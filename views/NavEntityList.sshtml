@@ -1,0 +1,3 @@
+@Each
+    <div class="nav_ent"><a class="bl" href="../tabl">@Current.NamePlural</a></div>
+@EndEach

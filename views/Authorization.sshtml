@@ -1,0 +1,15 @@
+@Master['Master']
+
+@Section['Title']
+    Hello!
+@EndSection
+
+@Section['Content']
+    <div class="main_aut">
+        <form class="aut" action="/nav">
+            <input class= "text" type="name" placeholder="Логин">
+            <input class= "text" type="password" placeholder="Пароль">
+            <input class= "btn" type="submit" value="Войти">
+        </form>
+	</div>
+@EndSection

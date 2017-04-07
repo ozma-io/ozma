@@ -1,0 +1,58 @@
+@Master['Master']
+
+@Section['Title']
+    Hello!
+@EndSection
+
+@Section['Content']
+    <div class="main_table">
+        <div class="mytitle">
+            <ul class="menu">
+                <li><a class="bl" href="../nav">Сущность1</a></li>
+                <li><a class="bl" href="../tabl">Все</a>
+                    <ul class="submenu">
+                        <li><a  class="bl" href="../tabl">Представление 2</a></li>
+                        <li><a class="bl" href="../tabl">Представление 3</a></li>
+                        <li><a class="bl" href="../tabl">Представление 4</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <div class="tabl">
+            <div class="tabl_head" id="tabl_head_1">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="min-width:300px">Name</th>
+                            <th style="min-width:50px">Count</th>
+                            <th style="min-width:700px">Description</th>
+                            <th style="min-width:300px">Param1</th>
+                            <th style="min-width:600px">Param2</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+            <div class="tabl_body" id="tabl_body_1">
+                <table>
+                    <tbody>
+                        @Each.entries
+                            <tr class="bl" onclick="window.location.href='../form'">
+                                <td data-type="text" style="min-width:300px">@Current.name</td>
+                                <td data-type="number" style="min-width:50px">@Current.count</td>
+                                <td data-type="text" style="min-width:700px">@Current.description</td>
+                                <td data-type="text" style="min-width:300px">@Current.param1</td>
+                                <td data-type="text" style="min-width:600px">@Current.param2</td>
+                            </tr>
+                        @EndEach
+                    </tbody>
+                </table>
+            </div>
+        </div> 
+	</div>
+
+    <script type="text/javascript">
+        document.getElementById("tabl_body_1").onscroll = function() {
+            document.getElementById('tabl_head_1').scrollLeft = document.getElementById('tabl_body_1').scrollLeft;
+        };
+    </script>
+@EndSection

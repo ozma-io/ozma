@@ -1,0 +1,194 @@
+/* Общие */
+
+*{
+    margin: 0;
+    zoom: 104%;
+}
+
+body {
+    width: 100%;
+    height: 100%;
+}
+
+p {
+    margin: 0;
+}
+
+a.bl {
+    display: block;
+    padding: 5px;
+    color: black;
+    background-color: #DCDCDC;
+    text-decoration: none;
+}
+
+
+/* Меню */
+
+ul {
+    display: block;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+ul.menu > li {
+    float: left;
+    position: relative;
+    margin-right: 1px;
+    margin-bottom: 1px;
+    width: 100%;
+}
+ul.menu > li:hover > ul.submenu {
+    display: block;
+}
+ul.submenu {
+    display: none;
+    position: absolute;
+    left: 0;
+    border: 1px #DCDCDC;
+    width: 100%;
+}
+ul.submenu > li {
+    display: block;
+}
+
+
+/* Авторизация */
+
+div.main_aut {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    overflow: auto;
+    top: 0;
+    left: 0;
+    display: flex;
+}
+
+form.aut {
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    justify-content: space-around;
+    background: #DCDCDC;
+    width: 210px;
+    height: 130px;
+}
+
+form.aut > input.str {
+    padding: 5px;
+    height: 18px;
+    width: 125px;
+    text-decoration: none;
+    border-radius: none;
+}
+
+form.aut > input.text {
+    padding: 5px;
+    height: 18px;
+    width: 125px;
+    text-decoration: none;
+    border-radius: none;
+}
+
+form.aut > input.btn {
+    padding: 5px;
+    border: none;
+    background: #FFFFFF;
+    text-decoration: none;
+    border-radius: none;
+}
+
+
+/* Навигация */
+
+div.main_nav {
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+}
+
+div.submain_nav {
+    width: 100%;
+    height: 100%;
+    background: #DCDCDC;
+    overflow: hidden;
+}
+
+div.subsubmain_nav {
+    width:100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+div.nav_sec {
+    width:100%;
+    overflow: hidden;
+}
+
+div.nav_sec_tit {
+    padding: 5px;
+    width: 100%;
+    overflow: hidden;
+}
+
+div.nav_sec_ents {
+    width: 100%;
+    overflow: hidden;
+}
+
+div.nav_ent {
+    float:left;
+    background: #FFFFFF;
+    margin-bottom: 1px;
+    width: 100%;
+    overflow: hidden;
+}
+
+div.nav_ent > a {
+    display: block;
+    padding: 5px;
+    color: black;
+    background-color: #FFFFFF;
+    text-decoration: none;
+    width: 100%;
+}
+
+
+/* Таблица */
+
+table {
+    background: #DCDCDC;
+    border-spacing: 1px;
+    float: left;
+}
+
+th {
+    font-weight: normal;
+}
+
+tr.bl {
+    background: #FFFFFF;
+}
+
+
+/* Форма */
+
+div.form_field {
+    padding: 10px;
+    overflow: hidden;
+}
+
+div.form_field_tit > p {
+    padding: 5px;
+    overflow: hidden;
+}
+
+div.form_field_sense {
+    width: 100%;
+    padding: 5px;
+    overflow: hidden;
+}
