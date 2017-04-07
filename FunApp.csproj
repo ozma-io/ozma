@@ -19,6 +19,7 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="1.1.0" />
 
     <ProjectReference Include="../FunCore/FunCore.csproj" />
+    <ProjectReference Include="../FunDB/FunDB.fsproj" />
   </ItemGroup>
 
   <ItemGroup>
