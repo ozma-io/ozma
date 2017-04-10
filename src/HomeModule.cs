@@ -31,6 +31,18 @@ namespace FunWithFlags.FunApp
 
             Get("/form", _ =>
             {
+                /*
+                var model = new
+                {
+                    Entries = userDb.Tests[1]
+                    Entries = userDb.Tests[1]
+                                       .GroupJoin(db.Fields,
+                                                  category => category.Id,
+                                                  entity => entity.MenuCategoryId,
+                                                  (category, entities) => new { Category = category, Entities = entities.ToList() })
+                                       .ToList()
+                };
+ */
                 return View["Form"];
             });
 
