@@ -1,0 +1,7 @@
+@Each
+    <div class="form_field">
+        <div class="form_field_tit"><p>Параметр 1</p></div>
+        <hr>
+        <div class="form_field_sense"><p>Значение параметра 1</p></div>
+    </div>
+@EndEach
