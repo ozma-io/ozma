@@ -242,14 +242,10 @@ div.form_data {
 }
 
 div.form_field {
-    padding: 3px;
-    width: 33%;
+    padding: 9px;
+    width: 30%;
     margin: 0;
     float: left;
-}
-
-div.form_field_tit > p {
-    
 }
 
 div.form_field_sense {
