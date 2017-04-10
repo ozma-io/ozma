@@ -79,7 +79,18 @@
             <div class="form_field">
                 <div class="form_field_tit"><p>Дата</p></div>
                 <hr>
-                <input type="date" class="form_field_sense" value="22.12.2014">
+                <input type="date" class="form_field_sense">
+            </div>
+
+            <div class="form_field">
+                <div class="form_field_tit"><p>Дата</p></div>
+                <hr>
+                <div class="form_field_sense"><p>22.12.2014 12:45</p></div>
+            </div>
+            <div class="form_field">
+                <div class="form_field_tit"><p>Дата</p></div>
+                <hr>
+                <input type="datetime" class="form_field_sense">
             </div>
         </div>
 	</div>
