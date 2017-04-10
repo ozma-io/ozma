@@ -20,51 +20,50 @@
             </ul>
         </div>
         <div class="form_data">
-            <div class="form_col">
-                <div class="form_field">
-                    <div class="form_field_tit"><p>Параметр 1</p></div>
-                    <hr>
-                    <div class="form_field_sense"><p>Значение параметра 1</p></div>
-                </div>
-                <div class="form_field">
-                    <div class="form_field_tit"><p>Параметр 1</p></div>
-                    <hr>
-                    <div class="form_field_sense"><p>Значение параметра 1</p></div>
-                </div>
-                <div class="form_field">
-                    <div class="form_field_tit"><p>Параметр 1</p></div>
-                    <hr>
-                    <div class="form_field_sense"><p>Значение параметра 1</p></div>
-                </div>
+            <div class="form_field">
+                <div class="form_field_tit"><p>Параметр 1</p></div>
+                <hr>
+                <div class="form_field_sense"><p>Значение параметра 1</p></div>
             </div>
-            <div class="form_col">
-                <div class="form_field">
-                    <div class="form_field_tit"><p>Параметр 1</p></div>
-                    <hr>
-                    <div class="form_field_sense"><p>Значение параметра 1</p></div>
-                </div>
+            <div class="form_field">
+                <div class="form_field_tit"><p>Параметр 1</p></div>
+                <hr>
+                <div class="form_field_sense"><p>Значение параметра 1</p></div>
             </div>
-            <div class="form_col">
-                <div class="form_field">
-                    <div class="form_field_tit"><p>Параметр 1</p></div>
-                    <hr>
-                    <div class="form_field_sense"><p>Значение параметра 1</p></div>
-                </div>
-                <div class="form_field">
-                    <div class="form_field_tit"><p>Параметр 1</p></div>
-                    <hr>
-                    <div class="form_field_sense"><p>Значение параметра 1</p></div>
-                </div>
-                <div class="form_field">
-                    <div class="form_field_tit"><p>Параметр 1</p></div>
-                    <hr>
-                    <div class="form_field_sense"><p>Значение параметра 1</p></div>
-                </div>
-                <div class="form_field">
-                    <div class="form_field_tit"><p>Параметр 1</p></div>
-                    <hr>
-                    <div class="form_field_sense"><p>Значение параметра 1</p></div>
-                </div>
+            <div class="form_field">
+                <div class="form_field_tit"><p>Параметр 1</p></div>
+                <hr>
+                <div class="form_field_sense"><p>Значение параметра 1</p></div>
+            </div>
+            <div class="form_field">
+                <div class="form_field_tit"><p>Параметр 1</p></div>
+                <hr>
+                <div class="form_field_sense"><p>Значение параметра 1</p></div>
+            </div>
+            <div class="form_field">
+                <div class="form_field_tit"><p>Параметр 1</p></div>
+                <hr>
+                <div class="form_field_sense"><p>Значение параметра 1</p></div>
+            </div>
+            <div class="form_field">
+                <div class="form_field_tit"><p>Параметр 1</p></div>
+                <hr>
+                <div class="form_field_sense"><p>Значение параметра 1</p></div>
+            </div>
+            <div class="form_field">
+                <div class="form_field_tit"><p>Параметр 1</p></div>
+                <hr>
+                <div class="form_field_sense"><p>Значение параметра 1</p></div>
+            </div>
+            <div class="form_field">
+                <div class="form_field_tit"><p>Параметр 1</p></div>
+                <hr>
+                <div class="form_field_sense"><p>Значение параметра 1</p></div>
+            </div>
+            <div class="form_field">
+                <div class="form_field_tit"><p>Параметр 1</p></div>
+                <hr>
+                <div class="form_field_sense"><p>Значение параметра 1</p></div>
             </div>
         </div>
 	</div>
