@@ -254,4 +254,5 @@ div.form_field_tit > p {
 
 div.form_field_sense {
     width: 100%;
+    padding-top: 3px;
 }
