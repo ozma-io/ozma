@@ -26,9 +26,10 @@ namespace FunWithFlags.FunApp
                                                   entity => entity.MenuCategoryId,
                                                   (category, entities) => new { Category = category, Entities = entities.ToList() })
                                        .ToList()
-                    // ! Удаляем пустые менюкатегории
+                    // ! Удаляем пустые менюкатегории (без Сущностей)
 
-                    // ! Добавляем в модель захардкоженные системные сущности если Группа пользователя "Администраторы"
+                    // ! Если Группа пользователя "Администраторы"
+                        // Добавляем в модель захардкоженную меню категорию "Систменые" и системные сущности
                 };
 
                 return View["Navigator", model];
