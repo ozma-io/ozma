@@ -35,7 +35,7 @@
             <div class="tabl_body" id="tabl_body_1">
                 <table>
                     <tbody>
-                        @Each.entries
+                        @Each.Entries
                             <tr class="bl" onclick="window.location.href='../form'">
                                 <td data-type="text" style="min-width:300px">@Current.name</td>
                                 <td data-type="number" style="min-width:50px">@Current.count</td>
