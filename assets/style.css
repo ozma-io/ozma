@@ -241,14 +241,11 @@ div.form_data {
     clear: left;
 }
 
-div.form_col {
+div.form_field {
+    padding: 3px;
     width: 33%;
     margin: 0;
     float: left;
-}
-
-div.form_field {
-    padding: 10px;
 }
 
 div.form_field_tit > p {
