@@ -50,10 +50,26 @@
             <div class="form_field">
                 <div class="form_field_tit"><p>Текст</p></div>
                 <hr>
-                <input type="text" class="form_field_sense" value="">
+                <textarea>
+                    Строка 1
+                    Строка 2
+                </textarea>
             </div>
 
-
+            <div class="form_field">
+                <div class="form_field_tit"><p>Список</p></div>
+                <hr>
+                <div class="form_field_sense"><p>Значение списка 1</p></div>
+            </div>
+            <div class="form_field">
+                <div class="form_field_tit"><p>Список</p></div>
+                <hr>
+                <select>
+                    <option value="a">Значение списка 1</option>
+                    <option value="b">Значение списка 2</option>
+                    <option value="c">Значение списка 3</option>
+                </select>
+            </div>
         </div>
 	</div>
 @EndSection
