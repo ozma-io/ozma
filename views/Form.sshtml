@@ -21,15 +21,39 @@
         </div>
         <div class="form_data">
             <div class="form_field">
-                <div class="form_field_tit"><p>Параметр 1</p></div>
+                <div class="form_field_tit"><p>Строка текста</p></div>
                 <hr>
                 <div class="form_field_sense"><p>Значение параметра 1</p></div>
             </div>
             <div class="form_field">
-                <div class="form_field_tit"><p>Параметр 1</p></div>
+                <div class="form_field_tit"><p>Строка текста</p></div>
                 <hr>
-                <input class="form_field_sense" value="123123123"></input>
+                <input class="form_field_sense" value="Значение параметра 1">
             </div>
+
+            <div class="form_field">
+                <div class="form_field_tit"><p>Число</p></div>
+                <hr>
+                <div class="form_field_sense"><p>11</p></div>
+            </div>
+            <div class="form_field">
+                <div class="form_field_tit"><p>Число</p></div>
+                <hr>
+                <input type="number" class="form_field_sense" value="11">
+            </div>
+
+            <div class="form_field">
+                <div class="form_field_tit"><p>Текст</p></div>
+                <hr>
+                <div class="form_field_sense"><p>11</p></div>
+            </div>
+            <div class="form_field">
+                <div class="form_field_tit"><p>Текст</p></div>
+                <hr>
+                <input type="text" class="form_field_sense" value="">
+            </div>
+
+
         </div>
 	</div>
 @EndSection
