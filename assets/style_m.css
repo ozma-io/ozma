@@ -191,8 +191,5 @@ div.form_field_sense {
     width: 100%;
     padding: 5px;
     overflow: hidden;
-}
-
-div.form_field_sense > input {
     -webkit-appearance: none;
 }
