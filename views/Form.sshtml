@@ -90,7 +90,7 @@
             <div class="form_field">
                 <div class="form_field_tit"><p>Дата</p></div>
                 <hr>
-                <input type="datetime" class="form_field_sense">
+                <input type="datetime-local" class="form_field_sense">
             </div>
         </div>
 	</div>
