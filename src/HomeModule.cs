@@ -38,9 +38,9 @@ namespace FunWithFlags.FunApp
             });
 
             // ! Переписать функционал под ID разных юзервью и параметры (соритровка 1,2,3, id записи (если надо))
-            Get(@"/uv/(?<id>[\d]+)/", pars =>
+            Get(@"/uv/{id:int}/", pars =>
             {
-                var uv = db.UserViews.Find(pars.id);
+                var uv = db.UserViews.Find((int)pars.id);
 
                 // ! Переписать на динамический поиск через Reflection
                 View view = null;
