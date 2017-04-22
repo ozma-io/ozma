@@ -41,6 +41,10 @@ namespace FunWithFlags.FunApp
             Get(@"/uv/{id:int}/", pars =>
             {
                 var uv = db.UserViews.Find((int)pars.id);
+                if(uv == null)
+                {
+                    throw new ArgumentException($"User view doesn't exist: {uv}");
+                }
 
                 // ! Переписать на динамический поиск через Reflection
                 View view = null;
@@ -50,7 +54,7 @@ namespace FunWithFlags.FunApp
                         view = new TableView();
                         break;
                     default:
-                        throw new ArgumentException("Unknown view type");
+                        throw new ArgumentException($"Unknown view type: {uv.Type}");
                 }
                 /*
                 Создаем модель меню, берем данные из базы с доступами пользователя к сущности и юзервью
