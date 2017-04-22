@@ -36,7 +36,7 @@ namespace FunWithFlags.FunApp
             });
 
             // ! Переписать функционал под ID разных юзервью и параметры (соритровка 1,2,3, id записи (если надо))
-            Get("/uv", _ =>
+            Get(@"/uv/(?<id>[\d]+)", pars =>
             {
                 /*
                 Создаем модель меню, берем данные из базы с доступами пользователя к сущности и юзервью
@@ -68,7 +68,8 @@ namespace FunWithFlags.FunApp
 
                 var model = new
                 {
-                    Entries = userDb.Tests.ToArray()
+                    Entries = userDb.Tests.ToArray(),
+                    Test = pars.id
                 };
 
                 return View["Table", model];
