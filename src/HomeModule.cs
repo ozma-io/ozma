@@ -1,9 +1,11 @@
 namespace FunWithFlags.FunApp
 {
+    using System;
     using System.Linq;
     using Nancy;
 
     using FunWithFlags.FunCore;
+    using FunWithFlags.FunApp.Views;
 
     public class HomeModule : NancyModule
     {
@@ -15,7 +17,7 @@ namespace FunWithFlags.FunApp
                 return View["Authorization"];
             });
 
-            Get("/nav", _ =>
+            Get("/nav/", _ =>
             {
                 var model = new
                 {
@@ -36,8 +38,20 @@ namespace FunWithFlags.FunApp
             });
 
             // ! Переписать функционал под ID разных юзервью и параметры (соритровка 1,2,3, id записи (если надо))
-            Get(@"/uv/(?<id>[\d]+)", pars =>
+            Get(@"/uv/(?<id>[\d]+)/", pars =>
             {
+                var uv = db.UserViews.Find(pars.id);
+
+                // ! Переписать на динамический поиск через Reflection
+                View view = null;
+                switch (uv.Type)
+                {
+                    case "Table":
+                        view = new TableView();
+                        break;
+                    default:
+                        throw new ArgumentException("Unknown view type");
+                }
                 /*
                 Создаем модель меню, берем данные из базы с доступами пользователя к сущности и юзервью
                 Если модель не пустая {
@@ -66,24 +80,8 @@ namespace FunWithFlags.FunApp
                 Запускаем sshtml с выгруженной моделью меню и данных
                 */
 
-                var model = new
-                {
-                    Entries = userDb.Tests.ToArray(),
-                    Test = pars.id
-                };
-
-                return View["Table", model];
+                return View[view.ViewName, view.Get(db, userDb, uv)];
             });
-
-
-            // Пример с id
-
-            /*
-            Get("/products/{id}", parameters =>
-            {
-                return $"Hello Bar, id: {parameters.id}";
-            });
-            */
         }
     }
 }
