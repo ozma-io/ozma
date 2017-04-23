@@ -37,7 +37,7 @@ namespace FunWithFlags.FunApp
 
                 model.MenuCategories.RemoveAt(0);
                 model.MenuCategories.RemoveAt(1);
-                //model.MenuCategories.RemoveAt(2);
+                model.MenuCategories.RemoveAt(2);
                 
                 // ! Удаляем пустые менюкатегории (без Сущностей)
                 for (int i = 0; i < model.MenuCategories.Count; i++)
