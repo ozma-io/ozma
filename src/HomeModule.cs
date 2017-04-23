@@ -32,14 +32,15 @@ namespace FunWithFlags.FunApp
 
                 // ! Дописать что бы добавляли только есть роль пользователя "admin"
                     // Добавляем в модель захардкоженную меню категорию "Систменые" и системные сущности
-/*
+
                 // ! Не работает
+/*
                 var sis = new { 
                     Category = "testcat", 
-                    Entities = new {"1", "2"}
+                    Entities = new {1, 2}
                 };
                 model.MenuCategories.Add(sis);
- */
+  */
 
                 // ! Удаляем пустые менюкатегории (без Сущностей)
 /*
@@ -58,6 +59,7 @@ namespace FunWithFlags.FunApp
                     }
                 }
 */
+                model.MenuCategories.RemoveAll((mc) => { return mc.Entities.Count == 0; });
 
                 return View["Navigator", model];
             });
