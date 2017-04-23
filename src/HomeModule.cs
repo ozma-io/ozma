@@ -37,8 +37,9 @@ namespace FunWithFlags.FunApp
                 // ! Удаляем пустые менюкатегории (без Сущностей)
 /*
                 model.MenuCategories.ForEach({
-                    if (currnt.Entities.Count == 0) {
-                        current.RemoveAt(i);
+                    if (curent.Entities.Count == 0) {
+                        curent.Remove;
+                    }
                 });
 */
                 for (int i = 0; i < model.MenuCategories.Count; i++)
