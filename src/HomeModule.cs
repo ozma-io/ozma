@@ -34,17 +34,18 @@ namespace FunWithFlags.FunApp
                     // Добавляем в модель захардкоженную меню категорию "Систменые" и системные сущности
 
 
-
-                model.MenuCategories.RemoveAt(0);
-                model.MenuCategories.RemoveAt(1);
-                model.MenuCategories.RemoveAt(2);
-                
                 // ! Удаляем пустые менюкатегории (без Сущностей)
+/*
+                model.MenuCategories.ForEach({
+                    if (currnt.Entities.Count == 0) {
+                        current.RemoveAt(i);
+                });
+*/
                 for (int i = 0; i < model.MenuCategories.Count; i++)
                 {
-                    //if (model.MenuCategories[i].Entities.Count == 0) {
-                    //    model.MenuCategories.RemoveAt(i);
-                    //}
+                    if (model.MenuCategories[i].Entities.Count == 0) {
+                        model.MenuCategories.RemoveAt(i);
+                    }
                 }
 
                 return View["Navigator", model];
