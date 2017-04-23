@@ -34,7 +34,7 @@ namespace FunWithFlags.FunApp
                     // Добавляем в модель захардкоженную меню категорию "Систменые" и системные сущности
 
                 // ! Удаляем пустые менюкатегории (без Сущностей)
-                for (int i = 1; i <= model.MenuCategories.Count; i++)
+                for (int i = 0; i <= model.MenuCategories.Count; i++)
                 {
                     //if (model.MenuCategories[i].Entities.Count == 0) {
                         model.MenuCategories.RemoveAt(i);
