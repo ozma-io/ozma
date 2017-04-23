@@ -30,9 +30,9 @@ namespace FunWithFlags.FunApp
                                        .ToList()
                 };
 
-                // ! Если Группа пользователя "Администраторы"
+                // ! Дописать что бы добавляли только есть роль пользователя "admin"
                     // Добавляем в модель захардкоженную меню категорию "Систменые" и системные сущности
-
+                    
 
                 // ! Удаляем пустые менюкатегории (без Сущностей)
 /*
@@ -41,13 +41,14 @@ namespace FunWithFlags.FunApp
                         curent.Remove;
                     }
                 });
-*/
+
                 for (int i = 0; i < model.MenuCategories.Count; i++)
                 {
                     if (model.MenuCategories[i].Entities.Count == 0) {
                         model.MenuCategories.RemoveAt(i);
                     }
                 }
+*/
 
                 return View["Navigator", model];
             });
