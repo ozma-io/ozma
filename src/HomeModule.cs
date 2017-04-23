@@ -37,7 +37,7 @@ namespace FunWithFlags.FunApp
                 for (int i = 0; i < model.MenuCategories.Count; i++)
                 {
                     if (model.MenuCategories[i].Entities.Count == 0) {
-                        model.MenuCategories.RemoveAt(i+1);
+                        model.MenuCategories.RemoveAt(i-1);
                     }
                 }
 
