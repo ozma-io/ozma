@@ -9,12 +9,12 @@
         <div class="mytitle">
             <ul class="menu">
                 <li><a class="bl" href="../nav">Сущность1</a></li>
-                <li><a class="bl" href="../tabl">Все</a>
-                <li><a class="bl" href="../form">Основная</a>
+                <li><a class="bl" href="../uv/1">Все</a>
+                <li><a class="bl" href="../uv/2">Основная</a>
                     <ul class="submenu">
-                        <li><a class="bl" href="../form">Форма 2</a></li>
-                        <li><a class="bl" href="../form">Форма 3</a></li>
-                        <li><a class="bl" href="../form">Форма 4</a></li>
+                        <li><a class="bl" href="../uv/2">Форма 2</a></li>
+                        <li><a class="bl" href="../uv/2">Форма 3</a></li>
+                        <li><a class="bl" href="../uv/2">Форма 4</a></li>
                     </ul>
                 </li>
             </ul>
