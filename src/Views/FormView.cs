@@ -16,8 +16,7 @@ namespace FunWithFlags.FunApp.Views
         {
             dynamic model = new ExpandoObject();
             
-            //model.Entries = userDb.Tests.ToArray();
-            //model.View = uv;
+            model.View = uv;
 
             return model;
         }

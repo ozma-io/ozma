@@ -52,6 +52,9 @@ namespace FunWithFlags.FunApp
                     case "Table":
                         view = new TableView();
                         break;
+                    case "Form":
+                        view = new FormView();
+                        break;
                     default:
                         throw new ArgumentException($"Unknown view type: {uv.Type}");
                 }
