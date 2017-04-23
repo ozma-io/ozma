@@ -5,19 +5,19 @@ namespace FunWithFlags.FunApp.Views
 
     using FunWithFlags.FunCore;
 
-    public class TableView : View
+    public class FormView : View
     {
         public string ViewName
         {
-            get { return "Table"; }
+            get { return "Form"; }
         }
 
         public ExpandoObject Get(DatabaseContext db, UserDatabaseContext userDb, UserView uv)
         {
             dynamic model = new ExpandoObject();
             
-            //model.Entries = userDb.Tests.ToArray();
-            //model.View = uv;
+            model.Entries = userDb.Tests.ToArray();
+            model.View = uv;
 
             return model;
         }

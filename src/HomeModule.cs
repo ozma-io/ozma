@@ -37,7 +37,6 @@ namespace FunWithFlags.FunApp
                 return View["Navigator", model];
             });
 
-            // ! Переписать функционал под ID разных юзервью и параметры (соритровка 1,2,3, id записи (если надо))
             Get(@"/uv/{id:int}/", pars =>
             {
                 var uv = db.UserViews.Find((int)pars.id);
@@ -56,6 +55,7 @@ namespace FunWithFlags.FunApp
                     default:
                         throw new ArgumentException($"Unknown view type: {uv.Type}");
                 }
+                
                 /*
                 Создаем модель меню, берем данные из базы с доступами пользователя к сущности и юзервью
                 Если модель не пустая {
