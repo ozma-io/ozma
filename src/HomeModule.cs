@@ -33,6 +33,12 @@ namespace FunWithFlags.FunApp
                 // ! Если Группа пользователя "Администраторы"
                     // Добавляем в модель захардкоженную меню категорию "Систменые" и системные сущности
 
+
+
+                model.MenuCategories.RemoveAt(0);
+                model.MenuCategories.RemoveAt(1);
+                model.MenuCategories.RemoveAt(2);
+                
                 // ! Удаляем пустые менюкатегории (без Сущностей)
                 for (int i = 0; i < model.MenuCategories.Count; i++)
                 {
