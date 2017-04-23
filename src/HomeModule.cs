@@ -36,9 +36,9 @@ namespace FunWithFlags.FunApp
                 // ! Удаляем пустые менюкатегории (без Сущностей)
                 for (int i = 0; i < model.MenuCategories.Count; i++)
                 {
-                    if (model.MenuCategories[i].Entities.Count == 0) {
+                    //if (model.MenuCategories[i].Entities.Count == 0) {
                         model.MenuCategories.RemoveAt(i);
-                    }
+                    //}
                 }
 
                 return View["Navigator", model];
