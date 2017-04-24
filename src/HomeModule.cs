@@ -84,7 +84,7 @@ namespace FunWithFlags.FunApp
 
                 // ! Переписать на динамический поиск через Reflection
                 View view = null;
-                switch (uv.Type)
+                switch (uv.Type.Name)
                 {
                     case "Table":
                         view = new TableView();
