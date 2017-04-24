@@ -34,34 +34,27 @@ namespace FunWithFlags.FunApp
                 // ! Дописать что бы добавляли только есть роль пользователя "admin"
                     // Добавляем в модель захардкоженную меню категорию "Систменые" и системные сущности
 
-                // ! Не работает
-/*
-                MenuCategory sisCat = new MenuCategory{};
-                sisCat.Id = model.MenuCategories.Last().Category.Id+1;
-                sisCat.Name = "Системные";
-                sisCat.OrdinalNum = model.MenuCategories.Last().Category.OrdinalNum+1;
-
-                List<Entity> sisEnts = new List<Entity> {};
-                sisEnts.Add(new Entity {});
-                sisEnts.Add(new Entity {});
-                sisEnts[0].Name = "Пользователи";
-                sisEnts[1].Name = "Настройки";
-
-                var sis = new { sisCat, sisEnts };
-                model.MenuCategories.Add(sis);
- */
-
                 model.MenuCategories.Add(new {
                     Category = new MenuCategory {
                         Id = model.MenuCategories.Last().Category.Id+1,
                         Name = "Системные",
                         OrdinalNum = model.MenuCategories.Last().Category.OrdinalNum+1,
                     }, 
-                    Entities = new List<Entity> {}
+                    Entities = new List<Entity> {
+                        new Entity {
+                            Name = "test1"
+                        },
+                        new Entity {
+                            Name = "test2"
+                        },
+                        new Entity {
+                            Name = "test3"
+                        }
+                    }
                 });
 
                 // Удаляем пустые менюкатегории (без Сущностей)
-                //model.MenuCategories.RemoveAll((mc) => { return mc.Entities.Count == 0; });
+                model.MenuCategories.RemoveAll((mc) => { return mc.Entities.Count == 0; });
 
                 return View["Navigator", model];
             });
