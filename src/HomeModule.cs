@@ -97,7 +97,7 @@ namespace FunWithFlags.FunApp
                         throw new ArgumentException($"Unknown view type: {uv.Type.Name}");
                 }
                  */
-                view = new TableView();
+                throw new ArgumentException($"Unknown view type: {uv.Type.Name}");
 
                 /*
                 Создаем модель меню, берем данные из базы с доступами пользователя к сущности и юзервью
