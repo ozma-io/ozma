@@ -84,20 +84,21 @@ namespace FunWithFlags.FunApp
 
                 // ! Переписать на динамический поиск через Reflection
                 View view = null;
+                /*
                 switch (uv.Type.Name)
                 {
-                    /*
                     case "Table":
                         view = new TableView();
                         break;
                     case "Form":
                         view = new FormView();
                         break;
-                     */
                     default:
                         throw new ArgumentException($"Unknown view type: {uv.Type.Name}");
                 }
-                
+                 */
+                view = new TableView();
+
                 /*
                 Создаем модель меню, берем данные из базы с доступами пользователя к сущности и юзервью
                 Если модель не пустая {
