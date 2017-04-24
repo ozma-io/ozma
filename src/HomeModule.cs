@@ -93,7 +93,7 @@ namespace FunWithFlags.FunApp
                         view = new FormView();
                         break;
                     default:
-                        throw new ArgumentException($"Unknown view type: {uv.Type}");
+                        throw new ArgumentException($"Unknown view type: {uv.Type.Name}");
                 }
                 
                 /*
