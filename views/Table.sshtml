@@ -8,7 +8,7 @@
     <div class="main_table">
         <div class="mytitle">
             <ul class="menu">
-                <li><a class="bl" href="../nav">Сущность1 (id @Model.Test)</a></li>
+                <li><a class="bl" href="../nav">Сущность1</a></li>
                 <li><a class="bl" href="../uv/1">Все</a>
                     <ul class="submenu">
                         <li><a  class="bl" href="../uv/1">Представление 2</a></li>
