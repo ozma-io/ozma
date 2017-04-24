@@ -2,6 +2,7 @@ namespace FunWithFlags.FunApp
 {
     using System;
     using System.Linq;
+    using System.Collections.Generic;
     using Nancy;
 
     using FunWithFlags.FunCore;
@@ -35,30 +36,22 @@ namespace FunWithFlags.FunApp
 
                 // ! Не работает
 /*
-                var sis = new { 
-                    Category = "testcat", 
-                    Entities = new {1, 2}
-                };
+                MenuCategory sisCat = new MenuCategory{};
+                sisCat.Id = model.MenuCategories.Last().Category.Id+1;
+                sisCat.Name = "Системные";
+                sisCat.OrdinalNum = model.MenuCategories.Last().Category.OrdinalNum+1;
+
+                List<Entity> sisEnts = new List<Entity> {};
+                sisEnts.Add(new Entity {});
+                sisEnts.Add(new Entity {});
+                sisEnts[0].Name = "Пользователи";
+                sisEnts[1].Name = "Настройки";
+
+                var sis = new { sisCat, sisEnts };
                 model.MenuCategories.Add(sis);
-  */
+ */
 
-                // ! Удаляем пустые менюкатегории (без Сущностей)
-/*
-                // ! вариант 1 - не работает
-                model.MenuCategories.ForEach({
-                    if (curent.Entities.Count == 0) {
-                        curent.Remove;
-                    }
-                });
-
-                // ! вариант 2 - не работает
-                for (int i = 0; i < model.MenuCategories.Count; i++)
-                {
-                    if (model.MenuCategories[i].Entities.Count == 0) {
-                        model.MenuCategories.RemoveAt(i);
-                    }
-                }
-*/
+                // Удаляем пустые менюкатегории (без Сущностей)
                 model.MenuCategories.RemoveAll((mc) => { return mc.Entities.Count == 0; });
 
                 return View["Navigator", model];
