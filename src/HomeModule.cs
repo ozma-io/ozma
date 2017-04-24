@@ -41,13 +41,28 @@ namespace FunWithFlags.FunApp
                         }, 
                         Entities = new List<Entity> {
                             new Entity {
-                                NamePlural = "test1"
+                                NamePlural = "Настройки"
                             },
                             new Entity {
-                                NamePlural = "test2"
+                                NamePlural = "Пользователи"
                             },
                             new Entity {
-                                NamePlural = "test3"
+                                NamePlural = "Роли"
+                            },
+                            new Entity {
+                                NamePlural = "Группы"
+                            },
+                            new Entity {
+                                NamePlural = "Сущности"
+                            },
+                            new Entity {
+                                NamePlural = "Поля"
+                            },
+                            new Entity {
+                                NamePlural = "Виды"
+                            },
+                            new Entity {
+                                NamePlural = "Категории меню"
                             }
                         }
                     });
