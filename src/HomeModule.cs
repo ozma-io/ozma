@@ -51,8 +51,17 @@ namespace FunWithFlags.FunApp
                 model.MenuCategories.Add(sis);
  */
 
+                model.MenuCategories.Add(new {
+                    Category = new MenuCategory {
+                        Id = model.MenuCategories.Last().Category.Id+1,
+                        Name = "Системные",
+                        OrdinalNum = model.MenuCategories.Last().Category.OrdinalNum+1,
+                    }, 
+                    Entities = new List<Entity> {}
+                });
+
                 // Удаляем пустые менюкатегории (без Сущностей)
-                model.MenuCategories.RemoveAll((mc) => { return mc.Entities.Count == 0; });
+                //model.MenuCategories.RemoveAll((mc) => { return mc.Entities.Count == 0; });
 
                 return View["Navigator", model];
             });
