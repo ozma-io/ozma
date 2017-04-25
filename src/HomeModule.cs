@@ -2,6 +2,7 @@ namespace FunWithFlags.FunApp
 {
     using System;
     using System.Linq;
+    using Microsoft.EntityFrameworkCore;
     using System.Collections.Generic;
     using Nancy;
 
@@ -74,9 +75,10 @@ namespace FunWithFlags.FunApp
                 return View["Navigator", model];
             });
 
-            Get(@"/uv/{id:int}/", pars =>
+            Get(@"/uv/{Id:int}/", pars =>
             {
-                var uv = db.UserViews.Find((int)pars.id);
+                var id = (int)pars.Id;
+                var uv = db.UserViews.Include(u => u.Type).First(u => u.Id == id);
                 if(uv == null)
                 {
                     throw new ArgumentException($"User view doesn't exist: {uv}");
@@ -84,7 +86,6 @@ namespace FunWithFlags.FunApp
 
                 // ! Переписать на динамический поиск через Reflection
                 View view = null;
-                /*
                 switch (uv.Type.Name)
                 {
                     case "Table":
@@ -96,8 +97,6 @@ namespace FunWithFlags.FunApp
                     default:
                         throw new ArgumentException($"Unknown view type: {uv.Type.Name}");
                 }
-                 */
-                throw new ArgumentException($"Unknown view type: {uv.Type.Name}");
 
                 /*
                 Создаем модель меню, берем данные из базы с доступами пользователя к сущности и юзервью
