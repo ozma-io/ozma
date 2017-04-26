@@ -16,7 +16,13 @@ namespace FunWithFlags.FunApp.Views
         {
             dynamic model = new ExpandoObject();
             
+            // Использовать вильтр UV
             model.Entries = userDb.Tests.ToArray();
+
+            model.Titles = db.Fields.GroupBy(
+                    b => b.EntityId == 1)
+                .ToList();
+
             model.View = uv;
 
             return model;
