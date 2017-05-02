@@ -20,8 +20,8 @@ namespace FunWithFlags.FunApp.Views
             model.Entries = userDb.Tests.ToArray();
 
 
-            model.Titles = db.Fields.GroupBy(
-                    b => b.EntityId == 1)
+            model.Titles = db.Fields//.GroupBy(
+                    //b => b.EntityId == 1)
                 .ToList();
  
             model.View = uv;
