@@ -16,7 +16,7 @@
                         <li><a class="bl" href="../uv/1">Представление 4</a></li>
                     </ul>
                 </li>
-                @Each.Entries
+                @Each.Titles
                     <li><a class="bl" href="../nav">@Current.name</a></li>
                 @EndEach
             </ul>
