@@ -24,7 +24,7 @@
                     <thead>
                         <tr>
                             @Each.Titles
-                                <th style="min-width:@Current.Widthpx">@Current.Name</th>
+                                <th style="min-width:@Current.Width px">@Current.Name</th>
                             @EndEach
                             <th style="min-width:300px">Name</th>
                             <th style="min-width:50px">Count</th>
