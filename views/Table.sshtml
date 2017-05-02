@@ -8,7 +8,7 @@
     <div class="main_table">
         <div class="mytitle">
             <ul class="menu">
-                <li><a class="bl" href="../nav">@Model.Titles[0].name</a></li>
+                <li><a class="bl" href="../nav">Сущность 1</a></li>
                 <li><a class="bl" href="../uv/1">Все</a>
                     <ul class="submenu">
                         <li><a  class="bl" href="../uv/1">Представление 2</a></li>
@@ -16,6 +16,9 @@
                         <li><a class="bl" href="../uv/1">Представление 4</a></li>
                     </ul>
                 </li>
+                @Each.Entries
+                    <li><a class="bl" href="../nav">@Current.name</a></li>
+                @EndEach
             </ul>
         </div>
         <div class="tabl">
