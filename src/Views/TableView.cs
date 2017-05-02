@@ -19,10 +19,11 @@ namespace FunWithFlags.FunApp.Views
             // Использовать вильтр UV
             model.Entries = userDb.Tests.ToArray();
 
+/*
             model.Titles = db.Fields.GroupBy(
                     b => b.EntityId == 1)
                 .ToList();
-
+ */
             model.View = uv;
 
             return model;
