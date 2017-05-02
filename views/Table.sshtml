@@ -17,7 +17,7 @@
                     </ul>
                 </li>
                 @Each.Titles
-                    <li><a class="bl" href="../nav">@Current.name</a></li>
+                    <li><a class="bl" href="../nav">@Current.Name</a></li>
                 @EndEach
             </ul>
         </div>
