@@ -16,9 +16,6 @@
                         <li><a class="bl" href="../uv/1">Представление 4</a></li>
                     </ul>
                 </li>
-                @Each.Titles
-                    <li><a class="bl" href="../nav">@Current.Name</a></li>
-                @EndEach
             </ul>
         </div>
         <div class="tabl">
@@ -26,6 +23,9 @@
                 <table>
                     <thead>
                         <tr>
+                            @Each.Titles
+                                <th style="min-width:300px">@Current.Name</th>
+                            @EndEach
                             <th style="min-width:300px">Name</th>
                             <th style="min-width:50px">Count</th>
                             <th style="min-width:700px">Description</th>
