@@ -126,7 +126,7 @@ namespace FunWithFlags.FunApp
                 Запускаем sshtml с выгруженной моделью меню и данных
                 */
                 dynamic tModel = view.Get(db, userDb, uv);
-                throw new ArgumentException($"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!: {tModel.Titles[0]}");
+                throw new ArgumentException($"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!: {tModel.Titles.Count}");
                 return View[view.ViewName, tModel];
             });
         }
