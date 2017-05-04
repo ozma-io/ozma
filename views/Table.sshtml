@@ -35,11 +35,11 @@
                     <tbody>
                         @Each.Entries
                             <tr class="bl" onclick="window.location.href='../uv/2'">
-                                <td data-type="text" style="min-width:300px">@Current.name</td>
-                                <td data-type="number" style="min-width:50px">@Current.count</td>
-                                <td data-type="text" style="min-width:700px">@Current.description</td>
-                                <td data-type="text" style="min-width:300px">@Current.param1</td>
-                                <td data-type="text" style="min-width:600px">@Current.param2</td>
+                                <td data-type="text" style="width:300px">@Current.name</td>
+                                <td data-type="number" style="width:50px">@Current.count</td>
+                                <td data-type="text" style="width:700px">@Current.description</td>
+                                <td data-type="text" style="width:300px">@Current.param1</td>
+                                <td data-type="text" style="width:600px">@Current.param2</td>
                             </tr>
                         @EndEach
                     </tbody>
