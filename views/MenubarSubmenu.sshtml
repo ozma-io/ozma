@@ -1,3 +1,3 @@
 @Each
-    <li><a  class="bl" href="../uv/1">Представление 2</a></li>
+    <li><a  class="bl" href="@Current.Link">@Current.Name</a></li>
 @EndEach

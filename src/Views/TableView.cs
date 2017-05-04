@@ -25,20 +25,20 @@ namespace FunWithFlags.FunApp.Views
             model.MenuEls = new List<ExpandoObject>();
 
             dynamic tel = new ExpandoObject();
-
             tel.Name = "Cущность 1";
             tel.Link = "../nav";
             tel.Sub = new List<ExpandoObject>();
             model.MenuEls.Add(tel);
 
-            tel.Name = "Все";
-            tel.Link = "../uv/1";
-            tel.Sub = new List<ExpandoObject>();
             dynamic tel2 = new ExpandoObject();
-            tel2.Name = "Представление 1";
+            tel2.Name = "Все";
             tel2.Link = "../uv/1";
-            tel.Sub.Add(tel2);
-            model.MenuEls.Add(tel);
+            tel2.Sub = new List<ExpandoObject>();
+            dynamic tel3 = new ExpandoObject();
+            tel3.Name = "Представление 1";
+            tel3.Link = "../uv/1";
+            tel.Sub.Add(tel3);
+            model.MenuEls.Add(tel2);
 
             
  
