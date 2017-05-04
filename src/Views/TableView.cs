@@ -17,7 +17,7 @@ namespace FunWithFlags.FunApp.Views
         {
             dynamic model = new ExpandoObject();
             
-            // Использовать вильтр UV
+            // Использовать фильтр UV
             model.Entries = userDb.Tests.ToArray();
 
             model.Titles = db.UVFields.ToList();
