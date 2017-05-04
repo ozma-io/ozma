@@ -24,13 +24,8 @@
                     <thead>
                         <tr>
                             @Each.Titles
-                                <th style="min-width:@Current.Width">@Current.Name</th>
+                                <th style="width:@Current.Width">@Current.Name</th>
                             @EndEach
-                            <th style="min-width:300px">Name</th>
-                            <th style="min-width:50px">Count</th>
-                            <th style="min-width:700px">Description</th>
-                            <th style="min-width:300px">Param1</th>
-                            <th style="min-width:600px">Param2</th>
                         </tr>
                     </thead>
                 </table>
