@@ -119,16 +119,12 @@ div.main_nav {
 }
 
 div.submain_nav {
-    max-width: 350px;
-    margin: auto;
-    /*
     width: 350px;
     background: #DCDCDC;
     overflow: auto;
     display: flex;
     margin: auto;
     overflow: hidden;
-    */
 }
 
 div.subsubmain_nav {
