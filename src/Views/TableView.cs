@@ -22,13 +22,13 @@ namespace FunWithFlags.FunApp.Views
 
             model.Titles = db.UVFields.ToList();
 
-            model.MenuEls = new List<ExpandoObject>();
+            model.Menubar = new List<ExpandoObject>();
 
             dynamic tel = new ExpandoObject();
             tel.Name = "Cущность 1";
             tel.Link = "../nav";
             tel.Sub = new List<ExpandoObject>();
-            model.MenuEls.Add(tel);
+            model.Menubar.Add(tel);
 
             dynamic tel2 = new ExpandoObject();
             tel2.Name = "Все";
@@ -41,7 +41,7 @@ namespace FunWithFlags.FunApp.Views
             {
                 tel2.Sub.Add(tel3);
             }
-            model.MenuEls.Add(tel2);
+            model.Menubar.Add(tel2);
             
             
 
