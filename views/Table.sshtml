@@ -6,18 +6,7 @@
 
 @Section['Content']
     <div class="main_table">
-        <div class="mytitle">
-            <ul class="menu">
-                <li><a class="bl" href="../nav">Сущность 1</a></li>
-                <li><a class="bl" href="../uv/1">Все</a>
-                    <ul class="submenu">
-                        <li><a  class="bl" href="../uv/1">Представление 2</a></li>
-                        <li><a class="bl" href="../uv/1">Представление 3</a></li>
-                        <li><a class="bl" href="../uv/1">Представление 4</a></li>
-                    </ul>
-                </li>
-            </ul>
-        </div>
+        @Partial['Menubar', Current]
         <div class="tabl">
             <div class="tabl_head" id="tabl_head_1">
                 <table>
