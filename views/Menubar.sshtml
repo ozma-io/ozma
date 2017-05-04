@@ -1,10 +1,12 @@
 <div class="mytitle">
     <ul class="menu">
         @Each
-            <li><a class="bl" href="@Current.Link">@Current.Name</a></li>
+            <li>
+                <a class="bl" href="@Current.Link">@Current.Name</a>
                 <ul class="submenu">
                     @Partial['MenubarSubmenu', Current.Sub]
                 </ul>
+            </li>
         @EndEach
     </ul>
 </div>
