@@ -19,6 +19,9 @@ namespace FunWithFlags.FunApp.Views
             
             model.View = uv;
 
+
+            // Временная реализация меню - полностью заменить на создание через функцию в TableView.cs
+
             model.Menubar = new List<ExpandoObject>();
 
             dynamic tel = new ExpandoObject();
@@ -52,6 +55,9 @@ namespace FunWithFlags.FunApp.Views
                 t1.Sub.Add(t2);
             }
             model.Menubar.Add(t1);
+
+            // Конец временно реализации меню
+            
 
             return model;
         }
