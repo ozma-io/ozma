@@ -23,9 +23,10 @@ namespace FunWithFlags.FunApp.Views
             model.Titles = db.UVFields.ToList();
 
             model.MenuEls = new List<ExpandoObject>();
-            model.MenuEls.Add();
-            model.MenuEls[0].Name = "Cущность 1";
-            model.MenuEls[0].Link = "../nav";
+            dynamic tel = new ExpandoObject();
+            tel.Name = "Cущность 1";
+            tel.Link = "../nav";
+            model.MenuEls.Add(tel);
             
  
             model.View = uv;
