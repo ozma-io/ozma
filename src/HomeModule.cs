@@ -32,43 +32,6 @@ namespace FunWithFlags.FunApp
                                        .ToList()
                 };
 
-                // ! Дописать что бы добавляли только есть роль пользователя "admin"
-                    // Добавляем в модель захардкоженную меню категорию "Систменые" и системные сущности
-                    model.MenuCategories.Add(new {
-                        Category = new MenuCategory {
-                            Id = model.MenuCategories.Last().Category.Id+1,
-                            Name = "Системные",
-                            OrdinalNum = model.MenuCategories.Last().Category.OrdinalNum+1,
-                        }, 
-                        Entities = new List<Entity> {
-                            new Entity {
-                                NamePlural = "Настройки"
-                            },
-                            new Entity {
-                                NamePlural = "Пользователи"
-                            },
-                            new Entity {
-                                NamePlural = "Роли"
-                            },
-                            new Entity {
-                                NamePlural = "Группы"
-                            },
-                            new Entity {
-                                NamePlural = "Сущности"
-                            },
-                            new Entity {
-                                NamePlural = "Поля"
-                            },
-                            new Entity {
-                                NamePlural = "Виды"
-                            },
-                            new Entity {
-                                NamePlural = "Категории меню"
-                            }
-                        }
-                    });
-                // -!
-
                 // Удаляем пустые менюкатегории (без Сущностей)
                 model.MenuCategories.RemoveAll((mc) => { return mc.Entities.Count == 0; });
 
