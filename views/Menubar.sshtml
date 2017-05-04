@@ -1,5 +1,14 @@
 <div class="mytitle">
     <ul class="menu">
+        @Each
+            <li><a class="bl" href="@Current.Link">@Current.Name</a></li>
+        @EndEach
+    </ul>
+</div>
+
+/*
+<div class="mytitle">
+    <ul class="menu">
         <li><a class="bl" href="../nav">Сущность 1</a></li>
         <li><a class="bl" href="../uv/1">Все</a>
             <ul class="submenu">
@@ -10,3 +19,4 @@
         </li>
     </ul>
 </div>
+*/

@@ -2,6 +2,7 @@ namespace FunWithFlags.FunApp.Views
 {
     using System.Dynamic;
     using System.Linq;
+    using System.Collections.Generic;
 
     using FunWithFlags.FunCore;
 
@@ -20,6 +21,11 @@ namespace FunWithFlags.FunApp.Views
             model.Entries = userDb.Tests.ToArray();
 
             model.Titles = db.UVFields.ToList();
+
+            model.MenuEls = new List<ExpandoObject>();
+            model.MenuEls[0].Name = "Cущность 1";
+            model.MenuEls[0].Link = "../nav";
+            
  
             model.View = uv;
 

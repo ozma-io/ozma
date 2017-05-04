@@ -6,7 +6,7 @@
 
 @Section['Content']
     <div class="main_table">
-        @Partial['Menubar', Current]
+        @Partial['Menubar', Model.MenuEls]
         <div class="tabl">
             <div class="tabl_head" id="tabl_head_1">
                 <table>
