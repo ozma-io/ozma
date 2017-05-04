@@ -2,6 +2,9 @@
     <ul class="menu">
         @Each
             <li><a class="bl" href="@Current.Link">@Current.Name</a></li>
+                <ul class="submenu">
+                    @Partial['MenubarSubmenu', Current.Sub]
+                </ul>
         @EndEach
     </ul>
 </div>
