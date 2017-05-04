@@ -37,7 +37,7 @@ namespace FunWithFlags.FunApp.Views
             dynamic tel3 = new ExpandoObject();
             tel3.Name = "Представление 1";
             tel3.Link = "../uv/1";
-            tel.Sub.Add(tel3);
+            tel2.Sub.Add(tel3);
             model.MenuEls.Add(tel2);
 
             
