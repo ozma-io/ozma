@@ -19,7 +19,6 @@ namespace FunWithFlags.FunApp.Views
             // Использовать вильтр UV
             model.Entries = userDb.Tests.ToArray();
 
-
             model.Titles = db.UVFields.ToList();
  
             model.View = uv;

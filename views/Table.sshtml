@@ -24,7 +24,7 @@
                     <thead>
                         <tr>
                             @Each.Titles
-                                <th style="width:@Current.Width ; min-width:@Current.Width ; max-width:@Current.Width">@Current.Name</th>
+                                <th style="min-width:@Current.Width ; max-width:@Current.Width">@Current.Name</th>
                             @EndEach
                         </tr>
                     </thead>
@@ -35,11 +35,11 @@
                     <tbody>
                         @Each.Entries
                             <tr class="bl" onclick="window.location.href='../uv/2'">
-                                <td data-type="text" style="width:300px">@Current.name</td>
-                                <td data-type="number" style="width:50px">@Current.count</td>
-                                <td data-type="text" style="width:700px">@Current.description</td>
-                                <td data-type="text" style="width:300px">@Current.param1</td>
-                                <td data-type="text" style="width:600px">@Current.param2</td>
+                                <td data-type="text" style="min-width:300px ; max-width:300px">@Current.name</td>
+                                <td data-type="number" style="min-width:50px ; max-width:50px">@Current.count</td>
+                                <td data-type="text" style="min-width:700px ; max-width:700px">@Current.description</td>
+                                <td data-type="text" style="min-width:300px ; max-width:300px">@Current.param1</td>
+                                <td data-type="text" style="min-width:600px ; max-width:600px">@Current.param2</td>
                             </tr>
                         @EndEach
                     </tbody>
