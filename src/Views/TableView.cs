@@ -13,6 +13,11 @@ namespace FunWithFlags.FunApp.Views
             get { return "Table"; }
         }
 
+        public ViewType ViewType
+        {
+            get { return ViewType.Multiple; }
+        }
+
         public ExpandoObject Get(DatabaseContext db, UserDatabaseContext userDb, UserView uv)
         {
             dynamic model = new ExpandoObject();
@@ -21,61 +26,6 @@ namespace FunWithFlags.FunApp.Views
             model.Entries = userDb.Tests.ToArray();
 
             model.Titles = db.UVFields.ToList();
-
-
-            // Временная реализация меню - Вывести в одельную функцию и привязать ко всем вью.cs
-
-            /*
-            Первым элементом добавляем 3 элемента
-                название сущностей через запятую привязанные к этому представлению 
-                и ссылка на меню навигации
-                подменю этому элементу оставляем пустым
-            
-            Если этот вид юзервью выводит данные по одной записи
-                Вторым элементом добавляем 3 элемента 
-                    Название основного для этой сущности юзервью
-                    и ссылку на него
-                    Подменю
-                        Все юзервью кроме этого отсортированные в алфавитном порядке
-            Иначе (Если этот вид юзервью выводит данные сразу по многим записям)
-                Вторым элементом добавляем 3 элемента 
-                    текущее название юзервью 
-                    и ссылку на него
-                    Подменю
-                        Все юзервью кроме этого отсортированные в алфавитном порядке
-            
-            Если этот вид юзервью выводит данные по одной записи
-                Доабавляем третий элемент
-                    Текущий юзервью
-                    Ссылка на него
-                    Подменю
-                        Все юзервью выводящие данные по 1 записи кроме текущего
-            */
-
-            model.Menubar = new List<ExpandoObject>();
-
-            dynamic tel = new ExpandoObject();
-            tel.Name = "Cущность 1";
-            tel.Link = "../nav";
-            tel.Sub = new List<ExpandoObject>();
-            model.Menubar.Add(tel);
-
-            dynamic tel2 = new ExpandoObject();
-            tel2.Name = "Все";
-            tel2.Link = "../uv/1";
-            tel2.Sub = new List<ExpandoObject>();
-            dynamic tel3 = new ExpandoObject();
-            tel3.Name = "Представление";
-            tel3.Link = "../uv/1";
-            for (int i = 0; i < 3; i++)
-            {
-                tel2.Sub.Add(tel3);
-            }
-            model.Menubar.Add(tel2);
-        
-            // Конец временной реализации меню
-
-            
  
             model.View = uv;
 

@@ -5,12 +5,72 @@ namespace FunWithFlags.FunApp
     using Microsoft.EntityFrameworkCore;
     using System.Collections.Generic;
     using Nancy;
+    using System.Dynamic;
 
     using FunWithFlags.FunCore;
     using FunWithFlags.FunApp.Views;
 
     public class HomeModule : NancyModule
     {
+        private dynamic[] GetMenuBar(DatabaseContext db, UserDatabaseContext userDb, UserView currUv)
+        {
+
+            // Временная реализация меню - Вывести в одельную функцию и привязать ко всем вью.cs
+
+            /*
+            Первым элементом добавляем 3 элемента
+                название сущностей через запятую привязанные к этому представлению 
+                и ссылка на меню навигации
+                подменю этому элементу оставляем пустым
+            
+            Если этот вид юзервью выводит данные по одной записи
+                Вторым элементом добавляем 3 элемента 
+                    Название основного для этой сущности юзервью
+                    и ссылку на него
+                    Подменю
+                        Все юзервью кроме этого отсортированные в алфавитном порядке
+            Иначе (Если этот вид юзервью выводит данные сразу по многим записям)
+                Вторым элементом добавляем 3 элемента 
+                    текущее название юзервью 
+                    и ссылку на него
+                    Подменю
+                        Все юзервью кроме этого отсортированные в алфавитном порядке
+            
+            Если этот вид юзервью выводит данные по одной записи
+                Доабавляем третий элемент
+                    Текущий юзервью
+                    Ссылка на него
+                    Подменю
+                        Все юзервью выводящие данные по 1 записи кроме текущего
+            */
+
+            var entitiesQuery = db.Entities.Where(e =>
+                db.UVEntities.Where(uve => 
+                    uve.UserViewId == currUv.Id && uve.EntityId == e.Id
+                ).Any()
+            );
+
+            var views = new [] { "FormView" };
+
+            var entities = entitiesQuery.ToList();
+
+            var userViews = db.UserViews.Where(uv =>
+                views.Contains(uv.Name) && uv.Id != currUv.Id && db.UVEntities.Where(uve =>
+                    uve.UserViewId == uv.Id && entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
+                ).Any()
+            ).ToList();
+
+            return new []
+            {
+                new { Name = "Сущность 1", Link = "../nav", Sub = new dynamic[] { } },
+                new { Name = "Все", Link = "../uv/1", Sub = new dynamic[]
+                        {
+                            new { Name = "Представление", Link = "../uv/1" }
+                        }
+                    }
+            };
+        }
+
         public HomeModule(DatabaseContext db, UserDatabaseContext userDb)
         {        
             // ! Переписать авторизацию на авторизацию ненси и повесить защиту на остальные запросы
@@ -89,6 +149,7 @@ namespace FunWithFlags.FunApp
                 Запускаем sshtml с выгруженной моделью меню и данных
                 */
                 dynamic tModel = view.Get(db, userDb, uv);
+                tModel.MenuBar = this.GetMenuBar(db, userDb, uv);
                 //throw new ArgumentException($"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!: {tModel.Titles[0].Name} !!!!!!!!!!");
                 return View[view.ViewName, tModel];
             });
