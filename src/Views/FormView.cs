@@ -13,7 +13,7 @@ namespace FunWithFlags.FunApp.Views
             get { return "Form"; }
         }
 
-        public ViewType ViewTipe
+        public ViewType ViewType
         {
             get { return ViewType.Single; }
         }
