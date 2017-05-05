@@ -6,7 +6,7 @@
 
 @Section['Content']
     <div class="main">
-        @Partial['Menubar', Model.Menubar]
+        @Partial['Menubar', Model.MenuBar]
         <div class="form_data">
             <div class="form_field">
                 <div class="form_field_tit"><p>Строка текста</p></div>
