@@ -10,7 +10,7 @@ namespace FunWithFlags.FunApp
         {
             get;
         }
-
+        
         ExpandoObject Get(DatabaseContext db, UserDatabaseContext userDb, UserView uv);
     }
 }
