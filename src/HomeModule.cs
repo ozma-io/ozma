@@ -101,7 +101,7 @@ namespace FunWithFlags.FunApp
             Get(@"/uv/{Id:int}/", pars =>
             {
                 var id = (int)pars.Id;
-                var uv = db.UserViews.Include(u => u.Type).First(u => u.Id == id);
+                var uv = db.UserViews.First(u => u.Id == id);
                 if(uv == null)
                 {
                     throw new ArgumentException($"User view doesn't exist: {uv}");
