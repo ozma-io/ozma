@@ -49,10 +49,10 @@ namespace FunWithFlags.FunApp
                     uve.UserViewId == currUv.Id && uve.EntityId == e.Id
                 ).Any()
             );
+            var entities = entitiesQuery.First().DisplayNamePlural;
+
 
             var views = new [] { "FormView" };
-
-            var entities = entitiesQuery.First().Name;
 
             var userViews = db.UserViews.Where(uv =>
                 views.Contains(uv.Name) && uv.Id != currUv.Id && db.UVEntities.Where(uve =>
@@ -61,8 +61,7 @@ namespace FunWithFlags.FunApp
             ).ToList();
 
 
-
-            return new []
+            dynamic menuModel = new [] 
             {
                 new { Name = entities, Link = "../nav", Sub = new dynamic[] { } },
                 new { Name = currUv.Name, Link = System.String.Format("../uv/{0}",currUv.Id), Sub = new dynamic[]
@@ -71,6 +70,8 @@ namespace FunWithFlags.FunApp
                         }
                     }
             };
+
+            return menuModel;
         }
 
         public HomeModule(DatabaseContext db, UserDatabaseContext userDb)
