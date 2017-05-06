@@ -13,7 +13,7 @@
                     <thead>
                         <tr>
                             @Each.Titles
-                                <th style="min-width:@Current.Width ; max-width:@Current.Width">@Current.DisplayName</th>
+                                <th style="min-width:@Current.Width ; max-width:@Current.Width">@Current.Name</th>
                             @EndEach
                         </tr>
                     </thead>
