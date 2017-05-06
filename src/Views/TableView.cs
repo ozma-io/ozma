@@ -25,7 +25,9 @@ namespace FunWithFlags.FunApp.Views
             // Использовать фильтр UV
             model.Entries = userDb.Tests.ToArray();
 
-            model.Titles = db.UVFields.ToList();
+            model.Titles = db.UVFields.Where(uvf =>
+                uvf.UserViewId == uv.Id
+            ).ToList();
  
             model.View = uv;
 
