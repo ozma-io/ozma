@@ -64,12 +64,16 @@ namespace FunWithFlags.FunApp
             dynamic menuModel = new [] 
             {
                 new { Name = entities, Link = "../nav", Sub = new dynamic[] { } },
-                new { Name = currUv.Name, Link = System.String.Format("../uv/{0}",currUv.Id), Sub = new dynamic[]
-                        {
-                            new { Name = "Представление", Link = "../uv/1" }
-                        }
-                    }
             };
+
+            menuModel[1] = 
+            new { Name = currUv.Name, Link = System.String.Format("../uv/{0}",currUv.Id), Sub = new dynamic[]
+                    {
+                        new { Name = "Представление", Link = "../uv/1" }
+                    }
+                };
+
+            
 
             return menuModel;
         }
