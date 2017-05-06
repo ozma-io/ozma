@@ -52,7 +52,7 @@ namespace FunWithFlags.FunApp
 
             var views = new [] { "FormView" };
 
-            var entities = entitiesQuery.First().ToString();
+            var entities = entitiesQuery.First().Name;
 
             var userViews = db.UserViews.Where(uv =>
                 views.Contains(uv.Name) && uv.Id != currUv.Id && db.UVEntities.Where(uve =>
