@@ -89,12 +89,17 @@ namespace FunWithFlags.FunApp
                 {
                     // ! Создаем модель выгружаем данные по сущностям из базы на основании доступов пользователя к этим сущностям
                     MenuCategories = db.MenuCategories
-                                       .GroupJoin(db.Entities,
-                                                  category => category.Id,
-                                                  entity => entity.MenuCategoryId,
-                                                  (category, entities) => new { Category = category, Entities = entities.ToList() })
-                                       .ToList()
+                    .GroupJoin(db.Entities,
+                        category => category.Id,
+                        entity => entity.MenuCategoryId,
+                        (category, entities) => new { 
+                            Category = category, 
+                            Entities = entities.ToList() 
+                        })
+                    .ToList()
                 };
+
+                // ! - дописат добавление ссылок на кнопки
 
                 // Удаляем пустые менюкатегории (без Сущностей)
                 model.MenuCategories.RemoveAll((mc) => { return mc.Entities.Count == 0; });
