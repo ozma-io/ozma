@@ -109,7 +109,7 @@ namespace FunWithFlags.FunApp
 
                 // ! Переписать на динамический поиск через Reflection
                 View view = null;
-                switch (uv.Type.Name)
+                switch (uv.Type)
                 {
                     case "Table":
                         view = new TableView();
@@ -118,7 +118,7 @@ namespace FunWithFlags.FunApp
                         view = new FormView();
                         break;
                     default:
-                        throw new ArgumentException($"Unknown view type: {uv.Type.Name}");
+                        throw new ArgumentException($"Unknown view type: {uv.Type}");
                 }
 
                 /*
