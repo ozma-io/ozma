@@ -120,7 +120,7 @@ namespace FunWithFlags.FunApp
                 // Подменю третьего пункта
 
                 var userViews2 = db.UserViews.Where(uv =>
-                    !viewsMultiple.Contains(uv.Name) && 
+                    !viewsMultiple.Contains(uv.Type) && 
                     uv.Id != currUv.Id && 
                     db.UVEntities.Where(uve =>
                         uve.UserViewId == uv.Id && 
@@ -135,22 +135,6 @@ namespace FunWithFlags.FunApp
                     menuModel[2].Sub.Add(subMenuModel5);
                 }
             }
-            
-
-            /*
-            {
-                new ExpandoObject  { 
-                    Name = entities, 
-                    Link = "../nav", 
-                    Sub = new dynamic[] { } 
-                },
-                new List<ExpandoObject>  { Name = currUv.Name, Link = System.String.Format("../uv/{0}",currUv.Id), Sub = new dynamic[]
-                    {
-                        new { Name = "Представление", Link = "../uv/1" }
-                    }
-                }
-            };
-             */
 
             return menuModel;
         }
