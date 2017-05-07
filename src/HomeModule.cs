@@ -52,7 +52,7 @@ namespace FunWithFlags.FunApp
             var entities = entitiesQuery.First().DisplayNamePlural;
 
 
-            var views = new [] { "FormView" };
+            var views = new [] { "TableView" };
 
             var userViews = db.UserViews.Where(uv =>
                 views.Contains(uv.Name) && uv.Id != currUv.Id && db.UVEntities.Where(uve =>
@@ -62,7 +62,17 @@ namespace FunWithFlags.FunApp
 
 
             dynamic menuModel = new List<ExpandoObject>();
-            menuModel.Add();
+            menuModel.Add(new List<ExpandoObject>());
+            menuModel[0].Name = entities;
+            menuModel[0].Link = "../nav";
+            menuModel[0].Sub = new List<ExpandoObject>();
+
+            if (views.Contains(currUv.Name)) {
+                //menuModel.Add(new List<ExpandoObject>());
+            } else {
+
+            }
+
             /*
             {
                 new ExpandoObject  { 
