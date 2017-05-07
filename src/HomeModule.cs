@@ -56,7 +56,7 @@ namespace FunWithFlags.FunApp
 
             // Массивы
 
-            var viewsMultiple = new [] { "TableView" };
+            var viewsMultiple = new [] { "Table" };
 
 
             // Первый пернкт меню
