@@ -62,7 +62,7 @@ namespace FunWithFlags.FunApp
 
 
             dynamic menuModel = new List<ExpandoObject>();
-            menuModel.Add(new List<ExpandoObject>());
+            menuModel.Add(new ExpandoObject());
             menuModel[0].Name = entities;
             menuModel[0].Link = "../nav";
             menuModel[0].Sub = new List<ExpandoObject>();
