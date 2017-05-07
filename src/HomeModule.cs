@@ -103,7 +103,7 @@ namespace FunWithFlags.FunApp
                 dynamic subMenuModel3 = new ExpandoObject();
                 subMenuModel3.Name = userViews[i].Name;
                 subMenuModel3.Link = System.String.Format("../uv/{0}",userViews[i].Id);
-                menuModel[1].Add(subMenuModel2);
+                menuModel[1].Sub.Add(subMenuModel2);
             }
 
 
@@ -132,7 +132,7 @@ namespace FunWithFlags.FunApp
                     dynamic subMenuModel5 = new ExpandoObject();
                     subMenuModel5.Name = userViews2[i].Name;
                     subMenuModel5.Link = System.String.Format("../uv/{0}",userViews2[i].Id);
-                    menuModel[2].Add(subMenuModel5);
+                    menuModel[2].Sub.Add(subMenuModel5);
                 }
             }
             
