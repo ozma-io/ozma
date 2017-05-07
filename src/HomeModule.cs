@@ -12,7 +12,7 @@ namespace FunWithFlags.FunApp
 
     public class HomeModule : NancyModule
     {
-        private dynamic[] GetMenuBar(DatabaseContext db, UserDatabaseContext userDb, UserView currUv)
+        private dynamic GetMenuBar(DatabaseContext db, UserDatabaseContext userDb, UserView currUv)
         {
 
             // Временная реализация меню - Вывести в одельную функцию и привязать ко всем вью.cs
@@ -44,6 +44,8 @@ namespace FunWithFlags.FunApp
             
             */
 
+            // Используемые сущности
+
             var entitiesQuery = db.Entities.Where(e =>
                 db.UVEntities.Where(uve => 
                     uve.UserViewId == currUv.Id && uve.EntityId == e.Id
@@ -52,14 +54,12 @@ namespace FunWithFlags.FunApp
             var entities = entitiesQuery.First().DisplayNamePlural;
 
 
-            var views = new [] { "TableView" };
+            // Массивы
 
-            var userViews = db.UserViews.Where(uv =>
-                views.Contains(uv.Name) && uv.Id != currUv.Id && db.UVEntities.Where(uve =>
-                    uve.UserViewId == uv.Id && entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
-                ).Any()
-            ).ToList();
+            var viewsMultiple = new [] { "TableView" };
 
+
+            // Первый пернкт меню
 
             dynamic menuModel = new List<ExpandoObject>();
             dynamic subMenuModel1 = new ExpandoObject();
@@ -68,8 +68,48 @@ namespace FunWithFlags.FunApp
             subMenuModel1.Sub = new List<ExpandoObject>();
             menuModel.Add(subMenuModel1);
 
-            if (views.Contains(currUv.Name)) {
-                //menuModel.Add(new List<ExpandoObject>());
+
+            // Второй пункт меню
+
+            UserView tView = currUv;
+            if (!viewsMultiple.Contains(currUv.Name)) {
+                tView = db.UserViews.First(uv =>
+                    viewsMultiple.Contains(currUv.Name) &&
+                    db.UVEntities.Where(uve =>
+                        uve.UserViewId == uv.Id && 
+                        entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
+                    ).Any()
+                );
+            }
+            var userViews = db.UserViews.Where(uv =>
+                viewsMultiple.Contains(uv.Name) && 
+                uv.Id != tView.Id && 
+                db.UVEntities.Where(uve =>
+                    uve.UserViewId == uv.Id && 
+                    entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
+                ).Any()
+            ).ToList();
+
+            dynamic subMenuModel2 = new ExpandoObject();
+            subMenuModel2.Name = tView.Name;
+            subMenuModel2.Link = System.String.Format("../uv/{0}",tView.Id);
+            subMenuModel2.Sub = new List<ExpandoObject>();
+            menuModel.Add(subMenuModel2);
+
+
+            // Подменю второго пункта
+
+            for(int i = 0; i < userViews.Count; i++){
+                dynamic subMenuModel3 = new ExpandoObject();
+                subMenuModel3.Name = userViews[i].Name;
+                subMenuModel3.Link = System.String.Format("../uv/{0}",userViews[i].Id);
+                menuModel[1].Add(subMenuModel2);
+            }
+
+
+
+            if (viewsMultiple.Contains(currUv.Name)) {
+                
             } else {
 
             }
