@@ -61,16 +61,22 @@ namespace FunWithFlags.FunApp
             ).ToList();
 
 
-            dynamic menuModel = new [] 
+            dynamic menuModel = new List<ExpandoObject>();
+            menuModel.Add();
+            /*
             {
-                new { Name = entities, Link = "../nav", Sub = new dynamic[] { } },
-                new { Name = currUv.Name, Link = System.String.Format("../uv/{0}",currUv.Id), Sub = new dynamic[]
+                new ExpandoObject  { 
+                    Name = entities, 
+                    Link = "../nav", 
+                    Sub = new dynamic[] { } 
+                },
+                new List<ExpandoObject>  { Name = currUv.Name, Link = System.String.Format("../uv/{0}",currUv.Id), Sub = new dynamic[]
                     {
                         new { Name = "Представление", Link = "../uv/1" }
                     }
                 }
             };
-            
+             */
 
             return menuModel;
         }
