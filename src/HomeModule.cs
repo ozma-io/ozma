@@ -149,6 +149,9 @@ namespace FunWithFlags.FunApp
 
             Get("/nav/", _ =>
             {
+                // Массивы
+                var viewsMultiple = new [] { "Table" };
+
                 var model = new
                 {
                     // ! Создаем модель выгружаем данные по сущностям из базы на основании доступов пользователя к этим сущностям
@@ -157,12 +160,20 @@ namespace FunWithFlags.FunApp
                         entity => entity.MenuCategoryId,
                         (category, entities) => new {
                             Category = category, 
-                            Entities = entities.Join(db.UVEntities,
+                            Entities = entities.GroupJoin(db.UVEntities,
                                 e => e.Id,
                                 uve => uve.EntityId,
-                                (e, uve) => new {
+                                (e, uves) => new {
                                     DisplayNamePlural = e.DisplayNamePlural,
-                                    Link = System.String.Format("../uv/{0}",uve.UserViewId)
+                                    Link = System.String.Format("../uv/{0}",
+                                        uves.First(myuve =>
+                                            myuve.EntityId == e.Id &&
+                                            db.UserViews.Where(myuv =>
+                                                myuv.Id == myuve.UserViewId &&
+                                                viewsMultiple.Contains(myuv.Type)
+                                            ).Any()
+                                        ).UserViewId
+                                    )
                                 }
                             ).ToList()
                         }
