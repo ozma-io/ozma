@@ -72,6 +72,9 @@ namespace FunWithFlags.FunApp
             // Второй пункт меню
 
             UserView tView = currUv;
+
+            throw new ArgumentException($"User view doesn't exist: {currUv.Name}");
+
             if (!viewsMultiple.Contains(currUv.Name)) {
                 tView = db.UserViews.First(uv =>
                     viewsMultiple.Contains(currUv.Name) &&
