@@ -74,7 +74,7 @@ namespace FunWithFlags.FunApp
             UserView tView = currUv;
             if (!viewsMultiple.Contains(currUv.Type)) {
                 tView = db.UserViews.First(uv =>
-                    viewsMultiple.Contains(currUv.Type) &&
+                    viewsMultiple.Contains(uv.Type) &&
                     db.UVEntities.Where(uve =>
                         uve.UserViewId == uv.Id && 
                         entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
