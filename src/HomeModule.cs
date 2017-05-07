@@ -161,21 +161,12 @@ namespace FunWithFlags.FunApp
                                 e => e.Id,
                                 uve => uve.EntityId,
                                 (e, uve) => new {
-                                    Name = e.DisplayNamePlural,
-                                    Link = "../uv/{0}",uve.UserViewId
+                                    DisplayNamePlural = e.DisplayNamePlural,
+                                    Link = System.String.Format("../uv/{0}",uve.UserViewId)
                                 }
                             ).ToList()
                         }
-                    ).ToList(),
-
-                    Entities = db.Entities.Join(db.UVEntities,
-                        e => e.Id,
-                        uve => uve.EntityId,
-                        (e, uve) => new {
-                            Name = e.DisplayNamePlural,
-                            Link = "../uv/{0}",uve.UserViewId
-                        }
-                    )
+                    ).ToList()
                 };
                 
 /*
