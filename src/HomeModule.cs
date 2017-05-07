@@ -107,12 +107,35 @@ namespace FunWithFlags.FunApp
             }
 
 
+            // Третий пункт (опицонально)
 
-            if (viewsMultiple.Contains(currUv.Name)) {
-                
-            } else {
+            if (!viewsMultiple.Contains(currUv.Type)) {
+                dynamic subMenuModel4 = new ExpandoObject();
+                subMenuModel4.Name = currUv.Name;
+                subMenuModel4.Link = System.String.Format("../uv/{0}",currUv.Id);
+                subMenuModel4.Sub = new List<ExpandoObject>();
+                menuModel.Add(subMenuModel4);
 
+
+                // Подменю третьего пункта
+
+                var userViews2 = db.UserViews.Where(uv =>
+                    !viewsMultiple.Contains(uv.Name) && 
+                    uv.Id != currUv.Id && 
+                    db.UVEntities.Where(uve =>
+                        uve.UserViewId == uv.Id && 
+                        entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
+                    ).Any()
+                ).ToList();
+
+                for(int i = 0; i < userViews2.Count; i++){
+                    dynamic subMenuModel5 = new ExpandoObject();
+                    subMenuModel5.Name = userViews2[i].Name;
+                    subMenuModel5.Link = System.String.Format("../uv/{0}",userViews2[i].Id);
+                    menuModel[2].Add(subMenuModel5);
+                }
             }
+            
 
             /*
             {
