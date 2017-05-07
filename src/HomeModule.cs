@@ -62,10 +62,11 @@ namespace FunWithFlags.FunApp
 
 
             dynamic menuModel = new List<ExpandoObject>();
-            menuModel.Add(new ExpandoObject());
-            menuModel[0].Name = entities;
-            menuModel[0].Link = "../nav";
-            menuModel[0].Sub = new List<ExpandoObject>();
+            dynamic subMenuModel1 = new List<ExpandoObject>();
+            subMenuModel1.Name = entities;
+            subMenuModel1.Link = "../nav";
+            subMenuModel1.Sub = new List<ExpandoObject>();
+            menuModel.Add(subMenuModel1);
 
             if (views.Contains(currUv.Name)) {
                 //menuModel.Add(new List<ExpandoObject>());
