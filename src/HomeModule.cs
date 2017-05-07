@@ -152,16 +152,39 @@ namespace FunWithFlags.FunApp
                 var model = new
                 {
                     // ! Создаем модель выгружаем данные по сущностям из базы на основании доступов пользователя к этим сущностям
-                    MenuCategories = db.MenuCategories
-                    .GroupJoin(db.Entities,
+                    MenuCategories = db.MenuCategories.GroupJoin(db.Entities,
                         category => category.Id,
                         entity => entity.MenuCategoryId,
-                        (category, entities) => new { 
+                        (category, entities) => new {
                             Category = category, 
-                            Entities = entities.ToList() 
-                        })
-                    .ToList()
+                            Entities = entities.Join(db.UVEntities,
+                                e => e.Id,
+                                uve => uve.EntityId,
+                                (e, uve) => new {
+                                    Name = e.DisplayNamePlural,
+                                    Link = "../uv/{0}",uve.UserViewId
+                                }
+                            ).ToList()
+                        }
+                    ).ToList(),
+
+                    Entities = db.Entities.Join(db.UVEntities,
+                        e => e.Id,
+                        uve => uve.EntityId,
+                        (e, uve) => new {
+                            Name = e.DisplayNamePlural,
+                            Link = "../uv/{0}",uve.UserViewId
+                        }
+                    )
                 };
+                
+/*
+                for(int i = 0; i < model.MenuCategories.Count; i++) {
+                    for(int j = 0; j < model.MenuCategories[i].Entities.Count; j++) {
+                        model.MenuCategories[i].Entities[j].Link = "../1";
+                    }
+                }
+ */
 
                 // ! - дописат добавление ссылок на кнопки
 
