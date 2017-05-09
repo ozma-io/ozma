@@ -48,6 +48,7 @@ namespace FunWithFlags.FunApp.Views
             IEnumerable<System.Tuple<string, string>> strs = Enumerable.Empty<System.Tuple<string, string>>();
             dynamic flds = dbmodel.Entries[0].Fields;
             string tstr = "";
+            
             for(int i = 0; i < flds.Count; i++) {
                 tstr = flds[i].Name;
                 strs.Append(Tuple.Create(tstr,string.Join(null, sl, quote, tstr, sl, quote)));
