@@ -23,7 +23,7 @@
                 <table>
                     <tbody>
                         @Each.Entries
-                            @Partial['TableLine', @Current]
+                            @Partial['TableLine', Current]
                         @EndEach
                     </tbody>
                 </table>
