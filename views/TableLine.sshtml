@@ -1,5 +1,5 @@
 <tr class="bl" onclick="window.location.href='../uv/2'">
-    @Each.Current
+    @Each
         <td data-type="text" style="min-width:300px ; max-width:300px">@Current</td>
     @EndEach
 </tr>
