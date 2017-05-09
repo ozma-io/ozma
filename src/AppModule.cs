@@ -9,11 +9,12 @@ namespace FunWithFlags.FunApp
     using System.Dynamic;
 
     using FunWithFlags.FunCore;
+    using FunWithFlags.FunDB;
     using FunWithFlags.FunApp.Views;
 
     public class AppModule : NancyModule
     {
-        private dynamic GetMenuBar(DatabaseContext db, UserDatabaseContext userDb, UserView currUv)
+        private dynamic GetMenuBar(DatabaseContext db, DBQuery userDb, UserView currUv)
         {
             // Временная реализация меню - Вывести в одельную функцию и привязать ко всем вью.cs
 
@@ -139,7 +140,7 @@ namespace FunWithFlags.FunApp
             return menuModel;
         }
 
-        public AppModule(DatabaseContext db, UserDatabaseContext userDb)
+        public AppModule(DatabaseContext db, DBQuery userDb)
         {
             this.RequiresAuthentication();
 

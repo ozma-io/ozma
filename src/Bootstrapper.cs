@@ -13,6 +13,7 @@ namespace FunWithFlags.FunApp
     using Autofac;
 
     using FunWithFlags.FunCore;
+    using FunWithFlags.FunDB;
 
     /// <summary>
     /// Returns current working directory as the root path for views.
@@ -31,7 +32,7 @@ namespace FunWithFlags.FunApp
     public class CustomBootstrapper : AutofacNancyBootstrapper
     {
         private DbContextOptions<DatabaseContext> dbOptions;
-        private DbContextOptions<UserDatabaseContext> userDbOptions;
+        private string userDbString;
         private string environmentName;
         
         public CustomBootstrapper(IHostingEnvironment env, IConfiguration configuration)
@@ -41,9 +42,7 @@ namespace FunWithFlags.FunApp
                 .UseNpgsql(configuration["database"]);
             this.dbOptions = optionsBuilder.Options;
 
-            var userOptionsBuilder = new DbContextOptionsBuilder<UserDatabaseContext>()
-                .UseNpgsql(configuration["database"]);
-            this.userDbOptions = userOptionsBuilder.Options;
+            this.userDbString = configuration["user_database"];
 
             this.environmentName = env.EnvironmentName;
         }
@@ -84,7 +83,7 @@ namespace FunWithFlags.FunApp
             // Provide database context if needed.
             // Disposable objects must be registered as single instances to ensure cleanup.
             builder.Register(c => new DatabaseContext(this.dbOptions)).As<DatabaseContext>().SingleInstance();
-            builder.Register(c => new UserDatabaseContext(this.userDbOptions)).As<UserDatabaseContext>().SingleInstance();
+            builder.Register(c => new DBQuery(this.userDbString)).As<DBQuery>().SingleInstance();
 
             builder.Update(container.ComponentRegistry);
         }

@@ -5,6 +5,7 @@ namespace FunWithFlags.FunApp.Views
     using System.Collections.Generic;
 
     using FunWithFlags.FunCore;
+    using FunWithFlags.FunDB;
 
     public class FormView : View
     {
@@ -18,7 +19,7 @@ namespace FunWithFlags.FunApp.Views
             get { return ViewType.Single; }
         }
 
-        public ExpandoObject Get(DatabaseContext db, UserDatabaseContext userDb, UserView uv)
+        public ExpandoObject Get(DatabaseContext db, DBQuery userDb, UserView uv)
         {
             dynamic model = new ExpandoObject();
             

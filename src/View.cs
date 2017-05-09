@@ -3,6 +3,7 @@ namespace FunWithFlags.FunApp
     using System.Dynamic;
     
     using FunWithFlags.FunCore;
+    using FunWithFlags.FunDB;
 
     public enum ViewType {Single, Multiple, None}; 
 
@@ -12,6 +13,6 @@ namespace FunWithFlags.FunApp
 
         ViewType ViewType { get; }
 
-        ExpandoObject Get(DatabaseContext db, UserDatabaseContext userDb, UserView uv);
+        ExpandoObject Get(DatabaseContext db, DBQuery userDb, UserView uv);
     }
 }
