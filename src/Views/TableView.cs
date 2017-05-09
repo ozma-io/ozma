@@ -45,10 +45,12 @@ namespace FunWithFlags.FunApp.Views
             const string quote = "\"";
             const string sl = "\\";
 
-            string[,] strs = new string[,] {};
-            for(int i = 0; i < dbmodel.Entries[0].Fields.Count; i++) {
-                strs[i,0] = dbmodel.Entries[0].Fields[i].Name;
-                strs[i,1] = string.Join(null, sl, quote, strs[i,0], sl, quote);
+            System.Collections.Generic.IEnumerable<System.Tuple<string, string>> strs = null;
+            string tstr = "";
+            dynamic flds = dbmodel.Entries[0].Fields;
+            for(int i = 0; i < flds.Count; i++) {
+                tstr = flds[i].Name;
+                strs.Append(Tuple.Create(tstr,string.Join(null, sl, quote, tstr, sl, quote)));
             }
 
             model.Entries = userDb.Query(dbmodel.Entries[0].Entity.Name, strs, "");
