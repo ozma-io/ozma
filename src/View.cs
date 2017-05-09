@@ -13,6 +13,8 @@ namespace FunWithFlags.FunApp
 
         ViewType ViewType { get; }
 
-        ExpandoObject Get(DatabaseContext db, DBQuery userDb, UserView uv);
+        // FIXME: Don't give DatabaseContext! Everything can be loaded from database during preparations.
+        ExpandoObject Get(DatabaseContext db, DBQuery userDb, UserView uv, ExpandoObject getPars);
+        ExpandoObject Post(DatabaseContext db, DBQuery userDb, UserView uv, ExpandoObject getPars, ExpandoObject postPars);
     }
 }
