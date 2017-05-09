@@ -5,7 +5,9 @@ namespace FunWithFlags.FunApp
     using Microsoft.Extensions.Configuration;
     using Microsoft.EntityFrameworkCore;
     using Nancy;
+    using Nancy.Bootstrapper;
     using Nancy.Bootstrappers.Autofac;
+    using Nancy.Authentication.Forms;
     using Nancy.Configuration;
     using Nancy.Conventions;
     using Autofac;
@@ -50,7 +52,7 @@ namespace FunWithFlags.FunApp
         {
             base.Configure(environment);
 
-            if(environmentName == "Debug")
+            if (environmentName == "Debug")
             {
                 environment.Tracing(enabled: false, displayErrorTraces: true);
                 environment.Views(runtimeViewUpdates: true, runtimeViewDiscovery: true);
@@ -71,7 +73,7 @@ namespace FunWithFlags.FunApp
         }
 
         /// <summary>
-        /// Called on each new request; registers objects that are provided to modules per request.
+        /// Registers objects that are provided to modules per request.
         /// </summary>
         protected override void ConfigureRequestContainer(ILifetimeScope container, NancyContext context)
         {
@@ -85,6 +87,23 @@ namespace FunWithFlags.FunApp
             builder.Register(c => new UserDatabaseContext(this.userDbOptions)).As<UserDatabaseContext>().SingleInstance();
 
             builder.Update(container.ComponentRegistry);
+        }
+
+        /// <summary>
+        /// Sets per-request hooks.
+        /// </summary>
+        protected override void RequestStartup(ILifetimeScope container, IPipelines pipelines, NancyContext context)
+        {
+            base.RequestStartup(container, pipelines, context);
+            
+            var db = container.Resolve<DatabaseContext>();
+
+            var formsAuthConfiguration = new FormsAuthenticationConfiguration()
+                {
+                    RedirectUrl = "~/login",
+                    UserMapper = new CustomUserMapper(db)
+                };
+            FormsAuthentication.Enable(pipelines, formsAuthConfiguration);
         }
     }
 }

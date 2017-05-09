@@ -5,16 +5,16 @@ namespace FunWithFlags.FunApp
     using Microsoft.EntityFrameworkCore;
     using System.Collections.Generic;
     using Nancy;
+    using Nancy.Security;
     using System.Dynamic;
 
     using FunWithFlags.FunCore;
     using FunWithFlags.FunApp.Views;
 
-    public class HomeModule : NancyModule
+    public class AppModule : NancyModule
     {
         private dynamic GetMenuBar(DatabaseContext db, UserDatabaseContext userDb, UserView currUv)
         {
-
             // Временная реализация меню - Вывести в одельную функцию и привязать ко всем вью.cs
 
             /*
@@ -139,12 +139,13 @@ namespace FunWithFlags.FunApp
             return menuModel;
         }
 
-        public HomeModule(DatabaseContext db, UserDatabaseContext userDb)
-        {        
-            // ! Переписать авторизацию на авторизацию ненси и повесить защиту на остальные запросы
+        public AppModule(DatabaseContext db, UserDatabaseContext userDb)
+        {
+            this.RequiresAuthentication();
+
             Get("/", _ =>
             {
-                return View["Authorization"];
+                return this.Response.AsRedirect("~/nav");
             });
 
             Get("/nav/", _ =>
@@ -200,7 +201,7 @@ namespace FunWithFlags.FunApp
             {
                 var id = (int)pars.Id;
                 var uv = db.UserViews.First(u => u.Id == id);
-                if(uv == null)
+                if (uv == null)
                 {
                     throw new ArgumentException($"User view doesn't exist: {uv}");
                 }

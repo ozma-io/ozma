@@ -8,15 +8,9 @@ namespace FunWithFlags.FunApp
 
     public interface View
     {
-        string ViewName
-        {
-            get;
-        }
+        string ViewName { get; }
 
-        ViewType ViewType
-        {
-            get;
-        }
+        ViewType ViewType { get; }
 
         ExpandoObject Get(DatabaseContext db, UserDatabaseContext userDb, UserView uv);
     }
