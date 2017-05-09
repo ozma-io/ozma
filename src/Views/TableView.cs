@@ -41,20 +41,6 @@ namespace FunWithFlags.FunApp.Views
                     ).ToList()
                 }
             ).ToList();
-            
-
-            /*
-            const string quote = "\"";
-
-            var strs = new List<Tuple<string, string>>();
-            dynamic flds = dbmodel.Entries[0].Fields;
-            string tstr = "";
-
-            for(int i = 0; i < flds.Count; i++) {
-                tstr = flds[i].Name;
-                strs.Add(Tuple.Create(tstr,string.Join(null, quote, tstr, quote)));
-            }
-             */
 
             var strs = dbmodel[0].Fields.Select(f => Tuple.Create(f.Name, $"\"{f.Name}\""));
 
