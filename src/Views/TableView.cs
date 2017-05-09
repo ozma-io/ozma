@@ -24,9 +24,9 @@ namespace FunWithFlags.FunApp.Views
         {
             dynamic model = new ExpandoObject();
             
-            // Использовать фильтр UV
-            dynamic dbmodel = new ExpandoObject();
-            dbmodel.Entries = db.Entities.Where(e =>
+
+            //dynamic dbmodel = new ExpandoObject();
+            var dbmodel = db.Entities.Where(e =>
                 db.UVEntities.Where(uve =>
                     uve.EntityId == e.Id &&
                     uve.UserViewId == uv.Id
@@ -42,8 +42,9 @@ namespace FunWithFlags.FunApp.Views
                 }
             ).ToList();
             
+
+            /*
             const string quote = "\"";
-            const string sl = "\\";
 
             var strs = new List<Tuple<string, string>>();
             dynamic flds = dbmodel.Entries[0].Fields;
@@ -51,10 +52,13 @@ namespace FunWithFlags.FunApp.Views
 
             for(int i = 0; i < flds.Count; i++) {
                 tstr = flds[i].Name;
-                strs.Add(Tuple.Create(tstr,string.Join(null, sl, quote, tstr, sl, quote)));
+                strs.Add(Tuple.Create(tstr,string.Join(null, quote, tstr, quote)));
             }
+             */
 
-            model.Entries = userDb.Query(dbmodel.Entries[0].Entity.Name, strs, "");
+            var strs = dbmodel[0].Fields.Select(f => Tuple.Create(f.Name, $"\"{f.Name}\""));
+
+            model.Entries = userDb.Query(dbmodel[0].Entity.Name, strs, "");
 
             /*
             model.Entries = userDb.Query("Tests", new[]
