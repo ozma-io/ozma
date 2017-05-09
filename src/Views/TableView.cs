@@ -45,9 +45,9 @@ namespace FunWithFlags.FunApp.Views
             const string quote = "\"";
             const string sl = "\\";
 
-            System.Collections.Generic.IEnumerable<System.Tuple<string, string>> strs = null;
-            string tstr = "";
+            IEnumerable<System.Tuple<string, string>> strs = Enumerable.Empty<System.Tuple<string, string>>();
             dynamic flds = dbmodel.Entries[0].Fields;
+            string tstr = "";
             for(int i = 0; i < flds.Count; i++) {
                 tstr = flds[i].Name;
                 strs.Append(Tuple.Create(tstr,string.Join(null, sl, quote, tstr, sl, quote)));
