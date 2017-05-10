@@ -6,7 +6,7 @@
 
 @Section['Content']
     <div class="main_nav">
-        <div class="submain_nav">
+        <div class="submain_nav" style="background:#f2ad00">
             <div class="subsubmain_nav">
                 @Each.MenuCategories
                     <div class="nav_sec">

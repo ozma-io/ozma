@@ -180,7 +180,9 @@ namespace FunWithFlags.FunApp
                                 }
                             ).OrderBy(t => t.OrdNum).ToList()
                         }
-                    ).OrderBy(t => t.Category.OrdinalNum).ToList()
+                    ).OrderBy(t => t.Category.OrdinalNum).ToList(),
+
+                    Color = db.Settings.Single(s => s.Name == "bgcolor").Value
                 };
 
                 // Удаляем пустые менюкатегории (без Сущностей)
