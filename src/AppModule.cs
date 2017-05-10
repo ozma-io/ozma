@@ -179,7 +179,7 @@ namespace FunWithFlags.FunApp
                                 }
                             ).ToList()
                         }
-                    ).ToList()
+                    ).OrderBy(t => t.Category.OrdinalNum).ToList()
                 };
                 
 /*
