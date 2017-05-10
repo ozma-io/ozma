@@ -167,6 +167,7 @@ namespace FunWithFlags.FunApp
                                 uve => uve.EntityId,
                                 (e, uves) => new {
                                     DisplayNamePlural = e.DisplayNamePlural,
+                                    OrdNum = e.MenuCategoryOrdinalNum,
                                     Link = System.String.Format("../uv/{0}",
                                         uves.First(myuve =>
                                             myuve.EntityId == e.Id &&
@@ -177,7 +178,7 @@ namespace FunWithFlags.FunApp
                                         ).UserViewId
                                     )
                                 }
-                            ).ToList()
+                            ).OrderBy(t => t.OrdNum).ToList()
                         }
                     ).OrderBy(t => t.Category.OrdinalNum).ToList()
                 };
