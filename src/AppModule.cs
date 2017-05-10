@@ -182,16 +182,6 @@ namespace FunWithFlags.FunApp
                         }
                     ).OrderBy(t => t.Category.OrdinalNum).ToList()
                 };
-                
-/*
-                for(int i = 0; i < model.MenuCategories.Count; i++) {
-                    for(int j = 0; j < model.MenuCategories[i].Entities.Count; j++) {
-                        model.MenuCategories[i].Entities[j].Link = "../1";
-                    }
-                }
- */
-
-                // ! - дописат добавление ссылок на кнопки
 
                 // Удаляем пустые менюкатегории (без Сущностей)
                 model.MenuCategories.RemoveAll((mc) => { return mc.Entities.Count == 0; });
@@ -249,9 +239,9 @@ namespace FunWithFlags.FunApp
 
                 Запускаем sshtml с выгруженной моделью меню и данных
                 */
+
                 dynamic tModel = view.Get(db, userDb, uv, this.Request.Query);
                 tModel.MenuBar = this.GetMenuBar(db, userDb, uv);
-                //throw new ArgumentException($"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!: {tModel.Titles[0].Name} !!!!!!!!!!");
                 return View[view.ViewName, tModel];
             });
         }
