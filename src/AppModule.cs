@@ -14,7 +14,7 @@ namespace FunWithFlags.FunApp
 
     public class AppModule : NancyModule
     {
-        private dynamic GetMenuBar(DatabaseContext db, DBQuery userDb, UserView currUv)
+        private List<ExpandoObject> GetMenuBar(DatabaseContext db, UserView currUv)
         {
             // Временная реализация меню - Вывести в одельную функцию и привязать ко всем вью.cs
 
@@ -140,9 +140,10 @@ namespace FunWithFlags.FunApp
             return menuModel;
         }
 
-        public AppModule(DatabaseContext db, DBQuery userDb)
+        public AppModule(DBQuery dbQuery)
         {
             this.RequiresAuthentication();
+            var db = dbQuery.Database;
 
             Get("/", _ =>
             {
@@ -242,8 +243,8 @@ namespace FunWithFlags.FunApp
                 Запускаем sshtml с выгруженной моделью меню и данных
                 */
 
-                dynamic tModel = view.Get(db, userDb, uv, this.Request.Query);
-                tModel.MenuBar = this.GetMenuBar(db, userDb, uv);
+                var tModel = view.Get(dbQuery, uv, this.Request.Query);
+                tModel.MenuBar = this.GetMenuBar(db, uv);
                 return View[view.ViewName, tModel];
             });
         }

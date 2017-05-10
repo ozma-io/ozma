@@ -3,7 +3,6 @@ namespace FunWithFlags.FunApp
     using System.IO;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
-    using Microsoft.EntityFrameworkCore;
     using Nancy;
     using Nancy.Bootstrapper;
     using Nancy.Bootstrappers.Autofac;
@@ -31,17 +30,13 @@ namespace FunWithFlags.FunApp
     /// </summary>
     public class CustomBootstrapper : AutofacNancyBootstrapper
     {
-        private DbContextOptions<DatabaseContext> dbOptions;
+        private string dbString;
         private string userDbString;
         private string environmentName;
         
         public CustomBootstrapper(IHostingEnvironment env, IConfiguration configuration)
         {
-            // Build database connection options.
-            var optionsBuilder = new DbContextOptionsBuilder<DatabaseContext>()
-                .UseNpgsql(configuration["database"]);
-            this.dbOptions = optionsBuilder.Options;
-
+            this.dbString = configuration["database"];
             this.userDbString = configuration["user_database"];
 
             this.environmentName = env.EnvironmentName;
@@ -82,8 +77,7 @@ namespace FunWithFlags.FunApp
 
             // Provide database context if needed.
             // Disposable objects must be registered as single instances to ensure cleanup.
-            builder.Register(c => new DatabaseContext(this.dbOptions)).As<DatabaseContext>().SingleInstance();
-            builder.Register(c => new DBQuery(this.userDbString)).As<DBQuery>().SingleInstance();
+            builder.Register(c => new DBQuery(this.dbString, this.userDbString)).As<DBQuery>().SingleInstance();
 
             builder.Update(container.ComponentRegistry);
         }
@@ -95,12 +89,12 @@ namespace FunWithFlags.FunApp
         {
             base.RequestStartup(container, pipelines, context);
             
-            var db = container.Resolve<DatabaseContext>();
+            var db = container.Resolve<DBQuery>();
 
             var formsAuthConfiguration = new FormsAuthenticationConfiguration()
                 {
                     RedirectUrl = "~/login",
-                    UserMapper = new CustomUserMapper(db)
+                    UserMapper = new CustomUserMapper(db.Database)
                 };
             FormsAuthentication.Enable(pipelines, formsAuthConfiguration);
         }

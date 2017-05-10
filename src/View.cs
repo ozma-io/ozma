@@ -1,6 +1,7 @@
 namespace FunWithFlags.FunApp
 {
     using System.Dynamic;
+    using Nancy;
     
     using FunWithFlags.FunCore;
     using FunWithFlags.FunDB;
@@ -14,7 +15,7 @@ namespace FunWithFlags.FunApp
         ViewType ViewType { get; }
 
         // FIXME: Don't give DatabaseContext! Everything can be loaded from database during preparations.
-        ExpandoObject Get(DatabaseContext db, DBQuery userDb, UserView uv, ExpandoObject getPars);
-        ExpandoObject Post(DatabaseContext db, DBQuery userDb, UserView uv, ExpandoObject getPars, ExpandoObject postPars);
+        ExpandoObject Get(DBQuery dbQuery, UserView uv, DynamicDictionary getPars);
+        ExpandoObject Post(DBQuery dbQuery, UserView uv, DynamicDictionary getPars, DynamicDictionary postPars);
     }
 }

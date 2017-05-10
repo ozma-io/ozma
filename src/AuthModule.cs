@@ -11,6 +11,7 @@ namespace FunWithFlags.FunApp
     using Nancy.Authentication.Forms;
 
     using FunWithFlags.FunCore;
+    using FunWithFlags.FunDB;
 
     public class CustomUserMapper : IUserMapper
     {
@@ -37,7 +38,7 @@ namespace FunWithFlags.FunApp
     
     public class AuthModule : NancyModule
     {
-        public AuthModule(DatabaseContext db)
+        public AuthModule(DBQuery db)
         {
             Get("/login", args =>
             {
@@ -51,7 +52,7 @@ namespace FunWithFlags.FunApp
             Post("/login", args =>
             {
                 var name = (string)this.Request.Form.name ?? "";
-                var user = db.Users.Where(u => u.Name == name).FirstOrDefault();
+                var user = db.Database.Users.Where(u => u.Name == name).FirstOrDefault();
                 if (user != null && user.CheckPassword((string)this.Request.Form.password))
                 {
                     DateTime? expiry = null;

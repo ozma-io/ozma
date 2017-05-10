@@ -4,6 +4,7 @@ namespace FunWithFlags.FunApp.Views
     using System.Dynamic;
     using System.Linq;
     using System.Collections.Generic;
+    using Nancy;
 
     using FunWithFlags.FunCore;
     using FunWithFlags.FunDB;
@@ -20,12 +21,11 @@ namespace FunWithFlags.FunApp.Views
             get { return ViewType.Multiple; }
         }
 
-        public ExpandoObject Get(DatabaseContext db, DBQuery userDb, UserView uv, ExpandoObject getPars)
+        public ExpandoObject Get(DBQuery dbQuery, UserView uv, DynamicDictionary getPars)
         {
+            var db = dbQuery.Database;
             dynamic model = new ExpandoObject();
-            
 
-            //dynamic dbmodel = new ExpandoObject();
             var dbmodel = db.Entities.Where(e =>
                 db.UVEntities.Where(uve =>
                     uve.EntityId == e.Id &&
@@ -42,18 +42,18 @@ namespace FunWithFlags.FunApp.Views
                 }
             ).ToList();
 
-            var strs = dbmodel[0].Fields.Select(f => Tuple.Create(f.Name, $"\"{f.Name}\""));
+            var strs = dbmodel[0].Fields.Select(f => $"\"{f.Name}\"");
 
-            model.Entries = userDb.Query(dbmodel[0].Entity.Name, strs, "");
+            model.Entries = dbQuery.Query(dbmodel[0].Entity.Name, strs);
 
             /*
-            model.Entries = userDb.Query("Tests", new[]
+            model.Entries = dbQuery.Query("Tests", new[]
                     {
-                        Tuple.Create("Name", "\"Name\""),
-                        Tuple.Create("Count", "\"Count\""),
-                        Tuple.Create("Description", "\"Description\""),
-                        Tuple.Create("Param1", "\"Param1\""),
-                        Tuple.Create("Param2", "\"Param2\""),
+                        "\"Name\"",
+                        "\"Count\"",
+                        "\"Description\"",
+                        "\"Param1\"",
+                        "\"Param2\"",
                     }, ""
             );
               */
@@ -67,7 +67,7 @@ namespace FunWithFlags.FunApp.Views
             return model;
         }
 
-        public ExpandoObject Post(DatabaseContext db, DBQuery userDb, UserView uv, ExpandoObject getPars, ExpandoObject postPars)
+        public ExpandoObject Post(DBQuery dbQuery, UserView uv, DynamicDictionary getPars, DynamicDictionary postPars)
         {
             throw new NotImplementedException("TableView Post is not implemented");
         }       

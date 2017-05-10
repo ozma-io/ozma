@@ -4,6 +4,7 @@ namespace FunWithFlags.FunApp.Views
     using System.Dynamic;
     using System.Linq;
     using System.Collections.Generic;
+    using Nancy;
 
     using FunWithFlags.FunCore;
     using FunWithFlags.FunDB;
@@ -20,7 +21,7 @@ namespace FunWithFlags.FunApp.Views
             get { return ViewType.Single; }
         }
 
-        public ExpandoObject Get(DatabaseContext db, DBQuery userDb, UserView uv, ExpandoObject getPars)
+        public ExpandoObject Get(DBQuery dbQuery, UserView uv, DynamicDictionary getPars)
         {
             dynamic model = new ExpandoObject();
             
@@ -29,7 +30,7 @@ namespace FunWithFlags.FunApp.Views
             return model;
         }
 
-        public ExpandoObject Post(DatabaseContext db, DBQuery userDb, UserView uv, ExpandoObject getPars, ExpandoObject postPars)
+        public ExpandoObject Post(DBQuery dbQuery, UserView uv, DynamicDictionary getPars, DynamicDictionary postPars)
         {
             throw new NotImplementedException("FormView Post is not implemented");
         }       
