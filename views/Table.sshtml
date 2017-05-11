@@ -20,7 +20,7 @@
                 </table>
             </div>
             <div class="tabl_body" id="tabl_body_1">
-                <table>
+                <table style="background:@Model.Color">
                     <tbody>
                         @Each.Entries
                             <tr class="bl" onclick="window.location.href='../uv/2'">
