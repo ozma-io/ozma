@@ -100,13 +100,12 @@ namespace FunWithFlags.FunApp
 
 
             // Подменю второго пункта
-
+            dynamic subMenuModel3 = new ExpandoObject();
             for(int i = 0; i < userViews.Count; i++){
-                dynamic subMenuModel3 = new ExpandoObject();
                 subMenuModel3.Name = userViews[i].Name;
                 subMenuModel3.Link = System.String.Format("../uv/{0}",userViews[i].Id);
                 subMenuModel3.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-                menuModel.Lists[0].Sub.Add(subMenuModel2);
+                menuModel.Lists[0].Sub.Add(subMenuModel3);
             }
 
 
