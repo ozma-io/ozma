@@ -65,7 +65,7 @@ namespace FunWithFlags.FunApp.Views
             ).ToList();
             */
 
-            var strs = dbmodel[0].UVFields.Select(f => $"\"{f.Name}\"");
+            var strs = dbmodel[0].UVFields.Select(f => $"\"{f.Field.Name}\"");
 
             model.Entries = dbQuery.Query(dbmodel[0].Entity.Name, strs);
 
