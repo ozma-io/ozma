@@ -62,7 +62,11 @@ namespace FunWithFlags.FunApp.Views
 
             var strs = dbmodel[0].UVFields.Select(f => $"\"{f.Field.Name}\"");
 
-            model.Entries = dbQuery.Query(dbmodel[0].Entity.Name, strs);
+            model.Entries = dbQuery.Query(dbmodel[0].Entity.Name, strs).Select(l =>
+                l.Select(a =>
+                    a += "aaaaaaaaa"
+                ).ToArray()
+            );
 
             /*
             model.Entries = dbQuery.Query("Tests", new[]
@@ -75,13 +79,7 @@ namespace FunWithFlags.FunApp.Views
                     }, ""
             );
             */
-/* 
-            model.Entries.Select(l =>
-                l.Select(a =>
-                    a += "aaaaaaaaa"
-                ).ToArray()
-            ).ToList();
-*/
+            
             model.Titles = db.UVFields.Where(uvf =>
                 uvf.UserViewId == uv.Id
             ).OrderBy(t => t.OrdNum).ToList();
