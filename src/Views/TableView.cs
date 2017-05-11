@@ -29,6 +29,10 @@ namespace FunWithFlags.FunApp.Views
             var db = dbQuery.Database;
             dynamic model = new ExpandoObject();
 
+            model.Titles = db.UVFields.Where(uvf =>
+                uvf.UserViewId == uv.Id
+            ).OrderBy(t => t.OrdNum).ToList();
+
             var dbmodel = db.Entities.Where(e =>
                 db.UVEntities.Where(uve =>
                     uve.EntityId == e.Id &&
@@ -45,28 +49,14 @@ namespace FunWithFlags.FunApp.Views
                     ).OrderBy(t => t.OrdNum).ToList()
                 }
             ).ToList();
-            
-            
-            /* 
-            ).GroupJoin(db.Fields,
-                ent => ent.Id,
-                fld => fld.EntityId,
-                (ent, fld) => new {
-                    Entity = ent,
-                    Fields = fld.Where(tf =>
-                        tf.EntityId == ent.Id
-                    ).ToList()
-                }
-            ).ToList();
-            */
 
             var strs = dbmodel[0].UVFields.Select(f => $"\"{f.Field.Name}\"");
 
             model.Entries = dbQuery.Query(dbmodel[0].Entity.Name, strs).Select(l =>
-                l.Select(a => new
+                l.Select((a,i) => new
                     {
                         Value = a,
-                        Width = "200px"
+                        Width = model.Titles[i].Width
                     }
                 )
             );
@@ -82,10 +72,6 @@ namespace FunWithFlags.FunApp.Views
                     }, ""
             );
             */
-
-            model.Titles = db.UVFields.Where(uvf =>
-                uvf.UserViewId == uv.Id
-            ).OrderBy(t => t.OrdNum).ToList();
  
             model.View = uv;
 
