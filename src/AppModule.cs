@@ -14,7 +14,7 @@ namespace FunWithFlags.FunApp
 
     public class AppModule : NancyModule
     {
-        private List<ExpandoObject> GetMenuBar(DatabaseContext db, UserView currUv)
+        private ExpandoObject GetMenuBar(DatabaseContext db, UserView currUv)
         {
             // Временная реализация меню - Вывести в одельную функцию и привязать ко всем вью.cs
 
