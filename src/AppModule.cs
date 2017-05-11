@@ -63,7 +63,9 @@ namespace FunWithFlags.FunApp
             // Первый пернкт меню
 
             dynamic menuModel = new ExpandoObject();
-            menuModel.Ent = new List<ExpandoObject>();
+            menuModel.Ent = new ExpandoObject();
+            menuModel.Lists = new List<ExpandoObject>();
+
             dynamic subMenuModel1 = new ExpandoObject();
             subMenuModel1.Name = entities;
             subMenuModel1.Link = "../nav";
