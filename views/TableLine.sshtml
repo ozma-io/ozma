@@ -1,3 +1,3 @@
     @Each
-        <td data-type="text" style="min-width:@Current.Width ; max-width:@Current.Width">@Current.Value</td>
+        <td data-type="text" style="min-width:@Current.Width ; max-width:@Current.Width" ; min-height:@Model.Height ; max-height:@Model.Height">@Current.Value</td>
     @EndEach

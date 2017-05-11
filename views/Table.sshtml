@@ -23,7 +23,7 @@
                 <table>
                     <tbody>
                         @Each.Entries
-                            <tr class="bl" onclick="window.location.href='../uv/2'" style="min-height:@Model.Height ; max-height:@Model.Height">
+                            <tr class="bl" onclick="window.location.href='../uv/2'">
                                 @Partial['TableLine', Current]
                             </tr>
                         @EndEach
