@@ -40,10 +40,13 @@ namespace FunWithFlags.FunApp.Views
                 (ent, uvf) => new {
                     Entity = ent,
                     UVFields = uvf.Where(tuvf =>
+                        uvf.Field.EntityId == ent.Id
+                        /* 
                         db.Fields.Where(tf =>
                             tf.EntityId == ent.Id &&
-                            tf.Id == tuvf.FieldID
+                            tf.Id == tuvf.FieldId
                         ).Any()
+                        */
                     ).ToList()
                 }
             ).ToList();
