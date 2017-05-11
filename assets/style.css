@@ -27,7 +27,7 @@ a.bl {
     text-decoration: none;
 }
 a.bl:hover {
-    background-color: #808080
+    /*background-color: #808080*/
 }
 
 
@@ -232,7 +232,7 @@ tr.bl {
 }
 
 tr.bl:hover {
-    background-color: #808080;
+    /*background-color: #808080;*/
     cursor: pointer;
 }
 
