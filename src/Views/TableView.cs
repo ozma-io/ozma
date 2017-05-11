@@ -29,6 +29,8 @@ namespace FunWithFlags.FunApp.Views
             var db = dbQuery.Database;
             dynamic model = new ExpandoObject();
 
+            model.Height = uv.Height;
+
             model.Titles = db.UVFields.Where(uvf =>
                 uvf.UserViewId == uv.Id
             ).OrderBy(t => t.OrdNum).ToList();
