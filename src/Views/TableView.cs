@@ -66,7 +66,7 @@ namespace FunWithFlags.FunApp.Views
                 l.Select(a => new
                     {
                         Value = a,
-                        Width = "20px"
+                        Width = "200px"
                     }
                 )
             );
