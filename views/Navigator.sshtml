@@ -14,7 +14,7 @@
                             <a>@Current.Category.Name</a>
                         </div>
                         <div class="nav_sec_ents">
-                            @Partial['NavEntityList', Current.Entities, Model.Color"]
+                            @Partial['NavEntityList', Current.Entities]
                         </div>
                     </div>
                 @EndEach
