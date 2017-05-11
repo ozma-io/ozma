@@ -84,7 +84,7 @@ namespace FunWithFlags.FunApp
                 );
             }
             var userViews = db.UserViews.Where(uv =>
-                viewsMultiple.Contains(uv.Name) && 
+                viewsMultiple.Contains(uv.Type) && 
                 db.UVEntities.Where(uve =>
                     uve.UserViewId == uv.Id && 
                     entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
