@@ -66,9 +66,8 @@ namespace FunWithFlags.FunApp
             dynamic subMenuModel1 = new ExpandoObject();
             subMenuModel1.Name = entities;
             subMenuModel1.Link = "../nav";
-            subMenuModel1.Sub = new List<ExpandoObject>();
             subMenuModel1.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-            menuModel.Add(subMenuModel1);
+            menuModel.Ent.Add(subMenuModel1);
 
 
             // Второй пункт меню
@@ -85,7 +84,6 @@ namespace FunWithFlags.FunApp
             }
             var userViews = db.UserViews.Where(uv =>
                 viewsMultiple.Contains(uv.Name) && 
-                uv.Id != tView.Id && 
                 db.UVEntities.Where(uve =>
                     uve.UserViewId == uv.Id && 
                     entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
@@ -97,7 +95,7 @@ namespace FunWithFlags.FunApp
             subMenuModel2.Link = System.String.Format("../uv/{0}",tView.Id);
             subMenuModel2.Sub = new List<ExpandoObject>();
             subMenuModel2.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-            menuModel.Add(subMenuModel2);
+            menuModel.Lists.Add(subMenuModel2);
 
 
             // Подменю второго пункта
@@ -107,7 +105,7 @@ namespace FunWithFlags.FunApp
                 subMenuModel3.Name = userViews[i].Name;
                 subMenuModel3.Link = System.String.Format("../uv/{0}",userViews[i].Id);
                 subMenuModel3.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-                menuModel[1].Sub.Add(subMenuModel2);
+                menuModel.Lists[1].Sub.Add(subMenuModel2);
             }
 
 
@@ -119,7 +117,7 @@ namespace FunWithFlags.FunApp
                 subMenuModel4.Link = System.String.Format("../uv/{0}",currUv.Id);
                 subMenuModel4.Sub = new List<ExpandoObject>();
                 subMenuModel4.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-                menuModel.Add(subMenuModel4);
+                menuModel.Lists.Add(subMenuModel4);
 
 
                 // Подменю третьего пункта
@@ -138,7 +136,7 @@ namespace FunWithFlags.FunApp
                     subMenuModel5.Name = userViews2[i].Name;
                     subMenuModel5.Link = System.String.Format("../uv/{0}",userViews2[i].Id);
                     subMenuModel5.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-                    menuModel[2].Sub.Add(subMenuModel5);
+                    menuModel.Lists[2].Sub.Add(subMenuModel5);
                 }
             }
 
