@@ -123,7 +123,6 @@ namespace FunWithFlags.FunApp
 
                 var userViews2 = db.UserViews.Where(uv =>
                     !viewsMultiple.Contains(uv.Type) && 
-                    uv.Id != currUv.Id && 
                     db.UVEntities.Where(uve =>
                         uve.UserViewId == uv.Id && 
                         entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
