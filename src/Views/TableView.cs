@@ -6,6 +6,9 @@ namespace FunWithFlags.FunApp.Views
     using System.Collections.Generic;
     using Nancy;
 
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Infrastructure;
+
     using FunWithFlags.FunCore;
     using FunWithFlags.FunDB;
 
