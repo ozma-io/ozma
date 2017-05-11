@@ -106,7 +106,7 @@ namespace FunWithFlags.FunApp
                 subMenuModel3.Name = userViews[i].Name;
                 subMenuModel3.Link = System.String.Format("../uv/{0}",userViews[i].Id);
                 subMenuModel3.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-                menuModel.Lists[1].Sub.Add(subMenuModel2);
+                menuModel.Lists[0].Sub.Add(subMenuModel2);
             }
 
 
@@ -137,7 +137,7 @@ namespace FunWithFlags.FunApp
                     subMenuModel5.Name = userViews2[i].Name;
                     subMenuModel5.Link = System.String.Format("../uv/{0}",userViews2[i].Id);
                     subMenuModel5.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-                    menuModel.Lists[2].Sub.Add(subMenuModel5);
+                    menuModel.Lists[1].Sub.Add(subMenuModel5);
                 }
             }
 

@@ -4,7 +4,7 @@
         @Each.Lists
             <li>
                 <a class="bl" style="background:@Current.Color">@Current.Name</a>
-                <ul class="submenu" style="background:@Color">
+                <ul class="submenu">
                     @Partial['MenubarSubmenu', Current.Sub]
                 </ul>
             </li>
