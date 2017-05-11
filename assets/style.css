@@ -47,8 +47,8 @@ ul {
 ul.menu > li {
     float: left;
     position: relative;
-    margin-right: 1px;
-    margin-bottom: 1px;
+    /*margin-right: 1px;*/
+    /*margin-bottom: 1px;*/
 }
 ul.menu > li:hover > ul.submenu {
     display: block;
@@ -68,6 +68,7 @@ a.bl {
     float: left;
     position: relative;
     margin-right: 1px;
+    margin-bottom: 1px;
     border: 1px #DCDCDC;
 }
 
