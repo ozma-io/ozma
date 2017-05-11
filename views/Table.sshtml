@@ -23,7 +23,9 @@
                 <table>
                     <tbody>
                         @Each.Entries
-                            @Partial['TableLine', Current]
+                            <tr class="bl" onclick="window.location.href='../uv/2'">
+                                @Partial['TableLine', Current]
+                            </tr>
                         @EndEach
                     </tbody>
                 </table>

@@ -75,7 +75,13 @@ namespace FunWithFlags.FunApp.Views
                     }, ""
             );
             */
-
+/* 
+            model.Entries.Select(l =>
+                l.Select(a =>
+                    a += "aaaaaaaaa"
+                ).ToArray()
+            ).ToList();
+*/
             model.Titles = db.UVFields.Where(uvf =>
                 uvf.UserViewId == uv.Id
             ).OrderBy(t => t.OrdNum).ToList();
