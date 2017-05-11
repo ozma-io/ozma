@@ -31,6 +31,19 @@ namespace FunWithFlags.FunApp.Views
                     uve.EntityId == e.Id &&
                     uve.UserViewId == uv.Id
                 ).Any()
+            ).GroupJoin(db.UVFields,
+                ent => ent.Id,
+                uvf => uvf.Include(tuvf => tuvf.Field).Field.EntityId,
+                (ent, uvf) => new {
+                    Entity = ent,
+                    UVFields = uvf.Where(tf =>
+                        tf.EntityId == ent.Id
+                    ).ToList()
+                }
+            ).ToList();
+            
+            
+            /* 
             ).GroupJoin(db.Fields,
                 ent => ent.Id,
                 fld => fld.EntityId,
@@ -41,6 +54,7 @@ namespace FunWithFlags.FunApp.Views
                     ).ToList()
                 }
             ).ToList();
+            */
 
             var strs = dbmodel[0].Fields.Select(f => $"\"{f.Name}\"");
 
