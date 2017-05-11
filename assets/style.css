@@ -205,7 +205,7 @@ div.tabl_head {
 
 div.tabl_body {
     overflow: scroll;
-    height: 70%;
+    height: 90%;
     width: 100%;
     float: left;
 }
