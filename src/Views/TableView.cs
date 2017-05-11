@@ -63,10 +63,12 @@ namespace FunWithFlags.FunApp.Views
             var strs = dbmodel[0].UVFields.Select(f => $"\"{f.Field.Name}\"");
 
             model.Entries = dbQuery.Query(dbmodel[0].Entity.Name, strs).Select(l =>
-                l.Select(a =>
-                    a.Value = a &&
-                    a.Test = "20px"
-                ).ToArray()
+                l.Select(a => new
+                    {
+                        Value = a,
+                        Width = "20px"
+                    }
+                )
             );
 
             /*
