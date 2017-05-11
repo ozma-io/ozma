@@ -101,7 +101,7 @@ form.aut > input.text {
 form.aut > input.btn {
     padding: 5px;
     border: none;
-    background: #FFFFFF;
+    /*background: #FFFFFF;*/
     text-decoration: none;
     border-radius: none;
 }
