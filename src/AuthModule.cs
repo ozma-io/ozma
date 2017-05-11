@@ -45,7 +45,7 @@ namespace FunWithFlags.FunApp
                 dynamic model = new ExpandoObject();
                 model.Errored = this.Request.Query.error.HasValue;
                 model.Name = this.Request.Query.name.Value;
-                model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
+                //model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
 
                 return View["Login", model];
             });
