@@ -6,7 +6,7 @@
 
 @Section['Content']
     <div class="main_aut">
-        <form class="aut" action="" method="post">
+        <form class="aut" action="" method="post" style="background:@Model.Color">
             <input class= "text" type="text" name="name" placeholder="Логин">
             <input class= "text" type="password" name="password" placeholder="Пароль">
             <input class= "btn" type="submit" value="Войти">
