@@ -66,11 +66,9 @@ namespace FunWithFlags.FunApp
             menuModel.Ent = new ExpandoObject();
             menuModel.Lists = new List<ExpandoObject>();
 
-            dynamic subMenuModel1 = new ExpandoObject();
-            subMenuModel1.Name = entities;
-            subMenuModel1.Link = "../nav";
-            subMenuModel1.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-            menuModel.Ent = subMenuModel1;
+            menuModel.Ent.Name = entities;
+            menuModel.Ent.Link = "../nav";
+            menuModel.Ent.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
 
 
             // Второй пункт меню

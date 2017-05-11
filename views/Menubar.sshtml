@@ -1,6 +1,6 @@
 <div class="mytitle">
     <ul class="menu">
-        <a class="bl" href="@Ent.Link" style="background:@Ent.Color">@Ent.Name</a>
+        <a class="bl" href="@Model.Ent.Link" style="background:@Model.Ent.Color">@Model.Ent.Name</a>
         @Each.Lists
             <li>
                 <a class="bl" style="background:@Current.Color">@Current.Name</a>
