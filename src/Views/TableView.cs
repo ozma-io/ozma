@@ -42,7 +42,7 @@ namespace FunWithFlags.FunApp.Views
                     UVFields = uvf.Where(tuvf =>
                         tuvf.UserViewId == uv.Id &&
                         tuvf.Field.EntityId == ent.Id
-                    ).ToList()
+                    ).OrderBy(t => t.ID).ToList()
                 }
             ).ToList();
             
@@ -62,9 +62,9 @@ namespace FunWithFlags.FunApp.Views
 
             var strs = dbmodel[0].UVFields.Select(f => $"\"{f.Field.Name}\"");
 
-            //model.Entries = dbQuery.Query(dbmodel[0].Entity.Name, strs);
+            model.Entries = dbQuery.Query(dbmodel[0].Entity.Name, strs);
 
-            
+            /*
             model.Entries = dbQuery.Query("Tests", new[]
                     {
                         "\"Name\"",
@@ -74,7 +74,7 @@ namespace FunWithFlags.FunApp.Views
                         "\"Param2\"",
                     }, ""
             );
-            
+            */
 
             model.Titles = db.UVFields.Where(uvf =>
                 uvf.UserViewId == uv.Id
