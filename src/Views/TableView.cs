@@ -37,7 +37,7 @@ namespace FunWithFlags.FunApp.Views
                 (ent, uvf) => new {
                     Entity = ent,
                     UVFields = uvf.Where(tuvf =>
-                        db.Field.Where(tf =>
+                        db.Fields.Where(tf =>
                             tf.EntityId == ent.Id &&
                             tf.Id == tuvf.FieldID
                         ).Any()
