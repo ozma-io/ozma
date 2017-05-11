@@ -42,7 +42,7 @@ namespace FunWithFlags.FunApp.Views
                     UVFields = uvf.Where(tuvf =>
                         tuvf.UserViewId == uv.Id &&
                         tuvf.Field.EntityId == ent.Id
-                    ).OrderBy(t => t.ID).ToList()
+                    ).OrderBy(t => t.OrdNum).ToList()
                 }
             ).ToList();
             
