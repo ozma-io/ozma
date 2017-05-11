@@ -224,6 +224,7 @@ td,th {
     padding: 3px;
     overflow: hidden;
     text-overflow: ellipsis;
+    vertical-align: top;
 }
 
 tr.bl {
