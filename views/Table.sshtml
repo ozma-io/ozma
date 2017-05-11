@@ -9,7 +9,7 @@
         @Partial['Menubar', Model.MenuBar]
         <div class="tabl">
             <div class="tabl_head" id="tabl_head_1">
-                <table>
+                <table style="background:@Model.Color">
                     <thead>
                         <tr>
                             @Each.Titles
