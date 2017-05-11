@@ -64,6 +64,11 @@ ul.submenu {
 ul.submenu > li {
     display: block;
 }
+a.bl {
+    float: left;
+    position: relative;
+    margin-right: 1px;
+}
 
 
 /* Авторизация */
