@@ -64,7 +64,8 @@ namespace FunWithFlags.FunApp.Views
 
             model.Entries = dbQuery.Query(dbmodel[0].Entity.Name, strs).Select(l =>
                 l.Select(a =>
-                    a += "aaaaaaaaa"
+                    a.Value = a &&
+                    a.Test = "20px"
                 ).ToArray()
             );
 
@@ -79,7 +80,7 @@ namespace FunWithFlags.FunApp.Views
                     }, ""
             );
             */
-            
+
             model.Titles = db.UVFields.Where(uvf =>
                 uvf.UserViewId == uv.Id
             ).OrderBy(t => t.OrdNum).ToList();
