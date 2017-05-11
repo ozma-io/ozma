@@ -1,3 +1,3 @@
 @Each
-    <li style="background:@Current.Color"><a class="bl" href="@Current.Link" style="background:@Color">@Current.Name</a></li>
+    <li><a class="bl" href="@Current.Link" style="background:@Current.Color">@Current.Name</a></li>
 @EndEach
