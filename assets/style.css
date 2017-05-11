@@ -184,7 +184,6 @@ div.nav_ent > a {
 
 div.main_table {
     width: 100%;
-    height: 100%;
     top: 0;
     left: 0;
     overflow: hidden;
@@ -193,7 +192,6 @@ div.main_table {
 div.tabl {
     overflow: hidden;
     float: left;
-    height: 100%;
     width: 100%;
 }
 
@@ -205,7 +203,6 @@ div.tabl_head {
 
 div.tabl_body {
     overflow: scroll;
-    height: 93%;
     width: 100%;
     float: left;
 }
@@ -213,7 +210,6 @@ div.tabl_body {
 table {
     background: #DCDCDC;
     border-spacing: 1px;
-    height: 100%;
     table-layout: fixed;
 }
 
@@ -223,6 +219,11 @@ th {
 
 td,th {
     padding: 3px;
+}
+
+td {
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 tr.bl {
