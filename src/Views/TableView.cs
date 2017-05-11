@@ -29,6 +29,8 @@ namespace FunWithFlags.FunApp.Views
             var db = dbQuery.Database;
             dynamic model = new ExpandoObject();
 
+            model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
+
             model.Titles = db.UVFields.Where(uvf =>
                 uvf.UserViewId == uv.Id
             ).OrderBy(t => t.OrdNum).ToList();
