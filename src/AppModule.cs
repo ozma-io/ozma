@@ -70,7 +70,7 @@ namespace FunWithFlags.FunApp
             subMenuModel1.Name = entities;
             subMenuModel1.Link = "../nav";
             subMenuModel1.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-            menuModel.Ent.Add(subMenuModel1);
+            menuModel.Ent = subMenuModel1;
 
 
             // Второй пункт меню
