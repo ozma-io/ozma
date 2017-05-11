@@ -184,7 +184,7 @@ namespace FunWithFlags.FunApp
                                         ).UserViewId
                                     )
                                 }
-                            ).OrderBy(t => t.OrdNum).ToList()
+                            ).OrderBy(t => t.MenuCategoryOrdinalNum).ToList()
                         }
                     ).OrderBy(t => t.Category.OrdinalNum).ToList(),
 
