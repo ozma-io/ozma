@@ -78,7 +78,7 @@ namespace FunWithFlags.FunApp.Views
 
             model.Titles = db.UVFields.Where(uvf =>
                 uvf.UserViewId == uv.Id
-            ).ToList();
+            ).OrderBy(t => t.OrdNum).ToList();
  
             model.View = uv;
 
