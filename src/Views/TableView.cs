@@ -31,9 +31,9 @@ namespace FunWithFlags.FunApp.Views
                     uve.EntityId == e.Id &&
                     uve.UserViewId == uv.Id
                 ).Any()
-            ).GroupJoin(db.UVFields,
+            ).GroupJoin(db.UVFields.Include(tuvf => tuvf.Field),
                 ent => ent.Id,
-                uvf => uvf.Include(tuvf => tuvf.Field).Field.EntityId,
+                uvf => uvf.Field.EntityId,
                 (ent, uvf) => new {
                     Entity = ent,
                     UVFields = uvf.Where(tf =>
