@@ -1,7 +1,7 @@
 <div class="mytitle">
     <ul class="menu">
         @Each
-            <li style="background:@Color">
+            <li style="background:@Current.Color">
                 <a class="bl" href="@Current.Link">@Current.Name</a>
                 <ul class="submenu" style="background:@Color">
                     @Partial['MenubarSubmenu', Current.Sub]

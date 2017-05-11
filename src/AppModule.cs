@@ -67,6 +67,7 @@ namespace FunWithFlags.FunApp
             subMenuModel1.Name = entities;
             subMenuModel1.Link = "../nav";
             subMenuModel1.Sub = new List<ExpandoObject>();
+            subMenuModel1.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
             menuModel.Add(subMenuModel1);
 
 
@@ -95,6 +96,7 @@ namespace FunWithFlags.FunApp
             subMenuModel2.Name = tView.Name;
             subMenuModel2.Link = System.String.Format("../uv/{0}",tView.Id);
             subMenuModel2.Sub = new List<ExpandoObject>();
+            subMenuModel2.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
             menuModel.Add(subMenuModel2);
 
 
@@ -104,6 +106,7 @@ namespace FunWithFlags.FunApp
                 dynamic subMenuModel3 = new ExpandoObject();
                 subMenuModel3.Name = userViews[i].Name;
                 subMenuModel3.Link = System.String.Format("../uv/{0}",userViews[i].Id);
+                subMenuModel3.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
                 menuModel[1].Sub.Add(subMenuModel2);
             }
 
@@ -115,6 +118,7 @@ namespace FunWithFlags.FunApp
                 subMenuModel4.Name = currUv.Name;
                 subMenuModel4.Link = System.String.Format("../uv/{0}",currUv.Id);
                 subMenuModel4.Sub = new List<ExpandoObject>();
+                subMenuModel4.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
                 menuModel.Add(subMenuModel4);
 
 
@@ -133,6 +137,7 @@ namespace FunWithFlags.FunApp
                     dynamic subMenuModel5 = new ExpandoObject();
                     subMenuModel5.Name = userViews2[i].Name;
                     subMenuModel5.Link = System.String.Format("../uv/{0}",userViews2[i].Id);
+                    subMenuModel5.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
                     menuModel[2].Sub.Add(subMenuModel5);
                 }
             }
