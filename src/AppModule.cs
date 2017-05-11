@@ -106,9 +106,7 @@ namespace FunWithFlags.FunApp
                 subMenuModel3.Link = System.String.Format("../uv/{0}",userViews[i].Id);
                 subMenuModel3.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
                 menuModel.Lists[0].Sub.Add(subMenuModel3);
-                throw new ArgumentException($"!!!!!!!!!!!!!!!!!: {subMenuModel3.Name}");
             }
-            throw new ArgumentException($"!!!!!!!!!!!!!!!!!: {userViews.Count}");
 
             // Третий пункт (опицонально)
 
