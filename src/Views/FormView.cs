@@ -27,7 +27,8 @@ namespace FunWithFlags.FunApp.Views
         public ExpandoObject Get(DBQuery dbQuery, UserView uv, DynamicDictionary getPars)
         {
             var db = dbQuery.Database;
-            var recId = (int)getPars.recId;
+            // !- разобраться как работать с параметрами
+            //var recId = (int)getPars.recId;
             dynamic model = new ExpandoObject();
 
             model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
