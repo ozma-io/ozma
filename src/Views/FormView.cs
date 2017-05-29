@@ -37,7 +37,7 @@ namespace FunWithFlags.FunApp.Views
                 uvf.UserViewId == uv.Id
             ).OrderBy(t => t.OrdNum).ToList();
 
-            var dbmodel = db.Entities.First(e =>
+            var dbmodel = db.Entities.Where(e =>
                 db.UVEntities.Where(uve =>
                     uve.EntityId == e.Id &&
                     uve.UserViewId == uv.Id
