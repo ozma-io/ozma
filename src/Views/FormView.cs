@@ -51,8 +51,6 @@ namespace FunWithFlags.FunApp.Views
 
             model.Titles = dbmodel[0].UVFields.ToList();
 
-            throw new NotImplementedException(model.Titles[0].Name);
-
             var strs = dbmodel[0].UVFields.Select(f => $"\"{f.Field.Name}\"");
 
             // Сюда дописать условие - что бы бралась только 1 запись по recId а не все записи
