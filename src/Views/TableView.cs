@@ -30,11 +30,7 @@ namespace FunWithFlags.FunApp.Views
             dynamic model = new ExpandoObject();
 
             model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-
-            model.Titles = db.UVFields.Where(uvf =>
-                uvf.UserViewId == uv.Id
-            ).OrderBy(t => t.OrdNum).ToList();
-
+            
             var dbmodel = db.Entities.Where(e =>
                 db.UVEntities.Where(uve =>
                     uve.EntityId == e.Id &&
@@ -51,6 +47,8 @@ namespace FunWithFlags.FunApp.Views
                     ).OrderBy(t => t.OrdNum).ToList()
                 }
             ).ToList();
+
+            model.Titles = dbmodel[0].UVFields.Select(f => f.Field.Name);
 
             var strs = dbmodel[0].UVFields.Select(f => $"\"{f.Field.Name}\"");
 
