@@ -28,9 +28,9 @@ namespace FunWithFlags.FunApp.Views
         {
             var db = dbQuery.Database;
             // !- разобраться как работать с параметрами
-            //var recId = (int)getPars.recId;
+            var recId = (int)getPars.recId;
             // ! убрать
-            //throw new NotImplementedException(recId.ToString());
+            throw new NotImplementedException(recId.ToString());
             dynamic model = new ExpandoObject();
 
             model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
