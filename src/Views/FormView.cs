@@ -27,7 +27,6 @@ namespace FunWithFlags.FunApp.Views
         public ExpandoObject Get(DBQuery dbQuery, UserView uv, dynamic getPars)
         {
             var db = dbQuery.Database;
-            // !- разобраться как работать с параметрами
             var recId = (int)getPars.recId;
             dynamic model = new ExpandoObject();
 
