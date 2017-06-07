@@ -24,7 +24,7 @@ namespace FunWithFlags.FunApp.Views
             get { return ViewType.Multiple; }
         }
 
-        public ExpandoObject Get(DBQuery dbQuery, UserView uv, DynamicDictionary getPars)
+        public ExpandoObject Get(DBQuery dbQuery, UserView uv, dynamic getPars)
         {
             var db = dbQuery.Database;
             dynamic model = new ExpandoObject();
