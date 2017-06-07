@@ -49,9 +49,9 @@ namespace FunWithFlags.FunApp.Views
                 }
             ).ToList();
 
-            model.Titles = dbmodel[0].UVFields.Select(f => f.Field.Name);
+            model.Titles = dbmodel[0].UVFields.ToList();
 
-            throw new NotImplementedException(dbmodel[0].UVFields[0].Name);
+            throw new NotImplementedException(model.Titles[0].Name);
 
             var strs = dbmodel[0].UVFields.Select(f => $"\"{f.Field.Name}\"");
 
