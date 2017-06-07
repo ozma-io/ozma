@@ -53,8 +53,9 @@ namespace FunWithFlags.FunApp.Views
                 }
             ).ToList();
 
+            throw new NotImplementedException(dbmodel[0].UVFields[0].Name);
+
             var strs = dbmodel[0].UVFields.Select(f => $"\"{f.Field.Name}\"");
-            throw new NotImplementedException(strs[0,0].ToString());
 
             // Сюда дописать условие - что бы бралась только 1 запись по recId а не все записи
             model.Entries = dbQuery.Query(dbmodel[0].Entity.Name, strs).Select(l =>
