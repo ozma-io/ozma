@@ -61,7 +61,7 @@ namespace FunWithFlags.FunApp.Views
                     }
                 )
             );
-
+/* 
             for (int i=0; i<entries.length; i++) {
                 for (int j=0; j<entries[i].length; j++) {
                     if (model.Titles[i].Type == "lookup") {
@@ -69,7 +69,7 @@ namespace FunWithFlags.FunApp.Views
                     }
                 }
             }
-
+*/
             model.Entries = entries;
 
             /*
