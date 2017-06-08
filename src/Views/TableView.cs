@@ -60,6 +60,7 @@ namespace FunWithFlags.FunApp.Views
                         Height = uv.Height,
                     }
                 ).ToList()
+                // сюда положить ссылку на юзервью с формой
             ).ToList();
 /* 
             // ! - дописать
