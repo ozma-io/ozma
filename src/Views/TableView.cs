@@ -62,7 +62,7 @@ namespace FunWithFlags.FunApp.Views
                 )
             );
 
-            for (int i=0; i<entries.count; i++) {
+            for (int i=0; i<entries.ToList().Count; i++) {
                 /* 
                 for (int j=0; j<entries[i].Count; j++) {
                     if (model.Titles[i].Type == "lookup") {
