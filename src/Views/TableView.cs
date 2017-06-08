@@ -65,7 +65,7 @@ namespace FunWithFlags.FunApp.Views
             for (int i=0; i<entries.Count(); i++) {
                 for (int j=0; j<entries[i].Count(); j++) {
                     if (model.Titles[i].Type == "lookup") {
-                        entries[i,j].Value = "FunFun";
+                        entries[i][j].Value = "FunFun";
                     }
                 }
             }
