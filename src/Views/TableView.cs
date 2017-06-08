@@ -58,7 +58,6 @@ namespace FunWithFlags.FunApp.Views
                         Value = a,
                         Width = model.Titles[i].Width,
                         Height = uv.Height,
-                        //Type = model.Titles[i].Type
                     }
                 )
             );
