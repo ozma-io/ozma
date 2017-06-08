@@ -52,15 +52,26 @@ namespace FunWithFlags.FunApp.Views
 
             var strs = dbmodel[0].UVFields.Select(f => $"\"{f.Field.Name}\"");
 
-            model.Entries = dbQuery.Query(dbmodel[0].Entity.Name, strs).Select(l =>
+            var entries = dbQuery.Query(dbmodel[0].Entity.Name, strs).Select(l =>
                 l.Select((a,i) => new
                     {
                         Value = a,
                         Width = model.Titles[i].Width,
-                        Height = uv.Height
+                        Height = uv.Height,
+                        //Type = model.Titles[i].Type
                     }
                 )
             );
+
+            for (int i=0; i<entries.length; i++) {
+                for (int j=0; j<entries[i].length; j++) {
+                    if (model.Titles[i].Type == "lookup") {
+                        entries[i,j].Value = "FunFun";
+                    }
+                }
+            }
+
+            model.Entries = entries;
 
             /*
             model.Entries = dbQuery.Query("Tests", new[]
