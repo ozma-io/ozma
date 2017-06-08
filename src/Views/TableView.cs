@@ -59,8 +59,8 @@ namespace FunWithFlags.FunApp.Views
                         Width = model.Titles[i].Width,
                         Height = uv.Height,
                     }
-                )
-            );
+                ).ToList()
+            ).ToList();
 
             for (int i=0; i<entries.Count(); i++) {
                 for (int j=0; j<entries[i].Count(); j++) {
