@@ -54,7 +54,7 @@ namespace FunWithFlags.FunApp.Views
             var strs = dbmodel[0].UVFields.Select(f => $"\"{f.Field.Name}\"");
 
             // Сюда дописать условие - что бы бралась только 1 запись по recId а не все записи
-            model.Entries = dbQuery.Query($"{dbmodel[0].Entity.Name}", strs/*, $"{dbmodel[0].Entity.Name}.Id=0"*/).Select(l =>
+            model.Entries = dbQuery.Query(dbmodel[0].Entity.Name, strs/*, $"{dbmodel[0].Entity.Name}.Id=0"*/).Select(l =>
                 l.Select((a,i) => new
                     {
                         // дописать параметр - тип поля
