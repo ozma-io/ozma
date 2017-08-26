@@ -47,14 +47,15 @@ namespace FunWithFlags.FunApp.Views
                         tuvf.Field.EntityId == ent.Id
                     ).OrderBy(t => t.OrdNum).ToList()
                 }
-            ).ToList();
+            ).Single();
 
-            model.Titles = dbmodel[0].UVFields.ToList();
+            model.Titles = dbmodel.UVFields.ToList();
 
-            var strs = dbmodel[0].UVFields.Select(f => $"\"{f.Field.Name}\"");
+            var strs = dbmodel.UVFields.Select(f => $"\"{f.Field.Name}\"");
 
             // Сюда дописать условие - что бы бралась только 1 запись по recId а не все записи
-            model.Entries = dbQuery.Query(dbmodel[0].Entity.Name, strs, "\"Settings.Name\" = 'bgcolor'").Select(l =>
+            var query = SelectExpr.Single(Table.FromEntity(dbmodel.Entity), dbmodel.UVFields.Select(f => f.Field.Name));
+            model.Entries = dbQuery.Query(query).Select(l =>
                 l.Select((a,i) => new
                     {
                         // дописать параметр - тип поля

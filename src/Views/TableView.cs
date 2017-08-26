@@ -31,7 +31,7 @@ namespace FunWithFlags.FunApp.Views
 
             model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
 
-            var dbmodel = db.Entities.Where(e =>
+            var dbmodel = db.Entities.Include(e => e.Schema).Where(e =>
                 db.UVEntities.Where(uve =>
                     uve.EntityId == e.Id &&
                     uve.UserViewId == uv.Id
@@ -46,13 +46,12 @@ namespace FunWithFlags.FunApp.Views
                         tuvf.Field.EntityId == ent.Id
                     ).OrderBy(t => t.OrdNum).ToList()
                 }
-            ).ToList();
+            ).Single();
 
-            model.Titles = dbmodel[0].UVFields.ToList();
+            model.Titles = dbmodel.UVFields.ToList();
 
-            var strs = dbmodel[0].UVFields.Select(f => $"\"{f.Field.Name}\"");
-
-            var entries = dbQuery.Query(dbmodel[0].Entity.Name, strs).Select(l =>
+            var query = SelectExpr.Single(Table.FromEntity(dbmodel.Entity), dbmodel.UVFields.Select(f => f.Field.Name));
+            var entries = dbQuery.Query(query).Select(l =>
                 l.Select((a,i) => new
                     {
                         Value = a,

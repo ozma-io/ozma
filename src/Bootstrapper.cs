@@ -31,13 +31,11 @@ namespace FunWithFlags.FunApp
     public class CustomBootstrapper : AutofacNancyBootstrapper
     {
         private string dbString;
-        private string userDbString;
         private string environmentName;
         
         public CustomBootstrapper(IHostingEnvironment env, IConfiguration configuration)
         {
             this.dbString = configuration["database"];
-            this.userDbString = configuration["user_database"];
 
             this.environmentName = env.EnvironmentName;
         }
@@ -77,7 +75,7 @@ namespace FunWithFlags.FunApp
 
             // Provide database context if needed.
             // Disposable objects must be registered as single instances to ensure cleanup.
-            builder.Register(c => new DBQuery(this.dbString, this.userDbString)).As<DBQuery>().SingleInstance();
+            builder.Register(c => new DBQuery(this.dbString)).As<DBQuery>().SingleInstance();
 
             builder.Update(container.ComponentRegistry);
         }
