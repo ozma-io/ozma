@@ -41,13 +41,15 @@ namespace FunWithFlags.FunApp.Views
                 uvf => uvf.Field.EntityId,
                 (ent, uvf) => new {
                     Entity = ent,
-                    UVFields = uvf.Where(tuvf =>
-                        tuvf.UserViewId == uv.Id &&
-                        tuvf.Field.EntityId == ent.Id
-                    ).OrderBy(t => t.OrdNum).ToList()
+                    UVFields = uvf.ToList()
                 }
-            ).Single();
-
+            // FIXME: Workaround for https://github.com/aspnet/EntityFrameworkCore/issues/9609
+            // We filter and sort UVFields after they are fetched with EFCore.
+            ).ToList().Select(old_model => new {
+                Entity = old_model.Entity,
+                UVFields = old_model.UVFields.Where(tuvf => tuvf.UserViewId == uv.Id).OrderBy(t => t.OrdNum).ToList()
+            }).Single();
+      
             model.Titles = dbmodel.UVFields;
 
             var query = SelectExpr.Single(Table.FromEntity(dbmodel.Entity), dbmodel.UVFields.Select(f => f.Field.Name));
