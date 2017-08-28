@@ -5,6 +5,7 @@ namespace FunWithFlags.FunApp
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using Nancy.Owin;
 
     public class Program
@@ -23,6 +24,12 @@ namespace FunWithFlags.FunApp
                 .UseConfiguration(config)
                 // Pass config to Startup via dependency injection.
                 .ConfigureServices(services => services.AddSingleton<IConfiguration>(config))
+                .ConfigureLogging((hostingContext, logging) =>
+                    logging
+                        .AddConfiguration(hostingContext.Configuration.GetSection("Logging"))
+                        .AddConsole()
+                        .AddDebug()
+                )
                 .UseStartup<Startup>()
                 .Build();
 

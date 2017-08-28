@@ -170,7 +170,6 @@ namespace FunWithFlags.FunApp
                                     OrdNum = e.MenuCategoryOrdinalNum,
                                     Link = System.String.Format("../uv/{0}",
                                         uves.First(myuve =>
-                                            myuve.EntityId == e.Id &&
                                             db.UserViews.Where(myuv =>
                                                 myuv.Id == myuve.UserViewId &&
                                                 viewsMultiple.Contains(myuv.Type)
@@ -180,13 +179,11 @@ namespace FunWithFlags.FunApp
                                 }
                             ).OrderBy(t => t.OrdNum).ToList()
                         }
-                    ).OrderBy(t => t.Category.OrdinalNum).ToList(),
+                    // Удаляем пустые менюкатегории (без Сущностей)
+                    ).Where((mc) => mc.Entities.Count != 0).OrderBy(t => t.Category.OrdinalNum).ToList(),
 
                     Color = db.Settings.Single(s => s.Name == "bgcolor").Value
                 };
-
-                // Удаляем пустые менюкатегории (без Сущностей)
-                model.MenuCategories.RemoveAll((mc) => { return mc.Entities.Count == 0; });
 
                 return View["Navigator", model];
             });

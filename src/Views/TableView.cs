@@ -48,7 +48,7 @@ namespace FunWithFlags.FunApp.Views
                 }
             ).Single();
 
-            model.Titles = dbmodel.UVFields.ToList();
+            model.Titles = dbmodel.UVFields;
 
             var query = SelectExpr.Single(Table.FromEntity(dbmodel.Entity), dbmodel.UVFields.Select(f => f.Field.Name));
             var entries = dbQuery.Query(query).Select(l =>

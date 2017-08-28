@@ -1,8 +1,11 @@
 namespace FunWithFlags.FunApp
 {
+    using System;
     using System.IO;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.EntityFrameworkCore.Infrastructure;
     using Nancy;
     using Nancy.Bootstrapper;
     using Nancy.Bootstrappers.Autofac;
@@ -32,11 +35,12 @@ namespace FunWithFlags.FunApp
     {
         private string dbString;
         private string environmentName;
+        private ILoggerFactory loggerFactory;
         
-        public CustomBootstrapper(IHostingEnvironment env, IConfiguration configuration)
+        public CustomBootstrapper(IHostingEnvironment env, IConfiguration configuration, ILoggerFactory loggerFactory)
         {
             this.dbString = configuration["database"];
-
+            this.loggerFactory = loggerFactory;
             this.environmentName = env.EnvironmentName;
         }
 
@@ -74,8 +78,7 @@ namespace FunWithFlags.FunApp
             var builder = new ContainerBuilder();
 
             // Provide database context if needed.
-            // Disposable objects must be registered as single instances to ensure cleanup.
-            builder.Register(c => new DBQuery(this.dbString)).As<DBQuery>().SingleInstance();
+            builder.Register(c => new DBQuery(this.dbString, this.loggerFactory)).As<DBQuery>().InstancePerRequest();
 
             builder.Update(container.ComponentRegistry);
         }
