@@ -128,7 +128,7 @@ div.main_nav {
 }
 
 div.submain_nav {
-    width: 450px;
+    width: 650px; /*450px*/
     background: #DCDCDC;
     overflow: auto;
     display: flex;
