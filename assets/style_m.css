@@ -33,18 +33,20 @@ ul {
     list-style: none;
 }
 
-ul.menu > li{
+/*ul.menu > li{
     float: left;
     position: relative;
     margin-right: 1px;
     margin-bottom: 1px;
     width: 100%;
-}
+}*/
 
 ul.menu > li.submenu  {
     float: left;
     position: relative;
-    margin-top: 1px;
+    margin-right: 1px;
+    margin-bottom: 1px;
+    /*margin-top: 1px;*/
     width: 100%;
 }
 
