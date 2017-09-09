@@ -32,9 +32,11 @@ ul {
     padding: 0;
     list-style: none;
 }
+
 ul.menu > li {
     float: left;
     position: relative;
+    margin-top: 1px;
     margin-right: 1px;
     margin-bottom: 1px;
     width: 100%;
@@ -160,6 +162,8 @@ div.nav_ent > a {
 
 
 /* Таблица */
+
+
 
 table {
     background: #DCDCDC;
