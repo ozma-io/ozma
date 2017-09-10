@@ -175,7 +175,6 @@ div.nav_ent > a {
 table {
     background: #DCDCDC;
     border-spacing: 1px;
-    float: left;
     table-layout: fixed;
 }
 
