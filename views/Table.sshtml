@@ -13,7 +13,7 @@
                     <thead>
                         <tr>
                             @Each.Titles
-                                <th style=
+							   <th style=
                                     "
                                         min-width:@Current.Width ; 
                                         max-width:@Current.Width
@@ -29,7 +29,11 @@
                 <table style="background:@Model.Color">
                     <tbody>
                         @Each.Entries
-                            <tr class="bl" onclick="window.location.href='../uv/2'">
+                            <!--<tr class="bl" onclick="window.location.href='../uv/2'">-->
+							<tr style="background:#FFFFFF">
+								<!--<tr class="bl" onclick=@Current.href>-->
+								<!--tr class="bl" onclick="window.location.href=@Current.href">-->
+								<!--@Current.Value-->
                                 @Partial['TableLine', Current]
                             </tr>
                         @EndEach

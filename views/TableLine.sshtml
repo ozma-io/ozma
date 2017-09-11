@@ -1,3 +1,5 @@
     @Each
-        <td data-type="text" style="width:@Current.Width ; min-width:@Current.Width ; max-width:@Current.Width ; height:@Current.Height ; min-height:@Current.Height ; max-height:@Current.Height">@Current.Value</td>
+		<!--<tr class="bl" onclick="window.location.href='../uv/2'">-->
+		<td data-type="text" onclick="@Current.href"  style="cursor:pointer ; width:@Current.Width ; min-width:@Current.Width ; max-width:@Current.Width ; height:@Current.Height ; min-height:@Current.Height ; max-height:@Current.Height">@Current.Value</td>
+		<!--</tr>-->
     @EndEach
