@@ -52,13 +52,14 @@ namespace FunWithFlags.FunApp.Views
       
             model.Titles = dbmodel.UVFields;
 
-            var query = SelectExpr.Single(Table.FromEntity(dbmodel.Entity), dbmodel.UVFields.Select(f => f.Field.Name));
+            var query = SelectExpr.Single(Table.FromEntity(dbmodel.Entity), (new[] { "Id" } ).Concat(dbmodel.UVFields.Select(f => f.Field.Name)));
             var entries = dbQuery.Query(query).Select(l =>
-                l.Select((a,i) => new
+                l.Skip(1).Select((a,i) => new
                     {
                         Value = a,
                         Width = model.Titles[i].Width,
                         Height = uv.Height,
+                        Id = l[0],
                     }
                 ).ToList()
                 // сюда положить ссылку на юзервью с формой
