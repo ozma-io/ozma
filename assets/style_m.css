@@ -32,13 +32,22 @@ ul {
     padding: 0;
     list-style: none;
 }
-ul.menu > li {
+
+ul.menu > li{
     float: left;
     position: relative;
     margin-right: 1px;
+    width: 100%;
+}
+
+ul.menu > li.submenu  {
+    float: left;
+    position: relative;
+    margin-top: 1px;
     margin-bottom: 1px;
     width: 100%;
 }
+
 ul.menu > li:hover > ul.submenu {
     display: block;
 }
@@ -161,10 +170,11 @@ div.nav_ent > a {
 
 /* Таблица */
 
+
+
 table {
     background: #DCDCDC;
     border-spacing: 1px;
-    float: left;
     table-layout: fixed;
 }
 
