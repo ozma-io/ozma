@@ -78,8 +78,8 @@ namespace FunWithFlags.FunApp.Views
 */
             model.Entries = entries;
 
-            /*
-            model.Entries = dbQuery.Query("Tests", new[]
+            
+            /*model.Entries = dbQuery.Query("Tests", new[]
                     {
                         "\"Name\"",
                         "\"Count\"",
@@ -87,8 +87,8 @@ namespace FunWithFlags.FunApp.Views
                         "\"Param1\"",
                         "\"Param2\"",
                     }, ""
-            );
-            */
+            );*/
+            
  
             model.View = uv;
 

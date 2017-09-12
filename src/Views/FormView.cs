@@ -73,6 +73,8 @@ namespace FunWithFlags.FunApp.Views
                    Rows = (a.Length / 40 + 1 > 5) ? 5 : a.Length / 40 + 1,
                    Width = model.Titles[i].Width,
                    Heigth = uv.Height,
+                   BlockNum= model.Titles[i].BlockNum,
+                   OrdInBlock= model.Titles[i].OrdInBlock,
                    Value = a
                    //
                }
@@ -97,19 +99,8 @@ namespace FunWithFlags.FunApp.Views
             };*/
             var count= Entries.Count();
             //var l = Entries
-            //var smt=Entries.ToList<>
-            for (int i = 0; i < Entries.Count(); i++)
-            {
-                /*for (int j = 0; j < Entries[i].Count(); j++)
-                {
-                    if (model.Titles[i].Type == "lookup")
-                    {
-                        Entries[i][j].Value = "FunFun";
-                    }
-                };*/
-
-            };
-
+            var smt = Entries.ToList();
+            
             model.Entries = Entries;
             //iif((a.Length / 40 + 1) > 7, 7, (a.Length / 40 + 1)),
             // это из старой Table

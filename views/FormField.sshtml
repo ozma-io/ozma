@@ -3,6 +3,8 @@
 		<div class="container">
 			<div class="label">
                 <p><strong>@Current.Name</strong></p>
+				<p><strong>@Current.BlockNum</strong></p>
+				<p><strong>@Current.OrdInBlock</strong></p>
 			</div>
                 <hr>
 				<!--If.@Current.Rows>2-->
