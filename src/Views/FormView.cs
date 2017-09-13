@@ -36,7 +36,7 @@ namespace FunWithFlags.FunApp.Views
 
             model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
 
-            var dbmodel = db.Entities.Where(e =>
+            var dbmodel = db.Entities.Include(ent => ent.Schema).Where(e =>
                 db.UVEntities.Where(uve =>
                     uve.EntityId == e.Id &&
                     uve.UserViewId == uv.Id
