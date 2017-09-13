@@ -8,10 +8,17 @@
     <div class="main">
         @Partial['Menubar', Model.MenuBar]
         <div class="form_data">
-		@Each.Entries
+		@Each.Entries1
+		xxxx
             @Partial['FormField', Current]
         @EndEach
 		</div>
-		
+		<!--<div class="form_data">
+		@Each.Entries2
+		xxxx
+            @Partial['FormField', Current]
+        @EndEach
+		</div>
+		-->
 	</div>
 @EndSection
