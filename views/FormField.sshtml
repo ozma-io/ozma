@@ -3,18 +3,9 @@
 		<div class="container">
 			<div class="label">
                 <p><strong>@Current.Name</strong></p>
-				<p><strong>@Current.BlockNum</strong></p>
-				<p><strong>@Current.OrdInBlock</strong></p>
 			</div>
                 <hr>
-				<!--If.@Current.Rows>2-->
-				<!--<p><stong>@Current.Rows</strong></p>-->
 				<div class="field">
-				<!--@if @Current.Rows>5
-				{
-					<textarea cols=@Current.Cols rows=5>@Current.Value</textarea>
-				
-				}-->
 					<textarea cols=@Current.Cols rows=@Current.Rows>@Current.Value</textarea>
 				</div>
 		</div>

@@ -28,7 +28,8 @@ namespace FunWithFlags.FunApp.Views
         {
             var db = dbQuery.Database;
             var recId = (int)getPars.recId;
-            var dbmodel1 = db.Entities.Where(e =>
+            //var dbmodel1 = db.Entities.Where(e =>
+            var dbmodel1 = db.Entities.Include(ent => ent.Schema).Where(e =>
                db.UVEntities.Where(uve =>
                    uve.EntityId == e.Id &&
                    uve.UserViewId == uv.Id
@@ -87,6 +88,8 @@ namespace FunWithFlags.FunApp.Views
 
             model.Entries1 = GetEntries(dbQuery, uv, getPars, 1);
             model.Entries2 = GetEntries(dbQuery, uv, getPars, 2);
+            model.Entries3 = GetEntries(dbQuery, uv, getPars, 3);
+            model.Entries4 = GetEntries(dbQuery, uv, getPars, 4);
             /*
             // Поля для блока 1
             var dbmodel1 = db.Entities.Where(e =>
