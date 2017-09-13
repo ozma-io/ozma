@@ -83,7 +83,7 @@ namespace FunWithFlags.FunApp.Views
             */
             dynamic model = new ExpandoObject();
 
-            model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
+            model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value; 
 
             model.Entries1 = GetEntries(dbQuery, uv, getPars, 1);
             model.Entries2 = GetEntries(dbQuery, uv, getPars, 2);
