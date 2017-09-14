@@ -43,7 +43,6 @@ ul.menu > li{
 ul.menu > li.submenu  {
     float: left;
     position: relative;
-    margin-top: 1px;
     margin-bottom: 1px;
     width: 100%;
 }
@@ -61,7 +60,6 @@ ul.submenu {
 ul.submenu > li {
     display: block;
     margin-top: 1px;
-
 }
 
 
