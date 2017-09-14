@@ -104,6 +104,8 @@ form.aut > input.text {
     width: 125px;
     text-decoration: none;
     border-radius: none;
+    -webkit-appearance: none;
+	border-radius:0;
 }
 
 form.aut > input.btn {
@@ -112,6 +114,8 @@ form.aut > input.btn {
     /*background: #FFFFFF;*/
     text-decoration: none;
     border-radius: none;
+    -webkit-appearance: none;
+	border-radius:0;
 }
 
 
