@@ -34,14 +34,12 @@ ul {
 }
 
 ul.menu > li{
-    float: left;
     position: relative;
     margin-right: 1px;
     width: 100%;
 }
 
 ul.menu > li.submenu  {
-    float: left;
     position: relative;
     margin-bottom: 1px;
     width: 100%;
@@ -194,6 +192,11 @@ tr.bl {
 
 /* Форма */
 
+textarea{
+    max-width: 98%;
+    min-width: 98%;
+}
+
 div.form_field {
     padding: 10px;
     overflow: hidden;
@@ -209,4 +212,17 @@ div.form_field_sense {
     padding: 5px;
     overflow: hidden;
     -webkit-appearance: none;
+}
+
+div.topsector {
+    width: 100%;
+    clear:both;
+}
+
+#Block1, #Block2, #Block3, #Block4 {
+    margin: 5px 1px;
+    width: 100%;
+    border: 1px solid;
+    border-color: #F5C700;
+    padding-bottom: 15px;
 }

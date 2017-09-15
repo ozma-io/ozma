@@ -251,6 +251,12 @@ tr.bl:hover {
 
 /* Форма */
 
+
+textarea {
+    max-width: 98%;
+    min-width: 98%;
+}
+
 div.form_data {
     min-width: 900px;
     max-width: 100%;
@@ -268,4 +274,38 @@ div.form_field {
 div.form_field_sense {
     width: 100%;
     padding-top: 3px;
+}
+
+div.topsector {
+    display: flex;
+    clear:both;
+} 
+
+ #Block1, #Block2, #Block3 {
+    margin: 0 5px;
+    margin-top:10px;
+    width: 350px;
+    min-width: 350px;
+    min-height: 200px;
+    max-height:600px;
+    display: inline-block;
+    border: 1px solid;
+    border-color: #F5C700;
+    padding-bottom:15px;
+}
+
+ #Block1{
+    float:left;
+    margin-left:0px;
+ }
+
+#Block4 {
+    margin-top: 10px;
+    width: 1074px;
+    min-width: 1074px;
+    min-height: 150px;
+    max-height: 300px;
+    border: 1px solid;
+    border-color: #F5C700;
+    padding-bottom: 15px;
 }
