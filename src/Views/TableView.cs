@@ -37,7 +37,7 @@ namespace FunWithFlags.FunApp.Views
                     uve.UserViewId == uv.Id && uve.EntityId == e.Id
                 ).Any()
             );
-            model.FormName = entitiesQuery.First().DisplayName;
+            model.FormName = entitiesQuery.First().DisplayNamePlural;
 
             var dbmodel = db.Entities.Include(e => e.Schema).Where(e =>
                 db.UVEntities.Where(uve =>
