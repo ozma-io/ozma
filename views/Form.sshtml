@@ -1,48 +1,49 @@
 ﻿@Master['Master']
 
 @Section['Title']
-    Hello! @Model.Titles[0].Name
+    @Model.FormName (Форма)
 @EndSection
 
 @Section['Content']
     <div class="main">
         @Partial['Menubar', Model.MenuBar]
-		<div class="form_data">
-			@Each.Entries1
-				<br>
-				<hr color=@Model.Color width="350" size = "4">
-				<p><strong><u>Блок 1</u></strong></p>
-					@Partial['FormField', Current]
-				<hr color=@Model.Color width="350" size = "4">
-			@EndEach
+		<div id="Block1" class="form_data">
+				@Each.Entries1
+					<br>
+					<hr color=@Model.Color width="350" size = "4">
+					<p><strong><u>Блок 1</u></strong></p>
+						@Partial['FormField', Current]
+					<hr color=@Model.Color width="350" size = "4">
+				@EndEach
 		</div>
-		<div class="form_data">
-			@Each.Entries2
-				<br>
-				<hr color=@Model.Color width="350" size = "4">
-				<p><strong><u>Блок 2</u></strong></p>
-					@Partial['FormField', Current]
-				<hr color=@Model.Color width="350" size = "4">
-			@EndEach
+
+		<div id="Block2" class="form_data">
+				@Each.Entries2
+					<br>
+					<hr color=@Model.Color width="350" size = "4">
+					<p><strong><u>Блок 2</u></strong></p>
+						@Partial['FormField', Current]
+					<hr color=@Model.Color width="350" size = "4">
+				@EndEach
+			
 		</div>
-		<div class="form_data">
-			@Each.Entries3
-				<br>
-				<hr color=@Model.Color width="350" size = "4">
-				<p><strong><u>Блок 3</u></strong></p>
-					@Partial['FormField', Current]
-				<hr color=@Model.Color width="350" size = "4">
-			@EndEach
+		<div id="Block3" class="form_data">
+				@Each.Entries3
+					<br>
+					<hr color=@Model.Color width="350" size = "4">
+					<p><strong><u>Блок 3</u></strong></p>
+						@Partial['FormField', Current]
+					<hr color=@Model.Color width="350" size = "4">
+				@EndEach
 		</div>
-		<div class="form_data">
-			@Each.Entries4
-				<br>
-				<hr color=@Model.Color width="350" size = "4">
-				<p><strong><u>Блок 4</u></strong></p>
-					@Partial['FormField', Current]
-				<hr color=@Model.Color width="350" size = "4">
-			@EndEach
+		<div id="Block4" class="form_data">
+				@Each.Entries4
+					<br>
+					<hr color=@Model.Color width="350" size = "4">
+					<p><strong><u>Блок 4</u></strong></p>
+						@Partial['FormField', Current]
+					<hr color=@Model.Color width="350" size = "4">
+				@EndEach
 		</div>
-		
 	</div>
 @EndSection

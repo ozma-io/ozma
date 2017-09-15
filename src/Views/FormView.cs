@@ -29,7 +29,7 @@ namespace FunWithFlags.FunApp.Views
             var db = dbQuery.Database;
             var recId = (int)getPars.recId;
             //var dbmodel1 = db.Entities.Where(e =>
-            var dbmodel1 = db.Entities.Include(ent => ent.Schema).Where(e =>
+            var dbmodel = db.Entities.Include(ent => ent.Schema).Where(e =>
                db.UVEntities.Where(uve =>
                    uve.EntityId == e.Id &&
                    uve.UserViewId == uv.Id
@@ -51,30 +51,57 @@ namespace FunWithFlags.FunApp.Views
            }).Single();
 
              // Дописано условие - что бы бралась только 1 запись по recId а не все записи
-            var columnWhere1 = new Column(Table.FromEntity(dbmodel1.Entity), "Id");
-            var query1 = SelectExpr.Single(Table.FromEntity(dbmodel1.Entity), dbmodel1.UVFields.Select(f => f.Field.Name), CondExpr.NewCEq(CondExpr.NewCColumn(columnWhere1), CondExpr.NewCInt(recId)));
+            var columnWhere = new Column(Table.FromEntity(dbmodel.Entity), "Id");
+            var query = SelectExpr.Single(Table.FromEntity(dbmodel.Entity), dbmodel.UVFields.Select(f => f.Field.Name), CondExpr.NewCEq(CondExpr.NewCColumn(columnWhere), CondExpr.NewCInt(recId)));
 
-            var Entries1 = dbQuery.Query(query1).Select(l =>
+            var Entries = dbQuery.Query(query).Select(l =>
                l.Select((a, i) => new
                {
-                   Name = dbmodel1.UVFields[i].Name,
+                   Name = dbmodel.UVFields[i].Name,
                    Cols = 40,
                    Rows = (a.Length / 40 + 1 > 5) ? 5 : a.Length / 40 + 1,
-                   Width = dbmodel1.UVFields[i].Width,
+                   Width = dbmodel.UVFields[i].Width,
                    Heigth = uv.Height,
-                   BlockNum = dbmodel1.UVFields[i].BlockNum,
-                   OrdInBlock = dbmodel1.UVFields[i].OrdInBlock,
+                   BlockNum = dbmodel.UVFields[i].BlockNum,
+                   OrdInBlock = dbmodel.UVFields[i].OrdInBlock,
                    Value = a
                }
                )
-           );
+             );
+            var cnt = Entries.Count();
+            /*var Entrie = new
+            {
+                dbmodel1.UVFields[1].Name,
+                Cols,
+                Rows,
+                dbmodel1.UVFields[1].Width,
+                uv.Height,
+                dbmodel1.UVFields[1].BlockNum,
+                dbmodel1.UVFields[1].OrdInBlock,
+                Value
+            };
+            */
+            /*for (int i = 0; i < dbmodel1.UVFields.Count(); i++)
+            {
+                Entries1 = new
+                {
+                    dbmodel1.UVFields[i].Name,
+                    Cols,
+                    Rows,
+                    dbmodel1.UVFields[1].Width,
+                    uv.Height,
+                    dbmodel1.UVFields[1].BlockNum,
+                    dbmodel1.UVFields[1].OrdInBlock,
+                    Value
+                } as IEnumerable<>;
+            };*/
             db.Database.CloseConnection();
-            return Entries1;
+            return Entries;
         }
 
         public ExpandoObject Get(DBQuery dbQuery, UserView uv, dynamic getPars)
         {
-            
+     
             var db = dbQuery.Database;
             /*var recId = (int)getPars.recId;
             if (recId == 0)
@@ -84,12 +111,25 @@ namespace FunWithFlags.FunApp.Views
             */
             dynamic model = new ExpandoObject();
 
-            model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value; 
+            model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
+            // Формируем название страницы в браузере
+            var entitiesQuery = db.Entities.Where(e =>
+                db.UVEntities.Where(uve =>
+                    uve.UserViewId == uv.Id && uve.EntityId == e.Id
+                ).Any()
+            );
+            model.FormName = entitiesQuery.First().DisplayName;
 
+            /*var Entries1 = GetEntries(dbQuery, uv, getPars, 1);
+            var Entries2 = GetEntries(dbQuery, uv, getPars, 2);
+            var Entries3 = GetEntries(dbQuery, uv, getPars, 3);
+            var Entries4 = GetEntries(dbQuery, uv, getPars, 4);
+            */
             model.Entries1 = GetEntries(dbQuery, uv, getPars, 1);
             model.Entries2 = GetEntries(dbQuery, uv, getPars, 2);
             model.Entries3 = GetEntries(dbQuery, uv, getPars, 3);
             model.Entries4 = GetEntries(dbQuery, uv, getPars, 4);
+            
             /*
             // Поля для блока 1
             var dbmodel1 = db.Entities.Where(e =>
@@ -181,7 +221,7 @@ namespace FunWithFlags.FunApp.Views
              model.Entries2 = Entries2;
              */
             model.View = uv;
-             return model;
+            return model;
         }
 
         public ExpandoObject Post(DBQuery dbQuery, UserView uv, DynamicDictionary getPars, DynamicDictionary postPars)

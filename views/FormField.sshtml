@@ -4,7 +4,7 @@
 			<div class="label">
                 <p><strong>@Current.Name</strong></p>
 			</div>
-                <hr>
+                <!--<hr>-->
 				<div class="field">
 					<textarea cols=@Current.Cols rows=@Current.Rows>@Current.Value</textarea>
 				</div>

@@ -31,6 +31,14 @@ namespace FunWithFlags.FunApp.Views
 
             model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
 
+            // Формируем название страницы в браузере
+            var entitiesQuery = db.Entities.Where(e =>
+                db.UVEntities.Where(uve =>
+                    uve.UserViewId == uv.Id && uve.EntityId == e.Id
+                ).Any()
+            );
+            model.FormName = entitiesQuery.First().DisplayName;
+
             var dbmodel = db.Entities.Include(e => e.Schema).Where(e =>
                 db.UVEntities.Where(uve =>
                     uve.EntityId == e.Id &&
