@@ -99,6 +99,55 @@ namespace FunWithFlags.FunApp.Views
             return Entries;
         }
 
+        public dynamic GetEntriesDefault(DBQuery dbQuery, UserView uv, dynamic getPars, int blockNum)
+        {
+            var db = dbQuery.Database;
+            var recId = (int)getPars.recId;
+            //var dbmodel1 = db.Entities.Where(e =>
+            var dbmodel = db.Entities.Include(ent => ent.Schema).Where(e =>
+               db.UVEntities.Where(uve =>
+                   uve.EntityId == e.Id &&
+                   uve.UserViewId == uv.Id
+               ).Any()
+           ).GroupJoin(db.UVFields.Include(tuvf => tuvf.Field),
+               ent => ent.Id,
+               uvf => uvf.Field.EntityId,
+               (ent, uvf) => new
+               {
+                   Entity = ent,
+                   UVFields = uvf.ToList()
+               }
+           // FIXME: Workaround for https://github.com/aspnet/EntityFrameworkCore/issues/9609
+           // We filter and sort UVFields after they are fetched with EFCore.
+           ).ToList().Select(old_model => new
+           {
+               Entity = old_model.Entity,
+               UVFields = old_model.UVFields.Where(tuvf => tuvf.UserViewId == uv.Id && tuvf.BlockNum == blockNum).OrderBy(t => t.OrdInBlock).ToList()
+           }).Single();
+
+            // Дописано условие - что бы бралась только 1 запись по recId а не все записи
+            var columnWhere = new Column(Table.FromEntity(dbmodel.Entity), "Id");
+            var query = SelectExpr.Single(Table.FromEntity(dbmodel.Entity), dbmodel.UVFields.Select(f => f.Field.Name), CondExpr.NewCEq(CondExpr.NewCColumn(columnWhere), CondExpr.NewCInt(recId)));
+
+            var Entries = dbQuery.Query(query).Select(l =>
+               l.Select((a, i) => new
+               {
+                   Name = dbmodel.UVFields[i].Name,
+                   Cols = 40,
+                   Rows = (a.Length / 40 + 1 > 5) ? 5 : a.Length / 40 + 1,
+                   Width = dbmodel.UVFields[i].Width,
+                   Heigth = uv.Height,
+                   BlockNum = dbmodel.UVFields[i].BlockNum,
+                   OrdInBlock = dbmodel.UVFields[i].OrdInBlock,
+                   Value = a
+               }
+               )
+             );
+            var cnt = Entries.Count();
+            db.Database.CloseConnection();
+            return Entries;
+        }
+
         public ExpandoObject Get(DBQuery dbQuery, UserView uv, dynamic getPars)
         {
      
@@ -120,11 +169,6 @@ namespace FunWithFlags.FunApp.Views
             );
             model.FormName = entitiesQuery.First().DisplayName;
 
-            /*var Entries1 = GetEntries(dbQuery, uv, getPars, 1);
-            var Entries2 = GetEntries(dbQuery, uv, getPars, 2);
-            var Entries3 = GetEntries(dbQuery, uv, getPars, 3);
-            var Entries4 = GetEntries(dbQuery, uv, getPars, 4);
-            */
             model.Entries1 = GetEntries(dbQuery, uv, getPars, 1);
             model.Entries2 = GetEntries(dbQuery, uv, getPars, 2);
             model.Entries3 = GetEntries(dbQuery, uv, getPars, 3);
