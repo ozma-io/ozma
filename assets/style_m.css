@@ -189,6 +189,15 @@ tr.bl {
     background: #FFFFFF;
 }
 
+.fly_block {
+    width:200px;
+    display:flex;
+}
+div.fly_block > div{
+    width:50%;
+    display:inline-block;
+}
+
 
 /* Форма */
 

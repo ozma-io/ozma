@@ -248,6 +248,10 @@ tr.bl:hover {
     cursor: pointer;
 }
 
+.fly_block {
+    visibility:hidden;
+    position:absolute;
+}
 
 /* Форма */
 
