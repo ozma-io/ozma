@@ -64,7 +64,8 @@ namespace FunWithFlags.FunApp.Views
             var entries = dbQuery.Query(query).Select(l =>
                 l.Skip(1).Select((a,i) => new
                     {
-                        Value = a,
+                        //Value = a,
+                        Value = (dbmodel.UVFields[i].Field.BusinessType != "date") ? a : a.Substring(0,10),
                         Width = model.Titles[i].Width,
                         Height = uv.Height,
                         Id =  l[0],

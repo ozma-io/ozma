@@ -1,12 +1,13 @@
-
+﻿
 @Each
 		<div class="container">
 			<div class="label">
                 <p><strong>@Current.Name</strong></p>
 			</div>
-                <!--<hr>-->
-				<div class="field">
-					<textarea cols=@Current.Cols rows=@Current.Rows>@Current.Value</textarea>
+                <div class="field">
+					<SCRIPT type = "text/javascript">
+						document.write("@Current.HtmlFieldTag");
+					</SCRIPT>
 				</div>
 		</div>
 @EndEach

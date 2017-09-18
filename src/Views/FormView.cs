@@ -24,6 +24,34 @@ namespace FunWithFlags.FunApp.Views
             get { return ViewType.Single; }
         }
 
+        public string GetHtmlFieldTag(string businessType, int cols, int rows, string value)
+        {
+            DateTime dt;
+            string HtmlFieldTag;
+            
+            switch (businessType)
+            {
+                case "date":
+                    dt = DateTime.Parse(value);
+                    HtmlFieldTag = "<input type=date value=" + dt.ToString("yyyy-MM-dd") + ">";
+                    break;
+                case "list":
+                    var str = "list;lookup;string;date";
+                    List<string> lst = new List<string>(str.Split(';'));
+                    HtmlFieldTag = "<select>";
+                    foreach (string lstVal in lst)
+                    {
+                        HtmlFieldTag = HtmlFieldTag + "<option " + ((value == lstVal) ? "selected value=": "value=") + lstVal + " > "+ lstVal + "</option>";
+                    }
+                    HtmlFieldTag = HtmlFieldTag + "<select>";
+                    break;
+                default:
+                    HtmlFieldTag = "<textarea cols=" + cols.ToString() + " rows=" + rows.ToString() + ">" + value + "</textarea>";
+                    break;
+            };
+            return HtmlFieldTag;
+        }
+
         public dynamic GetEntries(DBQuery dbQuery, UserView uv, dynamic getPars, int blockNum)
         {
             var db = dbQuery.Database;
@@ -64,37 +92,18 @@ namespace FunWithFlags.FunApp.Views
                    Heigth = uv.Height,
                    BlockNum = dbmodel.UVFields[i].BlockNum,
                    OrdInBlock = dbmodel.UVFields[i].OrdInBlock,
+                   BusinessType = dbmodel.UVFields[i].Field.BusinessType,
+                   HtmlFieldTag = GetHtmlFieldTag(
+                       dbmodel.UVFields[i].Field.BusinessType,
+                       40,
+                       (a.Length / 40 + 1 > 5) ? 5 : a.Length / 40 + 1,
+                       a
+                       ),
                    Value = a
                }
                )
              );
             var cnt = Entries.Count();
-            /*var Entrie = new
-            {
-                dbmodel1.UVFields[1].Name,
-                Cols,
-                Rows,
-                dbmodel1.UVFields[1].Width,
-                uv.Height,
-                dbmodel1.UVFields[1].BlockNum,
-                dbmodel1.UVFields[1].OrdInBlock,
-                Value
-            };
-            */
-            /*for (int i = 0; i < dbmodel1.UVFields.Count(); i++)
-            {
-                Entries1 = new
-                {
-                    dbmodel1.UVFields[i].Name,
-                    Cols,
-                    Rows,
-                    dbmodel1.UVFields[1].Width,
-                    uv.Height,
-                    dbmodel1.UVFields[1].BlockNum,
-                    dbmodel1.UVFields[1].OrdInBlock,
-                    Value
-                } as IEnumerable<>;
-            };*/
             db.Database.CloseConnection();
             return Entries;
         }
@@ -139,6 +148,13 @@ namespace FunWithFlags.FunApp.Views
                    Heigth = uv.Height,
                    BlockNum = dbmodel.UVFields[i].BlockNum,
                    OrdInBlock = dbmodel.UVFields[i].OrdInBlock,
+                   BusinessType = dbmodel.UVFields[i].Field.BusinessType,
+                   HtmlFieldTag = GetHtmlFieldTag(
+                       dbmodel.UVFields[i].Field.BusinessType,
+                       40,
+                       (a.Length / 40 + 1 > 5) ? 5 : a.Length / 40 + 1,
+                       a
+                       ),
                    Value = a
                }
                )
@@ -169,6 +185,7 @@ namespace FunWithFlags.FunApp.Views
             );
             model.FormName = entitiesQuery.First().DisplayName;
 
+            //var Entries1 = GetEntries(dbQuery, uv, getPars, 1);
             model.Entries1 = GetEntries(dbQuery, uv, getPars, 1);
             model.Entries2 = GetEntries(dbQuery, uv, getPars, 2);
             model.Entries3 = GetEntries(dbQuery, uv, getPars, 3);
