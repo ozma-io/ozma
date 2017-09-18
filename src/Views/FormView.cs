@@ -35,6 +35,9 @@ namespace FunWithFlags.FunApp.Views
                     dt = DateTime.Parse(value);
                     HtmlFieldTag = "<input type=date value=" + dt.ToString("yyyy-MM-dd") + ">";
                     break;
+                case "int":
+                    HtmlFieldTag = "<input type=number value=" + value + ">";
+                    break;
                 case "list":
                     var str = "list;lookup;string;date";
                     List<string> lst = new List<string>(str.Split(';'));
