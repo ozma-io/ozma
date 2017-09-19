@@ -1,4 +1,4 @@
-﻿@Master['Master']
+@Master['Master']
 
 @Section['Title']
     @Model.FormName (Форма)
@@ -11,40 +11,28 @@
 			<div id="Block1" class="form_data">
 					@Each.Entries1
 						<br>
-						<hr color=@Model.Color width="100%" size = "4">
-						<p><strong><u>Блок 1</u></strong></p>
-							@Partial['FormField', Current]
-						<hr color=@Model.Color width="100%" size = "4">
+						@Partial['FormField', Current]
 					@EndEach
 			</div>
 
 			<div id="Block2" class="form_data">
 					@Each.Entries2
 						<br>
-						<hr color=@Model.Color width="100%" size = "4">
-						<p><strong><u>Блок 2</u></strong></p>
-							@Partial['FormField', Current]
-						<hr color=@Model.Color width="100%" size = "4">
+						@Partial['FormField', Current]
 					@EndEach
 			
 			</div>
 			<div id="Block3" class="form_data">
 					@Each.Entries3
 						<br>
-						<hr color=@Model.Color width="100%" size = "4">
-						<p><strong><u>Блок 3</u></strong></p>
-							@Partial['FormField', Current]
-						<hr color=@Model.Color width="100%" size = "4">
+						@Partial['FormField', Current]
 					@EndEach
 			</div>
 		</div>
 		<div id="Block4" class="form_data">
 				@Each.Entries4
 					<br>
-					<hr color=@Model.Color width="100%" size = "4">
-					<p><strong><u>Блок 4</u></strong></p>
-						@Partial['FormField', Current]
-					<hr color=@Model.Color width="100%" size = "4">
+					@Partial['FormField', Current]
 				@EndEach
 		</div>
 	</div>

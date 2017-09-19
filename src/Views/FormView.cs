@@ -24,7 +24,7 @@ namespace FunWithFlags.FunApp.Views
             get { return ViewType.Single; }
         }
 
-        public string GetHtmlFieldTag(string businessType, int cols, int rows, string value)
+        public string GetHtmlFieldTag(string businessType, int cols, int rows, string value, string listValues)
         {
             DateTime dt;
             string HtmlFieldTag;
@@ -39,8 +39,8 @@ namespace FunWithFlags.FunApp.Views
                     HtmlFieldTag = "<input type=number value=" + value + ">";
                     break;
                 case "list":
-                    var str = "list;lookup;string;date";
-                    List<string> lst = new List<string>(str.Split(';'));
+                    //var str = "list;lookup;string;date";
+                    List<string> lst = new List<string>(listValues.Split(';'));
                     HtmlFieldTag = "<select>";
                     foreach (string lstVal in lst)
                     {
@@ -96,11 +96,13 @@ namespace FunWithFlags.FunApp.Views
                    BlockNum = dbmodel.UVFields[i].BlockNum,
                    OrdInBlock = dbmodel.UVFields[i].OrdInBlock,
                    BusinessType = dbmodel.UVFields[i].Field.BusinessType,
+                   ListValues = dbmodel.UVFields[i].Field.ListValues,
                    HtmlFieldTag = GetHtmlFieldTag(
                        dbmodel.UVFields[i].Field.BusinessType,
                        40,
                        (a.Length / 40 + 1 > 5) ? 5 : a.Length / 40 + 1,
-                       a
+                       a,
+                       dbmodel.UVFields[i].Field.ListValues
                        ),
                    Value = a
                }
@@ -152,11 +154,13 @@ namespace FunWithFlags.FunApp.Views
                    BlockNum = dbmodel.UVFields[i].BlockNum,
                    OrdInBlock = dbmodel.UVFields[i].OrdInBlock,
                    BusinessType = dbmodel.UVFields[i].Field.BusinessType,
+                   ListValues = dbmodel.UVFields[i].Field.ListValues,
                    HtmlFieldTag = GetHtmlFieldTag(
                        dbmodel.UVFields[i].Field.BusinessType,
                        40,
                        (a.Length / 40 + 1 > 5) ? 5 : a.Length / 40 + 1,
-                       a
+                       a,
+                       dbmodel.UVFields[i].Field.ListValues
                        ),
                    Value = a
                }
