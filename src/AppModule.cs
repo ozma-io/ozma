@@ -133,7 +133,13 @@ namespace FunWithFlags.FunApp
                     subMenuModel5.Link = System.String.Format("../uv/{0}",userViews2[i].Id);
                     subMenuModel5.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
                     menuModel.Lists[1].Sub.Add(subMenuModel5);
-                }
+                };
+                /*//Sergeev add
+                var barButtons = db.MenuBarButtons.Where(bb =>
+                    UserViewId == currUv
+                ).ToList();
+                //
+                */
             }
 
             return menuModel;
