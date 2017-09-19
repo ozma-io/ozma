@@ -35,7 +35,7 @@
 				Плавающий блок 2
 				</div>
 			</div>
-                <table style="background:@Model.Color">
+                <table style="background:@Model.Color" id="Glav_tabl">
                     <tbody>
                             <!--<tr class="bl" onclick="window.location.href='../uv/2'">-->
 							<tr style="background:#FFFFFF">
@@ -61,13 +61,14 @@
 		if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)){
 			document.addEventListener("DOMContentLoaded", function(){
 			var elements = document.getElementsByClassName('fly_block')
-				window.onscroll = function() {
-				var scroll=window.scrollX;
-				var offset = elements[1].offsetLeft;
+				document.getElementById("tabl_body_1").onscroll = function() {
+				var scroll=document.getElementById('tabl_body_1').scrollLeft;;
+				var offset = elements[0].offsetLeft;
 				var firstmargin ='0';
-					if(scroll > offset && offset < 905){
+				document.getElementById('tabl_head_1').scrollLeft = document.getElementById('tabl_body_1').scrollLeft;
+					if(scroll > offset){
 						for (i = 0; i < elements.length; i++) {
-							elements[i].style.marginLeft = firstmargin + scroll*0.79 + 'px';
+							elements[i].style.marginLeft = firstmargin + scroll*0.96+ 'px';
 						}
 					}
 					else{
@@ -78,5 +79,5 @@
 				};
 			});
 		};
-</script>
+	</script>
 @EndSection

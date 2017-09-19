@@ -173,12 +173,17 @@ div.nav_ent > a {
 
 /* Таблица */
 
+.tabl_body::-webkit-scrollbar {
+    width: 0 !important;
+}
 
+.tabl_body {
+    overflow: scroll;
+    height: 100vh;
+}
 
-table {
-    background: #DCDCDC;
-    border-spacing: 1px;
-    table-layout: fixed;
+.tabl_head {
+    overflow: hidden;
 }
 
 th {
