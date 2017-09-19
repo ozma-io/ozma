@@ -27,6 +27,7 @@
             </div>
             <div class="tabl_body" id="tabl_body_1">
 			@Each.Entries
+			<div id="pre_fly">
 			<div class="fly_block">
 				<div>
 				Плавающий блок 1
@@ -34,6 +35,7 @@
 				<div>
 				Плавающий блок 2
 				</div>
+			</div>
 			</div>
                 <table style="background:@Model.Color" id="Glav_tabl">
                     <tbody>
@@ -58,25 +60,36 @@
     </script>
 
 	<script type="text/javascript">
+		var scroll_top1=document.getElementById('tabl_body_1').scrollTop;
+		var prefly_top=document.getElementById('pre_fly').offsetTop
+		
 		if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)){
+			
 			document.addEventListener("DOMContentLoaded", function(){
-			var elements = document.getElementsByClassName('fly_block')
-				document.getElementById("tabl_body_1").onscroll = function() {
-					var scroll=document.getElementById('tabl_body_1').scrollLeft;
-					var offset = elements[0].offsetLeft;
-					var firstmargin ='0';
-					document.getElementById('tabl_head_1').scrollLeft = document.getElementById('tabl_body_1').scrollLeft;
-						if(scroll > offset){
-							for (i = 0; i < elements.length; i++) {
-								elements[i].style.marginLeft = firstmargin + scroll*0.96+ 'px';
-							}
-						}
-						else{
-							for (i = 0; i < elements.length; i++) {
-								elements[i].style.marginLeft = firstmargin + 'px';
-							}
-						}
-				};
+				var elements = document.getElementsByClassName('fly_block')
+					
+					document.getElementById("tabl_body_1").onscroll = function() {
+						var scroll_left=document.getElementById('tabl_body_1').scrollLeft;
+						var scroll_top=document.getElementById('tabl_body_1').scrollTop;
+						var offset = elements[0].offsetLeft;
+						var firstmargin ='0';
+						document.getElementById('tabl_head_1').scrollLeft = document.getElementById('tabl_body_1').scrollLeft;
+								if(scroll_left != offset){
+									for (i = 0; i < elements.length; i++) {
+										elements[i].style.position = "fixed";
+										elements[i].style.marginLeft = firstmargin + 'px';
+										elements[i].style.marginTop = - scroll_top*0.9245 + 'px';
+										}
+								}
+								if(scroll_top-scroll_top1 != 0){
+									scroll_top1=document.getElementById('tabl_body_1').scrollTop;
+									for (i = 0; i < elements.length; i++) {
+										elements[i].style.position = "relative";
+										elements[i].style.marginLeft = scroll_left*0.925 + 'px';
+										elements[i].style.marginTop ='0px';
+									}
+								}
+					};
 			});
 		};
 	</script>
