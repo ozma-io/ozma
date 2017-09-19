@@ -1,4 +1,4 @@
-﻿@Master['Master']
+@Master['Master']
 
 @Section['Title']
     @Model.FormName (Список)
@@ -16,7 +16,7 @@
 							   <th style=
                                     "
                                         min-width:@Current.Width ; 
-                                        max-width:@Current.Width
+                                        max-width:@Current.Width 
                                     "
                                     nowrap
                                 >@Current.Name</th>
