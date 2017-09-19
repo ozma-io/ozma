@@ -194,6 +194,10 @@ tr.bl {
     background: #FFFFFF;
 }
 
+#pre_fly{
+    height:40px;
+}
+
 .fly_block {
     width:200px;
     display:flex;
