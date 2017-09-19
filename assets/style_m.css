@@ -11,6 +11,7 @@ body {
     height: 100%;
 }
 
+
 p {
     margin: 0;
 }
@@ -199,8 +200,10 @@ tr.bl {
 }
 
 .fly_block {
-    width:200px;
-    display:flex;
+    width: 200px;
+    display: flex;
+    -webkit-transform: translate3d(0, 0, 0);
+    z-index: -100;
 }
 div.fly_block > div{
     width:50%;

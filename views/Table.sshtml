@@ -58,16 +58,12 @@
             document.getElementById('tabl_head_1').scrollLeft = document.getElementById('tabl_body_1').scrollLeft;
         };
     </script>
-
 	<script type="text/javascript">
 		var scroll_top1=document.getElementById('tabl_body_1').scrollTop;
-		var prefly_top=document.getElementById('pre_fly').offsetTop
-		
+		document.body.style.overflow = 'hidden';
 		if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)){
-			
 			document.addEventListener("DOMContentLoaded", function(){
-				var elements = document.getElementsByClassName('fly_block')
-					
+				var elements = document.getElementsByClassName('fly_block')	
 					document.getElementById("tabl_body_1").onscroll = function() {
 						var scroll_left=document.getElementById('tabl_body_1').scrollLeft;
 						var scroll_top=document.getElementById('tabl_body_1').scrollTop;
