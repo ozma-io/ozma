@@ -5,9 +5,11 @@
         </li>
         @Each.Lists
             <li class="submenu">
-                <a class="bl" style="background:@Current.Color">@Current.Name</a>
+                <a class="bl" href="@Current.Link" style="background:@Current.Color">@Current.Name</a>
                 <ul class="submenu">
+                  @If.Current.Sub
                     @Partial['MenubarSubmenu', Current.Sub]
+                  @EndIf
                 </ul>
             </li>
         @EndEach

@@ -134,14 +134,38 @@ namespace FunWithFlags.FunApp
                     subMenuModel5.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
                     menuModel.Lists[1].Sub.Add(subMenuModel5);
                 };
-                /*//Sergeev add
-                var barButtons = db.MenuBarButtons.Where(bb =>
-                    UserViewId == currUv
-                ).ToList();
-                //
-                */
-            }
+              };
+            //Sergeev add
 
+            // Кнопки меню получаем из таблицы кнопок для данного UserView
+            var barButtons = db.MenuBarButtons.Where(b =>
+               b.UserViewId == currUv.Id
+               ).OrderBy(t => t.OrdinalNum).ToList();
+            var vvv = db.UserViews.ToList();
+            // находим UserView для формы от этой таблицы
+            // в viewsMultiple находится один элемент со значением "Table"
+            var userViewsF = db.UserViews.Where(uv =>
+                    !viewsMultiple.Contains(uv.Type) &&
+                    db.UVEntities.Where(uve =>
+                        uve.UserViewId == uv.Id &&
+                        entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
+                    ).Any()
+                ).ToList();
+
+            //Добавляем в ранее созданное меню кнопки
+            int cnt = menuModel.Lists.Count;
+            for (int i = 0; i < barButtons.Count; i++)
+            {
+                dynamic MenuBarButtons = new ExpandoObject();
+                dynamic subMenuBarButtons = new ExpandoObject();
+                MenuBarButtons.Name = barButtons[i].Name;
+                MenuBarButtons.Link = System.String.Format("../uv/{0}", userViewsF[0].Id);
+                MenuBarButtons.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
+                MenuBarButtons.Sub =  new List<ExpandoObject>();
+                menuModel.Lists.Add(MenuBarButtons);
+                menuModel.Lists[cnt+i].Sub.Add(subMenuBarButtons);
+            };
+            //
             return menuModel;
         }
 
