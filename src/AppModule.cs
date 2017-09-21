@@ -135,8 +135,7 @@ namespace FunWithFlags.FunApp
                     menuModel.Lists[1].Sub.Add(subMenuModel5);
                 };
               };
-            //Sergeev add
-
+ 
             // Кнопки меню получаем из таблицы кнопок для данного UserView
             var barButtons = db.MenuBarButtons.Where(b =>
                b.UserViewId == currUv.Id
@@ -165,7 +164,6 @@ namespace FunWithFlags.FunApp
                 menuModel.Lists.Add(MenuBarButtons);
                 menuModel.Lists[cnt+i].Sub.Add(subMenuBarButtons);
             };
-            //
             return menuModel;
         }
 

@@ -54,9 +54,10 @@ namespace FunWithFlags.FunApp.Views
             };
             return HtmlFieldTag;
         }
-
+                
         public dynamic GetEntries(DBQuery dbQuery, UserView uv, dynamic getPars, int blockNum)
         {
+            
             var db = dbQuery.Database;
             var recId = (int)getPars.recId;
             //var dbmodel1 = db.Entities.Where(e =>
@@ -108,7 +109,7 @@ namespace FunWithFlags.FunApp.Views
                }
                )
              );
-            var cnt = Entries.Count();
+
             db.Database.CloseConnection();
             return Entries;
         }

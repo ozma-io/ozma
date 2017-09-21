@@ -69,8 +69,7 @@ namespace FunWithFlags.FunApp.Views
                         Width = model.Titles[i].Width,
                         Height = uv.Height,
                         Id =  l[0],
-                    //sergeev changed
-                    href = "window.location.href='../uv/" + (uv.Id+1).ToString()+"?recId="+l[0].ToString()+"'", 
+                        href = "window.location.href='../uv/" + (uv.Id+1).ToString()+"?recId="+l[0].ToString()+"'", 
                 }
                 ).ToList()
                 // сюда положить ссылку на юзервью с формой
