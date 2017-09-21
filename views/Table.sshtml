@@ -58,33 +58,47 @@
             document.getElementById('tabl_head_1').scrollLeft = document.getElementById('tabl_body_1').scrollLeft;
         };
     </script>
-	<script type="text/javascript">
-		var scroll_top1=document.getElementById('tabl_body_1').scrollTop;
-		document.body.style.overflow = 'hidden';
+<script type="text/javascript">
+		var scroll_table_top1=document.getElementById('tabl_body_1').scrollTop;
+		var scroll_window_top1=window.scrollY;
+		document.body.style.overflow='hidden';
 		if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)){
 			document.addEventListener("DOMContentLoaded", function(){
 				var elements = document.getElementsByClassName('fly_block')	
 					document.getElementById("tabl_body_1").onscroll = function() {
 						var scroll_left=document.getElementById('tabl_body_1').scrollLeft;
-						var scroll_top=document.getElementById('tabl_body_1').scrollTop;
+						var scroll_table_top=document.getElementById('tabl_body_1').scrollTop;
 						var offset = elements[0].offsetLeft;
+						var scroll_window_top=window.scrollY;
 						var firstmargin ='0';
 						document.getElementById('tabl_head_1').scrollLeft = document.getElementById('tabl_body_1').scrollLeft;
 								if(scroll_left != offset){
 									for (i = 0; i < elements.length; i++) {
 										elements[i].style.position = "fixed";
 										elements[i].style.marginLeft = firstmargin + 'px';
-										elements[i].style.marginTop = - scroll_top*0.9245 + 'px';
+										elements[i].style.marginTop = - scroll_table_top*0.9245 - scroll_window_top*0.78 + 'px';
 										}
 								}
-								if(scroll_top-scroll_top1 != 0){
-									scroll_top1=document.getElementById('tabl_body_1').scrollTop;
+								if(scroll_table_top-scroll_table_top1 != 0){
+									scroll_table_top1=document.getElementById('tabl_body_1').scrollTop;
 									for (i = 0; i < elements.length; i++) {
 										elements[i].style.position = "relative";
 										elements[i].style.marginLeft = scroll_left*0.925 + 'px';
 										elements[i].style.marginTop ='0px';
-									}
+										}
 								}
+					};
+					window.onscroll=function(){
+					var scroll_window_top=window.scrollY;
+					var scroll_left=document.getElementById('tabl_body_1').scrollLeft;
+						if(scroll_window_top-scroll_window_top1 != 0){
+							scroll_window_top1=window.scrollY;
+							for (i = 0; i < elements.length; i++) {
+								elements[i].style.position = "relative";
+								elements[i].style.marginLeft = scroll_left*0.925 + 'px';
+								elements[i].style.marginTop ='0px';
+								}
+						}
 					};
 			});
 		};
