@@ -63,6 +63,7 @@ namespace FunWithFlags.FunApp
             dynamic menuModel = new ExpandoObject();
             menuModel.Ent = new ExpandoObject();
             menuModel.Lists = new List<ExpandoObject>();
+            menuModel.BarButtons = new List<ExpandoObject>();
 
             menuModel.Ent.Name = entities;
             menuModel.Ent.Link = "../nav";
@@ -135,14 +136,12 @@ namespace FunWithFlags.FunApp
                     menuModel.Lists[1].Sub.Add(subMenuModel5);
                 };
               };
- 
-            // Кнопки меню получаем из таблицы кнопок для данного UserView
+            //Меню Действия с кнопками
             var barButtons = db.MenuBarButtons.Where(b =>
                b.UserViewId == currUv.Id
                ).OrderBy(t => t.OrdinalNum).ToList();
             var vvv = db.UserViews.ToList();
-            // находим UserView для формы от этой таблицы
-            // в viewsMultiple находится один элемент со значением "Table"
+            // находим UserView 
             var userViewsF = db.UserViews.Where(uv =>
                     !viewsMultiple.Contains(uv.Type) &&
                     db.UVEntities.Where(uve =>
@@ -150,20 +149,24 @@ namespace FunWithFlags.FunApp
                         entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
                     ).Any()
                 ).ToList();
-
-            //Добавляем в ранее созданное меню кнопки
+            //Меню Действия
+            dynamic menuActions = new ExpandoObject();
+            menuActions.Name = "Действия";
+            menuActions.Link = "";
+            menuActions.Sub = new List<ExpandoObject>();
+            menuActions.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
+            menuModel.Lists.Add(menuActions);
+            //Подменю с кнопками
             int cnt = menuModel.Lists.Count;
             for (int i = 0; i < barButtons.Count; i++)
             {
-                dynamic MenuBarButtons = new ExpandoObject();
-                dynamic subMenuBarButtons = new ExpandoObject();
-                MenuBarButtons.Name = barButtons[i].Name;
-                MenuBarButtons.Link = System.String.Format("../uv/{0}", userViewsF[0].Id);
-                MenuBarButtons.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-                MenuBarButtons.Sub =  new List<ExpandoObject>();
-                menuModel.Lists.Add(MenuBarButtons);
-                menuModel.Lists[cnt+i].Sub.Add(subMenuBarButtons);
+                dynamic subMenuBarButton = new ExpandoObject();
+                subMenuBarButton.Name = barButtons[i].Name;
+                subMenuBarButton.Link = System.String.Format(barButtons[i].Href, userViewsF[0].Id);
+                subMenuBarButton.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
+                menuModel.Lists[cnt-1].Sub.Add(subMenuBarButton);
             };
+                        
             return menuModel;
         }
 
