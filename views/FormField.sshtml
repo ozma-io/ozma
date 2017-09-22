@@ -1,4 +1,4 @@
-﻿
+
 @Each
 		<div class="container">
 			<div class="label">
@@ -6,7 +6,9 @@
 			</div>
                 <div class="field">
 					<SCRIPT type = "text/javascript">
-						document.write("@Current.HtmlFieldTag");
+						str = "@Current.HtmlFieldTag";
+						str_w = str.replace(/!##!/g,"\"");
+						document.write(str_w);
 					</SCRIPT>
 				</div>
 		</div>

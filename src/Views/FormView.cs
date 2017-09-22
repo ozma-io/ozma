@@ -28,6 +28,8 @@ namespace FunWithFlags.FunApp.Views
         {
             DateTime dt;
             string HtmlFieldTag;
+            //Заменяем двойные и одинарные кавычки
+            string val = value.Replace("\"", "!##!").Replace("'", "\'");
             
             switch (businessType)
             {
@@ -39,7 +41,6 @@ namespace FunWithFlags.FunApp.Views
                     HtmlFieldTag = "<input type=number value=" + value + ">";
                     break;
                 case "list":
-                    //var str = "list;lookup;string;date";
                     List<string> lst = new List<string>(listValues.Split(';'));
                     HtmlFieldTag = "<select>";
                     foreach (string lstVal in lst)
@@ -49,7 +50,7 @@ namespace FunWithFlags.FunApp.Views
                     HtmlFieldTag = HtmlFieldTag + "<select>";
                     break;
                 default:
-                    HtmlFieldTag = "<textarea cols=" + cols.ToString() + " rows=" + rows.ToString() + ">" + value + "</textarea>";
+                    HtmlFieldTag = "<textarea cols=" + cols.ToString() + " rows=" + rows.ToString()+">" + val + "</textarea>";
                     break;
             };
             return HtmlFieldTag;
