@@ -173,6 +173,10 @@ div.nav_ent > a {
 
 /* Таблица */
 
+.Glav_tab::-webkit-scrollbar {
+    width: 0 !important;
+}
+
 .tabl_body::-webkit-scrollbar {
     width: 0 !important;
 }
@@ -180,6 +184,10 @@ div.nav_ent > a {
 .tabl_body {
     overflow: scroll;
     height: 70vh;
+}
+
+.Glav_tab{
+    overflow:scroll;
 }
 
 .tabl_head {
@@ -192,10 +200,6 @@ th {
 
 tr.bl {
     background: #FFFFFF;
-}
-
-#pre_fly{
-    height:40px;
 }
 
 .fly_block {
