@@ -26,6 +26,7 @@ a.bl {
     background-color: #DCDCDC;
     text-decoration: none;
 }
+
 a.bl:hover {
     /*background-color: #808080*/
 }
@@ -56,14 +57,15 @@ ul.menu > li:hover > ul.submenu {
 ul.submenu {
     display: none;
     position: absolute;
-    width: 150px;
+    width: inherit;
     top: 28px;
     left: 0;
-    border: 1px #DCDCDC;
+    border: 1px solid #DCDCDC;
 }
 ul.submenu > li {
     display: block;
     margin-top:1px;
+    width:inherit
 }
 a.bl {
     float: left;
@@ -71,6 +73,7 @@ a.bl {
     margin-right: 1px;
     margin-bottom: 1px;
     border: 1px #DCDCDC;
+    width: inherit;
 }
 
 
