@@ -177,12 +177,7 @@ div.nav_ent > a {
     width: 0 !important;
 }
 
-.tabl_body::-webkit-scrollbar {
-    width: 0 !important;
-}
-
 .tabl_body {
-    overflow: scroll;
     height: 70vh;
 }
 
