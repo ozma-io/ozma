@@ -51,29 +51,32 @@ ul.menu > li {
     /*margin-right: 1px;*/
     /*margin-bottom: 1px;*/
 }
-ul.menu > li:hover > ul.submenu {
-    display: block;
-}
+    ul.menu > li:hover > ul.submenu {
+        display: flex;
+        flex-direction: row;
+    }
 ul.submenu {
     display: none;
     position: absolute;
-    width: inherit;
     top: 28px;
     left: 0;
     border: 1px solid #DCDCDC;
+    border-right:0;
+    border-top:0;
+    width:100%;
 }
 ul.submenu > li {
     display: block;
     margin-top:1px;
-    width:inherit
 }
 a.bl {
     float: left;
     position: relative;
-    margin-right: 1px;
-    margin-bottom: 1px;
-    border: 1px #DCDCDC;
-    width: inherit;
+    border: 1px solid #DCDCDC;
+    border-left: 0;
+    display: inline-block;
+    width:max-content;
+    white-space:nowrap;
 }
 
 

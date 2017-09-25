@@ -20,8 +20,8 @@ a.bl {
     display: block;
     padding: 5px;
     color: black;
-    background-color: #DCDCDC;
     text-decoration: none;
+    border-bottom: 1px solid #DCDCDC;
 }
 
 
@@ -42,7 +42,6 @@ ul.menu > li{
 
 ul.menu > li.submenu  {
     position: relative;
-    margin-bottom: 1px;
     width: 100%;
 }
 
@@ -58,7 +57,7 @@ ul.submenu {
 }
 ul.submenu > li {
     display: block;
-    margin-top: 1px;
+    z-index: 2000000;
 }
 
 

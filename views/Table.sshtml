@@ -68,11 +68,11 @@
 		document.getElementById('tabl_head_1').style.top='120px';
 		document.getElementById('plav').style.width='100%';
 		document.getElementById('plav').style.position='fixed';
-		document.getElementById('plav').style.zIndex='100';
+		document.getElementById('plav').style.zIndex='1';
 		document.getElementById('plav').style.top='94.5px';
 		document.getElementsByClassName('mytitle')[0].style.width='100%';
 		document.getElementsByClassName('mytitle')[0].style.position='fixed';
-		document.getElementsByClassName('mytitle')[0].style.zIndex='100';
+		document.getElementsByClassName('mytitle')[0].style.zIndex='10';
 		document.getElementById('tabl_body_1').style.position='relative';
 		document.getElementById('tabl_body_1').style.top='120px';
 			var elements = document.getElementsByClassName('Glav_tab')
