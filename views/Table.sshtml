@@ -8,26 +8,27 @@
     <div class="main_table">
         @Partial['Menubar', Model.MenuBar]
         <div class="tabl">
-            <div class="tabl_head" id="tabl_head_1">
-                <table style="background:@Model.Color">
-                    <thead>
-                        <tr>
-                            @Each.Titles
-							   <th style=
-                                    "
-                                        min-width:@Current.Width ; 
-                                        max-width:@Current.Width 
-                                    "
-                                    nowrap
-                                >@Current.Name</th>
-                            @EndEach
-                        </tr>
-                    </thead>
-                </table>
-            </div>
+			<div id="plav">
+				<div class="tabl_head" id="tabl_head_1">
+					<table style="background:@Model.Color">
+						<thead>
+							<tr>
+								@Each.Titles
+								   <th style=
+										"
+											min-width:@Current.Width ; 
+											max-width:@Current.Width 
+										"
+										nowrap
+									>@Current.Name</th>
+								@EndEach
+							</tr>
+						</thead>
+					</table>
+				</div>
+			</div>
             <div class="tabl_body" id="tabl_body_1">
 			@Each.Entries
-			<div id="pre_fly">
 			<div class="fly_block">
 				<div>
 				Плавающий блок 1
@@ -35,7 +36,6 @@
 				<div>
 				Плавающий блок 2
 				</div>
-			</div>
 			</div>
 			<div  Class="Glav_tab">
                 <table style="background:@Model.Color">
@@ -55,15 +55,26 @@
         </div> 
 	</div>
 
-    <!--script type="text/javascript">
+    <script type="text/javascript">
         document.getElementById("tabl_body_1").onscroll = function() {
             document.getElementById('tabl_head_1').scrollLeft = document.getElementById('tabl_body_1').scrollLeft;
         };
-    </script-->
+    </script>
 
 	<script type="text/javascript">
+	if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)){
 		document.addEventListener("DOMContentLoaded", function(){
-		document.body.style.overflow='hidden';
+		document.getElementById('tabl_head_1').style.positon='relative';
+		document.getElementById('tabl_head_1').style.top='120px';
+		document.getElementById('plav').style.width='100%';
+		document.getElementById('plav').style.position='fixed';
+		document.getElementById('plav').style.zIndex='100';
+		document.getElementById('plav').style.top='94.5px';
+		document.getElementsByClassName('mytitle')[0].style.width='100%';
+		document.getElementsByClassName('mytitle')[0].style.position='fixed';
+		document.getElementsByClassName('mytitle')[0].style.zIndex='100';
+		document.getElementById('tabl_body_1').style.position='relative';
+		document.getElementById('tabl_body_1').style.top='120px';
 			var elements = document.getElementsByClassName('Glav_tab')
 			var scroll=elements[0].scrollLeft;
 			
@@ -85,5 +96,6 @@
 			
 			ABC();
 		});
+	};
 	</script>
 @EndSection
