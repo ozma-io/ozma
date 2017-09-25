@@ -51,31 +51,34 @@ ul.menu > li {
     /*margin-right: 1px;*/
     /*margin-bottom: 1px;*/
 }
-    ul.menu > li:hover > ul.submenu {
-        display: flex;
-        flex-direction: row;
-    }
+
+ul.menu > li:hover > ul.submenu {
+    display: flex;
+    flex-direction: column;
+}
+
+ul.menu > li {
+    border: 1px solid #DCDCDC;
+    border-left:0;
+}
+
 ul.submenu {
     display: none;
     position: absolute;
     top: 28px;
     left: 0;
-    border: 1px solid #DCDCDC;
-    border-right:0;
-    border-top:0;
-    width:100%;
+    border-bottom:1px solid #DCDCDC;
 }
+
 ul.submenu > li {
     display: block;
-    margin-top:1px;
+    background-color: #F5C700;
+    border: 1px solid #DCDCDC;
+    border-bottom: 0;
 }
 a.bl {
     float: left;
     position: relative;
-    border: 1px solid #DCDCDC;
-    border-left: 0;
-    display: inline-block;
-    width:max-content;
     white-space:nowrap;
 }
 
