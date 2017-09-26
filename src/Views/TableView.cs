@@ -10,7 +10,11 @@ namespace FunWithFlags.FunApp.Views
     using Microsoft.EntityFrameworkCore.Infrastructure;
 
     using FunWithFlags.FunCore;
-    using FunWithFlags.FunDB;
+    using FunWithFlags.FunDB.Context;
+    using FunWithFlags.FunDB.Attribute;
+    using FunWithFlags.FunDB.View;
+    using FieldName = FunWithFlags.FunDB.FunQL.AST.FieldName;
+    using Result = FunWithFlags.FunDB.FunQL.AST.Result<FunWithFlags.FunDB.FunQL.AST.EntityName, FunWithFlags.FunDB.FunQL.AST.FieldName>;
 
     public class TableView : View
     {
@@ -24,14 +28,15 @@ namespace FunWithFlags.FunApp.Views
             get { return ViewType.Multiple; }
         }
 
-        public ExpandoObject Get(DBQuery dbQuery, UserView uv, dynamic getPars)
+        public ExpandoObject Get(Context ctx, UserView uv, dynamic getPars)
         {
-            var db = dbQuery.Database;
+            var db = ctx.Database;
             dynamic model = new ExpandoObject();
 
             model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
 
             // Формируем название страницы в браузере
+            // FIXME: use name from UserView
             var entitiesQuery = db.Entities.Where(e =>
                 db.UVEntities.Where(uve =>
                     uve.UserViewId == uv.Id && uve.EntityId == e.Id
@@ -39,37 +44,23 @@ namespace FunWithFlags.FunApp.Views
             );
             model.FormName = entitiesQuery.First().DisplayNamePlural;
 
-            var dbmodel = db.Entities.Include(e => e.Schema).Where(e =>
-                db.UVEntities.Where(uve =>
-                    uve.EntityId == e.Id &&
-                    uve.UserViewId == uv.Id
-                ).Any()
-            ).GroupJoin(db.UVFields.Include(tuvf => tuvf.Field),
-                ent => ent.Id,
-                uvf => uvf.Field.EntityId,
-                (ent, uvf) => new {
-                    Entity = ent,
-                    UVFields = uvf.ToList()
-                }
-            // FIXME: Workaround for https://github.com/aspnet/EntityFrameworkCore/issues/9609
-            // We filter and sort UVFields after they are fetched with EFCore.
-            ).ToList().Select(old_model => new {
-                Entity = old_model.Entity,
-                UVFields = old_model.UVFields.Where(tuvf => tuvf.UserViewId == uv.Id).OrderBy(t => t.OrdNum).ToList()
-            }).Single();
-      
-            model.Titles = dbmodel.UVFields;
+            var resultId = Tuple.Create(Result.NewRField(new FieldName(null, "Id")), new AttributeMap());
+            var parsedQuery = ViewResolver.ParseQuery(uv);
+            var newQuery = parsedQuery.MergeResults(new[] { resultId });
+            var result = ctx.Resolver.RunQuery(newQuery);
 
-            var query = SelectExpr.Single(Table.FromEntity(dbmodel.Entity), (new[] { "Id" } ).Concat(dbmodel.UVFields.Select(f => f.Field.Name)));
-            var entries = dbQuery.Query(query).Select(l =>
-                l.Skip(1).Select((a,i) => new
+            model.Titles = result.Columns.Skip(1).Select(c => c.Field).ToList();
+
+            var entries = result.Rows.Select(row =>
+                row.Cells.Skip(1).Zip(result.Columns.Skip(1), (cell, col) => new
                     {
                         //Value = a,
-                        Value = (dbmodel.UVFields[i].Field.BusinessType != "date") ? a : a.Substring(0,10),
-                        Width = model.Titles[i].Width,
-                        Height = uv.Height,
-                        Id =  l[0],
-                        href = "window.location.href='../uv/" + (uv.Id+1).ToString()+"?recId="+l[0].ToString()+"'", 
+                        Value = (col.Field.BusinessType != "date") ? cell : cell.Substring(0,10),
+                        Width = col.Attributes.GetIntWithDefault(100, "Size", "Width"),
+                        Height = 20,
+                        Id =  row.Cells[0],
+                        // FIXME: ????
+                        href = "window.location.href='../uv/" + (uv.Id+1).ToString()+"?recId="+row.Cells[0].ToString()+"'", 
                 }
                 ).ToList()
                 // сюда положить ссылку на юзервью с формой
@@ -103,7 +94,7 @@ namespace FunWithFlags.FunApp.Views
             return model;
         }
 
-        public ExpandoObject Post(DBQuery dbQuery, UserView uv, DynamicDictionary getPars, DynamicDictionary postPars)
+        public ExpandoObject Post(Context ctx, UserView uv, DynamicDictionary getPars, DynamicDictionary postPars)
         {
             throw new NotImplementedException("TableView Post is not implemented");
         }       

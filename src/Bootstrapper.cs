@@ -15,7 +15,7 @@ namespace FunWithFlags.FunApp
     using Autofac;
 
     using FunWithFlags.FunCore;
-    using FunWithFlags.FunDB;
+    using FunWithFlags.FunDB.Context;
 
     /// <summary>
     /// Returns current working directory as the root path for views.
@@ -78,7 +78,7 @@ namespace FunWithFlags.FunApp
             var builder = new ContainerBuilder();
 
             // Provide database context if needed.
-            builder.Register(c => new DBQuery(this.dbString, this.loggerFactory)).As<DBQuery>().InstancePerRequest();
+            builder.Register(c => new Context(this.dbString, this.loggerFactory)).As<Context>().InstancePerRequest();
 
             builder.Update(container.ComponentRegistry);
         }
@@ -90,12 +90,12 @@ namespace FunWithFlags.FunApp
         {
             base.RequestStartup(container, pipelines, context);
             
-            var db = container.Resolve<DBQuery>();
+            var ctx = container.Resolve<Context>();
 
             var formsAuthConfiguration = new FormsAuthenticationConfiguration()
                 {
                     RedirectUrl = "~/login",
-                    UserMapper = new CustomUserMapper(db.Database)
+                    UserMapper = new CustomUserMapper(ctx.Database)
                 };
             FormsAuthentication.Enable(pipelines, formsAuthConfiguration);
         }

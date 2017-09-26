@@ -9,7 +9,7 @@ namespace FunWithFlags.FunApp
     using System.Dynamic;
 
     using FunWithFlags.FunCore;
-    using FunWithFlags.FunDB;
+    using FunWithFlags.FunDB.Context;
     using FunWithFlags.FunApp.Views;
 
     public class AppModule : NancyModule
@@ -170,10 +170,10 @@ namespace FunWithFlags.FunApp
             return menuModel;
         }
 
-        public AppModule(DBQuery dbQuery)
+        public AppModule(Context ctx)
         {
             this.RequiresAuthentication();
-            var db = dbQuery.Database;
+            var db = ctx.Database;
 
             Get("/", _ =>
             {
@@ -270,7 +270,7 @@ namespace FunWithFlags.FunApp
                 Запускаем sshtml с выгруженной моделью меню и данных
                 */
 
-                var tModel = view.Get(dbQuery, uv, this.Request.Query);
+                var tModel = view.Get(ctx, uv, this.Request.Query);
                 tModel.MenuBar = this.GetMenuBar(db, uv);
                 return View[view.ViewName, tModel];
             });

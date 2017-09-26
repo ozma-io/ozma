@@ -10,7 +10,11 @@ namespace FunWithFlags.FunApp.Views
     using Microsoft.EntityFrameworkCore.Infrastructure;
 
     using FunWithFlags.FunCore;
-    using FunWithFlags.FunDB;
+    using FunWithFlags.FunDB.Context;
+    using FunWithFlags.FunDB.View;
+    using EntityName = FunWithFlags.FunDB.FunQL.AST.EntityName;
+    using FieldName = FunWithFlags.FunDB.FunQL.AST.FieldName;
+    using WhereExpr = FunWithFlags.FunDB.FunQL.AST.WhereExpr<FunWithFlags.FunDB.FunQL.AST.EntityName, FunWithFlags.FunDB.FunQL.AST.FieldName>;
 
     public class FormView : View
     {
@@ -56,127 +60,9 @@ namespace FunWithFlags.FunApp.Views
             return HtmlFieldTag;
         }
                 
-        public dynamic GetEntries(DBQuery dbQuery, UserView uv, dynamic getPars, int blockNum)
+        public ExpandoObject Get(Context ctx, UserView uv, dynamic getPars)
         {
-            
-            var db = dbQuery.Database;
-            var recId = (int)getPars.recId;
-            //var dbmodel1 = db.Entities.Where(e =>
-            var dbmodel = db.Entities.Include(ent => ent.Schema).Where(e =>
-               db.UVEntities.Where(uve =>
-                   uve.EntityId == e.Id &&
-                   uve.UserViewId == uv.Id
-               ).Any()
-           ).GroupJoin(db.UVFields.Include(tuvf => tuvf.Field),
-               ent => ent.Id,
-               uvf => uvf.Field.EntityId,
-               (ent, uvf) => new
-               {
-                   Entity = ent,
-                   UVFields = uvf.ToList()
-               }
-           // FIXME: Workaround for https://github.com/aspnet/EntityFrameworkCore/issues/9609
-           // We filter and sort UVFields after they are fetched with EFCore.
-           ).ToList().Select(old_model => new
-           {
-               Entity = old_model.Entity,
-               UVFields = old_model.UVFields.Where(tuvf => tuvf.UserViewId == uv.Id && tuvf.BlockNum == blockNum).OrderBy(t => t.OrdInBlock).ToList()
-           }).Single();
-
-             // Дописано условие - что бы бралась только 1 запись по recId а не все записи
-            var columnWhere = new Column(Table.FromEntity(dbmodel.Entity), "Id");
-            var query = SelectExpr.Single(Table.FromEntity(dbmodel.Entity), dbmodel.UVFields.Select(f => f.Field.Name), CondExpr.NewCEq(CondExpr.NewCColumn(columnWhere), CondExpr.NewCInt(recId)));
-
-            var Entries = dbQuery.Query(query).Select(l =>
-               l.Select((a, i) => new
-               {
-                   Name = dbmodel.UVFields[i].Name,
-                   Cols = 40,
-                   Rows = (a.Length / 40 + 1 > 5) ? 5 : a.Length / 40 + 1,
-                   Width = dbmodel.UVFields[i].Width,
-                   Heigth = uv.Height,
-                   BlockNum = dbmodel.UVFields[i].BlockNum,
-                   OrdInBlock = dbmodel.UVFields[i].OrdInBlock,
-                   BusinessType = dbmodel.UVFields[i].Field.BusinessType,
-                   ListValues = dbmodel.UVFields[i].Field.ListValues,
-                   HtmlFieldTag = GetHtmlFieldTag(
-                       dbmodel.UVFields[i].Field.BusinessType,
-                       40,
-                       (a.Length / 40 + 1 > 5) ? 5 : a.Length / 40 + 1,
-                       a,
-                       dbmodel.UVFields[i].Field.ListValues
-                       ),
-                   Value = a
-               }
-               )
-             );
-
-            db.Database.CloseConnection();
-            return Entries;
-        }
-
-        public dynamic GetEntriesDefault(DBQuery dbQuery, UserView uv, dynamic getPars, int blockNum)
-        {
-            var db = dbQuery.Database;
-            var recId = (int)getPars.recId;
-            //var dbmodel1 = db.Entities.Where(e =>
-            var dbmodel = db.Entities.Include(ent => ent.Schema).Where(e =>
-               db.UVEntities.Where(uve =>
-                   uve.EntityId == e.Id &&
-                   uve.UserViewId == uv.Id
-               ).Any()
-           ).GroupJoin(db.UVFields.Include(tuvf => tuvf.Field),
-               ent => ent.Id,
-               uvf => uvf.Field.EntityId,
-               (ent, uvf) => new
-               {
-                   Entity = ent,
-                   UVFields = uvf.ToList()
-               }
-           // FIXME: Workaround for https://github.com/aspnet/EntityFrameworkCore/issues/9609
-           // We filter and sort UVFields after they are fetched with EFCore.
-           ).ToList().Select(old_model => new
-           {
-               Entity = old_model.Entity,
-               UVFields = old_model.UVFields.Where(tuvf => tuvf.UserViewId == uv.Id && tuvf.BlockNum == blockNum).OrderBy(t => t.OrdInBlock).ToList()
-           }).Single();
-
-            // Дописано условие - что бы бралась только 1 запись по recId а не все записи
-            var columnWhere = new Column(Table.FromEntity(dbmodel.Entity), "Id");
-            var query = SelectExpr.Single(Table.FromEntity(dbmodel.Entity), dbmodel.UVFields.Select(f => f.Field.Name), CondExpr.NewCEq(CondExpr.NewCColumn(columnWhere), CondExpr.NewCInt(recId)));
-
-            var Entries = dbQuery.Query(query).Select(l =>
-               l.Select((a, i) => new
-               {
-                   Name = dbmodel.UVFields[i].Name,
-                   Cols = 40,
-                   Rows = (a.Length / 40 + 1 > 5) ? 5 : a.Length / 40 + 1,
-                   Width = dbmodel.UVFields[i].Width,
-                   Heigth = uv.Height,
-                   BlockNum = dbmodel.UVFields[i].BlockNum,
-                   OrdInBlock = dbmodel.UVFields[i].OrdInBlock,
-                   BusinessType = dbmodel.UVFields[i].Field.BusinessType,
-                   ListValues = dbmodel.UVFields[i].Field.ListValues,
-                   HtmlFieldTag = GetHtmlFieldTag(
-                       dbmodel.UVFields[i].Field.BusinessType,
-                       40,
-                       (a.Length / 40 + 1 > 5) ? 5 : a.Length / 40 + 1,
-                       a,
-                       dbmodel.UVFields[i].Field.ListValues
-                       ),
-                   Value = a
-               }
-               )
-             );
-            var cnt = Entries.Count();
-            db.Database.CloseConnection();
-            return Entries;
-        }
-
-        public ExpandoObject Get(DBQuery dbQuery, UserView uv, dynamic getPars)
-        {
-     
-            var db = dbQuery.Database;
+            var db = ctx.Database;
             /*var recId = (int)getPars.recId;
             if (recId == 0)
             {
@@ -194,11 +80,42 @@ namespace FunWithFlags.FunApp.Views
             );
             model.FormName = entitiesQuery.First().DisplayName;
 
-            //var Entries1 = GetEntries(dbQuery, uv, getPars, 1);
-            model.Entries1 = GetEntries(dbQuery, uv, getPars, 1);
-            model.Entries2 = GetEntries(dbQuery, uv, getPars, 2);
-            model.Entries3 = GetEntries(dbQuery, uv, getPars, 3);
-            model.Entries4 = GetEntries(dbQuery, uv, getPars, 4);
+            var recId = (int)getPars.recId;
+             // Дописано условие - что бы бралась только 1 запись по recId а не все записи
+            var columnWhere = WhereExpr.NewWEq(WhereExpr.NewWField(new FieldName(null, "Id")), WhereExpr.NewWInt(recId));
+            var parsedQuery = ViewResolver.ParseQuery(uv);
+            var newQuery = parsedQuery.MergeWhere(columnWhere);
+            var result = ctx.Resolver.RunQuery(newQuery);
+            var row = result.Rows[0];
+
+            var Entries = row.Cells.Zip(result.Columns, (cell, col) => new
+               {
+                   Name = col.Name,
+                   Cols = 40,
+                   Rows = (cell.Length / 40 + 1 > 5) ? 5 : cell.Length / 40 + 1,
+                   Width = col.Attributes.GetIntWithDefault(100, "Size", "Width"),
+                   // FIXME: get from user view-scope attributes
+                   Height = 20,
+                   BlockNum = col.Attributes.GetIntWithDefault(0, "Form", "BlockNum"),
+                   OrdInBlock = col.Attributes.GetIntWithDefault(0, "Form", "OrdInBlock"),
+                   // FIXME: Subqueries don't have Fields!
+                   BusinessType = col.Field.BusinessType,
+                   ListValues = col.Field.ListValues,
+                   HtmlFieldTag = GetHtmlFieldTag(
+                       col.Field.BusinessType,
+                       40,
+                       (cell.Length / 40 + 1 > 5) ? 5 : cell.Length / 40 + 1,
+                       cell,
+                       col.Field.ListValues
+                       ),
+                   Value = cell
+               });
+
+            //var Entries1 = GetEntries(ctx, uv, getPars, 1);
+            model.Entries1 = Entries.Where(cell => cell.BlockNum == 1);
+            model.Entries2 = Entries.Where(cell => cell.BlockNum == 2);
+            model.Entries3 = Entries.Where(cell => cell.BlockNum == 3);
+            model.Entries4 = Entries.Where(cell => cell.BlockNum == 4);
             
             /*
             // Поля для блока 1
@@ -294,7 +211,7 @@ namespace FunWithFlags.FunApp.Views
             return model;
         }
 
-        public ExpandoObject Post(DBQuery dbQuery, UserView uv, DynamicDictionary getPars, DynamicDictionary postPars)
+        public ExpandoObject Post(Context ctx, UserView uv, DynamicDictionary getPars, DynamicDictionary postPars)
         {
             throw new NotImplementedException("FormView Post is not implemented");
         }       
