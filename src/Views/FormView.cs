@@ -14,7 +14,8 @@ namespace FunWithFlags.FunApp.Views
     using FunWithFlags.FunDB.View;
     using EntityName = FunWithFlags.FunDB.FunQL.AST.EntityName;
     using FieldName = FunWithFlags.FunDB.FunQL.AST.FieldName;
-    using WhereExpr = FunWithFlags.FunDB.FunQL.AST.WhereExpr<FunWithFlags.FunDB.FunQL.AST.EntityName, FunWithFlags.FunDB.FunQL.AST.FieldName>;
+    using ValueExpr = FunWithFlags.FunDB.FunQL.AST.ValueExpr<FunWithFlags.FunDB.FunQL.AST.EntityName, FunWithFlags.FunDB.FunQL.AST.FieldName>;
+    using Value = FunWithFlags.FunDB.FunQL.AST.Value;
 
     public class FormView : View
     {
@@ -82,7 +83,7 @@ namespace FunWithFlags.FunApp.Views
 
             var recId = (int)getPars.recId;
              // Дописано условие - что бы бралась только 1 запись по recId а не все записи
-            var columnWhere = WhereExpr.NewWEq(WhereExpr.NewWField(new FieldName(null, "Id")), WhereExpr.NewWInt(recId));
+            var columnWhere = ValueExpr.NewWEq(ValueExpr.NewWField(new FieldName(null, "Id")), ValueExpr.NewWValue(Value.NewVInt(recId)));
             var parsedQuery = ViewResolver.ParseQuery(uv);
             var newQuery = parsedQuery.MergeWhere(columnWhere);
             var result = ctx.Resolver.RunQuery(newQuery);
