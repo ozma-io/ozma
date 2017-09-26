@@ -52,15 +52,15 @@ namespace FunWithFlags.FunApp.Views
             model.Titles = result.Columns.Skip(1).Select(col => new
                 {
                     Name = col.Attributes.GetStringWithDefault(col.Name, "Caption"),
-                    Width = col.Attributes.GetIntWithDefault(100, "Size", "Width")
-                });
+                    Width = col.Attributes.GetIntWithDefault(100, "Size", "Width").ToString() + "px"
+            });
 
             var entries = result.Rows.Select(row =>
                 row.Cells.Skip(1).Zip(result.Columns.Skip(1), (cell, col) => new
                     {
                         //Value = a,
                         Value = (col.Field.BusinessType != "date") ? cell : cell.Substring(0,10),
-                        Width = col.Attributes.GetIntWithDefault(100, "Size", "Width"),
+                        Width = col.Attributes.GetIntWithDefault(100, "Size", "Width").ToString()+"px",
                         Height = 20,
                         Id =  row.Cells[0],
                         // FIXME: ????
