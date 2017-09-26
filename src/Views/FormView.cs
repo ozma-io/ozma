@@ -90,7 +90,7 @@ namespace FunWithFlags.FunApp.Views
 
             var Entries = row.Cells.Zip(result.Columns, (cell, col) => new
                {
-                   Name = col.Name,
+                   Name = col.Attributes.GetStringWithDefault(col.Name, "Caption"),
                    Cols = 40,
                    Rows = (cell.Length / 40 + 1 > 5) ? 5 : cell.Length / 40 + 1,
                    Width = col.Attributes.GetIntWithDefault(100, "Size", "Width"),

@@ -49,7 +49,11 @@ namespace FunWithFlags.FunApp.Views
             var newQuery = parsedQuery.MergeResults(new[] { resultId });
             var result = ctx.Resolver.RunQuery(newQuery);
 
-            model.Titles = result.Columns.Skip(1).Select(c => c.Field).ToList();
+            model.Titles = result.Columns.Skip(1).Select(col => new
+                {
+                    Name = col.Attributes.GetStringWithDefault(col.Name, "Caption"),
+                    Width = col.Attributes.GetIntWithDefault(100, "Size", "Width")
+                });
 
             var entries = result.Rows.Select(row =>
                 row.Cells.Skip(1).Zip(result.Columns.Skip(1), (cell, col) => new
