@@ -37,12 +37,30 @@ namespace FunWithFlags.FunApp.Views
 
             // Формируем название страницы в браузере
             // FIXME: use name from UserView
-            var entitiesQuery = db.Entities.Where(e =>
+            var entitie = db.Entities.Where(e =>
                 db.UVEntities.Where(uve =>
                     uve.UserViewId == uv.Id && uve.EntityId == e.Id
                 ).Any()
             );
-            model.FormName = entitiesQuery.First().DisplayNamePlural;
+            model.FormName = entitie.First().DisplayNamePlural;
+
+            /*var userViewsF = db.UserViews.Where(uvf =>
+                    uvf.Type=="Form" &&
+                    db.UVEntities.Where(uve =>
+                        //uve.UserViewId == uv.Id &&
+                        uve.Id== entitiesQuery.First().Id
+                    //entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
+                    ).Any()
+                ).ToList();
+            var uvF = db.UVEntities.Where(uve =>
+                          uve.UserViewId == uv.Id /*&&
+                        entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
+                    ).Join(db.UserViews.Where(uvw =>
+                        uvw.Type == "Form").ToList()
+                    ).ToList();
+            var vvv = userViewsF;
+            var vvvE = uvF;
+            */
 
             var resultId = Tuple.Create(Result.NewRField(new FieldName(null, "Id")), new AttributeMap());
             var parsedQuery = ViewResolver.ParseQuery(uv);

@@ -140,7 +140,6 @@ namespace FunWithFlags.FunApp
             var barButtons = db.MenuBarButtons.Where(b =>
                b.UserViewId == currUv.Id
                ).OrderBy(t => t.OrdinalNum).ToList();
-            var vvv = db.UserViews.ToList();
             // находим UserView 
             var userViewsF = db.UserViews.Where(uv =>
                     !viewsMultiple.Contains(uv.Type) &&

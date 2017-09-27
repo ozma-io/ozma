@@ -1,12 +1,17 @@
 <div class="container">
-	<div class="label">
-              <p><strong>@Current.Name</strong></p>
-	</div>
-              <div class="field">
-			<SCRIPT type = "text/javascript">
-				str = "@Current.HtmlFieldTag";
-				str_w = str.replace(/!##!/g,"\"");
-				document.write(str_w);
-			</SCRIPT>
-		</div>
+  <div class="label">
+    <p>
+      <strong>@Current.Name</strong>
+    </p>
+  </div>
+  <div class="field">
+    <SCRIPT type = "text/javascript">
+      str = "@Current.HtmlFieldTag";
+      str_w = str.replace(/!##!/g,"\"");
+      document.write(str_w);
+    </SCRIPT>
+  </div>
 </div>
+
+
+

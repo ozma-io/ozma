@@ -33,8 +33,8 @@ namespace FunWithFlags.FunApp.Views
         {
             DateTime dt;
             string HtmlFieldTag;
-            //Заменяем двойные и одинарные кавычки
-            string val = value.Replace("\"", "!##!").Replace("'", "\'");
+            //Заменяем двойные и одинарные кавычки, перенос строки для javascript
+            string val = value.Replace("\"", "!##!").Replace("'", "\'").Replace("\r\n", "\\r\\n");
             
             switch (businessType)
             {
@@ -74,50 +74,115 @@ namespace FunWithFlags.FunApp.Views
 
             model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
             // Формируем название страницы в браузере
-            var entitiesQuery = db.Entities.Where(e =>
+            var entitie = db.Entities.Where(e =>
                 db.UVEntities.Where(uve =>
                     uve.UserViewId == uv.Id && uve.EntityId == e.Id
                 ).Any()
             );
-            model.FormName = entitiesQuery.First().DisplayName;
-
+            model.FormName = entitie.First().DisplayName;
             var recId = (int)getPars.recId;
-             // Дописано условие - что бы бралась только 1 запись по recId а не все записи
             var columnWhere = ValueExpr.NewWEq(ValueExpr.NewWField(new FieldName(null, "Id")), ValueExpr.NewWValue(Value.NewVInt(recId)));
             var parsedQuery = ViewResolver.ParseQuery(uv);
             var newQuery = parsedQuery.MergeWhere(columnWhere);
             var result = ctx.Resolver.RunQuery(newQuery);
-            var row = result.Rows[0];
 
-            var Entries = row.Cells.Zip(result.Columns, (cell, col) => new
-               {
-                   Name = col.Attributes.GetStringWithDefault(col.Name, "Caption"),
-                   Cols = 40,
-                   Rows = (cell.Length / 40 + 1 > 5) ? 5 : cell.Length / 40 + 1,
-                   Width = col.Attributes.GetIntWithDefault(100, "Size", "Width"),
-                   // FIXME: get from user view-scope attributes
-                   Height = 20,
-                   BlockNum = col.Attributes.GetIntWithDefault(0, "Form", "BlockNum"),
-                   OrdInBlock = col.Attributes.GetIntWithDefault(0, "Form", "OrdInBlock"),
-                   // FIXME: Subqueries don't have Fields!
-                   BusinessType = col.Field.BusinessType,
-                   ListValues = col.Field.ListValues,
-                   HtmlFieldTag = GetHtmlFieldTag(
-                       col.Field.BusinessType,
-                       40,
-                       (cell.Length / 40 + 1 > 5) ? 5 : cell.Length / 40 + 1,
-                       cell,
-                       col.Field.ListValues
-                       ),
-                   Value = cell
-               });
+            if (recId > 0)
+            {
+                var row = result.Rows[0];
 
-            //var Entries1 = GetEntries(ctx, uv, getPars, 1);
-            model.Entries1 = Entries.Where(cell => cell.BlockNum == 1);
-            model.Entries2 = Entries.Where(cell => cell.BlockNum == 2);
-            model.Entries3 = Entries.Where(cell => cell.BlockNum == 3);
-            model.Entries4 = Entries.Where(cell => cell.BlockNum == 4);
-            
+                var Entries = row.Cells.Zip(result.Columns, (cell, col) => new
+                {
+                    Name = col.Attributes.GetStringWithDefault(col.Name, "Caption"),
+                    Cols = 40,
+                    Rows = (cell.Length / 40 + 1 > 5) ? 5 : cell.Length / 40 + 1,
+                    Width = col.Attributes.GetIntWithDefault(100, "Size", "Width"),
+                    // FIXME: get from user view-scope attributes
+                    Height = 20,
+                    BlockNum = col.Attributes.GetIntWithDefault(0, "Form", "BlockNum"),
+                    OrdInBlock = col.Attributes.GetIntWithDefault(0, "Form", "OrdInBlock"),
+                    // FIXME: Subqueries don't have Fields!
+                    BusinessType = col.Field.BusinessType,
+                    ListValues = col.Field.ListValues,
+                    HtmlFieldTag = GetHtmlFieldTag(
+                           col.Field.BusinessType,
+                           40,
+                           (cell.Length / 40 + 1 > 5) ? 5 : cell.Length / 40 + 1,
+                           cell,
+                           col.Field.ListValues
+                           ),
+                    Value = cell
+                });
+
+                model.Entries1 = Entries.Where(cell => cell.BlockNum == 1);
+                model.Entries2 = Entries.Where(cell => cell.BlockNum == 2);
+                model.Entries3 = Entries.Where(cell => cell.BlockNum == 3);
+                model.Entries4 = Entries.Where(cell => cell.BlockNum == 4);
+            }
+            else
+            {
+                var EntriesDef1= new List<ExpandoObject>();
+                var EntriesDef2 = new List<ExpandoObject>();
+                var EntriesDef3 = new List<ExpandoObject>();
+                var EntriesDef4 = new List<ExpandoObject>();
+                foreach (ViewColumn col in result.Columns)
+                {
+                    dynamic entry = new ExpandoObject();
+                    string val;
+                    //FIXME use ctx.Resolver.GetTemplate(db.Entities.Where(e => e.Name == entitie.First().Name).Single());
+                    switch (col.Field.BusinessType)
+                    {
+                        case "int":
+                            val = "0";
+                            break;
+                        case "date":
+                            val = DateTime.Today.ToString("yyyy-MM-dd");
+                            break;
+                        default:
+                            val = "";
+                            break;
+                    };
+                    //
+                    entry.Name = col.Attributes.GetStringWithDefault(col.Name, "Caption");
+                    entry.Cols = 40;
+                    entry.Rows = 1;
+                    entry.Width = col.Attributes.GetIntWithDefault(100, "Size", "Width");
+                    // FIXME: get from user view-scope attributes
+                    entry.Height = 20;
+                    entry.BlockNum = col.Attributes.GetIntWithDefault(0, "Form", "BlockNum");
+                    entry.OrdInBlock = col.Attributes.GetIntWithDefault(0, "Form", "OrdInBlock");
+                    // FIXME: Subqueries don't have Fields!
+                    entry.BusinessType = col.Field.BusinessType;
+                    entry.ListValues = col.Field.ListValues;
+                    entry.HtmlFieldTag = GetHtmlFieldTag(
+                           col.Field.BusinessType,
+                           40,
+                           1,
+                           val,
+                           col.Field.ListValues
+                           );
+                    
+                    entry.Value = val;
+                    switch (entry.BlockNum)
+                    {
+                        case 1:
+                            EntriesDef1.Add(entry);
+                            break;
+                        case 2:
+                            EntriesDef2.Add(entry);
+                            break;
+                        case 3:
+                            EntriesDef3.Add(entry);
+                            break;
+                        case 4:
+                            EntriesDef4.Add(entry);
+                            break;
+                    };
+                };
+                model.Entries1 = EntriesDef1;
+                model.Entries2 = EntriesDef2;
+                model.Entries3 = EntriesDef3;
+                model.Entries4 = EntriesDef4;
+            }
             /*
             // Поля для блока 1
             var dbmodel1 = db.Entities.Where(e =>
