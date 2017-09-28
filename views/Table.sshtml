@@ -74,7 +74,7 @@
 		document.getElementsByClassName('mytitle')[0].style.position='fixed';
 		document.getElementsByClassName('mytitle')[0].style.zIndex='10';
 		document.getElementById('tabl_body_1').style.position='relative';
-		document.getElementById('tabl_body_1').style.top='120px';
+		document.getElementById('tabl_body_1').style.top='124px';
 			var elements = document.getElementsByClassName('Glav_tab')
 			var scroll=elements[0].scrollLeft;
 			
