@@ -1,4 +1,4 @@
-<div class="mytitle">
+<div class="mytitle" onclick>
     <ul class="menu">
         <li class="submenu">
             <a class="bl" href="@Model.Ent.Link" style="background:@Model.Ent.Color">@Model.Ent.Name</a>
