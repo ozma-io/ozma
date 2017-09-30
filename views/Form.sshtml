@@ -5,6 +5,7 @@
 @EndSection
 
 @Section['Content']
+<form name=form action="" method="POST" onSubmit="return confirm('Сохранить запись?')">
     <div class="main">
         @Partial['Menubar', Model.MenuBar]
 		<div class="topsector">
@@ -35,5 +36,7 @@
 					@Partial['FormField', Current]
 				@EndEach
 		</div>
+		<input type="hidden" VALUE="Кнопка отправки" name=action>
 	</div>
+</form>
 @EndSection

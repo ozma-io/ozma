@@ -65,7 +65,7 @@ namespace FunWithFlags.FunApp
             conventions.StaticContentsConventions.Add(
                 // Override-bind directories with content here.
                 StaticContentConventionBuilder.AddDirectory("assets")
-            );
+            );          
         }
 
         /// <summary>

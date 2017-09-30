@@ -79,7 +79,7 @@ namespace FunWithFlags.FunApp.Views
                         //Value = a,
                         Value = (col.Field.BusinessType != "date") ? cell : cell.Substring(0,10),
                         Width = col.Attributes.GetIntWithDefault(100, "Size", "Width").ToString()+"px",
-                        Height = 20,
+                        Height = col.Attributes.GetIntWithDefault(20, "Size", "Height").ToString() + "px",//20,
                         Id =  row.Cells[0],
                         // FIXME: ????
                         href = "window.location.href='../uv/" + (uv.Id+1).ToString()+"?recId="+row.Cells[0].ToString()+"'", 

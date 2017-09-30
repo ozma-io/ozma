@@ -12,6 +12,14 @@ namespace FunWithFlags.FunApp
     using FunWithFlags.FunDB.Context;
     using FunWithFlags.FunApp.Views;
 
+    using Nancy.ModelBinding;
+    using Nancy.Extensions;
+    using Newtonsoft.Json;
+
+    public class testModel
+    {
+        public string[] field;
+    }
     public class AppModule : NancyModule
     {
         private ExpandoObject GetMenuBar(DatabaseContext db, UserView currUv)
@@ -272,6 +280,19 @@ namespace FunWithFlags.FunApp
                 var tModel = view.Get(ctx, uv, this.Request.Query);
                 tModel.MenuBar = this.GetMenuBar(db, uv);
                 return View[view.ViewName, tModel];
+            });
+            Post(@"/uv/{Id:int}/", pars =>
+            {
+                dynamic model = new ExpandoObject();
+                model = Request.Form;
+                int cnt = model.Count; //количество записей
+                string Path = Request.Path;//URL формы
+                int recId = (int)Request.Query["recId"];//Id записи
+                string action=model["action"]; //действие из формы (Save, Delete)
+                var keys = model.Keys;
+                var values = model.Values;
+                
+                return this.Response.AsRedirect("~/nav");
             });
         }
     }

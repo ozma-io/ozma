@@ -28,8 +28,8 @@ namespace FunWithFlags.FunApp.Views
         {
             get { return ViewType.Single; }
         }
-
-        public string GetHtmlFieldTag(string businessType, int cols, int rows, string value, string listValues)
+         
+        public string GetHtmlFieldTag(string name, string businessType, int cols, int rows, string value, string listValues)
         {
             DateTime dt;
             string HtmlFieldTag;
@@ -40,14 +40,14 @@ namespace FunWithFlags.FunApp.Views
             {
                 case "date":
                     dt = DateTime.Parse(value);
-                    HtmlFieldTag = "<input type=date value=" + dt.ToString("yyyy-MM-dd") + ">";
+                    HtmlFieldTag = "<input type=date name=" + name + " value=" + dt.ToString("yyyy-MM-dd") + ">";
                     break;
                 case "int":
-                    HtmlFieldTag = "<input type=number value=" + value + ">";
+                    HtmlFieldTag = "<input type=number name=" + name + " value=" + value + ">";
                     break;
                 case "list":
                     List<string> lst = new List<string>(listValues.Split(';'));
-                    HtmlFieldTag = "<select>";
+                    HtmlFieldTag = "<select name=" + name +">";
                     foreach (string lstVal in lst)
                     {
                         HtmlFieldTag = HtmlFieldTag + "<option " + ((value == lstVal) ? "selected value=": "value=") + lstVal + " > "+ lstVal + "</option>";
@@ -55,7 +55,7 @@ namespace FunWithFlags.FunApp.Views
                     HtmlFieldTag = HtmlFieldTag + "<select>";
                     break;
                 default:
-                    HtmlFieldTag = "<textarea cols=" + cols.ToString() + " rows=" + rows.ToString()+">" + val + "</textarea>";
+                    HtmlFieldTag = "<textarea name=" + name + " cols=" + cols.ToString() + " rows=" + rows.ToString()+">" + val + "</textarea>";
                     break;
             };
             return HtmlFieldTag;
@@ -104,6 +104,7 @@ namespace FunWithFlags.FunApp.Views
                     BusinessType = col.Field.BusinessType,
                     ListValues = col.Field.ListValues,
                     HtmlFieldTag = GetHtmlFieldTag(
+                           col.Name,
                            col.Field.BusinessType,
                            40,
                            (cell.Length / 40 + 1 > 5) ? 5 : cell.Length / 40 + 1,
@@ -154,6 +155,7 @@ namespace FunWithFlags.FunApp.Views
                     entry.BusinessType = col.Field.BusinessType;
                     entry.ListValues = col.Field.ListValues;
                     entry.HtmlFieldTag = GetHtmlFieldTag(
+                           col.Name,
                            col.Field.BusinessType,
                            40,
                            1,
