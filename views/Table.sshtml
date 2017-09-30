@@ -19,6 +19,7 @@
 											min-width:@Current.Width ; 
 											max-width:@Current.Width ;
 											text-overflow:ellipsis;
+											overflow:hidden;
 										"
 										nowrap
 									>@Current.Name</th>
