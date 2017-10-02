@@ -65,16 +65,17 @@
 
 	<script type="text/javascript">
 	if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)){
+	
 		document.addEventListener("DOMContentLoaded", function(){
 			function fixed_menu(){
-				if(screen.width < 480){
+				if(screen.width < 480||document.body.width < 480){
 
 					document.getElementById('tabl_head_1').style.positon='relative';
 					document.getElementById('tabl_head_1').style.top='120px';
 					document.getElementById('plav').style.width='100%';
 					document.getElementById('plav').style.position='fixed';
 					document.getElementById('plav').style.zIndex='1';
-					document.getElementById('plav').style.top='94.5px';
+					document.getElementById('plav').style.top='95px';
 					document.getElementsByClassName('mytitle')[0].style.width='100%';
 					document.getElementsByClassName('mytitle')[0].style.position='fixed';
 					document.getElementsByClassName('mytitle')[0].style.zIndex='10';
