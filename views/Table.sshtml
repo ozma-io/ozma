@@ -66,17 +66,35 @@
 	<script type="text/javascript">
 	if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)){
 		document.addEventListener("DOMContentLoaded", function(){
-		document.getElementById('tabl_head_1').style.positon='relative';
-		document.getElementById('tabl_head_1').style.top='120px';
-		document.getElementById('plav').style.width='100%';
-		document.getElementById('plav').style.position='fixed';
-		document.getElementById('plav').style.zIndex='1';
-		document.getElementById('plav').style.top='94.5px';
-		document.getElementsByClassName('mytitle')[0].style.width='100%';
-		document.getElementsByClassName('mytitle')[0].style.position='fixed';
-		document.getElementsByClassName('mytitle')[0].style.zIndex='10';
-		document.getElementById('tabl_body_1').style.position='relative';
-		document.getElementById('tabl_body_1').style.top='124px';
+			function fixed_menu(){
+				if(screen.width < 480){
+
+					document.getElementById('tabl_head_1').style.positon='relative';
+					document.getElementById('tabl_head_1').style.top='120px';
+					document.getElementById('plav').style.width='100%';
+					document.getElementById('plav').style.position='fixed';
+					document.getElementById('plav').style.zIndex='1';
+					document.getElementById('plav').style.top='94.5px';
+					document.getElementsByClassName('mytitle')[0].style.width='100%';
+					document.getElementsByClassName('mytitle')[0].style.position='fixed';
+					document.getElementsByClassName('mytitle')[0].style.zIndex='10';
+					document.getElementById('tabl_body_1').style.position='relative';
+					document.getElementById('tabl_body_1').style.top='124px';
+				}
+				else{
+					document.getElementById('tabl_head_1').style.positon='';
+					document.getElementById('tabl_head_1').style.top='';
+					document.getElementById('plav').style.width='';
+					document.getElementById('plav').style.position='';
+					document.getElementById('plav').style.zIndex='';
+					document.getElementById('plav').style.top='';
+					document.getElementsByClassName('mytitle')[0].style.width='';
+					document.getElementsByClassName('mytitle')[0].style.position='';
+					document.getElementsByClassName('mytitle')[0].style.zIndex='';
+					document.getElementById('tabl_body_1').style.position='';
+					document.getElementById('tabl_body_1').style.top='';
+				}
+			}
 			var elements = document.getElementsByClassName('Glav_tab')
 			var scroll=elements[0].scrollLeft;
 			
@@ -94,8 +112,9 @@
 					elements[i].scrollLeft= scroll;
 				}
 			setTimeout(ABC, 5);
+			setTimeout(fixed_menu, 5);
 			}			
-			
+			fixed_menu();
 			ABC();
 		});
 	};
