@@ -12,10 +12,10 @@ namespace FunWithFlags.FunApp.Views
     using FunWithFlags.FunCore;
     using FunWithFlags.FunDB.Context;
     using FunWithFlags.FunDB.View;
+    using FunWithFlags.FunDB.SQL.Value;
     using EntityName = FunWithFlags.FunDB.FunQL.AST.EntityName;
     using FieldName = FunWithFlags.FunDB.FunQL.AST.FieldName;
     using ValueExpr = FunWithFlags.FunDB.FunQL.AST.ValueExpr<FunWithFlags.FunDB.FunQL.AST.EntityName, FunWithFlags.FunDB.FunQL.AST.FieldName>;
-    using Value = FunWithFlags.FunDB.FunQL.AST.Value;
 
     public class FormView : View
     {
