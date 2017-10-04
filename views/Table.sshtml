@@ -68,7 +68,7 @@
 	
 		document.addEventListener("DOMContentLoaded", function(){
 			function fixed_menu(){
-				if(screen.width < 480||document.body.width < 480){
+				if(screen.width < 480||document.body.offsetWidth < 480){
 
 					document.getElementById('tabl_head_1').style.positon='relative';
 					document.getElementById('tabl_head_1').style.top='120px';
