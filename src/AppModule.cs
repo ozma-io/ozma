@@ -22,6 +22,7 @@ namespace FunWithFlags.FunApp
     }
     public class AppModule : NancyModule
     {
+        private View view; 
         private ExpandoObject GetMenuBar(DatabaseContext db, UserView currUv)
         {
             // Временная реализация меню - Вывести в одельную функцию и привязать ко всем вью.cs
@@ -236,7 +237,7 @@ namespace FunWithFlags.FunApp
                 }
 
                 // ! Переписать на динамический поиск через Reflection
-                View view = null;
+                view = null;
                 switch (uv.Type)
                 {
                     case "Table":
@@ -283,16 +284,28 @@ namespace FunWithFlags.FunApp
             });
             Post(@"/uv/{Id:int}/", pars =>
             {
-                dynamic model = new ExpandoObject();
-                model = Request.Form;
-                int cnt = model.Count; //количество записей
-                string Path = Request.Path;//URL формы
-                int recId = (int)Request.Query["recId"];//Id записи
-                string action=model["action"]; //действие из формы (Save, Delete)
-                var keys = model.Keys;
-                var values = model.Values;
-                
-                return this.Response.AsRedirect("~/nav");
+                var id = (int)pars.Id;
+                var uv = db.UserViews.FirstOrDefault(u => u.Id == id);
+                // ! Переписать на динамический поиск через Reflection
+                view = null;
+                switch (uv.Type)
+                {
+                    case "Table":
+                        view = new TableView();
+                        break;
+                    case "Form":
+                        view = new FormView();
+                        break;
+                    default:
+                        throw new ArgumentException($"Unknown view type: {uv.Type}");
+                }
+                DynamicDictionary postPars = Request.Form;
+                int recId = (int)Request.Query["recId"];
+                postPars.Add("recId", recId);
+
+                view.Post(ctx, uv, null, postPars);
+                //FIXME Find UserView.Id for table
+                return this.Response.AsRedirect("~/uv/"+(id-1).ToString());
             });
         }
     }

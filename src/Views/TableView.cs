@@ -44,24 +44,6 @@ namespace FunWithFlags.FunApp.Views
             );
             model.FormName = entitie.First().DisplayNamePlural;
 
-            /*var userViewsF = db.UserViews.Where(uvf =>
-                    uvf.Type=="Form" &&
-                    db.UVEntities.Where(uve =>
-                        //uve.UserViewId == uv.Id &&
-                        uve.Id== entitiesQuery.First().Id
-                    //entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
-                    ).Any()
-                ).ToList();
-            var uvF = db.UVEntities.Where(uve =>
-                          uve.UserViewId == uv.Id /*&&
-                        entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
-                    ).Join(db.UserViews.Where(uvw =>
-                        uvw.Type == "Form").ToList()
-                    ).ToList();
-            var vvv = userViewsF;
-            var vvvE = uvF;
-            */
-
             var resultId = Tuple.Create(Result.NewRField(new FieldName(null, "Id")), new AttributeMap());
             var parsedQuery = ViewResolver.ParseQuery(uv);
             var newQuery = parsedQuery.MergeResults(new[] { resultId });

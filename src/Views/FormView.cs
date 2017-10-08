@@ -281,7 +281,25 @@ namespace FunWithFlags.FunApp.Views
 
         public ExpandoObject Post(Context ctx, UserView uv, DynamicDictionary getPars, DynamicDictionary postPars)
         {
-            throw new NotImplementedException("FormView Post is not implemented");
+            var entitie = ctx.Database.Entities.Where(e =>
+                ctx.Database.UVEntities.Where(uve =>
+                    uve.UserViewId == uv.Id && uve.EntityId == e.Id
+                ).Any()
+            );
+            IDictionary<string, string> pPars = new Dictionary<string,string>();
+            for (int i = 0; i < postPars.Count; i++)
+            {
+                if (postPars.Keys.ElementAt(i) != "action" && postPars.Keys.ElementAt(i) != "recId")
+                {
+                    pPars.Add(postPars.Keys.ElementAt(i), postPars.Values.ElementAt(i));
+                }
+            };
+            if (postPars["action"] == "Save" && postPars["recId"] == 0)
+            {
+                ctx.Resolver.InsertEntry(entitie.First(), pPars);
+            }
+            //throw new NotImplementedException("FormView Post is not implemented");
+            return null;
         }       
     }
 }
