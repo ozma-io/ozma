@@ -21,10 +21,10 @@ namespace FunWithFlags.FunApp
         {
             this.db = db;
         }
-        
+
         public ClaimsPrincipal GetUserFromIdentifier(Guid identifier, NancyContext context)
         {
-            var entry = this.db.Users.Where(u => u.GUID == identifier).FirstOrDefault();
+            var entry = this.db.Users.Find(User.GetIdFromGuid(identifier));
             if (entry != null)
             {
                 return new ClaimsPrincipal(entry);
@@ -56,7 +56,7 @@ namespace FunWithFlags.FunApp
                 if (user != null && user.CheckPassword((string)this.Request.Form.password))
                 {
                     DateTime? expiry = null;
-                    return this.LoginAndRedirect(user.GUID, expiry);
+                    return this.LoginAndRedirect(user.Guid, expiry);
                 }
                 else
                 {
