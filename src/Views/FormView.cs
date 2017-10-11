@@ -13,9 +13,9 @@ namespace FunWithFlags.FunApp.Views
     using FunWithFlags.FunDB.Context;
     using FunWithFlags.FunDB.View;
     using FunWithFlags.FunDB.SQL.Value;
+    using ValueExpr = FunWithFlags.FunDB.SQL.Value.ValueExpr<FunWithFlags.FunDB.FunQL.AST.FieldName>;
     using EntityName = FunWithFlags.FunDB.FunQL.AST.EntityName;
     using FieldName = FunWithFlags.FunDB.FunQL.AST.FieldName;
-    using ValueExpr = FunWithFlags.FunDB.FunQL.AST.ValueExpr<FunWithFlags.FunDB.FunQL.AST.EntityName, FunWithFlags.FunDB.FunQL.AST.FieldName>;
 
     public class FormView : View
     {
@@ -81,7 +81,7 @@ namespace FunWithFlags.FunApp.Views
             );
             model.FormName = entitie.First().DisplayName;
             var recId = (int)getPars.recId;
-            var columnWhere = ValueExpr.NewWEq(ValueExpr.NewWField(new FieldName(null, "Id")), ValueExpr.NewWValue(Value.NewVInt(recId)));
+            var columnWhere = ValueExpr.NewWEq(ValueExpr.NewWColumn(new FieldName(null, "Id")), ValueExpr.NewWValue(Value.NewVInt(recId)));
             var parsedQuery = ViewResolver.ParseQuery(uv);
             var newQuery = parsedQuery.MergeWhere(columnWhere);
             var result = ctx.Resolver.RunQuery(newQuery);
