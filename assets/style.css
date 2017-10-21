@@ -58,7 +58,7 @@ ul.menu > li:hover > ul.submenu {
 }
 
 ul.menu > li {
-    border: 1px solid #DCDCDC;
+    border: 1px solid white;
     border-left:0;
 }
 
@@ -67,13 +67,13 @@ ul.submenu {
     position: absolute;
     top: 28px;
     left: 0;
-    border-bottom:1px solid #DCDCDC;
+    border-bottom:1px solid white;
 }
 
 ul.submenu > li {
     display: block;
     background-color: #F5C700;
-    border: 1px solid #DCDCDC;
+    border: 1px solid white;
     border-bottom: 0;
 }
 a.bl {
@@ -143,7 +143,7 @@ div.main_nav {
 
 div.submain_nav {
     width: 650px; /*450px*/
-    background: #DCDCDC;
+    background: white;
     overflow: auto;
     display: flex;
     margin: auto;
@@ -232,7 +232,7 @@ div.tabl_body {
 }
 
 table {
-    background: #DCDCDC;
+    background: white;
     border-spacing: 1px;
     table-layout: fixed;
 }

@@ -21,7 +21,7 @@ a.bl {
     padding: 5px;
     color: black;
     text-decoration: none;
-    border-bottom: 1px solid #DCDCDC;
+    border-bottom: 1px solid white;
 }
 
 
@@ -80,7 +80,7 @@ form.aut {
     justify-content: center;
     flex-direction: column;
     justify-content: space-around;
-    background: #DCDCDC;
+    background: white;
     width: 210px;
     height: 130px;
 }
@@ -126,7 +126,7 @@ div.main_nav {
 div.submain_nav {
     width: 100%;
     height: 100%;
-    background: #DCDCDC;
+    background: white;
     overflow: hidden;
 }
 
