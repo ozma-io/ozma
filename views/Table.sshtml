@@ -119,4 +119,36 @@
 		});
 	};
 	</script>
+<script type="text/javascript">
+document.addEventListener("DOMContentLoaded", function(){
+   function clicktd(){
+   var elements = document.getElementsByTagName('td');
+  for (var i = 0; i < elements.length; i++) {
+        var row = elements[i];
+        row.onclick = onRowClick;
+    }
+	}
+    function onRowClick(event) {
+        var target = event ? event.target : window.event.srcElement;
+        this.onclick = null;
+        this.className = 'editable';
+            var cell = this.firstElementChild;
+            var input = document.createElement('input');
+            // IE fails to change "type" property to unsupported value
+            input.setAttribute('type', cell.getAttribute('data-type') || 'text');
+            input.value = cell.firstElementChild.firstChild.data;
+			input.onblur=unfocus; 
+            cell.insertBefore(input, cell.firstChild);
+			cell.firstChild.style.height='70%';
+			cell.firstChild.style.width='90%';
+            input.focus();	
+			}
+	function unfocus(event) {
+		this.nextElementSibling.firstChild.data = this.value;
+		this.parentNode.removeChild(this);
+		clicktd();
+	};
+	clicktd();
+});
+</script>
 @EndSection
