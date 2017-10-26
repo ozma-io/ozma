@@ -130,7 +130,8 @@ document.addEventListener("DOMContentLoaded", function(){
 	}
     function onRowClick(event) {
         var target = event ? event.target : window.event.srcElement;
-        this.onclick = null;
+		this.onclick=null;
+		if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) this.setAttribute("onclick", this.getAttribute('ondblclick'));
         this.className = 'editable';
             var cell = this.firstElementChild;
             var input = document.createElement('input');
@@ -144,6 +145,7 @@ document.addEventListener("DOMContentLoaded", function(){
             input.focus();	
 			}
 	function unfocus(event) {
+		if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) this.parentNode.parentNode.setAttribute("onclick", "null");
 		this.nextElementSibling.firstChild.data = this.value;
 		this.parentNode.removeChild(this);
 		clicktd();
