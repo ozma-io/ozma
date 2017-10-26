@@ -135,11 +135,10 @@ document.addEventListener("DOMContentLoaded", function(){
         this.className = 'editable';
             var cell = this.firstElementChild;
             var input = document.createElement('input');
-		 input.style.pointerEvents='none';
             // IE fails to change "type" property to unsupported value
             input.setAttribute('type', cell.getAttribute('data-type') || 'text');
             input.value = cell.firstElementChild.firstChild.data;
-			input.onblur=unfocus;
+			input.onblur=unfocus; 
             cell.insertBefore(input, cell.firstChild);
 			cell.firstChild.style.height='70%';
 			cell.firstChild.style.width='90%';
