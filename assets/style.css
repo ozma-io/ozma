@@ -233,8 +233,9 @@ div.tabl_body {
 
 table {
     background: white;
-    border-spacing: 1px;
+    border-spacing: 1px 0px;
     table-layout: fixed;
+    border-bottom:1px solid #F5C700;
 }
 
 th {
