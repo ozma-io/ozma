@@ -31,7 +31,7 @@
 			</div>
             <div class="tabl_body" id="tabl_body_1">
 			@Each.Entries
-			<div class="fly_block">
+			<div class="fly_block" onclick>
 				<div>
 				Плавающий блок 1
 				</div>
@@ -131,7 +131,6 @@ document.addEventListener("DOMContentLoaded", function(){
     function onRowClick(event) {
         var target = event ? event.target : window.event.srcElement;
 		this.onclick=null;
-		if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) this.setAttribute("onclick", this.getAttribute('ondblclick'));
         this.className = 'editable';
             var cell = this.firstElementChild;
             var input = document.createElement('input');
@@ -146,10 +145,12 @@ document.addEventListener("DOMContentLoaded", function(){
             cell.insertBefore(input, cell.firstChild);
 			input.style.height='90%';
 			input.style.width='100%';
+			input.style.paddingLeft='0px';
+			input.style.marginLeft='0px';
             input.focus();	
+			if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) input.setAttribute("onclick", this.getAttribute('ondblclick'));
 			}
 	function unfocus(event) {
-		if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) this.parentNode.parentNode.setAttribute("onclick", "null");
 		this.nextElementSibling.firstChild.data = this.value;
 		this.parentNode.removeChild(this);
 		clicktd();

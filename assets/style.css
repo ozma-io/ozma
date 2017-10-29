@@ -261,6 +261,7 @@ tr.bl:hover {
 .fly_block {
     visibility:hidden;
     position:absolute;
+    pointer-events:none;
 }
 
 /* Форма */
