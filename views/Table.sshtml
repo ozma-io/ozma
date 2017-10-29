@@ -157,7 +157,13 @@ function redact(){
 		this.parentNode.removeChild(this);
 	};
 	clicktd();
+	if(/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+	setTimeout(redact, 4000);
+	}
+	else
+	{
 	setTimeout(redact, 1500);
+	}
 }
 redact();
 });
