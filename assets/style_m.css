@@ -206,6 +206,11 @@ div.fly_block > div{
     width:50%;
     display:inline-block;
 }
+table {
+    background: white;
+    border-spacing: 1px;
+    table-layout: fixed;
+}
 
 
 /* Форма */
