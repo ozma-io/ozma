@@ -44,6 +44,7 @@
                     <tbody>
                             <!--<tr class="bl" onclick="window.location.href='../uv/2'">-->
 							<tr style="background:#FFFFFF">
+							<td><input class="customCheckbox" type="checkbox" /></td>
 								<!--<tr class="bl" onclick=@Current.href>-->
 								<!--tr class="bl" onclick="window.location.href=@Current.href">-->
 								<!--@Current.Value-->
@@ -123,7 +124,7 @@
 document.addEventListener("DOMContentLoaded", function(){
 function redact(){
    function clicktd(){
-   var elements = document.getElementsByTagName('td');
+   var elements = document.getElementsByClassName('editable');
   for (var i = 0; i < elements.length; i++) {
         var row = elements[i];
         row.onclick = onRowClick;
@@ -166,6 +167,20 @@ function redact(){
 	}
 }
 redact();
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+	function checkedd(){
+	var elements = document.getElementsByClassName('customCheckbox');
+		for (var i = 0; i < elements.length; i++) {
+			var check = elements[i];
+			if(check.checked) {check.parentNode.parentNode.style.backgroundColor='#CCCCCC';}
+			else{check.parentNode.parentNode.style.backgroundColor='white';}
+		}
+		setTimeout(checkedd, 5);
+	}
+	checkedd();
 });
 </script>
 @EndSection

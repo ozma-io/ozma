@@ -1,5 +1,5 @@
     @Each
 		<!--<tr class="bl" ondblclick="window.location.href='../uv/2'">-->
-		<td data-type="text" ondblclick="@Current.href"  style="cursor:pointer ; width:@Current.Width ; min-width:@Current.Width ; max-width:@Current.Width ; height:@Current.Height ; min-height:@Current.Height ; max-height:@Current.Height"><div style="height:@Current.Height ; min-height:@Current.Height ; max-height:@Current.Height ; overflow:hidden "><div style="height:100% ; column-width: @Current.Width">@Current.Value</div></div></td>
+		<td class="editable" data-type="text" ondblclick="@Current.href"  style="cursor:pointer ; width:@Current.Width ; min-width:@Current.Width ; max-width:@Current.Width ; height:@Current.Height ; min-height:@Current.Height ; max-height:@Current.Height"><div style="height:@Current.Height ; min-height:@Current.Height ; max-height:@Current.Height ; overflow:hidden "><div style="height:100% ; column-width: @Current.Width">@Current.Value</div></div></td>
 		<!--</tr>-->
     @EndEach
