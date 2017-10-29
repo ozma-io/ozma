@@ -121,6 +121,7 @@
 	</script>
 <script type="text/javascript">
 document.addEventListener("DOMContentLoaded", function(){
+function redact(){
    function clicktd(){
    var elements = document.getElementsByTagName('td');
   for (var i = 0; i < elements.length; i++) {
@@ -131,6 +132,7 @@ document.addEventListener("DOMContentLoaded", function(){
     function onRowClick(event) {
         var target = event ? event.target : window.event.srcElement;
 		this.onclick=null;
+		if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) this.onclick=this.ondblclick;
         this.className = 'editable';
             var cell = this.firstElementChild;
             var input = document.createElement('input');
@@ -142,20 +144,22 @@ document.addEventListener("DOMContentLoaded", function(){
 			input.style.borderRadius='0';
 			input.style.outline='0';
 			input.style.fontSize='16px';
+			if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) input.style.pointerEvents='none'; 
             cell.insertBefore(input, cell.firstChild);
 			input.style.height='90%';
 			input.style.width='100%';
 			input.style.paddingLeft='0px';
 			input.style.marginLeft='0px';
             input.focus();	
-			if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) input.setAttribute("onclick", this.getAttribute('ondblclick'));
 			}
 	function unfocus(event) {
 		this.nextElementSibling.firstChild.data = this.value;
 		this.parentNode.removeChild(this);
-		clicktd();
 	};
 	clicktd();
+	setTimeout(redact, 1500);
+}
+redact();
 });
 </script>
 @EndSection
