@@ -139,9 +139,13 @@ document.addEventListener("DOMContentLoaded", function(){
             input.setAttribute('type', cell.getAttribute('data-type') || 'text');
             input.value = cell.firstElementChild.firstChild.data;
 			input.onblur=unfocus; 
+			input.style.border='0px';
+			input.style.borderRadius='0';
+			input.style.outline='0';
+			input.style.fontSize='16px';
             cell.insertBefore(input, cell.firstChild);
-			cell.firstChild.style.height='70%';
-			cell.firstChild.style.width='90%';
+			input.style.height='90%';
+			input.style.width='100%';
             input.focus();	
 			}
 	function unfocus(event) {
