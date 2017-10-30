@@ -294,9 +294,18 @@ namespace FunWithFlags.FunApp.Views
                     pPars.Add(postPars.Keys.ElementAt(i), postPars.Values.ElementAt(i));
                 }
             };
-            if (postPars["action"] == "Save" && postPars["recId"] == 0)
+            int Id = postPars["recId"];
+            if (postPars["action"] == "Save" && Id == 0)
             {
                 ctx.Resolver.InsertEntry(entitie.First(), pPars);
+            }
+            if (postPars["action"] == "Save" && Id != 0)
+            {
+                ctx.Resolver.UpdateEntry(entitie.First(), Id, pPars);
+            }
+            if (postPars["action"] == "Delete" && Id != 0)
+            {
+                ctx.Resolver.DeleteEntry(entitie.First(), Id);
             }
             //throw new NotImplementedException("FormView Post is not implemented");
             return null;
