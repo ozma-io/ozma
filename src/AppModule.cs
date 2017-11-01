@@ -64,7 +64,7 @@ namespace FunWithFlags.FunApp
 
             // Массивы
 
-            var viewsMultiple = new [] { "Table" };
+            var viewsMultiple = new[] { "Table","Calendar" };
 
 
             // Первый пернкт меню
@@ -108,8 +108,9 @@ namespace FunWithFlags.FunApp
 
 
             // Подменю второго пункта
-            dynamic subMenuModel3 = new ExpandoObject();
+            //dynamic subMenuModel3 = new ExpandoObject();
             for(int i = 0; i < userViews.Count; i++){
+                dynamic subMenuModel3 = new ExpandoObject();
                 subMenuModel3.Name = userViews[i].Name;
                 subMenuModel3.Link = System.String.Format("../uv/{0}",userViews[i].Id);
                 subMenuModel3.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
@@ -245,6 +246,9 @@ namespace FunWithFlags.FunApp
                         break;
                     case "Form":
                         view = new FormView();
+                        break;
+                    case "Calendar":
+                        view = new CalendarView();
                         break;
                     default:
                         throw new ArgumentException($"Unknown view type: {uv.Type}");
