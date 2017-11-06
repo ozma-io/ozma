@@ -226,7 +226,7 @@ div.tabl_head {
 
 div.tabl_body {
     overflow: scroll;
-    height: 90%;
+    height:calc(100% - 60px);
     width: 100%;
     float: left;
 }
