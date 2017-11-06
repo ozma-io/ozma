@@ -33,10 +33,10 @@
 			@Each.Entries
 			<div class="fly_block" onclick>
 				<div>
-				Плавающий блок 1
+				@Partial['TableFlyBlock1', Current]
 				</div>
 				<div>
-				Плавающий блок 2
+				@Partial['TableFlyBlock2', Current]
 				</div>
 			</div>
 			<div  Class="Glav_tab">
