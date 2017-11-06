@@ -13,6 +13,15 @@
 					<table style="background:@Model.Color">
 						<thead>
 							<tr>
+								<th style=
+										"
+											min-width:13px ; 
+											max-width:13px ;
+											text-overflow:ellipsis;
+											overflow:hidden;
+										"
+										nowrap
+								></th>
 								@Each.Titles
 								   <th style=
 										"
