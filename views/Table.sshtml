@@ -68,6 +68,7 @@
 	</div>
 
     <script type="text/javascript">
+	if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)){} else{ document.getElementsByTagName('body')[0].style.overflow='hidden'; }
         document.getElementById("tabl_body_1").onscroll = function() {
             document.getElementById('tabl_head_1').scrollLeft = document.getElementById('tabl_body_1').scrollLeft;
         };
@@ -79,6 +80,8 @@
 		document.addEventListener("DOMContentLoaded", function(){
 			function fixed_menu(){
 				if(screen.width > 480||document.body.offsetWidth > 480){
+					document.getElementsByTagName('body')[0].scrollTop=0
+					document.getElementsByTagName('body')[0].style.overflow='hidden';
 					document.getElementById('tabl_head_1').style.positon='';
 					document.getElementById('tabl_head_1').style.top='';
 					document.getElementById('plav').style.width='';
