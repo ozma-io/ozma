@@ -34,6 +34,8 @@ namespace FunWithFlags.FunApp.Views
             dynamic model = new ExpandoObject();
 
             model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
+            model.ColorTableSelect = db.Settings.Single(s => s.Name == "ColorTableSelect").Value;
+            model.ColorTableBg = db.Settings.Single(s => s.Name == "ColorTableBg").Value;
 
             // Формируем название страницы в браузере
             // FIXME: use name from UserView

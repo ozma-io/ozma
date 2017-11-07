@@ -52,7 +52,7 @@
                 <table style="background:@Model.Color">
                     <tbody>
                             <!--<tr class="bl" onclick="window.location.href='../uv/2'">-->
-							<tr style="background:#FFFFFF">
+							<tr style="background:@Model.ColorTableBg">
 							<td><input class="customCheckbox" type="checkbox" /></td>
 								<!--<tr class="bl" onclick=@Current.href>-->
 								<!--tr class="bl" onclick="window.location.href=@Current.href">-->
@@ -194,8 +194,8 @@ document.addEventListener("DOMContentLoaded", function(){
 	var elements = document.getElementsByClassName('customCheckbox');
 		for (var i = 0; i < elements.length; i++) {
 			var check = elements[i];
-			if(check.checked) {check.parentNode.parentNode.style.backgroundColor='#CCCCCC';}
-			else{check.parentNode.parentNode.style.backgroundColor='white';}
+			if(check.checked) {check.parentNode.parentNode.style.backgroundColor='@Model.ColorTableSelect';}
+			else{check.parentNode.parentNode.style.backgroundColor='@Model.ColorTableBg';}
 		}
 		setTimeout(checkedd, 5);
 	}
