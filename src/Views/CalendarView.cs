@@ -20,7 +20,7 @@ namespace FunWithFlags.FunApp.Views
     {
         public string ViewName
         {
-            get { return "Calendar"; }
+            get { return "CalendarM"; }
         }
 
         public ViewType ViewType
@@ -34,6 +34,7 @@ namespace FunWithFlags.FunApp.Views
             dynamic model = new ExpandoObject();
 
             model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
+            model.ColorCalendarBd = db.Settings.Single(s => s.Name == "ColorCalendarBd").Value;
 
             // Формируем название страницы в браузере
             // FIXME: use name from UserView

@@ -1,4 +1,10 @@
+@Master['Master']
 
+@Section['Title']
+@Model.FormName (Календарь)
+@EndSection
+
+@Section['Content']
 <style>
   body{
   margin:0px;
@@ -107,6 +113,7 @@
   height:16.6%;
   }
 </style>
+
 <div id="new_entry">
 <a style="float:right; margin-right:10px; margin-top:5px" id="close">×</a><p style="margin:10px">Новая запись</p>
 <textarea class="Notes" cols="40" rows="1"></textarea>
