@@ -228,12 +228,12 @@ var iddragelem=null;
 function go(){
 function added(a) {
     document.querySelector('#new_entry').style.visibility='visible';
-	document.querySelector('#new_entry').style.top=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().top;
+	document.querySelector('#new_entry').style.top=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().top +'px';
 	if(a%7<5||a%7==0){
-	document.querySelector('#new_entry').style.left=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().left;
+	document.querySelector('#new_entry').style.left=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().left + 'px';
 	}
 	else{
-	document.querySelector('#new_entry').style.left=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().left- 202;
+	document.querySelector('#new_entry').style.left=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().left- 202+'px';
 	}
 	parentid=document.getElementsByClassName('add_new_entry')[a].parentNode.parentNode.parentNode;
 	number_td=document.getElementsByClassName('add_new_entry')[a].parentNode.getAttribute('id');
