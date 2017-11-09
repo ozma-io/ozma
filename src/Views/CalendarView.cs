@@ -35,6 +35,9 @@ namespace FunWithFlags.FunApp.Views
 
             model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
             model.ColorCalendarBd = db.Settings.Single(s => s.Name == "ColorCalendarBd").Value;
+            model.ColorCalendarEntryBg = db.Settings.Single(s => s.Name == "ColorCalendarEntryBg").Value;
+            model.ColorCalendarNoteBg = db.Settings.Single(s => s.Name == "ColorCalendarNoteBg").Value;
+            model.ColorCalendarToday = db.Settings.Single(s => s.Name == "ColorCalendarToday").Value;
 
             // Формируем название страницы в браузере
             // FIXME: use name from UserView
