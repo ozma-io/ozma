@@ -33,12 +33,15 @@
   width: 100%;
   table-layout: fixed;
   opacity:0.4;
+  background:none;
   }
 
   .table_for_note{
   position: relative;
   table-layout: fixed;
   width: 100%;
+  border-bottom: 0px;
+  background:none;
   }
 
   #calendar2 {
