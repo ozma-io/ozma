@@ -97,7 +97,6 @@
   .note_in_calendar{
   margin:0 auto;
   height:20px;
-  background-color:#CCCCCC;
   border:1px solid #F5C700;
   position:relative;
   z-index:100;
@@ -367,6 +366,7 @@ function addnew(lasting,colspan_need,parentparent,number_of_place,note) {
 	newdiv.setAttribute("id", note)
 	newdiv.setAttribute("ondragstart", "return dragStart(event)")
 	newdiv.setAttribute("lasting", lasting)
+  newdiv.style.backgroundColor = "@Model.ColorCalendarNoteBg"
 	if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
 	newdiv.setAttribute("onclick", "return dragStartMobile(this)")
 	var testelem=parentparent.firstElementChild;
