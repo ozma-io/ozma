@@ -84,7 +84,6 @@
   height:150px;
   width:200px;
   border:1px solid #F5C700;
-  background: #DCDCDC;
   visibility:hidden;
   z-index:200;
   }
@@ -227,6 +226,7 @@ var iddragelem=null;
 function go(){
 function added(a) {
     document.querySelector('#new_entry').style.visibility='visible';
+    document.querySelector('#new_entry').style.backgroundColor = "@Model.ColorCalendarEntryBg"
 	document.querySelector('#new_entry').style.top=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().top +'px';
 	if(a%7<5||a%7==0){
 	document.querySelector('#new_entry').style.left=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().left + 'px';
