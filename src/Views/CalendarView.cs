@@ -64,7 +64,8 @@ namespace FunWithFlags.FunApp.Views
                 {
                     Value = (col.Field.BusinessType != "date") ? cell : cell.Substring(0, 10),
                     Duration = 1,
-                    Id = row.Cells[0]
+                    Id = row.Cells[0],
+                    EntryText = row.Cells[1].ToString()
                 }
                 ).ToList()
             ).ToList();
