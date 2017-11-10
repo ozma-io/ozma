@@ -197,7 +197,7 @@ d.value = D.getDate();
 	}
 	for(var  i = day; i <= Dlast; i++) {
 	  if (i == new Date().getDate() && D.getFullYear() == new Date().getFullYear() && D.getMonth() == new Date().getMonth()) {
-		calendar += '<td id="'+m.value+'_'+i+'"><div class="date today">' + i + '</div><a class="add_new_entry">+</a></td>';
+		calendar += '<td id="'+m.value+'_'+i+'"><div class="date today" style="background:@Model.ColorCalendarToday">' + i + '</div><a class="add_new_entry">+</a></td>';
 	  }else{
 		calendar += '<td id="'+m.value+'_'+i+'"><div class="date">' + i + '</div><a class="add_new_entry">+</a></td>';
 	  }
