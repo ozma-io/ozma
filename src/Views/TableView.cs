@@ -36,6 +36,7 @@ namespace FunWithFlags.FunApp.Views
             model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
             model.ColorTableSelect = db.Settings.Single(s => s.Name == "ColorTableSelect").Value;
             model.ColorTableBg = db.Settings.Single(s => s.Name == "ColorTableBg").Value;
+            model.ColorTableBd = db.Settings.Single(s => s.Name == "ColorTableBd").Value;
 
             // Формируем название страницы в браузере
             // FIXME: use name from UserView

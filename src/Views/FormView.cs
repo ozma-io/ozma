@@ -73,6 +73,8 @@ namespace FunWithFlags.FunApp.Views
             dynamic model = new ExpandoObject();
 
             model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
+            model.ColorFormBd = db.Settings.Single(s => s.Name == "ColorFormBd").Value;
+
             // Формируем название страницы в браузере
             var entitie = db.Entities.Where(e =>
                 db.UVEntities.Where(uve =>

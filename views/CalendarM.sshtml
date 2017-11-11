@@ -145,7 +145,7 @@
 <div class="calendar">
 	<table class="head_line" cellpadding="0" cellspacing="0">
 	<tbody>
-    <tr><td class="head_td" style="border-left:1px solid #F5C700;">Пн</td><td class="head_td">Вт</td><td class="head_td">Ср</td><td class="head_td">Чт</td><td class="head_td">Пт</td><td class="head_td">Сб</td><td class="head_td">Вс</td></tr>
+    <tr><td class="head_td" style="border:1px solid @Model.ColorCalendarBd;">Пн</td><td class="head_td" style="border:1px solid @Model.ColorCalendarBd;">Вт</td><td class="head_td" style="border:1px solid @Model.ColorCalendarBd;">Ср</td><td class="head_td" style="border:1px solid @Model.ColorCalendarBd;">Чт</td><td class="head_td" style="border:1px solid @Model.ColorCalendarBd;">Пт</td><td class="head_td" style="border:1px solid @Model.ColorCalendarBd;">Сб</td><td class="head_td" style="border:1px solid @Model.ColorCalendarBd;">Вс</td></tr>
 	</tbody>
 	</table>
 	<div class="calendar_body">
@@ -166,7 +166,7 @@ var Dlast = new Date(year,month+1,0).getDate(),
     DNlast = new Date(D.getFullYear(),D.getMonth(),Dlast).getDay(),
 	DNfirst = new Date(D.getFullYear(),D.getMonth(),day).getDay(),
 	DNlastOFpreMonth=new Date(year,month,0).getDate(),
-    calendar = '<div class="month_row"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr><td class="block_td" id="101" style="border-left:1px solid #F5C700;" '+ fordrop +'>&nbsp;</td><td id="102" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="103" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="104" class="block_td"  '+ fordrop +'>&nbsp;</td><td  id="105" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="106" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="107" class="block_td"  '+ fordrop +'>&nbsp;</td></tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>',
+    calendar = '<div class="month_row"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr><td id="101" class="block_td" style="border-left:1px solid @Model.ColorCalendarBd;" '+ fordrop +'>&nbsp;</td><td id="102" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="103" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="104" class="block_td"  '+ fordrop +'>&nbsp;</td><td  id="105" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="106" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="107" class="block_td"  '+ fordrop +'>&nbsp;</td></tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>',
     month=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],
 	lines=0,
 	m = document.querySelector('#'+id+' option[value="' + D.getMonth() + '"]'),
@@ -203,7 +203,7 @@ d.value = D.getDate();
 	  }
 	  if (new Date(D.getFullYear(),D.getMonth(),i).getDay() == 0) {
 		calendar += '</tr></tbody></table></div>';
-		calendar += '<div class="month_row" style="top:'+16.6*Number(lines+1)+'%;"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr><td class="block_td" id="101" style="border-left:1px solid #F5C700;" '+ fordrop +'>&nbsp;</td><td id="102" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="103" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="104" class="block_td"  '+ fordrop +'>&nbsp;</td><td  id="105" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="106" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="107" class="block_td"  '+ fordrop +'>&nbsp;</td></tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>';
+		calendar += '<div class="month_row" style="top:'+16.6*Number(lines+1)+'%;"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr><td class="block_td" id="101" style="border-left:1px solid @Model.ColorCalendarBd;" '+ fordrop +'>&nbsp;</td><td id="102" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="103" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="104" class="block_td"  '+ fordrop +'>&nbsp;</td><td  id="105" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="106" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="107" class="block_td"  '+ fordrop +'>&nbsp;</td></tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>';
 		lines+=1;
 	  }
 	}
@@ -212,7 +212,7 @@ d.value = D.getDate();
 		calendar += '<td id="'+Number(m.value-(-1))%12+'_'+(i-lines*7-DNlast+1)+'"><div class="date">'+(i-lines*7-DNlast+1)+'</div><a class="add_new_entry">+</a></td>';
 		if ((i+1)%7 == 0 && i!=41) {
 			calendar += '</tr></tbody></table></div>';
-			calendar += '<div class="month_row" style="top:'+16.6*Number(col_lines+1)+'%;"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr><td class="block_td" id="101" style="border-left:1px solid #F5C700;" '+ fordrop +'>&nbsp;</td><td id="102" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="103" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="104" class="block_td"  '+ fordrop +'>&nbsp;</td><td  id="105" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="106" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="107" class="block_td"  '+ fordrop +'>&nbsp;</td></tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>';
+			calendar += '<div class="month_row" style="top:'+16.6*Number(col_lines+1)+'%;"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr><td class="block_td" id="101" style="border-left:1px solid @Model.ColorCalendarBd;" '+ fordrop +'>&nbsp;</td><td id="102" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="103" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="104" class="block_td"  '+ fordrop +'>&nbsp;</td><td  id="105" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="106" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="107" class="block_td"  '+ fordrop +'>&nbsp;</td></tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>';
 			col_lines+=1;
 		}
 	}

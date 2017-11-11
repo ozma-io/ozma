@@ -10,7 +10,7 @@
         <div class="tabl">
 			<div id="plav">
 				<div class="tabl_head" id="tabl_head_1">
-					<table style="background:@Model.Color">
+					<table style="background:@Model.ColorTableBd">
 						<thead>
 							<tr>
 								<th style=
@@ -49,7 +49,7 @@
 				</div>
 			</div>
 			<div  Class="Glav_tab">
-                <table style="background:@Model.Color">
+                <table style="background:@Model.ColorTableBd">
                     <tbody>
                             <!--<tr class="bl" onclick="window.location.href='../uv/2'">-->
 							<tr style="background:@Model.ColorTableBg">

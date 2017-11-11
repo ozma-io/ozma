@@ -305,7 +305,6 @@ div.topsector {
     max-height:600px;
     display: inline-block;
     border: 1px solid;
-    border-color: #F5C700;
     padding-bottom:15px;
 }
 
@@ -321,6 +320,5 @@ div.topsector {
     min-height: 150px;
     max-height: 300px;
     border: 1px solid;
-    border-color: #F5C700;
     padding-bottom: 15px;
 }

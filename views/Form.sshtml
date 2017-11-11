@@ -9,28 +9,28 @@
     <div class="main">
         @Partial['Menubar', Model.MenuBar]
 		<div class="topsector">
-			<div id="Block1" class="form_data">
+			<div id="Block1" class="form_data" style="border-color: @Model.ColorFormBd">
 					@Each.Entries1
 						<br>
 						@Partial['FormField', Current]
 					@EndEach
 			</div>
 
-			<div id="Block2" class="form_data">
+			<div id="Block2" class="form_data" style="border-color: @Model.ColorFormBd">
 					@Each.Entries2
 						<br>
 						@Partial['FormField', Current]
 					@EndEach
 			
 			</div>
-			<div id="Block3" class="form_data">
+			<div id="Block3" class="form_data" style="border-color: @Model.ColorFormBd">
 					@Each.Entries3
 						<br>
 						@Partial['FormField', Current]
 					@EndEach
 			</div>
 		</div>
-		<div id="Block4" class="form_data">
+		<div id="Block4" class="form_data" style="border-color: @Model.ColorFormBd">
 				@Each.Entries4
 					<br>
 					@Partial['FormField', Current]
