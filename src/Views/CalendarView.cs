@@ -37,6 +37,8 @@ namespace FunWithFlags.FunApp.Views
             model.ColorCalendarBd = db.Settings.Single(s => s.Name == "ColorCalendarBd").Value;
             model.ColorCalendarEntryBg = db.Settings.Single(s => s.Name == "ColorCalendarEntryBg").Value;
             model.ColorCalendarNoteBg = db.Settings.Single(s => s.Name == "ColorCalendarNoteBg").Value;
+            model.ColorCalendarHeadBg = db.Settings.Single(s => s.Name == "ColorCalendarHeadBg").Value;
+            model.ColorCalendarBlockBg = db.Settings.Single(s => s.Name == "ColorCalendarBlockBg").Value;
             model.ColorCalendarToday = db.Settings.Single(s => s.Name == "ColorCalendarToday").Value;
 
             // Формируем название страницы в браузере

@@ -33,7 +33,8 @@
   width: 100%;
   table-layout: fixed;
   opacity:0.4;
-  background:none;
+  border-top:0px;
+  border-bottom:0px;
   }
 
   .table_for_note{
@@ -59,12 +60,11 @@
   margin: 0 auto;
   }
   .head_td{
-  border:1px solid #F5C700;
   border-left:0px;
+  border-bottom: 0px;
   }
 
   .block_td{
-  border:1px solid #F5C700;
   border-left:0px;
   border-top: 0px;
   }
@@ -83,7 +83,6 @@
   position:absolute;
   height:150px;
   width:200px;
-  border:1px solid #F5C700;
   visibility:hidden;
   z-index:200;
   }
@@ -96,7 +95,6 @@
   .note_in_calendar{
   margin:0 auto;
   height:20px;
-  border:1px solid #F5C700;
   position:relative;
   z-index:100;
   }
@@ -104,7 +102,7 @@
   width: 100%;
   table-layout: fixed;
   text-align: left;
-
+  border-bottom: 0px;
   }
   .month_row {
   position: absolute;
@@ -145,7 +143,14 @@
 <div class="calendar">
 	<table class="head_line" cellpadding="0" cellspacing="0">
 	<tbody>
-    <tr><td class="head_td" style="border:1px solid @Model.ColorCalendarBd;">Пн</td><td class="head_td" style="border:1px solid @Model.ColorCalendarBd;">Вт</td><td class="head_td" style="border:1px solid @Model.ColorCalendarBd;">Ср</td><td class="head_td" style="border:1px solid @Model.ColorCalendarBd;">Чт</td><td class="head_td" style="border:1px solid @Model.ColorCalendarBd;">Пт</td><td class="head_td" style="border:1px solid @Model.ColorCalendarBd;">Сб</td><td class="head_td" style="border:1px solid @Model.ColorCalendarBd;">Вс</td></tr>
+    <tr><td style="border:1px solid @Model.ColorCalendarBd ; background: @Model.ColorCalendarHeadBg;">Пн</td>
+        <td style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; background: @Model.ColorCalendarHeadBg;">Вт</td>
+        <td style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; background: @Model.ColorCalendarHeadBg;">Ср</td>
+        <td style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; background: @Model.ColorCalendarHeadBg;">Чт</td>
+        <td style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; background: @Model.ColorCalendarHeadBg;">Пт</td>
+        <td style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; background: @Model.ColorCalendarHeadBg;">Сб</td>
+        <td class="head_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; background: @Model.ColorCalendarHeadBg;">Вс</td>
+    </tr>
 	</tbody>
 	</table>
 	<div class="calendar_body">
@@ -166,7 +171,15 @@ var Dlast = new Date(year,month+1,0).getDate(),
     DNlast = new Date(D.getFullYear(),D.getMonth(),Dlast).getDay(),
 	DNfirst = new Date(D.getFullYear(),D.getMonth(),day).getDay(),
 	DNlastOFpreMonth=new Date(year,month,0).getDate(),
-    calendar = '<div class="month_row"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr><td id="101" class="block_td" style="border-left:1px solid @Model.ColorCalendarBd;" '+ fordrop +'>&nbsp;</td><td id="102" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="103" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="104" class="block_td"  '+ fordrop +'>&nbsp;</td><td  id="105" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="106" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="107" class="block_td"  '+ fordrop +'>&nbsp;</td></tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>',
+    calendar = '<div class="month_row"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr>'+
+                '<td id="101" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+                '<td id="102" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+                '<td id="103" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+                '<td id="104" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+                '<td id="105" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+                '<td id="106" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+                '<td id="107" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+                '</tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>',
     month=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],
 	lines=0,
 	m = document.querySelector('#'+id+' option[value="' + D.getMonth() + '"]'),
@@ -203,7 +216,15 @@ d.value = D.getDate();
 	  }
 	  if (new Date(D.getFullYear(),D.getMonth(),i).getDay() == 0) {
 		calendar += '</tr></tbody></table></div>';
-		calendar += '<div class="month_row" style="top:'+16.6*Number(lines+1)+'%;"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr><td class="block_td" id="101" style="border-left:1px solid @Model.ColorCalendarBd;" '+ fordrop +'>&nbsp;</td><td id="102" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="103" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="104" class="block_td"  '+ fordrop +'>&nbsp;</td><td  id="105" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="106" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="107" class="block_td"  '+ fordrop +'>&nbsp;</td></tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>';
+		calendar += '<div class="month_row" style="top:'+16.6*Number(lines+1)+'%;"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr>'+
+          '<td class="block_td" id="101" style="border:1px solid @Model.ColorCalendarBd ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="102" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="103" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="104" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="105" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="106" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="107" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+          '</tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>';
 		lines+=1;
 	  }
 	}
@@ -212,7 +233,15 @@ d.value = D.getDate();
 		calendar += '<td id="'+Number(m.value-(-1))%12+'_'+(i-lines*7-DNlast+1)+'"><div class="date">'+(i-lines*7-DNlast+1)+'</div><a class="add_new_entry">+</a></td>';
 		if ((i+1)%7 == 0 && i!=41) {
 			calendar += '</tr></tbody></table></div>';
-			calendar += '<div class="month_row" style="top:'+16.6*Number(col_lines+1)+'%;"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr><td class="block_td" id="101" style="border-left:1px solid @Model.ColorCalendarBd;" '+ fordrop +'>&nbsp;</td><td id="102" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="103" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="104" class="block_td"  '+ fordrop +'>&nbsp;</td><td  id="105" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="106" class="block_td"  '+ fordrop +'>&nbsp;</td><td id="107" class="block_td"  '+ fordrop +'>&nbsp;</td></tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>';
+			calendar += '<div class="month_row" style="top:'+16.6*Number(col_lines+1)+'%;"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr>'+
+          '<td class="block_td" id="101" style="border:1px solid @Model.ColorCalendarBd ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="102" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="103" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="104" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="105" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="106" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="107" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+          '</tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>';
 			col_lines+=1;
 		}
 	}
@@ -227,6 +256,7 @@ function go(){
 function added(a) {
     document.querySelector('#new_entry').style.visibility='visible';
     document.querySelector('#new_entry').style.backgroundColor = "@Model.ColorCalendarEntryBg"
+    document.querySelector('#new_entry').style.border = "1px solid @Model.ColorCalendarBd"
 	document.querySelector('#new_entry').style.top=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().top +'px';
 	if(a%7<5||a%7==0){
 	document.querySelector('#new_entry').style.left=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().left + 'px';
@@ -367,6 +397,7 @@ function addnew(lasting,colspan_need,parentparent,number_of_place,note) {
 	newdiv.setAttribute("ondragstart", "return dragStart(event)")
 	newdiv.setAttribute("lasting", lasting)
   newdiv.style.backgroundColor = "@Model.ColorCalendarNoteBg"
+  newdiv.style.border = "1px solid @Model.ColorCalendarBd"
 	if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
 	newdiv.setAttribute("onclick", "return dragStartMobile(this)")
 	var testelem=parentparent.firstElementChild;
@@ -548,7 +579,6 @@ function dragStartMobile(ev) {
 	for(i=0;i<table_drop.length;i++){
 		table_drop[i].style.zIndex='1';
 		table_drop[i].style.backgroundColor='#99CCFF';
-
 	}
    return true;
 }
