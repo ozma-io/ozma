@@ -1,10 +1,12 @@
 var date,
 	Duration,
+	id,
 	EntryText;
 @Each
 	date="@Current.Value";
 	Duration="@Current.Duration";
 	EntryText="@Current.EntryText";
+	id=@Current.Id;
 @EndEach
 var i=0,
 	date1="";
@@ -55,6 +57,6 @@ var number_place=1;
 		element=element.nextElementSibling;
 		}
 	document.getElementById(date).parentNode.firstElementChild
-	addnew(Duration, Duration, document.getElementById(date).parentNode.parentNode, number_place, EntryText)
+	addnew(Duration, Duration, document.getElementById(date).parentNode.parentNode, number_place, EntryText,id)
 }
 }

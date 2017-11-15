@@ -266,7 +266,6 @@ function added(a) {
 	}
 	parentid=document.getElementsByClassName('add_new_entry')[a].parentNode.parentNode.parentNode;
 	number_td=document.getElementsByClassName('add_new_entry')[a].parentNode.getAttribute('id');
-	addold();
  };
 var bottons_add=document.getElementsByClassName('add_new_entry');
 function addold(){
@@ -274,7 +273,6 @@ function addold(){
 @Partial['CalendarEntry', Current];
 @EndEach
 };
-addold();
 bottons_add[0].onclick= function(){ added(0);}
 bottons_add[1].onclick= function(){ added(1);}
 bottons_add[2].onclick= function(){ added(2);}
@@ -317,6 +315,7 @@ bottons_add[38].onclick= function(){ added(38);}
 bottons_add[39].onclick= function(){ added(39);}
 bottons_add[40].onclick= function(){ added(40);}
 bottons_add[41].onclick= function(){ added(41);}
+addold();
 }
 Calendar2("calendar2", new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
 go();
@@ -391,7 +390,7 @@ function insertAfter(elem, refElem) {
   }
 }
 
-function addnew(lasting,colspan_need,parentparent,number_of_place,note) {
+function addnew(lasting,colspan_need,parentparent,number_of_place,note,id) {
     var newtr=document.createElement("tr"),
 		newtd=document.createElement("td"),
 		remainder_of_lasting=0;
@@ -400,7 +399,7 @@ function addnew(lasting,colspan_need,parentparent,number_of_place,note) {
 	newdiv.setAttribute("class", "note_in_calendar "+note);
 	newdiv.innerHTML = note;
 	newdiv.setAttribute("draggable", "true")
-	newdiv.setAttribute("id", note)
+	newdiv.setAttribute("id", id)
 	newdiv.setAttribute("ondragstart", "return dragStart(event)")
 	newdiv.setAttribute("lasting", lasting)
   newdiv.style.backgroundColor = "@Model.ColorCalendarNoteBg"
@@ -455,7 +454,7 @@ function addnew(lasting,colspan_need,parentparent,number_of_place,note) {
 		}
 		parentparent.appendChild(newtr);
 	}
-	if (remainder_of_lasting>0&&parentparent.parentNode.parentNode.nextElementSibling!=null) addnew(lasting,remainder_of_lasting ,parentparent.parentNode.parentNode.nextElementSibling.firstElementChild.nextElementSibling.firstElementChild,1,note);
+	if (remainder_of_lasting>0&&parentparent.parentNode.parentNode.nextElementSibling!=null) addnew(lasting,remainder_of_lasting ,parentparent.parentNode.parentNode.nextElementSibling.firstElementChild.nextElementSibling.firstElementChild,1,note,note);
 	document.querySelector('#new_entry').style.visibility='hidden'
  };
 document.querySelector('#add').onclick = function(){
@@ -465,7 +464,7 @@ document.querySelector('#add').onclick = function(){
 		number_of_pl+=1;
 		element=element.previousElementSibling;
 		}
-addnew(document.querySelector('input#lasting').value,document.querySelector('input#lasting').value,parentid,number_of_pl,document.querySelector('.Notes').value)
+addnew(document.querySelector('input#lasting').value,document.querySelector('input#lasting').value,parentid,number_of_pl,document.querySelector('.Notes').value,document.querySelector('.Notes').value)
 }
  function dragDropMobile(ev) {
 	var data = document.getElementById(iddragelem);
@@ -532,7 +531,7 @@ addnew(document.querySelector('input#lasting').value,document.querySelector('inp
 		table_drop[i].style.zIndex='-10';
 		table_drop[i].style.backgroundColor='white';
 	}
-	if(how_long-can_colspan>0) addnew(data.getAttribute('lasting'),how_long-can_colspan,place_where_insert.parentNode.parentNode.parentNode.parentNode.nextElementSibling.firstElementChild.nextElementSibling.firstElementChild,1,data.innerHTML); 
+	if(how_long-can_colspan>0) addnew(data.getAttribute('lasting'),how_long-can_colspan,place_where_insert.parentNode.parentNode.parentNode.parentNode.nextElementSibling.firstElementChild.nextElementSibling.firstElementChild,1,data.innerHTML,data.innerHTML); 
 	return false;
 }
 
