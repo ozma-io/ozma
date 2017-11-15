@@ -197,7 +197,7 @@ tr.bl {
 }
 
 .fly_block {
-    width: 200px;
+    width: 100%;
     display: flex;
     -webkit-transform: translate3d(0, 0, 0);
     z-index: -100;
