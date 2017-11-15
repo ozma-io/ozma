@@ -194,7 +194,12 @@ function redact(){
 			input.style.width='100%';
 			input.style.paddingLeft='0px';
 			input.style.marginLeft='0px';
-            input.focus();	
+            input.focus();
+			input.onkeyup=function(event){
+			if(event.keyCode == 13|| event.charCode === 13){
+				input.blur();
+			}
+			};
 			}
 	function unfocus(event) {
 		this.nextElementSibling.firstChild.data = this.value;
