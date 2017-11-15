@@ -22,6 +22,15 @@
 										"
 										nowrap
 								></th>
+								<th style=
+										"
+											min-width:39px ; 
+											max-width:39px ;
+											text-overflow:ellipsis;
+											overflow:hidden;
+										"
+										nowrap
+								></th>
 								@Each.Titles
 								   <th style=
 										"
@@ -53,7 +62,16 @@
                     <tbody>
                             <!--<tr class="bl" onclick="window.location.href='../uv/2'">-->
 							<tr style="background:@Model.ColorTableBg">
-							<td><input class="customCheckbox" type="checkbox" /></td>
+							<td style=
+										"
+											min-width:13px ; 
+											max-width:13px ;
+										"
+							><input class="customCheckbox" type="checkbox" /></td>
+							<td class='open_form' style="overflow:hidden;
+											min-width:39px ; 
+											max-width:39px ;
+										" onclick>form</td>
 								<!--<tr class="bl" onclick=@Current.href>-->
 								<!--tr class="bl" onclick="window.location.href=@Current.href">-->
 								<!--@Current.Value-->
