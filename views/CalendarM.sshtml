@@ -97,6 +97,7 @@
   height:20px;
   position:relative;
   z-index:100;
+  overflow: hidden;
   }
   .head_line{
   width: 100%;
@@ -122,7 +123,7 @@
 <div id="calendar2">
 <div class="head_line">
 <div class="head_block" style="width:70%;">
-<select>
+<select id='month'>
 	<option value="0">Январь</option>
 	<option value="1">Февраль</option>
 	<option value="2">Март</option>
@@ -138,6 +139,10 @@
 </select>
 <input id="year" type="number" value="" min="0" max="9999" size="4">
 <input id="day"type="number" value="" min="1" max="31" size="2">
+<select id='what_event'>
+	<option value="1">День рождения</option>
+	<option value="2">День ангела</option>
+</select>
 </div>
 </div>
 <div class="calendar">
@@ -252,75 +257,136 @@ d.value = D.getDate();
 document.querySelector('input#lasting').value=1;
 var parentid, number_td;
 var iddragelem=null;
+
+
 function go(){
-function added(a) {
-    document.querySelector('#new_entry').style.visibility='visible';
-    document.querySelector('#new_entry').style.backgroundColor = "@Model.ColorCalendarEntryBg"
-    document.querySelector('#new_entry').style.border = "1px solid @Model.ColorCalendarBd"
-	document.querySelector('#new_entry').style.top=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().top +'px';
-	if(a%7<5||a%7==0){
-	document.querySelector('#new_entry').style.left=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().left + 'px';
+	function added(a) {
+		document.querySelector('#new_entry').style.visibility='visible';
+		document.querySelector('#new_entry').style.backgroundColor = "@Model.ColorCalendarEntryBg"
+		document.querySelector('#new_entry').style.border = "1px solid @Model.ColorCalendarBd"
+		document.querySelector('#new_entry').style.top=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().top +'px';
+		if(a%7<5||a%7==0){
+		document.querySelector('#new_entry').style.left=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().left + 'px';
+		}
+		else{
+		document.querySelector('#new_entry').style.left=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().left- 202+'px';
+		}
+		parentid=document.getElementsByClassName('add_new_entry')[a].parentNode.parentNode.parentNode;
+		number_td=document.getElementsByClassName('add_new_entry')[a].parentNode.getAttribute('id');
+	};
+	var bottons_add=document.getElementsByClassName('add_new_entry');
+	function addold(num_ev){
+	
+	function old(date, Duration, id, EntryText){
+		var i=0,
+		date1="";
+		while(date.charAt(i)!="/"){
+			date1=date1+date.charAt(i);
+			i++;
+		}
+		date1=String(Number(date1)-1);
+		var m1=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(0);
+		var m2=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(1);
+		if (m2!='_')
+		var fm=m1+m2;
+		else
+		var fm=m1;
+		var m1=document.getElementsByClassName('table_for_note')[5].firstElementChild.firstElementChild.lastElementChild.getAttribute('id').charAt(0);
+		var m2=document.getElementsByClassName('table_for_note')[5].firstElementChild.firstElementChild.lastElementChild.getAttribute('id').charAt(1);
+		if (m2!='_')
+		var lm=m1+m2;
+		else
+		var lm=m1;
+		if (lm=="0") lm=12;
+		if(Number(date1)>=Number(fm) && Number(date1) <= Number(lm)){
+			i++;
+			var date2=date1;
+			date1="";
+			while(date.charAt(i)!="/"){
+				date1=date1+date.charAt(i);
+				i++;
+			}
+			var m1=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(3);
+			var m2=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(4);
+			if (m1!='_')
+			var fm1=m1+m2;
+			else
+			var fm1=m2;
+			var m1=document.getElementsByClassName('table_for_note')[5].firstElementChild.firstElementChild.lastElementChild.getAttribute('id').charAt(3);
+			var m2=document.getElementsByClassName('table_for_note')[5].firstElementChild.firstElementChild.lastElementChild.getAttribute('id').charAt(4);
+			if (m1!='_')
+			var lm1=m1+m2;
+			else
+			var lm1=m2;
+			if((Number(date2)==Number(fm) && Number(date1) >= Number(fm1))||(Number(date2)==Number(lm) && Number(date1) <= Number(lm1))||(Number(date2)>Number(fm) && Number(date2) < Number(lm))){
+				date=date2+"_"+date1;
+				var number_place=1;
+						element=document.getElementById(date).parentNode.firstElementChild;
+						for (i=1;(element.nextElementSibling!=null&&element!=document.getElementById(date));i++){
+							number_place+=1;
+							element=element.nextElementSibling;
+						}
+				document.getElementById(date).parentNode.firstElementChild
+				addnew(Duration, Duration, document.getElementById(date).parentNode.parentNode, number_place, EntryText,id)
+			}
+		}
 	}
-	else{
-	document.querySelector('#new_entry').style.left=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().left- 202+'px';
-	}
-	parentid=document.getElementsByClassName('add_new_entry')[a].parentNode.parentNode.parentNode;
-	number_td=document.getElementsByClassName('add_new_entry')[a].parentNode.getAttribute('id');
- };
-var bottons_add=document.getElementsByClassName('add_new_entry');
-function addold(){
-@Each.Entries
-@Partial['CalendarEntry', Current];
-@EndEach
-};
-bottons_add[0].onclick= function(){ added(0);}
-bottons_add[1].onclick= function(){ added(1);}
-bottons_add[2].onclick= function(){ added(2);}
-bottons_add[3].onclick= function(){ added(3);}
-bottons_add[4].onclick= function(){ added(4);}
-bottons_add[5].onclick= function(){ added(5);}
-bottons_add[6].onclick= function(){ added(6);}
-bottons_add[7].onclick= function(){ added(7);}
-bottons_add[8].onclick= function(){ added(8);}
-bottons_add[9].onclick= function(){ added(9);}
-bottons_add[10].onclick= function(){ added(10);}
-bottons_add[11].onclick= function(){ added(11);}
-bottons_add[12].onclick= function(){ added(12);}
-bottons_add[13].onclick= function(){ added(13);}
-bottons_add[14].onclick= function(){ added(14);}
-bottons_add[15].onclick= function(){ added(15);}
-bottons_add[16].onclick= function(){ added(16);}
-bottons_add[17].onclick= function(){ added(17);}
-bottons_add[18].onclick= function(){ added(18);}
-bottons_add[19].onclick= function(){ added(19);}
-bottons_add[20].onclick= function(){ added(20);}
-bottons_add[21].onclick= function(){ added(21);}
-bottons_add[22].onclick= function(){ added(22);}
-bottons_add[23].onclick= function(){ added(23);}
-bottons_add[24].onclick= function(){ added(24);}
-bottons_add[25].onclick= function(){ added(25);}
-bottons_add[26].onclick= function(){ added(26);}
-bottons_add[27].onclick= function(){ added(27);}
-bottons_add[28].onclick= function(){ added(28);}
-bottons_add[29].onclick= function(){ added(29);}
-bottons_add[30].onclick= function(){ added(30);}
-bottons_add[31].onclick= function(){ added(31);}
-bottons_add[32].onclick= function(){ added(32);}
-bottons_add[33].onclick= function(){ added(33);}
-bottons_add[34].onclick= function(){ added(34);}
-bottons_add[35].onclick= function(){ added(35);}
-bottons_add[36].onclick= function(){ added(36);}
-bottons_add[37].onclick= function(){ added(37);}
-bottons_add[38].onclick= function(){ added(38);}
-bottons_add[39].onclick= function(){ added(39);}
-bottons_add[40].onclick= function(){ added(40);}
-bottons_add[41].onclick= function(){ added(41);}
-addold();
+
+	@Each.Entries
+	@Partial['CalendarEntry', Current];
+	@EndEach
+
+	
+	};
+	bottons_add[0].onclick= function(){ added(0);}
+	bottons_add[1].onclick= function(){ added(1);}
+	bottons_add[2].onclick= function(){ added(2);}
+	bottons_add[3].onclick= function(){ added(3);}
+	bottons_add[4].onclick= function(){ added(4);}
+	bottons_add[5].onclick= function(){ added(5);}
+	bottons_add[6].onclick= function(){ added(6);}
+	bottons_add[7].onclick= function(){ added(7);}
+	bottons_add[8].onclick= function(){ added(8);}
+	bottons_add[9].onclick= function(){ added(9);}
+	bottons_add[10].onclick= function(){ added(10);}
+	bottons_add[11].onclick= function(){ added(11);}
+	bottons_add[12].onclick= function(){ added(12);}
+	bottons_add[13].onclick= function(){ added(13);}
+	bottons_add[14].onclick= function(){ added(14);}
+	bottons_add[15].onclick= function(){ added(15);}
+	bottons_add[16].onclick= function(){ added(16);}
+	bottons_add[17].onclick= function(){ added(17);}
+	bottons_add[18].onclick= function(){ added(18);}
+	bottons_add[19].onclick= function(){ added(19);}
+	bottons_add[20].onclick= function(){ added(20);}
+	bottons_add[21].onclick= function(){ added(21);}
+	bottons_add[22].onclick= function(){ added(22);}
+	bottons_add[23].onclick= function(){ added(23);}
+	bottons_add[24].onclick= function(){ added(24);}
+	bottons_add[25].onclick= function(){ added(25);}
+	bottons_add[26].onclick= function(){ added(26);}
+	bottons_add[27].onclick= function(){ added(27);}
+	bottons_add[28].onclick= function(){ added(28);}
+	bottons_add[29].onclick= function(){ added(29);}
+	bottons_add[30].onclick= function(){ added(30);}
+	bottons_add[31].onclick= function(){ added(31);}
+	bottons_add[32].onclick= function(){ added(32);}
+	bottons_add[33].onclick= function(){ added(33);}
+	bottons_add[34].onclick= function(){ added(34);}
+	bottons_add[35].onclick= function(){ added(35);}
+	bottons_add[36].onclick= function(){ added(36);}
+	bottons_add[37].onclick= function(){ added(37);}
+	bottons_add[38].onclick= function(){ added(38);}
+	bottons_add[39].onclick= function(){ added(39);}
+	bottons_add[40].onclick= function(){ added(40);}
+	bottons_add[41].onclick= function(){ added(41);}
+	addold(parseFloat(document.querySelector('#calendar2 select#what_event').options[document.querySelector('#calendar2 select#what_event').selectedIndex].value));
 }
+
 Calendar2("calendar2", new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
 go();
 document.querySelector('#calendar2').onchange = function Kalendar3() {
-  Calendar2("calendar2",document.querySelector('#calendar2 input#year').value, parseFloat(document.querySelector('#calendar2 select').options[document.querySelector('#calendar2 select').selectedIndex].value), document.querySelector('#calendar2 input#day').value);
+  Calendar2("calendar2",document.querySelector('#calendar2 input#year').value, parseFloat(document.querySelector('#calendar2 select#month').options[document.querySelector('#calendar2 select#month').selectedIndex].value), document.querySelector('#calendar2 input#day').value);
   bottons_add=document.getElementsByClassName('add_new_entry');
   go();
 }
