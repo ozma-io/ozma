@@ -141,8 +141,15 @@
 	</script>
 <script type="text/javascript">
 document.addEventListener("DOMContentLoaded", function(){
+
+  var elements = document.getElementsByClassName('open_form');
+  for (var i = 0; i < elements.length; i++) {
+        var row = elements[i];
+        row.onclick =document.getElementsByClassName('editable')[0].ondblclick ;
+    }
+
 function redact(){
-   function clicktd(){
+  function clicktd(){
    var elements = document.getElementsByClassName('editable');
   for (var i = 0; i < elements.length; i++) {
         var row = elements[i];
@@ -152,7 +159,6 @@ function redact(){
     function onRowClick(event) {
         var target = event ? event.target : window.event.srcElement;
 		this.onclick=null;
-		if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) this.onclick=this.ondblclick;
         this.className = 'editable';
             var cell = this.firstElementChild;
             var input = document.createElement('input');
@@ -177,13 +183,8 @@ function redact(){
 		this.parentNode.removeChild(this);
 	};
 	clicktd();
-	if(/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-	setTimeout(redact, 4000);
-	}
-	else
-	{
 	setTimeout(redact, 1500);
-	}
+
 }
 redact();
 });
