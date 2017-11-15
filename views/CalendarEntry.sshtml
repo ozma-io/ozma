@@ -1,0 +1,60 @@
+var date,
+	Duration,
+	EntryText;
+@Each
+	date="@Current.Value";
+	Duration="@Current.Duration";
+	EntryText="@Current.EntryText";
+@EndEach
+var i=0,
+	date1="";
+while(date.charAt(i)!="/"){
+date1=date1+date.charAt(i);
+i++;
+}
+date1=String(Number(date1)-1);
+var m1=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(0);
+var m2=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(1);
+if (m2!='_')
+var fm=m1+m2;
+else
+var fm=m1;
+var m1=document.getElementsByClassName('table_for_note')[5].firstElementChild.firstElementChild.lastElementChild.getAttribute('id').charAt(0);
+var m2=document.getElementsByClassName('table_for_note')[5].firstElementChild.firstElementChild.lastElementChild.getAttribute('id').charAt(1);
+if (m2!='_')
+var lm=m1+m2;
+else
+var lm=m1;
+if (lm="0") lm=12;
+if(Number(date1)>=Number(fm) && Number(date1) <= Number(lm)){
+i++;
+var date2=date1;
+date1="";
+while(date.charAt(i)!="/"){
+date1=date1+date.charAt(i);
+i++;
+}
+var m1=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(3);
+var m2=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(4);
+if (m1!='_')
+var fm1=m1+m2;
+else
+var fm1=m2;
+var m1=document.getElementsByClassName('table_for_note')[5].firstElementChild.firstElementChild.lastElementChild.getAttribute('id').charAt(3);
+var m2=document.getElementsByClassName('table_for_note')[5].firstElementChild.firstElementChild.lastElementChild.getAttribute('id').charAt(4);
+if (m1!='_')
+var lm1=m1+m2;
+else
+var lm1=m2;
+if((Number(date2)==Number(fm) && Number(date1) >= Number(fm1))||(Number(date2)==Number(lm) && Number(date1) <= Number(lm1))||(Number(date2)>Number(fm) && Number(date2) < Number(lm))){
+date=date2+"_"+date1;
+var number_place=1;
+		element=document.getElementById(date).parentNode.firstElementChild;
+		for (i=1;(element.nextElementSibling!=null&&element!=document.getElementById(date));i++){
+		number_place+=1;
+		element=element.nextElementSibling;
+		}
+	document.getElementById(date).parentNode.firstElementChild
+	addnew(Duration, Duration, document.getElementById(date).parentNode.parentNode, number_place, EntryText)
+}
+}

@@ -266,8 +266,15 @@ function added(a) {
 	}
 	parentid=document.getElementsByClassName('add_new_entry')[a].parentNode.parentNode.parentNode;
 	number_td=document.getElementsByClassName('add_new_entry')[a].parentNode.getAttribute('id');
+	addold();
  };
 var bottons_add=document.getElementsByClassName('add_new_entry');
+function addold(){
+@Each.Entries
+@Partial['CalendarEntry', Current];
+@EndEach
+};
+addold();
 bottons_add[0].onclick= function(){ added(0);}
 bottons_add[1].onclick= function(){ added(1);}
 bottons_add[2].onclick= function(){ added(2);}
