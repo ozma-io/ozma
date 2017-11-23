@@ -243,9 +243,142 @@ div.topsector {
 }
 
 #Block1, #Block2, #Block3, #Block4 {
-    margin: 5px 1px;
+    margin: 1px 1px;
     width: 100%;
-    border: 1px solid;
-    border-color: #F5C700;
-    padding-bottom: 15px;
+}
+
+/*Календарь*/
+
+
+.calendar_body {
+    position: absolute;
+    top: 40px;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.month-row {
+    position: absolute;
+    left: 0px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.line_table {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    table-layout: fixed;
+    opacity: 0.4;
+    border-top: 0px;
+    border-bottom: 0px;
+}
+
+.table_for_note {
+    position: relative;
+    table-layout: fixed;
+    width: 100%;
+    border-bottom: 0px;
+    background: none;
+}
+
+#calendar2 {
+    width: 100%;
+    font: monospace;
+    line-height: 1.2em;
+    font-size: 15px;
+    text-align: center;
+}
+
+    #calendar2 .today {
+        background: blue;
+    }
+
+.head_block {
+    display: inline-block;
+    margin: 0 auto;
+}
+
+.head_td {
+    border-left: 0px;
+    border-bottom: 0px;
+}
+
+.block_td {
+    border-left: 0px;
+    border-top: 0px;
+}
+
+.date {
+    float: left;
+    margin-left: 10px;
+    margin-top: 5px;
+}
+
+.add_new_entry {
+    float: right;
+    margin-right: 10px;
+    margin-top: 5px;
+}
+
+#new_entry {
+    position: absolute;
+    height: 150px;
+    width: 200px;
+    visibility: hidden;
+    z-index: 200;
+}
+
+.Notes {
+    margin-left: 1%;
+    max-width: 98%;
+    min-width: 98%;
+    height: 40%;
+}
+
+.note_in_calendar {
+    margin: 0 auto;
+    height: 20px;
+    position: relative;
+    z-index: 100;
+    overflow: hidden;
+}
+
+.head_line {
+    width: 100%;
+    table-layout: fixed;
+    text-align: left;
+    border-bottom: 0px;
+}
+
+.month_row {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    height: 16.6%;
+}
+
+.all_entry {
+    margin-top: 5px;
+    float: left;
+    margin-left: 10px;
+}
+
+#allEntrys {
+    position: absolute;
+    height: 200px;
+    width: 150px;
+    visibility: hidden;
+    z-index: 200;
+}
+
+.DWEbody {
+    height: calc(100% - 24px);
+    width: 100%;
+    overflow-y: auto;
 }
