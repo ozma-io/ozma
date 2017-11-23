@@ -496,6 +496,11 @@ addnew(document.querySelector('input#lasting').value,document.querySelector('inp
 }
  function dragDropMobile(ev) {
 	var data = document.getElementById(iddragelem);
+	var elements=document.getElementsByName('divintable'+data.getAttribute('id'));
+	if(needdel==1||data.parentNode.parentNode==document.getElementById('allEntrys')){
+	data.parentNode.removeChild(data);
+	data=elements[0];
+	}
 	var need_place=(Number(ev.getAttribute('id'))%100)%7;
 	if (need_place==0) need_place=7;
 	var can_colspan=1;
@@ -560,6 +565,7 @@ addnew(document.querySelector('input#lasting').value,document.querySelector('inp
 		table_drop[i].style.backgroundColor='white';
 	}
 	if(how_long-can_colspan>0) addnew(data.getAttribute('lasting'),how_long-can_colspan,place_where_insert.parentNode.parentNode.parentNode.parentNode.nextElementSibling.firstElementChild.nextElementSibling.firstElementChild,1,data.innerHTML,data.innerHTML); 
+	needdel=0;
 	return false;
 }
 
@@ -569,7 +575,7 @@ function dragStartMobile(ev) {
 	var how_many_colspan=Number(ev.parentNode.getAttribute('colspan'));
 	var elemforchekfree;
 	for (i=0;i<drop_elem.length;i++){
-		if(drop_elem[i]!=ev){
+		if(drop_elem[i]!=ev && drop_elem[i].parentNode.parentNode!=document.getElementById('allEntrys')){
 			var flag_of_child=0;
 			if (drop_elem[i].parentNode.nextElementSibling!=null){
 			elemforchekfree=drop_elem[i].parentNode.nextElementSibling;
@@ -616,9 +622,14 @@ function dragStartMobile(ev) {
 	}
    return true;
 }
-
+var needdel=0;
 function dragDrop(ev) {
-	var data = document.getElementById(ev.dataTransfer.getData("Text"));
+	var data = document.getElementById(ev.dataTransfer.getData("Text"));	
+	var elements=document.getElementsByName('divintable'+data.getAttribute('id'));
+	if(needdel==1||data.parentNode.parentNode==document.getElementById('allEntrys')){
+	data.parentNode.removeChild(data);
+	data=elements[0];
+	}
 	var need_place=(Number(ev.target.getAttribute('id'))%100)%7;
 	if (need_place==0) need_place=7;
 	var can_colspan=1;
@@ -681,16 +692,21 @@ function dragDrop(ev) {
 		table_drop[i].style.zIndex='-10';
 	}
 	if(how_long-can_colspan>0) addnew(data.getAttribute('lasting'),how_long-can_colspan,place_where_insert.parentNode.parentNode.parentNode.parentNode.nextElementSibling.firstElementChild.nextElementSibling.firstElementChild,1,data.innerHTML); 
+	needdel=0;
 	return false;
 }
 
 function dragStart(ev) {
+	if(needdel!=1)
+		var dragelem=ev.target;
+	else
+		var dragelem=ev;
 	var table_drop=document.getElementsByClassName('line_table');
-	var drop_elem=document.getElementsByClassName(ev.target.getAttribute('id'));
-	var how_many_colspan=Number(ev.target.parentNode.getAttribute('colspan'));
+	var drop_elem=document.getElementsByClassName(dragelem.getAttribute('id'));
+	var how_many_colspan=Number(dragelem.parentNode.getAttribute('colspan'));
 	var elemforchekfree;
 	for (i=0;i<drop_elem.length;i++){
-		if(drop_elem[i]!=ev.target){
+		if(drop_elem[i]!=dragelem && drop_elem[i].parentNode.parentNode!=document.getElementById('allEntrys')){
 			var flag_of_child=0;
 			if (drop_elem[i].parentNode.nextElementSibling!=null){
 			elemforchekfree=drop_elem[i].parentNode.nextElementSibling;
@@ -723,12 +739,14 @@ function dragStart(ev) {
 			}
 		}
 	}
+	if(needdel!=1){
 	ev.dataTransfer.effectAllowed='move';
-	ev.dataTransfer.setData("Text", ev.target.getAttribute('id')); 
-	ev.target.parentNode.setAttribute("colspan", "1");
+	ev.dataTransfer.setData("Text", dragelem.getAttribute('id'));
+	}
+	dragelem.parentNode.setAttribute("colspan", "1");
 	var newnewtd=document.createElement("td");
 	for(i=1; i<how_many_colspan; i++){
-	insertAfter(newnewtd, ev.target.parentNode);
+	insertAfter(newnewtd, dragelem.parentNode);
 	var newnewtd=document.createElement("td");
 	}
 	for(i=0;i<table_drop.length;i++){
@@ -744,5 +762,23 @@ function dragOver(ev) {
     event.preventDefault();
 }
 
+function dragStartByDWE(ev){
+needdel=1;
+ev.dataTransfer.effectAllowed='move';
+ev.dataTransfer.setData("Text", ev.target.getAttribute('id'));
+var elements=document.getElementsByName('divintable'+ ev.target.getAttribute('id'));
+var dragelem=elements[0];
+dragStart(dragelem);
+return true;
+}
+
+function dragStartByDWEMobile(ev) {
+needdel=1;
+ev.style.backgroundColor ='#CCCCFF';
+var elements=document.getElementsByName('divintable'+ ev.getAttribute('id'));
+var dragelem=elements[0];
+dragStartMobile(dragelem);
+return true;
+}
 </script>
 @EndSection
