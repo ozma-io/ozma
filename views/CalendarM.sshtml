@@ -362,15 +362,17 @@ function checkchild(testingtr, place, longest, elementtest){
 }
  
 function giveplace(someplace){
-	var placeinline=(Number(someplace.getAttribute('id'))%100)%7,
+	var placeinline=(Number(someplace.getAttribute('id'))%100)%7;
+	var table_with_entrys=someplace.parentNode.parentNode.parentNode.nextElementSibling;
+	var tr_in_table_with_entrys =table_with_entrys.firstElementChild.firstElementChild,
 		sometd_in_needtable;
 	if (placeinline==0) placeinline=7;
-	if(someplace.parentNode.parentNode.parentNode.nextElementSibling.firstElementChild.firstElementChild.nextElementSibling!=null){
-		sometd_in_needtable=someplace.parentNode.parentNode.parentNode.nextElementSibling.firstElementChild.firstElementChild.nextElementSibling.firstElementChild;
+	if(tr_in_table_with_entrys.nextElementSibling!=null){
+		sometd_in_needtable=tr_in_table_with_entrys.nextElementSibling.firstElementChild;
 	}
 	else{
-		createTR(someplace.parentNode.parentNode.parentNode.nextElementSibling.firstElementChild.firstElementChild);
-		sometd_in_needtable=someplace.parentNode.parentNode.parentNode.nextElementSibling.firstElementChild.firstElementChild.nextElementSibling.firstElementChild;
+		createTR(tr_in_table_with_entrys);
+		sometd_in_needtable=tr_in_table_with_entrys.nextElementSibling.firstElementChild;
 	}
 		if(Number(sometd_in_needtable.getAttribute('colspan'))>0) placeinline=placeinline-Number(sometd_in_needtable.getAttribute('colspan'))+1;
 		for(i=1;i<placeinline&&sometd_in_needtable.nextElementSibling!=null;i++){
