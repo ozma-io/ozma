@@ -5,115 +5,10 @@
 @EndSection
 
 @Section['Content']
-<style>
-  body{
-  margin:0px;
-  }
-  .calendar_body{
-  position: absolute;
-  top: 40px;
-  bottom: 0px;
-  left: 0px;
-  width: 100%;
-  overflow: hidden;
-  }
 
-  .month-row {
-  position: absolute;
-  left: 0px;
-  width: 100%;
-  overflow: hidden;
-  }
-
-  .line_table {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
-  table-layout: fixed;
-  opacity:0.4;
-  border-top:0px;
-  border-bottom:0px;
-  }
-
-  .table_for_note{
-  position: relative;
-  table-layout: fixed;
-  width: 100%;
-  border-bottom: 0px;
-  background:none;
-  }
-
-  #calendar2 {
-  width: 100%;
-  font: monospace;
-  line-height: 1.2em;
-  font-size: 15px;
-  text-align: center;
-  }
-  #calendar2 .today {
-  background: blue;
-  }
-  .head_block{
-  display:inline-block;
-  margin: 0 auto;
-  }
-  .head_td{
-  border-left:0px;
-  border-bottom: 0px;
-  }
-
-  .block_td{
-  border-left:0px;
-  border-top: 0px;
-  }
-
-  .date{
-  float:left;
-  margin-left:10px;
-  margin-top:5px;
-  }
-  .add_new_entry{
-  float:right;
-  margin-right:10px;
-  margin-top:5px;
-  }
-  #new_entry{
-  position:absolute;
-  height:150px;
-  width:200px;
-  visibility:hidden;
-  z-index:200;
-  }
-  .Notes{
-  margin-left:1%;
-  max-width:98%;
-  min-width:98%;
-  height:40%;
-  }
-  .note_in_calendar{
-  margin:0 auto;
-  height:20px;
-  position:relative;
-  z-index:100;
-  overflow: hidden;
-  }
-  .head_line{
-  width: 100%;
-  table-layout: fixed;
-  text-align: left;
-  border-bottom: 0px;
-  }
-  .month_row {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  overflow: hidden;
-  height:16.6%;
-  }
-</style>
-
+<div id="allEntrys">
+<a style="float:right; margin-right:10px; margin-top:5px" id="close_all">×</a>
+</div>
 <div id="new_entry">
 <a style="float:right; margin-right:10px; margin-top:5px" id="close">×</a><p style="margin:10px">Новая запись</p>
 <textarea class="Notes" cols="40" rows="1"></textarea>
@@ -335,9 +230,76 @@ function go(){
 	@Each.Entries
 	@Partial['CalendarEntry', Current];
 	@EndEach
-
-	
 	};
+	var all=document.getElementsByClassName('all_entry');
+			  for (var i = 0; i < all.length; i++) {
+				var day_entrys = all[i];
+				day_entrys.onclick = onAllClick;
+			}
+	function onAllClick(){
+		var target = event ? event.target : window.event.srcElement;
+		var tbody = target.parentNode.parentNode.parentNode;
+		var divWithEntrys=document.getElementById('allEntrys');
+		var bodyOfDWE=document.createElement("div");
+		bodyOfDWE.setAttribute("class","DWEbody")
+		var date=document.createElement("div");
+		date.innerHTML=target.parentNode.firstElementChild.innerHTML;
+		date.style.position='absolute';
+		if (divWithEntrys.firstElementChild!=document.querySelector('#close_all')) divWithEntrys.removeChild(divWithEntrys.firstElementChild);
+		if (divWithEntrys.lastElementChild!=document.querySelector('#close_all')) divWithEntrys.removeChild(divWithEntrys.lastElementChild);
+		divWithEntrys.insertBefore(date,divWithEntrys.firstElementChild)
+		insertAfter(bodyOfDWE,divWithEntrys.lastElementChild)
+		var dateplace=target.parentNode;
+		var tr=tbody.firstElementChild;
+		var td=tr.firstElementChild;
+		var k;
+		for(k=1; td!=dateplace;k++)
+			td=td.nextElementSibling;
+		for(var i=0;tr.nextElementSibling!=null;i++){
+			var td=tr.nextElementSibling.firstElementChild;
+			if(td.getAttribute("colspan")!=null)
+				var j=Number(td.getAttribute("colspan"));
+			else
+				var j=1;
+			while(j<k && td.nextElementSibling!=null){
+				td=td.nextElementSibling;
+				if(td.getAttribute("colspan")!=null)
+					j=j+Number(td.getAttribute("colspan"));
+				else
+				j++;
+			}
+			if(td.firstElementChild!=null){
+			var olddiv=td.firstElementChild;
+			olddiv.setAttribute('name','divintable'+ olddiv.getAttribute("id"))
+			var newdiv = document.createElement("div");
+			newdiv.setAttribute("class", olddiv.getAttribute("class"));
+			newdiv.innerHTML = olddiv.innerHTML;
+			newdiv.setAttribute("draggable", "true")
+			newdiv.setAttribute("id", olddiv.getAttribute("id"))
+			newdiv.setAttribute("ondragstart", "return dragStartByDWE(event)")
+			newdiv.setAttribute("lasting", olddiv.getAttribute("lasting"))
+			newdiv.style.backgroundColor = "@Model.ColorCalendarNoteBg"
+			newdiv.style.border = "1px solid @Model.ColorCalendarBd"
+			if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
+			newdiv.setAttribute("onclick", "return dragStartByDWEMobile(this)")
+			bodyOfDWE.appendChild(newdiv);
+			}
+			tr=tr.nextElementSibling;
+		}
+	
+		divWithEntrys.style.visibility='visible';
+		divWithEntrys.style.backgroundColor = "@Model.ColorCalendarEntryBg"
+		divWithEntrys.style.border = "1px solid @Model.ColorCalendarBd"
+		if(target.getBoundingClientRect().top - (divWithEntrys.getBoundingClientRect().top - divWithEntrys.getBoundingClientRect().bottom) <document.querySelector('body').getBoundingClientRect().bottom)
+		divWithEntrys.style.top=target.getBoundingClientRect().top +'px';
+		else
+		divWithEntrys.style.top=target.getBoundingClientRect().top - (target.getBoundingClientRect().top - (divWithEntrys.getBoundingClientRect().top - divWithEntrys.getBoundingClientRect().bottom) - document.querySelector('body').getBoundingClientRect().bottom) +'px';
+		if(target.getBoundingClientRect().left - (divWithEntrys.getBoundingClientRect().left - divWithEntrys.getBoundingClientRect().right)<document.querySelector('body').getBoundingClientRect().right)
+		divWithEntrys.style.left=target.getBoundingClientRect().left + 'px';
+		else
+		divWithEntrys.style.left=target.getBoundingClientRect().left -(target.getBoundingClientRect().left - (divWithEntrys.getBoundingClientRect().left - divWithEntrys.getBoundingClientRect().right) - document.querySelector('body').getBoundingClientRect().right ) + 'px';
+	}
+
 	bottons_add[0].onclick= function(){ added(0);}
 	bottons_add[1].onclick= function(){ added(1);}
 	bottons_add[2].onclick= function(){ added(2);}
