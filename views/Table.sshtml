@@ -5,6 +5,13 @@
 @EndSection
 
 @Section['Content']
+	<div id="black_block" style=" width: 100%;
+			position: fixed;
+			background: black;
+			z-index: 100;
+			opacity: 0.6;
+			display: none;"
+	></div>
     <div class="main_table">
         @Partial['Menubar', Model.MenuBar]
         <div class="tabl">
@@ -96,6 +103,26 @@
 	if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)){
 	
 		document.addEventListener("DOMContentLoaded", function(){
+		document.querySelector('div.tabl').onclick = function DelBlackBlock() {document.getElementById('black_block').style.display='none';}
+		document.getElementById('black_block').onclick = function DelBlackBlock() {document.getElementById('black_block').style.display='none';}
+			var menu=document.querySelectorAll('ul.menu > li.submenu');
+			  for (var i = 0; i < menu.length; i++) {
+				var li = menu[i];
+				li.onclick = onliClick;
+			}
+
+			function onliClick(event){
+				var lis=document.querySelectorAll('ul.menu > li.submenu');
+				var k=1;
+				var target = event ? event.target : window.event.srcElement;
+					for (var i = 0; i < lis.length; i++) {
+					if (target.parentNode==lis[i]){k=k+i;break;}
+				}
+				document.getElementById('black_block').style.display='block';
+				document.getElementById('black_block').style.height= 34*k+'px';
+
+			}
+
 			function fixed_menu(){
 				if(screen.width > 480||document.body.offsetWidth > 480){
 					document.getElementsByTagName('body')[0].scrollTop=0
@@ -111,6 +138,7 @@
 					document.getElementsByClassName('mytitle')[0].style.zIndex='';
 					document.getElementById('tabl_body_1').style.position='';
 					document.getElementById('tabl_body_1').style.top='';
+					document.getElementById('black_block').style.display='none';
 				}
 				else{
 					document.getElementById('tabl_head_1').style.positon='relative';
