@@ -266,10 +266,14 @@ tr.bl:hover {
 
 /* Форма */
 
+.container {
+    margin-top: -20px;
+}
 
 textarea {
     max-width: 98%;
     min-width: 98%;
+    resize:none;
 }
 
 div.form_data {
@@ -294,18 +298,14 @@ div.form_field_sense {
 div.topsector {
     display: flex;
     clear:both;
-} 
+}
 
- #Block1, #Block2, #Block3 {
-    margin: 0 5px;
-    margin-top:10px;
+#Block1, #Block2, #Block3 {
+    margin: 0 1px;
     width: 350px;
     min-width: 350px;
-    min-height: 200px;
-    max-height:600px;
+    max-height: 600px;
     display: inline-block;
-    border: 1px solid;
-    padding-bottom:15px;
 }
 
  #Block1{

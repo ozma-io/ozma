@@ -214,10 +214,19 @@ table {
 
 
 /* Форма */
-
+.container {
+    margin-top: -20px;
+}
 textarea{
     max-width: 98%;
     min-width: 98%;
+    border-radius:0;
+    -webkit-appearance:none;
+}
+
+input {
+    border-radius: 0;
+    -webkit-appearance: none;
 }
 
 div.form_field {
