@@ -14,7 +14,7 @@ namespace FunWithFlags.FunApp.Views
     using FunWithFlags.FunDB.Attribute;
     using FunWithFlags.FunDB.View;
     using FieldName = FunWithFlags.FunDB.FunQL.AST.FieldName;
-    using Result = FunWithFlags.FunDB.FunQL.AST.Result<FunWithFlags.FunDB.FunQL.AST.EntityName, FunWithFlags.FunDB.FunQL.AST.FieldName>;
+    using Result = FunWithFlags.FunDB.FunQL.AST.Result<FunWithFlags.FunDB.FunQL.AST.FieldName>;
 
     public class TableView : View
     {
