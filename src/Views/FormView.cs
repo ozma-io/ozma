@@ -90,7 +90,7 @@ namespace FunWithFlags.FunApp.Views
 
             if (recId > 0)
             {
-                var row = result.Rows[0];
+                var row = result.Rows.Single();
 
                 var Entries = row.Cells.Zip(result.Columns, (cell, col) => new
                 {
