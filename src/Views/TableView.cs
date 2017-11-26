@@ -61,17 +61,17 @@ namespace FunWithFlags.FunApp.Views
             var entries = result.Rows.Select(row =>
                 row.Cells.Skip(1).Zip(result.Columns.Skip(1), (cell, col) => new
                     {
-                        Value = (col.Field.BusinessType != "date") ? cell : cell.Substring(0,10),
+                        Value = (cell == null) ? "" : ((col.Field != null && col.Field.BusinessType == "date") ? cell.Substring(0, 10) : cell),
                         Width = col.Attributes.GetIntWithDefault(100, "Size", "Width").ToString()+"px",
                         Height = col.Attributes.GetIntWithDefault(20, "Size", "Height").ToString() + "px",
                         Id =  row.Cells[0],
                         // FIXME: ????
                         href = "window.location.href='../uv/" + (uv.Id+1).ToString()+"?recId="+row.Cells[0].ToString()+"'", 
-                        FlyBlockValue1=row.Cells[1].ToString(),
+                        /*FlyBlockValue1=row.Cells[1].ToString(),
                         FlyBlockWidth1=20,
                         FlyBlockValue2=(row.Cells.Count() > 2) ? row.Cells[2].ToString() : "",
-                        FlyBlockWidth2=20,
-                }
+                        FlyBlockWidth2=20,*/
+                    }
                 ).ToList()
                 // сюда положить ссылку на юзервью с формой
             ).ToList();
