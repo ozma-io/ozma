@@ -24,6 +24,10 @@ a.bl {
     border-bottom: 1px solid white;
 }
 
+input {
+    border-radius: 0;
+    -webkit-appearance: none;
+}
 
 /* Меню */
 
@@ -195,6 +199,10 @@ th {
 tr.bl {
     background: #FFFFFF;
 }
+input.customCheckbox {
+    width: 100%;
+    -webkit-appearance: checkbox;
+}
 
 .fly_block {
     width: 100%;
@@ -224,10 +232,6 @@ textarea{
     -webkit-appearance:none;
 }
 
-input {
-    border-radius: 0;
-    -webkit-appearance: none;
-}
 
 div.form_field {
     padding: 10px;
