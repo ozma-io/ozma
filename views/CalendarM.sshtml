@@ -333,8 +333,30 @@ document.querySelector('#calendar2').onchange= function blablabla(){
 Kalendar3();
 }
 function Kalendar3() {
-	var date= new Date(document.querySelector('#calendar2 input#calendar_for_choice').value)
-	Calendar2("calendar2",date.getFullYear(), date.getMonth(), date.getDate());
+	var text = document.querySelector('#calendar2 input#calendar_for_choice').value;
+	var y="";
+	var m="";
+	var d="";
+	var k=0;
+	for (var i=0; text.charAt(i)!='.';i++){
+	k++;
+	y+=text.charAt(i);
+	}
+	k++;
+	y=Number(y);
+	for (var i=k; text.charAt(i)!='.';i++){
+	k++;
+	m+=text.charAt(i);
+	}
+	k++;
+	m=Number(m);
+	m--;
+	for (var i=k; text.charAt(i)!='';i++){
+	k++;
+	d+=text.charAt(i);
+	}
+	d=Number(d);
+	Calendar2("calendar2",y, m, d);
 	bottons_add=document.getElementsByClassName('add_new_entry');
 	go();
 }
