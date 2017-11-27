@@ -79,7 +79,7 @@
 											min-width:14px ; 
 											max-width:14px ;
 											cursor:pointer;
-										" onclick>⤢</td>
+										" onclick><img src="../assets/openform.png" style="width:100%;"></td>
 								<!--<tr class="bl" onclick=@Current.href>-->
 								<!--tr class="bl" onclick="window.location.href=@Current.href">-->
 								<!--@Current.Value-->
