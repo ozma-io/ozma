@@ -119,6 +119,27 @@
 				var li = menu[i];
 				li.onmouseover = onliClick;
 			}
+
+			function onliClick(event){
+				var lis=document.querySelectorAll('ul.menu > li.submenu');
+				var k=1;
+				var target = event ? event.target : window.event.srcElement;
+					for (var i = 0; i < lis.length; i++) {
+					if (target.parentNode==lis[i]){k=k+i;break;}
+				}
+				target.parentNode.onmouseout=function DelBlackBlocks(event) {document.getElementById('black_block').style.display='none';
+				document.getElementById('black_block_bottom').style.display='none'; 
+				document.getElementsByTagName('body')[0].style.overflow='auto';
+				document.getElementsByClassName('main_table')[0].style.overflow='auto';
+				}
+				var m=target.parentNode.firstElementChild.nextElementSibling.children.length;
+				document.getElementById('black_block').style.display='block';
+				document.getElementById('black_block').style.height= 34.3*k+'px';
+				document.getElementById('black_block_bottom').style.display='block';
+				document.getElementById('black_block_bottom').style.top= 34.3*k+36*m+'px';
+				document.getElementsByTagName('body')[0].style.overflow='hidden';
+				document.getElementsByClassName('main_table')[0].style.overflow='hidden';
+			}
 		}
 		if(/Android/i.test(navigator.userAgent)){
 			
@@ -126,11 +147,7 @@
 				var li = menu[i];
 				li.onclick = onliClick;
 			}
-			
-		}
 
-		document.getElementById("black_block").onclick=function DelBlackBlocks(event) {document.getElementById('black_block').style.display='none'; document.getElementById('black_block_bottom').style.display='none'; document.getElementsByTagName('body')[0].style.overflow='auto';}
-		document.getElementById("black_block_bottom").onclick=function DelBlackBlocks(event) {document.getElementById('black_block').style.display='none'; document.getElementById('black_block_bottom').style.display='none'; document.getElementsByTagName('body')[0].style.overflow='auto';}
 			function onliClick(event){
 				var lis=document.querySelectorAll('ul.menu > li.submenu');
 				var k=1;
@@ -144,7 +161,21 @@
 				document.getElementById('black_block_bottom').style.display='block';
 				document.getElementById('black_block_bottom').style.top= 34.2*k+36*m+'px';
 				document.getElementsByTagName('body')[0].style.overflow='hidden';
+				document.getElementsByClassName('main_table')[0].style.overflow='hidden';
 			}
+			
+		}
+
+		document.getElementById("black_block").onclick=function DelBlackBlocks(event) {document.getElementById('black_block').style.display='none';
+		document.getElementById('black_block_bottom').style.display='none'; 
+		document.getElementsByTagName('body')[0].style.overflow='auto';
+		document.getElementsByClassName('main_table')[0].style.overflow='';
+		}
+		document.getElementById("black_block_bottom").onclick=function DelBlackBlocks(event) {document.getElementById('black_block').style.display='none';
+		document.getElementById('black_block_bottom').style.display='none';
+		document.getElementsByTagName('body')[0].style.overflow='auto';
+		document.getElementsByClassName('main_table')[0].style.overflow='';
+		}
 
 			function fixed_menu(){
 				if(screen.width > 480||document.body.offsetWidth > 480){
