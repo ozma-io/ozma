@@ -12,6 +12,14 @@
 			opacity: 0.6;
 			display: none;"
 	></div>
+	<div id="black_block_bottom" style=" width: 100%;
+			position: fixed;
+			background: black;
+			z-index: 100;
+			opacity: 0.6;
+			display: none;
+			height:100%;"
+	></div>
     <div class="main_table">
         @Partial['Menubar', Model.MenuBar]
         <div class="tabl">
@@ -104,12 +112,13 @@
 	if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)){
 	
 		document.addEventListener("DOMContentLoaded", function(){
-		document.querySelector('div.tabl').onclick = function DelBlackBlock() {document.getElementById('black_block').style.display='none';}
-		document.getElementById('black_block').onclick = function DelBlackBlock() {document.getElementById('black_block').style.display='none';}
+		document.getElementById('black_block').style.display='none'; document.getElementById('black_block_bottom').style.display='none';
+		document.getElementById('black_block').onclick = function DelBlackBlock() {document.getElementById('black_block').style.display='none'; document.getElementById('black_block_bottom').style.display='none';}
+		document.getElementById('black_block_bottom').onclick = function DelBlackBlock() {document.getElementById('black_block').style.display='none'; document.getElementById('black_block_bottom').style.display='none';}
 			var menu=document.querySelectorAll('ul.menu > li.submenu');
 			  for (var i = 0; i < menu.length; i++) {
 				var li = menu[i];
-				li.onclick = onliClick;
+				li.onmouseover = onliClick;
 			}
 
 			function onliClick(event){
@@ -119,8 +128,11 @@
 					for (var i = 0; i < lis.length; i++) {
 					if (target.parentNode==lis[i]){k=k+i;break;}
 				}
+				var m=target.parentNode.firstElementChild.nextElementSibling.children.length;
 				document.getElementById('black_block').style.display='block';
 				document.getElementById('black_block').style.height= 34*k+'px';
+				document.getElementById('black_block_bottom').style.display='block';
+				document.getElementById('black_block_bottom').style.top= 35*(k+m)+'px';
 
 			}
 
