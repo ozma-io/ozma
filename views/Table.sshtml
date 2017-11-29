@@ -112,15 +112,27 @@
 	if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)){
 	
 		document.addEventListener("DOMContentLoaded", function(){
-		document.getElementById('black_block').style.display='none'; document.getElementById('black_block_bottom').style.display='none';
-		document.getElementById('black_block').onclick = function DelBlackBlock() {document.getElementById('black_block').style.display='none'; document.getElementById('black_block_bottom').style.display='none';}
-		document.getElementById('black_block_bottom').onclick = function DelBlackBlock() {document.getElementById('black_block').style.display='none'; document.getElementById('black_block_bottom').style.display='none';}
 			var menu=document.querySelectorAll('ul.menu > li.submenu');
+		
+		if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){
 			  for (var i = 0; i < menu.length; i++) {
 				var li = menu[i];
 				li.onmouseover = onliClick;
+				li.onmouseout = DelBlackBlock;
+			}
+		}
+		if(/Android/i.test(navigator.userAgent)){
+			
+			for (var i = 0; i < menu.length; i++) {
+				var li = menu[i];
+				li.onclick = onliClick;
 			}
 
+		document.getElementById("black_block").onclick=function DelBlackBlocks(event) {document.getElementById('black_block').style.display='none'; document.getElementById('black_block_bottom').style.display='none';}
+		document.getElementById("black_block_bottom").onclick=function DelBlackBlocks(event) {document.getElementById('black_block').style.display='none'; document.getElementById('black_block_bottom').style.display='none';}
+			
+		}
+			function DelBlackBlock(event) {document.getElementById('black_block').style.display='none'; document.getElementById('black_block_bottom').style.display='none';}
 			function onliClick(event){
 				var lis=document.querySelectorAll('ul.menu > li.submenu');
 				var k=1;
