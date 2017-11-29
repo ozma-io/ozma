@@ -119,18 +119,18 @@
 				var li = menu[i];
 				li.onmouseover = onliClick;
 			}
-
+			document.addEventListener('touchmove', function(e) {
+			if(document.getElementById('black_block_bottom').style.display=='block'){
+			e.preventDefault();}
+			}, 
+			true
+			);
 			function onliClick(event){
 				var lis=document.querySelectorAll('ul.menu > li.submenu');
 				var k=1;
 				var target = event ? event.target : window.event.srcElement;
 					for (var i = 0; i < lis.length; i++) {
 					if (target.parentNode==lis[i]){k=k+i;break;}
-				}
-				target.parentNode.onmouseout=function DelBlackBlocks(event) {document.getElementById('black_block').style.display='none';
-				document.getElementById('black_block_bottom').style.display='none'; 
-				document.getElementsByTagName('body')[0].style.overflow='';
-				document.getElementsByClassName('main_table')[0].style.overflow='';
 				}
 				var m=target.parentNode.firstElementChild.nextElementSibling.children.length;
 				document.getElementById('black_block').style.display='block';
