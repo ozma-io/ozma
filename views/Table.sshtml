@@ -129,8 +129,8 @@
 				}
 				target.parentNode.onmouseout=function DelBlackBlocks(event) {document.getElementById('black_block').style.display='none';
 				document.getElementById('black_block_bottom').style.display='none'; 
-				document.getElementsByTagName('body')[0].style.overflow='auto';
-				document.getElementsByClassName('main_table')[0].style.overflow='auto';
+				document.getElementsByTagName('body')[0].style.overflow='';
+				document.getElementsByClassName('main_table')[0].style.overflow='';
 				}
 				var m=target.parentNode.firstElementChild.nextElementSibling.children.length;
 				document.getElementById('black_block').style.display='block';
