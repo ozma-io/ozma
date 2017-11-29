@@ -113,7 +113,6 @@
 	
 		document.addEventListener("DOMContentLoaded", function(){
 			var menu=document.querySelectorAll('ul.menu > li.submenu');
-		
 		if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){
 			  for (var i = 0; i < menu.length; i++) {
 				var li = menu[i];
@@ -122,6 +121,10 @@
 			document.addEventListener('touchmove', function(e) {
 			if(document.getElementById('black_block_bottom').style.display=='block'){
 			e.preventDefault();}
+			document.getElementById('black_block').style.display='none';
+			document.getElementById('black_block_bottom').style.display='none'; 
+			document.getElementsByTagName('body')[0].style.overflow='auto';
+			document.getElementsByClassName('main_table')[0].style.overflow='';
 			}, 
 			true
 			);
@@ -176,7 +179,6 @@
 		document.getElementsByTagName('body')[0].style.overflow='auto';
 		document.getElementsByClassName('main_table')[0].style.overflow='';
 		}
-
 			function fixed_menu(){
 				if(screen.width > 480||document.body.offsetWidth > 480){
 					document.getElementsByTagName('body')[0].scrollTop=0
@@ -193,6 +195,9 @@
 					document.getElementById('tabl_body_1').style.position='';
 					document.getElementById('tabl_body_1').style.top='';
 					document.getElementById('black_block').style.display='none';
+					document.getElementById('black_block_bottom').style.display='none';
+					document.getElementsByTagName('body')[0].style.overflow='auto';
+					document.getElementsByClassName('main_table')[0].style.overflow='';
 				}
 				else{
 					document.getElementById('tabl_head_1').style.positon='relative';
