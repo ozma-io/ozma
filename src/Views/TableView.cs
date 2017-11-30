@@ -61,7 +61,7 @@ namespace FunWithFlags.FunApp.Views
             var entries = result.Rows.Select(row =>
                 row.Cells.Skip(1).Zip(result.Columns.Skip(1), (cell, col) => new
                     {
-                        Value = (cell == null) ? "" : ((col.Field != null && col.Field.BusinessType == "date") ? cell.Substring(0, 10) : cell),
+                        Value = (cell == null) ? "" : ((col.Field != null && col.Field.Field.BusinessType == "date") ? cell.Substring(0, 10) : cell),
                         Width = col.Attributes.GetIntWithDefault(100, "Size", "Width").ToString()+"px",
                         Height = col.Attributes.GetIntWithDefault(20, "Size", "Height").ToString() + "px",
                         Id =  row.Cells[0],

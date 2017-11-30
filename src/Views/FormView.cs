@@ -103,15 +103,15 @@ namespace FunWithFlags.FunApp.Views
                     BlockNum = col.Attributes.GetIntWithDefault(0, "Form", "BlockNum"),
                     OrdInBlock = col.Attributes.GetIntWithDefault(0, "Form", "OrdInBlock"),
                     // FIXME: Subqueries don't have Fields!
-                    BusinessType = col.Field.BusinessType,
-                    ListValues = col.Field.ListValues,
+                    BusinessType = col.Field.Field.BusinessType,
+                    ListValues = col.Field.Field.ListValues,
                     HtmlFieldTag = GetHtmlFieldTag(
                            col.Name,
-                           col.Field.BusinessType,
+                           col.Field.Field.BusinessType,
                            40,
                            (cell.Length / 40 + 1 > 5) ? 5 : cell.Length / 40 + 1,
                            cell,
-                           col.Field.ListValues
+                           col.Field.Field.ListValues
                            ),
                     Value = cell
                 });
@@ -132,7 +132,7 @@ namespace FunWithFlags.FunApp.Views
                     dynamic entry = new ExpandoObject();
                     string val;
                     //FIXME use ctx.Resolver.GetTemplate(db.Entities.Where(e => e.Name == entitie.First().Name).Single());
-                    switch (col.Field.BusinessType)
+                    switch (col.Field.Field.BusinessType)
                     {
                         case "int":
                             val = "0";
@@ -154,15 +154,15 @@ namespace FunWithFlags.FunApp.Views
                     entry.BlockNum = col.Attributes.GetIntWithDefault(0, "Form", "BlockNum");
                     entry.OrdInBlock = col.Attributes.GetIntWithDefault(0, "Form", "OrdInBlock");
                     // FIXME: Subqueries don't have Fields!
-                    entry.BusinessType = col.Field.BusinessType;
-                    entry.ListValues = col.Field.ListValues;
+                    entry.BusinessType = col.Field.Field.BusinessType;
+                    entry.ListValues = col.Field.Field.ListValues;
                     entry.HtmlFieldTag = GetHtmlFieldTag(
                            col.Name,
-                           col.Field.BusinessType,
+                           col.Field.Field.BusinessType,
                            40,
                            1,
                            val,
-                           col.Field.ListValues
+                           col.Field.Field.ListValues
                            );
                     
                     entry.Value = val;

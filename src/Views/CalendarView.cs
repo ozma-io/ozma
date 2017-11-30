@@ -64,7 +64,7 @@ namespace FunWithFlags.FunApp.Views
             var entries = result.Rows.Select(row =>
                 row.Cells.Skip(1).Zip(result.Columns.Skip(1), (cell, col) => new
                 {
-                    Value = (col.Field.BusinessType != "date") ? cell : cell.Substring(0, 10),
+                    Value = (col.Field.Field.BusinessType != "date") ? cell : cell.Substring(0, 10),
                     Duration = 1,
                     Id = row.Cells[0],
                     EntryText = row.Cells[1].ToString()
