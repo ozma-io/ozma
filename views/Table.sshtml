@@ -254,6 +254,7 @@ document.addEventListener("DOMContentLoaded", function(){
     }
 
 
+function redact(){
 document.addEventListener('mouseup', clickpast);
 function clickpast (event) {
     var container = document.getElementById("selected");
@@ -261,11 +262,10 @@ function clickpast (event) {
         container.style.border="";
 		container.style.maxWidth=parseInt(container.style.maxWidth,10)+ 2 +"px";
 		container.style.minWidth=parseInt(container.style.minWidth,10)+ 2 +"px";
+		container.onclick = onRowClickFirst;
 		container.setAttribute('id','');
     }
 }
-
-function redact(){
   function clicktd(){
    var elements = document.getElementsByClassName('editable');
   for (var i = 0; i < elements.length; i++) {
