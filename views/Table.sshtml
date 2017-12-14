@@ -253,15 +253,36 @@ document.addEventListener("DOMContentLoaded", function(){
         row.onclick =document.getElementsByClassName('editable')[0].ondblclick ;
     }
 
+
+document.addEventListener('mouseup', clickpast);
+function clickpast (event) {
+    var container = document.getElementById("selected");
+    if (event.target.parentNode.parentNode !=container){
+        container.style.border="";
+		container.style.maxWidth=parseInt(container.style.maxWidth,10)+ 2 +"px";
+		container.style.minWidth=parseInt(container.style.minWidth,10)+ 2 +"px";
+		container.setAttribute('id','');
+    }
+}
+
 function redact(){
   function clicktd(){
    var elements = document.getElementsByClassName('editable');
   for (var i = 0; i < elements.length; i++) {
         var row = elements[i];
-        row.onclick = onRowClick;
+        row.onclick = onRowClickFirst;
     }
 	}
-    function onRowClick(event) {
+	 function onRowClickFirst(event) {
+        var target = event ? event.target : window.event.srcElement;
+		this.onclick=null;
+		this.style.border="1px solid blue";
+		this.style.maxWidth=parseInt(this.style.maxWidth,10)- 2 +"px";
+		this.style.minWidth=parseInt(this.style.minWidth,10)- 2 +"px";
+		this.onclick=onRowClickSecond;
+		this.setAttribute('id','selected');
+	}
+    function onRowClickSecond(event) {
         var target = event ? event.target : window.event.srcElement;
 		this.onclick=null;
         this.className = 'editable';
@@ -290,10 +311,14 @@ function redact(){
 			}
 	function unfocus(event) {
 		this.nextElementSibling.firstChild.data = this.value;
+		this.parentNode.parentNode.style.border="";
+		this.parentNode.parentNode.style.maxWidth=parseInt(this.parentNode.parentNode.style.maxWidth,10)+ 2 +"px";
+		this.parentNode.parentNode.style.minWidth=parseInt(this.parentNode.parentNode.style.minWidth,10)+ 2 +"px";
+		this.parentNode.parentNode.onclick=onRowClickFirst;
+		this.parentNode.parentNode.setAttribute('id','');
 		this.parentNode.removeChild(this);
 	};
 	clicktd();
-	setTimeout(redact, 1500);
 
 }
 redact();
