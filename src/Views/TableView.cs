@@ -33,78 +33,56 @@ namespace FunWithFlags.FunApp.Views
             var db = ctx.Database;
             dynamic model = new ExpandoObject();
 
+            // FIXME: Preload all settings once for a request.
             model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
             model.ColorTableSelect = db.Settings.Single(s => s.Name == "ColorTableSelect").Value;
+            // FIMXE: Rename.
             model.ColorTableBg = db.Settings.Single(s => s.Name == "ColorTableBg").Value;
             model.ColorTableBd = db.Settings.Single(s => s.Name == "ColorTableBd").Value;
 
             // Формируем название страницы в браузере
-            // FIXME: use name from UserView
-            var entitie = db.Entities.Where(e =>
-                db.UVEntities.Where(uve =>
-                    uve.UserViewId == uv.Id && uve.EntityId == e.Id
-                ).Any()
-            );
-            model.FormName = entitie.First().DisplayNamePlural;
+            model.FormName = uv.DisplayName;
 
+            // FIXME: Valid only for single-entity queries! Rewrite hrefs to use row attributes instead.
+            // For example, a user might specify a query like this:
+            // SELECT Name, { Link = { UserView = 'FieldsForm', Parameters = { id = Id } } } FROM Fields
             var resultId = Tuple.Create(Result.NewRField(new FieldName(null, "Id")), new AttributeMap());
             var parsedQuery = ViewResolver.ParseQuery(uv);
             var newQuery = parsedQuery.MergeResults(new[] { resultId });
             var result = ctx.Resolver.RunQuery(newQuery);
 
-            model.Titles = result.Columns.Skip(1).Select(col => new
+            var columns = result.Columns.Skip(1).Select(col => new
                 {
+                    Field = col.Field,
                     Name = col.Attributes.GetStringWithDefault(col.Name, "Caption"),
                     Width = col.Attributes.GetIntWithDefault(100, "Size", "Width").ToString() + "px"
-            });
+                }).ToList();
+            model.Titles = columns;
 
             var entries = result.Rows.Select(row =>
-                row.Cells.Skip(1).Zip(result.Columns.Skip(1), (cell, col) => new
                     {
-                        Value = (cell == null) ? "" : ((col.Field != null && col.Field.Field.BusinessType == "date") ? cell.Substring(0, 10) : cell),
-                        Width = col.Attributes.GetIntWithDefault(100, "Size", "Width").ToString()+"px",
-                        Height = col.Attributes.GetIntWithDefault(20, "Size", "Height").ToString() + "px",
-                        Id =  row.Cells[0],
-                        // FIXME: ????
-                        href = "window.location.href='../uv/" + (uv.Id+1).ToString()+"?recId="+row.Cells[0].ToString()+"'", 
-                        /*FlyBlockValue1=row.Cells[1].ToString(),
-                        FlyBlockWidth1=20,
-                        FlyBlockValue2=(row.Cells.Count() > 2) ? row.Cells[2].ToString() : "",
-                        FlyBlockWidth2=20,*/
-                    }
-                ).ToList()
-                // сюда положить ссылку на юзервью с формой
-            ).ToList();
-/* 
-            // ! - дописать
-            for (int i=0; i<entries.Count(); i++) {
-                for (int j=0; j<entries[i].Count(); j++) {
-                    if (model.Titles[i].Type == "lookup") {
-                        entries[i][j].Value = "FunFun";
-                    }
-                }
-            }
-*/
-            model.Entries = entries;
+                        var id = row.Cells[0].Value.GetInt();
+                        var height = row.Attributes.GetIntWithDefault(100, "Size", "Height").ToString() + "px";
+                        return row.Cells.Skip(1).Zip(columns, (cell, col) => new
+                            {
+                                Value = cell.ToString(),
+                                Width = col.Width,
+                                Height = height,
+                                Id = id,
+                                // FIXME: hacky as hell! Depends on uv ids!
+                                href = $"window.location.href='../uv/{uv.Id+1}?recId={id}'",
+                            }
+                            ).ToList();
+                        // сюда положить ссылку на юзервью с формой
+                    }).ToList();
 
-            
-            /*model.Entries = dbQuery.Query("Tests", new[]
-                    {
-                        "\"Name\"",
-                        "\"Count\"",
-                        "\"Description\"",
-                        "\"Param1\"",
-                        "\"Param2\"",
-                    }, ""
-            );*/
-            
- 
+            model.Entries = entries;
             model.View = uv;
 
             return model;
         }
 
-        public ExpandoObject Post(Context ctx, UserView uv, DynamicDictionary getPars, DynamicDictionary postPars)
+        public ExpandoObject Post(Context ctx, UserView uv, dynamic getPars, dynamic postPars)
         {
             throw new NotImplementedException("TableView Post is not implemented");
         }       

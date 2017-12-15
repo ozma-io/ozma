@@ -16,6 +16,6 @@ namespace FunWithFlags.FunApp
 
         // FIXME: Don't give DatabaseContext! Everything can be loaded from database during preparations.
         ExpandoObject Get(Context ctx, UserView uv, dynamic getPars);
-        ExpandoObject Post(Context ctx, UserView uv, DynamicDictionary getPars, DynamicDictionary postPars);
+        ExpandoObject Post(Context ctx, UserView uv, dynamic getPars, dynamic postPars);
     }
 }

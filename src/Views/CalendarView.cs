@@ -42,35 +42,33 @@ namespace FunWithFlags.FunApp.Views
             model.ColorCalendarToday = db.Settings.Single(s => s.Name == "ColorCalendarToday").Value;
 
             // Формируем название страницы в браузере
-            // FIXME: use name from UserView
-            var entitie = db.Entities.Where(e =>
-                db.UVEntities.Where(uve =>
-                    uve.UserViewId == uv.Id && uve.EntityId == e.Id
-                ).Any()
-            );
-            model.FormName = entitie.First().DisplayNamePlural;
+            model.FormName = uv.DisplayName;
 
             var resultId = Tuple.Create(Result.NewRField(new FieldName(null, "Id")), new AttributeMap());
             var parsedQuery = ViewResolver.ParseQuery(uv);
             var newQuery = parsedQuery.MergeResults(new[] { resultId });
             var result = ctx.Resolver.RunQuery(newQuery);
 
-            model.Titles = result.Columns.Skip(1).Select(col => new
-            {
-                Name = col.Name,
-                Width = col.Attributes.GetIntWithDefault(100, "Size", "Width").ToString() + "px"
-            });
+            var columns = result.Columns.Skip(1).Select(col => new
+                {
+                    Field = col.Field,
+                    Name = col.Name,
+                    Width = col.Attributes.GetIntWithDefault(100, "Size", "Width").ToString() + "px"
+                }).ToList();
+            model.Titles = columns;
 
             var entries = result.Rows.Select(row =>
-                row.Cells.Skip(1).Zip(result.Columns.Skip(1), (cell, col) => new
-                {
-                    Value = (col.Field.Field.BusinessType != "date") ? cell : cell.Substring(0, 10),
-                    Duration = 1,
-                    Id = row.Cells[0],
-                    EntryText = row.Cells[1].ToString()
-                }
-                ).ToList()
-            ).ToList();
+                    {
+                        var id = row.Cells[0].Value.GetInt();
+                        var entryText = row.Cells[1].ToString();
+                        return row.Cells.Skip(1).Zip(columns, (cell, col) => new
+                            {
+                                Value = cell.ToString(),
+                                Duration = 1,
+                                Id = id,
+                                EntryText = entryText
+                            }).ToList();
+                    }).ToList();
 
             model.Entries = entries;
 
@@ -79,9 +77,9 @@ namespace FunWithFlags.FunApp.Views
             return model;
         }
 
-        public ExpandoObject Post(Context ctx, UserView uv, DynamicDictionary getPars, DynamicDictionary postPars)
+        public ExpandoObject Post(Context ctx, UserView uv, dynamic getPars, dynamic postPars)
         {
-            throw new NotImplementedException("TableView Post is not implemented");
+            throw new NotImplementedException("CalendarView Post is not implemented");
         }       
     }
 }

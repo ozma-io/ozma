@@ -22,10 +22,11 @@ namespace FunWithFlags.FunApp
     }
     public class AppModule : NancyModule
     {
-        private View view; 
+        private View view;
+
         private ExpandoObject GetMenuBar(DatabaseContext db, UserView currUv)
         {
-            // Временная реализация меню - Вывести в одельную функцию и привязать ко всем вью.cs
+            // FIXME: Временная реализация меню - Вывести в одельную функцию и привязать ко всем вью.cs
 
             /*
             Первым элементом добавляем 3 элемента
@@ -61,10 +62,9 @@ namespace FunWithFlags.FunApp
             );
             var entities = entitiesQuery.First().DisplayNamePlural;
 
-
             // Массивы
 
-            var viewsMultiple = new[] { "Table","Calendar" };
+            var viewsMultiple = new[] { "Table", "Calendar" };
 
 
             // Первый пернкт меню
@@ -234,10 +234,10 @@ namespace FunWithFlags.FunApp
                 var uv = db.UserViews.FirstOrDefault(u => u.Id == id);
                 if (uv == null)
                 {
-                    throw new ArgumentException($"User view doesn't exist: {uv}");
+                    return HttpStatusCode.NotFound;
                 }
 
-                // ! Переписать на динамический поиск через Reflection
+                // FIXME: Переписать на динамический поиск через Reflection
                 view = null;
                 switch (uv.Type)
                 {
@@ -290,7 +290,12 @@ namespace FunWithFlags.FunApp
             {
                 var id = (int)pars.Id;
                 var uv = db.UserViews.FirstOrDefault(u => u.Id == id);
-                // ! Переписать на динамический поиск через Reflection
+                if (uv == null)
+                {
+                    return HttpStatusCode.NotFound;
+                }
+
+                // FIXME: Переписать на динамический поиск через Reflection
                 view = null;
                 switch (uv.Type)
                 {
@@ -303,12 +308,8 @@ namespace FunWithFlags.FunApp
                     default:
                         throw new ArgumentException($"Unknown view type: {uv.Type}");
                 }
-                DynamicDictionary postPars = Request.Form;
-                int recId = (int)Request.Query["recId"];
-                postPars.Add("recId", recId);
-
-                view.Post(ctx, uv, null, postPars);
-                //FIXME Find UserView.Id for table
+                view.Post(ctx, uv, this.Request.Query, this.Request.Form);
+                // FIXME: Find UserView.Id for table
                 return this.Response.AsRedirect("~/uv/"+(id-1).ToString());
             });
         }

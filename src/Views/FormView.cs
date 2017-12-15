@@ -14,6 +14,7 @@ namespace FunWithFlags.FunApp.Views
     using FunWithFlags.FunDB.View;
     using static FunWithFlags.FunDB.FunQL.AST;
     using FieldExpr = FunWithFlags.FunDB.FunQL.AST.FieldExpr<FunWithFlags.FunDB.FunQL.AST.FieldName>;
+    using QualifiedValue = FunWithFlags.FunDB.SQL.AST.Value<FunWithFlags.FunDB.SQL.AST.ObjectRef>;
     using EntityName = FunWithFlags.FunDB.FunQL.AST.EntityName;
     using FieldName = FunWithFlags.FunDB.FunQL.AST.FieldName;
 
@@ -28,124 +29,161 @@ namespace FunWithFlags.FunApp.Views
         {
             get { return ViewType.Single; }
         }
-         
-        public string GetHtmlFieldTag(string name, string businessType, int cols, int rows, string value, string listValues)
+
+        // FIXME: NO! Generation of HTML in code is a very dangerous anti-pattern.
+        public string GetHtmlFieldTag(ViewColumn col, int cols, int rows, ViewCell value, IEnumerable<Tuple<int, ViewCell>> summaries)
         {
-            DateTime dt;
             string HtmlFieldTag;
-            //Заменяем двойные и одинарные кавычки, перенос строки для javascript
-            string val = value.Replace("\"", "!##!").Replace("'", "\'").Replace("\r\n", "\\r\\n");
-            
-            switch (businessType)
+            // FIXME: Will break for computed fields!
+            var field = col.Field.TryColumnField();
+            if (field.FieldType.IsDate)
             {
-                case "date":
-                    dt = DateTime.Parse(value);
-                    HtmlFieldTag = "<input type=date name=" + name + " value=" + dt.ToString("yyyy-MM-dd") + ">";
-                    break;
-                case "int":
-                    HtmlFieldTag = "<input type=number name=" + name + " value=" + value + ">";
-                    break;
-                case "list":
-                    List<string> lst = new List<string>(listValues.Split(';'));
-                    HtmlFieldTag = "<select name=" + name +">";
-                    foreach (string lstVal in lst)
-                    {
-                        HtmlFieldTag = HtmlFieldTag + "<option " + ((value == lstVal) ? "selected value=": "value=") + lstVal + " > "+ lstVal + "</option>";
-                    }
-                    HtmlFieldTag = HtmlFieldTag + "<select>";
-                    break;
-                default:
-                    HtmlFieldTag = "<textarea name=" + name + " cols=" + cols.ToString() + " rows=" + rows.ToString()+">" + val + "</textarea>";
-                    break;
-            };
+                DateTime dt = value.Value.GetDate();
+                HtmlFieldTag = $"<input type=date name='{col.Name}' value='{(dt.ToString("yyyy-MM-dd"))}' />";
+            }
+            else if (field.FieldType.IsInt)
+            {
+                HtmlFieldTag = $"<input type=number name='{col.Name}' value='{value}' />";
+            }
+            else if (field.FieldType.IsReference)
+            {
+                HtmlFieldTag = $"<select name='{col.Name}'>";
+                int? valueId = null;
+                if (value.Value.IsInt)
+                {
+                    valueId = value.Value.GetInt();
+                }
+                foreach (var (lstId, lstVal) in summaries)
+                {
+                    //Заменяем двойные и одинарные кавычки, перенос строки для javascript
+                    // FIXME: ESPECIALLY this!
+                    string val = lstVal.ToString().Replace("\"", "!##!").Replace("'", "\'").Replace("\r\n", "\\r\\n");
+                    HtmlFieldTag = HtmlFieldTag + $"<option {(valueId.HasValue && valueId.Value == lstId ? "selected" : "")} value='{lstId}' >{val}</option>";
+                }
+                if (field.Field.Nullable)
+                {
+                    HtmlFieldTag = HtmlFieldTag + $"<option {(value.Value.IsNull ? "selected" : "")} value='' ></option>";
+                }
+                HtmlFieldTag = HtmlFieldTag + "</select>";
+            }
+            else if (field.FieldType.IsEnum)
+            {
+                HtmlFieldTag = $"<select name='{col.Name}'>";
+                foreach (string lstVal in field.FieldType.GetEnum())
+                {
+                    //Заменяем двойные и одинарные кавычки, перенос строки для javascript
+                    // FIXME: ESPECIALLY this!
+                    string val = lstVal.Replace("\"", "!##!").Replace("'", "\'").Replace("\r\n", "\\r\\n");
+                    HtmlFieldTag = HtmlFieldTag + $"<option {(value.ToString() == lstVal ? "selected" : "")} value='{val}' >{val}</option>";
+                }
+                if (field.Field.Nullable)
+                {
+                    HtmlFieldTag = HtmlFieldTag + $"<option {(value.Value.IsNull ? "selected" : "")} value='' ></option>";
+                }
+                HtmlFieldTag = HtmlFieldTag + "</select>";
+            }
+            else
+            {
+                //Заменяем двойные и одинарные кавычки, перенос строки для javascript
+                // FIXME: ESPECIALLY this!
+                string val = value.ToString().Replace("\"", "!##!").Replace("'", "\'").Replace("\r\n", "\\r\\n");
+                HtmlFieldTag = $"<textarea name='{col.Name}' cols={cols} rows={rows} >{val}</textarea>";
+            }
             return HtmlFieldTag;
         }
-                
+
         public ExpandoObject Get(Context ctx, UserView uv, dynamic getPars)
         {
             var db = ctx.Database;
-            /*var recId = (int)getPars.recId;
-            if (recId == 0)
-            {
-                recId = 1;
-            };
-            */
+
             dynamic model = new ExpandoObject();
 
             model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
             model.ColorFormBd = db.Settings.Single(s => s.Name == "ColorFormBd").Value;
 
             // Формируем название страницы в браузере
-            var entitie = db.Entities.Where(e =>
-                db.UVEntities.Where(uve =>
-                    uve.UserViewId == uv.Id && uve.EntityId == e.Id
-                ).Any()
-            );
-            model.FormName = entitie.First().DisplayName;
-            var recId = (int)getPars.recId;
-            var columnWhere = FieldExpr.NewFEEq(FieldExpr.NewFEColumn(new FieldName(null, "Id")), FieldExpr.NewFEValue(FieldValue.NewFInt(recId)));
+            model.FormName = uv.DisplayName;
             var parsedQuery = ViewResolver.ParseQuery(uv);
-            var newQuery = parsedQuery.MergeWhere(columnWhere);
-            var result = ctx.Resolver.RunQuery(newQuery);
+            var newQuery = parsedQuery;
 
-            if (recId > 0)
+            if (getPars.recId.HasValue)
             {
+                var recId = (int)getPars.recId;
+                var columnWhere = FieldExpr.NewFEEq(FieldExpr.NewFEColumn(new FieldName(null, "Id")), FieldExpr.NewFEValue(FieldValue.NewFInt(recId)));
+                newQuery = newQuery.MergeWhere(columnWhere);
+                var result = ctx.Resolver.RunQuery(newQuery);
+
                 var row = result.Rows.Single();
 
-                var Entries = row.Cells.Zip(result.Columns, (cell, col) => new
-                {
-                    Name = col.Attributes.GetStringWithDefault(col.Name, "Caption"),
-                    Cols = 40,
-                    Rows = (cell.Length / 40 + 1 > 5) ? 5 : cell.Length / 40 + 1,
-                    Width = col.Attributes.GetIntWithDefault(100, "Size", "Width"),
-                    // FIXME: get from user view-scope attributes
-                    Height = 20,
-                    BlockNum = col.Attributes.GetIntWithDefault(0, "Form", "BlockNum"),
-                    OrdInBlock = col.Attributes.GetIntWithDefault(0, "Form", "OrdInBlock"),
-                    // FIXME: Subqueries don't have Fields!
-                    BusinessType = col.Field.Field.BusinessType,
-                    ListValues = col.Field.Field.ListValues,
-                    HtmlFieldTag = GetHtmlFieldTag(
-                           col.Name,
-                           col.Field.Field.BusinessType,
-                           40,
-                           (cell.Length / 40 + 1 > 5) ? 5 : cell.Length / 40 + 1,
-                           cell,
-                           col.Field.Field.ListValues
-                           ),
-                    Value = cell
-                });
+                var columns = result.Columns.Select(col =>
+                        {
+                            Tuple<int, ViewCell>[] summaries = null;
+                            if (col.Field != null)
+                            {
+                                var colField = col.Field.TryColumnField();
+                                if (colField != null && colField.FieldType.IsReference)
+                                {
+                                    summaries = ctx.Resolver.SelectSummaries(colField.FieldType.GetReference().Entity);
+                                }
+                            }
 
-                model.Entries1 = Entries.Where(cell => cell.BlockNum == 1);
-                model.Entries2 = Entries.Where(cell => cell.BlockNum == 2);
-                model.Entries3 = Entries.Where(cell => cell.BlockNum == 3);
-                model.Entries4 = Entries.Where(cell => cell.BlockNum == 4);
+                            return new
+                            {
+                                Column = col,
+                                Caption = col.Attributes.GetStringWithDefault(col.Name, "Caption"),
+                                Width = col.Attributes.GetIntWithDefault(100, "Size", "Width"),
+                                BlockNum = col.Attributes.GetIntWithDefault(0, "Form", "BlockNum"),
+                                OrdInBlock = col.Attributes.GetIntWithDefault(0, "Form", "OrdInBlock"),
+                                Summaries = summaries
+                            };
+                        }).ToList();
+
+                var entries = row.Cells.Zip(columns, (cell, col) =>
+                        {
+                            var cellPun = cell.ToString();
+                            // FIXME: Subqueries don't have Fields!
+                            var field = col.Column.Field.TryColumnField();
+                            return new
+                            {
+                                Name = col.Caption,
+                                BlockNum = col.BlockNum,
+                                OrdInBlock = col.OrdInBlock,
+                                Width = col.Width,
+                                Cols = 40,
+                                Rows = (cellPun.Length / 40 + 1 > 5) ? 5 : cellPun.Length / 40 + 1,
+                                // FIXME: get from user view-scope attributes
+                                Height = 20,
+                                ListValues = field.FieldType.IsEnum ? field.FieldType.GetEnum() : null,
+                                HtmlFieldTag = GetHtmlFieldTag(
+                                                               col.Column,
+                                                               40,
+                                                               (cellPun.Length / 40 + 1 > 5) ? 5 : cellPun.Length / 40 + 1,
+                                                               cell,
+                                                               col.Summaries
+                                                              ),
+                                Value = cell
+                            };
+                        }).ToList();
+
+                model.Entries1 = entries.Where(cell => cell.BlockNum == 1);
+                model.Entries2 = entries.Where(cell => cell.BlockNum == 2);
+                model.Entries3 = entries.Where(cell => cell.BlockNum == 3);
+                model.Entries4 = entries.Where(cell => cell.BlockNum == 4);
             }
             else
             {
-                var EntriesDef1= new List<ExpandoObject>();
+                var result = ctx.Resolver.GetTemplate(newQuery);
+
+                var EntriesDef1 = new List<ExpandoObject>();
                 var EntriesDef2 = new List<ExpandoObject>();
                 var EntriesDef3 = new List<ExpandoObject>();
                 var EntriesDef4 = new List<ExpandoObject>();
-                foreach (ViewColumn col in result.Columns)
+                foreach (var col in result.Columns)
                 {
                     dynamic entry = new ExpandoObject();
-                    string val;
-                    //FIXME use ctx.Resolver.GetTemplate(db.Entities.Where(e => e.Name == entitie.First().Name).Single());
-                    switch (col.Field.Field.BusinessType)
-                    {
-                        case "int":
-                            val = "0";
-                            break;
-                        case "date":
-                            val = DateTime.Today.ToString("yyyy-MM-dd");
-                            break;
-                        default:
-                            val = "";
-                            break;
-                    };
+                    var cell = col.ToDefaultCell();
                     //
-                    entry.Name = col.Attributes.GetStringWithDefault(col.Name, "Caption");
+                    entry.Name = col.Attributes.GetStringWithDefault(col.Field.Field.Name, "Caption");
                     entry.Cols = 40;
                     entry.Rows = 1;
                     entry.Width = col.Attributes.GetIntWithDefault(100, "Size", "Width");
@@ -154,18 +192,16 @@ namespace FunWithFlags.FunApp.Views
                     entry.BlockNum = col.Attributes.GetIntWithDefault(0, "Form", "BlockNum");
                     entry.OrdInBlock = col.Attributes.GetIntWithDefault(0, "Form", "OrdInBlock");
                     // FIXME: Subqueries don't have Fields!
-                    entry.BusinessType = col.Field.Field.BusinessType;
-                    entry.ListValues = col.Field.Field.ListValues;
+                    entry.ListValues = col.Field.FieldType.IsEnum ? col.Field.FieldType.GetEnum() : null;
                     entry.HtmlFieldTag = GetHtmlFieldTag(
-                           col.Name,
-                           col.Field.Field.BusinessType,
-                           40,
-                           1,
-                           val,
-                           col.Field.Field.ListValues
-                           );
-                    
-                    entry.Value = val;
+                                                         col.ToViewColumn(),
+                                                         40,
+                                                         1,
+                                                         cell,
+                                                         col.Summaries
+                                                        );
+
+                    entry.Value = cell;
                     switch (entry.BlockNum)
                     {
                         case 1:
@@ -187,130 +223,40 @@ namespace FunWithFlags.FunApp.Views
                 model.Entries3 = EntriesDef3;
                 model.Entries4 = EntriesDef4;
             }
-            /*
-            // Поля для блока 1
-            var dbmodel1 = db.Entities.Where(e =>
-                db.UVEntities.Where(uve =>
-                    uve.EntityId == e.Id &&
-                    uve.UserViewId == uv.Id
-                ).Any()
-            ).GroupJoin(db.UVFields.Include(tuvf => tuvf.Field),
-                ent => ent.Id,
-                uvf => uvf.Field.EntityId,
-                (ent, uvf) => new
-                {
-                    Entity = ent,
-                    UVFields = uvf.ToList()
-                }
-            // FIXME: Workaround for https://github.com/aspnet/EntityFrameworkCore/issues/9609
-            // We filter and sort UVFields after they are fetched with EFCore.
-            ).ToList().Select(old_model => new
-            {
-                Entity = old_model.Entity,
-                UVFields = old_model.UVFields.Where(tuvf => tuvf.UserViewId == uv.Id && tuvf.BlockNum == 1).OrderBy(t => t.OrdInBlock).ToList()
-            }).Single();
 
-            model.Titles1 = dbmodel1.UVFields;
-            //model.Blocks.Add(dbmodel.UVFields);
-            // Дописано условие - что бы бралась только 1 запись по recId а не все записи
-            var columnWhere1 = new Column(Table.FromEntity(dbmodel1.Entity), "Id");
-            var query1 = SelectExpr.Single(Table.FromEntity(dbmodel1.Entity), dbmodel1.UVFields.Select(f => f.Field.Name), CondExpr.NewCEq(CondExpr.NewCColumn(columnWhere1), CondExpr.NewCInt(recId)));
-
-            var Entries1 = dbQuery.Query(query1).Select(l =>
-               l.Select((a, i) => new
-               {
-                   Name = dbmodel1.UVFields[i].Name,
-                   Cols = 40,
-                   Rows = (a.Length / 40 + 1 > 5) ? 5 : a.Length / 40 + 1,
-                   Width = dbmodel1.UVFields[i].Width,
-                   Heigth = uv.Height,
-                   BlockNum= dbmodel1.UVFields[i].BlockNum,
-                   OrdInBlock = dbmodel1.UVFields[i].OrdInBlock,
-                   Value = a
-               }
-               )
-           );
-            model.Entries1 = Entries1;
-            */
-            /* // Поля для блока 2
-             var dbmodel2 = db.Entities.Where(e =>
-                 db.UVEntities.Where(uve =>
-                     uve.EntityId == e.Id &&
-                     uve.UserViewId == uv.Id
-                 ).Any()
-             ).GroupJoin(db.UVFields.Include(tuvf => tuvf.Field),
-                 ent => ent.Id,
-                 uvf => uvf.Field.EntityId,
-                 (ent, uvf) => new
-                 {
-                     Entity = ent,
-                     UVFields = uvf.ToList()
-                 }
-             // FIXME: Workaround for https://github.com/aspnet/EntityFrameworkCore/issues/9609
-             // We filter and sort UVFields after they are fetched with EFCore.
-             ).ToList().Select(old_model => new
-             {
-                 Entity = old_model.Entity,
-                 UVFields = old_model.UVFields.Where(tuvf => tuvf.UserViewId == uv.Id && tuvf.BlockNum == 2).OrderBy(t => t.OrdInBlock).ToList()
-             }).Single();
-
-             model.Titles2 = dbmodel2.UVFields;
-             //model.Blocks.Add(dbmodel.UVFields);
-             // Дописано условие - что бы бралась только 1 запись по recId а не все записи
-             var columnWhere2 = new Column(Table.FromEntity(dbmodel2.Entity), "Id");
-             var query2 = SelectExpr.Single(Table.FromEntity(dbmodel1.Entity), dbmodel2.UVFields.Select(f => f.Field.Name), CondExpr.NewCEq(CondExpr.NewCColumn(columnWhere2), CondExpr.NewCInt(recId)));
-
-             var Entries2 = dbQuery.Query(query2).Select(l =>
-                l.Select((a, i) => new
-                {
-                    Name = dbmodel1.UVFields[i].Name,
-                    Cols = 40,//model.Titles[i].Size,
-                    Rows = (a.Length / 40 + 1 > 5) ? 5 : a.Length / 40 + 1,
-                    Width = dbmodel1.UVFields[i].Width,
-                    Heigth = uv.Height,
-                    BlockNum = dbmodel1.UVFields[i].BlockNum,
-                    OrdInBlock = dbmodel1.UVFields[i].OrdInBlock,
-                    Value = a
-                }
-                )
-            );
-             //model.Blocks.Add((ExpandoObject)Entries);
-             model.Entries2 = Entries2;
-             */
             model.View = uv;
             return model;
         }
 
-        public ExpandoObject Post(Context ctx, UserView uv, DynamicDictionary getPars, DynamicDictionary postPars)
+        public ExpandoObject Post(Context ctx, UserView uv, dynamic getPars, dynamic postPars)
         {
-            var entitie = ctx.Database.Entities.Where(e =>
-                ctx.Database.UVEntities.Where(uve =>
-                    uve.UserViewId == uv.Id && uve.EntityId == e.Id
-                ).Any()
-            );
-            IDictionary<string, string> pPars = new Dictionary<string,string>();
-            for (int i = 0; i < postPars.Count; i++)
+            var parsedQuery = ViewResolver.ParseQuery(uv);
+            var pPars = new Dictionary<string,string>();
+            foreach (var k in (DynamicDictionary)postPars)
             {
-                if (postPars.Keys.ElementAt(i) != "action" && postPars.Keys.ElementAt(i) != "recId")
+                if (k != "action")
                 {
-                    pPars.Add(postPars.Keys.ElementAt(i), postPars.Values.ElementAt(i));
+                    pPars.Add(k, postPars[k]);
                 }
             };
-            int Id = postPars["recId"];
-            if (postPars["action"] == "Save" && Id == 0)
+            var action = ((string)postPars.action).ToLower();
+            if (action == "save" && !getPars.recId.HasValue)
             {
-                ctx.Resolver.InsertEntry(entitie.First(), pPars);
+                ctx.Resolver.InsertEntry(parsedQuery, pPars);
             }
-            if (postPars["action"] == "Save" && Id != 0)
+            else if (action == "save" && getPars.recId.HasValue)
             {
-                ctx.Resolver.UpdateEntry(entitie.First(), Id, pPars);
+                ctx.Resolver.UpdateEntry(parsedQuery, getPars.recId, pPars);
             }
-            if (postPars["action"] == "Delete" && Id != 0)
+            else if (action == "delete")
             {
-                ctx.Resolver.DeleteEntry(entitie.First(), Id);
+                ctx.Resolver.DeleteEntry(parsedQuery, getPars.recId);
             }
-            //throw new NotImplementedException("FormView Post is not implemented");
+            else
+            {
+                throw new ArgumentException($"Unknown action: {action}");
+            }
             return null;
-        }       
+        }
     }
 }
