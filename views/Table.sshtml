@@ -117,10 +117,17 @@
 			  for (var i = 0; i < menu.length; i++) {
 				var li = menu[i];
 				li.onmouseover = onliClick;
+				li.onmousedown = onliClick;
+				li.onmouseup = onliClick;
+
 			}
 			document.addEventListener('touchmove', function(e) {
 			if(document.getElementById('black_block_bottom').style.display=='block'){
-			e.preventDefault(); document.location.reload(true);}
+			e.preventDefault();}
+			document.getElementById('black_block').style.display='none';
+			document.getElementById('black_block_bottom').style.display='none'; 
+			document.getElementsByTagName('body')[0].style.overflow='auto';
+			document.getElementsByClassName('main_table')[0].style.overflow='';
 			}, 
 			true
 			);
