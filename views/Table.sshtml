@@ -120,11 +120,7 @@
 			}
 			document.addEventListener('touchmove', function(e) {
 			if(document.getElementById('black_block_bottom').style.display=='block'){
-			e.preventDefault();}
-			document.getElementById('black_block').style.display='none';
-			document.getElementById('black_block_bottom').style.display='none'; 
-			document.getElementsByTagName('body')[0].style.overflow='auto';
-			document.getElementsByClassName('main_table')[0].style.overflow='';
+			e.preventDefault(); document.location.reload(true);}
 			}, 
 			true
 			);
