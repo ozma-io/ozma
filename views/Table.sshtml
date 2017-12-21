@@ -287,7 +287,7 @@ function clickpast (event) {
 		this.onclick=null;
         this.className = 'editable';
             var cell = this.firstElementChild;
-            var input = document.createElement('input');
+            var input = document.createElement('textarea');
             // IE fails to change "type" property to unsupported value
             input.setAttribute('type', cell.getAttribute('data-type') || 'text');
             input.value = cell.firstElementChild.firstChild.data;
