@@ -151,6 +151,8 @@
 				document.getElementById('black_block_bottom').style.top= 35*k+36*m+'px';
 				document.getElementsByTagName('body')[0].style.overflow='hidden';
 				document.getElementsByClassName('main_table')[0].style.overflow='hidden';
+				var stop=document.getElementById('thismusttostopourscript');
+				stop.style.border="";
 			}
 		}
 		if(/Android/i.test(navigator.userAgent)){
