@@ -145,7 +145,7 @@
 			document.getElementsByClassName('main_table')[0].style.overflow='';
 			var lis=document.querySelectorAll('ul.menu > li.submenu > ul.submenu');
 				for (var i = 0; i < lis.length; i++) {
-					if (lis[i].style.display=='block'){lis[i].style.display=='none';break;}
+					if (lis[i].style.display=='block'){lis[i].style.display='none';break;}
 				}
 			}, 
 			true
@@ -197,7 +197,7 @@
 		document.getElementsByClassName('main_table')[0].style.overflow='';
 		var lis=document.querySelectorAll('ul.menu > li.submenu > ul.submenu');
 				for (var i = 0; i < lis.length; i++) {
-					if (lis[i].style.display=='block'){lis[i].style.display=='none';break;}
+					if (lis[i].style.display=='block'){lis[i].style.display='none';break;}
 				}
 		}
 		document.getElementById("black_block_bottom").onclick=function DelBlackBlocks(event) {document.getElementById('black_block').style.display='none';
@@ -206,7 +206,7 @@
 		document.getElementsByClassName('main_table')[0].style.overflow='';
 		var lis=document.querySelectorAll('ul.menu > li.submenu > ul.submenu');
 				for (var i = 0; i < lis.length; i++) {
-					if (lis[i].style.display=='block'){lis[i].style.display=='none';break;}
+					if (lis[i].style.display=='block'){lis[i].style.display='none';break;}
 				}
 		}
 			function fixed_menu(){
