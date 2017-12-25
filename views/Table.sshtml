@@ -118,8 +118,14 @@
 				var li = menu[i];
 				li.onmouseover = onliClick;
 				li.onmousedown = onliClick;
-				li.onmouseup = onliClick;
+				li.onmouseup = onliup;
 
+			}
+			function onliup(){
+				document.getElementById('black_block').style.display='none';
+				document.getElementById('black_block_bottom').style.display='none'; 
+				document.getElementsByTagName('body')[0].style.overflow='auto';
+				document.getElementsByClassName('main_table')[0].style.overflow='';
 			}
 			document.addEventListener('touchmove', function(e) {
 			if(document.getElementById('black_block_bottom').style.display=='block'){
