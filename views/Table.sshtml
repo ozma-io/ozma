@@ -117,15 +117,18 @@
 			  for (var i = 0; i < menu.length; i++) {
 				var li = menu[i];
 				li.onmouseover = onliClick;
-				li.onmousedown = onliClick;
-				li.onmouseup = onliup;
+				li.onmousedown = onlidown;
 
 			}
-			function onliup(){
-				document.getElementById('black_block').style.display='none';
-				document.getElementById('black_block_bottom').style.display='none'; 
-				document.getElementsByTagName('body')[0].style.overflow='auto';
-				document.getElementsByClassName('main_table')[0].style.overflow='';
+			function onlidown(){
+			var lis=document.querySelectorAll('ul.menu > li.submenu');
+				var k=1;
+				var target = event ? event.target : window.event.srcElement;
+					for (var i = 0; i < lis.length; i++) {
+					if (target.parentNode==lis[i]){k=k+i;break;}
+				}
+				document.getElementById('black_block').style.display='block';
+				document.getElementById('black_block').style.height= 35*k+'px';
 			}
 			document.addEventListener('touchmove', function(e) {
 			if(document.getElementById('black_block_bottom').style.display=='block'){
