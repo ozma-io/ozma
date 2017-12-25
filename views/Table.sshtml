@@ -157,6 +157,7 @@
 					for (var i = 0; i < lis.length; i++) {
 					if (target.parentNode==lis[i]){k=k+i;break;}
 				}
+				target.nextElementSibling.style.display='block';
 				var m=target.parentNode.firstElementChild.nextElementSibling.children.length;
 				document.getElementById('black_block').style.display='block';
 				document.getElementById('black_block').style.height= 35*k+'px';
