@@ -5,8 +5,10 @@ namespace FunWithFlags.FunApp
     using Microsoft.EntityFrameworkCore;
     using System.Collections.Generic;
     using Nancy;
+    using Nancy.Responses;
     using Nancy.Security;
     using System.Dynamic;
+    using NGettext;
 
     using FunWithFlags.FunCore;
     using FunWithFlags.FunDB.Context;
@@ -16,213 +18,144 @@ namespace FunWithFlags.FunApp
     using Nancy.Extensions;
     using Newtonsoft.Json;
 
-    public class testModel
-    {
-        public string[] field;
-    }
     public class AppModule : NancyModule
     {
-        private View view;
-
-        private ExpandoObject GetMenuBar(DatabaseContext db, UserView currUv)
+        static View GetView(string name)
         {
-            // FIXME: Временная реализация меню - Вывести в одельную функцию и привязать ко всем вью.cs
+            // FIXME: rewrite using reflection.
+            switch (name)
+            {
+                case "Table":
+                    return new TableView();
+                case "Form":
+                    return new FormView();
+                case "Calendar":
+                    return new CalendarView();
+                default:
+                    throw new ArgumentException($"Unknown view type: {name}");
+            }
+        }
 
-            /*
-            Первым элементом добавляем 3 элемента
-                название сущностей через запятую привязанные к этому представлению 
-                и ссылка на меню навигации
-                подменю этому элементу оставляем пустым
-            
-            Если этот вид юзервью выводит данные сразу по многим записям
-                Вторым элементом добавляем 3 элемента 
-                    текущее название юзервью 
-                    и ссылку на него
-                    Подменю
-                        Все юзервью кроме этого отсортированные в алфавитном порядке
-            Иначе(Если этот вид юзервью выводит данные по одной записи)
-                Вторым элементом добавляем 3 элемента 
-                    Название основного для этой сущности юзервью
-                    и ссылку на него
-                    Подменю
-                        Все юзервью кроме этого отсортированные в алфавитном порядке
-                Доабавляем третий элемент
-                    Текущий юзервью
-                    Ссылка на него
-                    Подменю
-                        Все юзервью выводящие данные по 1 записи кроме текущего
-            */
+        dynamic RenderView(DatabaseContext db, UserView uv, ViewResponse view)
+        {
+            if (view is ViewPage)
+            {
+                var page = (ViewPage)view;
+                var attrs = page.Attributes;
+                attrs["MenuBar"] = RenderMenuBar(db, uv, page.Menus);
+                return this.View[page.Name, attrs];
+            }
+            else if (view is ViewRedirect)
+            {
+                var redirect = (ViewRedirect)view;
+                return this.Response.AsRedirect(redirect.Url);
+            }
+            else
+            {
+                throw new NotImplementedException($"Unknown view response type: {view.GetType()}");
+            }
+        }
 
-            // Используемые сущности
+        ViewMenuItem RenderAction(DatabaseContext db, ButtonAction action)
+        {
+            if (action is UserViewAction)
+            {
+                var uvAction = (UserViewAction)action;
 
-            var entitiesQuery = db.Entities.Where(e =>
-                db.UVEntities.Where(uve => 
-                    uve.UserViewId == currUv.Id && uve.EntityId == e.Id
-                ).Any()
-            );
-            var entities = entitiesQuery.First().DisplayNamePlural;
+                string name;
+                if (uvAction.DisplayName == null)
+                {
+                    // FIXME: slow -- called for every action separately.
+                    var uv = db.UserViews.Single(cuv => cuv.Id == uvAction.UserViewId);
+                    name = uv.DisplayName;
+                }
+                else
+                {
+                    name = uvAction.DisplayName;
+                }
 
-            // Массивы
+                return new ViewMenuItem {
+                    Name = name,
+                    Url = this.Context.ToFullPath($"~/uv/{uvAction.UserViewId}")
+                };
+            }
+            else
+            {
+                throw new NotImplementedException($"Unknown action type: {action.GetType()}");
+            }
+        }       
 
-            var viewsMultiple = new[] { "Table", "Calendar" };
+        ExpandoObject RenderMenuBar(DatabaseContext db, UserView uv, IEnumerable<ViewMenu> extras)
+        {
+            var color = db.Settings.Single(s => s.Name == "bgcolor").Value;
 
-
-            // Первый пернкт меню
+            var menus = db.UserViewMenus
+                .Where(menu => menu.UserViewId == uv.Id)
+                .OrderBy(menu => menu.OrdinalNum)
+                .GroupJoin(db.UserViewButtons,
+                           menu => menu.Id,
+                           button => button.MenuId,
+                           (menu, buttons) => new {
+                               Name = menu.DisplayName,
+                               Items = buttons
+                                           .OrderBy(b => b.OrdinalNum)
+                                           .Select(b => b.Action)
+                                           .ToList()
+                           })
+                .ToList()
+                .Select(m => new ViewMenu {
+                        Name = m.Name,
+                        Items = m.Items.Select(action => RenderAction(db, action)).ToList()
+                    })
+                .ToList();
+            menus.AddRange(extras.Select(menu => new ViewMenu {
+                        Name = menu.Name,
+                        Items = menu.Items.Select(item => new ViewMenuItem {
+                                    Name = item.Name,
+                                    Url = this.Context.ToFullPath(item.Url)
+                            }).ToList()
+                    }));
 
             dynamic menuModel = new ExpandoObject();
-            menuModel.Ent = new ExpandoObject();
-            menuModel.Lists = new List<ExpandoObject>();
-            menuModel.BarButtons = new List<ExpandoObject>();
-
-            menuModel.Ent.Name = entities;
-            menuModel.Ent.Link = "../nav";
-            menuModel.Ent.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-
-
-            // Второй пункт меню
-
-            UserView tView = currUv;
-            if (!viewsMultiple.Contains(currUv.Type)) {
-                tView = db.UserViews.First(uv =>
-                    viewsMultiple.Contains(uv.Type) &&
-                    db.UVEntities.Where(uve =>
-                        uve.UserViewId == uv.Id && 
-                        entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
-                    ).Any()
-                );
-            }
-            var userViews = db.UserViews.Where(uv =>
-                viewsMultiple.Contains(uv.Type) && 
-                db.UVEntities.Where(uve =>
-                    uve.UserViewId == uv.Id && 
-                    entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
-                ).Any()
-            ).ToList();
-
-            dynamic subMenuModel2 = new ExpandoObject();
-            subMenuModel2.Name = tView.Name;
-            subMenuModel2.Link = System.String.Format("../uv/{0}",tView.Id);
-            subMenuModel2.Sub = new List<ExpandoObject>();
-            subMenuModel2.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-            menuModel.Lists.Add(subMenuModel2);
-
-
-            // Подменю второго пункта
-            //dynamic subMenuModel3 = new ExpandoObject();
-            for(int i = 0; i < userViews.Count; i++){
-                dynamic subMenuModel3 = new ExpandoObject();
-                subMenuModel3.Name = userViews[i].Name;
-                subMenuModel3.Link = System.String.Format("../uv/{0}",userViews[i].Id);
-                subMenuModel3.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-                menuModel.Lists[0].Sub.Add(subMenuModel3);
-            }
-
-            // Третий пункт (опицонально)
-
-            if (!viewsMultiple.Contains(currUv.Type)) {
-                dynamic subMenuModel4 = new ExpandoObject();
-                subMenuModel4.Name = currUv.Name;
-                subMenuModel4.Link = System.String.Format("../uv/{0}",currUv.Id);
-                subMenuModel4.Sub = new List<ExpandoObject>();
-                subMenuModel4.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-                menuModel.Lists.Add(subMenuModel4);
-
-
-                // Подменю третьего пункта
-
-                var userViews2 = db.UserViews.Where(uv =>
-                    !viewsMultiple.Contains(uv.Type) && 
-                    db.UVEntities.Where(uve =>
-                        uve.UserViewId == uv.Id && 
-                        entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
-                    ).Any()
-                ).ToList();
-
-                for(int i = 0; i < userViews2.Count; i++){
-                    dynamic subMenuModel5 = new ExpandoObject();
-                    subMenuModel5.Name = userViews2[i].Name;
-                    subMenuModel5.Link = System.String.Format("../uv/{0}",userViews2[i].Id);
-                    subMenuModel5.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-                    menuModel.Lists[1].Sub.Add(subMenuModel5);
-                };
-              };
-            //Меню Действия с кнопками
-            var barButtons = db.MenuBarButtons.Where(b =>
-               b.UserViewId == currUv.Id
-               ).OrderBy(t => t.OrdinalNum).ToList();
-            // находим UserView 
-            var userViewsF = db.UserViews.Where(uv =>
-                    !viewsMultiple.Contains(uv.Type) &&
-                    db.UVEntities.Where(uve =>
-                        uve.UserViewId == uv.Id &&
-                        entitiesQuery.Where(e => e.Id == uve.EntityId).Any()
-                    ).Any()
-                ).ToList();
-            //Меню Действия
-            dynamic menuActions = new ExpandoObject();
-            menuActions.Name = "Действия";
-            menuActions.Link = "";
-            menuActions.Sub = new List<ExpandoObject>();
-            menuActions.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-            menuModel.Lists.Add(menuActions);
-            //Подменю с кнопками
-            int cnt = menuModel.Lists.Count;
-            for (int i = 0; i < barButtons.Count; i++)
-            {
-                dynamic subMenuBarButton = new ExpandoObject();
-                subMenuBarButton.Name = barButtons[i].Name;
-                subMenuBarButton.Link = System.String.Format(barButtons[i].Href, userViewsF[0].Id);
-                subMenuBarButton.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-                menuModel.Lists[cnt-1].Sub.Add(subMenuBarButton);
-            };
-                        
+            menuModel.BackColor = color;
+            menuModel.Menus = menus;
             return menuModel;
         }
 
-        public AppModule(Context ctx)
+        public AppModule(Context ctx, ICatalog catalog)
         {
             this.RequiresAuthentication();
             var db = ctx.Database;
 
             Get("/", _ =>
             {
-                return this.Response.AsRedirect("~/nav");
+                return this.Response.AsRedirect("~/nav", RedirectResponse.RedirectType.Permanent);
             });
 
             Get("/nav/", _ =>
             {
-                // Массивы
-                var viewsMultiple = new [] { "Table" };
-
-                var model = new
-                {
-                    // ! Создаем модель выгружаем данные по сущностям из базы на основании доступов пользователя к этим сущностям
-                    MenuCategories = db.MenuCategories.GroupJoin(db.Entities,
-                        category => category.Id,
-                        entity => entity.MenuCategoryId,
-                        (category, entities) => new {
-                            Category = category, 
-                            Entities = entities.GroupJoin(db.UVEntities,
-                                e => e.Id,
-                                uve => uve.EntityId,
-                                (e, uves) => new {
-                                    DisplayNamePlural = e.DisplayNamePlural,
-                                    OrdNum = e.MenuCategoryOrdinalNum,
-                                    Link = System.String.Format("../uv/{0}",
-                                        uves.First(myuve =>
-                                            db.UserViews.Where(myuv =>
-                                                myuv.Id == myuve.UserViewId &&
-                                                viewsMultiple.Contains(myuv.Type)
-                                            ).Any()
-                                        ).UserViewId
-                                    )
-                                }
-                            ).OrderBy(t => t.OrdNum).ToList()
-                        }
-                    // Удаляем пустые менюкатегории (без Сущностей)
-                    ).Where((mc) => mc.Entities.Count != 0).OrderBy(t => t.Category.OrdinalNum).ToList(),
-
-                    Color = db.Settings.Single(s => s.Name == "bgcolor").Value
+                var color = db.Settings.Single(s => s.Name == "bgcolor").Value;
+                var menus = db.MainMenuCategories
+                    .OrderBy(cat => cat.OrdinalNum)
+                    .GroupJoin(db.MainMenuButtons,
+                              cat => cat.Id,
+                              button => button.CategoryId,
+                              (cat, buttons) => new {
+                                  Name = cat.DisplayName,
+                                  Items = buttons
+                                              .OrderBy(b => b.OrdinalNum)
+                                              .Select(b => b.Action)
+                                              .ToList()
+                              })
+                    .ToList()
+                    .Select(m => new ViewMenu {
+                            Name = m.Name,
+                            Items = m.Items.Select(action => RenderAction(db, action)).ToList()
+                        })
+                    .ToList();
+                var model = new {
+                    MenuCategories = menus,
+                    Color = color
                 };
 
                 return View["Navigator", model];
@@ -237,54 +170,8 @@ namespace FunWithFlags.FunApp
                     return HttpStatusCode.NotFound;
                 }
 
-                // FIXME: Переписать на динамический поиск через Reflection
-                view = null;
-                switch (uv.Type)
-                {
-                    case "Table":
-                        view = new TableView();
-                        break;
-                    case "Form":
-                        view = new FormView();
-                        break;
-                    case "Calendar":
-                        view = new CalendarView();
-                        break;
-                    default:
-                        throw new ArgumentException($"Unknown view type: {uv.Type}");
-                }
-
-                /*
-                Создаем модель меню, берем данные из базы с доступами пользователя к сущности и юзервью
-                Если модель не пустая {
-                    Создаем модель данных, берем данные из базы с доступами пользователя к запис(и)ям и фильтрами из юзервью
-                    Если модель не пустая {
-                        Идем по всем полям сущности, используемым в текущем юзервью {
-                            Проверяем доступ пользоваеля к полю {
-                                Если нет доступа на чтение поля
-                                    Помечаем, что поле не доступно для чтения (При выводе поменяем значения полей на "********")
-                                Если тип юзервью позволяет редактирование
-                                    Если поле недоступно для рекдактирования
-                                        Помечаем запись в модели как недоступное для рекдактирования (При выводе сделаем не доступным для редактирования)
-                            }
-                        }
-                        Если тип юзервью поддерживает сортировку {
-                            Если есть параметр сортировка в ссылке
-                                Сортируем по нему
-                            Иначе (если параметра сортировка в ссылке нету)
-                                Сортируем по дате создания записи - новые наверх
-                        }
-                    }
-                } иначе (если модель пустая) {
-                    Выводим страницу ошибки "У вас нет досутпа к этим данным"
-                }
-
-                Запускаем sshtml с выгруженной моделью меню и данных
-                */
-
-                var tModel = view.Get(ctx, uv, this.Request.Query);
-                tModel.MenuBar = this.GetMenuBar(db, uv);
-                return View[view.ViewName, tModel];
+                var view = GetView(uv.Type);
+                return this.RenderView(db, uv, view.Get(ctx, catalog, uv, this.Request.Query));
             });
             Post(@"/uv/{Id:int}/", pars =>
             {
@@ -295,22 +182,8 @@ namespace FunWithFlags.FunApp
                     return HttpStatusCode.NotFound;
                 }
 
-                // FIXME: Переписать на динамический поиск через Reflection
-                view = null;
-                switch (uv.Type)
-                {
-                    case "Table":
-                        view = new TableView();
-                        break;
-                    case "Form":
-                        view = new FormView();
-                        break;
-                    default:
-                        throw new ArgumentException($"Unknown view type: {uv.Type}");
-                }
-                view.Post(ctx, uv, this.Request.Query, this.Request.Form);
-                // FIXME: Find UserView.Id for table
-                return this.Response.AsRedirect("~/uv/"+(id-1).ToString());
+                var view = GetView(uv.Type);
+                return this.RenderView(db, uv, view.Post(ctx, catalog, uv, this.Request.Query, this.Request.Form));
             });
         }
     }

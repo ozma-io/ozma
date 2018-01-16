@@ -5,6 +5,7 @@ namespace FunWithFlags.FunApp.Views
     using System.Linq;
     using System.Collections.Generic;
     using Nancy;
+    using NGettext;
 
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -20,16 +21,6 @@ namespace FunWithFlags.FunApp.Views
 
     public class FormView : View
     {
-        public string ViewName
-        {
-            get { return "Form"; }
-        }
-
-        public ViewType ViewType
-        {
-            get { return ViewType.Single; }
-        }
-
         // FIXME: NO! Generation of HTML in code is a very dangerous anti-pattern.
         public string GetHtmlFieldTag(ViewColumn col, int cols, int rows, ViewCell value, IEnumerable<Tuple<int, ViewCell>> summaries)
         {
@@ -92,17 +83,18 @@ namespace FunWithFlags.FunApp.Views
             return HtmlFieldTag;
         }
 
-        public ExpandoObject Get(Context ctx, UserView uv, dynamic getPars)
+        public ViewResponse Get(Context ctx, ICatalog catalog, UserView uv, dynamic getPars)
         {
             var db = ctx.Database;
 
-            dynamic model = new ExpandoObject();
+            var model = new Dictionary<string, object>();
+            var color = db.Settings.Single(s => s.Name == "bgcolor").Value;
 
-            model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-            model.ColorFormBd = db.Settings.Single(s => s.Name == "ColorFormBd").Value;
+            model["Color"] = color;
+            model["ColorFormBd"] = db.Settings.Single(s => s.Name == "ColorFormBd").Value;
 
             // Формируем название страницы в браузере
-            model.FormName = uv.DisplayName;
+            model["FormName"] = uv.DisplayName;
             var parsedQuery = ViewResolver.ParseQuery(uv);
             var newQuery = parsedQuery;
 
@@ -165,10 +157,10 @@ namespace FunWithFlags.FunApp.Views
                             };
                         }).ToList();
 
-                model.Entries1 = entries.Where(cell => cell.BlockNum == 1);
-                model.Entries2 = entries.Where(cell => cell.BlockNum == 2);
-                model.Entries3 = entries.Where(cell => cell.BlockNum == 3);
-                model.Entries4 = entries.Where(cell => cell.BlockNum == 4);
+                model["Entries1"] = entries.Where(cell => cell.BlockNum == 1);
+                model["Entries2"] = entries.Where(cell => cell.BlockNum == 2);
+                model["Entries3"] = entries.Where(cell => cell.BlockNum == 3);
+                model["Entries4"] = entries.Where(cell => cell.BlockNum == 4);
             }
             else
             {
@@ -218,20 +210,39 @@ namespace FunWithFlags.FunApp.Views
                             break;
                     };
                 };
-                model.Entries1 = EntriesDef1;
-                model.Entries2 = EntriesDef2;
-                model.Entries3 = EntriesDef3;
-                model.Entries4 = EntriesDef4;
+                model["Entries1"] = EntriesDef1;
+                model["Entries2"] = EntriesDef2;
+                model["Entries3"] = EntriesDef3;
+                model["Entries4"] = EntriesDef4;
             }
 
-            model.View = uv;
-            return model;
+            var removeRequest = catalog.GetString("Do you want to remove the item?");
+            var menu = new ViewMenu[] {
+                new ViewMenu {
+                    Name = catalog.GetString("Actions"),
+                    Items = new ViewMenuItem[] {
+                        new ViewMenuItem {
+                            Name = catalog.GetString("Save"),
+                            Url = "javascript: document.form.action.value='save'; document.form.submit();"
+                        },
+                        new ViewMenuItem {
+                            Name = catalog.GetString("Remove"),
+                            Url = $"javascript: document.form.action.value='delete'; if (confirm('{removeRequest}')) document.form.submit();"
+                        }
+                    }
+                }
+            };
+
+            return new ViewPage { Name = "Form", Attributes = model, Menus = menu };
         }
 
-        public ExpandoObject Post(Context ctx, UserView uv, dynamic getPars, dynamic postPars)
+        public ViewResponse Post(Context ctx, ICatalog catalog, UserView uv, dynamic getPars, dynamic postPars)
         {
             var parsedQuery = ViewResolver.ParseQuery(uv);
-            var pPars = new Dictionary<string,string>();
+            var redirectName = parsedQuery.Attributes.GetStringWithDefault(null, "ParentView");
+            var redirectUv = ctx.Database.UserViews.Single(cuv => cuv.Name == redirectName);
+
+            var pPars = new Dictionary<string, string>();
             foreach (var k in (DynamicDictionary)postPars)
             {
                 if (k != "action")
@@ -256,7 +267,8 @@ namespace FunWithFlags.FunApp.Views
             {
                 throw new ArgumentException($"Unknown action: {action}");
             }
-            return null;
+
+            return new ViewRedirect { Url = $"~/uv/{redirectUv.Id}" };
         }
     }
 }

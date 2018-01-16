@@ -21,6 +21,7 @@
     <PackageReference Include="Nancy.Bootstrappers.Autofac" Version="2.0.0-clinteastwood" />
     <PackageReference Include="Nancy.Authentication.Forms" Version="2.0.0-clinteastwood" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.0.*" />
+    <PackageReference Include="NGettext" Version="0.6.*" />
 
     <ProjectReference Include="../FunCore/FunCore.csproj" />
     <ProjectReference Include="../FunDB/FunDB.fsproj" />
@@ -31,10 +32,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="scripts\FormDeleteRec.js">
+    <None Update="scripts/FormDeleteRec.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="scripts\FormSaveRec.js">
+    <None Update="scripts/FormSaveRec.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -5,6 +5,7 @@ namespace FunWithFlags.FunApp.Views
     using System.Linq;
     using System.Collections.Generic;
     using Nancy;
+    using NGettext;
 
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -18,30 +19,9 @@ namespace FunWithFlags.FunApp.Views
 
     public class TableView : View
     {
-        public string ViewName
-        {
-            get { return "Table"; }
-        }
-
-        public ViewType ViewType
-        {
-            get { return ViewType.Multiple; }
-        }
-
-        public ExpandoObject Get(Context ctx, UserView uv, dynamic getPars)
+        public ViewResponse Get(Context ctx, ICatalog catalog, UserView uv, dynamic getPars)
         {
             var db = ctx.Database;
-            dynamic model = new ExpandoObject();
-
-            // FIXME: Preload all settings once for a request.
-            model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-            model.ColorTableSelect = db.Settings.Single(s => s.Name == "ColorTableSelect").Value;
-            // FIMXE: Rename.
-            model.ColorTableBg = db.Settings.Single(s => s.Name == "ColorTableBg").Value;
-            model.ColorTableBd = db.Settings.Single(s => s.Name == "ColorTableBd").Value;
-
-            // Формируем название страницы в браузере
-            model.FormName = uv.DisplayName;
 
             // FIXME: Valid only for single-entity queries! Rewrite hrefs to use row attributes instead.
             // For example, a user might specify a query like this:
@@ -57,7 +37,6 @@ namespace FunWithFlags.FunApp.Views
                     Name = col.Attributes.GetStringWithDefault(col.Name, "Caption"),
                     Width = col.Attributes.GetIntWithDefault(100, "Size", "Width").ToString() + "px"
                 }).ToList();
-            model.Titles = columns;
 
             var entries = result.Rows.Select(row =>
                     {
@@ -76,13 +55,23 @@ namespace FunWithFlags.FunApp.Views
                         // сюда положить ссылку на юзервью с формой
                     }).ToList();
 
-            model.Entries = entries;
-            model.View = uv;
+            var model = new Dictionary<string, object>()
+                { { "Color", db.Settings.Single(s => s.Name == "bgcolor").Value },
+                  { "ColorTableSelect", db.Settings.Single(s => s.Name == "ColorTableSelect").Value },
+                  // FIMXE: Rename.
+                  { "ColorTableBg", db.Settings.Single(s => s.Name == "ColorTableBg").Value },
+                  { "ColorTableBd", db.Settings.Single(s => s.Name == "ColorTableBd").Value },
+                  // Формируем название страницы в браузере
+                  { "FormName", uv.DisplayName },
 
-            return model;
+                  { "Titles", columns },
+                  { "Entries", entries }
+                };
+
+            return new ViewPage { Name = "Table", Attributes = model, Menus = new ViewMenu[] {} };
         }
 
-        public ExpandoObject Post(Context ctx, UserView uv, dynamic getPars, dynamic postPars)
+        public ViewResponse Post(Context ctx, ICatalog catalog, UserView uv, dynamic getPars, dynamic postPars)
         {
             throw new NotImplementedException("TableView Post is not implemented");
         }       

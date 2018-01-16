@@ -1,21 +1,42 @@
 namespace FunWithFlags.FunApp
 {
-    using System.Dynamic;
-    using Nancy;
+    using System.Collections.Generic;
+    using NGettext;
     
     using FunWithFlags.FunCore;
     using FunWithFlags.FunDB.Context;
 
-    public enum ViewType {Single, Multiple, None}; 
+    public struct ViewMenuItem
+    {
+        public string Name;
+        public string Url;
+    }
+
+    public struct ViewMenu
+    {
+        public string Name;
+        public IEnumerable<ViewMenuItem> Items;
+    }
+
+    public abstract class ViewResponse
+    {
+    }
+
+    public class ViewPage : ViewResponse
+    {
+        public string Name;
+        public IDictionary<string, object> Attributes;
+        public IEnumerable<ViewMenu> Menus;
+    }
+
+    public class ViewRedirect : ViewResponse
+    {
+        public string Url;
+    }
 
     public interface View
     {
-        string ViewName { get; }
-
-        ViewType ViewType { get; }
-
-        // FIXME: Don't give DatabaseContext! Everything can be loaded from database during preparations.
-        ExpandoObject Get(Context ctx, UserView uv, dynamic getPars);
-        ExpandoObject Post(Context ctx, UserView uv, dynamic getPars, dynamic postPars);
+        ViewResponse Get(Context ctx, ICatalog catalog, UserView uv, dynamic getPars);
+        ViewResponse Post(Context ctx, ICatalog catalog, UserView uv, dynamic getPars, dynamic postPars);
     }
 }

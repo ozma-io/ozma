@@ -1,13 +1,13 @@
 <div class="mytitle" onclick>
     <ul class="menu">
         <li class="submenu">
-            <a class="bl" href="@Model.Ent.Link" style="background:@Model.Ent.Color">@Model.Ent.Name</a>
+            <a class="bl" href="../nav" style="background:@Model.BackColor">Главное меню</a>
         </li>
-        @Each.Lists
+        @Each.Menus
             <li class="submenu">
-                <a class="bl" style="background:@Current.Color">@Current.Name</a>
+                <a class="bl" style="background:@Model.BackColor">@Current.Name</a>
                 <ul class="submenu">
-                    @Partial['MenubarSubmenu', Current.Sub]
+                    @Partial['MenubarSubmenu', Current.Items]
                 </ul>
             </li>
         @EndEach

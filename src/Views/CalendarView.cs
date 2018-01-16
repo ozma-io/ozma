@@ -5,6 +5,7 @@ namespace FunWithFlags.FunApp.Views
     using System.Linq;
     using System.Collections.Generic;
     using Nancy;
+    using NGettext;
 
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -18,31 +19,9 @@ namespace FunWithFlags.FunApp.Views
 
     public class CalendarView : View
     {
-        public string ViewName
-        {
-            get { return "CalendarM"; }
-        }
-
-        public ViewType ViewType
-        {
-            get { return ViewType.Single; }
-        }
-                
-        public ExpandoObject Get(Context ctx, UserView uv, dynamic getPars)
+        public ViewResponse Get(Context ctx, ICatalog catalog, UserView uv, dynamic getPars)
         {
             var db = ctx.Database;
-            dynamic model = new ExpandoObject();
-
-            model.Color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-            model.ColorCalendarBd = db.Settings.Single(s => s.Name == "ColorCalendarBd").Value;
-            model.ColorCalendarEntryBg = db.Settings.Single(s => s.Name == "ColorCalendarEntryBg").Value;
-            model.ColorCalendarNoteBg = db.Settings.Single(s => s.Name == "ColorCalendarNoteBg").Value;
-            model.ColorCalendarHeadBg = db.Settings.Single(s => s.Name == "ColorCalendarHeadBg").Value;
-            model.ColorCalendarBlockBg = db.Settings.Single(s => s.Name == "ColorCalendarBlockBg").Value;
-            model.ColorCalendarToday = db.Settings.Single(s => s.Name == "ColorCalendarToday").Value;
-
-            // Формируем название страницы в браузере
-            model.FormName = uv.DisplayName;
 
             var resultId = Tuple.Create(Result.NewRField(new FieldName(null, "Id")), new AttributeMap());
             var parsedQuery = ViewResolver.ParseQuery(uv);
@@ -55,7 +34,6 @@ namespace FunWithFlags.FunApp.Views
                     Name = col.Name,
                     Width = col.Attributes.GetIntWithDefault(100, "Size", "Width").ToString() + "px"
                 }).ToList();
-            model.Titles = columns;
 
             var entries = result.Rows.Select(row =>
                     {
@@ -70,14 +48,25 @@ namespace FunWithFlags.FunApp.Views
                             }).ToList();
                     }).ToList();
 
-            model.Entries = entries;
+            var model = new Dictionary<string, object>()
+                { { "Color", db.Settings.Single(s => s.Name == "bgcolor").Value },
+                  { "ColorCalendarBd", db.Settings.Single(s => s.Name == "ColorCalendarBd").Value },
+                  { "ColorCalendarEntryBg", db.Settings.Single(s => s.Name == "ColorCalendarEntryBg").Value },
+                  { "ColorCalendarNoteBg", db.Settings.Single(s => s.Name == "ColorCalendarNoteBg").Value },
+                  { "ColorCalendarHeadBg", db.Settings.Single(s => s.Name == "ColorCalendarHeadBg").Value },
+                  { "ColorCalendarBlockBg", db.Settings.Single(s => s.Name == "ColorCalendarBlockBg").Value },
+                  { "ColorCalendarToday", db.Settings.Single(s => s.Name == "ColorCalendarToday").Value },
+                  // Формируем название страницы в браузере
+                  { "FormName", uv.DisplayName },
 
-            model.View = uv;
+                  { "Titles", columns },
+                  { "Entries", entries }
+                };
 
-            return model;
+            return new ViewPage { Name = "CalendarM", Attributes = model, Menus = new ViewMenu[] {} };
         }
 
-        public ExpandoObject Post(Context ctx, UserView uv, dynamic getPars, dynamic postPars)
+        public ViewResponse Post(Context ctx, ICatalog catalog, UserView uv, dynamic getPars, dynamic postPars)
         {
             throw new NotImplementedException("CalendarView Post is not implemented");
         }       

@@ -2,6 +2,7 @@ namespace FunWithFlags.FunApp
 {
     using System;
     using System.IO;
+    using System.Globalization;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
@@ -13,6 +14,7 @@ namespace FunWithFlags.FunApp
     using Nancy.Configuration;
     using Nancy.Conventions;
     using Autofac;
+    using NGettext;
 
     using FunWithFlags.FunCore;
     using FunWithFlags.FunDB.Context;
@@ -36,12 +38,15 @@ namespace FunWithFlags.FunApp
         private string dbString;
         private string environmentName;
         private ILoggerFactory loggerFactory;
+        private ICatalog catalog;
         
         public CustomBootstrapper(IHostingEnvironment env, IConfiguration configuration, ILoggerFactory loggerFactory)
         {
             this.dbString = configuration["database"];
             this.loggerFactory = loggerFactory;
             this.environmentName = env.EnvironmentName;
+            var locale = configuration["locale"] != null ? new CultureInfo(configuration["locale"]) : CultureInfo.CurrentUICulture;
+            this.catalog = new Catalog("FunApp", "./locale", locale);
         }
 
         public override void Configure(INancyEnvironment environment)
@@ -79,6 +84,7 @@ namespace FunWithFlags.FunApp
 
             // Provide database context if needed.
             builder.Register(c => new Context(this.dbString, this.loggerFactory)).As<Context>().InstancePerRequest();
+            builder.RegisterInstance(this.catalog);
 
             builder.Update(container.ComponentRegistry);
         }
