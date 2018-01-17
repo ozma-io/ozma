@@ -279,9 +279,10 @@
 document.addEventListener("DOMContentLoaded", function(){
 
   var elements = document.getElementsByClassName('open_form');
+  var k = document.getElementsByClassName('editable')[0].parentNode.childElementCount-2;
   for (var i = 0; i < elements.length; i++) {
         var row = elements[i];
-        row.onclick =document.getElementsByClassName('editable')[0].ondblclick ;
+        row.onclick =document.getElementsByClassName('editable')[(i*k)+1].ondblclick ;
     }
 
 
