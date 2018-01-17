@@ -210,6 +210,8 @@
 					if (lis[i].style.display=='block'){lis[i].style.display='none';break;}
 				}
 		}
+		var topheadtabl=document.getElementsByClassName('mytitle')[0].getBoundingClientRect().bottom-3;
+		var topbodytable=topheadtabl + document.getElementById('tabl_head_1').getBoundingClientRect().bottom - document.getElementById('tabl_head_1').getBoundingClientRect().top;
 			function fixed_menu(){
 				if(screen.width > 480||document.body.offsetWidth > 480){
 					document.getElementsByTagName('body')[0].scrollTop=0
@@ -232,16 +234,16 @@
 				}
 				else{
 					document.getElementById('tabl_head_1').style.positon='relative';
-					document.getElementById('tabl_head_1').style.top=document.getElementsByClassName('mytitle')[0].getBoundingClientRect().bottom+"px";
+					document.getElementById('tabl_head_1').style.top=topheadtabl+"px";
 					document.getElementById('plav').style.width='100%';
 					document.getElementById('plav').style.position='fixed';
 					document.getElementById('plav').style.zIndex='1';
-					document.getElementById('plav').style.top=document.getElementsByClassName('mytitle')[0].getBoundingClientRect().bottom+"px";
+					document.getElementById('plav').style.top=topheadtabl+"px";
 					document.getElementsByClassName('mytitle')[0].style.width='100%';
 					document.getElementsByClassName('mytitle')[0].style.position='fixed';
 					document.getElementsByClassName('mytitle')[0].style.zIndex='10';
 					document.getElementById('tabl_body_1').style.position='relative';
-					document.getElementById('tabl_body_1').style.top=document.getElementById('tabl_head_1').getBoundingClientRect().bottom+"px";
+					document.getElementById('tabl_body_1').style.top=topbodytable+"px";
 				}
 			}
 			var elements = document.getElementsByClassName('Glav_tab')
