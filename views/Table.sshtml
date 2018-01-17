@@ -294,6 +294,10 @@ function clickpast (event) {
         container.style.border="";
 		container.style.maxWidth=parseInt(container.style.maxWidth,10)+ 2 +"px";
 		container.style.minWidth=parseInt(container.style.minWidth,10)+ 2 +"px";
+		container.firstElementChild.style.minHeight=parseInt(container.firstElementChild.style.minHeight,10)+ 2 +"px";
+		container.firstElementChild.style.maxHeight=parseInt(container.firstElementChild.style.maxHeight,10)+ 2 +"px";
+		container.firstElementChild.style.height=parseInt(container.firstElementChild.style.height,10)+ 2 +"px";
+		container.style.height=parseInt(container.style.height,10)+ 2 +"px";
 		container.onclick = onRowClickFirst;
 		container.setAttribute('id','');
     }
@@ -311,6 +315,10 @@ function clickpast (event) {
 		this.style.border="1px solid blue";
 		this.style.maxWidth=parseInt(this.style.maxWidth,10)- 2 +"px";
 		this.style.minWidth=parseInt(this.style.minWidth,10)- 2 +"px";
+		this.firstElementChild.style.minHeight=parseInt(this.firstElementChild.style.minHeight,10)- 2 +"px";
+		this.firstElementChild.style.maxHeight=parseInt(this.firstElementChild.style.maxHeight,10)- 2 +"px";
+		this.firstElementChild.style.height=parseInt(this.firstElementChild.style.height,10)- 2 +"px";
+		this.style.height=parseInt(this.style.height,10)- 2 +"px";
 		this.onclick=onRowClickSecond;
 		this.setAttribute('id','selected');
 	}
