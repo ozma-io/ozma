@@ -30,6 +30,8 @@ namespace FunWithFlags.FunApp.Views
             var parsedQuery = ViewResolver.ParseQuery(uv);
             var newQuery = parsedQuery.MergeResults(new[] { resultId });
             var result = ctx.Resolver.RunQuery(newQuery);
+            var childName = parsedQuery.Attributes.GetStringWithDefault(null, "ChildView");
+            var childUv = ctx.Database.UserViews.Single(cuv => cuv.Name == childName);
 
             var columns = result.Columns.Skip(1).Select(col => new
                 {
@@ -48,11 +50,9 @@ namespace FunWithFlags.FunApp.Views
                                 Width = col.Width,
                                 Height = height,
                                 Id = id,
-                                // FIXME: hacky as hell! Depends on uv ids!
-                                href = $"window.location.href='../uv/{uv.Id+1}?recId={id}'",
+                                Url = $"../uv/{childUv.Id}?recId={id}",
                             }
                             ).ToList();
-                        // сюда положить ссылку на юзервью с формой
                     }).ToList();
 
             var model = new Dictionary<string, object>()
