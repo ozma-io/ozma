@@ -90,7 +90,6 @@ namespace FunWithFlags.FunApp
                     ICatalog catalog;
                     if (!this.catalogs.TryGetValue(context.Culture, out catalog))
                     {
-                        Console.WriteLine($"New culture: {context.Culture}");
                         catalog = new Catalog("FunApp", "./locale", context.Culture);
                         this.catalogs.Add(context.Culture, catalog);
                     }
