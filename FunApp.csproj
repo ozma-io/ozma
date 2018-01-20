@@ -25,6 +25,7 @@
 
     <ProjectReference Include="../FunCore/FunCore.csproj" />
     <ProjectReference Include="../FunDB/FunDB.fsproj" />
+    <ProjectReference Include="../3rdparty/Nancy.ViewEngines.DotLiquid/Nancy.ViewEngines.DotLiquid.csproj" />
   </ItemGroup>
 
   <ItemGroup>

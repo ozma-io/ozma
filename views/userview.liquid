@@ -1,0 +1,40 @@
+{% extends "base" %}
+{% block title %}{{ Model.Name }}{% endblock %}
+
+{% block content %}
+	<div id="black_block" style=" width: 100%;
+			position: fixed;
+			background: black;
+			z-index: 100;
+			opacity: 0.6;
+			display: none;"
+	></div>
+	<div id="black_block_bottom" style=" width: 100%;
+			position: fixed;
+			background: black;
+			z-index: 100;
+			opacity: 0.6;
+			display: none;
+			height:100%;"
+	></div>
+  <div class="main_table">
+    <div class="mytitle" onclick>
+      <ul class="menu">
+        <li class="submenu">
+          <a class="bl" href="../nav" style="background:{{ Model.Color }}">Главное меню</a>
+        </li>
+        {% for menu in Model.MenuBar %}
+          <li class="submenu">
+            <a class="bl" style="background:{{ Model.Color }}">{{ menu.Name }}</a>
+              <ul class="submenu">
+                {% for item in menu.Items %}
+                  <li><a class="bl" href="{{ item.Url }}" style="background:{{ Model.Color }}">{{ item.Name }}</a></li>
+                {% endfor %}
+              </ul>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% block userview %}{% endblock %}
+  </div>
+{% endblock %}

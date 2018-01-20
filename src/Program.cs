@@ -8,7 +8,7 @@ namespace FunWithFlags.FunApp
     using Microsoft.Extensions.Logging;
     using Nancy.Owin;
 
-    public class Program
+    public static class Program
     {
         public static void Main(string[] args)
         {

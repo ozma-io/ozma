@@ -1,3 +1,0 @@
-@Each
-    <li><a class="bl" href="@Current.Url" style="background:@Model.BackColor">@Current.Name</a></li>
-@EndEach

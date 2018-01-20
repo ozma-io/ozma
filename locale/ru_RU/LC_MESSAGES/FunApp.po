@@ -32,3 +32,6 @@ msgstr "Сохранить"
 #: src/Views/FormView.cs:229
 msgid "Remove"
 msgstr "Удалить"
+
+msgid "Hello!"
+msgstr "Добрый день!"

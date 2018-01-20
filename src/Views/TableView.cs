@@ -17,7 +17,7 @@ namespace FunWithFlags.FunApp.Views
     using FieldName = FunWithFlags.FunDB.FunQL.AST.FieldName;
     using Result = FunWithFlags.FunDB.FunQL.AST.Result<FunWithFlags.FunDB.FunQL.AST.FieldName>;
 
-    public class TableView : View
+    public class TableView : IView
     {
         public ViewResponse Get(Context ctx, ICatalog catalog, UserView uv, dynamic getPars)
         {
@@ -56,19 +56,15 @@ namespace FunWithFlags.FunApp.Views
                     }).ToList();
 
             var model = new Dictionary<string, object>()
-                { { "Color", db.Settings.Single(s => s.Name == "bgcolor").Value },
-                  { "ColorTableSelect", db.Settings.Single(s => s.Name == "ColorTableSelect").Value },
+                { { "ColorTableSelect", db.Settings.Single(s => s.Name == "ColorTableSelect").Value },
                   // FIMXE: Rename.
                   { "ColorTableBg", db.Settings.Single(s => s.Name == "ColorTableBg").Value },
                   { "ColorTableBd", db.Settings.Single(s => s.Name == "ColorTableBd").Value },
-                  // Формируем название страницы в браузере
-                  { "FormName", uv.DisplayName },
-
                   { "Titles", columns },
                   { "Entries", entries }
                 };
 
-            return new ViewPage { Name = "Table", Attributes = model, Menus = new ViewMenu[] {} };
+            return new ViewPage { Name = "table", Attributes = model, Menus = new ViewMenu[] {} };
         }
 
         public ViewResponse Post(Context ctx, ICatalog catalog, UserView uv, dynamic getPars, dynamic postPars)

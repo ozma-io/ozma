@@ -19,7 +19,7 @@ namespace FunWithFlags.FunApp.Views
     using EntityName = FunWithFlags.FunDB.FunQL.AST.EntityName;
     using FieldName = FunWithFlags.FunDB.FunQL.AST.FieldName;
 
-    public class FormView : View
+    public class FormView : IView
     {
         // FIXME: NO! Generation of HTML in code is a very dangerous anti-pattern.
         public string GetHtmlFieldTag(ViewColumn col, int cols, int rows, ViewCell value, IEnumerable<Tuple<int, ViewCell>> summaries)
@@ -88,13 +88,8 @@ namespace FunWithFlags.FunApp.Views
             var db = ctx.Database;
 
             var model = new Dictionary<string, object>();
-            var color = db.Settings.Single(s => s.Name == "bgcolor").Value;
-
-            model["Color"] = color;
             model["ColorFormBd"] = db.Settings.Single(s => s.Name == "ColorFormBd").Value;
 
-            // Формируем название страницы в браузере
-            model["FormName"] = uv.DisplayName;
             var parsedQuery = ViewResolver.ParseQuery(uv);
             var newQuery = parsedQuery;
 
@@ -233,7 +228,7 @@ namespace FunWithFlags.FunApp.Views
                 }
             };
 
-            return new ViewPage { Name = "Form", Attributes = model, Menus = menu };
+            return new ViewPage { Name = "form", Attributes = model, Menus = menu };
         }
 
         public ViewResponse Post(Context ctx, ICatalog catalog, UserView uv, dynamic getPars, dynamic postPars)

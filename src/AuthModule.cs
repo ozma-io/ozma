@@ -15,7 +15,7 @@ namespace FunWithFlags.FunApp
 
     public class CustomUserMapper : IUserMapper
     {
-        private DatabaseContext db;
+        private readonly DatabaseContext db;
 
         public CustomUserMapper(DatabaseContext db)
         {
@@ -46,7 +46,7 @@ namespace FunWithFlags.FunApp
                 model.Errored = this.Request.Query.error.HasValue;
                 model.Name = this.Request.Query.name.Value;
 
-                return View["Login", model];
+                return View["login", model];
             });
 
             Post("/login", args =>
@@ -60,11 +60,6 @@ namespace FunWithFlags.FunApp
                 }
                 else
                 {
-                    var encUrl = "";
-                    if (this.Request.Query.returnUrl != null)
-                    {
-                        encUrl = $"&returnUrl={(Uri.EscapeDataString(this.Request.Query.returnUrl))}";
-                    }
                     var encName = Uri.EscapeDataString(name);
                     return this.Context.GetRedirect($"~/login?error=true&name={encName}");
                 }

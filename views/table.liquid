@@ -1,105 +1,75 @@
-@Master['Master']
+{% extends "userview" %}
 
-@Section['Title']
-    @Model.FormName (Список)
-@EndSection
+{% block userview %}
+  <div class="tabl">
 
-@Section['Content']
-	<div id="black_block" style=" width: 100%;
-			position: fixed;
-			background: black;
-			z-index: 100;
-			opacity: 0.6;
-			display: none;"
-	></div>
-	<div id="black_block_bottom" style=" width: 100%;
-			position: fixed;
-			background: black;
-			z-index: 100;
-			opacity: 0.6;
-			display: none;
-			height:100%;"
-	></div>
-    <div class="main_table">
-        @Partial['Menubar', Model.MenuBar]
-        <div class="tabl">
-			<div id="plav">
-				<div class="tabl_head" id="tabl_head_1">
-					<table style="background:@Model.ColorTableBd ; border-bottom:1px solid @Model.ColorTableBd;">
-						<thead>
-							<tr>
-								<th style=
-										"
-											min-width:14px ; 
-											max-width:14px ;
-											text-overflow:ellipsis;
-											overflow:hidden;
-										"
-										nowrap
-								></th>
-								<th style=
-										"
-											min-width:14px ; 
-											max-width:14px ;
-											text-overflow:ellipsis;
-											overflow:hidden;
-										"
-										nowrap
-								></th>
-								@Each.Titles
-								   <th style=
-										"
-											min-width:@Current.Width ; 
-											max-width:@Current.Width ;
-											text-overflow:ellipsis;
-											overflow:hidden;
-										"
-										nowrap
-									>@Current.Name</th>
-								@EndEach
-							</tr>
-						</thead>
-					</table>
-				</div>
-			</div>
-            <div class="tabl_body" id="tabl_body_1">
-			@Each.Entries
-			<div class="fly_block" onclick>
-				<div>
-				@Partial['TableFlyBlock1', Current]
-				</div>
-				<div>
-				@Partial['TableFlyBlock2', Current]
-				</div>
-			</div>
-			<div  Class="Glav_tab">
-                <table style="background:@Model.ColorTableBd ; border-bottom:1px solid @Model.ColorTableBd;">
-                    <tbody>
-                            <!--<tr class="bl" onclick="window.location.href='../uv/2'">-->
-							<tr style="background:@Model.ColorTableBg">
-							<td style=
-										"
-											min-width:14px ; 
-											max-width:14px ;
-										"
-							><input class="customCheckbox" type="checkbox" /></td>
-							<td class='open_form' style="overflow:hidden;
-											min-width:14px ; 
-											max-width:14px ;
-											cursor:pointer;
-										" onclick><img src="../assets/openform.png" style="width:100%;"></td>
-								<!--<tr class="bl" onclick=@Current.href>-->
-								<!--tr class="bl" onclick="window.location.href=@Current.href">-->
-								<!--@Current.Value-->
-                                @Partial['TableLine', Current]
-                            </tr>
-                    </tbody>
-                </table>
-			</div>
-			@EndEach
-            </div>
-        </div> 
-	</div>
+    <div id="plav">
+      <div class="tabl_head" id="tabl_head_1">
+        <table style="background:{{ Model.ColorTableBd }} ; border-bottom:1px solid {{ Model.ColorTableBd }};">
+          <thead>
+            <tr>
+              <th style=
+                  "
+                    min-width:14px ; 
+                    max-width:14px ;
+                    text-overflow:ellipsis;
+                    overflow:hidden;
+                  "
+                  nowrap
+              ></th>
+              <th style=
+                  "
+                    min-width:14px ; 
+                    max-width:14px ;
+                    text-overflow:ellipsis;
+                    overflow:hidden;
+                  "
+                  nowrap
+              ></th>
+              {% for title in Model.Titles %}
+                  <th style=
+                  "
+                    min-width:{{ title.Width }} ; 
+                    max-width:{{ title.Width }} ;
+                    text-overflow:ellipsis;
+                    overflow:hidden;
+                  "
+                  nowrap
+                >{{ title.Name }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+        </table>
+      </div>
+    </div>
+    <div class="tabl_body" id="tabl_body_1">
+    {% for line in Model.Entries %}
+    <div class="Glav_tab">
+              <table style="background:{{ Model.ColorTableBd }} ; border-bottom:1px solid {{ Model.ColorTableBd }};">
+                  <tbody>
+            <tr style="background:{{ Model.ColorTableBg }}">
+            <td style=
+                  "
+                    min-width:14px ; 
+                    max-width:14px ;
+                  "
+            ><input class="customCheckbox" type="checkbox" /></td>
+            <td class='open_form' style="overflow:hidden;
+                    min-width:14px ; 
+                    max-width:14px ;
+                    cursor:pointer;
+                  " onclick><img src="../assets/openform.png" style="width:100%;"></td>
+               {% for cell in line %}
+		             <td class="editable" data-type="text" ondblclick="window.location.href='{{ cell.Url }}'"  style="cursor:pointer ; width:{{ cell.Width }} ; min-width:{{ cell.Width }} ; max-width:{{ cell.Width }} ; height:{{ cell.Height }} ; min-height:{{ cell.Height }} ; max-height:{{ cell.Height }}"><div style="height:{{ cell.Height }} ; min-height:{{ cell.Height }} ; max-height:{{ cell.Height }} ; overflow:hidden "><div style="height:100% ; column-width: {{ cell.Width }}">{{ cell.Value }}</div></div></td>
+               {% endfor %}
+                          </tr>
+                  </tbody>
+              </table>
+    </div>
+    {% endfor %}
+          </div>
+      </div> 
+</div>
 
     <script type="text/javascript">
 	if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)){} else{ document.getElementsByTagName('body')[0].style.overflow='hidden'; }
@@ -409,8 +379,8 @@ var lastcheck=0;
 	function checkedd(){
 		for (var i = 0; i < elements.length; i++) {
 			var check = elements[i];
-			if(check.checked) {check.parentNode.parentNode.style.backgroundColor='@Model.ColorTableSelect';}
-			else{check.parentNode.parentNode.style.backgroundColor='@Model.ColorTableBg';}
+			if(check.checked) {check.parentNode.parentNode.style.backgroundColor='{{ Model.ColorTableSelect }}';}
+			else{check.parentNode.parentNode.style.backgroundColor='{{ Model.ColorTableBg }}';}
 		}
 		window.addEventListener? document.addEventListener('keydown', setShiftDown) : document.attachEvent('keydown', setShiftDown);
 		window.addEventListener? document.addEventListener('keyup', setShiftUp) : document.attachEvent('keyup', setShiftUp);
@@ -419,4 +389,4 @@ var lastcheck=0;
 	checkedd();
 });
 </script>
-@EndSection
+{% endblock %}
