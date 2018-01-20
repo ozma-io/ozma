@@ -1,0 +1,9 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="CallMsgfmt"
+    Inputs="@(Msgfmt)"
+    Outputs="@(Msgfmt->'%(RelativeDir)/%(Filename).mo')"
+    AfterTargets="Compile" BeforeTargets="Link">
+
+    <Exec Command="msgfmt -o %(Msgfmt.RelativeDir)/%(Msgfmt.Filename).mo %(Msgfmt.Identity)" />
+  </Target>
+</Project>

@@ -58,7 +58,7 @@
                     min-width:14px ; 
                     max-width:14px ;
                     cursor:pointer;
-                  " onclick><img src="../assets/openform.png" style="width:100%;"></td>
+                  " onclick><img src="{{ "~/assets/openform.png" | url }}" style="width:100%;"></td>
                {% for cell in line %}
 		             <td class="editable" data-type="text" ondblclick="window.location.href='{{ cell.Url }}'"  style="cursor:pointer ; width:{{ cell.Width }} ; min-width:{{ cell.Width }} ; max-width:{{ cell.Width }} ; height:{{ cell.Height }} ; min-height:{{ cell.Height }} ; max-height:{{ cell.Height }}"><div style="height:{{ cell.Height }} ; min-height:{{ cell.Height }} ; max-height:{{ cell.Height }} ; overflow:hidden "><div style="height:100% ; column-width: {{ cell.Width }}">{{ cell.Value }}</div></div></td>
                {% endfor %}

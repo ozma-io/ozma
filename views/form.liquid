@@ -1,7 +1,7 @@
 {% extends "userview" %}
 
 {% block userview %}
-<form name=form action="" method="POST" onSubmit="return confirm('Сохранить запись?')">
+<form name=form action="" method="POST" onSubmit="return confirm('{{ "Save the entry?" | getstring }}')">
     <div class="main">
 		<div class="topsector">
 			<div id="Block1" class="form_data" style="border-color: {{ Model.ColorFormBd }}">
@@ -31,7 +31,7 @@
             {% include "form_field" with entry %}
         {% endfor %}
 		</div>
-		<input type="hidden" VALUE="Кнопка отправки" name=action>
+		<input type="hidden" VALUE="{{ "Submit button" | getstring }}" name=action>
 	</div>
 </form>
 {% endblock %}

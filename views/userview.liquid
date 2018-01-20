@@ -21,7 +21,7 @@
     <div class="mytitle" onclick>
       <ul class="menu">
         <li class="submenu">
-          <a class="bl" href="../nav" style="background:{{ Model.Color }}">Главное меню</a>
+          <a class="bl" href="{{ "~/nav" | url }}" style="background:{{ Model.Color }}">{{ "Main menu" | getstring }}</a>
         </li>
         {% for menu in Model.MenuBar %}
           <li class="submenu">

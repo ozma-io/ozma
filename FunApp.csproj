@@ -7,6 +7,8 @@
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
   </PropertyGroup>
 
+  <Import Project="$(MSBuildProjectDirectory)/build/Gettext.targets" />
+
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.0.*" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.0.*" />
@@ -33,6 +35,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Msgfmt Include="locale/*/LC_MESSAGES/FunApp.po" />
+
     <None Update="scripts/FormDeleteRec.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
