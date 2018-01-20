@@ -12,21 +12,21 @@
 			</div>
 
 			<div id="Block2" class="form_data" style="border-color: {{ Model.ColorFormBd }}">
-        {% for entry in Model.Entries1 %}
+        {% for entry in Model.Entries2 %}
 						<br>
             {% include "form_field" with entry %}
         {% endfor %}
 			
 			</div>
 			<div id="Block3" class="form_data" style="border-color: {{ Model.ColorFormBd }}">
-        {% for entry in Model.Entries1 %}
+        {% for entry in Model.Entries3 %}
 						<br>
             {% include "form_field" with entry %}
         {% endfor %}
 			</div>
 		</div>
 		<div id="Block4" class="form_data" style="border-color: {{ Model.ColorFormBd }}">
-        {% for entry in Model.Entries1 %}
+        {% for entry in Model.Entries4 %}
 					<br>
             {% include "form_field" with entry %}
         {% endfor %}
