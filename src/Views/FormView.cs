@@ -98,9 +98,10 @@ namespace FunWithFlags.FunApp.Views
             var parsedQuery = ViewResolver.ParseQuery(uv);
             var newQuery = parsedQuery;
 
-            if (getPars.recId.HasValue)
+            if (getPars.recId.HasValue && !getPars.recId.ToString().Contains(";"))
             {
-                var recId = (int)getPars.recId;
+                int recId;
+                recId = (int)getPars.recId;
                 var columnWhere = FieldExpr.NewFEEq(FieldExpr.NewFEColumn(new FieldName(null, "Id")), FieldExpr.NewFEValue(FieldValue.NewFInt(recId)));
                 newQuery = newQuery.MergeWhere(columnWhere);
                 var result = ctx.Resolver.RunQuery(newQuery);
@@ -164,6 +165,18 @@ namespace FunWithFlags.FunApp.Views
             }
             else
             {
+                /*
+                    var p = getPars.recId.ToString();
+                    int recId;
+                    if (p.Contains(";"))
+                    {
+                        recId = 0;
+                    }
+                    else
+                    {
+                        recId = (int)getPars.recId;
+                    };
+                */
                 var result = ctx.Resolver.GetTemplate(newQuery);
 
                 var EntriesDef1 = new List<ExpandoObject>();
@@ -241,13 +254,27 @@ namespace FunWithFlags.FunApp.Views
             var parsedQuery = ViewResolver.ParseQuery(uv);
             var redirectName = parsedQuery.Attributes.GetStringWithDefault(null, "ParentView");
             var redirectUv = ctx.Database.UserViews.Single(cuv => cuv.Name == redirectName);
-
+            string gP;
+            List<string> gl;
+            gP = getPars.recId.ToString();
+            string [] recs;
+            recs = gP.Split(new Char[] { ';' });
             var pPars = new Dictionary<string, string>();
             foreach (var k in (DynamicDictionary)postPars)
             {
                 if (k != "action")
                 {
-                    pPars.Add(k, postPars[k]);
+                    if (recs.Count() > 1)
+                    {
+                        if (postPars[k].Value != "")
+                        {
+                            pPars.Add(k, postPars[k]);
+                        }
+                    }
+                    else
+                    {
+                        pPars.Add(k, postPars[k]);
+                    }
                 }
             };
             var action = ((string)postPars.action).ToLower();
@@ -257,11 +284,17 @@ namespace FunWithFlags.FunApp.Views
             }
             else if (action == "save" && getPars.recId.HasValue)
             {
-                ctx.Resolver.UpdateEntry(parsedQuery, getPars.recId, pPars);
+                foreach (string updId in recs)
+                {
+                    ctx.Resolver.UpdateEntry(parsedQuery, Int32.Parse(updId), pPars);
+                }
             }
             else if (action == "delete")
             {
-                ctx.Resolver.DeleteEntry(parsedQuery, getPars.recId);
+                foreach (string delId in recs)
+                {
+                    ctx.Resolver.DeleteEntry(parsedQuery, Int32.Parse(delId));
+                }
             }
             else
             {
