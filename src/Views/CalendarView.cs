@@ -17,7 +17,7 @@ namespace FunWithFlags.FunApp.Views
     using FieldName = FunWithFlags.FunDB.FunQL.AST.FieldName;
     using Result = FunWithFlags.FunDB.FunQL.AST.Result<FunWithFlags.FunDB.FunQL.AST.FieldName>;
 
-    public class CalendarView : View
+    public class CalendarView : IView
     {
         public ViewResponse Get(Context ctx, ICatalog catalog, UserView uv, dynamic getPars)
         {
@@ -49,21 +49,17 @@ namespace FunWithFlags.FunApp.Views
                     }).ToList();
 
             var model = new Dictionary<string, object>()
-                { { "Color", db.Settings.Single(s => s.Name == "bgcolor").Value },
-                  { "ColorCalendarBd", db.Settings.Single(s => s.Name == "ColorCalendarBd").Value },
+                { { "ColorCalendarBd", db.Settings.Single(s => s.Name == "ColorCalendarBd").Value },
                   { "ColorCalendarEntryBg", db.Settings.Single(s => s.Name == "ColorCalendarEntryBg").Value },
                   { "ColorCalendarNoteBg", db.Settings.Single(s => s.Name == "ColorCalendarNoteBg").Value },
                   { "ColorCalendarHeadBg", db.Settings.Single(s => s.Name == "ColorCalendarHeadBg").Value },
                   { "ColorCalendarBlockBg", db.Settings.Single(s => s.Name == "ColorCalendarBlockBg").Value },
                   { "ColorCalendarToday", db.Settings.Single(s => s.Name == "ColorCalendarToday").Value },
-                  // Формируем название страницы в браузере
-                  { "FormName", uv.DisplayName },
-
                   { "Titles", columns },
                   { "Entries", entries }
                 };
 
-            return new ViewPage { Name = "CalendarM", Attributes = model, Menus = new ViewMenu[] {} };
+            return new ViewPage { Name = "calendar", Attributes = model, Menus = new ViewMenu[] {} };
         }
 
         public ViewResponse Post(Context ctx, ICatalog catalog, UserView uv, dynamic getPars, dynamic postPars)

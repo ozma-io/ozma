@@ -6,16 +6,18 @@ namespace FunWithFlags.FunApp
     using FunWithFlags.FunCore;
     using FunWithFlags.FunDB.Context;
 
-    public struct ViewMenuItem
+    [DotLiquid.LiquidType("Name", "Url")]
+    public class ViewMenuItem
     {
-        public string Name;
-        public string Url;
+        public string Name { get; set; }
+        public string Url { get; set; }
     }
 
-    public struct ViewMenu
+    [DotLiquid.LiquidType("Name", "Items")]
+    public class ViewMenu
     {
-        public string Name;
-        public IEnumerable<ViewMenuItem> Items;
+        public string Name { get; set; }
+        public IEnumerable<ViewMenuItem> Items { get; set; }
     }
 
     public abstract class ViewResponse
@@ -24,17 +26,17 @@ namespace FunWithFlags.FunApp
 
     public class ViewPage : ViewResponse
     {
-        public string Name;
-        public IDictionary<string, object> Attributes;
-        public IEnumerable<ViewMenu> Menus;
+        public string Name { get; set; }
+        public IDictionary<string, object> Attributes { get; set; }
+        public IEnumerable<ViewMenu> Menus { get; set; }
     }
 
     public class ViewRedirect : ViewResponse
     {
-        public string Url;
+        public string Url { get; set; }
     }
 
-    public interface View
+    public interface IView
     {
         ViewResponse Get(Context ctx, ICatalog catalog, UserView uv, dynamic getPars);
         ViewResponse Post(Context ctx, ICatalog catalog, UserView uv, dynamic getPars, dynamic postPars);

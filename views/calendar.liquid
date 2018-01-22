@@ -1,11 +1,6 @@
-@Master['Master']
+{% extends "userview" %}
 
-@Section['Title']
-@Model.FormName (Календарь)
-@EndSection
-
-@Section['Content']
-
+{% block userview %}
 <div id="allEntrys">
 <a style="float:right; margin-right:10px; margin-top:5px" id="close_all">×</a>
 </div>
@@ -28,13 +23,13 @@
 <div class="calendar">
 	<table class="head_line" cellpadding="0" cellspacing="0">
 	<tbody>
-    <tr><td style="border:1px solid @Model.ColorCalendarBd ; background: @Model.ColorCalendarHeadBg;">Пн</td>
-        <td style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; background: @Model.ColorCalendarHeadBg;">Вт</td>
-        <td style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; background: @Model.ColorCalendarHeadBg;">Ср</td>
-        <td style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; background: @Model.ColorCalendarHeadBg;">Чт</td>
-        <td style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; background: @Model.ColorCalendarHeadBg;">Пт</td>
-        <td style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; background: @Model.ColorCalendarHeadBg;">Сб</td>
-        <td class="head_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; background: @Model.ColorCalendarHeadBg;">Вс</td>
+    <tr><td style="border:1px solid {{ Model.ColorCalendarBd }} ; background: {{ Model.ColorCalendarHeadBg }};">Пн</td>
+        <td style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; background: {{ Model.ColorCalendarHeadBg }};">Вт</td>
+        <td style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; background: {{ Model.ColorCalendarHeadBg }};">Ср</td>
+        <td style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; background: {{ Model.ColorCalendarHeadBg }};">Чт</td>
+        <td style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; background: {{ Model.ColorCalendarHeadBg }};">Пт</td>
+        <td style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; background: {{ Model.ColorCalendarHeadBg }};">Сб</td>
+        <td class="head_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; background: {{ Model.ColorCalendarHeadBg }};">Вс</td>
     </tr>
 	</tbody>
 	</table>
@@ -57,13 +52,13 @@ var Dlast = new Date(year,month+1,0).getDate(),
 	DNfirst = new Date(D.getFullYear(),D.getMonth(),day).getDay(),
 	DNlastOFpreMonth=new Date(year,month,0).getDate(),
     calendar = '<div class="month_row"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr>'+
-                '<td id="101" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
-                '<td id="102" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
-                '<td id="103" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
-                '<td id="104" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
-                '<td id="105" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
-                '<td id="106" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
-                '<td id="107" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+                '<td id="101" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+                '<td id="102" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+                '<td id="103" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+                '<td id="104" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+                '<td id="105" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+                '<td id="106" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+                '<td id="107" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
                 '</tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>',
     month=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],
 	lines=0,
@@ -90,20 +85,20 @@ var Dlast = new Date(year,month+1,0).getDate(),
 	}
 	for(var  i = day; i <= Dlast; i++) {
 	  if (i == new Date().getDate() && D.getFullYear() == new Date().getFullYear() && D.getMonth() == new Date().getMonth()) {
-		calendar += '<td id="'+m+'_'+i+'"><div class="date today" style="background:@Model.ColorCalendarToday">' + i + '</div><a class="all_entry">All</a><a class="add_new_entry">+</a></td>';
+		calendar += '<td id="'+m+'_'+i+'"><div class="date today" style="background:{{ Model.ColorCalendarToday }}">' + i + '</div><a class="all_entry">All</a><a class="add_new_entry">+</a></td>';
 	  }else{
 		calendar += '<td id="'+m+'_'+i+'"><div class="date">' + i + '</div><a class="all_entry">All</a><a class="add_new_entry">+</a></td>';
 	  }
 	  if (new Date(D.getFullYear(),D.getMonth(),i).getDay() == 0) {
 		calendar += '</tr></tbody></table></div>';
 		calendar += '<div class="month_row" style="top:'+16.6*Number(lines+1)+'%;"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr>'+
-          '<td class="block_td" id="101" style="border:1px solid @Model.ColorCalendarBd ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="102" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="103" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="104" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="105" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="106" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="107" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+          '<td class="block_td" id="101" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="102" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="103" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="104" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="105" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="106" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="107" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
           '</tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>';
 		lines+=1;
 	  }
@@ -114,13 +109,13 @@ var Dlast = new Date(year,month+1,0).getDate(),
 		if ((i+1)%7 == 0 && i!=41) {
 			calendar += '</tr></tbody></table></div>';
 			calendar += '<div class="month_row" style="top:'+16.6*Number(col_lines+1)+'%;"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr>'+
-          '<td class="block_td" id="101" style="border:1px solid @Model.ColorCalendarBd ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="102" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="103" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="104" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="105" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="106" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="107" class="block_td" style="border:1px solid @Model.ColorCalendarBd ; border-left:0px ; border-top:0px ;  background: @Model.ColorCalendarBlockBg;" '+ fordrop +'>&nbsp;</td>'+
+          '<td class="block_td" id="101" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="102" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="103" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="104" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="105" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="106" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+          '<td id="107" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
           '</tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>';
 			col_lines+=1;
 		}
@@ -137,8 +132,8 @@ var iddragelem=null;
 function go(){
 	function added(a) {
 		document.querySelector('#new_entry').style.visibility='visible';
-		document.querySelector('#new_entry').style.backgroundColor = "@Model.ColorCalendarEntryBg"
-		document.querySelector('#new_entry').style.border = "1px solid @Model.ColorCalendarBd"
+		document.querySelector('#new_entry').style.backgroundColor = "{{ Model.ColorCalendarEntryBg }}"
+		document.querySelector('#new_entry').style.border = "1px solid {{ Model.ColorCalendarBd }}"
 		document.querySelector('#new_entry').style.top=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().top +'px';
 		if(a%7<5||a%7==0){
 		document.querySelector('#new_entry').style.left=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().left + 'px';
@@ -154,8 +149,8 @@ function go(){
 	
 	function old(date, Duration, id, EntryText){
 		var i=0,
-		date1="";
-		while(date.charAt(i)!="/"){
+		date1=date;
+		while(date.charAt(i)!="."){
 			date1=date1+date.charAt(i);
 			i++;
 		}
@@ -177,7 +172,7 @@ function go(){
 			i++;
 			var date2=date1;
 			date1="";
-			while(date.charAt(i)!="/"){
+			while(date.charAt(i)!="."){
 				date1=date1+date.charAt(i);
 				i++;
 			}
@@ -207,9 +202,22 @@ function go(){
 		}
 	}
 
-	@Each.Entries
-	@Partial['CalendarEntry', Current];
-	@EndEach
+  {% for entry in Model.Entries %}
+    var base_date,
+      base_Duration,
+      base_id,
+      number_event=0,
+      base_EntryText;
+    {% for cell in entry %}
+      base_date="{{ cell.Value }}";
+      base_Duration="{{ cell.Duration }}";
+      base_EntryText="{{ cell.EntryText }}";
+      base_id={{ cell.Id }};
+      if (number_event==num_ev)
+      old(base_date, base_Duration, base_id, base_EntryText);
+      number_event++;
+    {% endfor %}
+  {% endfor %}
 	};
 	var all=document.getElementsByClassName('all_entry');
 			  for (var i = 0; i < all.length; i++) {
@@ -258,8 +266,8 @@ function go(){
 			newdiv.setAttribute("id", olddiv.getAttribute("id"))
 			newdiv.setAttribute("ondragstart", "return dragStartByDWE(event)")
 			newdiv.setAttribute("lasting", olddiv.getAttribute("lasting"))
-			newdiv.style.backgroundColor = "@Model.ColorCalendarNoteBg"
-			newdiv.style.border = "1px solid @Model.ColorCalendarBd"
+			newdiv.style.backgroundColor = "{{ Model.ColorCalendarNoteBg }}"
+			newdiv.style.border = "1px solid {{ Model.ColorCalendarBd }}"
 			if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
 			newdiv.setAttribute("onclick", "return dragStartByDWEMobile(this)")
 			bodyOfDWE.appendChild(newdiv);
@@ -268,8 +276,8 @@ function go(){
 		}
 	
 		divWithEntrys.style.visibility='visible';
-		divWithEntrys.style.backgroundColor = "@Model.ColorCalendarEntryBg"
-		divWithEntrys.style.border = "1px solid @Model.ColorCalendarBd"
+		divWithEntrys.style.backgroundColor = "{{ Model.ColorCalendarEntryBg }}"
+		divWithEntrys.style.border = "1px solid {{ Model.ColorCalendarBd }}"
 		if(target.getBoundingClientRect().top - (divWithEntrys.getBoundingClientRect().top - divWithEntrys.getBoundingClientRect().bottom) <document.querySelector('body').getBoundingClientRect().bottom)
 		divWithEntrys.style.top=target.getBoundingClientRect().top +'px';
 		else
@@ -442,8 +450,8 @@ function addnew(lasting,colspan_need,parentparent,number_of_place,note,id) {
 	newdiv.setAttribute("id", id)
 	newdiv.setAttribute("ondragstart", "return dragStart(event)")
 	newdiv.setAttribute("lasting", lasting)
-  newdiv.style.backgroundColor = "@Model.ColorCalendarNoteBg"
-  newdiv.style.border = "1px solid @Model.ColorCalendarBd"
+  newdiv.style.backgroundColor = "{{ Model.ColorCalendarNoteBg }}"
+  newdiv.style.border = "1px solid {{ Model.ColorCalendarBd }}"
 	if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
 	newdiv.setAttribute("onclick", "return dragStartMobile(this)")
 	var testelem=parentparent.firstElementChild;
@@ -1055,4 +1063,4 @@ function addnull(d,m,y)
 }
 </script>
 
-@EndSection
+{% endblock %}

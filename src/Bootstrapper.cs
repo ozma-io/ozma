@@ -3,6 +3,7 @@ namespace FunWithFlags.FunApp
     using System;
     using System.IO;
     using System.Globalization;
+    using System.Collections.Generic;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
@@ -29,24 +30,25 @@ namespace FunWithFlags.FunApp
             return Directory.GetCurrentDirectory();
         }
     }
-    
+
     /// <summary>
     /// Sets various aspects of how Nancy behaves.
     /// </summary>
     public class CustomBootstrapper : AutofacNancyBootstrapper
     {
-        private string dbString;
-        private string environmentName;
-        private ILoggerFactory loggerFactory;
-        private ICatalog catalog;
+        private readonly string dbString;
+        private readonly string environmentName;
+        private readonly ILoggerFactory loggerFactory;
+        private readonly Dictionary<CultureInfo, ICatalog> catalogs;
         
         public CustomBootstrapper(IHostingEnvironment env, IConfiguration configuration, ILoggerFactory loggerFactory)
         {
             this.dbString = configuration["database"];
             this.loggerFactory = loggerFactory;
             this.environmentName = env.EnvironmentName;
-            var locale = configuration["locale"] != null ? new CultureInfo(configuration["locale"]) : CultureInfo.CurrentUICulture;
-            this.catalog = new Catalog("FunApp", "./locale", locale);
+            this.catalogs = new Dictionary<CultureInfo, ICatalog>();
+
+            DotLiquid.Template.RegisterFilter(typeof(LiquidFilter));
         }
 
         public override void Configure(INancyEnvironment environment)
@@ -84,7 +86,15 @@ namespace FunWithFlags.FunApp
 
             // Provide database context if needed.
             builder.Register(c => new Context(this.dbString, this.loggerFactory)).As<Context>().InstancePerRequest();
-            builder.RegisterInstance(this.catalog);
+            builder.Register(c => {
+                    ICatalog catalog;
+                    if (!this.catalogs.TryGetValue(context.Culture, out catalog))
+                    {
+                        catalog = new Catalog("FunApp", "./locale", context.Culture);
+                        this.catalogs.Add(context.Culture, catalog);
+                    }
+                    return catalog;
+                }).As<ICatalog>().InstancePerRequest();
 
             builder.Update(container.ComponentRegistry);
         }
@@ -104,6 +114,10 @@ namespace FunWithFlags.FunApp
                     UserMapper = new CustomUserMapper(ctx.Database)
                 };
             FormsAuthentication.Enable(pipelines, formsAuthConfiguration);
+
+            var catalog = container.Resolve<ICatalog>();
+            context.Items["catalog"] = catalog;
+            context.ViewBag.Language = context.Culture.TwoLetterISOLanguageName;
         }
     }
 }

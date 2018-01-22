@@ -1,0 +1,23 @@
+{% extends "base" %}
+{% block title %}{{ "Hello!" | getstring }}{% endblock %}
+
+{% block content %}
+  <div class="main_nav">
+    <div class="submain_nav" style="background:{{ Model.Color }}">
+      <div class="subsubmain_nav">
+        {% for menu in Model.MenuCategories %}
+          <div class="nav_sec">
+            <div class="nav_sec_tit">
+              <a>{{ menu.Name }}</a>
+            </div>
+            <div class="nav_sec_ents">
+              {% for item in menu.Items %}
+                <div class="nav_ent"><a class="bl" href="{{ item.Url }}">{{ item.Name }}</a></div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+	</div>
+{% endblock %}

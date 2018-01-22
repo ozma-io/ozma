@@ -20,7 +20,7 @@ namespace FunWithFlags.FunApp
 
     public class AppModule : NancyModule
     {
-        static View GetView(string name)
+        static IView GetView(string name)
         {
             // FIXME: rewrite using reflection.
             switch (name)
@@ -38,22 +38,23 @@ namespace FunWithFlags.FunApp
 
         dynamic RenderView(DatabaseContext db, UserView uv, ViewResponse view)
         {
-            if (view is ViewPage)
+            var page = view as ViewPage;
+            if (page != null)
             {
-                var page = (ViewPage)view;
                 var attrs = page.Attributes;
                 attrs["MenuBar"] = RenderMenuBar(db, uv, page.Menus);
+                attrs["Color"] = db.Settings.Single(s => s.Name == "bgcolor").Value;
+                attrs["Name"] = uv.DisplayName;
                 return this.View[page.Name, attrs];
             }
-            else if (view is ViewRedirect)
+
+            var redirect = view as ViewRedirect;
+            if (redirect != null)
             {
-                var redirect = (ViewRedirect)view;
                 return this.Response.AsRedirect(redirect.Url);
             }
-            else
-            {
-                throw new NotImplementedException($"Unknown view response type: {view.GetType()}");
-            }
+
+            throw new NotImplementedException($"Unknown view response type: {view.GetType()}");
         }
 
         ViewMenuItem RenderAction(DatabaseContext db, ButtonAction action)
@@ -85,7 +86,7 @@ namespace FunWithFlags.FunApp
             }
         }       
 
-        ExpandoObject RenderMenuBar(DatabaseContext db, UserView uv, IEnumerable<ViewMenu> extras)
+        List<ViewMenu> RenderMenuBar(DatabaseContext db, UserView uv, IEnumerable<ViewMenu> extras)
         {
             var color = db.Settings.Single(s => s.Name == "bgcolor").Value;
 
@@ -116,10 +117,7 @@ namespace FunWithFlags.FunApp
                             }).ToList()
                     }));
 
-            dynamic menuModel = new ExpandoObject();
-            menuModel.BackColor = color;
-            menuModel.Menus = menus;
-            return menuModel;
+            return menus;
         }
 
         public AppModule(Context ctx, ICatalog catalog)
@@ -158,7 +156,7 @@ namespace FunWithFlags.FunApp
                     Color = color
                 };
 
-                return View["Navigator", model];
+                return View["navigator", model];
             });
 
             Get(@"/uv/{Id:int}/", pars =>

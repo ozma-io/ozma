@@ -7,6 +7,8 @@
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
   </PropertyGroup>
 
+  <Import Project="$(MSBuildProjectDirectory)/build/Gettext.targets" />
+
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.0.*" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.0.*" />
@@ -25,6 +27,7 @@
 
     <ProjectReference Include="../FunCore/FunCore.csproj" />
     <ProjectReference Include="../FunDB/FunDB.fsproj" />
+    <ProjectReference Include="../3rdparty/Nancy.ViewEngines.DotLiquid/Nancy.ViewEngines.DotLiquid.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,6 +35,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Msgfmt Include="locale/*/LC_MESSAGES/FunApp.po" />
+
     <None Update="scripts/FormDeleteRec.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

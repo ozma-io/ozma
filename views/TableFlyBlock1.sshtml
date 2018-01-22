@@ -1,8 +1,0 @@
-<SCRIPT type = "text/javascript">
-	@Each
-		str = "@Current.FlyBlockValue1";
-	@EndEach
-	document.write(str.substring(0,10));
-</SCRIPT>
-		
-    

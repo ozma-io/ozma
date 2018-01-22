@@ -1,0 +1,11 @@
+{% extends "base" %}
+{% block title %}{{ "Hello!" | getstring }}{% endblock %}
+{% block content %}
+ <div class="main_aut">
+    <form class="aut" action="" method="post">
+       <input class= "text" type="text" name="name" placeholder="{{ "Username" | getstring }}">
+       <input class= "text" type="password" name="password" placeholder="{{ "Password" | getstring }}">
+       <input class= "btn" type="submit" value="{{ "Login" | getstring }}">
+    </form>
+  </div>
+{% endblock %}

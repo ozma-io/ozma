@@ -1,3 +1,0 @@
-@Each
-    <div class="nav_ent"><a class="bl" href=@Current.Url>@Current.Name</a></div>
-@EndEach
