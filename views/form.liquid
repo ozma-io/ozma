@@ -3,35 +3,21 @@
 {% block userview %}
 <form name=form action="" method="POST" onSubmit="return confirm('{{ "Save the entry?" | getstring }}')">
     <div class="main">
-		<div class="topsector">
-			<div id="Block1" class="form_data" style="border-color: {{ Model.ColorFormBd }}">
-        {% for entry in Model.Entries1 %}
-						<br>
-            {% include "form_field" with entry %}
-        {% endfor %}
-			</div>
-
-			<div id="Block2" class="form_data" style="border-color: {{ Model.ColorFormBd }}">
-        {% for entry in Model.Entries2 %}
-						<br>
-            {% include "form_field" with entry %}
-        {% endfor %}
-			
-			</div>
-			<div id="Block3" class="form_data" style="border-color: {{ Model.ColorFormBd }}">
-        {% for entry in Model.Entries3 %}
-						<br>
-            {% include "form_field" with entry %}
-        {% endfor %}
-			</div>
-		</div>
-		<div id="Block4" class="form_data" style="border-color: {{ Model.ColorFormBd }}">
-        {% for entry in Model.Entries4 %}
-					<br>
-            {% include "form_field" with entry %}
-        {% endfor %}
-		</div>
-		<input type="hidden" VALUE="{{ "Submit button" | getstring }}" name=action>
-	</div>
+        <div class="topsector">
+            <div id="Block1" class="form_data" style="border-color: {{ Model.ColorFormBd }}">
+                {% include "form_field" with Model.Entries1 %}
+            </div>
+            <div id="Block2" class="form_data" style="border-color: {{ Model.ColorFormBd }}">
+                {% include "form_field" with Model.Entries2 %}
+            </div>
+            <div id="Block3" class="form_data" style="border-color: {{ Model.ColorFormBd }}">
+                {% include "form_field" with Model.Entries3 %}
+            </div>
+        </div>
+        <div id="Block4" class="form_data" style="border-color: {{ Model.ColorFormBd }}">
+            {% include "form_field" with Model.Entries4 %}
+        </div>
+        <input type="hidden" VALUE="{{ "Submit button" | getstring }}" name=action>
+    </div>
 </form>
 {% endblock %}

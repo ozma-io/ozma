@@ -153,10 +153,10 @@ namespace FunWithFlags.FunApp.Views
                             };
                         }).ToList();
 
-                model["Entries1"] = entries.Where(cell => cell.BlockNum == 1);
-                model["Entries2"] = entries.Where(cell => cell.BlockNum == 2);
-                model["Entries3"] = entries.Where(cell => cell.BlockNum == 3);
-                model["Entries4"] = entries.Where(cell => cell.BlockNum == 4);
+                model["Entries1"] = entries.Where(cell => cell.BlockNum == 1).ToList();
+                model["Entries2"] = entries.Where(cell => cell.BlockNum == 2).ToList();
+                model["Entries3"] = entries.Where(cell => cell.BlockNum == 3).ToList();
+                model["Entries4"] = entries.Where(cell => cell.BlockNum == 4).ToList();
             }
             else
             {
@@ -174,54 +174,37 @@ namespace FunWithFlags.FunApp.Views
                 */
                 var result = ctx.Resolver.GetTemplate(newQuery);
 
-                var EntriesDef1 = new List<ExpandoObject>();
-                var EntriesDef2 = new List<ExpandoObject>();
-                var EntriesDef3 = new List<ExpandoObject>();
-                var EntriesDef4 = new List<ExpandoObject>();
-                foreach (var col in result.Columns)
-                {
-                    dynamic entry = new ExpandoObject();
-                    var cell = col.ToDefaultCell();
-                    //
-                    entry.Name = col.Attributes.GetStringWithDefault(col.Field.Field.Name, "Caption");
-                    entry.Cols = 40;
-                    entry.Rows = 1;
-                    entry.Width = col.Attributes.GetIntWithDefault(100, "Size", "Width");
-                    // FIXME: get from user view-scope attributes
-                    entry.Height = 20;
-                    entry.BlockNum = col.Attributes.GetIntWithDefault(0, "Form", "BlockNum");
-                    entry.OrdInBlock = col.Attributes.GetIntWithDefault(0, "Form", "OrdInBlock");
-                    // FIXME: Subqueries don't have Fields!
-                    entry.ListValues = col.Field.FieldType.IsEnum ? col.Field.FieldType.GetEnum() : null;
-                    entry.HtmlFieldTag = GetHtmlFieldTag(
-                                                         col.ToViewColumn(),
-                                                         40,
-                                                         1,
-                                                         cell,
-                                                         col.Summaries
-                                                        );
+                var entries = result.Columns.Select(col =>
+                        {
+                            var cell = col.ToDefaultCell();
+                            return new
+                                {
+                                    Name = col.Attributes.GetStringWithDefault(col.Field.Field.Name, "Caption"),
+                                    Cols = 40,
+                                    Rows = 1,
+                                    Width = col.Attributes.GetIntWithDefault(100, "Size", "Width"),
+                                    // FIXME: get from user view-scope attributes
+                                    Height = 20,
+                                    BlockNum = col.Attributes.GetIntWithDefault(0, "Form", "BlockNum"),
+                                    OrdInBlock = col.Attributes.GetIntWithDefault(0, "Form", "OrdInBlock"),
+                                    // FIXME: Subqueries don't have Fields!
+                                    ListValues = col.Field.FieldType.IsEnum ? col.Field.FieldType.GetEnum() : null,
+                                    HtmlFieldTag = GetHtmlFieldTag(
+                                                                   col.ToViewColumn(),
+                                                                   40,
+                                                                   1,
+                                                                   cell,
+                                                                   col.Summaries
+                                                                   ),
+                                    Value = cell
+                                };
+                        }).ToList();
 
-                    entry.Value = cell;
-                    switch (entry.BlockNum)
-                    {
-                        case 1:
-                            EntriesDef1.Add(entry);
-                            break;
-                        case 2:
-                            EntriesDef2.Add(entry);
-                            break;
-                        case 3:
-                            EntriesDef3.Add(entry);
-                            break;
-                        case 4:
-                            EntriesDef4.Add(entry);
-                            break;
-                    };
-                };
-                model["Entries1"] = EntriesDef1;
-                model["Entries2"] = EntriesDef2;
-                model["Entries3"] = EntriesDef3;
-                model["Entries4"] = EntriesDef4;
+                // FIXME: ineffective!
+                model["Entries1"] = entries.Where(cell => cell.BlockNum == 1).ToList();
+                model["Entries2"] = entries.Where(cell => cell.BlockNum == 2).ToList();
+                model["Entries3"] = entries.Where(cell => cell.BlockNum == 3).ToList();
+                model["Entries4"] = entries.Where(cell => cell.BlockNum == 3).ToList();
             }
 
             var removeRequest = catalog.GetString("Do you want to remove the item?");
