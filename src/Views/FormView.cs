@@ -160,20 +160,7 @@ namespace FunWithFlags.FunApp.Views
             }
             else
             {
-                /*
-                    var p = getPars.recId.ToString();
-                    int recId;
-                    if (p.Contains(";"))
-                    {
-                        recId = 0;
-                    }
-                    else
-                    {
-                        recId = (int)getPars.recId;
-                    };
-                */
                 var result = ctx.Resolver.GetTemplate(newQuery);
-
                 var entries = result.Columns.Select(col =>
                         {
                             var cell = col.ToDefaultCell();
@@ -208,10 +195,12 @@ namespace FunWithFlags.FunApp.Views
             }
 
             var removeRequest = catalog.GetString("Do you want to remove the item?");
-            var menu = new ViewMenu[] {
-                new ViewMenu {
-                    Name = catalog.GetString("Actions"),
-                    Items = new ViewMenuItem[] {
+            var menu = new ViewMenu[] 
+                {
+                new ViewMenu
+                    {
+                        Name = catalog.GetString("Actions"),
+                        Items = new ViewMenuItem[] {
                         new ViewMenuItem {
                             Name = catalog.GetString("Save"),
                             Url = "javascript: document.form.action.value='save'; document.form.submit();"
