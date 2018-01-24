@@ -60,7 +60,7 @@
                     cursor:pointer;
                   " onclick><img src="{{ "~/assets/openform.png" | url }}" style="width:100%;"></td>
                {% for cell in line %}
-		             <td class="editable" data-type="text" ondblclick="window.location.href='{{ cell.Url }}'"  style="cursor:pointer ; width:{{ cell.Width }} ; min-width:{{ cell.Width }} ; max-width:{{ cell.Width }} ; height:{{ cell.Height }} ; min-height:{{ cell.Height }} ; max-height:{{ cell.Height }}"><div style="height:{{ cell.Height }} ; min-height:{{ cell.Height }} ; max-height:{{ cell.Height }} ; overflow:hidden "><div style="height:100% ; column-width: {{ cell.Width }}">{{ cell.Value }}</div></div></td>
+		             <td class="editable" id_entry="{{cell.Id}}" data-type="text" ondblclick="window.location.href='{{ cell.Url }}'"  style="cursor:pointer ; width:{{ cell.Width }} ; min-width:{{ cell.Width }} ; max-width:{{ cell.Width }} ; height:{{ cell.Height }} ; min-height:{{ cell.Height }} ; max-height:{{ cell.Height }}"><div style="height:{{ cell.Height }} ; min-height:{{ cell.Height }} ; max-height:{{ cell.Height }} ; overflow:hidden "><div style="height:100% ; column-width: {{ cell.Width }}">{{ cell.Value }}</div></div></td>
                {% endfor %}
                           </tr>
                   </tbody>
@@ -317,6 +317,7 @@ function clickpast (event) {
             input.focus();
 			input.onkeyup=function(event){
 			if(event.keyCode == 13|| event.charCode === 13){
+				input.value = input.value.substring(0, input.value.length - 1);
 				input.blur();
 			}
 			};
@@ -327,8 +328,26 @@ function clickpast (event) {
 		this.parentNode.parentNode.style.maxWidth=parseInt(this.parentNode.parentNode.style.maxWidth,10)+ 2 +"px";
 		this.parentNode.parentNode.style.minWidth=parseInt(this.parentNode.parentNode.style.minWidth,10)+ 2 +"px";
 		this.parentNode.parentNode.onclick=onRowClickFirst;
+		var number_td=0;
+		var td=this.parentNode.parentNode;
+		while (td.previousElementSibling)
+		{
+			number_td++;
+			td=td.previousElementSibling;
+		}
+		var field=document.getElementById('tabl_head_1').firstElementChild.firstElementChild.firstElementChild.children[number_td];
 		this.parentNode.parentNode.setAttribute('id','');
+		var url_of_change;
+		url_of_change="/uv/xx/recId="+this.parentNode.parentNode.getAttribute('id_entry')+"&"+field.innerHTML+"="+this.value;
+		var a = document.createElement('a');
+		a.href = url_of_change;
+		var form = document.createElement('form');
+		form.appendChild(a);
+		document.body.appendChild(form);
+		form.submit();
+		document.body.removeChild(form);
 		this.parentNode.removeChild(this);
+
 	};
 	clicktd();
 
