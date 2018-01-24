@@ -311,7 +311,7 @@ div.topsector {
     clear:both;
 }
 
-#Block1, #Block2, #Block3 {
+#block1, #block2, #block3 {
     margin: 0 1px;
     width: 350px;
     min-width: 350px;
@@ -319,12 +319,12 @@ div.topsector {
     display: inline-block;
 }
 
- #Block1{
+ #block1{
     float:left;
     margin-left:0px;
  }
 
-#Block4 {
+#block4 {
     width: 1074px;
     min-width: 1074px;
     max-height: 300px;
