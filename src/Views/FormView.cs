@@ -131,6 +131,7 @@ namespace FunWithFlags.FunApp.Views
                             var cellPun = cell.ToString();
                             // FIXME: Subqueries don't have Fields!
                             var field = col.Column.Field.TryColumnField();
+                            var fieldType = col.Column.ValueType;
                             return new
                             {
                                 Name = col.Caption,
