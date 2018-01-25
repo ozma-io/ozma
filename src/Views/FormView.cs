@@ -26,17 +26,32 @@ namespace FunWithFlags.FunApp.Views
         {
             string HtmlFieldTag;
             // FIXME: Will break for computed fields!
-            var field = col.Field.TryColumnField();
-            if (field.FieldType.IsDate)
+            //var fieldType = (col.Field == null) ?col.ValueType : col.Field.TryColumnField().FieldType;
+            //var fieldType;
+            //if (field.FieldType.IsDate)
+            string colName;
+            if (col.Field == null)
+            {
+                colName = "";
+            }
+            else
+            {
+                colName = $"name='{col.Name}'";
+            }
+            if ((col.Field==null && col.ValueType.IsDate)|(col.Field != null && col.Field.TryColumnField().FieldType.IsDate))
             {
                 DateTime dt = value.Value.GetDate();
-                HtmlFieldTag = $"<input type=date name='{col.Name}' value='{(dt.ToString("yyyy-MM-dd"))}' />";
+                //HtmlFieldTag = $"<input type=date name='{col.Name}' value='{(dt.ToString("yyyy-MM-dd"))}' />";
+                HtmlFieldTag = $"<input type=date {colName} value='{(dt.ToString("yyyy-MM-dd"))}' />";
             }
-            else if (field.FieldType.IsInt)
+            //else if (field.FieldType.IsInt)
+            else if ((col.Field == null && col.ValueType.IsInt) | (col.Field != null && col.Field.TryColumnField().FieldType.IsInt))
             {
-                HtmlFieldTag = $"<input type=number name='{col.Name}' value='{value}' />";
+                //HtmlFieldTag = $"<input type=number name='{col.Name}' value='{value}' />";
+                HtmlFieldTag = $"<input type=number {colName} value='{value}' />";
             }
-            else if (field.FieldType.IsReference)
+            //else if (field.FieldType.IsReference)
+            else if (col.Field != null && col.Field.TryColumnField().FieldType.IsReference)
             {
                 HtmlFieldTag = $"<select name='{col.Name}'>";
                 int? valueId = null;
@@ -51,23 +66,27 @@ namespace FunWithFlags.FunApp.Views
                     string val = lstVal.ToString().Replace("\"", "!##!").Replace("'", "\'").Replace("\r\n", "\\r\\n");
                     HtmlFieldTag = HtmlFieldTag + $"<option {(valueId.HasValue && valueId.Value == lstId ? "selected" : "")} value='{lstId}' >{val}</option>";
                 }
-                if (field.Field.Nullable)
+                //if (field.Field.Nullable)
+                if (col.Field != null && col.Field.TryColumnField().Field.Nullable)
                 {
                     HtmlFieldTag = HtmlFieldTag + $"<option {(value.Value.IsNull ? "selected" : "")} value='' ></option>";
                 }
                 HtmlFieldTag = HtmlFieldTag + "</select>";
             }
-            else if (field.FieldType.IsEnum)
+            //else if (field.FieldType.IsEnum)
+            else if (col.Field != null && col.Field.TryColumnField().FieldType.IsEnum)
             {
                 HtmlFieldTag = $"<select name='{col.Name}'>";
-                foreach (string lstVal in field.FieldType.GetEnum())
+                //foreach (string lstVal in field.FieldType.GetEnum())
+                foreach (string lstVal in col.Field.TryColumnField().FieldType.GetEnum())
                 {
                     //Заменяем двойные и одинарные кавычки, перенос строки для javascript
                     // FIXME: ESPECIALLY this!
                     string val = lstVal.Replace("\"", "!##!").Replace("'", "\'").Replace("\r\n", "\\r\\n");
                     HtmlFieldTag = HtmlFieldTag + $"<option {(value.ToString() == lstVal ? "selected" : "")} value='{val}' >{val}</option>";
                 }
-                if (field.Field.Nullable)
+                //if (field.Field.Nullable)
+                if (col.Field != null && col.Field.TryColumnField().Field.Nullable)
                 {
                     HtmlFieldTag = HtmlFieldTag + $"<option {(value.Value.IsNull ? "selected" : "")} value='' ></option>";
                 }
@@ -78,7 +97,8 @@ namespace FunWithFlags.FunApp.Views
                 //Заменяем двойные и одинарные кавычки, перенос строки для javascript
                 // FIXME: ESPECIALLY this!
                 string val = value.ToString().Replace("\"", "!##!").Replace("'", "\'").Replace("\r\n", "\\r\\n");
-                HtmlFieldTag = $"<textarea name='{col.Name}' cols={cols} rows={rows} >{val}</textarea>";
+                //HtmlFieldTag = $"<textarea name='{col.Name}' cols={cols} rows={rows} >{val}</textarea>";
+                HtmlFieldTag = $"<textarea {colName} cols={cols} rows={rows} >{val}</textarea>";
             }
             return HtmlFieldTag;
         }
@@ -130,8 +150,9 @@ namespace FunWithFlags.FunApp.Views
                         {
                             var cellPun = cell.ToString();
                             // FIXME: Subqueries don't have Fields!
-                            var field = col.Column.Field.TryColumnField();
-                            var fieldType = col.Column.ValueType;
+                            var fieldIsEnum = (col.Column.Field == null) ? false: col.Column.Field.TryColumnField().FieldType.IsEnum;
+                            //var field = (col.Column.Field == null) ? null : col.Column.Field.TryColumnField();
+                            
                             return new
                             {
                                 Name = col.Caption,
@@ -142,7 +163,8 @@ namespace FunWithFlags.FunApp.Views
                                 Rows = (cellPun.Length / 40 + 1 > 5) ? 5 : cellPun.Length / 40 + 1,
                                 // FIXME: get from user view-scope attributes
                                 Height = 20,
-                                ListValues = field.FieldType.IsEnum ? field.FieldType.GetEnum() : null,
+                                //ListValues = field.FieldType.IsEnum ? field.FieldType.GetEnum() : null,
+                                ListValues = fieldIsEnum ? col.Column.Field.TryColumnField().FieldType.GetEnum() : null,
                                 HtmlFieldTag = GetHtmlFieldTag(
                                                                col.Column,
                                                                40,
