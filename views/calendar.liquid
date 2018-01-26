@@ -147,14 +147,8 @@ function go(){
 	var bottons_add=document.getElementsByClassName('add_new_entry');
 	function addold(num_ev){
 	
-	function old(date, Duration, id, EntryText){
-		var i=0,
-		date1=date;
-		while(date.charAt(i)!="."){
-			date1=date1+date.charAt(i);
-			i++;
-		}
-		date1=String(Number(date1)-1);
+	function old(date1, Duration, id, EntryText){
+		var date=new Date(date1);
 		var m1=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(0);
 		var m2=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(1);
 		if (m2!='_')
@@ -168,14 +162,7 @@ function go(){
 		else
 		var lm=m1;
 		if (lm=="0") lm=12;
-		if(Number(date1)>=Number(fm) && Number(date1) <= Number(lm)){
-			i++;
-			var date2=date1;
-			date1="";
-			while(date.charAt(i)!="."){
-				date1=date1+date.charAt(i);
-				i++;
-			}
+		if(date.getMonth>=Number(fm) && date.getMonth <= Number(lm)){
 			var m1=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(3);
 			var m2=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(4);
 			if (m1!='_')
@@ -188,8 +175,8 @@ function go(){
 			var lm1=m1+m2;
 			else
 			var lm1=m2;
-			if((Number(date2)==Number(fm) && Number(date1) >= Number(fm1))||(Number(date2)==Number(lm) && Number(date1) <= Number(lm1))||(Number(date2)>Number(fm) && Number(date2) < Number(lm))){
-				date=date2+"_"+date1;
+			if((date.getMonth==Number(fm) &&  date.getDate>= Number(fm1))||(date.getMonth==Number(lm) && date.getDate<= Number(lm1))||(date.getMonth>Number(fm) && date.getMonth < Number(lm))){
+				date=date.getMonth()+"_"+date.getDate();
 				var number_place=1;
 						element=document.getElementById(date).parentNode.firstElementChild;
 						for (i=1;(element.nextElementSibling!=null&&element!=document.getElementById(date));i++){
