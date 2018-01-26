@@ -11,12 +11,10 @@
 							<th class="empty_th" nowrap></th>
 							<th class="empty_th" nowrap></th>
 							{% for title in Model.Titles %}
-								<th style=
+								<th class="tabl_heading" style=
 								  "
 									min-width:{{ title.Width }} ; 
 									max-width:{{ title.Width }} ;
-									text-overflow:ellipsis;
-									overflow:hidden;
 								  "
 								  nowrap
 								>{{ title.Name }}</th>
