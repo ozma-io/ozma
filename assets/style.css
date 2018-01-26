@@ -458,12 +458,22 @@ div.topsector {
     margin-left: 10px;
 }
 
-#allEntrys {
+#all_entrys {
     position: absolute;
     height: 200px;
     width: 150px;
     visibility: hidden;
     z-index: 200;
+}
+
+.close_smt {
+    float: right;
+    margin-right: 10px;
+    margin-top: 5px
+}
+
+.marg {
+    margin: 10px;
 }
 
 .DWEbody {
