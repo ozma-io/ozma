@@ -3,6 +3,7 @@ namespace FunWithFlags.FunApp.Views
     using System;
     using System.Dynamic;
     using System.Linq;
+    using System.Globalization;
     using System.Collections.Generic;
     using Nancy;
     using NGettext;
@@ -19,6 +20,12 @@ namespace FunWithFlags.FunApp.Views
 
     public class CalendarView : IView
     {
+        public static double DateTimeToUnixTimestamp(DateTime dateTime)
+        {
+            return (TimeZoneInfo.ConvertTimeToUtc(dateTime) -
+                    new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc)).TotalSeconds;
+        }
+
         public ViewResponse Get(Context ctx, ICatalog catalog, UserView uv, dynamic getPars)
         {
             var db = ctx.Database;
@@ -41,7 +48,8 @@ namespace FunWithFlags.FunApp.Views
                         var entryText = row.Cells[1].ToString();
                         return row.Cells.Skip(1).Zip(columns, (cell, col) => new
                             {
-                                Value = cell.ToString(),
+                                // JavaScript expects milliseconds since the epoch.
+                                Value = cell.Value.IsDate ? (DateTimeToUnixTimestamp(cell.Value.GetDate()) * 1000).ToString(CultureInfo.InvariantCulture) : cell.Value.ToString(),
                                 Duration = 1,
                                 Id = id,
                                 EntryText = entryText
