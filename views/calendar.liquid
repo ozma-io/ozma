@@ -1,1066 +1,1233 @@
 {% extends "userview" %}
 
 {% block userview %}
-<div id="allEntrys">
-<a style="float:right; margin-right:10px; margin-top:5px" id="close_all">×</a>
-</div>
-<div id="new_entry">
-<a style="float:right; margin-right:10px; margin-top:5px" id="close">×</a><p style="margin:10px">Новая запись</p>
-<textarea class="Notes" cols="40" rows="1"></textarea>
-  Длительность <input id="lasting" type="number" value="" min="1" max="9999" size="4">
-<div style="margin:10px"><a id="add">Добавить</a></div>
-</div>
-<div id="calendar2">
-<div class="head_line">
-<div class="head_block" style="width:70%;">
-<input type="text" value="dd-mm-yy" onfocus="this.select();lcs(this)" onclick="event.cancelBubble=true;this.select();lcs(this)" id="calendar_for_choice"> 
-<select id='what_event'>
-	<option value="1">День рождения</option>
-	<option value="2">День ангела</option>
-</select>
-</div>
-</div>
-<div class="calendar">
-	<table class="head_line" cellpadding="0" cellspacing="0">
-	<tbody>
-    <tr><td style="border:1px solid {{ Model.ColorCalendarBd }} ; background: {{ Model.ColorCalendarHeadBg }};">Пн</td>
-        <td style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; background: {{ Model.ColorCalendarHeadBg }};">Вт</td>
-        <td style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; background: {{ Model.ColorCalendarHeadBg }};">Ср</td>
-        <td style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; background: {{ Model.ColorCalendarHeadBg }};">Чт</td>
-        <td style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; background: {{ Model.ColorCalendarHeadBg }};">Пт</td>
-        <td style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; background: {{ Model.ColorCalendarHeadBg }};">Сб</td>
-        <td class="head_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; background: {{ Model.ColorCalendarHeadBg }};">Вс</td>
-    </tr>
-	</tbody>
-	</table>
-	<div class="calendar_body">
+	<div id="all_entrys">
+		<a class="close_smt" id="close_all">×</a>
 	</div>
-</div>
-</div>
+	
+	<div id="new_entry">
+		<a class="close_smt" id="close">×</a>
+		<p class="marg">Новая запись</p>
+		<textarea class="Notes" cols="40" rows="1"></textarea>
+		Длительность <input id="lasting" type="number" value="" min="1" max="9999" size="4">
+		<div class="marg">
+			<a id="add">Добавить</a>
+		</div>
+	</div>
+	
+	<div id="calendar2">
+		<div class="head_line">
+			<div class="head_block" style="width:70%;">
+				<input type="text" value="dd-mm-yy" onfocus="this.select();lcs(this)" onclick="event.cancelBubble=true;this.select();lcs(this)" id="calendar_for_choice"> 
+				<select id='what_event'>
+					<option value="1">День рождения</option>
+					<option value="2">День ангела</option>
+				</select>
+			</div>
+		</div>
+	
+		<div class="calendar">
+			<table class="head_line" cellpadding="0" cellspacing="0">
+				<tbody>
+					<tr>
+						<td style="border:1px solid {{ Model.ColorCalendarBd }} ; background: {{ Model.ColorCalendarHeadBg }};">Пн</td>
+						<td style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; background: {{ Model.ColorCalendarHeadBg }};">Вт</td>
+						<td style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; background: {{ Model.ColorCalendarHeadBg }};">Ср</td>
+						<td style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; background: {{ Model.ColorCalendarHeadBg }};">Чт</td>
+						<td style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; background: {{ Model.ColorCalendarHeadBg }};">Пт</td>
+						<td style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; background: {{ Model.ColorCalendarHeadBg }};">Сб</td>
+						<td class="head_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; background: {{ Model.ColorCalendarHeadBg }};">Вс</td>
+					</tr>
+				</tbody>
+			</table>
+			
+			<div class="calendar_body">
+			</div>
+		</div>
+	</div>
 
 
-<script>
-function Calendar2(id, year, month, day) {
-var Dlast = new Date(year,month+1,0).getDate(),
-	fordrop=' ondragenter="return dragEnter(event)" ondrop="return dragDrop(event)" ondragover="return dragOver(event)" '
-	
-	if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
-	fordrop=fordrop+'onclick="return dragDropMobile(this)"'
-	
-	D = new Date(year,month,day),
-    DNlast = new Date(D.getFullYear(),D.getMonth(),Dlast).getDay(),
-	DNfirst = new Date(D.getFullYear(),D.getMonth(),day).getDay(),
-	DNlastOFpreMonth=new Date(year,month,0).getDate(),
-    calendar = '<div class="month_row"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr>'+
-                '<td id="101" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-                '<td id="102" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-                '<td id="103" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-                '<td id="104" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-                '<td id="105" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-                '<td id="106" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-                '<td id="107" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-                '</tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>',
-    month=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],
-	lines=0,
-	m =  D.getMonth();
-	if (DNfirst != 0) {
-		for(var  i = 1; i < DNfirst; i++){
-			if (day-DNfirst+i>0){
-				calendar +=  '<td id="'+m%12+'_'+(day-DNfirst+i)+'"><div class="date">'+(day-DNfirst+i)+'</div><a class="all_entry">All</a><a class="add_new_entry">+</a></td>';
+	<script>
+		function Calendar2(id, year, month, day) {
+			var Dlast = new Date(year,month+1,0).getDate(),
+			
+			fordrop=' ondragenter="return dragEnter(event)" ondrop="return dragDrop(event)" ondragover="return dragOver(event)" '
+			
+			if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
+				fordrop=fordrop+'onclick="return dragDropMobile(this)"'
+			
+			D = new Date(year,month,day),
+			DNlast = new Date(D.getFullYear(),D.getMonth(),Dlast).getDay(),
+			DNfirst = new Date(D.getFullYear(),D.getMonth(),day).getDay(),
+			DNlastOFpreMonth=new Date(year,month,0).getDate(),
+			calendar = '<div class="month_row"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr>'+
+						'<td id="101" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+						'<td id="102" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+						'<td id="103" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+						'<td id="104" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+						'<td id="105" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+						'<td id="106" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+						'<td id="107" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+						'</tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>',
+			month=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],
+			lines=0,
+			m =  D.getMonth();
+			
+			if (DNfirst != 0) {
+				for(var  i = 1; i < DNfirst; i++){
+					if (day-DNfirst+i>0){
+						calendar +=  '<td id="'+m%12+'_'+(day-DNfirst+i)+'"><div class="date">'+(day-DNfirst+i)+'</div><a class="all_entry">All</a><a class="add_new_entry">+</a></td>';
+					}
+					else{
+						calendar += '<td id="'+Number(m-1)%12+'_'+((DNlastOFpreMonth-DNfirst+i)+Number(day))+'"><div class="date">'+((DNlastOFpreMonth-DNfirst+i)+Number(day))+'</div><a class="all_entry">All</a><a class="add_new_entry">+</a></td>';
+					}
+				}
 			}
 			else{
-				calendar += '<td id="'+Number(m-1)%12+'_'+((DNlastOFpreMonth-DNfirst+i)+Number(day))+'"><div class="date">'+((DNlastOFpreMonth-DNfirst+i)+Number(day))+'</div><a class="all_entry">All</a><a class="add_new_entry">+</a></td>';
+				for(var  i = 1; i < 7; i++) {	
+					if (day-7+i>0){
+						calendar += '<td id="'+m%12+'_'+(day-7+i)+'"><div class="date">'+(day-7+i)+'</div><a class="all_entry">All</a><a class="add_new_entry">+</a></td>';
+					}
+					else{
+						calendar += '<td id="'+Number(m-1)%12+'_'+((DNlastOFpreMonth-7+i)+Number(day))+'"><div class="date">'+((DNlastOFpreMonth-7+i)+Number(day))+'</div><a class="all_entry">All</a><a class="add_new_entry">+</a></td>';
+					}
+				}
 			}
-		}
-	}
-	else{
-		for(var  i = 1; i < 7; i++) {	
-			if (day-7+i>0){
-				calendar += '<td id="'+m%12+'_'+(day-7+i)+'"><div class="date">'+(day-7+i)+'</div><a class="all_entry">All</a><a class="add_new_entry">+</a></td>';
+			
+			for(var  i = day; i <= Dlast; i++) {
+			  if (i == new Date().getDate() && D.getFullYear() == new Date().getFullYear() && D.getMonth() == new Date().getMonth()) {
+				calendar += '<td id="'+m+'_'+i+'"><div class="date today" style="background:{{ Model.ColorCalendarToday }}">' + i + '</div><a class="all_entry">All</a><a class="add_new_entry">+</a></td>';
+			  }else{
+				calendar += '<td id="'+m+'_'+i+'"><div class="date">' + i + '</div><a class="all_entry">All</a><a class="add_new_entry">+</a></td>';
+			  }
+			  
+			  if (new Date(D.getFullYear(),D.getMonth(),i).getDay() == 0) {
+				calendar += '</tr></tbody></table></div>';
+				calendar += '<div class="month_row" style="top:'+16.6*Number(lines+1)+'%;"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr>'+
+				  '<td class="block_td" id="101" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+				  '<td id="102" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+				  '<td id="103" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+				  '<td id="104" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+				  '<td id="105" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+				  '<td id="106" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+				  '<td id="107" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+				  '</tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>';
+				lines+=1;
+			  }
 			}
-			else{
-				calendar += '<td id="'+Number(m-1)%12+'_'+((DNlastOFpreMonth-7+i)+Number(day))+'"><div class="date">'+((DNlastOFpreMonth-7+i)+Number(day))+'</div><a class="all_entry">All</a><a class="add_new_entry">+</a></td>';
+			
+			var col_lines=lines;
+			
+			for(var  i = lines*7+DNlast; i < 42; i++){
+				calendar += '<td id="'+Number(m-(-1))%12+'_'+(i-lines*7-DNlast+1)+'"><div class="date">'+(i-lines*7-DNlast+1)+'</div><a class="all_entry">All</a><a class="add_new_entry">+</a></td>';
+				if ((i+1)%7 == 0 && i!=41) {
+					calendar += '</tr></tbody></table></div>';
+					calendar += '<div class="month_row" style="top:'+16.6*Number(col_lines+1)+'%;"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr>'+
+				  '<td class="block_td" id="101" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+				  '<td id="102" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+				  '<td id="103" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+				  '<td id="104" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+				  '<td id="105" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+				  '<td id="106" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+				  '<td id="107" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
+				  '</tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>';
+					col_lines+=1;
+				}
 			}
+			
+			document.querySelector('#'+id+' div.calendar_body ').innerHTML = calendar;
+
 		}
-	}
-	for(var  i = day; i <= Dlast; i++) {
-	  if (i == new Date().getDate() && D.getFullYear() == new Date().getFullYear() && D.getMonth() == new Date().getMonth()) {
-		calendar += '<td id="'+m+'_'+i+'"><div class="date today" style="background:{{ Model.ColorCalendarToday }}">' + i + '</div><a class="all_entry">All</a><a class="add_new_entry">+</a></td>';
-	  }else{
-		calendar += '<td id="'+m+'_'+i+'"><div class="date">' + i + '</div><a class="all_entry">All</a><a class="add_new_entry">+</a></td>';
-	  }
-	  if (new Date(D.getFullYear(),D.getMonth(),i).getDay() == 0) {
-		calendar += '</tr></tbody></table></div>';
-		calendar += '<div class="month_row" style="top:'+16.6*Number(lines+1)+'%;"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr>'+
-          '<td class="block_td" id="101" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="102" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="103" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="104" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="105" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="106" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="107" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-          '</tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>';
-		lines+=1;
-	  }
-	}
-	var col_lines=lines;
-	for(var  i = lines*7+DNlast; i < 42; i++){
-		calendar += '<td id="'+Number(m-(-1))%12+'_'+(i-lines*7-DNlast+1)+'"><div class="date">'+(i-lines*7-DNlast+1)+'</div><a class="all_entry">All</a><a class="add_new_entry">+</a></td>';
-		if ((i+1)%7 == 0 && i!=41) {
-			calendar += '</tr></tbody></table></div>';
-			calendar += '<div class="month_row" style="top:'+16.6*Number(col_lines+1)+'%;"><table class="line_table" cellpadding="0" cellspacing="0"><tbody><tr>'+
-          '<td class="block_td" id="101" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="102" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="103" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="104" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="105" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="106" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-          '<td id="107" class="block_td" style="border:1px solid {{ Model.ColorCalendarBd }} ; border-left:0px ; border-top:0px ;  background: {{ Model.ColorCalendarBlockBg }};" '+ fordrop +'>&nbsp;</td>'+
-          '</tr></tbody></table><table class="table_for_note" cellpadding="0" cellspacing="0"><tbody><tr>';
-			col_lines+=1;
-		}
-	}
+
+		document.querySelector('input#lasting').value=1;
 	
-	document.querySelector('#'+id+' div.calendar_body ').innerHTML = calendar;
-
-}
-document.querySelector('input#lasting').value=1;
-var parentid, number_td;
-var iddragelem=null;
+		var parentid, number_td;
+		var iddragelem=null;
 
 
-function go(){
-	function added(a) {
-		document.querySelector('#new_entry').style.visibility='visible';
-		document.querySelector('#new_entry').style.backgroundColor = "{{ Model.ColorCalendarEntryBg }}"
-		document.querySelector('#new_entry').style.border = "1px solid {{ Model.ColorCalendarBd }}"
-		document.querySelector('#new_entry').style.top=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().top +'px';
-		if(a%7<5||a%7==0){
-		document.querySelector('#new_entry').style.left=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().left + 'px';
-		}
-		else{
-		document.querySelector('#new_entry').style.left=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().left- 202+'px';
-		}
-		parentid=document.getElementsByClassName('add_new_entry')[a].parentNode.parentNode.parentNode;
-		number_td=document.getElementsByClassName('add_new_entry')[a].parentNode.getAttribute('id');
-	};
-	var bottons_add=document.getElementsByClassName('add_new_entry');
-	function addold(num_ev){
-	
-	function old(date, Duration, id, EntryText){
-		var i=0,
-		date1=date;
-		while(date.charAt(i)!="."){
-			date1=date1+date.charAt(i);
-			i++;
-		}
-		date1=String(Number(date1)-1);
-		var m1=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(0);
-		var m2=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(1);
-		if (m2!='_')
-		var fm=m1+m2;
-		else
-		var fm=m1;
-		var m1=document.getElementsByClassName('table_for_note')[5].firstElementChild.firstElementChild.lastElementChild.getAttribute('id').charAt(0);
-		var m2=document.getElementsByClassName('table_for_note')[5].firstElementChild.firstElementChild.lastElementChild.getAttribute('id').charAt(1);
-		if (m2!='_')
-		var lm=m1+m2;
-		else
-		var lm=m1;
-		if (lm=="0") lm=12;
-		if(Number(date1)>=Number(fm) && Number(date1) <= Number(lm)){
-			i++;
-			var date2=date1;
-			date1="";
-			while(date.charAt(i)!="."){
-				date1=date1+date.charAt(i);
-				i++;
-			}
-			var m1=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(3);
-			var m2=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(4);
-			if (m1!='_')
-			var fm1=m1+m2;
-			else
-			var fm1=m2;
-			var m1=document.getElementsByClassName('table_for_note')[5].firstElementChild.firstElementChild.lastElementChild.getAttribute('id').charAt(3);
-			var m2=document.getElementsByClassName('table_for_note')[5].firstElementChild.firstElementChild.lastElementChild.getAttribute('id').charAt(4);
-			if (m1!='_')
-			var lm1=m1+m2;
-			else
-			var lm1=m2;
-			if((Number(date2)==Number(fm) && Number(date1) >= Number(fm1))||(Number(date2)==Number(lm) && Number(date1) <= Number(lm1))||(Number(date2)>Number(fm) && Number(date2) < Number(lm))){
-				date=date2+"_"+date1;
-				var number_place=1;
-						element=document.getElementById(date).parentNode.firstElementChild;
-						for (i=1;(element.nextElementSibling!=null&&element!=document.getElementById(date));i++){
-							number_place+=1;
-							element=element.nextElementSibling;
+		function go(){
+			function added(a) {
+				document.querySelector('#new_entry').style.visibility='visible';
+				document.querySelector('#new_entry').style.backgroundColor = "{{ Model.ColorCalendarEntryBg }}"
+				document.querySelector('#new_entry').style.border = "1px solid {{ Model.ColorCalendarBd }}"
+				document.querySelector('#new_entry').style.top=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().top +'px';
+				
+				if(a%7<5||a%7==0){
+				document.querySelector('#new_entry').style.left=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().left + 'px';
+				}
+				else{
+				document.querySelector('#new_entry').style.left=document.getElementsByClassName('add_new_entry')[a].getBoundingClientRect().left- 202+'px';
+				}
+				
+				parentid=document.getElementsByClassName('add_new_entry')[a].parentNode.parentNode.parentNode;
+				number_td=document.getElementsByClassName('add_new_entry')[a].parentNode.getAttribute('id');
+			};
+			
+			var bottons_add=document.getElementsByClassName('add_new_entry');
+			
+			function addold(num_ev){
+			
+				function old(date1, Duration, id, EntryText){
+					var date=new Date(date1);
+					var m1=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(0);
+					var m2=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(1);
+					
+					if (m2!='_')
+						var fm=m1+m2;
+					else
+						var fm=m1;
+					
+					var m1=document.getElementsByClassName('table_for_note')[5].firstElementChild.firstElementChild.lastElementChild.getAttribute('id').charAt(0);
+					var m2=document.getElementsByClassName('table_for_note')[5].firstElementChild.firstElementChild.lastElementChild.getAttribute('id').charAt(1);
+					
+					if (m2!='_')
+						var lm=m1+m2;
+					else
+						var lm=m1;
+					
+					if (lm=="0") lm=12;
+						if(date.getMonth>=Number(fm) && date.getMonth <= Number(lm)){
+							var m1=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(3);
+							var m2=document.getElementsByClassName('table_for_note')[0].firstElementChild.firstElementChild.firstElementChild.getAttribute('id').charAt(4);
+							
+							if (m1!='_')
+								var fm1=m1+m2;
+							else
+								var fm1=m2;
+						
+							var m1=document.getElementsByClassName('table_for_note')[5].firstElementChild.firstElementChild.lastElementChild.getAttribute('id').charAt(3);
+							var m2=document.getElementsByClassName('table_for_note')[5].firstElementChild.firstElementChild.lastElementChild.getAttribute('id').charAt(4);
+						
+						if (m1!='_')
+							var lm1=m1+m2;
+						else
+							var lm1=m2;
+						
+						if((date.getMonth==Number(fm) &&  date.getDate>= Number(fm1))||(date.getMonth==Number(lm) && date.getDate<= Number(lm1))||(date.getMonth>Number(fm) && date.getMonth < Number(lm))){
+							date=date.getMonth()+"_"+date.getDate();
+							var number_place=1;
+							
+							element=document.getElementById(date).parentNode.firstElementChild;
+									
+							for (i=1;(element.nextElementSibling!=null&&element!=document.getElementById(date));i++){
+								number_place+=1;
+								element=element.nextElementSibling;
+									
+							}
+							
+							document.getElementById(date).parentNode.firstElementChild
+							addnew(Duration, Duration, document.getElementById(date).parentNode.parentNode, number_place, EntryText,id)
 						}
-				document.getElementById(date).parentNode.firstElementChild
-				addnew(Duration, Duration, document.getElementById(date).parentNode.parentNode, number_place, EntryText,id)
+					}
+				}
+
+				{% for entry in Model.Entries %}
+					var base_date,
+					  base_Duration,
+					  base_id,
+					  number_event=0,
+					  base_EntryText;
+					{% for cell in entry %}
+						base_date="{{ cell.Value }}";
+						base_Duration="{{ cell.Duration }}";
+						base_EntryText="{{ cell.EntryText }}";
+						base_id={{ cell.Id }};
+						if (number_event==num_ev)
+						old(base_date, base_Duration, base_id, base_EntryText);
+						number_event++;
+					{% endfor %}
+				{% endfor %}
+			};
+			
+			var all=document.getElementsByClassName('all_entry');
+				for (var i = 0; i < all.length; i++) {
+					var day_entrys = all[i];
+					day_entrys.onclick = onAllClick;
+				}
+				
+			function onAllClick(){
+				var target = event ? event.target : window.event.srcElement;
+				var tbody = target.parentNode.parentNode.parentNode;
+				var divWithEntrys=document.getElementById('all_entrys');
+				var bodyOfDWE=document.createElement("div");
+				
+				bodyOfDWE.setAttribute("class","DWEbody")
+				
+				var date=document.createElement("div");
+				
+				date.innerHTML=target.parentNode.firstElementChild.innerHTML;
+				date.style.position='absolute';
+				
+				if (divWithEntrys.firstElementChild!=document.querySelector('#close_all')) divWithEntrys.removeChild(divWithEntrys.firstElementChild);
+				
+				if (divWithEntrys.lastElementChild!=document.querySelector('#close_all')) divWithEntrys.removeChild(divWithEntrys.lastElementChild);
+				
+				divWithEntrys.insertBefore(date,divWithEntrys.firstElementChild)
+				insertAfter(bodyOfDWE,divWithEntrys.lastElementChild)
+				
+				var dateplace=target.parentNode;
+				var tr=tbody.firstElementChild;
+				var td=tr.firstElementChild;
+				var k;
+				
+				for(k=1; td!=dateplace;k++)
+					td=td.nextElementSibling;
+				
+				for(var i=0;tr.nextElementSibling!=null;i++){
+					var td=tr.nextElementSibling.firstElementChild;
+					
+					if(td.getAttribute("colspan")!=null)
+						var j=Number(td.getAttribute("colspan"));
+					else
+						var j=1;
+					
+					while(j<k && td.nextElementSibling!=null){
+						td=td.nextElementSibling;
+						
+						if(td.getAttribute("colspan")!=null)
+							j=j+Number(td.getAttribute("colspan"));
+						else
+						j++;
+					}
+					
+					if(td.firstElementChild!=null){
+						var olddiv=td.firstElementChild;
+						
+						olddiv.setAttribute('name','divintable'+ olddiv.getAttribute("id"))
+						
+						var newdiv = document.createElement("div");
+						
+						newdiv.setAttribute("class", olddiv.getAttribute("class"));
+						newdiv.innerHTML = olddiv.innerHTML;
+						newdiv.setAttribute("draggable", "true")
+						newdiv.setAttribute("id", olddiv.getAttribute("id"))
+						newdiv.setAttribute("ondragstart", "return dragStartByDWE(event)")
+						newdiv.setAttribute("lasting", olddiv.getAttribute("lasting"))
+						newdiv.style.backgroundColor = "{{ Model.ColorCalendarNoteBg }}"
+						newdiv.style.border = "1px solid {{ Model.ColorCalendarBd }}"
+						if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
+						newdiv.setAttribute("onclick", "return dragStartByDWEMobile(this)")
+						bodyOfDWE.appendChild(newdiv);
+					}
+					tr=tr.nextElementSibling;
+				}
+			
+				divWithEntrys.style.visibility='visible';
+				divWithEntrys.style.backgroundColor = "{{ Model.ColorCalendarEntryBg }}"
+				divWithEntrys.style.border = "1px solid {{ Model.ColorCalendarBd }}"
+				
+				if(target.getBoundingClientRect().top - (divWithEntrys.getBoundingClientRect().top - divWithEntrys.getBoundingClientRect().bottom) <document.querySelector('body').getBoundingClientRect().bottom)
+				divWithEntrys.style.top=target.getBoundingClientRect().top +'px';
+				else
+				divWithEntrys.style.top=target.getBoundingClientRect().top - (target.getBoundingClientRect().top - (divWithEntrys.getBoundingClientRect().top - divWithEntrys.getBoundingClientRect().bottom) - document.querySelector('body').getBoundingClientRect().bottom) +'px';
+				
+				if(target.getBoundingClientRect().left - (divWithEntrys.getBoundingClientRect().left - divWithEntrys.getBoundingClientRect().right)<document.querySelector('body').getBoundingClientRect().right)
+				divWithEntrys.style.left=target.getBoundingClientRect().left + 'px';
+				else
+				divWithEntrys.style.left=target.getBoundingClientRect().left -(target.getBoundingClientRect().left - (divWithEntrys.getBoundingClientRect().left - divWithEntrys.getBoundingClientRect().right) - document.querySelector('body').getBoundingClientRect().right ) + 'px';
+			}
+
+			bottons_add[0].onclick= function(){ added(0);}
+			bottons_add[1].onclick= function(){ added(1);}
+			bottons_add[2].onclick= function(){ added(2);}
+			bottons_add[3].onclick= function(){ added(3);}
+			bottons_add[4].onclick= function(){ added(4);}
+			bottons_add[5].onclick= function(){ added(5);}
+			bottons_add[6].onclick= function(){ added(6);}
+			bottons_add[7].onclick= function(){ added(7);}
+			bottons_add[8].onclick= function(){ added(8);}
+			bottons_add[9].onclick= function(){ added(9);}
+			bottons_add[10].onclick= function(){ added(10);}
+			bottons_add[11].onclick= function(){ added(11);}
+			bottons_add[12].onclick= function(){ added(12);}
+			bottons_add[13].onclick= function(){ added(13);}
+			bottons_add[14].onclick= function(){ added(14);}
+			bottons_add[15].onclick= function(){ added(15);}
+			bottons_add[16].onclick= function(){ added(16);}
+			bottons_add[17].onclick= function(){ added(17);}
+			bottons_add[18].onclick= function(){ added(18);}
+			bottons_add[19].onclick= function(){ added(19);}
+			bottons_add[20].onclick= function(){ added(20);}
+			bottons_add[21].onclick= function(){ added(21);}
+			bottons_add[22].onclick= function(){ added(22);}
+			bottons_add[23].onclick= function(){ added(23);}
+			bottons_add[24].onclick= function(){ added(24);}
+			bottons_add[25].onclick= function(){ added(25);}
+			bottons_add[26].onclick= function(){ added(26);}
+			bottons_add[27].onclick= function(){ added(27);}
+			bottons_add[28].onclick= function(){ added(28);}
+			bottons_add[29].onclick= function(){ added(29);}
+			bottons_add[30].onclick= function(){ added(30);}
+			bottons_add[31].onclick= function(){ added(31);}
+			bottons_add[32].onclick= function(){ added(32);}
+			bottons_add[33].onclick= function(){ added(33);}
+			bottons_add[34].onclick= function(){ added(34);}
+			bottons_add[35].onclick= function(){ added(35);}
+			bottons_add[36].onclick= function(){ added(36);}
+			bottons_add[37].onclick= function(){ added(37);}
+			bottons_add[38].onclick= function(){ added(38);}
+			bottons_add[39].onclick= function(){ added(39);}
+			bottons_add[40].onclick= function(){ added(40);}
+			bottons_add[41].onclick= function(){ added(41);}
+			addold(parseFloat(document.querySelector('#calendar2 select#what_event').options[document.querySelector('#calendar2 select#what_event').selectedIndex].value));
+		}
+		
+		var date=new Date();
+		var dateString = date.getFullYear() + '.' + (date.getMonth() < 9 ? '0' + (date.getMonth() + 1) : date.getMonth()+1) + '.' + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate());
+		
+		document.querySelector('#calendar2 input#calendar_for_choice').value=dateString;
+		Calendar2("calendar2", new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+		go();
+		
+		document.querySelector('#calendar2').onchange= function blablabla(){
+			Kalendar3();
+		}
+		
+		function Kalendar3() {
+			var text = document.querySelector('#calendar2 input#calendar_for_choice').value;
+			var y="";
+			var m="";
+			var d="";
+			var k=0;
+			
+			for (var i=0; text.charAt(i)!='.';i++){
+				k++;
+				y+=text.charAt(i);
+			}
+			
+			k++;
+			y=Number(y);
+			
+			for (var i=k; text.charAt(i)!='.';i++){
+				k++;
+				m+=text.charAt(i);
+			}
+			
+			k++;
+			m=Number(m);
+			m--;
+			
+			for (var i=k; text.charAt(i)!='';i++){
+				k++;
+				d+=text.charAt(i);
+			}
+			
+			d=Number(d);
+			Calendar2("calendar2",y, m, d);
+			bottons_add=document.getElementsByClassName('add_new_entry');
+			go();
+		}
+		
+		document.querySelector('#close').onclick = function() {
+			document.querySelector('#new_entry').style.visibility='hidden';
+		};
+		
+		document.querySelector('#close_all').onclick = function() {
+			document.querySelector('#all_entrys').style.visibility='hidden';
+		};
+		
+		function checkchild(testingtr, place, longest, elementtest){
+			var td=testingtr.firstElementChild;
+			var flag =0;
+			
+			if(Number(td.getAttribute('colspan'))>0) place=place-Number(td.getAttribute('colspan'))+1;
+				for (i=1;i<place&&td.nextElementSibling!=null;i++){
+					td=td.nextElementSibling;
+					if(Number(td.getAttribute('colspan'))>0) place=place-Number(td.getAttribute('colspan'))+1;
+				}
+			
+			for(i=0; i<longest; i++){
+				if(td.childNodes.length&&td.firstElementChild!=elementtest){
+					flag=1;
+					break;
+				}
+				if (td.nextElementSibling!=null){
+					td=td.nextElementSibling;
+				}
+				else{
+					break;
+				}
+			}
+			
+			return flag;
+		}
+		 
+		function giveplace(someplace){
+			var placeinline=(Number(someplace.getAttribute('id'))%100)%7;
+			var table_with_entrys=someplace.parentNode.parentNode.parentNode.nextElementSibling;
+			var tr_in_table_with_entrys =table_with_entrys.firstElementChild.firstElementChild,
+				sometd_in_needtable;
+			
+			if (placeinline==0) placeinline=7;
+			
+			if(tr_in_table_with_entrys.nextElementSibling!=null){
+				sometd_in_needtable=tr_in_table_with_entrys.nextElementSibling.firstElementChild;
+			}
+			else{
+				createTR(tr_in_table_with_entrys);
+				sometd_in_needtable=tr_in_table_with_entrys.nextElementSibling.firstElementChild;
+			}
+			
+			if(Number(sometd_in_needtable.getAttribute('colspan'))>0) placeinline=placeinline-Number(sometd_in_needtable.getAttribute('colspan'))+1;
+				for(i=1;i<placeinline&&sometd_in_needtable.nextElementSibling!=null;i++){
+					sometd_in_needtable=sometd_in_needtable.nextElementSibling;
+					if(Number(sometd_in_needtable.getAttribute('colspan'))>0) placeinline=placeinline-Number(sometd_in_needtable.getAttribute('colspan'))+1;
+				}
+			
+			return sometd_in_needtable;
+		}
+		 
+		function createTR(previousTR){
+			var newtr=document.createElement("tr"),
+				newtd=document.createElement("td");
+			
+			for (i=1;i<8;i++){
+				newtr.appendChild(newtd);
+				var newtd=document.createElement("td");
+			}
+			
+			insertAfter(newtr, previousTR);
+		}
+
+		function insertAfter(elem, refElem) {
+			var parent = refElem.parentNode;
+			var next = refElem.nextSibling;
+			if (next) {
+				return parent.insertBefore(elem, next);
+			} 
+			else {
+				return parent.appendChild(elem);
 			}
 		}
-	}
 
-  {% for entry in Model.Entries %}
-    var base_date,
-      base_Duration,
-      base_id,
-      number_event=0,
-      base_EntryText;
-    {% for cell in entry %}
-      base_date="{{ cell.Value }}";
-      base_Duration="{{ cell.Duration }}";
-      base_EntryText="{{ cell.EntryText }}";
-      base_id={{ cell.Id }};
-      if (number_event==num_ev)
-      old(base_date, base_Duration, base_id, base_EntryText);
-      number_event++;
-    {% endfor %}
-  {% endfor %}
-	};
-	var all=document.getElementsByClassName('all_entry');
-			  for (var i = 0; i < all.length; i++) {
-				var day_entrys = all[i];
-				day_entrys.onclick = onAllClick;
-			}
-	function onAllClick(){
-		var target = event ? event.target : window.event.srcElement;
-		var tbody = target.parentNode.parentNode.parentNode;
-		var divWithEntrys=document.getElementById('allEntrys');
-		var bodyOfDWE=document.createElement("div");
-		bodyOfDWE.setAttribute("class","DWEbody")
-		var date=document.createElement("div");
-		date.innerHTML=target.parentNode.firstElementChild.innerHTML;
-		date.style.position='absolute';
-		if (divWithEntrys.firstElementChild!=document.querySelector('#close_all')) divWithEntrys.removeChild(divWithEntrys.firstElementChild);
-		if (divWithEntrys.lastElementChild!=document.querySelector('#close_all')) divWithEntrys.removeChild(divWithEntrys.lastElementChild);
-		divWithEntrys.insertBefore(date,divWithEntrys.firstElementChild)
-		insertAfter(bodyOfDWE,divWithEntrys.lastElementChild)
-		var dateplace=target.parentNode;
-		var tr=tbody.firstElementChild;
-		var td=tr.firstElementChild;
-		var k;
-		for(k=1; td!=dateplace;k++)
-			td=td.nextElementSibling;
-		for(var i=0;tr.nextElementSibling!=null;i++){
-			var td=tr.nextElementSibling.firstElementChild;
-			if(td.getAttribute("colspan")!=null)
-				var j=Number(td.getAttribute("colspan"));
-			else
-				var j=1;
-			while(j<k && td.nextElementSibling!=null){
-				td=td.nextElementSibling;
-				if(td.getAttribute("colspan")!=null)
-					j=j+Number(td.getAttribute("colspan"));
-				else
-				j++;
-			}
-			if(td.firstElementChild!=null){
-			var olddiv=td.firstElementChild;
-			olddiv.setAttribute('name','divintable'+ olddiv.getAttribute("id"))
-			var newdiv = document.createElement("div");
-			newdiv.setAttribute("class", olddiv.getAttribute("class"));
-			newdiv.innerHTML = olddiv.innerHTML;
+		function addnew(lasting,colspan_need,parentparent,number_of_place,note,id) {
+			var newtr=document.createElement("tr"),
+				newtd=document.createElement("td"),
+				remainder_of_lasting=0;
+				newdiv = document.createElement("div"),
+				flag_of_child=1;
+			
+			newdiv.setAttribute("class", "note_in_calendar "+note);
+			newdiv.innerHTML = note;
 			newdiv.setAttribute("draggable", "true")
-			newdiv.setAttribute("id", olddiv.getAttribute("id"))
-			newdiv.setAttribute("ondragstart", "return dragStartByDWE(event)")
-			newdiv.setAttribute("lasting", olddiv.getAttribute("lasting"))
+			newdiv.setAttribute("id", id)
+			newdiv.setAttribute("ondragstart", "return dragStart(event)")
+			newdiv.setAttribute("lasting", lasting)
 			newdiv.style.backgroundColor = "{{ Model.ColorCalendarNoteBg }}"
 			newdiv.style.border = "1px solid {{ Model.ColorCalendarBd }}"
+			
 			if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
-			newdiv.setAttribute("onclick", "return dragStartByDWEMobile(this)")
-			bodyOfDWE.appendChild(newdiv);
+				newdiv.setAttribute("onclick", "return dragStartMobile(this)")
+			
+			var testelem=parentparent.firstElementChild;
+			
+			for(i=0;testelem.nextElementSibling!=null&&flag_of_child==1;i++){
+				flag_of_child=checkchild(testelem.nextElementSibling, number_of_place, colspan_need, newdiv);
+				testelem=testelem.nextElementSibling;
 			}
-			tr=tr.nextElementSibling;
-		}
-	
-		divWithEntrys.style.visibility='visible';
-		divWithEntrys.style.backgroundColor = "{{ Model.ColorCalendarEntryBg }}"
-		divWithEntrys.style.border = "1px solid {{ Model.ColorCalendarBd }}"
-		if(target.getBoundingClientRect().top - (divWithEntrys.getBoundingClientRect().top - divWithEntrys.getBoundingClientRect().bottom) <document.querySelector('body').getBoundingClientRect().bottom)
-		divWithEntrys.style.top=target.getBoundingClientRect().top +'px';
-		else
-		divWithEntrys.style.top=target.getBoundingClientRect().top - (target.getBoundingClientRect().top - (divWithEntrys.getBoundingClientRect().top - divWithEntrys.getBoundingClientRect().bottom) - document.querySelector('body').getBoundingClientRect().bottom) +'px';
-		if(target.getBoundingClientRect().left - (divWithEntrys.getBoundingClientRect().left - divWithEntrys.getBoundingClientRect().right)<document.querySelector('body').getBoundingClientRect().right)
-		divWithEntrys.style.left=target.getBoundingClientRect().left + 'px';
-		else
-		divWithEntrys.style.left=target.getBoundingClientRect().left -(target.getBoundingClientRect().left - (divWithEntrys.getBoundingClientRect().left - divWithEntrys.getBoundingClientRect().right) - document.querySelector('body').getBoundingClientRect().right ) + 'px';
-	}
-
-	bottons_add[0].onclick= function(){ added(0);}
-	bottons_add[1].onclick= function(){ added(1);}
-	bottons_add[2].onclick= function(){ added(2);}
-	bottons_add[3].onclick= function(){ added(3);}
-	bottons_add[4].onclick= function(){ added(4);}
-	bottons_add[5].onclick= function(){ added(5);}
-	bottons_add[6].onclick= function(){ added(6);}
-	bottons_add[7].onclick= function(){ added(7);}
-	bottons_add[8].onclick= function(){ added(8);}
-	bottons_add[9].onclick= function(){ added(9);}
-	bottons_add[10].onclick= function(){ added(10);}
-	bottons_add[11].onclick= function(){ added(11);}
-	bottons_add[12].onclick= function(){ added(12);}
-	bottons_add[13].onclick= function(){ added(13);}
-	bottons_add[14].onclick= function(){ added(14);}
-	bottons_add[15].onclick= function(){ added(15);}
-	bottons_add[16].onclick= function(){ added(16);}
-	bottons_add[17].onclick= function(){ added(17);}
-	bottons_add[18].onclick= function(){ added(18);}
-	bottons_add[19].onclick= function(){ added(19);}
-	bottons_add[20].onclick= function(){ added(20);}
-	bottons_add[21].onclick= function(){ added(21);}
-	bottons_add[22].onclick= function(){ added(22);}
-	bottons_add[23].onclick= function(){ added(23);}
-	bottons_add[24].onclick= function(){ added(24);}
-	bottons_add[25].onclick= function(){ added(25);}
-	bottons_add[26].onclick= function(){ added(26);}
-	bottons_add[27].onclick= function(){ added(27);}
-	bottons_add[28].onclick= function(){ added(28);}
-	bottons_add[29].onclick= function(){ added(29);}
-	bottons_add[30].onclick= function(){ added(30);}
-	bottons_add[31].onclick= function(){ added(31);}
-	bottons_add[32].onclick= function(){ added(32);}
-	bottons_add[33].onclick= function(){ added(33);}
-	bottons_add[34].onclick= function(){ added(34);}
-	bottons_add[35].onclick= function(){ added(35);}
-	bottons_add[36].onclick= function(){ added(36);}
-	bottons_add[37].onclick= function(){ added(37);}
-	bottons_add[38].onclick= function(){ added(38);}
-	bottons_add[39].onclick= function(){ added(39);}
-	bottons_add[40].onclick= function(){ added(40);}
-	bottons_add[41].onclick= function(){ added(41);}
-	addold(parseFloat(document.querySelector('#calendar2 select#what_event').options[document.querySelector('#calendar2 select#what_event').selectedIndex].value));
-}
-var date=new Date();
-var dateString = date.getFullYear() + '.' + (date.getMonth() < 9 ? '0' + (date.getMonth() + 1) : date.getMonth()+1) + '.' + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate());
-document.querySelector('#calendar2 input#calendar_for_choice').value=dateString;
-Calendar2("calendar2", new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
-go();
-document.querySelector('#calendar2').onchange= function blablabla(){
-Kalendar3();
-}
-function Kalendar3() {
-	var text = document.querySelector('#calendar2 input#calendar_for_choice').value;
-	var y="";
-	var m="";
-	var d="";
-	var k=0;
-	for (var i=0; text.charAt(i)!='.';i++){
-	k++;
-	y+=text.charAt(i);
-	}
-	k++;
-	y=Number(y);
-	for (var i=k; text.charAt(i)!='.';i++){
-	k++;
-	m+=text.charAt(i);
-	}
-	k++;
-	m=Number(m);
-	m--;
-	for (var i=k; text.charAt(i)!='';i++){
-	k++;
-	d+=text.charAt(i);
-	}
-	d=Number(d);
-	Calendar2("calendar2",y, m, d);
-	bottons_add=document.getElementsByClassName('add_new_entry');
-	go();
-}
- document.querySelector('#close').onclick = function() {
-    document.querySelector('#new_entry').style.visibility='hidden';
- };
-  document.querySelector('#close_all').onclick = function() {
-    document.querySelector('#allEntrys').style.visibility='hidden';
- };
-function checkchild(testingtr, place, longest, elementtest){
-	var td=testingtr.firstElementChild;
-	var flag =0;
-	if(Number(td.getAttribute('colspan'))>0) place=place-Number(td.getAttribute('colspan'))+1;
-	for (i=1;i<place&&td.nextElementSibling!=null;i++){
-		td=td.nextElementSibling;
-		if(Number(td.getAttribute('colspan'))>0) place=place-Number(td.getAttribute('colspan'))+1;
-	}
-	for(i=0; i<longest; i++){
-		if(td.childNodes.length&&td.firstElementChild!=elementtest){
-			flag=1;
-			break;
-		}
-		if (td.nextElementSibling!=null){
-			td=td.nextElementSibling;
-		}
-		else{
-			break;
-		}
-	}
-	return flag;
-}
- 
-function giveplace(someplace){
-	var placeinline=(Number(someplace.getAttribute('id'))%100)%7;
-	var table_with_entrys=someplace.parentNode.parentNode.parentNode.nextElementSibling;
-	var tr_in_table_with_entrys =table_with_entrys.firstElementChild.firstElementChild,
-		sometd_in_needtable;
-	if (placeinline==0) placeinline=7;
-	if(tr_in_table_with_entrys.nextElementSibling!=null){
-		sometd_in_needtable=tr_in_table_with_entrys.nextElementSibling.firstElementChild;
-	}
-	else{
-		createTR(tr_in_table_with_entrys);
-		sometd_in_needtable=tr_in_table_with_entrys.nextElementSibling.firstElementChild;
-	}
-		if(Number(sometd_in_needtable.getAttribute('colspan'))>0) placeinline=placeinline-Number(sometd_in_needtable.getAttribute('colspan'))+1;
-		for(i=1;i<placeinline&&sometd_in_needtable.nextElementSibling!=null;i++){
-			sometd_in_needtable=sometd_in_needtable.nextElementSibling;
-			if(Number(sometd_in_needtable.getAttribute('colspan'))>0) placeinline=placeinline-Number(sometd_in_needtable.getAttribute('colspan'))+1;
-		}
-		return sometd_in_needtable;
-}
- 
-function createTR(previousTR){
-	var newtr=document.createElement("tr"),
-		newtd=document.createElement("td");
-	for (i=1;i<8;i++){
-	newtr.appendChild(newtd);
-	var newtd=document.createElement("td");
-	}
-	insertAfter(newtr, previousTR);
-}
-
-function insertAfter(elem, refElem) {
-  var parent = refElem.parentNode;
-  var next = refElem.nextSibling;
-  if (next) {
-    return parent.insertBefore(elem, next);
-  } else {
-    return parent.appendChild(elem);
-  }
-}
-
-function addnew(lasting,colspan_need,parentparent,number_of_place,note,id) {
-    var newtr=document.createElement("tr"),
-		newtd=document.createElement("td"),
-		remainder_of_lasting=0;
-		newdiv = document.createElement("div"),
-		flag_of_child=1;
-	newdiv.setAttribute("class", "note_in_calendar "+note);
-	newdiv.innerHTML = note;
-	newdiv.setAttribute("draggable", "true")
-	newdiv.setAttribute("id", id)
-	newdiv.setAttribute("ondragstart", "return dragStart(event)")
-	newdiv.setAttribute("lasting", lasting)
-  newdiv.style.backgroundColor = "{{ Model.ColorCalendarNoteBg }}"
-  newdiv.style.border = "1px solid {{ Model.ColorCalendarBd }}"
-	if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
-	newdiv.setAttribute("onclick", "return dragStartMobile(this)")
-	var testelem=parentparent.firstElementChild;
-	for(i=0;testelem.nextElementSibling!=null&&flag_of_child==1;i++){
-	flag_of_child=checkchild(testelem.nextElementSibling, number_of_place, colspan_need, newdiv);
-		testelem=testelem.nextElementSibling;
-	}
-	var place_where_insert=testelem.firstElementChild;
-	var need_place_copy=number_of_place;
-	if(Number(place_where_insert.getAttribute('colspan'))>0) need_place_copy=need_place_copy-Number(place_where_insert.getAttribute('colspan'))+1;
-	for(i=1;i<need_place_copy;i++){
-		place_where_insert=place_where_insert.nextElementSibling;
-		if(Number(place_where_insert.getAttribute('colspan'))>0) need_place_copy=need_place_copy-Number(place_where_insert.getAttribute('colspan'))+1;
-	}
-	
-	if (flag_of_child==0){
-		for(i=1; i<colspan_need && place_where_insert.nextElementSibling!=null; i++){
-			place_where_insert.parentNode.removeChild(place_where_insert.nextElementSibling);
-		}
-		if (Number(number_of_place)+Number(colspan_need)-1<7){
-		place_where_insert.setAttribute("colspan", colspan_need)
-		}
-		else{
-		place_where_insert.setAttribute("colspan", Number(colspan_need)-(Number(number_of_place)+Number(colspan_need)-1-7))
-		remainder_of_lasting=(Number(number_of_place)+Number(colspan_need)-1-7);
-		}
-	place_where_insert.appendChild(newdiv);
-	}
-	
-	else{
-		for (i=1;i<Number(number_of_place);i++){
-		newtr.appendChild(newtd)
-		var newtd=document.createElement("td");
-		}
-		if (Number(number_of_place)+Number(colspan_need)-1<7){
-		newtd.setAttribute("colspan", colspan_need)
-		}
-		else{
-		newtd.setAttribute("colspan", Number(colspan_need)-(Number(number_of_place)+Number(colspan_need)-1-7))
-		remainder_of_lasting=(Number(number_of_place)+Number(colspan_need)-1-7);
-		}
-		newtd.appendChild(newdiv);
-		newtr.appendChild(newtd);
-		var newnewtd=document.createElement("td");
-		for (i=Number(number_of_place)+Number(colspan_need);i<=7;i++){
-		newtr.appendChild(newnewtd)
-		var newnewtd=document.createElement("td");
-		}
-		parentparent.appendChild(newtr);
-	}
-	if (remainder_of_lasting>0&&parentparent.parentNode.parentNode.nextElementSibling!=null) addnew(lasting,remainder_of_lasting ,parentparent.parentNode.parentNode.nextElementSibling.firstElementChild.nextElementSibling.firstElementChild,1,note,note);
-	document.querySelector('#new_entry').style.visibility='hidden'
- };
-document.querySelector('#add').onclick = function(){
-		var number_of_pl=1;
-		element=document.getElementById(number_td);
-		for (i=1;element.previousElementSibling!=null;i++){
-		number_of_pl+=1;
-		element=element.previousElementSibling;
-		}
-addnew(document.querySelector('input#lasting').value,document.querySelector('input#lasting').value,parentid,number_of_pl,document.querySelector('.Notes').value,document.querySelector('.Notes').value)
-}
- function dragDropMobile(ev) {
-	var data = document.getElementById(iddragelem);
-	var elements=document.getElementsByName('divintable'+data.getAttribute('id'));
-	if(needdel==1||data.parentNode.parentNode==document.getElementById('allEntrys')){
-	data.parentNode.removeChild(data);
-	data=elements[0];
-	}
-	var need_place=(Number(ev.getAttribute('id'))%100)%7;
-	if (need_place==0) need_place=7;
-	var can_colspan=1;
-	var flag_of_child=1;
-	var how_long=Number(data.getAttribute('lasting'));
-	var place_where_insert=giveplace(ev);
-	var testelem=place_where_insert.parentNode.previousElementSibling,
-		elemforchekfree=data.parentNode.parentNode.firstElementChild;
-	for(i=0;testelem.nextElementSibling!=null&&flag_of_child==1;i++){
-		flag_of_child=checkchild(testelem.nextElementSibling, need_place, how_long, data);
-		testelem=testelem.nextElementSibling;
-	}
-	place_where_insert=testelem.firstElementChild
-	var need_place_copy=need_place;
-	if(Number(place_where_insert.getAttribute('colspan'))>0) need_place_copy=need_place_copy-Number(place_where_insert.getAttribute('colspan'))+1;
-	for(i=1;i<need_place_copy;i++){
-		place_where_insert=place_where_insert.nextElementSibling;
-		if(Number(place_where_insert.getAttribute('colspan'))>0) need_place_copy=need_place_copy-Number(place_where_insert.getAttribute('colspan'))+1;
-	}
-	if (flag_of_child==0){
-		for(i=1; i<how_long && place_where_insert.nextElementSibling!=null; i++){
-			place_where_insert.parentNode.removeChild(place_where_insert.nextElementSibling);
-			can_colspan+=1;
-		}
-	place_where_insert.setAttribute("colspan", can_colspan);
-	place_where_insert.appendChild(data);
-	}
-	else{
-		createTR(place_where_insert.parentNode);
-		var place_in_new_tr=place_where_insert.parentNode.nextElementSibling.firstElementChild;
-		for(i=1;i<need_place;i++){
-		place_in_new_tr=place_in_new_tr.nextElementSibling;
-		}
-		for(i=1; i<how_long && place_in_new_tr.nextElementSibling!=null; i++){
-		place_in_new_tr.parentNode.removeChild(place_in_new_tr.nextElementSibling);
-		can_colspan+=1;
-		}
-	place_in_new_tr.setAttribute("colspan", can_colspan);
-	place_in_new_tr.appendChild(data);
-	}
-	data.style.backgroundColor=' #CCCCCC';
-
-	flag_of_child=0;
-	for(i=0; i<7; i++){
-	if(elemforchekfree.childNodes.length){
-	flag_of_child=1;
-	break;
-	}
-	if (elemforchekfree.nextElementSibling!=null){
-	elemforchekfree=elemforchekfree.nextElementSibling;
-	}
-	else{
-	break;
-	}
-	}
-	if(flag_of_child==0){
-	elemforchekfree.parentNode.parentNode.removeChild(elemforchekfree.parentNode);
-	}
-	var table_drop=document.getElementsByClassName('line_table');
-	for(i=0;i<table_drop.length;i++){
-		table_drop[i].style.zIndex='-10';
-		table_drop[i].style.backgroundColor='white';
-	}
-	if(how_long-can_colspan>0) addnew(data.getAttribute('lasting'),how_long-can_colspan,place_where_insert.parentNode.parentNode.parentNode.parentNode.nextElementSibling.firstElementChild.nextElementSibling.firstElementChild,1,data.innerHTML,data.innerHTML); 
-	needdel=0;
-	return false;
-}
-
-function dragStartMobile(ev) {
-	var table_drop=document.getElementsByClassName('line_table');
-	var drop_elem=document.getElementsByClassName(ev.getAttribute('id'));
-	var how_many_colspan=Number(ev.parentNode.getAttribute('colspan'));
-	var elemforchekfree;
-	for (i=0;i<drop_elem.length;i++){
-		if(drop_elem[i]!=ev && drop_elem[i].parentNode.parentNode!=document.getElementById('allEntrys')){
-			var flag_of_child=0;
-			if (drop_elem[i].parentNode.nextElementSibling!=null){
-			elemforchekfree=drop_elem[i].parentNode.nextElementSibling;
-				for(k=0; k<7; k++){
-					if(elemforchekfree.childNodes.length){
-					flag_of_child=1;
-					break;
-					}
-						if (elemforchekfree.nextElementSibling!=null){
-							elemforchekfree=elemforchekfree.nextElementSibling;
-						}
-						else{
-						break;
-						}
+			
+			var place_where_insert=testelem.firstElementChild;
+			var need_place_copy=number_of_place;
+			
+			if(Number(place_where_insert.getAttribute('colspan'))>0) need_place_copy=need_place_copy-Number(place_where_insert.getAttribute('colspan'))+1;
+				for(i=1;i<need_place_copy;i++){
+					place_where_insert=place_where_insert.nextElementSibling;
+					if(Number(place_where_insert.getAttribute('colspan'))>0) need_place_copy=need_place_copy-Number(place_where_insert.getAttribute('colspan'))+1;
 				}
-			}
-			else{elemforchekfree=drop_elem[i].parentNode;}
-			if(flag_of_child==0){
-				elemforchekfree.parentNode.parentNode.removeChild(elemforchekfree.parentNode);
-				i-=1;
+			
+			if (flag_of_child==0){
+				for(i=1; i<colspan_need && place_where_insert.nextElementSibling!=null; i++){
+					place_where_insert.parentNode.removeChild(place_where_insert.nextElementSibling);
+				}
+				
+				if (Number(number_of_place)+Number(colspan_need)-1<7){
+				place_where_insert.setAttribute("colspan", colspan_need)
+				}
+				else{
+				place_where_insert.setAttribute("colspan", Number(colspan_need)-(Number(number_of_place)+Number(colspan_need)-1-7))
+				remainder_of_lasting=(Number(number_of_place)+Number(colspan_need)-1-7);
+				}
+				
+				place_where_insert.appendChild(newdiv);
 			}
 			else{
-			var newnewtd=document.createElement("td");
-			for(j=0; j<Number(drop_elem[i].parentNode.getAttribute('colspan')); j++){
-			insertAfter(newnewtd, drop_elem[i].parentNode);
-			var newnewtd=document.createElement("td");
-			}
-			drop_elem[i].parentNode.parentNode.removeChild(drop_elem[i].parentNode);
-			i-=1;
-			}
-		}
-	}
-	iddragelem=ev.getAttribute('id');
-	ev.style.backgroundColor ='#CCCCFF';
-	ev.parentNode.setAttribute("colspan", "1");
-	var newnewtd=document.createElement("td");
-	for(i=1; i<how_many_colspan; i++){
-	insertAfter(newnewtd, ev.parentNode);
-	var newnewtd=document.createElement("td");
-	}
-	for(i=0;i<table_drop.length;i++){
-		table_drop[i].style.zIndex='1';
-		table_drop[i].style.backgroundColor='#99CCFF';
-	}
-   return true;
-}
-var needdel=0;
-function dragDrop(ev) {
-	var data = document.getElementById(ev.dataTransfer.getData("Text"));	
-	var elements=document.getElementsByName('divintable'+data.getAttribute('id'));
-	if(needdel==1||data.parentNode.parentNode==document.getElementById('allEntrys')){
-	data.parentNode.removeChild(data);
-	data=elements[0];
-	}
-	var need_place=(Number(ev.target.getAttribute('id'))%100)%7;
-	if (need_place==0) need_place=7;
-	var can_colspan=1;
-	var flag_of_child=1;
-	var how_long=Number(data.getAttribute('lasting'));
-	var place_where_insert=giveplace(ev.target);
-	var testelem=place_where_insert.parentNode.previousElementSibling,
-		elemforchekfree=data.parentNode.parentNode.firstElementChild;
-	for(i=0;testelem.nextElementSibling!=null&&flag_of_child==1;i++){
-		flag_of_child=checkchild(testelem.nextElementSibling, need_place, how_long, data);
-		testelem=testelem.nextElementSibling;
-	}
-	place_where_insert=testelem.firstElementChild
-	var need_place_copy=need_place;
-	if(Number(place_where_insert.getAttribute('colspan'))>0) need_place_copy=need_place_copy-Number(place_where_insert.getAttribute('colspan'))+1;
-	for(i=1;i<need_place_copy;i++){
-		place_where_insert=place_where_insert.nextElementSibling;
-		if(Number(place_where_insert.getAttribute('colspan'))>0) need_place_copy=need_place_copy-Number(place_where_insert.getAttribute('colspan'))+1;
-	}
-	if (flag_of_child==0){
-		for(i=1; i<how_long && place_where_insert.nextElementSibling!=null; i++){
-			place_where_insert.parentNode.removeChild(place_where_insert.nextElementSibling);
-			can_colspan+=1;
-		}
-	place_where_insert.setAttribute("colspan", can_colspan);
-	place_where_insert.appendChild(data);
-	}
-	else{
-		createTR(place_where_insert.parentNode);
-		var place_in_new_tr=place_where_insert.parentNode.nextElementSibling.firstElementChild;
-		for(i=1;i<need_place;i++){
-		place_in_new_tr=place_in_new_tr.nextElementSibling;
-		}
-		for(i=1; i<how_long && place_in_new_tr.nextElementSibling!=null; i++){
-		place_in_new_tr.parentNode.removeChild(place_in_new_tr.nextElementSibling);
-		can_colspan+=1;
-		}
-	place_in_new_tr.setAttribute("colspan", can_colspan);
-	place_in_new_tr.appendChild(data);
-	}
-	flag_of_child=0;
-	for(i=0; i<7; i++){
-	if(elemforchekfree.childNodes.length){
-	flag_of_child=1;
-	break;
-	}
-	if (elemforchekfree.nextElementSibling!=null){
-	elemforchekfree=elemforchekfree.nextElementSibling;
-	}
-	else{
-	break;
-	}
-	}
-	if(flag_of_child==0){
-	elemforchekfree.parentNode.parentNode.removeChild(elemforchekfree.parentNode);
-	}
-	ev.stopPropagation();
-	var table_drop=document.getElementsByClassName('line_table');
-	for(i=0;i<table_drop.length;i++){
-		table_drop[i].style.zIndex='-10';
-	}
-	if(how_long-can_colspan>0) addnew(data.getAttribute('lasting'),how_long-can_colspan,place_where_insert.parentNode.parentNode.parentNode.parentNode.nextElementSibling.firstElementChild.nextElementSibling.firstElementChild,1,data.innerHTML); 
-	needdel=0;
-	return false;
-}
-
-function dragStart(ev) {
-	if(needdel!=1)
-		var dragelem=ev.target;
-	else
-		var dragelem=ev;
-	var table_drop=document.getElementsByClassName('line_table');
-	var drop_elem=document.getElementsByClassName(dragelem.getAttribute('id'));
-	var how_many_colspan=Number(dragelem.parentNode.getAttribute('colspan'));
-	var elemforchekfree;
-	for (i=0;i<drop_elem.length;i++){
-		if(drop_elem[i]!=dragelem && drop_elem[i].parentNode.parentNode!=document.getElementById('allEntrys')){
-			var flag_of_child=0;
-			if (drop_elem[i].parentNode.nextElementSibling!=null){
-			elemforchekfree=drop_elem[i].parentNode.nextElementSibling;
-				for(k=0; k<7; k++){
-					if(elemforchekfree.childNodes.length){
-					flag_of_child=1;
-					break;
-					}
-						if (elemforchekfree.nextElementSibling!=null){
-							elemforchekfree=elemforchekfree.nextElementSibling;
-						}
-						else{
-						break;
-						}
+				for (i=1;i<Number(number_of_place);i++){
+					newtr.appendChild(newtd)
+					var newtd=document.createElement("td");
 				}
+				
+				if (Number(number_of_place)+Number(colspan_need)-1<7){
+					newtd.setAttribute("colspan", colspan_need)
+				}
+				else{
+					newtd.setAttribute("colspan", Number(colspan_need)-(Number(number_of_place)+Number(colspan_need)-1-7))
+					remainder_of_lasting=(Number(number_of_place)+Number(colspan_need)-1-7);
+				}
+				
+				newtd.appendChild(newdiv);
+				newtr.appendChild(newtd);
+				
+				var newnewtd=document.createElement("td");
+				
+				for (i=Number(number_of_place)+Number(colspan_need);i<=7;i++){
+					newtr.appendChild(newnewtd)
+					var newnewtd=document.createElement("td");
+				}
+				parentparent.appendChild(newtr);
 			}
-			else{elemforchekfree=drop_elem[i].parentNode;}
-			if(flag_of_child==0){
-				elemforchekfree.parentNode.parentNode.removeChild(elemforchekfree.parentNode);
-				i-=1;
+			if (remainder_of_lasting>0&&parentparent.parentNode.parentNode.nextElementSibling!=null)
+				addnew(lasting,remainder_of_lasting ,parentparent.parentNode.parentNode.nextElementSibling.firstElementChild.nextElementSibling.firstElementChild,1,note,note);
+			document.querySelector('#new_entry').style.visibility='hidden'
+		 };
+		 
+		document.querySelector('#add').onclick = function(){
+			var number_of_pl=1;
+			element=document.getElementById(number_td);
+			
+			for (i=1;element.previousElementSibling!=null;i++){
+				number_of_pl+=1;
+				element=element.previousElementSibling;
+			}
+			
+			addnew(document.querySelector('input#lasting').value,document.querySelector('input#lasting').value,parentid,number_of_pl,document.querySelector('.Notes').value,document.querySelector('.Notes').value)
+		}
+		
+		function dragDropMobile(ev) {
+			var data = document.getElementById(iddragelem);
+			var elements=document.getElementsByName('divintable'+data.getAttribute('id'));
+			
+			if(needdel==1||data.parentNode.parentNode==document.getElementById('all_entrys')){
+				data.parentNode.removeChild(data);
+				data=elements[0];
+			}
+			
+			var need_place=(Number(ev.getAttribute('id'))%100)%7;
+			
+			if (need_place==0) need_place=7;
+			
+			var can_colspan=1;
+			var flag_of_child=1;
+			var how_long=Number(data.getAttribute('lasting'));
+			var place_where_insert=giveplace(ev);
+			var testelem=place_where_insert.parentNode.previousElementSibling,
+				elemforchekfree=data.parentNode.parentNode.firstElementChild;
+			
+			for(i=0;testelem.nextElementSibling!=null&&flag_of_child==1;i++){
+				flag_of_child=checkchild(testelem.nextElementSibling, need_place, how_long, data);
+				testelem=testelem.nextElementSibling;
+			}
+			
+			place_where_insert=testelem.firstElementChild
+			
+			var need_place_copy=need_place;
+			
+			if(Number(place_where_insert.getAttribute('colspan'))>0) 
+				need_place_copy=need_place_copy-Number(place_where_insert.getAttribute('colspan'))+1;
+			
+			for(i=1;i<need_place_copy;i++){
+				place_where_insert=place_where_insert.nextElementSibling;
+				
+				if(Number(place_where_insert.getAttribute('colspan'))>0) 
+					need_place_copy=need_place_copy-Number(place_where_insert.getAttribute('colspan'))+1;
+			}
+			
+			if (flag_of_child==0){
+				for(i=1; i<how_long && place_where_insert.nextElementSibling!=null; i++){
+					place_where_insert.parentNode.removeChild(place_where_insert.nextElementSibling);
+					can_colspan+=1;
+				}
+				
+				place_where_insert.setAttribute("colspan", can_colspan);
+				place_where_insert.appendChild(data);
 			}
 			else{
-			var newnewtd=document.createElement("td");
-			for(j=0; j<Number(drop_elem[i].parentNode.getAttribute('colspan')); j++){
-			insertAfter(newnewtd, drop_elem[i].parentNode);
-			var newnewtd=document.createElement("td");
+				createTR(place_where_insert.parentNode);
+				
+				var place_in_new_tr=place_where_insert.parentNode.nextElementSibling.firstElementChild;
+				
+				for(i=1;i<need_place;i++){
+					place_in_new_tr=place_in_new_tr.nextElementSibling;
+				}
+				
+				for(i=1; i<how_long && place_in_new_tr.nextElementSibling!=null; i++){
+					place_in_new_tr.parentNode.removeChild(place_in_new_tr.nextElementSibling);
+					can_colspan+=1;
+				}
+			
+				place_in_new_tr.setAttribute("colspan", can_colspan);
+				place_in_new_tr.appendChild(data);
 			}
-			drop_elem[i].parentNode.parentNode.removeChild(drop_elem[i].parentNode);
-			i-=1;
+			
+			data.style.backgroundColor=' #CCCCCC';
+			flag_of_child=0;
+			
+			for(i=0; i<7; i++){
+				if(elemforchekfree.childNodes.length){
+					flag_of_child=1;
+					break;
+				}
+			
+				if (elemforchekfree.nextElementSibling!=null){
+					elemforchekfree=elemforchekfree.nextElementSibling;
+				}
+				else{
+					break;
+				}
 			}
+			
+			if(flag_of_child==0){
+				elemforchekfree.parentNode.parentNode.removeChild(elemforchekfree.parentNode);
+			}
+			
+			var table_drop=document.getElementsByClassName('line_table');
+			for(i=0;i<table_drop.length;i++){
+				table_drop[i].style.zIndex='-10';
+				table_drop[i].style.backgroundColor='white';
+			}
+			
+			if(how_long-can_colspan>0) 
+				addnew(data.getAttribute('lasting'),how_long-can_colspan,place_where_insert.parentNode.parentNode.parentNode.parentNode.nextElementSibling.firstElementChild.nextElementSibling.firstElementChild,1,data.innerHTML,data.innerHTML); 
+			needdel=0;
+			return false;
 		}
-	}
-	if(needdel!=1){
-	ev.dataTransfer.effectAllowed='move';
-	ev.dataTransfer.setData("Text", dragelem.getAttribute('id'));
-	}
-	dragelem.parentNode.setAttribute("colspan", "1");
-	var newnewtd=document.createElement("td");
-	for(i=1; i<how_many_colspan; i++){
-	insertAfter(newnewtd, dragelem.parentNode);
-	var newnewtd=document.createElement("td");
-	}
-	for(i=0;i<table_drop.length;i++){
-		table_drop[i].style.zIndex='1';
-	}
-   return true;
-}
-function dragEnter(ev) {
-   event.preventDefault();
-   return true;
-}
-function dragOver(ev) {
-    event.preventDefault();
-}
 
-function dragStartByDWE(ev){
-needdel=1;
-ev.dataTransfer.effectAllowed='move';
-ev.dataTransfer.setData("Text", ev.target.getAttribute('id'));
-var elements=document.getElementsByName('divintable'+ ev.target.getAttribute('id'));
-var dragelem=elements[0];
-dragStart(dragelem);
-return true;
-}
+		function dragStartMobile(ev) {
+			var table_drop=document.getElementsByClassName('line_table');
+			var drop_elem=document.getElementsByClassName(ev.getAttribute('id'));
+			var how_many_colspan=Number(ev.parentNode.getAttribute('colspan'));
+			var elemforchekfree;
+			
+			for (i=0;i<drop_elem.length;i++){
+				if(drop_elem[i]!=ev && drop_elem[i].parentNode.parentNode!=document.getElementById('all_entrys')){
+					var flag_of_child=0;
+					
+					if (drop_elem[i].parentNode.nextElementSibling!=null){
+					elemforchekfree=drop_elem[i].parentNode.nextElementSibling;
+						
+						for(k=0; k<7; k++){
+							if(elemforchekfree.childNodes.length){
+								flag_of_child=1;
+								break;
+							}
+							
+							if (elemforchekfree.nextElementSibling!=null){
+								elemforchekfree=elemforchekfree.nextElementSibling;
+							}
+							else{
+								break;
+							}
+						}
+					}
+					else{
+						elemforchekfree=drop_elem[i].parentNode;
+					}
+					
+					if(flag_of_child==0){
+						elemforchekfree.parentNode.parentNode.removeChild(elemforchekfree.parentNode);
+						i-=1;
+					}
+					else{
+						var newnewtd=document.createElement("td");
+						
+						for(j=0; j<Number(drop_elem[i].parentNode.getAttribute('colspan')); j++){
+							insertAfter(newnewtd, drop_elem[i].parentNode);
+							var newnewtd=document.createElement("td");
+						}
+						
+						drop_elem[i].parentNode.parentNode.removeChild(drop_elem[i].parentNode);
+						i-=1;
+					}
+				}
+			}
+			
+			iddragelem=ev.getAttribute('id');
+			ev.style.backgroundColor ='#CCCCFF';
+			ev.parentNode.setAttribute("colspan", "1");
+			var newnewtd=document.createElement("td");
+			
+			for(i=1; i<how_many_colspan; i++){
+				insertAfter(newnewtd, ev.parentNode);
+				var newnewtd=document.createElement("td");
+			}
+			
+			for(i=0;i<table_drop.length;i++){
+				table_drop[i].style.zIndex='1';
+				table_drop[i].style.backgroundColor='#99CCFF';
+			}
+		   return true;
+		}
+		
+		var needdel=0;
+		
+		function dragDrop(ev) {
+			var data = document.getElementById(ev.dataTransfer.getData("Text"));	
+			var elements=document.getElementsByName('divintable'+data.getAttribute('id'));
+			
+			if(needdel==1||data.parentNode.parentNode==document.getElementById('all_entrys')){
+				data.parentNode.removeChild(data);
+				data=elements[0];
+			}
+			
+			var need_place=(Number(ev.target.getAttribute('id'))%100)%7;
+			
+			if (need_place==0) 
+				need_place=7;
+			
+			var can_colspan=1;
+			var flag_of_child=1;
+			var how_long=Number(data.getAttribute('lasting'));
+			var place_where_insert=giveplace(ev.target);
+			var testelem=place_where_insert.parentNode.previousElementSibling,
+				elemforchekfree=data.parentNode.parentNode.firstElementChild;
+			
+			for(i=0;testelem.nextElementSibling!=null&&flag_of_child==1;i++){
+				flag_of_child=checkchild(testelem.nextElementSibling, need_place, how_long, data);
+				testelem=testelem.nextElementSibling;
+			}
+			
+			place_where_insert=testelem.firstElementChild
+			
+			var need_place_copy=need_place;
+			
+			if(Number(place_where_insert.getAttribute('colspan'))>0) 
+				need_place_copy=need_place_copy-Number(place_where_insert.getAttribute('colspan'))+1;
+			
+			for(i=1;i<need_place_copy;i++){
+				place_where_insert=place_where_insert.nextElementSibling;
+				if(Number(place_where_insert.getAttribute('colspan'))>0) need_place_copy=need_place_copy-Number(place_where_insert.getAttribute('colspan'))+1;
+			}
+			
+			if (flag_of_child==0){
+				for(i=1; i<how_long && place_where_insert.nextElementSibling!=null; i++){
+					place_where_insert.parentNode.removeChild(place_where_insert.nextElementSibling);
+					can_colspan+=1;
+				}
+			
+				place_where_insert.setAttribute("colspan", can_colspan);
+				place_where_insert.appendChild(data);
+			}
+			else{
+				createTR(place_where_insert.parentNode);
+				
+				var place_in_new_tr=place_where_insert.parentNode.nextElementSibling.firstElementChild;
+				
+				for(i=1;i<need_place;i++){
+					place_in_new_tr=place_in_new_tr.nextElementSibling;
+				}
+				
+				for(i=1; i<how_long && place_in_new_tr.nextElementSibling!=null; i++){
+					place_in_new_tr.parentNode.removeChild(place_in_new_tr.nextElementSibling);
+					can_colspan+=1;
+				}
+				
+				place_in_new_tr.setAttribute("colspan", can_colspan);
+				place_in_new_tr.appendChild(data);
+			}
+			
+			flag_of_child=0;
+			
+			for(i=0; i<7; i++){
+				if(elemforchekfree.childNodes.length){
+					flag_of_child=1;
+					break;
+				}
+				
+				if (elemforchekfree.nextElementSibling!=null){
+					elemforchekfree=elemforchekfree.nextElementSibling;
+				}
+				else{
+					break;
+				}
+			}
+			
+			if(flag_of_child==0){
+				elemforchekfree.parentNode.parentNode.removeChild(elemforchekfree.parentNode);
+			}
+			
+			ev.stopPropagation();
+			
+			var table_drop=document.getElementsByClassName('line_table');
+			
+			for(i=0;i<table_drop.length;i++){
+				table_drop[i].style.zIndex='-10';
+			}
+			
+			if(how_long-can_colspan>0) 
+				addnew(data.getAttribute('lasting'),how_long-can_colspan,place_where_insert.parentNode.parentNode.parentNode.parentNode.nextElementSibling.firstElementChild.nextElementSibling.firstElementChild,1,data.innerHTML); 
+			
+			needdel=0;
+			return false;
+		}
 
-function dragStartByDWEMobile(ev) {
-needdel=1;
-ev.style.backgroundColor ='#CCCCFF';
-var elements=document.getElementsByName('divintable'+ ev.getAttribute('id'));
-var dragelem=elements[0];
-dragStartMobile(dragelem);
-return true;
-}
-</script>
-
-
-
-<script>
-function getObj(objID)
-{
-    if (document.getElementById) {return document.getElementById(objID);}
-    else if (document.all) {return document.all[objID];}
-    else if (document.layers) {return document.layers[objID];}
-}
-
-function checkClick(e) {
-	e?evt=e:evt=event;
-	CSE=evt.target?evt.target:evt.srcElement;
-	if (CSE.tagName!='SPAN')
-	if (getObj('fc'))
-		if (!isChild(CSE,getObj('fc')))
-			getObj('fc').style.display='none';
-}
-
-function isChild(s,d) {
-	while(s) {
-		if (s==d)
+		function dragStart(ev) {
+			if(needdel!=1)
+				var dragelem=ev.target;
+			else
+				var dragelem=ev;
+			
+			var table_drop=document.getElementsByClassName('line_table');
+			var drop_elem=document.getElementsByClassName(dragelem.getAttribute('id'));
+			var how_many_colspan=Number(dragelem.parentNode.getAttribute('colspan'));
+			var elemforchekfree;
+			
+			for (i=0;i<drop_elem.length;i++){
+				if(drop_elem[i]!=dragelem && drop_elem[i].parentNode.parentNode!=document.getElementById('all_entrys')){
+					
+					var flag_of_child=0;
+					
+					if (drop_elem[i].parentNode.nextElementSibling!=null){
+						elemforchekfree=drop_elem[i].parentNode.nextElementSibling;
+						
+						for(k=0; k<7; k++){
+							if(elemforchekfree.childNodes.length){
+								flag_of_child=1;
+								break;
+							}
+							
+							if (elemforchekfree.nextElementSibling!=null){
+									elemforchekfree=elemforchekfree.nextElementSibling;
+							}
+							else{
+								break;
+							}
+						}
+					}
+					else{
+						elemforchekfree=drop_elem[i].parentNode;
+					}
+					
+					if(flag_of_child==0){
+						elemforchekfree.parentNode.parentNode.removeChild(elemforchekfree.parentNode);
+						i-=1;
+					}
+					else{
+						var newnewtd=document.createElement("td");
+						
+						for(j=0; j<Number(drop_elem[i].parentNode.getAttribute('colspan')); j++){
+							insertAfter(newnewtd, drop_elem[i].parentNode);
+							var newnewtd=document.createElement("td");
+						}
+						
+						drop_elem[i].parentNode.parentNode.removeChild(drop_elem[i].parentNode);
+						i-=1;
+					}
+				}
+			}
+			
+			if(needdel!=1){
+				ev.dataTransfer.effectAllowed='move';
+				ev.dataTransfer.setData("Text", dragelem.getAttribute('id'));
+			}
+			
+			dragelem.parentNode.setAttribute("colspan", "1");
+			
+			var newnewtd=document.createElement("td");
+			
+			for(i=1; i<how_many_colspan; i++){
+				insertAfter(newnewtd, dragelem.parentNode);
+				var newnewtd=document.createElement("td");
+			}
+			
+			for(i=0;i<table_drop.length;i++){
+				table_drop[i].style.zIndex='1';
+			}
+			
 			return true;
-		s=s.parentNode;
-	}
-	return false;
-}
-
-function Left(obj)
-{
-	var curleft = 0;
-	if (obj.offsetParent)
-	{
-		while (obj.offsetParent)
-		{
-			curleft += obj.offsetLeft
-			obj = obj.offsetParent;
 		}
-	}
-	else if (obj.x)
-		curleft += obj.x;
-	return curleft;
-}
-
-function Top(obj)
-{
-	var curtop = 0;
-	if (obj.offsetParent)
-	{
-		while (obj.offsetParent)
-		{
-			curtop += obj.offsetTop
-			obj = obj.offsetParent;
+		
+		function dragEnter(ev) {
+		   event.preventDefault();
+		   return true;
 		}
-	}
-	else if (obj.y)
-		curtop += obj.y;
-	return curtop;
-}
+		
+		function dragOver(ev) {
+			event.preventDefault();
+		}
 
-// Calendar script
-var now = new Date;
-var sccd=now.getDate();
-var sccm=now.getMonth();
-var sccy=now.getFullYear();
-var ccm=now.getMonth();
-var ccy=now.getFullYear();
+		function dragStartByDWE(ev){
+			needdel=1;
+			ev.dataTransfer.effectAllowed='move';
+			ev.dataTransfer.setData("Text", ev.target.getAttribute('id'));
+			
+			var elements=document.getElementsByName('divintable'+ ev.target.getAttribute('id'));
+			var dragelem=elements[0];
+			
+			dragStart(dragelem);
+			return true;
+		}
 
-// For current selected date
-var selectedd, selectedm, selectedy;
-
-document.write('<table id="fc" style="position:absolute;border-collapse:collapse;background:#FFFFFF;border:1px solid #FFD088;display:none;-moz-user-select:none;-khtml-user-select:none;user-select:none;" cellpadding="2">');
-document.write('<tr style="font:bold 13px Arial" onselectstart="return false"><td style="cursor:pointer;font-size:15px" onclick="upmonth(-1)">&laquo;</td><td colspan="5" id="mns" align="center"></td><td align="right" style="cursor:pointer;font-size:15px" onclick="upmonth(1)">&raquo;</td></tr>');
-document.write('<tr style="background:white;font:12px Arial;color:black"><td align=center>П</td><td align=center>В</td><td align=center>С</td><td align=center>Ч</td><td align=center>П</td><td align=center>С</td><td align=center>В</td></tr>');
-for(var kk=1;kk<=6;kk++) {
-	document.write('<tr>');
-	for(var tt=1;tt<=7;tt++) {
-		num=7 * (kk-1) - (-tt);
-		document.write('<td id="cv' + num + '" style="width:18px;height:18px">&nbsp;</td>');
-	}
-	document.write('</tr>');
-}
-document.write('</table>');
-
-document.all?document.attachEvent('onclick',checkClick):document.addEventListener('click',checkClick,false);
+		function dragStartByDWEMobile(ev) {
+			needdel=1;
+			ev.style.backgroundColor ='#CCCCFF';
+			
+			var elements=document.getElementsByName('divintable'+ ev.getAttribute('id'));
+			var dragelem=elements[0];
+			
+			dragStartMobile(dragelem);
+			return true;
+		}
+		
+		</script>
 
 
 
+		<script>
+		function getObj(objID)
+		{
+			if (document.getElementById) {return document.getElementById(objID);}
+			else if (document.all) {return document.all[objID];}
+			else if (document.layers) {return document.layers[objID];}
+		}
 
-var updobj;
-function lcs(ielem) {
-	updobj=ielem;
-	getObj('fc').style.left=Left(ielem)+'px';
-	getObj('fc').style.top=Top(ielem)+ielem.offsetHeight+'px';
-	getObj('fc').style.display='';
+		function checkClick(e) {
+			e?evt=e:evt=event;
+			CSE=evt.target?evt.target:evt.srcElement;
+			if (CSE.tagName!='SPAN')
+				if (getObj('fc'))
+					if (!isChild(CSE,getObj('fc')))
+						getObj('fc').style.display='none';
+		}
 
-	// First check date is valid
-	curdt=ielem.value;
-	curdtarr=curdt.split('-');
-	isdt=true;
-	for(var k=0;k<curdtarr.length;k++) {
-		if (isNaN(curdtarr[k]))
-			isdt=false;
-	}
-	if (isdt&(curdtarr.length==3)) {
-		ccm=curdtarr[1]-1;
-		ccy=curdtarr[2];
+		function isChild(s,d) {
+			while(s) {
+				if (s==d)
+					return true;
+				s=s.parentNode;
+			}
+			return false;
+		}
 
-		selectedd=parseInt ( curdtarr[0], 10 );
-		selectedm=parseInt ( curdtarr[1]-1, 10 );
-		selectedy=parseInt ( curdtarr[2], 10 );
-
-		prepcalendar(curdtarr[0],curdtarr[1]-1,curdtarr[2]);
-	}
-
-}
-
-function evtTgt(e){
-	var el;
-	if(e.target)el=e.target;
-	else if(e.srcElement)el=e.srcElement;
-	if(el.nodeType==3)el=el.parentNode; // defeat Safari bug
-	return el;
-}
-function EvtObj(e){if(!e)e=window.event;return e;}
-function cs_over(e) {
-	evtTgt(EvtObj(e)).style.background='#FFEBCC';
-}
-function cs_out(e) {
-	evtTgt(EvtObj(e)).style.background='#FFFFFF';
-}
-function cs_click(e) {
-	updobj.value=calvalarr[evtTgt(EvtObj(e)).id.substring(2,evtTgt(EvtObj(e)).id.length)];
-	getObj('fc').style.display='none';
-	Kalendar3();
-}
-
-var mn=new Array('Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентрябрь','Октябрь','Ноябрь','Декабрь');
-var mnn=new Array('31','28','31','30','31','30','31','31','30','31','30','31');
-var mnl=new Array('31','29','31','30','31','30','31','31','30','31','30','31');
-var calvalarr=new Array(42);
-
-function f_cps(obj) {
-	obj.style.background='#FFFFFF';
-	obj.style.font='10px Arial';
-	obj.style.color='#333333';
-	obj.style.textAlign='center';
-	obj.style.textDecoration='none';
-	obj.style.border='1px solid #FFD088';//'1px solid #606060';
-	obj.style.cursor='pointer';
-}
-
-function f_cpps(obj) {
-	obj.style.background='#C4D3EA';
-	obj.style.font='10px Arial';
-	obj.style.color='#FF9900';
-	obj.style.textAlign='center';
-	obj.style.textDecoration='line-through';
-	obj.style.border='1px solid #6487AE';
-	obj.style.cursor='default';
-}
-
-function f_hds(obj) {
-	obj.style.background='#FFF799';
-	obj.style.font='bold 10px Arial';
-	obj.style.color='#333333';
-	obj.style.textAlign='center';
-	obj.style.border='1px solid #6487AE';
-	obj.style.cursor='pointer';
-}
-
-// day selected
-function prepcalendar(hd,cm,cy) {
-	now=new Date();
-	sd=now.getDate();
-	td=new Date();
-	td.setDate(1);
-	td.setFullYear(cy);
-	td.setMonth(cm);
-	cd=td.getDay();
-	if (cd==0)cd=6; else cd--;
-	getObj('mns').innerHTML=mn[cm]+'&nbsp;<span style="cursor:pointer" onclick="upmonth(-12)">&lt;</span>'+cy+'<span style="cursor:pointer" onclick="upmonth(12)">&gt;</span>';
-	marr=((cy%4)==0)?mnl:mnn;
-	for(var d=1;d<=42;d++) {
-		cv=getObj('cv'+parseInt(d));
-		f_cps(cv);
-		if ((d >= (cd -(-1)))&&(d<=cd-(-marr[cm]))) {
-			dip=((d-cd < sd)&&(cm==sccm)&&(cy==sccy));
-			htd=((hd!='')&&(d-cd==hd));
-
-			cv.onmouseover=cs_over;
-			cv.onmouseout=cs_out;
-			cv.onclick=cs_click;
-
-			// if today
-			if (sccm == cm && sccd == (d-cd) && sccy == cy)
-				cv.style.color='#FF9900';
-
-			// if selected date
-			if (cm == selectedm && cy == selectedy && selectedd == (d-cd) )
+		function Left(obj)
+		{
+			var curleft = 0;
+			
+			if (obj.offsetParent)
 			{
-				cv.style.background='#FFEBCC';
-				//cv.style.color='#e0d0c0';
-				//cv.style.fontSize='1.1em';
-				//cv.style.fontStyle='italic';
-				//cv.style.fontWeight='bold';
-
-				// when use style.background
-				cv.onmouseout=null;
+				while (obj.offsetParent)
+				{
+					curleft += obj.offsetLeft
+					obj = obj.offsetParent;
+				}
 			}
-
-			cv.innerHTML=d-cd;
-
-			calvalarr[d]=addnull(d-cd,cm-(-1),cy);
+			else if (obj.x)
+				curleft += obj.x;
+			return curleft;
 		}
-		else {
-			cv.innerHTML='&nbsp;';
-			cv.onmouseover=null;
-			cv.onmouseout=null;
-			cv.onclick=null;
-			cv.style.cursor='default';
+
+		function Top(obj)
+		{
+			var curtop = 0;
+			
+			if (obj.offsetParent)
+			{
+				while (obj.offsetParent)
+				{
+					curtop += obj.offsetTop
+					obj = obj.offsetParent;
+				}
 			}
-	}
-}
+			else if (obj.y)
+				curtop += obj.y;
+			return curtop;
+		}
 
-prepcalendar('',ccm,ccy);
+		// Calendar script
+		var now = new Date;
+		var sccd=now.getDate();
+		var sccm=now.getMonth();
+		var sccy=now.getFullYear();
+		var ccm=now.getMonth();
+		var ccy=now.getFullYear();
 
-function upmonth(s)
-{
-	marr=((ccy%4)==0)?mnl:mnn;
+		// For current selected date
+		var selectedd, selectedm, selectedy;
 
-	ccm+=s;
-	if (ccm>=12)
-	{
-		ccm-=12;
-		ccy++;
-	}
-	else if(ccm<0)
-	{
-		ccm+=12;
-		ccy--;
-	}
-	prepcalendar('',ccm,ccy);
-}
+		document.write('<table id="fc" style="position:absolute;border-collapse:collapse;background:#FFFFFF;border:1px solid #FFD088;display:none;-moz-user-select:none;-khtml-user-select:none;user-select:none;" cellpadding="2">');
+		document.write('<tr style="font:bold 13px Arial" onselectstart="return false"><td style="cursor:pointer;font-size:15px" onclick="upmonth(-1)">&laquo;</td><td colspan="5" id="mns" align="center"></td><td align="right" style="cursor:pointer;font-size:15px" onclick="upmonth(1)">&raquo;</td></tr>');
+		document.write('<tr style="background:white;font:12px Arial;color:black"><td align=center>П</td><td align=center>В</td><td align=center>С</td><td align=center>Ч</td><td align=center>П</td><td align=center>С</td><td align=center>В</td></tr>');
+		for(var kk=1;kk<=6;kk++) {
+			document.write('<tr>');
+			for(var tt=1;tt<=7;tt++) {
+				num=7 * (kk-1) - (-tt);
+				document.write('<td id="cv' + num + '" style="width:18px;height:18px">&nbsp;</td>');
+			}
+			document.write('</tr>');
+		}
+		document.write('</table>');
 
-function today() {
-	updobj.value=addnull(now.getDate(),now.getMonth()+1,now.getFullYear());
-	getObj('fc').style.display='none';
-	prepcalendar('',sccm,sccy);
-}
+		document.all?document.attachEvent('onclick',checkClick):document.addEventListener('click',checkClick,false);
 
-function addnull(d,m,y)
-{
-	var d0='',m0='';
-	if (d<10)d0='0';
-	if (m<10)m0='0';
 
-	return ''+y+'.'+m0+m+'.'+d0+d;
-}
-</script>
+
+
+		var updobj;
+		function lcs(ielem) {
+			updobj=ielem;
+			getObj('fc').style.left=Left(ielem)+'px';
+			getObj('fc').style.top=Top(ielem)+ielem.offsetHeight+'px';
+			getObj('fc').style.display='';
+
+			// First check date is valid
+			curdt=ielem.value;
+			curdtarr=curdt.split('-');
+			isdt=true;
+			for(var k=0;k<curdtarr.length;k++) {
+				if (isNaN(curdtarr[k]))
+					isdt=false;
+			}
+			if (isdt&(curdtarr.length==3)) {
+				ccm=curdtarr[1]-1;
+				ccy=curdtarr[2];
+
+				selectedd=parseInt ( curdtarr[0], 10 );
+				selectedm=parseInt ( curdtarr[1]-1, 10 );
+				selectedy=parseInt ( curdtarr[2], 10 );
+
+				prepcalendar(curdtarr[0],curdtarr[1]-1,curdtarr[2]);
+			}
+
+		}
+
+		function evtTgt(e){
+			var el;
+			if(e.target)el=e.target;
+			else if(e.srcElement)el=e.srcElement;
+			if(el.nodeType==3)el=el.parentNode; // defeat Safari bug
+			return el;
+		}
+		function EvtObj(e){if(!e)e=window.event;return e;}
+		
+		function cs_over(e) {
+			evtTgt(EvtObj(e)).style.background='#FFEBCC';
+		}
+		
+		function cs_out(e) {
+			evtTgt(EvtObj(e)).style.background='#FFFFFF';
+		}
+		
+		function cs_click(e) {
+			updobj.value=calvalarr[evtTgt(EvtObj(e)).id.substring(2,evtTgt(EvtObj(e)).id.length)];
+			getObj('fc').style.display='none';
+			Kalendar3();
+		}
+
+		var mn=new Array('Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентрябрь','Октябрь','Ноябрь','Декабрь');
+		var mnn=new Array('31','28','31','30','31','30','31','31','30','31','30','31');
+		var mnl=new Array('31','29','31','30','31','30','31','31','30','31','30','31');
+		var calvalarr=new Array(42);
+
+		function f_cps(obj) {
+			obj.style.background='#FFFFFF';
+			obj.style.font='10px Arial';
+			obj.style.color='#333333';
+			obj.style.textAlign='center';
+			obj.style.textDecoration='none';
+			obj.style.border='1px solid #FFD088';//'1px solid #606060';
+			obj.style.cursor='pointer';
+		}
+
+		function f_cpps(obj) {
+			obj.style.background='#C4D3EA';
+			obj.style.font='10px Arial';
+			obj.style.color='#FF9900';
+			obj.style.textAlign='center';
+			obj.style.textDecoration='line-through';
+			obj.style.border='1px solid #6487AE';
+			obj.style.cursor='default';
+		}
+
+		function f_hds(obj) {
+			obj.style.background='#FFF799';
+			obj.style.font='bold 10px Arial';
+			obj.style.color='#333333';
+			obj.style.textAlign='center';
+			obj.style.border='1px solid #6487AE';
+			obj.style.cursor='pointer';
+		}
+
+		// day selected
+		function prepcalendar(hd,cm,cy) {
+			now=new Date();
+			sd=now.getDate();
+			td=new Date();
+			td.setDate(1);
+			td.setFullYear(cy);
+			td.setMonth(cm);
+			cd=td.getDay();
+			if (cd==0)cd=6; else cd--;
+			getObj('mns').innerHTML=mn[cm]+'&nbsp;<span style="cursor:pointer" onclick="upmonth(-12)">&lt;</span>'+cy+'<span style="cursor:pointer" onclick="upmonth(12)">&gt;</span>';
+			marr=((cy%4)==0)?mnl:mnn;
+			for(var d=1;d<=42;d++) {
+				cv=getObj('cv'+parseInt(d));
+				f_cps(cv);
+				
+				if ((d >= (cd -(-1)))&&(d<=cd-(-marr[cm]))) {
+					dip=((d-cd < sd)&&(cm==sccm)&&(cy==sccy));
+					htd=((hd!='')&&(d-cd==hd));
+
+					cv.onmouseover=cs_over;
+					cv.onmouseout=cs_out;
+					cv.onclick=cs_click;
+
+					// if today
+					if (sccm == cm && sccd == (d-cd) && sccy == cy)
+						cv.style.color='#FF9900';
+
+					// if selected date
+					if (cm == selectedm && cy == selectedy && selectedd == (d-cd) )
+					{
+						cv.style.background='#FFEBCC';
+						cv.onmouseout=null;
+					}
+
+					cv.innerHTML=d-cd;
+
+					calvalarr[d]=addnull(d-cd,cm-(-1),cy);
+				}
+				else {
+					cv.innerHTML='&nbsp;';
+					cv.onmouseover=null;
+					cv.onmouseout=null;
+					cv.onclick=null;
+					cv.style.cursor='default';
+					}
+			}
+		}
+
+		prepcalendar('',ccm,ccy);
+
+		function upmonth(s)
+		{
+			marr=((ccy%4)==0)?mnl:mnn;
+
+			ccm+=s;
+			if (ccm>=12)
+			{
+				ccm-=12;
+				ccy++;
+			}
+			else if(ccm<0)
+			{
+				ccm+=12;
+				ccy--;
+			}
+			prepcalendar('',ccm,ccy);
+		}
+
+		function today() {
+			updobj.value=addnull(now.getDate(),now.getMonth()+1,now.getFullYear());
+			getObj('fc').style.display='none';
+			prepcalendar('',sccm,sccy);
+		}
+
+		function addnull(d,m,y)
+		{
+			var d0='',m0='';
+			if (d<10)d0='0';
+			if (m<10)m0='0';
+
+			return ''+y+'.'+m0+m+'.'+d0+d;
+		}
+	</script>
 
 {% endblock %}

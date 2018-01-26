@@ -282,7 +282,7 @@ div.topsector {
 
 .calendar_body {
     position: absolute;
-    top: 40px;
+    top: 50px;
     bottom: 0px;
     left: 0px;
     width: 100%;
@@ -399,12 +399,22 @@ div.topsector {
     margin-left: 10px;
 }
 
-#allEntrys {
+#all_entrys {
     position: absolute;
     height: 200px;
     width: 150px;
     visibility: hidden;
     z-index: 200;
+}
+
+.close_smt {
+    float: right;
+    margin-right: 10px;
+    margin-top: 5px
+}
+
+.marg {
+    margin: 10px;
 }
 
 .DWEbody {
