@@ -246,10 +246,7 @@ namespace FunWithFlags.FunApp.Views
             var redirectName = parsedQuery.Attributes.GetStringWithDefault(null, "ParentView");
             var redirectUv = ctx.Database.UserViews.Single(cuv => cuv.Name == redirectName);
             string gP= getPars.recId.ToString();
-            //List<string> gl;
-            //gP = getPars.recId.ToString();
             string [] recs = gP.Split(new Char[] { ';' });
-            //recs = gP.Split(new Char[] { ';' });
             var pPars = new Dictionary<string, string>();
             foreach (var k in (DynamicDictionary)postPars)
             {

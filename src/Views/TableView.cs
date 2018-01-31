@@ -70,9 +70,18 @@ namespace FunWithFlags.FunApp.Views
         public ViewResponse Post(Context ctx, ICatalog catalog, UserView uv, dynamic getPars, dynamic postPars)
         {
             var parsedQuery = ViewResolver.ParseQuery(uv);
-            //var redirectName = parsedQuery.Attributes.GetStringWithDefault(null, "ParentView");
-            //var redirectUv = ctx.Database.UserViews.Single(cuv => cuv.Name == redirectName);
-           throw new NotImplementedException("TableView Post is not implemented");
+            var pPars = new Dictionary<string, string>();
+            string updId= getPars["recId"].Value;
+            foreach (var k in (DynamicDictionary)getPars)
+            {
+                if (k != "recId")
+                {
+                    pPars.Add(k, getPars[k]);
+                }                  
+            };
+            ctx.Resolver.UpdateEntry(parsedQuery, Int32.Parse(updId), pPars);
+            return new ViewRedirect { Url = $"~/uv/{uv.Id}" };
+            //throw new NotImplementedException("TableView Post is not implemented");
         }       
     }
 }
