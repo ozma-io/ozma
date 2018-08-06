@@ -354,8 +354,10 @@
 					
 					<!--url_of_change="/uv/xx/recId="+this.parentNode.parentNode.getAttribute('id_entry')+"&"+field.innerHTML+"="+this.value;-->
 					<!--url_of_change="/uv/44?recId="+this.parentNode.parentNode.getAttribute('id_entry')+"&"+field.innerHTML+"="+this.value;-->
-					<!-- correct url for example: field name on english from base (entity: records)->
-					url_of_change="/uv/44?recId="+this.parentNode.parentNode.getAttribute('id_entry')+"&"+"Text"+"="+this.value;
+					<!-- correct url for example: field name on english from base (entity: records)-->
+					url_of_change= window.location.pathname +"?recId="+this.parentNode.parentNode.getAttribute('id_entry')+"&"+"Text"+"="+this.value;
+					
+					var current_url=window.location.protocol + "//" + window.location.host  + window.location.pathname;
 					
 					var a = document.createElement('a');
 					a.href = url_of_change;
@@ -364,12 +366,11 @@
 					
 					form.appendChild(a);
 					form.method = "POST";
-					form.action = url_of_change;
 					document.body.appendChild(form);
 					form.submit();
 					document.body.removeChild(form);
 					this.parentNode.removeChild(this);
-
+					window.location.href = current_url
 				};
 			clicktd();
 			}
