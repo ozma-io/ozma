@@ -55,6 +55,7 @@ ul.menu > li {
 ul.menu > li:hover > ul.submenu {
     display: flex;
     flex-direction: column;
+    left: -1px;
 }
 
 ul.menu > li {
