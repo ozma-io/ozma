@@ -211,7 +211,6 @@ td.open_form {
     overflow:hidden; 
     min-width:14px;
     max-width: 14px;
-    cursor: pointer;
 }
 
 .empty_th {

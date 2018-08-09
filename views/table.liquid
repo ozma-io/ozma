@@ -34,7 +34,7 @@
 									<input class="custom_checkbox" type="checkbox" />
 								</td>
 								<td class='open_form'>
-									<a href='{{ line[1].Url }}'><img src="{{ "~/assets/openform.png" | url }}" style="width:100%;"></a>
+									<a href='{{ line[1].Url }}' style="cursor:pointer"><img src="{{ "~/assets/openform.png" | url }}" style="width:100%;"></a>
 								</td>
 							   {% for cell in line %}
 									 <td class="editable" id_entry="{{cell.Id}}" data-type="text"   style="cursor:pointer ; width:{{ cell.Width }} ; min-width:{{ cell.Width }} ; max-width:{{ cell.Width }} ; height:{{ cell.Height }} ; min-height:{{ cell.Height }} ; max-height:{{ cell.Height }}"><div style="height:{{ cell.Height }} ; min-height:{{ cell.Height }} ; max-height:{{ cell.Height }} ; overflow:hidden "><div style="height:100% ; column-width: {{ cell.Width }}">{{ cell.Value }}</div></div></td>
