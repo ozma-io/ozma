@@ -85,9 +85,9 @@ if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
                 var m = target.parentNode.firstElementChild.nextElementSibling.children.length;
 
                 document.getElementById('black_block').style.display = 'block';
-                document.getElementById('black_block').style.height = 34.2 * k + 'px';
+                document.getElementById('black_block').style.height = 34.3 * k + 'px';
                 document.getElementById('black_block_bottom').style.display = 'block';
-                document.getElementById('black_block_bottom').style.top = 34.2 * k + 36 * m + 'px';
+                document.getElementById('black_block_bottom').style.top = 34.3 * k + 36 * m + 'px';
                 document.getElementsByTagName('body')[0].style.overflow = 'hidden';
                 document.getElementsByClassName('main_table')[0].style.overflow = 'hidden';
             }
