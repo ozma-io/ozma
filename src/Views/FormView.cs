@@ -215,7 +215,7 @@ namespace FunWithFlags.FunApp.Views
                 model["Entries1"] = entries.Where(cell => cell.BlockNum == 1).ToList();
                 model["Entries2"] = entries.Where(cell => cell.BlockNum == 2).ToList();
                 model["Entries3"] = entries.Where(cell => cell.BlockNum == 3).ToList();
-                model["Entries4"] = entries.Where(cell => cell.BlockNum == 3).ToList();
+                model["Entries4"] = entries.Where(cell => cell.BlockNum == 4).ToList();
             }
 
             var removeRequest = catalog.GetString("Do you want to remove the item?");
