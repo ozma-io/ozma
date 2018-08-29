@@ -30,7 +30,7 @@ namespace FunWithFlags.FunApp.Views
         {
             var db = ctx.Database;
 
-            var resultId = Tuple.Create(Result.NewRField(new FieldName(null, "Id")), new AttributeMap());
+            var resultId = Tuple.Create(new AttributeMap(), Result.NewRField(new FieldName(null, "Id")));
             var parsedQuery = ViewResolver.ParseQuery(uv);
             var newQuery = parsedQuery.MergeResults(new[] { resultId });
             var result = ctx.Resolver.RunQuery(newQuery);

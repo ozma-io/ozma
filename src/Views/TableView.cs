@@ -25,8 +25,8 @@ namespace FunWithFlags.FunApp.Views
 
             // FIXME: Valid only for single-entity queries! Rewrite hrefs to use row attributes instead.
             // For example, a user might specify a query like this:
-            // SELECT Name, { Link = { UserView = 'FieldsForm', Parameters = { id = Id } } } FROM Fields
-            var resultId = Tuple.Create(Result.NewRField(new FieldName(null, "Id")), new AttributeMap());
+            // SELECT { Link = { UserView = 'FieldsForm', Parameters = { id = Id } } } Name FROM Fields
+            var resultId = Tuple.Create(new AttributeMap(), Result.NewRField(new FieldName(null, "Id")));
             var parsedQuery = ViewResolver.ParseQuery(uv);
             var newQuery = parsedQuery.MergeResults(new[] { resultId });
             var result = ctx.Resolver.RunQuery(newQuery);
