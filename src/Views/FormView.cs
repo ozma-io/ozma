@@ -139,7 +139,7 @@ namespace FunWithFlags.FunApp.Views
                             return new
                             {
                                 Column = col,
-                                Caption = col.Attributes.GetStringWithDefault(col.Name, "Caption"),
+                                Caption = col.DisplayName,
                                 Width = col.Attributes.GetIntWithDefault(100, "Size", "Width"),
                                 BlockNum = col.Attributes.GetIntWithDefault(0, "Form", "BlockNum"),
                                 OrdInBlock = col.Attributes.GetIntWithDefault(0, "Form", "OrdInBlock"),
@@ -190,7 +190,7 @@ namespace FunWithFlags.FunApp.Views
                             var cell = col.ToDefaultCell();
                             return new
                                 {
-                                    Name = col.Attributes.GetStringWithDefault(col.Field.Field.Name, "Caption"),
+                                    Name = col.DisplayName,
                                     Cols = 40,
                                     Rows = 1,
                                     Width = col.Attributes.GetIntWithDefault(100, "Size", "Width"),

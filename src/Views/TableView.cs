@@ -36,7 +36,7 @@ namespace FunWithFlags.FunApp.Views
             var columns = result.Columns.Skip(1).Select(col => new
                 {
                     Field = col.Field,
-                    Name = col.Attributes.GetStringWithDefault(col.Name, "Caption"),
+                    Name = col.DisplayName,
                     Width = col.Attributes.GetIntWithDefault(100, "Size", "Width").ToString() + "px"
                 }).ToList();
 
