@@ -1,6 +1,6 @@
 import * as Utils from "./utils"
 
-const apiUrl = Utils.isProduction ? "https://myxprocess.com" : "http://localhost:8080"
+const apiUrl = Utils.isProduction ? "https://myxprocess.com" : "http://127.0.0.1:8080"
 
 interface AuthRequest {
     username: string
@@ -32,19 +32,25 @@ export interface AllowedDatabase {
 export type ValueType = any[]
 export type FieldType = any[]
 
-export interface TypedValue {
-    valueType: ValueType
-    value: any
+export interface ColumnField {
+    fieldType: FieldType
+    defaultValue: any
+    isNullable: boolean
 }
 
-export interface ResultColumn {
+export interface UpdateFieldInfo {
     name: string
-    attributes: Record<string, TypedValue>
+    field: ColumnField
+}
+
+export interface ResultColumnInfo {
+    name: string
+    attributeTypes: Record<string, ValueType>
     cellAttributeTypes: Record<string, ValueType>
     valueType: ValueType
     fieldType: FieldType | null
     punType: ValueType | null
-    updateField: string | null
+    updateField: UpdateFieldInfo | null
 }
 
 export interface EntityRef {
@@ -52,24 +58,35 @@ export interface EntityRef {
     name: string
 }
 
+
+export interface ResultViewInfo {
+    attributeTypes: Record<string, ValueType>
+    rowAttributeTypes: Record<string, ValueType>
+    updateEntity: EntityRef | null
+    columns: ResultColumnInfo[]
+}
+
 export interface ExecutedValue {
     value: any
-    attributes?: Record<string, TypedValue>
+    attributes?: Record<string, any>
     pun?: any
 }
 
 export interface ExecutedRow {
     values: ExecutedValue[]
-    attributes?: Record<string, TypedValue>
+    attributes?: Record<string, any>
     id?: number
 }
 
-export interface ResultViewExpr {
-    attributes: Record<string, TypedValue>
-    rowAttributeTypes: Record<string, ValueType>
-    columns: ResultColumn[]
+export interface ExecutedViewExpr {
+    attributes: Record<string, any>
+    columnAttributes: Record<string, any>[]
     rows: ExecutedRow[]
-    updateEntity: EntityRef | null
+}
+
+export interface ViewExprResult {
+    info: ResultViewInfo
+    result: ExecutedViewExpr
 }
 
 export const requestAuth = async (username: string, password: string): Promise<string> => {
@@ -108,15 +125,23 @@ export const fetchLayout = async (token: string): Promise<AllowedDatabase> => {
     return await fetchApi("layout", token, "GET")
 }
 
-const fetchView = async (path: string, token: string, args: URLSearchParams): Promise<ResultViewExpr> => {
-    return await fetchApi(`views/${path}?${args}`, token, "GET")
+const fetchView = async (path: string, token: string, args: URLSearchParams): Promise<ViewExprResult> => {
+    return await fetchApi(`views/${path}/entries?${args}`, token, "GET")
 }
 
-export const fetchAnonymousView = async (token: string, query: string, args: URLSearchParams): Promise<ResultViewExpr> => {
+const fetchViewInfo = async (path: string, token: string, args: URLSearchParams): Promise<ResultViewInfo> => {
+    return await fetchApi(`views/${path}/info?${args}`, token, "GET")
+}
+
+export const fetchAnonymousView = async (token: string, query: string, args: URLSearchParams): Promise<ViewExprResult> => {
     args.set("__query", query)
     return await fetchView("anonymous", token, args)
 }
 
-export const fetchNamedView = async (token: string, name: string, args: URLSearchParams): Promise<ResultViewExpr> => {
+export const fetchNamedView = async (token: string, name: string, args: URLSearchParams): Promise<ViewExprResult> => {
     return await fetchView(`by_name/${name}`, token, args)
+}
+
+export const fetchNamedViewInfo = async (token: string, name: string, args: URLSearchParams): Promise<ResultViewInfo> => {
+    return await fetchViewInfo(`by_name/${name}`, token, args)
 }

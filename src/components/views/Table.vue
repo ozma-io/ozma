@@ -15,7 +15,7 @@
 
 <script lang="ts">
     import { Component, Prop, Vue } from 'vue-property-decorator'
-    import { ResultViewExpr } from '../../api'
+    import { ViewExprResult } from '../../api'
 
     interface TableCell {
         value: any
@@ -24,32 +24,34 @@
 
     @Component
     export default class UserViewTable extends Vue {
-        @Prop() private uv!: ResultViewExpr
+        @Prop() private uv!: ViewExprResult
 
         get fields() {
-            return this.uv.columns.map((column) => {
-                const captionAttr = column.attributes['Caption']
-                const caption = captionAttr !== undefined ? this.$t(captionAttr.value) : column.name
+            return this.uv.info.columns.map((columnInfo, i) => {
+                const columnAttrs = this.uv.result.columnAttributes[i]
+                const captionAttr = columnAttrs['Caption']
+                const caption = captionAttr !== undefined ? this.$t(captionAttr.value) : columnInfo.name
 
                 return {
-                    key: column.name,
+                    key: columnInfo.name,
                     label: caption
                 }
             })
         }
 
         get items() {
-            return this.uv.rows.map((row) => {
+            return this.uv.result.rows.map((row) => {
                 return row.values.reduce<Record<string, TableCell>>((rowObj, value, i) => {
-                    const col = this.uv.columns[i]
-                    const linkedViewAttr = row.id === undefined ? undefined : col.attributes['LinkedView']
+                    const columnInfo = this.uv.info.columns[i]
+                    const columnAttrs = this.uv.result.columnAttributes[i]
+                    const linkedViewAttr = row.id === undefined ? undefined : columnAttrs['LinkedView']
                     const link =
                         linkedViewAttr === undefined ? null : {
                             name: 'view',
-                            params: { 'name': linkedViewAttr.value },
+                            params: { 'name': linkedViewAttr },
                             query: { 'id': row.id }
                         }
-                    rowObj[col.name] = {
+                    rowObj[columnInfo.name] = {
                         value: value.value,
                         link: link
                     }

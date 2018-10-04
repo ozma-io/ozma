@@ -65,12 +65,12 @@
                 return null
             }
             else {
-                const typeAttr = this.currentUserView.result.attributes["Type"]
+                const typeAttr = this.currentUserView.result.result.attributes["Type"]
                 if (typeAttr === undefined) {
                     return null
                 }
                 else {
-                    return String(typeAttr.value)
+                    return String(typeAttr)
                 }
             }
         }

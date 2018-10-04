@@ -6,9 +6,9 @@ import * as Store from "./store"
 export class CurrentUserView {
     name: string
     args: URLSearchParams
-    result: Api.ResultViewExpr
+    result: Api.ViewExprResult
 
-    constructor(name: string, args: URLSearchParams, result: Api.ResultViewExpr) {
+    constructor(name: string, args: URLSearchParams, result: Api.ViewExprResult) {
         this.name = name
         this.args = args
         this.result = result
@@ -59,7 +59,7 @@ export default class MainMenuState extends VuexModule {
 
         return (async () => {
             try {
-                const res: Api.ResultViewExpr = await Store.callSecretApi(Api.fetchNamedView, name, args)
+                const res: Api.ViewExprResult = await Store.callSecretApi(Api.fetchNamedView, name, args)
                 let userView = {
                     name: name,
                     args: args,

@@ -53,8 +53,8 @@ export default class MainMenuState extends VuexModule {
     @Action
     async getMenu(): Promise<void> {
         try {
-            const res: Api.ResultViewExpr = await Store.callSecretApi(Api.fetchAnonymousView, "SELECT \"CategoryId\", \"UserViewId\" FROM funapp.\"MainMenuButtons\" ORDER BY \"CategoryId\", \"OrdinalPosition\"", new URLSearchParams())
-            const categories = res.rows.reduce((currCategories, row) => {
+            const res: Api.ViewExprResult = await Store.callSecretApi(Api.fetchAnonymousView, "SELECT \"CategoryId\", \"UserViewId\" FROM funapp.\"MainMenuButtons\" ORDER BY \"CategoryId\", \"OrdinalPosition\"", new URLSearchParams())
+            const categories = res.result.rows.reduce((currCategories, row) => {
                 const category = row.values[0]
                 const userView = row.values[1]
                 const button = {
