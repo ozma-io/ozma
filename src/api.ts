@@ -1,6 +1,6 @@
 import * as Utils from "./utils"
 
-const apiUrl = Utils.isProduction ? "https://myxprocess.com" : "http://127.0.0.1:8080"
+const apiUrl = Utils.isProduction ? "https://api.myxprocess.com" : "http://127.0.0.1:5000"
 
 interface AuthRequest {
     username: string
