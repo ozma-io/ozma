@@ -1,4 +1,4 @@
-<i18n>
+﻿<i18n>
     {
         "en": {
             "create_not_supported": "Creating new entities in a table is not supported",

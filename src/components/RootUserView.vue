@@ -1,10 +1,12 @@
-<i18n>
+﻿<i18n>
     {
         "en": {
-            "failed": "Failed to fetch user view: {msg}"
+            "failed": "Failed to fetch user view: {msg}",
+            "goto_nav": "Back to the top"
         },
         "ru-RU": {
-            "failed": "Ошибка получения пользовательского вида: {msg}"
+            "failed": "Ошибка получения пользовательского вида: {msg}",
+            "goto_nav": "Вернуться на главную"
         }
     }
 </i18n>
@@ -17,6 +19,10 @@
                  @dismissed="clearError">
             {{ $t('failed', { msg: lastError }) }}
         </b-alert>
+
+        <b-button :to="{ name: 'navigator' }" class="goto_nav">
+            {{ $t('goto_nav') }}
+        </b-button>
 
         <UserView v-if="currentUserView !== null" :uv="currentUserView.uv"></UserView>
     </b-container>
@@ -63,6 +69,9 @@
         }
     }
 </script>
-<style scoped lang="scss">
 
+<style scoped lang="scss">
+    .goto_nav {
+        margin-bottom: 20px;
+    }
 </style>

@@ -18,10 +18,9 @@ export class FetchError extends Error {
     message: string
     response: Response
 
-    constructor(response: Response) {
-        super(response.statusText)
-        console.log(response)
-        this.message = response.statusText
+    constructor(message: string, response: Response) {
+        super(message)
+        this.message = message
         this.response = response
     }
 }
@@ -29,7 +28,9 @@ export class FetchError extends Error {
 export const fetchSuccess = async (input: RequestInfo, init?: RequestInit): Promise<Response> => {
     const response = await fetch(input, init)
     if (!response.ok) {
-        throw new FetchError(response)
+        const text = await response.text()
+        const message = text === "" ? response.statusText : text
+        throw new FetchError(text, response)
     }
     return response
 }
