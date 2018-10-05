@@ -1,11 +1,11 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import VueI18n, { LocaleMessageObject } from 'vue-i18n'
+import VueI18n, { LocaleMessageObject, Path, Locale } from 'vue-i18n'
 import BootstrapVue from 'bootstrap-vue'
 
 import Login from './components/Login.vue'
 import Navigator from './components/Navigator.vue'
-import UserView from './components/UserView.vue'
+import RootUserView from './components/RootUserView.vue'
 import App from './App.vue'
 
 import * as Store from './state/store'
@@ -24,7 +24,8 @@ Vue.use(BootstrapVue)
 
 const routes = [
     { path: "/", name: "navigator", component: Navigator },
-    { path: "/views/:name", name: "view", component: UserView },
+    { path: "/views/:name", name: "view", component: RootUserView },
+    { path: "/views/:name/new", name: "view_create", component: RootUserView },
     { path: "/login", name: "login", component: Login, meta: { isLogin: true } },
     { path: "*", redirect: { name: "navigator" } }
 ]
@@ -39,15 +40,15 @@ const i18n = new VueI18n({
     fallbackLocale: 'en'
 })
 
-if (sessionStorage.getItem("authToken") !== null) {
-    Store.store.commit("auth/setAuth", new CurrentAuth(sessionStorage.getItem("authToken") as string))
+if (localStorage.getItem("authToken") !== null) {
+    Store.store.commit("auth/setAuth", new CurrentAuth(localStorage.getItem("authToken") as string))
     Store.store.dispatch("auth/renewAuth")
 }
 Store.store.subscribe((mutation, state) => {
     if (mutation.type === "auth/removeAuth") {
-        sessionStorage.removeItem("authToken")
+        localStorage.removeItem("authToken")
     } else if (mutation.type === "auth/setAuth") {
-        sessionStorage.setItem("authToken", (Store.store.state.auth.current as CurrentAuth).token)
+        localStorage.setItem("authToken", (Store.store.state.auth.current as CurrentAuth).token)
     }
 })
 
@@ -79,6 +80,18 @@ router.beforeResolve((to, from, next) => {
         next()
     }
 })
+
+/*interface Vue {
+    $tm(key: Path, values?: any[]): string;
+}*/
+
+Vue.prototype.$tm = function(key: Path, values?: any[]) {
+    if (i18n.te(key)) {
+        return i18n.t(key, values);
+    } else {
+        return i18n.formatter.interpolate(key, values)[0];
+    }
+}
 
 const app = new Vue({
     router, i18n, store: Store.store,

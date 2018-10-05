@@ -3,15 +3,22 @@ import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators"
 import * as Api from "../api"
 import * as Store from "./store"
 
+export interface UserViewData {
+    info: Api.ResultViewInfo
+    attributes: Record<string, any>
+    columnAttributes: Record<string, any>[]
+    rows: Api.ExecutedRow[] | null
+}
+
 export class CurrentUserView {
     name: string
     args: URLSearchParams
-    result: Api.ViewExprResult
+    uv: UserViewData
 
-    constructor(name: string, args: URLSearchParams, result: Api.ViewExprResult) {
+    constructor(name: string, args: URLSearchParams, uv: UserViewData) {
         this.name = name
         this.args = args
-        this.result = result
+        this.uv = uv
     }
 }
 
@@ -55,17 +62,41 @@ export default class MainMenuState extends VuexModule {
             this.clear()
         }
 
-        console.log(args)
-
         return (async () => {
             try {
                 const res: Api.ViewExprResult = await Store.callSecretApi(Api.fetchNamedView, name, args)
-                let userView = {
-                    name: name,
-                    args: args,
-                    result: res
+                const data = {
+                    info: res.info,
+                    attributes: res.result.attributes,
+                    columnAttributes: res.result.columnAttributes,
+                    rows: res.result.rows
                 }
-                this.setCurrent(userView)
+                const current = new CurrentUserView(name, args, data)
+                this.setCurrent(current)
+            } catch (e) {
+                this.failGet(e.message)
+                throw e
+            }
+        })()
+    }
+
+    @Action
+    getUserViewInfo(name: string): Promise<void> {
+        if (this.current !== null && this.current.name !== name) {
+            this.clear()
+        }
+
+        return (async () => {
+            try {
+                const res: Api.ViewInfoResult = await Store.callSecretApi(Api.fetchNamedViewInfo, name)
+                const data = {
+                    info: res.info,
+                    attributes: res.pureAttributes,
+                    columnAttributes: res.pureColumnAttributes,
+                    rows: null
+                }
+                const current = new CurrentUserView(name, new URLSearchParams(), data)
+                this.setCurrent(current)
             } catch (e) {
                 this.failGet(e.message)
                 throw e

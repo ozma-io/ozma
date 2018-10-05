@@ -48,6 +48,9 @@
     <Content Include="src\components\Navigator.vue">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="src\components\RootUserView.vue">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="src\components\UserView.vue">
       <SubType>Code</SubType>
     </Content>
