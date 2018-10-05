@@ -4,7 +4,7 @@
             "item_not_found": "Record not found",
             "changes_saved": "Changes saved",
             "submit_error": "Error while submitting changes: {msg}",
-            "save": "Сохранить",
+            "save": "Save",
             "revert_changes": "Revert changes",
             "delete": "Delete",
             "delete_confirmation": "Are you sure want to delete this record?",
