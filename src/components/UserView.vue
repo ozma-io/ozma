@@ -4,16 +4,16 @@
 </template>
 
 <script lang="ts">
-    import { Component, Prop, Vue } from 'vue-property-decorator'
-    import { IUserViewData } from '../state/user_view'
+    import { Component, Prop, Vue } from "vue-property-decorator"
+    import { IUserViewData } from "@/state/user_view"
 
-    import UserViewTable from './views/Table.vue'
-    import UserViewForm from './views/Form.vue'
+    import UserViewTable from "@/components/views/Table.vue"
+    import UserViewForm from "@/components/views/Form.vue"
 
     @Component({
         components: {
-            UserViewTable, UserViewForm
-        }
+            UserViewTable, UserViewForm,
+        },
     })
     export default class UserView extends Vue {
         @Prop() private uv!: IUserViewData
@@ -22,8 +22,7 @@
             const typeAttr = this.uv.attributes["Type"]
             if (typeAttr === undefined) {
                 return null
-            }
-            else {
+            } else {
                 return String(typeAttr)
             }
         }

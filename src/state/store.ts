@@ -1,10 +1,10 @@
 import Vue from "vue"
 import Vuex from "vuex"
 
-import * as Utils from "../utils"
-import AuthState from "./auth"
-import MainMenuState from "./main_menu"
-import UserViewState from "./user_view"
+import * as Utils from "@/utils"
+import AuthState from "@/state/auth"
+import MainMenuState from "@/state/main_menu"
+import UserViewState from "@/state/user_view"
 
 interface IRootState {
     auth: AuthState

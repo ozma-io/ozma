@@ -1,7 +1,7 @@
 import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators"
 
-import * as Api from "../api"
-import * as Store from "./store"
+import * as Api from "@/api"
+import * as Store from "@/state/store"
 
 export class CurrentAuth {
     token: string

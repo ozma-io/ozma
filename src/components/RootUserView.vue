@@ -29,25 +29,34 @@
 </template>
 
 <script lang="ts">
-    import { Route } from 'vue-router'
-    import { Component, Watch, Vue } from 'vue-property-decorator'
-    import { namespace } from 'vuex-class'
-    import { CurrentUserView } from '../state/user_view'
-    import UserView from './UserView.vue'
+    import { Route } from "vue-router"
+    import { Component, Watch, Vue } from "vue-property-decorator"
+    import { namespace } from "vuex-class"
+    import { CurrentUserView } from "@/state/user_view"
+    import UserView from "@/components/UserView.vue"
 
-    const userView = namespace('userView')
+    const userView = namespace("userView")
 
     @Component({
         components: {
-            UserView
-        }
+            UserView,
+        },
     })
     export default class RootUserView extends Vue {
-        @userView.Action('getUserView') getUserView!: (_: { name: string, args: URLSearchParams }) => Promise<void>
-        @userView.Action('getUserViewInfo') getUserViewInfo!: (_: string) => Promise<void>
-        @userView.State('current') currentUserView!: CurrentUserView | null
-        @userView.Mutation('clearError') clearError!: () => void
-        @userView.State('lastError') lastError!: string | null
+        @userView.Action("getUserView") getUserView!: (_: { name: string, args: URLSearchParams }) => Promise<void>
+        @userView.Action("getUserViewInfo") getUserViewInfo!: (_: string) => Promise<void>
+        @userView.State("current") currentUserView!: CurrentUserView | null
+        @userView.Mutation("clearError") clearError!: () => void
+        @userView.State("lastError") lastError!: string | null
+
+        @Watch("$route")
+        onRouteChanged() {
+            this.updateView()
+        }
+
+        created() {
+            this.updateView()
+        }
 
         private updateView() {
             if (this.$route.name === "view") {
@@ -57,15 +66,6 @@
             } else {
                 console.assert(false)
             }
-        }
-
-        created() {
-            this.updateView()
-        }
-
-        @Watch('$route')
-        onRouteChanged() {
-            this.updateView()
         }
     }
 </script>

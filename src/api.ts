@@ -1,4 +1,4 @@
-import * as Utils from "./utils"
+import * as Utils from "@/utils"
 
 const apiUrl = Utils.isProduction ? "https://api.myxprocess.com" : "http://127.0.0.1:5000"
 

@@ -3,17 +3,17 @@ import VueRouter from "vue-router"
 import VueI18n, { LocaleMessageObject, Path, Locale } from "vue-i18n"
 import BootstrapVue from "bootstrap-vue"
 
-import Login from "./components/Login.vue"
-import Navigator from "./components/Navigator.vue"
-import RootUserView from "./components/RootUserView.vue"
-import App from "./App.vue"
+import Login from "@/components/Login.vue"
+import Navigator from "@/components/Navigator.vue"
+import RootUserView from "@/components/RootUserView.vue"
+import App from "@/App.vue"
 
-import * as Store from "./state/store"
+import * as Store from "@/state/store"
 // XXX: should be kept in sync with RootState type in in store.ts!
-import "./state/auth"
-import "./state/main_menu"
-import "'./state/user_view"
-import { CurrentAuth } from "./state/auth"
+import "@/state/auth"
+import "@/state/main_menu"
+import "@/state/user_view"
+import { CurrentAuth } from "@/state/auth"
 
 import "bootstrap/dist/css/bootstrap.css"
 import "bootstrap-vue/dist/bootstrap-vue.css"
@@ -81,11 +81,14 @@ router.beforeResolve((to, from, next) => {
     }
 })
 
-/*interface Vue {
-    $tm(key: Path, values?: any[]): string;
-}*/
+declare module "vue" {
+    // tslint:disable:interface-name
+    interface Vue {
+        $tm(key: Path, values?: any[]): string
+    }
+}
 
-/* tslint:disable:only-arrow-functions */
+// tslint:disable:only-arrow-functions
 Vue.prototype.$tm = function(key: Path, values?: any[]) {
     if (i18n.te(key)) {
         return i18n.t(key, values)

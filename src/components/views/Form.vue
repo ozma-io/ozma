@@ -79,12 +79,12 @@
 </template>
 
 <script lang="ts">
-    import { Component, Prop, Watch, Vue } from 'vue-property-decorator'
-    import { namespace } from 'vuex-class'
-    import * as Api from '../../api'
-    import { IUserViewData } from '../../state/user_view'
-    import { callSecretApi } from '../../state/store'
-    import { CurrentAuth } from '@/state/auth'
+    import { Component, Prop, Watch, Vue } from "vue-property-decorator"
+    import { namespace } from "vuex-class"
+    import * as Api from "@/api"
+    import { IUserViewData } from "@/state/user_view"
+    import { callSecretApi } from "@/state/store"
+    import { CurrentAuth } from "@/state/auth"
 
     interface ITextType {
         name: "text"
@@ -120,7 +120,7 @@
         type: IType
     }
 
-    const auth = namespace('auth')
+    const auth = namespace("auth")
 
     const getInputType = (columnInfo: Api.IResultColumnInfo, attributes: Record<string, any>): IType => {
         if (columnInfo.fieldType !== null) {
@@ -129,10 +129,10 @@
                     // FIXME
                     return { name: "text", type: "number" }
                 case "FTEnum":
-                    const vals: Array<string> = columnInfo.fieldType[1]
+                    const vals: string[] = columnInfo.fieldType[1]
                     return {
                         name: "select",
-                        options: vals.map(x => ({ text: x, value: x }))
+                        options: vals.map(x => ({ text: x, value: x })),
                     }
                 case "FTType":
                     switch (columnInfo.fieldType[1][0]) {
@@ -163,12 +163,13 @@
     @Component
     export default class UserViewForm extends Vue {
         // FIXME FIXME FIXME
-        @auth.State('current') currentAuth!: CurrentAuth | null
+        @auth.State("current") currentAuth!: CurrentAuth | null
 
-        @Prop() private uv!: IUserViewData
         lastError: string | null = null
         showSuccess = false
-        fields : Array<IField> | null = null
+        fields: IField[] | null = null
+
+        @Prop() private uv!: IUserViewData
 
         updateRecord() {
             if (this.uv.info.updateEntity === null || this.fields === null) {
@@ -226,7 +227,7 @@
                 throw Error()
             }
 
-            this.fields.forEach((field) => {
+            this.fields.forEach(field => {
                 field.updatedValue = field.value
             })
         }
@@ -241,19 +242,19 @@
         }
 
         private computeFields() {
-            const makeField = (columnInfo : Api.IResultColumnInfo, i : number, value : any) => {
+            const makeField = (columnInfo: Api.IResultColumnInfo, i: number, value: any) => {
                 const columnAttrs = this.uv.columnAttributes[i]
-                const captionAttr = columnAttrs['Caption']
+                const captionAttr = columnAttrs["Caption"]
                 const caption = captionAttr !== undefined ? captionAttr : columnInfo.name
                 const required = columnInfo.updateField === null ? false : (columnInfo.updateField.field.defaultValue === null)
 
                 return {
                     column: columnInfo,
-                    value: value,
+                    value,
                     updatedValue: value,
-                    caption: caption,
-                    required: required,
-                    type: getInputType(columnInfo, columnAttrs)
+                    caption,
+                    required,
+                    type: getInputType(columnInfo, columnAttrs),
                 }
             }
             if (this.uv.rows === null) {

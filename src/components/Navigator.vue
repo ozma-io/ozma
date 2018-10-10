@@ -40,20 +40,20 @@
 </template>
 
 <script lang="ts">
-    import { Component, Vue } from 'vue-property-decorator'
-    import { namespace } from 'vuex-class'
-    import { CurrentMainMenu } from '@/state/main_menu'
+    import { Component, Vue } from "vue-property-decorator"
+    import { namespace } from "vuex-class"
+    import { CurrentMainMenu } from "@/state/main_menu"
 
-    const mainMenu = namespace('mainMenu')
-    const auth = namespace('auth')
+    const mainMenu = namespace("mainMenu")
+    const auth = namespace("auth")
 
     @Component
     export default class Navigator extends Vue {
-        @auth.Mutation('removeAuth') removeAuth!: (_?: string) => void
-        @mainMenu.Action('getMenu') getMenu!: () => Promise<void>
-        @mainMenu.State('current') currentMenu!: CurrentMainMenu | null
-        @mainMenu.Mutation('clearError') clearError!: () => void
-        @mainMenu.State('lastError') lastError!: string | null
+        @auth.Mutation("removeAuth") removeAuth!: (_?: string) => void
+        @mainMenu.Action("getMenu") getMenu!: () => Promise<void>
+        @mainMenu.State("current") currentMenu!: CurrentMainMenu | null
+        @mainMenu.Mutation("clearError") clearError!: () => void
+        @mainMenu.State("lastError") lastError!: string | null
 
         created() {
             if (this.currentMenu === null) {

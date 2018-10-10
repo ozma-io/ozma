@@ -35,11 +35,12 @@
 
 <script lang="ts">
     import { Component, Prop, Vue } from "vue-property-decorator"
-    import { IUserViewData } from "../../state/user_view"
+    import { IUserViewData } from "@/state/user_view"
+    import { Location } from "vue-router"
 
-    interface TableCell {
+    interface ITableCell {
         value: any
-        link: object | null
+        link: Location | null
     }
 
     @Component
@@ -48,45 +49,45 @@
 
         get linkedView() {
             if (this.uv.info.updateEntity === null) {
-                return null;
+                return null
             }
 
-            const attr = this.uv.attributes['CreateView']
+            const attr = this.uv.attributes["CreateView"]
             return attr === undefined ? null : String(attr)
         }
 
         get fields() {
             return this.uv.info.columns.map((columnInfo, i) => {
                 const columnAttrs = this.uv.columnAttributes[i]
-                const captionAttr = columnAttrs['Caption']
+                const captionAttr = columnAttrs["Caption"]
                 const caption = captionAttr !== undefined ? captionAttr : columnInfo.name
 
                 return {
                     key: columnInfo.name,
-                    label: caption
+                    label: caption,
                 }
             })
         }
 
         get items() {
             if (this.uv.rows === null) {
-                return null;
+                return null
             }
 
-            return this.uv.rows.map((row) => {
-                return row.values.reduce<Record<string, TableCell>>((rowObj, value, i) => {
+            return this.uv.rows.map(row => {
+                return row.values.reduce<Record<string, ITableCell>>((rowObj, value, i) => {
                     const columnInfo = this.uv.info.columns[i]
                     const columnAttrs = this.uv.columnAttributes[i]
-                    const linkedViewAttr = row.id === undefined ? undefined : columnAttrs['LinkedView']
+                    const linkedViewAttr = row.id === undefined ? undefined : columnAttrs["LinkedView"]
                     const link =
                         linkedViewAttr === undefined ? null : {
-                            name: 'view',
-                            params: { 'name': linkedViewAttr },
-                            query: { 'id': row.id }
+                            name: "view",
+                            params: { "name": String(linkedViewAttr) },
+                            query: { "id": String(row.id) },
                         }
                     rowObj[columnInfo.name] = {
                         value: value.pun === undefined ? value.value : `(${value.value}) ${value.pun}`,
-                        link: link
+                        link,
                     }
                     return rowObj
                 }, {})

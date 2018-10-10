@@ -9,6 +9,7 @@
         "object-literal-sort-keys": false,
         "no-string-literal": false,
         "max-line-length": false,
-        "object-literal-key-quotes": false
+        "object-literal-key-quotes": false,
+        "no-console": false
     }
 }

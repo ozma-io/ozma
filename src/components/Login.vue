@@ -51,21 +51,21 @@
 <script lang="ts">
     import { Component, Watch, Vue } from "vue-property-decorator"
     import { namespace } from "vuex-class"
-    import { CurrentAuth } from "../state/auth"
+    import { CurrentAuth } from "@/state/auth"
 
-    const auth = namespace('auth')
+    const auth = namespace("auth")
 
     @Component
     export default class Login extends Vue {
-        @auth.Mutation('clearError') clearError!: () => void
-        @auth.Action('requestAuth') requestAuth!: (_: { username: string, password: string }) => Promise<void>
-        @auth.State('lastError') lastError!: string | null
-        @auth.State('current') current!: CurrentAuth | null
+        @auth.Mutation("clearError") clearError!: () => void
+        @auth.Action("requestAuth") requestAuth!: (_: { username: string, password: string }) => Promise<void>
+        @auth.State("lastError") lastError!: string | null
+        @auth.State("current") current!: CurrentAuth | null
 
         username = ""
         password = ""
 
-        @Watch('current')
+        @Watch("current")
         onAuthChanged() {
             if (this.current !== null) {
                 const nextUrl = (this.$route.query.redirect !== undefined) ? this.$route.query.redirect : "/"
