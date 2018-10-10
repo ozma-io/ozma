@@ -3,19 +3,19 @@ import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators"
 import * as Api from "../api"
 import * as Store from "./store"
 
-export interface UserViewData {
-    info: Api.ResultViewInfo
+export interface IUserViewData {
+    info: Api.IResultViewInfo
     attributes: Record<string, any>
-    columnAttributes: Record<string, any>[]
-    rows: Api.ExecutedRow[] | null
+    columnAttributes: Array<Record<string, any>>
+    rows: Api.IExecutedRow[] | null
 }
 
 export class CurrentUserView {
     name: string
     args: URLSearchParams
-    uv: UserViewData
+    uv: IUserViewData
 
-    constructor(name: string, args: URLSearchParams, uv: UserViewData) {
+    constructor(name: string, args: URLSearchParams, uv: IUserViewData) {
         this.name = name
         this.args = args
         this.uv = uv
@@ -64,12 +64,12 @@ export default class MainMenuState extends VuexModule {
 
         return (async () => {
             try {
-                const res: Api.ViewExprResult = await Store.callSecretApi(Api.fetchNamedView, name, args)
+                const res: Api.IViewExprResult = await Store.callSecretApi(Api.fetchNamedView, name, args)
                 const data = {
                     info: res.info,
                     attributes: res.result.attributes,
                     columnAttributes: res.result.columnAttributes,
-                    rows: res.result.rows
+                    rows: res.result.rows,
                 }
                 const current = new CurrentUserView(name, args, data)
                 this.setCurrent(current)
@@ -88,12 +88,12 @@ export default class MainMenuState extends VuexModule {
 
         return (async () => {
             try {
-                const res: Api.ViewInfoResult = await Store.callSecretApi(Api.fetchNamedViewInfo, name)
+                const res: Api.IViewInfoResult = await Store.callSecretApi(Api.fetchNamedViewInfo, name)
                 const data = {
                     info: res.info,
                     attributes: res.pureAttributes,
                     columnAttributes: res.pureColumnAttributes,
-                    rows: null
+                    rows: null,
                 }
                 const current = new CurrentUserView(name, new URLSearchParams(), data)
                 this.setCurrent(current)

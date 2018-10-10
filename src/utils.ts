@@ -9,7 +9,7 @@ export const resultMap = <A, B>(func: ((_: A) => B), res: Result<A>): Result<B> 
 }
 
 export declare var process: {
-    env: Record<string, string>
+    env: Record<string, string>,
 }
 
 export const isProduction: boolean = (process.env["NODE_ENV"] === "production")

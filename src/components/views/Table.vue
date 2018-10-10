@@ -21,7 +21,7 @@
 
             <b-table striped hover :fields="fields" :items="items">
                 <template v-for="col in fields" :slot="col.key" slot-scope="row">
-                    <router-link v-if="row.value.link !== null" :to="row.value.link">
+                    <router-link :key="col.name" v-if="row.value.link !== null" :to="row.value.link">
                         {{ row.value.value }}
                     </router-link>
                     <template v-else>
@@ -34,8 +34,8 @@
 </template>
 
 <script lang="ts">
-    import { Component, Prop, Vue } from 'vue-property-decorator'
-    import { UserViewData } from '../../state/user_view'
+    import { Component, Prop, Vue } from "vue-property-decorator"
+    import { IUserViewData } from "../../state/user_view"
 
     interface TableCell {
         value: any
@@ -44,7 +44,7 @@
 
     @Component
     export default class UserViewTable extends Vue {
-        @Prop() private uv!: UserViewData
+        @Prop() private uv!: IUserViewData
 
         get linkedView() {
             if (this.uv.info.updateEntity === null) {

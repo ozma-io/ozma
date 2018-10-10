@@ -49,9 +49,9 @@
 </template>
 
 <script lang="ts">
-    import { Component, Watch, Vue } from 'vue-property-decorator'
-    import { namespace } from 'vuex-class'
-    import { CurrentAuth } from '../state/auth'
+    import { Component, Watch, Vue } from "vue-property-decorator"
+    import { namespace } from "vuex-class"
+    import { CurrentAuth } from "../state/auth"
 
     const auth = namespace('auth')
 

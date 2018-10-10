@@ -39,7 +39,7 @@
         </h5>
         <b-form v-else @submit.prevent="updateRecord" @reset.prevent="resetRecord">
             <template v-for="field in fields">
-                <b-form-group :label="field.caption" :label-for="field.column.name">
+                <b-form-group :key="field.column.name" :label="field.caption" :label-for="field.column.name">
                     <b-form-checkbox v-if="field.type.name === 'check'"
                                      :id="field.column.name"
                                      v-model="field.updatedValue"
@@ -82,13 +82,47 @@
     import { Component, Prop, Watch, Vue } from 'vue-property-decorator'
     import { namespace } from 'vuex-class'
     import * as Api from '../../api'
-    import { UserViewData } from '../../state/user_view'
+    import { IUserViewData } from '../../state/user_view'
     import { callSecretApi } from '../../state/store'
-import { CurrentAuth } from '@/state/auth';
+    import { CurrentAuth } from '@/state/auth'
+
+    interface ITextType {
+        name: "text"
+        type: "text" | "number"
+    }
+
+    interface ITextAreaType {
+        name: "textarea"
+    }
+
+    interface ISelectOption {
+        text: string
+        value: string
+    }
+
+    interface ISelectType {
+        name: "select"
+        options: ISelectOption[]
+    }
+
+    interface ICheckType {
+        name: "check"
+    }
+
+    type IType = ITextType | ITextAreaType | ISelectType | ICheckType
+
+    interface IField {
+        column: Api.IResultColumnInfo
+        value: any
+        updatedValue: any
+        caption: string
+        required: boolean
+        type: IType
+    }
 
     const auth = namespace('auth')
 
-    const getInputType = (columnInfo: Api.ResultColumnInfo, attributes: Record<string, any>) => {
+    const getInputType = (columnInfo: Api.IResultColumnInfo, attributes: Record<string, any>): IType => {
         if (columnInfo.fieldType !== null) {
             switch (columnInfo.fieldType[0]) {
                 case "FTReference":
@@ -131,10 +165,10 @@ import { CurrentAuth } from '@/state/auth';
         // FIXME FIXME FIXME
         @auth.State('current') currentAuth!: CurrentAuth | null
 
-        @Prop() private uv!: UserViewData
+        @Prop() private uv!: IUserViewData
         lastError: string | null = null
         showSuccess = false
-        fields : Array<any> | null = null
+        fields : Array<IField> | null = null
 
         updateRecord() {
             if (this.uv.info.updateEntity === null || this.fields === null) {
@@ -207,7 +241,7 @@ import { CurrentAuth } from '@/state/auth';
         }
 
         private computeFields() {
-            const makeField = (columnInfo : Api.ResultColumnInfo, i : number, value : any) => {
+            const makeField = (columnInfo : Api.IResultColumnInfo, i : number, value : any) => {
                 const columnAttrs = this.uv.columnAttributes[i]
                 const captionAttr = columnAttrs['Caption']
                 const caption = captionAttr !== undefined ? captionAttr : columnInfo.name

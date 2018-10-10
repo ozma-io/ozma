@@ -3,20 +3,20 @@ import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators"
 import * as Api from "../api"
 import * as Store from "./store"
 
-export interface MainMenuButton {
+export interface IMainMenuButton {
     name: string
     userViewId: number
 }
 
-export interface MainMenuCategory {
+export interface IMainMenuCategory {
     name: string
-    buttons: MainMenuButton[]
+    buttons: IMainMenuButton[]
 }
 
 export class CurrentMainMenu {
-    categories: MainMenuCategory[]
+    categories: IMainMenuCategory[]
 
-    constructor(categories: MainMenuCategory[]) {
+    constructor(categories: IMainMenuCategory[]) {
         this.categories = categories
     }
 }
@@ -53,7 +53,7 @@ export default class MainMenuState extends VuexModule {
     @Action
     async getMenu(): Promise<void> {
         try {
-            const res: Api.ViewExprResult = await Store.callSecretApi(Api.fetchAnonymousView, "SELECT \"CategoryId\", \"UserViewId\" FROM funapp.\"MainMenuButtons\" ORDER BY \"CategoryId\", \"OrdinalPosition\"", new URLSearchParams())
+            const res: Api.IViewExprResult = await Store.callSecretApi(Api.fetchAnonymousView, "SELECT \"CategoryId\", \"UserViewId\" FROM funapp.\"MainMenuButtons\" ORDER BY \"CategoryId\", \"OrdinalPosition\"", new URLSearchParams())
             const categories = res.result.rows.reduce((currCategories, row) => {
                 const category = row.values[0]
                 // FIXME FIXME FIXME
@@ -63,21 +63,21 @@ export default class MainMenuState extends VuexModule {
                 const userView = row.values[1]
                 const button = {
                     name: userView.pun,
-                    userViewId: userView.value
+                    userViewId: userView.value,
                 }
 
-                let existing = currCategories.get(category.value)
+                const existing = currCategories.get(category.value)
                 if (existing === undefined) {
                     currCategories.set(category.value, {
                         name: category.pun,
-                        buttons: [button]
+                        buttons: [button],
                     })
                 } else {
                     existing.buttons.push(button)
                 }
 
                 return currCategories
-            }, new Map<number, MainMenuCategory>())
+            }, new Map<number, IMainMenuCategory>())
             const mainMenu = new CurrentMainMenu(Array.from(categories.values()))
             this.setCurrent(mainMenu)
         } catch (e) {

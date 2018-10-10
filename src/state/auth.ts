@@ -5,7 +5,7 @@ import * as Store from "./store"
 
 export class CurrentAuth {
     token: string
-    header: Api.AuthToken
+    header: Api.IAuthToken
 
     constructor(token: string) {
         this.token = token
@@ -39,7 +39,7 @@ export default class AuthState extends VuexModule {
     @Mutation
     setAuth(auth: CurrentAuth) {
         this.current = auth
-        this.lastError = null 
+        this.lastError = null
     }
 
     @Action
