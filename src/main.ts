@@ -11,9 +11,10 @@ import App from "@/App.vue"
 import * as Store from "@/state/store"
 // XXX: should be kept in sync with RootState type in in store.ts!
 import "@/state/auth"
-
 import "@/state/main_menu"
+import "@/state/settings"
 import "@/state/user_view"
+
 import { CurrentAuth } from "@/state/auth"
 
 import "bootstrap/dist/css/bootstrap.css"
