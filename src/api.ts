@@ -29,8 +29,47 @@ export interface IAllowedDatabase {
     systemEntities: Record<string, IAllowedEntity>
 }
 
-export type ValueType = any[]
-export type FieldType = any[]
+export interface IEntityRef {
+    schema: string | null
+    name: string
+}
+
+export type SimpleType = "int" | "string" | "bool" | "datetime" | "date" | "regclass"
+
+export interface IScalarSimpleType {
+    type: SimpleType
+}
+
+export interface IArraySimpleType {
+    type: "array"
+    subtype: SimpleType
+}
+
+export type ValueType = IScalarSimpleType | IArraySimpleType
+
+export type FieldValueType = "int" | "string" | "bool" | "datetime" | "date"
+
+export interface IScalarFieldType {
+    type: FieldValueType
+}
+
+export interface IArrayFieldType {
+    type: "array"
+    subtype: FieldValueType
+}
+
+export interface IReferenceFieldType {
+    type: "reference"
+    entity: IEntityRef
+    where: string
+}
+
+export interface IEnumFieldType {
+    type: "enum"
+    values: string[]
+}
+
+export type FieldType = IScalarFieldType | IArrayFieldType | IReferenceFieldType | IEnumFieldType
 
 export interface IColumnField {
     fieldType: FieldType
@@ -51,11 +90,6 @@ export interface IResultColumnInfo {
     fieldType: FieldType | null
     punType: ValueType | null
     updateField: IUpdateFieldInfo | null
-}
-
-export interface IEntityRef {
-    schema: string | null
-    name: string
 }
 
 export interface IResultViewInfo {

@@ -124,36 +124,26 @@
 
     const getInputType = (columnInfo: Api.IResultColumnInfo, attributes: Record<string, any>): IType => {
         if (columnInfo.fieldType !== null) {
-            switch (columnInfo.fieldType[0]) {
-                case "FTReference":
+            switch (columnInfo.fieldType.type) {
+                case "reference":
                     // FIXME
                     return { name: "text", type: "number" }
-                case "FTEnum":
-                    const vals: string[] = columnInfo.fieldType[1]
+                case "enum":
                     return {
                         name: "select",
-                        options: vals.map(x => ({ text: x, value: x })),
+                        options: columnInfo.fieldType.values.map(x => ({ text: x, value: x })),
                     }
-                case "FTType":
-                    switch (columnInfo.fieldType[1][0]) {
-                        case "FETScalar":
-                            switch (columnInfo.fieldType[1][1]) {
-                                case "SFTBool":
-                                    return { name: "check" }
-                                case "SFTInt":
-                                    return { name: "text", type: "number" }
-                            }
-                    }
+                case "bool":
+                    return { name: "check" }
+                case "int":
+                    return { name: "text", type: "number" }
             }
         } else {
-            switch (columnInfo.valueType[0]) {
-                case "VTScalar":
-                    switch (columnInfo.valueType[1]) {
-                        case "STBool":
-                            return { name: "check" }
-                        case "STInt":
-                            return { name: "text", type: "number" }
-                    }
+            switch (columnInfo.valueType.type) {
+                case "bool":
+                    return { name: "check" }
+                case "int":
+                    return { name: "text", type: "number" }
             }
         }
 
