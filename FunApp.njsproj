@@ -60,6 +60,7 @@
     <Content Include="src\components\views\Table.vue">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="src\Styles\Style.sass" />
     <Content Include="tsconfig.json" />
     <Content Include="package.json" />
     <Content Include="README.md" />
@@ -72,6 +73,7 @@
     <Folder Include="src\components\" />
     <Folder Include="src\components\views\" />
     <Folder Include="src\state\" />
+    <Folder Include="src\Styles\" />
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="src\api.ts">

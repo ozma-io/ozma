@@ -16,7 +16,7 @@
 </i18n>
 
 <template>
-    <b-container>
+    <b-container class="main_aut">
         <b-alert variant="danger"
                  dismissible
                  :show="lastError !== null"
@@ -24,11 +24,13 @@
             {{ $t('failed', { msg: lastError }) }}
         </b-alert>
 
-        <b-form @submit.prevent="sendLogin">
+        <b-form @submit.prevent="sendLogin" class="aut">
             <b-form-group id="usernameInputGroup"
                           :label="$t('username')"
-                          label-for="usernameInput">
+                          label-for="usernameInput"
+                          class="group">
                 <b-form-input id="usernameInput"
+                              class="text"
                               type="text"
                               v-model="username"
                               required />
@@ -36,14 +38,16 @@
 
             <b-form-group id="passwordInputGroup"
                           :label="$t('password')"
-                          label-for="passwordInput">
+                          label-for="passwordInput"
+                          class="group">
                 <b-form-input id="passwordInput"
+                              class="text"
                               type="password"
                               v-model="password"
                               required />
             </b-form-group>
 
-            <b-button type="submit" variant="primary">{{ $t('login') }}</b-button>
+            <b-button type="submit" class="btnn" variant="primary">{{ $t('login') }}</b-button>
         </b-form>
     </b-container>
 </template>

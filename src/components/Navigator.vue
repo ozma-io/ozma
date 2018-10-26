@@ -12,30 +12,30 @@
 </i18n>
 
 <template>
-    <b-container>
+    <b-container class="main_nav">
         <b-alert variant="danger"
                  dismissible
                  :show="lastError !== null"
                  @dismissed="clearError">
             {{ $t('failed', { msg: lastError }) }}
         </b-alert>
-
-        <b-row>
-            <b-button @click="removeAuth()">{{ $t('logout') }}</b-button>
-        </b-row>
-
-        <template v-if="currentMenu !== null">
-            <b-row class="menu_category" v-for="category in currentMenu.categories" :key="category.name">
-                <b-container>
-                    <b-row><h5>{{ $tm(category.name) }}</h5></b-row>
-                    <b-row>
-                        <b-button :to="{ name: 'view', params: { name: button.name } }" v-for="button in category.buttons" :key="button.name">
-                            {{ $tm(button.name) }}
-                        </b-button>
-                    </b-row>
-                </b-container>
+        <b-container class="submain_nav" style="background:#F5C700">
+            <b-row id="logout">
+                <b-button @click="removeAuth()">{{ $t('logout') }}</b-button>
             </b-row>
-        </template>
+            <template v-if="currentMenu !== null">
+                <b-row class="menu_category subsubmain_nav" v-for="category in currentMenu.categories" :key="category.name">
+                    <b-container class="nav_sec">
+                        <b-row class="nav_sec_tit "><a>{{ $tm(category.name) }}</a></b-row>
+                        <b-row>
+                            <b-button class="nav_ent" :to="{ name: 'view', params: { name: button.name } }" v-for="button in category.buttons" :key="button.name">
+                                {{ $tm(button.name) }}
+                            </b-button>
+                        </b-row>
+                    </b-container>
+                </b-row>
+            </template>
+        </b-container>
     </b-container>
 </template>
 
