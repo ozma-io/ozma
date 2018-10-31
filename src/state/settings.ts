@@ -1,3 +1,4 @@
+import { Module as Mod } from "vuex"
 import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators"
 
 import * as Api from "../api"
@@ -11,7 +12,7 @@ export class CurrentSettings {
     }
 }
 
-@Module({ namespaced: true, dynamic: true, store: Store.store, name: "mainMenu" })
+@Module({ namespaced: true, dynamic: true, store: Store.store, name: "settings" })
 export default class SettingsState extends VuexModule {
     current: CurrentSettings | null = null
     lastError: string | null = null
@@ -40,17 +41,28 @@ export default class SettingsState extends VuexModule {
         this.lastError = null
     }
 
+    get entry() {
+        return (name: string, defValue: string): string => {
+            if (this.current === null) {
+                return defValue
+            } else {
+                const ret = this.current.settings.get(name)
+                return (ret === undefined) ? defValue : ret
+            }
+        }
+    }
+
     @Action
     async getSettings(): Promise<void> {
         try {
             const res: Api.IViewExprResult = await Store.callSecretApi(Api.fetchAnonymousView, "SELECT \"Name\", \"Value\" FROM funapp.\"Settings\"", new URLSearchParams())
-            const categories = res.result.rows.reduce((currSettings, row) => {
+            const values = res.result.rows.reduce((currSettings, row) => {
                 const key = row.values[0].value
                 const value = row.values[1].value
                 currSettings.set(key, value)
                 return currSettings
             }, new Map<string, string>())
-            const settings = new CurrentSettings(categories)
+            const settings = new CurrentSettings(values)
             this.setCurrent(settings)
         } catch (e) {
             this.failGet(e.message)

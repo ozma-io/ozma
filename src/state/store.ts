@@ -11,6 +11,7 @@ interface IRootState {
     auth: AuthState
     mainMenu: MainMenuState
     userView: UserViewState
+    settings: SettingsState
 }
 
 Vue.use(Vuex)
