@@ -19,7 +19,7 @@ import { CurrentAuth } from "@/state/auth"
 
 import "bootstrap/dist/css/bootstrap.css"
 import "bootstrap-vue/dist/bootstrap-vue.css"
-import "@/Styles/Style.sass"
+import "@/styles/style.sass"
 
 Vue.use(VueRouter)
 Vue.use(VueI18n)
