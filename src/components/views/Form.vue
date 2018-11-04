@@ -26,7 +26,7 @@
 </i18n>
 
 <template>
-    <b-container>
+    <b-container fluid>
         <b-alert variant="success" dismissible :show="showSuccess" @dismissed="showSuccess = false">
             {{ $t('changes_saved') }}
         </b-alert>

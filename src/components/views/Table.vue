@@ -2,26 +2,41 @@
     {
         "en": {
             "create_not_supported": "Creating new entities in a table is not supported",
-            "create": "Create new"
+            "create": "Create new",
+            "filter": "Filter",
+            "search_placeholder": "Type to search",
+            "clear": "Clear"
         },
         "ru-RU": {
             "create_not_supported": "Создание новых записей через таблицу не поддерживается",
-            "create": "Создать новую"
+            "create": "Создать новую",
+            "filter": "Поиск",
+            "search_placeholder": "Введите фразу",
+            "clear": "Очистить"
         }
     }
 </i18n>
 
 <template>
-    <b-container>
+    <b-container fluid>
         <h5 v-if="fields === null">
             {{ $t('create_not_supported') }}
         </h5>
         <template v-else>
             <b-button v-if="linkedView !== null" :to="{ name: 'view_create', params: { name: linkedView } }" variant="primary">{{ $t('create') }}</b-button>
 
-            <b-table striped hover :fields="fields" :items="items">
+            <b-form-group horizontal :label="$t('filter')">
+            <b-input-group>
+                <b-form-input v-model="filter" :placeholder="$t('search_placeholder')" />
+                <b-input-group-append>
+                    <b-btn :disabled="!filter" @click="filter = ''">{{ $t('clear') }}</b-btn>
+                </b-input-group-append>
+            </b-input-group>
+            </b-form-group>
+
+            <b-table striped hover :fields="fields" :items="items" :filter="filter">
                 <template v-for="col in fields" :slot="col.key" slot-scope="row">
-                    <router-link :key="col.name" v-if="row.value.link !== null" :to="row.value.link">
+                    <router-link v-if="row.value.link !== null" :key="col.name" :to="row.value.link">
                         {{ row.value.value }}
                     </router-link>
                     <template v-else>
@@ -45,6 +60,7 @@
 
     @Component
     export default class UserViewTable extends Vue {
+        filter: string = ""
         @Prop() private uv!: IUserViewData
 
         get linkedView() {
@@ -65,6 +81,7 @@
                 return {
                     key: columnInfo.name,
                     label: caption,
+                    sortable: true,
                 }
             })
         }
