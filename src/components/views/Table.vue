@@ -35,12 +35,12 @@
             </b-form-group>
 
             <b-table striped hover :fields="fields" :items="items" :filter="filter">
-                <template v-for="col in fields" :slot="col.key" slot-scope="row">
-                    <router-link v-if="row.value.link !== null" :key="col.name" :to="row.value.link">
-                        {{ row.value.value }}
+                <template v-for="col in fields" :slot="col.key" slot-scope="data">
+                    <router-link v-if="data.value.link !== null" :key="col.name" :to="data.value.link">
+                        {{ data.value.value }}
                     </router-link>
                     <template v-else>
-                        {{ row.value.value }}
+                        {{ data.value.value }}
                     </template>
                 </template>
             </b-table>
@@ -79,7 +79,7 @@
                 const caption = captionAttr !== undefined ? captionAttr : columnInfo.name
 
                 return {
-                    key: columnInfo.name,
+                    key: String(i),
                     label: caption,
                     sortable: true,
                 }
@@ -92,7 +92,7 @@
             }
 
             return this.uv.rows.map(row => {
-                return row.values.reduce<Record<string, ITableCell>>((rowObj, value, i) => {
+                return row.values.reduce((rowObj: any, value, i) => {
                     const columnInfo = this.uv.info.columns[i]
                     const columnAttrs = this.uv.columnAttributes[i]
                     const linkedViewAttr = row.id === undefined ? undefined : columnAttrs["LinkedView"]
@@ -102,12 +102,18 @@
                             params: { "name": String(linkedViewAttr) },
                             query: { "id": String(row.id) },
                         }
-                    rowObj[columnInfo.name] = {
-                        value: value.pun === undefined ? value.value : `(${value.value}) ${value.pun}`,
+                    const valueText = value.value === null ? "" : value.value
+                    const cell: ITableCell = {
+                        value: value.pun === undefined || value.value === null ? valueText : `(${valueText}) ${value.pun}`,
                         link,
                     }
+                    const key = String(i)
+                    rowObj[key] = cell
+                    if (value.value === null) {
+                        rowObj._cellVariants[key] = "warning"
+                    }
                     return rowObj
-                }, {})
+                }, { _cellVariants: {} })
             })
         }
     }

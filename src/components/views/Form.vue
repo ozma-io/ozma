@@ -39,30 +39,39 @@
         </h5>
         <b-form v-else @submit.prevent="updateRecord" @reset.prevent="resetRecord">
             <template v-for="field in fields">
-                <b-form-group :key="field.column.name" :label="field.caption" :label-for="field.column.name">
+                <b-form-group :key="field.column.name" :label-for="field.column.name">
+                    <b-form-checkbox v-if="field.isNullable"
+                                     slot="label"
+                                     :id="field.column.name + '__notnull'"
+                                     :disabled="field.column.updateField === null"
+                                     v-model="field.updatedIsNotNull">
+                        {{ field.caption }}
+                    </b-form-checkbox>
+                    <template v-else slot="label">
+                        {{ field.caption }}
+                    </template>
+
                     <b-form-checkbox v-if="field.type.name === 'check'"
-                                     :id="field.column.name"
-                                     v-model="field.updatedValue"
-                                     :disabled="field.column.updateField === null"
-                                     :required="field.required" />
+                                    :id="field.column.name"
+                                    v-model="field.updatedValue"
+                                    :disabled="field.column.updateField === null || !field.updatedIsNotNull" />
                     <b-form-textarea v-else-if="field.type.name === 'textarea'"
-                                     :id="field.column.name"
-                                     v-model="field.updatedValue"
-                                     :disabled="field.column.updateField === null"
-                                     :rows="3"
-                                     :max-rows="6" />
+                                    :id="field.column.name"
+                                    v-model="field.updatedValue"
+                                    :disabled="field.column.updateField === null"
+                                    :rows="3"
+                                    :max-rows="6" />
                     <b-form-select v-else-if="field.type.name === 'select'"
-                                   :id="field.column.name"
-                                   v-model="field.updatedValue"
-                                   :disabled="field.column.updateField === null"
-                                   :options="field.type.options"
-                                   />
+                                :id="field.column.name"
+                                v-model="field.updatedValue"
+                                :disabled="field.column.updateField === null || !field.updatedIsNotNull"
+                                :options="field.type.options" />
                     <b-form-input v-else
-                                  :id="field.column.name"
-                                  v-model="field.updatedValue"
-                                  :type="field.type.type"
-                                  :disabled="field.column.updateField === null"
-                                  :required="field.required && field.type.type != 'text'" />
+                                :id="field.column.name"
+                                v-model="field.updatedValue"
+                                :type="field.type.type"
+                                :disabled="field.column.updateField === null || !field.updatedIsNotNull"
+                                :required="field.type.required" />
                 </b-form-group>
             </template>
 
@@ -89,6 +98,7 @@
     interface ITextType {
         name: "text"
         type: "text" | "number"
+        required: boolean
     }
 
     interface ITextAreaType {
@@ -114,9 +124,11 @@
     interface IField {
         column: Api.IResultColumnInfo
         value: any
-        updatedValue: any
+        updatedValue: string
+        updatedIsNotNull: boolean
         caption: string
         required: boolean
+        isNullable: boolean
         type: IType
     }
 
@@ -127,7 +139,7 @@
             switch (columnInfo.fieldType.type) {
                 case "reference":
                     // FIXME
-                    return { name: "text", type: "number" }
+                    return { name: "text", type: "number", required: true }
                 case "enum":
                     return {
                         name: "select",
@@ -136,18 +148,18 @@
                 case "bool":
                     return { name: "check" }
                 case "int":
-                    return { name: "text", type: "number" }
+                    return { name: "text", type: "number", required: true }
             }
         } else {
             switch (columnInfo.valueType.type) {
                 case "bool":
                     return { name: "check" }
                 case "int":
-                    return { name: "text", type: "number" }
+                    return { name: "text", type: "number", required: true }
             }
         }
 
-        return attributes["TextArea"] ? { name: "textarea" } : { name: "text", type: "text" }
+        return attributes["TextArea"] ? { name: "textarea" } : { name: "text", type: "text", required: false }
     }
 
     @Component
@@ -166,7 +178,9 @@
                 throw Error()
             }
 
-            const updatedFields = this.fields.map(field => [ field.column.name, field.updatedValue ])
+            const updatedFields = this.fields
+                                      .filter(field => !field.updatedIsNotNull)
+                                      .map(field => [ field.column.name, field.updatedValue ])
 
             if (this.uv.rows === null) {
                 return (async () => {
@@ -218,7 +232,8 @@
             }
 
             this.fields.forEach(field => {
-                field.updatedValue = field.value
+                field.updatedValue = field.value === null ? "" : field.value
+                field.updatedIsNotNull = field.value !== null
             })
         }
 
@@ -241,9 +256,11 @@
                 return {
                     column: columnInfo,
                     value,
-                    updatedValue: value,
+                    updatedValue: value === null ? "" : value,
+                    updatedIsNotNull: value !== null,
                     caption,
                     required,
+                    isNullable: columnInfo.updateField === null ? value === null : columnInfo.updateField.field.isNullable,
                     type: getInputType(columnInfo, columnAttrs),
                 }
             }
