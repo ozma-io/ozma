@@ -42,6 +42,7 @@
     </Content>
     <Content Include="public\favicon.ico" />
     <Content Include="public\index.html" />
+    <Content Include="src\assets\openform.png" />
     <Content Include="src\components\Login.vue">
       <SubType>Code</SubType>
     </Content>

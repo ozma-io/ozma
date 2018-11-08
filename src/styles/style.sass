@@ -2,8 +2,10 @@
 	margin: 0
 	font-family: Courier New, monospace
 	color: black !important
-
+	max-width: none !important
+	min-width: none !important
 body
+    overflow: hidden
     margin-left: 1px
     margin-right: 1px
     margin-top: 0px
@@ -31,7 +33,7 @@ div
 		top: 0
 		left: 0
 		display: flex
-
+		max-width: 100%
 		form
 			&.aut
 				margin: auto
@@ -133,3 +135,65 @@ div
 										margin-right: 1px
 										margin-bottom: 1px
 
+
+/* Таблица */
+table
+	width: auto !important
+div
+	&.tabl 
+		overflow: hidden
+		float: left
+		height: 100%
+		width: 100%
+		padding: 0
+		
+		table
+			thead
+				th
+					padding: 0
+					border: 0
+					font-weight: normal
+
+					&.empty_th
+						min-width: 14px
+						max-width: 14px !important
+						text-overflow: ellipsis
+						overflow: hidden
+						padding: 3px
+						vertical-align: top
+
+						div
+							min-width: 14px
+							max-width: 14px !important
+							margin: 0
+							
+							input
+								left: 0
+								rigth: 0
+					&.tabl_heading
+						text-overflow: ellipsis
+						overflow: hidden
+						vertical-align: top
+			tbody
+				border-right: solid 2px !important
+				tr
+					background-color: white !important
+					border-right: solid 1px
+				td
+					padding: 3px
+					border: solid 1px
+
+					div
+						min-width: 14px
+						max-width: 14px !important
+						margin: 0
+						padding-left: 0px
+						left: 24px
+					button
+						&.open_form
+							padding: 0
+							width: 14px
+							margin-top: -3px
+							img
+								max-width: 100% !important
+								top: -3px

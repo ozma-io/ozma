@@ -24,6 +24,27 @@
         </h5>
         <template v-else>
             <b-button v-if="linkedView !== null" :to="{ name: 'view_create', params: { name: linkedView } }" variant="primary">{{ $t('create') }}</b-button>
+<<<<<<< HEAD
+            <b-container class="tabl">
+                <b-table striped hover :fields="[{key:'isActive', class:'empty_th'},{key:'openform',class:'empty_th'}].concat(fields)" :items="items">
+                    <template slot="HEAD_isActive" slot-scope="data">
+                    </template>
+                    <template slot="isActive" slot-scope="data">
+                        <b-form-checkbox></b-form-checkbox>
+                    </template>
+                    <template slot="HEAD_openform" slot-scope="data">
+                    </template>
+                    <template slot="openform" slot-scope="data">
+                        <b-button style="cursor:pointer" class="open_form"><b-img src="/assets/openform.png" /></b-button>
+                    </template>
+                    <template v-for="col in fields" :slot="col.key" slot-scope="row">
+                        <router-link :key="col.name" v-if="row.value.link !== null" :to="row.value.link">
+                            {{ row.value.value }}
+                        </router-link>
+                        <template v-else>
+                            {{ row.value.value }}
+                        </template>
+=======
 
             <b-form-group horizontal :label="$t('filter')">
             <b-input-group>
@@ -41,9 +62,10 @@
                     </router-link>
                     <template v-else>
                         {{ data.value.value }}
+>>>>>>> d13f5d0740a6599e8cc81225f2cb590cae7c47b6
                     </template>
-                </template>
-            </b-table>
+                </b-table>
+            </b-container>
         </template>
     </b-container>
 </template>
@@ -81,7 +103,11 @@
                 return {
                     key: String(i),
                     label: caption,
+<<<<<<< HEAD
+                    class: "tabl_heading",
+=======
                     sortable: true,
+>>>>>>> d13f5d0740a6599e8cc81225f2cb590cae7c47b6
                 }
             })
         }
