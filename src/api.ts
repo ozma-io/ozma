@@ -191,8 +191,8 @@ export const fetchNamedView = async (token: string, name: string, args: URLSearc
     return await fetchView(`by_name/${name}`, token, args)
 }
 
-export const fetchNamedViewInfo = async (token: string, name: string, args: URLSearchParams): Promise<IViewInfoResult> => {
-    return await fetchViewInfo(`by_name/${name}`, token, args)
+export const fetchNamedViewInfo = async (token: string, name: string): Promise<IViewInfoResult> => {
+    return await fetchViewInfo(`by_name/${name}`, token, new URLSearchParams())
 }
 
 const changeEntity = async (path: string, method: string, token: string, ref: IEntityRef, body?: string): Promise<void> => {

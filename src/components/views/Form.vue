@@ -179,7 +179,7 @@
             }
 
             const updatedFields = this.fields
-                                      .filter(field => !field.updatedIsNotNull)
+                                      .filter(field => field.updatedIsNotNull)
                                       .map(field => [ field.column.name, field.updatedValue ])
 
             if (this.uv.rows === null) {
