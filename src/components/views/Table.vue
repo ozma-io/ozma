@@ -88,11 +88,13 @@
                 const columnAttrs = this.uv.columnAttributes[i]
                 const captionAttr = columnAttrs["Caption"]
                 const caption = captionAttr !== undefined ? captionAttr : columnInfo.name
+                const sortD = columnInfo.valueType.type === "int" ? 'desc' : 'asc'
 
                 return {
                     key: String(i),
                     label: caption,
                     sortable: true,
+                    sortDirection : sortD,
                 }
             })
         }
