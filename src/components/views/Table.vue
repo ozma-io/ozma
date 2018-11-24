@@ -121,7 +121,7 @@
                             query: { "id": String(row.id) },
                         }
                     const tdWidthAttr = row.id === undefined ? null : columnAttrs["widthColumn"]
-                    const tdHeightAttr = row.id === undefined ? null : columnAttrs["heightColumn"]
+                    const tdHeightAttr = row.id === undefined ? null : columnAttrs["heightrow"]
                     const width = tdWidthAttr -7
                     const height = tdHeightAttr -7
                     const valueText = value.value === null ? "" : value.value
