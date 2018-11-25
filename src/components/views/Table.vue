@@ -45,13 +45,15 @@
                         <b-button style="cursor:pointer" class="open_form"><b-img src="/assets/openform.png" /></b-button>
                     </template>
 
-                    <template v-for="col in fields" :slot="col.key" slot-scope="data">
-                        <router-link v-if="data.value.link !== null" :key="col.name" :to="data.value.link">
-                            {{ data.value.value }}
-                        </router-link>
-                        <template v-else>
-                            {{ data.value.value }}
-                        </template>
+                    <template v-for="col in fields" :slot="col.key" slot-scope="data" >
+                        <div class="contentTd" v-if="data.value.width!==null || data.value.height!==null" :style="{minWidth: data.value.width + 'px', height: data.value.height + 'px', width: data.value.width + 'px'}">
+                            <router-link v-if="data.value.link !== null" :key="col.name" :to="data.value.link">
+                                {{ data.value.value }}
+                            </router-link>
+                            <template v-else>
+                                {{ data.value.value }}
+                            </template>
+                        </div>
                     </template>
                 </b-table>
             </b-container>
@@ -67,6 +69,8 @@
     interface ITableCell {
         value: any
         link: Location | null
+        width: any
+        height: any
     }
 
     @Component
@@ -116,10 +120,14 @@
                             class: "tabl_heading",
                             query: { "id": String(row.id) },
                         }
+                    const tdWidthAttr = row.id === undefined ? null : columnAttrs["widthColumn"]
+                    const tdHeightAttr = row.id === undefined ? null : columnAttrs["heightrow"]
+                    const width = tdWidthAttr -7
+                    const height = tdHeightAttr -7
                     const valueText = value.value === null ? "" : value.value
                     const cell: ITableCell = {
                         value: value.pun === undefined || value.value === null ? valueText : `(${valueText}) ${value.pun}`,
-                        link,
+                        link, width, height,
                     }
                     const key = String(i)
                     rowObj[key] = cell

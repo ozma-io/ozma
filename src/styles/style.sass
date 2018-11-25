@@ -57,6 +57,8 @@ div
 									width: 160px
 									text-decoration: none
 									-webkit-appearance: none
+									box-sizing: content-box
+										
 				
 				button
 					&.btnn
@@ -92,7 +94,7 @@ div
 				margin: auto
 				padding: 0
 				max-width: 650px
-
+				background: var(--navigation-back-color)
 				div
 					&.subsubmain_nav
 						width: 90%
@@ -147,7 +149,8 @@ div
 					padding: 0
 					border: 0
 					font-weight: normal
-
+					max-width: 0px !important
+					overflow: hidden
 					&.empty_th
 						min-width: 14px
 						max-width: 14px !important
@@ -159,7 +162,7 @@ div
 							min-width: 14px
 							max-width: 14px !important
 							margin: 0
-							
+
 							input
 								left: 0
 								rigth: 0
@@ -181,6 +184,11 @@ div
 						margin: 0
 						padding-left: 0px
 						left: 24px
+													
+						&.contentTd
+							min-width: none
+							max-width: none !important
+							overflow: hidden
 					button
 						&.open_form
 							padding: 0
