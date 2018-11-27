@@ -5,14 +5,18 @@
             "create": "Create new",
             "filter": "Filter",
             "search_placeholder": "Type to search",
-            "clear": "Clear"
+            "clear": "Clear",
+            "yes": "Yes",
+            "no": "No"
         },
         "ru-RU": {
             "create_not_supported": "Создание новых записей через таблицу не поддерживается",
             "create": "Создать новую",
             "filter": "Поиск",
             "search_placeholder": "Введите фразу",
-            "clear": "Очистить"
+            "clear": "Очистить",
+            "yes": "Да",
+            "no": "Нет"
         }
     }
 </i18n>
@@ -105,9 +109,12 @@
             }
 
             return this.uv.rows.map(row => {
+                const rowAttrs = row.attributes === undefined ? {} : row.attributes
                 return row.values.reduce((rowObj: any, value, i) => {
                     const columnInfo = this.uv.info.columns[i]
                     const columnAttrs = this.uv.columnAttributes[i]
+                    const cellAttrs = value.attributes === undefined ? {} : value.attributes
+
                     const linkedViewAttr = row.id === undefined ? undefined : columnAttrs["LinkedView"]
                     const link =
                         linkedViewAttr === undefined ? null : {
@@ -115,19 +122,33 @@
                             params: { "name": String(linkedViewAttr) },
                             query: { "id": String(row.id) },
                         }
-                    const valueText = value.value === null ? "" : value.value
+
+                    const valueText = this.getValueText(value.value)
                     const cell: ITableCell = {
                         value: value.pun === undefined || value.value === null ? valueText : `(${valueText}) ${value.pun}`,
                         link,
                     }
+
+                    const cellStyle = cellAttrs["CellStyle"] || rowAttrs["CellStyle"] || columnAttrs["CellStyle"]
+
                     const key = String(i)
                     rowObj[key] = cell
-                    if (value.value === null) {
-                        rowObj._cellVariants[key] = "warning"
+                    if (cellStyle !== undefined && cellStyle !== null) {
+                        rowObj._cellVariants[key] = cellStyle
                     }
                     return rowObj
                 }, { _cellVariants: {} })
             })
+        }
+
+        private getValueText(val: any) {
+            if (val === null) {
+                return ""
+            } else if (typeof val === "boolean") {
+                return val ? this.$tc("yes") : this.$tc("no")
+            } else {
+                return val
+            }
         }
     }
 </script>

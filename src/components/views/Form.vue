@@ -11,6 +11,7 @@
             "ok": "OK",
             "cancel": "Cancel",
             "no_value": "(No value)",
+            "select_value": "(Select value)",
             "yes": "Yes",
             "no": "No"
         },
