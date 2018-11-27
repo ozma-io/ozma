@@ -1,6 +1,6 @@
 ﻿<i18n>
     {
-        "en": {
+        "en-US": {
             "create_not_supported": "Creating new entities in a table is not supported",
             "create": "Create new",
             "filter": "Filter",
@@ -113,7 +113,6 @@
                         linkedViewAttr === undefined ? null : {
                             name: "view",
                             params: { "name": String(linkedViewAttr) },
-                            class: "tabl_heading",
                             query: { "id": String(row.id) },
                         }
                     const valueText = value.value === null ? "" : value.value

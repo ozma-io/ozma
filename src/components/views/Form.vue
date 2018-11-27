@@ -1,6 +1,6 @@
 <i18n>
     {
-        "en": {
+        "en-US": {
             "item_not_found": "Record not found",
             "changes_saved": "Changes saved",
             "submit_error": "Error while submitting changes: {msg}",
@@ -9,7 +9,10 @@
             "delete": "Delete",
             "delete_confirmation": "Are you sure want to delete this record?",
             "ok": "OK",
-            "cancel": "Cancel"
+            "cancel": "Cancel",
+            "no_value": "(No value)",
+            "yes": "Yes",
+            "no": "No"
         },
         "ru-RU": {
             "item_not_found": "Запись не найдена",
@@ -20,7 +23,10 @@
             "delete": "Удалить",
             "delete_confirmation": "Вы действительно хотите удалить эту запись?",
             "ok": "ОК",
-            "cancel": "Отмена"
+            "cancel": "Отмена",
+            "no_value": "(Пусто)",
+            "yes": "Да",
+            "no": "Нет"
         }
     }
 </i18n>
@@ -40,37 +46,29 @@
         <b-form v-else @submit.prevent="updateRecord" @reset.prevent="resetRecord">
             <template v-for="field in fields">
                 <b-form-group :key="field.column.name" :label-for="field.column.name">
-                    <b-form-checkbox v-if="field.isNullable"
-                                     slot="label"
-                                     :id="field.column.name + '__notnull'"
-                                     :disabled="field.column.updateField === null"
-                                     v-model="field.updatedIsNotNull">
-                        {{ field.caption }}
-                    </b-form-checkbox>
-                    <template v-else slot="label">
-                        {{ field.caption }}
-                    </template>
+                    {{ field.caption }}
 
                     <b-form-checkbox v-if="field.type.name === 'check'"
                                     :id="field.column.name"
                                     v-model="field.updatedValue"
-                                    :disabled="field.column.updateField === null || !field.updatedIsNotNull" />
+                                    :disabled="field.column.updateField === null" />
                     <b-form-textarea v-else-if="field.type.name === 'textarea'"
                                     :id="field.column.name"
                                     v-model="field.updatedValue"
                                     :disabled="field.column.updateField === null"
                                     :rows="3"
-                                    :max-rows="6" />
+                                    :max-rows="6"
+                                    :required="field.type.required" />
                     <b-form-select v-else-if="field.type.name === 'select'"
                                 :id="field.column.name"
                                 v-model="field.updatedValue"
-                                :disabled="field.column.updateField === null || !field.updatedIsNotNull"
+                                :disabled="field.column.updateField === null"
                                 :options="field.type.options" />
                     <b-form-input v-else
                                 :id="field.column.name"
                                 v-model="field.updatedValue"
                                 :type="field.type.type"
-                                :disabled="field.column.updateField === null || !field.updatedIsNotNull"
+                                :disabled="field.column.updateField === null"
                                 :required="field.type.required" />
                 </b-form-group>
             </template>
@@ -125,42 +123,12 @@
         column: Api.IResultColumnInfo
         value: any
         updatedValue: string
-        updatedIsNotNull: boolean
         caption: string
-        required: boolean
         isNullable: boolean
         type: IType
     }
 
     const auth = namespace("auth")
-
-    const getInputType = (columnInfo: Api.IResultColumnInfo, attributes: Record<string, any>): IType => {
-        if (columnInfo.fieldType !== null) {
-            switch (columnInfo.fieldType.type) {
-                case "reference":
-                    // FIXME
-                    return { name: "text", type: "number", required: true }
-                case "enum":
-                    return {
-                        name: "select",
-                        options: columnInfo.fieldType.values.map(x => ({ text: x, value: x })),
-                    }
-                case "bool":
-                    return { name: "check" }
-                case "int":
-                    return { name: "text", type: "number", required: true }
-            }
-        } else {
-            switch (columnInfo.valueType.type) {
-                case "bool":
-                    return { name: "check" }
-                case "int":
-                    return { name: "text", type: "number", required: true }
-            }
-        }
-
-        return attributes["TextArea"] ? { name: "textarea" } : { name: "text", type: "text", required: false }
-    }
 
     @Component
     export default class UserViewForm extends Vue {
@@ -179,8 +147,8 @@
             }
 
             const updatedFields = this.fields
-                                      .filter(field => field.updatedIsNotNull)
-                                      .map(field => [ field.column.name, field.updatedValue ])
+                                      .filter(field => field.column.updateField !== null)
+                                      .map(field => [ field.column.name, field.updatedValue === "" ? "\0" : field.updatedValue ])
 
             if (this.uv.rows === null) {
                 return (async () => {
@@ -233,7 +201,6 @@
 
             this.fields.forEach(field => {
                 field.updatedValue = field.value === null ? "" : field.value
-                field.updatedIsNotNull = field.value !== null
             })
         }
 
@@ -257,11 +224,10 @@
                     column: columnInfo,
                     value,
                     updatedValue: value === null ? "" : value,
-                    updatedIsNotNull: value !== null,
                     caption,
                     required,
-                    isNullable: columnInfo.updateField === null ? value === null : columnInfo.updateField.field.isNullable,
-                    type: getInputType(columnInfo, columnAttrs),
+                    isNullable: columnInfo.updateField === null ? true : columnInfo.updateField.field.isNullable,
+                    type: this.getInputType(columnInfo, columnAttrs),
                 }
             }
             if (this.uv.rows === null) {
@@ -284,6 +250,41 @@
                     return makeField(columnInfo, i, value)
                 })
             }
+        }
+
+        private getInputType(columnInfo: Api.IResultColumnInfo, attributes: Record<string, any>): IType {
+            const isNullable = columnInfo.updateField === null ? true : columnInfo.updateField.field.isNullable
+            if (columnInfo.fieldType !== null) {
+                switch (columnInfo.fieldType.type) {
+                    case "reference":
+                        // FIXME
+                        return { name: "text", type: "number", required: !isNullable }
+                    case "enum":
+                        return {
+                            name: "select",
+                            options: [...(isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), ...columnInfo.fieldType.values.map(x => ({ text: x, value: x }))],
+                        }
+                    case "bool":
+                        return {
+                            name: "select",
+                            options: [...(isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
+                        }
+                    case "int":
+                        return { name: "text", type: "number", required: !isNullable }
+                }
+            } else {
+                switch (columnInfo.valueType.type) {
+                    case "bool":
+                        return {
+                            name: "select",
+                            options: [...(isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
+                        }
+                    case "int":
+                        return { name: "text", type: "number", required: !isNullable }
+                }
+            }
+
+            return attributes["TextArea"] ? { name: "textarea" } : { name: "text", type: "text", required: !isNullable }
         }
     }
 </script>
