@@ -133,8 +133,9 @@
 
                     const key = String(i)
                     rowObj[key] = cell
-                    if (cellStyle !== undefined && cellStyle !== null) {
-                        rowObj._cellVariants[key] = cellStyle
+                    // FIXME: cellStyle should be a string, not bool -- this is temporary until we get conditionals in FunQL
+                    if (cellStyle !== undefined && cellStyle !== null && cellStyle) {
+                        rowObj._cellVariants[key] = "warning"
                     }
                     return rowObj
                 }, { _cellVariants: {} })
