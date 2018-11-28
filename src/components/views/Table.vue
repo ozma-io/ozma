@@ -41,7 +41,7 @@
                     <template slot="HEAD_isActive" slot-scope="data">
                     </template>
                     <template slot="isActive" slot-scope="data">
-                        <b-form-checkbox></b-form-checkbox>
+                        <b-form-checkbox class="flag"></b-form-checkbox>
                     </template>
                     <template slot="HEAD_openform" slot-scope="data">
                     </template>
@@ -49,13 +49,31 @@
                         <b-button style="cursor:pointer" class="open_form"><b-img src="/assets/openform.png" /></b-button>
                     </template>
 
-                    <template v-for="col in fields" :slot="col.key" slot-scope="data" >
+                    <template v-for="col in fields" :slot="col.key" slot-scope="data">
                         <div class="contentTd" v-if="data.value.width!==null || data.value.height!==null" :style="{minWidth: data.value.width + 'px', height: data.value.height + 'px', width: data.value.width + 'px'}">
-                            <router-link v-if="data.value.link !== null" :key="col.name" :to="data.value.link">
-                                {{ data.value.value }}
-                            </router-link>
+                            <template v-if="col.isActive===true">
+                                <b-checkbox :checked="data.value.value" disabled="true"></b-checkbox>
+                            </template>
                             <template v-else>
-                                {{ data.value.value }}
+                                <router-link v-if="data.value.link !== null" :key="col.name" :to="data.value.link">
+                                    {{ data.value.value }}
+                                </router-link>
+                                <template v-else>
+                                    {{ data.value.value }}
+                                </template>
+                            </template>
+                        </div>
+                        <div class="contentTd" v-else>
+                            <template v-if="col.isActive===true">
+                                <b-checkbox :checked="data.value.value" disabled="true"></b-checkbox>
+                            </template>
+                            <template v-else>
+                                <router-link v-if="data.value.link !== null" :key="col.name" :to="data.value.link">
+                                    {{ data.value.value }}
+                                </router-link>
+                                <template v-else>
+                                    {{ data.value.value }}
+                                </template>
                             </template>
                         </div>
                     </template>
@@ -93,12 +111,13 @@
                 const captionAttr = columnAttrs["Caption"]
                 const caption = captionAttr !== undefined ? captionAttr : columnInfo.name
                 const sortD = columnInfo.valueType.type === "int" ? "desc" : "asc"
-
+                const chek = columnInfo.valueType.type === "bool" ? true : false
                 return {
                     key: String(i),
                     label: caption,
                     sortable: true,
-                    sortDirection : sortD,
+                    sortDirection: sortD,
+                    isActive: chek,
                 }
             })
         }
