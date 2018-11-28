@@ -130,10 +130,15 @@
             return this.uv.rows.map(row => {
                 const rowAttrs = row.attributes === undefined ? {} : row.attributes
                 return row.values.reduce((rowObj: any, value, i) => {
+                    const rowAttrs = row.attributes
+                    const viewAttrs = this.uv.attributes
                     const columnInfo = this.uv.info.columns[i]
                     const columnAttrs = this.uv.columnAttributes[i]
+                    const cellw = row.id === undefined ? undefined : columnAttrs["WidthColumn"]
+                    const cellh = viewAttrs["HeightRow"] === undefined ? (rowAttrs === undefined ? undefined : rowAttrs["HeightRow"]) : viewAttrs["HeightRow"]
+                    const width = cellw === undefined ? null : cellw
+                    const height = cellh === undefined ? null : cellh
                     const cellAttrs = value.attributes === undefined ? {} : value.attributes
-
                     const linkedViewAttr = row.id === undefined ? undefined : columnAttrs["LinkedView"]
                     const link =
                         linkedViewAttr === undefined ? null : {
@@ -141,17 +146,11 @@
                             params: { "name": String(linkedViewAttr) },
                             query: { "id": String(row.id) },
                         }
-                    const tdWidthAttr = row.id === undefined ? null : columnAttrs["widthColumn"]
-                    const tdHeightAttr = row.id === undefined ? null : columnAttrs["heightrow"]
-                    const width = tdWidthAttr - 7
-                    const height = tdHeightAttr - 7
                     const valueText = this.getValueText(value.value)
-
                     const cell: ITableCell = {
                         value: value.pun === undefined || value.value === null ? valueText : `(${valueText}) ${value.pun}`,
                         link, width, height,
                     }
-
                     const cellStyle = cellAttrs["CellStyle"] || rowAttrs["CellStyle"] || columnAttrs["CellStyle"]
 
                     const key = String(i)
