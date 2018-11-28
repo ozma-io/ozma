@@ -27,8 +27,8 @@
             {{ $t('create_not_supported') }}
         </h5>
         <template v-else>
-            <b-button v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" variant="primary">{{ $t('create') }}</b-button>
-            <b-form-group horizontal :label="$t('filter')">
+            <b-button v-if="linkedView !== null" :to="{ name: 'view_create', params: { name: linkedView } }" variant="primary">{{ $t('create') }}</b-button>
+            <b-form-group horizontal :label="$t('filter')" class="find">
                 <b-input-group>
                     <b-form-input v-model="filter" :placeholder="$t('search_placeholder')" />
                     <b-input-group-append>
