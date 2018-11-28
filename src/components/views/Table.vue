@@ -130,7 +130,6 @@
             return this.uv.rows.map(row => {
                 const rowAttrs = row.attributes === undefined ? {} : row.attributes
                 return row.values.reduce((rowObj: any, value, i) => {
-                    const rowAttrs = row.attributes
                     const viewAttrs = this.uv.attributes
                     const columnInfo = this.uv.info.columns[i]
                     const columnAttrs = this.uv.columnAttributes[i]
