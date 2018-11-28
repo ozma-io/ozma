@@ -40,7 +40,7 @@ const router = new VueRouter({
 
 const i18n = new VueI18n({
     locale: navigator.language,
-    fallbackLocale: "en",
+    fallbackLocale: "en-US",
 })
 
 if (localStorage.getItem("authToken") !== null) {
@@ -77,28 +77,18 @@ router.beforeResolve((to, from, next) => {
             query: { redirect: to.fullPath },
         })
     } else if (isLogin && Store.store.state.auth.current !== null) {
-        const nextUrl = (to.query.redirect !== undefined) ? to.query.redirect : "/"
+        let nextUrl
+        const redirect = to.query.redirect
+        if (redirect !== undefined) {
+            nextUrl = Array.isArray(redirect) ? redirect[0] : redirect
+        } else {
+            nextUrl = "/"
+        }
         next(nextUrl)
     } else {
         next()
     }
 })
-
-declare module "vue" {
-    // tslint:disable:interface-name
-    interface Vue {
-        $tm(key: Path, values?: any[]): string
-    }
-}
-
-// tslint:disable:only-arrow-functions
-Vue.prototype.$tm = function(key: Path, values?: any[]) {
-    if (i18n.te(key)) {
-        return i18n.t(key, values)
-    } else {
-        return i18n.formatter.interpolate(key, values)[0]
-    }
-}
 
 const app = new Vue({
     router, i18n, store: Store.store,

@@ -1,16 +1,16 @@
 <i18n>
     {
-        "en": {
-        "username": "User name",
-        "password": "Password",
-        "login": "Log in",
-        "failed": "Failed to log in: {msg}"
+        "en-US": {
+            "username": "User name",
+            "password": "Password",
+            "login": "Log in",
+            "failed": "Failed to log in: {msg}"
         },
         "ru-RU": {
-        "username": "Имя пользователя",
-        "password": "Пароль",
-        "login": "Войти",
-        "failed": "Ошибка авторизации: {msg}"
+            "username": "Имя пользователя",
+            "password": "Пароль",
+            "login": "Войти",
+            "failed": "Ошибка авторизации: {msg}"
         }
     }
 </i18n>
@@ -72,7 +72,13 @@
         @Watch("current")
         onAuthChanged() {
             if (this.current !== null) {
-                const nextUrl = (this.$route.query.redirect !== undefined) ? this.$route.query.redirect : "/"
+                let nextUrl
+                const redirect = this.$route.query.redirect
+                if (redirect !== undefined) {
+                    nextUrl = Array.isArray(redirect) ? redirect[0] : redirect
+                } else {
+                    nextUrl = "/"
+                }
                 this.$router.replace(nextUrl)
             }
         }

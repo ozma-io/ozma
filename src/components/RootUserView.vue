@@ -1,6 +1,6 @@
 ﻿<i18n>
     {
-        "en": {
+        "en-US": {
             "failed": "Failed to fetch user view: {msg}",
             "goto_nav": "Back to the top"
         },
@@ -60,7 +60,12 @@
 
         private updateView() {
             if (this.$route.name === "view") {
-                this.getUserView({ name: this.$route.params.name, args: new URLSearchParams(this.$route.query) })
+                const query = Object.keys(this.$route.query).map(name => {
+                    const values = this.$route.query[name]
+                    const val = Array.isArray(values) ? values[0] : values
+                    return [name, val]
+                })
+                this.getUserView({ name: this.$route.params.name, args: new URLSearchParams(query) })
             } else if (this.$route.name === "view_create") {
                 this.getUserViewInfo(this.$route.params.name)
             } else {

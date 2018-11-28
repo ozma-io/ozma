@@ -1,6 +1,6 @@
 <i18n>
     {
-        "en": {
+        "en-US": {
             "logout": "Log out",
             "failed": "Failed to fetch main menu: {msg}"
         },
@@ -26,10 +26,10 @@
             <template v-if="currentMenu !== null">
                 <b-row class="menu_category subsubmain_nav" v-for="category in currentMenu.categories" :key="category.name">
                     <b-container class="nav_sec">
-                        <b-row class="nav_sec_tit "><a>{{ $tm(category.name) }}</a></b-row>
+                        <b-row class="nav_sec_tit"><a>{{ category.name }}</a></b-row>
                         <b-row>
                             <b-button class="nav_ent" :to="{ name: 'view', params: { name: button.name } }" v-for="button in category.buttons" :key="button.name">
-                                {{ $tm(button.name) }}
+                                {{ button.name }}
                             </b-button>
                         </b-row>
                     </b-container>

@@ -1,18 +1,22 @@
 ﻿<i18n>
     {
-        "en": {
+        "en-US": {
             "create_not_supported": "Creating new entities in a table is not supported",
             "create": "Create new",
             "filter": "Filter",
             "search_placeholder": "Type to search",
-            "clear": "Clear"
+            "clear": "Clear",
+            "yes": "Yes",
+            "no": "No"
         },
         "ru-RU": {
             "create_not_supported": "Создание новых записей через таблицу не поддерживается",
             "create": "Создать новую",
             "filter": "Поиск",
             "search_placeholder": "Введите фразу",
-            "clear": "Очистить"
+            "clear": "Очистить",
+            "yes": "Да",
+            "no": "Нет"
         }
     }
 </i18n>
@@ -109,34 +113,51 @@
             }
 
             return this.uv.rows.map(row => {
+                const rowAttrs = row.attributes === undefined ? {} : row.attributes
                 return row.values.reduce((rowObj: any, value, i) => {
                     const columnInfo = this.uv.info.columns[i]
                     const columnAttrs = this.uv.columnAttributes[i]
+                    const cellAttrs = value.attributes === undefined ? {} : value.attributes
+
                     const linkedViewAttr = row.id === undefined ? undefined : columnAttrs["LinkedView"]
                     const link =
                         linkedViewAttr === undefined ? null : {
                             name: "view",
                             params: { "name": String(linkedViewAttr) },
-                            class: "tabl_heading",
                             query: { "id": String(row.id) },
                         }
                     const tdWidthAttr = row.id === undefined ? null : columnAttrs["widthColumn"]
                     const tdHeightAttr = row.id === undefined ? null : columnAttrs["heightrow"]
-                    const width = tdWidthAttr -7
-                    const height = tdHeightAttr -7
-                    const valueText = value.value === null ? "" : value.value
+                    const width = tdWidthAttr - 7
+                    const height = tdHeightAttr - 7
+                    const valueText = this.getValueText(value.value)
+
                     const cell: ITableCell = {
                         value: value.pun === undefined || value.value === null ? valueText : `(${valueText}) ${value.pun}`,
                         link, width, height,
                     }
+
+                    const cellStyle = cellAttrs["CellStyle"] || rowAttrs["CellStyle"] || columnAttrs["CellStyle"]
+
                     const key = String(i)
                     rowObj[key] = cell
-                    if (value.value === null) {
+                    // FIXME: cellStyle should be a string, not bool -- this is temporary until we get conditionals in FunQL
+                    if (cellStyle !== undefined && cellStyle !== null && cellStyle) {
                         rowObj._cellVariants[key] = "warning"
                     }
                     return rowObj
                 }, { _cellVariants: {} })
             })
+        }
+
+        private getValueText(val: any) {
+            if (val === null) {
+                return ""
+            } else if (typeof val === "boolean") {
+                return val ? this.$tc("yes") : this.$tc("no")
+            } else {
+                return val
+            }
         }
     }
 </script>
