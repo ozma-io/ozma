@@ -27,7 +27,7 @@
             {{ $t('create_not_supported') }}
         </h5>
         <template v-else>
-            <b-button v-if="linkedView !== null" :to="{ name: 'view_create', params: { name: linkedView } }" variant="primary">{{ $t('create') }}</b-button>
+            <b-button v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" variant="primary">{{ $t('create') }}</b-button>
             <b-form-group horizontal :label="$t('filter')">
                 <b-input-group>
                     <b-form-input v-model="filter" :placeholder="$t('search_placeholder')" />
@@ -78,11 +78,7 @@
         filter: string = ""
         @Prop() private uv!: IUserViewData
 
-        get linkedView() {
-            if (this.uv.info.updateEntity === null) {
-                return null
-            }
-
+        get createView() {
             const attr = this.uv.attributes["CreateView"]
             return attr === undefined ? null : String(attr)
         }
