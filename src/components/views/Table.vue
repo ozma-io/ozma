@@ -166,8 +166,6 @@
         private getValueText(val: any) {
             if (val === null) {
                 return ""
-            } else if (typeof val === "boolean") {
-                return val ? this.$tc("yes") : this.$tc("no")
             } else {
                 return val
             }
