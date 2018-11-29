@@ -50,7 +50,7 @@
                     </template>
 
                     <template v-for="col in fields" :slot="col.key" slot-scope="data">
-                        <div class="contentTd" v-if="data.value.width!==null || data.value.height!==null" :style="{minWidth: data.value.width + 'px', height: data.value.height + 'px', width: data.value.width + 'px'}">
+                        <div class="contentTd" v-if="data.value.width!==null || data.value.height!==null" :style="{columnWidth: data.value.width + 'px', minWidth: data.value.width + 'px', height: data.value.height + 'px', width: data.value.width + 'px'}">
                             <template v-if="col.isActive===true">
                                 <b-checkbox :checked="data.value.value" disabled="true"></b-checkbox>
                             </template>
