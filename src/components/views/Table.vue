@@ -27,7 +27,7 @@
             {{ $t('create_not_supported') }}
         </h5>
         <template v-else>
-            <b-button v-if="linkedView !== null" :to="{ name: 'view_create', params: { name: linkedView } }" variant="primary">{{ $t('create') }}</b-button>
+            <b-button v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" variant="primary">{{ $t('create') }}</b-button>
             <b-form-group horizontal :label="$t('filter')" class="find">
                 <b-input-group>
                     <b-form-input v-model="filter" :placeholder="$t('search_placeholder')" />
@@ -41,30 +41,21 @@
                     <template slot="HEAD_isActive" slot-scope="data">
                     </template>
                     <template slot="isActive" slot-scope="data">
-                        <b-form-checkbox class="flag"></b-form-checkbox>
+                        <div class="contentTd">
+                            <b-form-checkbox class="flag"></b-form-checkbox>
+                        </div>
                     </template>
                     <template slot="HEAD_openform" slot-scope="data">
                     </template>
                     <template slot="openform" slot-scope="data">
-                        <b-button style="cursor:pointer" class="open_form"><b-img src="/assets/openform.png" /></b-button>
+                        <div class="contentTd">
+                            <b-button style="cursor:pointer" class="open_form"><b-img src="/assets/openform.png" /></b-button>
+                        </div>
                     </template>
 
                     <template v-for="col in fields" :slot="col.key" slot-scope="data">
-                        <div class="contentTd" v-if="data.value.width!==null || data.value.height!==null" :style="{columnWidth: data.value.width + 'px', minWidth: data.value.width + 'px', height: data.value.height + 'px', width: data.value.width + 'px'}">
-                            <template v-if="col.isActive===true">
-                                <b-checkbox :checked="data.value.value" disabled="true"></b-checkbox>
-                            </template>
-                            <template v-else>
-                                <router-link v-if="data.value.link !== null" :key="col.name" :to="data.value.link">
-                                    {{ data.value.value }}
-                                </router-link>
-                                <template v-else>
-                                    {{ data.value.value }}
-                                </template>
-                            </template>
-                        </div>
-                        <div class="contentTd" v-else>
-                            <template v-if="col.isActive===true">
+                        <div class="contentTd" :style="data.value.style">
+                            <template v-if="col.isActive">
                                 <b-checkbox :checked="data.value.value" disabled="true"></b-checkbox>
                             </template>
                             <template v-else>
@@ -91,8 +82,7 @@
     interface ITableCell {
         value: any
         link: Location | null
-        width: any
-        height: any
+        style: Record<string, any>
     }
 
     @Component
@@ -111,13 +101,13 @@
                 const captionAttr = columnAttrs["Caption"]
                 const caption = captionAttr !== undefined ? captionAttr : columnInfo.name
                 const sortD = columnInfo.valueType.type === "int" ? "desc" : "asc"
-                const chek = columnInfo.valueType.type === "bool" ? true : false
+                const check = columnInfo.valueType.type === "bool" ? true : false
                 return {
                     key: String(i),
                     label: caption,
                     sortable: true,
                     sortDirection: sortD,
-                    isActive: chek,
+                    isActive: check,
                 }
             })
         }
@@ -129,16 +119,13 @@
 
             return this.uv.rows.map(row => {
                 const rowAttrs = row.attributes === undefined ? {} : row.attributes
-                return row.values.reduce((rowObj: any, value, i) => {
+                return row.values.reduce((rowObj: Record<string, ITableCell>, value, i) => {
                     const viewAttrs = this.uv.attributes
                     const columnInfo = this.uv.info.columns[i]
                     const columnAttrs = this.uv.columnAttributes[i]
-                    const cellw = row.id === undefined ? undefined : columnAttrs["WidthColumn"]
-                    const cellh = viewAttrs["HeightRow"] === undefined ? (rowAttrs === undefined ? undefined : rowAttrs["HeightRow"]) : viewAttrs["HeightRow"]
-                    const width = cellw === undefined ? null : cellw
-                    const height = cellh === undefined ? null : cellh
                     const cellAttrs = value.attributes === undefined ? {} : value.attributes
-                    const linkedViewAttr = row.id === undefined ? undefined : columnAttrs["LinkedView"]
+
+                    const linkedViewAttr = row.id === undefined ? undefined : columnAttrs["LinkedView"] || viewAttrs["LinkedView"]
                     const link =
                         linkedViewAttr === undefined ? null : {
                             name: "view",
@@ -146,20 +133,30 @@
                             query: { "id": String(row.id) },
                         }
                     const valueText = this.getValueText(value.value)
+                    const style: Record<string, any> = {}
+
+                    const cellColor = cellAttrs["CellColor"] || rowAttrs["CellColor"] || columnAttrs["CellColor"] || viewAttrs["CellColor"]
+                    if (cellColor !== undefined) {
+                        style["background-color"] = cellColor
+                    }
+                    const cellWidth = columnAttrs["WidthColumn"] || viewAttrs["WidthColumn"]
+                    if (cellWidth !== undefined) {
+                        style["width"] = cellWidth
+                    }
+                    const cellHeight = rowAttrs["HeightRow"] || viewAttrs["HeightRow"]
+                    if (cellHeight !== undefined) {
+                        style["height"] = cellHeight
+                    }
+
                     const cell: ITableCell = {
                         value: value.pun === undefined || value.value === null ? valueText : `(${valueText}) ${value.pun}`,
-                        link, width, height,
+                        link, style,
                     }
-                    const cellStyle = cellAttrs["CellStyle"] || rowAttrs["CellStyle"] || columnAttrs["CellStyle"]
 
                     const key = String(i)
                     rowObj[key] = cell
-                    // FIXME: cellStyle should be a string, not bool -- this is temporary until we get conditionals in FunQL
-                    if (cellStyle !== undefined && cellStyle !== null) {
-                        rowObj._cellVariants[key] = cellStyle
-                    }
                     return rowObj
-                }, { _cellVariants: {} })
+                }, {})
             })
         }
 
