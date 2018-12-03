@@ -28,7 +28,7 @@
         </h5>
         <template v-else>
             <b-button v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" variant="primary">{{ $t('create') }}</b-button>
-            <b-form-group horizontal :label="$t('filter')">
+            <b-form-group horizontal :label="$t('filter')" class="find">
                 <b-input-group>
                     <b-form-input v-model="filter" :placeholder="$t('search_placeholder')" />
                     <b-input-group-append>
@@ -41,21 +41,34 @@
                     <template slot="HEAD_isActive" slot-scope="data">
                     </template>
                     <template slot="isActive" slot-scope="data">
-                        <b-form-checkbox></b-form-checkbox>
+                        <!-- We wrap all cells in a div which fills the whole <td>. This is needed because bootstrap-vue's Table doesn't support computed
+                            properties in <td>'s attributes -->
+                        <div class="contentTd">
+                            <b-form-checkbox class="flag"></b-form-checkbox>
+                        </div>
                     </template>
                     <template slot="HEAD_openform" slot-scope="data">
                     </template>
                     <template slot="openform" slot-scope="data">
-                        <b-button style="cursor:pointer" class="open_form"><b-img src="/assets/openform.png" /></b-button>
+                        <div class="contentTd">
+                            <b-button style="cursor:pointer" class="open_form"><b-img src="/assets/openform.png" /></b-button>
+                        </div>
                     </template>
 
                     <template v-for="col in fields" :slot="col.key" slot-scope="data">
-                        <router-link v-if="data.value.link !== null" :key="col.name" :to="data.value.link">
-                            {{ data.value.value }}
-                        </router-link>
-                        <template v-else>
-                            {{ data.value.value }}
-                        </template>
+                        <div class="contentTd" :style="data.value.style">
+                            <template v-if="col.isActive">
+                                <b-checkbox :checked="data.value.value" disabled="true"></b-checkbox>
+                            </template>
+                            <template v-else>
+                                <router-link v-if="data.value.link !== null" :key="col.name" :to="data.value.link">
+                                    {{ data.value.value }}
+                                </router-link>
+                                <template v-else>
+                                    {{ data.value.value }}
+                                </template>
+                            </template>
+                        </div>
                     </template>
                 </b-table>
             </b-container>
@@ -71,6 +84,7 @@
     interface ITableCell {
         value: any
         link: Location | null
+        style: Record<string, any>
     }
 
     @Component
@@ -89,12 +103,13 @@
                 const captionAttr = columnAttrs["Caption"]
                 const caption = captionAttr !== undefined ? captionAttr : columnInfo.name
                 const sortD = columnInfo.valueType.type === "int" ? "desc" : "asc"
-
+                const check = columnInfo.valueType.type === "bool" ? true : false
                 return {
                     key: String(i),
                     label: caption,
                     sortable: true,
-                    sortDirection : sortD,
+                    sortDirection: sortD,
+                    isActive: check,
                 }
             })
         }
@@ -106,43 +121,50 @@
 
             return this.uv.rows.map(row => {
                 const rowAttrs = row.attributes === undefined ? {} : row.attributes
-                return row.values.reduce((rowObj: any, value, i) => {
+                return row.values.reduce((rowObj: Record<string, ITableCell>, value, i) => {
+                    const viewAttrs = this.uv.attributes
                     const columnInfo = this.uv.info.columns[i]
                     const columnAttrs = this.uv.columnAttributes[i]
                     const cellAttrs = value.attributes === undefined ? {} : value.attributes
 
-                    const linkedViewAttr = row.id === undefined ? undefined : columnAttrs["LinkedView"]
+                    const linkedViewAttr = row.id === undefined ? undefined : columnAttrs["LinkedView"] || viewAttrs["LinkedView"]
                     const link =
                         linkedViewAttr === undefined ? null : {
                             name: "view",
                             params: { "name": String(linkedViewAttr) },
                             query: { "id": String(row.id) },
                         }
-
                     const valueText = this.getValueText(value.value)
-                    const cell: ITableCell = {
-                        value: value.pun === undefined || value.value === null ? valueText : `(${valueText}) ${value.pun}`,
-                        link,
+                    const style: Record<string, any> = {}
+
+                    const cellColor = cellAttrs["CellColor"] || rowAttrs["CellColor"] || columnAttrs["CellColor"] || viewAttrs["CellColor"]
+                    if (cellColor !== undefined) {
+                        style["background-color"] = cellColor
+                    }
+                    const cellWidth = columnAttrs["WidthColumn"] || viewAttrs["WidthColumn"]
+                    if (cellWidth !== undefined) {
+                        style["width"] = cellWidth
+                    }
+                    const cellHeight = rowAttrs["HeightRow"] || viewAttrs["HeightRow"]
+                    if (cellHeight !== undefined) {
+                        style["height"] = cellHeight
                     }
 
-                    const cellStyle = cellAttrs["CellStyle"] || rowAttrs["CellStyle"] || columnAttrs["CellStyle"]
+                    const cell: ITableCell = {
+                        value: value.pun === undefined || value.value === null ? valueText : `(${valueText}) ${value.pun}`,
+                        link, style,
+                    }
 
                     const key = String(i)
                     rowObj[key] = cell
-                    // FIXME: cellStyle should be a string, not bool -- this is temporary until we get conditionals in FunQL
-                    if (cellStyle !== undefined && cellStyle !== null && cellStyle) {
-                        rowObj._cellVariants[key] = "warning"
-                    }
                     return rowObj
-                }, { _cellVariants: {} })
+                }, {})
             })
         }
 
         private getValueText(val: any) {
             if (val === null) {
                 return ""
-            } else if (typeof val === "boolean") {
-                return val ? this.$tc("yes") : this.$tc("no")
             } else {
                 return val
             }

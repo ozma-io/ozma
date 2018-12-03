@@ -57,6 +57,8 @@ div
 									width: 160px
 									text-decoration: none
 									-webkit-appearance: none
+									box-sizing: content-box
+										
 				
 				button
 					&.btnn
@@ -92,7 +94,7 @@ div
 				margin: auto
 				padding: 0
 				max-width: 650px
-
+				background: var(--navigation-back-color)
 				div
 					&.subsubmain_nav
 						width: 90%
@@ -132,6 +134,19 @@ div
 
 
 /* Таблица */
+div
+	div
+		div
+			fieldset
+				&.find
+					position: absolute;
+					top: 0px;
+					left: 234px;
+					width: 95%;
+
+					div
+						legend
+							max-width: 50px !important
 table
 	width: auto !important
 div
@@ -147,7 +162,8 @@ div
 					padding: 0
 					border: 0
 					font-weight: normal
-
+					max-width: max-content !important
+					overflow: hidden
 					&.empty_th
 						min-width: 14px
 						max-width: 14px !important
@@ -159,7 +175,7 @@ div
 							min-width: 14px
 							max-width: 14px !important
 							margin: 0
-							
+
 							input
 								left: 0
 								rigth: 0
@@ -171,16 +187,28 @@ div
 				tr
 					background-color: white !important
 					border-right: solid 1px
+					height: 100%
 				td
-					padding: 3px
 					border: solid 1px
+					padding: 0px
+					height: 100%
 
 					div
-						min-width: 14px
+						min-width: 100%
 						max-width: 14px !important
 						margin: 0
 						padding-left: 0px
-						left: 24px
+						left: 24px							
+						&.contentTd
+							min-width: none
+							max-width: none !important
+							overflow: hidden
+							column-count: 1
+							padding: 3px
+							height: 100%
+						&.flag
+							width: 14px
+							min-width: 14px
 					button
 						&.open_form
 							padding: 0

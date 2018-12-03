@@ -19,7 +19,7 @@
                  @dismissed="clearError">
             {{ $t('failed', { msg: lastError }) }}
         </b-alert>
-        <b-container class="submain_nav" style="background:#F5C700">
+        <b-container class="submain_nav">
             <b-row id="logout">
                 <b-button @click="removeAuth()">{{ $t('logout') }}</b-button>
             </b-row>
