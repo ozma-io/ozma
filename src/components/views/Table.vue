@@ -41,6 +41,8 @@
                     <template slot="HEAD_isActive" slot-scope="data">
                     </template>
                     <template slot="isActive" slot-scope="data">
+                        <!-- We wrap all cells in a div which fills the whole <td>. This is needed because bootstrap-vue's Table doesn't support computed
+                            properties in <td>'s attributes -->
                         <div class="contentTd">
                             <b-form-checkbox class="flag"></b-form-checkbox>
                         </div>
