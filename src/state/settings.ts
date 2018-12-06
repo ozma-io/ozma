@@ -1,13 +1,13 @@
 import { Module as Mod } from "vuex"
 import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators"
 
-import * as Api from "../api"
-import * as Store from "./store"
+import * as Api from "@/api"
+import * as Store from "@/state/store"
 
 export class CurrentSettings {
-    settings: Map<string, string>
+    settings: Record<string, string>
 
-    constructor(settings: Map<string, string>) {
+    constructor(settings: Record<string, string>) {
         this.settings = settings
     }
 }
@@ -27,6 +27,7 @@ export default class SettingsState extends VuexModule {
 
     @Mutation
     failGet(lastError: string) {
+        this.current = null
         this.lastError = lastError
     }
 
@@ -46,7 +47,7 @@ export default class SettingsState extends VuexModule {
             if (this.current === null) {
                 return defValue
             } else {
-                const ret = this.current.settings.get(name)
+                const ret = this.current.settings[name]
                 return (ret === undefined) ? defValue : ret
             }
         }
@@ -56,12 +57,12 @@ export default class SettingsState extends VuexModule {
     async getSettings(): Promise<void> {
         try {
             const res: Api.IViewExprResult = await Store.callSecretApi(Api.fetchAnonymousView, "SELECT \"Name\", \"Value\" FROM funapp.\"Settings\"", new URLSearchParams())
-            const values = res.result.rows.reduce((currSettings, row) => {
+            const values = res.result.rows.reduce((currSettings: Record<string, string>, row) => {
                 const key = row.values[0].value
                 const value = row.values[1].value
-                currSettings.set(key, value)
+                currSettings[key] = value
                 return currSettings
-            }, new Map<string, string>())
+            }, {})
             const settings = new CurrentSettings(values)
             this.setCurrent(settings)
         } catch (e) {

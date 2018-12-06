@@ -1,7 +1,6 @@
 ﻿<i18n>
     {
         "en-US": {
-            "create_not_supported": "Creating new entities in a table is not supported",
             "create": "Create new",
             "filter": "Filter",
             "search_placeholder": "Type to search",
@@ -10,7 +9,6 @@
             "no": "No"
         },
         "ru-RU": {
-            "create_not_supported": "Создание новых записей через таблицу не поддерживается",
             "create": "Создать новую",
             "filter": "Поиск",
             "search_placeholder": "Введите фразу",
@@ -23,74 +21,80 @@
 
 <template>
     <b-container fluid>
-        <h5 v-if="fields === null">
-            {{ $t('create_not_supported') }}
-        </h5>
-        <template v-else>
-            <b-button v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" variant="primary">{{ $t('create') }}</b-button>
-            <b-form-group horizontal :label="$t('filter')" class="find">
-                <b-input-group>
-                    <b-form-input v-model="filter" :placeholder="$t('search_placeholder')" />
-                    <b-input-group-append>
-                        <b-btn :disabled="!filter" @click="filter = ''">{{ $t('clear') }}</b-btn>
-                    </b-input-group-append>
-                </b-input-group>
-            </b-form-group>
-            <b-container class="tabl">
-                <b-table striped hover :fields="[{key:'isActive', class:'empty_th'},{key:'openform',class:'empty_th'}].concat(fields)" :items="items" :filter="filter">
-                    <template slot="HEAD_isActive" slot-scope="data">
-                    </template>
-                    <template slot="isActive" slot-scope="data">
-                        <!-- We wrap all cells in a div which fills the whole <td>. This is needed because bootstrap-vue's Table doesn't support computed
-                            properties in <td>'s attributes -->
-                        <div class="contentTd">
-                            <b-form-checkbox class="flag"></b-form-checkbox>
-                        </div>
-                    </template>
-                    <template slot="HEAD_openform" slot-scope="data">
-                    </template>
-                    <template slot="openform" slot-scope="data">
-                        <div class="contentTd">
-                            <b-button style="cursor:pointer" class="open_form"><b-img src="/assets/openform.png" /></b-button>
-                        </div>
-                    </template>
+        <b-button v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" variant="primary">{{ $t('create') }}</b-button>
+        <b-form-group horizontal :label="$t('filter')" class="find">
+            <b-input-group>
+                <b-form-input v-model="filter" :placeholder="$t('search_placeholder')" />
+                <b-input-group-append>
+                    <b-btn :disabled="!filter" @click="filter = ''">{{ $t('clear') }}</b-btn>
+                </b-input-group-append>
+            </b-input-group>
+        </b-form-group>
+        <b-container class="tabl">
+            <b-table striped hover :fields="[{key:'isActive', class:'empty_th'},{key:'openform',class:'empty_th'}].concat(fields)" :items="entries" :filter="filter">
+                <template slot="HEAD_isActive" slot-scope="data">
+                </template>
+                <template slot="isActive" slot-scope="data">
+                    <!-- We wrap all cells in a div which fills the whole <td>. This is needed because bootstrap-vue's Table doesn't support computed
+                        properties in <td>'s attributes -->
+                    <div class="contentTd">
+                        <b-form-checkbox class="flag"></b-form-checkbox>
+                    </div>
+                </template>
+                <template slot="HEAD_openform" slot-scope="data">
+                </template>
+                <template slot="openform" slot-scope="data">
+                    <div class="contentTd">
+                        <b-button style="cursor:pointer" class="open_form"><b-img src="/assets/openform.png" /></b-button>
+                    </div>
+                </template>
 
-                    <template v-for="col in fields" :slot="col.key" slot-scope="data">
-                        <div class="contentTd" :style="data.value.style">
-                            <template v-if="col.isActive">
-                                <b-checkbox :checked="data.value.value" disabled="true"></b-checkbox>
-                            </template>
+                <template v-for="col in fields" :slot="col.key" slot-scope="data">
+                    <div class="contentTd" :key="col.key" :style="data.value.style">
+                        <template v-if="col.isActive">
+                            <b-checkbox :checked="data.value.value" disabled="true"></b-checkbox>
+                        </template>
+                        <template v-else>
+                            <router-link v-if="data.value.link !== null" :key="col.name" :to="data.value.link">
+                                {{ data.value.value }}
+                            </router-link>
                             <template v-else>
-                                <router-link v-if="data.value.link !== null" :key="col.name" :to="data.value.link">
-                                    {{ data.value.value }}
-                                </router-link>
-                                <template v-else>
-                                    {{ data.value.value }}
-                                </template>
+                                {{ data.value.value }}
                             </template>
-                        </div>
-                    </template>
-                </b-table>
-            </b-container>
-        </template>
+                        </template>
+                    </div>
+                </template>
+            </b-table>
+        </b-container>
     </b-container>
 </template>
 
 <script lang="ts">
-    import { Component, Prop, Vue } from "vue-property-decorator"
-    import { IUserViewData } from "@/state/user_view"
+    import { Component, Prop, Watch, Vue } from "vue-property-decorator"
     import { Location } from "vue-router"
+    import { namespace } from "vuex-class"
+    import { UserViewResult } from "@/state/user_view"
+    import { ChangesMap, IEntityChanges } from "@/state/staging_changes"
+    import { IExecutedValue } from "@/api"
 
     interface ITableCell {
-        value: any
+        value: string
         link: Location | null
         style: Record<string, any>
     }
 
+    const staging = namespace("staging")
+
     @Component
     export default class UserViewTable extends Vue {
+        @staging.State("changes") changes!: ChangesMap
+        @staging.Getter("forUserView") changesForUserView!: (uv: UserViewResult) => IEntityChanges
+        @staging.Getter("isEmpty") changesAreEmpty!: boolean
+
         filter: string = ""
-        @Prop() private uv!: IUserViewData
+        entries: Array<Record<string, ITableCell>> = []
+
+        @Prop() private uv!: UserViewResult
 
         get createView() {
             const attr = this.uv.attributes["CreateView"]
@@ -105,7 +109,7 @@
                 const sortD = columnInfo.valueType.type === "int" ? "desc" : "asc"
                 const check = columnInfo.valueType.type === "bool" ? true : false
                 return {
-                    key: String(i),
+                    key: columnInfo.name,
                     label: caption,
                     sortable: true,
                     sortDirection: sortD,
@@ -114,27 +118,74 @@
             })
         }
 
-        get items() {
+        /* To optimize performance when staging entries change, we first pre-build entries and then update them selectively watching staging entries.
+           This is to avoid rebuilding complete rows array each time user changes a field.
+        */
+        @Watch("uv")
+        updateFields() {
+            this.entries = this.buildEntries()
+        }
+
+        @Watch("changes")
+        updateChanges() {
+            if (this.changesAreEmpty) {
+                // Changes got reset -- rebuild entries.
+                // This could be done more efficiently but it would require tracking of what fields were changed.
+                this.entries = this.buildEntries()
+            } else {
+                const changedFields = this.getCurrentChanges()
+                if (this.uv.rows !== null) {
+                    Object.keys(changedFields.updated).forEach(rowId => {
+                        const fields = changedFields.updated[rowId]
+                        const rowI = this.uv.updateRowIds[rowId]
+                        const entry = this.entries[rowI]
+                        Object.keys(fields).forEach(fieldName => {
+                            entry[fieldName].value = this.getValueText({ value: fields[fieldName] })
+                        })
+                    })
+                }
+            }
+        }
+
+        created() {
+            this.entries = this.buildEntries()
+        }
+
+        private buildEntries(): Array<Record<string, ITableCell>> {
+            // .rows === null means that we are in "create new" mode -- there are no selected existing values.
             if (this.uv.rows === null) {
-                return null
+                // Not supported in table yet.
+                return []
             }
 
-            return this.uv.rows.map(row => {
+            const changedFields = this.getCurrentChanges()
+
+            return this.uv.rows.map((row, rowI) => {
                 const rowAttrs = row.attributes === undefined ? {} : row.attributes
-                return row.values.reduce((rowObj: Record<string, ITableCell>, value, i) => {
+                return row.values.reduce((rowObj: Record<string, ITableCell>, value, colI) => {
                     const viewAttrs = this.uv.attributes
-                    const columnInfo = this.uv.info.columns[i]
-                    const columnAttrs = this.uv.columnAttributes[i]
+                    const columnInfo = this.uv.info.columns[colI]
+                    const columnAttrs = this.uv.columnAttributes[colI]
                     const cellAttrs = value.attributes === undefined ? {} : value.attributes
 
-                    const linkedViewAttr = row.id === undefined ? undefined : columnAttrs["LinkedView"] || viewAttrs["LinkedView"]
+                    let updatedValue
+                    if (row.id !== undefined) {
+                        const updatedEntry = changedFields.updated[row.id]
+                        if (updatedEntry !== undefined) {
+                            updatedValue = updatedEntry[columnInfo.name]
+                        }
+                    }
+                    const currentValue = updatedValue === undefined ? value : { value: updatedValue }
+                    const valueText = this.getValueText(currentValue)
+
+                    const linkedViewAttr = row.id === undefined ? undefined : cellAttrs["CellColor"] || columnAttrs["LinkedView"] || viewAttrs["LinkedView"]
                     const link =
                         linkedViewAttr === undefined ? null : {
                             name: "view",
                             params: { "name": String(linkedViewAttr) },
                             query: { "id": String(row.id) },
                         }
-                    const valueText = this.getValueText(value.value)
+
                     const style: Record<string, any> = {}
 
                     const cellColor = cellAttrs["CellColor"] || rowAttrs["CellColor"] || columnAttrs["CellColor"] || viewAttrs["CellColor"]
@@ -151,23 +202,26 @@
                     }
 
                     const cell: ITableCell = {
-                        value: value.pun === undefined || value.value === null ? valueText : `(${valueText}) ${value.pun}`,
+                        value: valueText,
                         link, style,
                     }
 
-                    const key = String(i)
-                    rowObj[key] = cell
+                    rowObj[columnInfo.name] = cell
                     return rowObj
                 }, {})
             })
         }
 
-        private getValueText(val: any) {
-            if (val === null) {
+        private getValueText(val: IExecutedValue) {
+            if (val.value === null) {
                 return ""
             } else {
-                return val
+                return val.pun === undefined ? String(val.value) : `(${val.value}) ${val.pun}`
             }
+        }
+
+        private getCurrentChanges() {
+            return this.changesForUserView(this.uv)
         }
     }
 </script>

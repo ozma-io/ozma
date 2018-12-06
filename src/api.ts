@@ -16,22 +16,26 @@ export interface IAuthToken {
     exp: number
 }
 
+export type RowId = number
+export type FieldName = string
+export type EntityName = string
+export type SchemaName = string
+
 export interface IAllowedEntity {
-    fields: Record<string, void>
+    fields: Record<FieldName, void>
 }
 
 export interface IAllowedSchema {
-    entities: Record<string, IAllowedEntity>
+    entities: Record<EntityName, IAllowedEntity>
 }
 
 export interface IAllowedDatabase {
-    schemas: Record<string, IAllowedSchema>
-    systemEntities: Record<string, IAllowedEntity>
+    schemas: Record<SchemaName, IAllowedSchema>
 }
 
 export interface IEntityRef {
-    schema: string | null
-    name: string
+    schema: SchemaName
+    name: EntityName
 }
 
 export type SimpleType = "int" | "string" | "bool" | "datetime" | "date" | "regclass"
@@ -108,7 +112,7 @@ export interface IExecutedValue {
 export interface IExecutedRow {
     values: IExecutedValue[]
     attributes?: Record<string, any>
-    id?: number
+    id?: RowId
 }
 
 export interface IExecutedViewExpr {
@@ -195,7 +199,7 @@ export const fetchNamedViewInfo = async (token: string, name: string): Promise<I
     return await fetchViewInfo(`by_name/${name}`, token, new URLSearchParams())
 }
 
-const changeEntity = async (path: string, method: string, token: string, ref: IEntityRef, body?: string): Promise<void> => {
+const changeEntity = async (path: string, method: string, token: string, ref: IEntityRef, body?: string): Promise<any> => {
     const schema = ref.schema === null ? "public" : ref.schema
     return await fetchApi(`entity/${schema}/${ref.name}${path}`, token, method, body)
 }
@@ -205,9 +209,9 @@ export const insertEntity = async (token: string, ref: IEntityRef, args: URLSear
 }
 
 export const updateEntity = async (token: string, ref: IEntityRef, id: number, args: URLSearchParams): Promise<void> => {
-    return await changeEntity(`/${id}`, "PUT", token, ref, args.toString())
+    await changeEntity(`/${id}`, "PUT", token, ref, args.toString())
 }
 
 export const deleteEntity = async (token: string, ref: IEntityRef, id: number): Promise<void> => {
-    return await changeEntity(`/${id}`, "DELETE", token, ref)
+    await changeEntity(`/${id}`, "DELETE", token, ref)
 }

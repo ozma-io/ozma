@@ -3,6 +3,8 @@ import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators"
 import * as Api from "@/api"
 import * as Store from "@/state/store"
 
+const renewInterval = 120000
+
 export class CurrentAuth {
     token: string
     header: Api.IAuthToken
@@ -13,21 +15,31 @@ export class CurrentAuth {
     }
 }
 
+const removeAuth = (store: AuthState, lastError?: string) => {
+    if (store.renewIntervalId !== null) {
+        clearInterval(store.renewIntervalId)
+        store.renewIntervalId = null
+    }
+    store.current = null
+    if (lastError !== undefined) {
+        store.lastError = lastError
+    }
+}
+
 @Module({ namespaced: true, dynamic: true, store: Store.store, name: "auth" })
 export default class AuthState extends VuexModule {
     current: CurrentAuth | null = null
     lastError: string | null = null
+    renewIntervalId: number | null = null
 
     @Mutation
     removeAuth(lastError?: string) {
-        this.current = null
-        if (lastError !== undefined) {
-            this.lastError = lastError
-        }
+        removeAuth(this, lastError)
     }
 
     @Mutation
     failAuth(lastError: string) {
+        removeAuth(this)
         this.lastError = lastError
     }
 
@@ -38,7 +50,11 @@ export default class AuthState extends VuexModule {
 
     @Mutation
     setAuth(auth: CurrentAuth) {
+        removeAuth(this)
         this.current = auth
+        this.renewIntervalId = setInterval(() => {
+            Store.store.dispatch("auth/renewAuth")
+        }, renewInterval)
         this.lastError = null
     }
 

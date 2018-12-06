@@ -2,10 +2,6 @@
     {
         "en-US": {
             "item_not_found": "Record not found",
-            "changes_saved": "Changes saved",
-            "submit_error": "Error while submitting changes: {msg}",
-            "save": "Save",
-            "revert_changes": "Revert changes",
             "delete": "Delete",
             "delete_confirmation": "Are you sure want to delete this record?",
             "ok": "OK",
@@ -17,10 +13,6 @@
         },
         "ru-RU": {
             "item_not_found": "Запись не найдена",
-            "changes_saved": "Изменения сохранены",
-            "submit_error": "Ошибка сохранения изменений: {msg}",
-            "save": "Сохранить",
-            "revert_changes": "Откатить изменения",
             "delete": "Удалить",
             "delete_confirmation": "Вы действительно хотите удалить эту запись?",
             "ok": "ОК",
@@ -34,52 +26,45 @@
 
 <template>
     <b-container fluid>
-        <b-alert variant="success" dismissible :show="showSuccess" @dismissed="showSuccess = false">
-            {{ $t('changes_saved') }}
-        </b-alert>
-        <b-alert variant="danger" dismissible :show="lastError !== null" @dismissed="lastError = null">
-            {{ $t('submit_error', { msg: lastError }) }}
-        </b-alert>
-
-        <h5 v-if="fields === null">
-            {{ $t('item_not_found') }}
-        </h5>
-        <b-form v-else @submit.prevent="updateRecord" @reset.prevent="resetRecord">
-            <template v-for="field in fields">
+        <b-form v-for="entry in entries">
+            <template v-for="field in entry.fields">
                 <b-form-group :key="field.column.name" :label-for="field.column.name">
                     {{ field.caption }}
 
                     <b-form-checkbox v-if="field.type.name === 'check'"
                                     :id="field.column.name"
-                                    v-model="field.updatedValue"
+                                    :value="field.value"
+                                    @input="updateValue(entry.id, field, $event)"
+                                    v-model="field.value"
                                     :disabled="field.column.updateField === null" />
                     <b-form-textarea v-else-if="field.type.name === 'textarea'"
                                     :id="field.column.name"
-                                    v-model="field.updatedValue"
+                                    :value="field.value"
+                                    @input="updateValue(entry.id, field, $event)"
                                     :disabled="field.column.updateField === null"
                                     :rows="3"
                                     :max-rows="6"
                                     :required="field.type.required" />
                     <b-form-select v-else-if="field.type.name === 'select'"
                                 :id="field.column.name"
-                                v-model="field.updatedValue"
+                                :value="field.value"
+                                @input="updateValue(entry.id, field, $event)"
                                 :disabled="field.column.updateField === null"
                                 :options="field.type.options" />
                     <b-form-input v-else
                                 :id="field.column.name"
-                                v-model="field.updatedValue"
+                               :value="field.value"
+                                @input="updateValue(entry.id, field, $event)"
                                 :type="field.type.type"
                                 :disabled="field.column.updateField === null"
                                 :required="field.type.required" />
                 </b-form-group>
             </template>
 
-            <b-button v-if="uv.updateEntity !== null" type="submit" variant="primary">{{ $t('save') }}</b-button>
-            <b-button v-if="uv.updateEntity !== null" type="reset" variant="secondary">{{ $t('revert_changes') }}</b-button>
             <!-- FIXME FIXME FIXME don't look at user! -->
-            <b-button v-if="uv.updateEntity !== null && uv.rows !== null && currentAuth.header.sub === 'root'" variant="danger" v-b-modal.deleteConfirm>{{ $t('delete') }}</b-button>
+            <b-button v-if="entry.id !== undefined && currentAuth.header.sub === 'root'" variant="danger" v-b-modal.deleteConfirm>{{ $t('delete') }}</b-button>
 
-            <b-modal id="deleteConfirm" ok-variant="danger" :ok-title="$t('ok')" @ok="deleteRecord" :cancel-title="$t('cancel')">
+            <b-modal id="deleteConfirm" ok-variant="danger" :ok-title="$t('ok')" @ok="deleteRecord(entry.id)" :cancel-title="$t('cancel')">
                 {{ $t('delete_confirmation') }}
             </b-modal>
         </b-form>
@@ -89,10 +74,12 @@
 <script lang="ts">
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
     import { namespace } from "vuex-class"
+    import { RowId, FieldName, IResultColumnInfo, IExecutedValue } from "@/api"
     import * as Api from "@/api"
-    import { IUserViewData } from "@/state/user_view"
-    import { callSecretApi } from "@/state/store"
+    import * as Store from "@/state/store"
+    import { UserViewResult } from "@/state/user_view"
     import { CurrentAuth } from "@/state/auth"
+    import { ChangesMap, IEntityChanges } from "@/state/staging_changes"
 
     interface ITextType {
         name: "text"
@@ -122,138 +109,159 @@
 
     interface IField {
         column: Api.IResultColumnInfo
-        value: any
-        updatedValue: string
+        value: string
         caption: string
         isNullable: boolean
         type: IType
     }
 
+    interface IEntry {
+        id?: RowId
+        fields: IField[]
+    }
+
     const auth = namespace("auth")
+    const staging = namespace("staging")
 
     @Component
     export default class UserViewForm extends Vue {
         // FIXME FIXME FIXME
         @auth.State("current") currentAuth!: CurrentAuth | null
+        @staging.State("changes") changes!: ChangesMap
+        @staging.Getter("forUserView") changesForUserView!: (uv: UserViewResult) => IEntityChanges
+        @staging.Mutation("updateField") updateField!: ({ schema, entity, id, field, value }: { schema: string, entity: string, id: number, field: string, value: any }) => void
+        @staging.Mutation("deleteRow") deleteRow!: ({ schema, entity, id }: { schema: string, entity: string, id: number }) => void
+        @staging.Getter("isEmpty") changesAreEmpty!: boolean
 
-        lastError: string | null = null
-        showSuccess = false
-        fields: IField[] | null = null
+        // Internal arrays are fields in columns order
+        entries: IEntry[] = []
 
-        @Prop() private uv!: IUserViewData
+        @Prop() private uv!: UserViewResult
 
-        updateRecord() {
-            if (this.uv.info.updateEntity === null || this.fields === null) {
-                throw Error()
+        updateValue(id: number, field: IField, value: string) {
+            if (this.uv.info.updateEntity === null) {
+                console.assert(false)
+                return
             }
 
-            const updatedFields = this.fields
-                                      .filter(field => field.column.updateField !== null)
-                                      .map(field => [ field.column.name, field.updatedValue === "" ? "\0" : field.updatedValue ])
-
-            if (this.uv.rows === null) {
-                return (async () => {
-                    try {
-                        await callSecretApi(Api.insertEntity, this.uv.info.updateEntity, new URLSearchParams(updatedFields))
-                        this.showSuccess = true
-                        this.$router.back()
-                    } catch (e) {
-                        this.lastError = e.message
-                    }
-                })()
-            } else {
-                if (this.uv.rows.length === 0) {
-                    throw Error()
-                }
-                const id = this.uv.rows[0].id
-
-                return (async () => {
-                    try {
-                        await callSecretApi(Api.updateEntity, this.uv.info.updateEntity, id, new URLSearchParams(updatedFields))
-                        this.showSuccess = true
-                    } catch (e) {
-                        this.lastError = e.message
-                    }
-                })()
+            if (field.value !== value) {
+                const entity = this.uv.info.updateEntity
+                this.updateField({
+                    schema: entity.schema,
+                    entity: entity.name,
+                    field: field.column.name,
+                    value, id,
+                })
             }
         }
 
-        deleteRecord() {
-            if (this.uv.info.updateEntity === null || this.uv.rows === null || this.uv.rows.length === 0 || this.fields === null) {
-                throw Error()
-            }
-            const id = this.uv.rows[0].id
-
-            return (async () => {
-                try {
-                    await callSecretApi(Api.deleteEntity, this.uv.info.updateEntity, id)
-                    this.showSuccess = true
-                    this.$router.back()
-                } catch (e) {
-                    this.lastError = e.message
-                }
-            })()
-        }
-
-        resetRecord() {
-            if (this.fields === null) {
-                throw Error()
+        deleteRecord(id: number) {
+            if (this.uv.info.updateEntity === null) {
+                console.assert(false)
+                return
             }
 
-            this.fields.forEach(field => {
-                field.updatedValue = field.value === null ? "" : field.value
-            })
+            return Store.callSecretApi(Api.deleteEntity, this.uv.info.updateEntity, id)
         }
 
         @Watch("uv")
         updateFields() {
-            this.fields = this.computeFields()
+            this.entries = this.buildEntries()
+        }
+
+        // See Table for description of why is this meddling with Watch is needed.
+        @Watch("changes")
+        updateChanges() {
+            if (this.changesAreEmpty) {
+                // Changes got reset -- rebuild entries.
+                // This could be done more efficiently but it would require tracking of what fields were changed.
+                this.entries = this.buildEntries()
+            } else {
+                const changedFields = this.getCurrentChanges()
+                if (this.uv.rows !== null) {
+                    Object.keys(changedFields.updated).forEach(rowId => {
+                        const fields = changedFields.updated[rowId]
+                        const rowI = this.uv.updateRowIds[rowId]
+                        const entry = this.entries[rowI]
+                        Object.keys(fields).forEach(fieldName => {
+                            const cell = entry.fields[this.uv.updateColumnIds[fieldName]]
+                            cell.value = this.getValueText(fields[fieldName])
+                        })
+                    })
+                } else {
+                    // Creation mode
+                    if (changedFields.added !== null) {
+                        const entry = this.entries[0]
+                        const fields = changedFields.added
+                        Object.keys(fields).forEach(fieldName => {
+                            const cell = entry.fields[this.uv.updateColumnIds[fieldName]]
+                            cell.value = this.getValueText(fields[fieldName])
+                        })
+                    }
+                }
+            }
         }
 
         created() {
-            this.fields = this.computeFields()
+            this.entries = this.buildEntries()
         }
 
-        private computeFields() {
-            const makeField = (columnInfo: Api.IResultColumnInfo, i: number, value: any) => {
+        private buildEntries(): IEntry[] {
+            const changedFields = this.getCurrentChanges()
+
+            // `rowId === null` means that this is added entry. `undefined` means that this is computed field.
+            const makeField = (rowId: number | null | undefined, columnInfo: Api.IResultColumnInfo, i: number, value: any) => {
                 const columnAttrs = this.uv.columnAttributes[i]
                 const captionAttr = columnAttrs["Caption"]
                 const caption = captionAttr !== undefined ? captionAttr : columnInfo.name
                 const required = columnInfo.updateField === null ? false : (columnInfo.updateField.field.defaultValue === null)
 
+                let updatedValue
+                if (rowId === null) {
+                    if (changedFields.added !== null) {
+                        updatedValue = changedFields.added[columnInfo.name]
+                    }
+                } else if (rowId !== undefined) {
+                    const updatedEntry = changedFields.updated[rowId]
+                    if (updatedEntry !== undefined) {
+                        updatedValue = updatedEntry[columnInfo.name]
+                    }
+                }
+                const currentValue = updatedValue === undefined ? value : updatedValue
+                const valueText = this.getValueText(currentValue)
+
                 return {
                     column: columnInfo,
-                    value,
-                    updatedValue: value === null ? "" : value,
+                    value: valueText,
                     caption,
                     required,
                     isNullable: columnInfo.updateField === null ? true : columnInfo.updateField.field.isNullable,
                     type: this.getInputType(columnInfo, columnAttrs),
                 }
             }
+
             if (this.uv.rows === null) {
                 // Creation mode
-                return this.uv.info.columns.map((columnInfo, i) => {
+                const newFields = this.uv.info.columns.map((columnInfo, i) => {
                     if (columnInfo.updateField === null) {
                         throw Error()
                     }
                     const defaultValue = columnInfo.updateField.field.defaultValue
-                    const value = defaultValue === null ? "" : defaultValue
-                    return makeField(columnInfo, i, value)
-                })
+                    return makeField(null, columnInfo, i, defaultValue)
+                }, {})
+                return [{ fields: newFields }]
             } else {
-                if (this.uv.rows.length === 0) {
-                    return null
-                }
-                const row = this.uv.rows[0]
-                return this.uv.info.columns.map((columnInfo, i) => {
-                    const value = row.values[i].value
-                    return makeField(columnInfo, i, value)
+                return this.uv.rows.map((row, rowI) => {
+                    const fields = this.uv.info.columns.map((columnInfo, i) => {
+                        const value = row.values[i].value
+                        return makeField(row.id, columnInfo, i, value)
+                    })
+                    return { fields, id: row.id }
                 })
             }
         }
 
-        private getInputType(columnInfo: Api.IResultColumnInfo, attributes: Record<string, any>): IType {
+        private getInputType(columnInfo: IResultColumnInfo, attributes: Record<string, any>): IType {
             const isNullable = columnInfo.updateField === null ? true : columnInfo.updateField.field.isNullable
             if (columnInfo.fieldType !== null) {
                 switch (columnInfo.fieldType.type) {
@@ -286,6 +294,18 @@
             }
 
             return attributes["TextArea"] ? { name: "textarea" } : { name: "text", type: "text", required: !isNullable }
+        }
+
+        private getCurrentChanges() {
+            return this.changesForUserView(this.uv)
+        }
+
+        private getValueText(val: any) {
+            if (val === null) {
+                return ""
+            } else {
+                return String(val)
+            }
         }
     }
 </script>

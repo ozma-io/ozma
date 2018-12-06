@@ -1,12 +1,22 @@
 ﻿<i18n>
     {
         "en-US": {
-            "failed": "Failed to fetch user view: {msg}",
-            "goto_nav": "Back to the top"
+            "fetch_error": "Failed to fetch user view: {msg}",
+            "goto_nav": "Back to the top",
+            "pending_changes": "Pending changes exist",
+            "submit_error": "Error while submitting changes: {msg}",
+            "save": "Save",
+            "revert_changes": "Revert changes",
+            "confirm_close": "You have unsaved changes, do you want to discard them?"
         },
         "ru-RU": {
-            "failed": "Ошибка получения пользовательского вида: {msg}",
-            "goto_nav": "Вернуться на главную"
+            "fetch_error": "Ошибка получения пользовательского вида: {msg}",
+            "goto_nav": "Вернуться на главную",
+            "pending_changes": "Есть несохранённые изменения",
+            "submit_error": "Ошибка сохранения изменений: {msg}",
+            "save": "Сохранить",
+            "revert_changes": "Откатить изменения",
+            "confirm_close": "У вас есть несохранённые изменения, отбросить их?"
         }
     }
 </i18n>
@@ -15,16 +25,30 @@
     <b-container>
         <b-alert variant="danger"
                  dismissible
-                 :show="lastError !== null"
-                 @dismissed="clearError">
-            {{ $t('failed', { msg: lastError }) }}
+                 :show="uvLastError !== null"
+                 @dismissed="uvClearError">
+            {{ $t('fetch_error', { msg: uvLastError }) }}
+        </b-alert>
+
+        <b-alert variant="danger"
+                 dismissible
+                 :show="stagingLastError !== null"
+                 @dismissed="stagingClearError">
+            {{ $t('submit_error', { msg: stagingLastError }) }}
+        </b-alert>
+
+        <b-alert variant="danger" :show="!changesAreEmpty">
+            {{ $t('pending_changes') }}
+
+            <b-button @click="submitChanges" variant="primary">{{ $t('save') }}</b-button>
+            <b-button @click="clearChanges" variant="secondary">{{ $t('revert_changes') }}</b-button>
         </b-alert>
 
         <b-button :to="{ name: 'navigator' }" class="goto_nav">
             {{ $t('goto_nav') }}
         </b-button>
 
-        <UserView v-if="currentUserView !== null" :uv="currentUserView.uv"></UserView>
+        <UserView v-if="currentUserView !== null" :uv="currentUserView"></UserView>
     </b-container>
 </template>
 
@@ -32,10 +56,12 @@
     import { Route } from "vue-router"
     import { Component, Watch, Vue } from "vue-property-decorator"
     import { namespace } from "vuex-class"
-    import { CurrentUserView } from "@/state/user_view"
+    import { UserViewResult } from "@/state/user_view"
+    import { ChangesMap } from "@/state/staging_changes"
     import UserView from "@/components/UserView.vue"
 
     const userView = namespace("userView")
+    const staging = namespace("staging")
 
     @Component({
         components: {
@@ -43,11 +69,17 @@
         },
     })
     export default class RootUserView extends Vue {
-        @userView.Action("getUserView") getUserView!: (_: { name: string, args: URLSearchParams }) => Promise<void>
-        @userView.Action("getUserViewInfo") getUserViewInfo!: (_: string) => Promise<void>
-        @userView.State("current") currentUserView!: CurrentUserView | null
-        @userView.Mutation("clearError") clearError!: () => void
-        @userView.State("lastError") lastError!: string | null
+        @userView.Action("getNamed") getNamed!: (_: { name: string, args: URLSearchParams }) => Promise<void>
+        @userView.Action("getNamedInfo") getNamedInfo!: (_: string) => Promise<void>
+        @userView.State("current") currentUserView!: UserViewResult | null
+        @userView.Mutation("clearError") uvClearError!: () => void
+        @userView.State("lastError") uvLastError!: string | null
+        @staging.State("changes") changes!: ChangesMap
+        @staging.Action("submit") submitChanges!: () => Promise<void>
+        @staging.Mutation("clear") clearChanges!: () => void
+        @staging.Mutation("clearError") stagingClearError!: () => void
+        @staging.State("lastError") stagingLastError!: string | null
+        @staging.Getter("isEmpty") changesAreEmpty!: boolean
 
         @Watch("$route")
         onRouteChanged() {
@@ -65,9 +97,9 @@
                     const val = Array.isArray(values) ? values[0] : values
                     return [name, val]
                 })
-                this.getUserView({ name: this.$route.params.name, args: new URLSearchParams(query) })
+                this.getNamed({ name: this.$route.params.name, args: new URLSearchParams(query) })
             } else if (this.$route.name === "view_create") {
-                this.getUserViewInfo(this.$route.params.name)
+                this.getNamedInfo(this.$route.params.name)
             } else {
                 console.assert(false)
             }

@@ -5,7 +5,7 @@
 
 <script lang="ts">
     import { Component, Prop, Vue } from "vue-property-decorator"
-    import { IUserViewData } from "@/state/user_view"
+    import { UserViewResult } from "@/state/user_view"
 
     import UserViewTable from "@/components/views/Table.vue"
     import UserViewForm from "@/components/views/Form.vue"
@@ -16,7 +16,7 @@
         },
     })
     export default class UserView extends Vue {
-        @Prop() private uv!: IUserViewData
+        @Prop() private uv!: UserViewResult
 
         get userViewType() {
             const typeAttr = this.uv.attributes["Type"]

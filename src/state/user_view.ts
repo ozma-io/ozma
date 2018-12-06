@@ -1,30 +1,56 @@
 import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators"
 
 import * as Api from "@/api"
+import { IResultViewInfo, IExecutedRow } from "@/api"
 import * as Store from "@/state/store"
 
-export interface IUserViewData {
-    info: Api.IResultViewInfo
+export type UserViewType = "named" | "anonymous"
+
+export class UserViewResult {
+    type: UserViewType
+    source: string
+    args: URLSearchParams | null
+    info: IResultViewInfo
     attributes: Record<string, any>
     columnAttributes: Array<Record<string, any>>
-    rows: Api.IExecutedRow[] | null
-}
+    rows: IExecutedRow[] | null
+    // Row ids to row positions, actual key is Api.RowId
+    updateRowIds: Record<string, number> = {}
+    // Column names to column positions
+    updateColumnIds: Record<string, number> = {}
 
-export class CurrentUserView {
-    name: string
-    args: URLSearchParams
-    uv: IUserViewData
-
-    constructor(name: string, args: URLSearchParams, uv: IUserViewData) {
-        this.name = name
+    constructor(type: UserViewType, source: string, args: URLSearchParams | null, info: IResultViewInfo, attributes: Record<string, any>, columnAttributes: Array<Record<string, any>>, rows: IExecutedRow[] | null) {
+        this.type = type
+        this.source = source
         this.args = args
-        this.uv = uv
+        this.info = info
+        this.attributes = attributes
+        this.columnAttributes = columnAttributes
+        this.rows = rows
+
+        if (rows !== null) {
+            this.updateRowIds = rows.reduce((rowIds: Record<string, number>, row, rowI) => {
+                if (row.id !== undefined) {
+                    rowIds[row.id] = rowI
+                }
+                return rowIds
+            }, {})
+        }
+
+        if (info.updateEntity !== null) {
+            this.updateColumnIds = info.columns.reduce((colIds: Record<string, number>, col, colI) => {
+                if (col.updateField !== null) {
+                    colIds[col.updateField.name] = colI
+                }
+                return colIds
+            }, {})
+        }
     }
 }
 
 @Module({ namespaced: true, dynamic: true, store: Store.store, name: "userView" })
 export default class MainMenuState extends VuexModule {
-    current: CurrentUserView | null = null
+    current: UserViewResult | null = null
     lastError: string | null = null
 
     @Mutation
@@ -36,12 +62,8 @@ export default class MainMenuState extends VuexModule {
     }
 
     @Mutation
-    clear() {
-        this.current = null
-    }
-
-    @Mutation
     failGet(lastError: string) {
+        this.current = null
         this.lastError = lastError
     }
 
@@ -51,27 +73,18 @@ export default class MainMenuState extends VuexModule {
     }
 
     @Mutation
-    setCurrent(userView: CurrentUserView) {
+    setCurrent(userView: UserViewResult | null) {
         this.current = userView
         this.lastError = null
     }
 
     @Action
-    getUserView({ name, args }: { name: string, args: URLSearchParams }): Promise<void> {
-        if (this.current !== null && this.current.name !== name) {
-            this.clear()
-        }
-
+    getNamed({ name, args }: { name: string, args: URLSearchParams }): Promise<void> {
+        this.setCurrent(null)
         return (async () => {
             try {
                 const res: Api.IViewExprResult = await Store.callSecretApi(Api.fetchNamedView, name, args)
-                const data = {
-                    info: res.info,
-                    attributes: res.result.attributes,
-                    columnAttributes: res.result.columnAttributes,
-                    rows: res.result.rows,
-                }
-                const current = new CurrentUserView(name, args, data)
+                const current = new UserViewResult("named", name, args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
                 this.setCurrent(current)
             } catch (e) {
                 this.failGet(e.message)
@@ -81,25 +94,33 @@ export default class MainMenuState extends VuexModule {
     }
 
     @Action
-    getUserViewInfo(name: string): Promise<void> {
-        if (this.current !== null && this.current.name !== name) {
-            this.clear()
-        }
-
+    getNamedInfo(name: string): Promise<void> {
+        this.setCurrent(null)
         return (async () => {
             try {
                 const res: Api.IViewInfoResult = await Store.callSecretApi(Api.fetchNamedViewInfo, name)
-                const data = {
-                    info: res.info,
-                    attributes: res.pureAttributes,
-                    columnAttributes: res.pureColumnAttributes,
-                    rows: null,
-                }
-                const current = new CurrentUserView(name, new URLSearchParams(), data)
+                const current = new UserViewResult("named", name, null, res.info, res.pureAttributes, res.pureColumnAttributes, null)
                 this.setCurrent(current)
             } catch (e) {
                 this.failGet(e.message)
                 throw e
+            }
+        })()
+    }
+
+    @Action
+    reload(): Promise<void> {
+        return (async () => {
+            if (this.current === null) {
+                return
+            }
+
+            if (this.current.type === "named") {
+                if (this.current.args !== null) {
+                    await this.context.dispatch("getNamed", { name: this.current.source, args: this.current.args })
+                } else {
+                    await this.context.dispatch("getNamedInfo", this.current.source)
+                }
             }
         })()
     }

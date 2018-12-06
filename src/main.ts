@@ -14,6 +14,7 @@ import "@/state/auth"
 import "@/state/main_menu"
 import "@/state/settings"
 import "@/state/user_view"
+import "@/state/staging_changes"
 
 import { CurrentAuth } from "@/state/auth"
 
