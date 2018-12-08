@@ -21,7 +21,6 @@
 
 <template>
     <b-container fluid>
-        <b-button v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" variant="primary">{{ $t('create') }}</b-button>
         <b-form-group horizontal :label="$t('filter')" class="find">
             <b-input-group>
                 <b-form-input v-model="filter" :placeholder="$t('search_placeholder')" />
@@ -94,7 +93,7 @@
         filter: string = ""
         entries: Array<Record<string, ITableCell>> = []
 
-        @Prop() private uv!: UserViewResult
+        @Prop({ type: UserViewResult }) private uv!: UserViewResult
 
         get createView() {
             const attr = this.uv.attributes["CreateView"]
@@ -122,12 +121,12 @@
            This is to avoid rebuilding complete rows array each time user changes a field.
         */
         @Watch("uv")
-        updateFields() {
+        private updateFields() {
             this.entries = this.buildEntries()
         }
 
         @Watch("changes")
-        updateChanges() {
+        private updateChanges() {
             if (this.changesAreEmpty) {
                 // Changes got reset -- rebuild entries.
                 // This could be done more efficiently but it would require tracking of what fields were changed.
@@ -147,7 +146,7 @@
             }
         }
 
-        created() {
+        private created() {
             this.entries = this.buildEntries()
         }
 

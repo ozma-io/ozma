@@ -198,8 +198,8 @@ export default class StagingChangesState extends VuexModule {
         return (async () => {
             try {
                 await Promise.all(results)
+                await this.context.dispatch("userView/reload", undefined, { root: true })
                 this.clear()
-                this.context.dispatch("userView/reload", undefined, { root: true })
             } catch (e) {
                 this.failPerform(e.message)
             }

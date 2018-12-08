@@ -32,32 +32,36 @@
                     {{ field.caption }}
 
                     <b-form-checkbox v-if="field.type.name === 'check'"
-                                    :id="field.column.name"
-                                    :value="field.value"
-                                    @input="updateValue(entry.id, field, $event)"
-                                    v-model="field.value"
-                                    :disabled="field.column.updateField === null" />
+                                     :id="field.column.name"
+                                     :value="field.value"
+                                     @input="updateValue(entry.id, field, $event)"
+                                     v-model="field.value"
+                                     :disabled="field.column.updateField === null" />
                     <b-form-textarea v-else-if="field.type.name === 'textarea'"
-                                    :id="field.column.name"
-                                    :value="field.value"
-                                    @input="updateValue(entry.id, field, $event)"
-                                    :disabled="field.column.updateField === null"
-                                    :rows="3"
-                                    :max-rows="6"
-                                    :required="field.type.required" />
+                                     :id="field.column.name"
+                                     :value="field.value"
+                                     @input="updateValue(entry.id, field, $event)"
+                                     :disabled="field.column.updateField === null"
+                                     :rows="3"
+                                     :max-rows="6"
+                                     :required="field.type.required" />
+                    <CodeEditor v-else-if="field.type.name === 'codeeditor'"
+                                :content="field.value"
+                                @update:content="updateValue(entry.id, field, $event)"
+                                :readOnly="field.column.updateField === null" />
                     <b-form-select v-else-if="field.type.name === 'select'"
-                                :id="field.column.name"
-                                :value="field.value"
-                                @input="updateValue(entry.id, field, $event)"
-                                :disabled="field.column.updateField === null"
-                                :options="field.type.options" />
+                                   :id="field.column.name"
+                                   :value="field.value"
+                                   @input="updateValue(entry.id, field, $event)"
+                                   :disabled="field.column.updateField === null"
+                                   :options="field.type.options" />
                     <b-form-input v-else
-                                :id="field.column.name"
-                               :value="field.value"
-                                @input="updateValue(entry.id, field, $event)"
-                                :type="field.type.type"
-                                :disabled="field.column.updateField === null"
-                                :required="field.type.required" />
+                                  :id="field.column.name"
+                                  :value="field.value"
+                                  @input="updateValue(entry.id, field, $event)"
+                                  :type="field.type.type"
+                                  :disabled="field.column.updateField === null"
+                                  :required="field.type.required" />
                 </b-form-group>
             </template>
 
@@ -89,6 +93,11 @@
 
     interface ITextAreaType {
         name: "textarea"
+        required: boolean
+    }
+
+    interface ICodeEditorType {
+        name: "codeeditor"
     }
 
     interface ISelectOption {
@@ -105,7 +114,7 @@
         name: "check"
     }
 
-    type IType = ITextType | ITextAreaType | ISelectType | ICheckType
+    type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | ICheckType
 
     interface IField {
         column: Api.IResultColumnInfo
@@ -123,7 +132,11 @@
     const auth = namespace("auth")
     const staging = namespace("staging")
 
-    @Component
+    @Component({
+        components: {
+            CodeEditor: () => import("@/components/CodeEditor.vue"),
+        },
+    })
     export default class UserViewForm extends Vue {
         // FIXME FIXME FIXME
         @auth.State("current") currentAuth!: CurrentAuth | null
@@ -136,9 +149,9 @@
         // Internal arrays are fields in columns order
         entries: IEntry[] = []
 
-        @Prop() private uv!: UserViewResult
+        @Prop({ type: UserViewResult }) private uv!: UserViewResult
 
-        updateValue(id: number, field: IField, value: string) {
+        private updateValue(id: number, field: IField, value: string) {
             if (this.uv.info.updateEntity === null) {
                 console.assert(false)
                 return
@@ -155,7 +168,7 @@
             }
         }
 
-        deleteRecord(id: number) {
+        private deleteRecord(id: number) {
             if (this.uv.info.updateEntity === null) {
                 console.assert(false)
                 return
@@ -165,13 +178,13 @@
         }
 
         @Watch("uv")
-        updateFields() {
+        private updateFields() {
             this.entries = this.buildEntries()
         }
 
         // See Table for description of why is this meddling with Watch is needed.
         @Watch("changes")
-        updateChanges() {
+        private updateChanges() {
             if (this.changesAreEmpty) {
                 // Changes got reset -- rebuild entries.
                 // This could be done more efficiently but it would require tracking of what fields were changed.
@@ -202,7 +215,7 @@
             }
         }
 
-        created() {
+        private created() {
             this.entries = this.buildEntries()
         }
 
@@ -293,7 +306,15 @@
                 }
             }
 
-            return attributes["TextArea"] ? { name: "textarea" } : { name: "text", type: "text", required: !isNullable }
+            // Plain text
+            switch (attributes["TextType"]) {
+                case "multiline":
+                    return { name: "textarea", required: !isNullable }
+                case "codeeditor":
+                    return { name: "codeeditor" }
+                default:
+                    return { name: "text", type: "text", required: !isNullable }
+            }
         }
 
         private getCurrentChanges() {
