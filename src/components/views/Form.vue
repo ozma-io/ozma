@@ -27,7 +27,7 @@
 <template>
     <b-container fluid class="without_padding">
         <div v-for="(entry, entry_i) in entries" :key="entry_i" class="form_entry">
-            <b-form>
+            <b-form class="view_form">
                 <div v-for="(block, block_i) in entry.blocks" :key="block_i" class="form_block" :style="{ width: `${block.width * 100}%` }">
                     <template v-for="field in block.fields" class="form_data">
                         <b-form-group :key="field.column.name" :label-for="field.column.name">
@@ -252,7 +252,7 @@
                 }
 
                 // Relative block widths. [0..1]. Each block contains zero or more inputs.
-                const blockWidths: number[] = getRowAttr("FormBlockWidths") || [1]
+                const blockWidths: number[] = getRowAttr("FormBlockWidths") || [0.3, 0.3, 0.3, 1]
                 const blocks: IBlock[] = blockWidths.map(width => ({ width, fields: [] }))
 
                 const fields = this.uv.info.columns.map((columnInfo, i): IField => {
@@ -270,7 +270,7 @@
                     const valueText = this.getValueText(currentValue)
 
                     const blockAttr = getCellAttr("FormBlock")
-                    const blockNumber: number = blockAttr !== undefined ? blockAttr : 0
+                    const blockNumber: number = blockAttr !== undefined ? blockAttr : 2
                     const block = Math.max(0, Math.min(blockNumber, blocks.length - 1))
 
                     const field = {
