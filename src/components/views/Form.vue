@@ -57,13 +57,24 @@
                                            @input="updateValue(entry.id, field, $event)"
                                            :disabled="field.column.updateField === null"
                                            :options="field.type.options" />
+                            <!-- We don't use bootstrap-vue's b-form-input type=text because of problems with Safari
+                                 https://github.com/bootstrap-vue/bootstrap-vue/issues/1951
+                            -->
+                            <input v-else-if="field.type.type === 'text'"
+                                   class="form-control"
+                                   :id="field.column.name"
+                                   :value="field.value"
+                                   @input="updateValue(entry.id, field, $event.target.value)"
+                                   type="text"
+                                   :disabled="field.column.updateField === null"
+                                   :required="field.type.required" />
                             <b-form-input v-else
-                                          :id="field.column.name"
-                                          :value="field.value"
-                                          @input="updateValue(entry.id, field, $event)"
-                                          :type="field.type.type"
-                                          :disabled="field.column.updateField === null"
-                                          :required="field.type.required" />
+                                   :id="field.column.name"
+                                   :value="field.value"
+                                   @input="updateValue(entry.id, field, $event)"
+                                   :type="field.type.type"
+                                   :disabled="field.column.updateField === null"
+                                   :required="field.type.required" />
                         </b-form-group>
                     </template>
                 </div>
