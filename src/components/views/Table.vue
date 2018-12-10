@@ -1,7 +1,6 @@
 ﻿<i18n>
     {
         "en-US": {
-            "create": "Create new",
             "filter": "Filter",
             "search_placeholder": "Type to search",
             "clear": "Clear",
@@ -9,7 +8,6 @@
             "no": "No"
         },
         "ru-RU": {
-            "create": "Создать новую",
             "filter": "Поиск",
             "search_placeholder": "Введите фразу",
             "clear": "Очистить",
@@ -21,7 +19,6 @@
 
 <template>
     <b-container fluid class="without_padding">
-        <b-button v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" variant="primary">{{ $t('create') }}</b-button>
         <b-form-group horizontal :label="$t('filter')" class="find">
             <b-input-group>
                 <b-form-input v-model="filter" :placeholder="$t('search_placeholder')" />
@@ -95,11 +92,6 @@
         entries: Array<Record<string, ITableCell>> = []
 
         @Prop({ type: UserViewResult }) private uv!: UserViewResult
-
-        get createView() {
-            const attr = this.uv.attributes["CreateView"]
-            return attr === undefined ? null : String(attr)
-        }
 
         get fields() {
             return this.uv.info.columns.map((columnInfo, i) => {

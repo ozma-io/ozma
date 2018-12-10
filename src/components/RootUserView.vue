@@ -1,6 +1,7 @@
 ﻿<i18n>
     {
         "en-US": {
+            "create": "Create new",
             "fetch_error": "Failed to fetch user view: {msg}",
             "goto_nav": "Back to the top",
             "pending_changes": "Pending changes exist",
@@ -10,6 +11,7 @@
             "confirm_close": "You have unsaved changes, do you want to discard them?"
         },
         "ru-RU": {
+            "create": "Создать новую",
             "fetch_error": "Ошибка получения пользовательского вида: {msg}",
             "goto_nav": "Вернуться на главную",
             "pending_changes": "Есть несохранённые изменения",
@@ -42,11 +44,13 @@
                 {{ $t('goto_nav') }}
             </b-button>
 
-            <!--b-button v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" variant="primary">{{ $t('create') }}</b-button>-->
+            <b-button v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" class="goto_nav" variant="primary">
+                {{ $t('create') }}
+            </b-button>
         </b-button-toolbar>
 
         <b-col class="without_padding">
-            <UserView v-if="currentUserView !== null" :uv="currentUserView"></UserView>
+            <UserView v-if="uv !== null" :uv="uv"></UserView>
         </b-col>
 
         <b-alert variant="danger" :show="!changesAreEmpty">
@@ -78,7 +82,7 @@
         @userView.Mutation("clear") clearView!: () => void
         @userView.Action("getNamed") getNamed!: (_: { name: string, args: URLSearchParams }) => Promise<void>
         @userView.Action("getNamedInfo") getNamedInfo!: (_: string) => Promise<void>
-        @userView.State("current") currentUserView!: UserViewResult | null
+        @userView.State("current") uv!: UserViewResult | null
         @userView.Mutation("clearError") uvClearError!: () => void
         @userView.State("lastError") uvLastError!: string | null
         @staging.State("changes") changes!: ChangesMap
@@ -114,6 +118,15 @@
                 default:
                     console.assert(false, `Invalid route name: ${this.$route.name}`)
                     break
+            }
+        }
+
+        get createView() {
+            if (this.uv === null) {
+                return null
+            } else {
+                const attr = this.uv.attributes["CreateView"]
+                return attr === undefined ? null : String(attr)
             }
         }
     }
