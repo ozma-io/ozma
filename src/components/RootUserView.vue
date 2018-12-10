@@ -45,7 +45,7 @@
             <!--b-button v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" variant="primary">{{ $t('create') }}</b-button>-->
         </b-button-toolbar>
 
-        <b-col>
+        <b-col class="without_padding">
             <UserView v-if="currentUserView !== null" :uv="currentUserView"></UserView>
         </b-col>
 
