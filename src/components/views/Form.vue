@@ -62,7 +62,7 @@
                            class="form-control"
                            :id="field.column.name"
                            :value="field.value"
-                           @input="updateValue(entry.id, field, $event)"
+                           @input="updateValue(entry.id, field, $event.target.value)"
                            type="text"
                            :disabled="field.column.updateField === null"
                            :required="field.type.required" />
