@@ -22,7 +22,7 @@
 </i18n>
 
 <template>
-    <b-container>
+    <b-container class="without_padding">
         <b-alert variant="danger"
                  dismissible
                  :show="uvLastError !== null"
@@ -45,7 +45,9 @@
             <!--b-button v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" variant="primary">{{ $t('create') }}</b-button>-->
         </b-button-toolbar>
 
-        <UserView v-if="currentUserView !== null" :uv="currentUserView"></UserView>
+        <b-col class="without_padding">
+            <UserView v-if="currentUserView !== null" :uv="currentUserView"></UserView>
+        </b-col>
 
         <b-alert variant="danger" :show="!changesAreEmpty">
             {{ $t('pending_changes') }}

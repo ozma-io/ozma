@@ -20,7 +20,8 @@
 </i18n>
 
 <template>
-    <b-container fluid>
+    <b-container fluid class="without_padding">
+        <b-button v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" variant="primary">{{ $t('create') }}</b-button>
         <b-form-group horizontal :label="$t('filter')" class="find">
             <b-input-group>
                 <b-form-input v-model="filter" :placeholder="$t('search_placeholder')" />
@@ -44,7 +45,7 @@
                 </template>
                 <template slot="openform" slot-scope="data">
                     <div class="contentTd">
-                        <b-button style="cursor:pointer" class="open_form"><b-img src="/assets/openform.png" /></b-button>
+                        <b-button style="cursor:pointer" class="open_form"><img src="@/assets/openform.png" /></b-button>
                     </div>
                 </template>
 
@@ -158,14 +159,19 @@
             }
 
             const changedFields = this.getCurrentChanges()
+            const viewAttrs = this.uv.attributes
 
             return this.uv.rows.map((row, rowI) => {
                 const rowAttrs = row.attributes === undefined ? {} : row.attributes
+                const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
+
                 return row.values.reduce((rowObj: Record<string, ITableCell>, value, colI) => {
-                    const viewAttrs = this.uv.attributes
                     const columnInfo = this.uv.info.columns[colI]
                     const columnAttrs = this.uv.columnAttributes[colI]
                     const cellAttrs = value.attributes === undefined ? {} : value.attributes
+
+                    const getCellAttr = (name: string) => cellAttrs[name] || rowAttrs[name] || columnAttrs[name] || viewAttrs[name]
+                    const getColumnAttr = (name: string) => columnAttrs[name] || viewAttrs[name]
 
                     let updatedValue
                     if (row.id !== undefined) {
@@ -177,7 +183,7 @@
                     const currentValue = updatedValue === undefined ? value : { value: updatedValue }
                     const valueText = this.getValueText(currentValue)
 
-                    const linkedViewAttr = row.id === undefined ? undefined : cellAttrs["CellColor"] || columnAttrs["LinkedView"] || viewAttrs["LinkedView"]
+                    const linkedViewAttr = row.id === undefined ? undefined : getCellAttr("LinkedView")
                     const link =
                         linkedViewAttr === undefined ? null : {
                             name: "view",
@@ -187,15 +193,15 @@
 
                     const style: Record<string, any> = {}
 
-                    const cellColor = cellAttrs["CellColor"] || rowAttrs["CellColor"] || columnAttrs["CellColor"] || viewAttrs["CellColor"]
+                    const cellColor = getCellAttr("CellColor")
                     if (cellColor !== undefined) {
                         style["background-color"] = cellColor
                     }
-                    const cellWidth = columnAttrs["WidthColumn"] || viewAttrs["WidthColumn"]
+                    const cellWidth = getColumnAttr("WidthColumn")
                     if (cellWidth !== undefined) {
                         style["width"] = cellWidth
                     }
-                    const cellHeight = rowAttrs["HeightRow"] || viewAttrs["HeightRow"]
+                    const cellHeight = getRowAttr("HeightRow")
                     if (cellHeight !== undefined) {
                         style["height"] = cellHeight
                     }

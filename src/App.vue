@@ -19,6 +19,8 @@
             const values = {
                 "background-color": this.settingsEntry("backround-color", "#ffffff"),
                 "navigation-back-color": this.settingsEntry("backround-color", "#F5C700"),
+                "table-border-color": this.settingsEntry("backround-color", "#F5C700"),
+                "font": this.settingsEntry("font-family", "Courier New, monospace"),
             }
             return Object.entries(values).reduce((currSettings, [name, value]) => {
                 currSettings[`--${name}`] = value
