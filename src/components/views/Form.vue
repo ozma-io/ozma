@@ -25,60 +25,63 @@
 </i18n>
 
 <template>
-    <b-container fluid>
-        <b-form v-for="entry in entries">
-            <template v-for="field in entry.fields">
-                <b-form-group :key="field.column.name" :label-for="field.column.name">
-                    {{ field.caption }}
-
-                    <b-form-checkbox v-if="field.type.name === 'check'"
-                                     :id="field.column.name"
-                                     :value="field.value"
-                                     @input="updateValue(entry.id, field, $event)"
-                                     v-model="field.value"
-                                     :disabled="field.column.updateField === null" />
-                    <b-form-textarea v-else-if="field.type.name === 'textarea'"
-                                     :id="field.column.name"
-                                     :value="field.value"
-                                     @input="updateValue(entry.id, field, $event)"
-                                     :disabled="field.column.updateField === null"
-                                     :rows="3"
-                                     :max-rows="6"
-                                     :required="field.type.required" />
-                    <CodeEditor v-else-if="field.type.name === 'codeeditor'"
-                                :content="field.value"
-                                @update:content="updateValue(entry.id, field, $event)"
-                                :readOnly="field.column.updateField === null" />
-                    <b-form-select v-else-if="field.type.name === 'select'"
-                                   :id="field.column.name"
-                                   :value="field.value"
-                                   @input="updateValue(entry.id, field, $event)"
-                                   :disabled="field.column.updateField === null"
-                                   :options="field.type.options" />
-                    <b-form-input v-else
-                                  :id="field.column.name"
-                                  :value="field.value"
-                                  @input="updateValue(entry.id, field, $event)"
-                                  :type="field.type.type"
-                                  :disabled="field.column.updateField === null"
-                                  :required="field.type.required" />
-                </b-form-group>
-            </template>
-
-            <!-- FIXME FIXME FIXME don't look at user! -->
-            <b-button v-if="entry.id !== undefined && currentAuth.header.sub === 'root'" variant="danger" v-b-modal.deleteConfirm>{{ $t('delete') }}</b-button>
-
-            <b-modal id="deleteConfirm" ok-variant="danger" :ok-title="$t('ok')" @ok="deleteRecord(entry.id)" :cancel-title="$t('cancel')">
-                {{ $t('delete_confirmation') }}
-            </b-modal>
-        </b-form>
+    <b-container fluid class="without_padding">
+        <div v-for="(entry, entry_i) in entries" :key="entry_i" class="form_entry">
+            <b-form>
+                <div v-for="(block, block_i) in entry.blocks" :key="block_i" class="form_block">
+                    <template v-for="field in block.fields" class="form_data">
+                        <b-form-group :key="field.column.name" :label-for="field.column.name">
+                            {{ field.caption }}
+            
+                            <b-form-checkbox v-if="field.type.name === 'check'"
+                                             :id="field.column.name"
+                                             :value="field.value"
+                                             @input="updateValue(entry.id, field, $event)"
+                                             v-model="field.value"
+                                             :disabled="field.column.updateField === null" />
+                            <b-form-textarea v-else-if="field.type.name === 'textarea'"
+                                             :id="field.column.name"
+                                             :value="field.value"
+                                             @input="updateValue(entry.id, field, $event)"
+                                             :disabled="field.column.updateField === null"
+                                             :rows="3"
+                                             :max-rows="6"
+                                             :required="field.type.required" />
+                            <CodeEditor v-else-if="field.type.name === 'codeeditor'"
+                                        :content="field.value"
+                                        @update:content="updateValue(entry.id, field, $event)"
+                                        :readOnly="field.column.updateField === null" />
+                            <b-form-select v-else-if="field.type.name === 'select'"
+                                           :id="field.column.name"
+                                           :value="field.value"
+                                           @input="updateValue(entry.id, field, $event)"
+                                           :disabled="field.column.updateField === null"
+                                           :options="field.type.options" />
+                            <b-form-input v-else
+                                          :id="field.column.name"
+                                          :value="field.value"
+                                          @input="updateValue(entry.id, field, $event)"
+                                          :type="field.type.type"
+                                          :disabled="field.column.updateField === null"
+                                          :required="field.type.required" />
+                        </b-form-group>
+                    </template>
+                </div>
+                    
+                <!-- FIXME FIXME FIXME don't look at user! -->
+                <b-button v-if="uv.updateEntity !== null && uv.rows !== null && currentAuth.header.sub === 'root'" variant="danger" v-b-modal.deleteConfirm>{{ $t('delete') }}</b-button>
+                <b-modal :id="deleteConfirm" ok-variant="danger" :ok-title="$t('ok')" @ok="deleteRecord" :cancel-title="$t('cancel')">
+                    {{ $t('delete_confirmation') }}
+                </b-modal>
+            </b-form>
+        </div>
     </b-container>
 </template>
 
 <script lang="ts">
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
     import { namespace } from "vuex-class"
-    import { RowId, FieldName, IResultColumnInfo, IExecutedValue } from "@/api"
+    import { IExecutedRow, RowId, FieldName, IResultColumnInfo, IExecutedValue } from "@/api"
     import * as Api from "@/api"
     import * as Store from "@/state/store"
     import { UserViewResult } from "@/state/user_view"
@@ -124,9 +127,15 @@
         type: IType
     }
 
-    interface IEntry {
+    interface IBlock {
+        width: number
+        fields: IField[]
+    }
+
+    interface IForm {
         id?: RowId
         fields: IField[]
+        blocks: IBlock[]
     }
 
     const auth = namespace("auth")
@@ -147,7 +156,7 @@
         @staging.Getter("isEmpty") changesAreEmpty!: boolean
 
         // Internal arrays are fields in columns order
-        entries: IEntry[] = []
+        entries: IForm[] = []
 
         @Prop({ type: UserViewResult }) private uv!: UserViewResult
 
@@ -219,58 +228,74 @@
             this.entries = this.buildEntries()
         }
 
-        private buildEntries(): IEntry[] {
+        private buildEntries(): IForm[] {
             const changedFields = this.getCurrentChanges()
+            const viewAttrs = this.uv.attributes
 
-            // `rowId === null` means that this is added entry. `undefined` means that this is computed field.
-            const makeField = (rowId: number | null | undefined, columnInfo: Api.IResultColumnInfo, i: number, value: any) => {
-                const columnAttrs = this.uv.columnAttributes[i]
-                const captionAttr = columnAttrs["Caption"]
-                const caption = captionAttr !== undefined ? captionAttr : columnInfo.name
-                const required = columnInfo.updateField === null ? false : (columnInfo.updateField.field.defaultValue === null)
+            // Build one form from a result row
+            const makeForm = (row: IExecutedRow, isAdded: boolean): IForm => {
+                const rowAttrs = row.attributes === undefined ? {} : row.attributes
+                const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
 
-                let updatedValue
-                if (rowId === null) {
+                let updatedValues: Record<string, any> = {}
+                if (isAdded) {
                     if (changedFields.added !== null) {
-                        updatedValue = changedFields.added[columnInfo.name]
+                        updatedValues = changedFields.added
                     }
-                } else if (rowId !== undefined) {
-                    const updatedEntry = changedFields.updated[rowId]
+                } else if (row.id !== undefined) {
+                    const updatedEntry = changedFields.updated[row.id]
                     if (updatedEntry !== undefined) {
-                        updatedValue = updatedEntry[columnInfo.name]
+                        updatedValues = updatedEntry
                     }
                 }
-                const currentValue = updatedValue === undefined ? value : updatedValue
-                const valueText = this.getValueText(currentValue)
 
-                return {
-                    column: columnInfo,
-                    value: valueText,
-                    caption,
-                    required,
-                    isNullable: columnInfo.updateField === null ? true : columnInfo.updateField.field.isNullable,
-                    type: this.getInputType(columnInfo, columnAttrs),
-                }
+                // Relative block widths. [0..1]. Each block contains zero or more inputs.
+                const blockWidths: number[] = getRowAttr("FormBlockWidths") || [1]
+                const blocks: IBlock[] = blockWidths.map(width => ({ width, fields: [] }))
+
+                const fields = this.uv.info.columns.map((columnInfo, i): IField => {
+                    const value = row.values[i]
+                    const columnAttrs = this.uv.columnAttributes[i]
+                    const cellAttrs = value.attributes === undefined ? {} : value.attributes
+                    const getCellAttr = (name: string) => cellAttrs[name] || rowAttrs[name] || columnAttrs[name] || viewAttrs[name]
+
+                    const captionAttr = getCellAttr("Caption")
+                    const caption: string = captionAttr !== undefined ? captionAttr : columnInfo.name
+                    const required = columnInfo.updateField === null ? false : (columnInfo.updateField.field.defaultValue === null)
+
+                    const updatedValue = columnInfo.updateField === null ? undefined : updatedValues[columnInfo.updateField.name]
+                    const currentValue = updatedValue === undefined ? value.value : updatedValue
+                    const valueText = this.getValueText(currentValue)
+
+                    const blockAttr = getCellAttr("FormBlock")
+                    const blockNumber: number = blockAttr !== undefined ? blockAttr : 0
+                    const block = Math.max(0, Math.min(blockNumber, blocks.length - 1))
+
+                    const field = {
+                        column: columnInfo,
+                        value: valueText,
+                        caption,
+                        required,
+                        isNullable: columnInfo.updateField === null ? true : columnInfo.updateField.field.isNullable,
+                        type: this.getInputType(columnInfo, columnAttrs),
+                    }
+
+                    blocks[block].fields.push(field)
+                    return field
+                })
+
+                return { id: row.id, fields, blocks }
             }
 
             if (this.uv.rows === null) {
                 // Creation mode
-                const newFields = this.uv.info.columns.map((columnInfo, i) => {
-                    if (columnInfo.updateField === null) {
-                        throw Error()
-                    }
-                    const defaultValue = columnInfo.updateField.field.defaultValue
-                    return makeField(null, columnInfo, i, defaultValue)
-                }, {})
-                return [{ fields: newFields }]
-            } else {
-                return this.uv.rows.map((row, rowI) => {
-                    const fields = this.uv.info.columns.map((columnInfo, i) => {
-                        const value = row.values[i].value
-                        return makeField(row.id, columnInfo, i, value)
-                    })
-                    return { fields, id: row.id }
+                const values = this.uv.info.columns.map((columnInfo, i) => {
+                    const value = columnInfo.updateField === null ? "" : columnInfo.updateField.field.defaultValue
+                    return { value }
                 })
+                return [makeForm({ values }, true)]
+            } else {
+                return this.uv.rows.map(row => makeForm(row, false))
             }
         }
 
