@@ -44,9 +44,13 @@
             <b-button @click="clearChanges" variant="secondary">{{ $t('revert_changes') }}</b-button>
         </b-alert>
 
-        <b-button :to="{ name: 'navigator' }" class="goto_nav">
-            {{ $t('goto_nav') }}
-        </b-button>
+        <b-button-toolbar key-nav>
+            <b-button :to="{ name: 'navigator' }" class="goto_nav">
+                {{ $t('goto_nav') }}
+            </b-button>
+
+            <!--b-button v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" variant="primary">{{ $t('create') }}</b-button>-->
+        </b-button-toolbar>
 
         <UserView v-if="currentUserView !== null" :uv="currentUserView"></UserView>
     </b-container>
@@ -69,6 +73,7 @@
         },
     })
     export default class RootUserView extends Vue {
+        @userView.Mutation("clear") clearView!: () => void
         @userView.Action("getNamed") getNamed!: (_: { name: string, args: URLSearchParams }) => Promise<void>
         @userView.Action("getNamedInfo") getNamedInfo!: (_: string) => Promise<void>
         @userView.State("current") currentUserView!: UserViewResult | null
@@ -82,26 +87,31 @@
         @staging.Getter("isEmpty") changesAreEmpty!: boolean
 
         @Watch("$route")
-        onRouteChanged() {
+        private onRouteChanged() {
             this.updateView()
         }
 
-        created() {
+        private created() {
             this.updateView()
         }
 
         private updateView() {
-            if (this.$route.name === "view") {
-                const query = Object.keys(this.$route.query).map(name => {
-                    const values = this.$route.query[name]
-                    const val = Array.isArray(values) ? values[0] : values
-                    return [name, val]
-                })
-                this.getNamed({ name: this.$route.params.name, args: new URLSearchParams(query) })
-            } else if (this.$route.name === "view_create") {
-                this.getNamedInfo(this.$route.params.name)
-            } else {
-                console.assert(false)
+            this.clearView()
+            switch (this.$route.name) {
+                case "view":
+                    const query = Object.keys(this.$route.query).map(name => {
+                        const values = this.$route.query[name]
+                        const val = Array.isArray(values) ? values[0] : values
+                        return [name, val]
+                    })
+                    this.getNamed({ name: this.$route.params.name, args: new URLSearchParams(query) })
+                    break
+                case "view_create":
+                    this.getNamedInfo(this.$route.params.name)
+                    break
+                default:
+                    console.assert(false, `Invalid route name: ${this.$route.name}`)
+                    break
             }
         }
     }

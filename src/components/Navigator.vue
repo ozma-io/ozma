@@ -55,7 +55,7 @@
         @mainMenu.Mutation("clearError") clearError!: () => void
         @mainMenu.State("lastError") lastError!: string | null
 
-        created() {
+        private created() {
             if (this.currentMenu === null) {
                 this.getMenu()
             }

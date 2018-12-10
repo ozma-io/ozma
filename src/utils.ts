@@ -39,3 +39,7 @@ export const fetchJson = async (input: RequestInfo, init?: RequestInit): Promise
     const response = await fetchSuccess(input, init)
     return await response.json()
 }
+
+export const randomId = () => {
+    return Math.random().toString(36).substring(2, 15)
+}

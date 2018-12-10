@@ -70,7 +70,7 @@
         password = ""
 
         @Watch("current")
-        onAuthChanged() {
+        private onAuthChanged() {
             if (this.current !== null) {
                 let nextUrl
                 const redirect = this.$route.query.redirect
@@ -83,7 +83,7 @@
             }
         }
 
-        async sendLogin() {
+        private async sendLogin() {
             await this.requestAuth({ username: this.username, password: this.password })
         }
     }

@@ -78,9 +78,14 @@ export default class MainMenuState extends VuexModule {
         this.lastError = null
     }
 
+    @Mutation
+    clear() {
+        this.current = null
+        this.lastError = null
+    }
+
     @Action
     getNamed({ name, args }: { name: string, args: URLSearchParams }): Promise<void> {
-        this.setCurrent(null)
         return (async () => {
             try {
                 const res: Api.IViewExprResult = await Store.callSecretApi(Api.fetchNamedView, name, args)
@@ -95,7 +100,6 @@ export default class MainMenuState extends VuexModule {
 
     @Action
     getNamedInfo(name: string): Promise<void> {
-        this.setCurrent(null)
         return (async () => {
             try {
                 const res: Api.IViewInfoResult = await Store.callSecretApi(Api.fetchNamedViewInfo, name)
