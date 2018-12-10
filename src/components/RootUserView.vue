@@ -37,13 +37,6 @@
             {{ $t('submit_error', { msg: stagingLastError }) }}
         </b-alert>
 
-        <b-alert variant="danger" :show="!changesAreEmpty">
-            {{ $t('pending_changes') }}
-
-            <b-button @click="submitChanges" variant="primary">{{ $t('save') }}</b-button>
-            <b-button @click="clearChanges" variant="secondary">{{ $t('revert_changes') }}</b-button>
-        </b-alert>
-
         <b-button-toolbar key-nav>
             <b-button :to="{ name: 'navigator' }" class="goto_nav">
                 {{ $t('goto_nav') }}
@@ -55,6 +48,13 @@
         <b-col>
             <UserView v-if="currentUserView !== null" :uv="currentUserView"></UserView>
         </b-col>
+
+        <b-alert variant="danger" :show="!changesAreEmpty">
+            {{ $t('pending_changes') }}
+
+            <b-button @click="submitChanges" variant="primary">{{ $t('save') }}</b-button>
+            <b-button @click="clearChanges" variant="secondary">{{ $t('revert_changes') }}</b-button>
+        </b-alert>
     </b-container>
 </template>
 
