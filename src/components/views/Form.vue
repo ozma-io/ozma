@@ -263,7 +263,7 @@
                 }
 
                 // Relative block widths. [0..1]. Each block contains zero or more inputs.
-                const blockWidths: number[] = getRowAttr("FormBlockWidths") || [0.3, 0.3, 0.3, 1]
+                const blockWidths: number[] = getRowAttr("FormBlockWidths") || [1]
                 const blocks: IBlock[] = blockWidths.map(width => ({ width, fields: [] }))
 
                 const fields = this.uv.info.columns.map((columnInfo, i): IField => {
