@@ -28,7 +28,7 @@
     <b-container fluid class="without_padding">
         <div v-for="(entry, entry_i) in entries" :key="entry_i" class="form_entry">
             <b-form>
-                <div v-for="(block, block_i) in entry.blocks" :key="block_i" class="form_block">
+                <div v-for="(block, block_i) in entry.blocks" :key="block_i" class="form_block" :style="{ width: `${block.width * 100}%` }">
                     <template v-for="field in block.fields" class="form_data">
                         <b-form-group :key="field.column.name" :label-for="field.column.name">
                             {{ field.caption }}
