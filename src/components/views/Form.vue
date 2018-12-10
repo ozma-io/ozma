@@ -165,6 +165,8 @@
                     field: field.column.name,
                     value, id,
                 })
+                // Needed to avoid cursor jumping in WebKit
+                field.value = value
             }
         }
 
