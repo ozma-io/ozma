@@ -139,41 +139,69 @@ div
 
 /* Таблица */
 div
+	&#cont_table
+		width: min-content
+		margin: 0px
+		position: relative
+
+div
 	div
 		div
 			fieldset
 				&.find
-					position: absolute;
-					top: 0px;
-					left: 234px;
-					width: 95%;
-
+					position: absolute
+					top: -36px
+					left: 291px
+					width: calc(100% - 292px)
+					min-width: 350px
+					max-width: calc(100vw - 310px) !important
 					div
+						flex-wrap: nowrap
 						legend
 							max-width: 50px !important
+						div
+							flex: unset
+							div
+								input:focus 
+									border-color: #ced4da
+									box-shadow: 0 0 0 white
+								input
+									&.find_in
+										height: 34px
+										margin-top: 1px
+								div
+									margin: 0px
+
+									button
+										padding: 5px
+										border: 0
 table
 	width: auto !important
+	table-layout: fixed
 div
 	&.tabl 
 		float: left
 		height: 100%
-		width: 100%
+		width: auto
 		padding: 0
 		
 		table
 			thead
+				height: 25px
 				border-right: solid 1px  var(--table-border-color) !important
 				background: var(--table-border-color)
 				th
+					overflow: hidden
 					padding: 0
 					border: 0
 					font-weight: normal
-					max-width: max-content !important
+					max-width: 50px !important
 					overflow: hidden
+					white-space: nowrap
+					text-overflow: ellipsis
 					&.empty_th
 						min-width: 14px
 						max-width: 14px !important
-						text-overflow: ellipsis
 						padding: 3px
 						vertical-align: top
 

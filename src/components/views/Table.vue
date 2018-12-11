@@ -18,12 +18,12 @@
 </i18n>
 
 <template>
-    <b-container fluid class="without_padding">
+    <b-container fluid id="cont_table" class=" without_padding">
         <b-form-group horizontal :label="$t('filter')" class="find">
             <b-input-group>
-                <b-form-input v-model="filter" :placeholder="$t('search_placeholder')" />
+                <b-form-input class="find_in" v-model="filter" :placeholder="$t('search_placeholder')" />
                 <b-input-group-append>
-                    <b-btn :disabled="!filter" @click="filter = ''">{{ $t('clear') }}</b-btn>
+                    <b-btn class="btn btn-light" :disabled="!filter" @click="filter = ''">{{ $t('clear') }}</b-btn>
                 </b-input-group-append>
             </b-input-group>
         </b-form-group>
