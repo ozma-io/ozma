@@ -31,7 +31,7 @@
                 <div v-for="(block, block_i) in entry.blocks" :key="block_i" class="form_block" :style="{ width: `${block.width * 100}%` }">
                     <template v-for="field in block.fields" class="form_data">
                         <b-form-group :key="field.column.name" :label-for="field.column.name">
-                            {{ field.caption }}
+                            <strong>{{ field.caption }}</strong>
             
                             <b-form-checkbox v-if="field.type.name === 'check'"
                                              :id="field.column.name"
