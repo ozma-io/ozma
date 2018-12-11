@@ -1,6 +1,7 @@
 ﻿<i18n>
     {
         "en-US": {
+            "actions": "Actions",
             "create": "Create new",
             "fetch_error": "Failed to fetch user view: {msg}",
             "goto_nav": "Back to the top",
@@ -11,6 +12,7 @@
             "confirm_close": "You have unsaved changes, do you want to discard them?"
         },
         "ru-RU": {
+            "actions": "Действия",
             "create": "Создать новую",
             "fetch_error": "Ошибка получения пользовательского вида: {msg}",
             "goto_nav": "Вернуться на главную",
@@ -39,14 +41,13 @@
             {{ $t('submit_error', { msg: stagingLastError }) }}
         </b-alert>
 
-        <b-button-toolbar key-nav>
-            <b-button :to="{ name: 'navigator' }" class="goto_nav">
+        <b-button-toolbar key-nav class="head_menu">
+            <b-button :to="{ name: 'navigator' }" class="goto_nav" id="menu_btn" >
                 {{ $t('goto_nav') }}
             </b-button>
-
-            <b-button v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" class="goto_nav" variant="primary">
-                {{ $t('create') }}
-            </b-button>
+            <b-dropdown id="ddown1" v-if="createView !== null"  class="actions_btn, menu_btn" :text="$t('actions')" no-caret>
+                <b-dropdown-item v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" class="menu_btn" variant="primary"> {{ $t('create') }} </b-dropdown-item>
+            </b-dropdown>
         </b-button-toolbar>
 
         <b-col class="without_padding">
@@ -133,7 +134,4 @@
 </script>
 
 <style scoped lang="scss">
-    .goto_nav {
-        margin-bottom: 20px;
-    }
 </style>

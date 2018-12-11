@@ -238,3 +238,42 @@ form
 				margin: 0 1px
 				display: inline-block
 				vertical-align: top
+
+/* меню */
+div
+	div
+		&.without_padding
+			div
+				&.head_menu
+					display: inline
+					white-space: nowrap
+					a
+						&#menu_btn
+							background-color: var(--menu-color)
+							padding: 5px
+							border: solid 1px white
+							border-left: 0px
+					div
+						&.dropdown:hover > .dropdown-menu
+							display: block
+						&.menu_btn
+							border: solid 1px white
+							border-left: 0px
+
+							button
+								background-color: var(--menu-color) !important
+								padding: 5px
+								pointer-events: none
+							div
+								padding: 0
+								min-width: 0
+								background-color: white
+								border: 0
+								border-radius: 0
+								background-clip: unset
+								margin: -0.5px -0px 0px -1px;
+								a
+									&.menu_btn
+										background-color: var(--menu-color)
+										padding: 5px
+										border: solid 1px white
