@@ -181,16 +181,17 @@ table
 div
 	&.tabl 
 		float: left
-		height: 100%
-		width: auto
+		height: 96vh
+		width: 100vw
 		padding: 0
-		
+		overflow: auto
+
 		table
 			thead
 				height: 25px
 				border-right: solid 1px  var(--table-border-color) !important
-				background: var(--table-border-color)
 				th
+					background: var(--table-border-color)
 					overflow: hidden
 					padding: 0
 					border: 0
@@ -199,6 +200,9 @@ div
 					overflow: hidden
 					white-space: nowrap
 					text-overflow: ellipsis
+					position: sticky
+					z-index: 10
+					top: 0
 					&.empty_th
 						min-width: 14px
 						max-width: 14px !important

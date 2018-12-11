@@ -229,5 +229,8 @@
     }
 </script>
 
-<style scoped lang="scss">
+<style type="text/css">
+    body {
+        overflow-y: hidden;
+    }
 </style>
