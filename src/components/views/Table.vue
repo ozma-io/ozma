@@ -193,6 +193,12 @@
                     if (cellWidth !== undefined) {
                         style["width"] = cellWidth
                     }
+                    if (cellWidth !== undefined) {
+                        style["maxWidth"] = cellWidth
+                    }
+                    if (cellWidth !== undefined) {
+                        style["minWidth"] = cellWidth
+                    }
                     const cellHeight = getRowAttr("HeightRow")
                     if (cellHeight !== undefined) {
                         style["height"] = cellHeight
