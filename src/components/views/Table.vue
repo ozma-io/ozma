@@ -231,6 +231,6 @@
 
 <style type="text/css">
     body {
-        overflow-y: hidden;
+        overflow: hidden;
     }
 </style>
