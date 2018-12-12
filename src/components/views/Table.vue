@@ -1,6 +1,7 @@
 ﻿<i18n>
     {
         "en-US": {
+            "language": "en",
             "filter": "Filter",
             "search_placeholder": "Type to search",
             "clear": "Clear",
@@ -8,6 +9,7 @@
             "no": "No"
         },
         "ru-RU": {
+            "language": "ru",
             "filter": "Поиск",
             "search_placeholder": "Введите фразу",
             "clear": "Очистить",
@@ -17,9 +19,10 @@
     }
 </i18n>
 
+
 <template>
     <b-container fluid id="cont_table" class=" without_padding">
-        <b-form-group horizontal :label="$t('filter')" class="find">
+        <b-form-group horizontal :label="$t('filter')" class="find" :lang="$t('language')">
             <b-input-group>
                 <b-form-input class="find_in" v-model="filter" :placeholder="$t('search_placeholder')" />
                 <b-input-group-append>
