@@ -1,7 +1,6 @@
 ﻿<i18n>
     {
         "en-US": {
-            "create": "Create new",
             "filter": "Filter",
             "search_placeholder": "Type to search",
             "clear": "Clear",
@@ -9,7 +8,6 @@
             "no": "No"
         },
         "ru-RU": {
-            "create": "Создать новую",
             "filter": "Поиск",
             "search_placeholder": "Введите фразу",
             "clear": "Очистить",
@@ -20,13 +18,12 @@
 </i18n>
 
 <template>
-    <b-container fluid class="without_padding">
-        <b-button v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" variant="primary">{{ $t('create') }}</b-button>
+    <b-container fluid id="cont_table" class=" without_padding">
         <b-form-group horizontal :label="$t('filter')" class="find">
             <b-input-group>
-                <b-form-input v-model="filter" :placeholder="$t('search_placeholder')" />
+                <b-form-input class="find_in" v-model="filter" :placeholder="$t('search_placeholder')" />
                 <b-input-group-append>
-                    <b-btn :disabled="!filter" @click="filter = ''">{{ $t('clear') }}</b-btn>
+                    <b-btn class="btn btn-light" :disabled="!filter" @click="filter = ''">{{ $t('clear') }}</b-btn>
                 </b-input-group-append>
             </b-input-group>
         </b-form-group>
@@ -95,11 +92,6 @@
         entries: Array<Record<string, ITableCell>> = []
 
         @Prop({ type: UserViewResult }) private uv!: UserViewResult
-
-        get createView() {
-            const attr = this.uv.attributes["CreateView"]
-            return attr === undefined ? null : String(attr)
-        }
 
         get fields() {
             return this.uv.info.columns.map((columnInfo, i) => {
@@ -201,6 +193,12 @@
                     if (cellWidth !== undefined) {
                         style["width"] = cellWidth
                     }
+                    if (cellWidth !== undefined) {
+                        style["maxWidth"] = cellWidth
+                    }
+                    if (cellWidth !== undefined) {
+                        style["minWidth"] = cellWidth
+                    }
                     const cellHeight = getRowAttr("HeightRow")
                     if (cellHeight !== undefined) {
                         style["height"] = cellHeight
@@ -231,5 +229,8 @@
     }
 </script>
 
-<style scoped lang="scss">
+<style type="text/css">
+    body {
+        overflow-y: hidden;
+    }
 </style>

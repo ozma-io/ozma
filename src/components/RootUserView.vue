@@ -1,6 +1,8 @@
 ﻿<i18n>
     {
         "en-US": {
+            "actions": "Actions",
+            "create": "Create new",
             "fetch_error": "Failed to fetch user view: {msg}",
             "goto_nav": "Back to the top",
             "pending_changes": "Pending changes exist",
@@ -10,6 +12,8 @@
             "confirm_close": "You have unsaved changes, do you want to discard them?"
         },
         "ru-RU": {
+            "actions": "Действия",
+            "create": "Создать новую",
             "fetch_error": "Ошибка получения пользовательского вида: {msg}",
             "goto_nav": "Вернуться на главную",
             "pending_changes": "Есть несохранённые изменения",
@@ -37,16 +41,17 @@
             {{ $t('submit_error', { msg: stagingLastError }) }}
         </b-alert>
 
-        <b-button-toolbar key-nav>
-            <b-button :to="{ name: 'navigator' }" class="goto_nav">
+        <b-button-toolbar key-nav class="head_menu">
+            <b-button :to="{ name: 'navigator' }" class="goto_nav" id="menu_btn" >
                 {{ $t('goto_nav') }}
             </b-button>
-
-            <!--b-button v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" variant="primary">{{ $t('create') }}</b-button>-->
+            <b-dropdown id="ddown1" v-if="createView !== null"  class="actions_btn, menu_btn" :text="$t('actions')" no-caret>
+                <b-dropdown-item v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" class="menu_btn" variant="primary"> {{ $t('create') }} </b-dropdown-item>
+            </b-dropdown>
         </b-button-toolbar>
 
         <b-col class="without_padding">
-            <UserView v-if="currentUserView !== null" :uv="currentUserView"></UserView>
+            <UserView v-if="uv !== null" :uv="uv"></UserView>
         </b-col>
 
         <b-alert variant="danger" :show="!changesAreEmpty">
@@ -78,7 +83,7 @@
         @userView.Mutation("clear") clearView!: () => void
         @userView.Action("getNamed") getNamed!: (_: { name: string, args: URLSearchParams }) => Promise<void>
         @userView.Action("getNamedInfo") getNamedInfo!: (_: string) => Promise<void>
-        @userView.State("current") currentUserView!: UserViewResult | null
+        @userView.State("current") uv!: UserViewResult | null
         @userView.Mutation("clearError") uvClearError!: () => void
         @userView.State("lastError") uvLastError!: string | null
         @staging.State("changes") changes!: ChangesMap
@@ -116,11 +121,17 @@
                     break
             }
         }
+
+        get createView() {
+            if (this.uv === null) {
+                return null
+            } else {
+                const attr = this.uv.attributes["CreateView"]
+                return attr === undefined ? null : String(attr)
+            }
+        }
     }
 </script>
 
 <style scoped lang="scss">
-    .goto_nav {
-        margin-bottom: 20px;
-    }
 </style>
