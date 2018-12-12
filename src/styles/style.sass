@@ -148,19 +148,30 @@ div
 	div
 		div
 			fieldset
-				&.find
+				&.find:lang(ru)
 					position: absolute
 					top: -36px
 					left: 291px
 					width: calc(100% - 292px)
 					min-width: 350px
 					max-width: calc(100vw - 310px) !important
+				&.find:lang(en)
+					position: absolute
+					top: -36px
+					left: 232px
+					width: calc(100% - 240px)
+					min-width: 350px
+					max-width: calc(100vw - 240px) !important
+				&.find
 					div
 						flex-wrap: nowrap
 						legend
-							max-width: 50px !important
+							max-width: max-content !important
+							padding-right: 0px !important
 						div
 							flex: unset
+							padding-left: 0px !important
+							padding-right: 0px !important
 							div
 								input:focus 
 									border-color: #ced4da
@@ -175,6 +186,7 @@ div
 									button
 										padding: 5px
 										border: 0
+										padding-left: 0px !important
 table
 	width: auto !important
 	table-layout: fixed

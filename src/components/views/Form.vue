@@ -371,3 +371,8 @@
 
 <style scoped lang="scss">
 </style>
+<style type="text/css">
+    body {
+        overflow: auto;
+    }
+</style>
