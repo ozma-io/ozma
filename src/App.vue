@@ -22,6 +22,8 @@
                 "table-border-color": this.settingsEntry("backround-color", "#F5C700"),
                 "font": this.settingsEntry("font-family", "Courier New, monospace"),
                 "menu-color": this.settingsEntry("backround-color", "#F5C700"),
+                "color-table-bg": this.settingsEntry("backround-color", "white"),
+                "color-table-select": this.settingsEntry("backround-color", "#CCCCCC"),
             }
             return Object.entries(values).reduce((currSettings, [name, value]) => {
                 currSettings[`--${name}`] = value
