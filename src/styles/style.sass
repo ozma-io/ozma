@@ -235,14 +235,18 @@ div
 			tbody
 				border-right: solid 1px  var(--table-border-color) !important
 				tr
-					background-color: white !important
+					background-color: white
 					border-right: solid 1px var(--table-border-color)
 					height: 100%
+					@-moz-document url-prefix()
+						td
+							height: 100%
+							width: 100%
 				td
 					border: solid 1px var(--table-border-color)
 					padding: 0px
-					height: 100%
-
+					height: 1px
+					width: 1px
 					div
 						min-width: 100%
 						max-width: 14px !important
@@ -256,9 +260,10 @@ div
 							column-count: 1
 							padding: 3px
 							height: 100%
+							weith: 100%
 						&.flag
-							width: 14px
-							min-width: 14px
+							width: 21px
+							min-width: 21px
 					button
 						&.open_form
 							padding: 0
