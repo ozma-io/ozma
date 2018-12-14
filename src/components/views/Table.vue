@@ -31,14 +31,14 @@
             </b-input-group>
         </b-form-group>
         <b-container class="tabl">
-            <b-table striped hover :fields="[{key:'isActive', class:'empty_th'},{key:'openform',class:'empty_th'}].concat(fields)" :items="entries" :filter="filter">
+            <b-table :fields="[{key:'isActive', class:'empty_th'},{key:'openform',class:'empty_th'}].concat(fields)" :items="entries" :filter="filter">
                 <template slot="HEAD_isActive" slot-scope="data">
                 </template>
                 <template slot="isActive" slot-scope="data">
                     <!-- We wrap all cells in a div which fills the whole <td>. This is needed because bootstrap-vue's Table doesn't support computed
                         properties in <td>'s attributes -->
                     <div class="contentTd">
-                        <b-form-checkbox class="flag"></b-form-checkbox>
+                        <input type="checkbox" class="flag"></input>
                     </div>
                 </template>
                 <template slot="HEAD_openform" slot-scope="data">
@@ -230,6 +230,68 @@
             return this.changesForUserView(this.uv)
         }
     }
+
+    let shiftDown = false
+
+    const setShiftDown = (event: KeyboardEvent) => {
+        if (event.keyCode === 16 || event.charCode === 16) {
+            shiftDown = true
+        }
+    }
+
+    const setShiftUp =  (event: KeyboardEvent) => {
+        if (event.keyCode === 16 || event.charCode === 16) {
+            shiftDown = false
+        }
+    }
+
+    document.addEventListener("keydown", setShiftDown)
+    document.addEventListener("keyup", setShiftUp)
+
+    const elements = document.getElementsByClassName("flag")
+    let lastcheck = 0
+
+    function getoncheck() {
+        for (let i = 0; i < elements.length; i++) {
+            const chebox = (elements[i] as HTMLInputElement)
+            chebox.onchange = oncheck
+            chebox.setAttribute("index", String(i))
+        }
+    }
+    function oncheck(ev: Event) {
+        const e = ev || window.event
+        const target = e.target || e.srcElement
+        let i = lastcheck
+        lastcheck = Number((target as HTMLInputElement).getAttribute("index"))
+
+        if (shiftDown) {
+            while (elements[i] !== target) {
+                (elements[i] as HTMLInputElement).checked = (target as HTMLInputElement).checked
+                if (lastcheck > i) {
+                    i++
+                } else {
+                    i--
+                }
+            }
+        }
+
+    }
+
+    function checkedd() {
+        for (const i of elements) {
+            const check = (i as HTMLInputElement)
+            if (check.checked) {
+                ((((check as HTMLInputElement).parentNode as HTMLInputElement).parentNode as HTMLInputElement).parentNode as HTMLInputElement).style.backgroundColor = "var(--color-table-select)"
+            } else {
+                ((((check as HTMLInputElement).parentNode as HTMLInputElement).parentNode as HTMLInputElement).parentNode as HTMLInputElement).style.backgroundColor = "var(--color-table-bg)"
+            }
+        }
+        getoncheck()
+        document.addEventListener("keydown", setShiftDown)
+        document.addEventListener("keyup", setShiftUp)
+        setTimeout(checkedd, 5)
+    }
+    checkedd()
 </script>
 
 <style type="text/css">
