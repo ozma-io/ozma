@@ -42,10 +42,10 @@
         </b-alert>
 
         <b-button-toolbar key-nav class="head_menu">
-            <b-button :to="{ name: 'navigator' }" class="goto_nav" id="menu_btn" >
+            <b-button :to="{ name: 'navigator' }" class="nav_batton, goto_nav" id="menu_btn" >
                 {{ $t('goto_nav') }}
             </b-button>
-            <b-dropdown id="ddown1" v-if="createView !== null"  class="actions_btn, menu_btn" :text="$t('actions')" no-caret>
+            <b-dropdown id="ddown1" v-if="createView !== null"  class=" nav_batton, actions_btn, menu_btn" :text="$t('actions')" no-caret>
                 <b-dropdown-item v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" class="menu_btn" variant="primary"> {{ $t('create') }} </b-dropdown-item>
             </b-dropdown>
         </b-button-toolbar>
