@@ -295,7 +295,14 @@
 </script>
 
 <style type="text/css">
+    
     body {
         overflow: hidden;
+    }
+
+    @media print {
+        @page {
+            size: landscape;
+        }
     }
 </style>

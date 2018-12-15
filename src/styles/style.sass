@@ -12,6 +12,13 @@ body
 	width: 100%
 	height: 100%
 	position: absolute
+@media print
+	@page
+		margin: 50px
+	body
+		overflow: hidden !important
+		-webkit-print-color-adjust: exact
+		 color-adjust: exact
 div.without_padding
 	padding: 0px
 button
@@ -203,6 +210,39 @@ div
 table
 	width: auto !important
 	table-layout: fixed
+@media print
+	div
+		&.tabl 
+			height: 100%
+			float: none !important
+			overflow: visible !important
+			table
+				page-break-inside:auto
+				border-spacing: 0
+				thead
+					th
+						max-width: 0px !important
+						border: solid 1px var(--table-border-color)
+						&.empty_th
+								display: none
+				tbody
+					tr
+						td
+							border: solid 1px var(--table-border-color)
+							&.empty_th
+								display: none
+								
+							div
+								&.contentTd
+									page-break-inside: avoid !important
+									min-width: none !important
+									max-width: 0px !important
+									display: block !important
+									height: auto !important
+									background-color: rgba(255,0,0,0)!important
+									margin-top: 3px !important
+									padding-top: 0px !important
+
 div
 	&.tabl 
 		float: left
@@ -210,13 +250,12 @@ div
 		width: 100vw
 		padding: 0
 		overflow: auto
-
 		table
 			thead
 				height: 25px
 				border-right: solid 1px  var(--table-border-color) !important
 				th
-					background: var(--table-border-color)
+					background: var(--table-border-color) !important
 					overflow: hidden
 					padding: 0
 					border: 0
@@ -251,10 +290,10 @@ div
 					background-color: white
 					border-right: solid 1px var(--table-border-color)
 					height: 100%
+					z-index: 100
 					@-moz-document url-prefix()
 						td
 							height: 100%
-							width: 100%
 				td
 					border: solid 1px var(--table-border-color)
 					padding: 0px
@@ -293,16 +332,28 @@ div
 							box-shadow: none;
 
 /* Форма */
+@media print
+	button.delete_btn
+		display: none !important
 form
 	&.view_form
+		@media print
+			div
+				&.form_block
+					width: 148vw !important
+					div
+						page-break-inside: avoid
+						div
+							page-break-inside: avoid
+				
 		div
-					
 			textarea
 				max-width: 98%
 				min-width: 
 				resize:none
 
 			&.form_block
+				width: 100%
 				margin: 0 1px
 				display: inline-block
 				vertical-align: top
@@ -311,10 +362,15 @@ form
 div
 	div
 		&.without_padding
+			@media print
+				div
+					&.head_menu
+						display: none !important
 			div
 				&.head_menu
 					display: inline
 					white-space: nowrap
+				
 					a
 						&#menu_btn
 							background-color: var(--menu-color)
