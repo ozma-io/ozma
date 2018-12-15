@@ -78,6 +78,7 @@ const startAutoSave = (store: StagingChangesState) => {
 const removeAuth = (store: StagingChangesState, lastError?: string) => {
     stopAutoSave(store)
     store.changes = {}
+    store.hasAdded = false
     if (lastError !== undefined) {
         store.lastError = lastError
     } else {
@@ -88,6 +89,7 @@ const removeAuth = (store: StagingChangesState, lastError?: string) => {
 @Module({ namespaced: true, dynamic: true, store: Store.store, name: "staging" })
 export default class StagingChangesState extends VuexModule {
     changes: ChangesMap = {}
+    hasAdded: boolean = false
     // FIXME: instead set errors for each change -- this requires transactions and per-change errors support in FunDB.
     lastError: string | null = null
     autoSaveTimeoutId: number | null = null
@@ -113,16 +115,6 @@ export default class StagingChangesState extends VuexModule {
     }
 
     @Mutation
-    startAutoSave() {
-        startAutoSave(this)
-    }
-
-    @Mutation
-    stopAutoSave() {
-        stopAutoSave(this)
-    }
-
-    @Mutation
     updateField({ schema, entity, id, field, value }: { schema: string, entity: string, id: number, field: string, value: any }) {
         const entry = getEntity(this.changes, schema, entity)
         let fields = entry.updated[id]
@@ -131,7 +123,9 @@ export default class StagingChangesState extends VuexModule {
             Vue.set(entry.updated, String(id), fields)
         }
         Vue.set(fields, field, value)
-        startAutoSave(this)
+        if (!this.hasAdded) {
+            startAutoSave(this)
+        }
     }
 
     @Mutation
@@ -141,7 +135,8 @@ export default class StagingChangesState extends VuexModule {
             entry.added = {}
         }
         Vue.set(entry.added, field, value)
-        startAutoSave(this)
+        stopAutoSave(this)
+        this.hasAdded = true
     }
 
     @Mutation
