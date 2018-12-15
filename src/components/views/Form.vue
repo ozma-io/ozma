@@ -80,7 +80,7 @@
                 </div>
                     
                 <!-- FIXME FIXME FIXME don't look at user! -->
-                <b-button v-if="uv.updateEntity !== null && uv.rows !== null && currentAuth.header.sub === 'root'" variant="danger" v-b-modal.deleteConfirm>{{ $t('delete') }}</b-button>
+                <b-button class="delete_btn" v-if="uv.updateEntity !== null && uv.rows !== null && currentAuth.header.sub === 'root'" variant="danger" v-b-modal.deleteConfirm>{{ $t('delete') }}</b-button>
                 <b-modal :id="deleteConfirm" ok-variant="danger" :ok-title="$t('ok')" @ok="deleteRecord" :cancel-title="$t('cancel')">
                     {{ $t('delete_confirmation') }}
                 </b-modal>
@@ -380,10 +380,13 @@
     }
 </script>
 
-<style scoped lang="scss">
-</style>
 <style type="text/css">
     body {
         overflow: auto;
+    }
+    @media print {
+        @page {
+            size: portrait;
+        }
     }
 </style>
