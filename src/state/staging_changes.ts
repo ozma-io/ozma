@@ -206,24 +206,3 @@ export default class StagingChangesState extends VuexModule {
         })()
     }
 }
-
-/*
-        saveTimeout: number | null = null
-        isSaved = true
-        closeHandler: any
-
-        constructor() {
-            super()
-            this.closeHandler = () => {
-                if (!isSaved) {
-                    return this.$tc("confirm_close")
-                } else {
-                    return null
-                }
-            }
-        }
-
-        mounted() {
-            addEventListener("beforeunload", this.closeHandler)
-        }
-*/
