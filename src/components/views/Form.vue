@@ -163,6 +163,7 @@
         @staging.State("changes") changes!: ChangesMap
         @staging.Getter("forUserView") changesForUserView!: (uv: UserViewResult) => IEntityChanges
         @staging.Mutation("updateField") updateField!: ({ schema, entity, id, field, value }: { schema: string, entity: string, id: number, field: string, value: any }) => void
+        @staging.Mutation("setNewField") setNewField!: ({ schema, entity, field, value }: { schema: string, entity: string, field: string, value: any }) => void
         @staging.Mutation("deleteRow") deleteRow!: ({ schema, entity, id }: { schema: string, entity: string, id: number }) => void
         @staging.Getter("isEmpty") changesAreEmpty!: boolean
 
@@ -171,7 +172,7 @@
 
         @Prop({ type: UserViewResult }) private uv!: UserViewResult
 
-        private updateValue(id: number, field: IField, value: string) {
+        private updateValue(id: number | undefined, field: IField, value: string) {
             if (this.uv.info.updateEntity === null) {
                 console.assert(false)
                 return
@@ -179,12 +180,22 @@
 
             if (field.value !== value) {
                 const entity = this.uv.info.updateEntity
-                this.updateField({
-                    schema: entity.schema,
-                    entity: entity.name,
-                    field: field.column.name,
-                    value, id,
-                })
+ 
+                if (id === undefined) {
+                    this.setNewField({
+                        schema: entity.schema,
+                        entity: entity.name,
+                        field: field.column.name,
+                        value,
+                    })
+                } else {
+                    this.updateField({
+                        schema: entity.schema,
+                        entity: entity.name,
+                        field: field.column.name,
+                        value, id,
+                    })
+                }
                 // Needed to avoid cursor jumping in WebKit
                 field.value = value
             }
