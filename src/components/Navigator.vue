@@ -63,15 +63,13 @@
     }
 </script>
 
-<style scoped lang="scss">
-    .menu_category {
-        margin-top: 20px;
-        padding-top: .75rem;
-        padding-bottom: .75rem;
-        background-color: rgba(86, 61, 124, .15);
-        border: 1px solid rgba(86, 61, 124, .2);
-    }
-    .menu_category * {
-        padding-left: 30px;
-    }
+<style scoped lang="sass">
+    .menu_category
+        margin-top: 20px
+        padding-top: .75rem
+        padding-bottom: .75rem
+        background-color: rgba(86, 61, 124, .15)
+        border: 1px solid rgba(86, 61, 124, .2)
+        &*
+            padding-left: 30px
 </style>

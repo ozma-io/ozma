@@ -442,13 +442,11 @@
     }
 </script>
 
-<style type="text/css">
-    body {
-        overflow: auto;
-    }
-    @media print {
-        @page {
-            size: portrait;
-        }
-    }
+<style lang="sass">
+    body
+        overflow: auto
+
+    @media print
+        @page
+            size: portrait
 </style>

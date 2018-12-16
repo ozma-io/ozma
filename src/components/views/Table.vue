@@ -309,15 +309,11 @@
     checkedd()
 </script>
 
-<style type="text/css">
-    
-    body {
-        overflow: hidden;
-    }
+<style lang="sass">
+    body
+        overflow: hidden
 
-    @media print {
-        @page {
-            size: landscape;
-        }
-    }
+    @media print
+        @page
+            size: landscape
 </style>
