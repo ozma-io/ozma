@@ -204,14 +204,14 @@ const changeEntity = async (path: string, method: string, token: string, ref: IE
     return await fetchApi(`entity/${schema}/${ref.name}${path}`, token, method, body)
 }
 
-export const insertEntity = async (token: string, ref: IEntityRef, args: URLSearchParams): Promise<void> => {
+export const insertEntry = async (token: string, ref: IEntityRef, args: URLSearchParams): Promise<void> => {
     return await changeEntity("", "POST", token, ref, args.toString())
 }
 
-export const updateEntity = async (token: string, ref: IEntityRef, id: number, args: URLSearchParams): Promise<void> => {
+export const updateEntry = async (token: string, ref: IEntityRef, id: number, args: URLSearchParams): Promise<void> => {
     await changeEntity(`/${id}`, "PUT", token, ref, args.toString())
 }
 
-export const deleteEntity = async (token: string, ref: IEntityRef, id: number): Promise<void> => {
+export const deleteEntry = async (token: string, ref: IEntityRef, id: number): Promise<void> => {
     await changeEntity(`/${id}`, "DELETE", token, ref)
 }

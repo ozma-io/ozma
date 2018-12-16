@@ -62,8 +62,7 @@ export default class MainMenuState extends VuexModule {
     }
 
     @Mutation
-    failGet(lastError: string) {
-        this.current = null
+    setError(lastError: string) {
         this.lastError = lastError
     }
 
@@ -73,9 +72,14 @@ export default class MainMenuState extends VuexModule {
     }
 
     @Mutation
-    setCurrent(userView: UserViewResult | null) {
+    setCurrent(userView: UserViewResult) {
         this.current = userView
         this.lastError = null
+    }
+
+    @Mutation
+    clearCurrent() {
+        this.current = null
     }
 
     @Mutation
@@ -85,47 +89,53 @@ export default class MainMenuState extends VuexModule {
     }
 
     @Action
-    getNamed({ name, args }: { name: string, args: URLSearchParams }): Promise<void> {
-        return (async () => {
-            try {
-                const res: Api.IViewExprResult = await Store.callSecretApi(Api.fetchNamedView, name, args)
-                const current = new UserViewResult("named", name, args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
-                this.setCurrent(current)
-            } catch (e) {
-                this.failGet(e.message)
-                throw e
-            }
-        })()
+    async getNamed({ name, args }: { name: string, args: URLSearchParams }): Promise<void> {
+        try {
+            const res: Api.IViewExprResult = await Store.callSecretApi(Api.fetchNamedView, name, args)
+            const current = new UserViewResult("named", name, args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
+            this.setCurrent(current)
+        } catch (e) {
+            this.setError(e.message)
+            throw e
+        }
     }
 
     @Action
-    getNamedInfo(name: string): Promise<void> {
-        return (async () => {
-            try {
-                const res: Api.IViewInfoResult = await Store.callSecretApi(Api.fetchNamedViewInfo, name)
-                const current = new UserViewResult("named", name, null, res.info, res.pureAttributes, res.pureColumnAttributes, null)
-                this.setCurrent(current)
-            } catch (e) {
-                this.failGet(e.message)
-                throw e
-            }
-        })()
+    async getNamedInfo(name: string): Promise<void> {
+        try {
+            const res: Api.IViewInfoResult = await Store.callSecretApi(Api.fetchNamedViewInfo, name)
+            const current = new UserViewResult("named", name, null, res.info, res.pureAttributes, res.pureColumnAttributes, null)
+            this.setCurrent(current)
+        } catch (e) {
+            this.setError(e.message)
+            throw e
+        }
     }
 
+    // Simple reload; we keep old data if it fails.
     @Action
-    reload(): Promise<void> {
-        return (async () => {
-            if (this.current === null) {
-                return
-            }
+    async reload(): Promise<void> {
+        if (this.current === null) {
+            return
+        }
 
-            if (this.current.type === "named") {
-                if (this.current.args !== null) {
-                    await this.context.dispatch("getNamed", { name: this.current.source, args: this.current.args })
-                } else {
-                    await this.context.dispatch("getNamedInfo", this.current.source)
-                }
+        if (this.current.type === "named") {
+            if (this.current.args !== null) {
+                await this.context.dispatch("getNamed", { name: this.current.source, args: this.current.args })
+            } else {
+                await this.context.dispatch("getNamedInfo", this.current.source)
             }
-        })()
+        }
+    }
+
+    // Forced reload; clear existing data if it fails.
+    @Action
+    async forceReload(): Promise<void> {
+        try {
+            await this.context.dispatch("reload")
+        } catch (e) {
+            this.clearCurrent()
+            throw e
+        }
     }
 }

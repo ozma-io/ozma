@@ -26,7 +26,7 @@
 
 <template>
     <b-container fluid class="without_padding">
-        <div v-for="(entry, entry_i) in entries" :key="entry_i" class="form_entry">
+        <div v-for="(entry, entry_i) in entries" v-if="!entry.deleted" :key="entry_i" class="form_entry">
             <b-form class="view_form">
                 <div v-for="(block, block_i) in entry.blocks" :key="block_i" class="form_block" :style="{ width: `${block.width * 100}%` }">
                     <template v-for="field in block.fields" class="form_data">
@@ -38,24 +38,24 @@
                                              :value="field.value"
                                              @input="updateValue(entry.id, field, $event)"
                                              v-model="field.value"
-                                             :disabled="field.column.updateField === null" />
+                                             :disabled="field.column.updateField === null || locked" />
                             <b-form-textarea v-else-if="field.type.name === 'textarea'"
                                              :id="field.column.name"
                                              :value="field.value"
                                              @input="updateValue(entry.id, field, $event)"
-                                             :disabled="field.column.updateField === null"
+                                             :disabled="field.column.updateField === null || locked"
                                              :rows="3"
                                              :max-rows="6"
                                              :required="field.type.required" />
                             <CodeEditor v-else-if="field.type.name === 'codeeditor'"
                                         :content="field.value"
                                         @update:content="updateValue(entry.id, field, $event)"
-                                        :readOnly="field.column.updateField === null" />
+                                        :readOnly="field.column.updateField === null || locked" />
                             <b-form-select v-else-if="field.type.name === 'select'"
                                            :id="field.column.name"
                                            :value="field.value"
                                            @input="updateValue(entry.id, field, $event)"
-                                           :disabled="field.column.updateField === null"
+                                           :disabled="field.column.updateField === null || locked"
                                            :options="field.type.options" />
                             <!-- We don't use bootstrap-vue's b-form-input type=text because of problems with Safari
                                  https://github.com/bootstrap-vue/bootstrap-vue/issues/1951
@@ -66,22 +66,22 @@
                                    :value="field.value"
                                    @input="updateValue(entry.id, field, $event.target.value)"
                                    type="text"
-                                   :disabled="field.column.updateField === null"
+                                   :disabled="field.column.updateField === null || locked"
                                    :required="field.type.required" />
                             <b-form-input v-else
-                                   :id="field.column.name"
-                                   :value="field.value"
-                                   @input="updateValue(entry.id, field, $event)"
-                                   :type="field.type.type"
-                                   :disabled="field.column.updateField === null"
-                                   :required="field.type.required" />
+                                          :id="field.column.name"
+                                          :value="field.value"
+                                          @input="updateValue(entry.id, field, $event)"
+                                          :type="field.type.type"
+                                          :disabled="field.column.updateField === null || locked"
+                                          :required="field.type.required" />
                         </b-form-group>
                     </template>
                 </div>
                     
                 <!-- FIXME FIXME FIXME don't look at user! -->
-                <b-button class="delete_btn" v-if="uv.updateEntity !== null && uv.rows !== null && currentAuth.header.sub === 'root'" variant="danger" v-b-modal.deleteConfirm>{{ $t('delete') }}</b-button>
-                <b-modal :id="deleteConfirm" ok-variant="danger" :ok-title="$t('ok')" @ok="deleteRecord" :cancel-title="$t('cancel')">
+                <b-button class="delete_btn" v-if="entry.id !== undefined && currentAuth.header.sub === 'root'" variant="danger" v-b-modal="`deleteConfirm_${entry.id}`">{{ $t('delete') }}</b-button>
+                <b-modal lazy :id="`deleteConfirm_${entry.id}`" ok-variant="danger" :ok-title="$t('ok')" @ok="deleteRecord(entry.id)" :cancel-title="$t('cancel')">
                     {{ $t('delete_confirmation') }}
                 </b-modal>
             </b-form>
@@ -145,6 +145,7 @@
 
     interface IForm {
         id?: RowId
+        deleted: boolean
         fields: IField[]
         blocks: IBlock[]
     }
@@ -161,10 +162,12 @@
         // FIXME FIXME FIXME
         @auth.State("current") currentAuth!: CurrentAuth | null
         @staging.State("changes") changes!: ChangesMap
+        @staging.State("currentSubmit") currentSubmit!: Promise<void> | null
         @staging.Getter("forUserView") changesForUserView!: (uv: UserViewResult) => IEntityChanges
         @staging.Mutation("updateField") updateField!: ({ schema, entity, id, field, value }: { schema: string, entity: string, id: number, field: string, value: any }) => void
-        @staging.Mutation("setNewField") setNewField!: ({ schema, entity, field, value }: { schema: string, entity: string, field: string, value: any }) => void
-        @staging.Mutation("deleteRow") deleteRow!: ({ schema, entity, id }: { schema: string, entity: string, id: number }) => void
+        @staging.Mutation("setAddedField") setAddedField!: ({ schema, entity, newId, field, value }: { schema: string, entity: string, newId: number, field: string, value: any }) => void
+        @staging.Mutation("deleteEntry") deleteEntry!: ({ schema, entity, id }: { schema: string, entity: string, id: number }) => void
+        @staging.Action("submit") submitChanges!: () => Promise<void>
         @staging.Getter("isEmpty") changesAreEmpty!: boolean
 
         // Internal arrays are fields in columns order
@@ -172,7 +175,11 @@
 
         @Prop({ type: UserViewResult }) private uv!: UserViewResult
 
-        private updateValue(id: number | undefined, field: IField, value: string) {
+        get locked() {
+            return this.uv.rows === null && this.currentSubmit !== null
+        }
+
+        private updateValue(id: number, field: IField, value: string) {
             if (this.uv.info.updateEntity === null) {
                 console.assert(false)
                 return
@@ -180,22 +187,13 @@
 
             if (field.value !== value) {
                 const entity = this.uv.info.updateEntity
- 
-                if (id === undefined) {
-                    this.setNewField({
-                        schema: entity.schema,
-                        entity: entity.name,
-                        field: field.column.name,
-                        value,
-                    })
-                } else {
-                    this.updateField({
-                        schema: entity.schema,
-                        entity: entity.name,
-                        field: field.column.name,
-                        value, id,
-                    })
-                }
+                this.updateField({
+                    schema: entity.schema,
+                    entity: entity.name,
+                    id,
+                    field: field.column.name,
+                    value,
+                })
                 // Needed to avoid cursor jumping in WebKit
                 field.value = value
             }
@@ -207,12 +205,20 @@
                 return
             }
 
-            return Store.callSecretApi(Api.deleteEntity, this.uv.info.updateEntity, id)
+            const entity = this.uv.info.updateEntity
+            this.deleteEntry({
+                schema: entity.schema,
+                entity: entity.name,
+                id,
+            })
         }
 
         @Watch("uv")
         private updateFields() {
             this.entries = this.buildEntries()
+            if (this.entries.length === 0) {
+                this.returnBack()
+            }
         }
 
         // See Table for description of why is this meddling with Watch is needed.
@@ -225,20 +231,46 @@
             } else {
                 const changedFields = this.getCurrentChanges()
                 if (this.uv.rows !== null) {
+                    let deletedCount = 0
+                    Object.keys(changedFields.deleted).forEach(rowId => {
+                        const deleted = changedFields.deleted[rowId]
+                        const rowI = this.uv.updateRowIds[rowId]
+                        const entry = this.entries[rowI]
+                        if (deleted !== undefined) {
+                            entry.deleted = deleted
+                            if (deleted) {
+                                deletedCount += 1
+                            }
+                        }
+                    })
+
+                    if (deletedCount === this.uv.rows.length) {
+                        this.returnBack()
+                        return
+                    }
+
                     Object.keys(changedFields.updated).forEach(rowId => {
                         const fields = changedFields.updated[rowId]
                         const rowI = this.uv.updateRowIds[rowId]
                         const entry = this.entries[rowI]
-                        Object.keys(fields).forEach(fieldName => {
-                            const cell = entry.fields[this.uv.updateColumnIds[fieldName]]
-                            cell.value = this.getValueText(fields[fieldName])
-                        })
+                        if (fields === null) {
+                            // Reset to original values
+                            (this.uv.rows as IExecutedRow[])[rowI].values.forEach((value, valueI) => {
+                                const cell = entry.fields[valueI]
+                                cell.value = this.getValueText(value.value)
+                            })
+                        } else {
+                            Object.keys(fields).forEach(fieldName => {
+                                const cell = entry.fields[this.uv.updateColumnIds[fieldName]]
+                                cell.value = this.getValueText(fields[fieldName])
+                            })
+                        }
                     })
                 } else {
                     // Creation mode
-                    if (changedFields.added !== null) {
+                    if (changedFields.added.length !== 0) {
                         const entry = this.entries[0]
-                        const fields = changedFields.added
+                        const fields = changedFields.added[0]
                         Object.keys(fields).forEach(fieldName => {
                             const cell = entry.fields[this.uv.updateColumnIds[fieldName]]
                             cell.value = this.getValueText(fields[fieldName])
@@ -262,13 +294,19 @@
                 const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
 
                 let updatedValues: Record<string, any> = {}
+                let deleted = false
                 if (isAdded) {
-                    if (changedFields.added !== null) {
-                        updatedValues = changedFields.added
+                    if (changedFields.added.length !== 0) {
+                        updatedValues = changedFields.added[0]
                     }
                 } else if (row.id !== undefined) {
+                    const deletedEntry = changedFields.deleted[row.id]
+                    if (deletedEntry !== undefined) {
+                        deleted = deletedEntry
+                    }
+
                     const updatedEntry = changedFields.updated[row.id]
-                    if (updatedEntry !== undefined) {
+                    if (updatedEntry !== undefined && updatedEntry !== null) {
                         updatedValues = updatedEntry
                     }
                 }
@@ -284,7 +322,7 @@
                     const getCellAttr = (name: string) => cellAttrs[name] || rowAttrs[name] || columnAttrs[name] || viewAttrs[name]
 
                     const captionAttr = getCellAttr("Caption")
-                    const caption: string = captionAttr !== undefined ? captionAttr : columnInfo.name
+                    const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name
                     const required = columnInfo.updateField === null ? false : (columnInfo.updateField.field.defaultValue === null)
 
                     const updatedValue = columnInfo.updateField === null ? undefined : updatedValues[columnInfo.updateField.name]
@@ -292,7 +330,7 @@
                     const valueText = this.getValueText(currentValue)
 
                     const blockAttr = getCellAttr("FormBlock")
-                    const blockNumber: number = blockAttr !== undefined ? blockAttr : 2
+                    const blockNumber = blockAttr !== undefined ? Number(blockAttr) : 0
                     const block = Math.max(0, Math.min(blockNumber, blocks.length - 1))
 
                     const field = {
@@ -308,7 +346,7 @@
                     return field
                 })
 
-                return { id: row.id, fields, blocks }
+                return { id: row.id, deleted, fields, blocks }
             }
 
             if (this.uv.rows === null) {
@@ -368,6 +406,10 @@
 
         private getCurrentChanges() {
             return this.changesForUserView(this.uv)
+        }
+
+        private returnBack() {
+            this.$router.back()
         }
 
         private getValueText(val: any) {

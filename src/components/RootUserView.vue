@@ -127,7 +127,7 @@
                 return null
             } else {
                 const attr = this.uv.attributes["CreateView"]
-                return attr === undefined ? null : String(attr)
+                return attr !== undefined ? String(attr) : null
             }
         }
     }
