@@ -29,13 +29,10 @@ export default class MainMenuState extends VuexModule {
     @Mutation
     removeAuth(lastError?: string) {
         this.current = null
-        if (lastError !== undefined) {
-            this.lastError = lastError
-        }
     }
 
     @Mutation
-    failGet(lastError: string) {
+    setError(lastError: string) {
         this.lastError = lastError
     }
 
@@ -81,7 +78,7 @@ export default class MainMenuState extends VuexModule {
             const mainMenu = new CurrentMainMenu(Array.from(categories.values()))
             this.setCurrent(mainMenu)
         } catch (e) {
-            this.failGet(e.message)
+            this.setError(e.message)
             throw e
         }
     }

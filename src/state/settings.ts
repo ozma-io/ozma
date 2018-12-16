@@ -20,14 +20,10 @@ export default class SettingsState extends VuexModule {
     @Mutation
     removeAuth(lastError?: string) {
         this.current = null
-        if (lastError !== undefined) {
-            this.lastError = lastError
-        }
     }
 
     @Mutation
-    failGet(lastError: string) {
-        this.current = null
+    setError(lastError: string) {
         this.lastError = lastError
     }
 
@@ -66,7 +62,7 @@ export default class SettingsState extends VuexModule {
             const settings = new CurrentSettings(values)
             this.setCurrent(settings)
         } catch (e) {
-            this.failGet(e.message)
+            this.setError(e.message)
             throw e
         }
     }

@@ -75,7 +75,7 @@
     import { namespace } from "vuex-class"
     import { UserViewResult } from "@/state/user_view"
     import { ChangesMap, IEntityChanges } from "@/state/staging_changes"
-    import { IExecutedValue } from "@/api"
+    import { IExecutedRow, IExecutedValue } from "@/api"
 
     interface ITableCell {
         value: string
@@ -134,9 +134,17 @@
                         const fields = changedFields.updated[rowId]
                         const rowI = this.uv.updateRowIds[rowId]
                         const entry = this.entries[rowI]
-                        Object.keys(fields).forEach(fieldName => {
-                            entry[fieldName].value = this.getValueText({ value: fields[fieldName] })
-                        })
+                        if (fields === null) {
+                            // Reset to original values
+                            (this.uv.rows as IExecutedRow[])[rowI].values.forEach((value, valueI) => {
+                                const columnInfo = this.uv.info.columns[valueI]
+                                entry[columnInfo.name].value = this.getValueText(value)
+                            })
+                        } else {
+                            Object.keys(fields).forEach(fieldName => {
+                                entry[fieldName].value = this.getValueText({ value: fields[fieldName] })
+                            })
+                        }
                     })
                 }
             }
@@ -160,6 +168,19 @@
                 const rowAttrs = row.attributes === undefined ? {} : row.attributes
                 const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
 
+                let updatedValues: Record<string, any> = {}
+                if (row.id !== undefined) {
+                    const deleted = changedFields.deleted[row.id]
+                    // FIXME: should mark row as deleted instead, as it could be reversed later
+                    if (deleted !== undefined && deleted) {
+                        return null
+                    }
+                    const updatedEntry = changedFields.updated[row.id]
+                    if (updatedEntry !== undefined && updatedEntry !== null) {
+                        updatedValues = updatedEntry
+                    }
+                }
+
                 return row.values.reduce((rowObj: Record<string, ITableCell>, value, colI) => {
                     const columnInfo = this.uv.info.columns[colI]
                     const columnAttrs = this.uv.columnAttributes[colI]
@@ -168,13 +189,7 @@
                     const getCellAttr = (name: string) => cellAttrs[name] || rowAttrs[name] || columnAttrs[name] || viewAttrs[name]
                     const getColumnAttr = (name: string) => columnAttrs[name] || viewAttrs[name]
 
-                    let updatedValue
-                    if (row.id !== undefined) {
-                        const updatedEntry = changedFields.updated[row.id]
-                        if (updatedEntry !== undefined) {
-                            updatedValue = updatedEntry[columnInfo.name]
-                        }
-                    }
+                    const updatedValue = updatedValues[columnInfo.name]
                     const currentValue = updatedValue === undefined ? value : { value: updatedValue }
                     const valueText = this.getValueText(currentValue)
 
@@ -197,7 +212,7 @@
                         style["width"] = cellWidth
                     }
                     if (cellWidth !== undefined) {
-                        style["maxWidth"] = cellWidth
+                        style["max-width"] = cellWidth
                     }
                     if (cellWidth !== undefined) {
                         style["minWidth"] = cellWidth
@@ -215,7 +230,7 @@
                     rowObj[columnInfo.name] = cell
                     return rowObj
                 }, {})
-            })
+            }).filter((row): row is Record<string, ITableCell> => row !== null)
         }
 
         private getValueText(val: IExecutedValue) {

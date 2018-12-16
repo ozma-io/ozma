@@ -15,7 +15,7 @@ export class CurrentAuth {
     }
 }
 
-const removeAuth = (store: AuthState, lastError?: string) => {
+const clear = (store: AuthState, lastError?: string) => {
     if (store.renewIntervalId !== null) {
         clearInterval(store.renewIntervalId)
         store.renewIntervalId = null
@@ -23,6 +23,8 @@ const removeAuth = (store: AuthState, lastError?: string) => {
     store.current = null
     if (lastError !== undefined) {
         store.lastError = lastError
+    } else {
+        store.lastError = null
     }
 }
 
@@ -34,13 +36,7 @@ export default class AuthState extends VuexModule {
 
     @Mutation
     removeAuth(lastError?: string) {
-        removeAuth(this, lastError)
-    }
-
-    @Mutation
-    failAuth(lastError: string) {
-        removeAuth(this)
-        this.lastError = lastError
+        clear(this, lastError)
     }
 
     @Mutation
@@ -50,12 +46,11 @@ export default class AuthState extends VuexModule {
 
     @Mutation
     setAuth(auth: CurrentAuth) {
-        removeAuth(this)
+        clear(this)
         this.current = auth
         this.renewIntervalId = setInterval(() => {
             Store.store.dispatch("auth/renewAuth")
         }, renewInterval)
-        this.lastError = null
     }
 
     @Action
@@ -65,7 +60,7 @@ export default class AuthState extends VuexModule {
             const auth = new CurrentAuth(token)
             this.setAuth(auth)
         } catch (e) {
-            this.failAuth(e.message)
+            this.removeAuth(e.message)
             throw e
         }
     }
