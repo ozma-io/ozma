@@ -25,7 +25,7 @@
 </i18n>
 
 <template>
-    <b-container fluid class="without_padding">
+    <b-container fluid class="cont_form without_padding">
         <div v-for="(entry, entry_i) in entries" v-if="!entry.deleted" :key="entry_i" class="form_entry">
             <b-form class="view_form">
                 <div v-for="(block, block_i) in entry.blocks" :key="block_i" class="form_block" :style="{ width: `${block.width * 100}%` }">
@@ -98,6 +98,7 @@
     import { UserViewResult } from "@/state/user_view"
     import { CurrentAuth } from "@/state/auth"
     import { ChangesMap, IEntityChanges } from "@/state/staging_changes"
+    import { setBodyStyle } from "@/style"
 
     interface ITextType {
         name: "text"
@@ -174,6 +175,7 @@
         entries: IForm[] = []
 
         @Prop({ type: UserViewResult }) private uv!: UserViewResult
+        @Prop({ type: Boolean, default: false }) private isRoot!: boolean
 
         get locked() {
             return this.uv.rows === null && this.currentSubmit !== null
@@ -301,6 +303,15 @@
         }
 
         private created() {
+            if (this.isRoot) {
+                setBodyStyle(`
+                    @media print {
+                        @page {
+                            size: portrait;
+                        }
+                    }
+                `)
+            }
             this.entries = this.buildEntries()
         }
 
@@ -429,7 +440,9 @@
         }
 
         private returnBack() {
-            this.$router.back()
+            if (this.isRoot) {
+                this.$router.back()
+            }
         }
 
         private getValueText(val: any) {
@@ -441,12 +454,3 @@
         }
     }
 </script>
-
-<style lang="sass">
-    body
-        overflow: auto
-
-    @media print
-        @page
-            size: portrait
-</style>
