@@ -187,13 +187,26 @@
 
             if (field.value !== value) {
                 const entity = this.uv.info.updateEntity
-                this.updateField({
-                    schema: entity.schema,
-                    entity: entity.name,
-                    id,
-                    field: field.column.name,
-                    value,
-                })
+
+                if (this.uv.rows === null) {
+                    this.setAddedField({
+                        schema: entity.schema,
+                        entity: entity.name,
+                        // XXX: we only support working with first added item now, maybe fix that?
+                        newId: 0,
+                        field: field.column.name,
+                        value,
+                    })
+                } else {
+                    this.updateField({
+                        schema: entity.schema,
+                        entity: entity.name,
+                        id,
+                        field: field.column.name,
+                        value,
+                    })
+                }
+
                 // Needed to avoid cursor jumping in WebKit
                 field.value = value
             }
@@ -215,9 +228,16 @@
 
         @Watch("uv")
         private updateFields() {
-            this.entries = this.buildEntries()
-            if (this.entries.length === 0) {
+            if (this.uv.rows === null) {
+                // This is creation mode and UserView just got reloaded -- it means staging was successfully pushed.
+                // We presume a new entry was added and return back to the table view.
+                // FIXME: this is a hack and we need to think of a better way.
                 this.returnBack()
+            } else {
+                this.entries = this.buildEntries()
+                if (this.entries.length === 0) {
+                    this.returnBack()
+                }
             }
         }
 
