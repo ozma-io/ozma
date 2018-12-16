@@ -19,9 +19,8 @@
     }
 </i18n>
 
-
 <template>
-    <b-container fluid id="cont_table" class=" without_padding">
+    <b-container fluid class="cont_table without_padding">
         <b-form-group horizontal :label="$t('filter')" class="find" :lang="$t('language')">
             <b-input-group>
                 <b-form-input class="find_in" v-model="filter" :placeholder="$t('search_placeholder')" />
@@ -75,6 +74,7 @@
     import { namespace } from "vuex-class"
     import { UserViewResult } from "@/state/user_view"
     import { ChangesMap, IEntityChanges } from "@/state/staging_changes"
+    import { setBodyStyle } from "@/style"
     import { IExecutedRow, IExecutedValue } from "@/api"
 
     interface ITableCell {
@@ -95,6 +95,7 @@
         entries: Array<Record<string, ITableCell>> = []
 
         @Prop({ type: UserViewResult }) private uv!: UserViewResult
+        @Prop({ type: Boolean, default: false }) private isRoot!: boolean
 
         get fields() {
             return this.uv.info.columns.map((columnInfo, i) => {
@@ -151,6 +152,15 @@
         }
 
         private created() {
+            if (this.isRoot) {
+                setBodyStyle(`
+                    @media print {
+                        @page {
+                            size: landscape;
+                        }
+                    }
+                `)
+            }
             this.entries = this.buildEntries()
         }
 

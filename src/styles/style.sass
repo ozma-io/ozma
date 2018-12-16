@@ -12,11 +12,11 @@ body
 	width: 100%
 	height: 100%
 	position: absolute
+	overflow: hidden
 @media print
 	@page
 		margin: 50px
 	body
-		overflow: hidden !important
 		-webkit-print-color-adjust: exact
 		 color-adjust: exact
 div.without_padding
@@ -84,6 +84,15 @@ div
 /* ! - Переписать "display: flex" на базовый функционал с дефолтными маржинами и фиксированной максимальной шириной*/
 #logout
 	margin: 1px
+
+.menu_category
+	margin-top: 20px
+	padding-top: .75rem
+	padding-bottom: .75rem
+	background-color: rgba(86, 61, 124, .15)
+	border: 1px solid rgba(86, 61, 124, .2)
+	*
+		padding-left: 30px
 
 div
 	&.main_nav
@@ -158,7 +167,7 @@ div
 
 /* Таблица */
 div
-	&#cont_table
+	&.cont_table
 		width: min-content
 		margin: 0px
 		position: relative
@@ -335,6 +344,12 @@ div
 @media print
 	button.delete_btn
 		display: none !important
+div
+	&.cont_form
+		overflow-y: auto
+		overflow-x: hidden
+		height: 96vh
+		width: 100vw
 form
 	&.view_form
 		@media print
@@ -350,7 +365,7 @@ form
 			textarea
 				max-width: 98%
 				min-width: 
-				resize:none
+				resize: none
 
 			&.form_block
 				width: 100%

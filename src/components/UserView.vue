@@ -1,6 +1,6 @@
 <template>
-    <UserViewForm v-if="userViewType === 'Form'" :uv="uv" />
-    <UserViewTable v-else :uv="uv" />
+    <UserViewForm v-if="userViewType === 'Form'" :uv="uv" :isRoot="isRoot" />
+    <UserViewTable v-else :uv="uv" :isRoot="isRoot" />
 </template>
 
 <script lang="ts">
@@ -15,6 +15,7 @@
     })
     export default class UserView extends Vue {
         @Prop({ type: UserViewResult }) private uv!: UserViewResult
+        @Prop({ type: Boolean, default: false }) private isRoot!: boolean
 
         get userViewType() {
             const typeAttr = this.uv.attributes["Type"]

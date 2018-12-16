@@ -51,7 +51,7 @@
         </b-button-toolbar>
 
         <b-col class="without_padding">
-            <UserView v-if="uv !== null" :uv="uv"></UserView>
+            <UserView v-if="uv !== null" :uv="uv" isRoot></UserView>
         </b-col>
 
         <b-alert variant="danger" :show="!changesAreEmpty">
