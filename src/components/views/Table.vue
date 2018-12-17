@@ -23,48 +23,51 @@
     <b-container fluid class="cont_table without_padding">
         <b-form-group horizontal :label="$t('filter')" class="find" :lang="$t('language')">
             <b-input-group>
-                <b-form-input class="find_in" v-model="filter" :placeholder="$t('search_placeholder')" />
+                <b-form-input class="find_in" :value="filter" @input="updateFilter($event)" :placeholder="$t('search_placeholder')" />
                 <b-input-group-append>
-                    <b-btn class="btn btn-light" :disabled="!filter" @click="filter = ''">{{ $t('clear') }}</b-btn>
+                    <b-btn class="btn btn-light" :disabled="!filter" @click="updateFilter('')">{{ $t('clear') }}</b-btn>
                 </b-input-group-append>
             </b-input-group>
         </b-form-group>
-        <b-container class="tabl">
-            <b-table :fields="[{key:'isActive', class:'empty_th'},{key:'openform',class:'empty_th'}].concat(fields)" :items="entries" :filter="filter">
-                <template slot="HEAD_isActive" slot-scope="data">
-                </template>
-                <template slot="isActive" slot-scope="data">
-                    <!-- We wrap all cells in a div which fills the whole <td>. This is needed because bootstrap-vue's Table doesn't support computed
-                        properties in <td>'s attributes -->
-                    <div class="contentTd">
-                        <input type="checkbox" class="flag"></input>
-                    </div>
-                </template>
-                <template slot="HEAD_openform" slot-scope="data">
-                </template>
-                <template slot="openform" slot-scope="data">
-                    <div class="contentTd">
-                        <b-button style="cursor:pointer" class="open_form"><img src="@/assets/openform.png" /></b-button>
-                    </div>
-                </template>
 
-                <template v-for="col in fields" :slot="col.key" slot-scope="data">
-                    <div class="contentTd" :key="col.key" :style="data.value.style">
-                        <template v-if="col.isActive">
-                            <b-checkbox :checked="data.value.value" disabled="true"></b-checkbox>
-                        </template>
-                        <template v-else>
-                            <router-link v-if="data.value.link !== null" :key="col.name" :to="data.value.link">
-                                {{ data.value.value }}
-                            </router-link>
+        <table class="tabl table b-table">
+            <col> <!-- Checkbox column -->
+            <col> <!-- Open form column -->
+            <col v-for="(col, col_i) in columns" :key="col_i" :style="col.style">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th></th>
+                    <th v-for="(col, col_i) in columns" :key="col_i" class="sorting" :style="col.style" @click="updateSort(col_i)">
+                        {{ col.caption }}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="row_i in rows" :key="row_i" v-if="!entries[row_i].deleted" :style="entries[row_i].style">
+                    <td>
+                        <input type="checkbox" class="flag">
+                    </td>
+                    <td class="contentTd">
+                        ⤢
+                    </td>
+                    <td v-for="(cell, col_i) in entries[row_i].cells" :key="col_i" class="contentTd" :style="cell.style">
+                        <router-link v-if="cell.link !== null" :to="cell.link">
+                            <b-checkbox v-if="typeof cell.value === 'boolean'" :checked="cell.value" disabled></b-checkbox>
                             <template v-else>
-                                {{ data.value.value }}
+                                {{ cell.valueText }}
+                            </template>
+                        </router-link>
+                        <template v-else>
+                            <b-checkbox v-if="typeof cell.value === 'boolean'" :checked="cell.value" disabled></b-checkbox>
+                            <template v-else>
+                                {{ cell.valueText }}
                             </template>
                         </template>
-                    </div>
-                </template>
-            </b-table>
-        </b-container>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </b-container>
 </template>
 
@@ -77,10 +80,38 @@
     import { setBodyStyle } from "@/style"
     import { IExecutedRow, IExecutedValue } from "@/api"
 
-    interface ITableCell {
-        value: string
+    interface ICell {
+        value: any
+        valueText: string
         link: Location | null
         style: Record<string, any>
+    }
+
+    interface IRow {
+        cells: ICell[]
+        deleted: boolean
+        style: Record<string, any>
+    }
+
+    interface IColumn {
+        caption: string
+        style: Record<string, any>
+    }
+
+    const rowContains = (row: IRow, searchString: string) => {
+        return row.cells.some(cell => cell.valueText.includes(searchString))
+    }
+
+    const rowIndicesCompare = (aIndex: number, bIndex: number, entries: IRow[], sortColumn: number) => {
+        const a = entries[aIndex]
+        const b = entries[bIndex]
+        if (a.cells[sortColumn].value < b.cells[sortColumn].value) {
+            return -1
+        } else if (a.cells[sortColumn].value > b.cells[sortColumn].value) {
+            return 1
+        } else {
+            return 0
+        }
     }
 
     const staging = namespace("staging")
@@ -92,34 +123,66 @@
         @staging.Getter("isEmpty") changesAreEmpty!: boolean
 
         filter: string = ""
-        entries: Array<Record<string, ITableCell>> = []
+        sortColumn: number | null = null
+        sortAsc: boolean = true
+        entries: IRow[] = []
+        rows: number[] = []
 
         @Prop({ type: UserViewResult }) private uv!: UserViewResult
         @Prop({ type: Boolean, default: false }) private isRoot!: boolean
 
-        get fields() {
+        get columns() {
+            const viewAttrs = this.uv.attributes
+
             return this.uv.info.columns.map((columnInfo, i) => {
                 const columnAttrs = this.uv.columnAttributes[i]
-                const captionAttr = columnAttrs["Caption"]
-                const caption = captionAttr !== undefined ? captionAttr : columnInfo.name
-                const sortD = columnInfo.valueType.type === "int" ? "desc" : "asc"
-                const check = columnInfo.valueType.type === "bool" ? true : false
+                const getColumnAttr = (name: string) => columnAttrs[name] || viewAttrs[name]
+
+                const captionAttr = getColumnAttr("Caption")
+                const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name
+
+                const style: Record<string, any> = {}
+                const columnWidth = getColumnAttr("ColumnWidth")
+                if (columnWidth !== undefined) {
+                    style["width"] = columnWidth
+                }
+
                 return {
-                    key: columnInfo.name,
-                    label: caption,
-                    sortable: true,
-                    sortDirection: sortD,
-                    isActive: check,
+                    caption, style,
                 }
             })
+        }
+
+        private updateFilter(filter: string) {
+            if (filter !== this.filter) {
+                const oldFilter = this.filter
+                this.filter = filter
+                if (filter === "" || !filter.includes(oldFilter)) {
+                    this.buildRows()
+                } else {
+                    // Filter existing rows when we filter a subset of already filtered ones.
+                    this.rows = this.rows.filter(rowI => rowContains(this.entries[rowI], this.filter))
+                }
+            }
+        }
+
+        private updateSort(sortColumn: number) {
+            if (this.sortColumn !== sortColumn) {
+                this.sortColumn = sortColumn
+                this.sortAsc = true
+            } else {
+                this.sortAsc = !this.sortAsc
+            }
+
+            this.sortRows()
         }
 
         /* To optimize performance when staging entries change, we first pre-build entries and then update them selectively watching staging entries.
            This is to avoid rebuilding complete rows array each time user changes a field.
         */
         @Watch("uv")
-        private updateFields() {
-            this.entries = this.buildEntries()
+        private updateEntries() {
+            this.buildEntries()
         }
 
         @Watch("changes")
@@ -127,10 +190,19 @@
             if (this.changesAreEmpty) {
                 // Changes got reset -- rebuild entries.
                 // This could be done more efficiently but it would require tracking of what fields were changed.
-                this.entries = this.buildEntries()
+                this.buildEntries()
             } else {
                 const changedFields = this.getCurrentChanges()
                 if (this.uv.rows !== null) {
+                    Object.keys(changedFields.deleted).forEach(rowId => {
+                        const deleted = changedFields.deleted[rowId]
+                        const rowI = this.uv.updateRowIds[rowId]
+                        const entry = this.entries[rowI]
+                        if (deleted !== undefined) {
+                            entry.deleted = deleted
+                        }
+                    })
+
                     Object.keys(changedFields.updated).forEach(rowId => {
                         const fields = changedFields.updated[rowId]
                         const rowI = this.uv.updateRowIds[rowId]
@@ -138,12 +210,16 @@
                         if (fields === null) {
                             // Reset to original values
                             (this.uv.rows as IExecutedRow[])[rowI].values.forEach((value, valueI) => {
-                                const columnInfo = this.uv.info.columns[valueI]
-                                entry[columnInfo.name].value = this.getValueText(value)
+                                const cell = entry.cells[valueI]
+                                cell.value = value.value
+                                cell.valueText = this.getValueText(value)
                             })
                         } else {
                             Object.keys(fields).forEach(fieldName => {
-                                entry[fieldName].value = this.getValueText({ value: fields[fieldName] })
+                                const cell = entry.cells[this.uv.updateColumnIds[fieldName]]
+                                const value = fields[fieldName]
+                                cell.value = value
+                                cell.valueText = this.getValueText({ value })
                             })
                         }
                     })
@@ -161,86 +237,101 @@
                     }
                 `)
             }
-            this.entries = this.buildEntries()
+            this.buildEntries()
         }
 
-        private buildEntries(): Array<Record<string, ITableCell>> {
+        private sortRows() {
+            if (this.sortColumn !== null) {
+                const sortColumn = this.sortColumn
+                const entries = this.entries
+                const sortFunction: (a: number, b: number) => number =
+                    this.sortAsc ?
+                    (a, b) => rowIndicesCompare(a, b, entries, sortColumn) :
+                    (a, b) => rowIndicesCompare(b, a, entries, sortColumn)
+                this.rows.sort(sortFunction)
+            }
+        }
+
+        // Update this.rows from this.entries
+        private buildRows() {
+            this.rows = Array.from({ length: this.entries.length }, (v, i) => i)
+            if (this.filter !== "") {
+                this.rows = this.rows.filter(rowI => rowContains(this.entries[rowI], this.filter))
+            }
+
+            this.sortRows()
+        }
+
+        // Update this.entries
+        private buildEntries() {
             // .rows === null means that we are in "create new" mode -- there are no selected existing values.
             if (this.uv.rows === null) {
                 // Not supported in table yet.
-                return []
-            }
+                this.entries = []
+            } else {
+                const changedFields = this.getCurrentChanges()
+                const viewAttrs = this.uv.attributes
 
-            const changedFields = this.getCurrentChanges()
-            const viewAttrs = this.uv.attributes
+                this.entries = this.uv.rows.map((row, rowI) => {
+                    const rowAttrs = row.attributes === undefined ? {} : row.attributes
+                    const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
 
-            return this.uv.rows.map((row, rowI) => {
-                const rowAttrs = row.attributes === undefined ? {} : row.attributes
-                const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
-
-                let updatedValues: Record<string, any> = {}
-                if (row.id !== undefined) {
-                    const deleted = changedFields.deleted[row.id]
-                    // FIXME: should mark row as deleted instead, as it could be reversed later
-                    if (deleted !== undefined && deleted) {
-                        return null
+                    let updatedValues: Record<string, any> = {}
+                    let deleted = false
+                    if (row.id !== undefined) {
+                        deleted = changedFields.deleted[row.id] || false
+                        const updatedEntry = changedFields.updated[row.id]
+                        if (updatedEntry !== undefined && updatedEntry !== null) {
+                            updatedValues = updatedEntry
+                        }
                     }
-                    const updatedEntry = changedFields.updated[row.id]
-                    if (updatedEntry !== undefined && updatedEntry !== null) {
-                        updatedValues = updatedEntry
+
+                    const rowStyle: Record<string, any> = {}
+                    const rowHeight = getRowAttr("RowHeight")
+                    if (rowHeight !== undefined) {
+                        rowStyle["height"] = rowHeight
                     }
-                }
 
-                return row.values.reduce((rowObj: Record<string, ITableCell>, value, colI) => {
-                    const columnInfo = this.uv.info.columns[colI]
-                    const columnAttrs = this.uv.columnAttributes[colI]
-                    const cellAttrs = value.attributes === undefined ? {} : value.attributes
+                    const cells = row.values.map((value, colI): ICell => {
+                        const columnInfo = this.uv.info.columns[colI]
+                        const columnAttrs = this.uv.columnAttributes[colI]
+                        const cellAttrs = value.attributes === undefined ? {} : value.attributes
 
-                    const getCellAttr = (name: string) => cellAttrs[name] || rowAttrs[name] || columnAttrs[name] || viewAttrs[name]
-                    const getColumnAttr = (name: string) => columnAttrs[name] || viewAttrs[name]
+                        const getCellAttr = (name: string) => cellAttrs[name] || rowAttrs[name] || columnAttrs[name] || viewAttrs[name]
 
-                    const updatedValue = updatedValues[columnInfo.name]
-                    const currentValue = updatedValue === undefined ? value : { value: updatedValue }
-                    const valueText = this.getValueText(currentValue)
+                        const updatedValue = updatedValues[columnInfo.name]
+                        const currentValue = updatedValue === undefined ? value : { value: updatedValue }
+                        const valueText = this.getValueText(currentValue)
 
-                    const linkedViewAttr = row.id === undefined ? undefined : getCellAttr("LinkedView")
-                    const link =
-                        linkedViewAttr === undefined ? null : {
-                            name: "view",
-                            params: { "name": String(linkedViewAttr) },
-                            query: { "id": String(row.id) },
+                        const linkedViewAttr = row.id === undefined ? undefined : getCellAttr("LinkedView")
+                        const link =
+                            linkedViewAttr === undefined ? null : {
+                                name: "view",
+                                params: { "name": String(linkedViewAttr) },
+                                query: { "id": String(row.id) },
+                            }
+
+                        const style: Record<string, any> = {}
+
+                        const cellColor = getCellAttr("CellColor")
+                        if (cellColor !== undefined) {
+                            style["background-color"] = cellColor
                         }
 
-                    const style: Record<string, any> = {}
+                        return {
+                            value: currentValue.value,
+                            valueText, link, style,
+                        }
+                    })
 
-                    const cellColor = getCellAttr("CellColor")
-                    if (cellColor !== undefined) {
-                        style["background-color"] = cellColor
+                    return {
+                        style: rowStyle,
+                        cells, deleted,
                     }
-                    const cellWidth = getColumnAttr("WidthColumn")
-                    if (cellWidth !== undefined) {
-                        style["width"] = cellWidth
-                    }
-                    if (cellWidth !== undefined) {
-                        style["max-width"] = cellWidth
-                    }
-                    if (cellWidth !== undefined) {
-                        style["minWidth"] = cellWidth
-                    }
-                    const cellHeight = getRowAttr("HeightRow")
-                    if (cellHeight !== undefined) {
-                        style["height"] = cellHeight
-                    }
+                })
+            }
 
-                    const cell: ITableCell = {
-                        value: valueText,
-                        link, style,
-                    }
-
-                    rowObj[columnInfo.name] = cell
-                    return rowObj
-                }, {})
-            }).filter((row): row is Record<string, ITableCell> => row !== null)
+            this.buildRows()
         }
 
         private getValueText(val: IExecutedValue) {

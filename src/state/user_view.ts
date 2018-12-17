@@ -115,15 +115,17 @@ export default class MainMenuState extends VuexModule {
     // Simple reload; we keep old data if it fails.
     @Action
     async reload(): Promise<void> {
-        if (this.current === null) {
+        const current: UserViewResult = this.context.getters["current"]
+
+        if (current === null) {
             return
         }
 
-        if (this.current.type === "named") {
-            if (this.current.args !== null) {
-                await this.context.dispatch("getNamed", { name: this.current.source, args: this.current.args })
+        if (current.type === "named") {
+            if (current.args !== null) {
+                await this.context.dispatch("getNamed", { name: current.source, args: current.args })
             } else {
-                await this.context.dispatch("getNamedInfo", this.current.source)
+                await this.context.dispatch("getNamedInfo", current.source)
             }
         }
     }
