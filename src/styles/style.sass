@@ -221,10 +221,14 @@ table
 	table-layout: fixed
 @media print
 	div
-		&.tabl 
+		&.tabl
 			height: 100%
 			float: none !important
 			overflow: visible !important
+			@-moz-document url-prefix()
+				table
+					border-collapse: separate !important
+					border-right: solid 1px var(--TableBorderColor)
 			table
 				max-width: 100% !important
 				page-break-inside:auto
