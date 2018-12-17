@@ -228,14 +228,14 @@
         }
 
         @Watch("uv")
-        private updateFields() {
+        private updateEntries() {
             if (this.uv.rows === null) {
                 // This is creation mode and UserView just got reloaded -- it means staging was successfully pushed.
                 // We presume a new entry was added and return back to the table view.
                 // FIXME: this is a hack and we need to think of a better way.
                 this.returnBack()
             } else {
-                this.entries = this.buildEntries()
+                this.buildEntries()
                 if (this.entries.length === 0) {
                     this.returnBack()
                 }
@@ -248,7 +248,7 @@
             if (this.changesAreEmpty) {
                 // Changes got reset -- rebuild entries.
                 // This could be done more efficiently but it would require tracking of what fields were changed.
-                this.entries = this.buildEntries()
+                this.buildEntries()
             } else {
                 const changedFields = this.getCurrentChanges()
                 if (this.uv.rows !== null) {
@@ -311,10 +311,10 @@
                     }
                 `)
             }
-            this.entries = this.buildEntries()
+            this.buildEntries()
         }
 
-        private buildEntries(): IForm[] {
+        private buildEntries() {
             const changedFields = this.getCurrentChanges()
             const viewAttrs = this.uv.attributes
 
@@ -385,9 +385,9 @@
                     const value = columnInfo.updateField === null ? "" : columnInfo.updateField.field.defaultValue
                     return { value }
                 })
-                return [makeForm({ values }, true)]
+                this.entries = [makeForm({ values }, true)]
             } else {
-                return this.uv.rows.map(row => makeForm(row, false))
+                this.entries = this.uv.rows.map(row => makeForm(row, false))
             }
         }
 
