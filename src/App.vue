@@ -17,13 +17,13 @@
 
         get styleSettings() {
             const values = {
-                "background-color": this.settingsEntry("backround-color", "#ffffff"),
-                "navigation-back-color": this.settingsEntry("backround-color", "#F5C700"),
-                "table-border-color": this.settingsEntry("backround-color", "#F5C700"),
-                "font": this.settingsEntry("font-family", "Courier New, monospace"),
-                "menu-color": this.settingsEntry("backround-color", "#F5C700"),
-                "color-table-bg": this.settingsEntry("backround-color", "white"),
-                "color-table-select": this.settingsEntry("backround-color", "#CCCCCC"),
+                "BackgroundColor": this.settingsEntry("backround-color", "#ffffff"),
+                "NavigationBackColor": this.settingsEntry("NavigationBackColor", "#F5C700"),
+                "TableBorderColor": this.settingsEntry("TableBorderColor", "#F5C700"),
+                "Font": this.settingsEntry("Font", "Courier New, monospace"),
+                "MenuColor": this.settingsEntry("MenuColor", "#F5C700"),
+                "ColorTableBg": this.settingsEntry("ColorTableBg", "white"),
+                "ColorTableSelect": this.settingsEntry("ColorTableSelect", "#CCCCCC"),
             }
             return Object.entries(values).reduce((currSettings, [name, value]) => {
                 currSettings[`--${name}`] = value
