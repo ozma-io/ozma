@@ -184,19 +184,19 @@
         private selectRow(rowI: number, event: MouseEvent) {
             if (this.lastSelected !== null && event.shiftKey) {
                 // Select all rows between current one and the previous selected one.
+                const oldEntry = this.entries[this.lastSelected]
                 if (this.lastSelected < rowI) {
                     for (let i = this.lastSelected + 1; i <= rowI; i++) {
                         const entry = this.entries[this.rows[i]]
-                        entry.selected = !entry.selected
+                        entry.selected = oldEntry.selected
                     }
                 } else if (this.lastSelected > rowI) {
                     for (let i = rowI; i <= this.lastSelected - 1; i++) {
                         const entry = this.entries[this.rows[i]]
-                        entry.selected = !entry.selected
+                        entry.selected = oldEntry.selected
                     }
                 } else {
-                    const entry = this.entries[this.rows[rowI]]
-                    entry.selected = !entry.selected
+                    oldEntry.selected = !oldEntry.selected
                 }
             } else {
                 const entry = this.entries[this.rows[rowI]]
