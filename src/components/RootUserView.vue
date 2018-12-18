@@ -54,12 +54,14 @@
             <UserView v-if="uv !== null" :uv="uv" isRoot></UserView>
         </b-col>
 
-        <b-alert variant="danger" :show="!changesAreEmpty">
-            {{ $t('pending_changes') }}
+        <nav class="navbar fixed-bottom navbar-light bg-light">
+            <b-alert variant="danger" :show="!changesAreEmpty">
+                {{ $t('pending_changes') }}
 
-            <b-button @click="submitChanges" variant="primary">{{ $t('save') }}</b-button>
-            <b-button @click="clearChanges" variant="secondary">{{ $t('revert_changes') }}</b-button>
-        </b-alert>
+                <b-button @click="submitChanges" variant="primary">{{ $t('save') }}</b-button>
+                <b-button @click="clearChanges" variant="secondary">{{ $t('revert_changes') }}</b-button>
+            </b-alert>
+        </nav>
     </b-container>
 </template>
 
