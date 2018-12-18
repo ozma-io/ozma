@@ -1,8 +1,6 @@
-import { Module as Mod } from "vuex"
-import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators"
+import { Module } from "vuex"
 
 import * as Api from "@/api"
-import * as Store from "@/state/store"
 
 export class CurrentSettings {
     settings: Record<string, string>
@@ -12,58 +10,70 @@ export class CurrentSettings {
     }
 }
 
-@Module({ namespaced: true, dynamic: true, store: Store.store, name: "settings" })
-export default class SettingsState extends VuexModule {
-    current: CurrentSettings | null = null
-    lastError: string | null = null
+export interface ISettingsState {
+    current: CurrentSettings | null
+    lastError: string | null
+}
 
-    @Mutation
-    removeAuth(lastError?: string) {
-        this.current = null
-    }
-
-    @Mutation
-    setError(lastError: string) {
-        this.lastError = lastError
-    }
-
-    @Mutation
-    clearError() {
-        this.lastError = null
-    }
-
-    @Mutation
-    setCurrent(settings: CurrentSettings) {
-        this.current = settings
-        this.lastError = null
-    }
-
-    get entry() {
-        return (name: string, defValue: string): string => {
-            if (this.current === null) {
+const settingsModule: Module<ISettingsState, {}> = {
+    namespaced: true,
+    state: {
+        current: null,
+        lastError: null,
+    },
+    mutations: {
+        setError: (state, lastError: string) => {
+            state.lastError = lastError
+        },
+        clearError: state => {
+            state.lastError = null
+        },
+        setSettings: (state, settings: CurrentSettings) => {
+            state.current = settings
+            state.lastError = null
+        },
+        clearSettings: state => {
+            state.current = null
+        },
+    },
+    getters: {
+        entry: state => (name: string, defValue: string): string => {
+            if (state.current === null) {
                 return defValue
             } else {
-                const ret = this.current.settings[name]
+                const ret = state.current.settings[name]
                 return (ret === undefined) ? defValue : ret
             }
-        }
-    }
-
-    @Action
-    async getSettings(): Promise<void> {
-        try {
-            const res: Api.IViewExprResult = await Store.callSecretApi(Api.fetchAnonymousView, "SELECT \"Name\", \"Value\" FROM funapp.\"Settings\"", new URLSearchParams())
-            const values = res.result.rows.reduce((currSettings: Record<string, string>, row) => {
-                const key = row.values[0].value
-                const value = row.values[1].value
-                currSettings[key] = value
-                return currSettings
-            }, {})
-            const settings = new CurrentSettings(values)
-            this.setCurrent(settings)
-        } catch (e) {
-            this.setError(e.message)
-            throw e
-        }
-    }
+        },
+    },
+    actions: {
+        removeAuth: {
+            root: true,
+            handler: ({ commit }) => {
+                commit("clearSettings")
+            },
+        },
+        getSettings: async ({ commit, dispatch }) => {
+            try {
+                const select = "SELECT \"Name\", \"Value\" FROM funapp.\"Settings\""
+                const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
+                    func: Api.fetchAnonymousView,
+                    args: [select, new URLSearchParams()],
+                }, { root: true })
+                const values = res.result.rows.reduce((currSettings: Record<string, string>, row) => {
+                    const key = row.values[0].value
+                    const value = row.values[1].value
+                    currSettings[key] = value
+                    return currSettings
+                }, {})
+                const settings = new CurrentSettings(values)
+                commit("setCurrent", settings)
+            } catch (e) {
+                commit("setError", e.message)
+                throw e
+            }
+        },
+    },
 }
+
+export default settingsModule

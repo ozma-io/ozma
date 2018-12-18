@@ -94,7 +94,6 @@
     import { namespace } from "vuex-class"
     import { IExecutedRow, RowId, FieldName, IResultColumnInfo, IExecutedValue } from "@/api"
     import * as Api from "@/api"
-    import * as Store from "@/state/store"
     import { UserViewResult } from "@/state/user_view"
     import { CurrentAuth } from "@/state/auth"
     import { ChangesMap, IEntityChanges } from "@/state/staging_changes"
