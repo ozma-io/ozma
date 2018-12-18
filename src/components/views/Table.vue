@@ -318,12 +318,3 @@
     }
     checkedd()
 </script>
-
-<style lang="sass">
-    body
-        overflow: hidden
-
-    @media print
-        @page
-            size: landscape
-</style>
