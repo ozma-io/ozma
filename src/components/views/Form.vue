@@ -164,9 +164,9 @@
         @staging.State("changes") changes!: ChangesMap
         @staging.State("currentSubmit") currentSubmit!: Promise<void> | null
         @staging.Getter("forUserView") changesForUserView!: (uv: UserViewResult) => IEntityChanges
-        @staging.Mutation("updateField") updateField!: ({ schema, entity, id, field, value }: { schema: string, entity: string, id: number, field: string, value: any }) => void
-        @staging.Mutation("setAddedField") setAddedField!: ({ schema, entity, newId, field, value }: { schema: string, entity: string, newId: number, field: string, value: any }) => void
-        @staging.Mutation("deleteEntry") deleteEntry!: ({ schema, entity, id }: { schema: string, entity: string, id: number }) => void
+        @staging.Action("updateField") updateField!: ({ schema, entity, id, field, value }: { schema: string, entity: string, id: number, field: string, value: any }) => void
+        @staging.Action("setAddedField") setAddedField!: ({ schema, entity, newId, field, value }: { schema: string, entity: string, newId: number, field: string, value: any }) => void
+        @staging.Action("deleteEntry") deleteEntry!: ({ schema, entity, id }: { schema: string, entity: string, id: number }) => void
         @staging.Action("submit") submitChanges!: () => Promise<void>
         @staging.Getter("isEmpty") changesAreEmpty!: boolean
 
