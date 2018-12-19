@@ -30,7 +30,7 @@ export const fetchSuccess = async (input: RequestInfo, init?: RequestInit): Prom
     if (!response.ok) {
         const text = await response.text()
         const message = text === "" ? response.statusText : text
-        throw new FetchError(text, response)
+        throw new FetchError(message, response)
     }
     return response
 }
