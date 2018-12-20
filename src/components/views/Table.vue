@@ -29,45 +29,46 @@
                 </b-input-group-append>
             </b-input-group>
         </b-form-group>
-
-        <table class="tabl table b-table">
-            <col> <!-- Checkbox column -->
-            <col> <!-- Open form column -->
-            <col v-for="(col, col_i) in columns" :key="col_i" :style="col.style">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th></th>
-                    <th v-for="(col, col_i) in columns" :key="col_i" class="sorting" :style="col.style" @click="updateSort(col_i)">
-                        {{ col.caption }}
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="(entry_i, row_i) in rows" :key="entry_i" v-if="!entries[entry_i].deleted" :style="entries[entry_i].style">
-                    <td>
-                        <input type="checkbox" :checked="entries[entry_i].selected" @click="selectRow(row_i, $event)">
-                    </td>
-                    <td class="contentTd">
-                        ⤢
-                    </td>
-                    <td v-for="(cell, col_i) in entries[entry_i].cells" :key="col_i" class="contentTd" :style="cell.style">
-                        <router-link v-if="cell.link !== null" :to="cell.link">
-                            <b-checkbox v-if="typeof cell.value === 'boolean'" :checked="cell.value" disabled></b-checkbox>
+        <div class="tabl">
+            <table class="tabl table b-table">
+                <col> <!-- Checkbox column -->
+                <col> <!-- Open form column -->
+                <col v-for="(col, col_i) in columns" :key="col_i" :style="col.style">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        <th v-for="(col, col_i) in columns" :key="col_i" class="sorting" :style="col.style" @click="updateSort(col_i)">
+                            {{ col.caption }}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(entry_i, row_i) in rows" :key="entry_i" v-if="!entries[entry_i].deleted" :style="entries[entry_i].style">
+                        <td>
+                            <input type="checkbox" :checked="entries[entry_i].selected" @click="selectRow(row_i, $event)">
+                        </td>
+                        <td class="contentTd">
+                            ⤢
+                        </td>
+                        <td v-for="(cell, col_i) in entries[entry_i].cells" :key="col_i" class="contentTd" :style="cell.style">
+                            <router-link v-if="cell.link !== null" :to="cell.link">
+                                <b-checkbox v-if="typeof cell.value === 'boolean'" :checked="cell.value" disabled></b-checkbox>
+                                <template v-else>
+                                    {{ cell.valueText }}
+                                </template>
+                            </router-link>
                             <template v-else>
-                                {{ cell.valueText }}
+                                <b-checkbox v-if="typeof cell.value === 'boolean'" :checked="cell.value" disabled></b-checkbox>
+                                <template v-else>
+                                    {{ cell.valueText }}
+                                </template>
                             </template>
-                        </router-link>
-                        <template v-else>
-                            <b-checkbox v-if="typeof cell.value === 'boolean'" :checked="cell.value" disabled></b-checkbox>
-                            <template v-else>
-                                {{ cell.valueText }}
-                            </template>
-                        </template>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </b-container>
 </template>
 
