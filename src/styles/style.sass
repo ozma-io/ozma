@@ -1,6 +1,6 @@
 ﻿*
 	margin: 0
-	font-family: var(--font)
+	font-family: var(--Font)
 	color: black !important
 	max-width: none !important
 	min-width: none !important
@@ -52,7 +52,7 @@ div
 				justify-content: center
 				flex-direction: column
 				justify-content: space-around
-				background: var(--background-color)
+				background: var(--BackgroundColor)
 				width: 180px
 				height: 200px
 		
@@ -114,7 +114,7 @@ div
 				margin: auto
 				padding: 0
 				max-width: 650px
-				background: var(--navigation-back-color)
+				background: var(--NavigationBackColor)
 				div
 					&#logout
 						button
@@ -221,36 +221,25 @@ table
 	table-layout: fixed
 @media print
 	div
-		&.tabl 
+		&.tabl
 			height: 100%
 			float: none !important
 			overflow: visible !important
+			@-moz-document url-prefix()
+				table
+					border-collapse: separate !important
+					border-right: solid 1px var(--TableBorderColor)
 			table
+				max-width: 100% !important
 				page-break-inside:auto
 				border-spacing: 0
 				thead
 					th
-						max-width: 0px !important
-						border: solid 1px var(--table-border-color)
-						&.empty_th
-								display: none
+						border: solid 1px var(--TableBorderColor)
 				tbody
 					tr
 						td
-							border: solid 1px var(--table-border-color)
-							&.empty_th
-								display: none
-								
-							div
-								&.contentTd
-									page-break-inside: avoid !important
-									min-width: none !important
-									max-width: 0px !important
-									display: block !important
-									height: auto !important
-									background-color: rgba(255,0,0,0)!important
-									margin-top: 3px !important
-									padding-top: 0px !important
+							border: solid 1px var(--TableBorderColor)
 
 div
 	&.tabl 
@@ -262,9 +251,9 @@ div
 		table
 			thead
 				height: 25px
-				border-right: solid 1px  var(--table-border-color) !important
+				border-right: solid 1px  var(--TableBorderColor) !important
 				th
-					background: var(--table-border-color) !important
+					background: var(--TableBorderColor) !important
 					overflow: hidden
 					padding: 0
 					border: 0
@@ -276,55 +265,27 @@ div
 					position: sticky
 					z-index: 10
 					top: 0
-					&.empty_th
-						min-width: 14px
-						max-width: 14px !important
-						padding: 3px
-						vertical-align: top
 
-						div
-							min-width: 14px
-							max-width: 14px !important
-							margin: 0
-
-							input
-								left: 0
-								rigth: 0
 					&.tabl_heading
 						text-overflow: ellipsis
 						vertical-align: top
 			tbody
-				border-right: solid 1px  var(--table-border-color) !important
+				border-right: solid 1px  var(--TableBorderColor) !important
 				tr
+					&.selected
+						background-color: var(--ColorTableSelect)
+					&.none_select
+						background-color: var(--ColorTableBg)
 					background-color: white
-					border-right: solid 1px var(--table-border-color)
+					border-right: solid 1px var(--TableBorderColor)
 					height: 100%
 					z-index: 100
 					@-moz-document url-prefix()
 						td
 							height: 100%
 				td
-					border: solid 1px var(--table-border-color)
+					border: solid 1px var(--TableBorderColor)
 					padding: 0px
-					height: 1px
-					width: 1px
-					div
-						min-width: 100%
-						max-width: 14px !important
-						margin: 0
-						padding-left: 0px
-						left: 24px							
-						&.contentTd
-							min-width: none
-							max-width: none !important
-							overflow: hidden
-							column-count: 1
-							padding: 3px
-							height: 100%
-							weith: 100%
-						&.flag
-							width: 21px
-							min-width: 21px
 					button
 						&.open_form
 							padding: 0
@@ -388,7 +349,7 @@ div
 				
 					a
 						&#menu_btn
-							background-color: var(--menu-color)
+							background-color: var(--MenuColor)
 							padding: 5px
 							border: solid 1px white
 							border-left: 0px
@@ -403,7 +364,7 @@ div
 							border-left: 0px
 
 							button
-								background-color: var(--menu-color) !important
+								background-color: var(--MenuColor) !important
 								padding: 5px
 								pointer-events: none
 							div
@@ -416,7 +377,7 @@ div
 								margin: -0.5px -0px 0px -1px;
 								a
 									&.menu_btn
-										background-color: var(--menu-color)
+										background-color: var(--MenuColor)
 										padding: 5px
 										border: solid 1px white
 										height: 30px
