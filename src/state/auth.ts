@@ -1,7 +1,6 @@
-import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators"
-
+import { Module } from "vuex"
 import * as Api from "@/api"
-import * as Store from "@/state/store"
+import * as Utils from "@/utils"
 
 const renewInterval = 120000
 
@@ -15,60 +14,95 @@ export class CurrentAuth {
     }
 }
 
-const clear = (store: AuthState, lastError?: string) => {
+export interface IAuthState {
+    current: CurrentAuth | null
+    lastError: string | null
+    renewIntervalId: number | null
+}
+
+const clearAuth = (store: IAuthState) => {
     if (store.renewIntervalId !== null) {
         clearInterval(store.renewIntervalId)
         store.renewIntervalId = null
     }
     store.current = null
-    if (lastError !== undefined) {
-        store.lastError = lastError
-    } else {
-        store.lastError = null
-    }
 }
 
-@Module({ namespaced: true, dynamic: true, store: Store.store, name: "auth" })
-export default class AuthState extends VuexModule {
-    current: CurrentAuth | null = null
-    lastError: string | null = null
-    renewIntervalId: number | null = null
+export const authModule: Module<IAuthState, {}> = {
+    namespaced: true,
+    state: {
+        current: null,
+        lastError: null,
+        renewIntervalId: null,
+    },
+    mutations: {
+        setError: (state, lastError: string) => {
+            state.lastError = lastError
+        },
+        clearError: state => {
+            state.lastError = null
+        },
+        setAuth: (state, { auth, renewFunc }: { auth: CurrentAuth, renewFunc: () => void }) => {
+            clearAuth(state)
+            state.current = auth
+            state.renewIntervalId = setInterval(renewFunc, renewInterval)
+        },
+        clearAuth,
+    },
+    actions: {
+        removeAuth: {
+            root: true,
+            handler: ({ commit }, lastError?: string) => {
+                commit("clearAuth")
+                if (lastError !== undefined) {
+                    commit("setError", lastError)
+                }
+            },
+        },
+        setAuth: ({ dispatch, commit }, auth: CurrentAuth) => {
+            commit("setAuth", {
+                auth,
+                renewFunc: () => {
+                    dispatch("renewAuth")
+                },
+            })
+        },
+        requestAuth: async ({ commit, dispatch }, { username, password }: { username: string, password: string }) => {
+            try {
+                const token = await Api.requestAuth(username, password)
+                const auth = new CurrentAuth(token)
+                dispatch("setAuth", auth)
+            } catch (e) {
+                commit("clearAuth", e.message)
+                throw e
+            }
+        },
+        callProtectedApi: {
+            root: true,
+            handler: async ({ state, commit }, { func, args }: { func: ((_1: string, ..._2: any[]) => Promise<any>), args?: any[] }): Promise<any> => {
+                if (state.current === null) {
+                    throw new Error("No authentication token to renew")
+                }
 
-    @Mutation
-    removeAuth(lastError?: string) {
-        clear(this, lastError)
-    }
-
-    @Mutation
-    clearError() {
-        this.lastError = null
-    }
-
-    @Mutation
-    setAuth(auth: CurrentAuth) {
-        clear(this)
-        this.current = auth
-        this.renewIntervalId = setInterval(() => {
-            Store.store.dispatch("auth/renewAuth")
-        }, renewInterval)
-    }
-
-    @Action
-    async requestAuth({ username, password }: { username: string, password: string }): Promise<void> {
-        try {
-            const token = await Api.requestAuth(username, password)
+                try {
+                    const argsArray = args === undefined ? [] : args
+                    return await func(state.current.token, ...argsArray)
+                } catch (e) {
+                    if (e instanceof Utils.FetchError) {
+                        if (e.response.status === 401) {
+                            commit("clearAuth", e.message)
+                        }
+                    }
+                    throw e
+                }
+            },
+        },
+        renewAuth: async ({ dispatch }): Promise<void> => {
+            const token: string = await dispatch("callProtectedApi", { func: Api.renewAuth }, { root: true })
             const auth = new CurrentAuth(token)
-            this.setAuth(auth)
-        } catch (e) {
-            this.removeAuth(e.message)
-            throw e
-        }
-    }
-
-    @Action
-    async renewAuth(): Promise<void> {
-        const token: string = await Store.callSecretApi(Api.renewAuth)
-        const auth = new CurrentAuth(token)
-        this.setAuth(auth)
-    }
+            dispatch("setAuth", auth)
+        },
+    },
 }
+
+export default authModule

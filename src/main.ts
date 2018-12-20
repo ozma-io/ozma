@@ -1,20 +1,21 @@
 import Vue from "vue"
+import Vuex from "vuex"
 import VueRouter from "vue-router"
 import VueI18n, { LocaleMessageObject, Path, Locale } from "vue-i18n"
 import BootstrapVue from "bootstrap-vue"
+
+import * as Utils from "@/utils"
 
 import Login from "@/components/Login.vue"
 import Navigator from "@/components/Navigator.vue"
 import RootUserView from "@/components/RootUserView.vue"
 import App from "@/App.vue"
 
-import * as Store from "@/state/store"
-// XXX: should be kept in sync with RootState type in in store.ts!
-import "@/state/auth"
-import "@/state/main_menu"
-import "@/state/settings"
-import "@/state/user_view"
-import "@/state/staging_changes"
+import authModule from "@/state/auth"
+import mainMenuModule from "@/state/main_menu"
+import settingsModule from "@/state/settings"
+import userViewModule from "@/state/user_view"
+import stagingChanges from "@/state/staging_changes"
 
 import { CurrentAuth } from "@/state/auth"
 
@@ -22,9 +23,24 @@ import "bootstrap/dist/css/bootstrap.css"
 import "bootstrap-vue/dist/bootstrap-vue.css"
 import "@/styles/style.sass"
 
+Vue.use(Vuex)
 Vue.use(VueRouter)
 Vue.use(VueI18n)
 Vue.use(BootstrapVue)
+
+export const store = new Vuex.Store({
+    strict: !Utils.isProduction,
+    modules: {
+        auth: authModule,
+        mainMenu: mainMenuModule,
+        settings: settingsModule,
+        userView: userViewModule,
+        staging: stagingChanges,
+    },
+})
+
+// TypeScript definition for "state" is broken
+const storeState: any = store.state
 
 const routes = [
     { path: "/", name: "navigator", component: Navigator },
@@ -45,25 +61,25 @@ const i18n = new VueI18n({
 })
 
 if (localStorage.getItem("authToken") !== null) {
-    Store.store.commit("auth/setAuth", new CurrentAuth(localStorage.getItem("authToken") as string))
-    Store.store.dispatch("auth/renewAuth")
+    store.dispatch("auth/setAuth", new CurrentAuth(localStorage.getItem("authToken") as string))
+    store.dispatch("auth/renewAuth")
 }
-Store.store.subscribe((mutation, state) => {
-    if (mutation.type === "auth/removeAuth") {
+store.subscribe((mutation, state: any) => {
+    if (mutation.type === "removeAuth") {
         localStorage.removeItem("authToken")
     } else if (mutation.type === "auth/setAuth") {
-        localStorage.setItem("authToken", (Store.store.state.auth.current as CurrentAuth).token)
+        localStorage.setItem("authToken", storeState.auth.current.token)
     }
 })
 
-if (Store.store.state.auth.current === null) {
+if (storeState.auth.current === null) {
     router.push({
         name: "login",
         query: { redirect: router.currentRoute.fullPath },
     })
 }
-Store.store.subscribe((mutation, state) => {
-    if (mutation.type === "auth/removeAuth") {
+store.subscribe((mutation, state) => {
+    if (mutation.type === "removeAuth") {
         router.push({
             name: "login",
             query: { redirect: router.currentRoute.fullPath },
@@ -72,12 +88,12 @@ Store.store.subscribe((mutation, state) => {
 })
 router.beforeResolve((to, from, next) => {
     const isLogin = to.matched.some(record => record.meta.isLogin)
-    if (!isLogin && Store.store.state.auth.current === null) {
+    if (!isLogin && storeState.auth.current === null) {
         next({
             name: "login",
             query: { redirect: to.fullPath },
         })
-    } else if (isLogin && Store.store.state.auth.current !== null) {
+    } else if (isLogin && storeState.auth.current !== null) {
         let nextUrl
         const redirect = to.query.redirect
         if (redirect !== undefined) {
@@ -92,6 +108,6 @@ router.beforeResolve((to, from, next) => {
 })
 
 const app = new Vue({
-    router, i18n, store: Store.store,
+    router, i18n, store,
     render: f => f(App),
 }).$mount("#app")

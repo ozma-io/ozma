@@ -44,14 +44,14 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="row_i in rows" :key="row_i" v-if="!entries[row_i].deleted" :style="entries[row_i].style">
+                <tr v-for="(entry_i, row_i) in rows" :key="entry_i" v-if="!entries[entry_i].deleted" :style="entries[entry_i].style">
                     <td>
-                        <input type="checkbox" class="flag">
+                        <input type="checkbox" :checked="entries[entry_i].selected" @click="selectRow(row_i, $event)">
                     </td>
                     <td class="contentTd">
                         ⤢
                     </td>
-                    <td v-for="(cell, col_i) in entries[row_i].cells" :key="col_i" class="contentTd" :style="cell.style">
+                    <td v-for="(cell, col_i) in entries[entry_i].cells" :key="col_i" class="contentTd" :style="cell.style">
                         <router-link v-if="cell.link !== null" :to="cell.link">
                             <b-checkbox v-if="typeof cell.value === 'boolean'" :checked="cell.value" disabled></b-checkbox>
                             <template v-else>
@@ -90,6 +90,7 @@
     interface IRow {
         cells: ICell[]
         deleted: boolean
+        selected: boolean
         style: Record<string, any>
     }
 
@@ -127,6 +128,7 @@
         sortAsc: boolean = true
         entries: IRow[] = []
         rows: number[] = []
+        lastSelected: number | null = null
 
         @Prop({ type: UserViewResult }) private uv!: UserViewResult
         @Prop({ type: Boolean, default: false }) private isRoot!: boolean
@@ -163,6 +165,7 @@
                     // Filter existing rows when we filter a subset of already filtered ones.
                     this.rows = this.rows.filter(rowI => rowContains(this.entries[rowI], this.filter))
                 }
+                this.lastSelected = null
             }
         }
 
@@ -175,6 +178,31 @@
             }
 
             this.sortRows()
+            this.lastSelected = null
+        }
+
+        private selectRow(rowI: number, event: MouseEvent) {
+            if (this.lastSelected !== null && event.shiftKey) {
+                // Select all rows between current one and the previous selected one.
+                const oldEntry = this.entries[this.lastSelected]
+                if (this.lastSelected < rowI) {
+                    for (let i = this.lastSelected + 1; i <= rowI; i++) {
+                        const entry = this.entries[this.rows[i]]
+                        entry.selected = oldEntry.selected
+                    }
+                } else if (this.lastSelected > rowI) {
+                    for (let i = rowI; i <= this.lastSelected - 1; i++) {
+                        const entry = this.entries[this.rows[i]]
+                        entry.selected = oldEntry.selected
+                    }
+                } else {
+                    oldEntry.selected = !oldEntry.selected
+                }
+            } else {
+                const entry = this.entries[this.rows[rowI]]
+                entry.selected = !entry.selected
+                this.lastSelected = rowI
+            }
         }
 
         /* To optimize performance when staging entries change, we first pre-build entries and then update them selectively watching staging entries.
@@ -325,8 +353,9 @@
                     })
 
                     return {
-                        style: rowStyle,
                         cells, deleted,
+                        style: rowStyle,
+                        selected: false,
                     }
                 })
             }
@@ -346,68 +375,6 @@
             return this.changesForUserView(this.uv)
         }
     }
-
-    let shiftDown = false
-
-    const setShiftDown = (event: KeyboardEvent) => {
-        if (event.keyCode === 16 || event.charCode === 16) {
-            shiftDown = true
-        }
-    }
-
-    const setShiftUp =  (event: KeyboardEvent) => {
-        if (event.keyCode === 16 || event.charCode === 16) {
-            shiftDown = false
-        }
-    }
-
-    document.addEventListener("keydown", setShiftDown)
-    document.addEventListener("keyup", setShiftUp)
-
-    const elements = document.getElementsByClassName("flag")
-    let lastcheck = 0
-
-    function getoncheck() {
-        for (let i = 0; i < elements.length; i++) {
-            const chebox = (elements[i] as HTMLInputElement)
-            chebox.onchange = oncheck
-            chebox.setAttribute("index", String(i))
-        }
-    }
-    function oncheck(ev: Event) {
-        const e = ev || window.event
-        const target = e.target || e.srcElement
-        let i = lastcheck
-        lastcheck = Number((target as HTMLInputElement).getAttribute("index"))
-
-        if (shiftDown) {
-            while (elements[i] !== target) {
-                (elements[i] as HTMLInputElement).checked = (target as HTMLInputElement).checked
-                if (lastcheck > i) {
-                    i++
-                } else {
-                    i--
-                }
-            }
-        }
-
-    }
-
-    function checkedd() {
-        for (const i of elements) {
-            const check = (i as HTMLInputElement)
-            if (check.checked) {
-                ((((check as HTMLInputElement).parentNode as HTMLInputElement).parentNode as HTMLInputElement).parentNode as HTMLInputElement).style.backgroundColor = "var(--color-table-select)"
-            } else {
-                ((((check as HTMLInputElement).parentNode as HTMLInputElement).parentNode as HTMLInputElement).parentNode as HTMLInputElement).style.backgroundColor = "var(--color-table-bg)"
-            }
-        }
-        getoncheck()
-        document.addEventListener("keydown", setShiftDown)
-        document.addEventListener("keyup", setShiftUp)
-        setTimeout(checkedd, 5)
-    }
-    checkedd()
 </script>
 
 <style lang="sass">
