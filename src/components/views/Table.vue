@@ -29,49 +29,45 @@
                 </b-input-group-append>
             </b-input-group>
         </b-form-group>
-        <div class="tabl">
-            <table class="table b-table">
-                <col> <!-- Checkbox column -->
-                <col> <!-- Open form column -->
-                <col v-for="(col, col_i) in columns" :key="col_i" :style="col.style">
-                <thead>
-                    <tr>
-                        <th class="empty_th"></th>
-                        <th class="empty_th"></th>
-                        <th v-for="(col, col_i) in columns" :key="col_i" class="sorting" :style="col.style" @click="updateSort(col_i)">
-                            {{ col.caption }}
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="row_i in rows" :key="row_i" v-if="!entries[row_i].deleted" :style="entries[row_i].style">
-                        <td class="empty_th">
-                            <input v-if="entries[row_i].selected" type="checkbox" checked="checked" class="flag" v-on:change="entries[row_i].selected=!entries[row_i].selected">
-                            <input v-else type="checkbox" class="flag" v-on:change="entries[row_i].selected=!entries[row_i].selected">
-                        </td>
-                        <td class="empty_th">
-                            ⤢
-                        </td>
-                        <td v-for="(cell, col_i) in entries[row_i].cells" :key="col_i" :style="cell.style">
-                            <div  class="contentTd">
-                                <router-link v-if="cell.link !== null" :to="cell.link">
-                                    <b-checkbox v-if="typeof cell.value === 'boolean'" :checked="cell.value" disabled></b-checkbox>
-                                    <template v-else>
-                                        {{ cell.valueText }}
-                                    </template>
-                                </router-link>
-                                <template v-else>
-                                    <b-checkbox v-if="typeof cell.value === 'boolean'" :checked="cell.value" disabled></b-checkbox>
-                                    <template v-else>
-                                        {{ cell.valueText }}
-                                    </template>
-                                </template>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+
+        <table class="tabl table b-table">
+            <col> <!-- Checkbox column -->
+            <col> <!-- Open form column -->
+            <col v-for="(col, col_i) in columns" :key="col_i" :style="col.style">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th></th>
+                    <th v-for="(col, col_i) in columns" :key="col_i" class="sorting" :style="col.style" @click="updateSort(col_i)">
+                        {{ col.caption }}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="row_i in rows" :key="row_i" v-if="!entries[row_i].deleted" :style="entries[row_i].style">
+                    <td>
+                        <input type="checkbox" class="flag">
+                    </td>
+                    <td class="contentTd">
+                        ⤢
+                    </td>
+                    <td v-for="(cell, col_i) in entries[row_i].cells" :key="col_i" class="contentTd" :style="cell.style">
+                        <router-link v-if="cell.link !== null" :to="cell.link">
+                            <b-checkbox v-if="typeof cell.value === 'boolean'" :checked="cell.value" disabled></b-checkbox>
+                            <template v-else>
+                                {{ cell.valueText }}
+                            </template>
+                        </router-link>
+                        <template v-else>
+                            <b-checkbox v-if="typeof cell.value === 'boolean'" :checked="cell.value" disabled></b-checkbox>
+                            <template v-else>
+                                {{ cell.valueText }}
+                            </template>
+                        </template>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </b-container>
 </template>
 
