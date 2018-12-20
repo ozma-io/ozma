@@ -44,7 +44,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(entry_i, row_i) in rows" :key="entry_i" v-if="!entries[entry_i].deleted" :style="entries[entry_i].style">
+                    <tr v-for="(entry_i, row_i) in rows" :key="entry_i" v-if="!entries[entry_i].deleted" :style="entries[entry_i].style" :class="entries[entry_i].selclass">
                         <td>
                             <input type="checkbox" :checked="entries[entry_i].selected" @click="selectRow(row_i, $event)">
                         </td>
@@ -93,6 +93,7 @@
         deleted: boolean
         selected: boolean
         style: Record<string, any>
+        selclass: string
     }
 
     interface IColumn {
@@ -186,22 +187,38 @@
             if (this.lastSelected !== null && event.shiftKey) {
                 // Select all rows between current one and the previous selected one.
                 const oldEntry = this.entries[this.lastSelected]
+                let selectedClass = "none_selected"
+                if (oldEntry.selected) {
+                    selectedClass = "selected"
+                }
                 if (this.lastSelected < rowI) {
                     for (let i = this.lastSelected + 1; i <= rowI; i++) {
                         const entry = this.entries[this.rows[i]]
                         entry.selected = oldEntry.selected
+                        entry.selclass = selectedClass
                     }
                 } else if (this.lastSelected > rowI) {
                     for (let i = rowI; i <= this.lastSelected - 1; i++) {
                         const entry = this.entries[this.rows[i]]
                         entry.selected = oldEntry.selected
+                        entry.selclass = selectedClass
                     }
                 } else {
                     oldEntry.selected = !oldEntry.selected
+                    if (oldEntry.selected) {
+                        oldEntry.selclass = "selected"
+                    } else {
+                        oldEntry.selclass = "none_selected"
+                    }
                 }
             } else {
                 const entry = this.entries[this.rows[rowI]]
                 entry.selected = !entry.selected
+                if (entry.selected) {
+                    entry.selclass = "selected"
+                } else {
+                    entry.selclass = "none_selected"
+                }
                 this.lastSelected = rowI
             }
         }
@@ -357,6 +374,7 @@
                         cells, deleted,
                         style: rowStyle,
                         selected: false,
+                        selclass: "none_selected",
                     }
                 })
             }
