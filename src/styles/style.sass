@@ -175,7 +175,12 @@ div
 div
 	div
 		div
-			fieldset
+			@media screen and (max-device-width: 650px)
+				fieldset
+					&.find
+						position: initial !important
+						min-width: 100% !important;
+			fieldset	
 				&.find:lang(ru)
 					position: absolute
 					top: -30px
@@ -191,16 +196,21 @@ div
 					min-width: 350px
 					max-width: calc(100vw - 240px) !important
 				&.find
+					margin-bottom: 0px
 					div
 						flex-wrap: nowrap
 
 						legend
 							max-width: max-content !important
 							padding-right: 0px !important
+							padding: 0px;
+							height: 24px;
+							margin-top: 3px;
 						div
 							flex: unset
 							padding-left: 0px !important
 							padding-right: 0px !important
+							height: 28px
 							div
 								input:focus 
 									border-color: #ced4da
