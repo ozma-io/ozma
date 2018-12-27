@@ -49,7 +49,9 @@
                             <input type="checkbox" :checked="entries[entry_i].selected" @click="selectRow(row_i, $event)">
                         </td>
                         <td>
-                            ⤢
+                            <router-link v-if="entries[entry_i].linkToForm !== null" :to="entries[entry_i].linkToForm">
+                                ⤢
+                            </router-link>
                         </td>
                         <td v-for="(cell, col_i) in entries[entry_i].cells" :key="col_i" :style="cell.style">
                             <router-link v-if="cell.link !== null" :to="cell.link">
@@ -93,6 +95,7 @@
         deleted: boolean
         selected: boolean
         style: Record<string, any>
+        linkToForm: Location | null
     }
 
     interface IColumn {
@@ -315,6 +318,14 @@
                         }
                     }
 
+                    const linkedViewAttrForRow = row.id === undefined ? undefined : getRowAttr("LinkedView")
+                    const linkForRow =
+                        linkedViewAttrForRow === undefined ? null : {
+                            name: "view",
+                            params: { "name": String(linkedViewAttrForRow) },
+                            query: { "id": String(row.id) },
+                        }
+
                     const rowStyle: Record<string, any> = {}
                     const rowHeight = getRowAttr("RowHeight")
                     if (rowHeight !== undefined) {
@@ -357,6 +368,7 @@
                         cells, deleted,
                         style: rowStyle,
                         selected: false,
+                        linkToForm: linkForRow,
                     }
                 })
             }

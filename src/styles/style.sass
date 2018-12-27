@@ -105,6 +105,53 @@ div
 		left: 0
 		display: flex
 		padding: 0
+
+		@media screen and (max-device-width: 480px)
+			div
+				&.submain_nav
+					width: 100% !important
+					margin-top: 0px !important
+					div
+						&#logout
+							margin: 0px !important
+							width: 100% !important
+
+							button
+								margin: 0px !important
+								width: 100% !important
+								text-align: left
+
+					div
+						&.subsubmain_nav
+							height: auto !important
+							margin: 0px !important
+							width: 100% !important
+
+							div
+								&.nav_sec
+									margin: 0px !important
+
+									div
+										&.nav_sec_tit
+											height: 29px !important
+											margin: 0px !important
+											padding: 5px  !important
+											
+											a
+												padding: 0px !important
+												line-height: normal
+									div
+										width: 100% !important
+										margin: 0px !important
+										padding: 0px !important
+										
+										a
+											&.nav_ent
+												margin-right: 0px !important
+												margin-bottom: 1px
+												width: 100%
+												text-align: left
+												height: 29px
 		div
 			&.submain_nav 
 				width: 650px; /*450px*/
