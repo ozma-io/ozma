@@ -121,7 +121,8 @@ div
 							display: block
 							padding: 5px
 							height: 28px
-							color: black	
+							color: black
+							line-height: normal
 							background-color: #FFFFFF
 							text-decoration: none
 							border: 0px
@@ -156,6 +157,7 @@ div
 								.nav_ent 
 										display: block
 										padding: 5px
+										line-height: normal
 										height: 28px
 										color: black
 										background-color: #FFFFFF
@@ -203,9 +205,11 @@ div
 						legend
 							max-width: max-content !important
 							padding-right: 0px !important
+							line-height: normal !important
 							padding: 0px;
 							height: 24px;
 							margin-top: 3px;
+
 						div
 							flex: unset
 							padding-left: 0px !important
@@ -216,6 +220,8 @@ div
 									border-color: #ced4da
 									box-shadow: 0 0 0 white
 								input
+									border-color: var(--TableBorderColor)
+									margin-left: 2px !important
 									&.find_in
 										height: 28px
 										margin-top: 1px
@@ -226,6 +232,7 @@ div
 										padding: 5px
 										border: 0
 										padding-left: 0px !important
+										line-height: normal !important
 table
 	width: auto !important
 	table-layout: fixed
@@ -364,6 +371,7 @@ div
 							border: solid 1px white
 							border-left: 0px
 							height: 30px
+							line-height: normal
 							text-decoration: none
 					div
 						height: 30px
@@ -377,6 +385,7 @@ div
 								background-color: var(--MenuColor) !important
 								padding: 5px
 								pointer-events: none
+								line-height: normal
 							div
 								padding: 0
 								min-width: 0
@@ -391,4 +400,5 @@ div
 										padding: 5px
 										border: solid 1px white
 										height: 30px
+										line-height: normal
 										text-decoration: none
