@@ -65,7 +65,7 @@ if (localStorage.getItem("authToken") !== null) {
     store.dispatch("auth/renewAuth")
 }
 store.subscribe((mutation, state: any) => {
-    if (mutation.type === "removeAuth") {
+    if (mutation.type === "auth/clearAuth") {
         localStorage.removeItem("authToken")
     } else if (mutation.type === "auth/setAuth") {
         localStorage.setItem("authToken", storeState.auth.current.token)
@@ -79,7 +79,7 @@ if (storeState.auth.current === null) {
     })
 }
 store.subscribe((mutation, state) => {
-    if (mutation.type === "removeAuth") {
+    if (mutation.type === "auth/clearAuth") {
         router.push({
             name: "login",
             query: { redirect: router.currentRoute.fullPath },
