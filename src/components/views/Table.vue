@@ -31,9 +31,11 @@
         </b-form-group>
         <div class="tabl">
             <table class="tabl table b-table">
-                <col> <!-- Checkbox column -->
-                <col> <!-- Open form column -->
-                <col v-for="(col, col_i) in columns" :key="col_i" :style="col.style">
+                <colgroup>
+                    <col> <!-- Checkbox column -->
+                    <col> <!-- Open form column -->
+                    <col v-for="(col, col_i) in columns" :key="col_i" :style="col.style">
+                </colgroup>
                 <thead>
                     <tr>
                         <th></th>
@@ -150,7 +152,8 @@
                 const style: Record<string, any> = {}
                 const columnWidth = getColumnAttr("ColumnWidth")
                 if (columnWidth !== undefined) {
-                    style["width"] = columnWidth
+                    style["min-width"] = columnWidth
+                    style["max-width"] = columnWidth
                 }
 
                 return {
