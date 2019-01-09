@@ -40,7 +40,7 @@
                     <tr>
                         <th></th>
                         <th></th>
-                        <th v-for="(col, col_i) in columns" :key="col_i" class="sorting" :style="col.style" @click="updateSort(col_i)">
+                        <th v-for="(col, col_i) in columns" :key="col_i" class="sorting" @click="updateSort(col_i)">
                             {{ col.caption }}
                         </th>
                     </tr>
@@ -154,7 +154,6 @@
                 if (columnWidth !== undefined) {
                     style["min-width"] = columnWidth
                     style["max-width"] = columnWidth
-                    style["width"] = columnWidth
                 }
 
                 return {
