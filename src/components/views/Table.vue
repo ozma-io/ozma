@@ -154,6 +154,7 @@
                 if (columnWidth !== undefined) {
                     style["min-width"] = columnWidth
                     style["max-width"] = columnWidth
+                    style["width"] = columnWidth
                 }
 
                 return {
