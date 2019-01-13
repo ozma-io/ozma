@@ -152,6 +152,7 @@
                 const style: Record<string, any> = {}
                 const columnWidth = getColumnAttr("ColumnWidth")
                 if (columnWidth !== undefined) {
+                    // All three are important -- without them it doesn't work in some browsers.
                     style["min-width"] = columnWidth
                     style["max-width"] = columnWidth
                     style["width"] = columnWidth
