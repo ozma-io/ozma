@@ -72,12 +72,6 @@ store.subscribe((mutation, state: any) => {
     }
 })
 
-if (storeState.auth.current === null) {
-    router.push({
-        name: "login",
-        query: { redirect: router.currentRoute.fullPath },
-    })
-}
 store.subscribe((mutation, state) => {
     if (mutation.type === "auth/clearAuth") {
         router.push({
