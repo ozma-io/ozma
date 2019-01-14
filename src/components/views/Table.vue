@@ -32,8 +32,8 @@
         <div class="tabl">
             <table class="tabl table b-table">
                 <colgroup>
-                    <col> <!-- Checkbox column -->
-                    <col> <!-- Open form column -->
+                    <col class="checkbox-col"> <!-- Checkbox column -->
+                    <col class="open-form-col"> <!-- Open form column -->
                     <col v-for="(col, col_i) in columns" :key="col_i" :style="col.style">
                 </colgroup>
                 <thead>
@@ -150,13 +150,10 @@
                 const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name
 
                 const style: Record<string, any> = {}
-                const columnWidth = getColumnAttr("ColumnWidth")
-                if (columnWidth !== undefined) {
-                    // All three are important -- without them it doesn't work in some browsers.
-                    style["min-width"] = columnWidth
-                    style["max-width"] = columnWidth
-                    style["width"] = columnWidth
-                }
+
+                const columnWidthAttr = getColumnAttr("ColumnWidth")
+                const columnWidth = columnWidthAttr === undefined ? "200px" : columnWidthAttr
+                style["width"] = columnWidth
 
                 return {
                     caption, style,
