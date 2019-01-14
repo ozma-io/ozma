@@ -24,7 +24,7 @@
                 <b-button @click="removeAuth()">{{ $t('logout') }}</b-button>
             </b-row>
             <template v-if="currentMenu !== null">
-                <b-row class="menu_category subsubmain_nav" v-for="category in currentMenu.categories" :key="category.name">
+                <b-row class="subsubmain_nav" v-for="category in currentMenu.categories" :key="category.name">
                     <b-container class="nav_sec">
                         <b-row class="nav_sec_tit"><a>{{ category.name }}</a></b-row>
                         <b-row>
