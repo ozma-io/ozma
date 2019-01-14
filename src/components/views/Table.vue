@@ -33,13 +33,13 @@
             <table class="tabl table b-table">
                 <colgroup>
                     <col class="checkbox-col"> <!-- Checkbox column -->
-                    <col class="open-form-col"> <!-- Open form column -->
+                    <col v-if="hasRowLinks" class="open-form-col"> <!-- Open form column -->
                     <col v-for="(col, col_i) in columns" :key="col_i" :style="col.style">
                 </colgroup>
                 <thead>
                     <tr>
                         <th></th>
-                        <th></th>
+                        <th v-if="hasRowLinks"></th>
                         <th v-for="(col, col_i) in columns" :key="col_i" class="sorting" @click="updateSort(col_i)">
                             {{ col.caption }}
                         </th>
@@ -50,8 +50,8 @@
                         <td>
                             <input type="checkbox" :checked="entries[entry_i].selected" @click="selectRow(row_i, $event)">
                         </td>
-                        <td>
-                            <router-link v-if="entries[entry_i].linkToForm !== null" :to="entries[entry_i].linkToForm">
+                        <td v-if="entries[entry_i].linkToForm !== null">
+                            <router-link :to="entries[entry_i].linkToForm">
                                 ⤢
                             </router-link>
                         </td>
@@ -138,6 +138,19 @@
 
         @Prop({ type: UserViewResult }) private uv!: UserViewResult
         @Prop({ type: Boolean, default: false }) private isRoot!: boolean
+
+        get hasRowLinks() {
+            const viewAttrs = this.uv.attributes
+
+            let rowLinks = false
+            if (this.uv.rows && this.uv.rows.length > 0) {
+                const firstRow = this.uv.rows[0]
+                const rowAttrs = firstRow.attributes === undefined ? {} : firstRow.attributes
+                const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
+                rowLinks = firstRow.id !== undefined && getRowAttr("LinkedView") !== undefined
+            }
+            return rowLinks
+        }
 
         get columns() {
             const viewAttrs = this.uv.attributes
