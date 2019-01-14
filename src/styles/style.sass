@@ -1,9 +1,20 @@
-﻿*
+﻿/*
+ *общие настройки
+ *текста
+ *отступов (т.к bootstrap их по дефолту выстовляет свои)
+ *минимальных размеров и максимальных размеров для удобства выставление собственных размеров
+ */
+*
 	margin: 0
 	font-family: var(--Font)
 	color: black !important
 	max-width: none !important
 	min-width: none !important
+/*
+ *позиционирование боди под наши стили
+ *установка размеров боди для наследования и размеров дочерних элементов выставленных в % (чтобы браузер мог их высчитать)
+ *overflow:hidden запрещает скролл для удобства пролистывания таблиц и прочего (где нужно можно выставить возможность скрола на самой странице)
+ */
 body
 	margin-left: 1px
 	margin-right: 1px
@@ -13,14 +24,25 @@ body
 	height: 100%
 	position: absolute
 	overflow: hidden
+/*
+ *стили печати 
+ *запрет браузеру менять цвета при печати
+ *отступы для правильного отображения страницы на печатном листе
+ */
 @media print
 	@page
 		margin: 50px
 	body
 		-webkit-print-color-adjust: exact
 		 color-adjust: exact
+/*
+ *bootstrap любит внутри обычного блока выставлять отступы убираем их
+ */
 div.without_padding
 	padding: 0px
+/*
+ *убираем красивости у кнопок селектов ссылок и прочего (без important придется прописывать этоже буквально для каждой кнопки)
+ */
 button
 	border-radius: inherit !important
 	background-color: white !important
@@ -42,18 +64,15 @@ div
 		overflow: auto
 		top: 0
 		left: 0
-		display: flex
-		max-width: 100%
+		display: flex /*для удобства позиционирования окошка входа*/
 		form
 			&.aut
-				margin: auto
-				display: flex
+				margin: auto /*чтобы элемент автомотически стоял по центру экрана*/
+				display: flex /*для красоты и позиционирования внутренних элементов*/
 				align-items: center
-				justify-content: center
-				flex-direction: column
-				justify-content: space-around
+				flex-direction: column /*расположение элементов друг под другом*/
 				background: var(--BackgroundColor)
-				width: 180px
+				width: 180px /*оптимально красивые размеры*/
 				height: 200px
 		
 				div
@@ -75,28 +94,17 @@ div
 					&.btnn
 						padding: 5px
 						border: none
-						background: #FFFFFF;
+						background: #FFFFFF; /*цвет кнопки входа возможно надо вынести в настройки*/
 						text-decoration: none
 						-webkit-appearance: none
 						color: black
 
 /* Навигация */
-/* ! - Переписать "display: flex" на базовый функционал с дефолтными маржинами и фиксированной максимальной шириной*/
 #logout
 	margin: 1px
 
-.menu_category
-	margin-top: 20px
-	padding-top: .75rem
-	padding-bottom: .75rem
-	background-color: rgba(86, 61, 124, .15)
-	border: 1px solid rgba(86, 61, 124, .2)
-	*
-		padding-left: 30px
-
 div
 	&.main_nav
-		max-width: 100%
 		width: 100%
 		height: 100%
 		position: fixed
@@ -105,6 +113,9 @@ div
 		left: 0
 		display: flex
 		padding: 0
+		/*мобильная версия
+		 *important везде стоят чтобы переплюнуть не мобильные стили возможно с этим стоит что то сделать))
+		 */
 		@media screen and (orientation: portrait)
 			@media screen and (max-device-width: 480px)
 				div
@@ -152,15 +163,14 @@ div
 													width: 100%
 													text-align: left
 													height: 29px
+		/*ПК навигация*/
 		div
 			&.submain_nav 
 				width: 650px; /*450px*/
-				background: white
 				overflow: auto
 				display: block
 				margin: auto
 				padding: 0
-				max-width: 650px
 				background: var(--NavigationBackColor)
 				div
 					&#logout
@@ -180,14 +190,16 @@ div
 						width: 90%
 						height: 90%
 						display: flex
-						align-items: center
-						justify-content: center
+						align-items: center /*для разных браузеров*/
+						justify-content: center /*для разных браузеров*/
 						flex-direction: column
 						align-items: flex-start
 						margin: auto
 						border: 0px
 						padding: 0
 						background-color: transparent;
+						*
+							padding-left: 30px
 						div
 							&.nav_sec 
 								margin-bottom: 20px
@@ -224,11 +236,16 @@ div
 div
 	div
 		div
+			/*фильтры для маленьких экранов*/
 			@media screen and (max-device-width: 650px)
 				fieldset
 					&.find
 						position: initial !important
 						min-width: 100% !important;
+			/*фильтр для больших экранов
+			 *пока высчитывание ширины ручками от количества текста в этом блоке, но фильтр потом все равно переписывать
+			 *пока костыльное решение нормально скрашивает все что нам нужно
+			 */
 			fieldset	
 				&.find:lang(ru)
 					position: absolute
@@ -244,6 +261,7 @@ div
 					width: calc(100% - 240px)
 					min-width: 350px
 					max-width: calc(100vw - 240px) !important
+				/*Внутренние части текущего фильтра*/
 				&.find
 					margin-bottom: 2px
 					div
@@ -280,20 +298,26 @@ div
 										border: 0
 										padding-left: 0px !important
 										line-height: normal !important
+/*непосредственно сама таблица*/
+/*решение для контролируемости ширины колонок*/
 table
 	width: 0 !important
 	table-layout: fixed
+
+/*технические колонки*/
 .checkbox-col
 	width: 20px
 .open-form-col
 	width: 20px
+
+/*вид печати таблиц*/
 @media print
 	div
 		&.tabl
 			height: 100%
-			float: none !important
-			overflow: visible !important
-			@-moz-document url-prefix()
+			float: none !important /*при печати для правильной масштабируемости*/
+			overflow: visible !important /*чтобы при печати была возможность видеть таблицу*/
+			@-moz-document url-prefix() /*стили в лисе исправляем баги с отображением границ таблицы*/
 				table
 					border-collapse: separate !important
 					border-right: solid 1px var(--TableBorderColor)
@@ -308,21 +332,22 @@ table
 					tr
 						td
 							border: solid 1px var(--TableBorderColor)
+							a
+								text-decoration: none !important
 
 div
 	&.tabl 
 		float: left
-		height: 93vh
-		width: 100vw
+		height: 95vh /*не до конца экрана ибо там скролл исчезает из-за фиксированного низа*/
+		width: 100vw /*на весь экран*/
 		padding: 0
-		overflow: auto
+		overflow: auto /*чтобы скролить таблицу в том числе на мобилке*/
 		table
 			thead
 				height: 25px
 				border-right: solid 1px  var(--TableBorderColor) !important
 				th
 					background: var(--TableBorderColor) !important
-					overflow: hidden
 					padding: 0
 					border: 0
 					font-weight: normal
@@ -330,8 +355,8 @@ div
 					overflow: hidden
 					white-space: nowrap
 					text-overflow: ellipsis
-					position: sticky
-					z-index: 10
+					position: sticky/*фиксация шапки при скроле*/
+					z-index: 10 /*при скроле таблицы чтобы шапка была видна*/
 					top: 0
 
 					&.tabl_heading
@@ -340,33 +365,33 @@ div
 			tbody
 				border-right: solid 1px  var(--TableBorderColor) !important
 				tr
+					/*выделение строк*/
 					&.selected
 						background-color: var(--ColorTableSelect)
 					&.none_select
 						background-color: var(--ColorTableBg)
-					background-color: white
+					background-color: white/*цвет таблицы возможно надо сменить на настраевоемый*/
 					border-right: solid 1px var(--TableBorderColor)
 					height: 100%
-					z-index: 100
 					@-moz-document url-prefix()
 						td
 							height: 100%
 				td
 					border: solid 1px var(--TableBorderColor)
 					padding: 0px
-					word-break: break-word;
+					word-break: break-word /*перенос слов если пользователь задал слишком маленькую ширину*/
 					button
 						&.open_form
 							padding: 0
 							width: 14px
-							margin-top: -27px
+							margin-top: -27px/*фикс стилей bootatrap не трогать!!!!*/
 							border: 0
 							box-shadow: none
 							outline: none 
 							height: 0px
 							img
 								max-width: 100% !important
-								top: -3px
+								top: -3px /*фикс стилей bootatrap не трогать!!!!*/
 						&.open_form:focus, &.open_form:active
 							box-shadow: none;
 
