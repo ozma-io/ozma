@@ -32,8 +32,8 @@
         <div class="tabl">
             <table class="tabl table b-table">
                 <colgroup>
-                    <col style="width: 20px;"> <!-- Checkbox column -->
-                    <col style="width: 20px;"> <!-- Open form column -->
+                    <col class="checkbox-col"> <!-- Checkbox column -->
+                    <col class="open-form-col"> <!-- Open form column -->
                     <col v-for="(col, col_i) in columns" :key="col_i" :style="col.style">
                 </colgroup>
                 <thead>
