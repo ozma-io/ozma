@@ -40,7 +40,7 @@
                     <tr>
                         <th></th>
                         <th v-if="hasRowLinks"></th>
-                        <th v-for="(col, col_i) in columns" :key="col_i" class="sorting" @click="updateSort(col_i)">
+                        <th v-for="(col, col_i) in columns" :key="col_i" :title="col.caption" class="sorting" @click="updateSort(col_i)">
                             {{ col.caption }}
                         </th>
                     </tr>
