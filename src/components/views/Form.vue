@@ -26,9 +26,9 @@
 
 <template>
     <b-container fluid class="cont_form without_padding">
-        <div v-for="(entry, entry_i) in entries" v-if="!entry.deleted" :key="entry_i" class="form_entry">
+        <div v-for="entry in showedEntries" :key="entry.index" class="form_entry">
             <b-form class="view_form">
-                <div v-for="(block, block_i) in entry.blocks" :key="block_i" class="form_block" :style="{ width: `${block.width * 100}%` }">
+                <div v-for="(block, blockI) in entry.blocks" :key="blockI" class="form_block" :style="{ width: `${block.width * 100}%` }">
                     <template v-for="field in block.fields" class="form_data">
                         <b-form-group :key="field.column.name" :label-for="field.column.name">
                             {{ field.caption }}
@@ -144,6 +144,7 @@
     }
 
     interface IForm {
+        index: number
         id?: RowId
         deleted: boolean
         fields: IField[]
@@ -319,7 +320,7 @@
             const viewAttrs = this.uv.attributes
 
             // Build one form from a result row
-            const makeForm = (row: IExecutedRow, isAdded: boolean): IForm => {
+            const makeForm = (row: IExecutedRow, rowI: number, isAdded: boolean): IForm => {
                 const rowAttrs = row.attributes === undefined ? {} : row.attributes
                 const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
 
@@ -376,7 +377,7 @@
                     return field
                 })
 
-                return { id: row.id, deleted, fields, blocks }
+                return { id: row.id, index: rowI, deleted, fields, blocks }
             }
 
             if (this.uv.rows === null) {
@@ -385,9 +386,9 @@
                     const value = columnInfo.updateField === null ? "" : columnInfo.updateField.field.defaultValue
                     return { value }
                 })
-                this.entries = [makeForm({ values }, true)]
+                this.entries = [makeForm({ values }, 0, true)]
             } else {
-                this.entries = this.uv.rows.map(row => makeForm(row, false))
+                this.entries = this.uv.rows.map((row, rowI) => makeForm(row, rowI, false))
             }
         }
 
@@ -450,6 +451,10 @@
             } else {
                 return String(val)
             }
+        }
+
+        get showedEntries() {
+            return this.entries.filter(entry => !entry.deleted)
         }
     }
 </script>
