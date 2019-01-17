@@ -4,6 +4,7 @@
             "language": "en",
             "filter": "Filter",
             "search_placeholder": "Type to search",
+            "filtered_count": "Rows count: {count}",
             "clear": "Clear",
             "yes": "Yes",
             "no": "No"
@@ -12,6 +13,7 @@
             "language": "ru",
             "filter": "Поиск",
             "search_placeholder": "Введите фразу",
+            "filtered_count": "Кол-во записей: {count}",
             "clear": "Очистить",
             "yes": "Да",
             "no": "Нет"
@@ -26,6 +28,7 @@
                 <b-form-input class="find_in" :value="filter" @input="updateFilter($event)" :placeholder="$t('search_placeholder')" />
                 <b-input-group-append>
                     <b-btn class="btn btn-light" :disabled="!filter" @click="updateFilter('')">{{ $t('clear') }}</b-btn>
+                    {{ $t('filtered_count', { count: this.filteredRows.length }) }}
                 </b-input-group-append>
             </b-input-group>
         </b-form-group>
@@ -425,8 +428,12 @@
             }
         }
 
+        get filteredRows() {
+            return this.rows.filter(rowI => !this.entries[rowI].deleted)
+        }
+
         get showedRows() {
-            return this.rows.filter(rowI => !this.entries[rowI].deleted).slice(0, this.showLength)
+            return this.filteredRows.slice(0, this.showLength)
         }
     }
 </script>
