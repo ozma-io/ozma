@@ -53,6 +53,12 @@ const settingsModule: Module<ISettingsState, {}> = {
                 commit("clearSettings")
             },
         },
+        setAuth: {
+            root: true,
+            handler: ({ dispatch }) => {
+                dispatch("getSettings")
+            },
+        },
         getSettings: async ({ commit, dispatch }) => {
             try {
                 const select = "SELECT \"Name\", \"Value\" FROM funapp.\"Settings\""
@@ -67,7 +73,7 @@ const settingsModule: Module<ISettingsState, {}> = {
                     return currSettings
                 }, {})
                 const settings = new CurrentSettings(values)
-                commit("setCurrent", settings)
+                commit("setSettings", settings)
             } catch (e) {
                 commit("setError", e.message)
                 throw e

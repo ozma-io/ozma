@@ -366,7 +366,7 @@
 
                         const getCellAttr = (name: string) => cellAttrs[name] || rowAttrs[name] || columnAttrs[name] || viewAttrs[name]
 
-                        const updatedValue = updatedValues[columnInfo.name]
+                        const updatedValue = columnInfo.updateField === null ? undefined : updatedValues[columnInfo.updateField.name]
                         const currentValue = updatedValue === undefined ? value : { value: updatedValue }
                         const valueText = this.getValueText(currentValue)
 

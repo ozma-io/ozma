@@ -307,25 +307,34 @@ const stagingModule: Module<IStagingState, {}> = {
                 })
             })
 
+            const errors: Error[] = []
+            let oneChange = false
+            const protectedResults = results.map(res => res.then(r => {
+                oneChange = true
+                return r
+            }).catch(e => {
+                errors.push(e)
+            }))
+
             commit("startSubmit", ((async () => {
-                let success = false
-                try {
-                    await Promise.all(results)
-                    success = true
-                } catch (e) {
-                    commit("setError", e.message)
+                await Promise.all(protectedResults)
+
+                if (oneChange) {
+                    try {
+                        await dispatch("userView/forceReload", undefined, { root: true })
+                    } catch (e) {
+                        // Ignore errors; they've been already handled for userView
+                    }
                 }
-                try {
-                    await dispatch("userView/forceReload", undefined, { root: true })
-                } catch (e) {
-                    // Ignore errors; they've been already handled for userView
-                }
-                if (success) {
+                if (errors.length === 0) {
                     if (state.touched) {
                         commit("clearAdded")
                     } else {
                         commit("clear")
                     }
+                    commit("clearError")
+                } else {
+                    commit("setError", errors[0].message)
                 }
                 commit("finishSubmit")
             })()))

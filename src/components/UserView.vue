@@ -1,5 +1,6 @@
 <template>
     <UserViewForm v-if="userViewType === 'Form'" :uv="uv" :isRoot="isRoot" />
+    <UserViewMenu v-else-if="userViewType === 'Menu'" :uv="uv" :isRoot="isRoot" />
     <UserViewTable v-else :uv="uv" :isRoot="isRoot" />
 </template>
 
@@ -11,6 +12,7 @@
         components: {
             UserViewTable: () => import("@/components/views/Table.vue"),
             UserViewForm: () => import("@/components/views/Form.vue"),
+            UserViewMenu: () => import("@/components/views/Menu.vue"),
         },
     })
     export default class UserView extends Vue {

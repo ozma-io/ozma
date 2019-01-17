@@ -59,27 +59,34 @@ export const authModule: Module<IAuthState, {}> = {
                 }
             },
         },
-        setAuth: ({ dispatch, commit }, auth: CurrentAuth) => {
+        setAuth: {
+            root: true,
+            handler: () => {
+                return
+            },
+        },
+        setCurrentAuth: ({ dispatch, commit }, auth: CurrentAuth) => {
             commit("setAuth", {
                 auth,
                 renewFunc: () => {
                     dispatch("renewAuth")
                 },
             })
+            dispatch("setAuth", undefined, { root: true })
         },
         requestAuth: async ({ commit, dispatch }, { username, password }: { username: string, password: string }) => {
             try {
                 const token = await Api.requestAuth(username, password)
                 const auth = new CurrentAuth(token)
-                dispatch("setAuth", auth)
+                dispatch("setCurrentAuth", auth)
             } catch (e) {
-                commit("clearAuth", e.message)
+                dispatch("removeAuth", e.message, { root: true })
                 throw e
             }
         },
         callProtectedApi: {
             root: true,
-            handler: async ({ state, commit }, { func, args }: { func: ((_1: string, ..._2: any[]) => Promise<any>), args?: any[] }): Promise<any> => {
+            handler: async ({ state, dispatch }, { func, args }: { func: ((_1: string, ..._2: any[]) => Promise<any>), args?: any[] }): Promise<any> => {
                 if (state.current === null) {
                     throw new Error("No authentication token to renew")
                 }
@@ -90,7 +97,7 @@ export const authModule: Module<IAuthState, {}> = {
                 } catch (e) {
                     if (e instanceof Utils.FetchError) {
                         if (e.response.status === 401) {
-                            commit("clearAuth", e.message)
+                            dispatch("removeAuth", e.message, { root: true })
                         }
                     }
                     throw e
@@ -100,7 +107,7 @@ export const authModule: Module<IAuthState, {}> = {
         renewAuth: async ({ dispatch }): Promise<void> => {
             const token: string = await dispatch("callProtectedApi", { func: Api.renewAuth }, { root: true })
             const auth = new CurrentAuth(token)
-            dispatch("setAuth", auth)
+            dispatch("setCurrentAuth", auth)
         },
     },
 }
