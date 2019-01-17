@@ -1,5 +1,5 @@
 <template>
-    <pre :id="id"></pre>
+    <pre ref="pre"></pre>
 </template>
 
 <script lang="ts">
@@ -12,7 +12,6 @@
 
     @Component
     export default class CodeEditor extends Vue {
-        private id = randomId()
         private editor: Ace.Ace.Editor | null = null
 
         @Prop({ default: "" }) private content!: string
@@ -21,11 +20,7 @@
         @Prop({ default: false }) private readOnly!: boolean
 
         private mounted() {
-            const preId = document.getElementById(this.id)
-            if (preId === null) {
-                throw new Error("Editor id not found")
-            }
-            const editor = Ace.edit(preId)
+            const editor = Ace.edit(this.$refs.pre)
             this.editor = editor
             editor.session.setMode(this.mode)
             editor.setTheme(this.theme)

@@ -8,6 +8,7 @@
             "pending_changes": "Pending changes exist",
             "submit_error": "Error while submitting changes: {msg}",
             "save": "Save",
+            "logout": "Logout",
             "revert_changes": "Revert changes",
             "confirm_close": "You have unsaved changes, do you want to discard them?"
         },
@@ -19,6 +20,7 @@
             "pending_changes": "Есть несохранённые изменения",
             "submit_error": "Ошибка сохранения изменений: {msg}",
             "save": "Сохранить",
+            "logout": "Выйти",
             "revert_changes": "Откатить изменения",
             "confirm_close": "У вас есть несохранённые изменения, отбросить их?"
         }
@@ -42,11 +44,16 @@
         </b-alert>
 
         <b-button-toolbar key-nav class="head_menu">
-            <b-button :to="{ name: 'navigator' }" class="nav_batton, goto_nav" id="menu_btn" >
+            <b-button :to="{ name: 'main' }" class="nav_batton, goto_nav" id="menu_btn" >
                 {{ $t('goto_nav') }}
             </b-button>
             <b-dropdown id="ddown1" v-if="createView !== null"  class=" nav_batton, actions_btn, menu_btn" :text="$t('actions')" no-caret>
-                <b-dropdown-item v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" class="menu_btn" variant="primary"> {{ $t('create') }} </b-dropdown-item>
+                <b-dropdown-item @click="removeAuth()" class="menu_btn" variant="primary">
+                    {{ $t('logout') }}
+                </b-dropdown-item>
+                <b-dropdown-item v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" class="menu_btn" variant="primary">
+                    {{ $t('create') }}
+                </b-dropdown-item>
             </b-dropdown>
         </b-button-toolbar>
 
@@ -61,6 +68,9 @@
                 <b-button @click="submitChanges" variant="primary">{{ $t('save') }}</b-button>
                 <b-button @click="clearChanges" variant="secondary">{{ $t('revert_changes') }}</b-button>
             </b-alert>
+
+            <b-row id="logout">
+            </b-row>
         </nav>
     </b-container>
 </template>
@@ -68,7 +78,7 @@
 <script lang="ts">
     import { Route } from "vue-router"
     import { Component, Watch, Vue } from "vue-property-decorator"
-    import { namespace } from "vuex-class"
+    import { Action, namespace } from "vuex-class"
     import { UserViewResult } from "@/state/user_view"
     import { ChangesMap } from "@/state/staging_changes"
     import UserView from "@/components/UserView.vue"
@@ -82,6 +92,7 @@
         },
     })
     export default class RootUserView extends Vue {
+        @Action("removeAuth") removeAuth!: (_?: string) => void
         @userView.Mutation("clear") clearView!: () => void
         @userView.Action("getNamed") getNamed!: (_: { name: string, args: URLSearchParams }) => Promise<void>
         @userView.Action("getNamedInfo") getNamedInfo!: (_: string) => Promise<void>

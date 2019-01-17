@@ -4,6 +4,7 @@
             "language": "en",
             "filter": "Filter",
             "search_placeholder": "Type to search",
+            "filtered_count": "Rows count: {count}",
             "clear": "Clear",
             "yes": "Yes",
             "no": "No"
@@ -12,6 +13,7 @@
             "language": "ru",
             "filter": "Поиск",
             "search_placeholder": "Введите фразу",
+            "filtered_count": "Кол-во записей: {count}",
             "clear": "Очистить",
             "yes": "Да",
             "no": "Нет"
@@ -26,36 +28,37 @@
                 <b-form-input class="find_in" :value="filter" @input="updateFilter($event)" :placeholder="$t('search_placeholder')" />
                 <b-input-group-append>
                     <b-btn class="btn btn-light" :disabled="!filter" @click="updateFilter('')">{{ $t('clear') }}</b-btn>
+                    {{ $t('filtered_count', { count: this.filteredRows.length }) }}
                 </b-input-group-append>
             </b-input-group>
         </b-form-group>
-        <div class="tabl">
+        <div ref="tableContainer" class="tabl" @scroll="updateShowLength()" @resize="updateShowLength()">
             <table class="tabl table b-table">
                 <colgroup>
                     <col class="checkbox-col"> <!-- Checkbox column -->
                     <col v-if="hasRowLinks" class="open-form-col"> <!-- Open form column -->
-                    <col v-for="(col, col_i) in columns" :key="col_i" :style="col.style">
+                    <col v-for="(col, colI) in columns" :key="colI" :style="col.style">
                 </colgroup>
                 <thead>
                     <tr>
                         <th></th>
                         <th v-if="hasRowLinks"></th>
-                        <th v-for="(col, col_i) in columns" :key="col_i" :title="col.caption" class="sorting" @click="updateSort(col_i)">
+                        <th v-for="(col, colI) in columns" :key="colI" :title="col.caption" class="sorting" @click="updateSort(colI)">
                             {{ col.caption }}
                         </th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(entry_i, row_i) in rows" :key="entry_i" v-if="!entries[entry_i].deleted" :style="entries[entry_i].style" :class="entries[entry_i].selected ? 'selected' : 'none_selected'">
+                    <tr v-for="(entryI, rowI) in showedRows" :key="entryI" :style="entries[entryI].style" :class="entries[entryI].selected ? 'selected' : 'none_selected'">
                         <td>
-                            <input type="checkbox" :checked="entries[entry_i].selected" @click="selectRow(row_i, $event)">
+                            <input type="checkbox" :checked="entries[entryI].selected" @click="selectRow(rowI, $event)">
                         </td>
-                        <td v-if="entries[entry_i].linkToForm !== null">
-                            <router-link :to="entries[entry_i].linkToForm">
+                        <td v-if="entries[entryI].linkToForm !== null">
+                            <router-link :to="entries[entryI].linkToForm">
                                 ⤢
                             </router-link>
                         </td>
-                        <td v-for="(cell, col_i) in entries[entry_i].cells" :key="col_i" :style="cell.style">
+                        <td v-for="(cell, colI) in entries[entryI].cells" :key="colI" :style="cell.style">
                             <router-link v-if="cell.link !== null" :to="cell.link">
                                 <b-checkbox v-if="typeof cell.value === 'boolean'" :checked="cell.value" disabled></b-checkbox>
                                 <template v-else>
@@ -93,6 +96,7 @@
     }
 
     interface IRow {
+        index: number
         cells: ICell[]
         deleted: boolean
         selected: boolean
@@ -104,6 +108,8 @@
         caption: string
         style: Record<string, any>
     }
+
+    const SHOW_STEP = 50
 
     const rowContains = (row: IRow, searchString: string) => {
         return row.cells.some(cell => cell.valueText.includes(searchString))
@@ -134,6 +140,7 @@
         sortAsc: boolean = true
         entries: IRow[] = []
         rows: number[] = []
+        showLength: number = 0
         lastSelected: number | null = null
 
         @Prop({ type: UserViewResult }) private uv!: UserViewResult
@@ -206,19 +213,19 @@
                 const oldEntry = this.entries[this.lastSelected]
                 if (this.lastSelected < rowI) {
                     for (let i = this.lastSelected + 1; i <= rowI; i++) {
-                        const entry = this.entries[this.rows[i]]
+                        const entry = this.entries[this.showedRows[i]]
                         entry.selected = oldEntry.selected
                     }
                 } else if (this.lastSelected > rowI) {
                     for (let i = rowI; i <= this.lastSelected - 1; i++) {
-                        const entry = this.entries[this.rows[i]]
+                        const entry = this.entries[this.showedRows[i]]
                         entry.selected = oldEntry.selected
                     }
                 } else {
                     oldEntry.selected = !oldEntry.selected
                 }
             } else {
-                const entry = this.entries[this.rows[rowI]]
+                const entry = this.entries[this.showedRows[rowI]]
                 entry.selected = !entry.selected
                 this.lastSelected = rowI
             }
@@ -287,6 +294,10 @@
             this.buildEntries()
         }
 
+        private mounted() {
+            this.updateShowLength()
+        }
+
         private sortRows() {
             if (this.sortColumn !== null) {
                 const sortColumn = this.sortColumn
@@ -307,6 +318,7 @@
             }
 
             this.sortRows()
+            this.updateShowLength()
         }
 
         // Update this.entries
@@ -354,7 +366,7 @@
 
                         const getCellAttr = (name: string) => cellAttrs[name] || rowAttrs[name] || columnAttrs[name] || viewAttrs[name]
 
-                        const updatedValue = updatedValues[columnInfo.name]
+                        const updatedValue = columnInfo.updateField === null ? undefined : updatedValues[columnInfo.updateField.name]
                         const currentValue = updatedValue === undefined ? value : { value: updatedValue }
                         const valueText = this.getValueText(currentValue)
 
@@ -380,6 +392,7 @@
                     })
 
                     return {
+                        index: rowI,
                         cells, deleted,
                         style: rowStyle,
                         selected: false,
@@ -401,6 +414,26 @@
 
         private getCurrentChanges() {
             return this.changesForUserView(this.uv)
+        }
+
+        private updateShowLength() {
+            const tableContainer = this.$refs.tableContainer as Element | undefined
+            // Component may still be unmounted
+            if (tableContainer === undefined) {
+                return
+            }
+            if (tableContainer.scrollTop + tableContainer.clientHeight >= tableContainer.scrollHeight && this.showLength < this.rows.length) {
+                this.showLength = Math.min(this.showLength + SHOW_STEP, this.rows.length)
+                Vue.nextTick(() => this.updateShowLength())
+            }
+        }
+
+        get filteredRows() {
+            return this.rows.filter(rowI => !this.entries[rowI].deleted)
+        }
+
+        get showedRows() {
+            return this.filteredRows.slice(0, this.showLength)
         }
     }
 </script>

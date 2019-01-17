@@ -7,12 +7,11 @@ import BootstrapVue from "bootstrap-vue"
 import * as Utils from "@/utils"
 
 import Login from "@/components/Login.vue"
-import Navigator from "@/components/Navigator.vue"
+import NotFound from "@/components/NotFound.vue"
 import RootUserView from "@/components/RootUserView.vue"
 import App from "@/App.vue"
 
 import authModule from "@/state/auth"
-import mainMenuModule from "@/state/main_menu"
 import settingsModule from "@/state/settings"
 import userViewModule from "@/state/user_view"
 import stagingChanges from "@/state/staging_changes"
@@ -32,7 +31,6 @@ export const store = new Vuex.Store({
     strict: !Utils.isProduction,
     modules: {
         auth: authModule,
-        mainMenu: mainMenuModule,
         settings: settingsModule,
         userView: userViewModule,
         staging: stagingChanges,
@@ -43,11 +41,11 @@ export const store = new Vuex.Store({
 const storeState: any = store.state
 
 const routes = [
-    { path: "/", name: "navigator", component: Navigator },
+    { path: "/", name: "main", redirect: { name: "view", params: { name: "Main" } } },
     { path: "/views/:name", name: "view", component: RootUserView },
     { path: "/views/:name/new", name: "view_create", component: RootUserView },
     { path: "/login", name: "login", component: Login, meta: { isLogin: true } },
-    { path: "*", redirect: { name: "navigator" } },
+    { path: "*", component: NotFound },
 ]
 
 const router = new VueRouter({
@@ -61,13 +59,13 @@ const i18n = new VueI18n({
 })
 
 if (localStorage.getItem("authToken") !== null) {
-    store.dispatch("auth/setAuth", new CurrentAuth(localStorage.getItem("authToken") as string))
+    store.dispatch("auth/setCurrentAuth", new CurrentAuth(localStorage.getItem("authToken") as string))
     store.dispatch("auth/renewAuth")
 }
 store.subscribe((mutation, state: any) => {
-    if (mutation.type === "auth/clearAuth") {
+    if (mutation.type === "clearAuth") {
         localStorage.removeItem("authToken")
-    } else if (mutation.type === "auth/setAuth") {
+    } else if (mutation.type === "setAuth") {
         localStorage.setItem("authToken", storeState.auth.current.token)
     }
 })
