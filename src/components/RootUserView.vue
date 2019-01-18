@@ -44,10 +44,10 @@
         </b-alert>
 
         <b-button-toolbar key-nav class="head_menu">
-            <b-button :to="{ name: 'main' }" class="nav_batton, goto_nav" id="menu_btn" >
+            <b-button v-if="!isMainView" :to="{ name: 'main' }" class="nav_batton, goto_nav" id="menu_btn" >
                 {{ $t('goto_nav') }}
             </b-button>
-            <b-dropdown id="ddown1" v-if="createView !== null"  class=" nav_batton, actions_btn, menu_btn" :text="$t('actions')" no-caret>
+            <b-dropdown id="ddown1" class=" nav_batton, actions_btn, menu_btn" :text="$t('actions')" no-caret>
                 <b-dropdown-item @click="removeAuth()" class="menu_btn" variant="primary">
                     {{ $t('logout') }}
                 </b-dropdown-item>
@@ -142,6 +142,10 @@
                 const attr = this.uv.attributes["CreateView"]
                 return attr !== undefined ? String(attr) : null
             }
+        }
+
+        get isMainView() {
+            return this.$route.params.name === "Main"
         }
     }
 </script>
