@@ -109,7 +109,7 @@
         style: Record<string, any>
     }
 
-    const SHOW_STEP = 50
+    const SHOW_STEP = 20
 
     const rowContains = (row: IRow, searchString: string) => {
         return row.cells.some(cell => cell.valueText.includes(searchString))
@@ -142,6 +142,7 @@
         rows: number[] = []
         showLength: number = 0
         lastSelected: number | null = null
+        printListener: { query: MediaQueryList, queryCallback: (mql: MediaQueryListEvent) => void, printCallback: () => void } | null = null
 
         @Prop({ type: UserViewResult }) private uv!: UserViewResult
         @Prop({ type: Boolean, default: false }) private isRoot!: boolean
@@ -290,8 +291,28 @@
                         }
                     }
                 `)
+
+                const queryCallback = (mql: MediaQueryListEvent) => {
+                    if (mql.matches) {
+                        this.showLength = this.rows.length
+                    }
+                }
+                const query = window.matchMedia("print")
+                query.addListener(queryCallback)
+                const printCallback = () => {
+                    this.showLength = this.rows.length
+                }
+                window.addEventListener("beforeprint", printCallback)
+                this.printListener = { query, queryCallback, printCallback }
             }
             this.buildEntries()
+        }
+
+        private destroyed() {
+            if (this.printListener !== null) {
+                window.removeEventListener("beforeprint", this.printListener.printCallback)
+                this.printListener.query.removeListener(this.printListener.queryCallback)
+            }
         }
 
         private mounted() {
