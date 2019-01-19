@@ -100,8 +100,6 @@ div
 						color: black
 
 /* Навигация */
-#logout
-	margin: 1px
 
 div
 	&.main_nav
@@ -122,15 +120,6 @@ div
 					&.submain_nav
 						width: 100% !important
 						margin-top: 0px !important
-						div
-							&#logout
-								margin: 0px !important
-								width: 100% !important
-
-								button
-									margin: 0px !important
-									width: 100% !important
-									text-align: left
 
 						div
 							&.subsubmain_nav
@@ -470,6 +459,7 @@ div
 						&.menu_btn
 							border: solid 1px white
 							border-left: 0px
+							z-index: 1000
 
 							button
 								background-color: var(--MenuColor) !important
@@ -496,3 +486,4 @@ div
 										text-decoration: none
 										padding-left: 7px
 										padding-right: 7px
+										border-bottom: 0
