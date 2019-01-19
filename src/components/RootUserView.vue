@@ -55,7 +55,7 @@
                     {{ $t('create') }}
                 </b-dropdown-item>
             </b-dropdown>
-            <div class="black_block">
+            <div class="black_block" onklick>
             </div>
         </b-button-toolbar>
 

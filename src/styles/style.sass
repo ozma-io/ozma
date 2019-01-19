@@ -103,7 +103,7 @@ div
 
 div
 	&.main_nav
-		width: 100%
+		width: 101%
 		height: 100%
 		position: fixed
 		overflow: auto
@@ -111,6 +111,7 @@ div
 		left: 0
 		display: flex
 		padding: 0
+		margin-left: -1px
 		/*мобильная версия
 		 *important везде стоят чтобы переплюнуть не мобильные стили возможно с этим стоит что то сделать))
 		 */
@@ -443,7 +444,8 @@ div
 					div
 						&.head_menu
 							display: flex !important
-							width: 100%
+							width: 101%;
+							margin-left: -1px;
 
 							a
 								&#menu_btn
@@ -455,17 +457,23 @@ div
 									top: 0
 									position: fixed
 									width: 100vw
-									height: 100vh
+									height: 0
 									background-color: black !important
-									z-index: 200
-									opacity: 0.7
+									z-index: 700
+									opacity: 0
+									display: block !important
 							
 							div
-								width: 100%
+								width: 101%
+								margin-left: -1px
+								border-right: 0 !important
 								&.dropdown:hover
 									border: 0
+								&.dropdown:not(:hover) + .black_block
+									transition: height 1s
 								&.dropdown:hover + .black_block
-									display: block !important
+									height: 100vh
+									opacity: 0.7
 								button
 									width: 100%
 									text-align: left
