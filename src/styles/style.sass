@@ -116,6 +116,8 @@ div
 		 */
 		@media screen and (orientation: portrait)
 			@media screen and (max-device-width: 480px)
+				&
+					position: relative !important
 				div
 					&.submain_nav
 						width: 100% !important
@@ -436,6 +438,45 @@ div
 				div
 					&.head_menu
 						display: none !important
+			@media screen and (orientation: portrait)
+				@media screen and (max-device-width: 480px)
+					div
+						&.head_menu
+							display: flex !important
+							width: 100%
+
+							a
+								&#menu_btn
+									width: 100%
+									text-align: left
+									border-bottom: 0 !important
+							div
+								&.black_block
+									top: 0
+									position: fixed
+									width: 100vw
+									height: 100vh
+									background-color: black !important
+									z-index: 200
+									opacity: 0.7
+							
+							div
+								width: 100%
+								&.dropdown:hover
+									border: 0
+								&.dropdown:hover + .black_block
+									display: block !important
+								button
+									width: 100%
+									text-align: left
+								div
+									min-width: calc(100% + 2px) !important
+									a
+										&.menu_btn
+											background-color: white !important
+											border-color: var(--MenuColor) !important
+											border-left: 0 !important
+
 			div
 				&.head_menu
 					display: inline
@@ -452,6 +493,9 @@ div
 							text-decoration: none
 							padding-left: 7px
 							padding-right: 7px
+					div
+						&.black_block
+							display: none
 					div
 						height: 30px
 						&.dropdown:hover > .dropdown-menu

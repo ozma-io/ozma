@@ -44,7 +44,7 @@
         </b-alert>
 
         <b-button-toolbar key-nav class="head_menu">
-            <b-button v-if="!isMainView" :to="{ name: 'main' }" class="nav_batton, goto_nav" id="menu_btn" >
+            <b-button v-if="!isMainView" :to="{ name: 'main' }" class="nav_batton, goto_nav" id="menu_btn">
                 {{ $t('goto_nav') }}
             </b-button>
             <b-dropdown id="ddown1" class=" nav_batton, actions_btn, menu_btn" :text="$t('actions')" no-caret>
@@ -55,6 +55,8 @@
                     {{ $t('create') }}
                 </b-dropdown-item>
             </b-dropdown>
+            <div class="black_block">
+            </div>
         </b-button-toolbar>
 
         <b-col class="without_padding">
