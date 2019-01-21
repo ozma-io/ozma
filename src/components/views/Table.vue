@@ -28,7 +28,6 @@
                 <b-form-input class="find_in" :value="filter" @input="updateFilter($event)" :placeholder="$t('search_placeholder')" />
                 <b-input-group-append>
                     <b-btn class="btn btn-light" :disabled="!filter" @click="updateFilter('')">{{ $t('clear') }}</b-btn>
-                    {{ $t('filtered_count', { count: this.filteredRows.length }) }}
                 </b-input-group-append>
             </b-input-group>
         </b-form-group>
@@ -75,6 +74,9 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+        <div class="count_row">
+        {{ $t('filtered_count', { count: this.filteredRows.length }) }}
         </div>
     </b-container>
 </template>
