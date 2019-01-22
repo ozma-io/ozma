@@ -103,7 +103,7 @@
         @userView.State("lastError") uvLastError!: string | null
         @staging.State("changes") changes!: ChangesMap
         @staging.Action("submit") submitChanges!: () => Promise<void>
-        @staging.Mutation("clear") clearChanges!: () => void
+        @staging.Action("reset") clearChanges!: () => void
         @staging.Mutation("clearError") stagingClearError!: () => void
         @staging.State("lastError") stagingLastError!: string | null
         @staging.Getter("isEmpty") changesAreEmpty!: boolean

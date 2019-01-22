@@ -56,29 +56,39 @@ const askOnClose = (e: BeforeUnloadEvent) => {
     e.returnValue = ""
 }
 
-const stopAutoSave = (store: IStagingState) => {
-    if (store.autoSaveTimeoutId !== null) {
+const stopAutoSave = ({ state, commit }: ActionContext<IStagingState, {}>) => {
+    if (state.autoSaveTimeoutId !== null) {
         window.removeEventListener("beforeunload", askOnClose)
-        clearTimeout(store.autoSaveTimeoutId)
-        store.autoSaveTimeoutId = null
+        clearTimeout(state.autoSaveTimeoutId)
+        commit("clearAutoSave")
     }
 }
 
-const startAutoSave = ({ commit, dispatch }: ActionContext<IStagingState, {}>) => {
-    commit("stopAutoSave")
-    commit("startAutoSave", () => {
+const startAutoSave = (context: ActionContext<IStagingState, {}>) => {
+    const { commit, dispatch } = context
+    stopAutoSave(context)
+
+    const timeoutId = setTimeout(() => {
         dispatch("submit")
-    })
+    }, autoSaveTimeout)
+    window.addEventListener("beforeunload", askOnClose)
+    commit("setAutoSave", timeoutId)
+}
+
+const reset = (context: ActionContext<IStagingState, {}>) => {
+    const { commit } = context
+    commit("clear")
+    stopAutoSave(context)
 }
 
 const checkCounters = (context: ActionContext<IStagingState, {}>) => {
     const { state, commit } = context
     if (state.updatedCount === 0 && state.addedCount === 0 && state.deletedCount === 0) {
-        commit("clear")
+        reset(context)
     } else if (state.addedCount === 0 && state.currentSubmit === null) {
         startAutoSave(context)
     } else {
-        commit("stopAutoSave")
+        stopAutoSave(context)
     }
 }
 
@@ -151,18 +161,18 @@ const stagingModule: Module<IStagingState, {}> = {
     },
     mutations: {
         clear: store => {
-            stopAutoSave(store)
             store.changes = {}
             store.addedCount = 0
             store.updatedCount = 0
             store.deletedCount = 0
             store.touched = false
         },
-        startAutoSave: (store, submitFunc: () => void) => {
-            store.autoSaveTimeoutId = setTimeout(submitFunc, autoSaveTimeout)
-            window.addEventListener("beforeunload", askOnClose)
+        setAutoSave: (store, timeoutId) => {
+            store.autoSaveTimeoutId = timeoutId
         },
-        stopAutoSave,
+        clearAutoSave: store => {
+            store.autoSaveTimeoutId = null
+        },
         startSubmit: (store, submit: Promise<void>) => {
             store.touched = false
             store.currentSubmit = submit
@@ -265,6 +275,7 @@ const stagingModule: Module<IStagingState, {}> = {
             context.commit("deleteEntry", args)
             checkCounters(context)
         },
+        reset,
         resetUpdatedEntry: (context, args: { schema: string, entity: string, id: number }) => {
             context.commit("resetUpdatedEntry", args)
             checkCounters(context)
@@ -330,7 +341,7 @@ const stagingModule: Module<IStagingState, {}> = {
                     if (state.touched) {
                         commit("clearAdded")
                     } else {
-                        commit("clear")
+                        reset(context)
                     }
                     commit("clearError")
                 } else {
