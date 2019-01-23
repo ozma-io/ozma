@@ -114,7 +114,7 @@
     const SHOW_STEP = 20
 
     const rowContains = (row: IRow, searchString: string) => {
-        let reg = new RegExp(searchString, 'i')
+        const reg = new RegExp(searchString, "i")
         return row.cells.some(cell => reg.test(cell.valueText))
     }
 
