@@ -114,7 +114,8 @@
     const SHOW_STEP = 20
 
     const rowContains = (row: IRow, searchString: string) => {
-        return row.cells.some(cell => cell.valueText.includes(searchString))
+        let reg = new RegExp(searchString, 'i')
+        return row.cells.some(cell => reg.test(cell.valueText))
     }
 
     const rowIndicesCompare = (aIndex: number, bIndex: number, entries: IRow[], sortColumn: number) => {
