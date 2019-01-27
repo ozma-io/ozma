@@ -6,9 +6,11 @@
  */
 html
 	overflow-x: hidden
+	overflow-y: hidden
 *
 	margin: 0
-	font-family: var(--Font)
+	font-family: var(--Font) !important
+	font-size: var(--FontSize) !important
 	color: black !important
 	max-width: none !important
 	min-width: none !important
@@ -265,6 +267,8 @@ div
 					&.find
 						position: initial !important
 						min-width: 100% !important;
+						margin-top: -1px;
+						margin-bottom: -1px !important;
 			/*фильтр для больших экранов
 			 *пока высчитывание ширины ручками от количества текста в этом блоке, но фильтр потом все равно переписывать
 			 *пока костыльное решение нормально скрашивает все что нам нужно
@@ -367,15 +371,18 @@ div
 		position: fixed
 		z-index: 2000
 		line-height: normal
-		
 div
-	&.tabl 
+	&.tabl
+		@media screen and (max-device-width: 650px)
+			height: calc(100vh - 30px - 3 * var(--FontSize) - 2px - 31px) /*15px высота паддингов и бордеров у меню, 2px приплюсовывается при нормализации высоты текста 31 высота текущего фильтра потом надо сделать чтобы тоже высчитвалась изходя из шрифтов*/ 
 		float: left
-		height: 95vh /*не до конца экрана ибо там скролл исчезает из-за фиксированного низа*/
+		height: calc(100vh - 15px - 2 * var(--FontSize) - 2px) /*15px высота паддингов и бордеров у меню, 2px приплюсовывается при нормализации высоты текста*/ 
 		width: 100vw /*на весь экран*/
 		padding: 0
 		overflow: auto /*чтобы скролить таблицу в том числе на мобилке*/
+		
 		table
+			margin-bottom: 0px !important;
 			thead
 				height: 25px
 				border-right: solid 1px  var(--TableBorderColor) !important

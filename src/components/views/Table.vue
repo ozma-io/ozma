@@ -76,7 +76,7 @@
             </table>
         </div>
         <div class="count_row">
-        {{ $t('filtered_count', { count: this.filteredRows.length }) }}
+        {{ this.filteredRows.length }}
         </div>
     </b-container>
 </template>

@@ -21,6 +21,7 @@
                 "NavigationBackColor": this.settingsEntry("NavigationBackColor", "#F5C700"),
                 "TableBorderColor": this.settingsEntry("TableBorderColor", "#F5C700"),
                 "Font": this.settingsEntry("Font", "Courier New, monospace"),
+                "FontSize": this.settingsEntry("FontSize", "16px"),
                 "MenuColor": this.settingsEntry("MenuColor", "#F5C700"),
                 "ColorTableBg": this.settingsEntry("ColorTableBg", "white"),
                 "ColorTableSelect": this.settingsEntry("ColorTableSelect", "#CCCCCC"),
