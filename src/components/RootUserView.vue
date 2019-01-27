@@ -64,7 +64,7 @@
                      @dismissed="stagingClearError">
                 {{ $t('submit_error', { msg: stagingLastError }) }}
             </b-alert>
-            <b-alert class="error" variant="danger" :show="!changesAreEmpty">
+            <b-alert class="error" variant="warning" :show="!changesAreEmpty">
                 {{ $t('pending_changes') }}
                 <b-button @click="submitChanges" variant="primary">{{ $t('save') }}</b-button>
                 <b-button @click="clearChanges" variant="secondary">{{ $t('revert_changes') }}</b-button>
