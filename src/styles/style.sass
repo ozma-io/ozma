@@ -458,6 +458,10 @@ form
 				resize: none
 
 			&.form_block
+				@media screen and (orientation: portrait)
+					@media screen and (max-device-width: 480px)
+						width: 100% !important
+						display: block
 				width: 100%
 				margin: 0 1px
 				display: inline-block
