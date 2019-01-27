@@ -29,20 +29,6 @@
 
 <template>
     <b-container class="without_padding">
-        <b-alert variant="danger"
-                 dismissible
-                 :show="uvLastError !== null"
-                 @dismissed="uvClearError">
-            {{ $t('fetch_error', { msg: uvLastError }) }}
-        </b-alert>
-
-        <b-alert variant="danger"
-                 dismissible
-                 :show="stagingLastError !== null"
-                 @dismissed="stagingClearError">
-            {{ $t('submit_error', { msg: stagingLastError }) }}
-        </b-alert>
-
         <b-button-toolbar key-nav class="head_menu">
             <b-button v-if="!isMainView" :to="{ name: 'main' }" class="nav_batton, goto_nav" id="menu_btn">
                 {{ $t('goto_nav') }}
@@ -63,16 +49,26 @@
             <UserView v-if="uv !== null" :uv="uv" isRoot></UserView>
         </b-col>
 
-        <nav class="navbar fixed-bottom navbar-light bg-light">
-            <b-alert variant="danger" :show="!changesAreEmpty">
+        <nav v-show="this.$children" class="fix-bot navbar fixed-bottom navbar-light bg-light">
+            <b-alert class="error" 
+                     variant="danger"
+                     dismissible
+                     :show="uvLastError !== null"
+                     @dismissed="uvClearError">
+                {{ $t('fetch_error', { msg: uvLastError }) }}
+            </b-alert>
+            <b-alert class="error" 
+                     variant="danger"
+                     dismissible
+                     :show="stagingLastError !== null"
+                     @dismissed="stagingClearError">
+                {{ $t('submit_error', { msg: stagingLastError }) }}
+            </b-alert>
+            <b-alert class="error" variant="danger" :show="!changesAreEmpty">
                 {{ $t('pending_changes') }}
-
                 <b-button @click="submitChanges" variant="primary">{{ $t('save') }}</b-button>
                 <b-button @click="clearChanges" variant="secondary">{{ $t('revert_changes') }}</b-button>
             </b-alert>
-
-            <b-row id="logout">
-            </b-row>
         </nav>
     </b-container>
 </template>
