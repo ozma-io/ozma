@@ -76,7 +76,8 @@
             </table>
         </div>
         <div class="count_row">
-        {{ this.filteredRows.length }}
+            {{ this.filteredRows.length }}
+            <a v-bind:download="this.$route.params['name']+'.csv'" v-bind:href="export2csv()">{{ this.$route.params["name"] + '.csv' }}</a>
         </div>
     </b-container>
 </template>
@@ -197,6 +198,32 @@
                 }
                 this.lastSelected = null
             }
+        }
+
+        private getCvsString(str: string): string {
+            let csvstr = str.replace(/"/g, '""')
+            if (csvstr.search(/("|;|\n)/g) > 0) {
+                csvstr = "\"" + csvstr + "\""
+            }
+            csvstr += ";"
+            return csvstr
+        }
+
+        private export2csv(): string {
+            const type = "data:text/csv;"
+            const charset = "charset=utf-8,"
+            let data: string = ""
+            for (const col of this.columns) {
+                data += this.getCvsString(col.caption.toString())
+            }
+            data += "\n"
+            for (const row of this.entries) {
+                for (const cell of row.cells) {
+                    data += this.getCvsString(cell.valueText.toString())
+                }
+                data += "\n"
+            }
+            return type + charset + data
         }
 
         private updateSort(sortColumn: number) {
