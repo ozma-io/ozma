@@ -212,7 +212,7 @@
         private export2csv(): string {
             const type = "data:text/csv;"
             const charset = "charset=utf-8,"
-            let data: string = ""
+            let data: string = "%EF%BB%BF"
             for (const col of this.columns) {
                 data += this.getCvsString(col.caption.toString())
             }
@@ -223,7 +223,7 @@
                 }
                 data += "\n"
             }
-            return type + charset + "%EF%BB%BF" + data
+            return type + charset + data
         }
 
         private updateSort(sortColumn: number) {
