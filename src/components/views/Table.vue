@@ -223,7 +223,7 @@
                 }
                 data += "\n"
             }
-            return type + charset + data
+            return type + charset + "%EF%BB%BF" + data
         }
 
         private updateSort(sortColumn: number) {
