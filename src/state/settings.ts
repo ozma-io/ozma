@@ -61,10 +61,9 @@ const settingsModule: Module<ISettingsState, {}> = {
         },
         getSettings: async ({ commit, dispatch }) => {
             try {
-                const select = "SELECT \"Name\", \"Value\" FROM funapp.\"Settings\""
                 const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
-                    func: Api.fetchAnonymousView,
-                    args: [select, new URLSearchParams()],
+                    func: Api.fetchNamedView,
+                    args: ["Settings", new URLSearchParams()],
                 }, { root: true })
                 const values = res.result.rows.reduce((currSettings: Record<string, string>, row) => {
                     const key = row.values[0].value
