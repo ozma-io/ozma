@@ -7,6 +7,8 @@
             "goto_nav": "Back to the top",
             "pending_changes": "Pending changes exist",
             "submit_error": "Error while submitting changes: {msg}",
+            "settings_error": "Failed to fetch settings: {msg}",
+            "translations_error": "Failed to fetch translations: {msg}",
             "save": "Save",
             "logout": "Logout",
             "revert_changes": "Revert changes",
@@ -15,10 +17,12 @@
         "ru-RU": {
             "actions": "Действия",
             "create": "Создать новую",
-            "fetch_error": "Ошибка получения пользовательского вида: {msg}",
+            "fetch_error": "Ошибка получения представления: {msg}",
             "goto_nav": "Вернуться на главную",
             "pending_changes": "Есть несохранённые изменения",
             "submit_error": "Ошибка сохранения изменений: {msg}",
+            "settings_error": "Ошибка получения настроек: {msg}",
+            "translations_error": "Ошибка получения переводов: {msg}",
             "save": "Сохранить",
             "logout": "Выйти",
             "revert_changes": "Откатить изменения",
@@ -46,7 +50,7 @@
         </b-button-toolbar>
 
         <b-col class="without_padding">
-            <UserView v-if="uv !== null" :uv="uv" isRoot></UserView>
+            <UserView v-if="uv !== null && pendingTranslations === null" :uv="uv" isRoot></UserView>
         </b-col>
 
         <nav v-show="this.$children" class="fix-bot navbar fixed-bottom navbar-light bg-light">
@@ -56,6 +60,20 @@
                      :show="uvLastError !== null"
                      @dismissed="uvClearError">
                 {{ $t('fetch_error', { msg: uvLastError }) }}
+            </b-alert>
+            <b-alert class="error" 
+                     variant="danger"
+                     dismissible
+                     :show="settingsLastError !== null"
+                     @dismissed="settingsClearError">
+                {{ $t('settings_error', { msg: settingsLastError }) }}
+            </b-alert>
+            <b-alert class="error" 
+                     variant="danger"
+                     dismissible
+                     :show="translationsLastError !== null"
+                     @dismissed="translationsClearError">
+                {{ $t('translations_error', { msg: translationsLastError }) }}
             </b-alert>
             <b-alert class="error" 
                      variant="danger"
@@ -80,9 +98,12 @@
     import { UserViewResult } from "@/state/user_view"
     import { ChangesMap } from "@/state/staging_changes"
     import UserView from "@/components/UserView.vue"
+    import { CurrentTranslations } from "@/state/translations"
 
     const userView = namespace("userView")
     const staging = namespace("staging")
+    const settings = namespace("settings")
+    const translations = namespace("translations")
 
     @Component({
         components: {
@@ -103,6 +124,12 @@
         @staging.Mutation("clearError") stagingClearError!: () => void
         @staging.State("lastError") stagingLastError!: string | null
         @staging.Getter("isEmpty") changesAreEmpty!: boolean
+        @translations.State("pending") pendingTranslations!: Promise<CurrentTranslations> | null
+        @translations.Action("getTranslations") getTranslations!: () => void
+        @translations.State("lastError") translationsLastError!: string | null
+        @translations.Mutation("clearError") translationsClearError!: () => void
+        @settings.State("lastError") settingsLastError!: string | null
+        @settings.Mutation("clearError") settingsClearError!: () => void
 
         @Watch("$route")
         private onRouteChanged() {

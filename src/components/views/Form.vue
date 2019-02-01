@@ -153,6 +153,7 @@
 
     const auth = namespace("auth")
     const staging = namespace("staging")
+    const translations = namespace("translations")
 
     @Component({
         components: {
@@ -170,6 +171,7 @@
         @staging.Action("deleteEntry") deleteEntry!: ({ schema, entity, id }: { schema: string, entity: string, id: number }) => void
         @staging.Action("submit") submitChanges!: () => Promise<void>
         @staging.Getter("isEmpty") changesAreEmpty!: boolean
+        @translations.Getter("field") fieldTranslation!: (schema: string, entity: string, field: string, defValue: string) => string
 
         // Internal arrays are fields in columns order
         entries: IForm[] = []
@@ -352,8 +354,15 @@
                     const cellAttrs = value.attributes === undefined ? {} : value.attributes
                     const getCellAttr = (name: string) => cellAttrs[name] || rowAttrs[name] || columnAttrs[name] || viewAttrs[name]
 
+                    let caption: string
                     const captionAttr = getCellAttr("Caption")
-                    const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name
+                    if (captionAttr !== undefined) {
+                        caption = String(captionAttr)
+                    } else if (this.uv.info.updateEntity !== null && columnInfo.updateField !== null) {
+                        caption = this.fieldTranslation(this.uv.info.updateEntity.schema, this.uv.info.updateEntity.name, columnInfo.updateField.name, columnInfo.name)
+                    } else {
+                        caption = columnInfo.name
+                    }
                     const required = columnInfo.updateField === null ? false : (columnInfo.updateField.field.defaultValue === null)
 
                     const updatedValue = columnInfo.updateField === null ? undefined : updatedValues[columnInfo.updateField.name]

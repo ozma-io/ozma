@@ -89,7 +89,8 @@
     import { UserViewResult } from "@/state/user_view"
     import { ChangesMap, IEntityChanges } from "@/state/staging_changes"
     import { setBodyStyle } from "@/style"
-    import { IExecutedRow, IExecutedValue } from "@/api"
+    import { IExecutedRow, IExecutedValue, IUpdateFieldInfo } from "@/api"
+    import { CurrentTranslations } from "@/state/translations"
 
     interface ICell {
         value: any
@@ -132,12 +133,14 @@
     }
 
     const staging = namespace("staging")
+    const translations = namespace("translations")
 
     @Component
     export default class UserViewTable extends Vue {
         @staging.State("changes") changes!: ChangesMap
         @staging.Getter("forUserView") changesForUserView!: (uv: UserViewResult) => IEntityChanges
         @staging.Getter("isEmpty") changesAreEmpty!: boolean
+        @translations.Getter("field") fieldTranslation!: (schema: string, entity: string, field: string, defValue: string) => string
 
         filter: string = ""
         sortColumn: number | null = null
@@ -171,8 +174,15 @@
                 const columnAttrs = this.uv.columnAttributes[i]
                 const getColumnAttr = (name: string) => columnAttrs[name] || viewAttrs[name]
 
+                let caption: string
                 const captionAttr = getColumnAttr("Caption")
-                const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name
+                if (captionAttr !== undefined) {
+                    caption = String(captionAttr)
+                } else if (this.uv.info.updateEntity !== null && columnInfo.updateField !== null) {
+                    caption = this.fieldTranslation(this.uv.info.updateEntity.schema, this.uv.info.updateEntity.name, columnInfo.updateField.name, columnInfo.name)
+                } else {
+                    caption = columnInfo.name
+                }
 
                 const style: Record<string, any> = {}
 

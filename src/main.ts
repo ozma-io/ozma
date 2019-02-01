@@ -9,10 +9,9 @@ import App from "@/App.vue"
 
 import authModule from "@/state/auth"
 import settingsModule from "@/state/settings"
+import translationsModule from "@/state/translations"
 import userViewModule from "@/state/user_view"
 import stagingChanges from "@/state/staging_changes"
-
-import { CurrentAuth } from "@/state/auth"
 
 import "bootstrap/dist/css/bootstrap.css"
 import "bootstrap-vue/dist/bootstrap-vue.css"
@@ -26,6 +25,7 @@ export const store = new Vuex.Store({
     modules: {
         auth: authModule,
         settings: settingsModule,
+        translations: translationsModule,
         userView: userViewModule,
         staging: stagingChanges,
     },
