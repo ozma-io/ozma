@@ -38,7 +38,7 @@ export interface IEntityRef {
     name: EntityName
 }
 
-export type SimpleType = "int" | "string" | "bool" | "datetime" | "date" | "regclass"
+export type SimpleType = "int" | "decimal" | "string" | "bool" | "datetime" | "date" | "regclass"
 
 export interface IScalarSimpleType {
     type: SimpleType
@@ -51,7 +51,7 @@ export interface IArraySimpleType {
 
 export type ValueType = IScalarSimpleType | IArraySimpleType
 
-export type FieldValueType = "int" | "string" | "bool" | "datetime" | "date"
+export type FieldValueType = "int" | "decimal" | "string" | "bool" | "datetime" | "date"
 
 export interface IScalarFieldType {
     type: FieldValueType
