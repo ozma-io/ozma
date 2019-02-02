@@ -42,6 +42,13 @@ body
  */
 div.without_padding
 	padding: 0px
+div.main_div
+	height: 100vh
+	div
+		&.userview_div
+			width: 100%
+			overflow: hidden
+			flex: 1
 /*
  *убираем красивости у кнопок селектов ссылок и прочего (без important придется прописывать этоже буквально для каждой кнопки)
  */
@@ -261,6 +268,7 @@ div
 		width: min-content
 		margin: 0px
 		position: relative
+		height: 100%
 
 div
 	div
@@ -279,8 +287,8 @@ div
 			 */
 			fieldset	
 				&.find:lang(ru)
-					position: absolute
-					top: -30px
+					position: fixed
+					top: 0px
 					left: 299px
 					width: calc(100% - 300px)
 					min-width: 350px
@@ -376,11 +384,9 @@ div
 		z-index: 2000
 		line-height: normal
 div
-	&.tabl
-		@media screen and (max-device-width: 650px)
-			height: calc(100vh - 30px - 3 * var(--FontSize) - 2px - 31px) /*15px высота паддингов и бордеров у меню, 2px приплюсовывается при нормализации высоты текста 31 высота текущего фильтра потом надо сделать чтобы тоже высчитвалась изходя из шрифтов*/ 
+	&.tabl 
 		float: left
-		height: calc(100vh - 15px - 2 * var(--FontSize) - 2px) /*15px высота паддингов и бордеров у меню, 2px приплюсовывается при нормализации высоты текста*/ 
+		height: calc(100% - var(--FontSize))
 		width: 100vw /*на весь экран*/
 		padding: 0
 		overflow: auto /*чтобы скролить таблицу в том числе на мобилке*/
@@ -450,7 +456,7 @@ div
 	&.cont_form
 		overflow-y: auto
 		overflow-x: hidden
-		height: 90vh
+		height: 100%
 		width: 100vw
 form
 	&.view_form

@@ -32,7 +32,7 @@
 </i18n>
 
 <template>
-    <b-container class="without_padding">
+    <b-container class="without_padding main_div">
         <b-button-toolbar key-nav class="head_menu">
             <b-button v-if="!isMainView" :to="{ name: 'main' }" class="nav_batton, goto_nav" id="menu_btn">
                 {{ $t('goto_nav') }}
@@ -49,7 +49,7 @@
             </div>
         </b-button-toolbar>
 
-        <b-col class="without_padding">
+        <b-col class="without_padding userview_div">
             <UserView v-if="uv !== null && pendingTranslations === null" :uv="uv" isRoot></UserView>
         </b-col>
 
