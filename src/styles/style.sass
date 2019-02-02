@@ -267,6 +267,11 @@ nav
 /* Таблица */
 div
 	&.cont_table
+		@media screen and (orientation: portrait)
+			@media screen and (max-device-width: 480px)
+				display: flex
+				flex-direction: column
+				height: calc(100% - var(--FontSize))
 		width: min-content
 		margin: 0px
 		position: relative
@@ -386,7 +391,11 @@ div
 		z-index: 2000
 		line-height: normal
 div
-	&.tabl 
+	&.tabl
+		@media screen and (orientation: portrait)
+			@media screen and (max-device-width: 480px)
+				flex: 1
+				height: none
 		float: left
 		height: calc(100% - var(--FontSize))
 		width: 100vw /*на весь экран*/
