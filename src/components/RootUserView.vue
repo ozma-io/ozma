@@ -31,61 +31,53 @@
 
 <template>
     <b-container class="without_padding main_div">
-        <b-button-toolbar key-nav class="head_menu">
-            <b-button v-if="!isMainView" :to="{ name: 'main' }" class="nav_batton, goto_nav" id="menu_btn">
-                {{ $t('goto_nav') }}
-            </b-button>
-            <b-dropdown id="ddown1" class=" nav_batton, actions_btn, menu_btn" :text="$t('actions')" no-caret>
-                <b-dropdown-item @click="removeAuth()" class="menu_btn" variant="primary">
-                    {{ $t('logout') }}
-                </b-dropdown-item>
-                <b-dropdown-item v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" class="menu_btn" variant="primary">
-                    {{ $t('create') }}
-                </b-dropdown-item>
-            </b-dropdown>
-            <div class="black_block" onklick>
-            </div>
-        </b-button-toolbar>
-
-        <b-col class="without_padding userview_div">
-            <UserView v-if="uv !== null && pendingTranslations === null" :uv="uv" isRoot></UserView>
-        </b-col>
-
-        <nav v-show="this.$children" class="fix-bot navbar fixed-bottom navbar-light bg-light">
-            <b-alert class="error" 
+        <div :class="isMainView ? 'scrol_menu' : 'none_scrol'">
+            <b-button-toolbar key-nav class="head_menu">
+                <b-button v-if="!isMainView" :to="{ name: 'main' }" class="nav_batton, goto_nav" id="menu_btn">
+                    {{ $t('goto_nav') }}
+                </b-button>
+                <b-dropdown id="ddown1" class=" nav_batton, actions_btn, menu_btn" :text="$t('actions')" no-caret>
+                    <b-dropdown-item @click="removeAuth()" class="menu_btn" variant="primary">
+                        {{ $t('logout') }}
+                    </b-dropdown-item>
+                    <b-dropdown-item v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" class="menu_btn" variant="primary">
+                        {{ $t('create') }}
+                    </b-dropdown-item>
+                </b-dropdown>
+                <div class="black_block" onklick>
+                </div>
+            </b-button-toolbar>
+            <b-col class="without_padding userview_div">
+                <UserView v-if="uv !== null && pendingTranslations === null" :uv="uv" isRoot></UserView>
+            </b-col>
+        </div>
+        <nav class="fix-bot navbar fixed-bottom navbar-light bg-light">
+            <b-alert class="error"
                      variant="danger"
-                     dismissible
-                     :show="uvLastError !== null"
-                     @dismissed="uvClearError">
+                     :show="uvLastError !== null">
                 {{ $t('fetch_error', { msg: uvLastError }) }}
             </b-alert>
-            <b-alert class="error" 
+            <b-alert class="error"
                      variant="danger"
-                     dismissible
-                     :show="settingsLastError !== null"
-                     @dismissed="settingsClearError">
+                     :show="settingsLastError !== null">
                 {{ $t('settings_error', { msg: settingsLastError }) }}
             </b-alert>
-            <b-alert class="error" 
+            <b-alert class="error"
                      variant="danger"
-                     dismissible
-                     :show="translationsLastError !== null"
-                     @dismissed="translationsClearError">
+                     :show="translationsLastError !== null">
                 {{ $t('translations_error', { msg: translationsLastError }) }}
             </b-alert>
-            <b-alert class="error" 
+            <b-alert class="error"
                      variant="danger"
-                     dismissible
-                     :show="stagingLastError !== null"
-                     @dismissed="stagingClearError">
+                     :show="stagingLastError !== null">
                 {{ $t('submit_error', { msg: stagingLastError }) }}
             </b-alert>
             <b-alert class="error" variant="warning" :show="!changesAreEmpty">
-                {{ $t('pending_changes') }}
                 <b-button @click="submitChanges" variant="primary">{{ $t('save') }}</b-button>
-                <b-button @click="clearChanges" variant="secondary">{{ $t('revert_changes') }}</b-button>
+                {{ $t('pending_changes') }}
             </b-alert>
         </nav>
+        {{ delCountDiv() }}
     </b-container>
 </template>
 
