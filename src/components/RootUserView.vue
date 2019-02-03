@@ -11,7 +11,6 @@
             "translations_error": "Failed to fetch translations: {msg}",
             "save": "Save",
             "logout": "Logout",
-            "revert_changes": "Revert changes",
             "confirm_close": "You have unsaved changes, do you want to discard them?"
         },
         "ru-RU": {
@@ -25,7 +24,6 @@
             "translations_error": "Ошибка получения переводов: {msg}",
             "save": "Сохранить",
             "logout": "Выйти",
-            "revert_changes": "Откатить изменения",
             "confirm_close": "У вас есть несохранённые изменения, отбросить их?"
         }
     }
@@ -172,5 +170,16 @@
         get isMainView() {
             return this.$route.params.name === "Main"
         }
+
+        private delCountDiv() {
+            const elem = document.getElementsByClassName("count_row")[0]
+            if (elem) {
+                const bot = document.getElementsByClassName("fix-bot")[0]
+                if (this.isMainView  && bot.firstChild === elem) {
+                    bot.removeChild(elem)
+                }
+            }
+        }
+
     }
 </script>

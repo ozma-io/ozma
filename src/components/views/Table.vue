@@ -23,6 +23,7 @@
 
 <template>
     <b-container fluid class="cont_table without_padding">
+        {{ posCountDiv() }}
         <b-form-group horizontal :label="$t('filter')" class="find" :lang="$t('language')">
             <b-input-group>
                 <b-form-input class="find_in" :value="filter" @input="updateFilter($event)" :placeholder="$t('search_placeholder')" />
@@ -495,6 +496,14 @@
 
         get showedRows() {
             return this.filteredRows.slice(0, this.showLength)
+        }
+
+        private posCountDiv() {
+            const elem = document.getElementsByClassName("count_row")[0]
+            if (elem) {
+                const bot = document.getElementsByClassName("fix-bot")[0]
+                bot.insertBefore(elem, bot.firstChild)
+            }
         }
     }
 </script>
