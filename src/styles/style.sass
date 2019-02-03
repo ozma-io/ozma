@@ -115,12 +115,20 @@ div
 						color: black
 
 /* Навигация */
+.scrol_menu
+	display: block
+	overflow: auto
+	height:	inherit
+.none_scrol
+	overflow: hidden
+	height:	inherit
+	display: flex
+	flex-direction: column
 div
 	&.main_nav
 		width: 100%
 		height: 100%
 		position: fixed
-		overflow: auto
 		top: 0
 		left: 0
 		display: flex
@@ -174,7 +182,6 @@ div
 		div
 			&.submain_nav 
 				width: 650px; /*450px*/
-				overflow: auto
 				display: block
 				margin: auto
 				padding: 0
@@ -242,30 +249,35 @@ div
 nav
 	&.fix-bot
 		padding: 0
-		line-height: normal
-		z-index: 3000
+		line-height: var(--FontSize)
+		z-index: 0
 		width: 100vw
 		white-space: nowrap
 		overflow-x: auto
+		display: block
+		overflow-y: hidden
+		text-align: right
+		margin-left: -1px
+		position: relative
+		height: var(--FontSize)
 		div
 			&.error
 				margin: 0
 				padding: 0
 				border: 0
 				border-radius: inherit
-				
+				display: inline-block
+				margin-left: 1px
+				height: var(--FontSize)
 				button
 					padding: 0
-					margin: 1px
-					margin-left: 0
-					line-height: normal
+					margin-bottom: 1px
+					margin-left: 1px
+					line-height: var(--FontSize)
 					position: relative
 					font-size: inherit
 					background: white
 					float: none
-					&.close
-						margin-left: 1px
-						margin-right: -10px
 
 
 /* Таблица */
@@ -274,7 +286,7 @@ div
 		@media screen and (max-device-width: 650px)
 			display: flex
 			flex-direction: column
-			height: calc(100% - var(--FontSize))
+			height: 100%
 		width: min-content
 		margin: 0px
 		position: relative
@@ -389,17 +401,17 @@ table
 								text-decoration: none !important
 div
 	&.count_row
-		bottom: 0px
-		position: fixed
-		z-index: 2000
-		line-height: normal
+		line-height: var(--FontSize);
+		margin-left: 1px;
+		display: inline-block;
+		float: left
 div
 	&.tabl
 		@media screen and (max-device-width: 650px)
 			flex: 1
 			height: none
 		float: left
-		height: calc(100% - var(--FontSize))
+		height: 100%
 		width: 100vw /*на весь экран*/
 		padding: 0
 		overflow: auto /*чтобы скролить таблицу в том числе на мобилке*/
@@ -432,8 +444,8 @@ div
 					/*выделение строк*/
 					&.selected
 						background-color: var(--ColorTableSelect)
-					&.none_select
-						background-color: var(--ColorTableBg)
+					&.none_selected
+						background-color: var(--ColorTableBg) !important
 					background-color: white/*цвет таблицы возможно надо сменить на настраевоемый*/
 					border-right: solid 1px var(--TableBorderColor)
 					height: 100%
