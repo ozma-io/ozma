@@ -4,7 +4,6 @@
             "language": "en",
             "search_placeholder": "Type to search",
             "filtered_count": "Rows count: {count}",
-            "filter": "Filter",
             "clear": "Clear",
             "yes": "Yes",
             "no": "No",
@@ -14,7 +13,6 @@
             "language": "ru",
             "search_placeholder": "Поиск",
             "filtered_count": "Кол-во записей: {count}",
-            "filter": "Фильтр",
             "clear": "Очистить",
             "yes": "Да",
             "no": "Нет",
@@ -25,7 +23,7 @@
 
 <template>
     <b-container fluid class="cont_table without_padding">
-        <b-form-group horizontal :label="$t('filter')" class="find" :lang="$t('language')">
+        <b-form-group horizontal label=" " class="find" :lang="$t('language')">
             <b-input-group>
                 <b-form-input class="find_in" :value="filter" @input="updateFilter($event)" :placeholder="$t('search_placeholder')" />
                 <b-input-group-append>
