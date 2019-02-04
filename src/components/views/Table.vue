@@ -25,9 +25,9 @@
     <b-container fluid class="cont_table without_padding">
         <b-form-group horizontal label=" " class="find" :lang="$t('language')">
             <b-input-group>
-                <b-form-input class="find_in" :value="filter" @input="updateFilter($event)" :placeholder="$t('search_placeholder')" />
+                <b-form-input class="find_in form-control" :value="filter" @input="updateFilter($event)" :placeholder="$t('search_placeholder')" />
                 <b-input-group-append>
-                    <b-btn class="btn btn-light" :disabled="!filter" @click="updateFilter('')">{{ $t('clear') }}</b-btn>
+                    <span v-if="filter" id="searchclear" class="glyphicon glyphicon-remove-circle" @click="updateFilter('')">×</span>
                 </b-input-group-append>
             </b-input-group>
         </b-form-group>
