@@ -3,7 +3,7 @@
         "en-US": {
             "language": "en",
             "search_placeholder": "Type to search",
-            "filtered_count": "Rows count: {count}",
+            "filtered_count": "{count}",
             "clear": "Clear",
             "yes": "Yes",
             "no": "No",
@@ -12,7 +12,7 @@
         "ru-RU": {
             "language": "ru",
             "search_placeholder": "Поиск",
-            "filtered_count": "Кол-во записей: {count}",
+            "filtered_count":  "{count}",
             "clear": "Очистить",
             "yes": "Да",
             "no": "Нет",

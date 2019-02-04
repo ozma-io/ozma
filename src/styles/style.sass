@@ -250,29 +250,32 @@ nav
 	&.fix-bot
 		padding: 0
 		line-height: normal
-		z-index: 3000
 		width: 100vw
 		white-space: nowrap
 		overflow-x: auto
+		overflow-y: hidden
+		display: inline
+		text-align: right
+		margin-left: -1px !important
+		position: relative
 		div
 			&.error
+				margin-left: 1px !important
 				margin: 0
 				padding: 0
 				border: 0
 				border-radius: inherit
-				
+				display: inline-block
 				button
 					padding: 0
-					margin: 1px
+					margin: 0px
 					margin-left: 0
 					line-height: normal
 					position: relative
 					font-size: inherit
 					background: white
 					float: none
-					&.close
-						margin-left: 1px
-						margin-right: -10px
+					vertical-align: unset
 
 
 /* Таблица */
@@ -281,7 +284,7 @@ div
 		@media screen and (max-device-width: 650px)
 			display: flex
 			flex-direction: column
-			height: calc(100% - var(--FontSize))
+			height: 100%
 		width: min-content
 		margin: 0px
 		position: relative
@@ -397,16 +400,18 @@ table
 div
 	&.count_row
 		bottom: 0px
-		position: fixed
 		z-index: 2000
 		line-height: normal
+		float: left
+		display: inline-block
+		margin-left: 2px
 div
 	&.tabl
 		@media screen and (max-device-width: 650px)
 			flex: 1
 			height: none
 		float: left
-		height: calc(100% - var(--FontSize))
+		height: 100%
 		width: 100vw /*на весь экран*/
 		padding: 0
 		overflow: auto /*чтобы скролить таблицу в том числе на мобилке*/
@@ -592,7 +597,6 @@ div
 							border: solid 1px white
 							border-left: 0px
 							z-index: 1000
-
 							button
 								background-color: var(--MenuColor) !important
 								padding: 5px

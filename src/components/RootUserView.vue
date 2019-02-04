@@ -5,7 +5,7 @@
             "create": "Create new",
             "fetch_error": "Failed to fetch user view: {msg}",
             "goto_nav": "Back to the top",
-            "pending_changes": "Pending changes exist",
+            "pending_changes": "Saving",
             "submit_error": "Error while submitting changes: {msg}",
             "settings_error": "Failed to fetch settings: {msg}",
             "translations_error": "Failed to fetch translations: {msg}",
@@ -18,7 +18,7 @@
             "create": "Создать новую",
             "fetch_error": "Ошибка получения представления: {msg}",
             "goto_nav": "Вернуться на главную",
-            "pending_changes": "Есть несохранённые изменения",
+            "pending_changes": "Сохраняется",
             "submit_error": "Ошибка сохранения изменений: {msg}",
             "settings_error": "Ошибка получения настроек: {msg}",
             "translations_error": "Ошибка получения переводов: {msg}",
@@ -52,8 +52,8 @@
                           @update:statusLine="statusLine = $event" />
             </b-col>
         </div>
-        <nav class="fix-bot navbar fixed-bottom navbar-light bg-light">
-            <p>{{ statusLine }}</p>
+        <nav :show="this.$children" class="fix-bot navbar fixed-bottom navbar-light bg-light">
+            <div class="count_row">{{ statusLine }}</div>
             <b-alert class="error"
                      variant="danger"
                      :show="uvLastError !== null">
