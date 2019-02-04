@@ -274,6 +274,7 @@
                 entry.selected = !entry.selected
                 this.lastSelected = rowI
             }
+            window.getSelection().removeAllRanges()
         }
 
         /* To optimize performance when staging entries change, we first pre-build entries and then update them selectively watching staging entries.
