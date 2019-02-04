@@ -2,7 +2,6 @@
     {
         "en-US": {
             "language": "en",
-            "filter": "Filter",
             "search_placeholder": "Type to search",
             "filtered_count": "Rows count: {count}",
             "clear": "Clear",
@@ -11,8 +10,7 @@
         },
         "ru-RU": {
             "language": "ru",
-            "filter": "Поиск",
-            "search_placeholder": "Введите фразу",
+            "search_placeholder": "Поиск",
             "filtered_count": "Кол-во записей: {count}",
             "clear": "Очистить",
             "yes": "Да",
@@ -24,7 +22,7 @@
 <template>
     <b-container fluid class="cont_table without_padding">
         {{ posCountDiv() }}
-        <b-form-group horizontal :label="$t('filter')" class="find" :lang="$t('language')">
+        <b-form-group horizontal label=" " class="find" :lang="$t('language')">
             <b-input-group>
                 <b-form-input class="find_in" :value="filter" @input="updateFilter($event)" :placeholder="$t('search_placeholder')" />
                 <b-input-group-append>
