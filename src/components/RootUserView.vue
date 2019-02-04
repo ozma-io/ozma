@@ -152,6 +152,8 @@
 
         private updateView() {
             this.clearView()
+            this.extraActions = []
+            this.statusLine = ""
             switch (this.$route.name) {
                 case "view":
                     const query = Object.keys(this.$route.query).map(name => {
