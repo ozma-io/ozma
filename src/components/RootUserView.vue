@@ -31,7 +31,7 @@
 
 <template>
     <b-container class="without_padding main_div">
-        <div :class="isMainView ? 'scrol_menu' : 'none_scrol'">
+        <div :class="uv !== null && uv.attributes.Type === 'Menu' ? 'scrol_menu' : 'none_scrol'">
             <b-button-toolbar key-nav class="head_menu">
                 <b-button v-if="!isMainView" :to="{ name: 'main' }" class="nav_batton, goto_nav" id="menu_btn">
                     {{ $t('goto_nav') }}
