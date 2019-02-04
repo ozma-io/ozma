@@ -37,21 +37,23 @@
                     {{ $t('goto_nav') }}
                 </b-button>
                 <b-dropdown id="ddown1" class=" nav_batton, actions_btn, menu_btn" :text="$t('actions')" no-caret>
-                    <b-dropdown-item @click="removeAuth()" class="menu_btn" variant="primary">
-                        {{ $t('logout') }}
-                    </b-dropdown-item>
-                    <b-dropdown-item v-if="createView !== null" :to="{ name: 'view_create', params: { name: createView } }" class="menu_btn" variant="primary">
-                        {{ $t('create') }}
+                    <b-dropdown-item v-for="action in actions" @click="action['action']" class="menu_btn" variant="primary">
+                        {{ action["name"] }}
                     </b-dropdown-item>
                 </b-dropdown>
                 <div class="black_block" onklick>
                 </div>
             </b-button-toolbar>
             <b-col class="without_padding userview_div">
-                <UserView v-if="uv !== null && pendingTranslations === null" :uv="uv" isRoot></UserView>
+                <UserView v-if="uv !== null && pendingTranslations === null"
+                          :uv="uv"
+                          isRoot
+                          @update:actions="extraActions = $event"
+                          @update:statusLine="statusLine = $event" />
             </b-col>
         </div>
         <nav class="fix-bot navbar fixed-bottom navbar-light bg-light">
+            <p>{{ statusLine }}</p>
             <b-alert class="error"
                      variant="danger"
                      :show="uvLastError !== null">
@@ -77,7 +79,6 @@
                 {{ $t('pending_changes') }}
             </b-alert>
         </nav>
-        {{ delCountDiv() }}
     </b-container>
 </template>
 
@@ -95,13 +96,18 @@
     const settings = namespace("settings")
     const translations = namespace("translations")
 
+    export interface IAction {
+        name: string
+        action: () => void
+    }
+
     @Component({
         components: {
             UserView,
         },
     })
     export default class RootUserView extends Vue {
-        @Action("removeAuth") removeAuth!: (_?: string) => void
+        @Action("removeAuth") removeAuth!: () => void
         @userView.Mutation("clear") clearView!: () => void
         @userView.Action("getNamed") getNamed!: (_: { name: string, args: URLSearchParams }) => Promise<void>
         @userView.Action("getNamedInfo") getNamedInfo!: (_: string) => Promise<void>
@@ -121,6 +127,9 @@
         @settings.State("lastError") settingsLastError!: string | null
         @settings.Mutation("clearError") settingsClearError!: () => void
 
+        extraActions: IAction[] = []
+        statusLine: string = ""
+
         @Watch("$route")
         private onRouteChanged() {
             this.updateView()
@@ -128,6 +137,17 @@
 
         private created() {
             this.updateView()
+        }
+
+        get actions() {
+            const actions: IAction[] = []
+            actions.push({ name: this.$tc("logout"), action: this.removeAuth })
+            const createView = this.createView
+            if (createView !== null) {
+                actions.push({ name: this.$tc("create"), action: () => this.$router.push({ name: "view_create", params: { name: createView } }) })
+            }
+            actions.push(...this.extraActions)
+            return actions
         }
 
         private updateView() {
@@ -162,16 +182,5 @@
         get isMainView() {
             return this.$route.params.name === "Main"
         }
-
-        private delCountDiv() {
-            const elem = document.getElementsByClassName("count_row")[0]
-            if (elem) {
-                const bot = document.getElementsByClassName("fix-bot")[0]
-                if (this.isMainView  && bot.firstChild === elem) {
-                    bot.removeChild(elem)
-                }
-            }
-        }
-
     }
 </script>

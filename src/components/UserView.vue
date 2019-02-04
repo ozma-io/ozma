@@ -1,7 +1,9 @@
 <template>
-    <UserViewForm v-if="userViewType === 'Form'" :uv="uv" :isRoot="isRoot" />
-    <UserViewMenu v-else-if="userViewType === 'Menu'" :uv="uv" :isRoot="isRoot" />
-    <UserViewTable v-else :uv="uv" :isRoot="isRoot" />
+    <component :is="userViewType"
+               :uv="uv"
+               :isRoot="isRoot"
+               @update:actions="$emit('update:actions', $event)"
+               @update:statusLine="$emit('update:statusLine', $event)" />
 </template>
 
 <script lang="ts">
@@ -20,11 +22,16 @@
         @Prop({ type: Boolean, default: false }) private isRoot!: boolean
 
         get userViewType() {
+            const types: Record<string, string> = {
+                "Form": "UserViewForm",
+                "Menu": "UserViewMenu",
+            }
             const typeAttr = this.uv.attributes["Type"]
-            if (typeAttr === undefined) {
-                return null
+            const type = types[String(typeAttr)]
+            if (type === undefined) {
+                return "UserViewTable"
             } else {
-                return String(typeAttr)
+                return type
             }
         }
     }
