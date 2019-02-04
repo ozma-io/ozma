@@ -4,25 +4,28 @@
             "language": "en",
             "search_placeholder": "Type to search",
             "filtered_count": "Rows count: {count}",
+            "filter": "Filter",
             "clear": "Clear",
             "yes": "Yes",
-            "no": "No"
+            "no": "No",
+            "export_to_csv": "Export to .csv"
         },
         "ru-RU": {
             "language": "ru",
             "search_placeholder": "Поиск",
             "filtered_count": "Кол-во записей: {count}",
+            "filter": "Фильтр",
             "clear": "Очистить",
             "yes": "Да",
-            "no": "Нет"
+            "no": "Нет",
+            "export_to_csv": "Экспорт в .csv"
         }
     }
 </i18n>
 
 <template>
     <b-container fluid class="cont_table without_padding">
-        {{ posCountDiv() }}
-        <b-form-group horizontal label=" " class="find" :lang="$t('language')">
+        <b-form-group horizontal :label="$t('filter')" class="find" :lang="$t('language')">
             <b-input-group>
                 <b-form-input class="find_in" :value="filter" @input="updateFilter($event)" :placeholder="$t('search_placeholder')" />
                 <b-input-group-append>
@@ -73,10 +76,6 @@
                     </tr>
                 </tbody>
             </table>
-        </div>
-        <div class="count_row">
-            {{ this.filteredRows.length }}
-            <a v-bind:download="this.$route.params['name']+'.csv'" v-bind:href="export2csv()">{{ this.$route.params["name"] + '.csv' }}</a>
         </div>
     </b-container>
 </template>
@@ -129,6 +128,15 @@
         } else {
             return 0
         }
+    }
+
+    const getCsvString = (str: string): string => {
+        let csvstr = str.replace(/"/g, '""')
+        if (csvstr.search(/("|;|\n)/g) > 0) {
+            csvstr = "\"" + csvstr + "\""
+        }
+        csvstr += ";"
+        return csvstr
     }
 
     const staging = namespace("staging")
@@ -209,30 +217,27 @@
             }
         }
 
-        private getCvsString(str: string): string {
-            let csvstr = str.replace(/"/g, '""')
-            if (csvstr.search(/("|;|\n)/g) > 0) {
-                csvstr = "\"" + csvstr + "\""
-            }
-            csvstr += ";"
-            return csvstr
-        }
-
-        private export2csv(): string {
-            const type = "data:text/csv;"
-            const charset = "charset=utf-8,"
-            let data: string = "%EF%BB%BF"
+        private export2csv() {
+            let data: string = ""
             for (const col of this.columns) {
-                data += this.getCvsString(col.caption.toString())
+                data += getCsvString(col.caption.toString())
             }
             data += "\n"
             for (const row of this.entries) {
                 for (const cell of row.cells) {
-                    data += this.getCvsString(cell.valueText.toString())
+                    data += getCsvString(cell.valueText.toString())
                 }
                 data += "\n"
             }
-            return type + charset + data
+
+            const element = document.createElement("a")
+            element.setAttribute("href", "data:text/csv;charset=utf-8," + encodeURIComponent("\uFEFF" + data))
+            element.setAttribute("download", this.$route.params["name"] + ".csv")
+
+            element.style.display = "none"
+            document.body.appendChild(element)
+            element.click()
+            document.body.removeChild(element)
         }
 
         private updateSort(sortColumn: number) {
@@ -343,6 +348,10 @@
                 }
                 window.addEventListener("beforeprint", printCallback)
                 this.printListener = { query, queryCallback, printCallback }
+
+                this.$emit("update:actions", [
+                    { name: this.$tc("export_to_csv"), action: () => this.export2csv() },
+                ])
             }
             this.buildEntries()
         }
@@ -492,16 +501,13 @@
             return this.rows.filter(rowI => !this.entries[rowI].deleted)
         }
 
-        get showedRows() {
-            return this.filteredRows.slice(0, this.showLength)
+        @Watch("filteredRows")
+        private updateStatusLine() {
+            this.$emit("update:statusLine", this.$tc("filtered_count", this.filteredRows.length, { count: this.filteredRows.length }))
         }
 
-        private posCountDiv() {
-            const elem = document.getElementsByClassName("count_row")[0]
-            if (elem) {
-                const bot = document.getElementsByClassName("fix-bot")[0]
-                bot.insertBefore(elem, bot.firstChild)
-            }
+        get showedRows() {
+            return this.filteredRows.slice(0, this.showLength)
         }
     }
 </script>
