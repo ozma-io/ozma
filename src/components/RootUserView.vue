@@ -1,6 +1,6 @@
 ﻿<i18n>
     {
-        "en-US": {
+        "en": {
             "actions": "Actions",
             "create": "Create new",
             "fetch_error": "Failed to fetch user view: {msg}",
@@ -13,7 +13,7 @@
             "logout": "Logout",
             "confirm_close": "You have unsaved changes, do you want to discard them?"
         },
-        "ru-RU": {
+        "ru": {
             "actions": "Действия",
             "create": "Создать новую",
             "fetch_error": "Ошибка получения представления: {msg}",

@@ -1,9 +1,9 @@
 <i18n>
     {
-        "en-US": {
+        "en": {
             "not_found": "Page not found"
         },
-        "ru-RU": {
+        "ru": {
             "not_found": "Страница не найдена"
         }
     }

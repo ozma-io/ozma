@@ -1,6 +1,6 @@
 <i18n>
     {
-        "en-US": {
+        "en": {
             "item_not_found": "Record not found",
             "delete": "Delete",
             "delete_confirmation": "Are you sure want to delete this record?",
@@ -11,7 +11,7 @@
             "yes": "Yes",
             "no": "No"
         },
-        "ru-RU": {
+        "ru": {
             "item_not_found": "Запись не найдена",
             "delete": "Удалить",
             "delete_confirmation": "Вы действительно хотите удалить эту запись?",

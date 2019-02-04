@@ -1,7 +1,6 @@
 <i18n>
     {
         "en-US": {
-            "language": "en",
             "filter": "Filter",
             "search_placeholder": "Type to search",
             "filtered_count": "Rows count: {count}",
@@ -9,8 +8,7 @@
             "yes": "Yes",
             "no": "No"
         },
-        "ru-RU": {
-            "language": "ru",
+        "ru": {
             "filter": "Поиск",
             "search_placeholder": "Введите фразу",
             "filtered_count": "Кол-во записей: {count}",

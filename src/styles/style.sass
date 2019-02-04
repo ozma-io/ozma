@@ -303,24 +303,16 @@ div
 						margin-top: -1px;
 						margin-bottom: -1px !important;
 			/*фильтр для больших экранов
-			 *пока высчитывание ширины ручками от количества текста в этом блоке, но фильтр потом все равно переписывать
 			 *пока костыльное решение нормально скрашивает все что нам нужно
 			 */
 			fieldset	
-				&.find:lang(ru)
+				&.find
 					position: fixed
 					top: 0px
 					left: 299px
 					width: calc(100% - 300px)
 					min-width: 350px
 					max-width: calc(100vw - 310px) !important
-				&.find:lang(en)
-					position: absolute
-					top: -30px
-					left: 232px
-					width: calc(100% - 240px)
-					min-width: 350px
-					max-width: calc(100vw - 240px) !important
 				/*Внутренние части текущего фильтра*/
 				&.find
 					margin-bottom: 2px

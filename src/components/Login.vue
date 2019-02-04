@@ -1,12 +1,12 @@
 <i18n>
     {
-        "en-US": {
+        "en": {
             "username": "User name",
             "password": "Password",
             "login": "Log in",
             "failed": "Failed to log in: {msg}"
         },
-        "ru-RU": {
+        "ru": {
             "username": "Имя пользователя",
             "password": "Пароль",
             "login": "Войти",

@@ -22,7 +22,9 @@ export const router = new VueRouter({
     routes,
 })
 
+const language = navigator.languages[0].split("-")[0]
+
 export const i18n = new VueI18n({
-    locale: navigator.language,
-    fallbackLocale: "en-US",
+    locale: language,
+    fallbackLocale: "en",
 })
