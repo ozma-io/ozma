@@ -50,8 +50,8 @@
                 </thead>
                 <tbody>
                     <tr v-for="(entryI, rowI) in showedRows" :key="entryI" :style="entries[entryI].style" :class="entries[entryI].selected ? 'selected' : 'none_selected'">
-                        <td>
-                            <input type="checkbox" :checked="entries[entryI].selected" @click="selectRow(rowI, $event)">
+                        <td @click="selectRow(rowI, $event)">
+                            <input type="checkbox" :checked="entries[entryI].selected">
                         </td>
                         <td v-if="entries[entryI].linkToForm !== null">
                             <router-link :to="entries[entryI].linkToForm">
