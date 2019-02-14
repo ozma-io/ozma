@@ -38,19 +38,19 @@
                 </colgroup>
                 <thead>
                     <tr>
-                        <th></th>
-                        <th v-if="hasRowLinks"></th>
+                        <th class="fixed-column"></th>
+                        <th v-if="hasRowLinks" class="fixed-column"></th>
                         <th v-for="(col, colI) in columns" :key="colI" :title="col.caption" class="sorting" @click="updateSort(colI)">
                             {{ col.caption }}
                         </th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody :mounted="this.$nextTick(() => fixedColumn() )">
                     <tr v-for="(entryI, rowI) in showedRows" :key="entryI" :style="entries[entryI].style" :class="entries[entryI].selected ? 'selected' : 'none_selected'">
-                        <td @click="selectRow(rowI, $event)">
+                        <td @click="selectRow(rowI, $event)" class="fixed-column">
                             <input type="checkbox" :checked="entries[entryI].selected">
                         </td>
-                        <td v-if="entries[entryI].linkToForm !== null">
+                        <td v-if="entries[entryI].linkToForm !== null" class="fixed-column">
                             <router-link :to="entries[entryI].linkToForm">
                                 ⤢
                             </router-link>
@@ -505,6 +505,13 @@
 
         get showedRows() {
             return this.filteredRows.slice(0, this.showLength)
+        }
+        private fixedColumn() {
+            const allFixedTd = document.getElementsByClassName("fixed-column")
+            for (const el of allFixedTd) {
+                const element = el as HTMLElement
+                element.style.left = String(element.getBoundingClientRect().left) + "px"
+            }
         }
     }
 </script>

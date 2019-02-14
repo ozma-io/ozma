@@ -426,6 +426,12 @@ div
 		
 		table
 			margin-bottom: 0px !important;
+			.fixed-column
+					position: sticky
+					z-index: 15
+					background-color: var(--ColorTableBg)
+					box-shadow: 1px 0 0px var(--TableBorderColor)
+					border-left: 0
 			thead
 				height: 25px
 				border-right: solid 1px  var(--TableBorderColor) !important
@@ -442,6 +448,9 @@ div
 					z-index: 10 /*при скроле таблицы чтобы шапка была видна*/
 					top: 0
 					padding-left: 3px
+
+					&.fixed-column
+						z-index: 20
 
 					&.tabl_heading
 						text-overflow: ellipsis
