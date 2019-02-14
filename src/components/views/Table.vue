@@ -40,7 +40,7 @@
                     <tr>
                         <th class="fixed-column"></th>
                         <th v-if="hasRowLinks" class="fixed-column"></th>
-                        <th v-for="(col, colI) in columns" :key="colI" :title="col.caption" class="sorting" @click="updateSort(colI)">
+                        <th v-for="(col, colI) in columns" :key="colI" :title="col.caption" @click="updateSort(colI)" :class="col.fixed ? 'fixed-column sorting' : 'sorting'">
                             {{ col.caption }}
                         </th>
                     </tr>
@@ -55,7 +55,7 @@
                                 ⤢
                             </router-link>
                         </td>
-                        <td v-for="(cell, colI) in entries[entryI].cells" :key="colI" :style="cell.style">
+                        <td v-for="(cell, colI) in entries[entryI].cells" :key="colI" :style="cell.style" :class="cell.fixed ? 'fixed-column' : 'none'">
                             <router-link v-if="cell.link !== null" :to="cell.link">
                                 <b-checkbox v-if="typeof cell.value === 'boolean'" :checked="cell.value" disabled></b-checkbox>
                                 <template v-else>
@@ -91,6 +91,7 @@
         valueText: string
         link: Location | null
         style: Record<string, any>
+        fixed: boolean
     }
 
     interface IRow {
@@ -105,6 +106,7 @@
     interface IColumn {
         caption: string
         style: Record<string, any>
+        fixed: boolean
     }
 
     const SHOW_STEP = 20
@@ -193,8 +195,12 @@
                 const columnWidth = columnWidthAttr === undefined ? "200px" : columnWidthAttr
                 style["width"] = columnWidth
 
+                const fixedColumnAttr = getColumnAttr("Fixed")
+                const fixedColumn = fixedColumnAttr === undefined ? false : fixedColumnAttr
+
                 return {
                     caption, style,
+                    fixed: fixedColumn,
                 }
             })
         }
@@ -451,9 +457,13 @@
                             style["background-color"] = cellColor
                         }
 
+                        const fixedColumnAttr = getCellAttr("Fixed")
+                        const fixedColumn = fixedColumnAttr === undefined ? false : fixedColumnAttr
+
                         return {
                             value: currentValue.value,
                             valueText, link, style,
+                            fixed: fixedColumn,
                         }
                     })
 
@@ -510,7 +520,7 @@
             const allFixedTd = document.getElementsByClassName("fixed-column")
             for (const el of allFixedTd) {
                 const element = el as HTMLElement
-                element.style.left = String(element.getBoundingClientRect().left) + "px"
+                element.style.left = element.style.left === "" ? String(element.offsetLeft) + "px" : element.style.left
             }
         }
     }
