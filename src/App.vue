@@ -25,6 +25,9 @@
                 "MenuColor": this.settingsEntry("MenuColor", "#F5C700"),
                 "ColorTableBg": this.settingsEntry("ColorTableBg", "white"),
                 "ColorTableSelect": this.settingsEntry("ColorTableSelect", "#CCCCCC"),
+                "WarningBackColor": this.settingsEntry("WarningBackColor", "#fff3cd"),
+                "DangerBackColor": this.settingsEntry("DangerBackColor", "#f8d7da"),
+                "SuccessBackColor": this.settingsEntry("SuccessBackColor", "#d4edda"),
             }
             return Object.entries(values).reduce((currSettings, [name, value]) => {
                 currSettings[`--${name}`] = value
