@@ -54,27 +54,27 @@
         </div>
         <nav :show="this.$children" class="fix-bot navbar fixed-bottom navbar-light bg-light">
             <div class="count_row">{{ statusLine }}</div>
-            <b-alert class="error"
+            <b-alert class="error custom_danger"
                      variant="danger"
                      :show="uvLastError !== null">
                 {{ $t('fetch_error', { msg: uvLastError }) }}
             </b-alert>
-            <b-alert class="error"
+            <b-alert class="error custom_danger"
                      variant="danger"
                      :show="settingsLastError !== null">
                 {{ $t('settings_error', { msg: settingsLastError }) }}
             </b-alert>
-            <b-alert class="error"
+            <b-alert class="error custom_danger"
                      variant="danger"
                      :show="translationsLastError !== null">
                 {{ $t('translations_error', { msg: translationsLastError }) }}
             </b-alert>
-            <b-alert class="error"
+            <b-alert class="error custom_danger"
                      variant="danger"
                      :show="stagingLastError !== null">
                 {{ $t('submit_error', { msg: stagingLastError }) }}
             </b-alert>
-            <b-alert class="error" variant="warning" :show="!changesAreEmpty">
+            <b-alert class="error custom_warning" variant="warning" :show="!changesAreEmpty">
                 <b-button @click="submitChanges" variant="primary">{{ $t('save') }}</b-button>
                 {{ $t('pending_changes') }}
             </b-alert>
