@@ -500,7 +500,9 @@
             if (tableContainer === undefined) {
                 return
             }
-            if (tableContainer.scrollTop + tableContainer.clientHeight >= tableContainer.scrollHeight && this.showLength < this.rows.length) {
+            // + 1 is needed because of rare cases like that:
+            // top 974.4000244140625, client height 690, scroll height 1665
+            if (tableContainer.scrollTop + tableContainer.clientHeight + 1 >= tableContainer.scrollHeight && this.showLength < this.rows.length) {
                 this.showLength = Math.min(this.showLength + SHOW_STEP, this.rows.length)
                 Vue.nextTick(() => this.updateShowLength())
             }
