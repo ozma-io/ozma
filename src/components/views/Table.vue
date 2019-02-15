@@ -19,16 +19,17 @@
     }
 </i18n>
 
+
 <template>
     <b-container fluid class="cont_table without_padding">
-        <b-form-group horizontal label=" " class="find">
+        <b-form inline class="find">
             <b-input-group>
                 <b-form-input class="find_in form-control" :value="filter" @input="updateFilter($event)" :placeholder="$t('search_placeholder')" />
                 <b-input-group-append>
                     <span v-if="filter" id="searchclear" class="glyphicon glyphicon-remove-circle" @click="updateFilter('')">×</span>
                 </b-input-group-append>
             </b-input-group>
-        </b-form-group>
+        </b-form>
         <div ref="tableContainer" class="tabl" @scroll="updateShowLength()" @resize="updateShowLength()">
             <table class="tabl table b-table">
                 <colgroup>
@@ -75,7 +76,6 @@
         </div>
     </b-container>
 </template>
-
 <script lang="ts">
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
     import { Location } from "vue-router"
@@ -382,8 +382,8 @@
                 const entries = this.entries
                 const sortFunction: (a: number, b: number) => number =
                     this.sortAsc ?
-                    (a, b) => rowIndicesCompare(a, b, entries, sortColumn) :
-                    (a, b) => rowIndicesCompare(b, a, entries, sortColumn)
+                        (a, b) => rowIndicesCompare(a, b, entries, sortColumn) :
+                        (a, b) => rowIndicesCompare(b, a, entries, sortColumn)
                 this.rows.sort(sortFunction)
             }
         }
