@@ -151,7 +151,7 @@
         entries: IRow[] = []
         rows: number[] = []
         showLength: number = 0
-        selected_rows: number = 0
+        selectedRows: number = 0
         lastSelected: number | null = null
         printListener: { query: MediaQueryList, queryCallback: (mql: MediaQueryListEvent) => void, printCallback: () => void } | null = null
 
@@ -252,29 +252,29 @@
         private selectRow(rowI: number, event: MouseEvent) {
             if (this.lastSelected !== null && event.shiftKey) {
                 // Select all rows between current one and the previous selected one.
-                let change_rows = 0
+                let changeRows = 0
                 const oldEntry = this.entries[this.lastSelected]
                 if (this.lastSelected < rowI) {
                     for (let i = this.lastSelected + 1; i <= rowI; i++) {
                         const entry = this.entries[this.showedRows[i]]
-                        change_rows += (entry.selected == oldEntry.selected) ? 0 : 1
+                        changeRows += (entry.selected == oldEntry.selected) ? 0 : 1
                         entry.selected = oldEntry.selected
                     }
                 } else if (this.lastSelected > rowI) {
                     for (let i = rowI; i <= this.lastSelected - 1; i++) {
                         const entry = this.entries[this.showedRows[i]]
-                        change_rows += (entry.selected == oldEntry.selected) ? 0 : 1
+                        changeRows += (entry.selected == oldEntry.selected) ? 0 : 1
                         entry.selected = oldEntry.selected
                     }
                 } else {
                     oldEntry.selected = !oldEntry.selected
-                    this.selected_rows += (oldEntry.selected) ? 1 : -1
+                    this.selectedRows += (oldEntry.selected) ? 1 : -1
                 }
-                this.selected_rows += (oldEntry.selected) ? change_rows : -change_rows
+                this.selectedRows += (oldEntry.selected) ? changeRows : -changeRows
             } else {
                 const entry = this.entries[this.showedRows[rowI]]
                 entry.selected = !entry.selected
-                this.selected_rows += (entry.selected) ? 1 : -1
+                this.selectedRows += (entry.selected) ? 1 : -1
                 this.lastSelected = rowI
             }
             window.getSelection().removeAllRanges()
@@ -508,7 +508,7 @@
 
         @Watch("filteredRows")
         private updateStatusLine() {
-            const selected = (this.selected_rows > 0) ? this.selected_rows.toString() + "/" : ""
+            const selected = (this.selectedRows > 0) ? this.selectedRows.toString() + "/" : ""
             this.$emit("update:statusLine", this.$tc("filtered_count", this.filteredRows.length, { status: selected + this.filteredRows.length.toString() }))
         }
 
