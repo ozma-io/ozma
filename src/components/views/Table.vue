@@ -257,7 +257,7 @@
                 if (this.lastSelected < rowI) {
                     for (let i = this.lastSelected + 1; i <= rowI; i++) {
                         const entry = this.entries[this.showedRows[i]]
-                        if (entry.selected != oldEntry.selected) {
+                        if (entry.selected !== oldEntry.selected) {
                             changeRows++
                         }
                         entry.selected = oldEntry.selected
@@ -265,7 +265,7 @@
                 } else if (this.lastSelected > rowI) {
                     for (let i = rowI; i <= this.lastSelected - 1; i++) {
                         const entry = this.entries[this.showedRows[i]]
-                        if (entry.selected != oldEntry.selected) {
+                        if (entry.selected !== oldEntry.selected) {
                             changeRows++
                         }
                         entry.selected = oldEntry.selected
