@@ -35,38 +35,38 @@
                 <colgroup>
                     <col class="checkbox-col"> <!-- Checkbox column -->
                     <col v-if="hasRowLinks" class="open-form-col"> <!-- Open form column -->
-                    <col v-for="(col, colI) in columns" :key="colI" :style="col.style">
+                    <col v-for="i in columnIndexes" :key="i" :style="columns[i].style">
                 </colgroup>
                 <thead>
                     <tr>
-                        <th></th>
-                        <th v-if="hasRowLinks"></th>
-                        <th v-for="(col, colI) in columns" :key="colI" :title="col.caption" class="sorting" @click="updateSort(colI)">
-                            {{ col.caption }}
+                        <th class="fixed-column"></th>
+                        <th v-if="hasRowLinks" class="fixed-column"></th>
+                        <th v-for="i in columnIndexes" :key="i" :title="columns[i].caption" @click="updateSort(i)" :class="columns[i].fixed ? 'fixed-column sorting' : 'sorting'">
+                            {{ columns[i].caption }}
                         </th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody :mounted="this.$nextTick(() => fixedColumn() )">
                     <tr v-for="(entryI, rowI) in showedRows" :key="entryI" :style="entries[entryI].style" :class="entries[entryI].selected ? 'selected' : 'none_selected'">
-                        <td @click="selectRow(rowI, $event)">
+                        <td @click="selectRow(rowI, $event)" class="fixed-column">
                             <input type="checkbox" :checked="entries[entryI].selected" v-on:click.self.prevent>
                         </td>
-                        <td v-if="entries[entryI].linkToForm !== null">
+                        <td v-if="entries[entryI].linkToForm !== null" class="fixed-column">
                             <router-link :to="entries[entryI].linkToForm">
                                 ⤢
                             </router-link>
                         </td>
-                        <td v-for="(cell, colI) in entries[entryI].cells" :key="colI" :style="cell.style">
-                            <router-link v-if="cell.link !== null" :to="cell.link">
-                                <b-checkbox v-if="typeof cell.value === 'boolean'" :checked="cell.value" disabled></b-checkbox>
+                        <td v-for="i in columnIndexes" :key="i" :style="entries[entryI].cells[i].style" :class="entries[entryI].cells[i].fixed ? 'fixed-column' : 'none'">
+                            <router-link v-if="entries[entryI].cells[i].link !== null" :to="entries[entryI].cells[i].link">
+                                <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" disabled></b-checkbox>
                                 <template v-else>
-                                    {{ cell.valueText }}
+                                    {{ entries[entryI].cells[i].valueText }}
                                 </template>
                             </router-link>
                             <template v-else>
-                                <b-checkbox v-if="typeof cell.value === 'boolean'" :checked="cell.value" disabled></b-checkbox>
+                                <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" disabled></b-checkbox>
                                 <template v-else>
-                                    {{ cell.valueText }}
+                                    {{ entries[entryI].cells[i].valueText }}
                                 </template>
                             </template>
                         </td>
@@ -91,6 +91,7 @@
         valueText: string
         link: Location | null
         style: Record<string, any>
+        fixed: boolean
     }
 
     interface IRow {
@@ -103,8 +104,10 @@
     }
 
     interface IColumn {
+        columnIndex: number
         caption: string
         style: Record<string, any>
+        fixed: boolean
     }
 
     const SHOW_STEP = 20
@@ -194,10 +197,30 @@
                 const columnWidth = columnWidthAttr === undefined ? "200px" : columnWidthAttr
                 style["width"] = columnWidth
 
+                const fixedColumnAttr = getColumnAttr("Fixed")
+                const fixedColumn = fixedColumnAttr === undefined ? false : fixedColumnAttr
+
                 return {
+                    columnIndex: i,
                     caption, style,
+                    fixed: fixedColumn,
                 }
             })
+        }
+
+        get columnIndexes() {
+            const array = []
+            for (const column of this.columns) {
+                if (column.fixed) {
+                    array.push(column.columnIndex)
+                }
+            }
+            for (const column of this.columns) {
+                if (!column.fixed) {
+                    array.push(column.columnIndex)
+                }
+            }
+            return array
         }
 
         private updateFilter(filter: string) {
@@ -463,9 +486,13 @@
                             style["background-color"] = cellColor
                         }
 
+                        const fixedColumnAttr = getCellAttr("Fixed")
+                        const fixedColumn = fixedColumnAttr === undefined ? false : fixedColumnAttr
+
                         return {
                             value: currentValue.value,
                             valueText, link, style,
+                            fixed: fixedColumn,
                         }
                     })
 
@@ -520,6 +547,13 @@
 
         get showedRows() {
             return this.filteredRows.slice(0, this.showLength)
+        }
+        private fixedColumn() {
+            const allFixedTd = document.getElementsByClassName("fixed-column")
+            for (const el of allFixedTd) {
+                const element = el as HTMLElement
+                element.style.left = element.style.left === "" ? String(element.offsetLeft) + "px" : element.style.left
+            }
         }
     }
 </script>
