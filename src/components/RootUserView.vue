@@ -49,7 +49,8 @@
                           :uv="uv"
                           isRoot
                           @update:actions="extraActions = $event"
-                          @update:statusLine="statusLine = $event" />
+                          @update:statusLine="statusLine = $event"
+                          @update:onSubmitStaging="onSubmitStaging = $event" />
             </b-col>
         </div>
         <nav :show="this.$children" class="fix-bot navbar fixed-bottom navbar-light bg-light">
@@ -75,7 +76,7 @@
                 {{ $t('submit_error', { msg: stagingLastError }) }}
             </b-alert>
             <b-alert class="error custom_warning" variant="warning" :show="!changesAreEmpty">
-                <b-button @click="submitChanges" variant="primary">{{ $t('save') }}</b-button>
+                <b-button @click="submitChangesWithHook" variant="primary">{{ $t('save') }}</b-button>
                 {{ $t('pending_changes') }}
             </b-alert>
         </nav>
@@ -86,7 +87,7 @@
     import { Route } from "vue-router"
     import { Component, Watch, Vue } from "vue-property-decorator"
     import { Action, namespace } from "vuex-class"
-    import { UserViewResult } from "@/state/user_view"
+    import { IUserViewArguments, UserViewResult } from "@/state/user_view"
     import { ChangesMap } from "@/state/staging_changes"
     import UserView from "@/components/UserView.vue"
     import { CurrentTranslations } from "@/state/translations"
@@ -109,12 +110,12 @@
     export default class RootUserView extends Vue {
         @Action("removeAuth") removeAuth!: () => void
         @userView.Mutation("clear") clearView!: () => void
-        @userView.Action("getNamed") getNamed!: (_: { name: string, args: URLSearchParams }) => Promise<void>
-        @userView.Action("getNamedInfo") getNamedInfo!: (_: string) => Promise<void>
+        @userView.Action("getView") getView!: (_: IUserViewArguments) => Promise<void>
         @userView.State("current") uv!: UserViewResult | null
         @userView.Mutation("clearError") uvClearError!: () => void
         @userView.State("lastError") uvLastError!: string | null
         @staging.State("changes") changes!: ChangesMap
+        @staging.State("currentSubmit") submitPromise!: Promise<void> | null
         @staging.Action("submit") submitChanges!: () => Promise<void>
         @staging.Action("reset") clearChanges!: () => void
         @staging.Mutation("clearError") stagingClearError!: () => void
@@ -129,6 +130,7 @@
 
         extraActions: IAction[] = []
         statusLine: string = ""
+        onSubmitStaging: () => void = () => {}
 
         @Watch("$route")
         private onRouteChanged() {
@@ -154,21 +156,28 @@
             this.clearView()
             this.extraActions = []
             this.statusLine = ""
+            this.onSubmitStaging = () => {}
             switch (this.$route.name) {
                 case "view":
-                    const query = Object.keys(this.$route.query).map(name => {
-                        const values = this.$route.query[name]
+                    const query = Object.entries(this.$route.query).map(([name, values]) => {
                         const val = Array.isArray(values) ? values[0] : values
                         return [name, val]
                     })
-                    this.getNamed({ name: this.$route.params.name, args: new URLSearchParams(query) })
+                    this.getView({ type: "named", source: this.$route.params.name, args: new URLSearchParams(query) })
                     break
                 case "view_create":
-                    this.getNamedInfo(this.$route.params.name)
+                    this.getView({ type: "named", source: this.$route.params.name, args: null })
                     break
                 default:
                     console.assert(false, `Invalid route name: ${this.$route.name}`)
                     break
+            }
+        }
+
+        private submitChangesWithHook() {
+            this.submitChanges()
+            if (this.submitPromise !== null) {
+                this.submitPromise.then(() => this.onSubmitStaging())
             }
         }
 

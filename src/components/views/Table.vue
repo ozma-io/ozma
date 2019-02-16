@@ -325,8 +325,7 @@
             } else {
                 const changedFields = this.getCurrentChanges()
                 if (this.uv.rows !== null) {
-                    Object.keys(changedFields.deleted).forEach(rowId => {
-                        const deleted = changedFields.deleted[rowId]
+                    Object.entries(changedFields.deleted).forEach(([rowId, deleted]) => {
                         const rowI = this.uv.updateRowIds[rowId]
                         const entry = this.entries[rowI]
                         if (deleted !== undefined) {
@@ -334,8 +333,7 @@
                         }
                     })
 
-                    Object.keys(changedFields.updated).forEach(rowId => {
-                        const fields = changedFields.updated[rowId]
+                    Object.entries(changedFields.updated).forEach(([rowId, fields]) => {
                         const rowI = this.uv.updateRowIds[rowId]
                         const entry = this.entries[rowI]
                         if (fields === null) {
@@ -346,9 +344,8 @@
                                 cell.valueText = this.getValueText(value)
                             })
                         } else {
-                            Object.keys(fields).forEach(fieldName => {
+                            Object.entries(fields).forEach(([fieldName, value]) => {
                                 const cell = entry.cells[this.uv.updateColumnIds[fieldName]]
-                                const value = fields[fieldName]
                                 cell.value = value
                                 cell.valueText = this.getValueText({ value })
                             })

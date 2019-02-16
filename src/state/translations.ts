@@ -36,7 +36,7 @@ const translationsModule: Module<ITranslationsState, {}> = {
             state.lastError = null
             state.pending = null
         },
-        setAwaiting: (state, pending: Promise<CurrentTranslations> | null) => {
+        setPending: (state, pending: Promise<CurrentTranslations> | null) => {
             state.pending = pending
         },
         clearTranslations: state => {
@@ -68,14 +68,17 @@ const translationsModule: Module<ITranslationsState, {}> = {
         },
         getTranslations: ({ state, commit, dispatch }) => {
             if (state.pending !== null) {
-                return
+                return state.pending
             }
-            commit("setAwaiting", (async () => {
+            commit("setPending", (async () => {
                 try {
                     const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
                         func: Api.fetchNamedView,
-                        args: ["FieldTranslations", new URLSearchParams()],
+                        args: ["__FieldTranslations", new URLSearchParams()],
                     }, { root: true })
+                    if (state.pending === null) {
+                        throw Error("Pending operation cancelled")
+                    }
                     const values = res.result.rows.reduce((currTranslations: Record<string, string>, row) => {
                         const schema = row.values[0].value
                         const entity = row.values[1].value

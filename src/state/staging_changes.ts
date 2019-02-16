@@ -93,8 +93,7 @@ const checkCounters = (context: ActionContext<IStagingState, {}>) => {
 }
 
 const updateEntry = ({ dispatch }: ActionContext<IStagingState, {}>, schemaName: string, entityName: string, id: number, changes: Record<string, any>) => {
-    const updatedFields = Object.keys(changes).map(name => {
-        const value = changes[name]
+    const updatedFields = Object.entries(changes).map(([name, value]) => {
         return [ name, value === null ? "\0" : String(value) ]
     })
 
@@ -105,8 +104,7 @@ const updateEntry = ({ dispatch }: ActionContext<IStagingState, {}>, schemaName:
 }
 
 const addEntry = ({ dispatch }: ActionContext<IStagingState, {}>, schemaName: string, entityName: string, values: Record<string, any>) => {
-    const addedFields = Object.keys(values).map(name => {
-        const value = values[name]
+    const addedFields = Object.entries(values).map(([name, value]) => {
         return [ name, value === null ? "\0" : String(value) ]
     })
 
@@ -136,7 +134,7 @@ const stagingModule: Module<IStagingState, {}> = {
         autoSaveTimeoutId: null,
     },
     getters: {
-        isEmpty: state => Object.keys(state.changes).length === 0,
+        isEmpty: state => Object.entries(state.changes).length === 0,
         forUserView: state => (uv: UserViewResult): IEntityChanges => {
             const emptyUpdates = {
                 removed: {},
@@ -160,105 +158,103 @@ const stagingModule: Module<IStagingState, {}> = {
         },
     },
     mutations: {
-        clear: store => {
-            store.changes = {}
-            store.addedCount = 0
-            store.updatedCount = 0
-            store.deletedCount = 0
-            store.touched = false
+        clear: state => {
+            state.changes = {}
+            state.addedCount = 0
+            state.updatedCount = 0
+            state.deletedCount = 0
+            state.touched = false
         },
-        setAutoSave: (store, timeoutId) => {
-            store.autoSaveTimeoutId = timeoutId
+        setAutoSave: (state, timeoutId) => {
+            state.autoSaveTimeoutId = timeoutId
         },
-        clearAutoSave: store => {
-            store.autoSaveTimeoutId = null
+        clearAutoSave: state => {
+            state.autoSaveTimeoutId = null
         },
-        startSubmit: (store, submit: Promise<void>) => {
-            store.touched = false
-            store.currentSubmit = submit
+        startSubmit: (state, submit: Promise<void>) => {
+            state.touched = false
+            state.currentSubmit = submit
         },
-        finishSubmit: store => {
-            store.currentSubmit = null
+        finishSubmit: state => {
+            state.currentSubmit = null
         },
-        clearAdded: store => {
-            Object.keys(store.changes).forEach(schemaName => {
-                const entities = store.changes[schemaName]
-                Object.keys(entities).forEach(entityName => {
-                    const entityChanges = entities[entityName]
+        clearAdded: state => {
+            Object.entries(state.changes).forEach(([schemaName, entities]) => {
+                Object.entries(entities).forEach(([entityName, entityChanges]) => {
                     entityChanges.added = []
                 })
             })
         },
-        setError: (store, lastError: string) => {
-            store.lastError = lastError
+        setError: (state, lastError: string) => {
+            state.lastError = lastError
         },
-        clearError: store => {
-            store.lastError = null
+        clearError: state => {
+            state.lastError = null
         },
-        updateField: (store, { schema, entity, id, field, value }: { schema: string, entity: string, id: number, field: string, value: any }) => {
-            const entityChanges = getEntityChanges(store.changes, schema, entity)
+        updateField: (state, { schema, entity, id, field, value }: { schema: string, entity: string, id: number, field: string, value: any }) => {
+            const entityChanges = getEntityChanges(state.changes, schema, entity)
             let fields = entityChanges.updated[id]
             if (fields === undefined || fields === null) {
                 fields = {}
                 Vue.set(entityChanges.updated, String(id), fields)
-                store.updatedCount += 1
+                state.updatedCount += 1
                 const deleted = entityChanges.deleted[id]
                 if (deleted !== undefined && deleted) {
                     entityChanges.deleted[id] = false
-                    store.deletedCount -= 1
+                    state.deletedCount -= 1
                 }
             }
             Vue.set(fields, field, value)
-            store.touched = true
+            state.touched = true
         },
-        setAddedField: (store, { schema, entity, newId, field, value }: { schema: string, entity: string, newId: number, field: string, value: any }) => {
-            if (store.currentSubmit !== null) {
+        setAddedField: (state, { schema, entity, newId, field, value }: { schema: string, entity: string, newId: number, field: string, value: any }) => {
+            if (state.currentSubmit !== null) {
                 return
             }
 
-            const entityChanges = getEntityChanges(store.changes, schema, entity)
+            const entityChanges = getEntityChanges(state.changes, schema, entity)
             for (let i = entityChanges.added.length; i <= newId; i++) {
                 entityChanges.added[i] = {}
-                store.addedCount += 1
+                state.addedCount += 1
             }
             Vue.set(entityChanges.added[newId], field, value)
-            store.touched = true
+            state.touched = true
         },
-        deleteEntry: (store, { schema, entity, id }: { schema: string, entity: string, id: number }) => {
-            const entityChanges = getEntityChanges(store.changes, schema, entity)
+        deleteEntry: (state, { schema, entity, id }: { schema: string, entity: string, id: number }) => {
+            const entityChanges = getEntityChanges(state.changes, schema, entity)
             const deleted = entityChanges.deleted[id]
             if (deleted === undefined || !deleted) {
                 Vue.set(entityChanges.deleted, String(id), true)
-                store.deletedCount += 1
+                state.deletedCount += 1
                 const updated = entityChanges.updated[id]
                 if (updated !== undefined && updated !== null) {
                     entityChanges.updated[id] = null
-                    store.updatedCount -= 1
+                    state.updatedCount -= 1
                 }
-                store.touched = true
+                state.touched = true
             }
         },
-        resetUpdatedEntry: (store, { schema, entity, id }: { schema: string, entity: string, id: number }) => {
-            const entityChanges = getEntityChanges(store.changes, schema, entity)
+        resetUpdatedEntry: (state, { schema, entity, id }: { schema: string, entity: string, id: number }) => {
+            const entityChanges = getEntityChanges(state.changes, schema, entity)
             const fields = entityChanges.updated[id]
             if (fields !== undefined && fields !== null) {
                 entityChanges.updated[id] = null
-                store.updatedCount -= 1
+                state.updatedCount -= 1
             }
         },
-        resetAddedEntry: (store, { schema, entity, newId }: { schema: string, entity: string, newId: number }) => {
-            const entityChanges = getEntityChanges(store.changes, schema, entity)
+        resetAddedEntry: (state, { schema, entity, newId }: { schema: string, entity: string, newId: number }) => {
+            const entityChanges = getEntityChanges(state.changes, schema, entity)
             if (newId < entityChanges.added.length) {
                 entityChanges.added.splice(newId, 1)
-                store.addedCount -= 1
+                state.addedCount -= 1
             }
         },
-        resetDeleteEntry: (store, { schema, entity, id }: { schema: string, entity: string, id: number }) => {
-            const entityChanges = getEntityChanges(store.changes, schema, entity)
+        resetDeleteEntry: (state, { schema, entity, id }: { schema: string, entity: string, id: number }) => {
+            const entityChanges = getEntityChanges(state.changes, schema, entity)
             const deleted = entityChanges.deleted[id]
             if (deleted !== undefined && deleted) {
                 entityChanges.deleted[id] = false
-                store.deletedCount -= 1
+                state.deletedCount -= 1
             }
         },
     },
@@ -288,30 +284,27 @@ const stagingModule: Module<IStagingState, {}> = {
             context.commit("resetDeleteEntry", args)
             checkCounters(context)
         },
-        submit: (context): Promise<void> => {
+        submit: (context) => {
             const { state, commit, dispatch } = context
             if (state.currentSubmit !== null) {
                 return state.currentSubmit
             }
 
             const results: Array<Promise<any>> = []
-            Object.keys(state.changes).forEach(schemaName => {
-                const entities = state.changes[schemaName]
-                Object.keys(entities).forEach(entityName => {
-                    const entityChanges = entities[entityName]
-                    Object.keys(entityChanges.updated).forEach(updatedIdStr => {
-                        const updatedId = Number(updatedIdStr)
-                        const updatedFields = entityChanges.updated[updatedId]
+            Object.entries(state.changes).forEach(([schemaName, entities]) => {
+                Object.entries(entities).forEach(([entityName, entityChanges]) => {
+                    Object.entries(entityChanges.updated).forEach(([updatedIdStr, updatedFields]) => {
                         if (updatedFields !== null) {
+                            const updatedId = Number(updatedIdStr)
                             results.push(updateEntry(context, schemaName, entityName, updatedId, updatedFields))
                         }
                     })
                     entityChanges.added.forEach(addedFields => {
                         results.push(addEntry(context, schemaName, entityName, addedFields))
                     })
-                    Object.keys(entityChanges.deleted).forEach(deletedIdStr => {
-                        const deletedId = Number(deletedIdStr)
-                        if (entityChanges.deleted[deletedId]) {
+                    Object.entries(entityChanges.deleted).forEach(([deletedIdStr, isDeleted]) => {
+                        if (isDeleted) {
+                            const deletedId = Number(deletedIdStr)
                             results.push(deleteEntry(context, schemaName, entityName, deletedId))
                         }
                     })
@@ -327,7 +320,7 @@ const stagingModule: Module<IStagingState, {}> = {
                 errors.push(e)
             }))
 
-            commit("startSubmit", ((async () => {
+            commit("startSubmit", (async () => {
                 await Promise.all(protectedResults)
 
                 if (oneChange) {
@@ -348,8 +341,7 @@ const stagingModule: Module<IStagingState, {}> = {
                     commit("setError", errors[0].message)
                 }
                 commit("finishSubmit")
-            })()))
-            return state.currentSubmit as any
+            })())
         },
     },
 }
