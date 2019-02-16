@@ -35,14 +35,14 @@
                 <colgroup>
                     <col class="checkbox-col"> <!-- Checkbox column -->
                     <col v-if="hasRowLinks" class="open-form-col"> <!-- Open form column -->
-                    <col v-for="(col, colI) in columns" :key="colI" :style="col.style">
+                    <col v-for="i in columnIndexes" :key="i" :style="columns[i].style">
                 </colgroup>
                 <thead>
                     <tr>
                         <th class="fixed-column"></th>
                         <th v-if="hasRowLinks" class="fixed-column"></th>
-                        <th v-for="(col, colI) in columns" :key="colI" :title="col.caption" @click="updateSort(colI)" :class="col.fixed ? 'fixed-column sorting' : 'sorting'">
-                            {{ col.caption }}
+                        <th v-for="i in columnIndexes" :key="i" :title="columns[i].caption" @click="updateSort(i)" :class="columns[i].fixed ? 'fixed-column sorting' : 'sorting'">
+                            {{ columns[i].caption }}
                         </th>
                     </tr>
                 </thead>
@@ -56,17 +56,17 @@
                                 ⤢
                             </router-link>
                         </td>
-                        <td v-for="(cell, colI) in entries[entryI].cells" :key="colI" :style="cell.style" :class="cell.fixed ? 'fixed-column' : 'none'">
-                            <router-link v-if="cell.link !== null" :to="cell.link">
-                                <b-checkbox v-if="typeof cell.value === 'boolean'" :checked="cell.value" disabled></b-checkbox>
+                        <td v-for="i in columnIndexes" :key="i" :style="entries[entryI].cells[i].style" :class="entries[entryI].cells[i].fixed ? 'fixed-column' : 'none'">
+                            <router-link v-if="entries[entryI].cells[i].link !== null" :to="entries[entryI].cells[i].link">
+                                <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" disabled></b-checkbox>
                                 <template v-else>
-                                    {{ cell.valueText }}
+                                    {{ entries[entryI].cells[i].valueText }}
                                 </template>
                             </router-link>
                             <template v-else>
-                                <b-checkbox v-if="typeof cell.value === 'boolean'" :checked="cell.value" disabled></b-checkbox>
+                                <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" disabled></b-checkbox>
                                 <template v-else>
-                                    {{ cell.valueText }}
+                                    {{ entries[entryI].cells[i].valueText }}
                                 </template>
                             </template>
                         </td>
@@ -104,6 +104,7 @@
     }
 
     interface IColumn {
+        columnIndex: number
         caption: string
         style: Record<string, any>
         fixed: boolean
@@ -200,10 +201,26 @@
                 const fixedColumn = fixedColumnAttr === undefined ? false : fixedColumnAttr
 
                 return {
+                    columnIndex: i,
                     caption, style,
                     fixed: fixedColumn,
                 }
             })
+        }
+
+        get columnIndexes() {
+            const array = []
+            for (const column of this.columns) {
+                if (column.fixed) {
+                    array.push(column.columnIndex)
+                }
+            }
+            for (const column of this.columns) {
+                if (!column.fixed) {
+                    array.push(column.columnIndex)
+                }
+            }
+            return array
         }
 
         private updateFilter(filter: string) {
