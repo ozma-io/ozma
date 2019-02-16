@@ -2,7 +2,7 @@
     {
         "en": {
             "search_placeholder": "Type to search",
-            "filtered_count": "{count}",
+            "filtered_count": "{status}",
             "clear": "Clear",
             "yes": "Yes",
             "no": "No",
@@ -10,7 +10,7 @@
         },
         "ru": {
             "search_placeholder": "Поиск",
-            "filtered_count":  "{count}",
+            "filtered_count":  "{status}",
             "clear": "Очистить",
             "yes": "Да",
             "no": "Нет",
@@ -19,16 +19,17 @@
     }
 </i18n>
 
+
 <template>
     <b-container fluid class="cont_table without_padding">
-        <b-form-group horizontal label=" " class="find">
+        <b-form inline class="find">
             <b-input-group>
                 <b-form-input class="find_in form-control" :value="filter" @input="updateFilter($event)" :placeholder="$t('search_placeholder')" />
                 <b-input-group-append>
                     <span v-if="filter" id="searchclear" class="glyphicon glyphicon-remove-circle" @click="updateFilter('')">×</span>
                 </b-input-group-append>
             </b-input-group>
-        </b-form-group>
+        </b-form>
         <div ref="tableContainer" class="tabl" @scroll="updateShowLength()" @resize="updateShowLength()">
             <table class="tabl table b-table">
                 <colgroup>
@@ -48,7 +49,7 @@
                 <tbody :mounted="this.$nextTick(() => fixedColumn() )">
                     <tr v-for="(entryI, rowI) in showedRows" :key="entryI" :style="entries[entryI].style" :class="entries[entryI].selected ? 'selected' : 'none_selected'">
                         <td @click="selectRow(rowI, $event)" class="fixed-column">
-                            <input type="checkbox" :checked="entries[entryI].selected">
+                            <input type="checkbox" :checked="entries[entryI].selected" v-on:click.self.prevent>
                         </td>
                         <td v-if="entries[entryI].linkToForm !== null" class="fixed-column">
                             <router-link :to="entries[entryI].linkToForm">
@@ -75,7 +76,6 @@
         </div>
     </b-container>
 </template>
-
 <script lang="ts">
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
     import { Location } from "vue-router"
@@ -153,6 +153,7 @@
         entries: IRow[] = []
         rows: number[] = []
         showLength: number = 0
+        selectedRows: number = 0
         lastSelected: number | null = null
         printListener: { query: MediaQueryList, queryCallback: (mql: MediaQueryListEvent) => void, printCallback: () => void } | null = null
 
@@ -257,26 +258,37 @@
         private selectRow(rowI: number, event: MouseEvent) {
             if (this.lastSelected !== null && event.shiftKey) {
                 // Select all rows between current one and the previous selected one.
+                let changeRows = 0
                 const oldEntry = this.entries[this.lastSelected]
                 if (this.lastSelected < rowI) {
                     for (let i = this.lastSelected + 1; i <= rowI; i++) {
                         const entry = this.entries[this.showedRows[i]]
+                        if (entry.selected !== oldEntry.selected) {
+                            changeRows++
+                        }
                         entry.selected = oldEntry.selected
                     }
                 } else if (this.lastSelected > rowI) {
                     for (let i = rowI; i <= this.lastSelected - 1; i++) {
                         const entry = this.entries[this.showedRows[i]]
+                        if (entry.selected !== oldEntry.selected) {
+                            changeRows++
+                        }
                         entry.selected = oldEntry.selected
                     }
                 } else {
                     oldEntry.selected = !oldEntry.selected
+                    this.selectedRows += (oldEntry.selected) ? 1 : -1
                 }
+                this.selectedRows += (oldEntry.selected) ? changeRows : -changeRows
             } else {
                 const entry = this.entries[this.showedRows[rowI]]
                 entry.selected = !entry.selected
+                this.selectedRows += (entry.selected) ? 1 : -1
                 this.lastSelected = rowI
             }
             window.getSelection().removeAllRanges()
+            this.updateStatusLine()
         }
 
         /* To optimize performance when staging entries change, we first pre-build entries and then update them selectively watching staging entries.
@@ -376,8 +388,8 @@
                 const entries = this.entries
                 const sortFunction: (a: number, b: number) => number =
                     this.sortAsc ?
-                    (a, b) => rowIndicesCompare(a, b, entries, sortColumn) :
-                    (a, b) => rowIndicesCompare(b, a, entries, sortColumn)
+                        (a, b) => rowIndicesCompare(a, b, entries, sortColumn) :
+                        (a, b) => rowIndicesCompare(b, a, entries, sortColumn)
                 this.rows.sort(sortFunction)
             }
         }
@@ -498,7 +510,9 @@
             if (tableContainer === undefined) {
                 return
             }
-            if (tableContainer.scrollTop + tableContainer.clientHeight >= tableContainer.scrollHeight && this.showLength < this.rows.length) {
+            // + 1 is needed because of rare cases like that:
+            // top 974.4000244140625, client height 690, scroll height 1665
+            if (tableContainer.scrollTop + tableContainer.clientHeight + 1 >= tableContainer.scrollHeight && this.showLength < this.rows.length) {
                 this.showLength = Math.min(this.showLength + SHOW_STEP, this.rows.length)
                 Vue.nextTick(() => this.updateShowLength())
             }
@@ -510,7 +524,8 @@
 
         @Watch("filteredRows")
         private updateStatusLine() {
-            this.$emit("update:statusLine", this.$tc("filtered_count", this.filteredRows.length, { count: this.filteredRows.length }))
+            const selected = (this.selectedRows > 0) ? this.selectedRows.toString() + "/" : ""
+            this.$emit("update:statusLine", this.$tc("filtered_count", this.filteredRows.length, { status: selected + this.filteredRows.length.toString() }))
         }
 
         get showedRows() {

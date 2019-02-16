@@ -233,7 +233,7 @@ div
 										min-height: 18px
 										width: 100%
 								.nav_ent 
-										display: block
+										display: table
 										padding: 5px
 										padding-left: 7px
 										padding-right: 7px
@@ -304,16 +304,17 @@ div
 		div
 			/*фильтры для маленьких экранов*/
 			@media screen and (max-device-width: 650px)
-				fieldset
+				form
 					&.find
 						position: initial !important
 						min-width: 100% !important;
 						margin-top: -1px;
-						margin-bottom: -1px !important;
+						margin-bottom: 1px !important
+						margin-left: -1px !important
 			/*фильтр для больших экранов
 			 *пока костыльное решение нормально скрашивает все что нам нужно
 			 */
-			fieldset	
+			form	
 				&.find
 					position: fixed
 					top: 0px
@@ -323,51 +324,34 @@ div
 					max-width: calc(100vw - 310px) !important
 				/*Внутренние части текущего фильтра*/
 				&.find
-					margin-bottom: 2px
 					div
-						flex-wrap: nowrap
-
-						legend
-							max-width: max-content !important
-							padding-right: 0px !important
-							line-height: normal !important
-							padding: 0px;
-							height: 24px;
-							margin-top: 7px;
-							margin-left: 7px
-							margin-right: -9px
-
+						width: 100% !important
+						input:focus 
+							border-color: var(--TableBorderColor)
+							box-shadow: 0 0 0 white
+						input
+							border-color: var(--TableBorderColor)
+							margin-left: 2px !important
+							&.find_in
+								height: 28px
+								margin-top: 1px
+								padding-left: 7px
 						div
-							flex: unset
-							padding-left: 0px !important
-							padding-right: 0px !important
-							height: 28px
-							div
-								input:focus 
-									border-color: var(--TableBorderColor)
-									box-shadow: 0 0 0 white
-								input
-									border-color: var(--TableBorderColor)
-									margin-left: 2px !important
-									&.find_in
-										height: 28px
-										margin-top: 1px
-										padding-left: 7px
-								div
-									margin: 0px
+							margin: 0px
 
-									span
-										border: 0
-										padding-left: 0px !important
-										line-height: normal !important
-										position: absolute !important
-										right: 10px
-										top: 0
-										bottom: 0
-										height: 14px
-										margin: auto
-										cursor: pointer
-										z-index: 4 !important
+							span
+								border: 0
+								padding-left: 0px !important
+								line-height: normal !important
+								position: absolute !important
+								display: inline-table
+								right: 10px
+								top: 0
+								bottom: 0
+								height: 14px
+								margin: auto
+								cursor: pointer
+								z-index: 4 !important
 										
 /*непосредственно сама таблица*/
 /*решение для контролируемости ширины колонок*/
@@ -603,6 +587,7 @@ div
 							text-decoration: none
 							padding-left: 7px
 							padding-right: 7px
+							display: inline-table
 					div
 						&.black_block
 							display: none
@@ -614,6 +599,7 @@ div
 							border: solid 1px white
 							border-left: 0px
 							z-index: 1000
+							display: inline-table
 							button
 								background-color: var(--MenuColor) !important
 								padding: 5px
@@ -640,3 +626,4 @@ div
 										padding-left: 7px
 										padding-right: 7px
 										border-bottom: 0
+										display: table
