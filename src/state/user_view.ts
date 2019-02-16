@@ -152,7 +152,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                     throw e
                 }
             })()
-            commit("setEntries", pending.ref)
+            commit("setEntries", { schemaName, entityName, entries: pending.ref })
         },
         getView: ({ state, commit, dispatch }, args: IUserViewArguments) => {
             const pending: IRef<Promise<UserViewResult>> = {}
