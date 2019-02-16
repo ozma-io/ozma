@@ -3,7 +3,8 @@
                :uv="uv"
                :isRoot="isRoot"
                @update:actions="$emit('update:actions', $event)"
-               @update:statusLine="$emit('update:statusLine', $event)" />
+               @update:statusLine="$emit('update:statusLine', $event)"
+               @update:onSubmitStaging="$emit('update:onSubmitStaging', $event)" />
 </template>
 
 <script lang="ts">

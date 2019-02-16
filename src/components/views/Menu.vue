@@ -100,7 +100,7 @@
                 // Not supported in table yet.
                 this.categories = []
             } else if (this.uv.info.columns.length !== 2) {
-                console.log("Menu user view should have two columns")
+                console.assert(false, "Menu user view should have two columns")
                 this.categories = []
             } else {
                 const changedFields = this.getCurrentChanges()

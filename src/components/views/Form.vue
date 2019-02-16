@@ -28,53 +28,53 @@
     <b-container fluid class="cont_form without_padding">
         <div v-for="entry in showedEntries" :key="entry.index" class="form_entry">
             <b-form class="view_form">
-                <div v-for="(block, blockI) in entry.blocks" :key="blockI" class="form_block" :style="{ width: `${block.width * 100}%` }">
-                    <template v-for="field in block.fields" class="form_data">
-                        <b-form-group :key="field.column.name" :label-for="field.column.name">
-                            {{ field.caption }}
+                <div v-for="(block, blockI) in blocks" :key="blockI" class="form_block" :style="{ width: `${block.width * 100}%` }">
+                    <template v-for="fieldInfo in block.fields" class="form_data">
+                        <b-form-group :key="fieldInfo.column.name" :label-for="fieldInfo.column.name">
+                            {{ fieldInfo.caption }}
             
-                            <b-form-checkbox v-if="field.type.name === 'check'"
-                                             :id="field.column.name"
-                                             :value="field.value"
-                                             @input="updateValue(entry.id, field, $event)"
-                                             v-model="field.value"
-                                             :disabled="field.column.updateField === null || locked" />
-                            <b-form-textarea v-else-if="field.type.name === 'textarea'"
-                                             :id="field.column.name"
-                                             :value="field.value"
-                                             @input="updateValue(entry.id, field, $event)"
-                                             :disabled="field.column.updateField === null || locked"
+                            <b-form-checkbox v-if="fieldInfo.type.name === 'check'"
+                                             :id="fieldInfo.column.name"
+                                             :value="entry.fields[fieldInfo.index].value"
+                                             @input="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event)"
+                                             v-model="fieldInfo.value"
+                                             :disabled="fieldInfo.column.updateField === null || locked" />
+                            <b-form-textarea v-else-if="fieldInfo.type.name === 'textarea'"
+                                             :id="fieldInfo.column.name"
+                                             :value="entry.fields[fieldInfo.index].value"
+                                             @input="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event)"
+                                             :disabled="fieldInfo.column.updateField === null || locked"
                                              :rows="3"
                                              :max-rows="6"
-                                             :required="field.type.required" />
-                            <CodeEditor v-else-if="field.type.name === 'codeeditor'"
-                                        :content="field.value"
-                                        @update:content="updateValue(entry.id, field, $event)"
-                                        :readOnly="field.column.updateField === null || locked" />
-                            <b-form-select v-else-if="field.type.name === 'select'"
-                                           :id="field.column.name"
-                                           :value="field.value"
-                                           @input="updateValue(entry.id, field, $event)"
-                                           :disabled="field.column.updateField === null || locked"
-                                           :options="field.type.options" />
+                                             :required="fieldInfo.type.required" />
+                            <CodeEditor v-else-if="fieldInfo.type.name === 'codeeditor'"
+                                        :content="entry.fields[fieldInfo.index].value"
+                                        @update:content="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event)"
+                                        :readOnly="fieldInfo.column.updateField === null || locked" />
+                            <b-form-select v-else-if="fieldInfo.type.name === 'select'"
+                                           :id="fieldInfo.column.name"
+                                           :value="entry.fields[fieldInfo.index].value"
+                                           @input="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event)"
+                                           :disabled="fieldInfo.column.updateField === null || locked"
+                                           :options="fieldInfo.type.options" />
                             <!-- We don't use bootstrap-vue's b-form-input type=text because of problems with Safari
                                  https://github.com/bootstrap-vue/bootstrap-vue/issues/1951
                             -->
-                            <input v-else-if="field.type.type === 'text'"
+                            <input v-else-if="fieldInfo.type.type === 'text'"
                                    class="form-control"
-                                   :id="field.column.name"
-                                   :value="field.value"
-                                   @input="updateValue(entry.id, field, $event.target.value)"
+                                   :id="fieldInfo.column.name"
+                                   :value="entry.fields[fieldInfo.index].value"
+                                   @input="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event.target.value)"
                                    type="text"
-                                   :disabled="field.column.updateField === null || locked"
-                                   :required="field.type.required" />
+                                   :disabled="fieldInfo.column.updateField === null || locked"
+                                   :required="fieldInfo.type.required" />
                             <b-form-input v-else
-                                          :id="field.column.name"
-                                          :value="field.value"
-                                          @input="updateValue(entry.id, field, $event)"
-                                          :type="field.type.type"
-                                          :disabled="field.column.updateField === null || locked"
-                                          :required="field.type.required" />
+                                          :id="fieldInfo.column.name"
+                                          :value="entry.fields[fieldInfo.index].value"
+                                          @input="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event)"
+                                          :type="fieldInfo.type.type"
+                                          :disabled="fieldInfo.column.updateField === null || locked"
+                                          :required="fieldInfo.type.required" />
                         </b-form-group>
                     </template>
                 </div>
@@ -94,7 +94,7 @@
     import { namespace } from "vuex-class"
     import { IExecutedRow, RowId, FieldName, IResultColumnInfo, IExecutedValue } from "@/api"
     import * as Api from "@/api"
-    import { UserViewResult } from "@/state/user_view"
+    import { IUserViewArguments, UserViewResult, EntriesMap } from "@/state/user_view"
     import { CurrentAuth } from "@/state/auth"
     import { ChangesMap, IEntityChanges } from "@/state/staging_changes"
     import { setBodyStyle } from "@/style"
@@ -130,17 +130,21 @@
 
     type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | ICheckType
 
-    interface IField {
+    interface IFieldInfo {
+        index: number
         column: Api.IResultColumnInfo
-        value: string
         caption: string
         isNullable: boolean
         type: IType
     }
 
-    interface IBlock {
+    interface IBlockInfo {
         width: number
-        fields: IField[]
+        fields: IFieldInfo[]
+    }
+
+    interface IField {
+        value: string
     }
 
     interface IForm {
@@ -148,10 +152,10 @@
         id?: RowId
         deleted: boolean
         fields: IField[]
-        blocks: IBlock[]
     }
 
     const auth = namespace("auth")
+    const userView = namespace("userView")
     const staging = namespace("staging")
     const translations = namespace("translations")
 
@@ -163,6 +167,8 @@
     export default class UserViewForm extends Vue {
         // FIXME FIXME FIXME
         @auth.State("current") currentAuth!: CurrentAuth | null
+        @userView.Action("getEntries") getEntries!: (_: { schemaName: string, entityName: string }) => Promise<void>
+        @userView.State("entries") entriesMap!: EntriesMap
         @staging.State("changes") changes!: ChangesMap
         @staging.State("currentSubmit") currentSubmit!: Promise<void> | null
         @staging.Getter("forUserView") changesForUserView!: (uv: UserViewResult) => IEntityChanges
@@ -183,9 +189,49 @@
             return this.uv.rows === null && this.currentSubmit !== null
         }
 
-        private updateValue(id: number, field: IField, value: string) {
+        get blocks() {
+            const viewAttrs = this.uv.attributes
+            // Relative block widths. [0..1]. Each block contains zero or more inputs.
+            const blockWidths: number[] = viewAttrs["FormBlockWidths"] || [1]
+            const blocks: IBlockInfo[] = blockWidths.map(width => ({ width, fields: [] }))
+
+            this.uv.info.columns.forEach((columnInfo, i) => {
+                const columnAttrs = this.uv.columnAttributes[i]
+                const getColumnAttr = (name: string) => columnAttrs[name] || viewAttrs[name]
+
+                let caption: string
+                const captionAttr = getColumnAttr("Caption")
+                if (captionAttr !== undefined) {
+                    caption = String(captionAttr)
+                } else if (this.uv.info.updateEntity !== null && columnInfo.updateField !== null) {
+                    caption = this.fieldTranslation(this.uv.info.updateEntity.schema, this.uv.info.updateEntity.name, columnInfo.updateField.name, columnInfo.name)
+                } else {
+                    caption = columnInfo.name
+                }
+                const required = columnInfo.updateField === null ? false : (columnInfo.updateField.field.defaultValue === null)
+
+                const blockAttr = getColumnAttr("FormBlock")
+                const blockNumber = blockAttr !== undefined ? Number(blockAttr) : 0
+                const block = Math.max(0, Math.min(blockNumber, blocks.length - 1))
+
+                const field = {
+                    index: i,
+                    column: columnInfo,
+                    caption,
+                    required,
+                    isNullable: columnInfo.updateField === null ? true : columnInfo.updateField.field.isNullable,
+                    type: this.getInputType(columnInfo, columnAttrs),
+                }
+
+                blocks[block].fields.push(field)
+            })
+
+            return blocks
+        }
+
+        private updateValue(id: number, fieldInfo: IFieldInfo, field: IField, value: string) {
             if (this.uv.info.updateEntity === null) {
-                console.assert(false)
+                console.assert(false, "No update entity defined in view")
                 return
             }
 
@@ -198,7 +244,7 @@
                         entity: entity.name,
                         // XXX: we only support working with first added item now, maybe fix that?
                         newId: 0,
-                        field: field.column.name,
+                        field: fieldInfo.column.name,
                         value,
                     })
                 } else {
@@ -206,7 +252,7 @@
                         schema: entity.schema,
                         entity: entity.name,
                         id,
-                        field: field.column.name,
+                        field: fieldInfo.column.name,
                         value,
                     })
                 }
@@ -232,16 +278,9 @@
 
         @Watch("uv")
         private updateEntries() {
-            if (this.uv.rows === null) {
-                // This is creation mode and UserView just got reloaded -- it means staging was successfully pushed.
-                // We presume a new entry was added and return back to the table view.
-                // FIXME: this is a hack and we need to think of a better way.
+            this.buildEntries()
+            if (this.entries.length === 0) {
                 this.returnBack()
-            } else {
-                this.buildEntries()
-                if (this.entries.length === 0) {
-                    this.returnBack()
-                }
             }
         }
 
@@ -256,8 +295,7 @@
                 const changedFields = this.getCurrentChanges()
                 if (this.uv.rows !== null) {
                     let deletedCount = 0
-                    Object.keys(changedFields.deleted).forEach(rowId => {
-                        const deleted = changedFields.deleted[rowId]
+                    Object.entries(changedFields.deleted).forEach(([rowId, deleted]) => {
                         const rowI = this.uv.updateRowIds[rowId]
                         const entry = this.entries[rowI]
                         if (deleted !== undefined) {
@@ -273,8 +311,7 @@
                         return
                     }
 
-                    Object.keys(changedFields.updated).forEach(rowId => {
-                        const fields = changedFields.updated[rowId]
+                    Object.entries(changedFields.updated).forEach(([rowId, fields]) => {
                         const rowI = this.uv.updateRowIds[rowId]
                         const entry = this.entries[rowI]
                         if (fields === null) {
@@ -284,9 +321,9 @@
                                 cell.value = this.getValueText(value.value)
                             })
                         } else {
-                            Object.keys(fields).forEach(fieldName => {
+                            Object.entries(fields).forEach(([fieldName, field]) => {
                                 const cell = entry.fields[this.uv.updateColumnIds[fieldName]]
-                                cell.value = this.getValueText(fields[fieldName])
+                                cell.value = this.getValueText(field)
                             })
                         }
                     })
@@ -295,9 +332,9 @@
                     if (changedFields.added.length !== 0) {
                         const entry = this.entries[0]
                         const fields = changedFields.added[0]
-                        Object.keys(fields).forEach(fieldName => {
+                        Object.entries(fields).forEach(([fieldName, field]) => {
                             const cell = entry.fields[this.uv.updateColumnIds[fieldName]]
-                            cell.value = this.getValueText(fields[fieldName])
+                            cell.value = this.getValueText(field)
                         })
                     }
                 }
@@ -313,6 +350,13 @@
                         }
                     }
                 `)
+
+                const currRoute = this.$route.fullPath
+                this.$emit("update:onSubmitStaging", () => {
+                    if (this.$route.fullPath === currRoute) {
+                        this.$router.back()
+                    }
+                })
             }
             this.buildEntries()
         }
@@ -320,6 +364,13 @@
         private buildEntries() {
             const changedFields = this.getCurrentChanges()
             const viewAttrs = this.uv.attributes
+
+            this.uv.info.columns.forEach(columnInfo => {
+                if (columnInfo.fieldType !== null && columnInfo.fieldType.type === "reference") {
+                    // Request entries for references
+                    this.getEntries({ schemaName: columnInfo.fieldType.entity.schema, entityName: columnInfo.fieldType.entity.name })
+                }
+            })
 
             // Build one form from a result row
             const makeForm = (row: IExecutedRow, rowI: number, isAdded: boolean): IForm => {
@@ -344,49 +395,22 @@
                     }
                 }
 
-                // Relative block widths. [0..1]. Each block contains zero or more inputs.
-                const blockWidths: number[] = getRowAttr("FormBlockWidths") || [1]
-                const blocks: IBlock[] = blockWidths.map(width => ({ width, fields: [] }))
-
                 const fields = this.uv.info.columns.map((columnInfo, i): IField => {
                     const value = row.values[i]
                     const columnAttrs = this.uv.columnAttributes[i]
                     const cellAttrs = value.attributes === undefined ? {} : value.attributes
                     const getCellAttr = (name: string) => cellAttrs[name] || rowAttrs[name] || columnAttrs[name] || viewAttrs[name]
 
-                    let caption: string
-                    const captionAttr = getCellAttr("Caption")
-                    if (captionAttr !== undefined) {
-                        caption = String(captionAttr)
-                    } else if (this.uv.info.updateEntity !== null && columnInfo.updateField !== null) {
-                        caption = this.fieldTranslation(this.uv.info.updateEntity.schema, this.uv.info.updateEntity.name, columnInfo.updateField.name, columnInfo.name)
-                    } else {
-                        caption = columnInfo.name
-                    }
-                    const required = columnInfo.updateField === null ? false : (columnInfo.updateField.field.defaultValue === null)
-
                     const updatedValue = columnInfo.updateField === null ? undefined : updatedValues[columnInfo.updateField.name]
                     const currentValue = updatedValue === undefined ? value.value : updatedValue
                     const valueText = this.getValueText(currentValue)
 
-                    const blockAttr = getCellAttr("FormBlock")
-                    const blockNumber = blockAttr !== undefined ? Number(blockAttr) : 0
-                    const block = Math.max(0, Math.min(blockNumber, blocks.length - 1))
-
-                    const field = {
-                        column: columnInfo,
+                    return {
                         value: valueText,
-                        caption,
-                        required,
-                        isNullable: columnInfo.updateField === null ? true : columnInfo.updateField.field.isNullable,
-                        type: this.getInputType(columnInfo, columnAttrs),
                     }
-
-                    blocks[block].fields.push(field)
-                    return field
                 })
 
-                return { id: row.id, index: rowI, deleted, fields, blocks }
+                return { id: row.id, index: rowI, deleted, fields }
             }
 
             if (this.uv.rows === null) {
@@ -406,8 +430,20 @@
             if (columnInfo.fieldType !== null) {
                 switch (columnInfo.fieldType.type) {
                     case "reference":
-                        // FIXME
-                        return { name: "text", type: "number", required: !isNullable }
+                        const { schema, name: entity } = columnInfo.fieldType.entity
+                        const currentSchema = this.entriesMap[schema]
+                        if (currentSchema === undefined) {
+                            return { name: "text", type: "number", required: !isNullable }
+                        }
+                        const entries = currentSchema[entity]
+                        if (entries === undefined || entries instanceof Promise) {
+                            return { name: "text", type: "number", required: !isNullable }
+                        } else {
+                            return {
+                                name: "select",
+                                options: Object.entries(entries).map(([name, id]) => ({ text: name, value: String(id) })),
+                            }
+                        }
                     case "enum":
                         return {
                             name: "select",
