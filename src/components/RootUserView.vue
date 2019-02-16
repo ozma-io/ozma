@@ -122,7 +122,6 @@
         @staging.State("lastError") stagingLastError!: string | null
         @staging.Getter("isEmpty") changesAreEmpty!: boolean
         @translations.State("pending") pendingTranslations!: Promise<CurrentTranslations> | null
-        @translations.Action("getTranslations") getTranslations!: () => void
         @translations.State("lastError") translationsLastError!: string | null
         @translations.Mutation("clearError") translationsClearError!: () => void
         @settings.State("lastError") settingsLastError!: string | null
@@ -130,7 +129,7 @@
 
         extraActions: IAction[] = []
         statusLine: string = ""
-        onSubmitStaging: () => void = () => {}
+        onSubmitStaging: (() => void) | null = null
 
         @Watch("$route")
         private onRouteChanged() {
@@ -156,7 +155,7 @@
             this.clearView()
             this.extraActions = []
             this.statusLine = ""
-            this.onSubmitStaging = () => {}
+            this.onSubmitStaging = null
             switch (this.$route.name) {
                 case "view":
                     const query = Object.entries(this.$route.query).map(([name, values]) => {
@@ -177,7 +176,11 @@
         private submitChangesWithHook() {
             this.submitChanges()
             if (this.submitPromise !== null) {
-                this.submitPromise.then(() => this.onSubmitStaging())
+                this.submitPromise.then(() => {
+                    if (this.onSubmitStaging !== null) {
+                        this.onSubmitStaging()
+                    }
+                })
             }
         }
 

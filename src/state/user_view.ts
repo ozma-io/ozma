@@ -1,6 +1,7 @@
 import Vue from "vue"
 import { Module } from "vuex"
 
+import { IRef } from "@/utils"
 import * as Api from "@/api"
 import { IResultViewInfo, IExecutedRow, SchemaName, EntityName } from "@/api"
 
@@ -120,21 +121,20 @@ const userViewModule: Module<IUserViewState, {}> = {
             const currentSchema = state.entries[schemaName]
             if (currentSchema !== undefined) {
                 const current = currentSchema[entityName]
-                if (current instanceof Promise) {
-                    return current
-                } else if (current !== undefined) {
-                    return Promise.resolve(current)
+                if (!(current === undefined || current instanceof Promise)) {
+                    return
                 }
             }
 
-            commit("setEntries", { schemaName, entityName, entries: (async () => {
+            const pending: IRef<Promise<Entries>> = {}
+            pending.ref = (async () => {
                 try {
                     const name = `__Summary__${schemaName}__${entityName}`
                     const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
                         func: Api.fetchNamedView,
                         args: [name, new URLSearchParams()],
                     }, { root: true })
-                    if (!(schemaName in state.entries && state.entries[schemaName][entityName] instanceof Promise)) {
+                    if (!(schemaName in state.entries && state.entries[schemaName][entityName] === pending.ref)) {
                         throw Error("Pending operation cancelled")
                     }
                     const entries = res.result.rows.reduce((currEntries: Record<string, number>, row) => {
@@ -146,16 +146,17 @@ const userViewModule: Module<IUserViewState, {}> = {
                     commit("setEntries", { schemaName, entityName, entries })
                     return entries
                 } catch (e) {
-                    commit("clearEntries", { schemaName, entityName })
+                    if (schemaName in state.entries && state.entries[schemaName][entityName] === pending.ref) {
+                        commit("clearEntries", { schemaName, entityName })
+                    }
                     throw e
                 }
-            })() })
+            })()
+            commit("setEntries", pending.ref)
         },
         getView: ({ state, commit, dispatch }, args: IUserViewArguments) => {
-            if (state.pending !== null) {
-                return state.pending
-            }
-            commit("setPending", (async () => {
+            const pending: IRef<Promise<UserViewResult>> = {}
+            pending.ref = (async () => {
                 try {
                     let current: UserViewResult
                     if (args.type === "named") {
@@ -183,16 +184,19 @@ const userViewModule: Module<IUserViewState, {}> = {
                             current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
                         }
                     }
-                    if (state.pending === null) {
+                    if (state.pending !== pending.ref) {
                         throw Error("Pending operation cancelled")
                     }
                     commit("setUserView", current)
                     return current
                 } catch (e) {
-                    commit("setError", e.message)
+                    if (state.pending === pending.ref) {
+                        commit("setError", e.message)
+                    }
                     throw e
                 }
-             })())
+            })()
+            commit("setPending", pending.ref)
         },
         // Forced reload; clear existing data if it fails.
         forceReload: async ({ state, commit, dispatch }) => {
@@ -200,7 +204,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                 return
             }
             try {
-                await dispatch("getView", state.current.args)
+                dispatch("getView", state.current.args)
             } catch (e) {
                 commit("clearUserView")
                 throw e

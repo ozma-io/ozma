@@ -1,5 +1,6 @@
 import { Module } from "vuex"
 
+import { IRef } from "@/utils"
 import * as Api from "@/api"
 
 export class CurrentTranslations {
@@ -36,7 +37,7 @@ const translationsModule: Module<ITranslationsState, {}> = {
             state.lastError = null
             state.pending = null
         },
-        setPending: (state, pending: Promise<CurrentTranslations> | null) => {
+        setPending: (state, pending: Promise<CurrentTranslations>) => {
             state.pending = pending
         },
         clearTranslations: state => {
@@ -67,16 +68,14 @@ const translationsModule: Module<ITranslationsState, {}> = {
             },
         },
         getTranslations: ({ state, commit, dispatch }) => {
-            if (state.pending !== null) {
-                return state.pending
-            }
-            commit("setPending", (async () => {
+            const pending: IRef<Promise<CurrentTranslations>> = {}
+            pending.ref = (async () => {
                 try {
                     const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
                         func: Api.fetchNamedView,
                         args: ["__FieldTranslations", new URLSearchParams()],
                     }, { root: true })
-                    if (state.pending === null) {
+                    if (state.pending !== pending.ref) {
                         throw Error("Pending operation cancelled")
                     }
                     const values = res.result.rows.reduce((currTranslations: Record<string, string>, row) => {
@@ -89,11 +88,15 @@ const translationsModule: Module<ITranslationsState, {}> = {
                     }, {})
                     const translations = new CurrentTranslations(values)
                     commit("setTranslations", translations)
+                    return translations
                 } catch (e) {
-                    commit("setError", e.message)
+                    if (state.pending === pending.ref) {
+                        commit("setError", e.message)
+                    }
                     throw e
                 }
-            })())
+            })()
+            commit("setPending", pending.ref)
         },
     },
 }

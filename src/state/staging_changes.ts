@@ -284,7 +284,7 @@ const stagingModule: Module<IStagingState, {}> = {
             context.commit("resetDeleteEntry", args)
             checkCounters(context)
         },
-        submit: (context) => {
+        submit: context => {
             const { state, commit, dispatch } = context
             if (state.currentSubmit !== null) {
                 return state.currentSubmit

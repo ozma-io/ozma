@@ -1,5 +1,6 @@
 import { Module } from "vuex"
 
+import { IRef } from "@/utils"
 import * as Api from "@/api"
 
 export class CurrentSettings {
@@ -46,7 +47,7 @@ const settingsModule: Module<ISettingsState, {}> = {
     },
     getters: {
         entry: state => (name: string, defValue: string): string => {
-            if (state.current === null || state.current instanceof Promise) {
+            if (state.current === null) {
                 return defValue
             } else {
                 const ret = state.current.settings[name]
@@ -68,16 +69,14 @@ const settingsModule: Module<ISettingsState, {}> = {
             },
         },
         getSettings: ({ state, commit, dispatch }) => {
-            if (state.pending !== null) {
-                return state.pending
-            }
-            const pending = (async () => {
+            const pending: IRef<Promise<CurrentSettings>> = {}
+            pending.ref = (async () => {
                 try {
                     const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
                         func: Api.fetchNamedView,
                         args: ["__Settings", new URLSearchParams()],
                     }, { root: true })
-                    if (state.pending === null) {
+                    if (state.pending !== pending.ref) {
                         throw Error("Pending operation cancelled")
                     }
                     const values = res.result.rows.reduce((currSettings: Record<string, string>, row) => {
@@ -90,11 +89,13 @@ const settingsModule: Module<ISettingsState, {}> = {
                     commit("setSettings", settings)
                     return settings
                 } catch (e) {
-                    commit("setError", e.message)
+                    if (state.pending === pending.ref) {
+                        commit("setError", e.message)
+                    }
                     throw e
                 }
             })()
-            commit("setPending", pending)
+            commit("setPending", pending.ref)
             return pending
         },
     },

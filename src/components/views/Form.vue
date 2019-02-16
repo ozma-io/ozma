@@ -231,7 +231,7 @@
 
         private updateValue(id: number, fieldInfo: IFieldInfo, field: IField, value: string) {
             if (this.uv.info.updateEntity === null) {
-                console.assert(false)
+                console.assert(false, "No update entity defined in view")
                 return
             }
 
@@ -430,12 +430,12 @@
             if (columnInfo.fieldType !== null) {
                 switch (columnInfo.fieldType.type) {
                     case "reference":
-                        const { schema, name } = columnInfo.fieldType.entity
+                        const { schema, name: entity } = columnInfo.fieldType.entity
                         const currentSchema = this.entriesMap[schema]
                         if (currentSchema === undefined) {
                             return { name: "text", type: "number", required: !isNullable }
                         }
-                        const entries = currentSchema[name]
+                        const entries = currentSchema[entity]
                         if (entries === undefined || entries instanceof Promise) {
                             return { name: "text", type: "number", required: !isNullable }
                         } else {

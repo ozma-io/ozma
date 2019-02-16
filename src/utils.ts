@@ -1,5 +1,9 @@
 export type Result<A> = A | Error
 
+export interface IRef<A> {
+    ref?: A
+}
+
 export const resultMap = <A, B>(func: ((_: A) => B), res: Result<A>): Result<B> => {
     if (res instanceof Error) {
         return res
