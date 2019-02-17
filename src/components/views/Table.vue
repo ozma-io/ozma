@@ -550,10 +550,32 @@
         }
         private fixedColumn() {
             const allFixedTd = document.getElementsByClassName("fixed-column")
-            for (const el of allFixedTd) {
-                const element = el as HTMLElement
-                element.style.left = element.style.left === "" ? String(element.offsetLeft) + "px" : element.style.left
+            if (screen.width > 768) {
+                for (const el of allFixedTd) {
+                    const element = el as HTMLElement
+                    element.style.left = element.style.left === "" || "auto" ? String(element.offsetLeft) + "px" : element.style.left
+                }
+            } else {
+                for (const el of allFixedTd) {
+                    const element = el as HTMLElement
+                    element.style.left = "auto"
+                }
             }
         }
     }
+    window.addEventListener("orientationchange", () => {
+        const allFixedTd = document.getElementsByClassName("fixed-column")
+        if (screen.width <= 768) {
+            for (const el of allFixedTd) {
+                const element = el as HTMLElement
+                element.style.left = "auto"
+            }
+        }
+        if (screen.width > 768) {
+            for (const el1 of allFixedTd) {
+                const element2 = el1 as HTMLElement
+                element2.style.left = element2.style.left === "" || "auto" ? String(element2.offsetLeft) + "px" : element2.style.left
+            }
+        }
+    })
 </script>
