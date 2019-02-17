@@ -197,6 +197,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                 }
             })()
             commit("setPending", pending.ref)
+            return pending.ref
         },
         // Forced reload; clear existing data if it fails.
         forceReload: async ({ state, commit, dispatch }) => {
@@ -204,7 +205,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                 return
             }
             try {
-                dispatch("getView", state.current.args)
+                await dispatch("getView", state.current.args)
             } catch (e) {
                 commit("clearUserView")
                 throw e

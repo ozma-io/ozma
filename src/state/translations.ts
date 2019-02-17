@@ -97,6 +97,7 @@ const translationsModule: Module<ITranslationsState, {}> = {
                 }
             })()
             commit("setPending", pending.ref)
+            return pending.ref
         },
     },
 }

@@ -37,7 +37,7 @@
                     {{ $t('goto_nav') }}
                 </b-button>
                 <b-dropdown id="ddown1" class=" nav_batton, actions_btn, menu_btn" :text="$t('actions')" no-caret>
-                    <b-dropdown-item v-for="action in actions" @click="action['action']" class="menu_btn" variant="primary">
+                    <b-dropdown-item v-for="action in actions" :key="action['name']" @click="action['action']()" class="menu_btn" variant="primary">
                         {{ action["name"] }}
                     </b-dropdown-item>
                 </b-dropdown>

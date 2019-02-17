@@ -96,7 +96,7 @@ const settingsModule: Module<ISettingsState, {}> = {
                 }
             })()
             commit("setPending", pending.ref)
-            return pending
+            return pending.ref
         },
     },
 }
