@@ -330,6 +330,7 @@ const stagingModule: Module<IStagingState, {}> = {
                         // Ignore errors; they've been already handled for userView
                     }
                 }
+                commit("finishSubmit")
                 if (errors.length === 0) {
                     if (state.touched) {
                         commit("clearAdded")
@@ -339,8 +340,8 @@ const stagingModule: Module<IStagingState, {}> = {
                     commit("clearError")
                 } else {
                     commit("setError", errors[0].message)
+                    throw errors[0]
                 }
-                commit("finishSubmit")
             })())
         },
     },
