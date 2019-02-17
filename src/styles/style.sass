@@ -410,12 +410,15 @@ div
 		
 		table
 			margin-bottom: 0px !important;
-			.fixed-column
-					position: sticky
-					z-index: 15
-					background-color: inherit
-					box-shadow: 1px 0 0px var(--TableBorderColor)
-					border-left: 0
+			@media screen and (min-device-width: 1024px)
+				.fixed-column
+						position: sticky
+						z-index: 15
+						background-color: inherit
+						box-shadow: 3px 0 0px var(--TableBorderColor)
+						border-left: 0
+						@-moz-document url-prefix()
+							outline: solid 1px  var(--TableBorderColor)
 			thead
 				height: 25px
 				border-right: solid 1px  var(--TableBorderColor) !important
