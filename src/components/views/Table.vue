@@ -31,7 +31,7 @@
             </b-input-group>
         </b-form>
         <div ref="tableContainer" class="tabl" @scroll="updateShowLength()" @resize="updateShowLength()">
-            <table class="tabl table b-table">
+            <table class="tabl table b-table" :mounted="this.$nextTick(() => fixedColumn() )">
                 <colgroup>
                     <col class="checkbox-col"> <!-- Checkbox column -->
                     <col v-if="hasRowLinks" class="open-form-col"> <!-- Open form column -->
@@ -46,8 +46,9 @@
                         </th>
                     </tr>
                 </thead>
-                <tbody :mounted="this.$nextTick(() => fixedColumn() )">
-                    <tr v-for="(entryI, rowI) in showedRows" :key="entryI" :style="entries[entryI].style" :class="entries[entryI].selected ? 'selected' : 'none_selected'">
+                <tbody v-for="(entryI, rowI) in showedRows">
+                    <tr class="fixed-place-tr"><td class="fixed-place-td"><div v-for="i in mobileColumnIndexes">{{ entries[entryI].cells[i].valueText }}</div></td></tr>
+                    <tr :key="entryI" :style="entries[entryI].style" :class="entries[entryI].selected ? 'selected' : 'none_selected'">
                         <td @click="selectRow(rowI, $event)" class="fixed-column">
                             <input type="checkbox" :checked="entries[entryI].selected" v-on:click.self.prevent>
                         </td>
@@ -58,7 +59,7 @@
                         </td>
                         <td v-for="i in columnIndexes" :key="i" :style="entries[entryI].cells[i].style" :class="entries[entryI].cells[i].fixed ? 'fixed-column' : 'none'">
                             <router-link v-if="entries[entryI].cells[i].link !== null" :to="entries[entryI].cells[i].link">
-                                <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" disabled></b-checkbox>
+                                <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" class="div_checkbox" disabled></b-checkbox>
                                 <template v-else>
                                     {{ entries[entryI].cells[i].valueText }}
                                 </template>
@@ -108,6 +109,7 @@
         caption: string
         style: Record<string, any>
         fixed: boolean
+        mobileFixed: boolean
     }
 
     const SHOW_STEP = 20
@@ -200,10 +202,14 @@
                 const fixedColumnAttr = getColumnAttr("Fixed")
                 const fixedColumn = fixedColumnAttr === undefined ? false : fixedColumnAttr
 
+                const fixedFieldAttr = getColumnAttr("MobileFixed")
+                const fixedField = fixedFieldAttr === undefined ? false : fixedFieldAttr
+
                 return {
                     columnIndex: i,
                     caption, style,
                     fixed: fixedColumn,
+                    mobileFixed: fixedField,
                 }
             })
         }
@@ -217,6 +223,16 @@
             }
             for (const column of this.columns) {
                 if (!column.fixed) {
+                    array.push(column.columnIndex)
+                }
+            }
+            return array
+        }
+
+        get mobileColumnIndexes() {
+            const array = []
+            for (const column of this.columns) {
+                if (column.mobileFixed) {
                     array.push(column.columnIndex)
                 }
             }
