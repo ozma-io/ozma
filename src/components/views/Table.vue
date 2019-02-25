@@ -58,7 +58,7 @@
                         </td>
                         <td v-for="i in columnIndexes" :key="i" :style="entries[entryI].cells[i].style" :class="entries[entryI].cells[i].fixed ? 'fixed-column' : 'none'">
                             <router-link v-if="entries[entryI].cells[i].link !== null" :to="entries[entryI].cells[i].link">
-                                <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" disabled></b-checkbox>
+                                <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" class="div_checkbox" disabled></b-checkbox>
                                 <template v-else>
                                     {{ entries[entryI].cells[i].valueText }}
                                 </template>
