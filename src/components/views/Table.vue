@@ -64,7 +64,7 @@
                                 </template>
                             </router-link>
                             <template v-else>
-                                <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" disabled></b-checkbox>
+                                <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" disabled class="div_checkbox"></b-checkbox>
                                 <template v-else>
                                     {{ entries[entryI].cells[i].valueText }}
                                 </template>
