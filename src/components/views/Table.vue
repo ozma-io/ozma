@@ -47,7 +47,7 @@
                     </tr>
                 </thead>
                 <tbody v-for="(entryI, rowI) in showedRows">
-                    <tr class="fixed-place-tr"><td class="fixed-place-td"><div v-for="i in mobileColumnIndexes">{{ entries[entryI].cells[i].valueText }}</div></td></tr>
+                    <tr v-if="mobileColumnIndexes.length" class="fixed-place-tr"><td class="fixed-place-td"><div class="fix"><div v-for="i in mobileColumnIndexes">{{ entries[entryI].cells[i].valueText }}</div></div></td></tr>
                     <tr :key="entryI" :style="entries[entryI].style" :class="entries[entryI].selected ? 'selected' : 'none_selected'">
                         <td @click="selectRow(rowI, $event)" class="fixed-column">
                             <input type="checkbox" :checked="entries[entryI].selected" v-on:click.self.prevent>
