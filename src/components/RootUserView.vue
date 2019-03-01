@@ -149,7 +149,7 @@
         extraActions: IAction[] = []
         statusLine: string = ""
         filter: string = ""
-        enableFilter: boolean = true;
+        enableFilter: boolean = true
         onSubmitStaging: (() => void) | null = null
 
         @Watch("$route")
