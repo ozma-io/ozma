@@ -49,7 +49,7 @@
                         </b-dropdown>
                     </li>
                     <li>
-                        <b-form v-if="!isMainView && enable_filter" inline class="find">
+                        <b-form v-if="!isMainView && enableFilter" inline class="find">
                             <b-input-group>
                                 <b-form-input v-model="filter" class="find_in form-control" :value="filter" :placeholder="$t('search_placeholder')" />
                                 <b-input-group-append>
@@ -149,7 +149,7 @@
         extraActions: IAction[] = []
         statusLine: string = ""
         filter: string = ""
-        enable_filter: boolean = true;
+        enableFilter: boolean = true;
         onSubmitStaging: (() => void) | null = null
 
         @Watch("$route")
@@ -179,7 +179,7 @@
             this.onSubmitStaging = null
             switch (this.$route.name) {
                 case "view":
-                    this.enable_filter = true
+                    this.enableFilter = true
                     const query = Object.entries(this.$route.query).map(([name, values]) => {
                         const val = Array.isArray(values) ? values[0] : values
                         return [name, val]
@@ -187,11 +187,11 @@
                     this.getView({ type: "named", source: this.$route.params.name, args: new URLSearchParams(query) })
                     break
                 case "view_create":
-                    this.enable_filter = false
+                    this.enableFilter = false
                     this.getView({ type: "named", source: this.$route.params.name, args: null })
                     break
                 default:
-                    this.enable_filter = true
+                    this.enableFilter = true
                     console.assert(false, `Invalid route name: ${this.$route.name}`)
                     break
             }
