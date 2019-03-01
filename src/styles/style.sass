@@ -308,20 +308,14 @@ div
 					&.find
 						position: initial !important
 						min-width: 100% !important;
-						margin-top: -1px;
+						margin-top: 0px;
 						margin-bottom: 1px !important
-						margin-left: -1px !important
-			/*фильтр для больших экранов
-			 *пока костыльное решение нормально скрашивает все что нам нужно
-			 */
+						input
+							margin-top: 0 !important
+
 			form	
 				&.find
-					position: fixed
-					top: 0px
-					left: 299px
-					width: calc(100% - 300px)
-					min-width: 350px
-					max-width: calc(100vw - 310px) !important
+					top: 0
 				/*Внутренние части текущего фильтра*/
 				&.find
 					div
@@ -331,7 +325,7 @@ div
 							box-shadow: 0 0 0 white
 						input
 							border-color: var(--TableBorderColor)
-							margin-left: 2px !important
+							margin-right: 1px
 							&.find_in
 								height: 28px
 								margin-top: 1px
@@ -344,7 +338,7 @@ div
 								padding-left: 0px !important
 								line-height: normal !important
 								position: absolute !important
-								display: inline-table
+								display: inline
 								right: 10px
 								top: 0
 								bottom: 0
@@ -611,7 +605,21 @@ div
 				&.head_menu
 					display: inline
 					white-space: nowrap
-				
+					ul
+						list-style:none
+						margin : 0
+						padding : 0
+						box-sizing : border-box
+					li
+						list-style : none
+						margin : 0
+						padding : 0
+						box-sizing : border-box
+						float: left
+
+					li:last-child
+						float: none
+						width: auto
 					a
 						&#menu_btn
 							background-color: var(--MenuColor)
@@ -650,7 +658,7 @@ div
 								border: 0
 								border-radius: 0
 								background-clip: unset
-								margin: -0.5px -0px 0px 0px;
+								margin: -0.5px -0px 0px -1px;
 								a
 									&.menu_btn
 										background-color: var(--MenuColor)
