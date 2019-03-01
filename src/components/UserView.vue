@@ -2,6 +2,7 @@
     <component :is="userViewType"
                :uv="uv"
                :isRoot="isRoot"
+               :newfilter="filter"
                @update:actions="$emit('update:actions', $event)"
                @update:statusLine="$emit('update:statusLine', $event)"
                @update:onSubmitStaging="$emit('update:onSubmitStaging', $event)" />
@@ -21,6 +22,7 @@
     export default class UserView extends Vue {
         @Prop({ type: UserViewResult }) private uv!: UserViewResult
         @Prop({ type: Boolean, default: false }) private isRoot!: boolean
+        @Prop({ type: String, default: "" }) private filter!: string
 
         get userViewType() {
             const types: Record<string, string> = {

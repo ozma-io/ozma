@@ -1,7 +1,6 @@
 ﻿<i18n>
     {
         "en": {
-            "search_placeholder": "Type to search",
             "filtered_count": "{status}",
             "clear": "Clear",
             "yes": "Yes",
@@ -9,7 +8,6 @@
             "export_to_csv": "Export to .csv"
         },
         "ru": {
-            "search_placeholder": "Поиск",
             "filtered_count":  "{status}",
             "clear": "Очистить",
             "yes": "Да",
@@ -22,14 +20,6 @@
 
 <template>
     <b-container fluid class="cont_table without_padding">
-        <b-form inline class="find">
-            <b-input-group>
-                <b-form-input class="find_in form-control" :value="filter" @input="updateFilter($event)" :placeholder="$t('search_placeholder')" />
-                <b-input-group-append>
-                    <span v-if="filter" id="searchclear" class="glyphicon glyphicon-remove-circle" @click="updateFilter('')">×</span>
-                </b-input-group-append>
-            </b-input-group>
-        </b-form>
         <div ref="tableContainer" class="tabl" @scroll="updateShowLength()" @resize="updateShowLength()">
             <table class="tabl table b-table" :mounted="this.$nextTick(() => fixedColumn() )">
                 <colgroup>
@@ -162,6 +152,7 @@
 
         @Prop({ type: UserViewResult }) private uv!: UserViewResult
         @Prop({ type: Boolean, default: false }) private isRoot!: boolean
+        @Prop({ type: String, default: "" }) private newfilter!: string
 
         get hasRowLinks() {
             const viewAttrs = this.uv.attributes
@@ -239,11 +230,12 @@
             return array
         }
 
-        private updateFilter(filter: string) {
-            if (filter !== this.filter) {
+        @Watch("newfilter")
+        private updateFilter() {
+            if (this.newfilter !== this.filter) {
                 const oldFilter = this.filter
-                this.filter = filter
-                if (filter === "" || !filter.includes(oldFilter)) {
+                this.filter = this.newfilter
+                if (this.newfilter === "" || !this.newfilter.includes(oldFilter)) {
                     this.buildRows()
                 } else {
                     // Filter existing rows when we filter a subset of already filtered ones.
