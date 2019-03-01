@@ -49,7 +49,7 @@
                         </b-dropdown>
                     </li>
                     <li>
-                        <b-form v-if="!isMainView" inline class="find">
+                        <b-form v-if="!isMainView && isRoot" inline class="find">
                             <b-input-group>
                                 <b-form-input v-model="filter" class="find_in form-control" :value="filter" :placeholder="$t('search_placeholder')" />
                                 <b-input-group-append>
