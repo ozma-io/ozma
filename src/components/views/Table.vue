@@ -230,7 +230,7 @@
             return array
         }
 
-        @Watch('newfilter')
+        @Watch("newfilter")
         private updateFilter() {
             if (this.newfilter !== this.filter) {
                 const oldFilter = this.filter
