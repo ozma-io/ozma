@@ -35,32 +35,24 @@
     <b-container class="without_padding main_div">
         <div :class="uv !== null && uv.attributes.Type === 'Menu' ? 'scrol_menu' : 'none_scrol'">
             <b-button-toolbar class="head_menu">
-                <ul>
-                    <li>
-                        <b-button v-if="!isMainView" :to="{ name: 'main' }" class="nav_batton, goto_nav" id="menu_btn">
-                            {{ $t('goto_nav') }}
-                        </b-button>
-                    </li>
-                    <li>
-                        <b-dropdown id="ddown1" class=" nav_batton, actions_btn, menu_btn" :text="$t('actions')" no-caret>
-                            <b-dropdown-item v-for="action in actions" :key="action['name']" @click="action['action']()" class="menu_btn" variant="primary">
-                                {{ action["name"] }}
-                            </b-dropdown-item>
-                        </b-dropdown>
-                    </li>
-                    <li>
-                        <b-form v-if="!isMainView && enableFilter" inline class="find">
-                            <b-input-group>
-                                <b-form-input v-model="filter" class="find_in form-control" :value="filter" :placeholder="$t('search_placeholder')" />
-                                <b-input-group-append>
-                                    <span v-if="filter" id="searchclear" class="glyphicon glyphicon-remove-circle" @click="filter=''">×</span>
-                                </b-input-group-append>
-                            </b-input-group>
-                        </b-form>
-                    </li>
-                </ul>
+                <b-button v-if="!isMainView" :to="{ name: 'main' }" class="nav_batton, goto_nav" id="menu_btn">
+                    {{ $t('goto_nav') }}
+                </b-button>
+                <b-dropdown id="ddown1" class=" nav_batton, actions_btn, menu_btn" :text="$t('actions')" no-caret>
+                    <b-dropdown-item v-for="action in actions" :key="action['name']" @click="action['action']()" class="menu_btn" variant="primary">
+                        {{ action["name"] }}
+                    </b-dropdown-item>
+                </b-dropdown>
                 <div class="black_block" onklick>
                 </div>
+                <b-form v-if="!isMainView && enableFilter" inline class="find">
+                    <b-input-group>
+                        <b-form-input v-model="filter" class="find_in form-control" :value="filter" :placeholder="$t('search_placeholder')" />
+                        <b-input-group-append>
+                            <span v-if="filter" id="searchclear" class="glyphicon glyphicon-remove-circle" @click="filter=''">×</span>
+                        </b-input-group-append>
+                    </b-input-group>
+                </b-form>
             </b-button-toolbar>
             <b-col class="without_padding userview_div">
                 <UserView v-if="uv !== null && pendingTranslations === null"
