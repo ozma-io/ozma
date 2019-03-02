@@ -448,6 +448,8 @@ div
 					@media screen and (max-device-width: 769px)
 						&.fixed-place-tr
 							display: table-row
+						&.fixed-place-tr + tr
+							border-bottom: solid 3px var(--TableBorderColor)
 					/*выделение строк*/
 					&.selected
 						background-color: var(--ColorTableSelect)
