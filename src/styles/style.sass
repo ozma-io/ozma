@@ -237,7 +237,7 @@ div
 										padding: 5px
 										padding-left: 7px
 										padding-right: 7px
-										line-height: normal
+										line-height: inherit
 										height: 28px
 										color: black
 										background-color: #FFFFFF
@@ -330,8 +330,7 @@ div
 							border-color: var(--TableBorderColor)
 							margin-right: 1px
 							&.find_in
-								height: 28px
-								margin-top: 1px
+								height: calc(1.5rem + 2px)
 								padding-left: 7px
 						div
 							margin: 0px
@@ -345,7 +344,7 @@ div
 								right: 10px
 								top: 1px
 								bottom: 0
-								height: 14px
+								height: 1.5rem
 								margin: auto
 								cursor: pointer
 								z-index: 4 !important
@@ -628,19 +627,19 @@ div
 							text-decoration: none
 							padding-left: 7px
 							padding-right: 7px
-							display: inline-table
+							height: calc(1.5rem + 4px)
 					div
 						&.black_block
 							display: none
 					div
-						height: 30px
+						/*height: 30px*/
 						&.dropdown:hover > .dropdown-menu
 							display: block
 						&.menu_btn
 							border: solid 1px white
 							border-left: 0px
 							z-index: 1000
-							display: inline-table
+							height: calc(1.5rem + 4px)
 							button
 								background-color: var(--MenuColor) !important
 								padding: 5px
@@ -655,16 +654,16 @@ div
 								border: 0
 								border-radius: 0
 								background-clip: unset
-								margin: -0.5px -0px 0px -1px;
+								margin: 0px -0px 0px -1px;
 								a
 									&.menu_btn
 										background-color: var(--MenuColor)
 										padding: 5px
 										border: solid 1px white
-										height: 30px
+										height: calc(1.5rem + 4px)
 										line-height: normal
 										text-decoration: none
 										padding-left: 7px
 										padding-right: 7px
 										border-bottom: 0
-										display: table
+										display: block
