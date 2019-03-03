@@ -49,7 +49,7 @@
                     <b-input-group>
                         <b-form-input v-model="filter" class="find_in form-control" :value="filter" :placeholder="$t('search_placeholder')" />
                         <b-input-group-append>
-                            <span v-if="filter" id="searchclear" class="glyphicon glyphicon-remove-circle" @click="filter=''">×</span>
+                            <span v-if="filter" id="searchclear" class="glyphicon glyphicon-remove-circle" @click="filter=''">✖</span>
                         </b-input-group-append>
                     </b-input-group>
                 </b-form>
