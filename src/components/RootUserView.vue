@@ -45,7 +45,7 @@
                 </b-dropdown>
                 <div class="black_block" onklick>
                 </div>
-                <b-form v-if="!isMainView && enableFilter" inline class="find">
+                <b-form v-if="enableFilter" inline class="find">
                     <b-input-group>
                         <b-form-input v-model="filter" class="find_in form-control" :value="filter" :placeholder="$t('search_placeholder')" />
                         <b-input-group-append>
@@ -55,13 +55,13 @@
                 </b-form>
             </b-button-toolbar>
             <b-col class="without_padding userview_div">
-                <UserView v-if="uv !== null && pendingTranslations === null"
-                          :uv="uv"
+                <UserView :uv="uv"
                           :filter="filter"
                           isRoot
                           @update:actions="extraActions = $event"
                           @update:statusLine="statusLine = $event"
-                          @update:onSubmitStaging="onSubmitStaging = $event" />
+                          @update:onSubmitStaging="onSubmitStaging = $event"
+                          @update:enableFilter="enableFilter = $event" />
             </b-col>
         </div>
         <nav :show="this.$children" class="fix-bot navbar fixed-bottom navbar-light bg-light">
@@ -132,7 +132,6 @@
         @staging.Mutation("clearError") stagingClearError!: () => void
         @staging.State("lastError") stagingLastError!: string | null
         @staging.Getter("isEmpty") changesAreEmpty!: boolean
-        @translations.State("pending") pendingTranslations!: Promise<CurrentTranslations> | null
         @translations.State("lastError") translationsLastError!: string | null
         @translations.Mutation("clearError") translationsClearError!: () => void
         @settings.State("lastError") settingsLastError!: string | null
@@ -141,7 +140,7 @@
         extraActions: IAction[] = []
         statusLine: string = ""
         filter: string = ""
-        enableFilter: boolean = true
+        enableFilter: boolean = false
         onSubmitStaging: (() => void) | null = null
 
         @Watch("$route")
@@ -169,9 +168,10 @@
             this.extraActions = []
             this.statusLine = ""
             this.onSubmitStaging = null
+            this.enableFilter = false
+
             switch (this.$route.name) {
                 case "view":
-                    this.enableFilter = true
                     const query = Object.entries(this.$route.query).map(([name, values]) => {
                         const val = Array.isArray(values) ? values[0] : values
                         return [name, val]
@@ -179,11 +179,9 @@
                     this.getView({ type: "named", source: this.$route.params.name, args: new URLSearchParams(query) })
                     break
                 case "view_create":
-                    this.enableFilter = false
                     this.getView({ type: "named", source: this.$route.params.name, args: null })
                     break
                 default:
-                    this.enableFilter = true
                     console.assert(false, `Invalid route name: ${this.$route.name}`)
                     break
             }

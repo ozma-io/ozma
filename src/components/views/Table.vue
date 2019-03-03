@@ -140,7 +140,7 @@
         @staging.Getter("isEmpty") changesAreEmpty!: boolean
         @translations.Getter("field") fieldTranslation!: (schema: string, entity: string, field: string, defValue: string) => string
 
-        filter: string = ""
+        currentFilter: string = ""
         sortColumn: number | null = null
         sortAsc: boolean = true
         entries: IRow[] = []
@@ -152,7 +152,7 @@
 
         @Prop({ type: UserViewResult }) private uv!: UserViewResult
         @Prop({ type: Boolean, default: false }) private isRoot!: boolean
-        @Prop({ type: String, default: "" }) private newfilter!: string
+        @Prop({ type: String, default: "" }) private filter!: string
 
         get hasRowLinks() {
             const viewAttrs = this.uv.attributes
@@ -230,16 +230,16 @@
             return array
         }
 
-        @Watch("newfilter")
+        @Watch("filter")
         private updateFilter() {
-            if (this.newfilter !== this.filter) {
-                const oldFilter = this.filter
-                this.filter = this.newfilter
-                if (this.newfilter === "" || !this.newfilter.includes(oldFilter)) {
+            if (this.filter !== this.currentFilter) {
+                const oldFilter = this.currentFilter
+                this.currentFilter = this.filter
+                if (this.filter === "" || !this.filter.includes(oldFilter)) {
                     this.buildRows()
                 } else {
                     // Filter existing rows when we filter a subset of already filtered ones.
-                    this.rows = this.rows.filter(rowI => rowContains(this.entries[rowI], this.filter))
+                    this.rows = this.rows.filter(rowI => rowContains(this.entries[rowI], this.currentFilter))
                 }
                 this.lastSelected = null
             }
@@ -389,6 +389,8 @@
                 this.$emit("update:actions", [
                     { name: this.$tc("export_to_csv"), action: () => this.export2csv() },
                 ])
+
+                this.$emit("update:enableFilter", true)
             }
             this.buildEntries()
         }
@@ -419,8 +421,8 @@
         // Update this.rows from this.entries
         private buildRows() {
             this.rows = Array.from({ length: this.entries.length }, (v, i) => i)
-            if (this.filter !== "") {
-                this.rows = this.rows.filter(rowI => rowContains(this.entries[rowI], this.filter))
+            if (this.currentFilter !== "") {
+                this.rows = this.rows.filter(rowI => rowContains(this.entries[rowI], this.currentFilter))
             }
 
             this.sortRows()
