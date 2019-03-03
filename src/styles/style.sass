@@ -232,13 +232,14 @@ div
 										padding-left: 1px
 										min-height: 18px
 										width: 100%
+										height: calc(1.5rem + 4px) !important
 								.nav_ent 
 										display: table
 										padding: 5px
 										padding-left: 7px
 										padding-right: 7px
 										line-height: normal
-										height: 28px
+										height: calc(1.5rem + 4px) !important
 										color: black
 										background-color: #FFFFFF
 										text-decoration: none
@@ -331,7 +332,7 @@ div
 							border-color: var(--TableBorderColor)
 							margin-right: 1px
 							&.find_in
-								height: calc(1.5rem + 2px)
+								height: calc(1.5rem + 4px)
 								padding-left: 7px
 						div
 							margin: 0px
@@ -567,13 +568,13 @@ div
 						&.head_menu
 							display: flex !important
 							width: 100%
-
 							a
 								&#menu_btn
 									width: 100vw
 									text-align: left
 									border-bottom: 0 !important
 									border-right: 0 !important
+									box-sizing: content-box
 							div
 								&.black_block
 									top: 0
@@ -590,6 +591,7 @@ div
 							div
 								width: 100%
 								border-right: 0 !important
+								box-sizing: content-box
 								&.dropdown:hover
 									border: 0
 								&.dropdown:not(:hover) + .black_block
@@ -609,6 +611,7 @@ div
 											border-left: 0 !important
 											border-right: 0 !important
 											width: 100%
+											box-sizing: content-box
 
 			div
 				&.head_menu
@@ -621,14 +624,13 @@ div
 					a
 						&#menu_btn
 							background-color: var(--MenuColor)
-							padding: 5px
+							padding-top: 2px
+							padding-bottom: 2px
 							border: solid 1px white
 							border-left: 0px
-							line-height: normal
 							text-decoration: none
 							padding-left: 7px
 							padding-right: 7px
-							height: calc(1.5rem + 4px)
 					div
 						&.black_block
 							display: none
@@ -640,7 +642,6 @@ div
 							border: solid 1px white
 							border-left: 0px
 							z-index: 1000
-							height: calc(1.5rem + 4px)
 							button
 								background-color: var(--MenuColor) !important
 								padding: 5px
@@ -648,6 +649,7 @@ div
 								line-height: normal
 								padding-left: 7px
 								padding-right: 7px
+								height: calc(1.5rem + 4px)
 							div
 								padding: 0
 								min-width: 0
@@ -661,7 +663,6 @@ div
 										background-color: var(--MenuColor)
 										padding: 5px
 										border: solid 1px white
-										height: calc(1.5rem + 4px)
 										line-height: normal
 										text-decoration: none
 										padding-left: 7px
