@@ -1,6 +1,6 @@
 import * as Utils from "@/utils"
 
-const apiUrl = Utils.isProduction ? `https://api.${location.hostname}` : "http://127.0.0.1:5000"
+const apiUrl = Utils.isProduction ? `https://api.${location.hostname}` : `http://${location.hostname}:5000`
 
 interface IAuthRequest {
     username: string
