@@ -12,10 +12,57 @@ export interface IEntityChanges {
     deleted: Record<string, boolean>
 }
 
-export type ChangesMap = Record<SchemaName, Record<EntityName, IEntityChanges>>
+export class CurrentChanges {
+    changes: Record<SchemaName, Record<EntityName, IEntityChanges>> = {}
+
+    get isEmpty() {
+        return Object.entries(this.changes).length === 0
+    }
+
+    getEntityChanges(schemaName: string, entityName: string): IEntityChanges {
+        let entities = this.changes[schemaName]
+        if (entities === undefined) {
+            entities = {}
+            Vue.set(this.changes, schemaName, entities)
+        }
+
+        let entity = entities[entityName]
+        if (entity === undefined) {
+            entity = {
+                updated: {},
+                added: [],
+                deleted: {},
+            }
+            Vue.set(entities, entityName, entity)
+        }
+
+        return entity
+    }
+
+    getForUserView(uv: UserViewResult): IEntityChanges {
+        const emptyUpdates: IEntityChanges = {
+            updated: {},
+            added: [],
+            deleted: {},
+        }
+        const entity = uv.info.updateEntity
+        if (entity === null) {
+            return emptyUpdates
+        }
+        const entities = this.changes[entity.schema]
+        if (entities === undefined) {
+            return emptyUpdates
+        }
+        const changes = entities[entity.name]
+        if (changes === undefined) {
+            return emptyUpdates
+        }
+        return changes
+    }
+}
 
 export interface IStagingState {
-    changes: ChangesMap
+    current: CurrentChanges
     addedCount: number
     updatedCount: number
     deletedCount: number
@@ -25,31 +72,11 @@ export interface IStagingState {
     // We allow updating and removing entries while submit is ongoing, but not adding new ones to prevent duplicate inserts.
     touched: boolean
     // FIXME: instead set errors for each change -- this requires transactions and per-change errors support in FunDB.
-    lastError: string | null
+    errors: string[]
     autoSaveTimeoutId: number | null
 }
 
 const autoSaveTimeout = 3000
-
-const getEntityChanges = (changes: ChangesMap, schemaName: string, entityName: string): IEntityChanges => {
-    let entities = changes[schemaName]
-    if (entities === undefined) {
-        entities = {}
-        Vue.set(changes, schemaName, entities)
-    }
-
-    let entity = entities[entityName]
-    if (entity === undefined) {
-        entity = {
-            updated: {},
-            added: [],
-            deleted: {},
-        }
-        Vue.set(entities, entityName, entity)
-    }
-
-    return entity
-}
 
 const askOnClose = (e: BeforeUnloadEvent) => {
     e.preventDefault()
@@ -124,42 +151,18 @@ const deleteEntry = ({ dispatch }: ActionContext<IStagingState, {}>, schemaName:
 const stagingModule: Module<IStagingState, {}> = {
     namespaced: true,
     state: {
-        changes: {},
+        current: new CurrentChanges(),
         addedCount: 0,
         updatedCount: 0,
         deletedCount: 0,
         currentSubmit: null,
         touched: false,
-        lastError: null,
+        errors: [],
         autoSaveTimeoutId: null,
-    },
-    getters: {
-        isEmpty: state => Object.entries(state.changes).length === 0,
-        forUserView: state => (uv: UserViewResult): IEntityChanges => {
-            const emptyUpdates = {
-                removed: {},
-                updated: {},
-                added: [],
-                deleted: {},
-            }
-            const entity = uv.info.updateEntity
-            if (entity === null) {
-                return emptyUpdates
-            }
-            const entities = state.changes[entity.schema]
-            if (entities === undefined) {
-                return emptyUpdates
-            }
-            const changes = entities[entity.name]
-            if (changes === undefined) {
-                return emptyUpdates
-            }
-            return changes
-        },
     },
     mutations: {
         clear: state => {
-            state.changes = {}
+            state.current = new CurrentChanges()
             state.addedCount = 0
             state.updatedCount = 0
             state.deletedCount = 0
@@ -177,22 +180,23 @@ const stagingModule: Module<IStagingState, {}> = {
         },
         finishSubmit: state => {
             state.currentSubmit = null
+            state.errors = []
         },
         clearAdded: state => {
-            Object.entries(state.changes).forEach(([schemaName, entities]) => {
+            Object.entries(state.current.changes).forEach(([schemaName, entities]) => {
                 Object.entries(entities).forEach(([entityName, entityChanges]) => {
                     entityChanges.added = []
                 })
             })
         },
-        setError: (state, lastError: string) => {
-            state.lastError = lastError
+        addError: (state, lastError: string) => {
+            state.errors.push(lastError)
         },
-        clearError: state => {
-            state.lastError = null
+        removeError: (state, errorIndex: number) => {
+            state.errors.splice(errorIndex, 1)
         },
         updateField: (state, { schema, entity, id, field, value }: { schema: string, entity: string, id: number, field: string, value: any }) => {
-            const entityChanges = getEntityChanges(state.changes, schema, entity)
+            const entityChanges = state.current.getEntityChanges(schema, entity)
             let fields = entityChanges.updated[id]
             if (fields === undefined || fields === null) {
                 fields = {}
@@ -212,7 +216,7 @@ const stagingModule: Module<IStagingState, {}> = {
                 return
             }
 
-            const entityChanges = getEntityChanges(state.changes, schema, entity)
+            const entityChanges = state.current.getEntityChanges(schema, entity)
             for (let i = entityChanges.added.length; i <= newId; i++) {
                 entityChanges.added[i] = {}
                 state.addedCount += 1
@@ -221,7 +225,7 @@ const stagingModule: Module<IStagingState, {}> = {
             state.touched = true
         },
         deleteEntry: (state, { schema, entity, id }: { schema: string, entity: string, id: number }) => {
-            const entityChanges = getEntityChanges(state.changes, schema, entity)
+            const entityChanges = state.current.getEntityChanges(schema, entity)
             const deleted = entityChanges.deleted[id]
             if (deleted === undefined || !deleted) {
                 Vue.set(entityChanges.deleted, String(id), true)
@@ -235,7 +239,7 @@ const stagingModule: Module<IStagingState, {}> = {
             }
         },
         resetUpdatedEntry: (state, { schema, entity, id }: { schema: string, entity: string, id: number }) => {
-            const entityChanges = getEntityChanges(state.changes, schema, entity)
+            const entityChanges = state.current.getEntityChanges(schema, entity)
             const fields = entityChanges.updated[id]
             if (fields !== undefined && fields !== null) {
                 entityChanges.updated[id] = null
@@ -243,14 +247,14 @@ const stagingModule: Module<IStagingState, {}> = {
             }
         },
         resetAddedEntry: (state, { schema, entity, newId }: { schema: string, entity: string, newId: number }) => {
-            const entityChanges = getEntityChanges(state.changes, schema, entity)
+            const entityChanges = state.current.getEntityChanges(schema, entity)
             if (newId < entityChanges.added.length) {
                 entityChanges.added.splice(newId, 1)
                 state.addedCount -= 1
             }
         },
         resetDeleteEntry: (state, { schema, entity, id }: { schema: string, entity: string, id: number }) => {
-            const entityChanges = getEntityChanges(state.changes, schema, entity)
+            const entityChanges = state.current.getEntityChanges(schema, entity)
             const deleted = entityChanges.deleted[id]
             if (deleted !== undefined && deleted) {
                 entityChanges.deleted[id] = false
@@ -291,7 +295,7 @@ const stagingModule: Module<IStagingState, {}> = {
             }
 
             const results: Array<Promise<any>> = []
-            Object.entries(state.changes).forEach(([schemaName, entities]) => {
+            Object.entries(state.current.changes).forEach(([schemaName, entities]) => {
                 Object.entries(entities).forEach(([entityName, entityChanges]) => {
                     Object.entries(entityChanges.updated).forEach(([updatedIdStr, updatedFields]) => {
                         if (updatedFields !== null) {
@@ -325,7 +329,7 @@ const stagingModule: Module<IStagingState, {}> = {
 
                 if (oneChange) {
                     try {
-                        await dispatch("userView/forceReload", undefined, { root: true })
+                        await dispatch("userView/reload", undefined, { root: true })
                     } catch (e) {
                         // Ignore errors; they've been already handled for userView
                     }
@@ -337,9 +341,11 @@ const stagingModule: Module<IStagingState, {}> = {
                     } else {
                         reset(context)
                     }
-                    commit("clearError")
                 } else {
-                    commit("setError", errors[0].message)
+                    console.log(errors)
+                    for (const error of errors) {
+                        commit("addError", error.message)
+                    }
                     throw errors[0]
                 }
             })())

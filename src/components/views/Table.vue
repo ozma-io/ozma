@@ -72,7 +72,7 @@
     import { Location } from "vue-router"
     import { namespace } from "vuex-class"
     import { UserViewResult } from "@/state/user_view"
-    import { ChangesMap, IEntityChanges } from "@/state/staging_changes"
+    import { CurrentChanges, IEntityChanges } from "@/state/staging_changes"
     import { setBodyStyle } from "@/style"
     import { IExecutedRow, IExecutedValue, IUpdateFieldInfo } from "@/api"
     import { CurrentTranslations } from "@/state/translations"
@@ -135,9 +135,7 @@
 
     @Component
     export default class UserViewTable extends Vue {
-        @staging.State("changes") changes!: ChangesMap
-        @staging.Getter("forUserView") changesForUserView!: (uv: UserViewResult) => IEntityChanges
-        @staging.Getter("isEmpty") changesAreEmpty!: boolean
+        @staging.State("current") changes!: CurrentChanges
         @translations.Getter("field") fieldTranslation!: (schema: string, entity: string, field: string, defValue: string) => string
 
         currentFilter: string = ""
@@ -319,14 +317,14 @@
         /* To optimize performance when staging entries change, we first pre-build entries and then update them selectively watching staging entries.
            This is to avoid rebuilding complete rows array each time user changes a field.
         */
-        @Watch("uv")
+        @Watch("uv", { deep: true })
         private updateEntries() {
             this.buildEntries()
         }
 
-        @Watch("changes")
+        @Watch("changes", { deep: true })
         private updateChanges() {
-            if (this.changesAreEmpty) {
+            if (this.changes.isEmpty) {
                 // Changes got reset -- rebuild entries.
                 // This could be done more efficiently but it would require tracking of what fields were changed.
                 this.buildEntries()
@@ -525,7 +523,7 @@
         }
 
         private getCurrentChanges() {
-            return this.changesForUserView(this.uv)
+            return this.changes.getForUserView(this.uv)
         }
 
         private updateShowLength() {

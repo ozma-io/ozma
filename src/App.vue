@@ -13,21 +13,21 @@
 
     @Component
     export default class App extends Vue {
-        @settings.Getter("entry") settingsEntry!: (_1: string, _2: string) => string
+        @settings.State("current") settings!: CurrentSettings
 
         get styleSettings() {
             const values = {
-                "BackgroundColor": this.settingsEntry("backround-color", "#ffffff"),
-                "NavigationBackColor": this.settingsEntry("NavigationBackColor", "#F5C700"),
-                "TableBorderColor": this.settingsEntry("TableBorderColor", "#F5C700"),
-                "Font": this.settingsEntry("Font", "Courier New, monospace"),
-                "FontSize": this.settingsEntry("FontSize", "16px"),
-                "MenuColor": this.settingsEntry("MenuColor", "#F5C700"),
-                "ColorTableBg": this.settingsEntry("ColorTableBg", "white"),
-                "ColorTableSelect": this.settingsEntry("ColorTableSelect", "#CCCCCC"),
-                "WarningBackColor": this.settingsEntry("WarningBackColor", "#fff3cd"),
-                "DangerBackColor": this.settingsEntry("DangerBackColor", "#f8d7da"),
-                "SuccessBackColor": this.settingsEntry("SuccessBackColor", "#d4edda"),
+                "BackgroundColor": this.settings.getEntry("backround-color", "#ffffff"),
+                "NavigationBackColor": this.settings.getEntry("NavigationBackColor", "#F5C700"),
+                "TableBorderColor": this.settings.getEntry("TableBorderColor", "#F5C700"),
+                "Font": this.settings.getEntry("Font", "Courier New, monospace"),
+                "FontSize": this.settings.getEntry("FontSize", "16px"),
+                "MenuColor": this.settings.getEntry("MenuColor", "#F5C700"),
+                "ColorTableBg": this.settings.getEntry("ColorTableBg", "white"),
+                "ColorTableSelect": this.settings.getEntry("ColorTableSelect", "#CCCCCC"),
+                "WarningBackColor": this.settings.getEntry("WarningBackColor", "#fff3cd"),
+                "DangerBackColor": this.settings.getEntry("DangerBackColor", "#f8d7da"),
+                "SuccessBackColor": this.settings.getEntry("SuccessBackColor", "#d4edda"),
             }
             return Object.entries(values).reduce((currSettings, [name, value]) => {
                 currSettings[`--${name}`] = value

@@ -41,19 +41,21 @@
                                              :disabled="fieldInfo.column.updateField === null || locked" />
                             <b-form-textarea v-else-if="fieldInfo.type.name === 'textarea'"
                                              :id="fieldInfo.column.name"
-                                             :value="entry.fields[fieldInfo.index].value"
+                                             :value="entry.fields[fieldInfo.index].valueText"
                                              @input="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event)"
                                              :disabled="fieldInfo.column.updateField === null || locked"
                                              :rows="3"
                                              :max-rows="6"
                                              :required="fieldInfo.type.required" />
                             <CodeEditor v-else-if="fieldInfo.type.name === 'codeeditor'"
-                                        :content="entry.fields[fieldInfo.index].value"
+                                        :content="entry.fields[fieldInfo.index].valueText"
                                         @update:content="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event)"
                                         :readOnly="fieldInfo.column.updateField === null || locked" />
+                            <UserView v-else-if="fieldInfo.type.name === 'userview'"
+                                      :uv="entry.fields[fieldInfo.index].value" />
                             <b-form-select v-else-if="fieldInfo.type.name === 'select'"
                                            :id="fieldInfo.column.name"
-                                           :value="entry.fields[fieldInfo.index].value"
+                                           :value="entry.fields[fieldInfo.index].valueText"
                                            @input="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event)"
                                            :disabled="fieldInfo.column.updateField === null || locked"
                                            :options="fieldInfo.type.options" />
@@ -63,14 +65,14 @@
                             <input v-else-if="fieldInfo.type.type === 'text'"
                                    class="form-control"
                                    :id="fieldInfo.column.name"
-                                   :value="entry.fields[fieldInfo.index].value"
+                                   :value="entry.fields[fieldInfo.index].valueText"
                                    @input="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event.target.value)"
                                    type="text"
                                    :disabled="fieldInfo.column.updateField === null || locked"
                                    :required="fieldInfo.type.required" />
                             <b-form-input v-else
                                           :id="fieldInfo.column.name"
-                                          :value="entry.fields[fieldInfo.index].value"
+                                          :value="entry.fields[fieldInfo.index].valueText"
                                           @input="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event)"
                                           :type="fieldInfo.type.type"
                                           :disabled="fieldInfo.column.updateField === null || locked"
@@ -94,9 +96,9 @@
     import { namespace } from "vuex-class"
     import { IExecutedRow, RowId, FieldName, IResultColumnInfo, IExecutedValue } from "@/api"
     import * as Api from "@/api"
-    import { IUserViewArguments, UserViewResult, EntriesMap } from "@/state/user_view"
+    import { IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews } from "@/state/user_view"
     import { CurrentAuth } from "@/state/auth"
-    import { ChangesMap, IEntityChanges } from "@/state/staging_changes"
+    import { CurrentChanges, IEntityChanges } from "@/state/staging_changes"
     import { setBodyStyle } from "@/style"
 
     interface ITextType {
@@ -128,7 +130,11 @@
         name: "check"
     }
 
-    type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | ICheckType
+    interface IUserViewType {
+        name: "userview"
+    }
+
+    type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | ICheckType | IUserViewType
 
     interface IFieldInfo {
         index: number
@@ -144,7 +150,8 @@
     }
 
     interface IField {
-        value: string
+        value: any
+        valueText: string
     }
 
     interface IForm {
@@ -169,14 +176,14 @@
         @auth.State("current") currentAuth!: CurrentAuth | null
         @userView.Action("getEntries") getEntries!: (_: { schemaName: string, entityName: string }) => Promise<void>
         @userView.State("entries") entriesMap!: EntriesMap
-        @staging.State("changes") changes!: ChangesMap
+        @userView.State("current") userViews!: CurrentUserViews
+        @userView.Action("getNestedView") getNestedView!: (_: IUserViewArguments) => Promise<void>
+        @staging.State("current") changes!: CurrentChanges
         @staging.State("currentSubmit") currentSubmit!: Promise<void> | null
-        @staging.Getter("forUserView") changesForUserView!: (uv: UserViewResult) => IEntityChanges
         @staging.Action("updateField") updateField!: ({ schema, entity, id, field, value }: { schema: string, entity: string, id: number, field: string, value: any }) => void
         @staging.Action("setAddedField") setAddedField!: ({ schema, entity, newId, field, value }: { schema: string, entity: string, newId: number, field: string, value: any }) => void
         @staging.Action("deleteEntry") deleteEntry!: ({ schema, entity, id }: { schema: string, entity: string, id: number }) => void
         @staging.Action("submit") submitChanges!: () => Promise<void>
-        @staging.Getter("isEmpty") changesAreEmpty!: boolean
         @translations.Getter("field") fieldTranslation!: (schema: string, entity: string, field: string, defValue: string) => string
 
         // Internal arrays are fields in columns order
@@ -220,7 +227,7 @@
                     caption,
                     required,
                     isNullable: columnInfo.updateField === null ? true : columnInfo.updateField.field.isNullable,
-                    type: this.getInputType(columnInfo, columnAttrs),
+                    type: this.getInputType(columnInfo, viewAttrs, columnAttrs),
                 }
 
                 blocks[block].fields.push(field)
@@ -235,7 +242,7 @@
                 return
             }
 
-            if (field.value !== value) {
+            if (field.valueText !== value) {
                 const entity = this.uv.info.updateEntity
 
                 if (this.uv.rows === null) {
@@ -276,7 +283,7 @@
             })
         }
 
-        @Watch("uv")
+        @Watch("uv", { deep: true })
         private updateEntries() {
             this.buildEntries()
             if (this.entries.length === 0) {
@@ -284,10 +291,15 @@
             }
         }
 
+        @Watch("userViews", { deep: true })
+        private updateNestedViews() {
+            this.buildEntries()
+        }
+
         // See Table for description of why is this meddling with Watch is needed.
-        @Watch("changes")
+        @Watch("changes", { deep: true })
         private updateChanges() {
-            if (this.changesAreEmpty) {
+            if (this.changes.isEmpty) {
                 // Changes got reset -- rebuild entries.
                 // This could be done more efficiently but it would require tracking of what fields were changed.
                 this.buildEntries()
@@ -318,12 +330,12 @@
                             // Reset to original values
                             (this.uv.rows as IExecutedRow[])[rowI].values.forEach((value, valueI) => {
                                 const cell = entry.fields[valueI]
-                                cell.value = this.getValueText(value.value)
+                                cell.value = this.getValueText(value)
                             })
                         } else {
-                            Object.entries(fields).forEach(([fieldName, field]) => {
+                            Object.entries(fields).forEach(([fieldName, value]) => {
                                 const cell = entry.fields[this.uv.updateColumnIds[fieldName]]
-                                cell.value = this.getValueText(field)
+                                cell.value = this.getValueText({ value })
                             })
                         }
                     })
@@ -332,9 +344,9 @@
                     if (changedFields.added.length !== 0) {
                         const entry = this.entries[0]
                         const fields = changedFields.added[0]
-                        Object.entries(fields).forEach(([fieldName, field]) => {
+                        Object.entries(fields).forEach(([fieldName, value]) => {
                             const cell = entry.fields[this.uv.updateColumnIds[fieldName]]
-                            cell.value = this.getValueText(field)
+                            cell.value = this.getValueText({ value })
                         })
                     }
                 }
@@ -401,15 +413,28 @@
                 const fields = this.uv.info.columns.map((columnInfo, i): IField => {
                     const value = row.values[i]
                     const columnAttrs = this.uv.columnAttributes[i]
+                    const getColumnAttr = (name: string) => columnAttrs[name] || viewAttrs[name]
                     const cellAttrs = value.attributes === undefined ? {} : value.attributes
                     const getCellAttr = (name: string) => cellAttrs[name] || rowAttrs[name] || columnAttrs[name] || viewAttrs[name]
-
                     const updatedValue = columnInfo.updateField === null ? undefined : updatedValues[columnInfo.updateField.name]
-                    const currentValue = updatedValue === undefined ? value.value : updatedValue
-                    const valueText = this.getValueText(currentValue)
+                    let currentValue = updatedValue === undefined ? value.value : updatedValue
+                    let valueText
+
+                    const controlAttr = getColumnAttr("Control")
+                    if (controlAttr === "UserView") {
+                        // See also getFieldType to understand expected value format.
+                        // FIXME: proper args
+                        const viewArgs: IUserViewArguments = { type: "named", source: currentValue[0], args: new URLSearchParams(location.search) }
+                        this.getNestedView(viewArgs)
+                        currentValue = this.userViews.getUserView(viewArgs)
+                        valueText = ""
+                    } else {
+                        valueText = this.getValueText(currentValue)
+                    }
 
                     return {
-                        value: valueText,
+                        value: currentValue,
+                        valueText,
                     }
                 })
 
@@ -428,8 +453,19 @@
             }
         }
 
-        private getInputType(columnInfo: IResultColumnInfo, attributes: Record<string, any>): IType {
+        private getInputType(columnInfo: IResultColumnInfo, viewAttrs: Record<string, any>, columnAttrs: Record<string, any>): IType {
+            const getColumnAttr = (name: string) => columnAttrs[name] || viewAttrs[name]
             const isNullable = columnInfo.updateField === null ? true : columnInfo.updateField.field.isNullable
+
+            const controlAttr = getColumnAttr("Control")
+            if (controlAttr === "UserView") {
+                console.assert(
+                    columnInfo.valueType.type === "array" && columnInfo.valueType.subtype === "string",
+                    "User view rows should be arrays with user view name and arguments",
+                )
+                return { name: "userview" }
+            }
+
             if (columnInfo.fieldType !== null) {
                 switch (columnInfo.fieldType.type) {
                     case "reference":
@@ -473,7 +509,7 @@
             }
 
             // Plain text
-            switch (attributes["TextType"]) {
+            switch (getColumnAttr("TextType")) {
                 case "multiline":
                     return { name: "textarea", required: !isNullable }
                 case "codeeditor":
@@ -484,7 +520,7 @@
         }
 
         private getCurrentChanges() {
-            return this.changesForUserView(this.uv)
+            return this.changes.getForUserView(this.uv)
         }
 
         private returnBack() {

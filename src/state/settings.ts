@@ -9,10 +9,15 @@ export class CurrentSettings {
     constructor(settings: Record<string, string>) {
         this.settings = settings
     }
+
+    getEntry(name: string, defValue: string): string {
+        const ret = this.settings[name]
+        return (ret === undefined) ? defValue : ret
+    }
 }
 
 export interface ISettingsState {
-    current: CurrentSettings | null
+    current: CurrentSettings
     pending: Promise<CurrentSettings> | null
     lastError: string | null
 }
@@ -20,7 +25,7 @@ export interface ISettingsState {
 const settingsModule: Module<ISettingsState, {}> = {
     namespaced: true,
     state: {
-        current: null,
+        current: new CurrentSettings({}),
         pending: null,
         lastError: null,
     },
@@ -41,18 +46,8 @@ const settingsModule: Module<ISettingsState, {}> = {
             state.pending = pending
         },
         clearSettings: state => {
-            state.current = null
+            state.current = new CurrentSettings({})
             state.pending = null
-        },
-    },
-    getters: {
-        entry: state => (name: string, defValue: string): string => {
-            if (state.current === null) {
-                return defValue
-            } else {
-                const ret = state.current.settings[name]
-                return (ret === undefined) ? defValue : ret
-            }
         },
     },
     actions: {
@@ -79,12 +74,12 @@ const settingsModule: Module<ISettingsState, {}> = {
                     if (state.pending !== pending.ref) {
                         throw Error("Pending operation cancelled")
                     }
-                    const values = res.result.rows.reduce((currSettings: Record<string, string>, row) => {
+                    const values = res.result.rows.reduce((currSettings, row) => {
                         const key = row.values[0].value
                         const value = row.values[1].value
                         currSettings[key] = value
                         return currSettings
-                    }, {})
+                    }, {} as Record<string, string>)
                     const settings = new CurrentSettings(values)
                     commit("setSettings", settings)
                     return settings

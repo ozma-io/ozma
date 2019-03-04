@@ -1,5 +1,5 @@
 import Vue from "vue"
-import { Module } from "vuex"
+import { Module, ActionContext } from "vuex"
 
 import { IRef } from "@/utils"
 import * as Api from "@/api"
@@ -55,48 +55,97 @@ export class UserViewResult {
 export type Entries = Record<string, number>
 export type EntriesMap = Record<SchemaName, Record<EntityName, Entries | Promise<Entries>>>
 
+const userViewHash = (args: IUserViewArguments) => `${args.type}__${args.source}__${args.args}`
+
+export class CurrentUserViews {
+    userViews: Record<string, UserViewResult | Promise<UserViewResult>> = {}
+
+    get rootView() {
+        const uv = this.userViews[""]
+        if (uv instanceof UserViewResult) {
+            return uv
+        } else {
+            return null
+        }
+    }
+
+    setUserView(args: IUserViewArguments | null, uv: UserViewResult | Promise<UserViewResult>) {
+        Vue.set(this.userViews, args === null ? "" : userViewHash(args), uv)
+    }
+
+    getUserView(args: IUserViewArguments) {
+        const uv = this.userViews[userViewHash(args)]
+        if (uv instanceof UserViewResult) {
+            return uv
+        } else {
+            return null
+        }
+    }
+}
+
 export interface IUserViewState {
-    current: UserViewResult | null
+    current: CurrentUserViews
     pending: Promise<UserViewResult> | null
     entries: EntriesMap
-    lastError: string | null
+    errors: string[]
+}
+
+const getUserView = async ({ dispatch }: ActionContext<IUserViewState, {}>, args: IUserViewArguments): Promise<UserViewResult> => {
+    let current: UserViewResult
+    if (args.type === "named") {
+        if (args.args === null) {
+            const res: Api.IViewInfoResult = await dispatch("callProtectedApi", {
+                func: Api.fetchNamedViewInfo,
+                args: [args.source],
+            }, { root: true })
+            current = new UserViewResult(args, res.info, res.pureAttributes, res.pureColumnAttributes, null)
+        } else {
+            const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
+                func: Api.fetchNamedView,
+                args: [args.source, args.args],
+            }, { root: true })
+            current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
+        }
+    } else {
+        if (args.args === null) {
+            throw Error("Getting information about anonymous views is not supported")
+        } else {
+            const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
+                func: Api.fetchAnonymousView,
+                args: [args.source, args.args],
+            }, { root: true })
+            current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
+        }
+    }
+    return current
 }
 
 const userViewModule: Module<IUserViewState, {}> = {
     namespaced: true,
     state: {
-        current: null,
+        current: new CurrentUserViews(),
         pending: null,
         entries: {},
-        lastError: null,
+        errors: [],
     },
     mutations: {
-        setError: (state, lastError: string) => {
-            state.lastError = lastError
-            state.pending = null
+        addError: (state, lastError: string) => {
+            state.errors.push(lastError)
         },
-        clearError: state => {
-            state.lastError = null
+        removeError: (state, errorIndex: number) => {
+            state.errors.splice(errorIndex, 1)
         },
-        setUserView: (state, userView: UserViewResult) => {
-            state.current = userView
-            state.pending = null
-            state.entries = {}
-            state.lastError = null
-        },
-        clearUserView: state => {
-            state.current = null
-            state.pending = null
-            state.entries = {}
-        },
-        clear: state => {
-            state.current = null
-            state.pending = null
-            state.entries = {}
-            state.lastError = null
+        setUserView: (state, { args, userView }: { args: IUserViewArguments | null, userView: UserViewResult | Promise<UserViewResult> }) => {
+            state.current.setUserView(args, userView)
         },
         setPending: (state, pending: Promise<UserViewResult>) => {
             state.pending = pending
+        },
+        clear: state => {
+            state.pending = null
+            state.current = new CurrentUserViews()
+            state.entries = {}
+            state.errors = []
         },
         setEntries: (state, { schemaName, entityName, entries }: { schemaName: string, entityName: string, entries: Entries | Promise<Entries> }) => {
             let entities = state.entries[schemaName]
@@ -120,8 +169,7 @@ const userViewModule: Module<IUserViewState, {}> = {
         getEntries: ({ state, commit, dispatch }, { schemaName, entityName }: { schemaName: string, entityName: string }) => {
             const currentSchema = state.entries[schemaName]
             if (currentSchema !== undefined) {
-                const current = currentSchema[entityName]
-                if (!(current === undefined || current instanceof Promise)) {
+                if (entityName in  currentSchema) {
                     return
                 }
             }
@@ -154,44 +202,22 @@ const userViewModule: Module<IUserViewState, {}> = {
             })()
             commit("setEntries", { schemaName, entityName, entries: pending.ref })
         },
-        getView: ({ state, commit, dispatch }, args: IUserViewArguments) => {
+        getRootView: (store, args: IUserViewArguments) => {
+            const { state, commit } = store
             const pending: IRef<Promise<UserViewResult>> = {}
             pending.ref = (async () => {
                 try {
-                    let current: UserViewResult
-                    if (args.type === "named") {
-                        if (args.args === null) {
-                            const res: Api.IViewInfoResult = await dispatch("callProtectedApi", {
-                                func: Api.fetchNamedViewInfo,
-                                args: [args.source],
-                            }, { root: true })
-                            current = new UserViewResult(args, res.info, res.pureAttributes, res.pureColumnAttributes, null)
-                        } else {
-                            const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
-                                func: Api.fetchNamedView,
-                                args: [args.source, args.args],
-                            }, { root: true })
-                            current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
-                        }
-                    } else {
-                        if (args.args === null) {
-                            throw Error("Getting information about anonymous views is not supported")
-                        } else {
-                            const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
-                                func: Api.fetchAnonymousView,
-                                args: [args.source, args.args],
-                            }, { root: true })
-                            current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
-                        }
-                    }
+                    const current = await getUserView(store, args)
                     if (state.pending !== pending.ref) {
                         throw Error("Pending operation cancelled")
                     }
-                    commit("setUserView", current)
+                    commit("clear")
+                    commit("setUserView", { args: null, userView: current })
                     return current
                 } catch (e) {
                     if (state.pending === pending.ref) {
-                        commit("setError", e.message)
+                        commit("clear")
+                        commit("addError", e.message)
                     }
                     throw e
                 }
@@ -199,17 +225,37 @@ const userViewModule: Module<IUserViewState, {}> = {
             commit("setPending", pending.ref)
             return pending.ref
         },
-        // Forced reload; clear existing data if it fails.
-        forceReload: async ({ state, commit, dispatch }) => {
-            if (state.current === null) {
+        getNestedView: (store, args: IUserViewArguments) => {
+            const { state, commit } = store
+            const uvHash = userViewHash(args)
+            if (uvHash in state.current.userViews) {
                 return
             }
-            try {
-                await dispatch("getView", state.current.args)
-            } catch (e) {
-                commit("clearUserView")
-                throw e
+
+            const pending: IRef<Promise<UserViewResult>> = {}
+            pending.ref = (async () => {
+                try {
+                    const current = await getUserView(store, args)
+                    if (state.current.userViews[uvHash] !== pending.ref) {
+                        throw Error("Pending operation cancelled")
+                    }
+                    commit("setUserView", { args, userView: current })
+                    return current
+                } catch (e) {
+                    if (state.current.userViews[uvHash] === pending.ref) {
+                        commit("addError", e.message)
+                    }
+                    throw e
+                }
+            })()
+            commit("setUserView", { args, userView: pending.ref })
+            return pending.ref
+        },
+        reload: async ({ getters, commit, dispatch }) => {
+            if (getters.rootView === null) {
+                return
             }
+            await dispatch("getRootView", getters.rootView.args)
         },
     },
 }

@@ -5,6 +5,7 @@ import BootstrapVue from "bootstrap-vue"
 import * as Utils from "@/utils"
 import * as Modules from "@/modules"
 
+import UserView from "@/components/UserView.vue"
 import App from "@/App.vue"
 
 import authModule from "@/state/auth"
@@ -56,6 +57,8 @@ Modules.router.beforeResolve((to, from, next) => {
 })
 
 store.dispatch("auth/startAuth")
+
+Vue.component("UserView", UserView)
 
 const app = new Vue({
     router: Modules.router,

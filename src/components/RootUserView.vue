@@ -66,10 +66,12 @@
         </div>
         <nav :show="this.$children" class="fix-bot navbar fixed-bottom navbar-light bg-light">
             <div class="count_row">{{ statusLine }}</div>
-            <b-alert class="error custom_danger"
+            <b-alert v-for="error in uvErrors"
+                     :key="error"
+                     class="error custom_danger"
                      variant="danger"
-                     :show="uvLastError !== null">
-                {{ $t('fetch_error', { msg: uvLastError }) }}
+                     show>
+                {{ $t('fetch_error', { msg: error }) }}
             </b-alert>
             <b-alert class="error custom_danger"
                      variant="danger"
@@ -81,12 +83,14 @@
                      :show="translationsLastError !== null">
                 {{ $t('translations_error', { msg: translationsLastError }) }}
             </b-alert>
-            <b-alert class="error custom_danger"
+            <b-alert v-for="error in stagingErrors"
+                     :key="error"
+                     class="error custom_danger"
                      variant="danger"
-                     :show="stagingLastError !== null">
-                {{ $t('submit_error', { msg: stagingLastError }) }}
+                     show>
+                {{ $t('submit_error', { msg: error }) }}
             </b-alert>
-            <b-alert class="error custom_warning" variant="warning" :show="!changesAreEmpty">
+            <b-alert class="error custom_warning" variant="warning" :show="!changes.isEmpty">
                 <b-button @click="submitChangesWithHook" variant="primary">{{ $t('save') }}</b-button>
                 {{ $t('pending_changes') }}
             </b-alert>
@@ -98,10 +102,9 @@
     import { Route } from "vue-router"
     import { Component, Watch, Vue } from "vue-property-decorator"
     import { Action, namespace } from "vuex-class"
-    import { IUserViewArguments, UserViewResult } from "@/state/user_view"
-    import { ChangesMap } from "@/state/staging_changes"
-    import UserView from "@/components/UserView.vue"
+    import { IUserViewArguments, UserViewResult, CurrentUserViews } from "@/state/user_view"
     import { CurrentTranslations } from "@/state/translations"
+    import { CurrentChanges } from "@/state/staging_changes"
 
     const userView = namespace("userView")
     const staging = namespace("staging")
@@ -113,25 +116,20 @@
         action: () => void
     }
 
-    @Component({
-        components: {
-            UserView,
-        },
-    })
+    @Component
     export default class RootUserView extends Vue {
         @Action("removeAuth") removeAuth!: () => void
         @userView.Mutation("clear") clearView!: () => void
-        @userView.Action("getView") getView!: (_: IUserViewArguments) => Promise<void>
-        @userView.State("current") uv!: UserViewResult | null
-        @userView.Mutation("clearError") uvClearError!: () => void
-        @userView.State("lastError") uvLastError!: string | null
-        @staging.State("changes") changes!: ChangesMap
+        @userView.Action("getRootView") getRootView!: (_: IUserViewArguments) => Promise<void>
+        @userView.State("current") userViews!: CurrentUserViews
+        @userView.Mutation("removeError") uvRemoveError!: (errorIndex: number) => void
+        @userView.State("errors") uvErrors!: string[]
+        @staging.State("current") changes!: CurrentChanges
         @staging.State("currentSubmit") submitPromise!: Promise<void> | null
         @staging.Action("submit") submitChanges!: () => Promise<void>
         @staging.Action("reset") clearChanges!: () => void
-        @staging.Mutation("clearError") stagingClearError!: () => void
-        @staging.State("lastError") stagingLastError!: string | null
-        @staging.Getter("isEmpty") changesAreEmpty!: boolean
+        @staging.Mutation("removeError") stagingRemoveError!: (errorIndex: number) => void
+        @staging.State("errors") stagingErrors!: string[]
         @translations.State("lastError") translationsLastError!: string | null
         @translations.Mutation("clearError") translationsClearError!: () => void
         @settings.State("lastError") settingsLastError!: string | null
@@ -176,10 +174,10 @@
                         const val = Array.isArray(values) ? values[0] : values
                         return [name, val]
                     })
-                    this.getView({ type: "named", source: this.$route.params.name, args: new URLSearchParams(query) })
+                    this.getRootView({ type: "named", source: this.$route.params.name, args: new URLSearchParams(query) })
                     break
                 case "view_create":
-                    this.getView({ type: "named", source: this.$route.params.name, args: null })
+                    this.getRootView({ type: "named", source: this.$route.params.name, args: null })
                     break
                 default:
                     console.assert(false, `Invalid route name: ${this.$route.name}`)
@@ -196,6 +194,10 @@
                     }
                 })
             }
+        }
+
+        get uv() {
+            return this.userViews.rootView
         }
 
         get createView() {

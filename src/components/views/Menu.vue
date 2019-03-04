@@ -41,7 +41,7 @@
     import { Location } from "vue-router"
     import { namespace } from "vuex-class"
     import { UserViewResult } from "@/state/user_view"
-    import { ChangesMap, IEntityChanges } from "@/state/staging_changes"
+    import { CurrentChanges, IEntityChanges } from "@/state/staging_changes"
     import { setBodyStyle } from "@/style"
 
     interface IMainMenuButton {
@@ -62,9 +62,7 @@
 
     @Component
     export default class UserViewMenu extends Vue {
-        @staging.State("changes") changes!: ChangesMap
-        @staging.Getter("forUserView") changesForUserView!: (uv: UserViewResult) => IEntityChanges
-        @staging.Getter("isEmpty") changesAreEmpty!: boolean
+        @staging.State("current") changes!: CurrentChanges
 
         categories: IMainMenuCategory[] = []
         rows: IMainMenuButton[] = []
@@ -75,12 +73,12 @@
         /* To optimize performance when staging entries change, we first pre-build entries and then update them selectively watching staging entries.
            This is to avoid rebuilding complete rows array each time user changes a field.
         */
-        @Watch("uv")
+        @Watch("uv", { deep: true })
         private updateEntries() {
             this.buildEntries()
         }
 
-        @Watch("changes")
+        @Watch("changes", { deep: true })
         private updateChanges() {
             // Be lazy
             this.buildEntries()
@@ -163,7 +161,7 @@
         }
 
         private getCurrentChanges() {
-            return this.changesForUserView(this.uv)
+            return this.changes.getForUserView(this.uv)
         }
 
         get showedCategories() {
