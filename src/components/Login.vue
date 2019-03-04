@@ -66,8 +66,8 @@
         @auth.State("lastError") lastError!: string | null
         @auth.State("current") current!: CurrentAuth | null
 
-        username = ""
-        password = ""
+        private username = ""
+        private password = ""
 
         @Watch("current")
         private onAuthChanged() {

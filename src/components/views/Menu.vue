@@ -63,12 +63,11 @@
     @Component
     export default class UserViewMenu extends Vue {
         @staging.State("current") changes!: CurrentChanges
+        @Prop({ type: UserViewResult }) uv!: UserViewResult
+        @Prop({ type: Boolean, default: false }) isRoot!: boolean
 
-        categories: IMainMenuCategory[] = []
-        rows: IMainMenuButton[] = []
-
-        @Prop({ type: UserViewResult }) private uv!: UserViewResult
-        @Prop({ type: Boolean, default: false }) private isRoot!: boolean
+        private categories: IMainMenuCategory[] = []
+        private rows: IMainMenuButton[] = []
 
         /* To optimize performance when staging entries change, we first pre-build entries and then update them selectively watching staging entries.
            This is to avoid rebuilding complete rows array each time user changes a field.

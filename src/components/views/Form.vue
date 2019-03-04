@@ -32,6 +32,9 @@
                     <template v-for="fieldInfo in block.fields" class="form_data">
                         <b-form-group :key="fieldInfo.column.name" :label-for="fieldInfo.column.name">
                             {{ fieldInfo.caption }}
+                            <ActionsMenu v-if="fieldInfo.type.name === 'userview'"
+                                         title="*"
+                                         :actions="entry.fields[fieldInfo.index].actions || []" />
             
                             <b-form-checkbox v-if="fieldInfo.type.name === 'check'"
                                              :id="fieldInfo.column.name"
@@ -52,7 +55,8 @@
                                         @update:content="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event)"
                                         :readOnly="fieldInfo.column.updateField === null || locked" />
                             <UserView v-else-if="fieldInfo.type.name === 'userview'"
-                                      :uv="entry.fields[fieldInfo.index].value" />
+                                      :uv="entry.fields[fieldInfo.index].value"
+                                      @update:actions="entry.fields[fieldInfo.index].actions = $event" />
                             <b-form-select v-else-if="fieldInfo.type.name === 'select'"
                                            :id="fieldInfo.column.name"
                                            :value="entry.fields[fieldInfo.index].valueText"
@@ -100,6 +104,7 @@
     import { CurrentAuth } from "@/state/auth"
     import { CurrentChanges, IEntityChanges } from "@/state/staging_changes"
     import { setBodyStyle } from "@/style"
+    import { IAction } from "@/components/ActionsMenu.vue"
 
     interface ITextType {
         name: "text"
@@ -152,6 +157,7 @@
     interface IField {
         value: any
         valueText: string
+        actions?: IAction[]
     }
 
     interface IForm {
@@ -186,11 +192,11 @@
         @staging.Action("submit") submitChanges!: () => Promise<void>
         @translations.Getter("field") fieldTranslation!: (schema: string, entity: string, field: string, defValue: string) => string
 
-        // Internal arrays are fields in columns order
-        entries: IForm[] = []
+        @Prop({ type: UserViewResult }) uv!: UserViewResult
+        @Prop({ type: Boolean, default: false }) isRoot!: boolean
 
-        @Prop({ type: UserViewResult }) private uv!: UserViewResult
-        @Prop({ type: Boolean, default: false }) private isRoot!: boolean
+        // Internal arrays are fields in columns order
+        private entries: IForm[] = []
 
         get locked() {
             return this.uv.rows === null && this.currentSubmit !== null

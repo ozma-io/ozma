@@ -3,7 +3,6 @@
         "en": {
             "actions": "Actions",
             "search_placeholder": "Type to search",
-            "create": "Create new",
             "fetch_error": "Failed to fetch user view: {msg}",
             "goto_nav": "Menu",
             "pending_changes": "Saving",
@@ -17,7 +16,6 @@
         "ru": {
             "actions": "Действия",
             "search_placeholder": "Поиск",
-            "create": "Создать новую",
             "fetch_error": "Ошибка получения представления: {msg}",
             "goto_nav": "Меню",
             "pending_changes": "Сохраняется",
@@ -38,11 +36,7 @@
                 <b-button v-if="!isMainView" :to="{ name: 'main' }" class="nav_batton, goto_nav" id="menu_btn">
                     {{ $t('goto_nav') }}
                 </b-button>
-                <b-dropdown id="ddown1" class=" nav_batton, actions_btn, menu_btn" :text="$t('actions')" no-caret>
-                    <b-dropdown-item v-for="action in actions" :key="action['name']" @click="action['action']()" class="menu_btn" variant="primary">
-                        {{ action["name"] }}
-                    </b-dropdown-item>
-                </b-dropdown>
+                <ActionsMenu :title="$t('actions')" :actions="actions" />
                 <div class="black_block" onklick>
                 </div>
                 <b-form v-if="enableFilter" inline class="find">
@@ -105,16 +99,12 @@
     import { IUserViewArguments, UserViewResult, CurrentUserViews } from "@/state/user_view"
     import { CurrentTranslations } from "@/state/translations"
     import { CurrentChanges } from "@/state/staging_changes"
+    import { IAction } from "@/components/ActionsMenu.vue"
 
     const userView = namespace("userView")
     const staging = namespace("staging")
     const settings = namespace("settings")
     const translations = namespace("translations")
-
-    export interface IAction {
-        name: string
-        action: () => void
-    }
 
     @Component
     export default class RootUserView extends Vue {
@@ -135,11 +125,11 @@
         @settings.State("lastError") settingsLastError!: string | null
         @settings.Mutation("clearError") settingsClearError!: () => void
 
-        extraActions: IAction[] = []
-        statusLine: string = ""
-        filter: string = ""
-        enableFilter: boolean = false
-        onSubmitStaging: (() => void) | null = null
+        private extraActions: IAction[] = []
+        private statusLine: string = ""
+        private filter: string = ""
+        private enableFilter: boolean = false
+        private onSubmitStaging: (() => void) | null = null
 
         @Watch("$route")
         private onRouteChanged() {
@@ -152,11 +142,7 @@
 
         get actions() {
             const actions: IAction[] = []
-            actions.push({ name: this.$tc("logout"), action: this.removeAuth })
-            const createView = this.createView
-            if (createView !== null) {
-                actions.push({ name: this.$tc("create"), action: () => this.$router.push({ name: "view_create", params: { name: createView } }) })
-            }
+            actions.push({ name: this.$tc("logout"), callback: this.removeAuth })
             actions.push(...this.extraActions)
             return actions
         }
@@ -198,15 +184,6 @@
 
         get uv() {
             return this.userViews.rootView
-        }
-
-        get createView() {
-            if (this.uv === null) {
-                return null
-            } else {
-                const attr = this.uv.attributes["CreateView"]
-                return attr !== undefined ? String(attr) : null
-            }
         }
 
         get isMainView() {
