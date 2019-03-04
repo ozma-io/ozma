@@ -272,6 +272,7 @@
 
                 // Needed to avoid cursor jumping in WebKit
                 field.value = value
+                field.valueText = this.getValueText(value)
             }
         }
 
@@ -336,12 +337,14 @@
                             // Reset to original values
                             (this.uv.rows as IExecutedRow[])[rowI].values.forEach((value, valueI) => {
                                 const cell = entry.fields[valueI]
-                                cell.value = this.getValueText(value)
+                                cell.value = value
+                                cell.valueText = this.getValueText(value)
                             })
                         } else {
                             Object.entries(fields).forEach(([fieldName, value]) => {
                                 const cell = entry.fields[this.uv.updateColumnIds[fieldName]]
-                                cell.value = this.getValueText({ value })
+                                cell.value = value
+                                cell.valueText = this.getValueText(value)
                             })
                         }
                     })
@@ -352,7 +355,8 @@
                         const fields = changedFields.added[0]
                         Object.entries(fields).forEach(([fieldName, value]) => {
                             const cell = entry.fields[this.uv.updateColumnIds[fieldName]]
-                            cell.value = this.getValueText({ value })
+                            cell.value = value
+                            cell.valueText = this.getValueText(value)
                         })
                     }
                 }
