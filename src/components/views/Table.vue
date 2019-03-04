@@ -138,19 +138,19 @@
         @staging.State("current") changes!: CurrentChanges
         @translations.Getter("field") fieldTranslation!: (schema: string, entity: string, field: string, defValue: string) => string
 
-        currentFilter: string = ""
-        sortColumn: number | null = null
-        sortAsc: boolean = true
-        entries: IRow[] = []
-        rows: number[] = []
-        showLength: number = 0
-        selectedRows: number = 0
-        lastSelected: number | null = null
-        printListener: { query: MediaQueryList, queryCallback: (mql: MediaQueryListEvent) => void, printCallback: () => void } | null = null
+        @Prop({ type: UserViewResult }) uv!: UserViewResult
+        @Prop({ type: Boolean, default: false }) isRoot!: boolean
+        @Prop({ type: String, default: "" }) filter!: string
 
-        @Prop({ type: UserViewResult }) private uv!: UserViewResult
-        @Prop({ type: Boolean, default: false }) private isRoot!: boolean
-        @Prop({ type: String, default: "" }) private filter!: string
+        private currentFilter: string = ""
+        private sortColumn: number | null = null
+        private sortAsc: boolean = true
+        private entries: IRow[] = []
+        private rows: number[] = []
+        private showLength: number = 0
+        private selectedRows: number = 0
+        private lastSelected: number | null = null
+        private printListener: { query: MediaQueryList, queryCallback: (mql: MediaQueryListEvent) => void, printCallback: () => void } | null = null
 
         get hasRowLinks() {
             const viewAttrs = this.uv.attributes
@@ -385,7 +385,7 @@
                 this.printListener = { query, queryCallback, printCallback }
 
                 this.$emit("update:actions", [
-                    { name: this.$tc("export_to_csv"), action: () => this.export2csv() },
+                    { name: this.$tc("export_to_csv"), callback: () => this.export2csv() },
                 ])
 
                 this.$emit("update:enableFilter", true)

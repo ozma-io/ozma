@@ -12,12 +12,12 @@
 
     @Component
     export default class CodeEditor extends Vue {
-        private editor: Ace.Ace.Editor | null = null
+        @Prop({ default: "" }) content!: string
+        @Prop({ default: "" }) mode!: string
+        @Prop({ default: "" }) theme!: string
+        @Prop({ default: false }) readOnly!: boolean
 
-        @Prop({ default: "" }) private content!: string
-        @Prop({ default: "" }) private mode!: string
-        @Prop({ default: "" }) private theme!: string
-        @Prop({ default: false }) private readOnly!: boolean
+        private editor: Ace.Ace.Editor | null = null
 
         private mounted() {
             const editor = Ace.edit(this.$refs.pre)
