@@ -218,7 +218,7 @@ const stagingModule: Module<IStagingState, {}> = {
 
             const entityChanges = state.current.getEntityChanges(schema, entity)
             for (let i = entityChanges.added.length; i <= newId; i++) {
-                entityChanges.added[i] = {}
+                entityChanges.added.push({})
                 state.addedCount += 1
             }
             Vue.set(entityChanges.added[newId], field, value)
@@ -342,7 +342,6 @@ const stagingModule: Module<IStagingState, {}> = {
                         reset(context)
                     }
                 } else {
-                    console.log(errors)
                     for (const error of errors) {
                         commit("addError", error.message)
                     }
