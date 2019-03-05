@@ -3,7 +3,7 @@ import { Module, ActionContext } from "vuex"
 
 import { IRef } from "@/utils"
 import * as Api from "@/api"
-import { IResultViewInfo, IExecutedRow, SchemaName, EntityName } from "@/api"
+import { IResultViewInfo, IExecutedRow, SchemaName, EntityName, ValueType } from "@/api"
 
 export type UserViewType = "named" | "anonymous"
 
@@ -32,6 +32,17 @@ export class UserViewResult {
         this.rows = rows
 
         if (rows !== null) {
+            info.columns.forEach((columnInfo, colI) => {
+                if (columnInfo.valueType.type === "datetime" || columnInfo.valueType.type === "date") {
+                    rows.forEach(row => {
+                        const cell = row.values[colI]
+                        if (typeof cell.value === "number") {
+                            cell.value = new Date(cell.value * 1000)
+                        }
+                    })
+                }
+            })
+
             this.updateRowIds = rows.reduce((rowIds: Record<string, number>, row, rowI) => {
                 if (row.id !== undefined) {
                     rowIds[row.id] = rowI
@@ -54,8 +65,6 @@ export class UserViewResult {
 // For each entity contains array of all accessible entries identified by main field
 export type Entries = Record<string, number>
 export type EntriesMap = Record<SchemaName, Record<EntityName, Entries | Promise<Entries>>>
-
-const userViewHash = (args: IUserViewArguments) => `${args.type}__${args.source}__${args.args}`
 
 export class CurrentUserViews {
     userViews: Record<string, UserViewResult | Promise<UserViewResult>> = {}
@@ -89,6 +98,19 @@ export interface IUserViewState {
     entries: EntriesMap
     errors: string[]
 }
+
+// Should be in sync with staging_changes.validateValue
+export const printValue = (valueType: ValueType, value: any): string => {
+    if (value === null) {
+        return ""
+    } else if (valueType.type === "date") {
+        return (value as Date).toLocaleDateString()
+    } else {
+        return String(value)
+    }
+}
+
+const userViewHash = (args: IUserViewArguments) => `${args.type}__${args.source}__${args.args}`
 
 const getUserView = async ({ dispatch }: ActionContext<IUserViewState, {}>, args: IUserViewArguments): Promise<UserViewResult> => {
     let current: UserViewResult
@@ -251,11 +273,11 @@ const userViewModule: Module<IUserViewState, {}> = {
             commit("setUserView", { args, userView: pending.ref })
             return pending.ref
         },
-        reload: async ({ getters, commit, dispatch }) => {
-            if (getters.rootView === null) {
+        reload: async ({ state, commit, dispatch }) => {
+            if (state.current.rootView === null) {
                 return
             }
-            await dispatch("getRootView", getters.rootView.args)
+            await dispatch("getRootView", state.current.rootView.args)
         },
     },
 }

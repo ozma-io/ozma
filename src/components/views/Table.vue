@@ -71,10 +71,10 @@
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
     import { Location } from "vue-router"
     import { namespace } from "vuex-class"
-    import { UserViewResult } from "@/state/user_view"
-    import { CurrentChanges, IEntityChanges } from "@/state/staging_changes"
+    import { UserViewResult, printValue } from "@/state/user_view"
+    import { CurrentChanges, IEntityChanges, IUpdatedCell } from "@/state/staging_changes"
     import { setBodyStyle } from "@/style"
-    import { IExecutedRow, IExecutedValue, IUpdateFieldInfo } from "@/api"
+    import { IExecutedRow, IExecutedValue, IUpdateFieldInfo, ValueType } from "@/api"
     import { CurrentTranslations } from "@/state/translations"
 
     interface ICell {
@@ -128,6 +128,14 @@
         }
         csvstr += ";"
         return csvstr
+    }
+
+    const getValueText = (valType: ValueType, val: IExecutedValue) => {
+        if (val.value === null) {
+            return ""
+        } else {
+            return val.pun === undefined ? printValue(valType, val.value) : printValue(valType, val.pun)
+        }
     }
 
     const staging = namespace("staging")
@@ -345,15 +353,16 @@
                         if (fields === null) {
                             // Reset to original values
                             (this.uv.rows as IExecutedRow[])[rowI].values.forEach((value, valueI) => {
+                                const columnInfo = this.uv.info.columns[valueI]
                                 const cell = entry.cells[valueI]
                                 cell.value = value.value
-                                cell.valueText = this.getValueText(value)
+                                cell.valueText = getValueText(columnInfo.valueType, value)
                             })
                         } else {
                             Object.entries(fields).forEach(([fieldName, value]) => {
                                 const cell = entry.cells[this.uv.updateColumnIds[fieldName]]
-                                cell.value = value
-                                cell.valueText = this.getValueText({ value })
+                                cell.value = value.value
+                                cell.valueText = value.rawValue
                             })
                         }
                     })
@@ -441,7 +450,7 @@
                     const rowAttrs = row.attributes === undefined ? {} : row.attributes
                     const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
 
-                    let updatedValues: Record<string, any> = {}
+                    let updatedValues: Record<string, IUpdatedCell> = {}
                     let deleted = false
                     if (row.id !== undefined) {
                         deleted = changedFields.deleted[row.id] || false
@@ -465,16 +474,24 @@
                         rowStyle["height"] = rowHeight
                     }
 
-                    const cells = row.values.map((value, colI): ICell => {
+                    const cells = row.values.map((rowValue, colI): ICell => {
                         const columnInfo = this.uv.info.columns[colI]
                         const columnAttrs = this.uv.columnAttributes[colI]
-                        const cellAttrs = value.attributes === undefined ? {} : value.attributes
+                        const cellAttrs = rowValue.attributes === undefined ? {} : rowValue.attributes
 
                         const getCellAttr = (name: string) => cellAttrs[name] || rowAttrs[name] || columnAttrs[name] || viewAttrs[name]
 
                         const updatedValue = columnInfo.updateField === null ? undefined : updatedValues[columnInfo.updateField.name]
-                        const currentValue = updatedValue === undefined ? value : { value: updatedValue }
-                        const valueText = this.getValueText(currentValue)
+
+                        let value
+                        let valueText
+                        if (updatedValue === undefined) {
+                            value = rowValue.value
+                            valueText = getValueText(columnInfo.valueType, rowValue)
+                        } else {
+                            value = updatedValue.value
+                            valueText = updatedValue.rawValue
+                        }
 
                         const linkedViewAttr = row.id === undefined ? undefined : getCellAttr("LinkedView")
                         const link =
@@ -495,8 +512,7 @@
                         const fixedColumn = fixedColumnAttr === undefined ? false : fixedColumnAttr
 
                         return {
-                            value: currentValue.value,
-                            valueText, link, style,
+                            value, valueText, link, style,
                             fixed: fixedColumn,
                         }
                     })
@@ -512,14 +528,6 @@
             }
 
             this.buildRows()
-        }
-
-        private getValueText(val: IExecutedValue) {
-            if (val.value === null) {
-                return ""
-            } else {
-                return val.pun === undefined ? String(val.value) : `(${val.value}) ${val.pun}`
-            }
         }
 
         private getCurrentChanges() {

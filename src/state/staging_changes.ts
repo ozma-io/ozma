@@ -1,14 +1,22 @@
 import Vue from "vue"
 import { Module, ActionContext } from "vuex"
 
-import { SchemaName, FieldName, EntityName } from "@/api"
+import { SchemaName, FieldName, EntityName, FieldType } from "@/api"
 import * as Api from "@/api"
 import { UserViewResult } from "@/state/user_view"
 
+export interface IUpdatedCell {
+    rawValue: any
+    value: any
+    fieldType: FieldType
+}
+
+export type UpdatedCells = Record<FieldName, IUpdatedCell>
+
 export interface IEntityChanges {
     // Actual key is RowId
-    updated: Record<string, Record<FieldName, any> | null>
-    added: Array<Record<FieldName, any>>
+    updated: Record<string, UpdatedCells | null>
+    added: UpdatedCells[]
     deleted: Record<string, boolean>
 }
 
@@ -119,33 +127,112 @@ const checkCounters = (context: ActionContext<IStagingState, {}>) => {
     }
 }
 
-const updateEntry = ({ dispatch }: ActionContext<IStagingState, {}>, schemaName: string, entityName: string, id: number, changes: Record<string, any>) => {
-    const updatedFields = Object.entries(changes).map(([name, value]) => {
-        return [ name, value === null ? "\0" : String(value) ]
+const changesToParams = (changes: UpdatedCells) => {
+    const fields = Object.entries(changes).map(([name, change]) => {
+        if (change.value === undefined) {
+            throw new Error("Value didn't pass validation")
+        }
+        let arg
+        if (change.value === null) {
+            arg = "\0"
+        } else if (change.value instanceof Date) {
+            arg = String(Math.floor(change.value.getTime() / 1000))
+        } else {
+            arg = String(change.value)
+        }
+        return [ name, arg ]
     })
+    return new URLSearchParams(fields)
+}
 
-    return dispatch("callProtectedApi", {
+const updateEntry = async ({ dispatch }: ActionContext<IStagingState, {}>, schemaName: string, entityName: string, id: number, changes: UpdatedCells) => {
+    return await dispatch("callProtectedApi", {
         func: Api.updateEntry,
-        args: [{ schema: schemaName, name: entityName }, id, new URLSearchParams(updatedFields)],
+        args: [{ schema: schemaName, name: entityName }, id, changesToParams(changes)],
     }, { root: true })
 }
 
-const addEntry = ({ dispatch }: ActionContext<IStagingState, {}>, schemaName: string, entityName: string, values: Record<string, any>) => {
-    const addedFields = Object.entries(values).map(([name, value]) => {
-        return [ name, value === null ? "\0" : String(value) ]
-    })
-
-    return dispatch("callProtectedApi", {
+const addEntry = async ({ dispatch }: ActionContext<IStagingState, {}>, schemaName: string, entityName: string, values: UpdatedCells) => {
+    return await dispatch("callProtectedApi", {
         func: Api.insertEntry,
-        args: [{ schema: schemaName, name: entityName }, new URLSearchParams(addedFields)],
+        args: [{ schema: schemaName, name: entityName }, changesToParams(values)],
     }, { root: true })
 }
 
-const deleteEntry = ({ dispatch }: ActionContext<IStagingState, {}>, schemaName: string, entityName: string, id: number) => {
-    return dispatch("callProtectedApi", {
+const deleteEntry = async ({ dispatch }: ActionContext<IStagingState, {}>, schemaName: string, entityName: string, id: number) => {
+    return await dispatch("callProtectedApi", {
         func: Api.deleteEntry,
         args: [{ schema: schemaName, name: entityName }, id],
     }, { root: true })
+}
+
+const convertArray = (entryType: FieldType, value: any[]): any[] | undefined => {
+    const converted = value.map(entry => convertValue(entryType, entry))
+    if (converted.some(entry => entry === undefined)) {
+        return undefined
+    } else {
+        return converted
+    }
+}
+
+const convertValue = (fieldType: FieldType, value: any): any => {
+    if (value === null || value === "") {
+        return null
+    } else if (fieldType.type === "string" || fieldType.type === "enum") {
+        return typeof value === "string" ? value : undefined
+    } else if (fieldType.type === "bool") {
+        if (typeof value === "boolean") {
+            return value
+        } else {
+            const str = String(value).toLowerCase()
+            if (str === "false") {
+                return false
+            } else if (str === "true") {
+                return true
+            } else {
+                return undefined
+            }
+        }
+    } else if (fieldType.type === "array") {
+        if (value instanceof Array) {
+            return convertArray({ type: fieldType.subtype }, value)
+        } else if (typeof value === "string") {
+            return convertArray({ type: fieldType.subtype }, value.split(","))
+        } else {
+            return undefined
+        }
+    } else if (fieldType.type === "date" || fieldType.type === "datetime") {
+        const date = new Date(value)
+        if (Number.isNaN(date.getTime())) {
+            return undefined
+        } else {
+            return date
+        }
+    } else if (fieldType.type === "decimal") {
+        const f = Number(value)
+        if (Number.isFinite(f)) {
+            return f
+        } else {
+            return undefined
+        }
+    } else if (fieldType.type === "int" || fieldType.type === "reference") {
+        const f = Number(value)
+        if (Number.isInteger(f)) {
+            return f
+        } else {
+            return undefined
+        }
+    } else {
+        console.assert(false, "Invalid field type")
+    }
+}
+
+const validateValue = (fieldType: FieldType, value: any): IUpdatedCell => {
+    return {
+        fieldType,
+        rawValue: value,
+        value: convertValue(fieldType, value),
+    }
 }
 
 const stagingModule: Module<IStagingState, {}> = {
@@ -195,7 +282,7 @@ const stagingModule: Module<IStagingState, {}> = {
         removeError: (state, errorIndex: number) => {
             state.errors.splice(errorIndex, 1)
         },
-        updateField: (state, { schema, entity, id, field, value }: { schema: string, entity: string, id: number, field: string, value: any }) => {
+        updateField: (state, { schema, entity, id, field, fieldType, value }: { schema: string, entity: string, id: number, field: string, fieldType: FieldType, value: any }) => {
             const entityChanges = state.current.getEntityChanges(schema, entity)
             let fields = entityChanges.updated[id]
             if (fields === undefined || fields === null) {
@@ -208,10 +295,10 @@ const stagingModule: Module<IStagingState, {}> = {
                     state.deletedCount -= 1
                 }
             }
-            Vue.set(fields, field, value)
+            Vue.set(fields, field, validateValue(fieldType, value))
             state.touched = true
         },
-        setAddedField: (state, { schema, entity, newId, field, value }: { schema: string, entity: string, newId: number, field: string, value: any }) => {
+        setAddedField: (state, { schema, entity, newId, field, fieldType, value }: { schema: string, entity: string, newId: number, field: string, fieldType: FieldType, value: any }) => {
             if (state.currentSubmit !== null) {
                 return
             }
@@ -221,7 +308,7 @@ const stagingModule: Module<IStagingState, {}> = {
                 entityChanges.added.push({})
                 state.addedCount += 1
             }
-            Vue.set(entityChanges.added[newId], field, value)
+            Vue.set(entityChanges.added[newId], field, validateValue(fieldType, value))
             state.touched = true
         },
         deleteEntry: (state, { schema, entity, id }: { schema: string, entity: string, id: number }) => {
@@ -331,6 +418,7 @@ const stagingModule: Module<IStagingState, {}> = {
                     try {
                         await dispatch("userView/reload", undefined, { root: true })
                     } catch (e) {
+                        console.log("Error while reloading", e)
                         // Ignore errors; they've been already handled for userView
                     }
                 }
