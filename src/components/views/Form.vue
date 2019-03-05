@@ -35,7 +35,7 @@
                             <ActionsMenu v-if="fieldInfo.type.name === 'userview'"
                                          title="*"
                                          :actions="entry.fields[fieldInfo.index].actions || []" />
-            
+
                             <b-form-checkbox v-if="fieldInfo.type.name === 'check'"
                                              :id="fieldInfo.column.name"
                                              :value="entry.fields[fieldInfo.index].value"
@@ -84,7 +84,7 @@
                         </b-form-group>
                     </template>
                 </div>
-                    
+
                 <!-- FIXME FIXME FIXME don't look at user! -->
                 <b-button class="delete_btn" v-if="entry.id !== undefined && currentAuth.header.sub === 'root'" variant="danger" v-b-modal="`deleteConfirm_${entry.id}`">{{ $t('delete') }}</b-button>
                 <b-modal lazy :id="`deleteConfirm_${entry.id}`" ok-variant="danger" :ok-title="$t('ok')" @ok="deleteRecord(entry.id)" :cancel-title="$t('cancel')">
@@ -98,11 +98,11 @@
 <script lang="ts">
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
     import { namespace } from "vuex-class"
-    import { IExecutedRow, RowId, FieldName, IResultColumnInfo, IExecutedValue } from "@/api"
+    import { IExecutedRow, RowId, FieldType, FieldName, IResultColumnInfo, IExecutedValue } from "@/api"
     import * as Api from "@/api"
-    import { IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews } from "@/state/user_view"
+    import { IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, printValue } from "@/state/user_view"
     import { CurrentAuth } from "@/state/auth"
-    import { CurrentChanges, IEntityChanges } from "@/state/staging_changes"
+    import { CurrentChanges, IEntityChanges, IUpdatedCell } from "@/state/staging_changes"
     import { setBodyStyle } from "@/style"
     import { IAction } from "@/components/ActionsMenu.vue"
 
@@ -186,8 +186,8 @@
         @userView.Action("getNestedView") getNestedView!: (_: IUserViewArguments) => Promise<void>
         @staging.State("current") changes!: CurrentChanges
         @staging.State("currentSubmit") currentSubmit!: Promise<void> | null
-        @staging.Action("updateField") updateField!: ({ schema, entity, id, field, value }: { schema: string, entity: string, id: number, field: string, value: any }) => void
-        @staging.Action("setAddedField") setAddedField!: ({ schema, entity, newId, field, value }: { schema: string, entity: string, newId: number, field: string, value: any }) => void
+        @staging.Action("updateField") updateField!: ({ schema, entity, id, field, value }: { schema: string, entity: string, id: number, field: string, fieldType: FieldType, value: any }) => void
+        @staging.Action("setAddedField") setAddedField!: ({ schema, entity, newId, field, value }: { schema: string, entity: string, newId: number, field: string, fieldType: FieldType, value: any }) => void
         @staging.Action("deleteEntry") deleteEntry!: ({ schema, entity, id }: { schema: string, entity: string, id: number }) => void
         @staging.Action("submit") submitChanges!: () => Promise<void>
         @translations.Getter("field") fieldTranslation!: (schema: string, entity: string, field: string, defValue: string) => string
@@ -242,13 +242,13 @@
             return blocks
         }
 
-        private updateValue(id: number, fieldInfo: IFieldInfo, field: IField, value: string) {
+        private updateValue(id: number, fieldInfo: IFieldInfo, field: IField, text: string) {
             if (this.uv.info.updateEntity === null) {
                 console.assert(false, "No update entity defined in view")
                 return
             }
 
-            if (field.valueText !== value) {
+            if (field.valueText !== text) {
                 const entity = this.uv.info.updateEntity
 
                 if (this.uv.rows === null) {
@@ -258,7 +258,8 @@
                         // XXX: we only support working with first added item now, maybe fix that?
                         newId: 0,
                         field: fieldInfo.column.name,
-                        value,
+                        fieldType: fieldInfo.column.fieldType as FieldType,
+                        value: text,
                     })
                 } else {
                     this.updateField({
@@ -266,13 +267,13 @@
                         entity: entity.name,
                         id,
                         field: fieldInfo.column.name,
-                        value,
+                        fieldType: fieldInfo.column.fieldType as FieldType,
+                        value: text,
                     })
                 }
 
                 // Needed to avoid cursor jumping in WebKit
-                field.value = value
-                field.valueText = this.getValueText(value)
+                field.valueText = text
             }
         }
 
@@ -336,15 +337,16 @@
                         if (fields === null) {
                             // Reset to original values
                             (this.uv.rows as IExecutedRow[])[rowI].values.forEach((value, valueI) => {
+                                const columnInfo = this.uv.info.columns[valueI]
                                 const cell = entry.fields[valueI]
-                                cell.value = value
-                                cell.valueText = this.getValueText(value)
+                                cell.value = value.value
+                                cell.valueText = printValue(columnInfo.valueType, value)
                             })
                         } else {
                             Object.entries(fields).forEach(([fieldName, value]) => {
                                 const cell = entry.fields[this.uv.updateColumnIds[fieldName]]
-                                cell.value = value
-                                cell.valueText = this.getValueText(value)
+                                cell.value = value.value
+                                cell.valueText = value.rawValue
                             })
                         }
                     })
@@ -355,8 +357,8 @@
                         const fields = changedFields.added[0]
                         Object.entries(fields).forEach(([fieldName, value]) => {
                             const cell = entry.fields[this.uv.updateColumnIds[fieldName]]
-                            cell.value = value
-                            cell.valueText = this.getValueText(value)
+                            cell.value = value.value
+                            cell.valueText = value.rawValue
                         })
                     }
                 }
@@ -402,7 +404,7 @@
                 const rowAttrs = row.attributes === undefined ? {} : row.attributes
                 const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
 
-                let updatedValues: Record<string, any> = {}
+                let updatedValues: Record<string, IUpdatedCell> = {}
                 let deleted = false
                 if (isAdded) {
                     if (changedFields.added.length !== 0) {
@@ -421,29 +423,34 @@
                 }
 
                 const fields = this.uv.info.columns.map((columnInfo, i): IField => {
-                    const value = row.values[i]
+                    const rowValue = row.values[i]
                     const columnAttrs = this.uv.columnAttributes[i]
                     const getColumnAttr = (name: string) => columnAttrs[name] || viewAttrs[name]
-                    const cellAttrs = value.attributes === undefined ? {} : value.attributes
+                    const cellAttrs = rowValue.attributes === undefined ? {} : rowValue.attributes
                     const getCellAttr = (name: string) => cellAttrs[name] || rowAttrs[name] || columnAttrs[name] || viewAttrs[name]
                     const updatedValue = columnInfo.updateField === null ? undefined : updatedValues[columnInfo.updateField.name]
-                    let currentValue = updatedValue === undefined ? value.value : updatedValue
+
+                    let value
                     let valueText
+                    if (updatedValue === undefined) {
+                        value = rowValue.value
+                        valueText = printValue(columnInfo.valueType, value)
+                    } else {
+                        value = updatedValue.value
+                        valueText = updatedValue.rawValue
+                    }
 
                     const controlAttr = getColumnAttr("Control")
                     if (controlAttr === "UserView") {
                         // See also getFieldType to understand expected value format.
                         // FIXME: proper args
-                        const viewArgs: IUserViewArguments = { type: "named", source: currentValue[0], args: new URLSearchParams(location.search) }
+                        const viewArgs: IUserViewArguments = { type: "named", source: value[0], args: new URLSearchParams(location.search) }
                         this.getNestedView(viewArgs)
-                        currentValue = this.userViews.getUserView(viewArgs)
-                        valueText = ""
-                    } else {
-                        valueText = this.getValueText(currentValue)
+                        value = this.userViews.getUserView(viewArgs)
                     }
 
                     return {
-                        value: currentValue,
+                        value,
                         valueText,
                     }
                 })
@@ -536,14 +543,6 @@
         private returnBack() {
             if (this.isRoot) {
                 this.$router.back()
-            }
-        }
-
-        private getValueText(val: any) {
-            if (val === null) {
-                return ""
-            } else {
-                return String(val)
             }
         }
 
