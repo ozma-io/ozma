@@ -374,17 +374,18 @@
                         }
                     }
                 `)
-
-                if (this.uv.rows === null) {
-                    // When entry is created successfully, return back.
-                    const currRoute = this.$route.fullPath
-                    this.$emit("update:onSubmitStaging", () => {
-                        if (this.$route.fullPath === currRoute) {
-                            this.$router.back()
-                        }
-                    })
-                }
             }
+
+            if (this.uv.rows === null) {
+                // When entry is created successfully, return back.
+                const currRoute = this.$route.fullPath
+                this.$emit("update:onSubmitStaging", () => {
+                    if (this.$route.fullPath === currRoute) {
+                        this.$router.back()
+                    }
+                })
+            }
+
             this.buildEntries()
         }
 
