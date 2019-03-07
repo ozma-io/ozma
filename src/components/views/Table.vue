@@ -392,13 +392,13 @@
                 }
                 window.addEventListener("beforeprint", printCallback)
                 this.printListener = { query, queryCallback, printCallback }
-
-                this.$emit("update:actions", [
-                    { name: this.$tc("export_to_csv"), callback: () => this.export2csv() },
-                ])
-
-                this.$emit("update:enableFilter", true)
             }
+
+            this.$emit("update:actions", [
+                { name: this.$tc("export_to_csv"), callback: () => this.export2csv() },
+            ])
+            this.$emit("update:enableFilter", true)
+
             this.buildEntries()
         }
 
