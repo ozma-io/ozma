@@ -2,10 +2,12 @@
     {
         "en": {
             "create": "Create new",
+            "edit_view": "Edit user view",
             "loading": "Now loading"
         },
         "ru": {
             "create": "Создать новую",
+            "edit_view": "Редактировать отображение",
             "loading": "Загрузка данных"
         }
     }
@@ -30,6 +32,8 @@
 
 <script lang="ts">
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
+    import { namespace } from "vuex-class"
+    import { CurrentAuth } from "@/state/auth"
     import { UserViewResult } from "@/state/user_view"
     import { IAction } from "@/components/ActionsMenu.vue"
 
@@ -48,19 +52,27 @@
         return res
     }, {} as Record<string, () => any>)
 
+    const auth = namespace("auth")
+
     @Component({ components })
     export default class UserView extends Vue {
+        // FIXME FIXME FIXME
         @Prop({ type: UserViewResult }) uv!: UserViewResult | null
         @Prop({ type: Boolean, default: false }) isRoot!: boolean
         @Prop({ type: String, default: "" }) filter!: string
+        @auth.State("current") currentAuth!: CurrentAuth
 
         private extraActions: IAction[] = []
 
         get actions() {
             const actions: IAction[] = []
-            const createView = this.createView
-            if (createView !== null) {
-                actions.push({ name: this.$tc("create"), location: this.$router.resolve({ name: "view_create", params: { name: createView } }).href })
+            if (this.createView !== null) {
+                const createLocation = { name: "view_create", params: { "name": this.createView } }
+                actions.push({ name: this.$tc("create"), location: this.$router.resolve(createLocation).href })
+            }
+            if (this.uv !== null && this.uv.args.type === "named" && this.currentAuth.header.sub === "root") {
+                const editLocation = { name: "view", params: { "name": "__UserViewByName" }, query: { "name": this.uv.args.source } }
+                actions.push({ name: this.$tc("edit_view"), location: this.$router.resolve(editLocation).href })
             }
             actions.push(...this.extraActions)
             return actions
