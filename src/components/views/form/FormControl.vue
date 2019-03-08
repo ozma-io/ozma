@@ -52,7 +52,7 @@
 </template>
 
 <script lang="ts">
-    import { Component, Vue, Prop } from "vue-property-decorator"
+    import { Component, Vue, Prop, Watch } from "vue-property-decorator"
     import { IResultColumnInfo } from "@/api"
     import { IAction } from "@/components/ActionsMenu.vue"
 
@@ -105,5 +105,10 @@
         @Prop({ type: Boolean }) locked!: boolean
 
         private actions: IAction[] = []
+
+        @Watch("type.name")
+        updateUserView() {
+            this.actions = []
+        }
     }
 </script>

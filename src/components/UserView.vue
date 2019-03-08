@@ -64,6 +64,11 @@
 
         private extraActions: IAction[] = []
 
+        @Watch("userViewType")
+        updateUserView() {
+            this.extraActions = []
+        }
+
         get actions() {
             const actions: IAction[] = []
             if (this.createView !== null) {
