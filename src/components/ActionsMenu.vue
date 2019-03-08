@@ -1,8 +1,14 @@
 <template>
-    <b-dropdown class="nav_batton, actions_btn, menu_btn" v-if="actionsMenu.length > 0" :text="title" no-caret>
-        <b-dropdown-item v-for="action in actionsMenu" :key="action.name" class="menu_btn" variant="primary" v-bind="action.attrs">
-            {{ action.name }}
-        </b-dropdown-item>
+    <b-dropdown class="nav_batton, actions_btn, menu_btn" v-if="actions.length > 0" :text="title" no-caret>
+        <template v-for="action in actions">
+            <!-- Passing v-on:click to v-bind doesn't seem to work, hence this ugly solution -->
+            <b-dropdown-item v-if="'location' in action" :key="action.name" class="menu_btn" variant="primary" :to="action.location">
+                {{ action.name }}
+            </b-dropdown-item>
+            <b-dropdown-item v-else-if="'callback' in action" :key="action.name" class="menu_btn" variant="primary" @click="action.callback()">
+                {{ action.name }}
+            </b-dropdown-item>
+        </template>
     </b-dropdown>
 </template>
 
@@ -26,17 +32,5 @@
     export default class ActionsMenu extends Vue {
         @Prop({ type: Array }) actions!: IAction[]
         @Prop({ type: String }) title!: string
-
-        get actionsMenu() {
-            return this.actions.map(action => {
-                let attrs
-                if ("location" in action) {
-                    attrs = { to: action.location }
-                } else {
-                    attrs = { ["on:click"]: () => action.callback() }
-                }
-                return { name: action.name, attrs }
-            })
-        }
     }
 </script>
