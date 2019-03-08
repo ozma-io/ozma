@@ -32,55 +32,11 @@
                     <template v-for="fieldInfo in block.fields" class="form_data">
                         <b-form-group :key="fieldInfo.column.name" :label-for="fieldInfo.column.name">
                             {{ fieldInfo.caption }}
-                            <ActionsMenu v-if="fieldInfo.type.name === 'userview'"
-                                         title="*"
-                                         :actions="entry.fields[fieldInfo.index].actions || []" />
-
-                            <b-form-checkbox v-if="fieldInfo.type.name === 'check'"
-                                             :id="fieldInfo.column.name"
-                                             :value="entry.fields[fieldInfo.index].value"
-                                             @input="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event)"
-                                             v-model="fieldInfo.value"
-                                             :disabled="fieldInfo.column.updateField === null || locked" />
-                            <b-form-textarea v-else-if="fieldInfo.type.name === 'textarea'"
-                                             :id="fieldInfo.column.name"
-                                             :value="entry.fields[fieldInfo.index].valueText"
-                                             @input="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event)"
-                                             :disabled="fieldInfo.column.updateField === null || locked"
-                                             :rows="3"
-                                             :max-rows="6"
-                                             :required="fieldInfo.type.required" />
-                            <CodeEditor v-else-if="fieldInfo.type.name === 'codeeditor'"
-                                        :content="entry.fields[fieldInfo.index].valueText"
-                                        @update:content="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event)"
-                                        :readOnly="fieldInfo.column.updateField === null || locked" />
-                            <UserView v-else-if="fieldInfo.type.name === 'userview'"
-                                      :uv="entry.fields[fieldInfo.index].value"
-                                      @update:actions="entry.fields[fieldInfo.index].actions = $event" />
-                            <b-form-select v-else-if="fieldInfo.type.name === 'select'"
-                                           :id="fieldInfo.column.name"
-                                           :value="entry.fields[fieldInfo.index].valueText"
-                                           @input="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event)"
-                                           :disabled="fieldInfo.column.updateField === null || locked"
-                                           :options="fieldInfo.type.options" />
-                            <!-- We don't use bootstrap-vue's b-form-input type=text because of problems with Safari
-                                 https://github.com/bootstrap-vue/bootstrap-vue/issues/1951
-                            -->
-                            <input v-else-if="fieldInfo.type.type === 'text'"
-                                   class="form-control"
-                                   :id="fieldInfo.column.name"
-                                   :value="entry.fields[fieldInfo.index].valueText"
-                                   @input="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event.target.value)"
-                                   type="text"
-                                   :disabled="fieldInfo.column.updateField === null || locked"
-                                   :required="fieldInfo.type.required" />
-                            <b-form-input v-else
-                                          :id="fieldInfo.column.name"
-                                          :value="entry.fields[fieldInfo.index].valueText"
-                                          @input="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event)"
-                                          :type="fieldInfo.type.type"
-                                          :disabled="fieldInfo.column.updateField === null || locked"
-                                          :required="fieldInfo.type.required" />
+                            
+                            <FormControl
+                                v-bind="Object.assign({}, fieldInfo, entry.fields[fieldInfo.index])"
+                                :locked="locked"
+                                @update:value="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event)" />
                         </b-form-group>
                     </template>
                 </div>
@@ -105,47 +61,13 @@
     import { CurrentChanges, IEntityChanges, IUpdatedCell } from "@/state/staging_changes"
     import { setBodyStyle } from "@/style"
     import { IAction } from "@/components/ActionsMenu.vue"
-
-    interface ITextType {
-        name: "text"
-        type: "text" | "number"
-        required: boolean
-    }
-
-    interface ITextAreaType {
-        name: "textarea"
-        required: boolean
-    }
-
-    interface ICodeEditorType {
-        name: "codeeditor"
-    }
-
-    interface ISelectOption {
-        text: string
-        value: string
-    }
-
-    interface ISelectType {
-        name: "select"
-        options: ISelectOption[]
-    }
-
-    interface ICheckType {
-        name: "check"
-    }
-
-    interface IUserViewType {
-        name: "userview"
-    }
-
-    type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | ICheckType | IUserViewType
+    import FormControl from "@/components/views/form/FormControl.vue"
+    import { IType } from "@/components/views/form/FormControl.vue"
 
     interface IFieldInfo {
         index: number
         column: Api.IResultColumnInfo
         caption: string
-        isNullable: boolean
         type: IType
     }
 
@@ -157,7 +79,6 @@
     interface IField {
         value: any
         valueText: string
-        actions?: IAction[]
     }
 
     interface IForm {
@@ -174,7 +95,7 @@
 
     @Component({
         components: {
-            CodeEditor: () => import("@/components/CodeEditor.vue"),
+            FormControl,
         },
     })
     export default class UserViewForm extends Vue {
@@ -232,7 +153,6 @@
                     column: columnInfo,
                     caption,
                     required,
-                    isNullable: columnInfo.updateField === null ? true : columnInfo.updateField.field.isNullable,
                     type: this.getInputType(columnInfo, viewAttrs, columnAttrs),
                 }
 
