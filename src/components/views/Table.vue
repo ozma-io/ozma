@@ -105,8 +105,20 @@
     const SHOW_STEP = 20
 
     const rowContains = (row: IRow, searchString: string) => {
-        const reg = new RegExp(searchString, "i")
-        return row.cells.some(cell => reg.test(cell.valueText))
+        const allfilters = searchString.match(/(".*?"|[^"\s]+)+(?=\s*|\s*$)/g)
+        if (allfilters != null) {
+            for (let filter of allfilters) {
+                if (filter.startsWith("\"")) {
+                    filter = filter.substring(1, filter.length - 1)
+                }
+                if (row.cells.some(cell => cell.valueText.toLowerCase().includes(filter.toLowerCase()))) {
+                    continue
+                }
+                return false
+            }
+            return true
+        }
+        return true
     }
 
     const rowIndicesCompare = (aIndex: number, bIndex: number, entries: IRow[], sortColumn: number) => {
