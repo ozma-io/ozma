@@ -129,7 +129,7 @@
                 }
                 deleted = 0
             }
-            if (start + 1 !== i) {
+            if (start !== i || start + 1 !== i) {
                 words = words.concat(str.substring(start + deleted, i - deleted))
             }
             start = i
