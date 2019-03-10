@@ -104,19 +104,46 @@
 
     const SHOW_STEP = 20
 
-    const rowContains = (row: IRow, searchString: string) => {
-        const allfilters = searchString.match(/(".*?"|[^"\s]+)+(?=\s*|\s*$)/g)
-        if (allfilters != null) {
-            for (let filter of allfilters) {
-                if (filter.startsWith("\"")) {
-                    filter = filter.substring(1, filter.length - 1)
-                }
-                if (row.cells.some(cell => cell.valueText.toLowerCase().includes(filter.toLowerCase()))) {
-                    continue
-                }
-                return false
+    const convertToWords = (str: string) => {
+        let words: string[] = []
+        let start = 0
+        let i = 0
+        let deleted = 0
+        const spec: string[] = ["\"\'«„", "\"\'»“"]
+        let indend: number
+        while (i < str.length) {
+            while (str[i] === " ") {
+                i++
+                start++
             }
-            return true
+            indend = spec[0].indexOf(str[i])
+            if (indend !== -1) {
+                // tslint:disable-next-line:no-empty
+                while (str[++i] !== spec[1][indend] && str[i] !== undefined) {
+                }
+                i++
+                deleted = 1
+            } else {
+                while (str[i] !== " " && str[i] !== undefined) {
+                    i++
+                }
+                deleted = 0
+            }
+            if (start + 1 !== i) {
+                words = words.concat(str.substring(start + deleted, i - deleted))
+            }
+            start = i
+        }
+        return words
+    }
+
+    const rowContains = (row: IRow, searchString: string) => {
+        const allfilters = convertToWords(searchString)
+        for (const filter of allfilters) {
+            if (row.cells.some(cell => cell.valueText.toLowerCase().includes(filter.toLowerCase()))) {
+                continue
+            }
+            return false
         }
         return true
     }
