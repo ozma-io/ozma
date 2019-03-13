@@ -109,7 +109,7 @@
         let start = 0
         let i = 0
         let deleted = 0
-        const spec: string[] = ["\"\'«„", "\"\'»“"]
+        const spec: string[] = ["\"\'«“", "\"\'»”"]
         let indend: number
         while (i < str.length) {
             while (str[i] === " ") {
