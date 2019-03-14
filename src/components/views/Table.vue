@@ -21,47 +21,63 @@
 <template>
     <b-container fluid class="cont_table without_padding">
         <div ref="tableContainer" class="tabl" @scroll="updateShowLength()" @resize="updateShowLength()">
-            <table class="tabl table b-table" :mounted="this.$nextTick(() => fixedColumn() )">
+            <table class="tabl table b-table">
                 <colgroup>
-                    <col class="checkbox-col"> <!-- Checkbox column -->
-                    <col v-if="hasRowLinks" class="open-form-col"> <!-- Open form column -->
+                    <col :class="flagOfFixedPlace ? 'checkbox-col checkbox-cells' : 'checkbox-col'"> <!-- Checkbox column -->
+                    <col v-if="hasRowLinks" :class="flagOfFixedPlace ? 'open-form-col opemform-cells' : 'open-form-col'"> <!-- Open form column -->
                     <col v-for="i in columnIndexes" :key="i" :style="columns[i].style">
                 </colgroup>
                 <thead>
                     <tr>
-                        <th class="fixed-column"></th>
-                        <th v-if="hasRowLinks" class="fixed-column"></th>
-                        <th v-for="i in columnIndexes" :key="i" :title="columns[i].caption" @click="updateSort(i)" :class="columns[i].fixed ? 'fixed-column sorting' : 'sorting'">
+                        <th class="fixed-column checkbox-cells"></th>
+                        <th v-if="hasRowLinks" class="fixed-column opemform-cells"></th>
+                        <th v-for="i in columnIndexes" :key="i" :title="columns[i].caption" @click="updateSort(i)" :class="columns[i].fixed ? 'fixed-column sorting' : 'sorting'" :style="columns[i].style">
                             {{ columns[i].caption }}
                         </th>
                     </tr>
                 </thead>
-                <tbody v-for="(entryI, rowI) in showedRows">
-                    <tr v-if="mobileColumnIndexes.length" class="fixed-place-tr"><td class="fixed-place-td"><div class="fix"><div v-for="i in mobileColumnIndexes">{{ entries[entryI].cells[i].valueText }}</div></div></td></tr>
-                    <tr :key="entryI" :style="entries[entryI].style" :class="entries[entryI].selected ? 'selected' : 'none_selected'">
-                        <td @click="selectRow(rowI, $event)" class="fixed-column">
-                            <input type="checkbox" :checked="entries[entryI].selected" v-on:click.self.prevent>
-                        </td>
-                        <td v-if="entries[entryI].linkToForm !== null" class="fixed-column">
-                            <router-link :to="entries[entryI].linkToForm">
-                                ⤢
-                            </router-link>
-                        </td>
-                        <td v-for="i in columnIndexes" :key="i" :style="entries[entryI].cells[i].style" :class="entries[entryI].cells[i].fixed ? 'fixed-column' : 'none'">
-                            <router-link v-if="entries[entryI].cells[i].link !== null" :to="entries[entryI].cells[i].link">
-                                <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" class="div_checkbox" disabled></b-checkbox>
+                <tbody>
+                    <template v-for="(entryI, rowI) in showedRows">
+                        <tr v-if="flagOfFixedPlace" class="fixed-place-tr">
+                            <td class="fixed-place-td">
+                                <div class="fix">
+                                    <div @click="selectRow(rowI, $event)" class="fixed-column">
+                                        <input type="checkbox" :checked="entries[entryI].selected" v-on:click.self.prevent>
+                                    </div>
+                                    <div v-if="entries[entryI].linkToForm !== null" class="fixed-column">
+                                        <router-link :to="entries[entryI].linkToForm">
+                                            ⤢
+                                        </router-link>
+                                    </div>
+                                    <div v-for="i in mobileColumnIndexes">{{ entries[entryI].cells[i].valueText }}</div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr :key="entryI" :style="entries[entryI].style" :class="entries[entryI].selected ? 'selected' : 'none_selected'">
+                            <td @click="selectRow(rowI, $event)" class="fixed-column checkbox-cells">
+                                <input type="checkbox" :checked="entries[entryI].selected" v-on:click.self.prevent>
+                            </td>
+                            <td v-if="entries[entryI].linkToForm !== null" class="fixed-column opemform-cells">
+                                <router-link :to="entries[entryI].linkToForm">
+                                    ⤢
+                                </router-link>
+                            </td>
+                            <td v-for="i in columnIndexes" :key="i" :style="entries[entryI].cells[i].style" :class="entries[entryI].cells[i].fixed ? 'fixed-column' : 'none'">
+                                <router-link v-if="entries[entryI].cells[i].link !== null" :to="entries[entryI].cells[i].link">
+                                    <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" class="div_checkbox" disabled></b-checkbox>
+                                    <template v-else>
+                                        {{ entries[entryI].cells[i].valueText }}
+                                    </template>
+                                </router-link>
                                 <template v-else>
-                                    {{ entries[entryI].cells[i].valueText }}
+                                    <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" disabled class="div_checkbox"></b-checkbox>
+                                    <template v-else>
+                                        {{ entries[entryI].cells[i].valueText }}
+                                    </template>
                                 </template>
-                            </router-link>
-                            <template v-else>
-                                <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" disabled class="div_checkbox"></b-checkbox>
-                                <template v-else>
-                                    {{ entries[entryI].cells[i].valueText }}
-                                </template>
-                            </template>
-                        </td>
-                    </tr>
+                            </td>
+                        </tr>
+                    </template>
                 </tbody>
             </table>
         </div>
@@ -567,6 +583,7 @@
             }
 
             this.buildRows()
+            this.fixedColumn()
         }
 
         private getCurrentChanges() {
@@ -601,33 +618,37 @@
             return this.filteredRows.slice(0, this.showLength)
         }
         private fixedColumn() {
-            const allFixedTd = document.getElementsByClassName("fixed-column")
-            if (screen.width > 768) {
-                for (const el of allFixedTd) {
-                    const element = el as HTMLElement
-                    element.style.left = element.style.left === "" || "auto" ? String(element.offsetLeft) + "px" : element.style.left
+            const allFixedColumn = []
+            for (const column of this.columns) {
+                if (column.fixed) {
+                    allFixedColumn.push(column.columnIndex)
                 }
+            }
+            let left = 20
+            if (this.hasRowLinks) {
+                left = 40
+            }
+            for (const fixedColumnIndex of allFixedColumn) {
+                this.columns[fixedColumnIndex].style["left"] = left + "px"
+                for (const row of this.entries) {
+                    row.cells[fixedColumnIndex].style["left"] = left + "px"
+                }
+                left += parseInt(this.columns[fixedColumnIndex].style["width"], 10)
+            }
+        }
+        get flagOfFixedPlace() {
+            let tableWidth = 20
+            if (this.hasRowLinks) {
+                tableWidth = 40
+            }
+            for (const column of this.columns) {
+                tableWidth += parseInt(column.style["width"], 10)
+            }
+            if (tableWidth > screen.width && this.mobileColumnIndexes.length) {
+                return true
             } else {
-                for (const el of allFixedTd) {
-                    const element = el as HTMLElement
-                    element.style.left = "auto"
-                }
+                return false
             }
         }
     }
-    window.addEventListener("orientationchange", () => {
-        const allFixedTd = document.getElementsByClassName("fixed-column")
-        if (screen.width <= 768) {
-            for (const el of allFixedTd) {
-                const element = el as HTMLElement
-                element.style.left = "auto"
-            }
-        }
-        if (screen.width > 768) {
-            for (const el1 of allFixedTd) {
-                const element2 = el1 as HTMLElement
-                element2.style.left = element2.style.left === "" || "auto" ? String(element2.offsetLeft) + "px" : element2.style.left
-            }
-        }
-    })
 </script>
