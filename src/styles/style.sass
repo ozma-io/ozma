@@ -409,7 +409,20 @@ div
 			border: 0
 		table
 			margin-bottom: 0px !important;
+			@media screen and (max-device-width: 768px)
+				.checkbox-cells
+					left: auto !important
+					width: 0px !important
+				.opemform-cells
+					left: auto !important
+					width: 0px !important
+				.fixed-column
+					left: auto !important
 			@media screen and (min-device-width: 769px)
+				.checkbox-cells
+					left: 0px
+				.opemform-cells
+					left: 20px
 				.fixed-column
 						position: sticky
 						z-index: 15
@@ -473,11 +486,11 @@ div
 							border-bottom: 0
 							border-left: 0
 							border-right: 0
-							max-width: 100vw !important
+							max-width: inherit !important
 							width: 100vw !important
 							overflow: visible
 							div.fix
-								max-width: 100vw !important
+								max-width: inherit !important
 								width: 100vw !important
 								overflow: auto
 								border-right: solid 1px var(--TableBorderColor) 
