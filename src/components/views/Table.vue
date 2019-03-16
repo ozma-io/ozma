@@ -195,7 +195,8 @@
 
     const staging = namespace("staging")
     const translations = namespace("translations")
-
+    const technicalFieldsWidth = 20 // checkbox's and openform's td width
+    
     @Component
     export default class UserViewTable extends Vue {
         @staging.State("current") changes!: CurrentChanges
@@ -624,9 +625,9 @@
                     allFixedColumn.push(column.columnIndex)
                 }
             }
-            let left = 20
+            let left = technicalFieldsWidth
             if (this.hasRowLinks) {
-                left = 40
+                left = technicalFieldsWidth * 2
             }
             for (const fixedColumnIndex of allFixedColumn) {
                 this.columns[fixedColumnIndex].style["left"] = left + "px"
@@ -637,9 +638,9 @@
             }
         }
         get flagOfFixedPlace() {
-            let tableWidth = 20
+            let tableWidth = technicalFieldsWidth
             if (this.hasRowLinks) {
-                tableWidth = 40
+                tableWidth = technicalFieldsWidth * 2
             }
             for (const column of this.columns) {
                 tableWidth += parseInt(column.style["width"], 10)

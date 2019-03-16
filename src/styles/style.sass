@@ -418,7 +418,7 @@ div
 					width: 0px !important
 				.fixed-column
 					left: auto !important
-			@media screen and (min-device-width: 769px)
+			@media screen and (min-device-width: 813px) and (orientation: landscape)
 				.checkbox-cells
 					left: 0px
 				.opemform-cells
@@ -459,7 +459,7 @@ div
 				tr
 					&.fixed-place-tr
 						display: none
-					@media screen and (max-device-width: 769px)
+					@media screen and (max-device-width: 813px), screen and (orientation: portrait)
 						&.fixed-place-tr
 							display: table-row
 						&.fixed-place-tr + tr
@@ -476,7 +476,7 @@ div
 						td
 							height: 100%
 				td
-					@media screen and (max-device-width: 769px)
+					@media screen and (max-device-width: 813px), screen and (orientation: portrait)
 						&.fixed-place-td
 							white-space: nowrap
 							position: sticky
@@ -658,6 +658,9 @@ div
 							border: solid 1px white
 							border-left: 0px
 							z-index: 1000
+							@media screen and (min-device-width: 768px), screen and (orientation: landscape)
+								button
+									pointer-events: none
 							button
 								background-color: var(--MenuColor) !important
 								padding: 5px
