@@ -1,7 +1,9 @@
 import Vue from "vue"
 import { Module, ActionContext } from "vuex"
+import { Moment } from "moment"
+import moment from "moment"
 
-import { IRef } from "@/utils"
+import { IRef, momentLocale } from "@/utils"
 import * as Api from "@/api"
 import { IResultViewInfo, IExecutedRow, SchemaName, EntityName, ValueType } from "@/api"
 
@@ -37,7 +39,8 @@ export class UserViewResult {
                     rows.forEach(row => {
                         const cell = row.values[colI]
                         if (typeof cell.value === "number") {
-                            cell.value = new Date(cell.value * 1000)
+                            const str = cell.value
+                            cell.value = moment(cell.value * 1000)
                         }
                     })
                 }
@@ -99,12 +102,17 @@ export interface IUserViewState {
     errors: string[]
 }
 
+export const dateFormat = "L"
+export const dateTimeFormat = "L LTS"
+
 // Should be in sync with staging_changes.validateValue
 export const printValue = (valueType: ValueType, value: any): string => {
     if (value === null) {
         return ""
     } else if (valueType.type === "date") {
-        return (value as Date).toLocaleDateString()
+        return (value as Moment).format(dateFormat)
+    } else if (valueType.type === "datetime") {
+        return (value as Moment).format(dateTimeFormat)
     } else {
         return String(value)
     }
@@ -120,12 +128,14 @@ const getUserView = async ({ dispatch }: ActionContext<IUserViewState, {}>, args
                 func: Api.fetchNamedViewInfo,
                 args: [args.source],
             }, { root: true })
+            await momentLocale
             current = new UserViewResult(args, res.info, res.pureAttributes, res.pureColumnAttributes, null)
         } else {
             const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
                 func: Api.fetchNamedView,
                 args: [args.source, args.args],
             }, { root: true })
+            await momentLocale
             current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
         }
     } else {
@@ -136,6 +146,7 @@ const getUserView = async ({ dispatch }: ActionContext<IUserViewState, {}>, args
                 func: Api.fetchAnonymousView,
                 args: [args.source, args.args],
             }, { root: true })
+            await momentLocale
             current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
         }
     }

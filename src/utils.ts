@@ -1,3 +1,5 @@
+import moment from "moment"
+
 export type Result<A> = A | Error
 
 export interface IRef<A> {
@@ -47,3 +49,13 @@ export const fetchJson = async (input: RequestInfo, init?: RequestInit): Promise
 export const randomId = () => {
     return Math.random().toString(36).substring(2, 15)
 }
+
+export const language = navigator.languages[0]
+export const shortLanguage = language.split("-")[0]
+
+export const momentLocale = (async () => {
+    if (shortLanguage !== "en") {
+        await import(`moment/locale/${shortLanguage}.js`)
+    }
+    moment.locale(shortLanguage)
+})()

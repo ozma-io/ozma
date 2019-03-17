@@ -2,6 +2,7 @@ import Vue from "vue"
 import VueRouter from "vue-router"
 import VueI18n from "vue-i18n"
 
+import * as Utils from "@/utils"
 import Login from "@/components/Login.vue"
 import NotFound from "@/components/NotFound.vue"
 import RootUserView from "@/components/RootUserView.vue"
@@ -22,9 +23,7 @@ export const router = new VueRouter({
     routes,
 })
 
-const language = navigator.languages[0].split("-")[0]
-
 export const i18n = new VueI18n({
-    locale: language,
+    locale: Utils.shortLanguage,
     fallbackLocale: "en",
 })
