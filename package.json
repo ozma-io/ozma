@@ -19,7 +19,8 @@
     "vue-property-decorator": "^7.0.0",
     "vue-router": "^3.0.2",
     "vuex": "^3.0.1",
-    "vuex-class": "^0.3.1"
+    "vuex-class": "^0.3.1",
+    "moment": "^2.24.0"
   },
   "devDependencies": {
     "@kazupon/vue-i18n-loader": "^0.3.0",

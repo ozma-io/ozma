@@ -1,9 +1,11 @@
 import Vue from "vue"
 import { Module, ActionContext } from "vuex"
+import { Moment } from "moment"
+import moment from "moment"
 
 import { SchemaName, FieldName, EntityName, FieldType } from "@/api"
 import * as Api from "@/api"
-import { UserViewResult } from "@/state/user_view"
+import { UserViewResult, dateFormat, dateTimeFormat } from "@/state/user_view"
 
 export interface IUpdatedCell {
     rawValue: any
@@ -135,8 +137,8 @@ const changesToParams = (changes: UpdatedCells) => {
         let arg
         if (change.value === null) {
             arg = "\0"
-        } else if (change.value instanceof Date) {
-            arg = String(Math.floor(change.value.getTime() / 1000))
+        } else if (change.value instanceof moment) {
+            arg = String(Math.floor((change.value as Moment).unix()))
         } else {
             arg = String(change.value)
         }
@@ -201,9 +203,16 @@ const convertValue = (fieldType: FieldType, value: any): any => {
         } else {
             return undefined
         }
-    } else if (fieldType.type === "date" || fieldType.type === "datetime") {
-        const date = new Date(value)
-        if (Number.isNaN(date.getTime())) {
+    } else if (fieldType.type === "date") {
+        const date = moment.utc(value, dateFormat)
+        if (!date.isValid()) {
+            return undefined
+        } else {
+            return date
+        }
+    } else if (fieldType.type === "datetime") {
+        const date = moment(value, dateTimeFormat)
+        if (!date.isValid()) {
             return undefined
         } else {
             return date
