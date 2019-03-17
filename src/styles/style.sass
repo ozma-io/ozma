@@ -660,9 +660,6 @@ div
 							border: solid 1px white
 							border-left: 0px
 							z-index: 1000
-							@media screen and (min-device-width: 768px), screen and (orientation: landscape)
-								button
-									pointer-events: none
 							button
 								background-color: var(--MenuColor) !important
 								padding: 5px
@@ -671,6 +668,8 @@ div
 								padding-left: 7px
 								padding-right: 7px
 								height: calc(1.5em + 4px)
+							button::hover + div
+								transform: translate3d(0px, calc(1.5em + 4px), 0px) !important
 							div
 								padding: 0
 								min-width: 0
@@ -678,9 +677,13 @@ div
 								border: 0
 								border-radius: 0
 								background-clip: unset
-								margin: 0px -0px 0px -1px;
-								transform: translateX(0px) !important
+								margin: 0px -0px 0px -1px
+								@media screen and (max-device-width: 767px) and (orientation: portrait)
+									transform: translateX(0px) !important
+									top: calc(1.5em + 4px) !important
 								will-change: unset !important
+								transform: translate3d(0px, calc(1.5em + 4px), 0px) !important
+								top: 0px !important
 								a
 									&.menu_btn
 										background-color: var(--MenuColor)
