@@ -54,21 +54,19 @@
 <script lang="ts">
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
     import { namespace } from "vuex-class"
-    import { IExecutedRow, RowId, FieldType, FieldName, IResultColumnInfo, IExecutedValue } from "@/api"
+    import { AttributesMap, IMainFieldInfo, IColumnField, IExecutedRow, RowId, FieldType, FieldName, IResultColumnInfo, IExecutedValue } from "@/api"
     import * as Api from "@/api"
-    import { IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, printValue } from "@/state/user_view"
+    import { IUpdatableField, IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, printValue, IProcessedRow } from "@/state/user_view"
     import { CurrentChanges, IEntityChanges, IUpdatedCell } from "@/state/staging_changes"
     import { CurrentAuth } from "@/state/auth"
     import { setBodyStyle } from "@/style"
     import { IAction } from "@/components/ActionsMenu.vue"
     import FormControl from "@/components/views/form/FormControl.vue"
-    import { IType } from "@/components/views/form/FormControl.vue"
 
     interface IFieldInfo {
         index: number
-        column: Api.IResultColumnInfo
+        column: IResultColumnInfo
         caption: string
-        type: IType
     }
 
     interface IBlockInfo {
@@ -79,31 +77,27 @@
     interface IField {
         value: any
         valueText: string
+        attributes: AttributesMap
+        update: IUpdatableField | null
     }
 
     interface IForm {
-        index: number
-        id?: RowId
         deleted: boolean
         fields: IField[]
     }
 
-    const userView = namespace("userView")
     const staging = namespace("staging")
     const translations = namespace("translations")
     const auth = namespace("auth")
 
     @Component
     export default class UserViewForm extends Vue {
-        @userView.Action("getEntries") getEntries!: (_: { schemaName: string, entityName: string }) => Promise<void>
-        @userView.State("entries") entriesMap!: EntriesMap
-        @userView.State("current") userViews!: CurrentUserViews
-        @userView.Action("getNestedView") getNestedView!: (_: IUserViewArguments) => Promise<void>
         @staging.State("current") changes!: CurrentChanges
         @staging.State("currentSubmit") currentSubmit!: Promise<void> | null
-        @staging.Action("updateField") updateField!: ({ schema, entity, id, field, value }: { schema: string, entity: string, id: number, field: string, fieldType: FieldType, value: any }) => void
-        @staging.Action("setAddedField") setAddedField!: ({ schema, entity, newId, field, value }: { schema: string, entity: string, newId: number, field: string, fieldType: FieldType, value: any }) => void
-        @staging.Action("deleteEntry") deleteEntry!: ({ schema, entity, id }: { schema: string, entity: string, id: number }) => void
+        @staging.Action("updateField") updateField!: (args: { schema: string, entity: string, id: number, field: string, fieldType: FieldType, value: any }) => void
+        @staging.Action("setAddedField") setAddedField!: (args: { schema: string, entity: string, newId: number, field: string, fieldType: FieldType, value: any }) => void
+        @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { schema: string, entity: string, newId: number }) => void
+        @staging.Action("deleteEntry") deleteEntry!: (args: { schema: string, entity: string, id: number }) => void
         @staging.Action("submit") submitChanges!: () => Promise<void>
         @translations.Getter("field") fieldTranslation!: (schema: string, entity: string, field: string, defValue: string) => string
 
@@ -112,6 +106,7 @@
 
         // Internal arrays are fields in columns order
         private entries: IForm[] = []
+        private newEntries: IForm[] = []
 
         get locked() {
             return this.uv.rows === null && this.currentSubmit !== null
@@ -131,12 +126,13 @@
                 const captionAttr = getColumnAttr("Caption")
                 if (captionAttr !== undefined) {
                     caption = String(captionAttr)
-                } else if (this.uv.info.updateEntity !== null && columnInfo.updateField !== null) {
-                    caption = this.fieldTranslation(this.uv.info.updateEntity.schema, this.uv.info.updateEntity.name, columnInfo.updateField.name, columnInfo.name)
+                } else if (this.uv.info.mainEntity !== null && columnInfo.mainField !== null) {
+                    // FIXME: get rid of this; use default field attributes instead 
+                    const entity = this.uv.info.mainEntity.entity
+                    caption = this.fieldTranslation(entity.schema, entity.name, columnInfo.mainField.name, columnInfo.name)
                 } else {
                     caption = columnInfo.name
                 }
-                const required = columnInfo.updateField === null ? false : (columnInfo.updateField.field.defaultValue === null)
 
                 const blockAttr = getColumnAttr("FormBlock")
                 const blockNumber = blockAttr !== undefined ? Number(blockAttr) : 0
@@ -146,8 +142,6 @@
                     index: i,
                     column: columnInfo,
                     caption,
-                    required,
-                    type: this.getInputType(columnInfo, viewAttrs, columnAttrs),
                 }
 
                 blocks[block].fields.push(field)
@@ -156,52 +150,83 @@
             return blocks
         }
 
-        private updateValue(id: number, fieldInfo: IFieldInfo, field: IField, text: string) {
-            if (this.uv.info.updateEntity === null) {
-                console.assert(false, "No update entity defined in view")
+        private setAddedValue(id: number, fieldInfo: IFieldInfo, field: IField, text: string) {
+            if (this.uv.info.mainEntity === null) {
+                console.assert(false, "No insert entity defined for view")
+                return
+            }
+            if (fieldInfo.column.mainField === null) {
+                console.assert(false, "Not an inserted field")
                 return
             }
 
             if (field.valueText !== text) {
-                const entity = this.uv.info.updateEntity
+                const mainEntity = this.uv.info.mainEntity.entity
+                const mainField = fieldInfo.column.mainField
 
-                if (this.uv.rows === null) {
-                    this.setAddedField({
-                        schema: entity.schema,
-                        entity: entity.name,
-                        // XXX: we only support working with first added item now, maybe fix that?
-                        newId: 0,
-                        field: fieldInfo.column.name,
-                        fieldType: fieldInfo.column.fieldType as FieldType,
-                        value: text,
-                    })
-                } else {
-                    this.updateField({
-                        schema: entity.schema,
-                        entity: entity.name,
-                        id,
-                        field: fieldInfo.column.name,
-                        fieldType: fieldInfo.column.fieldType as FieldType,
-                        value: text,
-                    })
-                }
+                this.setAddedField({
+                    schema: mainEntity.schema,
+                    entity: mainEntity.name,
+                    newId: id,
+                    field: mainField.name,
+                    fieldType: mainField.field.fieldType,
+                    value: text,
+                })
 
                 // Needed to avoid cursor jumping in WebKit
                 field.valueText = text
             }
         }
 
-        private deleteRecord(id: number) {
-            if (this.uv.info.updateEntity === null) {
-                console.assert(false)
+        private updateValue(id: number, fieldInfo: IFieldInfo, field: IField, text: string) {
+            if (field.update === null) {
+                console.assert(false, "No update entity defined in view")
                 return
             }
 
-            const entity = this.uv.info.updateEntity
+            if (field.valueText !== text) {
+                const entity = field.update.fieldRef.entity
+
+                this.updateField({
+                    schema: entity.schema,
+                    entity: entity.name,
+                    id,
+                    field: field.update.fieldRef.name,
+                    fieldType: field.update.field.fieldType,
+                    value: text,
+                })
+
+                // Needed to avoid cursor jumping in WebKit
+                field.valueText = text
+            }
+        }
+
+        private deleteAddedRecord(id: number) {
+            if (this.uv.info.mainEntity === null) {
+                console.assert(false, "No main entity defined in view")
+                return
+            }
+
+            const mainEntity = this.uv.info.mainEntity.entity
+
+            this.resetAddedEntry({
+                schema: mainEntity.schema,
+                entity: mainEntity.name,
+                newId: id,
+            })
+        }
+
+        private deleteRecord(field: IField) {
+            if (field.update === null) {
+                console.assert(false, "Not an update field")
+                return
+            }
+
+            const entity = field.update.fieldRef.entity
             this.deleteEntry({
                 schema: entity.schema,
                 entity: entity.name,
-                id,
+                id: field.update.id,
             })
         }
 
@@ -213,11 +238,6 @@
             }
         }
 
-        @Watch("userViews", { deep: true })
-        private updateNestedViews() {
-            this.buildEntries()
-        }
-
         // See Table for description of why is this meddling with Watch is needed.
         @Watch("changes", { deep: true })
         private updateChanges() {
@@ -226,55 +246,125 @@
                 // This could be done more efficiently but it would require tracking of what fields were changed.
                 this.buildEntries()
             } else {
-                const changedFields = this.getCurrentChanges()
-                if (this.uv.rows !== null) {
-                    let deletedCount = 0
-                    Object.entries(changedFields.deleted).forEach(([rowId, deleted]) => {
-                        const rowI = this.uv.updateRowIds[rowId]
-                        const entry = this.entries[rowI]
-                        if (deleted !== undefined) {
-                            entry.deleted = deleted
-                            if (deleted) {
-                                deletedCount += 1
-                            }
-                        }
-                    })
+ 
+            }
+        }
 
-                    if (deletedCount === this.uv.rows.length) {
-                        this.returnBack()
-                        return
+        private applyChanges() {
+            if (this.uv.info.mainEntity !== null) {
+                const entity = this.uv.info.mainEntity.entity
+                const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
+
+                changedFields.added.forEach((fields, newRowI) => {
+                    let form: IForm
+                    if (this.newEntries.length <= newRowI) {
+                        const newFields = this.uv.info.columns.map((info, colI) => {
+                            return {
+                                value: undefined,
+                                valueText: "",
+                                attributes: Object.assign({}, this.uv.attributes, this.uv.columnAttributes[colI]),
+                                update: info.mainField === null ? null : {
+                                    field: info.mainField.field,
+                                    fieldRef: {
+                                        entity: entity,
+                                        name: info.mainField.name,
+                                    },
+                                    id: newRowI,
+                                },
+                            }
+                        })
+                        form = {
+                            deleted: false,
+                            fields: newFields,
+                        }
+                        this.newEntries[newRowI] = form
+                    } else {
+                        form = this.newEntries[newRowI]
                     }
 
-                    Object.entries(changedFields.updated).forEach(([rowId, fields]) => {
-                        const rowI = this.uv.updateRowIds[rowId]
-                        const entry = this.entries[rowI]
-                        if (fields === null) {
-                            // Reset to original values
-                            (this.uv.rows as IExecutedRow[])[rowI].values.forEach((value, valueI) => {
-                                const columnInfo = this.uv.info.columns[valueI]
-                                const cell = entry.fields[valueI]
-                                cell.value = value.value
-                                cell.valueText = printValue(columnInfo.valueType, value)
-                            })
-                        } else {
-                            Object.entries(fields).forEach(([fieldName, value]) => {
-                                const cell = entry.fields[this.uv.updateColumnIds[fieldName]]
-                                cell.value = value.value
-                                cell.valueText = value.rawValue
-                            })
-                        }
-                    })
-                } else {
-                    // Creation mode
-                    if (changedFields.added.length !== 0) {
-                        const entry = this.entries[0]
-                        const fields = changedFields.added[0]
-                        Object.entries(fields).forEach(([fieldName, value]) => {
-                            const cell = entry.fields[this.uv.updateColumnIds[fieldName]]
-                            cell.value = value.value
-                            cell.valueText = value.rawValue
+                    if (fields === null) {
+                        form.deleted = true
+                    } else {
+                        form.deleted = false
+                        this.uv.info.columns.forEach((info, colI) => {
+                            if (info.mainField !== null) {
+                                const cell = form.fields[colI]
+                                const value = fields[info.mainField.name]
+                                if (value === undefined) {
+                                    cell.value = undefined
+                                    cell.valueText = ""
+                                } else {
+                                    cell.value = value.value
+                                    cell.valueText = value.rawValue
+                                }
+                            }
                         })
                     }
+                })
+            }
+
+            if (this.uv.rows !== null) {
+                const rows = this.uv.rows
+                let deletedCount = 0
+
+                Object.entries(this.changes.changes).forEach(([schemaName, entityChanges]) => {
+                    Object.entries(entityChanges).forEach(([entityName, changedFields]) => {
+                        const mapping = this.uv.mappingForEntity(schemaName, entityName)
+                        if (mapping === null) {
+                            return
+                        }
+
+                        Object.entries(changedFields.deleted).forEach(([rowId, deleted]) => {
+                            const rowIs = mapping.idsToRows[rowId]
+                            if (rowIs === undefined) {
+                                return
+                            }
+                            rowIs.forEach(rowI => {
+                                const entry = this.entries[rowI]
+                                entry.deleted = deleted
+                                if (deleted) {
+                                    deletedCount += 1
+                                }
+                            })
+                        })
+
+                        Object.entries(changedFields.updated).forEach(([rowId, fields]) => {
+                            const rowIs = mapping.idsToRows[rowId]
+                            if (rowIs === undefined) {
+                                return
+                            }
+                            rowIs.forEach(rowI => {
+                                const entry = this.entries[rowI]
+                                if (fields === null) {
+                                    // Reset to original values
+                                    rows[rowI].values.forEach((value, valueI) => {
+                                        const columnInfo = this.uv.info.columns[valueI]
+                                        const cell = entry.fields[valueI]
+                                        cell.value = value.value
+                                        cell.valueText = printValue(columnInfo.valueType, value)
+                                    })
+                                } else {
+                                    Object.entries(fields).forEach(([fieldName, value]) => {
+                                        const colIs = mapping.fieldsToColumns[fieldName]
+                                        if (colIs === undefined) {
+                                            return
+                                        }
+                                        colIs.forEach(colI => {
+                                            const cell = entry.fields[colI]
+                                            cell.value = value.value
+                                            cell.valueText = value.rawValue
+                                        })
+                                    })
+                                }
+                            })
+                        })
+                    })
+                })
+
+                if (deletedCount === rows.length) {
+                    // All entries are removed
+                    this.returnBack()
+                    return
                 }
             }
         }
@@ -304,155 +394,41 @@
         }
 
         private buildEntries() {
-            const changedFields = this.getCurrentChanges()
             const viewAttrs = this.uv.attributes
 
-            this.uv.info.columns.forEach(columnInfo => {
-                if (columnInfo.fieldType !== null && columnInfo.fieldType.type === "reference") {
-                    // Request entries for references
-                    this.getEntries({ schemaName: columnInfo.fieldType.entity.schema, entityName: columnInfo.fieldType.entity.name })
-                }
-            })
-
             // Build one form from a result row
-            const makeForm = (row: IExecutedRow, rowI: number, isAdded: boolean): IForm => {
+            const makeForm = (row: IProcessedRow, rowI: number): IForm => {
                 const rowAttrs = row.attributes === undefined ? {} : row.attributes
                 const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
 
-                let updatedValues: Record<string, IUpdatedCell> = {}
-                let deleted = false
-                if (isAdded) {
-                    if (changedFields.added.length !== 0) {
-                        updatedValues = changedFields.added[0]
-                    }
-                } else if (row.id !== undefined) {
-                    const deletedEntry = changedFields.deleted[row.id]
-                    if (deletedEntry !== undefined) {
-                        deleted = deletedEntry
-                    }
-
-                    const updatedEntry = changedFields.updated[row.id]
-                    if (updatedEntry !== undefined && updatedEntry !== null) {
-                        updatedValues = updatedEntry
-                    }
-                }
-
                 const fields = this.uv.info.columns.map((columnInfo, i): IField => {
-                    const rowValue = row.values[i]
+                    const cellValue = row.values[i]
                     const columnAttrs = this.uv.columnAttributes[i]
                     const getColumnAttr = (name: string) => columnAttrs[name] || viewAttrs[name]
-                    const cellAttrs = rowValue.attributes === undefined ? {} : rowValue.attributes
+                    const cellAttrs = cellValue.attributes === undefined ? {} : cellValue.attributes
                     const getCellAttr = (name: string) => cellAttrs[name] || rowAttrs[name] || columnAttrs[name] || viewAttrs[name]
-                    const updatedValue = columnInfo.updateField === null ? undefined : updatedValues[columnInfo.updateField.name]
 
-                    let value
-                    let valueText
-                    if (updatedValue === undefined) {
-                        value = rowValue.value
-                        valueText = printValue(columnInfo.valueType, value)
-                    } else {
-                        value = updatedValue.value
-                        valueText = updatedValue.rawValue
-                    }
-
-                    const controlAttr = getColumnAttr("Control")
-                    if (controlAttr === "UserView") {
-                        // See also getFieldType to understand expected value format.
-                        // FIXME: proper args
-                        const viewArgs: IUserViewArguments = { type: "named", source: value[0], args: new URLSearchParams(location.search) }
-                        this.getNestedView(viewArgs)
-                        value = this.userViews.getUserView(viewArgs)
-                    }
-
+                    const value = cellValue.value
+                    const valueText = printValue(columnInfo.valueType, value)
+                    const attributes = Object.assign({}, cellAttrs, columnAttrs, rowAttrs, viewAttrs)
                     return {
                         value,
                         valueText,
+                        attributes,
+                        update: cellValue.update === undefined ? null : cellValue.update,
                     }
                 })
 
-                return { id: row.id, index: rowI, deleted, fields }
-            }
-
-            if (this.uv.rows === null) {
-                // Creation mode
-                const values = this.uv.info.columns.map((columnInfo, i) => {
-                    const value = columnInfo.updateField === null ? "" : columnInfo.updateField.field.defaultValue
-                    return { value }
-                })
-                this.entries = [makeForm({ values }, 0, true)]
-            } else {
-                this.entries = this.uv.rows.map((row, rowI) => makeForm(row, rowI, false))
-            }
-        }
-
-        private getInputType(columnInfo: IResultColumnInfo, viewAttrs: Record<string, any>, columnAttrs: Record<string, any>): IType {
-            const getColumnAttr = (name: string) => columnAttrs[name] || viewAttrs[name]
-            const isNullable = columnInfo.updateField === null ? true : columnInfo.updateField.field.isNullable
-
-            const controlAttr = getColumnAttr("Control")
-            if (controlAttr === "UserView") {
-                console.assert(
-                    columnInfo.valueType.type === "array" && columnInfo.valueType.subtype === "string",
-                    "User view rows should be arrays with user view name and arguments",
-                )
-                return { name: "userview" }
-            }
-
-            if (columnInfo.fieldType !== null) {
-                switch (columnInfo.fieldType.type) {
-                    case "reference":
-                        const { schema, name: entity } = columnInfo.fieldType.entity
-                        const currentSchema = this.entriesMap[schema]
-                        if (currentSchema === undefined) {
-                            return { name: "text", type: "number", required: !isNullable }
-                        }
-                        const entries = currentSchema[entity]
-                        if (entries === undefined || entries instanceof Promise) {
-                            return { name: "text", type: "number", required: !isNullable }
-                        } else {
-                            return {
-                                name: "select",
-                                options: Object.entries(entries).map(([name, id]) => ({ text: name, value: String(id) })),
-                            }
-                        }
-                    case "enum":
-                        return {
-                            name: "select",
-                            options: [...(isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), ...columnInfo.fieldType.values.map(x => ({ text: x, value: x }))],
-                        }
-                    case "bool":
-                        return {
-                            name: "select",
-                            options: [...(isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
-                        }
-                    case "int":
-                        return { name: "text", type: "number", required: !isNullable }
-                }
-            } else {
-                switch (columnInfo.valueType.type) {
-                    case "bool":
-                        return {
-                            name: "select",
-                            options: [...(isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
-                        }
-                    case "int":
-                        return { name: "text", type: "number", required: !isNullable }
+                return {
+                    deleted: false,
+                    fields,
                 }
             }
 
-            // Plain text
-            switch (getColumnAttr("TextType")) {
-                case "multiline":
-                    return { name: "textarea", required: !isNullable }
-                case "codeeditor":
-                    return { name: "codeeditor" }
-                default:
-                    return { name: "text", type: "text", required: !isNullable }
+            if (this.uv.rows !== null) {
+                this.entries = this.uv.rows.map((row, rowI) => makeForm(row, rowI))
             }
-        }
-
-        private getCurrentChanges() {
-            return this.changes.getForUserView(this.uv)
+            this.applyChanges()
         }
 
         private returnBack() {
@@ -463,6 +439,10 @@
 
         get showedEntries() {
             return this.entries.filter(entry => !entry.deleted)
+        }
+
+        get showedNewEntries() {
+            return this.newEntries.filter(entry => !entry.deleted)
         }
     }
 </script>

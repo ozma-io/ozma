@@ -5,7 +5,10 @@ import moment from "moment"
 
 import { IRef, FetchError, momentLocale } from "@/utils"
 import * as Api from "@/api"
-import { IResultViewInfo, IExecutedRow, SchemaName, EntityName, ValueType } from "@/api"
+import {
+    AttributesMap, IColumnField, IFieldRef, IResultViewInfo, IExecutedRow,
+    SchemaName, ColumnName, EntityName, RowId, RowIdString, DomainId, FieldName, ValueType
+} from "@/api"
 
 export type UserViewType = "named" | "anonymous"
 
@@ -15,28 +18,56 @@ export interface IUserViewArguments {
     args: URLSearchParams | null
 }
 
+export interface IUpdateMapping {
+    // Entity IDs to row positions
+    idsToRows: Record<RowIdString, Array<number>>
+    // Column names to column positions
+    fieldsToColumns: Record<FieldName, Array<number>>
+}
+
+export interface IUpdatableField {
+    field: IColumnField
+    fieldRef: IFieldRef
+    id: RowId
+}
+
+export interface IProcessedValue {
+    value: any
+    attributes?: AttributesMap
+    pun?: any
+    update?: IUpdatableField
+}
+
+export interface IProcessedRow {
+    values: IProcessedValue[]
+    attributes?: AttributesMap
+    domainId: DomainId
+    entityIds?: Record<ColumnName, RowId>
+}
+
+export type IUpdateMappings = Record<SchemaName, Record<EntityName, IUpdateMapping>>
+
 export class UserViewResult {
     args: IUserViewArguments
     info: IResultViewInfo
     attributes: Record<string, any>
     columnAttributes: Array<Record<string, any>>
-    rows: IExecutedRow[] | null
+    rows: IProcessedRow[] | null
     // Row ids to row positions, actual key is Api.RowId
-    updateRowIds: Record<string, number> = {}
-    // Column names to column positions
-    updateColumnIds: Record<string, number> = {}
+    updateMappings: IUpdateMappings = {}
 
     constructor(args: IUserViewArguments, info: IResultViewInfo, attributes: Record<string, any>, columnAttributes: Array<Record<string, any>>, rows: IExecutedRow[] | null) {
+        const newRows = rows as IProcessedRow[] | null
         this.args = args
         this.info = info
         this.attributes = attributes
         this.columnAttributes = columnAttributes
         this.rows = rows
 
-        if (rows !== null) {
+        if (newRows !== null) {
             info.columns.forEach((columnInfo, colI) => {
                 if (columnInfo.valueType.type === "datetime" || columnInfo.valueType.type === "date") {
-                    rows.forEach(row => {
+                    newRows.forEach(row => {
                         const cell = row.values[colI]
                         if (typeof cell.value === "number") {
                             const str = cell.value
@@ -46,22 +77,70 @@ export class UserViewResult {
                 }
             })
 
-            this.updateRowIds = rows.reduce((rowIds: Record<string, number>, row, rowI) => {
-                if (row.id !== undefined) {
-                    rowIds[row.id] = rowI
-                }
-                return rowIds
-            }, {})
-        }
+            this.updateMappings = newRows.reduce((mappings: IUpdateMappings, row, rowI) => {
+                const domain = this.info.domains[row.domainId]
 
-        if (info.updateEntity !== null) {
-            this.updateColumnIds = info.columns.reduce((colIds: Record<string, number>, col, colI) => {
-                if (col.updateField !== null) {
-                    colIds[col.updateField.name] = colI
+                if (row.entityIds !== undefined) {
+                    const entityIds = row.entityIds
+                    info.columns.forEach((columnInfo, colI) => {
+                        const field = domain[columnInfo.name]
+                        if (field !== undefined) {
+                            const cell = row.values[colI]
+                            const id = entityIds[field.idColumn]
+                            const updateInfo = {
+                                field: field.field,
+                                fieldRef: field.ref,
+                                id: id,
+                            }
+                            cell.update = updateInfo
+
+                            const ref = field.ref.entity
+                            let entityMappings = mappings[ref.schema]
+                            if (entityMappings === undefined) {
+                                entityMappings = {}
+                                mappings[ref.schema] = entityMappings
+                            }
+                            let mapping = entityMappings[ref.name]
+                            if (mapping === undefined) {
+                                mapping = {
+                                    idsToRows: {},
+                                    fieldsToColumns: {}
+                                }
+                                entityMappings[ref.name] = mapping
+                            }
+
+                            let rows = mapping.idsToRows[id]
+                            if (rows === undefined) {
+                                mapping.idsToRows[id] = [rowI]
+                            } else {
+                                rows.push(rowI)
+                            }
+
+                            let cols = mapping.fieldsToColumns[field.ref.name]
+                            if (cols === undefined) {
+                                mapping.fieldsToColumns[field.ref.name] = [colI]
+                            } else {
+                                cols.push(colI)
+                            }
+                        }
+                    })
                 }
-                return colIds
+
+                return mappings
             }, {})
         }
+    }
+
+    mappingForEntity(schemaName: string, entityName: string): IUpdateMapping | null {
+        const entities = this.updateMappings[schemaName]
+        if (entities === undefined) {
+            return null
+        }
+        const mapping = entities[entityName]
+        if (mapping === undefined) {
+            return null
+        }
+        return mapping
     }
 }
 

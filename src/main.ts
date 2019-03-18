@@ -7,7 +7,7 @@ import * as Modules from "@/modules"
 
 import UserView from "@/components/UserView.vue"
 import ActionsMenu from "@/components/ActionsMenu.vue"
-import FormControl from "@/components/views/form/FormControl.vue"
+import FormControl from "@/components/FormControl.vue"
 import App from "@/App.vue"
 
 import authModule from "@/state/auth"
