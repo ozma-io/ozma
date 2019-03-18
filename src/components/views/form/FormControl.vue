@@ -2,7 +2,7 @@
     <span>
         <div class="nested_menu">
             <ActionsMenu v-if="type.name === 'userview'"
-                            title=""
+                            title="☰"
                             :actions="actions" />
         </div>
         <b-form-checkbox v-if="type.name === 'check'"

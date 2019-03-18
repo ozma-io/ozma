@@ -1,4 +1,4 @@
-﻿/*
+/*
  *общие настройки
  *текста
  *отступов (т.к bootstrap их по дефолту выстовляет свои)
@@ -538,6 +538,13 @@ div
 @media print
 	button.delete_btn
 		display: none !important
+button.delete_btn
+	background-color: var(--MenuColor) !important
+	padding: 0px
+	padding-left: 7px
+	padding-right: 7px
+	line-height: normal
+	height: calc(1.5em + 4px)
 div
 	&.cont_form
 		overflow-y: auto
@@ -556,7 +563,15 @@ form
 							page-break-inside: avoid
 				
 		div
+			select
+				border-color: var(--FormBorderColor)
+			input:focus 
+				border-color: var(--FormBorderColor)
+				box-shadow: 0 0 0 white
+			input
+				border-color: var(--FormBorderColor)
 			textarea
+				border-color: var(--FormBorderColor)
 				max-width: 98%
 				min-width: 
 				resize: none
@@ -711,21 +726,21 @@ div
 /*меню вложенное*/
 div.nested_menu
 	display: inline-block
+	float: left
+	margin-right: 7px
 	div
-		/*height: 30px*/
-		&.dropdown:hover > .dropdown-menu
-			display: block
 		&.menu_btn
 			border: solid 1px white
 			border-left: 0px
+			vertical-align: bottom
 			button
 				background-color: var(--MenuColor) !important
-				padding: 5px				
-				line-height: normal
+				padding: 0px
 				padding-left: 7px
 				padding-right: 7px
+				line-height: normal
 				height: calc(1.5em + 4px)
-				margin: 0
+				margin-top: -12px
 			div.show
 				transform: translate3d(0px, calc(1.5em + 4px), 0px) !important
 				@media screen and (max-device-width: 767px) and (orientation: portrait)

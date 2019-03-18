@@ -20,6 +20,7 @@
                 "BackgroundColor": this.settings.getEntry("backround-color", "#ffffff"),
                 "NavigationBackColor": this.settings.getEntry("NavigationBackColor", "#F5C700"),
                 "TableBorderColor": this.settings.getEntry("TableBorderColor", "#F5C700"),
+                "FormBorderColor": this.settings.getEntry("FormBorderColor", "#F5C700"),
                 "Font": this.settings.getEntry("Font", "Courier New, monospace"),
                 "FontSize": this.settings.getEntry("FontSize", "16px"),
                 "MenuColor": this.settings.getEntry("MenuColor", "#F5C700"),
