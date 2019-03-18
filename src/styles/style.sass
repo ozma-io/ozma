@@ -1,4 +1,4 @@
-﻿/*
+/*
  *общие настройки
  *текста
  *отступов (т.к bootstrap их по дефолту выстовляет свои)
@@ -297,7 +297,7 @@ div
 			display: flex
 			flex-direction: column
 			height: 100%
-		width: min-content
+		width: 100%
 		margin: 0px
 		position: relative
 		height: 100%
@@ -404,7 +404,7 @@ div
 			height: none
 		float: left
 		height: 100%
-		width: 100vw /*на весь экран*/
+		width: 100% /*на весь экран*/
 		padding: 0
 		overflow: auto /*чтобы скролить таблицу в том числе на мобилке*/
 		table.table tbody + tbody
@@ -425,6 +425,8 @@ div
 					left: 0px
 				.opemform-cells
 					left: 20px
+				.fixed-column:first-child
+					box-shadow: 3px 0 0px var(--TableBorderColor), inset 1px 0px 0px 0px var(--TableBorderColor)
 				.fixed-column
 						position: sticky
 						z-index: 15
@@ -491,7 +493,14 @@ div
 							max-width: inherit !important
 							width: 100vw !important
 							overflow: visible
+							div.fix:last-child
+								border-right: solid 1px var(--TableBorderColor) 
+							div.fix:first-child
+								border-left: solid 1px var(--TableBorderColor) 
+							div.fix > div:first-child
+								border-left: 0
 							div.fix
+								margin-left: -1px
 								max-width: inherit !important
 								width: 100vw !important
 								overflow: auto
@@ -529,6 +538,13 @@ div
 @media print
 	button.delete_btn
 		display: none !important
+button.delete_btn
+	background-color: var(--MenuColor) !important
+	padding: 0px
+	padding-left: 7px
+	padding-right: 7px
+	line-height: normal
+	height: calc(1.5em + 4px)
 div
 	&.cont_form
 		overflow-y: auto
@@ -547,7 +563,15 @@ form
 							page-break-inside: avoid
 				
 		div
+			select
+				border-color: var(--FormBorderColor)
+			input:focus 
+				border-color: var(--FormBorderColor)
+				box-shadow: 0 0 0 white
+			input
+				border-color: var(--FormBorderColor)
 			textarea
+				border-color: var(--FormBorderColor)
 				max-width: 98%
 				min-width: 
 				resize: none
@@ -570,6 +594,9 @@ form
 			margin-top: 4px
 
 /* меню */
+div
+	&.loading
+		padding-left: 7px
 div
 	div
 		&.without_padding
@@ -696,3 +723,49 @@ div
 										padding-right: 7px
 										border-bottom: 0
 										display: block
+/*меню вложенное*/
+div.nested_menu
+	display: inline-block
+	float: left
+	margin-right: 7px
+	div
+		&.menu_btn
+			border: solid 1px white
+			border-left: 0px
+			vertical-align: bottom
+			button
+				background-color: var(--MenuColor) !important
+				padding: 0px
+				padding-left: 7px
+				padding-right: 7px
+				line-height: normal
+				height: calc(1.5em + 4px)
+				margin-top: -12px
+			div.show
+				transform: translate3d(0px, calc(1.5em + 4px), 0px) !important
+				@media screen and (max-device-width: 767px) and (orientation: portrait)
+					transform: translateX(0px) !important
+					top: calc(1.5em + 4px) !important
+			div
+				padding: 0
+				min-width: 0
+				background-color: white
+				border: 0
+				border-radius: 0
+				background-clip: unset
+				margin: 0px -0px 0px -1px
+				@media screen and (max-device-width: 767px) and (orientation: portrait)
+					transform: translateX(0px) !important
+					top: calc(1.5em + 4px) !important
+				will-change: unset !important
+				a
+					&.menu_btn
+						background-color: var(--MenuColor)
+						padding: 5px
+						border: solid 1px white
+						line-height: normal
+						text-decoration: none
+						padding-left: 7px
+						padding-right: 7px
+						border-bottom: 0
+						display: block
