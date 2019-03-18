@@ -1,9 +1,10 @@
 <template>
     <span>
-        <ActionsMenu v-if="type.name === 'userview'"
-                        title="*"
-                        :actions="actions" />
-
+        <div class="nested_menu">
+            <ActionsMenu v-if="type.name === 'userview'"
+                            title=""
+                            :actions="actions" />
+        </div>
         <b-form-checkbox v-if="type.name === 'check'"
                             :id="column.name"
                             :value="value"

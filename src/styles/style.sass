@@ -708,3 +708,49 @@ div
 										padding-right: 7px
 										border-bottom: 0
 										display: block
+/*меню вложенное*/
+div.nested_menu
+	display: inline-block
+	div
+		/*height: 30px*/
+		&.dropdown:hover > .dropdown-menu
+			display: block
+		&.menu_btn
+			border: solid 1px white
+			border-left: 0px
+			button
+				background-color: var(--MenuColor) !important
+				padding: 5px				
+				line-height: normal
+				padding-left: 7px
+				padding-right: 7px
+				height: calc(1.5em + 4px)
+				margin: 0
+			div.show
+				transform: translate3d(0px, calc(1.5em + 4px), 0px) !important
+				@media screen and (max-device-width: 767px) and (orientation: portrait)
+					transform: translateX(0px) !important
+					top: calc(1.5em + 4px) !important
+			div
+				padding: 0
+				min-width: 0
+				background-color: white
+				border: 0
+				border-radius: 0
+				background-clip: unset
+				margin: 0px -0px 0px -1px
+				@media screen and (max-device-width: 767px) and (orientation: portrait)
+					transform: translateX(0px) !important
+					top: calc(1.5em + 4px) !important
+				will-change: unset !important
+				a
+					&.menu_btn
+						background-color: var(--MenuColor)
+						padding: 5px
+						border: solid 1px white
+						line-height: normal
+						text-decoration: none
+						padding-left: 7px
+						padding-right: 7px
+						border-bottom: 0
+						display: block
