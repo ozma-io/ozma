@@ -25,7 +25,9 @@
                 @update:onSubmitStaging="$emit('update:onSubmitStaging', $event)"
                 @update:enableFilter="$emit('update:enableFilter', $event)" />
         <template v-else>
-            {{ $t('loading') }}
+            <div class="loading">
+                {{ $t('loading') }}
+            </div>
         </template>
     </span>
 </template>
