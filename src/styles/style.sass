@@ -668,8 +668,11 @@ div
 								padding-left: 7px
 								padding-right: 7px
 								height: calc(1.5em + 4px)
-							button::hover + div
+							div.show
 								transform: translate3d(0px, calc(1.5em + 4px), 0px) !important
+								@media screen and (max-device-width: 767px) and (orientation: portrait)
+									transform: translateX(0px) !important
+									top: calc(1.5em + 4px) !important
 							div
 								padding: 0
 								min-width: 0
@@ -682,8 +685,6 @@ div
 									transform: translateX(0px) !important
 									top: calc(1.5em + 4px) !important
 								will-change: unset !important
-								transform: translate3d(0px, calc(1.5em + 4px), 0px) !important
-								top: 0px !important
 								a
 									&.menu_btn
 										background-color: var(--MenuColor)
