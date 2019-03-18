@@ -297,7 +297,7 @@ div
 			display: flex
 			flex-direction: column
 			height: 100%
-		width: min-content
+		width: 100%
 		margin: 0px
 		position: relative
 		height: 100%
@@ -404,7 +404,7 @@ div
 			height: none
 		float: left
 		height: 100%
-		width: 100vw /*на весь экран*/
+		width: 100% /*на весь экран*/
 		padding: 0
 		overflow: auto /*чтобы скролить таблицу в том числе на мобилке*/
 		table.table tbody + tbody
@@ -425,6 +425,8 @@ div
 					left: 0px
 				.opemform-cells
 					left: 20px
+				.fixed-column:first-child
+					box-shadow: 3px 0 0px var(--TableBorderColor), inset 1px 0px 0px 0px var(--TableBorderColor)
 				.fixed-column
 						position: sticky
 						z-index: 15
@@ -458,7 +460,6 @@ div
 						vertical-align: top
 			tbody
 				border-right: solid 1px  var(--TableBorderColor) !important
-				border-left: solid 1px var(--TableBorderColor)
 				tr
 					&.fixed-place-tr
 						display: none
@@ -492,7 +493,14 @@ div
 							max-width: inherit !important
 							width: 100vw !important
 							overflow: visible
+							div.fix:last-child
+								border-right: solid 1px var(--TableBorderColor) 
+							div.fix:first-child
+								border-left: solid 1px var(--TableBorderColor) 
+							div.fix > div:first-child
+								border-left: 0
 							div.fix
+								margin-left: -1px
 								max-width: inherit !important
 								width: 100vw !important
 								overflow: auto
