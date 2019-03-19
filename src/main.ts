@@ -37,29 +37,6 @@ export const store = new Vuex.Store({
 // TypeScript definition for "state" is broken
 const storeState: any = store.state
 
-Modules.router.beforeResolve((to, from, next) => {
-    const isLogin = to.matched.some(record => record.meta.isLogin)
-    if (!isLogin && storeState.auth.current === null) {
-        next({
-            name: "login",
-            query: { redirect: to.fullPath },
-        })
-    } else if (isLogin && storeState.auth.current !== null) {
-        let nextUrl
-        const redirect = to.query.redirect
-        if (redirect !== undefined) {
-            nextUrl = Array.isArray(redirect) ? redirect[0] : redirect
-        } else {
-            nextUrl = "/"
-        }
-        next(nextUrl)
-    } else {
-        next()
-    }
-})
-
-store.dispatch("auth/startAuth")
-
 Vue.component("UserView", UserView)
 Vue.component("ActionsMenu", ActionsMenu)
 Vue.component("FormControl", FormControl)

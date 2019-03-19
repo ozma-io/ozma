@@ -101,6 +101,7 @@
     import { CurrentChanges } from "@/state/staging_changes"
     import { IAction } from "@/components/ActionsMenu.vue"
 
+    const auth = namespace("auth")
     const userView = namespace("userView")
     const staging = namespace("staging")
     const settings = namespace("settings")

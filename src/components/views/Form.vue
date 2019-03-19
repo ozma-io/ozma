@@ -42,7 +42,7 @@
                 </div>
 
                 <!-- FIXME FIXME FIXME don't look at user! -->
-                <b-button class="delete_btn" v-if="entry.id !== undefined && currentAuth.header.sub === 'root'" variant="danger" v-b-modal="`deleteConfirm_${entry.id}`">{{ $t('delete') }}</b-button>
+                <b-button class="delete_btn" v-if="entry.id !== undefined && currentAuth.username === 'root'" variant="danger" v-b-modal="`deleteConfirm_${entry.id}`">{{ $t('delete') }}</b-button>
                 <b-modal lazy :id="`deleteConfirm_${entry.id}`" ok-variant="danger" :ok-title="$t('ok')" @ok="deleteRecord(entry.id)" :cancel-title="$t('cancel')">
                     {{ $t('delete_confirmation') }}
                 </b-modal>
@@ -57,8 +57,8 @@
     import { IExecutedRow, RowId, FieldType, FieldName, IResultColumnInfo, IExecutedValue } from "@/api"
     import * as Api from "@/api"
     import { IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, printValue } from "@/state/user_view"
-    import { CurrentAuth } from "@/state/auth"
     import { CurrentChanges, IEntityChanges, IUpdatedCell } from "@/state/staging_changes"
+    import { CurrentAuth } from "@/state/auth"
     import { setBodyStyle } from "@/style"
     import { IAction } from "@/components/ActionsMenu.vue"
     import FormControl from "@/components/views/form/FormControl.vue"
@@ -88,15 +88,15 @@
         fields: IField[]
     }
 
-    const auth = namespace("auth")
     const userView = namespace("userView")
     const staging = namespace("staging")
     const translations = namespace("translations")
+    const auth = namespace("auth")
 
     @Component
     export default class UserViewForm extends Vue {
         // FIXME FIXME FIXME
-        @auth.State("current") currentAuth!: CurrentAuth | null
+        @auth.State("current") currentAuth!: CurrentAuth
         @userView.Action("getEntries") getEntries!: (_: { schemaName: string, entityName: string }) => Promise<void>
         @userView.State("entries") entriesMap!: EntriesMap
         @userView.State("current") userViews!: CurrentUserViews

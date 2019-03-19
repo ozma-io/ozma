@@ -35,8 +35,8 @@
 <script lang="ts">
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
     import { namespace } from "vuex-class"
-    import { CurrentAuth } from "@/state/auth"
     import { UserViewResult } from "@/state/user_view"
+    import { CurrentAuth } from "@/state/auth"
     import { IAction } from "@/components/ActionsMenu.vue"
 
     const types: string[] = [
@@ -59,10 +59,10 @@
     @Component({ components })
     export default class UserView extends Vue {
         // FIXME FIXME FIXME
+        @auth.State("current") currentAuth!: CurrentAuth
         @Prop({ type: UserViewResult }) uv!: UserViewResult | null
         @Prop({ type: Boolean, default: false }) isRoot!: boolean
         @Prop({ type: String, default: "" }) filter!: string
-        @auth.State("current") currentAuth!: CurrentAuth
 
         private extraActions: IAction[] = []
 
@@ -77,7 +77,8 @@
                 const createLocation = { name: "view_create", params: { "name": this.createView } }
                 actions.push({ name: this.$tc("create"), location: this.$router.resolve(createLocation).href })
             }
-            if (this.uv !== null && this.uv.args.type === "named" && this.currentAuth.header.sub === "root") {
+            // FIXME FIXME FIXME
+            if (this.uv !== null && this.uv.args.type === "named" && this.currentAuth.username === "root") {
                 const editLocation = { name: "view", params: { "name": "__UserViewByName" }, query: { "name": this.uv.args.source } }
                 actions.push({ name: this.$tc("edit_view"), location: this.$router.resolve(editLocation).href })
             }
