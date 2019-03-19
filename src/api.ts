@@ -2,6 +2,11 @@ import * as Utils from "@/utils"
 
 const apiUrl = Utils.isProduction ? `https://api.${location.hostname}` : `http://${location.hostname}:5000`
 
+const authUrlBase = Utils.isProduction ? "https://account.myprocessx.com/auth/realms/myprocessx/" : "https://keycloak.myprocessx.com/auth/realms/myprocessx-dev"
+export const authUrl = `${authUrlBase}/protocol/openid-connect`
+export const authClientId = "funapp"
+export const authClientSecret = Utils.isProduction ? undefined : "f95ff7a4-5e36-44de-aa43-571f86b21638"
+
 interface IAuthRequest {
     username: string
     password: string
@@ -132,22 +137,6 @@ export interface IViewInfoResult {
     pureColumnAttributes: Array<Record<string, any>>
 }
 
-export const requestAuth = async (username: string, password: string): Promise<string> => {
-    const reqBody: IAuthRequest = { username, password }
-    const resBody: IAuthResponse = await Utils.fetchJson(`${apiUrl}/auth/login`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(reqBody),
-    })
-    return resBody.token
-}
-
-export const parseToken = (token: string): IAuthToken => {
-    return JSON.parse(atob(token.split(".")[1]))
-}
-
 const fetchApi = async (subUrl: string, token: string, method: string, body?: string): Promise<any> => {
     return await Utils.fetchSuccess(`${apiUrl}/${subUrl}`, {
         method,
@@ -167,11 +156,6 @@ const fetchJsonApi = async (subUrl: string, token: string, method: string, body?
         },
         body: JSON.stringify(body),
     })
-}
-
-export const renewAuth = async (token: string): Promise<string> => {
-    const response: IAuthResponse = await fetchJsonApi("auth/renew", token, "POST")
-    return response.token
 }
 
 export const fetchAllowed = async (token: string): Promise<IAllowedDatabase> => {

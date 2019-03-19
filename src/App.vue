@@ -1,19 +1,48 @@
+<i18n>
+    {
+        "en": {
+            "no_auth": "You were logged out. Refresh the page to log in again.",
+            "auth_error": "Error during authentication: {msg}"
+        },
+        "ru": {
+            "no_auth": "Вы вышли из системы. Обновите страницу чтобы зайти снова.",
+            "auth_error": "Ошибка аутентификации: {msg}"
+        }
+    }
+</i18n>
+
 <template>
     <div id="app" :style="styleSettings">
-        <router-view></router-view>
+        <router-view v-if="currentAuth !== null || pendingAuth !== null"></router-view>
+        <span v-else-if="authLastError !== null">
+            {{ $t('auth_error', { msg: authLastError }) }}
+        </span>
+        <span v-else>
+            {{ $t('no_auth') }}
+        </span>
     </div>
 </template>
 
 <script lang="ts">
-    import { Component, Vue } from "vue-property-decorator"
+    import { Component, Vue, Watch } from "vue-property-decorator"
     import { namespace } from "vuex-class"
     import { CurrentSettings } from "@/state/settings"
+    import { CurrentAuth } from "@/state/auth"
 
     const settings = namespace("settings")
+    const auth = namespace("auth")
 
     @Component
     export default class App extends Vue {
         @settings.State("current") settings!: CurrentSettings
+        @auth.Action("startAuth") startAuth!: () => void
+        @auth.State("current") currentAuth!: CurrentAuth | null
+        @auth.State("pending") pendingAuth!: Promise<CurrentAuth> | null
+        @auth.State("lastError") authLastError!: string | null
+
+        created() {
+            this.$router.onReady(() => this.startAuth())
+        }
 
         get styleSettings() {
             const values = {

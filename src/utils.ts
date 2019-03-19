@@ -59,3 +59,7 @@ export const momentLocale = (async () => {
     }
     moment.locale(shortLanguage)
 })()
+
+export const sse = () => {
+    return Math.floor((new Date()).getTime() / 1000)
+}
