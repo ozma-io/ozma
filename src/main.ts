@@ -7,6 +7,7 @@ import * as Modules from "@/modules"
 
 import UserView from "@/components/UserView.vue"
 import ActionsMenu from "@/components/ActionsMenu.vue"
+import FormControl from "@/components/views/form/FormControl.vue"
 import App from "@/App.vue"
 
 import authModule from "@/state/auth"
@@ -61,6 +62,7 @@ store.dispatch("auth/startAuth")
 
 Vue.component("UserView", UserView)
 Vue.component("ActionsMenu", ActionsMenu)
+Vue.component("FormControl", FormControl)
 
 const app = new Vue({
     router: Modules.router,

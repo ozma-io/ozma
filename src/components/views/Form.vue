@@ -93,11 +93,7 @@
     const staging = namespace("staging")
     const translations = namespace("translations")
 
-    @Component({
-        components: {
-            FormControl,
-        },
-    })
+    @Component
     export default class UserViewForm extends Vue {
         // FIXME FIXME FIXME
         @auth.State("current") currentAuth!: CurrentAuth | null
