@@ -2,7 +2,7 @@ import * as Utils from "@/utils"
 
 const apiUrl = Utils.isProduction ? `https://api.${location.hostname}` : `http://${location.hostname}:5000`
 
-const authUrlBase = Utils.isProduction ? "https://account.myprocessx.com/auth/realms/myprocessx/" : "https://keycloak.myprocessx.com/auth/realms/myprocessx-dev"
+const authUrlBase = Utils.isProduction ? "https://account.myprocessx.com/auth/realms/myprocessx" : "https://keycloak.myprocessx.com/auth/realms/myprocessx-dev"
 export const authUrl = `${authUrlBase}/protocol/openid-connect`
 export const authClientId = "funapp"
 export const authClientSecret = Utils.isProduction ? undefined : "f95ff7a4-5e36-44de-aa43-571f86b21638"
