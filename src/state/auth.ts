@@ -135,7 +135,7 @@ const getToken = (context: ActionContext<IAuthState, {}>, params: Record<string,
             return auth
         } catch (e) {
             if (state.pending === pending.ref) {
-                dispatch("removeAuth", { root: true })
+                dispatch("removeAuth", undefined, { root: true })
                 commit("setError", e.message)
             }
             throw e
