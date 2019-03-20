@@ -31,7 +31,7 @@
 
 <template>
     <b-container class="without_padding main_div">
-        <div :class="uv !== null && uv.attributes.Type === 'Menu' ? 'scrol_menu' : 'none_scrol'">
+        <div :class="uvIsReady && uv.attributes.Type === 'Menu' ? 'scrol_menu' : 'none_scrol'">
             <b-button-toolbar class="head_menu">
                 <b-button v-if="!isMainView" :to="{ name: 'main' }" class="nav_batton, goto_nav" id="menu_btn">
                     {{ $t('goto_nav') }}
@@ -58,7 +58,7 @@
                           @update:enableFilter="enableFilter = $event" />
             </b-col>
         </div>
-        <nav :show="this.$children" class="fix-bot navbar fixed-bottom navbar-light bg-light">
+        <nav v-if="!uvIsError && bottomBarNeeded" class="fix-bot navbar fixed-bottom navbar-light bg-light">
             <div class="count_row">{{ statusLine }}</div>
             <b-alert v-for="error in uvErrors"
                      :key="error"
@@ -72,7 +72,7 @@
                      :show="settingsLastError !== null">
                 {{ $t('settings_error', { msg: settingsLastError }) }}
             </b-alert>
-            <b-alert class="error custom_danger"
+            <b-alert class="error custom_danger"    
                      variant="danger"
                      :show="translationsLastError !== null">
                 {{ $t('translations_error', { msg: translationsLastError }) }}
@@ -96,7 +96,7 @@
     import { Route } from "vue-router"
     import { Component, Watch, Vue } from "vue-property-decorator"
     import { Action, namespace } from "vuex-class"
-    import { IUserViewArguments, UserViewResult, CurrentUserViews } from "@/state/user_view"
+    import { IUserViewArguments, UserViewResult, UserViewError, CurrentUserViews } from "@/state/user_view"
     import { CurrentTranslations } from "@/state/translations"
     import { CurrentChanges } from "@/state/staging_changes"
     import { IAction } from "@/components/ActionsMenu.vue"
@@ -187,8 +187,24 @@
             return this.userViews.rootView
         }
 
+        get uvIsReady() {
+            return this.uv instanceof UserViewResult
+        }
+
+        get uvIsError() {
+            return this.uv instanceof UserViewError
+        }
+
         get isMainView() {
             return this.$route.params.name === "Main"
+        }
+
+        get bottomBarNeeded() {
+            return this.uvErrors.length > 0 ||
+                this.settingsLastError !== null ||
+                this.translationsLastError !== null ||
+                this.stagingErrors.length > 0 ||
+                !this.changes.isEmpty
         }
     }
 </script>

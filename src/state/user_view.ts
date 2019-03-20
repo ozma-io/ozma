@@ -3,7 +3,7 @@ import { Module, ActionContext } from "vuex"
 import { Moment } from "moment"
 import moment from "moment"
 
-import { IRef, momentLocale } from "@/utils"
+import { IRef, FetchError, momentLocale } from "@/utils"
 import * as Api from "@/api"
 import { IResultViewInfo, IExecutedRow, SchemaName, EntityName, ValueType } from "@/api"
 
@@ -69,19 +69,32 @@ export class UserViewResult {
 export type Entries = Record<string, number>
 export type EntriesMap = Record<SchemaName, Record<EntityName, Entries | Promise<Entries>>>
 
+export type UserViewErrorType = "forbidden"
+
+export class UserViewError extends Error {
+    message: UserViewErrorType
+    args: IUserViewArguments
+
+    constructor(message: UserViewErrorType, args: IUserViewArguments) {
+        super(message)
+        this.message = message
+        this.args = args
+    }
+}
+
 export class CurrentUserViews {
-    userViews: Record<string, UserViewResult | Promise<UserViewResult>> = {}
+    userViews: Record<string, UserViewResult | UserViewError | Promise<UserViewResult>> = {}
 
     get rootView() {
         const uv = this.userViews[""]
-        if (uv instanceof UserViewResult) {
-            return uv
-        } else {
+        if (uv === null || uv instanceof Promise) {
             return null
+        } else {
+            return uv
         }
     }
 
-    setUserView(args: IUserViewArguments | null, uv: UserViewResult | Promise<UserViewResult>) {
+    setUserView(args: IUserViewArguments | null, uv: UserViewResult | UserViewError | Promise<UserViewResult>) {
         Vue.set(this.userViews, args === null ? "" : userViewHash(args), uv)
     }
 
@@ -120,37 +133,47 @@ export const printValue = (valueType: ValueType, value: any): string => {
 
 const userViewHash = (args: IUserViewArguments) => `${args.type}__${args.source}__${args.args}`
 
-const getUserView = async ({ dispatch }: ActionContext<IUserViewState, {}>, args: IUserViewArguments): Promise<UserViewResult> => {
-    let current: UserViewResult
-    if (args.type === "named") {
-        if (args.args === null) {
-            const res: Api.IViewInfoResult = await dispatch("callProtectedApi", {
-                func: Api.fetchNamedViewInfo,
-                args: [args.source],
-            }, { root: true })
-            await momentLocale
-            current = new UserViewResult(args, res.info, res.pureAttributes, res.pureColumnAttributes, null)
+const getUserView = async ({ dispatch }: ActionContext<IUserViewState, {}>, args: IUserViewArguments): Promise<UserViewResult | UserViewError> => {
+    try {
+        let current: UserViewResult
+        if (args.type === "named") {
+            if (args.args === null) {
+                const res: Api.IViewInfoResult = await dispatch("callProtectedApi", {
+                    func: Api.fetchNamedViewInfo,
+                    args: [args.source],
+                }, { root: true })
+                await momentLocale
+                current = new UserViewResult(args, res.info, res.pureAttributes, res.pureColumnAttributes, null)
+            } else {
+                const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
+                    func: Api.fetchNamedView,
+                    args: [args.source, args.args],
+                }, { root: true })
+                await momentLocale
+                current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
+            }
         } else {
-            const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
-                func: Api.fetchNamedView,
-                args: [args.source, args.args],
-            }, { root: true })
-            await momentLocale
-            current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
+            if (args.args === null) {
+                throw Error("Getting information about anonymous views is not supported")
+            } else {
+                const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
+                    func: Api.fetchAnonymousView,
+                    args: [args.source, args.args],
+                }, { root: true })
+                await momentLocale
+                current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
+            }
         }
-    } else {
-        if (args.args === null) {
-            throw Error("Getting information about anonymous views is not supported")
-        } else {
-            const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
-                func: Api.fetchAnonymousView,
-                args: [args.source, args.args],
-            }, { root: true })
-            await momentLocale
-            current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
+        return current
+    } catch (e) {
+        if (e instanceof FetchError) {
+            if (e.response.status === 403) {
+                return new UserViewError("forbidden", args)
+            }
         }
+
+        throw e
     }
-    return current
 }
 
 const userViewModule: Module<IUserViewState, {}> = {
@@ -239,20 +262,25 @@ const userViewModule: Module<IUserViewState, {}> = {
             const { state, commit } = store
             const pending: IRef<Promise<UserViewResult>> = {}
             pending.ref = (async () => {
+                let current: UserViewError | UserViewResult
                 try {
-                    const current = await getUserView(store, args)
+                    current = await getUserView(store, args)
                     if (state.pending !== pending.ref) {
                         throw Error("Pending operation cancelled")
                     }
                     commit("clear")
                     commit("setUserView", { args: null, userView: current })
-                    return current
                 } catch (e) {
                     if (state.pending === pending.ref) {
                         commit("clear")
                         commit("addError", e.message)
                     }
                     throw e
+                }
+                if (current instanceof UserViewError) {
+                    throw current
+                } else {
+                    return current
                 }
             })()
             commit("setPending", pending.ref)
@@ -267,18 +295,23 @@ const userViewModule: Module<IUserViewState, {}> = {
 
             const pending: IRef<Promise<UserViewResult>> = {}
             pending.ref = (async () => {
+                let current: UserViewError | UserViewResult
                 try {
-                    const current = await getUserView(store, args)
+                    current = await getUserView(store, args)
                     if (state.current.userViews[uvHash] !== pending.ref) {
                         throw Error("Pending operation cancelled")
                     }
                     commit("setUserView", { args, userView: current })
-                    return current
                 } catch (e) {
                     if (state.current.userViews[uvHash] === pending.ref) {
                         commit("addError", e.message)
                     }
                     throw e
+                }
+                if (current instanceof UserViewError) {
+                    throw current
+                } else {
+                    return current
                 }
             })()
             commit("setUserView", { args, userView: pending.ref })

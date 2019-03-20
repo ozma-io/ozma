@@ -3,19 +3,23 @@
         "en": {
             "create": "Create new",
             "edit_view": "Edit user view",
-            "loading": "Now loading"
+            "loading": "Now loading",
+            "forbidden": "Sorry, you are not authorized to use this user view. Contact your administrator.",
+            "unknown_error": "Unknown user view fetch error: {msg}"
         },
         "ru": {
             "create": "Создать новую",
             "edit_view": "Редактировать отображение",
-            "loading": "Загрузка данных"
+            "loading": "Загрузка данных",
+            "forbidden": "К сожалению у вас нет прав доступа для просмотра этого отображения. Свяжитесь с администратором.",
+            "unknown_error": "Неизвестная ошибка загрузки отображения: {msg}"
         }
     }
 </i18n>
 
 <template>
     <span>
-        <component v-if="uv !== null"
+        <component v-if="userViewType !== null"
                 :is="userViewType"
                 :uv="uv"
                 :isRoot="isRoot"
@@ -24,18 +28,19 @@
                 @update:statusLine="$emit('update:statusLine', $event)"
                 @update:onSubmitStaging="$emit('update:onSubmitStaging', $event)"
                 @update:enableFilter="$emit('update:enableFilter', $event)" />
-        <template v-else>
-            <div class="loading">
-                {{ $t('loading') }}
-            </div>
-        </template>
+        <div v-else-if="errorMessage !== null" class="loading">
+            {{ errorMessage }}
+        </div>
+        <div v-else class="loading">
+            {{ $t('loading') }}
+        </div>
     </span>
 </template>
 
 <script lang="ts">
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
     import { namespace } from "vuex-class"
-    import { UserViewResult } from "@/state/user_view"
+    import { UserViewResult, UserViewError } from "@/state/user_view"
     import { CurrentAuth } from "@/state/auth"
     import { IAction } from "@/components/ActionsMenu.vue"
 
@@ -60,7 +65,7 @@
     export default class UserView extends Vue {
         // FIXME FIXME FIXME
         @auth.State("current") currentAuth!: CurrentAuth
-        @Prop({ type: UserViewResult }) uv!: UserViewResult | null
+        @Prop() uv!: UserViewResult | UserViewError | null
         @Prop({ type: Boolean, default: false }) isRoot!: boolean
         @Prop({ type: String, default: "" }) filter!: string
 
@@ -78,7 +83,7 @@
                 actions.push({ name: this.$tc("create"), location: this.$router.resolve(createLocation).href })
             }
             // FIXME FIXME FIXME
-            if (this.uv !== null && this.uv.args.type === "named" && this.currentAuth.decodedToken.realm_access.roles.includes("fundb_admin")) {
+            if (this.uv instanceof UserViewResult && this.uv.args.type === "named" && this.currentAuth.decodedToken.realm_access.roles.includes("fundb_admin")) {
                 const editLocation = { name: "view", params: { "name": "__UserViewByName" }, query: { "name": this.uv.args.source } }
                 actions.push({ name: this.$tc("edit_view"), location: this.$router.resolve(editLocation).href })
             }
@@ -92,7 +97,7 @@
         }
 
         get userViewType() {
-            if (this.uv === null) {
+            if (!(this.uv instanceof UserViewResult)) {
                 return null
             } else {
                 const typeAttr = this.uv.attributes["Type"]
@@ -106,11 +111,23 @@
         }
 
         get createView() {
-            if (this.uv === null) {
+            if (!(this.uv instanceof UserViewResult)) {
                 return null
             } else {
                 const attr = this.uv.attributes["CreateView"]
                 return attr !== undefined ? String(attr) : null
+            }
+        }
+
+        get errorMessage() {
+            if (!(this.uv instanceof UserViewError)) {
+                return null
+            } else {
+                if (this.uv.message === "forbidden") {
+                    return this.$t("forbidden")
+                } else {
+                    return this.$t("unknown_error", { msg: this.uv.message } )
+                }
             }
         }
     }
