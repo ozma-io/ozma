@@ -681,8 +681,6 @@ div
 							display: none
 					div
 						/*height: 30px*/
-						&.dropdown:hover > .dropdown-menu
-							display: block
 						&.menu_btn
 							border: solid 1px white
 							border-left: 0px
@@ -742,10 +740,9 @@ div.nested_menu
 				height: calc(1.5em + 4px)
 				margin-top: -12px
 			div.show
-				transform: translate3d(0px, calc(1.5em + 4px), 0px) !important
 				@media screen and (max-device-width: 767px) and (orientation: portrait)
 					transform: translateX(0px) !important
-					top: calc(1.5em + 4px) !important
+					top: calc(1.5em - 8px) !important
 			div
 				padding: 0
 				min-width: 0
@@ -754,9 +751,6 @@ div.nested_menu
 				border-radius: 0
 				background-clip: unset
 				margin: 0px -0px 0px -1px
-				@media screen and (max-device-width: 767px) and (orientation: portrait)
-					transform: translateX(0px) !important
-					top: calc(1.5em + 4px) !important
 				will-change: unset !important
 				a
 					&.menu_btn
