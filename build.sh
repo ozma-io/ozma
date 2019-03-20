@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 # Build and publish the application.
 
 set -x
@@ -6,3 +6,4 @@ set -x
 rm -rf dist
 npm install
 npm run build
+rm dist/js/*.map

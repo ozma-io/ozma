@@ -18,8 +18,6 @@ export declare var process: {
     env: Record<string, string>,
 }
 
-export const isProduction: boolean = (process.env["NODE_ENV"] === "production")
-
 export class FetchError extends Error {
     message: string
     response: Response
