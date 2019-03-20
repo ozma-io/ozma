@@ -37,15 +37,15 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <template v-for="(entryI, rowI) in showedRows">
+                    <template v-for="(entryI, rowI) in shownRows">
                         <tr v-if="flagOfFixedPlace" class="fixed-place-tr">
                             <td class="fixed-place-td">
                                 <div class="fix">
                                     <div @click="selectRow(rowI, $event)" class="fixed-column">
                                         <input type="checkbox" :checked="entries[entryI].selected" v-on:click.self.prevent>
                                     </div>
-                                    <div v-if="entries[entryI].linkToForm !== null" class="fixed-column">
-                                        <router-link :to="entries[entryI].linkToForm">
+                                    <div v-if="entries[entryI].linkForRow !== null" class="fixed-column">
+                                        <router-link :to="entries[entryI].linkForRow">
                                             ⤢
                                         </router-link>
                                     </div>
@@ -57,8 +57,8 @@
                             <td @click="selectRow(rowI, $event)" class="fixed-column checkbox-cells">
                                 <input type="checkbox" :checked="entries[entryI].selected" v-on:click.self.prevent>
                             </td>
-                            <td v-if="entries[entryI].linkToForm !== null" class="fixed-column opemform-cells">
-                                <router-link :to="entries[entryI].linkToForm">
+                            <td v-if="entries[entryI].linkForRow !== null" class="fixed-column opemform-cells">
+                                <router-link :to="entries[entryI].linkForRow">
                                     ⤢
                                 </router-link>
                             </td>
@@ -87,10 +87,10 @@
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
     import { Location } from "vue-router"
     import { namespace } from "vuex-class"
-    import { UserViewResult, printValue } from "@/state/user_view"
+    import { UserViewResult, printValue, IUpdatableField } from "@/state/user_view"
     import { CurrentChanges, IEntityChanges, IUpdatedCell } from "@/state/staging_changes"
     import { setBodyStyle } from "@/style"
-    import { IExecutedRow, IExecutedValue, IUpdateFieldInfo, ValueType } from "@/api"
+    import { IExecutedRow, IExecutedValue, ValueType } from "@/api"
     import { CurrentTranslations } from "@/state/translations"
 
     interface ICell {
@@ -107,7 +107,7 @@
         deleted: boolean
         selected: boolean
         style: Record<string, any>
-        linkToForm: Location | null
+        linkForRow: Location | null
     }
 
     interface IColumn {
@@ -196,7 +196,7 @@
     const staging = namespace("staging")
     const translations = namespace("translations")
     const technicalFieldsWidth = 20 // checkbox's and openform's td width
-    
+
     @Component
     export default class UserViewTable extends Vue {
         @staging.State("current") changes!: CurrentChanges
@@ -217,16 +217,7 @@
         private printListener: { query: MediaQueryList, queryCallback: (mql: MediaQueryListEvent) => void, printCallback: () => void } | null = null
 
         get hasRowLinks() {
-            const viewAttrs = this.uv.attributes
-
-            let rowLinks = false
-            if (this.uv.rows && this.uv.rows.length > 0) {
-                const firstRow = this.uv.rows[0]
-                const rowAttrs = firstRow.attributes === undefined ? {} : firstRow.attributes
-                const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
-                rowLinks = firstRow.id !== undefined && getRowAttr("LinkedView") !== undefined
-            }
-            return rowLinks
+            return this.entries.some(e => e.linkForRow !== null)
         }
 
         get columns() {
@@ -240,8 +231,10 @@
                 const captionAttr = getColumnAttr("Caption")
                 if (captionAttr !== undefined) {
                     caption = String(captionAttr)
-                } else if (this.uv.info.updateEntity !== null && columnInfo.updateField !== null) {
-                    caption = this.fieldTranslation(this.uv.info.updateEntity.schema, this.uv.info.updateEntity.name, columnInfo.updateField.name, columnInfo.name)
+                } else if (this.uv.info.mainEntity !== null && columnInfo.mainField !== null) {
+                    // FIXME: get rid of this; use default field attributes instead
+                    const entity = this.uv.info.mainEntity.entity
+                    caption = this.fieldTranslation(entity.schema, entity.name, columnInfo.mainField.name, columnInfo.name)
                 } else {
                     caption = columnInfo.name
                 }
@@ -349,7 +342,7 @@
                 const oldEntry = this.entries[this.lastSelected]
                 if (this.lastSelected < rowI) {
                     for (let i = this.lastSelected + 1; i <= rowI; i++) {
-                        const entry = this.entries[this.showedRows[i]]
+                        const entry = this.entries[this.shownRows[i]]
                         if (entry.selected !== oldEntry.selected) {
                             changeRows++
                         }
@@ -357,7 +350,7 @@
                     }
                 } else if (this.lastSelected > rowI) {
                     for (let i = rowI; i <= this.lastSelected - 1; i++) {
-                        const entry = this.entries[this.showedRows[i]]
+                        const entry = this.entries[this.shownRows[i]]
                         if (entry.selected !== oldEntry.selected) {
                             changeRows++
                         }
@@ -369,7 +362,7 @@
                 }
                 this.selectedRows += (oldEntry.selected) ? changeRows : -changeRows
             } else {
-                const entry = this.entries[this.showedRows[rowI]]
+                const entry = this.entries[this.shownRows[rowI]]
                 entry.selected = !entry.selected
                 this.selectedRows += (entry.selected) ? 1 : -1
                 this.lastSelected = rowI
@@ -393,36 +386,66 @@
                 // This could be done more efficiently but it would require tracking of what fields were changed.
                 this.buildEntries()
             } else {
-                const changedFields = this.getCurrentChanges()
-                if (this.uv.rows !== null) {
-                    Object.entries(changedFields.deleted).forEach(([rowId, deleted]) => {
-                        const rowI = this.uv.updateRowIds[rowId]
-                        const entry = this.entries[rowI]
-                        if (deleted !== undefined) {
-                            entry.deleted = deleted
-                        }
-                    })
+                this.applyChanges()
+            }
+        }
 
-                    Object.entries(changedFields.updated).forEach(([rowId, fields]) => {
-                        const rowI = this.uv.updateRowIds[rowId]
-                        const entry = this.entries[rowI]
-                        if (fields === null) {
-                            // Reset to original values
-                            (this.uv.rows as IExecutedRow[])[rowI].values.forEach((value, valueI) => {
-                                const columnInfo = this.uv.info.columns[valueI]
-                                const cell = entry.cells[valueI]
-                                cell.value = value.value
-                                cell.valueText = getValueText(columnInfo.valueType, value)
-                            })
-                        } else {
-                            Object.entries(fields).forEach(([fieldName, value]) => {
-                                const cell = entry.cells[this.uv.updateColumnIds[fieldName]]
-                                cell.value = value.value
-                                cell.valueText = value.rawValue
-                            })
+        // Apply changes on top of built entries.
+        // TODO: make this even more granular, ideally: dynamically bind a watcher to every changed and added entry.
+        private applyChanges() {
+            if (this.uv.rows !== null) {
+                const rows = this.uv.rows
+
+                Object.entries(this.changes.changes).forEach(([schemaName, entityChanges]) => {
+                    Object.entries(entityChanges).forEach(([entityName, changedFields]) => {
+                        const mapping = this.uv.mappingForEntity(schemaName, entityName)
+                        if (mapping === null) {
+                            return
                         }
+
+                        Object.entries(changedFields.deleted).forEach(([rowId, deleted]) => {
+                            const rowIs = mapping.idsToRows[rowId]
+                            if (rowIs === undefined) {
+                                return
+                            }
+                            rowIs.forEach(rowI => {
+                                const entry = this.entries[rowI]
+                                entry.deleted = deleted
+                            })
+                        })
+
+                        Object.entries(changedFields.updated).forEach(([rowId, fields]) => {
+                            const rowIs = mapping.idsToRows[rowId]
+                            if (rowIs === undefined) {
+                                return
+                            }
+                            rowIs.forEach(rowI => {
+                                const entry = this.entries[rowI]
+                                if (fields === null) {
+                                    // Reset to original values
+                                    rows[rowI].values.forEach((value, valueI) => {
+                                        const columnInfo = this.uv.info.columns[valueI]
+                                        const cell = entry.cells[valueI]
+                                        cell.value = value.value
+                                        cell.valueText = printValue(columnInfo.valueType, value)
+                                    })
+                                } else {
+                                    Object.entries(fields).forEach(([fieldName, value]) => {
+                                        const colIs = mapping.fieldsToColumns[fieldName]
+                                        if (colIs === undefined) {
+                                            return
+                                        }
+                                        colIs.forEach(colI => {
+                                            const cell = entry.cells[colI]
+                                            cell.value = value.value
+                                            cell.valueText = value.rawValue
+                                        })
+                                    })
+                                }
+                            })
+                        })
                     })
-                }
+                })
             }
         }
 
@@ -499,30 +522,13 @@
                 // Not supported in table yet.
                 this.entries = []
             } else {
-                const changedFields = this.getCurrentChanges()
                 const viewAttrs = this.uv.attributes
 
                 this.entries = this.uv.rows.map((row, rowI) => {
                     const rowAttrs = row.attributes === undefined ? {} : row.attributes
                     const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
 
-                    let updatedValues: Record<string, IUpdatedCell> = {}
-                    let deleted = false
-                    if (row.id !== undefined) {
-                        deleted = changedFields.deleted[row.id] || false
-                        const updatedEntry = changedFields.updated[row.id]
-                        if (updatedEntry !== undefined && updatedEntry !== null) {
-                            updatedValues = updatedEntry
-                        }
-                    }
-
-                    const linkedViewAttrForRow = row.id === undefined ? undefined : getRowAttr("LinkedView")
-                    const linkForRow =
-                        linkedViewAttrForRow === undefined ? null : {
-                            name: "view",
-                            params: { "name": String(linkedViewAttrForRow) },
-                            query: { "id": String(row.id) },
-                        }
+                    let linkForRow = null
 
                     const rowStyle: Record<string, any> = {}
                     const rowHeight = getRowAttr("RowHeight")
@@ -530,32 +536,31 @@
                         rowStyle["height"] = rowHeight
                     }
 
-                    const cells = row.values.map((rowValue, colI): ICell => {
+                    const cells = row.values.map((cellValue, colI): ICell => {
                         const columnInfo = this.uv.info.columns[colI]
                         const columnAttrs = this.uv.columnAttributes[colI]
-                        const cellAttrs = rowValue.attributes === undefined ? {} : rowValue.attributes
+                        const cellAttrs = cellValue.attributes === undefined ? {} : cellValue.attributes
 
                         const getCellAttr = (name: string) => cellAttrs[name] || rowAttrs[name] || columnAttrs[name] || viewAttrs[name]
 
-                        const updatedValue = columnInfo.updateField === null ? undefined : updatedValues[columnInfo.updateField.name]
+                        const value = cellValue.value
+                        const valueText = getValueText(columnInfo.valueType, cellValue)
 
-                        let value
-                        let valueText
-                        if (updatedValue === undefined) {
-                            value = rowValue.value
-                            valueText = getValueText(columnInfo.valueType, rowValue)
-                        } else {
-                            value = updatedValue.value
-                            valueText = updatedValue.rawValue
-                        }
-
-                        const linkedViewAttr = row.id === undefined ? undefined : getCellAttr("LinkedView")
+                        const linkedViewAttr = cellValue.update === undefined ? undefined : getCellAttr("LinkedView")
                         const link =
                             linkedViewAttr === undefined ? null : {
                                 name: "view",
                                 params: { "name": String(linkedViewAttr) },
-                                query: { "id": String(row.id) },
+                                query: { "id": String((cellValue.update as IUpdatableField).id) },
                             }
+                        const linkedViewForRowAttr = cellValue.update === undefined ? undefined : getCellAttr("RowLinkedView")
+                        if (linkedViewForRowAttr !== undefined) {
+                            linkForRow = {
+                                name: "view",
+                                params: { "name": String(linkedViewAttr) },
+                                query: { "id": String((cellValue.update as IUpdatableField).id) },
+                            }
+                        }
 
                         const style: Record<string, any> = {}
 
@@ -575,20 +580,18 @@
 
                     return {
                         index: rowI,
-                        cells, deleted,
+                        cells,
+                        deleted: false,
                         style: rowStyle,
                         selected: false,
-                        linkToForm: linkForRow,
+                        linkForRow,
                     }
                 })
             }
 
             this.buildRows()
             this.fixedColumn()
-        }
-
-        private getCurrentChanges() {
-            return this.changes.getForUserView(this.uv)
+            this.applyChanges()
         }
 
         private updateShowLength() {
@@ -615,9 +618,10 @@
             this.$emit("update:statusLine", this.$tc("filtered_count", this.filteredRows.length, { status: selected + this.filteredRows.length.toString() }))
         }
 
-        get showedRows() {
+        get shownRows() {
             return this.filteredRows.slice(0, this.showLength)
         }
+
         private fixedColumn() {
             const allFixedColumn = []
             for (const column of this.columns) {
@@ -637,6 +641,7 @@
                 left += parseInt(this.columns[fixedColumnIndex].style["width"], 10)
             }
         }
+
         get flagOfFixedPlace() {
             let tableWidth = technicalFieldsWidth
             if (this.hasRowLinks) {

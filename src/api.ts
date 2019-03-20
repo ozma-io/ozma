@@ -21,10 +21,14 @@ export interface IAuthToken {
     exp: number
 }
 
+export type DomainId = number
 export type RowId = number
+export type RowIdString = string
 export type FieldName = string
 export type EntityName = string
 export type SchemaName = string
+export type ColumnName = string
+export type AttributeName = string
 
 export interface IAllowedEntity {
     fields: Record<FieldName, void>
@@ -43,6 +47,11 @@ export interface IEntityRef {
     name: EntityName
 }
 
+export interface IFieldRef {
+    entity: IEntityRef
+    name: FieldName
+}
+
 export type SimpleType = "int" | "decimal" | "string" | "bool" | "datetime" | "date" | "regclass"
 
 export interface IScalarSimpleType {
@@ -57,6 +66,9 @@ export interface IArraySimpleType {
 export type ValueType = IScalarSimpleType | IArraySimpleType
 
 export type FieldValueType = "int" | "decimal" | "string" | "bool" | "datetime" | "date"
+
+export type AttributesMap = Record<AttributeName, any>
+export type AttributeTypesMap = Record<AttributeName, ValueType>
 
 export interface IScalarFieldType {
     type: FieldValueType
@@ -86,43 +98,55 @@ export interface IColumnField {
     isNullable: boolean
 }
 
-export interface IUpdateFieldInfo {
-    name: string
+export interface IMainFieldInfo {
+    name: FieldName
     field: IColumnField
 }
 
 export interface IResultColumnInfo {
     name: string
-    attributeTypes: Record<string, ValueType>
-    cellAttributeTypes: Record<string, ValueType>
+    attributeTypes: AttributeTypesMap
+    cellAttributeTypes: AttributeTypesMap
     valueType: ValueType
-    fieldType: FieldType | null
     punType: ValueType | null
-    updateField: IUpdateFieldInfo | null
+    mainField: IMainFieldInfo | null
+}
+
+export interface IDomainField {
+    ref: IFieldRef
+    field: IColumnField
+    idColumn: ColumnName
+}
+
+export interface IMainEntityInfo {
+    entity: IEntityRef
+    name: FieldName
 }
 
 export interface IResultViewInfo {
-    attributeTypes: Record<string, ValueType>
-    rowAttributeTypes: Record<string, ValueType>
-    updateEntity: IEntityRef | null
+    attributeTypes: AttributeTypesMap
+    rowAttributeTypes: AttributeTypesMap
+    domains: Record<DomainId, Record<ColumnName, IDomainField>>
+    mainEntity: IMainEntityInfo | null
     columns: IResultColumnInfo[]
 }
 
 export interface IExecutedValue {
     value: any
-    attributes?: Record<string, any>
+    attributes?: AttributesMap
     pun?: any
 }
 
 export interface IExecutedRow {
     values: IExecutedValue[]
-    attributes?: Record<string, any>
-    id?: RowId
+    domainId: DomainId
+    attributes?: AttributesMap
+    entityIds?: Record<ColumnName, RowId>
 }
 
 export interface IExecutedViewExpr {
-    attributes: Record<string, any>
-    columnAttributes: Array<Record<string, any>>
+    attributes: AttributesMap
+    columnAttributes: AttributesMap[]
     rows: IExecutedRow[]
 }
 
@@ -133,14 +157,15 @@ export interface IViewExprResult {
 
 export interface IViewInfoResult {
     info: IResultViewInfo
-    pureAttributes: Record<string, any>
-    pureColumnAttributes: Array<Record<string, any>>
+    pureAttributes: Record<AttributeName, any>
+    pureColumnAttributes: Array<Record<AttributeName, any>>
 }
 
-const fetchApi = async (subUrl: string, token: string, method: string, body?: string): Promise<any> => {
+const fetchFormApi = async (subUrl: string, token: string, method: string, body?: string): Promise<any> => {
     return await Utils.fetchSuccess(`${apiUrl}/${subUrl}`, {
         method,
         headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
             "Authorization": `Bearer ${token}`,
         },
         body,
@@ -185,7 +210,7 @@ export const fetchNamedViewInfo = async (token: string, name: string): Promise<I
 
 const changeEntity = async (path: string, method: string, token: string, ref: IEntityRef, body?: string): Promise<any> => {
     const schema = ref.schema === null ? "public" : ref.schema
-    return await fetchApi(`entity/${schema}/${ref.name}${path}`, token, method, body)
+    return await fetchFormApi(`entity/${schema}/${ref.name}${path}`, token, method, body)
 }
 
 export const insertEntry = async (token: string, ref: IEntityRef, args: URLSearchParams): Promise<void> => {

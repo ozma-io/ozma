@@ -75,7 +75,7 @@
 
         private extraActions: IAction[] = []
 
-        @Watch("userViewType")
+        @Watch("userViewType", { immediate: true })
         updateUserView() {
             this.extraActions = []
         }

@@ -3,7 +3,7 @@ import { Module, ActionContext } from "vuex"
 import { Moment } from "moment"
 import moment from "moment"
 
-import { SchemaName, FieldName, EntityName, FieldType } from "@/api"
+import { RowIdString, SchemaName, FieldName, EntityName, FieldType } from "@/api"
 import * as Api from "@/api"
 import { UserViewResult, dateFormat, dateTimeFormat } from "@/state/user_view"
 
@@ -16,10 +16,17 @@ export interface IUpdatedCell {
 export type UpdatedCells = Record<FieldName, IUpdatedCell>
 
 export interface IEntityChanges {
-    // Actual key is RowId
-    updated: Record<string, UpdatedCells | null>
-    added: UpdatedCells[]
-    deleted: Record<string, boolean>
+    updated: Record<RowIdString, UpdatedCells | null>
+    // Applied to user views with FOR INSERT INTO
+    added: Array<UpdatedCells | null>
+    // Applied to user views with FOR UPDATE OF (or FOR INSERT INTO)
+    deleted: Record<RowIdString, boolean>
+}
+
+const emptyUpdates: IEntityChanges = {
+    updated: {},
+    added: [],
+    deleted: {},
 }
 
 export class CurrentChanges {
@@ -29,7 +36,7 @@ export class CurrentChanges {
         return Object.entries(this.changes).length === 0
     }
 
-    getEntityChanges(schemaName: string, entityName: string): IEntityChanges {
+    getOrCreateChanges(schemaName: string, entityName: string): IEntityChanges {
         let entities = this.changes[schemaName]
         if (entities === undefined) {
             entities = {}
@@ -49,21 +56,12 @@ export class CurrentChanges {
         return entity
     }
 
-    getForUserView(uv: UserViewResult): IEntityChanges {
-        const emptyUpdates: IEntityChanges = {
-            updated: {},
-            added: [],
-            deleted: {},
-        }
-        const entity = uv.info.updateEntity
-        if (entity === null) {
-            return emptyUpdates
-        }
-        const entities = this.changes[entity.schema]
+    changesForEntity(schemaName: string, entityName: string): IEntityChanges {
+        const entities = this.changes[schemaName]
         if (entities === undefined) {
             return emptyUpdates
         }
-        const changes = entities[entity.name]
+        const changes = entities[entityName]
         if (changes === undefined) {
             return emptyUpdates
         }
@@ -86,7 +84,7 @@ export interface IStagingState {
     autoSaveTimeoutId: number | null
 }
 
-const autoSaveTimeout = 3000
+const autoSaveTimeout = 5000
 
 const askOnClose = (e: BeforeUnloadEvent) => {
     e.preventDefault()
@@ -292,7 +290,7 @@ const stagingModule: Module<IStagingState, {}> = {
             state.errors.splice(errorIndex, 1)
         },
         updateField: (state, { schema, entity, id, field, fieldType, value }: { schema: string, entity: string, id: number, field: string, fieldType: FieldType, value: any }) => {
-            const entityChanges = state.current.getEntityChanges(schema, entity)
+            const entityChanges = state.current.getOrCreateChanges(schema, entity)
             let fields = entityChanges.updated[id]
             if (fields === undefined || fields === null) {
                 fields = {}
@@ -307,21 +305,41 @@ const stagingModule: Module<IStagingState, {}> = {
             Vue.set(fields, field, validateValue(fieldType, value))
             state.touched = true
         },
+        addEntry: (state, { schema, entity, newId }: { schema: string, entity: string, newId: number }) => {
+            if (state.currentSubmit !== null) {
+                return
+            }
+
+            const entityChanges = state.current.getOrCreateChanges(schema, entity)
+            for (let i = entityChanges.added.length; i <= newId; i++) {
+                entityChanges.added.push({})
+                state.addedCount += 1
+            }
+            if (entityChanges.added[newId] === null) {
+                Vue.set(entityChanges.added, newId, {})
+            }
+            state.touched = true
+        },
         setAddedField: (state, { schema, entity, newId, field, fieldType, value }: { schema: string, entity: string, newId: number, field: string, fieldType: FieldType, value: any }) => {
             if (state.currentSubmit !== null) {
                 return
             }
 
-            const entityChanges = state.current.getEntityChanges(schema, entity)
+            const entityChanges = state.current.getOrCreateChanges(schema, entity)
             for (let i = entityChanges.added.length; i <= newId; i++) {
                 entityChanges.added.push({})
                 state.addedCount += 1
             }
-            Vue.set(entityChanges.added[newId], field, validateValue(fieldType, value))
+            let added = entityChanges.added[newId]
+            if (added === null) {
+                added = {}
+                Vue.set(entityChanges.added, newId, added)
+            }
+            Vue.set(added, field, validateValue(fieldType, value))
             state.touched = true
         },
         deleteEntry: (state, { schema, entity, id }: { schema: string, entity: string, id: number }) => {
-            const entityChanges = state.current.getEntityChanges(schema, entity)
+            const entityChanges = state.current.getOrCreateChanges(schema, entity)
             const deleted = entityChanges.deleted[id]
             if (deleted === undefined || !deleted) {
                 Vue.set(entityChanges.deleted, String(id), true)
@@ -335,7 +353,7 @@ const stagingModule: Module<IStagingState, {}> = {
             }
         },
         resetUpdatedEntry: (state, { schema, entity, id }: { schema: string, entity: string, id: number }) => {
-            const entityChanges = state.current.getEntityChanges(schema, entity)
+            const entityChanges = state.current.getOrCreateChanges(schema, entity)
             const fields = entityChanges.updated[id]
             if (fields !== undefined && fields !== null) {
                 entityChanges.updated[id] = null
@@ -343,14 +361,14 @@ const stagingModule: Module<IStagingState, {}> = {
             }
         },
         resetAddedEntry: (state, { schema, entity, newId }: { schema: string, entity: string, newId: number }) => {
-            const entityChanges = state.current.getEntityChanges(schema, entity)
+            const entityChanges = state.current.getOrCreateChanges(schema, entity)
             if (newId < entityChanges.added.length) {
-                entityChanges.added.splice(newId, 1)
+                entityChanges.added[newId] = null
                 state.addedCount -= 1
             }
         },
         resetDeleteEntry: (state, { schema, entity, id }: { schema: string, entity: string, id: number }) => {
-            const entityChanges = state.current.getEntityChanges(schema, entity)
+            const entityChanges = state.current.getOrCreateChanges(schema, entity)
             const deleted = entityChanges.deleted[id]
             if (deleted !== undefined && deleted) {
                 entityChanges.deleted[id] = false
@@ -361,6 +379,10 @@ const stagingModule: Module<IStagingState, {}> = {
     actions: {
         updateField: (context, args: { schema: string, entity: string, id: number, field: string, value: any }) => {
             context.commit("updateField", args)
+            checkCounters(context)
+        },
+        addEntry: (context, args: { schema: string, entity: string, newId: number }) => {
+            context.commit("addEntry", args)
             checkCounters(context)
         },
         setAddedField: (context, args: { schema: string, entity: string, newId: number, field: string, value: any }) => {
@@ -400,7 +422,9 @@ const stagingModule: Module<IStagingState, {}> = {
                         }
                     })
                     entityChanges.added.forEach(addedFields => {
-                        results.push(addEntry(context, schemaName, entityName, addedFields))
+                        if (addedFields !== null) {
+                            results.push(addEntry(context, schemaName, entityName, addedFields))
+                        }
                     })
                     Object.entries(entityChanges.deleted).forEach(([deletedIdStr, isDeleted]) => {
                         if (isDeleted) {

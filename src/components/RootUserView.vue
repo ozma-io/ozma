@@ -72,7 +72,7 @@
                      :show="settingsLastError !== null">
                 {{ $t('settings_error', { msg: settingsLastError }) }}
             </b-alert>
-            <b-alert class="error custom_danger"    
+            <b-alert class="error custom_danger"
                      variant="danger"
                      :show="translationsLastError !== null">
                 {{ $t('translations_error', { msg: translationsLastError }) }}
