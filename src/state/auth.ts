@@ -31,11 +31,11 @@ export class CurrentAuth {
     }
 
     get refreshValidFor(): number {
-        return this.decodedToken.exp - this.decodedToken.iat
+        return this.decodedRefreshToken.exp - this.decodedRefreshToken.iat
     }
 
     get validFor(): number {
-        return this.decodedRefreshToken.exp - this.decodedRefreshToken.iat
+        return this.decodedToken.exp - this.decodedToken.iat
     }
 }
 
@@ -135,6 +135,7 @@ const getToken = (context: ActionContext<IAuthState, {}>, params: Record<string,
             return auth
         } catch (e) {
             if (state.pending === pending.ref) {
+                dispatch("removeAuth", { root: true })
                 commit("setError", e.message)
             }
             throw e
@@ -167,11 +168,12 @@ const startRenewalInterval = ({ state, commit, dispatch }: ActionContext<IAuthSt
     const timeout = (validFor * constantFactor + Math.random() * validFor * (1 - 1.1 * constantFactor)) * 1000
 
     const renewIntervalId = setInterval(() => {
+        commit("setRenewTimer", null)
         if (state.pending === null) {
             dispatch("renewAuth")
         }
     }, timeout)
-    commit("setAuthHandler", renewIntervalId)
+    commit("setRenewTimer", renewIntervalId)
 }
 
 export const authModule: Module<IAuthState, {}> = {
@@ -196,7 +198,7 @@ export const authModule: Module<IAuthState, {}> = {
             state.lastError = null
             state.pending = null
         },
-        setAuthHandler: (state, renewIntervalId: number) => {
+        setRenewTimer: (state, renewIntervalId: number) => {
             state.renewalIntervalId = renewIntervalId
         },
         clearAuth: state => {
