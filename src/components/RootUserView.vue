@@ -109,7 +109,7 @@
 
     @Component
     export default class RootUserView extends Vue {
-        @Action("removeAuth") removeAuth!: () => void
+        @auth.Action("logout") logout!: () => Promise<void>
         @userView.Mutation("clear") clearView!: () => void
         @userView.Action("getRootView") getRootView!: (_: IUserViewArguments) => Promise<void>
         @userView.State("current") userViews!: CurrentUserViews
@@ -143,7 +143,7 @@
 
         get actions() {
             const actions: IAction[] = []
-            actions.push({ name: this.$tc("logout"), callback: this.removeAuth })
+            actions.push({ name: this.$tc("logout"), callback: this.logout })
             actions.push(...this.extraActions)
             return actions
         }

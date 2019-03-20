@@ -167,7 +167,9 @@ const startRenewalInterval = ({ state, commit, dispatch }: ActionContext<IAuthSt
     const timeout = (validFor * constantFactor + Math.random() * validFor * (1 - 1.1 * constantFactor)) * 1000
 
     const renewIntervalId = setInterval(() => {
-        dispatch("renewAuth")
+        if (state.pending === null) {
+            dispatch("renewAuth")
+        }
     }, timeout)
     commit("setAuthHandler", renewIntervalId)
 }
@@ -337,6 +339,24 @@ export const authModule: Module<IAuthState, {}> = {
                 refresh_token: state.current.refreshToken,
             }
             return getToken(context, params)
+        },
+        logout: async ({ state, dispatch, commit }) => {
+            if (state.current === null) {
+                throw Error("Cannot logout without an existing token")
+            }
+
+            const params = {
+                redirect_uri: redirectUri(),
+            }
+            const paramsString = new URLSearchParams(params).toString()
+            window.location.href = `${Api.authUrl}/logout?${paramsString}`
+            const waitForLoad = new Promise((resolve, reject) => {
+                addEventListener("load", () => {
+                    reject()
+                })
+            })
+            commit("setPending", waitForLoad)
+            return waitForLoad
         },
     },
 }
