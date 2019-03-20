@@ -61,6 +61,10 @@ const initialSecret = () => {
     }
 }
 
+const rootUri = () => {
+    return `${window.location.protocol}//${window.location.host}/`
+}
+
 const redirectUri = () => {
     const returnPath = router.resolve({ name: "auth_response" }).href
     return `${window.location.protocol}//${window.location.host}${returnPath}`
@@ -348,9 +352,10 @@ export const authModule: Module<IAuthState, {}> = {
             }
 
             const params = {
-                redirect_uri: redirectUri(),
+                redirect_uri: rootUri(),
             }
             const paramsString = new URLSearchParams(params).toString()
+            dropCurrentAuth()
             window.location.href = `${Api.authUrl}/logout?${paramsString}`
             const waitForLoad = new Promise((resolve, reject) => {
                 addEventListener("load", () => {
