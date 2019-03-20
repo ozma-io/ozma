@@ -164,7 +164,7 @@ const startRenewalInterval = ({ state, commit, dispatch }: ActionContext<IAuthSt
     const constantFactor = 0.6
     const validFor = state.current.validFor
     // Random timeouts for different tabs not to overload the server.
-    const timeout = Math.floor(validFor * constantFactor + Math.random() * validFor * (1 - 1.1 * constantFactor))
+    const timeout = (validFor * constantFactor + Math.random() * validFor * (1 - 1.1 * constantFactor)) * 1000
 
     const renewIntervalId = setInterval(() => {
         dispatch("renewAuth")

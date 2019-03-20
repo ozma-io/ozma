@@ -41,8 +41,8 @@
                     </template>
                 </div>
 
-                <!-- FIXME FIXME FIXME don't look at user! -->
-                <b-button class="delete_btn" v-if="entry.id !== undefined && currentAuth.username === 'root'" variant="danger" v-b-modal="`deleteConfirm_${entry.id}`">{{ $t('delete') }}</b-button>
+                <!-- FIXME FIXME FIXME look at permissions! -->
+                <b-button class="delete_btn" v-if="entry.id !== undefined && uv.info.updateEntity !== null" variant="danger" v-b-modal="`deleteConfirm_${entry.id}`">{{ $t('delete') }}</b-button>
                 <b-modal lazy :id="`deleteConfirm_${entry.id}`" ok-variant="danger" :ok-title="$t('ok')" @ok="deleteRecord(entry.id)" :cancel-title="$t('cancel')">
                     {{ $t('delete_confirmation') }}
                 </b-modal>
@@ -95,8 +95,6 @@
 
     @Component
     export default class UserViewForm extends Vue {
-        // FIXME FIXME FIXME
-        @auth.State("current") currentAuth!: CurrentAuth
         @userView.Action("getEntries") getEntries!: (_: { schemaName: string, entityName: string }) => Promise<void>
         @userView.State("entries") entriesMap!: EntriesMap
         @userView.State("current") userViews!: CurrentUserViews
