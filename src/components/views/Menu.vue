@@ -77,11 +77,10 @@
             this.buildEntries()
         }
 
-        @Watch("changes", { deep: true })
+        // TODO: implement
+        /*@Watch("changes", { deep: true })
         private updateChanges() {
-            // Be lazy
-            this.buildEntries()
-        }
+        }*/
 
         private created() {
             if (this.isRoot) {
@@ -100,14 +99,11 @@
                 console.assert(false, "Menu user view should have two columns")
                 this.categories = []
             } else {
-                const changedFields = this.getCurrentChanges()
                 const viewAttrs = this.uv.attributes
 
                 const categoryColumnInfo = this.uv.info.columns[0]
-                const categoryColumnName = categoryColumnInfo.updateField !== null ? categoryColumnInfo.updateField.name : null
                 const categoriesAttrs = this.uv.columnAttributes[0]
                 const buttonColumnInfo = this.uv.info.columns[1]
-                const buttonColumnName = buttonColumnInfo.updateField !== null ? buttonColumnInfo.updateField.name : null
                 const buttonsAttrs = this.uv.columnAttributes[1]
 
                 const categories = new Map<string, IMainMenuCategory>()
@@ -115,18 +111,7 @@
                     const rowAttrs = row.attributes === undefined ? {} : row.attributes
                     const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
 
-                    let updatedValues: Record<string, any> = {}
-                    let deleted = false
-                    if (row.id !== undefined) {
-                        deleted = changedFields.deleted[row.id] || false
-                        const updatedEntry = changedFields.updated[row.id]
-                        if (updatedEntry !== undefined && updatedEntry !== null) {
-                            updatedValues = updatedEntry
-                        }
-                    }
-
-                    const updatedCategory = categoryColumnName === null ? undefined : updatedValues[categoryColumnName]
-                    const currentCategory = updatedCategory === undefined ? row.values[0].value : updatedCategory
+                    const currentCategory = row.values[0].value
                     const categoryName = String(currentCategory)
                     let category: IMainMenuCategory | undefined = categories.get(categoryName)
                     if (category === undefined) {
@@ -138,8 +123,7 @@
                         categories.set(categoryName, category)
                     }
 
-                    const updatedButton = buttonColumnName === null ? undefined : updatedValues[buttonColumnName]
-                    const currentButton = updatedButton === undefined ? row.values[1].value : updatedButton
+                    const currentButton = row.values[1].value
                     const buttonName = String(currentButton)
                     const buttonAttrs = row.values[1].attributes || {}
                     const getButtonAttr = (name: string) => buttonAttrs[name] || rowAttrs[name] || buttonsAttrs[name] || viewAttrs[name]
@@ -150,17 +134,14 @@
                     const button = {
                         index: rowI,
                         name: buttonName,
-                        deleted, categoryName, to,
+                        deleted: false,
+                        categoryName, to,
                     }
                     category.buttons.push(button)
                     return button
                 })
                 this.categories = Array.from(categories.values())
             }
-        }
-
-        private getCurrentChanges() {
-            return this.changes.getForUserView(this.uv)
         }
 
         get showedCategories() {

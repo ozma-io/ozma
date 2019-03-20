@@ -145,7 +145,7 @@ export interface IExecutedRow {
 
 export interface IExecutedViewExpr {
     attributes: AttributesMap
-    columnAttributes: Array<AttributesMap>
+    columnAttributes: AttributesMap[]
     rows: IExecutedRow[]
 }
 

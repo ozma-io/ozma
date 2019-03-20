@@ -7,7 +7,7 @@ import { IRef, FetchError, momentLocale } from "@/utils"
 import * as Api from "@/api"
 import {
     AttributesMap, IColumnField, IFieldRef, IResultViewInfo, IExecutedRow,
-    SchemaName, ColumnName, EntityName, RowId, RowIdString, DomainId, FieldName, ValueType
+    SchemaName, ColumnName, EntityName, RowId, RowIdString, DomainId, FieldName, ValueType,
 } from "@/api"
 
 export type UserViewType = "named" | "anonymous"
@@ -20,9 +20,9 @@ export interface IUserViewArguments {
 
 export interface IUpdateMapping {
     // Entity IDs to row positions
-    idsToRows: Record<RowIdString, Array<number>>
+    idsToRows: Record<RowIdString, number[]>
     // Column names to column positions
-    fieldsToColumns: Record<FieldName, Array<number>>
+    fieldsToColumns: Record<FieldName, number[]>
 }
 
 export interface IUpdatableField {
@@ -90,7 +90,7 @@ export class UserViewResult {
                             const updateInfo = {
                                 field: field.field,
                                 fieldRef: field.ref,
-                                id: id,
+                                id,
                             }
                             cell.update = updateInfo
 
@@ -104,23 +104,23 @@ export class UserViewResult {
                             if (mapping === undefined) {
                                 mapping = {
                                     idsToRows: {},
-                                    fieldsToColumns: {}
+                                    fieldsToColumns: {},
                                 }
                                 entityMappings[ref.name] = mapping
                             }
 
-                            let rows = mapping.idsToRows[id]
-                            if (rows === undefined) {
+                            const mappedRows = mapping.idsToRows[id]
+                            if (mappedRows === undefined) {
                                 mapping.idsToRows[id] = [rowI]
                             } else {
-                                rows.push(rowI)
+                                mappedRows.push(rowI)
                             }
 
-                            let cols = mapping.fieldsToColumns[field.ref.name]
-                            if (cols === undefined) {
+                            const mappedCols = mapping.fieldsToColumns[field.ref.name]
+                            if (mappedCols === undefined) {
                                 mapping.fieldsToColumns[field.ref.name] = [colI]
                             } else {
-                                cols.push(colI)
+                                mappedCols.push(colI)
                             }
                         }
                     })

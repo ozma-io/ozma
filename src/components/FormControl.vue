@@ -118,7 +118,6 @@
         @Prop({ type: String }) valueText!: string
         @Prop({ type: Object, default: {} }) attributes!: AttributesMap
         @Prop({ type: Boolean }) locked!: boolean
-        @Prop({ type: Boolean, default: false }) added!: boolean
 
         @userView.State("entries") entriesMap!: EntriesMap
         @userView.Action("getEntries") getEntries!: (_: { schemaName: string, entityName: string }) => Promise<void>

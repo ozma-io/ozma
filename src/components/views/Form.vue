@@ -26,7 +26,7 @@
 
 <template>
     <b-container fluid class="cont_form without_padding">
-        <div v-for="entry in showedEntries" :key="entry.index" class="form_entry">
+        <div v-for="entry in showedEntries.concat(newEntries)" :key="entry.index" class="form_entry">
             <b-form class="view_form">
                 <div v-for="(block, blockI) in blocks" :key="blockI" class="form_block" :style="{ width: `${block.width * 100}%` }">
                     <template v-for="fieldInfo in block.fields" class="form_data">
@@ -34,16 +34,18 @@
                             {{ fieldInfo.caption }}
                             
                             <FormControl
-                                v-bind="Object.assign({}, fieldInfo, entry.fields[fieldInfo.index])"
+                                v-bind="entry.fields[fieldInfo.index]"
+                                :field="entry.fields[fieldInfo.index].update === null ? null : entry.fields[fieldInfo.index].update.field"
+                                :type="fieldInfo.column.valueType"
                                 :locked="locked"
-                                @update:value="updateValue(entry.id, fieldInfo, entry.fields[fieldInfo.index], $event)" />
+                                @update:value="updateValue(entry.added, entry.fields[fieldInfo.index].update.id, fieldInfo, entry.fields[fieldInfo.index], $event)" />
                         </b-form-group>
                     </template>
                 </div>
 
                 <!-- FIXME FIXME FIXME look at permissions! -->
-                <b-button class="delete_btn" v-if="entry.id !== undefined && uv.info.updateEntity !== null" variant="danger" v-b-modal="`deleteConfirm_${entry.id}`">{{ $t('delete') }}</b-button>
-                <b-modal lazy :id="`deleteConfirm_${entry.id}`" ok-variant="danger" :ok-title="$t('ok')" @ok="deleteRecord(entry.id)" :cancel-title="$t('cancel')">
+                <b-button class="delete_btn" v-if="entry.id !== undefined && uv.info.mainEntity !== null" variant="danger" v-b-modal="`deleteConfirm_${entry.id}`">{{ $t('delete') }}</b-button>
+                <b-modal lazy :id="`deleteConfirm_${entry.id}`" ok-variant="danger" :ok-title="$t('ok')" @ok="deleteRecord(entry.added, entry.id)" :cancel-title="$t('cancel')">
                     {{ $t('delete_confirmation') }}
                 </b-modal>
             </b-form>
@@ -83,6 +85,8 @@
 
     interface IForm {
         deleted: boolean
+        added: boolean
+        id: number | null
         fields: IField[]
     }
 
@@ -95,6 +99,7 @@
         @staging.State("current") changes!: CurrentChanges
         @staging.State("currentSubmit") currentSubmit!: Promise<void> | null
         @staging.Action("updateField") updateField!: (args: { schema: string, entity: string, id: number, field: string, fieldType: FieldType, value: any }) => void
+        @staging.Action("addEntry") addEntry!: (args: { schema: string, entity: string, newId: number }) => void
         @staging.Action("setAddedField") setAddedField!: (args: { schema: string, entity: string, newId: number, field: string, fieldType: FieldType, value: any }) => void
         @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { schema: string, entity: string, newId: number }) => void
         @staging.Action("deleteEntry") deleteEntry!: (args: { schema: string, entity: string, id: number }) => void
@@ -127,7 +132,7 @@
                 if (captionAttr !== undefined) {
                     caption = String(captionAttr)
                 } else if (this.uv.info.mainEntity !== null && columnInfo.mainField !== null) {
-                    // FIXME: get rid of this; use default field attributes instead 
+                    // FIXME: get rid of this; use default field attributes instead
                     const entity = this.uv.info.mainEntity.entity
                     caption = this.fieldTranslation(entity.schema, entity.name, columnInfo.mainField.name, columnInfo.name)
                 } else {
@@ -246,10 +251,12 @@
                 // This could be done more efficiently but it would require tracking of what fields were changed.
                 this.buildEntries()
             } else {
- 
+                this.applyChanges()
             }
         }
 
+        // Apply changes on top of built entries.
+        // TODO: make this even more granular, ideally: dynamically bind a watcher to every changed and added entry.
         private applyChanges() {
             if (this.uv.info.mainEntity !== null) {
                 const entity = this.uv.info.mainEntity.entity
@@ -266,7 +273,7 @@
                                 update: info.mainField === null ? null : {
                                     field: info.mainField.field,
                                     fieldRef: {
-                                        entity: entity,
+                                        entity,
                                         name: info.mainField.name,
                                     },
                                     id: newRowI,
@@ -275,9 +282,11 @@
                         })
                         form = {
                             deleted: false,
+                            added: true,
                             fields: newFields,
+                            id: newRowI,
                         }
-                        this.newEntries[newRowI] = form
+                        this.newEntries.push(form)
                     } else {
                         form = this.newEntries[newRowI]
                     }
@@ -388,6 +397,18 @@
                         this.$router.back()
                     }
                 })
+
+                if (this.uv.info.mainEntity !== null) {
+                    const entity = this.uv.info.mainEntity.entity
+                    const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
+                    if (changedFields.added.length === 0) {
+                        this.addEntry({
+                            schema: entity.schema,
+                            entity: entity.name,
+                            newId: 0,
+                        })
+                    }
+                }
             }
 
             this.buildEntries()
@@ -421,6 +442,7 @@
 
                 return {
                     deleted: false,
+                    added: false,
                     fields,
                 }
             }
