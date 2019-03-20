@@ -32,7 +32,7 @@
                     <template v-for="fieldInfo in block.fields" class="form_data">
                         <b-form-group :key="fieldInfo.column.name" :label-for="fieldInfo.column.name">
                             {{ fieldInfo.caption }}
-                            
+
                             <FormControl
                                 v-bind="entry.fields[fieldInfo.index]"
                                 :field="entry.fields[fieldInfo.index].update === null ? null : entry.fields[fieldInfo.index].update.field"

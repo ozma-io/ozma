@@ -196,7 +196,7 @@
     const staging = namespace("staging")
     const translations = namespace("translations")
     const technicalFieldsWidth = 20 // checkbox's and openform's td width
-    
+
     @Component
     export default class UserViewTable extends Vue {
         @staging.State("current") changes!: CurrentChanges
