@@ -37,7 +37,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <template v-for="(entryI, rowI) in showedRows">
+                    <template v-for="(entryI, rowI) in shownRows">
                         <tr v-if="flagOfFixedPlace" class="fixed-place-tr">
                             <td class="fixed-place-td">
                                 <div class="fix">
@@ -342,7 +342,7 @@
                 const oldEntry = this.entries[this.lastSelected]
                 if (this.lastSelected < rowI) {
                     for (let i = this.lastSelected + 1; i <= rowI; i++) {
-                        const entry = this.entries[this.showedRows[i]]
+                        const entry = this.entries[this.shownRows[i]]
                         if (entry.selected !== oldEntry.selected) {
                             changeRows++
                         }
@@ -350,7 +350,7 @@
                     }
                 } else if (this.lastSelected > rowI) {
                     for (let i = rowI; i <= this.lastSelected - 1; i++) {
-                        const entry = this.entries[this.showedRows[i]]
+                        const entry = this.entries[this.shownRows[i]]
                         if (entry.selected !== oldEntry.selected) {
                             changeRows++
                         }
@@ -362,7 +362,7 @@
                 }
                 this.selectedRows += (oldEntry.selected) ? changeRows : -changeRows
             } else {
-                const entry = this.entries[this.showedRows[rowI]]
+                const entry = this.entries[this.shownRows[rowI]]
                 entry.selected = !entry.selected
                 this.selectedRows += (entry.selected) ? 1 : -1
                 this.lastSelected = rowI
@@ -618,7 +618,7 @@
             this.$emit("update:statusLine", this.$tc("filtered_count", this.filteredRows.length, { status: selected + this.filteredRows.length.toString() }))
         }
 
-        get showedRows() {
+        get shownRows() {
             return this.filteredRows.slice(0, this.showLength)
         }
 

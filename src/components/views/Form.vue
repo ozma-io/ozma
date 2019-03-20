@@ -26,7 +26,7 @@
 
 <template>
     <b-container fluid class="cont_form without_padding">
-        <div v-for="entry in showedEntries.concat(newEntries)" :key="entry.index" class="form_entry">
+        <div v-for="entry in shownEntries" :key="entry.index" class="form_entry">
             <b-form class="view_form">
                 <div v-for="(block, blockI) in blocks" :key="blockI" class="form_block" :style="{ width: `${block.width * 100}%` }">
                     <template v-for="fieldInfo in block.fields" class="form_data">
@@ -155,35 +155,7 @@
             return blocks
         }
 
-        private setAddedValue(id: number, fieldInfo: IFieldInfo, field: IField, text: string) {
-            if (this.uv.info.mainEntity === null) {
-                console.assert(false, "No insert entity defined for view")
-                return
-            }
-            if (fieldInfo.column.mainField === null) {
-                console.assert(false, "Not an inserted field")
-                return
-            }
-
-            if (field.valueText !== text) {
-                const mainEntity = this.uv.info.mainEntity.entity
-                const mainField = fieldInfo.column.mainField
-
-                this.setAddedField({
-                    schema: mainEntity.schema,
-                    entity: mainEntity.name,
-                    newId: id,
-                    field: mainField.name,
-                    fieldType: mainField.field.fieldType,
-                    value: text,
-                })
-
-                // Needed to avoid cursor jumping in WebKit
-                field.valueText = text
-            }
-        }
-
-        private updateValue(id: number, fieldInfo: IFieldInfo, field: IField, text: string) {
+        private updateValue(added: boolean, id: number, fieldInfo: IFieldInfo, field: IField, text: string) {
             if (field.update === null) {
                 console.assert(false, "No update entity defined in view")
                 return
@@ -192,55 +164,56 @@
             if (field.valueText !== text) {
                 const entity = field.update.fieldRef.entity
 
-                this.updateField({
-                    schema: entity.schema,
-                    entity: entity.name,
-                    id,
-                    field: field.update.fieldRef.name,
-                    fieldType: field.update.field.fieldType,
-                    value: text,
-                })
+                if (added) {
+                    this.setAddedField({
+                       schema: entity.schema,
+                        entity: entity.name,
+                        newId: id,
+                        field: field.update.fieldRef.name,
+                        fieldType: field.update.field.fieldType,
+                        value: text,
+                    })
+                } else {
+                    this.updateField({
+                        schema: entity.schema,
+                        entity: entity.name,
+                        id,
+                        field: field.update.fieldRef.name,
+                        fieldType: field.update.field.fieldType,
+                        value: text,
+                    })
+                }
 
                 // Needed to avoid cursor jumping in WebKit
                 field.valueText = text
             }
         }
 
-        private deleteAddedRecord(id: number) {
+        private deleteRecord(added: boolean, id: number) {
             if (this.uv.info.mainEntity === null) {
-                console.assert(false, "No main entity defined in view")
+                console.assert(false, "View doesn't have a main entity")
                 return
             }
+            const entity = this.uv.info.mainEntity.entity
 
-            const mainEntity = this.uv.info.mainEntity.entity
-
-            this.resetAddedEntry({
-                schema: mainEntity.schema,
-                entity: mainEntity.name,
-                newId: id,
-            })
-        }
-
-        private deleteRecord(field: IField) {
-            if (field.update === null) {
-                console.assert(false, "Not an update field")
-                return
+            if (added) {
+                this.resetAddedEntry({
+                    schema: entity.schema,
+                    entity: entity.name,
+                    newId: id,
+                })
+            } else {
+                this.deleteEntry({
+                    schema: entity.schema,
+                    entity: entity.name,
+                    id,
+                })
             }
-
-            const entity = field.update.fieldRef.entity
-            this.deleteEntry({
-                schema: entity.schema,
-                entity: entity.name,
-                id: field.update.id,
-            })
         }
 
         @Watch("uv", { deep: true })
         private updateEntries() {
             this.buildEntries()
-            if (this.entries.length === 0) {
-                this.returnBack()
-            }
         }
 
         // See Table for description of why is this meddling with Watch is needed.
@@ -314,7 +287,6 @@
 
             if (this.uv.rows !== null) {
                 const rows = this.uv.rows
-                let deletedCount = 0
 
                 Object.entries(this.changes.changes).forEach(([schemaName, entityChanges]) => {
                     Object.entries(entityChanges).forEach(([entityName, changedFields]) => {
@@ -331,9 +303,6 @@
                             rowIs.forEach(rowI => {
                                 const entry = this.entries[rowI]
                                 entry.deleted = deleted
-                                if (deleted) {
-                                    deletedCount += 1
-                                }
                             })
                         })
 
@@ -369,12 +338,6 @@
                         })
                     })
                 })
-
-                if (deletedCount === rows.length) {
-                    // All entries are removed
-                    this.returnBack()
-                    return
-                }
             }
         }
 
@@ -440,9 +403,17 @@
                     }
                 })
 
+                let id
+                if (this.uv.info.mainEntity !== null) {
+                    id = (row.entityIds as Record<string, number>)[this.uv.info.mainEntity.name]
+                } else {
+                    id = null
+                }
+
                 return {
                     deleted: false,
                     added: false,
+                    id,
                     fields,
                 }
             }
@@ -459,12 +430,15 @@
             }
         }
 
-        get showedEntries() {
-            return this.entries.filter(entry => !entry.deleted)
+        get shownEntries() {
+            return this.entries.filter(entry => !entry.deleted).concat(this.newEntries.filter(entry => !entry.deleted))
         }
 
-        get showedNewEntries() {
-            return this.newEntries.filter(entry => !entry.deleted)
+        @Watch("shownEntries")
+        private returnIfEmpty() {
+            if (this.shownEntries.length === 0) {
+                this.returnBack()
+            }
         }
     }
 </script>

@@ -120,6 +120,7 @@ export interface IDomainField {
 
 export interface IMainEntityInfo {
     entity: IEntityRef
+    name: FieldName
 }
 
 export interface IResultViewInfo {
@@ -160,10 +161,11 @@ export interface IViewInfoResult {
     pureColumnAttributes: Array<Record<AttributeName, any>>
 }
 
-const fetchApi = async (subUrl: string, token: string, method: string, body?: string): Promise<any> => {
+const fetchFormApi = async (subUrl: string, token: string, method: string, body?: string): Promise<any> => {
     return await Utils.fetchSuccess(`${apiUrl}/${subUrl}`, {
         method,
         headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
             "Authorization": `Bearer ${token}`,
         },
         body,
@@ -208,7 +210,7 @@ export const fetchNamedViewInfo = async (token: string, name: string): Promise<I
 
 const changeEntity = async (path: string, method: string, token: string, ref: IEntityRef, body?: string): Promise<any> => {
     const schema = ref.schema === null ? "public" : ref.schema
-    return await fetchApi(`entity/${schema}/${ref.name}${path}`, token, method, body)
+    return await fetchFormApi(`entity/${schema}/${ref.name}${path}`, token, method, body)
 }
 
 export const insertEntry = async (token: string, ref: IEntityRef, args: URLSearchParams): Promise<void> => {

@@ -84,7 +84,7 @@ export interface IStagingState {
     autoSaveTimeoutId: number | null
 }
 
-const autoSaveTimeout = 3000
+const autoSaveTimeout = 5000
 
 const askOnClose = (e: BeforeUnloadEvent) => {
     e.preventDefault()
