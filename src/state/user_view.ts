@@ -69,16 +69,26 @@ export class UserViewResult {
 export type Entries = Record<string, number>
 export type EntriesMap = Record<SchemaName, Record<EntityName, Entries | Promise<Entries>>>
 
-export type UserViewErrorType = "forbidden"
+export type UserViewErrorType = "forbidden" | "not_found" | "bad_request" | "unknown"
 
 export class UserViewError extends Error {
-    message: UserViewErrorType
+    type: UserViewErrorType
+    description: string
     args: IUserViewArguments
 
-    constructor(message: UserViewErrorType, args: IUserViewArguments) {
-        super(message)
-        this.message = message
+    constructor(type: UserViewErrorType, description: string, args: IUserViewArguments) {
+        super(type)
+        this.type = type
+        this.description = description
         this.args = args
+    }
+
+    get message() {
+        if (this.description !== "") {
+            return this.description
+        } else {
+            return this.type
+        }
     }
 }
 
@@ -168,7 +178,13 @@ const getUserView = async ({ dispatch }: ActionContext<IUserViewState, {}>, args
     } catch (e) {
         if (e instanceof FetchError) {
             if (e.response.status === 403) {
-                return new UserViewError("forbidden", args)
+                return new UserViewError("forbidden", "", args)
+            } else if (e.response.status === 404) {
+                return new UserViewError("not_found", "", args)
+            } else if (e.response.status === 400) {
+                return new UserViewError("bad_request", e.message, args)
+            } else {
+                return new UserViewError("unknown", e.message, args)
             }
         }
 

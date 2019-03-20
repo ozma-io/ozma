@@ -5,14 +5,18 @@
             "edit_view": "Edit user view",
             "loading": "Now loading",
             "forbidden": "Sorry, you are not authorized to use this user view. Contact your administrator.",
+            "not_found": "User view not found",
+            "bad_request": "User view request error: {msg}",
             "unknown_error": "Unknown user view fetch error: {msg}"
         },
         "ru": {
             "create": "Создать новую",
-            "edit_view": "Редактировать отображение",
+            "edit_view": "Редактировать представление",
             "loading": "Загрузка данных",
-            "forbidden": "К сожалению у вас нет прав доступа для просмотра этого отображения. Свяжитесь с администратором.",
-            "unknown_error": "Неизвестная ошибка загрузки отображения: {msg}"
+            "forbidden": "К сожалению у вас нет прав доступа для просмотра этого представления. Свяжитесь с администратором.",
+            "not_found": "Представление не найдено",
+            "bad_request": "Неверный запрос для этого представления: {msg}",
+            "unknown_error": "Неизвестная ошибка загрузки представления: {msg}"
         }
     }
 </i18n>
@@ -123,10 +127,14 @@
             if (!(this.uv instanceof UserViewError)) {
                 return null
             } else {
-                if (this.uv.message === "forbidden") {
+                if (this.uv.type === "forbidden") {
                     return this.$t("forbidden")
+                } else if (this.uv.type === "not_found") {
+                    return this.$t("not_found")
+                } else if (this.uv.type === "bad_request") {
+                    return this.$t("bad_request", { msg: this.uv.message })
                 } else {
-                    return this.$t("unknown_error", { msg: this.uv.message } )
+                    return this.$t("unknown_error", { msg: this.uv.message })
                 }
             }
         }
