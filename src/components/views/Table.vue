@@ -557,7 +557,7 @@
                         if (linkedViewForRowAttr !== undefined) {
                             linkForRow = {
                                 name: "view",
-                                params: { "name": String(linkedViewAttr) },
+                                params: { "name": String(linkedViewForRowAttr) },
                                 query: { "id": String((cellValue.update as IUpdatableField).id) },
                             }
                         }
