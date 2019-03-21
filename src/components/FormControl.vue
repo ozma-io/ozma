@@ -23,25 +23,25 @@
 
         <b-form-checkbox v-if="inputType.name === 'check'"
                          :value="value"
-                         @input="$emit('update:value', $event)"
+                         @input="updateValue($event)"
                          :disabled="isDisabled" />
         <b-form-textarea v-else-if="inputType.name === 'textarea'"
                          :value="valueText"
-                         @input="$emit('update:value', $event)"
+                         @input="updateValue($event)"
                          :disabled="isDisabled"
                          :rows="3"
                          :max-rows="6"
                          :required="!isNullable" />
         <CodeEditor v-else-if="inputType.name === 'codeeditor'"
                     :content="valueText"
-                    @update:content="$emit('update:value', $event)"
+                    @update:content="updateValue($event)"
                     :readOnly="isDisabled" />
         <UserView v-else-if="inputType.name === 'userview'"
                     :uv="uv"
                     @update:actions="actions = $event" />
         <b-form-select v-else-if="inputType.name === 'select'"
                        :value="valueText"
-                       @input="$emit('update:value', $event)"
+                       @input="updateValue($event)"
                        :disabled="isDisabled"
                        :options="inputType.options" />
         <!-- We don't use bootstrap-vue's b-form-input type=text because of problems with Safari
@@ -50,13 +50,13 @@
         <input v-else-if="inputType.type === 'text'"
                class="form-control"
                :value="valueText"
-               @input="$emit('update:value', $event.target.value)"
+               @input="updateValue($event.target.value)"
                type="text"
                :disabled="isDisabled"
                :required="!isNullable" />
         <b-form-input v-else
                       :value="valueText"
-                      @input="$emit('update:value', $event)"
+                      @input="updateValue($event)"
                       :type="inputType.type"
                       :disabled="isDisabled"
                       :required="!isNullable" />
@@ -66,7 +66,7 @@
 <script lang="ts">
     import { Component, Vue, Prop, Watch } from "vue-property-decorator"
     import { namespace } from "vuex-class"
-    import { AttributesMap, ValueType, IResultColumnInfo, IColumnField } from "@/api"
+    import { AttributesMap, ValueType, FieldType, IResultColumnInfo, IColumnField } from "@/api"
     import { IAction } from "@/components/ActionsMenu.vue"
     import { IUpdatableField, IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, printValue } from "@/state/user_view"
 
@@ -104,6 +104,7 @@
     type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | ICheckType | IUserViewType
 
     const userView = namespace("userView")
+    const staging = namespace("staging")
 
     @Component({
         components: {
@@ -111,14 +112,17 @@
         },
     })
     export default class FormControl extends Vue {
-        @Prop({ type: Object, default: null }) field!: IColumnField | null
         @Prop({ type: Object }) type!: ValueType
         // Can be undefined which means failed validation.
         @Prop() value!: any
         @Prop({ type: String }) valueText!: string
         @Prop({ type: Object, default: {} }) attributes!: AttributesMap
-        @Prop({ type: Boolean }) locked!: boolean
+        @Prop({ type: Boolean, default: false }) locked!: boolean
+        @Prop({ type: Boolean }) added!: boolean
+        @Prop({ type: Object, default: null }) update!: IUpdatableField | null
 
+        @staging.Action("updateField") updateField!: (args: { schema: string, entity: string, id: number, field: string, fieldType: FieldType, value: any }) => void
+        @staging.Action("setAddedField") setAddedField!: (args: { schema: string, entity: string, newId: number, field: string, fieldType: FieldType, value: any }) => void
         @userView.State("entries") entriesMap!: EntriesMap
         @userView.Action("getEntries") getEntries!: (_: { schemaName: string, entityName: string }) => Promise<void>
         @userView.State("current") userViews!: CurrentUserViews
@@ -133,11 +137,11 @@
         }
 
         get isNullable() {
-            return this.field === null ? true : this.field.isNullable
+            return this.update === null ? true : this.update.field.isNullable
         }
 
         get isDisabled() {
-            return this.field === null || this.locked
+            return this.update === null || this.locked
         }
 
         get inputType(): IType {
@@ -156,8 +160,8 @@
             }
             this.uv = null
 
-            if (this.field !== null) {
-                const fieldType = this.field.fieldType
+            if (this.update !== null) {
+                const fieldType = this.update.field.fieldType
                 switch (fieldType.type) {
                     case "reference":
                         const { schema, name: entity } = fieldType.entity
@@ -208,6 +212,40 @@
                     return { name: "codeeditor" }
                 default:
                     return { name: "text", type: "text" }
+            }
+        }
+
+        private updateValue(text: string) {
+            if (this.update === null) {
+                console.assert(false, "No update entity defined in view")
+                return
+            }
+
+            if (this.valueText !== text) {
+                const entity = this.update.fieldRef.entity
+
+                if (this.added) {
+                    this.setAddedField({
+                       schema: entity.schema,
+                        entity: entity.name,
+                        newId: this.update.id,
+                        field: this.update.fieldRef.name,
+                        fieldType: this.update.field.fieldType,
+                        value: text,
+                    })
+                } else {
+                    this.updateField({
+                        schema: entity.schema,
+                        entity: entity.name,
+                        id: this.update.id,
+                        field: this.update.fieldRef.name,
+                        fieldType: this.update.field.fieldType,
+                        value: text,
+                    })
+                }
+
+                // Needed to avoid cursor jumping in WebKit
+                this.valueText = text
             }
         }
     }

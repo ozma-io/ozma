@@ -35,10 +35,10 @@
 
                             <FormControl
                                 v-bind="entry.fields[fieldInfo.index]"
-                                :field="entry.fields[fieldInfo.index].update === null ? null : entry.fields[fieldInfo.index].update.field"
+                                :update="entry.fields[fieldInfo.index].update"
                                 :type="fieldInfo.column.valueType"
                                 :locked="locked"
-                                @update:value="updateValue(entry.added, entry.fields[fieldInfo.index].update.id, fieldInfo, entry.fields[fieldInfo.index], $event)" />
+                                :added="added" />
                         </b-form-group>
                     </template>
                 </div>
@@ -98,9 +98,7 @@
     export default class UserViewForm extends Vue {
         @staging.State("current") changes!: CurrentChanges
         @staging.State("currentSubmit") currentSubmit!: Promise<void> | null
-        @staging.Action("updateField") updateField!: (args: { schema: string, entity: string, id: number, field: string, fieldType: FieldType, value: any }) => void
         @staging.Action("addEntry") addEntry!: (args: { schema: string, entity: string, newId: number }) => void
-        @staging.Action("setAddedField") setAddedField!: (args: { schema: string, entity: string, newId: number, field: string, fieldType: FieldType, value: any }) => void
         @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { schema: string, entity: string, newId: number }) => void
         @staging.Action("deleteEntry") deleteEntry!: (args: { schema: string, entity: string, id: number }) => void
         @staging.Action("submit") submitChanges!: () => Promise<void>
@@ -153,40 +151,6 @@
             })
 
             return blocks
-        }
-
-        private updateValue(added: boolean, id: number, fieldInfo: IFieldInfo, field: IField, text: string) {
-            if (field.update === null) {
-                console.assert(false, "No update entity defined in view")
-                return
-            }
-
-            if (field.valueText !== text) {
-                const entity = field.update.fieldRef.entity
-
-                if (added) {
-                    this.setAddedField({
-                       schema: entity.schema,
-                        entity: entity.name,
-                        newId: id,
-                        field: field.update.fieldRef.name,
-                        fieldType: field.update.field.fieldType,
-                        value: text,
-                    })
-                } else {
-                    this.updateField({
-                        schema: entity.schema,
-                        entity: entity.name,
-                        id,
-                        field: field.update.fieldRef.name,
-                        fieldType: field.update.field.fieldType,
-                        value: text,
-                    })
-                }
-
-                // Needed to avoid cursor jumping in WebKit
-                field.valueText = text
-            }
         }
 
         private deleteRecord(added: boolean, id: number) {
