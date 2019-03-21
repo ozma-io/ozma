@@ -61,10 +61,6 @@ const initialSecret = () => {
     }
 }
 
-const rootUri = () => {
-    return `${window.location.protocol}//${window.location.host}/`
-}
-
 const redirectUri = () => {
     const returnPath = router.resolve({ name: "auth_response" }).href
     return `${window.location.protocol}//${window.location.host}${returnPath}`
@@ -239,20 +235,25 @@ export const authModule: Module<IAuthState, {}> = {
 
                 const urlParams = new URLSearchParams(window.location.search)
                 const stateString = urlParams.get("state")
-                const code = urlParams.get("code")
-                if (stateString !== null && code !== null) {
-                    const savedState = JSON.parse(atob(stateString))
-                    const params: Record<string, string> = {
-                        grant_type: "authorization_code",
-                        code,
-                        redirect_uri: redirectUri(),
+                if (stateString !== null) {
+                    const code = urlParams.get("code")
+                    if (code !== null) {
+                        const savedState = JSON.parse(atob(stateString))
+                        const params: Record<string, string> = {
+                            grant_type: "authorization_code",
+                            code,
+                            redirect_uri: redirectUri(),
+                        }
+                        getToken(context, params)
+                        router.push(savedState.path)
+                    } else {
+                        const error = urlParams.get("error")
+                        const errorDescription = urlParams.get("errorDescription")
+                        commit(`setError", "Invalid auth response query parameters, error ${error} ${errorDescription}`)
                     }
-                    getToken(context, params)
-                    router.push(savedState.path)
                 } else {
-                    const error = urlParams.get("error")
-                    const errorDescription = urlParams.get("errorDescription")
-                    commit(`setError", "Invalid auth response query parameters, error ${error} ${errorDescription}`)
+                    // We get here is redirected from logout
+                    router.push({ name: "main" })
                 }
             } else {
                 const oldAuth = loadCurrentAuth()
@@ -352,7 +353,7 @@ export const authModule: Module<IAuthState, {}> = {
             }
 
             const params = {
-                redirect_uri: rootUri(),
+                redirect_uri: redirectUri(),
             }
             const paramsString = new URLSearchParams(params).toString()
             dropCurrentAuth()
