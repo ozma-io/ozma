@@ -84,12 +84,12 @@
             const actions: IAction[] = []
             if (this.createView !== null) {
                 const createLocation = { name: "view_create", params: { "name": this.createView } }
-                actions.push({ name: this.$tc("create"), location: this.$router.resolve(createLocation).href })
+                actions.push({ name: this.$tc("create"), location: createLocation })
             }
             // FIXME FIXME FIXME
             if (this.uv instanceof UserViewResult && this.uv.args.type === "named" && this.currentAuth.decodedToken.realm_access.roles.includes("fundb_admin")) {
                 const editLocation = { name: "view", params: { "name": "__UserViewByName" }, query: { "name": this.uv.args.source } }
-                actions.push({ name: this.$tc("edit_view"), location: this.$router.resolve(editLocation).href })
+                actions.push({ name: this.$tc("edit_view"), location: editLocation })
             }
             actions.push(...this.extraActions)
             return actions

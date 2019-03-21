@@ -5,6 +5,9 @@
             <b-dropdown-item v-if="'location' in action" :key="action.name" class="menu_btn" variant="primary" :to="action.location">
                 {{ action.name }}
             </b-dropdown-item>
+            <b-dropdown-item v-else-if="'href' in action" :key="action.name" class="menu_btn" variant="primary" :href="action.href">
+                {{ action.name }}
+            </b-dropdown-item>
             <b-dropdown-item v-else-if="'callback' in action" :key="action.name" class="menu_btn" variant="primary" @click="action.callback()">
                 {{ action.name }}
             </b-dropdown-item>
@@ -21,12 +24,17 @@
         location: RawLocation
     }
 
+    export interface IHrefAction {
+        name: string
+        href: string
+    }
+
     export interface ICallbackAction {
         name: string
         callback: () => void
     }
 
-    export type IAction = ILocationAction | ICallbackAction
+    export type IAction = ILocationAction | IHrefAction | ICallbackAction
 
     @Component
     export default class ActionsMenu extends Vue {

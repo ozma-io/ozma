@@ -10,6 +10,7 @@
             "settings_error": "Failed to fetch settings: {msg}",
             "translations_error": "Failed to fetch translations: {msg}",
             "save": "Save",
+            "account": "Account",
             "logout": "Logout",
             "confirm_close": "You have unsaved changes, do you want to discard them?"
         },
@@ -23,6 +24,7 @@
             "settings_error": "Ошибка получения настроек: {msg}",
             "translations_error": "Ошибка получения переводов: {msg}",
             "save": "Сохранить",
+            "account": "Профиль",
             "logout": "Выйти",
             "confirm_close": "У вас есть несохранённые изменения, отбросить их?"
         }
@@ -96,6 +98,8 @@
     import { Route } from "vue-router"
     import { Component, Watch, Vue } from "vue-property-decorator"
     import { Action, namespace } from "vuex-class"
+
+    import * as Api from "@/api"
     import { IUserViewArguments, UserViewResult, UserViewError, CurrentUserViews } from "@/state/user_view"
     import { CurrentTranslations } from "@/state/translations"
     import { CurrentChanges } from "@/state/staging_changes"
@@ -143,8 +147,9 @@
 
         get actions() {
             const actions: IAction[] = []
-            actions.push({ name: this.$tc("logout"), callback: this.logout })
             actions.push(...this.extraActions)
+            actions.push({ name: this.$tc("account"), href: Api.accountUrl })
+            actions.push({ name: this.$tc("logout"), callback: this.logout })
             return actions
         }
 
