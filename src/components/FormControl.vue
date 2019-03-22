@@ -19,6 +19,8 @@
             <ActionsMenu v-if="inputType.name === 'userview'"
                             title="☰"
                             :actions="actions" />
+            <div class="black_block" onklick>
+            </div>
         </div>
 
         <b-form-checkbox v-if="inputType.name === 'check'"
