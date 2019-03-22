@@ -44,6 +44,7 @@
     <Content Include="public\index.html" />
     <Content Include="src\assets\openform.png" />
     <Content Include="src\components\ActionsMenu.vue" />
+    <Content Include="src\components\FormControl.vue" />
     <Content Include="src\components\Login.vue">
       <SubType>Code</SubType>
     </Content>
