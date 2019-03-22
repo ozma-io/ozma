@@ -62,26 +62,17 @@
                                     ⤢
                                 </router-link>
                             </td>
-                            <td v-for="i in columnIndexes" @dblclick="changeValue(entries[entryI].cells[i])" :key="i" :style="entries[entryI].cells[i].style" :class="entries[entryI].cells[i].fixed ? 'fixed-column' : 'none'">
-                                <FormControl v-if="entries[entryI].cells[i].change"
-                                    :valueText="entries[entryI].cells[i].valueText"
-                                    :locked="false"
-                                    :attributes="Object.assign({}, entries[entryI].cells[i].attrs, entries[entryI].attrs, columns[i].attrs)"
-                                    :added="false"
-                                    :update="entries[entryI].cells[i].update"
-                                    :type="columns[i].columnInfo.valueType"/>
-                                <template v-else>
-                                    <router-link v-if="entries[entryI].cells[i].link !== null" :to="entries[entryI].cells[i].link">
-                                        <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" class="div_checkbox" disabled></b-checkbox>
-                                        <template v-else>
-                                            {{ entries[entryI].cells[i].valueText }}
-                                        </template>
-                                    </router-link>
+                            <td v-for="i in columnIndexes" :key="i" :style="entries[entryI].cells[i].style" :class="entries[entryI].cells[i].fixed ? 'fixed-column' : 'none'">
+                                <router-link v-if="entries[entryI].cells[i].link !== null" :to="entries[entryI].cells[i].link">
+                                    <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" class="div_checkbox" disabled></b-checkbox>
                                     <template v-else>
-                                        <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" disabled class="div_checkbox"></b-checkbox>
-                                        <template v-else>
-                                            {{ entries[entryI].cells[i].valueText }}
-                                        </template>
+                                        {{ entries[entryI].cells[i].valueText }}
+                                    </template>
+                                </router-link>
+                                <template v-else>
+                                    <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" disabled class="div_checkbox"></b-checkbox>
+                                    <template v-else>
+                                        {{ entries[entryI].cells[i].valueText }}
                                     </template>
                                 </template>
                             </td>
@@ -99,7 +90,7 @@
     import { UserViewResult, printValue, IUpdatableField } from "@/state/user_view"
     import { CurrentChanges, IEntityChanges, IUpdatedCell } from "@/state/staging_changes"
     import { setBodyStyle } from "@/style"
-    import { IExecutedRow, IExecutedValue, ValueType, IResultColumnInfo } from "@/api"
+    import { IExecutedRow, IExecutedValue, ValueType } from "@/api"
     import { CurrentTranslations } from "@/state/translations"
 
     interface ICell {
@@ -108,9 +99,6 @@
         link: Location | null
         style: Record<string, any>
         fixed: boolean
-        update: IUpdatableField | undefined | null
-        attrs: Record<string, any>
-        change: boolean
     }
 
     interface IRow {
@@ -120,7 +108,6 @@
         selected: boolean
         style: Record<string, any>
         linkForRow: Location | null
-        attrs: Record<string, any>
     }
 
     interface IColumn {
@@ -129,8 +116,6 @@
         style: Record<string, any>
         fixed: boolean
         mobileFixed: boolean
-        columnInfo: IResultColumnInfo
-        attrs: Record<string, any>
     }
 
     const SHOW_STEP = 20
@@ -271,8 +256,6 @@
                     caption, style,
                     fixed: fixedColumn,
                     mobileFixed: fixedField,
-                    columnInfo,
-                    attrs: captionAttr,
                 }
             })
         }
@@ -350,14 +333,6 @@
 
             this.sortRows()
             this.lastSelected = null
-        }
-
-        private changeValue(cell: ICell) {
-            if (cell.update !== null && cell.update !== undefined) {
-                if (cell.update.id !== undefined) {
-                    cell.change = !cell.change
-                }
-            }
         }
 
         private selectRow(rowI: number, event: MouseEvent) {
@@ -600,9 +575,6 @@
                         return {
                             value, valueText, link, style,
                             fixed: fixedColumn,
-                            change: false,
-                            attrs: cellAttrs,
-                            update: cellValue.update,
                         }
                     })
 
@@ -613,7 +585,6 @@
                         style: rowStyle,
                         selected: false,
                         linkForRow,
-                        attrs: rowAttrs,
                     }
                 })
             }
