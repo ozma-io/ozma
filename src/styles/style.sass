@@ -630,6 +630,8 @@ div
 									opacity: 0
 									display: block !important
 									overflow: scroll
+									div
+										height: calc(100vh + 10px)
 							
 							div
 								width: 100%
@@ -644,7 +646,7 @@ div
 								&.dropdown:not(:hover) > div
 									display: none
 								&.dropdown:hover + .black_block
-									height: calc(100vh + 8px)
+									height: 100vh
 									opacity: 0.7
 								button
 									width: 100vw
@@ -742,8 +744,10 @@ div.nested_menu
 					background-color: black !important
 					z-index: 1100
 					opacity: 0
-					display: block !important	
+					display: block !important
 					overflow: scroll
+					div
+						height: calc(100vh + 10px)
 			div
 				width: 100%
 				border-right: 0 !important
@@ -760,7 +764,7 @@ div.nested_menu
 				&.dropdown:not(:hover) > div
 					display: none
 				&.dropdown:hover + .black_block
-					height: calc(100vh + 8px)
+					height: 100vh
 					opacity: 0.7
 				a
 					&.menu_btn
