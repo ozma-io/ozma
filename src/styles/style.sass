@@ -634,6 +634,8 @@ div
 								width: 100%
 								border-right: 0 !important
 								box-sizing: content-box
+								&.dropdown:hover > div.dropdown-menu
+									display: block
 								&.dropdown:hover
 									border: 0
 								&.dropdown:not(:hover) + .black_block
@@ -747,6 +749,10 @@ div.nested_menu
 				&.dropdown:hover
 					border: 0
 					z-index: 1200
+				&.dropdown:hover > div.dropdown-menu
+					display: block
+				&.dropdown:not(:avctive) + .black_block
+					height: 0px
 				&.dropdown:not(:hover) + .black_block
 					transition: height 1s
 				&.dropdown:not(:hover) > div
