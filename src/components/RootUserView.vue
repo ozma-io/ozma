@@ -40,6 +40,7 @@
                 </b-button>
                 <ActionsMenu :title="$t('actions')" :actions="actions" />
                 <div class="black_block" onklick>
+                    <div></div>
                 </div>
                 <b-form v-if="enableFilter" inline class="find">
                     <b-input-group>

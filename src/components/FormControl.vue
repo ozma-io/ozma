@@ -20,6 +20,7 @@
                             title="☰"
                             :actions="actions" />
             <div class="black_block" onklick>
+                <div></div>
             </div>
         </div>
 
