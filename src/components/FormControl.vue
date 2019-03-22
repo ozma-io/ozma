@@ -246,9 +246,6 @@
                         value: text,
                     })
                 }
-
-                // Needed to avoid cursor jumping in WebKit
-                this.valueText = text
             }
         }
     }

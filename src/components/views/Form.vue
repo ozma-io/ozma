@@ -38,7 +38,7 @@
                                 :update="entry.fields[fieldInfo.index].update"
                                 :type="fieldInfo.column.valueType"
                                 :locked="locked"
-                                :added="added" />
+                                :added="entry.added" />
                         </b-form-group>
                     </template>
                 </div>
