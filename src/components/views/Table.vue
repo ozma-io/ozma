@@ -66,7 +66,7 @@
                                 <FormControl v-if="entries[entryI].cells[i].change"
                                     :valueText="entries[entryI].cells[i].valueText"
                                     :locked="false"
-                                    :attributes="Object.assign({}, entries[entryI].cells[i].attrs, entries[entryI].attrs, columns[i].attrs)"
+                                    :attributes="Object.assign({}, entries[entryI].cells[i].attrs, entries[entryI].attrs, columns[i].attrs, uv.attributes)"
                                     :added="false"
                                     :update="entries[entryI].cells[i].update"
                                     :type="columns[i].columnInfo.valueType"/>
