@@ -87,7 +87,7 @@
                 actions.push({ name: this.$tc("create"), location: createLocation })
             }
             // FIXME FIXME FIXME
-            if (this.uv instanceof UserViewResult && this.uv.args.type === "named" && this.currentAuth.decodedToken.realm_access.roles.includes("fundb_admin")) {
+            if (this.uv instanceof UserViewResult && this.uv.args.type === "named") {
                 const editLocation = { name: "view", params: { "name": "__UserViewByName" }, query: { "name": this.uv.args.source } }
                 actions.push({ name: this.$tc("edit_view"), location: editLocation })
             }
