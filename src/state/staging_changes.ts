@@ -81,10 +81,9 @@ export interface IStagingState {
     touched: boolean
     // FIXME: instead set errors for each change -- this requires transactions and per-change errors support in FunDB.
     errors: string[]
+    autoSaveTimeout: number | null
     autoSaveTimeoutId: number | null
 }
-
-const autoSaveTimeout = 5000
 
 const askOnClose = (e: BeforeUnloadEvent) => {
     e.preventDefault()
@@ -95,19 +94,21 @@ const stopAutoSave = ({ state, commit }: ActionContext<IStagingState, {}>) => {
     if (state.autoSaveTimeoutId !== null) {
         window.removeEventListener("beforeunload", askOnClose)
         clearTimeout(state.autoSaveTimeoutId)
-        commit("clearAutoSave")
+        commit("clearAutoSaveHandler")
     }
 }
 
 const startAutoSave = (context: ActionContext<IStagingState, {}>) => {
-    const { commit, dispatch } = context
+    const { state, commit, dispatch } = context
     stopAutoSave(context)
 
-    const timeoutId = setTimeout(() => {
-        dispatch("submit")
-    }, autoSaveTimeout)
-    window.addEventListener("beforeunload", askOnClose)
-    commit("setAutoSave", timeoutId)
+    if (state.autoSaveTimeout !== null) {
+        const timeoutId = setTimeout(() => {
+            dispatch("submit")
+        }, state.autoSaveTimeout)
+        window.addEventListener("beforeunload", askOnClose)
+        commit("setAutoSaveHandler", timeoutId)
+    }
 }
 
 const reset = (context: ActionContext<IStagingState, {}>) => {
@@ -252,6 +253,7 @@ const stagingModule: Module<IStagingState, {}> = {
         currentSubmit: null,
         touched: false,
         errors: [],
+        autoSaveTimeout: null,
         autoSaveTimeoutId: null,
     },
     mutations: {
@@ -262,11 +264,14 @@ const stagingModule: Module<IStagingState, {}> = {
             state.deletedCount = 0
             state.touched = false
         },
-        setAutoSave: (state, timeoutId) => {
+        setAutoSaveHandler: (state, timeoutId: number) => {
             state.autoSaveTimeoutId = timeoutId
         },
-        clearAutoSave: state => {
+        clearAutoSaveHandler: state => {
             state.autoSaveTimeoutId = null
+        },
+        setAutoSaveTimeout: (state, timeout: number | null) => {
+            state.autoSaveTimeout = timeout
         },
         startSubmit: (state, submit: Promise<void>) => {
             state.touched = false

@@ -31,6 +31,7 @@
 
     const settings = namespace("settings")
     const auth = namespace("auth")
+    const staging = namespace("staging")
 
     @Component
     export default class App extends Vue {
@@ -39,9 +40,17 @@
         @auth.State("current") currentAuth!: CurrentAuth | null
         @auth.State("pending") pendingAuth!: Promise<CurrentAuth> | null
         @auth.State("lastError") authLastError!: string | null
+        @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void
 
         created() {
             this.$router.onReady(() => this.startAuth())
+        }
+
+        @Watch("settings")
+        private updateSettings() {
+            const rawAutoSaveTimeout = Number(this.settings.getEntry("AutoSaveTimeout", "3"))
+            const autoSaveTimeout = Number.isNaN(rawAutoSaveTimeout) ? null : rawAutoSaveTimeout * 1000
+            this.setAutoSaveTimeout(autoSaveTimeout)
         }
 
         get styleSettings() {
