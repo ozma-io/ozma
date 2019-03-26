@@ -55,15 +55,15 @@
 
         get styleSettings() {
             const values = {
-                "BackgroundColor": this.settings.getEntry("backround-color", "#ffffff"),
+                "BackColor": this.settings.getEntry("BackColor", "white"),
                 "NavigationBackColor": this.settings.getEntry("NavigationBackColor", "#F5C700"),
                 "TableBorderColor": this.settings.getEntry("TableBorderColor", "#F5C700"),
                 "FormBorderColor": this.settings.getEntry("FormBorderColor", "#F5C700"),
                 "Font": this.settings.getEntry("Font", "Courier New, monospace"),
                 "FontSize": this.settings.getEntry("FontSize", "16px"),
                 "MenuColor": this.settings.getEntry("MenuColor", "#F5C700"),
-                "ColorTableBg": this.settings.getEntry("ColorTableBg", "white"),
-                "ColorTableSelect": this.settings.getEntry("ColorTableSelect", "#CCCCCC"),
+                "TableBackColor": this.settings.getEntry("TableBackColor", "white"),
+                "TableSelectColor": this.settings.getEntry("TableSelectColor", "#CCCCCC"),
                 "WarningBackColor": this.settings.getEntry("WarningBackColor", "#fff3cd"),
                 "DangerBackColor": this.settings.getEntry("DangerBackColor", "#f8d7da"),
                 "SuccessBackColor": this.settings.getEntry("SuccessBackColor", "#d4edda"),
