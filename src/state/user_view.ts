@@ -3,7 +3,7 @@ import { Module, ActionContext } from "vuex"
 import { Moment } from "moment"
 import moment from "moment"
 
-import { IRef, FetchError, momentLocale } from "@/utils"
+import { IRef, FetchError, momentLocale, deepFreeze } from "@/utils"
 import * as Api from "@/api"
 import {
     AttributesMap, IColumnField, IFieldRef, IResultViewInfo, IExecutedRow,
@@ -253,7 +253,7 @@ const getUserView = async ({ dispatch }: ActionContext<IUserViewState, {}>, args
                 current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
             }
         }
-        return current
+        return deepFreeze(current)
     } catch (e) {
         if (e instanceof FetchError) {
             if (e.response.status === 403) {

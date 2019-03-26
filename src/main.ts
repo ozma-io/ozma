@@ -1,8 +1,11 @@
 import Vue from "vue"
+
+Vue.config.devtools = process.env["NODE_ENV"] !== "production"
+Vue.config.performance = process.env["NODE_ENV"] !== "production"
+
 import Vuex from "vuex"
 import BootstrapVue from "bootstrap-vue"
 
-import * as Utils from "@/utils"
 import * as Modules from "@/modules"
 
 import UserView from "@/components/UserView.vue"
@@ -33,9 +36,6 @@ export const store = new Vuex.Store({
         staging: stagingChanges,
     },
 })
-
-// TypeScript definition for "state" is broken
-const storeState: any = store.state
 
 Vue.component("UserView", UserView)
 Vue.component("ActionsMenu", ActionsMenu)
