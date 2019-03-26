@@ -38,54 +38,28 @@
                 </thead>
                 <tbody>
                     <template v-for="(entryI, rowI) in shownRows">
-                        <tr v-if="flagOfFixedPlace" class="fixed-place-tr">
+                        <tr v-if="flagOfFixedPlace" :key="`fixed-${entryI}`" class="fixed-place-tr">
                             <td class="fixed-place-td">
                                 <div class="fix">
                                     <div @click="selectRow(rowI, $event)" class="fixed-column">
                                         <input type="checkbox" :checked="entries[entryI].selected" v-on:click.self.prevent>
                                     </div>
                                     <div v-if="entries[entryI].linkForRow !== null" class="fixed-column">
-                                        <router-link :to="entries[entryI].linkForRow">
+                                        <a :href="entries[entryI].linkForRow">
                                             ⤢
-                                        </router-link>
+                                        </a>
                                     </div>
-                                    <div v-for="i in mobileColumnIndexes">{{ entries[entryI].cells[i].valueText }}</div>
+                                    <div v-for="i in mobileColumnIndexes" :key="i">{{ entries[entryI].cells[i].valueText }}</div>
                                 </div>
                             </td>
                         </tr>
-                        <tr :key="entryI" :style="entries[entryI].style" :class="entries[entryI].selected ? 'selected' : 'none_selected'">
-                            <td @click="selectRow(rowI, $event)" class="fixed-column checkbox-cells">
-                                <input type="checkbox" :checked="entries[entryI].selected" v-on:click.self.prevent>
-                            </td>
-                            <td v-if="entries[entryI].linkForRow !== null" class="fixed-column opemform-cells">
-                                <router-link :to="entries[entryI].linkForRow">
-                                    ⤢
-                                </router-link>
-                            </td>
-                            <td v-for="i in columnIndexes" @dblclick="changeValue(entries[entryI].cells[i])" :key="i" :style="entries[entryI].cells[i].style" :class="entries[entryI].cells[i].fixed ? 'fixed-column' : 'none'">
-                                <FormControl v-if="entries[entryI].cells[i].change"
-                                    :valueText="entries[entryI].cells[i].valueText"
-                                    :locked="false"
-                                    :attributes="Object.assign({}, entries[entryI].cells[i].attrs, entries[entryI].attrs, columns[i].attrs, uv.attributes)"
-                                    :added="false"
-                                    :update="entries[entryI].cells[i].update"
-                                    :type="columns[i].columnInfo.valueType"/>
-                                <template v-else>
-                                    <router-link v-if="entries[entryI].cells[i].link !== null" :to="entries[entryI].cells[i].link">
-                                        <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" class="div_checkbox" disabled></b-checkbox>
-                                        <template v-else>
-                                            {{ entries[entryI].cells[i].valueText }}
-                                        </template>
-                                    </router-link>
-                                    <template v-else>
-                                        <b-checkbox v-if="typeof entries[entryI].cells[i].value === 'boolean'" :checked="entries[entryI].cells[i].value" disabled class="div_checkbox"></b-checkbox>
-                                        <template v-else>
-                                            {{ entries[entryI].cells[i].valueText }}
-                                        </template>
-                                    </template>
-                                </template>
-                            </td>
-                        </tr>
+                        <TableRow :key="entryI"
+                                :entry="entries[entryI]"
+                                :columnIndexes="columnIndexes"
+                                :columns="columns"
+                                :uv="uv"
+                                @selectRow="selectRow(rowI, $event)"
+                                @changeValue="changeValue" />
                     </template>
                 </tbody>
             </table>
@@ -101,37 +75,7 @@
     import { setBodyStyle } from "@/style"
     import { IExecutedRow, IExecutedValue, ValueType, IResultColumnInfo } from "@/api"
     import { CurrentTranslations } from "@/state/translations"
-
-    interface ICell {
-        value: any
-        valueText: string
-        link: Location | null
-        style: Record<string, any>
-        fixed: boolean
-        update: IUpdatableField | undefined | null
-        attrs: Record<string, any>
-        change: boolean
-    }
-
-    interface IRow {
-        index: number
-        cells: ICell[]
-        deleted: boolean
-        selected: boolean
-        style: Record<string, any>
-        linkForRow: Location | null
-        attrs: Record<string, any>
-    }
-
-    interface IColumn {
-        columnIndex: number
-        caption: string
-        style: Record<string, any>
-        fixed: boolean
-        mobileFixed: boolean
-        columnInfo: IResultColumnInfo
-        attrs: Record<string, any>
-    }
+    import TableRow, { IRow, ICell, IColumn } from "@/components/views/table/TableRow.vue"
 
     const SHOW_STEP = 20
 
@@ -212,7 +156,11 @@
     const translations = namespace("translations")
     const technicalFieldsWidth = 20 // checkbox's and openform's td width
 
-    @Component
+    @Component({
+        components: {
+            TableRow,
+        },
+    })
     export default class UserViewTable extends Vue {
         @staging.State("current") changes!: CurrentChanges
         @translations.Getter("field") fieldTranslation!: (schema: string, entity: string, field: string, defValue: string) => string
@@ -573,18 +521,18 @@
 
                         const linkedViewAttr = cellValue.update === undefined ? undefined : getCellAttr("LinkedView")
                         const link =
-                            linkedViewAttr === undefined ? null : {
+                            linkedViewAttr === undefined ? null : this.$router.resolve({
                                 name: "view",
                                 params: { "name": String(linkedViewAttr) },
                                 query: { "id": String((cellValue.update as IUpdatableField).id) },
-                            }
+                            }).href
                         const linkedViewForRowAttr = cellValue.update === undefined ? undefined : getCellAttr("RowLinkedView")
                         if (linkedViewForRowAttr !== undefined) {
-                            linkForRow = {
+                            linkForRow = this.$router.resolve({
                                 name: "view",
                                 params: { "name": String(linkedViewForRowAttr) },
                                 query: { "id": String((cellValue.update as IUpdatableField).id) },
-                            }
+                            }).href
                         }
 
                         const style: Record<string, any> = {}

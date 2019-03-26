@@ -61,3 +61,18 @@ export const momentLocale = (async () => {
 export const sse = () => {
     return Math.floor((new Date()).getTime() / 1000)
 }
+
+export const deepFreeze = (o: any) => {
+    Object.freeze(o)
+
+    Object.getOwnPropertyNames(o).forEach(prop => {
+      if (o.hasOwnProperty(prop)
+      && o[prop] !== null
+      && (typeof o[prop] === "object" || typeof o[prop] === "function")
+      && !Object.isFrozen(o[prop])) {
+        deepFreeze(o[prop])
+      }
+    })
+
+    return o
+}
