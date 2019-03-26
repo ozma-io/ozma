@@ -210,7 +210,8 @@
                 this.settingsLastError !== null ||
                 this.translationsLastError !== null ||
                 this.stagingErrors.length > 0 ||
-                !this.changes.isEmpty
+                !this.changes.isEmpty ||
+                this.statusLine !== ""
         }
     }
 </script>
