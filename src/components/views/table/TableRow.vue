@@ -4,9 +4,9 @@
             <input type="checkbox" :checked="props.entry.selected" @click.self.prevent>
         </td>
         <td v-if="props.entry.linkForRow !== null" class="fixed-column opemform-cells">
-            <a :href="entry.linkForRow">
+            <router-link :to="entry.linkForRow">
                 ⤢
-            </a>
+            </router-link>
         </td>
         <td v-for="i in props.columnIndexes"
                 :key="i"
@@ -21,7 +21,7 @@
                     :update="props.entry.cells[i].update"
                     :type="props.columns[i].columnInfo.valueType"/>
             <template v-else>
-                <a v-if="props.entry.cells[i].link !== null" :href="props.entry.cells[i].link">
+                <router-link v-if="props.entry.cells[i].link !== null" :to="props.entry.cells[i].link">
                     <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"
                             :checked="props.entry.cells[i].value"
                             class="div_checkbox"
@@ -29,7 +29,7 @@
                     <template v-else>
                         {{ props.entry.cells[i].valueText }}
                     </template>
-                </a>
+                </router-link>
                 <template v-else>
                     <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"
                             :checked="props.entry.cells[i].value"
@@ -46,13 +46,15 @@
 
 <script lang="ts">
     import Vue, { FunctionalComponentOptions } from "vue"
+    import { Location } from "vue-router"
+
     import { UserViewResult, IUpdatableField } from "@/state/user_view"
     import { IResultColumnInfo } from "@/api"
 
     export interface ICell {
         value: any
         valueText: string
-        link: string | null
+        link: Location | null
         style: Record<string, any>
         fixed: boolean
         update: IUpdatableField | undefined | null
@@ -66,7 +68,7 @@
         deleted: boolean
         selected: boolean
         style: Record<string, any>
-        linkForRow: string | null
+        linkForRow: Location | null
         attrs: Record<string, any>
     }
 
