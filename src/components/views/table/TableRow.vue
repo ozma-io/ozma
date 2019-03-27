@@ -4,7 +4,7 @@
             <input type="checkbox" :checked="props.entry.selected" @click.self.prevent>
         </td>
         <td v-if="props.entry.linkForRow !== null" class="fixed-column opemform-cells">
-            <router-link :to="entry.linkForRow">
+            <router-link :to="props.entry.linkForRow">
                 ⤢
             </router-link>
         </td>
