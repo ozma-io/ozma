@@ -17,7 +17,7 @@
         @Prop({ default: "" }) theme!: string
         @Prop({ default: false }) readOnly!: boolean
 
-        private editor: Ace.Ace.Editor | null = null
+        editor: Ace.Ace.Editor | null = null
 
         private mounted() {
             const editor = Ace.edit(this.$refs.pre)

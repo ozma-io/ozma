@@ -19,7 +19,8 @@
                     :attributes="Object.assign({}, props.entry.cells[i].attrs, props.entry.attrs, props.columns[i].attrs, props.uv.attributes)"
                     :added="props.added"
                     :update="props.entry.cells[i].update"
-                    :type="props.columns[i].columnInfo.valueType"/>
+                    :type="props.columns[i].columnInfo.valueType"
+                    autofocus />
             <template v-else>
                 <router-link v-if="props.entry.cells[i].link !== null" :to="props.entry.cells[i].link">
                     <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"

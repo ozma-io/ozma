@@ -27,26 +27,31 @@
         <b-form-checkbox v-if="inputType.name === 'check'"
                          :value="value"
                          @input="updateValue($event)"
-                         :disabled="isDisabled" />
+                         :disabled="isDisabled"
+                         ref="control" />
         <b-form-textarea v-else-if="inputType.name === 'textarea'"
                          :value="valueText"
                          @input="updateValue($event)"
                          :disabled="isDisabled"
                          :rows="3"
                          :max-rows="6"
-                         :required="!isNullable" />
+                         :required="!isNullable"
+                         ref="control" />
         <CodeEditor v-else-if="inputType.name === 'codeeditor'"
                     :content="valueText"
                     @update:content="updateValue($event)"
-                    :readOnly="isDisabled" />
+                    :readOnly="isDisabled"
+                    ref="control" />
         <UserView v-else-if="inputType.name === 'userview'"
                     :uv="uv"
-                    @update:actions="actions = $event" />
+                    @update:actions="actions = $event"
+                    ref="control" />
         <b-form-select v-else-if="inputType.name === 'select'"
                        :value="valueText"
                        @input="updateValue($event)"
                        :disabled="isDisabled"
-                       :options="inputType.options" />
+                       :options="inputType.options"
+                       ref="control" />
         <!-- We don't use bootstrap-vue's b-form-input type=text because of problems with Safari
                 https://github.com/bootstrap-vue/bootstrap-vue/issues/1951
         -->
@@ -56,13 +61,15 @@
                @input="updateValue($event.target.value)"
                type="text"
                :disabled="isDisabled"
-               :required="!isNullable" />
+               :required="!isNullable"
+               ref="control" />
         <b-form-input v-else
                       :value="valueText"
                       @input="updateValue($event)"
                       :type="inputType.type"
                       :disabled="isDisabled"
-                      :required="!isNullable" />
+                      :required="!isNullable"
+                      ref="control" />
     </span>
 </template>
 
@@ -109,6 +116,7 @@
     const userView = namespace("userView")
     const staging = namespace("staging")
 
+    // TODO: this could be rewritten as a functional component with a UserViewControl sub-component for handling UV state.
     @Component({
         components: {
             CodeEditor: () => import("@/components/CodeEditor.vue"),
@@ -123,6 +131,7 @@
         @Prop({ type: Boolean, default: false }) locked!: boolean
         @Prop({ type: Boolean }) added!: boolean
         @Prop({ type: Object, default: null }) update!: IUpdatableField | null
+        @Prop({ type: Boolean, default: false }) autofocus!: boolean
 
         @staging.Action("updateField") updateField!: (args: { schema: string, entity: string, id: number, field: string, fieldType: FieldType, value: any }) => void
         @staging.Action("setAddedField") setAddedField!: (args: { schema: string, entity: string, newId: number, field: string, fieldType: FieldType, value: any }) => void
@@ -133,6 +142,24 @@
 
         private actions: IAction[] = []
         private uv: UserViewResult | null = null
+
+        private mounted() {
+            if (this.autofocus) {
+                const type = this.inputType
+                const control: any = this.$refs["control"]
+                if (type.name === "text") {
+                    control.focus()
+                } else if (type.name === "textarea") {
+                    control.focus()
+                } else if (type.name === "codeeditor") {
+                    control.editor.focus()
+                } else if (type.name === "select") {
+                    control.focus()
+                } else if (type.name === "check") {
+                    control.focus()
+                }
+            }
+        }
 
         @Watch("uv", { immediate: true })
         private clearActions() {
