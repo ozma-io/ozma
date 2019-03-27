@@ -501,7 +501,7 @@
                     const rowAttrs = row.attributes === undefined ? {} : row.attributes
                     const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
 
-                    let linkForRow = null
+                    let linkForRow: Location | null = null
 
                     const rowStyle: Record<string, any> = {}
                     const rowHeight = getRowAttr("RowHeight")
@@ -521,18 +521,18 @@
 
                         const linkedViewAttr = cellValue.update === undefined ? undefined : getCellAttr("LinkedView")
                         const link =
-                            linkedViewAttr === undefined ? null : this.$router.resolve({
+                            linkedViewAttr === undefined ? null : {
                                 name: "view",
                                 params: { "name": String(linkedViewAttr) },
                                 query: { "id": String((cellValue.update as IUpdatableField).id) },
-                            }).href
+                            }
                         const linkedViewForRowAttr = cellValue.update === undefined ? undefined : getCellAttr("RowLinkedView")
                         if (linkedViewForRowAttr !== undefined) {
-                            linkForRow = this.$router.resolve({
+                            linkForRow = {
                                 name: "view",
                                 params: { "name": String(linkedViewForRowAttr) },
                                 query: { "id": String((cellValue.update as IUpdatableField).id) },
-                            }).href
+                            }
                         }
 
                         const style: Record<string, any> = {}
