@@ -306,7 +306,7 @@
             if (this.timeId === null) {
                 this.timeId = setTimeout(() => {
                     this.timeId = null
-                }, 500)
+                }, 700)
                 if (this.oldCell !== null && this.oldCell !== cell) {
                     this.oldCell.select = false
                     this.oldCell.change = false
@@ -322,6 +322,13 @@
                         this.oldCell = cell
                     }
                 }
+            } else {
+                if (this.oldCell !== null) {
+                    this.oldCell.select = false
+                }
+                this.oldCell = cell
+                this.oldCell.select = true
+                this.timeId = null
             }
         }
 
