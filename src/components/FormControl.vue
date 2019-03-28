@@ -57,12 +57,14 @@
         -->
         <input v-else-if="inputType.type === 'text'"
                :value="valueText"
+               class="form-control"
                @input="updateValue($event.target.value)"
                type="text"
                :disabled="isDisabled"
                :required="!isNullable"
                ref="control" />
         <b-form-input v-else
+                      class="form-control"
                       :value="valueText"
                       @input="updateValue($event)"
                       :type="inputType.type"
