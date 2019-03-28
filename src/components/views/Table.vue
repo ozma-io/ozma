@@ -178,6 +178,8 @@
         private selectedRows: number = 0
         private lastSelected: number | null = null
         private printListener: { query: MediaQueryList, queryCallback: (mql: MediaQueryListEvent) => void, printCallback: () => void } | null = null
+        private oldCell: ICell | null = null
+        private timeId: any = null
 
         get hasRowLinks() {
             return this.entries.some(e => e.linkForRow !== null)
@@ -301,9 +303,24 @@
         }
 
         private changeValue(cell: ICell) {
-            if (cell.update !== null && cell.update !== undefined) {
-                if (cell.update.id !== undefined) {
-                    cell.change = !cell.change
+            if (this.timeId === null) {
+                this.timeId = setTimeout(() => {
+                    this.timeId = null
+                }, 500)
+                if (this.oldCell !== null && this.oldCell !== cell) {
+                    this.oldCell.select = false
+                    this.oldCell.change = false
+                }
+                this.oldCell = cell
+                this.oldCell.select = true
+            } else if (cell === this.oldCell) {
+                clearTimeout(this.timeId)
+                this.timeId = null
+                if (cell.update !== null && cell.update !== undefined) {
+                    if (cell.update.id !== undefined) {
+                        cell.change = !cell.change
+                        this.oldCell = cell
+                    }
                 }
             }
         }
@@ -551,6 +568,7 @@
                             change: false,
                             attrs: cellAttrs,
                             update: cellValue.update,
+                            select: false,
                         }
                     })
 
