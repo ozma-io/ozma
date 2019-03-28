@@ -110,6 +110,7 @@
 
     interface IUserViewType {
         name: "userview"
+        args: IUserViewArguments
     }
 
     type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | ICheckType | IUserViewType
@@ -142,7 +143,6 @@
         @userView.Action("getNestedView") getNestedView!: (_: IUserViewArguments) => Promise<void>
 
         private actions: IAction[] = []
-        private uv: UserViewResult | null = null
 
         private mounted() {
             if (this.autofocus) {
@@ -175,6 +175,14 @@
             return this.update === null || this.locked
         }
 
+        get uv() {
+            if (this.inputType.name !== "userview") {
+                return null
+            } else {
+                return this.userViews.getUserView(this.inputType.args)
+            }
+        }
+
         get inputType(): IType {
             const controlAttr = this.attributes["Control"]
             if (controlAttr === "UserView") {
@@ -186,10 +194,8 @@
                 // FIXME: proper args
                 const viewArgs: IUserViewArguments = { type: "named", source: this.value[0], args: new URLSearchParams(location.search) }
                 this.getNestedView(viewArgs)
-                this.uv = this.userViews.getUserView(viewArgs)
-                return { name: "userview" }
+                return { name: "userview", args: viewArgs }
             }
-            this.uv = null
 
             if (this.update !== null) {
                 const fieldType = this.update.field.fieldType
