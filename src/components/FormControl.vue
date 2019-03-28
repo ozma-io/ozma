@@ -56,7 +56,6 @@
                 https://github.com/bootstrap-vue/bootstrap-vue/issues/1951
         -->
         <input v-else-if="inputType.type === 'text'"
-               class="form-control"
                :value="valueText"
                @input="updateValue($event.target.value)"
                type="text"

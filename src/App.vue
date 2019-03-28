@@ -67,6 +67,7 @@
                 "WarningBackColor": this.settings.getEntry("WarningBackColor", "#fff3cd"),
                 "DangerBackColor": this.settings.getEntry("DangerBackColor", "#f8d7da"),
                 "SuccessBackColor": this.settings.getEntry("SuccessBackColor", "#d4edda"),
+                "SelectBorderColor": this.settings.getEntry("SelectBorderColor", "blue"),
             }
             return Object.entries(values).reduce((currSettings, [name, value]) => {
                 currSettings[`--${name}`] = value

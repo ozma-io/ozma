@@ -10,9 +10,9 @@
         </td>
         <td v-for="i in props.columnIndexes"
                 :key="i"
-                @dblclick="listeners.changeValue(props.entry.cells[i], $event)"
+                @click="listeners.changeValue(props.entry.cells[i], $event)"
                 :style="props.entry.cells[i].style"
-                :class="props.entry.cells[i].fixed ? 'fixed-column' : 'none'">
+                :class="[props.entry.cells[i].fixed ? 'fixed-column' : 'none', props.entry.cells[i].select ? 'select' : 'none']">
             <FormControl v-if="props.entry.cells[i].change"
                     :valueText="props.entry.cells[i].valueText"
                     :locked="false"
@@ -61,6 +61,7 @@
         update: IUpdatableField | undefined | null
         attrs: Record<string, any>
         change: boolean
+        select: boolean /* one click on the cell */
     }
 
     export interface IRow {
@@ -82,7 +83,7 @@
         columnInfo: IResultColumnInfo
         attrs: Record<string, any>
     }
-    
+
     export default {
         name: "TableRow",
         props: {
