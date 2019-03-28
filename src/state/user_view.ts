@@ -189,10 +189,10 @@ export class CurrentUserViews {
 
     getUserView(args: IUserViewArguments) {
         const uv = this.userViews[userViewHash(args)]
-        if (uv instanceof UserViewResult) {
-            return uv
-        } else {
+        if (uv === null || uv instanceof Promise) {
             return null
+        } else {
+            return uv
         }
     }
 }

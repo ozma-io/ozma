@@ -6,7 +6,8 @@
             "filtered_count": "Rows count: {count}",
             "clear": "Clear",
             "yes": "Yes",
-            "no": "No"
+            "no": "No",
+            "invalid_menu": "Menu user view should have two columns"
         },
         "ru": {
             "filter": "Поиск",
@@ -14,14 +15,18 @@
             "filtered_count": "Кол-во записей: {count}",
             "clear": "Очистить",
             "yes": "Да",
-            "no": "Нет"
+            "no": "Нет",
+            "invalid_menu": "Представление меню должно иметь две колонки"
         }
     }
 </i18n>
 
 <template>
     <b-container fluid class="main_nav">
-        <b-container class="submain_nav">
+        <span v-if="error !== null">
+            {{ error }}
+        </span>
+        <b-container v-else class="submain_nav">
             <b-row class="subsubmain_nav" v-for="category in showedCategories" :key="category.index">
                 <b-container class="nav_sec">
                     <b-row class="nav_sec_tit"><a>{{ category.name }}</a></b-row>
@@ -68,6 +73,7 @@
 
         private categories: IMainMenuCategory[] = []
         private rows: IMainMenuButton[] = []
+        private error: string | null = null
 
         /* To optimize performance when staging entries change, we first pre-build entries and then update them selectively watching staging entries.
            This is to avoid rebuilding complete rows array each time user changes a field.
@@ -96,8 +102,9 @@
                 // Not supported in table yet.
                 this.categories = []
             } else if (this.uv.info.columns.length !== 2) {
-                console.assert(false, "Menu user view should have two columns")
+                this.error = this.$tc("invalid_menu")
                 this.categories = []
+                this.rows = []
             } else {
                 const viewAttrs = this.uv.attributes
 
@@ -141,6 +148,7 @@
                     return button
                 })
                 this.categories = Array.from(categories.values())
+                this.error = null
             }
         }
 

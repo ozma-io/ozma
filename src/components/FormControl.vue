@@ -3,12 +3,14 @@
         "en": {
             "no_value": "(No value)",
             "yes": "Yes",
-            "no": "No"
+            "no": "No",
+            "invalid_uv": "Nested user view rows should be arrays with user view name and arguments"
         },
         "ru": {
             "no_value": "(Пусто)",
             "yes": "Да",
-            "no": "Нет"
+            "no": "Нет",
+            "invalid_uv": "Столбцы со вложенными представлениями должны быть массивами с названием и аргументами к представлению"
         }
     }
 </i18n>
@@ -113,7 +115,12 @@
         args: IUserViewArguments
     }
 
-    type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | ICheckType | IUserViewType
+    interface IErrorType {
+        name: "error"
+        text: string
+    }
+
+    type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | ICheckType | IUserViewType | IErrorType
 
     const userView = namespace("userView")
     const staging = namespace("staging")
@@ -186,11 +193,9 @@
         get inputType(): IType {
             const controlAttr = this.attributes["Control"]
             if (controlAttr === "UserView") {
-                console.assert(
-                    this.type.type === "array" && this.type.subtype === "string",
-                    "User view rows should be arrays with user view name and arguments",
-                )
-                // See also getFieldType to understand expected value format.
+                if (this.type.type !== "array" || this.type.subtype !== "string") {
+                    return { name: "error", text: this.$tc("invalid_uv") }
+                }
                 // FIXME: proper args
                 const viewArgs: IUserViewArguments = { type: "named", source: this.value[0], args: new URLSearchParams(location.search) }
                 this.getNestedView(viewArgs)
