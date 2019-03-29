@@ -132,7 +132,7 @@
                     const getButtonAttr = (name: string) => buttonAttrs[name] || rowAttrs[name] || buttonsAttrs[name] || viewAttrs[name]
 
                     const linkedView = getButtonAttr("LinkedView")
-                    const to = linkedView === undefined ? null : { name: "view", params: { name: linkedView } }
+                    const to = linkedView === undefined ? null : { name: "view", params: { name: String(linkedView) } }
 
                     const button = {
                         index: rowI,

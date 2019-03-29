@@ -136,8 +136,8 @@
                     caption = columnInfo.name
                 }
 
-                const blockAttr = getColumnAttr("FormBlock")
-                const blockNumber = blockAttr !== undefined ? Number(blockAttr) : 0
+                const blockAttr = Number(getColumnAttr("FormBlock"))
+                const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr
                 const block = Math.max(0, Math.min(blockNumber, blocks.length - 1))
 
                 const field = {

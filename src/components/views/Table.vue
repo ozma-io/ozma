@@ -169,10 +169,10 @@
                 style["width"] = `${columnWidth}px`
 
                 const fixedColumnAttr = getColumnAttr("Fixed")
-                const fixedColumn = fixedColumnAttr === undefined ? false : fixedColumnAttr
+                const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr)
 
                 const fixedFieldAttr = getColumnAttr("MobileFixed")
-                const fixedField = fixedFieldAttr === undefined ? false : fixedFieldAttr
+                const fixedField = fixedFieldAttr === undefined ? false : Boolean(fixedFieldAttr)
 
                 return {
                     caption, style,
@@ -507,9 +507,9 @@
                     let linkForRow: Location | null = null
 
                     const rowStyle: Record<string, any> = {}
-                    const rowHeight = getRowAttr("RowHeight")
-                    if (rowHeight !== undefined) {
-                        rowStyle["height"] = rowHeight
+                    const rowHeight = Number(getRowAttr("RowHeight"))
+                    if (!Number.isNaN(rowHeight)) {
+                        rowStyle["height"] = `${rowHeight}px`
                     }
 
                     const cells = row.values.map((cellValue, colI): ICell => {
@@ -529,7 +529,7 @@
                                 params: { "name": String(linkedViewAttr) },
                                 query: { "id": String((cellValue.update as IUpdatableField).id) },
                             }
-                        const linkedViewForRowAttr = cellValue.update === undefined ? undefined : getCellAttr("RowLinkedView")
+                        const linkedViewForRowAttr = cellValue.update === undefined ? undefined : String(getCellAttr("RowLinkedView"))
                         if (linkedViewForRowAttr !== undefined) {
                             linkForRow = {
                                 name: "view",
@@ -542,11 +542,11 @@
 
                         const cellColor = getCellAttr("CellColor")
                         if (cellColor !== undefined) {
-                            style["background-color"] = cellColor
+                            style["background-color"] = String(cellColor)
                         }
 
                         const fixedColumnAttr = getCellAttr("Fixed")
-                        const fixedColumn = fixedColumnAttr === undefined ? false : fixedColumnAttr
+                        const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr)
 
                         return {
                             value, valueText, link, style,

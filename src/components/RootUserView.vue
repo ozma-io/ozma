@@ -33,6 +33,7 @@
 
 <template>
     <b-container class="without_padding main_div">
+        <!-- FIXME: This shouldn't depend on type! -->
         <div :class="uvIsReady && uv.attributes.Type === 'Menu' ? 'scrol_menu' : 'none_scrol'">
             <b-button-toolbar class="head_menu">
                 <b-button v-if="!isMainView" :to="{ name: 'main' }" class="nav_batton, goto_nav" id="menu_btn">
