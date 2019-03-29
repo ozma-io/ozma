@@ -230,29 +230,31 @@ export const authModule: Module<IAuthState, {}> = {
         startAuth: context => {
             const { state, commit, dispatch } = context
 
+            let tryExisting = true
             if (router.currentRoute.name === "auth_response") {
                 dropCurrentAuth()
+                tryExisting = false
 
                 const urlParams = new URLSearchParams(window.location.search)
                 const stateString = urlParams.get("state")
                 if (stateString !== null) {
+                    const savedState = JSON.parse(atob(stateString))
+                    router.push(savedState.path)
                     const code = urlParams.get("code")
                     if (code !== null) {
-                        const savedState = JSON.parse(atob(stateString))
                         const params: Record<string, string> = {
                             grant_type: "authorization_code",
                             code,
                             redirect_uri: redirectUri(),
                         }
                         getToken(context, params)
-                        router.push(savedState.path)
                     } else {
                         const error = urlParams.get("error")
                         const errorDescription = urlParams.get("errorDescription")
-                        commit(`setError", "Invalid auth response query parameters, error ${error} ${errorDescription}`)
+                        commit("setError", `Invalid auth response query parameters, error ${error} ${errorDescription}`)
                     }
                 } else {
-                    // We get here is redirected from logout
+                    // We get here is redirected from logout.
                     router.push({ name: "main" })
                 }
             } else {
@@ -279,12 +281,12 @@ export const authModule: Module<IAuthState, {}> = {
             window.addEventListener("storage", authStorageHandler)
 
             if (state.current === null && state.pending === null) {
-                return dispatch("requestLogin")
+                return dispatch("requestLogin", tryExisting)
             } else if (state.pending !== null) {
                 return state.pending
             }
         },
-        requestLogin: ({ state, commit }) => {
+        requestLogin: ({ state, commit }, tryExisting: boolean) => {
             const redirectParams = new URLSearchParams({ url: window.location.href })
             const savedState: IOIDCState = {
                 secret: state.secret,
@@ -297,7 +299,7 @@ export const authModule: Module<IAuthState, {}> = {
                 scope: "openid",
                 response_mode: "query",
                 response_type: "code",
-                prompt: "login",
+                prompt: tryExisting ? "none" : "login",
             }
             const paramsString = new URLSearchParams(params).toString()
 
