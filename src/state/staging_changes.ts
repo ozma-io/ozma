@@ -82,7 +82,7 @@ export interface IStagingState {
     // FIXME: instead set errors for each change -- this requires transactions and per-change errors support in FunDB.
     errors: string[]
     autoSaveTimeout: number | null
-    autoSaveTimeoutId: number | null
+    autoSaveTimeoutId: NodeJS.Timeout | null
 }
 
 const askOnClose = (e: BeforeUnloadEvent) => {
@@ -264,7 +264,7 @@ const stagingModule: Module<IStagingState, {}> = {
             state.deletedCount = 0
             state.touched = false
         },
-        setAutoSaveHandler: (state, timeoutId: number) => {
+        setAutoSaveHandler: (state, timeoutId: NodeJS.Timeout) => {
             state.autoSaveTimeoutId = timeoutId
         },
         clearAutoSaveHandler: state => {

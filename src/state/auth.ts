@@ -167,7 +167,6 @@ const updateAuth = ({ state, commit, dispatch }: ActionContext<IAuthState, {}>, 
     }
 }
 
-// May be a performance hog -- perhaps disable later.
 const startCheckTimeout = ({ state, commit }: ActionContext<IAuthState, {}>) => {
     if (state.checkTimeoutId !== null) {
         clearTimeout(state.checkTimeoutId)

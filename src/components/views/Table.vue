@@ -1,14 +1,12 @@
 ﻿<i18n>
     {
         "en": {
-            "filtered_count": "{status}",
             "clear": "Clear",
             "yes": "Yes",
             "no": "No",
             "export_to_csv": "Export to .csv"
         },
         "ru": {
-            "filtered_count":  "{status}",
             "clear": "Очистить",
             "yes": "Да",
             "no": "Нет",
@@ -23,8 +21,8 @@
         <div ref="tableContainer" class="tabl" @scroll="updateShowLength()" @resize="updateShowLength()">
             <table class="tabl table b-table">
                 <colgroup>
-                    <col :class="flagOfFixedPlace ? 'checkbox-col checkbox-cells' : 'checkbox-col'"> <!-- Checkbox column -->
-                    <col v-if="hasRowLinks" :class="flagOfFixedPlace ? 'open-form-col opemform-cells' : 'open-form-col'"> <!-- Open form column -->
+                    <col :class="showFixedRow ? 'checkbox-col checkbox-cells' : 'checkbox-col'"> <!-- Checkbox column -->
+                    <col v-if="hasRowLinks" :class="showFixedRow ? 'open-form-col opemform-cells' : 'open-form-col'"> <!-- Row link column -->
                     <col v-for="i in columnIndexes" :key="i" :style="columns[i].style">
                 </colgroup>
                 <thead>
@@ -38,28 +36,21 @@
                 </thead>
                 <tbody>
                     <template v-for="(entryI, rowI) in shownRows">
-                        <tr v-if="flagOfFixedPlace" :key="`fixed-${entryI}`" class="fixed-place-tr">
-                            <td class="fixed-place-td">
-                                <div class="fix">
-                                    <div @click="selectRow(rowI, $event)" class="fixed-column">
-                                        <input type="checkbox" :checked="entries[entryI].selected" v-on:click.self.prevent>
-                                    </div>
-                                    <div v-if="entries[entryI].linkForRow !== null" class="fixed-column">
-                                        <a :href="entries[entryI].linkForRow">
-                                            ⤢
-                                        </a>
-                                    </div>
-                                    <div v-for="i in mobileColumnIndexes" :key="i">{{ entries[entryI].cells[i].valueText }}</div>
-                                </div>
-                            </td>
-                        </tr>
+                        <TableFixedRow v-if="showFixedRow"
+                                :key="`fixed-${entryI}`"
+                                :entry="entries[entryI]"
+                                :columnIndexes="fixedRowColumnIndexes"
+                                :columns="columns"
+                                :uv="uv"
+                                @selectRow="cellClicked(rowI, $event)"
+                                @valueClicked="changeValue" />
                         <TableRow :key="entryI"
                                 :entry="entries[entryI]"
                                 :columnIndexes="columnIndexes"
                                 :columns="columns"
                                 :uv="uv"
-                                @selectRow="selectRow(rowI, $event)"
-                                @changeValue="changeValue" />
+                                @selectRow="cellClicked(rowI, $event)"
+                                @valueClicked="changeValue" />
                     </template>
                 </tbody>
             </table>
@@ -72,53 +63,21 @@
     import { namespace } from "vuex-class"
     import { UserViewResult, printValue, IUpdatableField } from "@/state/user_view"
     import { CurrentChanges, IEntityChanges, IUpdatedCell } from "@/state/staging_changes"
-    import { setBodyStyle } from "@/style"
     import { IExecutedRow, IExecutedValue, ValueType, IResultColumnInfo } from "@/api"
     import { CurrentTranslations } from "@/state/translations"
     import TableRow, { IRow, ICell, IColumn } from "@/components/views/table/TableRow.vue"
+    import TableFixedRow from "@/components/views/table/TableFixedRow.vue"
 
-    const SHOW_STEP = 20
+    const showStep = 20
+    const doubleClickTime = 700
+    // FIXME: Use CSS variables to avoid this constant
+    const technicalFieldsWidth = 20 // checkbox's and openform's td width
 
-    const convertToWords = (str: string) => {
-        let words: string[] = []
-        let start = 0
-        let i = 0
-        let deleted = 0
-        const spec: string[] = ["\"\'«„”", "\"\'»“”"]
-        let indend: number
-        while (i < str.length) {
-            while (str[i] === " ") {
-                i++
-                start++
+    const rowContains = (row: IRow, searchWords: string[]) => {
+        for (const word of searchWords) {
+            if (!row.cells.some(cell => cell.valueLowerText.includes(word))) {
+                return false
             }
-            indend = spec[0].indexOf(str[i])
-            if (indend !== -1) {
-                // tslint:disable-next-line:no-empty
-                while (str[++i] !== spec[1][indend] && str[i] !== undefined) {
-                }
-                i++
-                deleted = 1
-            } else {
-                while (str[i] !== " " && str[i] !== undefined) {
-                    i++
-                }
-                deleted = 0
-            }
-            if (start !== i || start + 1 !== i) {
-                words = words.concat(str.substring(start + deleted, i - deleted))
-            }
-            start = i
-        }
-        return words
-    }
-
-    const rowContains = (row: IRow, searchString: string) => {
-        const allfilters = convertToWords(searchString)
-        for (const filter of allfilters) {
-            if (row.cells.some(cell => cell.valueText.toLowerCase().includes(filter.toLowerCase()))) {
-                continue
-            }
-            return false
         }
         return true
     }
@@ -154,11 +113,10 @@
 
     const staging = namespace("staging")
     const translations = namespace("translations")
-    const technicalFieldsWidth = 20 // checkbox's and openform's td width
 
     @Component({
         components: {
-            TableRow,
+            TableRow, TableFixedRow,
         },
     })
     export default class UserViewTable extends Vue {
@@ -167,9 +125,9 @@
 
         @Prop({ type: UserViewResult }) uv!: UserViewResult
         @Prop({ type: Boolean, default: false }) isRoot!: boolean
-        @Prop({ type: String, default: "" }) filter!: string
+        @Prop({ type: Array, default: [] }) filter!: string[]
 
-        private currentFilter: string = ""
+        private currentFilter: string[] = []
         private sortColumn: number | null = null
         private sortAsc: boolean = true
         private entries: IRow[] = []
@@ -179,13 +137,13 @@
         private lastSelected: number | null = null
         private printListener: { query: MediaQueryList, queryCallback: (mql: MediaQueryListEvent) => void, printCallback: () => void } | null = null
         private oldCell: ICell | null = null
-        private timeId: any = null
+        private clickTimeoutId: NodeJS.Timeout | null = null
 
         get hasRowLinks() {
             return this.entries.some(e => e.linkForRow !== null)
         }
 
-        get columns() {
+        get columns(): IColumn[] {
             const viewAttrs = this.uv.attributes
 
             return this.uv.info.columns.map((columnInfo, i) => {
@@ -206,9 +164,9 @@
 
                 const style: Record<string, any> = {}
 
-                const columnWidthAttr = getColumnAttr("ColumnWidth")
-                const columnWidth = columnWidthAttr === undefined ? "200px" : columnWidthAttr
-                style["width"] = columnWidth
+                const columnWidthAttr = Number(getColumnAttr("ColumnWidth"))
+                const columnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr
+                style["width"] = `${columnWidth}px`
 
                 const fixedColumnAttr = getColumnAttr("Fixed")
                 const fixedColumn = fixedColumnAttr === undefined ? false : fixedColumnAttr
@@ -217,74 +175,88 @@
                 const fixedField = fixedFieldAttr === undefined ? false : fixedFieldAttr
 
                 return {
-                    columnIndex: i,
                     caption, style,
                     fixed: fixedColumn,
                     mobileFixed: fixedField,
                     columnInfo,
                     attrs: captionAttr,
+                    width: columnWidth,
                 }
             })
         }
 
         get columnIndexes() {
-            const array = []
-            for (const column of this.columns) {
-                if (column.fixed) {
-                    array.push(column.columnIndex)
-                }
-            }
-            for (const column of this.columns) {
-                if (!column.fixed) {
-                    array.push(column.columnIndex)
-                }
-            }
-            return array
+            const columns = this.columns.map((column, index) => ({ index, fixed: column.fixed }))
+            const fixed = columns.filter(c => c.fixed)
+            const nonFixed = columns.filter(c => !c.fixed)
+            return fixed.concat(nonFixed).map(c => c.index)
         }
 
-        get mobileColumnIndexes() {
-            const array = []
-            for (const column of this.columns) {
-                if (column.mobileFixed) {
-                    array.push(column.columnIndex)
-                }
-            }
-            return array
+        get fixedColumnIndexes() {
+            return this.columns.map((c, index) => ({ index, fixed: c.fixed })).filter(c => c.fixed).map(c => c.index)
+        }
+
+        get fixedRowColumnIndexes() {
+            return this.columns.map((c, index) => ({ index, fixed: c.mobileFixed })).filter(c => c.fixed).map(c => c.index)
         }
 
         @Watch("filter")
         private updateFilter() {
-            if (this.filter !== this.currentFilter) {
-                const oldFilter = this.currentFilter
-                this.currentFilter = this.filter
-                if (this.filter === "" || !this.filter.includes(oldFilter)) {
-                    this.buildRows()
-                } else {
-                    // Filter existing rows when we filter a subset of already filtered ones.
-                    this.rows = this.rows.filter(rowI => rowContains(this.entries[rowI], this.currentFilter))
+            const oldFilter = this.currentFilter
+            const currentFilter = this.filter
+            this.currentFilter = currentFilter
+
+            // Check if current filter contained this one
+            let contained = true
+            const newWords = []
+            if (currentFilter.length !== 0) {
+                for (const oldWord of oldFilter) {
+                    let hasThis = false
+                    for (const newWord of currentFilter) {
+                        if (newWord.startsWith(oldWord)) {
+                            hasThis = true
+                            newWords.push(newWord)
+                            break
+                        }
+                    }
+                    if (!hasThis) {
+                        contained = false
+                        break
+                    }
                 }
-                this.lastSelected = null
+            } else {
+                contained = false
             }
+
+            if (!contained) {
+                this.buildRows()
+            } else {
+                // Filter existing rows when we filter a subset of already filtered ones.
+                const newFilterWords = Array.from(new Set(newWords))
+                this.rows = this.rows.filter(rowI => rowContains(this.entries[rowI], newFilterWords))
+            }
+
+            this.lastSelected = null
         }
 
         private export2csv() {
             let data: string = ""
             for (const col of this.columns) {
-                data += getCsvString(col.caption.toString())
+                data += getCsvString(col.caption)
             }
             data += "\n"
             for (const row of this.entries) {
                 for (const cell of row.cells) {
-                    data += getCsvString(cell.valueText.toString())
+                    data += getCsvString(cell.valueText)
                 }
                 data += "\n"
             }
 
             const element = document.createElement("a")
             element.setAttribute("href", "data:text/csv;charset=utf-8," + encodeURIComponent("\uFEFF" + data))
-            element.setAttribute("download", this.$route.params["name"] + ".csv")
-
+            element.setAttribute("download", `${this.uv.name}.csv`)
             element.style.display = "none"
+
             document.body.appendChild(element)
             element.click()
             document.body.removeChild(element)
@@ -303,45 +275,47 @@
         }
 
         private changeValue(cell: ICell) {
-            if (this.timeId === null) {
-                this.timeId = setTimeout(() => {
-                    this.timeId = null
-                }, 700)
+            if (this.clickTimeoutId === null) {
+                this.clickTimeoutId = setTimeout(() => {
+                    cell.selected = false
+                    this.clickTimeoutId = null
+                }, doubleClickTime)
+
                 if (this.oldCell !== null && this.oldCell !== cell) {
-                    this.oldCell.select = false
-                    this.oldCell.change = false
+                    this.oldCell.selected = false
+                    this.oldCell.isEditing = false
                 }
                 this.oldCell = cell
-                this.oldCell.select = true
-            } else if (cell === this.oldCell) {
-                clearTimeout(this.timeId)
-                this.timeId = null
-                if (cell.update !== null && cell.update !== undefined) {
-                    if (cell.update.id !== undefined) {
-                        cell.change = !cell.change
-                        this.oldCell = cell
-                    }
-                }
+                this.oldCell.selected = true
             } else {
-                if (this.oldCell !== null) {
-                    this.oldCell.select = false
+                clearTimeout(this.clickTimeoutId)
+                this.clickTimeoutId = null
+
+                if (cell === this.oldCell) {
+                    if (cell.update !== null) {
+                        cell.isEditing = !cell.isEditing
+                    }
+                } else {
+                    if (this.oldCell !== null) {
+                        this.oldCell.selected = false
+                    }
+                    this.oldCell = cell
+                    this.oldCell.selected = true
+                    this.clickTimeoutId = null
                 }
-                this.oldCell = cell
-                this.oldCell.select = true
-                this.timeId = null
             }
         }
 
         private selectRow(rowI: number, event: MouseEvent) {
             if (this.lastSelected !== null && event.shiftKey) {
                 // Select all rows between current one and the previous selected one.
-                let changeRows = 0
+                let changedRows = 0
                 const oldEntry = this.entries[this.lastSelected]
                 if (this.lastSelected < rowI) {
                     for (let i = this.lastSelected + 1; i <= rowI; i++) {
                         const entry = this.entries[this.shownRows[i]]
                         if (entry.selected !== oldEntry.selected) {
-                            changeRows++
+                            changedRows++
                         }
                         entry.selected = oldEntry.selected
                     }
@@ -349,7 +323,7 @@
                     for (let i = rowI; i <= this.lastSelected - 1; i++) {
                         const entry = this.entries[this.shownRows[i]]
                         if (entry.selected !== oldEntry.selected) {
-                            changeRows++
+                            changedRows++
                         }
                         entry.selected = oldEntry.selected
                     }
@@ -357,7 +331,7 @@
                     oldEntry.selected = !oldEntry.selected
                     this.selectedRows += (oldEntry.selected) ? 1 : -1
                 }
-                this.selectedRows += (oldEntry.selected) ? changeRows : -changeRows
+                this.selectedRows += (oldEntry.selected) ? changedRows : -changedRows
             } else {
                 const entry = this.entries[this.shownRows[rowI]]
                 entry.selected = !entry.selected
@@ -425,6 +399,7 @@
                                         const cell = entry.cells[valueI]
                                         cell.value = value.value
                                         cell.valueText = printValue(columnInfo.valueType, value)
+                                        cell.valueLowerText = cell.valueText.toLowerCase()
                                     })
                                 } else {
                                     Object.entries(fields).forEach(([fieldName, value]) => {
@@ -436,6 +411,7 @@
                                             const cell = entry.cells[colI]
                                             cell.value = value.value
                                             cell.valueText = value.rawValue
+                                            cell.valueLowerText = cell.valueText.toLowerCase()
                                         })
                                     })
                                 }
@@ -448,7 +424,7 @@
 
         private created() {
             if (this.isRoot) {
-                setBodyStyle(`
+                this.$emit("update:bodyStyle", `
                     @media print {
                         @page {
                             size: landscape;
@@ -478,15 +454,18 @@
             this.buildEntries()
         }
 
+        private mounted() {
+            this.updateShowLength()
+        }
+
         private destroyed() {
             if (this.printListener !== null) {
                 window.removeEventListener("beforeprint", this.printListener.printCallback)
                 this.printListener.query.removeListener(this.printListener.queryCallback)
             }
-        }
-
-        private mounted() {
-            this.updateShowLength()
+            if (this.clickTimeoutId !== null) {
+                clearTimeout(this.clickTimeoutId)
+            }
         }
 
         private sortRows() {
@@ -504,8 +483,8 @@
         // Update this.rows from this.entries
         private buildRows() {
             this.rows = Array.from({ length: this.entries.length }, (v, i) => i)
-            if (this.currentFilter !== "") {
-                this.rows = this.rows.filter(rowI => rowContains(this.entries[rowI], this.currentFilter))
+            if (this.filter.length !== 0) {
+                this.rows = this.rows.filter(rowI => rowContains(this.entries[rowI], this.filter))
             }
 
             this.sortRows()
@@ -571,11 +550,12 @@
 
                         return {
                             value, valueText, link, style,
+                            valueLowerText: valueText.toLowerCase(),
                             fixed: fixedColumn,
-                            change: false,
+                            isEditing: false,
                             attrs: cellAttrs,
-                            update: cellValue.update,
-                            select: false,
+                            update: cellValue.update === undefined ? null : cellValue.update,
+                            selected: false,
                         }
                     })
 
@@ -592,7 +572,7 @@
             }
 
             this.buildRows()
-            this.fixedColumn()
+            this.fixColumns()
             this.applyChanges()
         }
 
@@ -605,7 +585,7 @@
             // + 1 is needed because of rare cases like that:
             // top 974.4000244140625, client height 690, scroll height 1665
             if (tableContainer.scrollTop + tableContainer.clientHeight + 1 >= tableContainer.scrollHeight && this.showLength < this.rows.length) {
-                this.showLength = Math.min(this.showLength + SHOW_STEP, this.rows.length)
+                this.showLength = Math.min(this.showLength + showStep, this.rows.length)
                 Vue.nextTick(() => this.updateShowLength())
             }
         }
@@ -616,43 +596,41 @@
 
         @Watch("filteredRows")
         private updateStatusLine() {
-            const selected = (this.selectedRows > 0) ? this.selectedRows.toString() + "/" : ""
-            this.$emit("update:statusLine", this.$tc("filtered_count", this.filteredRows.length, { status: selected + this.filteredRows.length.toString() }))
+            const selected = (this.selectedRows > 0) ? `${this.selectedRows}/` : ""
+            const line = `${selected}${this.filteredRows.length}`
+            this.$emit("update:statusLine", line)
         }
 
         get shownRows() {
             return this.filteredRows.slice(0, this.showLength)
         }
 
-        private fixedColumn() {
-            const allFixedColumn = []
-            for (const column of this.columns) {
-                if (column.fixed) {
-                    allFixedColumn.push(column.columnIndex)
-                }
-            }
+        get technicalWidth() {
             let left = technicalFieldsWidth
             if (this.hasRowLinks) {
-                left = technicalFieldsWidth * 2
+                left += technicalFieldsWidth
             }
-            for (const fixedColumnIndex of allFixedColumn) {
-                this.columns[fixedColumnIndex].style["left"] = left + "px"
+            return left
+        }
+
+        private fixColumns() {
+            let left = this.technicalWidth
+            for (const fixedColumnIndex of this.fixedColumnIndexes) {
+                const leftStr = `${left}px`
+                this.columns[fixedColumnIndex].style["left"] = leftStr
                 for (const row of this.entries) {
-                    row.cells[fixedColumnIndex].style["left"] = left + "px"
+                    row.cells[fixedColumnIndex].style["left"] = leftStr
                 }
-                left += parseInt(this.columns[fixedColumnIndex].style["width"], 10)
+                left += this.columns[fixedColumnIndex].width
             }
         }
 
-        get flagOfFixedPlace() {
-            let tableWidth = technicalFieldsWidth
-            if (this.hasRowLinks) {
-                tableWidth = technicalFieldsWidth * 2
-            }
+        get showFixedRow() {
+            let tableWidth = this.technicalWidth
             for (const column of this.columns) {
-                tableWidth += parseInt(column.style["width"], 10)
+                tableWidth += column.width
             }
-            if (tableWidth > screen.width && this.mobileColumnIndexes.length) {
+            if (tableWidth > screen.width && this.fixedRowColumnIndexes.length > 0) {
                 return true
             } else {
                 return false

@@ -61,7 +61,6 @@
     import { IUpdatableField, IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, printValue, IProcessedRow } from "@/state/user_view"
     import { CurrentChanges, IEntityChanges, IUpdatedCell } from "@/state/staging_changes"
     import { CurrentAuth } from "@/state/auth"
-    import { setBodyStyle } from "@/style"
     import { IAction } from "@/components/ActionsMenu.vue"
     import FormControl from "@/components/views/form/FormControl.vue"
 
@@ -307,7 +306,7 @@
 
         private created() {
             if (this.isRoot) {
-                setBodyStyle(`
+                this.$emit("update:bodyStyle", `
                     @media print {
                         @page {
                             size: portrait;

@@ -31,7 +31,8 @@
                 @update:actions="extraActions = $event"
                 @update:statusLine="$emit('update:statusLine', $event)"
                 @update:onSubmitStaging="$emit('update:onSubmitStaging', $event)"
-                @update:enableFilter="$emit('update:enableFilter', $event)" />
+                @update:enableFilter="$emit('update:enableFilter', $event)"
+                @update:bodyStyle="$emit('update:bodyStyle', $event)" />
         <div v-else-if="errorMessage !== null" class="loading">
             {{ errorMessage }}
         </div>
@@ -71,7 +72,7 @@
         @auth.State("current") currentAuth!: CurrentAuth
         @Prop() uv!: UserViewResult | UserViewError | null
         @Prop({ type: Boolean, default: false }) isRoot!: boolean
-        @Prop({ type: String, default: "" }) filter!: string
+        @Prop({ type: Array, default: [] }) filter!: string[]
 
         private extraActions: IAction[] = []
 

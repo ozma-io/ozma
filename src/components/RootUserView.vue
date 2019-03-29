@@ -44,21 +44,22 @@
                 </div>
                 <b-form v-if="enableFilter" inline class="find">
                     <b-input-group>
-                        <b-form-input v-model="filter" class="find_in form-control" :value="filter" :placeholder="$t('search_placeholder')" />
+                        <b-form-input v-model="filterString" class="find_in form-control" :value="filterString" :placeholder="$t('search_placeholder')" />
                         <b-input-group-append>
-                            <span v-if="filter" id="searchclear" class="glyphicon glyphicon-remove-circle" @click="filter=''">✖</span>
+                            <span v-if="filterString.length > 0" id="searchclear" class="glyphicon glyphicon-remove-circle" @click="filterString = ''">✖</span>
                         </b-input-group-append>
                     </b-input-group>
                 </b-form>
             </b-button-toolbar>
             <b-col class="without_padding userview_div">
                 <UserView :uv="uv"
-                          :filter="filter"
+                          :filter="filterWords"
                           isRoot
                           @update:actions="extraActions = $event"
                           @update:statusLine="statusLine = $event"
                           @update:onSubmitStaging="onSubmitStaging = $event"
-                          @update:enableFilter="enableFilter = $event" />
+                          @update:enableFilter="enableFilter = $event"
+                          @update:bodyStyle="updateBodyStyle" />
             </b-col>
         </div>
         <nav v-if="!uvIsError && bottomBarNeeded" class="fix-bot navbar fixed-bottom navbar-light bg-light">
@@ -101,6 +102,7 @@
     import { Action, namespace } from "vuex-class"
 
     import * as Api from "@/api"
+    import { setBodyStyle, setHeadTitle } from "@/elements"
     import { IUserViewArguments, UserViewResult, UserViewError, CurrentUserViews } from "@/state/user_view"
     import { CurrentTranslations } from "@/state/translations"
     import { CurrentChanges } from "@/state/staging_changes"
@@ -111,6 +113,42 @@
     const staging = namespace("staging")
     const settings = namespace("settings")
     const translations = namespace("translations")
+
+    const makeWordsRegex = () => {
+        // Match words that doesn't start with quotes
+        const wordRegex = `([^"'«„”\\s][^\\s]*)`
+        const quotes = [
+            [`"`, `"`],
+            [`'`, `'`],
+            [`«`, `»`],
+            [`„`, `“`],
+            [`”`, `”`],
+        ]
+        // Match fully-quoted words: e.g. `"foo bar"` will match but `"foo"b` or `"foo ` will not
+        const quoteRegexes = quotes.map(([start, end]) => `${start}([^${end}]+)${end}\b`)
+        // Match any word
+        const fallbackRegex = `[^\\s]+`
+        const regexes = [wordRegex].concat(quoteRegexes).concat([fallbackRegex])
+        const regexesStr = regexes.map(reg => `(?:${reg})`).join("|")
+        const fullRegex = `^\\s*(?:${regexesStr})`
+        return fullRegex
+    }
+    const wordsRegexString = makeWordsRegex()
+
+    const convertToWords = (str: string) => {
+        const regex = new RegExp(wordsRegexString, "g")
+        const words: string[] = []
+        while (true) {
+            const ret = regex.exec(str)
+            if (ret === null) {
+                break
+            } else {
+                const word = ret.slice(1).find(x => x !== undefined) as string
+                words.push(word.toLowerCase())
+            }
+        }
+        return words
+    }
 
     @Component
     export default class RootUserView extends Vue {
@@ -133,9 +171,13 @@
 
         private extraActions: IAction[] = []
         private statusLine: string = ""
-        private filter: string = ""
+        private filterString: string = ""
         private enableFilter: boolean = false
         private onSubmitStaging: (() => void) | null = null
+
+        get filterWords() {
+            return Array.from(new Set(convertToWords(this.filterString)))
+        }
 
         @Watch("$route")
         private onRouteChanged() {
@@ -144,6 +186,10 @@
 
         private created() {
             this.updateView()
+        }
+
+        private updateBodyStyle(styleString: string) {
+            setBodyStyle(styleString)
         }
 
         get actions() {
@@ -160,17 +206,21 @@
             this.statusLine = ""
             this.onSubmitStaging = null
             this.enableFilter = false
+            setBodyStyle("")
+
+            const name = this.$route.params.name
+            setHeadTitle(`${name} - FunApp`)
 
             switch (this.$route.name) {
                 case "view":
-                    const query = Object.entries(this.$route.query).map(([name, values]) => {
+                    const query = Object.entries(this.$route.query).map(([argName, values]) => {
                         const val = Array.isArray(values) ? values[0] : values
-                        return [name, val]
+                        return [argName, val]
                     })
-                    this.getRootView({ type: "named", source: this.$route.params.name, args: new URLSearchParams(query) })
+                    this.getRootView({ type: "named", source: name, args: new URLSearchParams(query) })
                     break
                 case "view_create":
-                    this.getRootView({ type: "named", source: this.$route.params.name, args: null })
+                    this.getRootView({ type: "named", source: name, args: null })
                     break
                 default:
                     console.assert(false, `Invalid route name: ${this.$route.name}`)

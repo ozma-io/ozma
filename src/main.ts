@@ -7,6 +7,7 @@ import Vuex from "vuex"
 import BootstrapVue from "bootstrap-vue"
 
 import * as Modules from "@/modules"
+import { setHeadTitle } from "@/elements"
 
 import UserView from "@/components/UserView.vue"
 import ActionsMenu from "@/components/ActionsMenu.vue"
@@ -40,6 +41,12 @@ export const store = new Vuex.Store({
 Vue.component("UserView", UserView)
 Vue.component("ActionsMenu", ActionsMenu)
 Vue.component("FormControl", FormControl)
+
+Modules.router.beforeResolve((to, from, next) => {
+    // Reset page title
+    setHeadTitle("FunApp")
+    next()
+})
 
 const app = new Vue({
     router: Modules.router,

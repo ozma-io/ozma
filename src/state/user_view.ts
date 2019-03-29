@@ -142,6 +142,14 @@ export class UserViewResult {
         }
         return mapping
     }
+
+    get name() {
+        if (this.args.type === "named") {
+            return this.args.source
+        } else {
+            return "unnamed"
+        }
+    }
 }
 
 // For each entity contains array of all accessible entries identified by main field

@@ -1,4 +1,5 @@
 <template functional>
+    <!-- When you change anything here, also make corresponding changes in TableFixedRow! -->
     <tr :style="props.entry.style" :class="props.entry.selected ? 'selected' : 'none_selected'">
         <td @click="listeners.selectRow" class="fixed-column checkbox-cells">
             <input type="checkbox" :checked="props.entry.selected" @click.self.prevent>
@@ -10,10 +11,10 @@
         </td>
         <td v-for="i in props.columnIndexes"
                 :key="i"
-                @click="listeners.changeValue(props.entry.cells[i], $event)"
+                @click="listeners.cellClicked(props.entry.cells[i], $event)"
                 :style="props.entry.cells[i].style"
-                :class="[props.entry.cells[i].fixed ? 'fixed-column' : 'none', props.entry.cells[i].select ? 'select' : 'none']">
-            <FormControl v-if="props.entry.cells[i].change"
+                :class="[props.entry.cells[i].fixed ? 'fixed-column' : 'none', props.entry.cells[i].isSelected ? 'select' : 'none']">
+            <FormControl v-if="props.entry.cells[i].isEditing"
                     :valueText="props.entry.cells[i].valueText"
                     :locked="false"
                     :attributes="Object.assign({}, props.entry.cells[i].attrs, props.entry.attrs, props.columns[i].attrs, props.uv.attributes)"
@@ -46,7 +47,6 @@
 </template>
 
 <script lang="ts">
-    import Vue, { FunctionalComponentOptions } from "vue"
     import { Location } from "vue-router"
 
     import { UserViewResult, IUpdatableField } from "@/state/user_view"
@@ -55,13 +55,14 @@
     export interface ICell {
         value: any
         valueText: string
+        valueLowerText: string
         link: Location | null
         style: Record<string, any>
         fixed: boolean
-        update: IUpdatableField | undefined | null
+        update: IUpdatableField | null
         attrs: Record<string, any>
-        change: boolean
-        select: boolean /* one click on the cell */
+        isEditing: boolean
+        selected: boolean /* one click on the cell */
     }
 
     export interface IRow {
@@ -75,13 +76,13 @@
     }
 
     export interface IColumn {
-        columnIndex: number
         caption: string
         style: Record<string, any>
         fixed: boolean
         mobileFixed: boolean
         columnInfo: IResultColumnInfo
         attrs: Record<string, any>
+        width: number // in px
     }
 
     export default {

@@ -47,7 +47,6 @@
     import { namespace } from "vuex-class"
     import { UserViewResult } from "@/state/user_view"
     import { CurrentChanges, IEntityChanges } from "@/state/staging_changes"
-    import { setBodyStyle } from "@/style"
 
     interface IMainMenuButton {
         index: number
@@ -89,9 +88,6 @@
         }*/
 
         private created() {
-            if (this.isRoot) {
-                setBodyStyle("")
-            }
             this.buildEntries()
         }
 
