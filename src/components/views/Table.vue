@@ -42,15 +42,15 @@
                                 :columnIndexes="fixedRowColumnIndexes"
                                 :columns="columns"
                                 :uv="uv"
-                                @selectRow="cellClicked(rowI, $event)"
-                                @valueClicked="changeValue" />
+                                @selectRow="selectRow(rowI, $event)"
+                                @valueClicked="valueClicked" />
                         <TableRow :key="entryI"
                                 :entry="entries[entryI]"
                                 :columnIndexes="columnIndexes"
                                 :columns="columns"
                                 :uv="uv"
-                                @selectRow="cellClicked(rowI, $event)"
-                                @valueClicked="changeValue" />
+                                @selectRow="selectRow(rowI, $event)"
+                                @valueClicked="valueClicked" />
                     </template>
                 </tbody>
             </table>
@@ -274,7 +274,7 @@
             this.lastSelected = null
         }
 
-        private changeValue(cell: ICell) {
+        private valueClicked(cell: ICell) {
             if (this.clickTimeoutId === null) {
                 this.clickTimeoutId = setTimeout(() => {
                     cell.selected = false
