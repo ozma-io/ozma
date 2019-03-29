@@ -16,11 +16,11 @@ export class CurrentSettings {
             return defValue
         } else {
             if (constructor === Number as any) {
-                const conv = constructor(ret)
-                if (Number.isNaN(conv as any)) {
+                const conv = Number(ret)
+                if (Number.isNaN(conv)) {
                     return defValue
                 } else {
-                    return conv
+                    return conv as any
                 }
             } else if (constructor === String as any) {
                 return ret as any
