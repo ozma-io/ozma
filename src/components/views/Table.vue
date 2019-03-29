@@ -529,7 +529,7 @@
                                 params: { "name": String(linkedViewAttr) },
                                 query: { "id": String((cellValue.update as IUpdatableField).id) },
                             }
-                        const linkedViewForRowAttr = cellValue.update === undefined ? undefined : String(getCellAttr("RowLinkedView"))
+                        const linkedViewForRowAttr = cellValue.update === undefined ? undefined : getCellAttr("RowLinkedView")
                         if (linkedViewForRowAttr !== undefined) {
                             linkForRow = {
                                 name: "view",
