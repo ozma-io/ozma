@@ -48,26 +48,26 @@
 
         @Watch("settings")
         private updateSettings() {
-            const rawAutoSaveTimeout = Number(this.settings.getEntry("AutoSaveTimeout", "3"))
+            const rawAutoSaveTimeout = Number(this.settings.getEntry("AutoSaveTimeout", String, "3"))
             const autoSaveTimeout = Number.isNaN(rawAutoSaveTimeout) ? null : rawAutoSaveTimeout * 1000
             this.setAutoSaveTimeout(autoSaveTimeout)
         }
 
         get styleSettings() {
             const values = {
-                "BackColor": this.settings.getEntry("BackColor", "white"),
-                "NavigationBackColor": this.settings.getEntry("NavigationBackColor", "#F5C700"),
-                "TableBorderColor": this.settings.getEntry("TableBorderColor", "#F5C700"),
-                "FormBorderColor": this.settings.getEntry("FormBorderColor", "#F5C700"),
-                "Font": this.settings.getEntry("Font", "Courier New, monospace"),
-                "FontSize": this.settings.getEntry("FontSize", "16px"),
-                "MenuColor": this.settings.getEntry("MenuColor", "#F5C700"),
-                "TableBackColor": this.settings.getEntry("TableBackColor", "white"),
-                "TableSelectColor": this.settings.getEntry("TableSelectColor", "#CCCCCC"),
-                "WarningBackColor": this.settings.getEntry("WarningBackColor", "#fff3cd"),
-                "DangerBackColor": this.settings.getEntry("DangerBackColor", "#f8d7da"),
-                "SuccessBackColor": this.settings.getEntry("SuccessBackColor", "#d4edda"),
-                "SelectBorderColor": this.settings.getEntry("SelectBorderColor", "blue"),
+                "BackColor": this.settings.getEntry("BackColor", String, "white"),
+                "NavigationBackColor": this.settings.getEntry("NavigationBackColor", String, "#F5C700"),
+                "TableBorderColor": this.settings.getEntry("TableBorderColor", String, "#F5C700"),
+                "FormBorderColor": this.settings.getEntry("FormBorderColor", String, "#F5C700"),
+                "Font": this.settings.getEntry("Font", String, "Courier New, monospace"),
+                "FontSize": `${this.settings.getEntry("FontSize", Number, 16)}px`,
+                "MenuColor": this.settings.getEntry("MenuColor", String, "#F5C700"),
+                "TableBackColor": this.settings.getEntry("TableBackColor", String, "white"),
+                "TableSelectColor": this.settings.getEntry("TableSelectColor", String, "#CCCCCC"),
+                "WarningBackColor": this.settings.getEntry("WarningBackColor", String, "#fff3cd"),
+                "DangerBackColor": this.settings.getEntry("DangerBackColor", String, "#f8d7da"),
+                "SuccessBackColor": this.settings.getEntry("SuccessBackColor", String, "#d4edda"),
+                "SelectBorderColor": this.settings.getEntry("SelectBorderColor", String, "blue"),
             }
             return Object.entries(values).reduce((currSettings, [name, value]) => {
                 currSettings[`--${name}`] = value

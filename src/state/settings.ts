@@ -10,9 +10,29 @@ export class CurrentSettings {
         this.settings = settings
     }
 
-    getEntry(name: string, defValue: string): string {
+    getEntry<T>(name: string, constructor: (_: string) => T, defValue: T): T {
         const ret = this.settings[name]
-        return (ret === undefined) ? defValue : ret
+        if (ret === undefined) {
+            return defValue
+        } else {
+            if (constructor === Number as any) {
+                const conv = constructor(ret)
+                if (Number.isNaN(conv as any)) {
+                    return defValue
+                } else {
+                    return conv
+                }
+            } else if (constructor === String as any) {
+                return ret as any
+            } else {
+                const conv = constructor(ret)
+                if (conv instanceof constructor) {
+                    return conv
+                } else {
+                    return defValue
+                }
+            }
+        }
     }
 }
 
