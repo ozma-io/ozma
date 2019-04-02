@@ -215,7 +215,7 @@
             this.statusLine = ""
             this.onSubmitStaging = null
             this.enableFilter = false
-            styleNode.innerHTML = ""
+            this.styleNode.innerHTML = ""
 
             const name = this.$route.params.name
             setHeadTitle(`${name} - FunApp`)
