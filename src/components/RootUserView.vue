@@ -60,7 +60,7 @@
                           @update:statusLine="statusLine = $event"
                           @update:onSubmitStaging="onSubmitStaging = $event"
                           @update:enableFilter="enableFilter = $event"
-                          @update:bodyStyle="styleNode.innerHTML = styleString" />
+                          @update:bodyStyle="styleNode.innerHTML = $event" />
             </b-col>
         </div>
         <nav v-if="!uvIsError && bottomBarNeeded" class="fix-bot navbar fixed-bottom navbar-light bg-light">

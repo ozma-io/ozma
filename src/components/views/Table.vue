@@ -42,6 +42,7 @@
                                 :columnIndexes="fixedRowColumnIndexes"
                                 :columns="columns"
                                 :uv="uv"
+                                :added="true"
                                 :hasRowLinks="hasRowLinks"
                                 @cellClicked="cellClicked" />
                         <TableRow :key="`new-${entryI}`"
@@ -60,6 +61,7 @@
                                 :columnIndexes="fixedRowColumnIndexes"
                                 :columns="columns"
                                 :uv="uv"
+                                :added="false"
                                 :hasRowLinks="hasRowLinks"
                                 @rowSelected="rowSelected(rowI, $event)"
                                 @cellClicked="cellClicked" />
