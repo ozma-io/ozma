@@ -72,7 +72,7 @@
         @auth.State("current") currentAuth!: CurrentAuth
         @Prop() uv!: UserViewResult | UserViewError | null
         @Prop({ type: Boolean, default: false }) isRoot!: boolean
-        @Prop({ type: Array, default: [] }) filter!: string[]
+        @Prop({ type: Array, default: () => [] }) filter!: string[]
 
         private extraActions: IAction[] = []
 

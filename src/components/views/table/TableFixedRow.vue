@@ -3,17 +3,17 @@
     <tr :style="props.entry.style" class="fixed-place-tr">
         <td class="fixed-place-td">
             <div class="fix">
-                <div @click="listeners.rowSelected" class="fixed-column">
+                <div @click="'rowSelected' in listeners && listeners.rowSelected" class="fixed-column">
                     <input type="checkbox" :checked="props.entry.selected" @click.self.prevent>
                 </div>
-                <div v-if="props.entry.linkForRow !== null" class="fixed-column">
-                    <router-link :to="props.entry.linkForRow">
+                <div v-if="props.hasRowLinks" class="fixed-column">
+                    <router-link v-if="props.entry.linkForRow !== null" :to="props.entry.linkForRow">
                         ⤢
                     </router-link>
                 </div>
                 <div v-for="i in columnIndexes"
                         :key="i"
-                        @click="listeners.cellClicked(props.entry.cells[i], $event)"
+                        @click="'cellClicked' in listeners && listeners.cellClicked(props.entry.cells[i], $event)"
                         :style="props.entry.cells[i].style">
                     <FormControl v-if="props.entry.cells[i].isEditing"
                             :valueText="props.entry.cells[i].valueText"
@@ -56,6 +56,8 @@
             columnIndexes: { type: Array, required: true },
             columns: { type: Array, required: true },
             uv: { type: Object, required: true },
+            added: { type: Boolean, required: true },
+            hasRowLinks: { type: Boolean, required: true },
         },
     }
 </script>

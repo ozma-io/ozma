@@ -35,22 +35,22 @@
                     </tr>
                 </thead>
                 <tbody>
-                     <template>
+                     <template v-for="(entry, entryI) in newEntries">
                         <TableFixedRow v-if="showFixedRow"
-                                :key="`fixed-${0}`"
-                                :entry="newEntries[0]"
+                                :key="`fixed-new-${entryI}`"
+                                :entry="entry"
                                 :columnIndexes="fixedRowColumnIndexes"
                                 :columns="columns"
                                 :uv="uv"
-                                @rowSelected="() => {}"
+                                :hasRowLinks="hasRowLinks"
                                 @cellClicked="cellClicked" />
-                        <TableRow :key="0"
-                                :entry="newEntries[0]"
+                        <TableRow :key="`new-${entryI}`"
+                                :entry="entry"
                                 :columnIndexes="columnIndexes"
                                 :columns="columns"
                                 :uv="uv"
                                 :added="true"
-                                @rowSelected="() => {}"
+                                :hasRowLinks="hasRowLinks"
                                 @cellClicked="cellClicked" />
                     </template>
                     <template v-for="(entryI, rowI) in shownRows">
@@ -60,6 +60,7 @@
                                 :columnIndexes="fixedRowColumnIndexes"
                                 :columns="columns"
                                 :uv="uv"
+                                :hasRowLinks="hasRowLinks"
                                 @rowSelected="rowSelected(rowI, $event)"
                                 @cellClicked="cellClicked" />
                         <TableRow :key="entryI"
@@ -68,6 +69,7 @@
                                 :columns="columns"
                                 :uv="uv"
                                 :added="false"
+                                :hasRowLinks="hasRowLinks"
                                 @rowSelected="rowSelected(rowI, $event)"
                                 @cellClicked="cellClicked" />
                     </template>
@@ -144,7 +146,7 @@
 
         @Prop({ type: UserViewResult }) uv!: UserViewResult
         @Prop({ type: Boolean, default: false }) isRoot!: boolean
-        @Prop({ type: Array, default: [] }) filter!: string[]
+        @Prop({ type: Array, default: () => [] }) filter!: string[]
 
         private currentFilter: string[] = []
         private sortColumn: number | null = null
@@ -380,6 +382,44 @@
             }
         }
 
+        private newEmptyRow(rowId: number): IRow {
+            if (this.uv.info.mainEntity === null) {
+                throw new Error("Main entity cannot be null")
+            }
+            const entity = this.uv.info.mainEntity.entity
+            const newCells = this.uv.info.columns.map((info, colI) => {
+                return {
+                    value: undefined,
+                    valueText: "",
+                    valueLowerText: "",
+                    link: null,
+                    style: {},
+                    update: info.mainField === null ? null : {
+                        field: info.mainField.field,
+                        fieldRef: {
+                            entity,
+                            name: info.mainField.name,
+                        },
+                        id: rowId,
+                    },
+                    attrs: {},
+                    isEditing: false,
+                    selected: false,
+                }
+            })
+            const row = {
+                cells: newCells,
+                index: rowId,
+                deleted: false,
+                selected: false,
+                style: {},
+                linkForRow: null,
+                attrs: {},
+            }
+            this.newEntries.push(row)
+            return row
+        }
+
         // Apply changes on top of built entries.
         // TODO: make this even more granular, ideally: dynamically bind a watcher to every changed and added entry.
         private applyChanges() {
@@ -389,37 +429,7 @@
                 changedRows.added.forEach((newRow, newRowI) => {
                     let row: IRow
                     if (this.newEntries.length <= newRowI) {
-                        const newCells = this.uv.info.columns.map((info, colI) => {
-                            return {
-                                value: undefined,
-                                valueText: "",
-                                valueLowerText: "",
-                                link: null,
-                                style: {},
-                                fixed: false,
-                                update: info.mainField === null ? null : {
-                                    field: info.mainField.field,
-                                    fieldRef: {
-                                        entity,
-                                        name: info.mainField.name,
-                                    },
-                                    id: newRowI,
-                                },
-                                attrs: Object.assign({}, this.uv.attributes, this.uv.columnAttributes[colI]),
-                                isEditing: false,
-                                selected: false,
-                            }
-                        })
-                        row = {
-                            cells: newCells,
-                            index: newRowI,
-                            deleted: false,
-                            selected: false,
-                            style: {},
-                            linkForRow: null,
-                            attrs: {},
-                        }
-                        this.newEntries.push(row)
+                        row = this.newEmptyRow(newRowI)
                     } else {
                         row = this.newEntries[newRowI]
                     }
@@ -445,48 +455,17 @@
                         })
                     }
                 })
-
-                if (Object.keys(this.changes.changes).length === 0 && this.newEntries.length !== 0) {
-                    this.newEntries = []
-                    this.applyChanges()
+                for (let i = changedRows.added.length; i < this.newEntries.length; i++) {
+                    const row = this.newEntries[i]
+                    this.uv.info.columns.forEach((info, colI) => {
+                        const cell = row.cells[colI]
+                        cell.value = undefined
+                        cell.valueText = ""
+                        cell.valueLowerText = ""
+                    })
                 }
-
                 if (this.newEntries.length === 0) {
-                    this.newEntries.push({
-                        index: 0,
-                        cells: [],
-                        deleted: false,
-                        selected: false,
-                        style: {},
-                        linkForRow: null,
-                        attrs: {},
-                    } as IRow)
-
-                    for (const info of this.uv.info.columns) {
-                        this.newEntries[0].cells.push({
-                            value: undefined,
-                            valueText: "",
-                            valueLowerText: "",
-                            link: null,
-                            style: {},
-                            fixed: false,
-                            update: info.mainField === null ? null : {
-                                field: info.mainField.field,
-                                fieldRef: {
-                                    entity,
-                                    name: info.mainField.name,
-                                },
-                                id: 0,
-                            } ,
-                            attrs: {},
-                            isEditing: false,
-                            selected: false,
-                        } as ICell)
-                    }
-                }
-                for (let i = 0; i < this.columns.length; i++) {
-                    this.newEntries[0].cells[i].fixed = this.columns[i].fixed
-                    this.newEntries[0].cells[i].style = this.columns[i].style
+                    this.newEmptyRow(0)
                 }
             }
             if (this.uv.rows !== null) {

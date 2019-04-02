@@ -224,7 +224,7 @@
                     this.getRootView({ type: "named", source: name, args: null })
                     break
                 default:
-                    console.assert(false, `Invalid route name: ${this.$route.name}`)
+                    throw new Error(`Invalid route name: ${this.$route.name}`)
                     break
             }
         }

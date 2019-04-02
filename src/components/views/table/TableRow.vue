@@ -1,19 +1,19 @@
 <template functional>
     <!-- When you change anything here, also make corresponding changes in TableFixedRow! -->
     <tr :style="props.entry.style" :class="props.entry.selected ? 'selected' : 'none_selected'">
-        <td @click="listeners.rowSelected" class="fixed-column checkbox-cells">
+        <td @click="'rowSelected' in listeners && listeners.rowSelected" class="fixed-column checkbox-cells">
             <input type="checkbox" :checked="props.entry.selected" @click.self.prevent>
         </td>
-        <td v-if="props.entry.linkForRow !== null" class="fixed-column opemform-cells">
-            <router-link :to="props.entry.linkForRow">
+        <td v-if="props.hasRowLinks" class="fixed-column opemform-cells">
+            <router-link v-if="props.entry.linkForRow !== null" :to="props.entry.linkForRow">
                 ⤢
             </router-link>
         </td>
         <td v-for="i in props.columnIndexes"
                 :key="i"
-                @click="listeners.cellClicked(props.entry.cells[i], $event)"
+                @click="'cellClicked' in listeners && listeners.cellClicked(props.entry.cells[i], $event)"
                 :style="props.entry.cells[i].style"
-                :class="[props.entry.cells[i].fixed ? 'fixed-column' : 'none', props.entry.cells[i].selected ? 'select' : 'none']">
+                :class="[props.columns[i].fixed ? 'fixed-column' : 'none', props.entry.cells[i].selected ? 'select' : 'none']">
             <FormControl v-if="props.entry.cells[i].isEditing"
                     :valueText="props.entry.cells[i].valueText"
                     :attributes="Object.assign({}, props.entry.cells[i].attrs, props.entry.attrs, props.columns[i].attrs, props.uv.attributes)"
@@ -57,7 +57,6 @@
         valueLowerText: string
         link: Location | null
         style: Record<string, any>
-        fixed: boolean
         update: IUpdatableField | null
         attrs: Record<string, any>
         isEditing: boolean
@@ -92,6 +91,7 @@
             columns: { type: Array, required: true },
             uv: { type: Object, required: true },
             added: { type: Boolean, required: true },
+            hasRowLinks: { type: Boolean, required: true },
         },
     }
 </script>

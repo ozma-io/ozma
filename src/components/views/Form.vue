@@ -154,8 +154,7 @@
 
         private deleteRecord(added: boolean, id: number) {
             if (this.uv.info.mainEntity === null) {
-                console.assert(false, "View doesn't have a main entity")
-                return
+                throw new Error("View doesn't have a main entity")
             }
             const entity = this.uv.info.mainEntity.entity
 
@@ -191,6 +190,36 @@
             }
         }
 
+        private newEmptyRow(rowId: number): IForm {
+            if (this.uv.info.mainEntity === null) {
+                throw new Error("Main entity cannot be null")
+            }
+            const entity = this.uv.info.mainEntity.entity
+            const newFields = this.uv.info.columns.map((info, colI) => {
+                return {
+                    value: undefined,
+                    valueText: "",
+                    attributes: Object.assign({}, this.uv.attributes, this.uv.columnAttributes[colI]),
+                    update: info.mainField === null ? null : {
+                        field: info.mainField.field,
+                        fieldRef: {
+                            entity,
+                            name: info.mainField.name,
+                        },
+                        id: rowId,
+                    },
+                }
+            })
+            const form = {
+                deleted: false,
+                added: true,
+                fields: newFields,
+                id: rowId,
+            }
+            this.newEntries.push(form)
+            return form
+        }
+
         // Apply changes on top of built entries.
         // TODO: make this even more granular, ideally: dynamically bind a watcher to every changed and added entry.
         private applyChanges() {
@@ -201,28 +230,7 @@
                 changedFields.added.forEach((fields, newRowI) => {
                     let form: IForm
                     if (this.newEntries.length <= newRowI) {
-                        const newFields = this.uv.info.columns.map((info, colI) => {
-                            return {
-                                value: undefined,
-                                valueText: "",
-                                attributes: Object.assign({}, this.uv.attributes, this.uv.columnAttributes[colI]),
-                                update: info.mainField === null ? null : {
-                                    field: info.mainField.field,
-                                    fieldRef: {
-                                        entity,
-                                        name: info.mainField.name,
-                                    },
-                                    id: newRowI,
-                                },
-                            }
-                        })
-                        form = {
-                            deleted: false,
-                            added: true,
-                            fields: newFields,
-                            id: newRowI,
-                        }
-                        this.newEntries.push(form)
+                        form = this.newEmptyRow(newRowI)
                     } else {
                         form = this.newEntries[newRowI]
                     }
@@ -246,6 +254,17 @@
                         })
                     }
                 })
+                for (let i = changedFields.added.length; i < this.newEntries.length; i++) {
+                    const row = this.newEntries[i]
+                    this.uv.info.columns.forEach((info, colI) => {
+                        const cell = row.fields[colI]
+                        cell.value = undefined
+                        cell.valueText = ""
+                    })
+                }
+                if (this.newEntries.length === 0 && this.uv.rows === null) {
+                    this.newEmptyRow(0)
+                }
             }
 
             if (this.uv.rows !== null) {
@@ -323,18 +342,6 @@
                         this.$router.back()
                     }
                 })
-
-                if (this.uv.info.mainEntity !== null) {
-                    const entity = this.uv.info.mainEntity.entity
-                    const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
-                    if (changedFields.added.length === 0) {
-                        this.addEntry({
-                            schema: entity.schema,
-                            entity: entity.name,
-                            newId: 0,
-                        })
-                    }
-                }
             }
 
             this.buildEntries()

@@ -310,21 +310,6 @@ const stagingModule: Module<IStagingState, {}> = {
             Vue.set(fields, field, validateValue(fieldType, value))
             state.touched = true
         },
-        addEntry: (state, { schema, entity, newId }: { schema: string, entity: string, newId: number }) => {
-            if (state.currentSubmit !== null) {
-                return
-            }
-
-            const entityChanges = state.current.getOrCreateChanges(schema, entity)
-            for (let i = entityChanges.added.length; i <= newId; i++) {
-                entityChanges.added.push({})
-                state.addedCount += 1
-            }
-            if (entityChanges.added[newId] === null) {
-                Vue.set(entityChanges.added, newId, {})
-            }
-            state.touched = true
-        },
         setAddedField: (state, { schema, entity, newId, field, fieldType, value }: { schema: string, entity: string, newId: number, field: string, fieldType: FieldType, value: any }) => {
             if (state.currentSubmit !== null) {
                 return
@@ -384,10 +369,6 @@ const stagingModule: Module<IStagingState, {}> = {
     actions: {
         updateField: (context, args: { schema: string, entity: string, id: number, field: string, value: any }) => {
             context.commit("updateField", args)
-            checkCounters(context)
-        },
-        addEntry: (context, args: { schema: string, entity: string, newId: number }) => {
-            context.commit("addEntry", args)
             checkCounters(context)
         },
         setAddedField: (context, args: { schema: string, entity: string, newId: number, field: string, value: any }) => {
