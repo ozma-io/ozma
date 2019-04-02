@@ -1,3 +1,11 @@
+$enable-rounded: false
+$enable-shadows: false
+$enable-gradients: false
+$font-family-sans-serif: var(--Font)
+$font-family-serif: var(--Font)
+
+@import node_modules/bootstrap/scss/bootstrap
+
 /*
  *общие настройки
  *текста
@@ -9,7 +17,6 @@ html
 	overflow-y: hidden
 *
 	margin: 0
-	font-family: var(--Font) !important
 	font-size: var(--FontSize) !important
 	color: black !important
 	max-width: none !important
@@ -55,21 +62,6 @@ div.main_div
 			width: 100%
 			overflow: hidden
 			flex: 1
-/*
- *убираем красивости у кнопок селектов ссылок и прочего (без important придется прописывать этоже буквально для каждой кнопки)
- */
-button
-	border-radius: inherit !important
-	background-color: white !important
-	border: 0px !important
-a
-	border-radius: inherit !important
-input
-	border-radius: inherit !important
-select
-	border-radius: inherit !important
-textarea
-	border-radius: inherit !important
 
 /* Авторизация */
 

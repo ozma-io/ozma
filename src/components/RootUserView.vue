@@ -103,7 +103,7 @@
     import { Action, namespace } from "vuex-class"
 
     import * as Api from "@/api"
-    import { setBodyStyle, setHeadTitle } from "@/elements"
+    import { setHeadTitle } from "@/elements"
     import { IUserViewArguments, UserViewResult, UserViewError, CurrentUserViews } from "@/state/user_view"
     import { CurrentTranslations } from "@/state/translations"
     import { CurrentChanges } from "@/state/staging_changes"
@@ -151,6 +151,10 @@
         return words
     }
 
+    const styleNode = document.createElement("style")
+    styleNode.type = "text/css"
+    document.head.appendChild(styleNode)
+
     @Component
     export default class RootUserView extends Vue {
         @auth.Action("logout") logout!: () => Promise<void>
@@ -190,7 +194,7 @@
         }
 
         private updateBodyStyle(styleString: string) {
-            setBodyStyle(styleString)
+            styleNode.innerHTML = styleString
         }
 
         get actions() {
@@ -207,7 +211,7 @@
             this.statusLine = ""
             this.onSubmitStaging = null
             this.enableFilter = false
-            setBodyStyle("")
+            styleNode.innerHTML = ""
 
             const name = this.$route.params.name
             setHeadTitle(`${name} - FunApp`)
@@ -225,7 +229,6 @@
                     break
                 default:
                     throw new Error(`Invalid route name: ${this.$route.name}`)
-                    break
             }
         }
 

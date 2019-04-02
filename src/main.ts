@@ -20,8 +20,6 @@ import translationsModule from "@/state/translations"
 import userViewModule from "@/state/user_view"
 import stagingChanges from "@/state/staging_changes"
 
-import "bootstrap/dist/css/bootstrap.css"
-import "bootstrap-vue/dist/bootstrap-vue.css"
 import "@/styles/style.sass"
 
 Vue.use(Vuex)

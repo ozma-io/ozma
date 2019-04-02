@@ -12,7 +12,7 @@
 </i18n>
 
 <template>
-    <div id="app" :style="styleSettings">
+    <div id="app">
         <router-view v-if="currentAuth !== null || pendingAuth !== null"></router-view>
         <span v-else-if="authLastError !== null">
             {{ $t('auth_error', { msg: authLastError }) }}
@@ -73,6 +73,13 @@
                 currSettings[`--${name}`] = value
                 return currSettings
             }, {} as Record<string, any>)
+        }
+
+        @Watch("styleSettings")
+        private updateStyle() {
+            Object.entries(this.styleSettings).forEach(([name, value]) => {
+                document.documentElement.style.setProperty(name, value)
+            })
         }
     }
 </script>
