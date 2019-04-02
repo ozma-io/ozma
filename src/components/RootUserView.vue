@@ -60,7 +60,7 @@
                           @update:statusLine="statusLine = $event"
                           @update:onSubmitStaging="onSubmitStaging = $event"
                           @update:enableFilter="enableFilter = $event"
-                          @update:bodyStyle="updateBodyStyle" />
+                          @update:bodyStyle="styleNode.innerHTML = styleString" />
             </b-col>
         </div>
         <nav v-if="!uvIsError && bottomBarNeeded" class="fix-bot navbar fixed-bottom navbar-light bg-light">
@@ -151,10 +151,6 @@
         return words
     }
 
-    const styleNode = document.createElement("style")
-    styleNode.type = "text/css"
-    document.head.appendChild(styleNode)
-
     @Component
     export default class RootUserView extends Vue {
         @auth.Action("logout") logout!: () => Promise<void>
@@ -179,6 +175,13 @@
         private filterString: string = ""
         private enableFilter: boolean = false
         private onSubmitStaging: (() => void) | null = null
+        private styleNode: HTMLStyleElement
+
+        constructor() {
+            super()
+            this.styleNode = document.createElement("style")
+            this.styleNode.type = "text/css"
+        }
 
         get filterWords() {
             return Array.from(new Set(convertToWords(this.filterString)))
@@ -190,11 +193,12 @@
         }
 
         private created() {
+            document.head.appendChild(this.styleNode)
             this.updateView()
         }
 
-        private updateBodyStyle(styleString: string) {
-            styleNode.innerHTML = styleString
+        private destroyed() {
+            this.styleNode.remove()
         }
 
         get actions() {
