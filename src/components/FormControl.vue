@@ -17,10 +17,9 @@
 
 <template>
     <span>
-        <div class="nested_menu">
-            <ActionsMenu v-if="inputType.name === 'userview'"
-                            title="☰"
-                            :actions="actions" />
+        <div class="nested_menu" v-if="inputType.name === 'userview'">
+            <ActionsMenu title="☰"
+                         :actions="actions" />
             <div class="black_block" onklick>
                 <div></div>
             </div>

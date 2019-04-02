@@ -297,6 +297,7 @@
                 } else {
                     if (this.oldCell !== null) {
                         this.oldCell.selected = false
+                        this.oldCell.isEditing = false
                     }
                     this.oldCell = cell
                     cell.selected = true
