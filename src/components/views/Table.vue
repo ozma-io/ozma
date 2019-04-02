@@ -42,7 +42,7 @@
                                 :columnIndexes="fixedRowColumnIndexes"
                                 :columns="columns"
                                 :uv="uv"
-                                :added="true"
+                                added
                                 :hasRowLinks="hasRowLinks"
                                 @cellClicked="cellClicked" />
                         <TableRow :key="`new-${entryI}`"
@@ -50,7 +50,7 @@
                                 :columnIndexes="columnIndexes"
                                 :columns="columns"
                                 :uv="uv"
-                                :added="true"
+                                added
                                 :hasRowLinks="hasRowLinks"
                                 @cellClicked="cellClicked" />
                     </template>
@@ -61,7 +61,6 @@
                                 :columnIndexes="fixedRowColumnIndexes"
                                 :columns="columns"
                                 :uv="uv"
-                                :added="false"
                                 :hasRowLinks="hasRowLinks"
                                 @rowSelected="rowSelected(rowI, $event)"
                                 @cellClicked="cellClicked" />
@@ -70,7 +69,6 @@
                                 :columnIndexes="columnIndexes"
                                 :columns="columns"
                                 :uv="uv"
-                                :added="false"
                                 :hasRowLinks="hasRowLinks"
                                 @rowSelected="rowSelected(rowI, $event)"
                                 @cellClicked="cellClicked" />
@@ -675,8 +673,8 @@
             }
 
             this.buildRows()
-            this.fixColumns()
             this.applyChanges()
+            this.fixColumns()
         }
 
         private updateShowLength() {
@@ -721,6 +719,9 @@
             for (const fixedColumnIndex of this.fixedColumnIndexes) {
                 const leftStr = `${left}px`
                 this.columns[fixedColumnIndex].style["left"] = leftStr
+                for (const row of this.newEntries) {
+                    row.cells[fixedColumnIndex].style["left"] = leftStr
+                }
                 for (const row of this.entries) {
                     row.cells[fixedColumnIndex].style["left"] = leftStr
                 }
@@ -734,8 +735,10 @@
                 tableWidth += column.width
             }
             if (tableWidth > screen.width && this.fixedRowColumnIndexes.length > 0) {
+                console.log("show fixed")
                 return true
             } else {
+                console.log("no show fixed")
                 return false
             }
         }

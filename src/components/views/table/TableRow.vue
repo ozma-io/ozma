@@ -92,7 +92,7 @@
             columnIndexes: { type: Array, required: true },
             columns: { type: Array, required: true },
             uv: { type: Object, required: true },
-            added: { type: Boolean, required: true },
+            added: { type: Boolean, default: false },
             hasRowLinks: { type: Boolean, required: true },
         },
     }

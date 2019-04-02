@@ -14,7 +14,7 @@
                 <div v-for="i in props.columnIndexes"
                         :key="i"
                         @click="'cellClicked' in listeners && listeners.cellClicked(props.entry.cells[i], $event)"
-                        :style="Object.assign({}, props.entry.cells[i].style, props.columns[i].style)" />
+                        :style="Object.assign({}, props.entry.cells[i].style, props.columns[i].style)">
                     <FormControl v-if="props.entry.cells[i].isEditing"
                             :valueText="props.entry.cells[i].valueText"
                             :attributes="Object.assign({}, props.entry.cells[i].attrs, props.entry.attrs, props.columns[i].attrs, props.uv.attributes)"
@@ -56,7 +56,7 @@
             columnIndexes: { type: Array, required: true },
             columns: { type: Array, required: true },
             uv: { type: Object, required: true },
-            added: { type: Boolean, required: true },
+            added: { type: Boolean, default: false },
             hasRowLinks: { type: Boolean, required: true },
         },
     }
