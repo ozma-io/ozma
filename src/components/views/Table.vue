@@ -650,13 +650,9 @@
                             style["background-color"] = String(cellColor)
                         }
 
-                        const fixedColumnAttr = getCellAttr("Fixed")
-                        const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr)
-
                         return {
                             value, valueText, link, style,
                             valueLowerText: valueText.toLowerCase(),
-                            fixed: fixedColumn,
                             isEditing: false,
                             attrs: cellAttrs,
                             update: cellValue.update === undefined ? null : cellValue.update,
