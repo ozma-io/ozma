@@ -277,7 +277,6 @@
         private valueClicked(cell: ICell) {
             if (this.clickTimeoutId === null) {
                 this.clickTimeoutId = setTimeout(() => {
-                    cell.selected = false
                     this.clickTimeoutId = null
                 }, doubleClickTime)
 
@@ -286,7 +285,7 @@
                     this.oldCell.isEditing = false
                 }
                 this.oldCell = cell
-                this.oldCell.selected = true
+                cell.selected = true
             } else {
                 clearTimeout(this.clickTimeoutId)
                 this.clickTimeoutId = null
@@ -300,8 +299,7 @@
                         this.oldCell.selected = false
                     }
                     this.oldCell = cell
-                    this.oldCell.selected = true
-                    this.clickTimeoutId = null
+                    cell.selected = true
                 }
             }
         }
