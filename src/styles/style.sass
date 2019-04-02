@@ -429,7 +429,7 @@ div
 					box-shadow: 3px 0 0px var(--TableBorderColor), inset 1px 0px 0px 0px var(--TableBorderColor)
 				.fixed-column
 						position: sticky
-						z-index: 15
+						z-index: 20
 						background-color: inherit
 						box-shadow: 3px 0 0px var(--TableBorderColor)
 						border-left: 0
@@ -542,10 +542,14 @@ div
 								top: -3px /*фикс стилей bootatrap не трогать!!!!*/
 						&.open_form:focus, &.open_form:active
 							box-shadow: none
+					&.select_fixed
+						box-shadow: inset 0 0 0 2px var(--SelectBorderColor)
+						position: sticky
+						z-index: 20
 					&.select
 						box-shadow: inset 0 0 0 2px var(--SelectBorderColor)
 						position: sticky
-						z-index: 17
+						z-index: 15
 
 /* Форма */
 @media print
