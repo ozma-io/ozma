@@ -3,7 +3,7 @@
     <tr :style="props.entry.style" class="fixed-place-tr">
         <td class="fixed-place-td">
             <div class="fix">
-                <div @click="selectRow(rowI, $event)" class="fixed-column">
+                <div @click="listeners.rowSelected" class="fixed-column">
                     <input type="checkbox" :checked="props.entry.selected" @click.self.prevent>
                 </div>
                 <div v-if="props.entry.linkForRow !== null" class="fixed-column">
@@ -17,7 +17,6 @@
                         :style="props.entry.cells[i].style">
                     <FormControl v-if="props.entry.cells[i].isEditing"
                             :valueText="props.entry.cells[i].valueText"
-                            :locked="false"
                             :attributes="Object.assign({}, props.entry.cells[i].attrs, props.entry.attrs, props.columns[i].attrs, props.uv.attributes)"
                             :added="props.added"
                             :update="props.entry.cells[i].update"

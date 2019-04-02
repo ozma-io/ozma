@@ -42,15 +42,15 @@
                                 :columnIndexes="fixedRowColumnIndexes"
                                 :columns="columns"
                                 :uv="uv"
-                                @selectRow="selectRow(rowI, $event)"
-                                @cellClicked="valueClicked" />
+                                @rowSelected="rowSelected(rowI, $event)"
+                                @cellClicked="cellClicked" />
                         <TableRow :key="entryI"
                                 :entry="entries[entryI]"
                                 :columnIndexes="columnIndexes"
                                 :columns="columns"
                                 :uv="uv"
-                                @selectRow="selectRow(rowI, $event)"
-                                @cellClicked="valueClicked" />
+                                @rowSelected="rowSelected(rowI, $event)"
+                                @cellClicked="cellClicked" />
                     </template>
                 </tbody>
             </table>
@@ -274,7 +274,7 @@
             this.lastSelected = null
         }
 
-        private valueClicked(cell: ICell) {
+        private cellClicked(cell: ICell) {
             if (this.clickTimeoutId === null) {
                 this.clickTimeoutId = setTimeout(() => {
                     this.clickTimeoutId = null
@@ -304,7 +304,7 @@
             }
         }
 
-        private selectRow(rowI: number, event: MouseEvent) {
+        private rowSelected(rowI: number, event: MouseEvent) {
             if (this.lastSelected !== null && event.shiftKey) {
                 // Select all rows between current one and the previous selected one.
                 let changedRows = 0

@@ -161,8 +161,6 @@
                     control.focus()
                 } else if (type.name === "codeeditor") {
                     control.editor.focus()
-                } else if (type.name === "select") {
-                    control.focus()
                 } else if (type.name === "check") {
                     control.focus()
                 }

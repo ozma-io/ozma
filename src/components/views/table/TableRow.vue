@@ -13,10 +13,9 @@
                 :key="i"
                 @click="listeners.cellClicked(props.entry.cells[i], $event)"
                 :style="props.entry.cells[i].style"
-                :class="[props.entry.cells[i].fixed ? 'fixed-column' : 'none', props.entry.cells[i].isSelected ? 'select' : 'none']">
+                :class="[props.entry.cells[i].fixed ? 'fixed-column' : 'none', props.entry.cells[i].selected ? 'select' : 'none']">
             <FormControl v-if="props.entry.cells[i].isEditing"
                     :valueText="props.entry.cells[i].valueText"
-                    :locked="false"
                     :attributes="Object.assign({}, props.entry.cells[i].attrs, props.entry.attrs, props.columns[i].attrs, props.uv.attributes)"
                     :added="props.added"
                     :update="props.entry.cells[i].update"
