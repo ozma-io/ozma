@@ -734,13 +734,7 @@
             for (const column of this.columns) {
                 tableWidth += column.width
             }
-            if (tableWidth > screen.width && this.fixedRowColumnIndexes.length > 0) {
-                console.log("show fixed")
-                return true
-            } else {
-                console.log("no show fixed")
-                return false
-            }
+            return tableWidth > screen.width && this.fixedRowColumnIndexes.length > 0
         }
     }
 </script>
