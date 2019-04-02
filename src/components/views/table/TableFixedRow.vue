@@ -3,7 +3,7 @@
     <tr :style="props.entry.style" class="fixed-place-tr">
         <td class="fixed-place-td">
             <div class="fix">
-                <div @click="'rowSelected' in listeners && listeners.rowSelected" class="fixed-column">
+                <div @click="'rowSelected' in listeners && listeners.rowSelected($event)" class="fixed-column">
                     <input type="checkbox" :checked="props.entry.selected" @click.self.prevent>
                 </div>
                 <div v-if="props.hasRowLinks" class="fixed-column">
