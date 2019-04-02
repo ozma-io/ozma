@@ -43,14 +43,14 @@
                                 :columns="columns"
                                 :uv="uv"
                                 @selectRow="selectRow(rowI, $event)"
-                                @valueClicked="valueClicked" />
+                                @cellClicked="valueClicked" />
                         <TableRow :key="entryI"
                                 :entry="entries[entryI]"
                                 :columnIndexes="columnIndexes"
                                 :columns="columns"
                                 :uv="uv"
                                 @selectRow="selectRow(rowI, $event)"
-                                @valueClicked="valueClicked" />
+                                @cellClicked="valueClicked" />
                     </template>
                 </tbody>
             </table>

@@ -1,7 +1,7 @@
 <template functional>
     <!-- When you change anything here, also make corresponding changes in TableFixedRow! -->
     <tr :style="props.entry.style" :class="props.entry.selected ? 'selected' : 'none_selected'">
-        <td @click="listeners.selectRow" class="fixed-column checkbox-cells">
+        <td @click="listeners.rowSelected" class="fixed-column checkbox-cells">
             <input type="checkbox" :checked="props.entry.selected" @click.self.prevent>
         </td>
         <td v-if="props.entry.linkForRow !== null" class="fixed-column opemform-cells">
