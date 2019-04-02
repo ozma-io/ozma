@@ -21,6 +21,7 @@ html
 	color: black !important
 	max-width: none !important
 	min-width: none !important
+
 /*
  *позиционирование боди под наши стили
  *установка размеров боди для наследования и размеров дочерних элементов выставленных в % (чтобы браузер мог их высчитать)
@@ -37,6 +38,7 @@ body
 	bottom: 0px
 	div#app
 		height: 100%
+
 /*
  *стили печати
  *запрет браузеру менять цвета при печати
@@ -48,6 +50,7 @@ body
 	body
 		-webkit-print-color-adjust: exact
 		 color-adjust: exact
+
 /*
  *bootstrap любит внутри обычного блока выставлять отступы убираем их
  */
@@ -63,50 +66,12 @@ div.main_div
 			overflow: hidden
 			flex: 1
 
-/* Авторизация */
-
-div
-	&.main_aut
-		width: 100%
-		height: 100%
-		position: absolute
-		overflow: auto
-		top: 0
-		left: 0
-		display: flex /*для удобства позиционирования окошка входа*/
-		form
-			&.aut
-				margin: auto /*чтобы элемент автомотически стоял по центру экрана*/
-				display: flex /*для красоты и позиционирования внутренних элементов*/
-				align-items: center
-				flex-direction: column /*расположение элементов друг под другом*/
-				background: var(--BackgroundColor)
-				width: 180px /*оптимально красивые размеры*/
-				height: 200px
-		
-				div
-					&.group
-						height: 50px
-						width: 160px
-						>div
-							input
-								&.text
-									padding: 5px
-									height: 18px
-									width: 160px
-									text-decoration: none
-									-webkit-appearance: none
-									box-sizing: content-box
-										
-				
-				button
-					&.btnn
-						padding: 5px
-						border: none
-						background: #FFFFFF; /*цвет кнопки входа возможно надо вынести в настройки*/
-						text-decoration: none
-						-webkit-appearance: none
-						color: black
+/*
+ *убираем красивости у кнопок селектов ссылок и прочего (без important придется прописывать этоже буквально для каждой кнопки)
+ */
+button
+    background-color: white !important
+    border: 0px !important
 
 /* Навигация */
 .scrol_menu
