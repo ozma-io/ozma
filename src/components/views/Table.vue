@@ -35,6 +35,24 @@
                     </tr>
                 </thead>
                 <tbody>
+                     <template>
+                        <TableFixedRow v-if="showFixedRow"
+                                :key="`fixed-${0}`"
+                                :entry="newEntries[0]"
+                                :columnIndexes="fixedRowColumnIndexes"
+                                :columns="columns"
+                                :uv="uv"
+                                @rowSelected="() => {}"
+                                @cellClicked="cellClicked" />
+                        <TableRow :key="0"
+                                :entry="newEntries[0]"
+                                :columnIndexes="columnIndexes"
+                                :columns="columns"
+                                :uv="uv"
+                                :added="true"
+                                @rowSelected="() => {}"
+                                @cellClicked="cellClicked" />
+                    </template>
                     <template v-for="(entryI, rowI) in shownRows">
                         <TableFixedRow v-if="showFixedRow"
                                 :key="`fixed-${entryI}`"
@@ -49,6 +67,7 @@
                                 :columnIndexes="columnIndexes"
                                 :columns="columns"
                                 :uv="uv"
+                                :added="false"
                                 @rowSelected="rowSelected(rowI, $event)"
                                 @cellClicked="cellClicked" />
                     </template>
@@ -138,6 +157,7 @@
         private printListener: { query: MediaQueryList, queryCallback: (mql: MediaQueryListEvent) => void, printCallback: () => void } | null = null
         private oldCell: ICell | null = null
         private clickTimeoutId: NodeJS.Timeout | null = null
+        private newEntries: IRow[] = []
 
         get hasRowLinks() {
             return this.entries.some(e => e.linkForRow !== null)
@@ -363,6 +383,112 @@
         // Apply changes on top of built entries.
         // TODO: make this even more granular, ideally: dynamically bind a watcher to every changed and added entry.
         private applyChanges() {
+            if (this.uv.info.mainEntity !== null) {
+                const entity = this.uv.info.mainEntity.entity
+                const changedRows = this.changes.changesForEntity(entity.schema, entity.name)
+                changedRows.added.forEach((newRow, newRowI) => {
+                    let row: IRow
+                    if (this.newEntries.length <= newRowI) {
+                        const newCells = this.uv.info.columns.map((info, colI) => {
+                            return {
+                                value: undefined,
+                                valueText: "",
+                                valueLowerText: "",
+                                link: null,
+                                style: {},
+                                fixed: false,
+                                update: info.mainField === null ? null : {
+                                    field: info.mainField.field,
+                                    fieldRef: {
+                                        entity,
+                                        name: info.mainField.name,
+                                    },
+                                    id: newRowI,
+                                },
+                                attrs: Object.assign({}, this.uv.attributes, this.uv.columnAttributes[colI]),
+                                isEditing: false,
+                                selected: false,
+                            }
+                        })
+                        row = {
+                            cells: newCells,
+                            index: newRowI,
+                            deleted: false,
+                            selected: false,
+                            style: {},
+                            linkForRow: null,
+                            attrs: {},
+                        }
+                        this.newEntries.push(row)
+                    } else {
+                        row = this.newEntries[newRowI]
+                    }
+
+                    if (newRow === null) {
+                        row.deleted = true
+                    } else {
+                        row.deleted = false
+                        this.uv.info.columns.forEach((info, colI) => {
+                            if (info.mainField !== null) {
+                                const cell = row.cells[colI]
+                                const value = newRow[info.mainField.name]
+                                if (value === undefined) {
+                                    cell.value = undefined
+                                    cell.valueText = ""
+                                    cell.valueLowerText = ""
+                                } else {
+                                    cell.value = value.value
+                                    cell.valueText = value.rawValue
+                                    cell.valueLowerText = cell.valueText.toLowerCase()
+                                }
+                            }
+                        })
+                    }
+                })
+
+                if (Object.keys(this.changes.changes).length === 0 && this.newEntries.length !== 0) {
+                    this.newEntries = []
+                    this.applyChanges()
+                }
+
+                if (this.newEntries.length === 0) {
+                    this.newEntries.push({
+                        index: 0,
+                        cells: [],
+                        deleted: false,
+                        selected: false,
+                        style: {},
+                        linkForRow: null,
+                        attrs: {},
+                    } as IRow)
+
+                    for (const info of this.uv.info.columns) {
+                        this.newEntries[0].cells.push({
+                            value: undefined,
+                            valueText: "",
+                            valueLowerText: "",
+                            link: null,
+                            style: {},
+                            fixed: false,
+                            update: info.mainField === null ? null : {
+                                field: info.mainField.field,
+                                fieldRef: {
+                                    entity,
+                                    name: info.mainField.name,
+                                },
+                                id: 0,
+                            } ,
+                            attrs: {},
+                            isEditing: false,
+                            selected: false,
+                        } as ICell)
+                    }
+                }
+                for (let i = 0; i < this.columns.length; i++) {
+                    this.newEntries[0].cells[i].fixed = this.columns[i].fixed
+                    this.newEntries[0].cells[i].style = this.columns[i].style
+                }
+            }
             if (this.uv.rows !== null) {
                 const rows = this.uv.rows
 
@@ -419,6 +545,7 @@
                     })
                 })
             }
+            this.selectedRows = 0
         }
 
         private created() {

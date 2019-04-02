@@ -91,6 +91,7 @@
             columnIndexes: { type: Array, required: true },
             columns: { type: Array, required: true },
             uv: { type: Object, required: true },
+            added: { type: Boolean, required: true },
         },
     }
 </script>
