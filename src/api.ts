@@ -2,7 +2,7 @@ import * as Utils from "@/utils"
 
 const apiUrl = (process.env["NODE_ENV"] === "production") ? `https://api.${location.hostname}` : `http://${location.hostname}:5000`
 
-export const authOrigin = (process.env["NODE_ENV"] === "production") ? "https://account.myprocessx.com" : "https://keycloak.myprocessx.com"
+export const authOrigin = (process.env["NODE_ENV"] === "production") ? "https://account.myprocessx.com" : "https://keycloak-dev.myprocessx.com"
 const authUrlBase = (process.env["NODE_ENV"] === "production") ? `${authOrigin}/auth/realms/myprocessx` : `${authOrigin}/auth/realms/myprocessx-dev`
 export const authUrl = `${authUrlBase}/protocol/openid-connect`
 export const accountUrl = `${authUrlBase}/account`
