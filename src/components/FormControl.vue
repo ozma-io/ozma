@@ -78,6 +78,8 @@
 <script lang="ts">
     import { Component, Vue, Prop, Watch } from "vue-property-decorator"
     import { namespace } from "vuex-class"
+
+    import seq from "@/sequences"
     import { AttributesMap, ValueType, FieldType, IResultColumnInfo, IColumnField } from "@/api"
     import { IAction } from "@/components/ActionsMenu.vue"
     import { IUpdatableField, IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, printValue } from "@/state/user_view"
@@ -149,6 +151,7 @@
         @userView.Action("getNestedView") getNestedView!: (_: IUserViewArguments) => Promise<void>
 
         private actions: IAction[] = []
+        private oldArgs: string = ""
 
         private mounted() {
             if (this.autofocus) {
@@ -164,11 +167,6 @@
                     control.focus()
                 }
             }
-        }
-
-        @Watch("uv", { immediate: true })
-        private clearActions() {
-            this.actions = []
         }
 
         get isNullable() {
@@ -194,7 +192,8 @@
                     return { name: "error", text: this.$tc("invalid_uv") }
                 }
                 // FIXME: proper args
-                const viewArgs: IUserViewArguments = { type: "named", source: this.value[0], args: new URLSearchParams(location.search) }
+                const queryArgs = seq(new URLSearchParams(location.search)).toObject()
+                const viewArgs: IUserViewArguments = { type: "named", source: this.value[0], args: queryArgs }
                 this.getNestedView(viewArgs)
                 return { name: "userview", args: viewArgs }
             }

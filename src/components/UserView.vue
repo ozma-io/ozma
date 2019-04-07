@@ -45,6 +45,8 @@
 <script lang="ts">
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
     import { namespace } from "vuex-class"
+
+    import seq from "@/sequences"
     import { UserViewResult, UserViewError } from "@/state/user_view"
     import { CurrentAuth } from "@/state/auth"
     import { IAction } from "@/components/ActionsMenu.vue"
@@ -55,14 +57,10 @@
         "Table",
     ]
 
-    const componentNames = types.reduce((res, name) => {
-        res[name] = `UserView${name}`
-        return res
-    }, {} as Record<string, string>)
-    const components = Object.entries(componentNames).reduce((res, [name, componentName]) => {
-        res[componentName] = () => import(`@/components/views/${name}.vue`)
-        return res
-    }, {} as Record<string, () => any>)
+    const componentNames = seq(types).map<[string, string]>(name => [name, `UserView${name}`]).toObject()
+    const componentsList = Object.entries(componentNames).map<[string, any]>(([name, componentName]) => [componentName, () => import(`@/components/views/${name}.vue`)])
+    // FIXME: use Object.fromEntries once it's available
+    const components = seq(componentsList).toObject()
 
     const auth = namespace("auth")
 

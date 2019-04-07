@@ -82,6 +82,7 @@
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
     import { Location } from "vue-router"
     import { namespace } from "vuex-class"
+    import seq from "@/sequences"
     import { UserViewResult, printValue, IUpdatableField } from "@/state/user_view"
     import { CurrentChanges, IEntityChanges, IUpdatedCell } from "@/state/staging_changes"
     import { IExecutedRow, IExecutedValue, ValueType, IResultColumnInfo } from "@/api"
@@ -215,11 +216,11 @@
         }
 
         get fixedColumnIndexes() {
-            return this.columns.map((c, index) => ({ index, fixed: c.fixed })).filter(c => c.fixed).map(c => c.index)
+            return seq(this.columns).map((c, index) => ({ index, fixed: c.fixed })).filter(c => c.fixed).map(c => c.index).toArray()
         }
 
         get fixedRowColumnIndexes() {
-            return this.columns.map((c, index) => ({ index, fixed: c.mobileFixed })).filter(c => c.fixed).map(c => c.index)
+            return seq(this.columns).map((c, index) => ({ index, fixed: c.mobileFixed })).filter(c => c.fixed).map(c => c.index).toArray()
         }
 
         @Watch("filter")
@@ -359,8 +360,8 @@
                 this.selectedRows += (entry.selected) ? 1 : -1
                 this.lastSelected = rowI
             }
-            window.getSelection().removeAllRanges()
             this.updateStatusLine()
+            return false
         }
 
         /* To optimize performance when staging entries change, we first pre-build entries and then update them selectively watching staging entries.

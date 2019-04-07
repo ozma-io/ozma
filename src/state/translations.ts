@@ -1,6 +1,7 @@
 import { Module } from "vuex"
 
 import { IRef } from "@/utils"
+import seq from "@/sequences"
 import * as Api from "@/api"
 
 export class CurrentTranslations {
@@ -78,14 +79,13 @@ const translationsModule: Module<ITranslationsState, {}> = {
                     if (state.pending !== pending.ref) {
                         throw Error("Pending operation cancelled")
                     }
-                    const values = res.result.rows.reduce((currTranslations: Record<string, string>, row) => {
+                    const values = seq(res.result.rows).map<[string, string]>(row => {
                         const schema = row.values[0].value
                         const entity = row.values[1].value
                         const field = row.values[2].value
                         const translation = row.values[3].value
-                        currTranslations[`${schema}__${entity}__${field}`] = translation
-                        return currTranslations
-                    }, {})
+                        return [`${schema}__${entity}__${field}`, translation]
+                    }).toObject()
                     const translations = new CurrentTranslations(values)
                     commit("setTranslations", translations)
                     return translations

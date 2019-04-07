@@ -102,6 +102,7 @@
     import { Component, Watch, Vue } from "vue-property-decorator"
     import { Action, namespace } from "vuex-class"
 
+    import seq from "@/sequences"
     import * as Api from "@/api"
     import { setHeadTitle } from "@/elements"
     import { IUserViewArguments, UserViewResult, UserViewError, CurrentUserViews } from "@/state/user_view"
@@ -222,11 +223,11 @@
 
             switch (this.$route.name) {
                 case "view":
-                    const query = Object.entries(this.$route.query).map(([argName, values]) => {
+                    const query = seq(this.$route.query as Record<string, string | string[]>).map<[string, string]>(([argName, values]) => {
                         const val = Array.isArray(values) ? values[0] : values
                         return [argName, val]
-                    })
-                    this.getRootView({ type: "named", source: name, args: new URLSearchParams(query) })
+                    }).toObject()
+                    this.getRootView({ type: "named", source: name, args: query })
                     break
                 case "view_create":
                     this.getRootView({ type: "named", source: name, args: null })

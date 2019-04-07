@@ -4,6 +4,7 @@ import { Moment } from "moment"
 import moment from "moment"
 
 import { IRef, FetchError, momentLocale, deepFreeze } from "@/utils"
+import seq from "@/sequences"
 import * as Api from "@/api"
 import {
     AttributesMap, IColumnField, IFieldRef, IResultViewInfo, IExecutedRow,
@@ -15,7 +16,7 @@ export type UserViewType = "named" | "anonymous"
 export interface IUserViewArguments {
     type: UserViewType
     source: string
-    args: URLSearchParams | null
+    args: Record<string, any> | null
 }
 
 export interface IUpdateMapping {
@@ -77,7 +78,8 @@ export class UserViewResult {
                 }
             })
 
-            this.updateMappings = newRows.reduce((mappings: IUpdateMappings, row, rowI) => {
+            const mappings: IUpdateMappings = {}
+            newRows.forEach((row, rowI) => {
                 const domain = this.info.domains[row.domainId]
 
                 if (row.entityIds !== undefined) {
@@ -125,9 +127,8 @@ export class UserViewResult {
                         }
                     })
                 }
-
-                return mappings
-            }, {})
+            })
+            this.updateMappings = mappings
         }
     }
 
@@ -242,9 +243,10 @@ const getUserView = async ({ dispatch }: ActionContext<IUserViewState, {}>, args
                 await momentLocale
                 current = new UserViewResult(args, res.info, res.pureAttributes, res.pureColumnAttributes, null)
             } else {
+                const urlArgs = new URLSearchParams(args.args)
                 const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
                     func: Api.fetchNamedView,
-                    args: [args.source, args.args],
+                    args: [args.source, urlArgs],
                 }, { root: true })
                 await momentLocale
                 current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
@@ -253,9 +255,10 @@ const getUserView = async ({ dispatch }: ActionContext<IUserViewState, {}>, args
             if (args.args === null) {
                 throw Error("Getting information about anonymous views is not supported")
             } else {
+                const urlArgs = new URLSearchParams(args.args)
                 const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
                     func: Api.fetchAnonymousView,
-                    args: [args.source, args.args],
+                    args: [args.source, urlArgs],
                 }, { root: true })
                 await momentLocale
                 current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
@@ -344,12 +347,11 @@ const userViewModule: Module<IUserViewState, {}> = {
                     if (!(schemaName in state.entries && state.entries[schemaName][entityName] === pending.ref)) {
                         throw Error("Pending operation cancelled")
                     }
-                    const entries = res.result.rows.reduce((currEntries: Record<string, number>, row) => {
+                    const entries = seq(res.result.rows).map<[string, number]>(row => {
                         const id = row.values[0].value
                         const main = row.values[1].value
-                        currEntries[main] = id
-                        return currEntries
-                    }, {})
+                        return [main, id]
+                    }).toObject()
                     commit("setEntries", { schemaName, entityName, entries })
                     return entries
                 } catch (e) {
