@@ -84,7 +84,7 @@ export class UserViewResult {
                     const entityIds = row.entityIds
                     info.columns.forEach((columnInfo, colI) => {
                         const field = domain[columnInfo.name]
-                        if (field !== undefined) {
+                        if (field !== undefined && field.field !== null) {
                             const cell = row.values[colI]
                             const id = entityIds[field.idColumn]
                             const updateInfo = {

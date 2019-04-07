@@ -116,7 +116,7 @@ export interface IResultColumnInfo {
 
 export interface IDomainField {
     ref: IFieldRef
-    field: IColumnField
+    field: IColumnField | null
     idColumn: ColumnName
 }
 
