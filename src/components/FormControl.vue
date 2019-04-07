@@ -172,11 +172,11 @@
         }
 
         get isNullable() {
-            return this.update === null ? true : this.update.field.isNullable
+            return this.update === null || this.update.field === null ? true : this.update.field.isNullable
         }
 
         get isDisabled() {
-            return this.update === null || this.locked
+            return this.locked || this.update === null || this.update.field === null
         }
 
         get uv() {
@@ -199,7 +199,7 @@
                 return { name: "userview", args: viewArgs }
             }
 
-            if (this.update !== null) {
+            if (this.update !== null && this.update.field !== null) {
                 const fieldType = this.update.field.fieldType
                 switch (fieldType.type) {
                     case "reference":
@@ -255,7 +255,7 @@
         }
 
         private updateValue(text: string) {
-            if (this.update === null) {
+            if (this.update === null || this.update.field === null) {
                 console.assert(false, "No update entity defined in view")
                 return
             }

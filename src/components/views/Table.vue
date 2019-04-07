@@ -313,7 +313,7 @@
                 this.clickTimeoutId = null
 
                 if (cell === this.oldCell) {
-                    if (cell.update !== null) {
+                    if (cell.update !== null && cell.update.field !== null) {
                         cell.isEditing = !cell.isEditing
                     }
                 } else {

@@ -26,7 +26,7 @@ export interface IUpdateMapping {
 }
 
 export interface IUpdatableField {
-    field: IColumnField
+    field: IColumnField | null
     fieldRef: IFieldRef
     id: RowId
 }
@@ -84,7 +84,7 @@ export class UserViewResult {
                     const entityIds = row.entityIds
                     info.columns.forEach((columnInfo, colI) => {
                         const field = domain[columnInfo.name]
-                        if (field !== undefined && field.field !== null) {
+                        if (field !== undefined) {
                             const cell = row.values[colI]
                             const id = entityIds[field.idColumn]
                             const updateInfo = {
