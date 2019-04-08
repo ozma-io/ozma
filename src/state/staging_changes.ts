@@ -3,6 +3,7 @@ import { Module, ActionContext } from "vuex"
 import { Moment } from "moment"
 import moment from "moment"
 
+import seq from "@/sequences"
 import { RowIdString, SchemaName, FieldName, EntityName, FieldType } from "@/api"
 import * as Api from "@/api"
 import { UserViewResult, dateFormat, dateTimeFormat } from "@/state/user_view"
@@ -128,43 +129,19 @@ const checkCounters = (context: ActionContext<IStagingState, {}>) => {
     }
 }
 
-const changesToParams = (changes: UpdatedCells) => {
-    const fields = Object.entries(changes).map(([name, change]) => {
+const changesToParams = (changes: UpdatedCells): Record<string, any> => {
+    return seq(changes).map<[string, any]>(([name, change]) => {
         if (change.value === undefined) {
             throw new Error("Value didn't pass validation")
         }
         let arg
-        if (change.value === null) {
-            arg = "\0"
-        } else if (change.value instanceof moment) {
-            arg = String(Math.floor((change.value as Moment).unix()))
+        if (change.value instanceof moment) {
+            arg = Math.floor((change.value as Moment).unix())
         } else {
-            arg = String(change.value)
+            arg = change.value
         }
         return [ name, arg ]
-    })
-    return new URLSearchParams(fields)
-}
-
-const updateEntry = async ({ dispatch }: ActionContext<IStagingState, {}>, schemaName: string, entityName: string, id: number, changes: UpdatedCells) => {
-    return await dispatch("callProtectedApi", {
-        func: Api.updateEntry,
-        args: [{ schema: schemaName, name: entityName }, id, changesToParams(changes)],
-    }, { root: true })
-}
-
-const addEntry = async ({ dispatch }: ActionContext<IStagingState, {}>, schemaName: string, entityName: string, values: UpdatedCells) => {
-    return await dispatch("callProtectedApi", {
-        func: Api.insertEntry,
-        args: [{ schema: schemaName, name: entityName }, changesToParams(values)],
-    }, { root: true })
-}
-
-const deleteEntry = async ({ dispatch }: ActionContext<IStagingState, {}>, schemaName: string, entityName: string, id: number) => {
-    return await dispatch("callProtectedApi", {
-        func: Api.deleteEntry,
-        args: [{ schema: schemaName, name: entityName }, id],
-    }, { root: true })
+    }).toObject()
 }
 
 const convertArray = (entryType: FieldType, value: any[]): any[] | undefined => {
@@ -290,7 +267,7 @@ const stagingModule: Module<IStagingState, {}> = {
         clearAdded: state => {
             Object.entries(state.current.changes).forEach(([schemaName, entities]) => {
                 Object.entries(entities).forEach(([entityName, entityChanges]) => {
-                    entityChanges.added = []
+                    entityChanges.added = new Array(entityChanges.added.length).fill(null)
                 })
             })
         },
@@ -404,61 +381,76 @@ const stagingModule: Module<IStagingState, {}> = {
                 return state.currentSubmit
             }
 
-            const results: Array<Promise<any>> = []
-            Object.entries(state.current.changes).forEach(([schemaName, entities]) => {
-                Object.entries(entities).forEach(([entityName, entityChanges]) => {
-                    Object.entries(entityChanges.updated).forEach(([updatedIdStr, updatedFields]) => {
-                        if (updatedFields !== null) {
-                            const updatedId = Number(updatedIdStr)
-                            results.push(updateEntry(context, schemaName, entityName, updatedId, updatedFields))
-                        }
-                    })
-                    entityChanges.added.forEach(addedFields => {
-                        if (addedFields !== null) {
-                            results.push(addEntry(context, schemaName, entityName, addedFields))
-                        }
-                    })
-                    Object.entries(entityChanges.deleted).forEach(([deletedIdStr, isDeleted]) => {
-                        if (isDeleted) {
-                            const deletedId = Number(deletedIdStr)
-                            results.push(deleteEntry(context, schemaName, entityName, deletedId))
-                        }
-                    })
+            const ops = Object.entries(state.current.changes).flatMap(([schemaName, entities]) => {
+                return Object.entries(entities).flatMap(([entityName, entityChanges]) => {
+                    const entity = {
+                        schema: schemaName,
+                        name: entityName,
+                    }
+                    const updated =
+                        Object.entries(entityChanges.updated)
+                        .filter(([updatedIdStr, updatedFields]) => updatedFields !== null)
+                        .map(([updatedIdStr, updatedFields]) => {
+                            return {
+                                type: "update",
+                                entity,
+                                id: Number(updatedIdStr),
+                                entries: changesToParams(updatedFields as Record<string, IUpdatedCell>),
+                            }
+                        }) as Api.TransactionOp[]
+                    const added =
+                        entityChanges.added
+                        .filter(addedFields => addedFields !== null)
+                        .map(addedFields => {
+                            return {
+                                type: "insert",
+                                entity,
+                                entries: changesToParams(addedFields as Record<string, IUpdatedCell>),
+                            }
+                        }) as Api.TransactionOp[]
+                    const deleted =
+                        Object.entries(entityChanges.deleted)
+                        .filter(([deletedIdStr, isDeleted]) => isDeleted)
+                        .map(([deletedIdStr, _]) => {
+                            return {
+                                type: "delete",
+                                entity,
+                                id: Number(deletedIdStr),
+                            }
+                        }) as Api.TransactionOp[]
+                    return updated.concat(added, deleted)
                 })
             })
 
-            const errors: Error[] = []
-            let oneChange = false
-            const protectedResults = results.map(res => res.then(r => {
-                oneChange = true
-                return r
-            }).catch(e => {
-                errors.push(e)
-            }))
-
             commit("startSubmit", (async () => {
-                await Promise.all(protectedResults)
-
-                if (oneChange) {
+                let failed: Error | null = null
+                try {
+                    await dispatch("callProtectedApi", {
+                        func: Api.runTransaction,
+                        args: [ops],
+                    }, { root: true })
+                } catch (e) {
+                    failed = e
+                }
+                if (failed === null) {
                     try {
                         await dispatch("userView/reload", undefined, { root: true })
                     } catch (e) {
-                        console.log("Error while reloading", e)
+                        console.log("Error while commiting", e)
                         // Ignore errors; they've been already handled for userView
                     }
                 }
+
                 commit("finishSubmit")
-                if (errors.length === 0) {
+                if (failed === null) {
                     if (state.touched) {
                         commit("clearAdded")
                     } else {
                         reset(context)
                     }
                 } else {
-                    for (const error of errors) {
-                        commit("addError", error.message)
-                    }
-                    throw errors[0]
+                    commit("addError", failed.message)
+                    throw failed
                 }
             })())
         },

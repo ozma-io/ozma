@@ -12,9 +12,9 @@ Vue.use(VueRouter)
 Vue.use(VueI18n)
 
 const routes = [
-    { path: "/", name: "main", redirect: { name: "view", params: { name: "Main" } } },
-    { path: "/views/:name", name: "view", component: RootUserView },
-    { path: "/views/:name/new", name: "view_create", component: RootUserView },
+    { path: "/", name: "main", redirect: { name: "view", params: { schema: "user", name: "Main" } } },
+    { path: "/views/:schema/:name", name: "view", component: RootUserView },
+    { path: "/views/:schema/:name/new", name: "view_create", component: RootUserView },
     { path: "/auth_response", name: "auth_response", component: AuthResponse },
     { path: "*", component: NotFound },
 ]

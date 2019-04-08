@@ -18,6 +18,8 @@
         @Prop({ default: false }) readOnly!: boolean
 
         editor: Ace.Ace.Editor | null = null
+        // Workaround for Ace editor's bug: it calls on(change) with an empty string during an update.
+        isUpdating = false
 
         private mounted() {
             const editor = Ace.edit(this.$refs.pre)
@@ -27,7 +29,10 @@
             editor.setValue(this.content, 1)
 
             editor.on("change", () => {
-                this.$emit("update:content", editor.getValue())
+                if (!this.isUpdating) {
+                    const newValue = this.editor.getValue()
+                    this.$emit("update:content", newValue)
+                }
             })
         }
 
@@ -35,7 +40,9 @@
         private onUpdateContent(val: string, oldVal: string) {
             if (this.editor !== null) {
                 if (val !== this.editor.getValue()) {
+                    this.isUpdating = true
                     this.editor.setValue(val, 1)
+                    this.isUpdating = false
                 }
             }
         }

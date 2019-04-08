@@ -86,7 +86,7 @@
     import { namespace } from "vuex-class"
 
     import seq from "@/sequences"
-    import { AttributesMap, ValueType, FieldType, IResultColumnInfo, IColumnField } from "@/api"
+    import { AttributesMap, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef } from "@/api"
     import { IAction } from "@/components/ActionsMenu.vue"
     import { IUpdatableField, IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, printValue } from "@/state/user_view"
 
@@ -198,24 +198,46 @@
                 if (this.value === undefined) {
                     return { name: "error", text: this.$tc("no_uv") }
                 }
-                let viewArgs: IUserViewArguments
-                let defaultValues: Record<string, any> = {}
-                if (this.type.type === "json") {
-                    if (typeof this.value.name !== "string" || typeof this.value.args !== "object" || this.value.args === null) {
-                        return { name: "error", text: this.$tc("invalid_uv") }
-                    }
-                    if (typeof this.value.defaultValues === "object" && this.value.defaultValues !== null) {
-                        defaultValues = this.value.defaultValues
-                    }
-                    viewArgs = { type: "named", source: this.value.name, args: this.value.args }
-                } else if (this.type.type === "string") {
-                    if (this.update === null) {
-                        return { name: "error", text: this.$tc("invalid_uv") }
-                    }
-                    viewArgs = { type: "named", source: this.value.name, args: { id: this.update.id } }
-                } else {
+                if (typeof this.value !== "object" || this.value === null) {
                     return { name: "error", text: this.$tc("invalid_uv") }
                 }
+
+                let ref: IUserViewRef
+                if (typeof this.value.ref === "object" && this.value.ref !== null) {
+                    ref = this.value.ref
+                } else {
+                    ref = this.value
+                }
+                if (typeof ref.schema !== "string" || typeof ref.name !== "string") {
+                    return { name: "error", text: this.$tc("no_uv") }
+                }
+
+                let args: Record<string, any>
+                if (typeof this.value.args === "object" && this.value.args !== null) {
+                    args = this.value.args
+                } else {
+                    if (this.update === null) {
+                        return { name: "error", text: this.$tc("invalid_uv") }
+                    } else {
+                        args = { id: this.update.id }
+                    }
+                }
+
+                let defaultValues: Record<string, any> = {}
+                if (typeof this.value.defaultValues === "object" && this.value.defaultValues !== null) {
+                    defaultValues = this.value.defaultValues
+                }
+                const viewArgs: IUserViewArguments = {
+                    source: {
+                        type: "named",
+                        ref: {
+                            schema: ref.schema,
+                            name: ref.name,
+                        },
+                    },
+                    args,
+                }
+
                 this.getNestedView(viewArgs)
                 return { name: "userview", args: viewArgs, defaultValues }
             }

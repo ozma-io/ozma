@@ -45,7 +45,8 @@
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
     import { Location } from "vue-router"
     import { namespace } from "vuex-class"
-    import { UserViewResult } from "@/state/user_view"
+    import { UserViewResult, printValue, homeSchema } from "@/state/user_view"
+    import { attrToQuery, queryLocation } from "@/state/query"
     import { CurrentChanges, IEntityChanges } from "@/state/staging_changes"
 
     interface IMainMenuButton {
@@ -114,8 +115,8 @@
                     const rowAttrs = row.attributes === undefined ? {} : row.attributes
                     const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
 
-                    const currentCategory = row.values[0].value
-                    const categoryName = String(currentCategory)
+                    const categoryCell = row.values[0]
+                    const categoryName = printValue(categoryColumnInfo.valueType, categoryCell.value)
                     let category: IMainMenuCategory | undefined = categories.get(categoryName)
                     if (category === undefined) {
                         category = {
@@ -126,13 +127,13 @@
                         categories.set(categoryName, category)
                     }
 
-                    const currentButton = row.values[1].value
-                    const buttonName = String(currentButton)
-                    const buttonAttrs = row.values[1].attributes || {}
+                    const buttonCell = row.values[1]
+                    const buttonName = printValue(buttonColumnInfo.valueType, buttonCell.value)
+                    const buttonAttrs = buttonCell.attributes || {}
                     const getButtonAttr = (name: string) => buttonAttrs[name] || rowAttrs[name] || buttonsAttrs[name] || viewAttrs[name]
 
-                    const linkedView = getButtonAttr("LinkedView")
-                    const to = linkedView === undefined ? null : { name: "view", params: { name: String(linkedView) } }
+                    const toQuery = attrToQuery(buttonCell.update, homeSchema(this.uv.args), getButtonAttr("LinkedView"))
+                    const to = toQuery === null ? null : this.$router.resolve(queryLocation(toQuery)).location
 
                     const button = {
                         index: rowI,

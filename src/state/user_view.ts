@@ -11,11 +11,18 @@ import {
     SchemaName, ColumnName, EntityName, RowId, RowIdString, DomainId, FieldName, ValueType,
 } from "@/api"
 
-export type UserViewType = "named" | "anonymous"
+export interface IAnonymousUserView {
+    type: "anonymous"
+    query: string
+}
+
+export interface INamedUserView {
+    type: "named"
+    ref: Api.IUserViewRef
+}
 
 export interface IUserViewArguments {
-    type: UserViewType
-    source: string
+    source: IAnonymousUserView | INamedUserView
     args: Record<string, any> | null
 }
 
@@ -145,8 +152,8 @@ export class UserViewResult {
     }
 
     get name() {
-        if (this.args.type === "named") {
-            return this.args.source
+        if (this.args.source.type === "named") {
+            return this.args.source.ref.name
         } else {
             return "unnamed"
         }
@@ -216,6 +223,14 @@ export interface IUserViewState {
 export const dateFormat = "L"
 export const dateTimeFormat = "L LTS"
 
+export const homeSchema = (args: IUserViewArguments): SchemaName | null => {
+    if (args.source.type === "named") {
+        return args.source.ref.schema
+    } else {
+        return null
+    }
+}
+
 // Should be in sync with staging_changes.validateValue
 export const printValue = (valueType: ValueType, value: any): string => {
     if (value === null) {
@@ -232,7 +247,14 @@ export const printValue = (valueType: ValueType, value: any): string => {
 }
 
 export const userViewHash = (args: IUserViewArguments): string => {
-    const query = [args.type, args.source]
+    let query: string[]
+    if (args.source.type === "anonymous") {
+        query = ["anonymous", args.source.query]
+    } else if (args.source.type === "named") {
+        query = [args.source.ref.schema, args.source.ref.name]
+    } else {
+        throw new Error("Invalid source type")
+    }
     if (args.args === null) {
         query.push("info")
     } else {
@@ -247,33 +269,35 @@ export const userViewHash = (args: IUserViewArguments): string => {
 const getUserView = async ({ dispatch }: ActionContext<IUserViewState, {}>, args: IUserViewArguments): Promise<UserViewResult | UserViewError> => {
     try {
         let current: UserViewResult
-        if (args.type === "named") {
+        if (args.source.type === "named") {
             if (args.args === null) {
                 const res: Api.IViewInfoResult = await dispatch("callProtectedApi", {
                     func: Api.fetchNamedViewInfo,
-                    args: [args.source],
+                    args: [args.source.ref],
                 }, { root: true })
                 await momentLocale
                 current = new UserViewResult(args, res.info, res.pureAttributes, res.pureColumnAttributes, null)
             } else {
                 const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
                     func: Api.fetchNamedView,
-                    args: [args.source, args.args],
+                    args: [args.source.ref, args.args],
                 }, { root: true })
                 await momentLocale
                 current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
             }
-        } else {
+        } else if (args.source.type === "anonymous") {
             if (args.args === null) {
                 throw Error("Getting information about anonymous views is not supported")
             } else {
                 const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
                     func: Api.fetchAnonymousView,
-                    args: [args.source, args.args],
+                    args: [args.source.query, args.args],
                 }, { root: true })
                 await momentLocale
                 current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
             }
+        } else {
+            throw new Error("Invalid source type")
         }
         return current
     } catch (e) {
@@ -350,10 +374,13 @@ const userViewModule: Module<IUserViewState, {}> = {
             const pending: IRef<Promise<Entries>> = {}
             pending.ref = (async () => {
                 try {
-                    const name = `__Summary__${schemaName}__${entityName}`
+                    const ref = {
+                        schema: Api.funappSchema,
+                        name: `Summary-${schemaName}-${entityName}`,
+                    }
                     const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
                         func: Api.fetchNamedView,
-                        args: [name, new URLSearchParams()],
+                        args: [ref, {}],
                     }, { root: true })
                     if (!(schemaName in state.entries && state.entries[schemaName][entityName] === pending.ref)) {
                         throw Error("Pending operation cancelled")

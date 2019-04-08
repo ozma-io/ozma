@@ -10,6 +10,8 @@ export const accountUrl = `${authUrlBase}/account`
 export const authClientId = "funapp"
 export const authClientSecret = (process.env["NODE_ENV"] === "production") ? undefined : "f95ff7a4-5e36-44de-aa43-571f86b21638"
 
+export const funappSchema = "funapp"
+
 interface IAuthRequest {
     username: string
     password: string
@@ -32,6 +34,7 @@ export type EntityName = string
 export type SchemaName = string
 export type ColumnName = string
 export type AttributeName = string
+export type UserViewName = string
 
 export interface IAllowedEntity {
     fields: Record<FieldName, void>
@@ -53,6 +56,11 @@ export interface IEntityRef {
 export interface IFieldRef {
     entity: IEntityRef
     name: FieldName
+}
+
+export interface IUserViewRef {
+    schema: SchemaName
+    name: UserViewName
 }
 
 export type SimpleType = "int" | "decimal" | "string" | "bool" | "datetime" | "date" | "regclass" | "json"
@@ -164,6 +172,27 @@ export interface IViewInfoResult {
     pureColumnAttributes: Array<Record<AttributeName, any>>
 }
 
+export interface IInsertEntityOp {
+    type: "insert"
+    entity: IEntityRef
+    entries: Record<FieldName, any>
+}
+
+export interface IUpdateEntityOp {
+    type: "update"
+    entity: IEntityRef
+    id: number
+    entries: Record<FieldName, any>
+}
+
+export interface IDeleteEntityOp {
+    type: "delete"
+    entity: IEntityRef
+    id: number
+}
+
+export type TransactionOp = IInsertEntityOp | IUpdateEntityOp | IDeleteEntityOp
+
 const fetchFormApi = async (subUrl: string, token: string, method: string, body?: string): Promise<any> => {
     return await Utils.fetchSuccess(`${apiUrl}/${subUrl}`, {
         method,
@@ -212,12 +241,12 @@ export const fetchAnonymousView = async (token: string, query: string, args: Rec
     return await fetchView("anonymous", token, search)
 }
 
-export const fetchNamedView = async (token: string, name: string, args: Record<string, any>): Promise<IViewExprResult> => {
-    return await fetchView(`by_name/${name}`, token, convertArgs(args))
+export const fetchNamedView = async (token: string, ref: IUserViewRef, args: Record<string, any>): Promise<IViewExprResult> => {
+    return await fetchView(`by_name/${ref.schema}/${ref.name}`, token, convertArgs(args))
 }
 
-export const fetchNamedViewInfo = async (token: string, name: string): Promise<IViewInfoResult> => {
-    return await fetchViewInfo(`by_name/${name}`, token, new URLSearchParams())
+export const fetchNamedViewInfo = async (token: string, ref: IUserViewRef): Promise<IViewInfoResult> => {
+    return await fetchViewInfo(`by_name/${ref.schema}/${ref.name}`, token, new URLSearchParams())
 }
 
 const changeEntity = async (path: string, method: string, token: string, ref: IEntityRef, body?: string): Promise<any> => {
@@ -235,4 +264,8 @@ export const updateEntry = async (token: string, ref: IEntityRef, id: number, ar
 
 export const deleteEntry = async (token: string, ref: IEntityRef, id: number): Promise<void> => {
     await changeEntity(`/${id}`, "DELETE", token, ref)
+}
+
+export const runTransaction = async (token: string, ops: TransactionOp[]): Promise<void> => {
+    return await fetchJsonApi("transaction", token, "POST", { operations: ops })
 }

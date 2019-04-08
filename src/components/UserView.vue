@@ -48,6 +48,7 @@
     import { namespace } from "vuex-class"
 
     import seq from "@/sequences"
+    import { funappSchema } from "@/api"
     import { UserViewResult, UserViewError } from "@/state/user_view"
     import { CurrentAuth } from "@/state/auth"
     import { attrToInfoQuery, queryLocation, IQuery } from "@/state/query"
@@ -88,14 +89,20 @@
 
                 actions.push({ name: this.$tc("create"), location: queryLocation(this.createView) })
             }
-            if (this.uv instanceof UserViewResult && this.uv.args.type === "named") {
+            if (this.uv instanceof UserViewResult && this.uv.args.source.type === "named") {
                 const query: IQuery = {
                     search: {},
                     rootViewArgs: {
-                        type: "named",
-                        source: "__UserViewByName",
+                        source: {
+                            type: "named",
+                            ref: {
+                                schema: funappSchema,
+                                name: "UserViewByName",
+                            },
+                        },
                         args: {
-                            name: this.uv.args.source,
+                            schema: this.uv.args.source.ref.schema,
+                            name: this.uv.args.source.ref.name,
                         },
                     },
                 }

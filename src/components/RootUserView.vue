@@ -248,7 +248,10 @@
                 throw Error("Invalid root view arguments")
             }
             const args = this.query.rootViewArgs
-            setHeadTitle(`${args.source} - FunApp`)
+            if (args.source.type !== "named") {
+                throw Error("Anonymous user views are not supported")
+            }
+            setHeadTitle(`${args.source.ref.name} - FunApp`)
             this.getRootView(args)
         }
 
