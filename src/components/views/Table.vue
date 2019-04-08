@@ -4,13 +4,15 @@
             "clear": "Clear",
             "yes": "Yes",
             "no": "No",
-            "export_to_csv": "Export to .csv"
+            "export_to_csv": "Export to .csv",
+            "remove_selected_rows" : "Remove selected rows"
         },
         "ru": {
             "clear": "Очистить",
             "yes": "Да",
             "no": "Нет",
-            "export_to_csv": "Экспорт в .csv"
+            "export_to_csv": "Экспорт в .csv",
+            "remove_selected_rows" : "Удалить выбранные записи"
         }
     }
 </i18n>
@@ -143,6 +145,7 @@
     })
     export default class UserViewTable extends Vue {
         @staging.State("current") changes!: CurrentChanges
+        @staging.Action("deleteEntry") deleteEntry!: (args: { schema: string, entity: string, id: number }) => void
         @translations.Getter("field") fieldTranslation!: (schema: string, entity: string, field: string, defValue: string) => string
 
         @Prop({ type: UserViewResult }) uv!: UserViewResult
@@ -421,6 +424,27 @@
             return row
         }
 
+        private removeSelectedRows() {
+            if (this.uv.info.mainEntity === null || this.uv.rows === null) {
+                throw new Error("View doesn't have a main entity")
+            }
+            const entity = this.uv.info.mainEntity.entity
+            // tslint:disable-next-line:forin
+            for (const rowI in this.entries) {
+                if (this.entries[rowI].selected) {
+                    const row = this.uv.rows[rowI]
+                    if (row.entityIds === undefined) {
+                        throw new Error("View doesn't have a main entity")
+                    }
+                    this.deleteEntry({
+                        schema: entity.schema,
+                        entity: entity.name,
+                        id: row.entityIds[entity.name],
+                    })
+                }
+            }
+        }
+
         // Apply changes on top of built entries.
         // TODO: make this even more granular, ideally: dynamically bind a watcher to every changed and added entry.
         private applyChanges() {
@@ -554,6 +578,7 @@
 
             this.$emit("update:actions", [
                 { name: this.$tc("export_to_csv"), callback: () => this.export2csv() },
+                { name: this.$tc("remove_selected_rows"), callback: () => this.removeSelectedRows() },
             ])
             this.$emit("update:enableFilter", true)
 
