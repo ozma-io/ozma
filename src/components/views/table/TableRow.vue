@@ -1,8 +1,8 @@
 <template functional>
     <!-- When you change anything here, also make corresponding changes in TableFixedRow! -->
-    <tr :style="props.entry.style" :class="props.entry.selected ? 'selected' : 'none_selected'">
+    <tr :style="props.entry.style" :class="props.selectedRows.indexOf(props.entry.index) !== -1 ? 'selected' : 'none_selected'">
         <td @click="'rowSelected' in listeners && listeners.rowSelected($event)" class="fixed-column checkbox-cells">
-            <input type="checkbox" :checked="props.entry.selected" @click.self.prevent>
+            <input type="checkbox" :checked="props.selectedRows.indexOf(props.entry.index) !== -1" @click.self.prevent>
         </td>
         <td v-if="props.hasRowLinks" class="fixed-column opemform-cells">
             <router-link v-if="props.entry.linkForRow !== null" :to="props.entry.linkForRow">
@@ -69,7 +69,6 @@
         index: number
         cells: ICell[]
         deleted: boolean
-        selected: boolean
         style: Record<string, any>
         linkForRow: Location | null
         attrs: Record<string, any>
@@ -94,6 +93,7 @@
             uv: { type: Object, required: true },
             added: { type: Boolean, default: false },
             hasRowLinks: { type: Boolean, required: true },
+            selectedRows: { type: Array, required: true },
         },
     }
 </script>

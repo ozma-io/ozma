@@ -46,6 +46,7 @@
                                     :columns="columns"
                                     :uv="uv"
                                     added
+                                    :selectedRows="[]"
                                     :hasRowLinks="hasRowLinks"
                                     @cellClicked="cellClicked" />
                             <TableRow :key="`new-${entryI}`"
@@ -53,6 +54,7 @@
                                     :columnIndexes="columnIndexes"
                                     :columns="columns"
                                     :uv="uv"
+                                    :selectedRows="[]"
                                     added
                                     :hasRowLinks="hasRowLinks"
                                     @cellClicked="cellClicked" />
@@ -66,6 +68,7 @@
                                 :columns="columns"
                                 :uv="uv"
                                 :hasRowLinks="hasRowLinks"
+                                :selectedRows="selectedRows"
                                 @rowSelected="rowSelected(rowI, $event)"
                                 @cellClicked="cellClicked" />
                         <TableRow :key="entryI"
@@ -73,6 +76,7 @@
                                 :columnIndexes="columnIndexes"
                                 :columns="columns"
                                 :uv="uv"
+                                :selectedRows="selectedRows"
                                 :hasRowLinks="hasRowLinks"
                                 @rowSelected="rowSelected(rowI, $event)"
                                 @cellClicked="cellClicked" />
@@ -160,7 +164,7 @@
         private entries: IRow[] = []
         private rows: number[] = []
         private showLength: number = 0
-        private selectedRows: number = 0
+        private selectedRows: number[] = []
         private lastSelected: number | null = null
         private printListener: { query: MediaQueryList, queryCallback: (mql: MediaQueryListEvent) => void, printCallback: () => void } | null = null
         private oldCell: ICell | null = null
@@ -342,37 +346,30 @@
         }
 
         private rowSelected(rowI: number, event: MouseEvent) {
-            if (this.lastSelected !== null && event.shiftKey) {
+            const setsSelected = new Set(this.selectedRows)
+
+            if (this.lastSelected !== null && this.lastSelected !== rowI && event.shiftKey) {
                 // Select all rows between current one and the previous selected one.
-                let changedRows = 0
-                const oldEntry = this.entries[this.lastSelected]
+                const func = (setsSelected.has(this.lastSelected)) ? setsSelected.add.bind(setsSelected) : setsSelected.delete.bind(setsSelected)
+
                 if (this.lastSelected < rowI) {
-                    for (let i = this.lastSelected + 1; i <= rowI; i++) {
-                        const entry = this.entries[this.shownRows[i]]
-                        if (entry.selected !== oldEntry.selected) {
-                            changedRows++
-                        }
-                        entry.selected = oldEntry.selected
+                    for (let i = this.lastSelected; i <= rowI; i++) {
+                        func(i)
                     }
                 } else if (this.lastSelected > rowI) {
-                    for (let i = rowI; i <= this.lastSelected - 1; i++) {
-                        const entry = this.entries[this.shownRows[i]]
-                        if (entry.selected !== oldEntry.selected) {
-                            changedRows++
-                        }
-                        entry.selected = oldEntry.selected
+                    for (let i = rowI; i <= this.lastSelected; i++) {
+                        func(i)
                     }
-                } else {
-                    oldEntry.selected = !oldEntry.selected
-                    this.selectedRows += (oldEntry.selected) ? 1 : -1
                 }
-                this.selectedRows += (oldEntry.selected) ? changedRows : -changedRows
             } else {
-                const entry = this.entries[this.shownRows[rowI]]
-                entry.selected = !entry.selected
-                this.selectedRows += (entry.selected) ? 1 : -1
-                this.lastSelected = rowI
+                if (!setsSelected.has(this.shownRows[rowI])) {
+                    setsSelected.add(this.shownRows[rowI])
+                } else {
+                    setsSelected.delete(this.shownRows[rowI])
+                }
+                this.lastSelected = this.shownRows[rowI]
             }
+            this.selectedRows = Array.from(setsSelected)
             this.updateStatusLine()
             return false
         }
@@ -425,7 +422,6 @@
                 cells: newCells,
                 index: rowId,
                 deleted: false,
-                selected: false,
                 style: {},
                 linkForRow: null,
                 attrs: {},
@@ -440,18 +436,16 @@
             }
             const entity = this.uv.info.mainEntity.entity
             // tslint:disable-next-line:forin
-            for (const rowI in this.entries) {
-                if (this.entries[rowI].selected) {
-                    const row = this.uv.rows[rowI]
-                    if (row.entityIds === undefined) {
-                        throw new Error("View doesn't have a main entity")
-                    }
-                    this.deleteEntry({
-                        schema: entity.schema,
-                        entity: entity.name,
-                        id: row.entityIds[entity.name],
-                    })
+            for (const rowI of this.selectedRows) {
+                const row = this.uv.rows[rowI]
+                if (row.entityIds === undefined) {
+                    throw new Error("View doesn't have a main entity")
                 }
+                this.deleteEntry({
+                    schema: entity.schema,
+                    entity: entity.name,
+                    id: row.entityIds[entity.name],
+                })
             }
         }
 
@@ -559,7 +553,7 @@
                     })
                 })
             }
-            this.selectedRows = 0
+            this.selectedRows = []
         }
 
         private created() {
@@ -701,7 +695,6 @@
                         cells,
                         deleted: false,
                         style: rowStyle,
-                        selected: false,
                         linkForRow,
                         attrs: rowAttrs,
                     }
@@ -733,7 +726,7 @@
 
         @Watch("filteredRows")
         private updateStatusLine() {
-            const selected = (this.selectedRows > 0) ? `${this.selectedRows}/` : ""
+            const selected = (this.selectedRows.length > 0) ? `${this.selectedRows.length}/` : ""
             const line = `${selected}${this.filteredRows.length}`
             this.$emit("update:statusLine", line)
         }
