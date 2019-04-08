@@ -353,9 +353,13 @@
                 const func = (setsSelected.has(this.lastSelected)) ? setsSelected.add.bind(setsSelected) : setsSelected.delete.bind(setsSelected)
 
                 if (this.lastSelected < rowI) {
-                    [...Array(rowI - this.lastSelected + 1).keys()].map(i => i + this.lastSelected).forEach(func)
+                    for (let i = this.lastSelected; i <= rowI; i++) {
+                        func(i)
+                    }
                 } else if (this.lastSelected > rowI) {
-                    [...Array(this.lastSelected - rowI + 1).keys()].map(i => i + rowI).forEach(func)
+                    for (let i = rowI; i <= this.lastSelected; i++) {
+                        func(i)
+                    }
                 }
             } else {
                 if (!setsSelected.has(this.shownRows[rowI])) {
