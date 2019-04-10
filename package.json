@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "ace-builds": "^1.4.3",
-    "bootstrap-vue": "^2.0.0-rc.16",
+    "bootstrap-vue": "^2.0.0-rc.18",
     "jwt-decode": "^2.2.0",
     "moment": "^2.24.0",
     "uuid": "^3.3.2",
@@ -20,7 +20,7 @@
     "vue-class-component": "^6.2.0",
     "vue-i18n": "^8.10.0",
     "vue-property-decorator": "^7.3.0",
-    "vue-router": "^3.0.2",
+    "vue-router": "^3.0.3",
     "vuex": "^3.1.0",
     "vuex-class": "^0.3.2"
   },

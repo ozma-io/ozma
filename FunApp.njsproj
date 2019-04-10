@@ -85,7 +85,9 @@
     <TypeScriptCompile Include="src\api.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
+    <TypeScriptCompile Include="src\elements.ts" />
     <TypeScriptCompile Include="src\main.ts" />
+    <TypeScriptCompile Include="src\sequences.ts" />
     <TypeScriptCompile Include="src\shims.d.ts" />
     <TypeScriptCompile Include="src\state\auth.ts">
       <SubType>Code</SubType>
