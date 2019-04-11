@@ -172,8 +172,8 @@
         private newEntries: IRow[] = []
 
         get showEmptyRow() {
-            const style = getComputedStyle(document.body)
-            if (style.getPropertyValue("--ShowEmptyRow").toLowerCase() === "yes") {
+            const value: string | undefined = this.uv.attributes["ShowEmptyRow"]
+            if (value !== undefined && value.toLowerCase() === "true") {
                 return true
             }
             return false
