@@ -68,7 +68,6 @@
                 "DangerBackColor": this.settings.getEntry("DangerBackColor", String, "#f8d7da"),
                 "SuccessBackColor": this.settings.getEntry("SuccessBackColor", String, "#d4edda"),
                 "SelectBorderColor": this.settings.getEntry("SelectBorderColor", String, "blue"),
-                "ShowEmptyRow": this.settings.getEntry("ShowEmptyRow", String, "yes"),
             }
             return Object.entries(values).reduce((currSettings, [name, value]) => {
                 currSettings[`--${name}`] = value
