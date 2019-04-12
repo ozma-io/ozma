@@ -46,6 +46,7 @@
                                     :columns="columns"
                                     :uv="uv"
                                     added
+                                    :tableShow="true"
                                     :selectedRows="[]"
                                     :hasRowLinks="hasRowLinks"
                                     @cellClicked="cellClicked" />
@@ -55,6 +56,7 @@
                                     :columns="columns"
                                     :uv="uv"
                                     :selectedRows="[]"
+                                    :tableShow="true"
                                     added
                                     :hasRowLinks="hasRowLinks"
                                     @cellClicked="cellClicked" />
@@ -69,6 +71,7 @@
                                 :uv="uv"
                                 :hasRowLinks="hasRowLinks"
                                 :selectedRows="selectedRows"
+                                :tableShow="true"
                                 @rowSelected="rowSelected(rowI, $event)"
                                 @cellClicked="cellClicked" />
                         <TableRow :key="entryI"
@@ -78,6 +81,7 @@
                                 :uv="uv"
                                 :selectedRows="selectedRows"
                                 :hasRowLinks="hasRowLinks"
+                                :tableShow="true"
                                 @rowSelected="rowSelected(rowI, $event)"
                                 @cellClicked="cellClicked" />
                     </template>
