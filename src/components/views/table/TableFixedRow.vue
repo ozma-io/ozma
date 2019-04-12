@@ -21,6 +21,7 @@
                             :added="props.added"
                             :update="props.entry.cells[i].update"
                             :type="props.columns[i].columnInfo.valueType"
+                            :tableShow="props.tableShow"
                             autofocus />
                     <template v-else>
                         <router-link v-if="props.entry.cells[i].link !== null" :to="props.entry.cells[i].link">
@@ -59,6 +60,7 @@
             added: { type: Boolean, default: false },
             hasRowLinks: { type: Boolean, required: true },
             selectedRows: { type: Array, required: true },
+            tableShow: { type: Boolean, required: true }, // FIXME solution must been css (form-control does blue border around input)
         },
     }
 </script>
