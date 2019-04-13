@@ -47,7 +47,7 @@
                                     :uv="uv"
                                     added
                                     :tableShow="true"
-                                    :selectedRows="[]"
+                                    :selectedRow="false"
                                     :hasRowLinks="hasRowLinks"
                                     @cellClicked="cellClicked" />
                             <TableRow :key="`new-${entryI}`"
@@ -55,7 +55,7 @@
                                     :columnIndexes="columnIndexes"
                                     :columns="columns"
                                     :uv="uv"
-                                    :selectedRows="[]"
+                                    :selectedRow="false"
                                     :tableShow="true"
                                     added
                                     :hasRowLinks="hasRowLinks"
@@ -70,7 +70,7 @@
                                 :columns="columns"
                                 :uv="uv"
                                 :hasRowLinks="hasRowLinks"
-                                :selectedRows="selectedRows"
+                                :selectedRow="selectedRow(entryI)"
                                 :tableShow="true"
                                 @rowSelected="rowSelected(rowI, $event)"
                                 @cellClicked="cellClicked" />
@@ -79,7 +79,7 @@
                                 :columnIndexes="columnIndexes"
                                 :columns="columns"
                                 :uv="uv"
-                                :selectedRows="selectedRows"
+                                :selectedRow="selectedRow(entryI)"
                                 :hasRowLinks="hasRowLinks"
                                 :tableShow="true"
                                 @rowSelected="rowSelected(rowI, $event)"
@@ -227,6 +227,10 @@
                     width: columnWidth,
                 }
             })
+        }
+
+        private selectedRow(id: number) {
+            return this.selectedRows.indexOf(id) !== -1
         }
 
         get columnIndexes() {
