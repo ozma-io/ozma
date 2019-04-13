@@ -4,7 +4,7 @@
         <td class="fixed-place-td">
             <div class="fix">
                 <div @click="'rowSelected' in listeners && listeners.rowSelected($event)" class="fixed-column">
-                    <input type="checkbox" :checked="props.selectedRows.indexOf(props.entry.index) !== -1" @click.self.prevent>
+                    <input type="checkbox" :checked="props.selectedRow" @click.self.prevent>
                 </div>
                 <div v-if="props.hasRowLinks" class="fixed-column">
                     <router-link v-if="props.entry.linkForRow !== null" :to="props.entry.linkForRow">
@@ -59,7 +59,7 @@
             uv: { type: Object, required: true },
             added: { type: Boolean, default: false },
             hasRowLinks: { type: Boolean, required: true },
-            selectedRows: { type: Array, required: true },
+            selectedRow: { type: Boolean, required: true },
             tableShow: { type: Boolean, required: true }, // FIXME solution must been css (form-control does blue border around input)
         },
     }
