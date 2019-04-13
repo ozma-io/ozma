@@ -42,15 +42,11 @@
     </Content>
     <Content Include="public\favicon.ico" />
     <Content Include="public\index.html" />
-    <Content Include="src\assets\openform.png" />
     <Content Include="src\components\ActionsMenu.vue" />
+    <Content Include="src\components\AuthResponse.vue" />
+    <Content Include="src\components\CodeEditor.vue" />
     <Content Include="src\components\FormControl.vue" />
-    <Content Include="src\components\Login.vue">
-      <SubType>Code</SubType>
-    </Content>
-    <Content Include="src\components\Navigator.vue">
-      <SubType>Code</SubType>
-    </Content>
+    <Content Include="src\components\NotFound.vue" />
     <Content Include="src\components\RootUserView.vue">
       <SubType>Code</SubType>
     </Content>
@@ -60,15 +56,17 @@
     <Content Include="src\components\views\Form.vue">
       <SubType>Code</SubType>
     </Content>
-    <Content Include="src\components\views\form\FormControl.vue" />
     <Content Include="src\components\views\Menu.vue" />
     <Content Include="src\components\views\Table.vue">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="src\components\views\table\TableFixedRow.vue" />
+    <Content Include="src\components\views\table\TableRow.vue" />
     <Content Include="src\styles\style.sass" />
     <Content Include="tsconfig.json" />
     <Content Include="package.json" />
     <Content Include="README.md" />
+    <Content Include="tslint.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="dist\" />
@@ -77,7 +75,7 @@
     <Folder Include="src\assets\" />
     <Folder Include="src\components\" />
     <Folder Include="src\components\views\" />
-    <Folder Include="src\components\views\form\" />
+    <Folder Include="src\components\views\table\" />
     <Folder Include="src\state\" />
     <Folder Include="src\styles\" />
   </ItemGroup>
@@ -87,6 +85,7 @@
     </TypeScriptCompile>
     <TypeScriptCompile Include="src\elements.ts" />
     <TypeScriptCompile Include="src\main.ts" />
+    <TypeScriptCompile Include="src\modules.ts" />
     <TypeScriptCompile Include="src\sequences.ts" />
     <TypeScriptCompile Include="src\shims.d.ts" />
     <TypeScriptCompile Include="src\state\auth.ts">

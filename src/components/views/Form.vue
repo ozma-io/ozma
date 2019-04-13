@@ -38,7 +38,7 @@
                                 :update="entry.fields[fieldInfo.index].update"
                                 :type="fieldInfo.column.valueType"
                                 :locked="locked"
-                                :added="entry.added" />
+                                :added="entry.added"/>
                         </b-form-group>
                     </template>
                 </div>
@@ -196,9 +196,13 @@
             }
             const entity = this.uv.info.mainEntity.entity
             const newFields = this.uv.info.columns.map((info, colI) => {
+                const columnAttrs = this.uv.columnAttributes[colI]
+                const viewAttrs = this.uv.attributes
+                const getColumnAttr = (name: string) => columnAttrs[name] || viewAttrs[name]
+                const defaultAttr = getColumnAttr("DefaultValue")
                 return {
-                    value: undefined,
-                    valueText: "",
+                    value: defaultAttr === undefined ? (info.mainField === null ? undefined : info.mainField.field.defaultValue) : defaultAttr,
+                    valueText: defaultAttr === undefined ? (info.mainField === null ? "" : printValue(info.valueType, info.mainField.field.defaultValue)) : printValue(info.valueType, defaultAttr),
                     attributes: Object.assign({}, this.uv.attributes, this.uv.columnAttributes[colI]),
                     update: info.mainField === null ? null : {
                         field: info.mainField.field,
