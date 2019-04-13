@@ -43,9 +43,9 @@
                 <div class="black_block" onklick>
                     <div></div>
                 </div>
-                <b-form v-if="enableFilter" inline class="find">
+                <b-form v-if="enableFilter" v-on:submit.prevent="submitFilter()" inline class="find">
                     <b-input-group>
-                        <b-form-input v-model="filterString" class="find_in form-control" :value="filterString" :placeholder="$t('search_placeholder')" />
+                        <b-form-input v-model="filterString" :value="filterString" class="find_in form-control" :placeholder="$t('search_placeholder')" />
                         <b-input-group-append>
                             <span v-if="filterString.length > 0" id="searchclear" class="glyphicon glyphicon-remove-circle" @click="filterString = ''">✖</span>
                         </b-input-group-append>
@@ -185,16 +185,35 @@
         }
 
         get filterWords() {
-            return Array.from(new Set(convertToWords(this.filterString)))
+            const value = this.$route.query["search"]
+            if (value !== undefined) {
+                return Array.from(new Set(convertToWords(value.toString())))
+            }
+            return []
         }
 
-        @Watch("$route")
+        // FIXME update when change not query.search
+        @Watch("$route.path")
         private onRouteChanged() {
             this.updateView()
         }
 
+        private submitFilter() {
+            if (this.filterString !== "") {
+                this.$router.push({query: {search: this.filterString}})
+            } else {
+                this.$router.replace({query: {}})
+            }
+        }
+
         private created() {
             document.head.appendChild(this.styleNode)
+
+            // init filterString
+            const value = this.$route.query["search"]
+            if (value !== undefined) {
+                this.filterString = value.toString()
+            }
             this.updateView()
         }
 
