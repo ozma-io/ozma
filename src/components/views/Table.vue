@@ -46,18 +46,16 @@
                                     :columns="columns"
                                     :uv="uv"
                                     added
-                                    :selectedRow="false"
                                     :hasRowLinks="hasRowLinks"
-                                    @cellClicked="cellClicked" />
+                                    @cellClick="cellClick" />
                             <TableRow :key="`new-${entryI}`"
                                     :entry="entry"
                                     :columnIndexes="columnIndexes"
                                     :columns="columns"
                                     :uv="uv"
-                                    :selectedRow="false"
                                     added
                                     :hasRowLinks="hasRowLinks"
-                                    @cellClicked="cellClicked" />
+                                    @cellClick="cellClick" />
                         </template>
                     </template>
                     <template v-for="(entryI, rowI) in shownRows">
@@ -68,18 +66,18 @@
                                 :columns="columns"
                                 :uv="uv"
                                 :hasRowLinks="hasRowLinks"
-                                :selectedRow="selectedRow(entryI)"
-                                @rowSelected="rowSelected(rowI, $event)"
-                                @cellClicked="cellClicked" />
+                                :selected="rowIsSelected(entryI)"
+                                @select="selectRow(rowI, $event)"
+                                @cellClick="cellClick" />
                         <TableRow :key="entryI"
                                 :entry="entries[entryI]"
                                 :columnIndexes="columnIndexes"
                                 :columns="columns"
                                 :uv="uv"
-                                :selectedRow="selectedRow(entryI)"
+                                :selected="rowIsSelected(entryI)"
                                 :hasRowLinks="hasRowLinks"
-                                @rowSelected="rowSelected(rowI, $event)"
-                                @cellClicked="cellClicked" />
+                                @select="selectRow(rowI, $event)"
+                                @cellClick="cellClick" />
                     </template>
                 </tbody>
             </table>
@@ -227,7 +225,7 @@
             })
         }
 
-        private selectedRow(id: number) {
+        private rowIsSelected(id: number) {
             return this.selectedRows.indexOf(id) !== -1
         }
 
@@ -320,7 +318,7 @@
             this.lastSelected = null
         }
 
-        private cellClicked(cell: ICell) {
+        private cellClick(cell: ICell) {
             if (this.clickTimeoutId === null) {
                 this.clickTimeoutId = setTimeout(() => {
                     this.clickTimeoutId = null
@@ -351,7 +349,7 @@
             }
         }
 
-        private rowSelected(rowI: number, event: MouseEvent) {
+        private selectRow(rowI: number, event: MouseEvent) {
             const setsSelected = new Set(this.selectedRows)
 
             if (this.lastSelected !== null && this.lastSelected !== rowI && event.shiftKey) {

@@ -1,8 +1,8 @@
 <template functional>
     <!-- When you change anything here, also make corresponding changes in TableFixedRow! -->
-    <tr :style="props.entry.style" :class="props.selectedRow ? 'selected' : 'none_selected'">
-        <td @click="'rowSelected' in listeners && listeners.rowSelected($event)" class="fixed-column checkbox-cells">
-            <input type="checkbox" :checked="props.selectedRow" @click.self.prevent>
+    <tr :style="props.entry.style" :class="props.selected ? 'selected' : 'none_selected'">
+        <td @click="'select' in listeners && listeners.select($event)" class="fixed-column checkbox-cells">
+            <input type="checkbox" :checked="props.selected">
         </td>
         <td v-if="props.hasRowLinks" class="fixed-column opemform-cells">
             <UserViewLink v-if="props.entry.linkForRow !== null" :uv="props.entry.linkForRow">
@@ -11,7 +11,7 @@
         </td>
         <td v-for="i in props.columnIndexes"
                 :key="i"
-                @click="'cellClicked' in listeners && listeners.cellClicked(props.entry.cells[i], $event)"
+                @click="'cellClick' in listeners && listeners.cellClick(props.entry.cells[i], $event)"
                 :style="props.entry.cells[i].style"
                 :class="[props.columns[i].fixed ? 'fixed-column' : 'none',
                          props.entry.cells[i].selected && props.columns[i].fixed ? 'select_fixed' : 'none',
@@ -94,7 +94,7 @@
             uv: { type: Object, required: true },
             added: { type: Boolean, default: false },
             hasRowLinks: { type: Boolean, required: true },
-            selectedRow: { type: Boolean, required: true },
+            selected: { type: Boolean, default: false },
         },
     }
 </script>
