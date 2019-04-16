@@ -7,9 +7,9 @@
                     <input type="checkbox" :checked="props.selectedRow" @click.self.prevent>
                 </div>
                 <div v-if="props.hasRowLinks" class="fixed-column">
-                    <router-link v-if="props.entry.linkForRow !== null" :to="props.entry.linkForRow">
+                    <UserViewLink v-if="props.entry.linkForRow !== null" :uv="props.entry.linkForRow">
                         ⤢
-                    </router-link>
+                    </UserViewLink>
                 </div>
                 <div v-for="i in props.columnIndexes"
                         :key="i"
@@ -23,7 +23,7 @@
                             :type="props.columns[i].columnInfo.valueType"
                             autofocus />
                     <template v-else>
-                        <router-link v-if="props.entry.cells[i].link !== null" :to="props.entry.cells[i].link">
+                        <UserViewLink v-if="props.entry.cells[i].link !== null" :uv="props.entry.cells[i].link">
                             <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"
                                     :checked="props.entry.cells[i].value"
                                     class="div_checkbox"
@@ -31,7 +31,7 @@
                             <template v-else>
                                 {{ props.entry.cells[i].valueText }}
                             </template>
-                        </router-link>
+                        </UserViewLink>
                         <template v-else>
                             <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"
                                     :checked="props.entry.cells[i].value"

@@ -10,6 +10,7 @@ import * as Modules from "@/modules"
 import { setHeadTitle } from "@/elements"
 
 import UserView from "@/components/UserView.vue"
+import UserViewLink from "@/components/UserViewLink.ts"
 import ActionsMenu from "@/components/ActionsMenu.vue"
 import FormControl from "@/components/FormControl.vue"
 import App from "@/App.vue"
@@ -18,7 +19,8 @@ import authModule from "@/state/auth"
 import settingsModule from "@/state/settings"
 import translationsModule from "@/state/translations"
 import userViewModule from "@/state/user_view"
-import stagingChanges from "@/state/staging_changes"
+import stagingChangesModule from "@/state/staging_changes"
+import queryModule from "@/state/query"
 
 import "@/styles/style.sass"
 
@@ -32,13 +34,15 @@ export const store = new Vuex.Store({
         settings: settingsModule,
         translations: translationsModule,
         userView: userViewModule,
-        staging: stagingChanges,
+        staging: stagingChangesModule,
+        query: queryModule,
     },
 })
 
 Vue.component("UserView", UserView)
 Vue.component("ActionsMenu", ActionsMenu)
 Vue.component("FormControl", FormControl)
+Vue.component("UserViewLink", UserViewLink)
 
 Modules.router.beforeResolve((to, from, next) => {
     // Reset page title

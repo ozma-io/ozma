@@ -95,6 +95,7 @@
     import { CurrentChanges, IEntityChanges, IUpdatedCell } from "@/state/staging_changes"
     import { IExecutedRow, IExecutedValue, ValueType, IResultColumnInfo } from "@/api"
     import { CurrentTranslations } from "@/state/translations"
+    import { IQuery } from "@/state/query"
     import TableRow, { IRow, ICell, IColumn } from "@/components/views/table/TableRow.vue"
     import TableFixedRow from "@/components/views/table/TableFixedRow.vue"
 
@@ -647,7 +648,7 @@
                     const rowAttrs = row.attributes === undefined ? {} : row.attributes
                     const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
 
-                    let linkForRow: Location | null = null
+                    let linkForRow: IQuery | null = null
 
                     const rowStyle: Record<string, any> = {}
                     const rowHeight = Number(getRowAttr("RowHeight"))
@@ -666,18 +667,28 @@
                         const valueText = getValueText(columnInfo.valueType, cellValue)
 
                         const linkedViewAttr = cellValue.update === undefined ? undefined : getCellAttr("LinkedView")
-                        const link =
+                        const link: IQuery | null =
                             linkedViewAttr === undefined ? null : {
-                                name: "view",
-                                params: { "name": String(linkedViewAttr) },
-                                query: { "id": String((cellValue.update as IUpdatableField).id) },
+                                search: {},
+                                rootViewArgs: {
+                                    type: "named",
+                                    source: String(linkedViewAttr),
+                                    args: {
+                                        "id": (cellValue.update as IUpdatableField).id,
+                                    },
+                                },
                             }
                         const linkedViewForRowAttr = cellValue.update === undefined ? undefined : getCellAttr("RowLinkedView")
                         if (linkedViewForRowAttr !== undefined) {
                             linkForRow = {
-                                name: "view",
-                                params: { "name": String(linkedViewForRowAttr) },
-                                query: { "id": String((cellValue.update as IUpdatableField).id) },
+                                search: {},
+                                rootViewArgs: {
+                                    type: "named",
+                                    source: String(linkedViewForRowAttr),
+                                    args: {
+                                        "id": (cellValue.update as IUpdatableField).id,
+                                    },
+                                },
                             }
                         }
 

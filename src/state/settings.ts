@@ -1,6 +1,6 @@
 import { Module } from "vuex"
 
-import { IRef } from "@/utils"
+import { IRef, convertString } from "@/utils"
 import seq from "@/sequences"
 import * as Api from "@/api"
 
@@ -16,23 +16,7 @@ export class CurrentSettings {
         if (ret === undefined) {
             return defValue
         } else {
-            if (constructor === Number as any) {
-                const conv = Number(ret)
-                if (Number.isNaN(conv)) {
-                    return defValue
-                } else {
-                    return conv as any
-                }
-            } else if (constructor === String as any) {
-                return ret as any
-            } else {
-                const conv = constructor(ret)
-                if (conv instanceof constructor) {
-                    return conv
-                } else {
-                    return defValue
-                }
-            }
+            return convertString(ret, constructor, defValue)
         }
     }
 }

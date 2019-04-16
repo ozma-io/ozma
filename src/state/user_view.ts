@@ -184,7 +184,7 @@ export class CurrentUserViews {
     userViews: Record<string, UserViewResult | UserViewError | Promise<UserViewResult>> = {}
 
     get rootView() {
-        const uv = this.userViews[""]
+        const uv = this.userViews["root"]
         if (uv === null || uv instanceof Promise) {
             return null
         } else {
@@ -193,7 +193,7 @@ export class CurrentUserViews {
     }
 
     setUserView(args: IUserViewArguments | null, uv: UserViewResult | UserViewError | Promise<UserViewResult>) {
-        Vue.set(this.userViews, args === null ? "" : userViewHash(args), uv)
+        Vue.set(this.userViews, args === null ? "root" : userViewHash(args), uv)
     }
 
     getUserView(args: IUserViewArguments) {
@@ -229,7 +229,18 @@ export const printValue = (valueType: ValueType, value: any): string => {
     }
 }
 
-const userViewHash = (args: IUserViewArguments) => `${args.type}__${args.source}__${args.args}`
+export const userViewHash = (args: IUserViewArguments): string => {
+    const query = [args.type, args.source]
+    if (args.args === null) {
+        query.push("info")
+    } else {
+        const queryArgs = seq(args.args).map(([name, arg]) => `${name}=${JSON.stringify(arg)}`).toArray()
+        if (queryArgs.length !== 0) {
+            query.push(queryArgs.join(","))
+        }
+    }
+    return query.join(".")
+}
 
 const getUserView = async ({ dispatch }: ActionContext<IUserViewState, {}>, args: IUserViewArguments): Promise<UserViewResult | UserViewError> => {
     try {
@@ -264,7 +275,7 @@ const getUserView = async ({ dispatch }: ActionContext<IUserViewState, {}>, args
                 current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
             }
         }
-        return deepFreeze(current)
+        return current
     } catch (e) {
         if (e instanceof FetchError) {
             if (e.response.status === 403) {

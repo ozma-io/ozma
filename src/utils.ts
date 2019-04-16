@@ -1,4 +1,7 @@
 import moment from "moment"
+import Vue from "vue"
+
+import seq from "@/sequences"
 
 export type Result<A> = A | Error
 
@@ -66,12 +69,12 @@ export const deepFreeze = (o: any) => {
     Object.freeze(o)
 
     Object.getOwnPropertyNames(o).forEach(prop => {
-      if (o.hasOwnProperty(prop)
-      && o[prop] !== null
-      && (typeof o[prop] === "object" || typeof o[prop] === "function")
-      && !Object.isFrozen(o[prop])) {
-        deepFreeze(o[prop])
-      }
+        if (o.hasOwnProperty(prop)
+                && o[prop] !== null
+                && (typeof o[prop] === "object" || typeof o[prop] === "function")
+                && !Object.isFrozen(o[prop])) {
+            deepFreeze(o[prop])
+        }
     })
 
     return o
@@ -81,5 +84,62 @@ export const waitForElement = (e: GlobalEventHandlers) => {
     return new Promise((resolve, reject) => {
         e.onload = resolve
         e.onerror = reject
+    })
+}
+
+export const convertString = <T>(value: string, constructor: (_: string) => T, defValue: T): T => {
+    if (value === "") {
+        return defValue
+    }
+
+    if (constructor === Number as any) {
+        const conv = Number(value)
+        if (Number.isNaN(conv)) {
+            return defValue
+        } else {
+            return conv as any
+        }
+    } else if (constructor === String as any) {
+        return value as any
+    } else {
+        const conv = constructor(value)
+        if (conv instanceof constructor) {
+            return conv
+        } else {
+            return defValue
+        }
+    }
+}
+
+export const updateObject = (to: object, from: object) => {
+    seq(to).forEach(([name, oldValue]) => {
+        if (!(name in from)) {
+            Vue.delete(to, name)
+        }
+    })
+    seq(from).forEach(([name, newValue]) => {
+        if (!(name in to) || to[name] !== newValue) {
+            Vue.set(to, name, newValue)
+        }
+    })
+}
+
+export const deepUpdateObject = (to: object, from: object) => {
+    seq(to).forEach(([name, oldValue]) => {
+        if (!(name in from)) {
+            Vue.delete(to, name)
+        }
+    })
+    seq(from).forEach(([name, newValue]) => {
+        if (!(name in to)) {
+            Vue.set(to, name, newValue)
+        } else {
+            const oldValue = to[name]
+            if (typeof oldValue === "object" && typeof newValue === "object") {
+                deepUpdateObject(oldValue, newValue)
+            } else if (oldValue !== newValue) {
+                to[name] = newValue
+            }
+        }
     })
 }

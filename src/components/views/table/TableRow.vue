@@ -5,9 +5,9 @@
             <input type="checkbox" :checked="props.selectedRow" @click.self.prevent>
         </td>
         <td v-if="props.hasRowLinks" class="fixed-column opemform-cells">
-            <router-link v-if="props.entry.linkForRow !== null" :to="props.entry.linkForRow">
+            <UserViewLink v-if="props.entry.linkForRow !== null" :uv="props.entry.linkForRow">
                 ⤢
-            </router-link>
+            </UserViewLink>
         </td>
         <td v-for="i in props.columnIndexes"
                 :key="i"
@@ -24,7 +24,7 @@
                     :type="props.columns[i].columnInfo.valueType"
                     autofocus />
             <template v-else>
-                <router-link v-if="props.entry.cells[i].link !== null" :to="props.entry.cells[i].link">
+                <UserViewLink v-if="props.entry.cells[i].link !== null" :uv="props.entry.cells[i].link">
                     <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"
                             :checked="props.entry.cells[i].value"
                             class="div_checkbox"
@@ -32,7 +32,7 @@
                     <template v-else>
                         {{ props.entry.cells[i].valueText }}
                     </template>
-                </router-link>
+                </UserViewLink>
                 <template v-else>
                     <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"
                             :checked="props.entry.cells[i].value"
@@ -52,12 +52,13 @@
 
     import { UserViewResult, IUpdatableField } from "@/state/user_view"
     import { IResultColumnInfo } from "@/api"
+    import { IQuery } from "@/state/query"
 
     export interface ICell {
         value: any
         valueText: string
         valueLowerText: string
-        link: Location | null
+        link: IQuery | null
         style: Record<string, any>
         update: IUpdatableField | null
         attrs: Record<string, any>
@@ -70,7 +71,7 @@
         cells: ICell[]
         deleted: boolean
         style: Record<string, any>
-        linkForRow: Location | null
+        linkForRow: IQuery | null
         attrs: Record<string, any>
     }
 

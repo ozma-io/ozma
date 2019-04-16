@@ -1,4 +1,5 @@
 import * as Utils from "@/utils"
+import seq from "@/sequences"
 
 const apiUrl = (process.env["NODE_ENV"] === "production") ? `https://api.${location.hostname}` : `http://${location.hostname}:5000`
 
@@ -197,13 +198,22 @@ const fetchViewInfo = async (path: string, token: string, args: URLSearchParams)
     return await fetchJsonApi(`views/${path}/info?${args}`, token, "GET")
 }
 
-export const fetchAnonymousView = async (token: string, query: string, args: URLSearchParams): Promise<IViewExprResult> => {
-    args.set("__query", query)
-    return await fetchView("anonymous", token, args)
+const convertArgs = (args: Record<string, any>): URLSearchParams => {
+    const params = new URLSearchParams()
+    seq(args).forEach(([name, arg]) => {
+        params.append(name, JSON.stringify(arg))
+    })
+    return params
 }
 
-export const fetchNamedView = async (token: string, name: string, args: URLSearchParams): Promise<IViewExprResult> => {
-    return await fetchView(`by_name/${name}`, token, args)
+export const fetchAnonymousView = async (token: string, query: string, args: Record<string, any>): Promise<IViewExprResult> => {
+    const search = convertArgs(args)
+    search.set("__query", query)
+    return await fetchView("anonymous", token, search)
+}
+
+export const fetchNamedView = async (token: string, name: string, args: Record<string, any>): Promise<IViewExprResult> => {
+    return await fetchView(`by_name/${name}`, token, convertArgs(args))
 }
 
 export const fetchNamedViewInfo = async (token: string, name: string): Promise<IViewInfoResult> => {
@@ -215,12 +225,12 @@ const changeEntity = async (path: string, method: string, token: string, ref: IE
     return await fetchFormApi(`entity/${schema}/${ref.name}${path}`, token, method, body)
 }
 
-export const insertEntry = async (token: string, ref: IEntityRef, args: URLSearchParams): Promise<void> => {
-    return await changeEntity("", "POST", token, ref, args.toString())
+export const insertEntry = async (token: string, ref: IEntityRef, args: Record<string, any>): Promise<void> => {
+    return await changeEntity("", "POST", token, ref, convertArgs(args).toString())
 }
 
-export const updateEntry = async (token: string, ref: IEntityRef, id: number, args: URLSearchParams): Promise<void> => {
-    await changeEntity(`/${id}`, "PUT", token, ref, args.toString())
+export const updateEntry = async (token: string, ref: IEntityRef, id: number, args: Record<string, any>): Promise<void> => {
+    await changeEntity(`/${id}`, "PUT", token, ref, convertArgs(args).toString())
 }
 
 export const deleteEntry = async (token: string, ref: IEntityRef, id: number): Promise<void> => {

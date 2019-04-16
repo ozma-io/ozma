@@ -45,9 +45,9 @@
                 </div>
                 <b-form v-if="enableFilter" v-on:submit.prevent="submitFilter()" inline class="find">
                     <b-input-group>
-                        <b-form-input v-model="filterString" :value="filterString" class="find_in form-control" :placeholder="$t('search_placeholder')" />
-                        <b-input-group-append>
-                            <span v-if="filterString.length > 0" id="searchclear" class="glyphicon glyphicon-remove-circle" @click="filterString = ''">✖</span>
+                        <b-form-input v-model="filterString" class="find_in form-control" :placeholder="$t('search_placeholder')" />
+                        <b-input-group-append v-if="filterString.length > 0">
+                            <span id="searchclear" class="glyphicon glyphicon-remove-circle" @click="filterString = ''">✖</span>
                         </b-input-group-append>
                     </b-input-group>
                 </b-form>
@@ -109,12 +109,14 @@
     import { CurrentTranslations } from "@/state/translations"
     import { CurrentChanges } from "@/state/staging_changes"
     import { IAction } from "@/components/ActionsMenu.vue"
+    import { CurrentQuery, replaceSearch } from "@/state/query"
 
     const auth = namespace("auth")
     const userView = namespace("userView")
     const staging = namespace("staging")
     const settings = namespace("settings")
     const translations = namespace("translations")
+    const query = namespace("query")
 
     const makeWordsRegex = () => {
         // Match words that doesn't start with quotes
@@ -152,6 +154,8 @@
         return words
     }
 
+    const searchParam = "__q"
+
     @Component
     export default class RootUserView extends Vue {
         @auth.Action("logout") logout!: () => Promise<void>
@@ -170,6 +174,8 @@
         @translations.Mutation("clearError") translationsClearError!: () => void
         @settings.State("lastError") settingsLastError!: string | null
         @settings.Mutation("clearError") settingsClearError!: () => void
+        @query.State("current") query!: CurrentQuery
+        @query.Mutation("setRoute") setRoute!: (_: Route) => void
 
         private extraActions: IAction[] = []
         private statusLine: string = ""
@@ -185,7 +191,7 @@
         }
 
         get filterWords() {
-            const value = this.$route.query["search"]
+            const value = this.query.getSearch(null, "q", String, "")
             if (value !== undefined) {
                 return Array.from(new Set(convertToWords(value.toString())))
             }
@@ -193,28 +199,32 @@
         }
 
         // FIXME update when change not query.search
-        @Watch("$route.path")
+        @Watch("$route", { deep: true })
         private onRouteChanged() {
+            this.setRoute(this.$route)
+        }
+
+        @Watch("query.rootViewArgs", { deep: true })
+        private onViewArgsChanged() {
             this.updateView()
         }
 
         private submitFilter() {
-            if (this.filterString !== "") {
-                this.$router.push({query: {search: this.filterString}})
-            } else {
-                this.$router.replace({query: {}})
-            }
+            replaceSearch(null, "q", this.filterString)
+        }
+
+        @Watch("query.search.root")
+        private updateRootParams() {
+            this.updateFilter()
+        }
+
+        private updateFilter() {
+            this.filterString = this.query.getSearch(null, "q", String, "")
         }
 
         private created() {
             document.head.appendChild(this.styleNode)
-
-            // init filterString
-            const value = this.$route.query["search"]
-            if (value !== undefined) {
-                this.filterString = value.toString()
-            }
-            this.updateView()
+            this.setRoute(this.$route)
         }
 
         private destroyed() {
@@ -237,23 +247,12 @@
             this.enableFilter = false
             this.styleNode.innerHTML = ""
 
-            const name = this.$route.params.name
-            setHeadTitle(`${name} - FunApp`)
-
-            switch (this.$route.name) {
-                case "view":
-                    const query = seq(this.$route.query as Record<string, string | string[]>).map<[string, string]>(([argName, values]) => {
-                        const val = Array.isArray(values) ? values[0] : values
-                        return [argName, val]
-                    }).toObject()
-                    this.getRootView({ type: "named", source: name, args: query })
-                    break
-                case "view_create":
-                    this.getRootView({ type: "named", source: name, args: null })
-                    break
-                default:
-                    throw new Error(`Invalid route name: ${this.$route.name}`)
+            if (this.query.rootViewArgs === null) {
+                throw Error("Invalid root view arguments")
             }
+            const args = this.query.rootViewArgs
+            setHeadTitle(`${args.source} - FunApp`)
+            this.getRootView(args)
         }
 
         private submitChangesWithHook() {

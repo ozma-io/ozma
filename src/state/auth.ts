@@ -5,7 +5,7 @@ import jwtDecode from "jwt-decode"
 import { IRef } from "@/utils"
 import * as Api from "@/api"
 import * as Utils from "@/utils"
-import { router } from "@/modules"
+import { router, getQueryValue } from "@/modules"
 
 export class CurrentAuth {
     createdTime: number
@@ -274,16 +274,14 @@ export const authModule: Module<IAuthState, {}> = {
                 dropCurrentAuth()
                 tryExisting = false
 
-                const urlParams = new URLSearchParams(window.location.search)
-                const stateString = urlParams.get("state")
+                const stateString = getQueryValue("state")
                 if (stateString !== null) {
                     const savedState: IOIDCState = JSON.parse(atob(stateString))
                     const nonce = localStorage.getItem(authNonceKey)
                     if (nonce === null || savedState.nonce !== nonce) {
                         commit("setError", "Invalid client nonce")
                     } else {
-                        router.push(savedState.path)
-                        const code = urlParams.get("code")
+                        const code = getQueryValue("code")
                         if (code !== null) {
                             const params: Record<string, string> = {
                                 grant_type: "authorization_code",
@@ -292,10 +290,11 @@ export const authModule: Module<IAuthState, {}> = {
                             }
                             getToken(context, params)
                         } else {
-                            const error = urlParams.get("error")
-                            const errorDescription = urlParams.get("errorDescription")
+                            const error = getQueryValue("error")
+                            const errorDescription = getQueryValue("errorDescription")
                             commit("setError", `Invalid auth response query parameters, error ${error} ${errorDescription}`)
                         }
+                        router.push(savedState.path)
                     }
                 } else {
                     // We get here is redirected from logout.
