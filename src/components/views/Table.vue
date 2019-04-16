@@ -258,9 +258,9 @@
             let contained = true
             const newWords = []
             if (currentFilter.length !== 0) {
-                for (const oldWord of oldFilter) {
+                for (const newWord of currentFilter) {
                     let hasThis = false
-                    for (const newWord of currentFilter) {
+                    for (const oldWord of oldFilter) {
                         if (newWord.startsWith(oldWord)) {
                             hasThis = true
                             newWords.push(newWord)
