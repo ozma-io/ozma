@@ -120,15 +120,23 @@ const queryModule: Module<IQueryState, {}> = {
             search["root"] = rootSearch
             deepUpdateObject(state.current.search, search)
 
-            const reqArgs = seq(route.query).mapMaybe<[string, string]>(([name, value]) => {
-                const strName = String(name)
-                const strValue = routerQueryValue(value)
-                if (!strName.startsWith("__") && strValue !== null) {
-                    return [strName, JSON.parse(strValue)]
-                } else {
-                    return undefined
-                }
-            }).toObject()
+            let reqArgs: Record<string, any> | null
+            if (route.name === "view") {
+                reqArgs = seq(route.query).mapMaybe<[string, string]>(([name, value]) => {
+                    const strName = String(name)
+                    const strValue = routerQueryValue(value)
+                    if (!strName.startsWith("__") && strValue !== null) {
+                        return [strName, JSON.parse(strValue)]
+                    } else {
+                        return undefined
+                    }
+                }).toObject()
+            } else if (route.name === "view_create") {
+                reqArgs = null
+            } else {
+                throw new Error(`Impossible route name: ${route.name}`)
+            }
+
             const userViewArgs: IUserViewArguments = {
                 type: "named",
                 source: String(route.params.name),

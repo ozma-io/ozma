@@ -200,7 +200,9 @@ export default function seq<A>(array: Iterable<A>): Sequence<A>
 export default function seq<K extends string | number | symbol, V>(record: Record<K, V>): Sequence<[K, V]>
 
 export default function seq(value: object): Sequence<any> {
-    if (typeof (value as Iterable<any>)[Symbol.iterator] === "function") {
+    if (value === null) {
+        return new Sequence([][Symbol.iterator]())
+    } else if (typeof (value as Iterable<any>)[Symbol.iterator] === "function") {
         return new Sequence((value as Iterable<any>)[Symbol.iterator]())
     } else {
         const v = value as Record<string, any>

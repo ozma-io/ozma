@@ -125,6 +125,10 @@ export const updateObject = (to: object, from: object) => {
 }
 
 export const deepUpdateObject = (to: object, from: object) => {
+    if (to === null || from === null) {
+        throw new Error("deepUpdateObject: expected two objects")
+    }
+
     seq(to).forEach(([name, oldValue]) => {
         if (!(name in from)) {
             Vue.delete(to, name)
@@ -135,10 +139,10 @@ export const deepUpdateObject = (to: object, from: object) => {
             Vue.set(to, name, newValue)
         } else {
             const oldValue = to[name]
-            if (typeof oldValue === "object" && typeof newValue === "object") {
+            if (typeof oldValue === "object" && oldValue !== null && typeof newValue === "object" && newValue !== null) {
                 deepUpdateObject(oldValue, newValue)
             } else if (oldValue !== newValue) {
-                to[name] = newValue
+                Vue.set(to, name, newValue)
             }
         }
     })
