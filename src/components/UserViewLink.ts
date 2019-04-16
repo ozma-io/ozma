@@ -15,6 +15,20 @@ export default Vue.component("UserViewLink", {
             },
             on: {
                 click: (e: MouseEvent) => {
+                    // Copied from router-link's guardEvent
+                    // don't redirect with control keys
+                    if (e.metaKey || e.altKey || e.ctrlKey || e.shiftKey) {
+                        return
+                    }
+                    // don't redirect when preventDefault called
+                    if (e.defaultPrevented) {
+                        return
+                    }
+                    // don't redirect on right click
+                    if (e.button !== undefined && e.button !== 0) {
+                        return
+                    }
+
                     e.preventDefault()
                     router.push(queryLocation(context.props.uv))
                 },
