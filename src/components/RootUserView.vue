@@ -129,9 +129,9 @@
             [`”`, `”`],
         ]
         // Match fully-quoted words: e.g. `"foo bar"` will match but `"foo"b` or `"foo ` will not
-        const quoteRegexes = quotes.map(([start, end]) => `${start}([^${end}]+)${end}\b`)
+        const quoteRegexes = quotes.map(([start, end]) => `${start}([^${end}]+)${end}(?:\\s|$)`)
         // Match any word
-        const fallbackRegex = `[^\\s]+`
+        const fallbackRegex = `([^\\s]+)`
         const regexes = [wordRegex].concat(quoteRegexes).concat([fallbackRegex])
         const regexesStr = regexes.map(reg => `(?:${reg})`).join("|")
         const fullRegex = `^\\s*(?:${regexesStr})`
