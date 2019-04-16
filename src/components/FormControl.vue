@@ -58,14 +58,14 @@
         -->
         <input v-else-if="inputType.type === 'text'"
                :value="valueText"
-               :class="(tableShow) ? 'none' : 'form-control'"
+               class="form-control"
                @input="updateValue($event.target.value)"
                type="text"
                :disabled="isDisabled"
                :required="!isNullable"
                ref="control" />
         <b-form-input v-else
-                      :class="(tableShow) ? 'none' : 'form-control'"
+                      class="form-control"
                       :value="valueText"
                       @input="updateValue($event)"
                       :type="inputType.type"
@@ -142,7 +142,6 @@
         @Prop({ type: Boolean }) added!: boolean
         @Prop({ type: Object, default: null }) update!: IUpdatableField | null
         @Prop({ type: Boolean, default: false }) autofocus!: boolean
-        @Prop({ type: Boolean, default: false }) tableShow!: boolean // FIXME solution must been css (form-control does blue border around input)
 
         @staging.Action("updateField") updateField!: (args: { schema: string, entity: string, id: number, field: string, fieldType: FieldType, value: any }) => void
         @staging.Action("setAddedField") setAddedField!: (args: { schema: string, entity: string, newId: number, field: string, fieldType: FieldType, value: any }) => void
