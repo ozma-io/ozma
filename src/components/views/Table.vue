@@ -37,26 +37,24 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <template v-if="showEmptyRow">
-                        <template v-for="(entry, entryI) in newEntries">
-                            <TableFixedRow v-if="showFixedRow"
-                                    :key="`fixed-new-${entryI}`"
-                                    :entry="entry"
-                                    :columnIndexes="fixedRowColumnIndexes"
-                                    :columns="columns"
-                                    :uv="uv"
-                                    added
-                                    :hasRowLinks="hasRowLinks"
-                                    @cellClick="cellClick" />
-                            <TableRow :key="`new-${entryI}`"
-                                    :entry="entry"
-                                    :columnIndexes="columnIndexes"
-                                    :columns="columns"
-                                    :uv="uv"
-                                    added
-                                    :hasRowLinks="hasRowLinks"
-                                    @cellClick="cellClick" />
-                        </template>
+                    <template v-for="(entry, entryI) in newEntries">
+                        <TableFixedRow v-if="showFixedRow"
+                                :key="`fixed-new-${entryI}`"
+                                :entry="entry"
+                                :columnIndexes="fixedRowColumnIndexes"
+                                :columns="columns"
+                                :uv="uv"
+                                added
+                                :hasRowLinks="hasRowLinks"
+                                @cellClick="cellClick" />
+                        <TableRow :key="`new-${entryI}`"
+                                :entry="entry"
+                                :columnIndexes="columnIndexes"
+                                :columns="columns"
+                                :uv="uv"
+                                added
+                                :hasRowLinks="hasRowLinks"
+                                @cellClick="cellClick" />
                     </template>
                     <template v-for="(entryI, rowI) in shownRows">
                         <TableFixedRow v-if="showFixedRow"
@@ -512,7 +510,7 @@
                         cell.valueLowerText = ""
                     })
                 }
-                if (this.newEntries.length === 0) {
+                if (this.newEntries.length === 0 && showEmptyRow) {
                     this.newEmptyRow(0)
                 }
             }
