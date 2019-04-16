@@ -173,11 +173,12 @@
         private newEntries: IRow[] = []
 
         get showEmptyRow() {
-            const value: string | undefined = this.uv.attributes["ShowEmptyRow"]
-            if (value !== undefined && value.toLowerCase() === "true") {
-                return true
+            const value = this.uv.attributes["ShowEmptyRow"]
+            if (value !== undefined) {
+                return Boolean(value)
+            } else {
+                return false
             }
-            return false
         }
 
         get hasRowLinks() {
@@ -408,10 +409,11 @@
                 const viewAttrs = this.uv.attributes
                 const getColumnAttr = (name: string) => columnAttrs[name] || viewAttrs[name]
                 const defaultAttr = getColumnAttr("DefaultValue")
+                const value = defaultAttr === undefined ? (info.mainField === null ? undefined : info.mainField.field.defaultValue) : defaultAttr
+                const valueText = printValue(info.valueType, value)
+                const valueLowerText = valueText.toLowerCase()
                 return {
-                    value: defaultAttr === undefined ? (info.mainField === null ? undefined : info.mainField.field.defaultValue) : defaultAttr,
-                    valueText: defaultAttr === undefined ? (info.mainField === null ? "" : printValue(info.valueType, info.mainField.field.defaultValue)) : printValue(info.valueType, defaultAttr) ,
-                    valueLowerText: defaultAttr === undefined ? (info.mainField === null ? "" : printValue(info.valueType, info.mainField.field.defaultValue).toLowerCase()) : printValue(info.valueType, defaultAttr).toLowerCase(),
+                    value, valueText, valueLowerText,
                     link: null,
                     style: {},
                     update: info.mainField === null ? null : {
