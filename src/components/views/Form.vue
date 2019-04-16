@@ -59,7 +59,7 @@
     import { AttributesMap, IMainFieldInfo, IColumnField, IExecutedRow, RowId, FieldType, FieldName, IResultColumnInfo, IExecutedValue } from "@/api"
     import * as Api from "@/api"
     import { IUpdatableField, IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, printValue, IProcessedRow } from "@/state/user_view"
-    import { CurrentChanges, IEntityChanges, IUpdatedCell } from "@/state/staging_changes"
+    import { CurrentChanges, IEntityChanges, IUpdatedCell, convertValue } from "@/state/staging_changes"
     import { CurrentAuth } from "@/state/auth"
     import { IAction } from "@/components/ActionsMenu.vue"
     import FormControl from "@/components/views/form/FormControl.vue"
@@ -199,9 +199,17 @@
                 const columnAttrs = this.uv.columnAttributes[colI]
                 const viewAttrs = this.uv.attributes
                 const getColumnAttr = (name: string) => columnAttrs[name] || viewAttrs[name]
-                const defaultAttr = getColumnAttr("DefaultValue")
-                const value = defaultAttr === undefined ? (info.mainField === null ? undefined : info.mainField.field.defaultValue) : defaultAttr
-                const valueText = printValue(info.valueType, value)
+                let value: any
+                let valueText: string
+                if (info.mainField !== null) {
+                    const defaultAttr = getColumnAttr("DefaultValue")
+                    const defaultValue = convertValue(info.mainField.field.fieldType, defaultAttr)
+                    value = defaultValue !== undefined ? defaultValue : info.mainField.field.defaultValue
+                    valueText = printValue(info.valueType, value)
+                } else {
+                    value = undefined
+                    valueText = ""
+                }
                 return {
                     value, valueText,
                     attributes: Object.assign({}, this.uv.attributes, this.uv.columnAttributes[colI]),
@@ -359,7 +367,6 @@
             const makeForm = (row: IProcessedRow, rowI: number): IForm => {
                 const rowAttrs = row.attributes === undefined ? {} : row.attributes
                 const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
-
                 const fields = this.uv.info.columns.map((columnInfo, i): IField => {
                     const cellValue = row.values[i]
                     const columnAttrs = this.uv.columnAttributes[i]
@@ -369,6 +376,7 @@
 
                     const value = cellValue.value
                     const valueText = printValue(columnInfo.valueType, value)
+
                     const attributes = Object.assign({}, cellAttrs, columnAttrs, rowAttrs, viewAttrs)
                     return {
                         value,

@@ -92,7 +92,7 @@
     import { namespace } from "vuex-class"
     import seq from "@/sequences"
     import { UserViewResult, printValue, IUpdatableField } from "@/state/user_view"
-    import { CurrentChanges, IEntityChanges, IUpdatedCell } from "@/state/staging_changes"
+    import { CurrentChanges, IEntityChanges, IUpdatedCell, convertValue } from "@/state/staging_changes"
     import { IExecutedRow, IExecutedValue, ValueType, IResultColumnInfo } from "@/api"
     import { CurrentTranslations } from "@/state/translations"
     import { IQuery } from "@/state/query"
@@ -177,7 +177,7 @@
             if (value !== undefined) {
                 return Boolean(value)
             } else {
-                return false
+                return true
             }
         }
 
@@ -408,10 +408,20 @@
                 const columnAttrs = this.uv.columnAttributes[colI]
                 const viewAttrs = this.uv.attributes
                 const getColumnAttr = (name: string) => columnAttrs[name] || viewAttrs[name]
-                const defaultAttr = getColumnAttr("DefaultValue")
-                const value = defaultAttr === undefined ? (info.mainField === null ? undefined : info.mainField.field.defaultValue) : defaultAttr
-                const valueText = printValue(info.valueType, value)
-                const valueLowerText = valueText.toLowerCase()
+                let value: any
+                let valueText: string
+                let valueLowerText: string
+                if (info.mainField !== null) {
+                    const defaultAttr = getColumnAttr("DefaultValue")
+                    const defaultValue = convertValue(info.mainField.field.fieldType, defaultAttr)
+                    value = defaultValue !== undefined ? defaultValue : info.mainField.field.defaultValue
+                    valueText = printValue(info.valueType, value)
+                    valueLowerText = valueText.toLowerCase()
+                } else {
+                    value = undefined
+                    valueText = ""
+                    valueLowerText = ""
+                }
                 return {
                     value, valueText, valueLowerText,
                     link: null,

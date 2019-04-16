@@ -176,7 +176,7 @@ const convertArray = (entryType: FieldType, value: any[]): any[] | undefined => 
     }
 }
 
-const convertValue = (fieldType: FieldType, value: any): any => {
+export const convertValue = (fieldType: FieldType, value: any): any => {
     if (value === null || value === "") {
         return null
     } else if (fieldType.type === "string" || fieldType.type === "enum") {
@@ -228,6 +228,12 @@ const convertValue = (fieldType: FieldType, value: any): any => {
         if (Number.isInteger(f)) {
             return f
         } else {
+            return undefined
+        }
+    } else if (fieldType.type === "json") {
+        try {
+            return JSON.parse(value)
+        } catch (e) {
             return undefined
         }
     } else {

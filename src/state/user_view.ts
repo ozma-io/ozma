@@ -224,6 +224,8 @@ export const printValue = (valueType: ValueType, value: any): string => {
         return (value as Moment).format(dateFormat)
     } else if (valueType.type === "datetime") {
         return (value as Moment).format(dateTimeFormat)
+    } else if (valueType.type === "json") {
+        return JSON.stringify(value)
     } else {
         return String(value)
     }
@@ -254,10 +256,9 @@ const getUserView = async ({ dispatch }: ActionContext<IUserViewState, {}>, args
                 await momentLocale
                 current = new UserViewResult(args, res.info, res.pureAttributes, res.pureColumnAttributes, null)
             } else {
-                const urlArgs = new URLSearchParams(args.args)
                 const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
                     func: Api.fetchNamedView,
-                    args: [args.source, urlArgs],
+                    args: [args.source, args.args],
                 }, { root: true })
                 await momentLocale
                 current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)
@@ -266,10 +267,9 @@ const getUserView = async ({ dispatch }: ActionContext<IUserViewState, {}>, args
             if (args.args === null) {
                 throw Error("Getting information about anonymous views is not supported")
             } else {
-                const urlArgs = new URLSearchParams(args.args)
                 const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
                     func: Api.fetchAnonymousView,
-                    args: [args.source, urlArgs],
+                    args: [args.source, args.args],
                 }, { root: true })
                 await momentLocale
                 current = new UserViewResult(args, res.info, res.result.attributes, res.result.columnAttributes, res.result.rows)

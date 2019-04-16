@@ -4,13 +4,15 @@
             "no_value": "(No value)",
             "yes": "Yes",
             "no": "No",
-            "invalid_uv": "Nested user view rows should be arrays with user view name and arguments"
+            "invalid_uv": "Nested user view rows should be JSON objects with 'name' and 'args' defined",
+            "no_uv": "(empty)"
         },
         "ru": {
             "no_value": "(Пусто)",
             "yes": "Да",
             "no": "Нет",
-            "invalid_uv": "Столбцы со вложенными представлениями должны быть массивами с названием и аргументами к представлению"
+            "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с определёнными полями 'name' и 'args'",
+            "no_uv": "(пусто)"
         }
     }
 </i18n>
@@ -25,7 +27,10 @@
             </div>
         </div>
 
-        <b-form-checkbox v-if="inputType.name === 'check'"
+        <template v-if="inputType.name === 'error'">
+            {{ inputType.text }}
+        </template>
+        <b-form-checkbox v-else-if="inputType.name === 'check'"
                          :value="value"
                          @input="updateValue($event)"
                          :disabled="isDisabled"
@@ -188,12 +193,13 @@
         get inputType(): IType {
             const controlAttr = this.attributes["Control"]
             if (controlAttr === "UserView") {
-                if (this.type.type !== "array" || this.type.subtype !== "string") {
+                if (this.value === undefined) {
+                    return { name: "error", text: this.$tc("no_uv") }
+                }
+                if (this.type.type !== "json" || typeof this.value.name !== "string" || typeof this.value.args !== "object") {
                     return { name: "error", text: this.$tc("invalid_uv") }
                 }
-                // FIXME: proper args
-                const queryArgs = seq(new URLSearchParams(location.search)).toObject()
-                const viewArgs: IUserViewArguments = { type: "named", source: this.value[0], args: queryArgs }
+                const viewArgs: IUserViewArguments = { type: "named", source: this.value.name, args: this.value.args }
                 this.getNestedView(viewArgs)
                 return { name: "userview", args: viewArgs }
             }
