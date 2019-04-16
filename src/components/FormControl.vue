@@ -196,10 +196,20 @@
                 if (this.value === undefined) {
                     return { name: "error", text: this.$tc("no_uv") }
                 }
-                if (this.type.type !== "json" || typeof this.value.name !== "string" || typeof this.value.args !== "object") {
+                let viewArgs: IUserViewArguments
+                if (this.type.type === "json") {
+                    if (typeof this.value.name !== "string" || typeof this.value.args !== "object") {
+                        return { name: "error", text: this.$tc("invalid_uv") }
+                    }
+                    viewArgs = { type: "named", source: this.value.name, args: this.value.args }
+                } else if (this.type.type === "string") {
+                    if (this.update === null) {
+                        return { name: "error", text: this.$tc("invalid_uv") }
+                    }
+                    viewArgs = { type: "named", source: this.value.name, args: { id: this.update.id } }
+                } else {
                     return { name: "error", text: this.$tc("invalid_uv") }
                 }
-                const viewArgs: IUserViewArguments = { type: "named", source: this.value.name, args: this.value.args }
                 this.getNestedView(viewArgs)
                 return { name: "userview", args: viewArgs }
             }

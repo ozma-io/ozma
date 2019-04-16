@@ -674,30 +674,44 @@
                         const value = cellValue.value
                         const valueText = getValueText(columnInfo.valueType, cellValue)
 
-                        const linkedViewAttr = cellValue.update === undefined ? undefined : getCellAttr("LinkedView")
-                        const link: IQuery | null =
-                            linkedViewAttr === undefined ? null : {
-                                search: {},
-                                rootViewArgs: {
-                                    type: "named",
-                                    source: String(linkedViewAttr),
-                                    args: {
-                                        "id": (cellValue.update as IUpdatableField).id,
-                                    },
-                                },
+                        const makeLink = (linkedAttr: any): IQuery | null => {
+                            if (typeof linkedAttr === "string") {
+                                if (cellValue.update === undefined) {
+                                    return null
+                                } else {
+                                    return {
+                                        search: {},
+                                        rootViewArgs: {
+                                            type: "named",
+                                            source: linkedAttr,
+                                            args: {
+                                                "id": cellValue.update.id,
+                                            },
+                                        },
+                                    }
+                                }
+                            } else if (typeof linkedAttr === "object" && linkedAttr !== null) {
+                                if (typeof linkedAttr.name !== "string" || typeof linkedAttr.args !== "object") {
+                                    return null
+                                } else {
+                                    return {
+                                        search: {},
+                                        rootViewArgs: {
+                                            type: "named",
+                                            source: linkedAttr.name,
+                                            args: linkedAttr.args,
+                                        },
+                                    }
+                                }
+                            } else {
+                                return null
                             }
-                        const linkedViewForRowAttr = cellValue.update === undefined ? undefined : getCellAttr("RowLinkedView")
-                        if (linkedViewForRowAttr !== undefined) {
-                            linkForRow = {
-                                search: {},
-                                rootViewArgs: {
-                                    type: "named",
-                                    source: String(linkedViewForRowAttr),
-                                    args: {
-                                        "id": (cellValue.update as IUpdatableField).id,
-                                    },
-                                },
-                            }
+                        }
+
+                        const link = makeLink(getCellAttr("LinkedView"))
+                        const currLinkForRow = makeLink(getCellAttr("RowLinkedView"))
+                        if (currLinkForRow !== null) {
+                            linkForRow = currLinkForRow
                         }
 
                         const style: Record<string, any> = {}
