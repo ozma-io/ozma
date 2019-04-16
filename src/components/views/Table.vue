@@ -510,7 +510,7 @@
                         cell.valueLowerText = ""
                     })
                 }
-                if (this.newEntries.length === 0 && showEmptyRow) {
+                if (this.newEntries.length === 0 && this.showEmptyRow) {
                     this.newEmptyRow(0)
                 }
             }
