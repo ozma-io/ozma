@@ -50,7 +50,7 @@
     import seq from "@/sequences"
     import { UserViewResult, UserViewError } from "@/state/user_view"
     import { CurrentAuth } from "@/state/auth"
-    import { attrToInfoQuery, queryLocation } from "@/state/query"
+    import { attrToInfoQuery, queryLocation, IQuery } from "@/state/query"
     import { IAction } from "@/components/ActionsMenu.vue"
 
     const types: string[] = [
@@ -85,12 +85,21 @@
         get actions() {
             const actions: IAction[] = []
             if (this.createView !== null) {
-                const createLocation = { name: "view_create", params: { "name": this.createView } }
+
                 actions.push({ name: this.$tc("create"), location: queryLocation(this.createView) })
             }
             if (this.uv instanceof UserViewResult && this.uv.args.type === "named") {
-                const editLocation = { name: "view", params: { "name": "__UserViewByName" }, query: { "name": this.uv.args.source } }
-                actions.push({ name: this.$tc("edit_view"), location: editLocation })
+                const query: IQuery = {
+                    search: {},
+                    rootViewArgs: {
+                        type: "named",
+                        source: "__UserViewByName",
+                        args: {
+                            name: this.uv.args.source,
+                        },
+                    },
+                }
+                actions.push({ name: this.$tc("edit_view"), location: queryLocation(query) })
             }
             actions.push(...this.extraActions)
             return actions
