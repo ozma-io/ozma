@@ -105,6 +105,7 @@
 
         @Prop({ type: UserViewResult }) uv!: UserViewResult
         @Prop({ type: Boolean, default: false }) isRoot!: boolean
+        @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, any>
 
         // Internal arrays are fields in columns order
         private entries: IForm[] = []
@@ -202,8 +203,13 @@
                 let value: any
                 let valueText: string
                 if (info.mainField !== null) {
-                    const defaultAttr = getColumnAttr("DefaultValue")
-                    const defaultValue = convertValue(info.mainField.field.fieldType, defaultAttr)
+                    let rawValue: any
+                    if (info.mainField.name in this.defaultValues) {
+                        rawValue = this.defaultValues[info.mainField.name]
+                    } else {
+                        rawValue = getColumnAttr("DefaultValue")
+                    }
+                    const defaultValue = convertValue(info.mainField.field.fieldType, rawValue)
                     value = defaultValue !== undefined ? defaultValue : info.mainField.field.defaultValue
                     valueText = printValue(info.valueType, value)
                 } else {

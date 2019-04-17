@@ -56,6 +56,7 @@
                 <UserView :uv="uv"
                           :filter="filterWords"
                           isRoot
+                          :defaultValues="defaultValues"
                           @update:actions="extraActions = $event"
                           @update:statusLine="statusLine = $event"
                           @update:onSubmitStaging="onSubmitStaging = $event"
@@ -109,7 +110,7 @@
     import { CurrentTranslations } from "@/state/translations"
     import { CurrentChanges } from "@/state/staging_changes"
     import { IAction } from "@/components/ActionsMenu.vue"
-    import { CurrentQuery, replaceSearch } from "@/state/query"
+    import { CurrentQuery, replaceSearch, defaultValuePrefix } from "@/state/query"
 
     const auth = namespace("auth")
     const userView = namespace("userView")
@@ -191,7 +192,7 @@
         }
 
         get filterWords() {
-            const value = this.query.getSearch(null, "q", String, "")
+            const value = this.query.getSearch("q", String, "")
             if (value !== undefined) {
                 return Array.from(new Set(convertToWords(value.toString())))
             }
@@ -210,16 +211,12 @@
         }
 
         private submitFilter() {
-            replaceSearch(null, "q", this.filterString)
+            replaceSearch("q", this.filterString)
         }
 
         @Watch("query.search.root")
         private updateRootParams() {
-            this.updateFilter()
-        }
-
-        private updateFilter() {
-            this.filterString = this.query.getSearch(null, "q", String, "")
+            this.filterString = this.query.getSearch("q", String, "")
         }
 
         private created() {
@@ -289,6 +286,16 @@
                 this.stagingErrors.length > 0 ||
                 !this.changes.isEmpty ||
                 this.statusLine !== ""
+        }
+
+        get defaultValues() {
+            return seq(this.query.search).mapMaybe<[string, any]>(([name, val]) => {
+                if (name.startsWith(defaultValuePrefix)) {
+                    return [name.slice(defaultValuePrefix.length), JSON.parse(val)]
+                } else {
+                    return undefined
+                }
+            }).toObject()
         }
     }
 </script>

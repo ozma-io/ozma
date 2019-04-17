@@ -28,6 +28,7 @@
                 :uv="uv"
                 :isRoot="isRoot"
                 :filter="filter"
+                :defaultValues="defaultValues"
                 @update:actions="extraActions = $event"
                 @update:statusLine="$emit('update:statusLine', $event)"
                 @update:onSubmitStaging="$emit('update:onSubmitStaging', $event)"
@@ -49,6 +50,7 @@
     import seq from "@/sequences"
     import { UserViewResult, UserViewError } from "@/state/user_view"
     import { CurrentAuth } from "@/state/auth"
+    import { attrToQuery, queryLocation } from "@/state/query"
     import { IAction } from "@/components/ActionsMenu.vue"
 
     const types: string[] = [
@@ -71,6 +73,7 @@
         @Prop() uv!: UserViewResult | UserViewError | null
         @Prop({ type: Boolean, default: false }) isRoot!: boolean
         @Prop({ type: Array, default: () => [] }) filter!: string[]
+        @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, any>
 
         private extraActions: IAction[] = []
 
@@ -83,9 +86,8 @@
             const actions: IAction[] = []
             if (this.createView !== null) {
                 const createLocation = { name: "view_create", params: { "name": this.createView } }
-                actions.push({ name: this.$tc("create"), location: createLocation })
+                actions.push({ name: this.$tc("create"), location: queryLocation(this.createView) })
             }
-            // FIXME FIXME FIXME
             if (this.uv instanceof UserViewResult && this.uv.args.type === "named") {
                 const editLocation = { name: "view", params: { "name": "__UserViewByName" }, query: { "name": this.uv.args.source } }
                 actions.push({ name: this.$tc("edit_view"), location: editLocation })
@@ -117,8 +119,12 @@
             if (!(this.uv instanceof UserViewResult)) {
                 return null
             } else {
-                const attr = this.uv.attributes["CreateView"]
-                return attr !== undefined ? String(attr) : null
+                const ret = attrToQuery(undefined, this.uv.attributes["CreateView"])
+                if (ret !== null) {
+                    // FIXME: make attrToQuery more flexible instead.
+                    ret.rootViewArgs.args = null
+                    return ret
+                }
             }
         }
 

@@ -50,6 +50,7 @@
                     ref="control" />
         <UserView v-else-if="inputType.name === 'userview'"
                     :uv="uv"
+                    :defaultValues="inputType.defaultValues"
                     @update:actions="actions = $event"
                     ref="control" />
         <b-form-select v-else-if="inputType.name === 'select'"
@@ -119,6 +120,7 @@
     interface IUserViewType {
         name: "userview"
         args: IUserViewArguments
+        defaultValues: Record<string, any>
     }
 
     interface IErrorType {
@@ -197,9 +199,13 @@
                     return { name: "error", text: this.$tc("no_uv") }
                 }
                 let viewArgs: IUserViewArguments
+                let defaultValues: Record<string, any> = {}
                 if (this.type.type === "json") {
-                    if (typeof this.value.name !== "string" || typeof this.value.args !== "object") {
+                    if (typeof this.value.name !== "string" || typeof this.value.args !== "object" || this.value.args === null) {
                         return { name: "error", text: this.$tc("invalid_uv") }
+                    }
+                    if (typeof this.value.defaultValues === "object" && this.value.defaultValues !== null) {
+                        defaultValues = this.value.defaultValues
                     }
                     viewArgs = { type: "named", source: this.value.name, args: this.value.args }
                 } else if (this.type.type === "string") {
@@ -211,7 +217,7 @@
                     return { name: "error", text: this.$tc("invalid_uv") }
                 }
                 this.getNestedView(viewArgs)
-                return { name: "userview", args: viewArgs }
+                return { name: "userview", args: viewArgs, defaultValues }
             }
 
             if (this.update !== null && this.update.field !== null) {
