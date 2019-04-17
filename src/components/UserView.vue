@@ -50,7 +50,7 @@
     import seq from "@/sequences"
     import { UserViewResult, UserViewError } from "@/state/user_view"
     import { CurrentAuth } from "@/state/auth"
-    import { attrToQuery, queryLocation } from "@/state/query"
+    import { attrToInfoQuery, queryLocation } from "@/state/query"
     import { IAction } from "@/components/ActionsMenu.vue"
 
     const types: string[] = [
@@ -119,14 +119,7 @@
             if (!(this.uv instanceof UserViewResult)) {
                 return null
             } else {
-                const ret = attrToQuery(undefined, this.uv.attributes["CreateView"])
-                if (ret !== null) {
-                    // FIXME: make attrToQuery more flexible instead.
-                    ret.rootViewArgs.args = null
-                    return ret
-                } else {
-                    return null
-                }
+                return attrToInfoQuery(this.uv.attributes["CreateView"])
             }
         }
 

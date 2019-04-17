@@ -57,6 +57,41 @@ export const replaceSearch = (name: string, value: string) => {
 
 export const defaultValuePrefix = "def__"
 
+export const attrToInfoQuery = (linkedAttr: any): IQuery | null => {
+    if (typeof linkedAttr === "string") {
+        return {
+            search: {},
+            rootViewArgs: {
+                type: "named",
+                source: linkedAttr,
+                args: null,
+            },
+        }
+    } else if (typeof linkedAttr === "object" && linkedAttr !== null) {
+        if (typeof linkedAttr.name !== "string") {
+            return null
+        }
+
+        const search: Record<string, string> = {}
+        if (typeof linkedAttr.defaultValues === "object" && linkedAttr.defaultValues !== null) {
+            Object.entries(linkedAttr.defaultValues).forEach(([name, val]) => {
+                search[`${defaultValuePrefix}${name}`] = JSON.stringify(val)
+            })
+        }
+
+        return {
+            search,
+            rootViewArgs: {
+                type: "named",
+                source: linkedAttr.name,
+                args: null,
+            },
+        }
+    } else {
+        return null
+    }
+}
+
 export const attrToQuery = (update: IUpdatableField | undefined, linkedAttr: any): IQuery | null => {
     if (typeof linkedAttr === "string") {
         if (update === undefined) {
