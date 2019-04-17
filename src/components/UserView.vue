@@ -124,6 +124,8 @@
                     // FIXME: make attrToQuery more flexible instead.
                     ret.rootViewArgs.args = null
                     return ret
+                } else {
+                    return null
                 }
             }
         }
