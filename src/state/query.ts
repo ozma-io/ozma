@@ -1,6 +1,7 @@
 import { Module } from "vuex"
 import { RawLocation, Route } from "vue-router"
 
+import { IUserViewRef, SchemaName } from "@/api"
 import { convertString, deepUpdateObject } from "@/utils"
 import seq from "@/sequences"
 import { routerQueryValue, router } from "@/modules"
@@ -30,7 +31,7 @@ export interface IQuery {
 }
 
 export const queryLocation = (query: IQuery): RawLocation => {
-    if (query.rootViewArgs.type !== "named") {
+    if (query.rootViewArgs.source.type !== "named") {
         throw new Error("Unnamed user views aren't supported now")
     }
 
@@ -39,7 +40,7 @@ export const queryLocation = (query: IQuery): RawLocation => {
     const args = searchArgs.append(uvArgs).toObject()
     return {
         name: query.rootViewArgs.args !== null ? "view" : "view_create",
-        params: { name: query.rootViewArgs.source },
+        params: query.rootViewArgs.source.ref as any,
         query: args,
     }
 }
@@ -58,17 +59,14 @@ export const replaceSearch = (name: string, value: string) => {
 export const defaultValuePrefix = "def__"
 
 export const attrToInfoQuery = (linkedAttr: any): IQuery | null => {
-    if (typeof linkedAttr === "string") {
-        return {
-            search: {},
-            rootViewArgs: {
-                type: "named",
-                source: linkedAttr,
-                args: null,
-            },
+    if (typeof linkedAttr === "object" && linkedAttr !== null) {
+        let ref: IUserViewRef
+        if (typeof linkedAttr.ref === "object" && linkedAttr.ref !== null) {
+            ref = linkedAttr.ref
+        } else {
+            ref = linkedAttr
         }
-    } else if (typeof linkedAttr === "object" && linkedAttr !== null) {
-        if (typeof linkedAttr.name !== "string") {
+        if (typeof ref.schema !== "string" || typeof ref.name !== "string") {
             return null
         }
 
@@ -82,8 +80,13 @@ export const attrToInfoQuery = (linkedAttr: any): IQuery | null => {
         return {
             search,
             rootViewArgs: {
-                type: "named",
-                source: linkedAttr.name,
+                source: {
+                    type: "named",
+                    ref: {
+                        schema: ref.schema,
+                        name: ref.name,
+                    },
+                },
                 args: null,
             },
         }
@@ -92,25 +95,26 @@ export const attrToInfoQuery = (linkedAttr: any): IQuery | null => {
     }
 }
 
-export const attrToQuery = (update: IUpdatableField | undefined, linkedAttr: any): IQuery | null => {
-    if (typeof linkedAttr === "string") {
-        if (update === undefined) {
-            return null
+export const attrToQuery = (update: IUpdatableField | undefined, homeSchema: SchemaName | null, linkedAttr: any): IQuery | null => {
+    if (typeof linkedAttr === "object" && linkedAttr !== null) {
+        let ref: IUserViewRef
+        if (typeof linkedAttr.ref === "object" && linkedAttr.ref !== null) {
+            ref = linkedAttr.ref
         } else {
-            return {
-                search: {},
-                rootViewArgs: {
-                    type: "named",
-                    source: linkedAttr,
-                    args: {
-                        "id": update.id,
-                    },
-                },
-            }
+            ref = linkedAttr
         }
-    } else if (typeof linkedAttr === "object" && linkedAttr !== null) {
-        if (typeof linkedAttr.name !== "string") {
+        if (typeof ref.name !== "string") {
             return null
+        }
+        let schema: SchemaName
+        if (typeof ref.schema !== "string") {
+            if (homeSchema === null) {
+                return null
+            } else {
+                schema = homeSchema
+            }
+        } else {
+            schema = ref.schema
         }
 
         let args: Record<string, any> = {}
@@ -131,8 +135,13 @@ export const attrToQuery = (update: IUpdatableField | undefined, linkedAttr: any
         return {
             search,
             rootViewArgs: {
-                type: "named",
-                source: linkedAttr.name,
+                source: {
+                    type: "named",
+                    ref: {
+                        schema: ref.schema,
+                        name: ref.name,
+                    },
+                },
                 args,
             },
         }
@@ -186,8 +195,13 @@ const queryModule: Module<IQueryState, {}> = {
             }
 
             const userViewArgs: IUserViewArguments = {
-                type: "named",
-                source: String(route.params.name),
+                source: {
+                    type: "named",
+                    ref: {
+                        schema: String(route.params.schema),
+                        name: String(route.params.name),
+                    },
+                },
                 args: reqArgs,
             }
             if (state.current.rootViewArgs === null) {

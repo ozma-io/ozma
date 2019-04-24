@@ -72,9 +72,13 @@ const translationsModule: Module<ITranslationsState, {}> = {
             const pending: IRef<Promise<CurrentTranslations>> = {}
             pending.ref = (async () => {
                 try {
+                    const ref = {
+                        schema: Api.funappSchema,
+                        name: "FieldTranslations",
+                    }
                     const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
                         func: Api.fetchNamedView,
-                        args: ["__FieldTranslations", new URLSearchParams()],
+                        args: [ref, {}],
                     }, { root: true })
                     if (state.pending !== pending.ref) {
                         throw Error("Pending operation cancelled")

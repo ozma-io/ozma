@@ -87,11 +87,11 @@
     import { Location } from "vue-router"
     import { namespace } from "vuex-class"
     import seq from "@/sequences"
-    import { UserViewResult, printValue, IUpdatableField } from "@/state/user_view"
+    import { IUpdatableField, UserViewResult, printValue, homeSchema } from "@/state/user_view"
     import { CurrentChanges, IEntityChanges, IUpdatedCell, convertValue } from "@/state/staging_changes"
     import { IExecutedRow, IExecutedValue, ValueType, IResultColumnInfo } from "@/api"
     import { CurrentTranslations } from "@/state/translations"
-    import { IQuery } from "@/state/query"
+    import { IQuery, attrToQuery } from "@/state/query"
     import TableRow, { IRow, ICell, IColumn } from "@/components/views/table/TableRow.vue"
     import TableFixedRow from "@/components/views/table/TableFixedRow.vue"
 
@@ -680,42 +680,8 @@
                         const value = cellValue.value
                         const valueText = getValueText(columnInfo.valueType, cellValue)
 
-                        const makeLink = (linkedAttr: any): IQuery | null => {
-                            if (typeof linkedAttr === "string") {
-                                if (cellValue.update === undefined) {
-                                    return null
-                                } else {
-                                    return {
-                                        search: {},
-                                        rootViewArgs: {
-                                            type: "named",
-                                            source: linkedAttr,
-                                            args: {
-                                                "id": cellValue.update.id,
-                                            },
-                                        },
-                                    }
-                                }
-                            } else if (typeof linkedAttr === "object" && linkedAttr !== null) {
-                                if (typeof linkedAttr.name !== "string" || typeof linkedAttr.args !== "object") {
-                                    return null
-                                } else {
-                                    return {
-                                        search: {},
-                                        rootViewArgs: {
-                                            type: "named",
-                                            source: linkedAttr.name,
-                                            args: linkedAttr.args,
-                                        },
-                                    }
-                                }
-                            } else {
-                                return null
-                            }
-                        }
-
-                        const link = makeLink(getCellAttr("LinkedView"))
-                        const currLinkForRow = makeLink(getCellAttr("RowLinkedView"))
+                        const link = attrToQuery(cellValue.update, homeSchema(this.uv.args), getCellAttr("LinkedView"))
+                        const currLinkForRow = attrToQuery(cellValue.update, homeSchema(this.uv.args), getCellAttr("RowLinkedView"))
                         if (currLinkForRow !== null) {
                             linkForRow = currLinkForRow
                         }

@@ -72,9 +72,13 @@ const settingsModule: Module<ISettingsState, {}> = {
             const pending: IRef<Promise<CurrentSettings>> = {}
             pending.ref = (async () => {
                 try {
+                    const ref = {
+                        schema: Api.funappSchema,
+                        name: "Settings",
+                    }
                     const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
                         func: Api.fetchNamedView,
-                        args: ["__Settings", new URLSearchParams()],
+                        args: [ref, {}],
                     }, { root: true })
                     if (state.pending !== pending.ref) {
                         throw Error("Pending operation cancelled")
