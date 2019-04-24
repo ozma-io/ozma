@@ -279,7 +279,7 @@
         }
 
         get isMainView() {
-            return this.$route.params.name === "Main"
+            return this.$route.params.schema === "user" && this.$route.params.name === "Main"
         }
 
         get bottomBarNeeded() {
