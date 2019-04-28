@@ -554,7 +554,7 @@ form
 				resize: none
 
 			&.form_block
-				@media screen and (orientation: portrait)
+				@media screen and (max-aspect-ratio: 13/9)
 					@media screen and (max-device-width: 480px)
 						width: 100% !important
 						display: block
@@ -581,7 +581,7 @@ div
 				div
 					&.head_menu
 						display: none !important
-			@media screen and (orientation: portrait)
+			@media screen and (max-aspect-ratio: 13/9)
 				@media screen and (max-device-width: 480px)
 					div
 						&.head_menu
