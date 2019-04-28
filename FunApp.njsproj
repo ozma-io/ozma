@@ -65,7 +65,6 @@
     <Content Include="src\styles\style.sass" />
     <Content Include="tsconfig.json" />
     <Content Include="package.json" />
-    <Content Include="README.md" />
     <Content Include="tslint.json" />
   </ItemGroup>
   <ItemGroup>
@@ -83,6 +82,7 @@
     <TypeScriptCompile Include="src\api.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
+    <TypeScriptCompile Include="src\components\UserViewLink.ts" />
     <TypeScriptCompile Include="src\elements.ts" />
     <TypeScriptCompile Include="src\main.ts" />
     <TypeScriptCompile Include="src\modules.ts" />
@@ -91,12 +91,10 @@
     <TypeScriptCompile Include="src\state\auth.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="src\state\main_menu.ts">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="src\state\store.ts">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\state\query.ts" />
+    <TypeScriptCompile Include="src\state\settings.ts" />
+    <TypeScriptCompile Include="src\state\staging_changes.ts" />
+    <TypeScriptCompile Include="src\state\translations.ts" />
     <TypeScriptCompile Include="src\state\user_view.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>

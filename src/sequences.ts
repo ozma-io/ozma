@@ -196,8 +196,11 @@ export class Sequence<A> {
     }
 }
 
+export interface IDictionary<T> { [key: string]: T }
+
 export default function seq<A>(array: Iterable<A>): Sequence<A>
 export default function seq<K extends string | number | symbol, V>(record: Record<K, V>): Sequence<[K, V]>
+export default function seq<V>(record: IDictionary<V>): Sequence<[string, V]>
 
 export default function seq(value: object): Sequence<any> {
     if (value === null) {
