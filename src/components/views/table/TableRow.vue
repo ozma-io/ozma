@@ -78,6 +78,7 @@
     export interface IColumn {
         caption: string
         style: Record<string, any>
+        visible: boolean
         fixed: boolean
         mobileFixed: boolean
         columnInfo: IResultColumnInfo

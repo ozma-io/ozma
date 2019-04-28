@@ -213,8 +213,12 @@
                 const fixedFieldAttr = getColumnAttr("MobileFixed")
                 const fixedField = fixedFieldAttr === undefined ? false : Boolean(fixedFieldAttr)
 
+                const visibleColumnAttr = getColumnAttr("Visible")
+                const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(fixedFieldAttr)
+
                 return {
                     caption, style,
+                    visible: visibleColumn,
                     fixed: fixedColumn,
                     mobileFixed: fixedField,
                     columnInfo,
@@ -229,10 +233,12 @@
         }
 
         get columnIndexes() {
-            const columns = this.columns.map((column, index) => ({ index, fixed: column.fixed }))
+            const columns = this.columns.map((column, index) => ({ index, fixed: column.fixed, visible: column.visible }))
             const fixed = columns.filter(c => c.fixed)
+            const fixedVisible = fixed.filter(c => c.visible)
             const nonFixed = columns.filter(c => !c.fixed)
-            return fixed.concat(nonFixed).map(c => c.index)
+            const visible = nonFixed.filter(c => c.visible)
+            return fixedVisible.concat(visible).map(c => c.index)
         }
 
         get fixedColumnIndexes() {
