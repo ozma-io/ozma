@@ -214,7 +214,7 @@
                 const fixedField = fixedFieldAttr === undefined ? false : Boolean(fixedFieldAttr)
 
                 const visibleColumnAttr = getColumnAttr("Visible")
-                const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(fixedFieldAttr)
+                const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr)
 
                 return {
                     caption, style,
@@ -233,12 +233,10 @@
         }
 
         get columnIndexes() {
-            const columns = this.columns.map((column, index) => ({ index, fixed: column.fixed, visible: column.visible }))
+            const columns = this.columns.map((column, index) => ({ index, fixed: column.fixed, visible: column.visible })).filter(c => c.visible)
             const fixed = columns.filter(c => c.fixed)
-            const fixedVisible = fixed.filter(c => c.visible)
             const nonFixed = columns.filter(c => !c.fixed)
-            const visible = nonFixed.filter(c => c.visible)
-            return fixedVisible.concat(visible).map(c => c.index)
+            return fixed.concat(nonFixed).map(c => c.index)
         }
 
         get fixedColumnIndexes() {
