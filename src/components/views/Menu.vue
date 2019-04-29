@@ -45,6 +45,7 @@
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
     import { Location } from "vue-router"
     import { namespace } from "vuex-class"
+    import { tryDicts } from "@/utils"
     import { UserViewResult, printValue, homeSchema } from "@/state/user_view"
     import { attrToQuery, queryLocation } from "@/state/query"
     import { CurrentChanges, IEntityChanges } from "@/state/staging_changes"
@@ -113,7 +114,7 @@
                 const categories = new Map<string, IMainMenuCategory>()
                 this.rows = this.uv.rows.map((row, rowI) => {
                     const rowAttrs = row.attributes === undefined ? {} : row.attributes
-                    const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
+                    const getRowAttr = (name: string) => tryDicts(name, rowAttrs, viewAttrs)
 
                     const categoryCell = row.values[0]
                     const categoryName = printValue(categoryColumnInfo.valueType, categoryCell.value)
@@ -130,7 +131,7 @@
                     const buttonCell = row.values[1]
                     const buttonName = printValue(buttonColumnInfo.valueType, buttonCell.value)
                     const buttonAttrs = buttonCell.attributes || {}
-                    const getButtonAttr = (name: string) => buttonAttrs[name] || rowAttrs[name] || buttonsAttrs[name] || viewAttrs[name]
+                    const getButtonAttr = (name: string) => tryDicts(name, buttonAttrs, rowAttrs, buttonsAttrs, viewAttrs)
 
                     const toQuery = attrToQuery(buttonCell.update, homeSchema(this.uv.args), getButtonAttr("LinkedView"))
                     const to = toQuery === null ? null : this.$router.resolve(queryLocation(toQuery)).location

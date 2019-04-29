@@ -147,3 +147,12 @@ export const deepUpdateObject = (to: object, from: object) => {
         }
     })
 }
+
+export const tryDicts = <K extends string | number | symbol, V>(key: K, ...dicts: Array<Record<K, V>>): V | undefined => {
+    for (const dict of dicts) {
+        if (key in dict) {
+            return dict[key]
+        }
+    }
+    return undefined
+}

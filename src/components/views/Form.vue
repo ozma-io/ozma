@@ -56,6 +56,7 @@
 <script lang="ts">
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
     import { namespace } from "vuex-class"
+    import { tryDicts } from "@/utils"
     import { AttributesMap, IMainFieldInfo, IColumnField, IExecutedRow, RowId, FieldType, FieldName, IResultColumnInfo, IExecutedValue } from "@/api"
     import * as Api from "@/api"
     import { IUpdatableField, IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, printValue, IProcessedRow } from "@/state/user_view"
@@ -123,7 +124,7 @@
 
             this.uv.info.columns.forEach((columnInfo, i) => {
                 const columnAttrs = this.uv.columnAttributes[i]
-                const getColumnAttr = (name: string) => columnAttrs[name] || viewAttrs[name]
+                const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs)
 
                 let caption: string
                 const captionAttr = getColumnAttr("Caption")
@@ -199,7 +200,7 @@
             const newFields = this.uv.info.columns.map((info, colI) => {
                 const columnAttrs = this.uv.columnAttributes[colI]
                 const viewAttrs = this.uv.attributes
-                const getColumnAttr = (name: string) => columnAttrs[name] || viewAttrs[name]
+                const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs)
                 let value: any
                 let valueText: string
                 if (info.mainField !== null) {
@@ -376,9 +377,8 @@
                 const fields = this.uv.info.columns.map((columnInfo, i): IField => {
                     const cellValue = row.values[i]
                     const columnAttrs = this.uv.columnAttributes[i]
-                    const getColumnAttr = (name: string) => columnAttrs[name] || viewAttrs[name]
                     const cellAttrs = cellValue.attributes === undefined ? {} : cellValue.attributes
-                    const getCellAttr = (name: string) => cellAttrs[name] || rowAttrs[name] || columnAttrs[name] || viewAttrs[name]
+                    const getCellAttr = (name: string) => tryDicts(name, cellAttrs, rowAttrs, columnAttrs, viewAttrs)
 
                     const value = cellValue.value
                     const valueText = printValue(columnInfo.valueType, value)
