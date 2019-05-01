@@ -120,7 +120,7 @@
             const viewAttrs = this.uv.attributes
             // Relative block widths. [0..1]. Each block contains zero or more inputs.
             const blockWidths: number[] = viewAttrs["FormBlockWidths"] || [1]
-            const blocks: IBlockInfo[] = blockWidths.map(width => ({ width, fields: [] }))
+            const blocks: IBlockInfo[] = blockWidths.map(width => ({ width: width * 0.95, fields: [] }))
 
             this.uv.info.columns.forEach((columnInfo, i) => {
                 const columnAttrs = this.uv.columnAttributes[i]
