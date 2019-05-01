@@ -6,12 +6,11 @@ import moment from "moment"
 import seq from "@/sequences"
 import { RowIdString, SchemaName, FieldName, EntityName, FieldType } from "@/api"
 import * as Api from "@/api"
-import { UserViewResult, dateFormat, dateTimeFormat } from "@/state/user_view"
+import { dateFormat, dateTimeFormat } from "@/state/user_view"
 
 export interface IUpdatedCell {
     rawValue: any
     value: any
-    fieldType: FieldType
 }
 
 export type UpdatedCells = Record<FieldName, IUpdatedCell>
@@ -70,8 +69,17 @@ export class CurrentChanges {
     }
 }
 
+export interface IFieldInfo {
+    fieldType: Api.FieldType
+    isNullable: boolean
+}
+
+export type EntityFieldsInfo = Record<FieldName, IFieldInfo>
+export type FieldsInfo = Record<SchemaName, Record<EntityName, EntityFieldsInfo>>
+
 export interface IStagingState {
     current: CurrentChanges
+    fieldsInfo: FieldsInfo
     addedCount: number
     updatedCount: number
     deletedCount: number
@@ -145,7 +153,7 @@ const changesToParams = (changes: UpdatedCells): Record<string, any> => {
 }
 
 const convertArray = (entryType: FieldType, value: any[]): any[] | undefined => {
-    const converted = value.map(entry => convertValue(entryType, entry))
+    const converted = value.map(entry => convertValue({ fieldType: entryType, isNullable: false }, entry))
     if (converted.some(entry => entry === undefined)) {
         return undefined
     } else {
@@ -153,9 +161,9 @@ const convertArray = (entryType: FieldType, value: any[]): any[] | undefined => 
     }
 }
 
-export const convertValue = (fieldType: FieldType, value: any): any => {
+export const convertValue = ({ fieldType, isNullable }: IFieldInfo, value: any): any => {
     if (value === null || value === "") {
-        return null
+        return isNullable ? null : undefined
     } else if (fieldType.type === "string" || fieldType.type === "enum") {
         return typeof value === "string" ? value : undefined
     } else if (fieldType.type === "bool") {
@@ -218,18 +226,38 @@ export const convertValue = (fieldType: FieldType, value: any): any => {
     }
 }
 
-const validateValue = (fieldType: FieldType, value: any): IUpdatedCell => {
+const validateValue = (info: IFieldInfo, value: any): IUpdatedCell => {
     return {
-        fieldType,
         rawValue: value,
-        value: convertValue(fieldType, value),
+        value: convertValue(info, value),
     }
+}
+
+const getFieldInfo = (state: IStagingState, schema: SchemaName, entity: EntityName, field: FieldName): [EntityFieldsInfo, IFieldInfo] => {
+    const schemaInfo = state.fieldsInfo[schema]
+    if (schemaInfo === undefined) {
+        throw new Error(`No schema info for schema ${schema}`)
+    }
+    const entityInfo = schemaInfo[entity]
+    if (entityInfo === undefined) {
+        throw new Error(`No entity info for schema ${schema}.${entity}`)
+    }
+    const fieldInfo = entityInfo[field]
+    if (fieldInfo === undefined) {
+        throw new Error(`No schema info for schema ${schema}`)
+    }
+    return [entityInfo, fieldInfo]
+}
+
+const getEmptyCells = (entityInfo: EntityFieldsInfo): UpdatedCells => {
+    return seq(entityInfo).filter(([name, info]) => !info.isNullable).map<[string, IUpdatedCell]>(([name, info]) => [name, { value: undefined, rawValue: undefined }]).toObject()
 }
 
 const stagingModule: Module<IStagingState, {}> = {
     namespaced: true,
     state: {
         current: new CurrentChanges(),
+        fieldsInfo: {},
         addedCount: 0,
         updatedCount: 0,
         deletedCount: 0,
@@ -277,9 +305,32 @@ const stagingModule: Module<IStagingState, {}> = {
         removeError: (state, errorIndex: number) => {
             state.errors.splice(errorIndex, 1)
         },
-        updateField: (state, { schema, entity, id, field, fieldType, value }: { schema: string, entity: string, id: number, field: string, fieldType: FieldType, value: any }) => {
+        clearFieldsInfo: state => {
+            state.fieldsInfo = {}
+        },
+        addFieldsInfo: (state, fieldsInfo: FieldsInfo) => {
+            Object.entries(fieldsInfo).forEach(([schema, newSchema]) => {
+                Object.entries(newSchema).forEach(([entity, newEntity]) => {
+                    Object.entries(newEntity).forEach(([field, newInfo]) => {
+                        let schemaInfo = state.fieldsInfo[schema]
+                        if (schemaInfo === undefined) {
+                            schemaInfo = {}
+                            state.fieldsInfo[schema] = schemaInfo
+                        }
+                        let oldInfo = schemaInfo[entity]
+                        if (oldInfo === undefined) {
+                            oldInfo = {}
+                            schemaInfo[entity] = oldInfo
+                        }
+                        oldInfo[field] = newInfo
+                    })
+                })
+            })
+        },
+        updateField: (state, { schema, entity, id, field, value }: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => {
             const entityChanges = state.current.getOrCreateChanges(schema, entity)
             let fields = entityChanges.updated[id]
+            const [entityInfo, fieldInfo] = getFieldInfo(state, schema, entity, field)
             if (fields === undefined || fields === null) {
                 fields = {}
                 Vue.set(entityChanges.updated, String(id), fields)
@@ -290,17 +341,19 @@ const stagingModule: Module<IStagingState, {}> = {
                     state.deletedCount -= 1
                 }
             }
-            Vue.set(fields, field, validateValue(fieldType, value))
+            Vue.set(fields, field, validateValue(fieldInfo, value))
             state.touched = true
         },
-        setAddedField: (state, { schema, entity, newId, field, fieldType, value }: { schema: string, entity: string, newId: number, field: string, fieldType: FieldType, value: any }) => {
+        setAddedField: (state, { schema, entity, newId, field, value }: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => {
+            // During submit new entries aren't allowed to be added because this can result in duplicates.
             if (state.currentSubmit !== null) {
                 return
             }
 
             const entityChanges = state.current.getOrCreateChanges(schema, entity)
+            const [entityInfo, fieldInfo] = getFieldInfo(state, schema, entity, field)
             for (let i = entityChanges.added.length; i <= newId; i++) {
-                entityChanges.added.push({})
+                entityChanges.added.push(getEmptyCells(entityInfo))
                 state.addedCount += 1
             }
             let added = entityChanges.added[newId]
@@ -308,10 +361,10 @@ const stagingModule: Module<IStagingState, {}> = {
                 added = {}
                 Vue.set(entityChanges.added, newId, added)
             }
-            Vue.set(added, field, validateValue(fieldType, value))
+            Vue.set(added, field, validateValue(fieldInfo, value))
             state.touched = true
         },
-        deleteEntry: (state, { schema, entity, id }: { schema: string, entity: string, id: number }) => {
+        deleteEntry: (state, { schema, entity, id }: { schema: SchemaName, entity: FieldName, id: number }) => {
             const entityChanges = state.current.getOrCreateChanges(schema, entity)
             const deleted = entityChanges.deleted[id]
             if (deleted === undefined || !deleted) {
@@ -325,7 +378,7 @@ const stagingModule: Module<IStagingState, {}> = {
                 state.touched = true
             }
         },
-        resetUpdatedEntry: (state, { schema, entity, id }: { schema: string, entity: string, id: number }) => {
+        resetUpdatedEntry: (state, { schema, entity, id }: { schema: SchemaName, entity: EntityName, id: number }) => {
             const entityChanges = state.current.getOrCreateChanges(schema, entity)
             const fields = entityChanges.updated[id]
             if (fields !== undefined && fields !== null) {
@@ -333,14 +386,14 @@ const stagingModule: Module<IStagingState, {}> = {
                 state.updatedCount -= 1
             }
         },
-        resetAddedEntry: (state, { schema, entity, newId }: { schema: string, entity: string, newId: number }) => {
+        resetAddedEntry: (state, { schema, entity, newId }: { schema: SchemaName, entity: EntityName, newId: number }) => {
             const entityChanges = state.current.getOrCreateChanges(schema, entity)
             if (newId < entityChanges.added.length) {
                 entityChanges.added[newId] = null
                 state.addedCount -= 1
             }
         },
-        resetDeleteEntry: (state, { schema, entity, id }: { schema: string, entity: string, id: number }) => {
+        resetDeleteEntry: (state, { schema, entity, id }: { schema: SchemaName, entity: EntityName, id: number }) => {
             const entityChanges = state.current.getOrCreateChanges(schema, entity)
             const deleted = entityChanges.deleted[id]
             if (deleted !== undefined && deleted) {
@@ -350,28 +403,28 @@ const stagingModule: Module<IStagingState, {}> = {
         },
     },
     actions: {
-        updateField: (context, args: { schema: string, entity: string, id: number, field: string, value: any }) => {
+        updateField: (context, args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => {
             context.commit("updateField", args)
             checkCounters(context)
         },
-        setAddedField: (context, args: { schema: string, entity: string, newId: number, field: string, value: any }) => {
+        setAddedField: (context, args: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => {
             context.commit("setAddedField", args)
             checkCounters(context)
         },
-        deleteEntry: (context, args: { schema: string, entity: string, id: number }) => {
+        deleteEntry: (context, args: { schema: SchemaName, entity: EntityName, id: number }) => {
             context.commit("deleteEntry", args)
             checkCounters(context)
         },
         reset,
-        resetUpdatedEntry: (context, args: { schema: string, entity: string, id: number }) => {
+        resetUpdatedEntry: (context, args: { schema: SchemaName, entity: EntityName, id: number }) => {
             context.commit("resetUpdatedEntry", args)
             checkCounters(context)
         },
-        resetAddedEntry: (context, args: { schema: string, entity: string, newId: number }) => {
+        resetAddedEntry: (context, args: { schema: SchemaName, entity: EntityName, newId: number }) => {
             context.commit("resetAddedEntry", args)
             checkCounters(context)
         },
-        resetDeleteEntry: (context, args: { schema: string, entity: string, id: number }) => {
+        resetDeleteEntry: (context, args: { schema: SchemaName, entity: EntityName, id: number }) => {
             context.commit("resetDeleteEntry", args)
             checkCounters(context)
         },
@@ -395,7 +448,7 @@ const stagingModule: Module<IStagingState, {}> = {
                                 type: "update",
                                 entity,
                                 id: Number(updatedIdStr),
-                                entries: changesToParams(updatedFields as Record<string, IUpdatedCell>),
+                                entries: changesToParams(updatedFields as Record<FieldName, IUpdatedCell>),
                             }
                         }) as Api.TransactionOp[]
                     const added =
@@ -405,7 +458,7 @@ const stagingModule: Module<IStagingState, {}> = {
                             return {
                                 type: "insert",
                                 entity,
-                                entries: changesToParams(addedFields as Record<string, IUpdatedCell>),
+                                entries: changesToParams(addedFields as Record<FieldName, IUpdatedCell>),
                             }
                         }) as Api.TransactionOp[]
                     const deleted =

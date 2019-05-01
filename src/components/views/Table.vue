@@ -420,7 +420,7 @@
                     } else {
                         rawValue = getColumnAttr("DefaultValue")
                     }
-                    const defaultValue = convertValue(info.mainField.field.fieldType, rawValue)
+                    const defaultValue = convertValue(info.mainField.field, rawValue)
                     value = defaultValue !== undefined ? defaultValue : info.mainField.field.defaultValue
                     valueText = printValue(info.valueType, value)
                     valueLowerText = valueText.toLowerCase()
