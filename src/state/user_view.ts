@@ -10,6 +10,7 @@ import {
     AttributesMap, IColumnField, IFieldRef, IResultViewInfo, IExecutedRow,
     SchemaName, ColumnName, EntityName, RowId, RowIdString, DomainId, FieldName, ValueType,
 } from "@/api"
+import { FieldsInfo } from "@/state/staging_changes"
 
 export interface IAnonymousUserView {
     type: "anonymous"
@@ -139,7 +140,7 @@ export class UserViewResult {
         }
     }
 
-    mappingForEntity(schemaName: string, entityName: string): IUpdateMapping | null {
+    mappingForEntity(schemaName: SchemaName, entityName: EntityName): IUpdateMapping | null {
         const entities = this.updateMappings[schemaName]
         if (entities === undefined) {
             return null
@@ -317,6 +318,31 @@ const getUserView = async ({ dispatch }: ActionContext<IUserViewState, {}>, args
     }
 }
 
+const getFieldsInfo = (result: UserViewResult): FieldsInfo => {
+    const fieldsInfo: FieldsInfo = {}
+    Object.values(result.info.domains).forEach(domain => {
+        Object.values(domain).forEach(field => {
+            if (field.field !== null) {
+                const schemaName = field.ref.entity.schema
+                const entityName = field.ref.entity.name
+                const fieldName = field.ref.name
+                let schemaInfo = fieldsInfo[schemaName]
+                if (schemaInfo === undefined) {
+                    schemaInfo = {}
+                    fieldsInfo[schemaName] = schemaInfo
+                }
+                let oldInfo = schemaInfo[entityName]
+                if (oldInfo === undefined) {
+                    oldInfo = {}
+                    schemaInfo[entityName] = oldInfo
+                }
+                oldInfo[fieldName] = field.field
+            }
+        })
+    })
+    return fieldsInfo
+}
+
 const userViewModule: Module<IUserViewState, {}> = {
     namespaced: true,
     state: {
@@ -413,6 +439,10 @@ const userViewModule: Module<IUserViewState, {}> = {
                     }
                     commit("clear")
                     commit("setUserView", { args: null, userView: current })
+                    commit("staging/clearFieldsInfo", undefined, { root: true })
+                    if (current instanceof UserViewResult) {
+                        commit("staging/addFieldsInfo", getFieldsInfo(current), { root: true })
+                    }
                 } catch (e) {
                     if (state.pending === pending.ref) {
                         commit("clear")
@@ -445,6 +475,9 @@ const userViewModule: Module<IUserViewState, {}> = {
                         throw Error("Pending operation cancelled")
                     }
                     commit("setUserView", { args, userView: current })
+                    if (current instanceof UserViewResult) {
+                        commit("staging/addFieldsInfo", getFieldsInfo(current), { root: true })
+                    }
                 } catch (e) {
                     if (state.current.userViews[uvHash] === pending.ref) {
                         commit("addError", e.message)

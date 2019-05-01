@@ -86,7 +86,7 @@
     import { namespace } from "vuex-class"
 
     import seq from "@/sequences"
-    import { AttributesMap, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef } from "@/api"
+    import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef } from "@/api"
     import { IAction } from "@/components/ActionsMenu.vue"
     import { IUpdatableField, IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, printValue } from "@/state/user_view"
 
@@ -150,10 +150,10 @@
         @Prop({ type: Object, default: null }) update!: IUpdatableField | null
         @Prop({ type: Boolean, default: false }) autofocus!: boolean
 
-        @staging.Action("updateField") updateField!: (args: { schema: string, entity: string, id: number, field: string, fieldType: FieldType, value: any }) => void
-        @staging.Action("setAddedField") setAddedField!: (args: { schema: string, entity: string, newId: number, field: string, fieldType: FieldType, value: any }) => void
+        @staging.Action("updateField") updateField!: (args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => void
+        @staging.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => void
         @userView.State("entries") entriesMap!: EntriesMap
-        @userView.Action("getEntries") getEntries!: (_: { schemaName: string, entityName: string }) => Promise<void>
+        @userView.Action("getEntries") getEntries!: (_: { schemaName: SchemaName, entityName: EntityName }) => Promise<void>
         @userView.State("current") userViews!: CurrentUserViews
         @userView.Action("getNestedView") getNestedView!: (_: IUserViewArguments) => Promise<void>
 
@@ -312,7 +312,6 @@
                         entity: entity.name,
                         newId: this.update.id,
                         field: this.update.fieldRef.name,
-                        fieldType: this.update.field.fieldType,
                         value: text,
                     })
                 } else {
@@ -321,7 +320,6 @@
                         entity: entity.name,
                         id: this.update.id,
                         field: this.update.fieldRef.name,
-                        fieldType: this.update.field.fieldType,
                         value: text,
                     })
                 }
