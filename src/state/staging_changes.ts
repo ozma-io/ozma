@@ -162,7 +162,7 @@ const convertArray = (entryType: FieldType, value: any[]): any[] | undefined => 
 }
 
 export const convertValue = ({ fieldType, isNullable }: IFieldInfo, value: any): any => {
-    if (value === null || value === "") {
+    if (value === null || value === undefined || value === "") {
         return isNullable ? null : undefined
     } else if (fieldType.type === "string" || fieldType.type === "enum") {
         return typeof value === "string" ? value : undefined
