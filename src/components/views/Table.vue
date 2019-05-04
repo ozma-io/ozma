@@ -444,6 +444,7 @@
                     attrs: {},
                     isEditing: false,
                     selected: false,
+                    errorEvent: false,
                 }
             })
             const row = {
@@ -503,10 +504,12 @@
                                     cell.value = undefined
                                     cell.valueText = ""
                                     cell.valueLowerText = ""
+                                    cell.errorEvent = false
                                 } else {
                                     cell.value = value.value
-                                    cell.valueText = value.rawValue
+                                    cell.valueText = (value.rawValue === undefined) ? "" : value.rawValue
                                     cell.valueLowerText = cell.valueText.toLowerCase()
+                                    cell.errorEvent = value.errorEvent || cell.valueText === ""
                                 }
                             }
                         })
@@ -519,6 +522,7 @@
                         cell.value = undefined
                         cell.valueText = ""
                         cell.valueLowerText = ""
+                        cell.errorEvent = false
                     })
                 }
                 if (this.newEntries.length === 0 && this.showEmptyRow) {
@@ -561,6 +565,7 @@
                                         cell.value = value.value
                                         cell.valueText = printValue(columnInfo.valueType, value)
                                         cell.valueLowerText = cell.valueText.toLowerCase()
+                                        cell.errorEvent = false
                                     })
                                 } else {
                                     Object.entries(fields).forEach(([fieldName, value]) => {
@@ -571,8 +576,9 @@
                                         colIs.forEach(colI => {
                                             const cell = entry.cells[colI]
                                             cell.value = value.value
-                                            cell.valueText = value.rawValue
+                                            cell.valueText = (value.rawValue === undefined) ? "" : value.rawValue
                                             cell.valueLowerText = cell.valueText.toLowerCase()
+                                            cell.errorEvent = value.errorEvent || cell.valueText === ""
                                         })
                                     })
                                 }
@@ -705,6 +711,7 @@
                             attrs: cellAttrs,
                             update: cellValue.update === undefined ? null : cellValue.update,
                             selected: false,
+                            errorEvent: false,
                         }
                     })
 

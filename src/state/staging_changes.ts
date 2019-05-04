@@ -11,6 +11,7 @@ import { dateFormat, dateTimeFormat } from "@/state/user_view"
 export interface IUpdatedCell {
     rawValue: any
     value: any
+    errorEvent: boolean // error after actions
 }
 
 export type UpdatedCells = Record<FieldName, IUpdatedCell>
@@ -140,6 +141,7 @@ const checkCounters = (context: ActionContext<IStagingState, {}>) => {
 const changesToParams = (changes: UpdatedCells): Record<string, any> => {
     return seq(changes).map<[string, any]>(([name, change]) => {
         if (change.value === undefined) {
+            change.errorEvent = true
             throw new Error("Value didn't pass validation")
         }
         let arg
@@ -230,6 +232,7 @@ const validateValue = (info: IFieldInfo, value: any): IUpdatedCell => {
     return {
         rawValue: value,
         value: convertValue(info, value),
+        errorEvent: false,
     }
 }
 
@@ -250,7 +253,7 @@ const getFieldInfo = (state: IStagingState, schema: SchemaName, entity: EntityNa
 }
 
 const getEmptyCells = (entityInfo: EntityFieldsInfo): UpdatedCells => {
-    return seq(entityInfo).filter(([name, info]) => !info.isNullable).map<[string, IUpdatedCell]>(([name, info]) => [name, { value: undefined, rawValue: undefined }]).toObject()
+    return seq(entityInfo).filter(([name, info]) => !info.isNullable).map<[string, IUpdatedCell]>(([name, info]) => [name, { value: undefined, rawValue: undefined, errorEvent: false }]).toObject()
 }
 
 const stagingModule: Module<IStagingState, {}> = {
