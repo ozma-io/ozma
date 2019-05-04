@@ -15,7 +15,8 @@
                 :style="props.entry.cells[i].style"
                 :class="[props.columns[i].fixed ? 'fixed-column' : 'none',
                          props.entry.cells[i].selected && props.columns[i].fixed ? 'select_fixed' : 'none',
-                         props.entry.cells[i].selected && !props.columns[i].fixed ? 'select' : 'none']">
+                         props.entry.cells[i].selected && !props.columns[i].fixed ? 'select' : 'none',
+                         props.entry.cells[i].errorEvent ? 'error_style' : 'none']">
             <FormControl v-if="props.entry.cells[i].isEditing"
                     :valueText="props.entry.cells[i].valueText"
                     :attributes="Object.assign({}, props.entry.cells[i].attrs, props.entry.attrs, props.columns[i].attrs, props.uv.attributes)"
@@ -64,6 +65,7 @@
         attrs: Record<string, any>
         isEditing: boolean
         selected: boolean /* one click on the cell */
+        errorEvent: boolean /* for error style in the table */
     }
 
     export interface IRow {
