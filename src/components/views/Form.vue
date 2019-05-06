@@ -30,7 +30,7 @@
             <b-form class="view_form">
                 <div v-for="(block, blockI) in blocks" :key="blockI" class="form_block" :style="{ width: `${block.width * 100}%` }">
                     <template v-for="fieldInfo in block.fields" class="form_data">
-                        <b-form-group :key="fieldInfo.column.name" :label-for="fieldInfo.column.name">
+                        <b-form-group v-if="fieldInfo.visible" :key="fieldInfo.column.name" :label-for="fieldInfo.column.name">
                             {{ fieldInfo.caption }}
 
                             <FormControl
@@ -69,6 +69,7 @@
         index: number
         column: IResultColumnInfo
         caption: string
+        visible: boolean
     }
 
     interface IBlockInfo {
@@ -141,11 +142,14 @@
                 const blockAttr = Number(getColumnAttr("FormBlock"))
                 const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr
                 const block = Math.max(0, Math.min(blockNumber, blocks.length - 1))
+                const visibleColumnAttr = getColumnAttr("Visible")
+                const visible = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr)
 
                 const field = {
                     index: i,
                     column: columnInfo,
                     caption,
+                    visible,
                 }
 
                 blocks[block].fields.push(field)
