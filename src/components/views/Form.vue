@@ -234,7 +234,7 @@
                         },
                         id: rowId,
                     },
-                    errorEvent: false
+                    errorEvent: false,
                 }
             })
             const form = {
@@ -401,7 +401,7 @@
                         valueText,
                         attributes,
                         update: cellValue.update === undefined ? null : cellValue.update,
-                        errorEvent: false
+                        errorEvent: false,
                     }
                 })
 
