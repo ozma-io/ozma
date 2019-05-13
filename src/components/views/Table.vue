@@ -401,6 +401,15 @@
             }
         }
 
+        get getHeightRow() {
+            const height = this.uv.attributes["HeightRow"]
+            if (height === undefined) {
+                return 45
+            } else {
+                return Number(height)
+            }
+        }
+
         private newEmptyRow(rowId: number): IRow {
             if (this.uv.info.mainEntity === null) {
                 throw new Error("Main entity cannot be null")
@@ -413,6 +422,8 @@
                 let value: any
                 let valueText: string
                 let valueLowerText: string
+                const style: Record<string, any> = {}
+                style["height"] = `${this.getHeightRow}px`
                 if (info.mainField !== null) {
                     let rawValue: any
                     if (info.mainField.name in this.defaultValues) {
@@ -432,7 +443,7 @@
                 return {
                     value, valueText, valueLowerText,
                     link: null,
-                    style: {},
+                    style,
                     update: info.mainField === null ? null : {
                         field: info.mainField.field,
                         fieldRef: {
@@ -511,6 +522,7 @@
                                     cell.valueLowerText = cell.valueText.toLowerCase()
                                     cell.errorEvent = value.errorEvent || cell.valueText === ""
                                 }
+                                cell.style["height"] = `${this.getHeightRow}px`
                             }
                         })
                     }
@@ -523,6 +535,7 @@
                         cell.valueText = ""
                         cell.valueLowerText = ""
                         cell.errorEvent = false
+                        cell.style["height"] = `${this.getHeightRow}px`
                     })
                 }
                 if (this.newEntries.length === 0 && this.showEmptyRow) {
@@ -566,6 +579,7 @@
                                         cell.valueText = printValue(columnInfo.valueType, value)
                                         cell.valueLowerText = cell.valueText.toLowerCase()
                                         cell.errorEvent = false
+                                        cell.style["height"] = `${this.getHeightRow}px`
                                     })
                                 } else {
                                     Object.entries(fields).forEach(([fieldName, value]) => {
@@ -579,6 +593,7 @@
                                             cell.valueText = (value.rawValue === undefined) ? "" : value.rawValue
                                             cell.valueLowerText = cell.valueText.toLowerCase()
                                             cell.errorEvent = value.errorEvent || cell.valueText === ""
+                                            cell.style["height"] = `${this.getHeightRow}px`
                                         })
                                     })
                                 }
@@ -703,6 +718,7 @@
                         if (cellColor !== undefined) {
                             style["background-color"] = String(cellColor)
                         }
+                        style["height"] = `${this.getHeightRow}px`
 
                         return {
                             value, valueText, link, style,
