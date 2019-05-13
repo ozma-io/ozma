@@ -370,7 +370,7 @@ div
 		table.table tbody + tbody
 			border: 0
 		table
-			margin-bottom: 0px !important;
+			margin-bottom: 0px !important
 			@media screen and (max-device-width: 768px), screen and (orientation: portrait)
 				.checkbox-cells
 					left: auto !important
@@ -441,9 +441,9 @@ div
 						td
 							height: 100%
 				td
-					color: var(--TextTableColor) !important
-					a
+					p,a
 						color: var(--TextTableColor) !important
+
 					@media screen and (max-device-width: 813px), screen and (orientation: portrait)
 						&.fixed-place-td
 							white-space: nowrap
@@ -480,15 +480,29 @@ div
 					padding-left: 3px
 					overflow-wrap: break-word /* перенос по словам */
 					overflow: hidden
-					span
+
+					&.editing_style
+						z-index: 200 !important
+					
+					p
+						overflow: hidden
+						text-overflow: ellipsis
+						padding-bottom: 3px
+						white-space: nowrap
+						padding-right: 4px
+						margin-bottom: 0
+
+					center
+						left: calc(50% - 175px)
+						top: calc(50% - 50px)
+						position: fixed
+						background-color: var(--MenuColor)
+						display: flex
+						align-items: center
+						padding: 20px
 						*
-							padding: 0
-							display: table-cell
-							height: 100%
-							width: calc(100% - 2px)
-							margin: 0
-							outline: none !important
-							border: none
+							width: 300px
+
 						input:focus
 							border: 0 !important
 							box-shadow: none !important

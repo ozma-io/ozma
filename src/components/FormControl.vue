@@ -18,7 +18,7 @@
 </i18n>
 
 <template>
-    <span>
+    <center>
         <div class="nested_menu" v-if="inputType.name === 'userview'">
             <ActionsMenu title="☰"
                          :actions="actions" />
@@ -84,7 +84,7 @@
                       :disabled="isDisabled"
                       :required="!isNullable"
                       ref="control" />
-    </span>
+    </center>
 </template>
 
 <script lang="ts">
