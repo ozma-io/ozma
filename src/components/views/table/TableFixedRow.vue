@@ -22,25 +22,27 @@
                             :update="props.entry.cells[i].update"
                             :type="props.columns[i].columnInfo.valueType"
                             autofocus />
-                    <template v-else>
-                        <UserViewLink v-if="props.entry.cells[i].link !== null" :uv="props.entry.cells[i].link">
-                            <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"
-                                    :checked="props.entry.cells[i].value"
-                                    class="div_checkbox"
-                                    disabled />
+                    <template>
+                        <p>
+                            <UserViewLink v-if="props.entry.cells[i].link !== null" :uv="props.entry.cells[i].link">
+                                <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"
+                                        :checked="props.entry.cells[i].value"
+                                        class="div_checkbox"
+                                        disabled />
+                                <template v-else>
+                                    {{ props.entry.cells[i].valueText }}
+                                </template>
+                            </UserViewLink>
                             <template v-else>
-                                {{ props.entry.cells[i].valueText }}
+                                <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"
+                                        :checked="props.entry.cells[i].value"
+                                        class="div_checkbox"
+                                        disabled />
+                                <template v-else>
+                                    {{ props.entry.cells[i].valueText }}
+                                </template>
                             </template>
-                        </UserViewLink>
-                        <template v-else>
-                            <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"
-                                    :checked="props.entry.cells[i].value"
-                                    class="div_checkbox"
-                                    disabled />
-                            <template v-else>
-                                {{ props.entry.cells[i].valueText }}
-                            </template>
-                        </template>
+                        </p>
                     </template>
                 </div>
             </div>

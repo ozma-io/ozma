@@ -16,7 +16,8 @@
                 :class="[props.columns[i].fixed ? 'fixed-column' : 'none',
                          props.entry.cells[i].selected && props.columns[i].fixed ? 'select_fixed' : 'none',
                          props.entry.cells[i].selected && !props.columns[i].fixed ? 'select' : 'none',
-                         props.entry.cells[i].errorEvent ? 'error_style' : 'none']">
+                         props.entry.cells[i].errorEvent ? 'error_style' : 'none',
+                         props.entry.cells[i].isEditing ? 'editing_style' : 'none']">
             <FormControl v-if="props.entry.cells[i].isEditing"
                     :valueText="props.entry.cells[i].valueText"
                     :attributes="Object.assign({}, props.entry.cells[i].attrs, props.entry.attrs, props.columns[i].attrs, props.uv.attributes)"
@@ -24,25 +25,27 @@
                     :update="props.entry.cells[i].update"
                     :type="props.columns[i].columnInfo.valueType"
                     autofocus />
-            <template v-else>
-                <UserViewLink v-if="props.entry.cells[i].link !== null" :uv="props.entry.cells[i].link">
-                    <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"
-                            :checked="props.entry.cells[i].value"
-                            class="div_checkbox"
-                            disabled />
+            <template>
+                <p>
+                    <UserViewLink v-if="props.entry.cells[i].link !== null" :uv="props.entry.cells[i].link">
+                        <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"
+                                :checked="props.entry.cells[i].value"
+                                class="div_checkbox"
+                                disabled />
+                        <template v-else>
+                            {{ props.entry.cells[i].valueText }}
+                        </template>
+                    </UserViewLink>
                     <template v-else>
-                        {{ props.entry.cells[i].valueText }}
+                        <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"
+                                :checked="props.entry.cells[i].value"
+                                class="div_checkbox"
+                                disabled />
+                        <template v-else>
+                            {{ props.entry.cells[i].valueText }}
+                        </template>
                     </template>
-                </UserViewLink>
-                <template v-else>
-                    <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"
-                            :checked="props.entry.cells[i].value"
-                            class="div_checkbox"
-                            disabled />
-                    <template v-else>
-                        {{ props.entry.cells[i].valueText }}
-                    </template>
-                </template>
+                </p>
             </template>
         </td>
     </tr>
