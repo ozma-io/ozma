@@ -69,6 +69,9 @@
                 "SuccessBackColor": this.settings.getEntry("SuccessBackColor", String, "#d4edda"),
                 "SelectBorderColor": this.settings.getEntry("SelectBorderColor", String, "blue"),
                 "ErrorBackgroudColor": this.settings.getEntry("ErrorBackgroundColor", String, "red"),
+                "TextButtonColor": this.settings.getEntry("TextButtonColor", String, "red"),
+                "TextMenuColor": this.settings.getEntry("TextMenuColor", String, "gray"),
+                "TextTableColor": this.settings.getEntry("TextTableColor", String, "orange"),
             }
             return Object.entries(values).reduce((currSettings, [name, value]) => {
                 currSettings[`--${name}`] = value
