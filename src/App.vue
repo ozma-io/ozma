@@ -68,7 +68,7 @@
                 "DangerBackColor": this.settings.getEntry("DangerBackColor", String, "#f8d7da"),
                 "SuccessBackColor": this.settings.getEntry("SuccessBackColor", String, "#d4edda"),
                 "SelectBorderColor": this.settings.getEntry("SelectBorderColor", String, "blue"),
-                "ErrorBackgroudColor": this.settings.getEntry("ErrorBackgroundColor", String, "red"),
+                "ErrorBackColor": this.settings.getEntry("ErrorBackColor", String, "red"),
                 "TextButtonColor": this.settings.getEntry("TextButtonColor", String, "red"),
                 "TextMenuColor": this.settings.getEntry("TextMenuColor", String, "gray"),
                 "TextTableColor": this.settings.getEntry("TextTableColor", String, "orange"),

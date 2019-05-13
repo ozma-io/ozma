@@ -496,7 +496,7 @@ div
 						&.div_checkbox
 							margin-left: 1px
 					&.error_style
-						background-color: var(--ErrorBackgroudColor)
+						background-color: var(--ErrorBackColor)
 					button
 						&.open_form
 							padding: 0
@@ -551,16 +551,24 @@ form
 		div
 			select
 				border-color: var(--FormBorderColor)
+				&.error-style
+					border-color: var(--ErrorBackColor)
 			input:focus
 				border-color: var(--FormBorderColor)
 				box-shadow: 0 0 0 white
+				&.error-style
+					border-color: var(--ErrorBackColor)
 			input
 				border-color: var(--FormBorderColor)
+				&.error-style
+					border-color: var(--ErrorBackColor)
 			textarea
 				border-color: var(--FormBorderColor)
 				max-width: 98%
 				min-width:
 				resize: none
+				&.error-style
+					border-color: var(--ErrorBackColor)
 
 			&.form_block
 				@media screen and (max-aspect-ratio: 13/9)
