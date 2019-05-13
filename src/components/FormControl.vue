@@ -66,24 +66,25 @@
         <!-- We don't use bootstrap-vue's b-form-input type=text because of problems with Safari
                 https://github.com/bootstrap-vue/bootstrap-vue/issues/1951
         -->
-        <input v-else-if="inputType.type === 'text'"
-               :value="valueText"
-               class="form-control"
-               :class="(errorEvent) ? 'error-style' : 'none'"
-               @input="updateValue($event.target.value)"
-               type="text"
-               :disabled="isDisabled"
-               :required="!isNullable"
-               ref="control" />
-        <b-form-input v-else
-                      class="form-control"
-                      :class="(errorEvent) ? 'error-style' : 'none'"
-                      :value="valueText"
-                      @input="updateValue($event)"
-                      :type="inputType.type"
-                      :disabled="isDisabled"
-                      :required="!isNullable"
-                      ref="control" />
+        <b-form-textarea v-else-if="inputType.type === 'text'"
+                wrap="soft"
+                :value="valueText"
+                :class="(errorEvent) ? 'error-style' : 'none'"
+                @input="updateValue($event)"
+                :disabled="isDisabled"
+                :rows="3"
+                :max-rows="6"
+                :required="!isNullable"
+                ref="control" />
+        <b-form-textarea v-else
+                :value="valueText"
+                :class="(errorEvent) ? 'error-style' : 'none'"
+                @input="updateValue($event)"
+                :disabled="isDisabled"
+                :rows="3"
+                :max-rows="6"
+                :required="!isNullable"
+                ref="control" />
     </center>
 </template>
 
@@ -312,6 +313,10 @@
 
             if (this.valueText !== text) {
                 const entity = this.update.fieldRef.entity
+
+                if (this.inputType.name === "text") {
+                    text = text.replace(/(\r\n|\n|\r)/gm, "")
+                }
 
                 if (this.added) {
                     this.setAddedField({
