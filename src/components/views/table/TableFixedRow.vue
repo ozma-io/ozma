@@ -1,6 +1,6 @@
 <template functional>
     <!-- When you change anything here, also make corresponding changes in TableRow! -->
-    <tr :style="props.entry.style" class="fixed-place-tr">
+    <tr :style="props.entry.style" class="fixed-place-tr none_selected">
         <td class="fixed-place-td">
             <div class="fix">
                 <div @click="'select' in listeners && listeners.select($event)" class="fixed-column">

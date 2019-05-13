@@ -370,6 +370,7 @@ div
 		table.table tbody + tbody
 			border: 0
 		table
+			background-color: var(--TableBackColor)
 			margin-bottom: 0px !important
 			@media screen and (max-device-width: 768px), screen and (orientation: portrait)
 				.checkbox-cells
@@ -485,9 +486,11 @@ div
 						z-index: 200 !important
 					
 					p
+						display: inline-block
 						overflow: hidden
+						width: 100%
 						text-overflow: ellipsis
-						padding-bottom: 3px
+						line-height: normal
 						white-space: nowrap
 						padding-right: 4px
 						margin-bottom: 0
