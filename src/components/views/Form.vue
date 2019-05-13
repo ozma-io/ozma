@@ -38,6 +38,7 @@
                                 :update="entry.fields[fieldInfo.index].update"
                                 :type="fieldInfo.column.valueType"
                                 :locked="locked"
+                                :errorEvent="entry.fields[fieldInfo.index].errorEvent"
                                 :added="entry.added" />
                         </b-form-group>
                     </template>
@@ -82,6 +83,7 @@
         valueText: string
         attributes: AttributesMap
         update: IUpdatableField | null
+        errorEvent: boolean
     }
 
     interface IForm {
@@ -232,6 +234,7 @@
                         },
                         id: rowId,
                     },
+                    errorEvent: false,
                 }
             })
             const form = {
@@ -270,9 +273,11 @@
                                 if (value === undefined) {
                                     cell.value = undefined
                                     cell.valueText = ""
+                                    cell.errorEvent = false
                                 } else {
                                     cell.value = value.value
                                     cell.valueText = value.rawValue
+                                    cell.errorEvent = cell.valueText === undefined || cell.valueText === "" || value.errorEvent
                                 }
                             }
                         })
@@ -284,6 +289,7 @@
                         const cell = row.fields[colI]
                         cell.value = undefined
                         cell.valueText = ""
+                        cell.errorEvent = false
                     })
                 }
                 if (this.newEntries.length === 0 && this.uv.rows === null) {
@@ -326,6 +332,7 @@
                                         const cell = entry.fields[valueI]
                                         cell.value = value.value
                                         cell.valueText = printValue(columnInfo.valueType, value)
+                                        cell.errorEvent = false
                                     })
                                 } else {
                                     Object.entries(fields).forEach(([fieldName, value]) => {
@@ -337,6 +344,7 @@
                                             const cell = entry.fields[colI]
                                             cell.value = value.value
                                             cell.valueText = value.rawValue
+                                            cell.errorEvent = cell.valueText === undefined || cell.valueText === "" || value.errorEvent
                                         })
                                     })
                                 }
@@ -393,6 +401,7 @@
                         valueText,
                         attributes,
                         update: cellValue.update === undefined ? null : cellValue.update,
+                        errorEvent: false,
                     }
                 })
 

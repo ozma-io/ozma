@@ -32,11 +32,13 @@
         </template>
         <b-form-checkbox v-else-if="inputType.name === 'check'"
                          :value="value"
+                         :class="(errorEvent) ? 'error-style' : 'none'"
                          @input="updateValue($event)"
                          :disabled="isDisabled"
                          ref="control" />
         <b-form-textarea v-else-if="inputType.name === 'textarea'"
                          :value="valueText"
+                         :class="(errorEvent) ? 'error-style' : 'none'"
                          @input="updateValue($event)"
                          :disabled="isDisabled"
                          :rows="3"
@@ -45,6 +47,7 @@
                          ref="control" />
         <CodeEditor v-else-if="inputType.name === 'codeeditor'"
                     :content="valueText"
+                    :class="(errorEvent) ? 'error-style' : 'none'"
                     @update:content="updateValue($event)"
                     :readOnly="isDisabled"
                     ref="control" />
@@ -55,6 +58,7 @@
                     ref="control" />
         <b-form-select v-else-if="inputType.name === 'select'"
                        :value="valueText"
+                       :class="(errorEvent) ? 'error-style' : 'none'"
                        @input="updateValue($event)"
                        :disabled="isDisabled"
                        :options="inputType.options"
@@ -65,6 +69,7 @@
         <input v-else-if="inputType.type === 'text'"
                :value="valueText"
                class="form-control"
+               :class="(errorEvent) ? 'error-style' : 'none'"
                @input="updateValue($event.target.value)"
                type="text"
                :disabled="isDisabled"
@@ -72,6 +77,7 @@
                ref="control" />
         <b-form-input v-else
                       class="form-control"
+                      :class="(errorEvent) ? 'error-style' : 'none'"
                       :value="valueText"
                       @input="updateValue($event)"
                       :type="inputType.type"
@@ -149,6 +155,7 @@
         @Prop({ type: Boolean }) added!: boolean
         @Prop({ type: Object, default: null }) update!: IUpdatableField | null
         @Prop({ type: Boolean, default: false }) autofocus!: boolean
+        @Prop({ type: Boolean, default: false }) errorEvent!: boolean
 
         @staging.Action("updateField") updateField!: (args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => void
         @staging.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => void
