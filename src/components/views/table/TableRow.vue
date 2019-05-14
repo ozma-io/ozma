@@ -16,7 +16,7 @@
                 :class="{'fixed-column' : props.columns[i].fixed,
                         'select_fixed' : props.entry.cells[i].selected && props.columns[i].fixed,
                         'select' : props.entry.cells[i].selected && !props.columns[i].fixed,
-                        'error_style' : props.entry.cells[i].errorEvent,
+                        'error_style' : (props.entry.cells[i].isAwaited || props.entry.cells[i].isInvalid),
                         'editing_style' : props.entry.cells[i].isEditing}">
             <FormControl v-if="props.entry.cells[i].isEditing !== null"
                     :valueText="props.entry.cells[i].valueText"
