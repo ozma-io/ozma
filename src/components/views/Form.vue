@@ -235,7 +235,6 @@
                     value = undefined
                     valueText = ""
                 }
-                console.log("valueText", `'${valueText}'`, typeof valueText)
                 return {
                     value, valueText,
                     attributes: Object.assign({}, this.uv.attributes, this.uv.columnAttributes[colI]),
