@@ -563,6 +563,8 @@ div
 		width: 100vw
 form
 	&.view_form
+		border-bottom: 0
+		border-top: 0
 		@media print
 			div
 				&.form_block
@@ -578,7 +580,7 @@ form
 				height: 2.4em !important
 				&.error-style
 					border-color: var(--ErrorBackColor)
-			input:focus
+			*:focus
 				border-color: var(--FormBorderColor)
 				box-shadow: 0 0 0 white
 				&.error-style
