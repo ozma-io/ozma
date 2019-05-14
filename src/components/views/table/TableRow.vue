@@ -18,7 +18,7 @@
                          props.entry.cells[i].selected && !props.columns[i].fixed ? 'select' : 'none',
                          props.entry.cells[i].errorEvent ? 'error_style' : 'none',
                          props.entry.cells[i].isEditing ? 'editing_style' : 'none']">
-            <FormControl v-if="props.entry.cells[i].isEditing"
+            <FormControl v-if="props.entry.cells[i].isEditing !== null"
                     :valueText="props.entry.cells[i].valueText"
                     :attributes="Object.assign({}, props.entry.cells[i].attrs, props.entry.attrs, props.columns[i].attrs, props.uv.attributes)"
                     :added="props.added"
@@ -55,6 +55,7 @@
     import { Location } from "vue-router"
 
     import { UserViewResult, IUpdatableField } from "@/state/user_view"
+    import { AutoSaveLock } from "@/state/staging_changes"
     import { IResultColumnInfo } from "@/api"
     import { IQuery } from "@/state/query"
 
@@ -66,7 +67,7 @@
         style: Record<string, any>
         update: IUpdatableField | null
         attrs: Record<string, any>
-        isEditing: boolean
+        isEditing: AutoSaveLock | null
         selected: boolean /* one click on the cell */
         errorEvent: boolean /* for error style in the table */
     }
