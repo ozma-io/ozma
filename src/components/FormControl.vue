@@ -158,8 +158,8 @@
         @Prop({ type: Boolean, default: false }) autofocus!: boolean
         @Prop({ type: Boolean, default: false }) errorEvent!: boolean
 
-        @staging.Action("updateField") updateField!: (args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => void
-        @staging.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => void
+        @staging.Action("updateField") updateField!: (args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => Promise<void>
+        @staging.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => Promise<void>
         @userView.State("entries") entriesMap!: EntriesMap
         @userView.Action("getEntries") getEntries!: (_: { schemaName: SchemaName, entityName: EntityName }) => Promise<void>
         @userView.State("current") userViews!: CurrentUserViews

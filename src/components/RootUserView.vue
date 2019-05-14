@@ -168,7 +168,7 @@
         @staging.State("current") changes!: CurrentChanges
         @staging.State("currentSubmit") submitPromise!: Promise<void> | null
         @staging.Action("submit") submitChanges!: () => Promise<void>
-        @staging.Action("reset") clearChanges!: () => void
+        @staging.Action("reset") clearChanges!: () => Promise<void>
         @staging.Mutation("removeError") stagingRemoveError!: (errorIndex: number) => void
         @staging.State("errors") stagingErrors!: string[]
         @translations.State("lastError") translationsLastError!: string | null

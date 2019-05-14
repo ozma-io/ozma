@@ -36,7 +36,7 @@
     @Component
     export default class App extends Vue {
         @settings.State("current") settings!: CurrentSettings
-        @auth.Action("startAuth") startAuth!: () => void
+        @auth.Action("startAuth") startAuth!: () => Promise<void>
         @auth.State("current") currentAuth!: CurrentAuth | null
         @auth.State("pending") pendingAuth!: Promise<CurrentAuth> | null
         @auth.State("lastError") authLastError!: string | null

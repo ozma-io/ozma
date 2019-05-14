@@ -16,6 +16,8 @@ export interface IUpdatedCell {
 
 export type UpdatedCells = Record<FieldName, IUpdatedCell>
 
+export type AutoSaveLock = number
+
 export interface IEntityChanges {
     updated: Record<RowIdString, UpdatedCells | null>
     // Applied to user views with FOR INSERT INTO
@@ -93,6 +95,8 @@ export interface IStagingState {
     errors: string[]
     autoSaveTimeout: number | null
     autoSaveTimeoutId: NodeJS.Timeout | null
+    lastAutoSaveLock: AutoSaveLock
+    autoSaveLocks: Record<AutoSaveLock, null>
 }
 
 const askOnClose = (e: BeforeUnloadEvent) => {
@@ -127,14 +131,21 @@ const reset = (context: ActionContext<IStagingState, {}>) => {
     stopAutoSave(context)
 }
 
+const checkAutoSave = (context: ActionContext<IStagingState, {}>) => {
+    const { state, commit } = context
+    if (state.addedCount === 0 && state.currentSubmit === null && Object.entries(state.autoSaveLocks).length === 0) {
+        startAutoSave(context)
+    } else {
+        stopAutoSave(context)
+    }
+}
+
 const checkCounters = (context: ActionContext<IStagingState, {}>) => {
     const { state, commit } = context
     if (state.updatedCount === 0 && state.addedCount === 0 && state.deletedCount === 0) {
         reset(context)
-    } else if (state.addedCount === 0 && state.currentSubmit === null) {
-        startAutoSave(context)
     } else {
-        stopAutoSave(context)
+        checkAutoSave(context)
     }
 }
 
@@ -267,8 +278,10 @@ const stagingModule: Module<IStagingState, {}> = {
         currentSubmit: null,
         touched: false,
         errors: [],
+        lastAutoSaveLock: 0,
         autoSaveTimeout: null,
         autoSaveTimeoutId: null,
+        autoSaveLocks: {},
     },
     mutations: {
         clear: state => {
@@ -286,6 +299,13 @@ const stagingModule: Module<IStagingState, {}> = {
         },
         setAutoSaveTimeout: (state, timeout: number | null) => {
             state.autoSaveTimeout = timeout
+        },
+        addAutoSaveLock: state => {
+            state.autoSaveLocks[state.lastAutoSaveLock] = null
+            state.lastAutoSaveLock++
+        },
+        removeAutoSaveLock: (state, lock: AutoSaveLock) => {
+            delete state.autoSaveLocks[lock]
         },
         startSubmit: (state, submit: Promise<void>) => {
             state.touched = false
@@ -430,6 +450,16 @@ const stagingModule: Module<IStagingState, {}> = {
         resetDeleteEntry: (context, args: { schema: SchemaName, entity: EntityName, id: number }) => {
             context.commit("resetDeleteEntry", args)
             checkCounters(context)
+        },
+        addAutoSaveLock: context => {
+            const id = context.state.lastAutoSaveLock
+            context.commit("addAutoSaveLock")
+            checkAutoSave(context)
+            return id
+        },
+        removeAutoSaveLock: (context, id: AutoSaveLock) => {
+            context.commit("removeAutoSaveLock", id)
+            checkAutoSave(context)
         },
         submit: context => {
             const { state, commit, dispatch } = context

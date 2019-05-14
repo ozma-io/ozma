@@ -89,7 +89,7 @@
     import { tryDicts } from "@/utils"
     import seq from "@/sequences"
     import { IUpdatableField, UserViewResult, printValue, homeSchema } from "@/state/user_view"
-    import { CurrentChanges, IEntityChanges, IUpdatedCell, convertValue } from "@/state/staging_changes"
+    import { CurrentChanges, IEntityChanges, IUpdatedCell, convertValue, AutoSaveLock } from "@/state/staging_changes"
     import { IExecutedRow, IExecutedValue, ValueType, IResultColumnInfo } from "@/api"
     import { CurrentTranslations } from "@/state/translations"
     import { IQuery, attrToQuery } from "@/state/query"
@@ -149,7 +149,9 @@
     })
     export default class UserViewTable extends Vue {
         @staging.State("current") changes!: CurrentChanges
-        @staging.Action("deleteEntry") deleteEntry!: (args: { schema: string, entity: string, id: number }) => void
+        @staging.Action("deleteEntry") deleteEntry!: (args: { schema: string, entity: string, id: number }) => Promise<void>
+        @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>
+        @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>
         @translations.Getter("field") fieldTranslation!: (schema: string, entity: string, field: string, defValue: string) => string
 
         @Prop({ type: UserViewResult }) uv!: UserViewResult
@@ -322,6 +324,24 @@
             this.lastSelected = null
         }
 
+        private setCellEditing(cell: ICell, isEditing: boolean) {
+            if ((cell.isEditing !== null) !== isEditing) {
+                if (cell.isEditing !== null) {
+                    this.removeAutoSaveLock(cell.isEditing)
+                    cell.isEditing = null
+                } else {
+                    this.addAutoSaveLock().then(id => {
+                        if (cell.isEditing !== null) {
+                            // The lock is already taken; release this one
+                            this.removeAutoSaveLock(id)
+                        } else {
+                            cell.isEditing = id
+                        }
+                    })
+                }
+            }
+        }
+
         private cellClick(cell: ICell) {
             if (this.clickTimeoutId === null) {
                 this.clickTimeoutId = setTimeout(() => {
@@ -330,7 +350,7 @@
 
                 if (this.oldCell !== null && this.oldCell !== cell) {
                     this.oldCell.selected = false
-                    this.oldCell.isEditing = false
+                    this.setCellEditing(this.oldCell, false)
                 }
                 this.oldCell = cell
                 cell.selected = true
@@ -340,12 +360,12 @@
 
                 if (cell === this.oldCell) {
                     if (cell.update !== null && cell.update.field !== null) {
-                        cell.isEditing = !cell.isEditing
+                        this.setCellEditing(cell, cell.isEditing === null)
                     }
                 } else {
                     if (this.oldCell !== null) {
                         this.oldCell.selected = false
-                        this.oldCell.isEditing = false
+                        this.setCellEditing(this.oldCell, false)
                     }
                     this.oldCell = cell
                     cell.selected = true
@@ -453,7 +473,7 @@
                         id: rowId,
                     },
                     attrs: {},
-                    isEditing: false,
+                    isEditing: null,
                     selected: false,
                     errorEvent: false,
                 }
@@ -723,7 +743,7 @@
                         return {
                             value, valueText, link, style,
                             valueLowerText: valueText.toLowerCase(),
-                            isEditing: false,
+                            isEditing: null,
                             attrs: cellAttrs,
                             update: cellValue.update === undefined ? null : cellValue.update,
                             selected: false,

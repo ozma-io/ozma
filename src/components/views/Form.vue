@@ -101,9 +101,9 @@
     export default class UserViewForm extends Vue {
         @staging.State("current") changes!: CurrentChanges
         @staging.State("currentSubmit") currentSubmit!: Promise<void> | null
-        @staging.Action("addEntry") addEntry!: (args: { schema: string, entity: string, newId: number }) => void
-        @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { schema: string, entity: string, newId: number }) => void
-        @staging.Action("deleteEntry") deleteEntry!: (args: { schema: string, entity: string, id: number }) => void
+        @staging.Action("addEntry") addEntry!: (args: { schema: string, entity: string, newId: number }) => Promise<void>
+        @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { schema: string, entity: string, newId: number }) => Promise<void>
+        @staging.Action("deleteEntry") deleteEntry!: (args: { schema: string, entity: string, id: number }) => Promise<void>
         @staging.Action("submit") submitChanges!: () => Promise<void>
         @translations.Getter("field") fieldTranslation!: (schema: string, entity: string, field: string, defValue: string) => string
 
