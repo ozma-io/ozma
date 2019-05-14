@@ -55,7 +55,6 @@
 
         get styleSettings() {
             const values = {
-                "BackColor": this.settings.getEntry("BackColor", String, "white"),
                 "NavigationBackColor": this.settings.getEntry("NavigationBackColor", String, "#F5C700"),
                 "TableBorderColor": this.settings.getEntry("TableBorderColor", String, "#F5C700"),
                 "FormBorderColor": this.settings.getEntry("FormBorderColor", String, "#F5C700"),
@@ -69,9 +68,9 @@
                 "SuccessBackColor": this.settings.getEntry("SuccessBackColor", String, "#d4edda"),
                 "SelectBorderColor": this.settings.getEntry("SelectBorderColor", String, "blue"),
                 "ErrorBackColor": this.settings.getEntry("ErrorBackColor", String, "red"),
-                "TextButtonColor": this.settings.getEntry("TextButtonColor", String, "red"),
-                "TextMenuColor": this.settings.getEntry("TextMenuColor", String, "gray"),
-                "TextTableColor": this.settings.getEntry("TextTableColor", String, "orange"),
+                "ButtonTextColor": this.settings.getEntry("ButtonTextColor", String, "black"),
+                "MenuTextColor": this.settings.getEntry("MenuTextColor", String, "gray"),
+                "TableTextColor": this.settings.getEntry("TableTextColor", String, "black"),
             }
             return Object.entries(values).reduce((currSettings, [name, value]) => {
                 currSettings[`--${name}`] = value
