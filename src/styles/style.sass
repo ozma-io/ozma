@@ -277,7 +277,12 @@ div
 							margin-top: 0 !important
 							margin-bottom: 2px !important
 
-			form	
+			form
+				border-top: 1px solid white
+				border-bottom: 1px solid white
+				@media screen and (max-device-width: 650px)
+					border-top: 0
+					border-bottom: 0
 				&.find
 					top: 0
 					display: inline-flex
@@ -286,6 +291,7 @@ div
 				/*Внутренние части текущего фильтра*/
 				&.find
 					div
+						background-color: var(--MenuColor)
 						width: 100% !important
 						input:focus
 							border-color: var(--TableBorderColor)
@@ -506,10 +512,10 @@ div
 						padding: 20px
 						*
 							width: 300px
-
-						input:focus
+						*:focus
 							border: 0 !important
 							box-shadow: none !important
+						
 					div
 						&.div_checkbox
 							margin-left: 1px
@@ -681,6 +687,7 @@ div
 				&.head_menu
 					display: inline-flex
 					white-space: nowrap
+					background-color: var(--MenuColor)
 
 					li:last-child
 						float: none
