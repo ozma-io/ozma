@@ -13,11 +13,11 @@
                 :key="i"
                 @click="'cellClick' in listeners && listeners.cellClick(props.entry.cells[i], $event)"
                 :style="props.entry.cells[i].style"
-                :class="[props.columns[i].fixed ? 'fixed-column' : 'none',
-                         props.entry.cells[i].selected && props.columns[i].fixed ? 'select_fixed' : 'none',
-                         props.entry.cells[i].selected && !props.columns[i].fixed ? 'select' : 'none',
-                         (props.entry.cells[i].isAwaited || props.entry.cells[i].isInvalid) ? 'error_style' : 'none',
-                         props.entry.cells[i].isEditing ? 'editing_style' : 'none']">
+                :class="{'fixed-column' : props.columns[i].fixed,
+                        'select_fixed' : props.entry.cells[i].selected && props.columns[i].fixed,
+                        'select' : props.entry.cells[i].selected && !props.columns[i].fixed,
+                        'error_style' : props.entry.cells[i].errorEvent,
+                        'editing_style' : props.entry.cells[i].isEditing}">
             <FormControl v-if="props.entry.cells[i].isEditing !== null"
                     :valueText="props.entry.cells[i].valueText"
                     :attributes="Object.assign({}, props.entry.cells[i].attrs, props.entry.attrs, props.columns[i].attrs, props.uv.attributes)"
