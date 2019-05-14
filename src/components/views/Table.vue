@@ -46,7 +46,8 @@
                                 :uv="uv"
                                 added
                                 :hasRowLinks="hasRowLinks"
-                                @cellClick="cellClick" />
+                                @cellClick="cellClick"
+                                @update="beforeAddEntry(entry)" />
                         <TableRow :key="`new-${entryI}`"
                                 :entry="entry"
                                 :columnIndexes="columnIndexes"
@@ -54,7 +55,8 @@
                                 :uv="uv"
                                 added
                                 :hasRowLinks="hasRowLinks"
-                                @cellClick="cellClick" />
+                                @cellClick="cellClick"
+                                @update="beforeAddEntry(entry)" />
                     </template>
                     <template v-for="(entryI, rowI) in shownRows">
                         <TableFixedRow v-if="showFixedRow"
@@ -90,7 +92,7 @@
     import seq from "@/sequences"
     import { IUpdatableField, UserViewResult, printValue, homeSchema } from "@/state/user_view"
     import { CurrentChanges, IEntityChanges, IUpdatedCell, convertValue, AutoSaveLock } from "@/state/staging_changes"
-    import { IExecutedRow, IExecutedValue, ValueType, IResultColumnInfo } from "@/api"
+    import { IExecutedRow, IExecutedValue, ValueType, IResultColumnInfo, SchemaName, EntityName, FieldName, IMainEntityInfo } from "@/api"
     import { CurrentTranslations } from "@/state/translations"
     import { IQuery, attrToQuery } from "@/state/query"
     import TableRow, { IRow, ICell, IColumn } from "@/components/views/table/TableRow.vue"
@@ -149,9 +151,11 @@
     })
     export default class UserViewTable extends Vue {
         @staging.State("current") changes!: CurrentChanges
-        @staging.Action("deleteEntry") deleteEntry!: (args: { schema: string, entity: string, id: number }) => Promise<void>
+        @staging.Action("deleteEntry") deleteEntry!: (args: { schema: SchemaName, entity: EntityName, id: number }) => Promise<void>
         @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>
         @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>
+        @staging.Action("addEntry") addEntry!: (args: { schema: SchemaName, entity: EntityName }) => Promise<void>
+        @staging.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => Promise<void>
         @translations.Getter("field") fieldTranslation!: (schema: string, entity: string, field: string, defValue: string) => string
 
         @Prop({ type: UserViewResult }) uv!: UserViewResult
@@ -421,7 +425,7 @@
             }
         }
 
-        get getHeightRow() {
+        get rowHeight() {
             const height = this.uv.attributes["HeightRow"]
             if (height === undefined) {
                 return 45
@@ -443,7 +447,7 @@
                 let valueText: string
                 let valueLowerText: string
                 const style: Record<string, any> = {}
-                style["height"] = `${this.getHeightRow}px`
+                style["height"] = `${this.rowHeight}px`
                 if (info.mainField !== null) {
                     let rawValue: any
                     if (info.mainField.name in this.defaultValues) {
@@ -475,7 +479,8 @@
                     attrs: {},
                     isEditing: null,
                     selected: false,
-                    errorEvent: false,
+                    isInvalid: false,
+                    isAwaited: info.mainField !== null && !info.mainField.field.isNullable && value === undefined,
                 }
             })
             const row = {
@@ -535,29 +540,18 @@
                                     cell.value = undefined
                                     cell.valueText = ""
                                     cell.valueLowerText = ""
-                                    cell.errorEvent = false
                                 } else {
                                     cell.value = value.value
                                     cell.valueText = (value.rawValue === undefined) ? "" : value.rawValue
                                     cell.valueLowerText = cell.valueText.toLowerCase()
-                                    cell.errorEvent = value.errorEvent || cell.valueText === ""
+                                    cell.isInvalid = value.erroredOnce
+                                    cell.isAwaited = !info.mainField.field.isNullable && cell.value === undefined
                                 }
-                                cell.style["height"] = `${this.getHeightRow}px`
+                                cell.style["height"] = `${this.rowHeight}px`
                             }
                         })
                     }
                 })
-                for (let i = changedRows.added.length; i < this.newEntries.length; i++) {
-                    const row = this.newEntries[i]
-                    this.uv.info.columns.forEach((info, colI) => {
-                        const cell = row.cells[colI]
-                        cell.value = undefined
-                        cell.valueText = ""
-                        cell.valueLowerText = ""
-                        cell.errorEvent = false
-                        cell.style["height"] = `${this.getHeightRow}px`
-                    })
-                }
                 if (this.newEntries.length === 0 && this.showEmptyRow) {
                     this.newEmptyRow(0)
                 }
@@ -598,8 +592,8 @@
                                         cell.value = value.value
                                         cell.valueText = printValue(columnInfo.valueType, value)
                                         cell.valueLowerText = cell.valueText.toLowerCase()
-                                        cell.errorEvent = false
-                                        cell.style["height"] = `${this.getHeightRow}px`
+                                        cell.isInvalid = false
+                                        cell.style["height"] = `${this.rowHeight}px`
                                     })
                                 } else {
                                     Object.entries(fields).forEach(([fieldName, value]) => {
@@ -612,8 +606,8 @@
                                             cell.value = value.value
                                             cell.valueText = (value.rawValue === undefined) ? "" : value.rawValue
                                             cell.valueLowerText = cell.valueText.toLowerCase()
-                                            cell.errorEvent = value.errorEvent || cell.valueText === ""
-                                            cell.style["height"] = `${this.getHeightRow}px`
+                                            cell.isInvalid = value.erroredOnce
+                                            cell.style["height"] = `${this.rowHeight}px`
                                         })
                                     })
                                 }
@@ -738,7 +732,7 @@
                         if (cellColor !== undefined) {
                             style["background-color"] = String(cellColor)
                         }
-                        style["height"] = `${this.getHeightRow}px`
+                        style["height"] = `${this.rowHeight}px`
 
                         return {
                             value, valueText, link, style,
@@ -747,7 +741,8 @@
                             attrs: cellAttrs,
                             update: cellValue.update === undefined ? null : cellValue.update,
                             selected: false,
-                            errorEvent: false,
+                            isInvalid: false,
+                            isAwaited: false,
                         }
                     })
 
@@ -825,6 +820,30 @@
                 tableWidth += column.width
             }
             return tableWidth > screen.width && this.fixedRowColumnIndexes.length > 0
+        }
+
+        private beforeAddEntry(row: IRow) {
+            // Check if an entry is already added; if it isn't, create it with our default values.
+            const mainEntity = this.uv.info.mainEntity as IMainEntityInfo
+            const entity = mainEntity.entity
+            const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
+            if (row.index > changedFields.added.length) {
+                throw new Error("Invalid added entry id")
+            } else if (row.index === changedFields.added.length) {
+                this.addEntry({ schema: entity.schema, entity: entity.name })
+                row.cells.forEach((cell, i) => {
+                    const info = this.columns[i]
+                    if (info.columnInfo.mainField !== null && cell.valueText !== "") {
+                        this.setAddedField({
+                            schema: entity.schema,
+                            entity: entity.name,
+                            field: info.columnInfo.mainField.name,
+                            newId: row.index,
+                            value: cell.valueText,
+                        })
+                    }
+                })
+            }
         }
     }
 </script>

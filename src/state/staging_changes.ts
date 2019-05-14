@@ -11,7 +11,7 @@ import { dateFormat, dateTimeFormat } from "@/state/user_view"
 export interface IUpdatedCell {
     rawValue: any
     value: any
-    errorEvent: boolean // error after actions
+    erroredOnce: boolean // failed on submit
 }
 
 export type UpdatedCells = Record<FieldName, IUpdatedCell>
@@ -149,10 +149,9 @@ const checkCounters = (context: ActionContext<IStagingState, {}>) => {
     }
 }
 
-const changesToParams = (changes: UpdatedCells): Record<string, any> => {
+const changesToParams = (changes: UpdatedCells): Record<string, any> | null => {
     return seq(changes).map<[string, any]>(([name, change]) => {
         if (change.value === undefined) {
-            change.errorEvent = true
             throw new Error("Value didn't pass validation")
         }
         let arg
@@ -243,28 +242,39 @@ const validateValue = (info: IFieldInfo, value: any): IUpdatedCell => {
     return {
         rawValue: value,
         value: convertValue(info, value),
-        errorEvent: false,
+        erroredOnce: false,
     }
 }
 
-const getFieldInfo = (state: IStagingState, schema: SchemaName, entity: EntityName, field: FieldName): [EntityFieldsInfo, IFieldInfo] => {
+const getFieldInfo = (state: IStagingState, schema: SchemaName, entity: EntityName, field: FieldName): IFieldInfo => {
     const schemaInfo = state.fieldsInfo[schema]
     if (schemaInfo === undefined) {
         throw new Error(`No schema info for schema ${schema}`)
     }
     const entityInfo = schemaInfo[entity]
     if (entityInfo === undefined) {
-        throw new Error(`No entity info for schema ${schema}.${entity}`)
+        throw new Error(`No entity info for entity ${schema}.${entity}`)
     }
     const fieldInfo = entityInfo[field]
     if (fieldInfo === undefined) {
-        throw new Error(`No schema info for schema ${schema}`)
+        throw new Error(`No field info for field ${schema}.${entity}.${field}`)
     }
-    return [entityInfo, fieldInfo]
+    return fieldInfo
 }
 
 const getEmptyCells = (entityInfo: EntityFieldsInfo): UpdatedCells => {
-    return seq(entityInfo).filter(([name, info]) => !info.isNullable).map<[string, IUpdatedCell]>(([name, info]) => [name, { value: undefined, rawValue: undefined, errorEvent: false }]).toObject()
+    return seq(entityInfo).filter(([name, info]) => !info.isNullable).map<[string, IUpdatedCell]>(([name, info]) => {
+        const cell = { value: undefined, rawValue: "", erroredOnce: false }
+        return [name, cell]
+    }).toObject()
+}
+
+const checkUpdatedFields = (fields: Record<string, IUpdatedCell>) => {
+    Object.values(fields).forEach(field => {
+        if (field.value === undefined) {
+            field.erroredOnce = true
+        }
+    })
 }
 
 const stagingModule: Module<IStagingState, {}> = {
@@ -290,6 +300,26 @@ const stagingModule: Module<IStagingState, {}> = {
             state.updatedCount = 0
             state.deletedCount = 0
             state.touched = false
+        },
+        validate: state => {
+            Object.entries(state.current.changes).forEach(([schemaName, entities]) => {
+                Object.entries(entities).forEach(([entityName, entityChanges]) => {
+                    const entity = {
+                        schema: schemaName,
+                        name: entityName,
+                    }
+                    Object.entries(entityChanges.updated).forEach(([updatedIdStr, updatedFields]) => {
+                        if (updatedFields !== null) {
+                            checkUpdatedFields(updatedFields)
+                        }
+                    })
+                    entityChanges.added.forEach(addedFields => {
+                        if (addedFields !== null) {
+                            checkUpdatedFields(addedFields)
+                        }
+                    })
+                })
+            })
         },
         setAutoSaveHandler: (state, timeoutId: NodeJS.Timeout) => {
             state.autoSaveTimeoutId = timeoutId
@@ -353,7 +383,7 @@ const stagingModule: Module<IStagingState, {}> = {
         updateField: (state, { schema, entity, id, field, value }: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => {
             const entityChanges = state.current.getOrCreateChanges(schema, entity)
             let fields = entityChanges.updated[id]
-            const [entityInfo, fieldInfo] = getFieldInfo(state, schema, entity, field)
+            const fieldInfo = getFieldInfo(state, schema, entity, field)
             if (fields === undefined || fields === null) {
                 fields = {}
                 Vue.set(entityChanges.updated, String(id), fields)
@@ -367,6 +397,25 @@ const stagingModule: Module<IStagingState, {}> = {
             Vue.set(fields, field, validateValue(fieldInfo, value))
             state.touched = true
         },
+        addEntry: (state, { schema, entity }: { schema: SchemaName, entity: EntityName }) => {
+            // During submit new entries aren't allowed to be added because this can result in duplicates.
+            if (state.currentSubmit !== null) {
+                return
+            }
+
+            const entityChanges = state.current.getOrCreateChanges(schema, entity)
+            const schemaInfo = state.fieldsInfo[schema]
+            if (schemaInfo === undefined) {
+                throw new Error(`No schema info for schema ${schema}`)
+            }
+            const entityInfo = schemaInfo[entity]
+            if (entityInfo === undefined) {
+                throw new Error(`No entity info for schema ${schema}.${entity}`)
+            }
+            entityChanges.added.push(getEmptyCells(entityInfo))
+            state.addedCount += 1
+            state.touched = true
+        },
         setAddedField: (state, { schema, entity, newId, field, value }: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => {
             // During submit new entries aren't allowed to be added because this can result in duplicates.
             if (state.currentSubmit !== null) {
@@ -374,15 +423,10 @@ const stagingModule: Module<IStagingState, {}> = {
             }
 
             const entityChanges = state.current.getOrCreateChanges(schema, entity)
-            const [entityInfo, fieldInfo] = getFieldInfo(state, schema, entity, field)
-            for (let i = entityChanges.added.length; i <= newId; i++) {
-                entityChanges.added.push(getEmptyCells(entityInfo))
-                state.addedCount += 1
-            }
-            let added = entityChanges.added[newId]
-            if (added === null) {
-                added = {}
-                Vue.set(entityChanges.added, newId, added)
+            const fieldInfo = getFieldInfo(state, schema, entity, field)
+            const added = entityChanges.added[newId]
+            if (added === undefined || added === null) {
+                throw new Error(`New entity id ${newId} is not found`)
             }
             Vue.set(added, field, validateValue(fieldInfo, value))
             state.touched = true
@@ -428,6 +472,10 @@ const stagingModule: Module<IStagingState, {}> = {
     actions: {
         updateField: (context, args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => {
             context.commit("updateField", args)
+            checkCounters(context)
+        },
+        addEntry: (context, args: { schema: SchemaName, entity: EntityName }) => {
+            context.commit("addEntry", args)
             checkCounters(context)
         },
         setAddedField: (context, args: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => {

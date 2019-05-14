@@ -38,7 +38,8 @@
                                 :update="entry.fields[fieldInfo.index].update"
                                 :type="fieldInfo.column.valueType"
                                 :locked="locked"
-                                :errorEvent="entry.fields[fieldInfo.index].errorEvent"
+                                :isInvalid="entry.fields[fieldInfo.index].isInvalid"
+                                @update="beforeUpdateEntry(entry)"
                                 :added="entry.added" />
                         </b-form-group>
                     </template>
@@ -59,7 +60,7 @@
     import { namespace } from "vuex-class"
     import { tryDicts } from "@/utils"
     import { AttributesMap, IMainFieldInfo, IColumnField, IExecutedRow, RowId, FieldType, FieldName, IResultColumnInfo, IExecutedValue } from "@/api"
-    import * as Api from "@/api"
+    import { SchemaName, EntityName, IMainEntityInfo } from "@/api"
     import { IUpdatableField, IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, printValue, IProcessedRow } from "@/state/user_view"
     import { CurrentChanges, IEntityChanges, IUpdatedCell, convertValue } from "@/state/staging_changes"
     import { CurrentAuth } from "@/state/auth"
@@ -83,7 +84,7 @@
         valueText: string
         attributes: AttributesMap
         update: IUpdatableField | null
-        errorEvent: boolean
+        isInvalid: boolean
     }
 
     interface IForm {
@@ -101,7 +102,8 @@
     export default class UserViewForm extends Vue {
         @staging.State("current") changes!: CurrentChanges
         @staging.State("currentSubmit") currentSubmit!: Promise<void> | null
-        @staging.Action("addEntry") addEntry!: (args: { schema: string, entity: string, newId: number }) => Promise<void>
+        @staging.Action("addEntry") addEntry!: (args: { schema: SchemaName, entity: EntityName }) => Promise<void>
+        @staging.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => Promise<void>
         @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { schema: string, entity: string, newId: number }) => Promise<void>
         @staging.Action("deleteEntry") deleteEntry!: (args: { schema: string, entity: string, id: number }) => Promise<void>
         @staging.Action("submit") submitChanges!: () => Promise<void>
@@ -119,13 +121,9 @@
             return this.uv.rows === null && this.currentSubmit !== null
         }
 
-        get blocks() {
+        get fields() {
             const viewAttrs = this.uv.attributes
-            // Relative block widths. [0..1]. Each block contains zero or more inputs.
-            const blockWidths: number[] = viewAttrs["FormBlockWidths"] || [1]
-            const blocks: IBlockInfo[] = blockWidths.map(width => ({ width: width * 0.95, fields: [] }))
-
-            this.uv.info.columns.forEach((columnInfo, i) => {
+            return this.uv.info.columns.map((columnInfo, i) => {
                 const columnAttrs = this.uv.columnAttributes[i]
                 const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs)
 
@@ -141,18 +139,32 @@
                     caption = columnInfo.name
                 }
 
-                const blockAttr = Number(getColumnAttr("FormBlock"))
-                const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr
-                const block = Math.max(0, Math.min(blockNumber, blocks.length - 1))
                 const visibleColumnAttr = getColumnAttr("Visible")
                 const visible = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr)
 
-                const field = {
+                return {
                     index: i,
                     column: columnInfo,
                     caption,
                     visible,
                 }
+            })
+        }
+
+        get blocks() {
+            const viewAttrs = this.uv.attributes
+            // Relative block widths. [0..1]. Each block contains zero or more inputs.
+            const blockWidths: number[] = viewAttrs["FormBlockWidths"] || [1]
+            const blocks: IBlockInfo[] = blockWidths.map(width => ({ width: width * 0.95, fields: [] }))
+
+            this.uv.info.columns.forEach((columnInfo, i) => {
+                const columnAttrs = this.uv.columnAttributes[i]
+                const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs)
+                const field = this.fields[i]
+
+                const blockAttr = Number(getColumnAttr("FormBlock"))
+                const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr
+                const block = Math.max(0, Math.min(blockNumber, blocks.length - 1))
 
                 blocks[block].fields.push(field)
             })
@@ -223,6 +235,7 @@
                     value = undefined
                     valueText = ""
                 }
+                console.log("valueText", `'${valueText}'`, typeof valueText)
                 return {
                     value, valueText,
                     attributes: Object.assign({}, this.uv.attributes, this.uv.columnAttributes[colI]),
@@ -234,7 +247,7 @@
                         },
                         id: rowId,
                     },
-                    errorEvent: false,
+                    isInvalid: false,
                 }
             })
             const form = {
@@ -273,11 +286,11 @@
                                 if (value === undefined) {
                                     cell.value = undefined
                                     cell.valueText = ""
-                                    cell.errorEvent = false
+                                    cell.isInvalid = false
                                 } else {
                                     cell.value = value.value
                                     cell.valueText = value.rawValue
-                                    cell.errorEvent = cell.valueText === undefined || cell.valueText === "" || value.errorEvent
+                                    cell.isInvalid = value.erroredOnce
                                 }
                             }
                         })
@@ -289,7 +302,7 @@
                         const cell = row.fields[colI]
                         cell.value = undefined
                         cell.valueText = ""
-                        cell.errorEvent = false
+                        cell.isInvalid = false
                     })
                 }
                 if (this.newEntries.length === 0 && this.uv.rows === null) {
@@ -332,7 +345,7 @@
                                         const cell = entry.fields[valueI]
                                         cell.value = value.value
                                         cell.valueText = printValue(columnInfo.valueType, value)
-                                        cell.errorEvent = false
+                                        cell.isInvalid = false
                                     })
                                 } else {
                                     Object.entries(fields).forEach(([fieldName, value]) => {
@@ -344,7 +357,7 @@
                                             const cell = entry.fields[colI]
                                             cell.value = value.value
                                             cell.valueText = value.rawValue
-                                            cell.errorEvent = cell.valueText === undefined || cell.valueText === "" || value.errorEvent
+                                            cell.isInvalid = value.erroredOnce
                                         })
                                     })
                                 }
@@ -401,7 +414,7 @@
                         valueText,
                         attributes,
                         update: cellValue.update === undefined ? null : cellValue.update,
-                        errorEvent: false,
+                        isInvalid: false,
                     }
                 })
 
@@ -440,6 +453,33 @@
         private returnIfEmpty() {
             if (this.shownEntries.length === 0) {
                 this.returnBack()
+            }
+        }
+
+        private beforeUpdateEntry(form: IForm) {
+            if (form.added) {
+                // Check if an entry is already added; if it isn't, create it with our default values.
+                const mainEntity = this.uv.info.mainEntity as IMainEntityInfo
+                const entity = mainEntity.entity
+                const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
+                const id = form.id as number
+                if (id > changedFields.added.length) {
+                    throw new Error("Invalid added entry id")
+                } else if (id === changedFields.added.length) {
+                    this.addEntry({ schema: entity.schema, entity: entity.name })
+                    form.fields.forEach((field, i) => {
+                        const info = this.fields[i]
+                        if (info.column.mainField !== null && field.valueText !== "") {
+                            this.setAddedField({
+                                schema: entity.schema,
+                                entity: entity.name,
+                                field: info.column.mainField.name,
+                                newId: id,
+                                value: field.valueText,
+                            })
+                        }
+                    })
+                }
             }
         }
     }

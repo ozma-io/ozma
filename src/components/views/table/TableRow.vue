@@ -16,7 +16,7 @@
                 :class="[props.columns[i].fixed ? 'fixed-column' : 'none',
                          props.entry.cells[i].selected && props.columns[i].fixed ? 'select_fixed' : 'none',
                          props.entry.cells[i].selected && !props.columns[i].fixed ? 'select' : 'none',
-                         props.entry.cells[i].errorEvent ? 'error_style' : 'none',
+                         (props.entry.cells[i].isAwaited || props.entry.cells[i].isInvalid) ? 'error_style' : 'none',
                          props.entry.cells[i].isEditing ? 'editing_style' : 'none']">
             <FormControl v-if="props.entry.cells[i].isEditing !== null"
                     :valueText="props.entry.cells[i].valueText"
@@ -24,6 +24,7 @@
                     :added="props.added"
                     :update="props.entry.cells[i].update"
                     :type="props.columns[i].columnInfo.valueType"
+                    @update="'update' in listeners && listeners.update(props.entry.cells[i], $event)"
                     autofocus />
             <template>
                 <p>
@@ -69,7 +70,8 @@
         attrs: Record<string, any>
         isEditing: AutoSaveLock | null
         selected: boolean /* one click on the cell */
-        errorEvent: boolean /* for error style in the table */
+        isInvalid: boolean /* for error style in the table */
+        isAwaited: boolean
     }
 
     export interface IRow {

@@ -32,13 +32,13 @@
         </template>
         <b-form-checkbox v-else-if="inputType.name === 'check'"
                          :value="value"
-                         :class="(errorEvent) ? 'error-style' : 'none'"
+                         :class="(isInvalid || isAwaited) ? 'error-style' : 'none'"
                          @input="updateValue($event)"
                          :disabled="isDisabled"
                          ref="control" />
         <b-form-textarea v-else-if="inputType.name === 'textarea'"
                          :value="valueText"
-                         :class="(errorEvent) ? 'error-style' : 'none'"
+                         :class="(isInvalid || isAwaited) ? 'error-style' : 'none'"
                          @input="updateValue($event)"
                          :disabled="isDisabled"
                          :rows="3"
@@ -47,7 +47,7 @@
                          ref="control" />
         <CodeEditor v-else-if="inputType.name === 'codeeditor'"
                     :content="valueText"
-                    :class="(errorEvent) ? 'error-style' : 'none'"
+                    :class="(isInvalid || isAwaited) ? 'error-style' : 'none'"
                     @update:content="updateValue($event)"
                     :readOnly="isDisabled"
                     ref="control" />
@@ -58,7 +58,7 @@
                     ref="control" />
         <b-form-select v-else-if="inputType.name === 'select'"
                        :value="valueText"
-                       :class="(errorEvent) ? 'error-style' : 'none'"
+                       :class="(isInvalid || isAwaited) ? 'error-style' : 'none'"
                        @input="updateValue($event)"
                        :disabled="isDisabled"
                        :options="inputType.options"
@@ -69,7 +69,7 @@
         <b-form-textarea v-else-if="inputType.type === 'text'"
                 wrap="soft"
                 :value="valueText"
-                :class="(errorEvent) ? 'error-style' : 'none'"
+                :class="(isInvalid || isAwaited) ? 'error-style' : 'none'"
                 @input="updateValue($event)"
                 :disabled="isDisabled"
                 :rows="3"
@@ -78,7 +78,7 @@
                 ref="control" />
         <b-form-textarea v-else
                 :value="valueText"
-                :class="(errorEvent) ? 'error-style' : 'none'"
+                :class="(isInvalid || isAwaited) ? 'error-style' : 'none'"
                 @input="updateValue($event)"
                 :disabled="isDisabled"
                 :rows="3"
@@ -156,7 +156,7 @@
         @Prop({ type: Boolean }) added!: boolean
         @Prop({ type: Object, default: null }) update!: IUpdatableField | null
         @Prop({ type: Boolean, default: false }) autofocus!: boolean
-        @Prop({ type: Boolean, default: false }) errorEvent!: boolean
+        @Prop({ type: Boolean, default: false }) isInvalid!: boolean
 
         @staging.Action("updateField") updateField!: (args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => Promise<void>
         @staging.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => Promise<void>
@@ -186,6 +186,10 @@
 
         get isNullable() {
             return this.update === null || this.update.field === null ? true : this.update.field.isNullable
+        }
+
+        get isAwaited() {
+            return !this.isNullable && this.valueText === ""
         }
 
         get isDisabled() {
@@ -317,6 +321,8 @@
                 if (this.inputType.name === "text") {
                     text = text.replace(/(\r\n|\n|\r)/gm, "")
                 }
+
+                this.$emit("update", text)
 
                 if (this.added) {
                     this.setAddedField({
