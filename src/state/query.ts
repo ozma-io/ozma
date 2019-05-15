@@ -95,7 +95,7 @@ export const attrToInfoQuery = (linkedAttr: any): IQuery | null => {
     }
 }
 
-export const attrToQuery = (update: IUpdatableField | undefined, homeSchema: SchemaName | null, linkedAttr: any): IQuery | null => {
+export const attrToQuery = (homeSchema: SchemaName | null, linkedAttr: any): IQuery | null => {
     if (typeof linkedAttr === "object" && linkedAttr !== null) {
         let ref: IUserViewRef
         if (typeof linkedAttr.ref === "object" && linkedAttr.ref !== null) {
@@ -121,9 +121,6 @@ export const attrToQuery = (update: IUpdatableField | undefined, homeSchema: Sch
         if (typeof linkedAttr.args === "object" && linkedAttr.args !== null) {
             args = linkedAttr.args
         }
-        if (!("id" in args) && update !== undefined) {
-            args.id = update.id
-        }
 
         const search: Record<string, string> = {}
         if (typeof linkedAttr.defaultValues === "object" && linkedAttr.defaultValues !== null) {
@@ -148,6 +145,32 @@ export const attrToQuery = (update: IUpdatableField | undefined, homeSchema: Sch
     } else {
         return null
     }
+}
+
+export const attrToQuerySelf = (update: IUpdatableField | undefined | null, homeSchema: SchemaName | null, linkedAttr: any): IQuery | null => {
+    const ret = attrToQuery(homeSchema, linkedAttr)
+    if (ret !== null) {
+        const args = ret.rootViewArgs.args
+        if (args !== null) {
+            if (!("id" in args) && update) {
+                args.id = update.id
+            }
+        }
+    }
+    return ret
+}
+
+export const attrToQueryRef = (update: IUpdatableField | undefined | null, value: any, homeSchema: SchemaName | null, linkedAttr: any): IQuery | null => {
+    const ret = attrToQuery(homeSchema, linkedAttr)
+    if (ret !== null) {
+        const args = ret.rootViewArgs.args
+        if (args !== null) {
+            if (!("id" in args) && update && update.field !== null && update.field.fieldType.type === "reference") {
+                args.id = value
+            }
+        }
+    }
+    return ret
 }
 
 // While in user_view views we use this module to reduce complete page reloads.

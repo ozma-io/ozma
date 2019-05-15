@@ -94,7 +94,7 @@
     import { CurrentChanges, IEntityChanges, IUpdatedCell, convertValue, AutoSaveLock } from "@/state/staging_changes"
     import { IExecutedRow, IExecutedValue, ValueType, IResultColumnInfo, SchemaName, EntityName, FieldName, IMainEntityInfo } from "@/api"
     import { CurrentTranslations } from "@/state/translations"
-    import { IQuery, attrToQuery } from "@/state/query"
+    import { IQuery, attrToQuerySelf, attrToQueryRef } from "@/state/query"
     import TableRow, { IRow, ICell, IColumn } from "@/components/views/table/TableRow.vue"
     import TableFixedRow from "@/components/views/table/TableFixedRow.vue"
 
@@ -213,6 +213,7 @@
                 const columnWidthAttr = Number(getColumnAttr("ColumnWidth"))
                 const columnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr
                 style["width"] = `${columnWidth}px`
+                style["height"] = `${this.rowHeight}px`
 
                 const fixedColumnAttr = getColumnAttr("Fixed")
                 const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr)
@@ -586,14 +587,16 @@
                                 const entry = this.entries[rowI]
                                 if (fields === null) {
                                     // Reset to original values
-                                    rows[rowI].values.forEach((value, valueI) => {
-                                        const columnInfo = this.uv.info.columns[valueI]
-                                        const cell = entry.cells[valueI]
+                                    rows[rowI].values.forEach((value, colI) => {
+                                        const columnInfo = this.uv.info.columns[colI]
+                                        const cell = entry.cells[colI]
+                                        const getCellAttr = (name: string) => tryDicts(name, cell.attrs, entry.attrs, this.uv.columnAttributes[colI], this.uv.attributes)
+
                                         cell.value = value.value
                                         cell.valueText = printValue(columnInfo.valueType, value)
                                         cell.valueLowerText = cell.valueText.toLowerCase()
                                         cell.isInvalid = false
-                                        cell.style["height"] = `${this.rowHeight}px`
+                                        cell.link = attrToQueryRef(cell.update, cell.value, homeSchema(this.uv.args), getCellAttr("LinkedView"))
                                     })
                                 } else {
                                     Object.entries(fields).forEach(([fieldName, value]) => {
@@ -603,11 +606,13 @@
                                         }
                                         colIs.forEach(colI => {
                                             const cell = entry.cells[colI]
+                                            const getCellAttr = (name: string) => tryDicts(name, cell.attrs, entry.attrs, this.uv.columnAttributes[colI], this.uv.attributes)
+
                                             cell.value = value.value
                                             cell.valueText = (value.rawValue === undefined) ? "" : value.rawValue
                                             cell.valueLowerText = cell.valueText.toLowerCase()
                                             cell.isInvalid = value.erroredOnce
-                                            cell.style["height"] = `${this.rowHeight}px`
+                                            cell.link = attrToQueryRef(cell.update, cell.value, homeSchema(this.uv.args), getCellAttr("LinkedView"))
                                         })
                                     })
                                 }
@@ -720,8 +725,9 @@
                         const value = cellValue.value
                         const valueText = getValueText(columnInfo.valueType, cellValue)
 
-                        const link = attrToQuery(cellValue.update, homeSchema(this.uv.args), getCellAttr("LinkedView"))
-                        const currLinkForRow = attrToQuery(cellValue.update, homeSchema(this.uv.args), getCellAttr("RowLinkedView"))
+                        const link = attrToQueryRef(cellValue.update, value, homeSchema(this.uv.args), getCellAttr("LinkedView"))
+                        // Row links use current cell id by default, hence Self instead of Ref.
+                        const currLinkForRow = attrToQuerySelf(cellValue.update, homeSchema(this.uv.args), getCellAttr("RowLinkedView"))
                         if (currLinkForRow !== null) {
                             linkForRow = currLinkForRow
                         }

@@ -9,7 +9,8 @@
             "no_value": "(No value)",
             "select_value": "(Select value)",
             "yes": "Yes",
-            "no": "No"
+            "no": "No",
+            "follow_link": "Follow reference"
         },
         "ru": {
             "item_not_found": "Запись не найдена",
@@ -19,7 +20,8 @@
             "cancel": "Отмена",
             "no_value": "(Пусто)",
             "yes": "Да",
-            "no": "Нет"
+            "no": "Нет",
+            "follow_link": "Перейти к сущности"
         }
     }
 </i18n>
@@ -41,6 +43,9 @@
                                 :isInvalid="entry.fields[fieldInfo.index].isInvalid"
                                 @update="beforeUpdateEntry(entry)"
                                 :added="entry.added" />
+                            <UserViewLink v-if="entry.link !== null" :uv="entry.link">
+                                {{ $t('follow_link') }}
+                            </UserViewLink>
                         </b-form-group>
                     </template>
                 </div>
@@ -61,9 +66,10 @@
     import { tryDicts } from "@/utils"
     import { AttributesMap, IMainFieldInfo, IColumnField, IExecutedRow, RowId, FieldType, FieldName, IResultColumnInfo, IExecutedValue } from "@/api"
     import { SchemaName, EntityName, IMainEntityInfo } from "@/api"
-    import { IUpdatableField, IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, printValue, IProcessedRow } from "@/state/user_view"
+    import { IUpdatableField, IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, IProcessedRow, printValue, homeSchema } from "@/state/user_view"
     import { CurrentChanges, IEntityChanges, IUpdatedCell, convertValue } from "@/state/staging_changes"
     import { CurrentAuth } from "@/state/auth"
+    import { IQuery, attrToQueryRef } from "@/state/query"
     import { IAction } from "@/components/ActionsMenu.vue"
     import FormControl from "@/components/views/form/FormControl.vue"
 
@@ -85,6 +91,7 @@
         attributes: AttributesMap
         update: IUpdatableField | null
         isInvalid: boolean
+        link: IQuery | null
     }
 
     interface IForm {
@@ -247,6 +254,7 @@
                         id: rowId,
                     },
                     isInvalid: false,
+                    link: null,
                 }
             })
             const form = {
@@ -339,12 +347,14 @@
                                 const entry = this.entries[rowI]
                                 if (fields === null) {
                                     // Reset to original values
-                                    rows[rowI].values.forEach((value, valueI) => {
-                                        const columnInfo = this.uv.info.columns[valueI]
-                                        const cell = entry.fields[valueI]
+                                    rows[rowI].values.forEach((value, colI) => {
+                                        const columnInfo = this.uv.info.columns[colI]
+                                        const cell = entry.fields[colI]
+
                                         cell.value = value.value
                                         cell.valueText = printValue(columnInfo.valueType, value)
                                         cell.isInvalid = false
+                                        cell.link = attrToQueryRef(cell.update, cell.value, homeSchema(this.uv.args), cell.attributes["LinkedView"])
                                     })
                                 } else {
                                     Object.entries(fields).forEach(([fieldName, value]) => {
@@ -354,9 +364,11 @@
                                         }
                                         colIs.forEach(colI => {
                                             const cell = entry.fields[colI]
+
                                             cell.value = value.value
                                             cell.valueText = value.rawValue
                                             cell.isInvalid = value.erroredOnce
+                                            cell.link = attrToQueryRef(cell.update, cell.value, homeSchema(this.uv.args), cell.attributes["LinkedView"])
                                         })
                                     })
                                 }
@@ -408,12 +420,16 @@
                     const valueText = printValue(columnInfo.valueType, value)
 
                     const attributes = Object.assign({}, cellAttrs, columnAttrs, rowAttrs, viewAttrs)
+
+                    const link = attrToQueryRef(cellValue.update, value, homeSchema(this.uv.args), getCellAttr("LinkedView"))
+
                     return {
                         value,
                         valueText,
                         attributes,
                         update: cellValue.update === undefined ? null : cellValue.update,
                         isInvalid: false,
+                        link,
                     }
                 })
 

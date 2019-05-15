@@ -133,7 +133,7 @@
                     const buttonAttrs = buttonCell.attributes || {}
                     const getButtonAttr = (name: string) => tryDicts(name, buttonAttrs, rowAttrs, buttonsAttrs, viewAttrs)
 
-                    const toQuery = attrToQuery(buttonCell.update, homeSchema(this.uv.args), getButtonAttr("LinkedView"))
+                    const toQuery = attrToQuery(homeSchema(this.uv.args), getButtonAttr("LinkedView"))
                     const to = toQuery === null ? null : this.$router.resolve(queryLocation(toQuery)).location
 
                     const button = {
