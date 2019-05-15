@@ -213,7 +213,6 @@
                 const columnWidthAttr = Number(getColumnAttr("ColumnWidth"))
                 const columnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr
                 style["width"] = `${columnWidth}px`
-                style["height"] = `${this.rowHeight}px`
 
                 const fixedColumnAttr = getColumnAttr("Fixed")
                 const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr)
@@ -426,15 +425,6 @@
             }
         }
 
-        get rowHeight() {
-            const height = this.uv.attributes["HeightRow"]
-            if (height === undefined) {
-                return 45
-            } else {
-                return Number(height)
-            }
-        }
-
         private newEmptyRow(rowId: number): IRow {
             if (this.uv.info.mainEntity === null) {
                 throw new Error("Main entity cannot be null")
@@ -448,7 +438,6 @@
                 let valueText: string
                 let valueLowerText: string
                 const style: Record<string, any> = {}
-                style["height"] = `${this.rowHeight}px`
                 if (info.mainField !== null) {
                     let rawValue: any
                     if (info.mainField.name in this.defaultValues) {
@@ -548,7 +537,6 @@
                                     cell.isInvalid = value.erroredOnce
                                     cell.isAwaited = !info.mainField.field.isNullable && cell.value === undefined
                                 }
-                                cell.style["height"] = `${this.rowHeight}px`
                             }
                         })
                     }
@@ -711,9 +699,6 @@
 
                     const rowStyle: Record<string, any> = {}
                     const rowHeight = Number(getRowAttr("RowHeight"))
-                    if (!Number.isNaN(rowHeight)) {
-                        rowStyle["height"] = `${rowHeight}px`
-                    }
 
                     const cells = row.values.map((cellValue, colI): ICell => {
                         const columnInfo = this.uv.info.columns[colI]
@@ -738,7 +723,9 @@
                         if (cellColor !== undefined) {
                             style["background-color"] = String(cellColor)
                         }
-                        style["height"] = `${this.rowHeight}px`
+                        if (!Number.isNaN(rowHeight)) {
+                            rowStyle["height"] = `${rowHeight}px`
+                        }
 
                         return {
                             value, valueText, link, style,
