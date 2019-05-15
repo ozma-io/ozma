@@ -43,7 +43,7 @@
                                 :isInvalid="entry.fields[fieldInfo.index].isInvalid"
                                 @update="beforeUpdateEntry(entry)"
                                 :added="entry.added" />
-                            <UserViewLink v-if="entry.link !== null" :uv="entry.link">
+                            <UserViewLink v-if="entry.fields[fieldInfo.index].link !== null" :uv="entry.fields[fieldInfo.index].link">
                                 {{ $t('follow_link') }}
                             </UserViewLink>
                         </b-form-group>
