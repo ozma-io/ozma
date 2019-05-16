@@ -699,6 +699,9 @@
 
                     const rowStyle: Record<string, any> = {}
                     const rowHeight = Number(getRowAttr("RowHeight"))
+                    if (!Number.isNaN(rowHeight)) {
+                        rowStyle["white-space"] = "nowrap"
+                    }
 
                     const cells = row.values.map((cellValue, colI): ICell => {
                         const columnInfo = this.uv.info.columns[colI]
@@ -724,7 +727,7 @@
                             style["background-color"] = String(cellColor)
                         }
                         if (!Number.isNaN(rowHeight)) {
-                            rowStyle["height"] = `${rowHeight}px`
+                            style["height"] = `${rowHeight}px`
                         }
 
                         return {
