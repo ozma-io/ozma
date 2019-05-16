@@ -69,6 +69,7 @@
                 https://github.com/bootstrap-vue/bootstrap-vue/issues/1951
         -->
         <b-form-textarea v-else-if="inputType.type === 'text'"
+                @keydown.enter="disablePressKey($event)"
                 wrap="soft"
                 :value="valueText"
                 :class="(isInvalid || isAwaited) ? 'error-style' : 'none'"
@@ -171,6 +172,12 @@
 
         private extraActions: IAction[] = []
         private oldArgs: string = ""
+
+        private disablePressKey($event: any) {
+            if (event !== undefined) {
+                event.preventDefault();
+            }
+        }
 
         private mounted() {
             if (this.autofocus) {
