@@ -5,21 +5,23 @@
             "yes": "Yes",
             "no": "No",
             "invalid_uv": "Nested user view rows should be JSON objects with 'name' and 'args' defined",
-            "no_uv": "(empty)"
+            "no_uv": "(empty)",
+            "follow_reference": "Follow reference"
         },
         "ru": {
             "no_value": "(Пусто)",
             "yes": "Да",
             "no": "Нет",
             "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'name' и 'args'",
-            "no_uv": "(пусто)"
+            "no_uv": "(пусто)",
+            "follow_reference": "Перейти к сущности"
         }
     }
 </i18n>
 
 <template>
     <center>
-        <div class="nested_menu" v-if="inputType.name === 'userview'">
+        <div class="nested_menu" v-if="actions.length > 0">
             <ActionsMenu title="☰"
                          :actions="actions" />
             <div class="black_block" onklick>
@@ -52,9 +54,9 @@
                     :readOnly="isDisabled"
                     ref="control" />
         <UserView v-else-if="inputType.name === 'userview'"
-                    :uv="uv"
+                    :uv="nestedUv"
                     :defaultValues="inputType.defaultValues"
-                    @update:actions="actions = $event"
+                    @update:actions="extraActions = $event"
                     ref="control" />
         <b-form-select v-else-if="inputType.name === 'select'"
                        :value="valueText"
@@ -95,7 +97,8 @@
     import seq from "@/sequences"
     import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef } from "@/api"
     import { IAction } from "@/components/ActionsMenu.vue"
-    import { IUpdatableField, IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, printValue } from "@/state/user_view"
+    import { IUpdatableField, IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, printValue, homeSchema } from "@/state/user_view"
+    import { attrToQueryRef, queryLocation } from "@/state/query"
 
     interface ITextType {
         name: "text"
@@ -157,6 +160,7 @@
         @Prop({ type: Object, default: null }) update!: IUpdatableField | null
         @Prop({ type: Boolean, default: false }) autofocus!: boolean
         @Prop({ type: Boolean, default: false }) isInvalid!: boolean
+        @Prop({ type: UserViewResult }) uv!: UserViewResult
 
         @staging.Action("updateField") updateField!: (args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => Promise<void>
         @staging.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => Promise<void>
@@ -165,7 +169,7 @@
         @userView.State("current") userViews!: CurrentUserViews
         @userView.Action("getNestedView") getNestedView!: (_: IUserViewArguments) => Promise<void>
 
-        private actions: IAction[] = []
+        private extraActions: IAction[] = []
         private oldArgs: string = ""
 
         private mounted() {
@@ -196,12 +200,22 @@
             return this.locked || this.update === null || this.update.field === null
         }
 
-        get uv() {
+        get nestedUv() {
             if (this.inputType.name !== "userview") {
                 return null
             } else {
                 return this.userViews.getUserView(this.inputType.args)
             }
+        }
+
+        get actions() {
+            const actions: IAction[] = []
+            const link = attrToQueryRef(this.update, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"])
+            if (link !== null) {
+                actions.push({ name: this.$tc("follow_reference"), location: queryLocation(link) })
+            }
+            actions.push(...this.extraActions)
+            return actions
         }
 
         get inputType(): IType {
