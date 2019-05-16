@@ -175,7 +175,7 @@
 
         private disablePressKey($event: any) {
             if (event !== undefined) {
-                event.preventDefault();
+                event.preventDefault()
             }
         }
 
