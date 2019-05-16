@@ -20,7 +20,7 @@
 </i18n>
 
 <template>
-    <center>
+    <div id="form_control_panel">
         <div class="nested_menu" v-if="actions.length > 0">
             <ActionsMenu title="☰"
                          :actions="actions" />
@@ -87,7 +87,7 @@
                 :max-rows="6"
                 :required="!isNullable"
                 ref="control" />
-    </center>
+    </div>
 </template>
 
 <script lang="ts">

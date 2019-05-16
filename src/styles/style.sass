@@ -500,20 +500,20 @@ div
 						padding-right: 4px
 						margin-bottom: 0
 						margin-top: 2px
-
-					center
-						left: calc(50% - 175px)
-						top: calc(50% - 50px)
-						position: fixed
-						background-color: var(--MenuColor)
-						display: flex
-						align-items: center
-						padding: 20px
-						*
-							width: 300px
-						*:focus
-							border: 0 !important
-							box-shadow: none !important
+					div
+						&#form_control_panel
+							left: calc(50% - 175px)
+							top: calc(50% - 50px)
+							position: fixed
+							background-color: var(--MenuColor)
+							display: flex
+							align-items: center
+							padding: 20px
+							*
+								width: 300px
+							*:focus
+								border: 0 !important
+								box-shadow: none !important
 						
 					div
 						&.div_checkbox
@@ -574,7 +574,8 @@ form
 							page-break-inside: avoid
 				
 		div
-			center
+			&#form_control_panel
+				padding-right: 2px
 				select
 					border-color: var(--FormBorderColor)
 					height: 2.4em !important
