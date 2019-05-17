@@ -20,7 +20,7 @@
 </i18n>
 
 <template>
-    <div id="form_control_panel">
+    <div class="form_control_panel">
         <div class="nested_menu" v-if="actions.length > 0">
             <ActionsMenu title="☰"
                          :actions="actions" />
