@@ -34,13 +34,13 @@
         </template>
         <b-form-checkbox v-else-if="inputType.name === 'check'"
                          :value="value"
-                         :class="(isInvalid || isAwaited) ? 'error-style' : 'none'"
+                         :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
                          @input="updateValue($event)"
                          :disabled="isDisabled"
                          ref="control" />
         <b-form-textarea v-else-if="inputType.name === 'textarea'"
                          :value="valueText"
-                         :class="(isInvalid || isAwaited) ? 'error-style' : 'none'"
+                         :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
                          @input="updateValue($event)"
                          :disabled="isDisabled"
                          :rows="3"
@@ -49,7 +49,7 @@
                          ref="control" />
         <CodeEditor v-else-if="inputType.name === 'codeeditor'"
                     :content="valueText"
-                    :class="(isInvalid || isAwaited) ? 'error-style' : 'none'"
+                    :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
                     @update:content="updateValue($event)"
                     :readOnly="isDisabled"
                     ref="control" />
@@ -60,7 +60,7 @@
                     ref="control" />
         <b-form-select v-else-if="inputType.name === 'select'"
                        :value="valueText"
-                       :class="(isInvalid || isAwaited) ? 'error-style' : 'none'"
+                       :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
                        @input="updateValue($event)"
                        :disabled="isDisabled"
                        :options="inputType.options"
@@ -72,7 +72,7 @@
                 @keydown.enter.prevent=""
                 wrap="soft"
                 :value="valueText"
-                :class="(isInvalid || isAwaited) ? 'error-style' : 'none'"
+                :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
                 @input="updateValue($event)"
                 :disabled="isDisabled"
                 :rows="3"
@@ -81,7 +81,7 @@
                 ref="control" />
         <b-form-textarea v-else
                 :value="valueText"
-                :class="(isInvalid || isAwaited) ? 'error-style' : 'none'"
+                :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
                 @input="updateValue($event)"
                 :disabled="isDisabled"
                 :rows="3"
