@@ -17,7 +17,7 @@
                         'select_fixed' : props.entry.cells[i].selected && props.columns[i].fixed,
                         'select' : props.entry.cells[i].selected && !props.columns[i].fixed,
                         'error_style' : (props.entry.cells[i].isAwaited || props.entry.cells[i].isInvalid),
-                        'editing_style' : props.entry.cells[i].isEditing}">
+                        'editing_style' : props.entry.cells[i].isEditing !== null}">
             <FormControl v-if="props.entry.cells[i].isEditing !== null"
                     :valueText="props.entry.cells[i].valueText"
                     :attributes="Object.assign({}, props.entry.cells[i].attrs, props.entry.attrs, props.columns[i].attrs, props.uv.attributes)"
