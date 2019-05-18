@@ -67,10 +67,10 @@
                 "DangerBackColor": this.settings.getEntry("DangerBackColor", String, "#f8d7da"),
                 "SuccessBackColor": this.settings.getEntry("SuccessBackColor", String, "#d4edda"),
                 "SelectBorderColor": this.settings.getEntry("SelectBorderColor", String, "blue"),
-                "ErrorBackColor": this.settings.getEntry("ErrorBackColor", String, "red"),
-                "ButtonTextColor": this.settings.getEntry("ButtonTextColor", String, "black"),
-                "MenuTextColor": this.settings.getEntry("MenuTextColor", String, "gray"),
-                "TableTextColor": this.settings.getEntry("TableTextColor", String, "black"),
+                "ErrorBackColor": this.settings.getEntry("ErrorBackColor", String, "yellow"),
+                "ButtonTextColor": this.settings.getEntry("ButtonTextColor", String, "white"),
+                "MenuTextColor": this.settings.getEntry("MenuTextColor", String, "#383838"),
+                "TableTextColor": this.settings.getEntry("TableTextColor", String, "#383838"),
             }
             return Object.entries(values).reduce((currSettings, [name, value]) => {
                 currSettings[`--${name}`] = value

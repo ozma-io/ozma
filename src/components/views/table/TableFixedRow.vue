@@ -21,6 +21,7 @@
                             :added="props.added"
                             :update="props.entry.cells[i].update"
                             :type="props.columns[i].columnInfo.valueType"
+                            :uv="props.uv"
                             @update="'update' in listeners && listeners.update(props.entry.cells[i], $event)"
                             autofocus />
                     <template>

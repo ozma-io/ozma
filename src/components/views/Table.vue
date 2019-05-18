@@ -584,7 +584,7 @@
                                         cell.valueText = printValue(columnInfo.valueType, value)
                                         cell.valueLowerText = cell.valueText.toLowerCase()
                                         cell.isInvalid = false
-                                        cell.link = attrToQueryRef(cell.update, cell.value, homeSchema(this.uv.args), getCellAttr("LinkedView"))
+                                        cell.link = attrToQueryRef(cell.update, cell.value, this.homeSchema, getCellAttr("LinkedView"))
                                     })
                                 } else {
                                     Object.entries(fields).forEach(([fieldName, value]) => {
@@ -600,7 +600,7 @@
                                             cell.valueText = (value.rawValue === undefined) ? "" : value.rawValue
                                             cell.valueLowerText = cell.valueText.toLowerCase()
                                             cell.isInvalid = value.erroredOnce
-                                            cell.link = attrToQueryRef(cell.update, cell.value, homeSchema(this.uv.args), getCellAttr("LinkedView"))
+                                            cell.link = attrToQueryRef(cell.update, cell.value, this.homeSchema, getCellAttr("LinkedView"))
                                         })
                                     })
                                 }
@@ -713,9 +713,9 @@
                         const value = cellValue.value
                         const valueText = getValueText(columnInfo.valueType, cellValue)
 
-                        const link = attrToQueryRef(cellValue.update, value, homeSchema(this.uv.args), getCellAttr("LinkedView"))
+                        const link = attrToQueryRef(cellValue.update, value, this.homeSchema, getCellAttr("LinkedView"))
                         // Row links use current cell id by default, hence Self instead of Ref.
-                        const currLinkForRow = attrToQuerySelf(cellValue.update, homeSchema(this.uv.args), getCellAttr("RowLinkedView"))
+                        const currLinkForRow = attrToQuerySelf(cellValue.update, this.homeSchema, getCellAttr("RowLinkedView"))
                         if (currLinkForRow !== null) {
                             linkForRow = currLinkForRow
                         }
@@ -816,6 +816,10 @@
                 tableWidth += column.width
             }
             return tableWidth > screen.width && this.fixedRowColumnIndexes.length > 0
+        }
+
+        get homeSchema() {
+            return homeSchema(this.uv.args)
         }
 
         private beforeAddEntry(row: IRow) {

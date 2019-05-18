@@ -507,20 +507,20 @@ div
 						padding-right: 4px
 						margin-bottom: 0
 						margin-top: 2px
-
-					center
-						left: calc(50% - 175px)
-						top: calc(50% - 50px)
-						position: fixed
-						background-color: var(--MenuColor)
-						display: flex
-						align-items: center
-						padding: 20px
-						*
-							width: 300px
-						*:focus
-							border: 0 !important
-							box-shadow: none !important
+					div
+						&.form_control_panel
+							left: calc(50% - 175px)
+							top: calc(50% - 50px)
+							position: fixed
+							background-color: var(--MenuColor)
+							display: flex
+							align-items: center
+							padding: 20px
+							*
+								width: 300px
+							*:focus
+								border: 0 !important
+								box-shadow: none !important
 						
 					div
 						&.div_checkbox
@@ -582,31 +582,33 @@ form
 							page-break-inside: avoid
 				
 		div
-			select
-				border-color: var(--FormBorderColor)
-				height: 2.4em !important
-				&.error-style
-					border-color: var(--ErrorBackColor)
-			*:focus
-				border-color: var(--FormBorderColor)
-				box-shadow: 0 0 0 white
-				&.error-style
-					border-color: var(--ErrorBackColor)
-			input
-				border-color: var(--FormBorderColor)
-				&.error-style
-					border-color: var(--ErrorBackColor)
-			textarea
-				border-color: var(--FormBorderColor)
-				max-width: 98%
-				min-width:
-				resize: none
-				overflow-y: hidden !important
-				overflow-x: hidden !important
-				word-wrap: unset !important
-				height: 2.4em !important
-				&.error-style
-					border-color: var(--ErrorBackColor)
+			&#form_control_panel
+				padding-right: 2px
+				select
+					border-color: var(--FormBorderColor)
+					height: 2.4em !important
+					&.error-style
+						background-color: var(--ErrorBackColor)
+				*:focus
+					border-color: var(--FormBorderColor)
+					box-shadow: 0 0 0 white
+					&.error-style
+						background-color: var(--ErrorBackColor)
+				input
+					border-color: var(--FormBorderColor)
+					&.error-style
+						background-color: var(--ErrorBackColor)
+				textarea
+					border-color: var(--FormBorderColor)
+					max-width: 98%
+					min-width:
+					resize: none
+					overflow-y: hidden !important
+					overflow-x: hidden !important
+					word-wrap: unset !important
+					height: 2.4em !important
+					&.error-style
+						background-color: var(--ErrorBackColor)
 
 			&.form_block
 				@media screen and (max-aspect-ratio: 13/9)
