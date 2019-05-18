@@ -19,7 +19,7 @@
 
 
 <template>
-    <b-container fluid class="cont_table without_padding">
+    <b-container fluid :class="isRoot ? 'cont_table without_padding' : 'nested_table cont_table without_padding'">
         <div ref="tableContainer" class="tabl" @scroll="updateShowLength()" @resize="updateShowLength()">
             <table class="tabl table b-table">
                 <colgroup>
