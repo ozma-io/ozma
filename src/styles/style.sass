@@ -363,6 +363,13 @@ div
 		float: left
 		display: inline-block
 		margin-left: 2px
+@media screen and (max-device-width: 768px), screen and (orientation: portrait)
+	div
+		&.nested_table
+			width: max-content !important
+			div
+				&.tabl
+					width: max-content !important
 div
 	&.tabl
 		@media screen and (max-device-width: 650px)
@@ -567,6 +574,7 @@ form
 		@media print
 			div
 				&.form_block
+					position: sticky
 					width: 148vw !important
 					div
 						page-break-inside: avoid
@@ -756,6 +764,8 @@ div
 										display: block
 /*меню вложенное*/
 div.nested_menu
+	position: sticky
+	left: 0
 	display: inline-block
 	float: left
 	margin-right: 7px
