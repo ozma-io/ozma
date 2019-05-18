@@ -31,7 +31,7 @@
                 <div v-for="(block, blockI) in blocks" :key="blockI" class="form_block" :style="{ width: `${block.width * 100}%` }">
                     <template v-for="fieldInfo in block.fields" class="form_data">
                         <b-form-group v-if="fieldInfo.visible" :key="fieldInfo.column.name" :label-for="fieldInfo.column.name">
-                            <div :class=" fieldInfo.column.valueType.type == 'json' ? 'caption_editors nested':'caption_editors' ">
+                            <div class="caption_editors">
                             {{ fieldInfo.caption }}
                             </div>
                             <FormControl
