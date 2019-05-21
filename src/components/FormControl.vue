@@ -49,7 +49,6 @@
                          ref="control" />
         <CodeEditor v-else-if="inputType.name === 'codeeditor'"
                     :content="valueText"
-                    :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
                     @update:content="updateValue($event)"
                     :readOnly="isDisabled"
                     ref="control" />
