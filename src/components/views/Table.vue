@@ -685,6 +685,7 @@
         // Update this.entries
         private buildEntries() {
             // .rows === null means that we are in "create new" mode -- there are no selected existing values.
+            this.newEntries = []
             if (this.uv.rows === null) {
                 // Not supported in table yet.
                 this.entries = []
