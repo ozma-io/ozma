@@ -18,7 +18,6 @@ html
 *
 	margin: 0
 	font-size: var(--FontSize) !important
-	color: black !important
 	max-width: none !important
 	min-width: none !important
 
@@ -368,6 +367,9 @@ div
 		div
 			&.nested_table
 				width: max-content !important
+				position: sticky;
+				float: right
+				right: 0
 				div
 					&.tabl
 						width: max-content !important
@@ -552,6 +554,8 @@ div
 						z-index: 15
 
 /* Форма */
+.custom-select
+	display: block !important
 @media print
 	button.delete_btn
 		display: none !important
@@ -623,6 +627,8 @@ form
 						display: block
 						div
 							width: 100%
+							&.form-group
+								display: table
 							div
 								width: 100%
 								div
@@ -717,9 +723,9 @@ div
 									min-width: calc(100% + 2px) !important
 									a
 										&.menu_btn
-											color: var(--ButtonTextColor) !important
-											background-color: var(--MenuColor)
-											border-color: white !important
+											color: black !important
+											background-color: white !important
+											border-color: var(--MenuColor) !important
 											border-left: 0 !important
 											border-right: 0 !important
 											width: 100%
@@ -782,7 +788,7 @@ div
 								will-change: unset !important
 								a
 									&.menu_btn
-										color: var(--ButtonTextColor) !important
+										color: var(--ButtonTextColor)
 										background-color: var(--MenuColor)
 										padding: 5px
 										border: solid 1px white
@@ -796,16 +802,21 @@ div
 										border-bottom: 1px solid white
 /*меню вложенное*/
 div.nested_menu
+	display: contents
 	color: var(--ButtonTextColor) !important
 	width: max-content !important
-	display: inline-block
-	float: left
+	display: block
 	margin-right: 7px
-	z-index: 1200
+	&:hover
+		z-index: 1200
 	@media screen and (orientation: portrait)
 		@media screen and (max-device-width: 480px)
 			position: sticky
 			left: 1px
+			button
+				text-align: left
+				margin-left: -1px
+				color: black !important
 			div
 				&.black_block
 					top: 0
@@ -828,8 +839,6 @@ div.nested_menu
 				&.dropdown:hover
 					border: 0
 					z-index: 1200
-				&.dropdown:hover > div.dropdown-menu
-					display: block
 				&.dropdown:not(:avctive) + .black_block
 					height: 0px
 				&.dropdown:not(:hover) + .black_block
@@ -841,18 +850,12 @@ div.nested_menu
 					opacity: 0.7
 				a
 					&.menu_btn
-						color: var(--ButtonTextColor) !important
-						background-color: var(--MenuColor)
-						opacity: 0.7
-						border-color: white !important
-						border-left: 0 !important
+						color: black !important
+						background-color: white !important
+						border-color: var(--MenuColor) !important
 						border-right: 0 !important
 						width: 100vw
 						box-sizing: content-box
-				button
-					text-align: left
-					margin-left: -1px
-					color: var(--ButtonTextColor) !important
 	div
 		&.menu_btn
 			border: 0
@@ -882,7 +885,7 @@ div.nested_menu
 				a
 					&.menu_btn
 						background-color: var(--MenuColor)
-						color: var(--ButtonTextColor) !important
+						color: var(--ButtonTextColor)
 						padding: 5px
 						border: solid 1px white
 						line-height: normal
@@ -891,3 +894,7 @@ div.nested_menu
 						padding-right: 7px
 						border-bottom: 0
 						display: block
+			button
+				text-align: left
+				margin-left: -1px
+				color: var(--ButtonTextColor) !important
