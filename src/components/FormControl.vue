@@ -282,9 +282,11 @@
                         if (entries === undefined || entries instanceof Promise) {
                             return { name: "text", type: "number" }
                         } else {
+                            const options = this.isNullable ? [{ text: "", value: "" }] : []
+                            options.push(...Object.entries(entries).map(([name, id]) => ({ text: name, value: String(id) })))
                             return {
                                 name: "select",
-                                options: Object.entries(entries).map(([name, id]) => ({ text: name, value: String(id) })),
+                                options,
                             }
                         }
                     case "enum":
