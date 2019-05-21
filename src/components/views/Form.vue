@@ -437,6 +437,7 @@
                 }
             }
 
+            this.newEntries = []
             if (this.uv.rows !== null) {
                 this.entries = this.uv.rows.map((row, rowI) => makeForm(row, rowI))
             }
