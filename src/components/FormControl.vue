@@ -24,9 +24,6 @@
         <div class="nested_menu" v-if="actions.length > 0">
             <ActionsMenu title="☰"
                          :actions="actions" />
-            <div class="black_block" onklick>
-                <div></div>
-            </div>
         </div>
 
         <template v-if="inputType.name === 'error'">
@@ -49,6 +46,7 @@
                          ref="control" />
         <CodeEditor v-else-if="inputType.name === 'codeeditor'"
                     :content="valueText"
+                    :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
                     @update:content="updateValue($event)"
                     :readOnly="isDisabled"
                     ref="control" />
@@ -282,11 +280,9 @@
                         if (entries === undefined || entries instanceof Promise) {
                             return { name: "text", type: "number" }
                         } else {
-                            const options = this.isNullable ? [{ text: "", value: "" }] : []
-                            options.push(...Object.entries(entries).map(([name, id]) => ({ text: name, value: String(id) })))
                             return {
                                 name: "select",
-                                options,
+                                options: Object.entries(entries).map(([name, id]) => ({ text: name, value: String(id) })),
                             }
                         }
                     case "enum":
