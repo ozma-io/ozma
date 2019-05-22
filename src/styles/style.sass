@@ -687,45 +687,46 @@ div
 									border-bottom: 0 !important
 									border-right: 0 !important
 									box-sizing: content-box
-							div
-								&.black_block
-									top: 0
-									right: 0
-									left: 0
-									position: fixed
-									width: 100vw
-									height: 0
-									background-color: black !important
-									z-index: 700
-									opacity: 0
-									display: block !important
-									overflow: scroll
-									div
-										height: calc(100vh + 10px)
 							
 							div
 								width: 100%
 								border-right: 0 !important
 								box-sizing: content-box
-								&.dropdown:hover > div.dropdown-menu
-									display: block
-								&.dropdown:hover
-									border: 0
-								&.dropdown:not(:hover) + .black_block
-									transition: height 1s
-								&.dropdown:not(:hover) > div
-									display: none
-								&.dropdown:hover + .black_block
-									height: 100vh
-									opacity: 0.7
+								&.dropdown
+									div
+										div
+											&.black_block
+												top: -50vh !important
+												right: 0
+												left: 0
+												position: fixed
+												width: 100vw
+												height: 0
+												z-index: 700
+												opacity: 0
+												display: block !important
+												overflow: scroll
+												background-color: black !important
+												div
+													height: calc(100vh + 10px)
+													background-color: black !important
+													opacity: 0
+													a
+														height: 100%
+										&.show > .black_block
+											height: 160vh
+											opacity: 0.7
 								button
 									width: 100vw
 									text-align: left
+									z-index: 1100 !important
 								div
 									top: calc(1.5em + 4px) !important
 									min-width: calc(100% + 2px) !important
 									a
 										&.menu_btn
+											z-index: 1000
+											position: relative
 											color: black !important
 											background-color: white !important
 											border-color: var(--MenuColor) !important
@@ -786,7 +787,7 @@ div
 								background-clip: unset
 								margin: 0px -0px 0px -1px
 								@media screen and (max-device-width: 767px) and (orientation: portrait)
-									transform: translateX(0px) !important
+									transform: none !important
 									top: calc(1.5em + 4px) !important
 								will-change: unset !important
 								a
@@ -840,19 +841,38 @@ div.nested_menu
 				border-right: 0 !important
 				box-sizing: content-box
 				&.dropdown:hover
-					border: 0
 					z-index: 1200
-				&.dropdown:not(:avctive) + .black_block
-					height: 0px
-				&.dropdown:not(:hover) + .black_block
-					transition: height 1s
-				&.dropdown:not(:hover) > div
-					display: none
-				&.dropdown:hover + .black_block
-					height: 100vh
-					opacity: 0.7
+					button
+						z-index: 1100!important
+					div
+						div
+							&.black_block
+								top: -100vh !important
+								right: 0
+								left: 0
+								position: fixed
+								width: 100vw
+								height: 0
+								z-index: 700
+								opacity: 0
+								display: block !important
+								overflow: scroll
+								background-color: black !important
+								div
+									height: calc(400vh + 10px)
+									background-color: black !important
+									opacity: 0
+									a
+										height: 100%
+
+
+						&.show > .black_block
+								height: 400vh
+								opacity: 0.7
 				a
 					&.menu_btn
+						position: relative
+						z-index: 700
 						color: black !important
 						background-color: white !important
 						border-color: var(--MenuColor) !important
@@ -874,7 +894,7 @@ div.nested_menu
 				margin-top: -12px
 			div.show
 				@media screen and (max-device-width: 767px) and (orientation: portrait)
-					transform: translateX(0px) !important
+					transform: none !important
 					top: calc(1.5em - 8px) !important
 			div
 				padding: 0

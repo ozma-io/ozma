@@ -40,9 +40,6 @@
                     {{ $t('goto_nav') }}
                 </b-button>
                 <ActionsMenu :title="$t('actions')" :actions="actions" />
-                <div class="black_block" onklick>
-                    <div></div>
-                </div>
                 <b-form v-if="enableFilter" v-on:submit.prevent="submitFilter()" inline class="find">
                     <b-input-group>
                         <b-form-input v-model="filterString" class="find_in form-control" :placeholder="$t('search_placeholder')" />

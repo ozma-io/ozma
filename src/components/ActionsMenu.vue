@@ -1,5 +1,8 @@
 <template>
     <b-dropdown class="nav_batton, actions_btn, menu_btn" v-if="actions.length > 0" :text="title" no-caret>
+        <div class="black_block" onklick>
+            <div><b-dropdown-item></b-dropdown-item></div>
+        </div>
         <template v-for="action in actions">
             <!-- Passing v-on:click to v-bind doesn't seem to work, hence this ugly solution -->
             <b-dropdown-item v-if="'location' in action" :key="action.name" class="menu_btn" variant="primary" :to="action.location">
