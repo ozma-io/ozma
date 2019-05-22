@@ -130,14 +130,20 @@ div
 											width: 100% !important
 											margin: 0px !important
 											padding: 0px !important
-										
+											background-color: var(--MenuColor)
+											&.nav_sec_tit
+												background-color: white
 											a
 												&.nav_ent
+													background: hsla(0,0%,100%,.3)
 													margin-right: 0px !important
 													margin-bottom: 1px
 													width: 100%
 													text-align: left
 													height: 29px
+													opacity: 1
+												&.nav_ent:last-child
+													margin-bottom: 0px
 		/*ПК навигация*/
 		div
 			&.submain_nav
@@ -158,7 +164,7 @@ div
 							height: 28px
 							color: black
 							line-height: normal
-							background-color: var(--MenuColor)
+							background: hsla(0,0%,100%,.3)
 							text-decoration: none
 							border: 0px
 							margin-right: 1px
@@ -202,7 +208,8 @@ div
 										line-height: normal
 										height: calc(1.5em + 4px) !important
 										color: var(--ButtonTextColor) !important
-										background-color: var(--MenuColor)
+										background: var(--MenuColor)
+										opacity: 0.7
 										text-decoration: none
 										border: 0px
 										margin-right: 1px
@@ -289,6 +296,7 @@ div
 					display: inline-flex
 					flex: 1
 					width: auto
+					border: 0
 				/*Внутренние части текущего фильтра*/
 				&.find
 					div
@@ -299,10 +307,22 @@ div
 							box-shadow: 0 0 0 white
 						input
 							border-color: var(--TableBorderColor)
+							
 							margin-right: 1px
+							&.find_in + div
+								color: var(--ButtonTextColor)
 							&.find_in
-								height: calc(1.5em + 4px)
+								@media screen and (max-aspect-ratio: 13/9)
+									@media screen and (max-device-width: 480px)
+										border: 0
+								height: calc(1.5em + 6px)
 								padding-left: 7px
+								background: hsla(0,0%,100%,.3)
+								border-left: 0
+								color: var(--ButtonTextColor)
+							&.find_in::placeholder
+								color: var(--ButtonTextColor)
+
 						div
 							margin: 0px
 
@@ -692,6 +712,15 @@ div
 								width: 100%
 								border-right: 0 !important
 								box-sizing: content-box
+								&.dropdown:after
+									content: ""
+									display: block
+									width: 100%
+									background: green
+									position: absolute
+									height: 100%
+									z-index: 1100
+									opacity: 1
 								&.dropdown
 									div
 										div
@@ -716,10 +745,11 @@ div
 										&.show > .black_block
 											height: 160vh
 											opacity: 0.7
+								button:hover
 								button
 									width: 100vw
 									text-align: left
-									z-index: 1100 !important
+									z-index: 1200 !important
 								div
 									top: calc(1.5em + 4px) !important
 									min-width: calc(100% + 2px) !important
@@ -747,10 +777,10 @@ div
 					a
 						&#menu_btn
 							color: var(--ButtonTextColor) !important
-							background-color: var(--MenuColor)
+							background: hsla(0,0%,100%,.3)
 							padding-top: 2px
 							padding-bottom: 2px
-							border: solid 1px white
+							border: solid 1px var(--MenuColor)
 							border-left: 0px
 							text-decoration: none
 							padding-left: 7px
@@ -761,11 +791,11 @@ div
 					div
 						/*height: 30px*/
 						&.menu_btn
-							border: solid 1px white
+							border: solid 1px var(--MenuColor)
 							border-left: 0px
 							z-index: 1000
 							button
-								background-color: var(--MenuColor) !important
+								background: hsla(0,0%,100%,.3) !important
 								padding: 5px
 								
 								line-height: normal
@@ -774,6 +804,7 @@ div
 								height: calc(1.5em + 4px)
 								color: var(--ButtonTextColor) !important
 							div.show
+								background: var(--MenuColor)
 								transform: translate3d(0px, calc(1.5em + 4px), 0px) !important
 								@media screen and (max-device-width: 767px) and (orientation: portrait)
 									transform: translateX(0px) !important
@@ -793,9 +824,9 @@ div
 								a
 									&.menu_btn
 										color: var(--ButtonTextColor)
-										background-color: var(--MenuColor)
+										background: hsla(0,0%,100%,.3)
 										padding: 5px
-										border: solid 1px white
+										border: solid 1px var(--MenuColor)
 										line-height: normal
 										text-decoration: none
 										padding-left: 7px
@@ -803,7 +834,7 @@ div
 										border-bottom: 0
 										display: block
 									&.menu_btn:last-child
-										border-bottom: 1px solid white
+										border-bottom: 1px solid var(--MenuColor)
 /*меню вложенное*/
 div.nested_menu
 	display: contents
@@ -840,10 +871,21 @@ div.nested_menu
 				width: 100%
 				border-right: 0 !important
 				box-sizing: content-box
+				&.dropdown
+					button
+						z-index: 1200!important
+				&.dropdown:after
+					content: ""
+					display: block
+					width: 100%
+					background: green
+					position: absolute
+					height: 1.7rem
+					z-index: 1100
+					opacity: 1
+					bottom: 0
 				&.dropdown:hover
 					z-index: 1200
-					button
-						z-index: 1100!important
 					div
 						div
 							&.black_block
@@ -877,6 +919,7 @@ div.nested_menu
 						background-color: white !important
 						border-color: var(--MenuColor) !important
 						border-right: 0 !important
+						border-left: 0 !important
 						width: 100vw
 						box-sizing: content-box
 	div
@@ -885,7 +928,7 @@ div.nested_menu
 			border-left: 0px
 			vertical-align: bottom
 			button
-				background-color: var(--MenuColor) !important
+				background: hsla(0,0%,100%,.3) !important
 				padding: 0px
 				padding-left: 7px
 				padding-right: 7px
@@ -893,24 +936,29 @@ div.nested_menu
 				height: calc(1.5em + 4px)
 				margin-top: -12px
 			div.show
+				transform: none !important
+				top: calc(1.5em - 8px) !important
 				@media screen and (max-device-width: 767px) and (orientation: portrait)
 					transform: none !important
 					top: calc(1.5em - 8px) !important
 			div
 				padding: 0
 				min-width: 0
-				background-color: white
+				background-color: var(--MenuColor)
 				border: 0
 				border-radius: 0
 				background-clip: unset
 				margin: 0px -0px 0px -1px
 				will-change: unset !important
+				div
+					&.black_block
+						display: none
 				a
 					&.menu_btn
-						background-color: var(--MenuColor)
+						background: hsla(0,0%,100%,.3)
 						color: var(--ButtonTextColor)
 						padding: 5px
-						border: solid 1px white
+						border: solid 1px var(--MenuColor)
 						line-height: normal
 						text-decoration: none
 						padding-left: 7px
