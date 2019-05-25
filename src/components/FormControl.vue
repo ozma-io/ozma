@@ -36,6 +36,7 @@
                          :disabled="isDisabled"
                          ref="control" />
         <b-form-textarea v-else-if="inputType.name === 'textarea'"
+                         :style="inputType.style"
                          :value="valueText"
                          :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
                          @input="updateValue($event)"
@@ -69,6 +70,7 @@
                 @keydown.enter.prevent=""
                 wrap="soft"
                 :value="valueText"
+                :style="inputType.style"
                 :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
                 @input="updateValue($event)"
                 :disabled="isDisabled"
@@ -78,6 +80,7 @@
                 ref="control" />
         <b-form-textarea v-else
                 :value="valueText"
+                :style="inputType.style"
                 :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
                 @input="updateValue($event)"
                 :disabled="isDisabled"
@@ -101,10 +104,12 @@
     interface ITextType {
         name: "text"
         type: "text" | "number"
+        style: Record<string, any>
     }
 
     interface ITextAreaType {
         name: "textarea"
+        style: Record<string, any>
     }
 
     interface ICodeEditorType {
@@ -216,6 +221,13 @@
             return actions
         }
 
+        private ControlStyle(defHeight: string) {
+            const style: Record<string, any> = {}
+            const heightAttr = this.attributes["ControlHeight"]
+            style["height"] = isNaN(Number(heightAttr)) ? defHeight : `${Number(heightAttr)}px`
+            return style
+        }
+
         get inputType(): IType {
             const controlAttr = this.attributes["Control"]
             if (controlAttr === "UserView") {
@@ -265,7 +277,8 @@
                 this.getNestedView(viewArgs)
                 return { name: "userview", args: viewArgs, defaultValues }
             }
-
+            const heightSinglelineText = "calc(2em + 6px)"
+            const heightMultilineText = "calc(4em + 12px)"
             if (this.update !== null && this.update.field !== null) {
                 const fieldType = this.update.field.fieldType
                 switch (fieldType.type) {
@@ -274,11 +287,11 @@
                         this.getEntries({ schemaName: schema, entityName: entity })
                         const currentSchema = this.entriesMap[schema]
                         if (currentSchema === undefined) {
-                            return { name: "text", type: "number" }
+                            return { name: "text", type: "number", style: this.ControlStyle(heightSinglelineText) }
                         }
                         const entries = currentSchema[entity]
                         if (entries === undefined || entries instanceof Promise) {
-                            return { name: "text", type: "number" }
+                            return { name: "text", type: "number", style: this.ControlStyle(heightSinglelineText) }
                         } else {
                             return {
                                 name: "select",
@@ -296,7 +309,7 @@
                             options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
                         }
                     case "int":
-                        return { name: "text", type: "number" }
+                        return { name: "text", type: "number", style: this.ControlStyle(heightSinglelineText) }
                 }
             } else {
                 switch (this.type.type) {
@@ -306,18 +319,18 @@
                             options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
                         }
                     case "int":
-                        return { name: "text", type: "number" }
+                        return { name: "text", type: "number", style: this.ControlStyle(heightSinglelineText) }
                 }
             }
 
             // Plain text
             switch (this.attributes["TextType"]) {
                 case "multiline":
-                    return { name: "textarea" }
+                    return { name: "textarea", style: this.ControlStyle(heightMultilineText)}
                 case "codeeditor":
                     return { name: "codeeditor" }
                 default:
-                    return { name: "text", type: "text" }
+                    return { name: "text", type: "text", style: this.ControlStyle(heightSinglelineText) }
             }
         }
 

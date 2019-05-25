@@ -223,13 +223,14 @@
                 const visibleColumnAttr = getColumnAttr("Visible")
                 const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr)
 
+                delete columnAttrs["LinkedView"]
                 return {
                     caption, style,
                     visible: visibleColumn,
                     fixed: fixedColumn,
                     mobileFixed: fixedField,
                     columnInfo,
-                    attrs: captionAttr,
+                    attrs: columnAttrs,
                     width: columnWidth,
                 }
             })
