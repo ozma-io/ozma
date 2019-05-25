@@ -19,9 +19,16 @@
 
 
 <template>
-    <b-container fluid :class="isRoot ? 'cont_table without_padding' : 'nested_table cont_table without_padding'">
+    <b-container fluid
+                :class="[isRoot ? 'cont_table without_padding' : 'nested_table cont_table without_padding',
+                        {'active_editing': isEdit}]">
+        <div id="disable_edit"
+        :class="{'edit_active': isEdit}"
+            @click="disable_edit()">
+        </div>
         <div ref="tableContainer" class="tabl" @scroll="updateShowLength()" @resize="updateShowLength()">
-            <table class="tabl table b-table">
+            <table class="tabl table b-table"
+                    :class="{'edit_active': isEdit}">
                 <colgroup>
                     <col :class="showFixedRow ? 'checkbox-col checkbox-cells' : 'checkbox-col'"> <!-- Checkbox column -->
                     <col v-if="hasRowLinks" :class="showFixedRow ? 'open-form-col opemform-cells' : 'open-form-col'"> <!-- Row link column -->
@@ -173,6 +180,7 @@
         private lastSelected: number | null = null
         private printListener: { query: MediaQueryList, queryCallback: (mql: MediaQueryListEvent) => void, printCallback: () => void } | null = null
         private oldCell: ICell | null = null
+        private isEdit: boolean = false
         private clickTimeoutId: NodeJS.Timeout | null = null
         private newEntries: IRow[] = []
 
@@ -329,18 +337,29 @@
             this.lastSelected = null
         }
 
+        private disable_edit() {
+            if (this.oldCell !== undefined && this.oldCell !== null) {
+                this.oldCell.isEditing = null
+                this.oldCell.selected = false
+                this.isEdit = false
+            }
+        }
+
         private setCellEditing(cell: ICell, isEditing: boolean) {
             if ((cell.isEditing !== null) !== isEditing) {
                 if (cell.isEditing !== null) {
                     this.removeAutoSaveLock(cell.isEditing)
                     cell.isEditing = null
+                    this.isEdit = false
                 } else {
                     this.addAutoSaveLock().then(id => {
                         if (cell.isEditing !== null) {
                             // The lock is already taken; release this one
                             this.removeAutoSaveLock(id)
+                            this.isEdit = false
                         } else {
                             cell.isEditing = id
+                            this.isEdit = true
                         }
                     })
                 }

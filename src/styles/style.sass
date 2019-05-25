@@ -267,6 +267,11 @@ div
 		margin: 0px
 		position: relative
 		height: 100%
+	/* чтобы FormControl отрисовывался поверх всего */
+	&.active_editing
+		@media screen and (max-device-width: 650px)
+			position: sticky !important
+			z-index: 100000
 
 div
 	div
@@ -337,7 +342,23 @@ div
 								margin: auto
 								cursor: pointer
 								z-index: 4 !important
-										
+
+/* блок для отключения редактирования в таблице */
+#disable_edit
+	position: fixed
+	top: calc(1.5em + 6px)
+	left: 0
+	&.edit_active
+		width: 100vw
+		height: 100vh
+		z-index: 500
+/* таблица поверх блока отключения редактирования */
+table
+	&.edit_active
+		position: relative
+		z-index: 1000
+
+
 /*непосредственно сама таблица*/
 /*решение для контролируемости ширины колонок*/
 table
