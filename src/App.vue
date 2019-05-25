@@ -71,6 +71,7 @@
                 "ButtonTextColor": this.settings.getEntry("ButtonTextColor", String, "white"),
                 "MenuTextColor": this.settings.getEntry("MenuTextColor", String, "#383838"),
                 "TableTextColor": this.settings.getEntry("TableTextColor", String, "#383838"),
+                "FormTextColor": this.settings.getEntry("FormTextColor", String, "black"),
                 "SaveBackColor": this.settings.getEntry("SaveBackColor", String, "blue"),
             }
             return Object.entries(values).reduce((currSettings, [name, value]) => {
