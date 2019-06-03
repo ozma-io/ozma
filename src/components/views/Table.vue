@@ -230,9 +230,6 @@
                 const visibleColumnAttr = getColumnAttr("Visible")
                 const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr)
 
-                // FIXME HACK: https://trello.com/c/qRrkLOI8
-                delete columnAttrs["LinkedView"]
-
                 return {
                     caption, style,
                     visible: visibleColumn,
