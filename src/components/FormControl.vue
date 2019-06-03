@@ -45,9 +45,9 @@
                          :max-rows="6"
                          :required="!isNullable"
                          ref="control" />
+        <!-- Do NOT add any `class` to CodeEditor; it breaks stuff! -->
         <CodeEditor v-else-if="inputType.name === 'codeeditor'"
                     :content="valueText"
-                    :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
                     @update:content="updateValue($event)"
                     :readOnly="isDisabled"
                     ref="control" />
