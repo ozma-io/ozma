@@ -221,7 +221,7 @@
             return actions
         }
 
-        private ControlStyle(defHeight: string) {
+        private controlStyle(defHeight: string) {
             const style: Record<string, any> = {}
             const heightAttr = this.attributes["ControlHeight"]
             style["height"] = isNaN(Number(heightAttr)) ? defHeight : `${Number(heightAttr)}px`
@@ -277,8 +277,8 @@
                 this.getNestedView(viewArgs)
                 return { name: "userview", args: viewArgs, defaultValues }
             }
-            const heightSinglelineText = "calc(2em + 6px)"
-            const heightMultilineText = "calc(4em + 12px)"
+            const heightSinglelineText = "38px"
+            const heightMultilineText = "76px"
             if (this.update !== null && this.update.field !== null) {
                 const fieldType = this.update.field.fieldType
                 switch (fieldType.type) {
@@ -287,11 +287,11 @@
                         this.getEntries({ schemaName: schema, entityName: entity })
                         const currentSchema = this.entriesMap[schema]
                         if (currentSchema === undefined) {
-                            return { name: "text", type: "number", style: this.ControlStyle(heightSinglelineText) }
+                            return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
                         }
                         const entries = currentSchema[entity]
                         if (entries === undefined || entries instanceof Promise) {
-                            return { name: "text", type: "number", style: this.ControlStyle(heightSinglelineText) }
+                            return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
                         } else {
                             return {
                                 name: "select",
@@ -309,7 +309,7 @@
                             options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
                         }
                     case "int":
-                        return { name: "text", type: "number", style: this.ControlStyle(heightSinglelineText) }
+                        return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
                 }
             } else {
                 switch (this.type.type) {
@@ -319,18 +319,18 @@
                             options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
                         }
                     case "int":
-                        return { name: "text", type: "number", style: this.ControlStyle(heightSinglelineText) }
+                        return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
                 }
             }
 
             // Plain text
             switch (this.attributes["TextType"]) {
                 case "multiline":
-                    return { name: "textarea", style: this.ControlStyle(heightMultilineText)}
+                    return { name: "textarea", style: this.controlStyle(heightMultilineText)}
                 case "codeeditor":
                     return { name: "codeeditor" }
                 default:
-                    return { name: "text", type: "text", style: this.ControlStyle(heightSinglelineText) }
+                    return { name: "text", type: "text", style: this.controlStyle(heightSinglelineText) }
             }
         }
 
