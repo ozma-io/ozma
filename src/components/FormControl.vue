@@ -47,6 +47,7 @@
                          ref="control" />
         <!-- Do NOT add any `class` to CodeEditor; it breaks stuff! -->
         <CodeEditor v-else-if="inputType.name === 'codeeditor'"
+                    :style="inputType.style"
                     :content="valueText"
                     @update:content="updateValue($event)"
                     :readOnly="isDisabled"
@@ -114,6 +115,7 @@
 
     interface ICodeEditorType {
         name: "codeeditor"
+        style: Record<string, any>
     }
 
     interface ISelectOption {
@@ -279,6 +281,7 @@
             }
             const heightSinglelineText = "38px"
             const heightMultilineText = "76px"
+            const heightCodeEditor = "500px"
             if (this.update !== null && this.update.field !== null) {
                 const fieldType = this.update.field.fieldType
                 switch (fieldType.type) {
@@ -328,7 +331,7 @@
                 case "multiline":
                     return { name: "textarea", style: this.controlStyle(heightMultilineText)}
                 case "codeeditor":
-                    return { name: "codeeditor" }
+                    return { name: "codeeditor", style: this.controlStyle(heightCodeEditor) }
                 default:
                     return { name: "text", type: "text", style: this.controlStyle(heightSinglelineText) }
             }
