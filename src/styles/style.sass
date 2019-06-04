@@ -420,6 +420,9 @@ div
 			flex: 1
 			height: none
 		float: left
+		margin-bottom: 10px
+		@media screen and (max-device-width: 650px)
+			margin-bottom: 0
 		height: 100%
 		width: 100% /*на весь экран*/
 		padding: 0
@@ -675,10 +678,6 @@ form
 							div
 								width: 100%
 								div
-									&.caption_editors
-										width: max-content
-										position: sticky
-										left: 1px
 									&.nested
 										left: calc(2rem + 10px)
 								&.form_control_panel
@@ -686,9 +685,17 @@ form
 										width: calc(100vw - 2px)
 										position: sticky
 										left: 1px
+									div
+										&.caption_editors
+											width: max-content
+											position: sticky
+											left: 1px
 				div
 					&.caption_editors
 						color: var(--FormTextColor)
+					&.caption_inline
+						display: inline-block
+						margin-left: 2px
 									
 				width: 100%
 				margin: 0 1px
@@ -862,6 +869,8 @@ div.nested_menu
 	width: max-content !important
 	display: block
 	margin-right: 7px
+	margin-top: 10px
+	margin-bottom: 2px
 	&:hover
 		z-index: 1200
 	@media screen and (orientation: portrait)
@@ -944,6 +953,7 @@ div.nested_menu
 						box-sizing: content-box
 	div
 		&.menu_btn
+			width: 42px !important
 			border: 0
 			border-left: 0px
 			vertical-align: bottom

@@ -24,8 +24,13 @@
         <div class="nested_menu" v-if="actions.length > 0">
             <ActionsMenu title="☰"
                          :actions="actions" />
+            <div v-if="caption.length > 0" class="caption_editors caption_inline">
+                {{caption}}
+            </div>
         </div>
-
+        <div v-else-if="caption.length > 0" class="caption_editors">
+            {{caption}}
+        </div>
         <template v-if="inputType.name === 'error'">
             {{ inputType.text }}
         </template>
@@ -166,6 +171,7 @@
         @Prop({ type: Boolean, default: false }) autofocus!: boolean
         @Prop({ type: Boolean, default: false }) isInvalid!: boolean
         @Prop({ type: UserViewResult }) uv!: UserViewResult
+        @Prop({ type: String, default: ""}) caption!: string
 
         @staging.Action("updateField") updateField!: (args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => Promise<void>
         @staging.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => Promise<void>
