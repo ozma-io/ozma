@@ -554,25 +554,7 @@ div
 						line-height: normal
 						padding-right: 4px
 						margin-bottom: 0
-						margin-top: 2px
-					div
-						&.form_control_panel
-							left: calc(50% - 175px)
-							top: calc(50% - 50px)
-							position: fixed
-							background-color: var(--MenuColor)
-							display: block
-							align-items: center
-							padding: 20px
-							*
-								width: 300px
-							*:focus
-								border: 0 !important
-								box-shadow: none !important
-							div
-								&.nested_menu
-									margin-bottom: 5px
-						
+						margin-top: 2px	
 					div
 						&.div_checkbox
 							margin-left: 1px
@@ -600,6 +582,33 @@ div
 						box-shadow: inset 0 0 0 2px var(--SelectBorderColor)
 						position: sticky
 						z-index: 15
+
+/* FormControl для таблицы */
+div
+	&.tabl
+		table
+			tbody
+				td
+					div
+						&.form_control_panel
+							@media screen and (max-device-width: 480px)
+								left: 2px
+								width: calc(100% - 4px)
+								*
+									width: calc(100vw - 44px) !important // padding 20px and left 2px
+							left: calc(50% - 175px)
+							top: calc(50% - 50px)
+							position: fixed
+							background-color: var(--MenuColor)
+							display: block
+							align-items: center
+							padding: 20px
+							*
+								width: 300px
+							*:focus
+								border: 0 !important
+								box-shadow: none !important
+
 
 /* Форма */
 .custom-select
