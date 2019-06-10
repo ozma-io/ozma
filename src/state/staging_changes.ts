@@ -397,7 +397,7 @@ const stagingModule: Module<IStagingState, {}> = {
             Vue.set(fields, field, validateValue(fieldInfo, value))
             state.touched = true
         },
-        addEntry: (state, { schema, entity }: { schema: SchemaName, entity: EntityName }) => {
+        addEntry: (state, { schema, entity, position }: { schema: SchemaName, entity: EntityName, position?: number }) => {
             // During submit new entries aren't allowed to be added because this can result in duplicates.
             if (state.currentSubmit !== null) {
                 return
@@ -412,7 +412,12 @@ const stagingModule: Module<IStagingState, {}> = {
             if (entityInfo === undefined) {
                 throw new Error(`No entity info for schema ${schema}.${entity}`)
             }
-            entityChanges.added.push(getEmptyCells(entityInfo))
+            const newEntry = getEmptyCells(entityInfo)
+            if (position === undefined) {
+                entityChanges.added.push(newEntry)
+            } else {
+                entityChanges.added.splice(position, 0, newEntry)
+            }
             state.addedCount += 1
             state.touched = true
         },
