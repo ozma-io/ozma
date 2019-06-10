@@ -161,7 +161,7 @@
         @staging.Action("deleteEntry") deleteEntry!: (args: { schema: SchemaName, entity: EntityName, id: number }) => Promise<void>
         @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>
         @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>
-        @staging.Action("addEntry") addEntry!: (args: { schema: SchemaName, entity: EntityName }) => Promise<void>
+        @staging.Action("addEntry") addEntry!: (args: { schema: SchemaName, entity: EntityName, position?: number }) => Promise<void>
         @staging.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => Promise<void>
         @translations.Getter("field") fieldTranslation!: (schema: string, entity: string, field: string, defValue: string) => string
 
