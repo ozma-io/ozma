@@ -19,6 +19,7 @@
                         'error_style' : (props.entry.cells[i].isAwaited || props.entry.cells[i].isInvalid),
                         'editing_style' : props.entry.cells[i].isEditing !== null}">
             <FormControl v-if="props.entry.cells[i].isEditing !== null"
+                    :value="props.entry.cells[i].value"
                     :valueText="props.entry.cells[i].valueText"
                     :attributes="Object.assign({}, props.entry.cells[i].attrs, props.entry.attrs, props.columns[i].attrs, props.uv.attributes)"
                     :added="props.added"

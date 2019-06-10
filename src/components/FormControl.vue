@@ -63,7 +63,7 @@
                     @update:actions="extraActions = $event"
                     ref="control" />
         <b-form-select v-else-if="inputType.name === 'select'"
-                       :value="valueText"
+                       :value="value"
                        :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
                        @input="updateValue($event)"
                        :disabled="isDisabled"
