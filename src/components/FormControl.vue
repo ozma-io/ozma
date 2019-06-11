@@ -285,8 +285,9 @@
                 this.getNestedView(viewArgs)
                 return { name: "userview", args: viewArgs, defaultValues }
             }
-            const heightSinglelineText = "38px"
-            const heightMultilineText = "76px"
+            // `calc` is needed because sizes should be relative to base font size.
+            const heightSinglelineText = "calc(2em + 6px)"
+            const heightMultilineText = "calc(4em + 12px)"
             const heightCodeEditor = "500px"
             if (this.update !== null && this.update.field !== null) {
                 const fieldType = this.update.field.fieldType
