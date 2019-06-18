@@ -396,18 +396,18 @@ table
 			@-moz-document url-prefix() /*стили в лисе исправляем баги с отображением границ таблицы*/
 				table
 					border-collapse: separate !important
-					border-right: solid 1px var(--TableBorderColor)
+					border-right: solid 1px var(--MenuColor)
 			table
 				max-width: 100% !important
 				page-break-inside:auto
 				border-spacing: 0
 				thead
 					th
-						border: solid 1px var(--TableBorderColor)
+						border: solid 1px var(--MenuColor)
 				tbody
 					tr
 						td
-							border: solid 1px var(--TableBorderColor)
+							border: solid 1px var(--MenuColor)
 							a
 								text-decoration: none !important
 div
@@ -463,20 +463,20 @@ div
 				.opemform-cells
 					left: 20px
 				.fixed-column:first-child
-					box-shadow: 3px 0 0px var(--TableBorderColor), inset 1px 0px 0px 0px var(--TableBorderColor)
+					box-shadow: 3px 0 0px var(--MenuColor), inset 1px 0px 0px 0px var(--MenuColor)
 				.fixed-column
 						position: sticky
 						z-index: 20
 						background-color: inherit
-						box-shadow: 3px 0 0px var(--TableBorderColor)
+						box-shadow: 3px 0 0px var(--MenuColor)
 						border-left: 0
 						@-moz-document url-prefix()
-							outline: solid 1px  var(--TableBorderColor)
+							outline: solid 1px  var(--MenuColor)
 			thead
 				height: 25px
-				border-right: solid 1px  var(--TableBorderColor) !important
+				border-right: solid 1px  var(--MenuColor) !important
 				th
-					background: var(--TableBorderColor) !important
+					background: var(--MenuColor) !important
 					color: var(--ButtonTextColor) !important
 					padding: 0
 					border: 0
@@ -497,7 +497,7 @@ div
 						text-overflow: ellipsis
 						vertical-align: top
 			tbody
-				border-right: solid 1px  var(--TableBorderColor) !important
+				border-right: solid 1px  var(--MenuColor) !important
 				tr
 					&.fixed-place-tr
 						display: none
@@ -505,14 +505,14 @@ div
 						&.fixed-place-tr
 							display: table-row
 						&.fixed-place-tr + tr
-							border-bottom: solid 3px var(--TableBorderColor)
+							border-bottom: solid 3px var(--MenuColor)
 					/*выделение строк*/
 					&.selected
 						background-color: var(--TableSelectColor)
 					&.none_selected
 						background-color: var(--TableBackColor) !important
 					background-color: white/*цвет таблицы возможно надо сменить на настраевоемый*/
-					border-right: solid 1px var(--TableBorderColor)
+					border-right: solid 1px var(--MenuColor)
 					height: 100%
 					@-moz-document url-prefix()
 						td
@@ -535,9 +535,9 @@ div
 							width: 100vw !important
 							overflow: visible
 							div.fix:last-child
-								border-right: solid 1px var(--TableBorderColor)
+								border-right: solid 1px var(--MenuColor)
 							div.fix:first-child
-								border-left: solid 1px var(--TableBorderColor)
+								border-left: solid 1px var(--MenuColor)
 							div.fix > div:first-child
 								border-left: 0
 							div.fix
@@ -545,14 +545,14 @@ div
 								max-width: inherit !important
 								width: 100vw !important
 								overflow: auto
-								border-right: solid 1px var(--TableBorderColor)
+								border-right: solid 1px var(--MenuColor)
 								div
 									display: inline-block
 									border-right: 0
-									border-left: solid 1px var(--TableBorderColor)
+									border-left: solid 1px var(--MenuColor)
 									padding-left: 3px
 									padding-right: 3px
-					border: solid 1px var(--TableBorderColor)
+					border: solid 1px var(--MenuColor)
 					padding: 0px
 					padding-left: 3px
 					overflow-wrap: break-word /* перенос по словам */
@@ -669,20 +669,20 @@ form
 			&.form_control_panel
 				padding-right: 2px
 				select
-					border-color: var(--FormBorderColor)
+					border-color: var(--MenuColor)
 					&.error-style
 						background-color: var(--ErrorBackColor)
 				*:focus
-					border-color: var(--FormBorderColor)
+					border-color: var(--MenuColor)
 					box-shadow: 0 0 0 white
 					&.error-style
 						background-color: var(--ErrorBackColor)
 				input
-					border-color: var(--FormBorderColor)
+					border-color: var(--MenuColor)
 					&.error-style
 						background-color: var(--ErrorBackColor)
 				textarea
-					border-color: var(--FormBorderColor)
+					border-color: var(--MenuColor)
 					max-width: 98%
 					min-width:
 					resize: none

@@ -56,8 +56,6 @@
         get styleSettings() {
             const values = {
                 "NavigationBackColor": this.settings.getEntry("NavigationBackColor", String, "white"),
-                "TableBorderColor": this.settings.getEntry("TableBorderColor", String, "#F5C700"),
-                "FormBorderColor": this.settings.getEntry("FormBorderColor", String, "#F5C700"),
                 "Font": this.settings.getEntry("Font", String, "Courier New, monospace"),
                 "FontSize": `${this.settings.getEntry("FontSize", Number, 16)}px`,
                 "MenuColor": this.settings.getEntry("MenuColor", String, "#F5C700"),
