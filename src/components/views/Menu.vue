@@ -31,9 +31,11 @@
                 <b-container class="nav_sec">
                     <b-row class="nav_sec_tit"><a>{{ category.name }}</a></b-row>
                     <b-row>
-                        <b-button class="nav_ent" :to="button.to" v-for="button in category.buttons" :key="button.index">
-                            {{ button.name }}
-                        </b-button>
+                        <div class="filter_back" v-for="button in category.buttons" :key="button.index">
+                            <b-button class="nav_ent" :to="button.to">
+                                {{ button.name }}
+                            </b-button>
+                        </div>
                     </b-row>
                 </b-container>
             </b-row>
