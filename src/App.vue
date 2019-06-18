@@ -72,6 +72,7 @@
                 "TableTextColor": this.settings.getEntry("TableTextColor", String, "#383838"),
                 "SaveBackColor": this.settings.getEntry("SaveBackColor", String, "blue"),
                 "NavigationTextColor": this.settings.getEntry("NavigationTextColor", String, "white"),
+                "ControlDisableColor": this.settings.getEntry("ControlDisableColor", String, "#e9ecef"),
             }
             return Object.entries(values).reduce((currSettings, [name, value]) => {
                 currSettings[`--${name}`] = value
