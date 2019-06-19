@@ -236,18 +236,31 @@ nav
 		white-space: nowrap
 		overflow-x: auto
 		overflow-y: hidden
-		display: inline
 		text-align: right
 		margin-left: -1px !important
 		position: relative
 		background-color: var(--MenuColor) !important
+		display: -webkit-box
+		display: -ms-flexbox
+		display: flex
+		-webkit-box-orient: horizontal
+		-webkit-box-direction: normal
+		-ms-flex-direction: row
+		flex-direction: row
+		-ms-flex-wrap: nowrap
+		flex-wrap: nowrap
 		
 		div.custom_warning
 			background-color: var(--WarningBackColor)
+			float: right
 			button // button-save in bottom panel
 				opacity: 0.76
 		div.custom_danger
 			background-color: var(--DangerBackColor)
+			float: left
+			overflow-x: auto
+			width: 100%
+			text-align: left
 		div.custom_success
 			background-color: var(--SuccessBackColor)
 
