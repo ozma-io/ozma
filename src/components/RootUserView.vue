@@ -39,7 +39,7 @@
                 <b-button v-if="!isMainView" :to="{ name: 'main' }" class="nav_batton, goto_nav" id="menu_btn">
                     {{ $t('goto_nav') }}
                 </b-button>
-                <ActionsMenu :title="$t('actions')" :actions="actions" />
+                <ActionsMenu v-if="uvIsReady" :title="$t('actions')" :actions="actions" />
                 <b-form v-if="enableFilter" v-on:submit.prevent="submitFilter()" inline class="find">
                     <b-input-group>
                         <b-form-input v-model="filterString" class="find_in form-control" :placeholder="$t('search_placeholder')" />
