@@ -104,6 +104,7 @@
     import { IQuery, attrToQuerySelf, attrToQueryRef } from "@/state/query"
     import TableRow, { IRow, ICell, IColumn } from "@/components/views/table/TableRow.vue"
     import TableFixedRow from "@/components/views/table/TableFixedRow.vue"
+import { isNullOrUndefined } from "util";
 
     const showStep = 20
     const doubleClickTime = 700
@@ -771,6 +772,8 @@
                     }
                 })
             }
+
+            this.disable_edit() //if saving when FormControl is active
 
             this.buildRows()
             this.applyChanges()
