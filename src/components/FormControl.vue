@@ -303,9 +303,10 @@
                         if (entries === undefined || entries instanceof Promise) {
                             return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
                         } else {
+                            const select = Object.entries(entries).map(([name, id]) => ({ text: name, value: String(id) }))
                             return {
                                 name: "select",
-                                options: Object.entries(entries).map(([name, id]) => ({ text: name, value: String(id) })),
+                                options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), ...select],
                             }
                         }
                     case "enum":
