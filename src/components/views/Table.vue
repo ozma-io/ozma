@@ -772,6 +772,8 @@
                 })
             }
 
+            this.disable_edit() // if saving when FormControl is active
+
             this.buildRows()
             this.applyChanges()
             this.fixColumns()
