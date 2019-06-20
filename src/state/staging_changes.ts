@@ -519,6 +519,7 @@ const stagingModule: Module<IStagingState, {}> = {
             if (state.currentSubmit !== null) {
                 return state.currentSubmit
             }
+            commit("validate")
 
             const ops = Object.entries(state.current.changes).flatMap(([schemaName, entities]) => {
                 return Object.entries(entities).flatMap(([entityName, entityChanges]) => {
