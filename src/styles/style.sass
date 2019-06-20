@@ -249,10 +249,9 @@ nav
 		flex-wrap: nowrap
 		
 		div.custom_warning
-			background-color: var(--WarningBackColor)
+			background-color: var(--MenuColor)
+			color: var(--ButtonTextColor)
 			float: right
-			button // button-save in bottom panel
-				opacity: 0.76
 		div.custom_danger
 			background-color: var(--DangerBackColor)
 			float: left
@@ -277,7 +276,8 @@ nav
 					line-height: normal
 					position: relative
 					font-size: inherit
-					background-color: var(--SaveBackColor) !important
+					background: hsla(0,0%,100%,.3)
+					color: var(--ButtonTextColor)
 					float: none
 					vertical-align: unset
 
