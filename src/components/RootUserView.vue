@@ -88,7 +88,7 @@
                 {{ $t('submit_error', { msg: error }) }}
             </b-alert>
             <b-alert class="error custom_warning" variant="warning" :show="!changes.isEmpty">
-                <b-button @click="submitChangesWithHook" variant="primary">{{ $t('save') }}</b-button>
+                <button @click="submitChangesWithHook" variant="primary">{{ $t('save') }}</button>
                 {{ $t('pending_changes') }}
             </b-alert>
         </nav>
