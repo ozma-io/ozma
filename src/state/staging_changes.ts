@@ -522,42 +522,47 @@ const stagingModule: Module<IStagingState, {}> = {
 
             const ops = Object.entries(state.current.changes).flatMap(([schemaName, entities]) => {
                 return Object.entries(entities).flatMap(([entityName, entityChanges]) => {
-                    const entity = {
-                        schema: schemaName,
-                        name: entityName,
+                    try {
+                        const entity = {
+                            schema: schemaName,
+                            name: entityName,
+                        }
+                        const updated =
+                            Object.entries(entityChanges.updated)
+                            .filter(([updatedIdStr, updatedFields]) => updatedFields !== null)
+                            .map(([updatedIdStr, updatedFields]) => {
+                                return {
+                                    type: "update",
+                                    entity,
+                                    id: Number(updatedIdStr),
+                                    entries: changesToParams(updatedFields as Record<FieldName, IUpdatedCell>),
+                                }
+                            }) as Api.TransactionOp[]
+                        const added =
+                            entityChanges.added
+                            .filter(addedFields => addedFields !== null)
+                            .map(addedFields => {
+                                return {
+                                    type: "insert",
+                                    entity,
+                                    entries: changesToParams(addedFields as Record<FieldName, IUpdatedCell>),
+                                }
+                            }) as Api.TransactionOp[]
+                        const deleted =
+                            Object.entries(entityChanges.deleted)
+                            .filter(([deletedIdStr, isDeleted]) => isDeleted)
+                            .map(([deletedIdStr, _]) => {
+                                return {
+                                    type: "delete",
+                                    entity,
+                                    id: Number(deletedIdStr),
+                                }
+                            }) as Api.TransactionOp[]
+                        return updated.concat(added, deleted)
+                    } catch (e) {
+                        commit("addError", `Invalid value for ${schemaName}.${entityName}`)
+                        throw e
                     }
-                    const updated =
-                        Object.entries(entityChanges.updated)
-                        .filter(([updatedIdStr, updatedFields]) => updatedFields !== null)
-                        .map(([updatedIdStr, updatedFields]) => {
-                            return {
-                                type: "update",
-                                entity,
-                                id: Number(updatedIdStr),
-                                entries: changesToParams(updatedFields as Record<FieldName, IUpdatedCell>),
-                            }
-                        }) as Api.TransactionOp[]
-                    const added =
-                        entityChanges.added
-                        .filter(addedFields => addedFields !== null)
-                        .map(addedFields => {
-                            return {
-                                type: "insert",
-                                entity,
-                                entries: changesToParams(addedFields as Record<FieldName, IUpdatedCell>),
-                            }
-                        }) as Api.TransactionOp[]
-                    const deleted =
-                        Object.entries(entityChanges.deleted)
-                        .filter(([deletedIdStr, isDeleted]) => isDeleted)
-                        .map(([deletedIdStr, _]) => {
-                            return {
-                                type: "delete",
-                                entity,
-                                id: Number(deletedIdStr),
-                            }
-                        }) as Api.TransactionOp[]
-                    return updated.concat(added, deleted)
                 })
             })
 
