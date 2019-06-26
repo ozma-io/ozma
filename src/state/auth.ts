@@ -150,6 +150,7 @@ const getToken = (context: ActionContext<IAuthState, {}>, params: Record<string,
             if (state.pending === pending.ref) {
                 dispatch("removeAuth", undefined, { root: true })
                 commit("setError", e.message)
+                dispatch("requestLogin", false)
             }
             throw e
         }
