@@ -6,6 +6,7 @@ import moment from "moment"
 import seq from "@/sequences"
 import { RowIdString, SchemaName, FieldName, EntityName, FieldType } from "@/api"
 import * as Api from "@/api"
+import { i18n } from "@/modules"
 import { dateFormat, dateTimeFormat } from "@/state/user_view"
 
 export interface IUpdatedCell {
@@ -101,12 +102,13 @@ export interface IStagingState {
 
 const askOnClose = (e: BeforeUnloadEvent) => {
     e.preventDefault()
-    e.returnValue = ""
+    const msg = i18n.tc("confirm_close")
+    e.returnValue = msg
+    return msg
 }
 
 const stopAutoSave = ({ state, commit }: ActionContext<IStagingState, {}>) => {
     if (state.autoSaveTimeoutId !== null) {
-        window.removeEventListener("beforeunload", askOnClose)
         clearTimeout(state.autoSaveTimeoutId)
         commit("clearAutoSaveHandler")
     }
@@ -120,7 +122,6 @@ const startAutoSave = (context: ActionContext<IStagingState, {}>) => {
         const timeoutId = setTimeout(() => {
             dispatch("submit")
         }, state.autoSaveTimeout)
-        window.addEventListener("beforeunload", askOnClose)
         commit("setAutoSaveHandler", timeoutId)
     }
 }
@@ -129,6 +130,7 @@ const reset = (context: ActionContext<IStagingState, {}>) => {
     const { commit } = context
     commit("clear")
     stopAutoSave(context)
+    window.removeEventListener("beforeunload", askOnClose)
 }
 
 const checkAutoSave = (context: ActionContext<IStagingState, {}>) => {
@@ -145,6 +147,7 @@ const checkCounters = (context: ActionContext<IStagingState, {}>) => {
     if (state.updatedCount === 0 && state.addedCount === 0 && state.deletedCount === 0) {
         reset(context)
     } else {
+        window.addEventListener("beforeunload", askOnClose)
         checkAutoSave(context)
     }
 }

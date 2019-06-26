@@ -1,7 +1,7 @@
 import Vue from "vue"
 import VueRouter from "vue-router"
 import VueI18n from "vue-i18n"
-import { Dictionary } from "vue-router/types/router"
+import { RawLocation, Dictionary } from "vue-router/types/router"
 
 import * as Utils from "@/utils"
 import NotFound from "@/components/NotFound.vue"
@@ -19,6 +19,15 @@ const routes = [
     { path: "*", component: NotFound },
 ]
 
+const globalMessages = {
+    "en": {
+        "confirm_close": "You have unsaved changes, do you want to discard them?",
+    },
+    "ru": {
+        "confirm_close": "У вас есть несохранённые изменения, отбросить их?",
+    },
+}
+
 export const router = new VueRouter({
     mode: "history",
     routes,
@@ -27,6 +36,7 @@ export const router = new VueRouter({
 export const i18n = new VueI18n({
     locale: Utils.shortLanguage,
     fallbackLocale: "en",
+    messages: globalMessages,
 })
 
 export type RouterQueryValues = string | Array<string | null>
@@ -36,6 +46,10 @@ export const routerQueryValue = (values: RouterQueryValues): string | null => {
     // Array is always non-empty
     return Array.isArray(values) ? values[values.length - 1] : values
 }
+
+export const asyncPush = async (location: RawLocation) => new Promise((resolve, reject) => {
+    router.push(location, resolve, reject)
+})
 
 export const getQueryValue = (name: string) => {
     const value = router.currentRoute.query[name]

@@ -5,7 +5,7 @@ import jwtDecode from "jwt-decode"
 import { IRef } from "@/utils"
 import * as Api from "@/api"
 import * as Utils from "@/utils"
-import { router, getQueryValue } from "@/modules"
+import { router, asyncPush, getQueryValue } from "@/modules"
 
 export class CurrentAuth {
     createdTime: number
@@ -268,7 +268,7 @@ export const authModule: Module<IAuthState, {}> = {
             root: true,
             handler: () => { return },
         },
-        startAuth: context => {
+        startAuth: async context => {
             const { state, commit, dispatch } = context
 
             let tryExisting = true
@@ -297,11 +297,11 @@ export const authModule: Module<IAuthState, {}> = {
                             const errorDescription = getQueryValue("errorDescription")
                             commit("setError", `Invalid auth response query parameters, error ${error} ${errorDescription}`)
                         }
-                        router.push(savedState.path)
+                        await asyncPush(savedState.path)
                     }
                 } else {
                     // We got here after logout, redirect.
-                    router.push({ name: "main" })
+                    await asyncPush({ name: "main" })
                 }
             } else {
                 const oldAuth = loadCurrentAuth()
