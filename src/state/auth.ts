@@ -279,6 +279,7 @@ export const authModule: Module<IAuthState, {}> = {
                 const stateString = getQueryValue("state")
                 if (stateString !== null) {
                     const savedState: IOIDCState = JSON.parse(atob(stateString))
+                    console.log("auth state", savedState)
                     const nonce = localStorage.getItem(authNonceKey)
                     if (nonce === null || savedState.nonce !== nonce) {
                         commit("setError", "Invalid client nonce")
@@ -357,6 +358,7 @@ export const authModule: Module<IAuthState, {}> = {
             const redirectParams = new URLSearchParams({ url: window.location.href })
             const nonce = uuidv4()
             localStorage.setItem(authNonceKey, nonce)
+            console.log("current path", router.currentRoute.fullPath)
             const path =
                 router.currentRoute.name === "auth_response" ?
                 router.resolve({ name: "main" }).href :

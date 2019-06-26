@@ -581,7 +581,7 @@ const stagingModule: Module<IStagingState, {}> = {
                     try {
                         await dispatch("userView/reload", undefined, { root: true })
                     } catch (e) {
-                        console.log("Error while commiting", e)
+                        console.error("Error while commiting", e)
                         // Ignore errors; they've been already handled for userView
                     }
                 }
