@@ -297,12 +297,11 @@ export const authModule: Module<IAuthState, {}> = {
                             const errorDescription = getQueryValue("errorDescription")
                             commit("setError", `Invalid auth response query parameters, error ${error} ${errorDescription}`)
                         }
-                        await asyncPush(savedState.path)
-                        console.log("current location", router.currentRoute.fullPath)
+                        router.push(savedState.path)
                     }
                 } else {
                     // We got here after logout, redirect.
-                    await asyncPush({ name: "main" })
+                    router.push({ name: "main" })
                 }
             } else {
                 const oldAuth = loadCurrentAuth()
