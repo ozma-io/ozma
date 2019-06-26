@@ -220,6 +220,7 @@ export const authModule: Module<IAuthState, {}> = {
     },
     mutations: {
         setError: (state, lastError: string) => {
+            console.error(`Auth error: ${lastError}`)
             state.lastError = lastError
             state.pending = null
         },
@@ -297,7 +298,7 @@ export const authModule: Module<IAuthState, {}> = {
                         router.push(savedState.path)
                     }
                 } else {
-                    // We get here is redirected from logout.
+                    // We got here after logout, redirect.
                     router.push({ name: "main" })
                 }
             } else {
@@ -355,9 +356,13 @@ export const authModule: Module<IAuthState, {}> = {
             const redirectParams = new URLSearchParams({ url: window.location.href })
             const nonce = uuidv4()
             localStorage.setItem(authNonceKey, nonce)
+            const path =
+                router.currentRoute.name === "auth_response" ?
+                router.resolve("main").href :
+                router.currentRoute.fullPath
             const savedState: IOIDCState = {
                 nonce,
-                path: router.currentRoute.fullPath,
+                path,
             }
             const params = {
                 client_id: Api.authClientId,
