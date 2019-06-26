@@ -21,7 +21,7 @@
 
 <template>
     <div class="form_control_panel">
-        <div class="nested_menu" v-if="actions.length > 0">
+        <div class="nested-menu" v-if="actions.length > 0">
             <ActionsMenu title="☰"
                          :actions="actions" />
             <div v-if="caption.length > 0" class="caption_editors caption_inline">
@@ -96,7 +96,31 @@
                 ref="control" />
     </div>
 </template>
-
+<style scoped>
+    .nested-menu > .actions-menu{
+        width: max-content;
+        display: inline-block;
+    }
+    .nested-menu > > > .actions-menu_actions-button {
+        border: 0px !important;
+        line-height: normal;
+        padding-bottom: 3px;
+        padding-top: 3px;
+        padding-left: 0px;
+    }
+    .nested-menu {
+        margin-left: -1px;
+        position: sticky;
+        left: 0;
+        color: var(--ButtonTextColor) !important;
+        width: max-content !important;
+        display: block;
+        margin-right: 7px;
+        margin-top: 10px;
+        margin-bottom: 2px;
+        z-index: 1000;
+    }
+</style>
 <script lang="ts">
     import { Component, Vue, Prop, Watch } from "vue-property-decorator"
     import { namespace } from "vuex-class"

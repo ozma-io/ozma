@@ -1,23 +1,100 @@
 <template>
-    <b-dropdown class="nav_batton, actions_btn, menu_btn" v-if="actions.length > 0" :text="title" no-caret>
-        <div class="black_block" onklick>
+    <div class="actions-menu" v-if="actions.length > 0" >
+        <input type="button" class="actions-menu_actions-button"  @click="actionsShow" @blur="actionsHidden" :value="title" >
+        <div v-if="showActions" class="black-block" onklick>
             <div><b-dropdown-item></b-dropdown-item></div>
         </div>
-        <template v-for="action in actions">
+        <div v-if="showActions" class="div-with-actions">
+        <template  v-for="action in actions">
             <!-- Passing v-on:click to v-bind doesn't seem to work, hence this ugly solution -->
-            <b-dropdown-item v-if="'location' in action" :key="action.name" class="menu_btn" variant="primary" :to="action.location">
+            <router-link v-if="'location' in action" :key="action.name" class="div-with-actions_button" variant="primary" :to="action.location">
                 {{ action.name }}
-            </b-dropdown-item>
-            <b-dropdown-item v-else-if="'href' in action" :key="action.name" class="menu_btn" variant="primary" :href="action.href">
+            </router-link>
+            <a v-else-if="'href' in action" :key="action.name" class="div-with-actions_button" variant="primary" :href="action.href">
                 {{ action.name }}
-            </b-dropdown-item>
-            <b-dropdown-item v-else-if="'callback' in action" :key="action.name" class="menu_btn" variant="primary" @click="action.callback()">
+            </a>
+            <button v-else-if="'callback' in action" :key="action.name" class="div-with-actions_button" variant="primary" @click="action.callback()">
                 {{ action.name }}
-            </b-dropdown-item>
+            </button>
         </template>
-    </b-dropdown>
+        </div>
+    </div>
 </template>
-
+<style scoped>
+    .div-with-actions {
+        width: max-content;
+        flex: 1;
+        position: absolute;
+        display: block;
+        z-index: 1200;
+        background-color: var(--MenuColor);
+    }
+    .div-with-actions_button {
+        display: block;
+        background: hsla(0,0%,100%,.3) !important;
+        padding: 5px;
+        line-height: normal;
+        padding-left: 7px;
+        padding-right: 7px;
+        color: var(--ButtonTextColor) !important;
+        text-decoration: none;
+        width: 100%;
+        text-align: left;
+        border: solid 1px var(--MenuColor) !important;
+        border-top: 0px !important;
+    }
+    .actions-menu {
+        z-index: 1000;
+        background-color: var(--MenuColor);
+    }
+    .black-block{
+        display:none;
+    }
+    .actions-menu_actions-button {
+        color: var(--ButtonTextColor) !important;
+        background: hsla(0,0%,100%,.3);
+        border: solid 1px var(--MenuColor) !important;
+        border-left: 0px !important;
+        text-align: left;
+    }
+    @media screen and (max-aspect-ratio: 13/9) {
+        @media screen and (max-device-width: 480px) {
+            .actions-menu::after {
+                display: none;
+            }
+            .div-with-actions{
+                width: 100vw !important;
+            }
+            .black-block {
+                top: -50vh !important;
+                right: 0;
+                left: 0;
+                position: fixed;
+                width: 100vw;
+                height: 0;
+                z-index: 700;
+                opacity: 0.7;
+                display: block !important;
+                overflow: scroll;
+                background-color: black !important;
+                height: 200vh;
+                z-index: 1000;
+            }
+            .actions-menu_actions-button, .div-with-actions_button {
+                width: 100%;
+                text-align: left;
+                border-bottom: 0 !important;
+                border-right: 0 !important;
+                border: solid 1px var(--MenuColor) !important;
+                border-left: 0px !important;
+                border-top: 0px !important;
+                z-index: 1000;
+                padding-left: 7px !important;
+                padding-right: 7px !important;
+            }
+        }
+    }
+</style>
 <script lang="ts">
     import { Component, Vue, Prop } from "vue-property-decorator"
     import { RawLocation } from "vue-router"
@@ -43,5 +120,14 @@
     export default class ActionsMenu extends Vue {
         @Prop({ type: Array }) actions!: IAction[]
         @Prop({ type: String }) title!: string
+
+        private showActions: boolean = false;
+
+        private actionsShow() {
+            this.showActions = !this.showActions;
+        }
+        private actionsHidden() {
+            this.showActions = false;
+        }
     }
 </script>
