@@ -359,7 +359,7 @@ export const authModule: Module<IAuthState, {}> = {
             localStorage.setItem(authNonceKey, nonce)
             const path =
                 router.currentRoute.name === "auth_response" ?
-                router.resolve("main").href :
+                router.resolve({ name: "main" }).href :
                 router.currentRoute.fullPath
             const savedState: IOIDCState = {
                 nonce,
