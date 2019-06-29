@@ -26,7 +26,10 @@
 
 <template>
     <b-container fluid class="cont_form without_padding">
-        <div v-for="entry in shownEntries" :key="entry.index" class="form_entry">
+        <div v-if="shownEntries.length === 0">
+          {{ $t('item_not_found') }}
+        </div>
+        <div v-else v-for="entry in shownEntries" :key="entry.index" class="form_entry">
             <b-form class="view_form">
                 <div v-for="(block, blockI) in blocks" :key="blockI" class="form_block" :style="{ width: `${block.width * 100}%` }">
                     <template v-for="fieldInfo in block.fields" class="form_data">
@@ -116,6 +119,8 @@
         // Internal arrays are fields in columns order
         private entries: IForm[] = []
         private newEntries: IForm[] = []
+        // Used for returning back if "Delete" is used
+        private deletedOne: boolean = false
 
         get locked() {
             return this.uv.rows === null && this.currentSubmit !== null
@@ -191,6 +196,8 @@
                     id,
                 })
             }
+
+            this.deletedOne = true
         }
 
         @Watch("uv", { deep: true })
@@ -442,20 +449,14 @@
             this.applyChanges()
         }
 
-        private returnBack() {
-            if (this.isRoot) {
-                this.$router.back()
-            }
-        }
-
         get shownEntries() {
             return this.entries.filter(entry => !entry.deleted).concat(this.newEntries.filter(entry => !entry.deleted))
         }
 
         @Watch("shownEntries")
         private returnIfEmpty() {
-            if (this.shownEntries.length === 0) {
-                this.returnBack()
+            if (this.isRoot && this.deletedOne && this.shownEntries.length === 0) {
+                this.$router.back()
             }
         }
 
