@@ -20,7 +20,7 @@
 </i18n>
 
 <template>
-    <div class="form_control_panel">
+    <div class="form-control-panel">
         <div class="nested-menu" v-if="actions.length > 0">
             <ActionsMenu title="☰"
                          :actions="actions" />
@@ -119,6 +119,33 @@
         margin-top: 10px;
         margin-bottom: 2px;
         z-index: 1000;
+    }
+    .form-control-panel {
+        padding-right: 2px;
+    }
+    .form-control-panel_select {
+        border-color: var(--NavigationBackColor);
+    }
+    .form-control-panel_input {
+        border-color: var(--NavigationBackColor)
+    }
+    .form-control-panel_textarea {
+        border-color: var(--NavigationBackColor);
+        max-width: 98%;
+        resize: none;
+        overflow-y: hidden !important;
+        overflow-x: hidden !important;
+        word-wrap: unset !important;
+    }
+    .form-control-panel_select_error, .form-control-panel_input_error, .form-control-panel_textarea_error {
+        background-color: var(--ErrorBackColor)
+    }
+    .form-control-panel_select:focus, .form-control-panel_input:focus, .form-control-panel_textarea:focus {
+        border-color: var(--NavigationBackColor);
+        box-shadow: 0 0 0 white;
+    }
+    .form-control-panel_select:disabled, .form-control-panel_input:disabled, .form-control-panel_textarea:disabled {
+        background-color: var(--ControlDisableColor);
     }
 </style>
 <script lang="ts">
