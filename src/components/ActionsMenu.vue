@@ -1,10 +1,10 @@
 <template>
     <div class="actions-menu" v-if="actions.length > 0" >
-        <input type="button" class="actions-menu_actions-button"  @click="actionsShow" @blur="actionsHidden" :value="title" >
+        <input type="button" class="actions-menu_actions-button"  @click="actionsShow"  :value="title" >
         <div v-if="showActions" class="black-block" onklick>
-            <div><b-dropdown-item></b-dropdown-item></div>
+            <button class="black-block_button" @click="actionsHidden()"></button>
         </div>
-        <div v-if="showActions" class="div-with-actions">
+        <div v-show="showActions" class="div-with-actions">
         <template  v-for="action in actions">
             <!-- Passing v-on:click to v-bind doesn't seem to work, hence this ugly solution -->
             <router-link v-if="'location' in action" :key="action.name" class="div-with-actions_button" variant="primary" :to="action.location">
@@ -13,9 +13,7 @@
             <a v-else-if="'href' in action" :key="action.name" class="div-with-actions_button" variant="primary" :href="action.href">
                 {{ action.name }}
             </a>
-            <button v-else-if="'callback' in action" :key="action.name" class="div-with-actions_button" variant="primary" @click="action.callback()">
-                {{ action.name }}
-            </button>
+            <input type="button" :value="action.name" v-else-if="'callback' in action" :key="action.name" class="div-with-actions_button" variant="primary" @click="action.callback(); actionsHidden();">
         </template>
         </div>
     </div>
@@ -46,9 +44,23 @@
     .actions-menu {
         z-index: 1000;
         background-color: var(--MenuColor);
+        position: relative;
     }
     .black-block{
-        display:none;
+       position: fixed;
+       width: 150vw;
+       height: 150vh;
+       top: -50vh;
+       left:-50vw;
+    }
+    .black-block_button{
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: auto !important;
+    }
+    .actions-menu_actions-button:focus {
+        outline: none;
     }
     .actions-menu_actions-button {
         color: var(--ButtonTextColor) !important;
@@ -59,9 +71,6 @@
     }
     @media screen and (max-aspect-ratio: 13/9) {
         @media screen and (max-device-width: 480px) {
-            .actions-menu::after {
-                display: none;
-            }
             .div-with-actions{
                 width: 100vw !important;
             }
@@ -78,7 +87,20 @@
                 overflow: scroll;
                 background-color: black !important;
                 height: 200vh;
-                z-index: 1000;
+            }
+            .actions-menu_actions-button {
+                position: sticky;
+            }
+            .actions-menu::after {
+                content: "";
+                display: block;
+                width: 100%;
+                background: var(--MenuColor);
+                position: absolute;
+                height: 100%;
+                z-index: 900;
+                opacity: 1;
+                top: 0;
             }
             .actions-menu_actions-button, .div-with-actions_button {
                 width: 100%;
@@ -88,10 +110,15 @@
                 border: solid 1px var(--MenuColor) !important;
                 border-left: 0px !important;
                 border-top: 0px !important;
-                z-index: 1000;
+                z-index: 1000 !important;
                 padding-left: 7px !important;
                 padding-right: 7px !important;
             }
+        }
+    }
+    @media print {
+        .actions-menu {
+            display: none !important
         }
     }
 </style>
@@ -121,13 +148,14 @@
         @Prop({ type: Array }) actions!: IAction[]
         @Prop({ type: String }) title!: string
 
-        private showActions: boolean = false;
+        private showActions: boolean = false
 
         private actionsShow() {
-            this.showActions = !this.showActions;
+            this.showActions = !this.showActions
         }
         private actionsHidden() {
-            this.showActions = false;
+            
+            this.showActions = false
         }
     }
 </script>

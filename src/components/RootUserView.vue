@@ -113,9 +113,11 @@
         height: inherit;
     }
     .menu_none-scrol {
-        overflow: hidden; 
-        height: inherit; display: flex;
+        overflow: hidden;
+        height: inherit;
+        display: flex;
         flex-direction: column;
+        z-index: 1050;
     }
     @media print {
         .head-menu {
