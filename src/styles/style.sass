@@ -50,6 +50,7 @@ body
 	body
 		-webkit-print-color-adjust: exact
 		 color-adjust: exact
+		 background-color: white !important
 
 /*
  *убираем красивости у кнопок селектов ссылок и прочего (без important придется прописывать этоже буквально для каждой кнопки)
@@ -594,7 +595,7 @@ div
 			tbody
 				td
 					div
-						&.form_control_panel
+						&.form-control-panel
 							@media screen and (max-device-width: 480px)
 								left: 2px
 								width: calc(100% - 4px)
@@ -616,114 +617,3 @@ div
 
 
 /* Форма */
-.custom-select
-	display: block !important
-@media print
-	button.delete_btn
-		display: none !important
-button.delete_btn
-	background: hsla(0,0%,100%,.3) !important
-	padding: 0px
-	padding-left: 7px
-	padding-right: 7px
-	line-height: normal
-	height: calc(1.5em + 4px)
-div
-	&.cont_form
-		overflow-y: auto
-		overflow-x: hidden
-		height: 100%
-		width: 100vw
-		@media screen and (max-aspect-ratio: 13/9)
-				@media screen and (max-device-width: 480px)
-					overflow: auto !important
-form
-	&.view_form
-		@media screen and (orientation: portrait)
-			@media screen and (max-device-width: 480px)
-				width: max-content
-		border-bottom: 0
-		border-top: 0
-		@media print
-			div
-				&.form_block
-					width: 148vw !important
-					div
-						page-break-inside: avoid
-						div
-							page-break-inside: avoid
-				
-		div
-			&.form_control_panel
-				padding-right: 2px
-				select
-					border-color: var(--NavigationBackColor)
-					&.error-style
-						background-color: var(--ErrorBackColor)
-				*:focus
-					border-color: var(--NavigationBackColor)
-					box-shadow: 0 0 0 white
-					&.error-style
-						background-color: var(--ErrorBackColor)
-				input
-					border-color: var(--NavigationBackColor)
-					&.error-style
-						background-color: var(--ErrorBackColor)
-				textarea
-					border-color: var(--NavigationBackColor)
-					max-width: 98%
-					min-width:
-					resize: none
-					overflow-y: hidden !important
-					overflow-x: hidden !important
-					word-wrap: unset !important
-					&.error-style
-						background-color: var(--ErrorBackColor)
-				*:disabled
-					background-color: var(--ControlDisableColor)
-
-			&.form_block
-				@media screen and (max-aspect-ratio: 13/9)
-					@media screen and (max-device-width: 480px)
-						width: 100% !important
-						display: block
-						div
-							width: 100%
-							&.form-group
-								display: table
-							div
-								width: 100%
-								div
-									&.nested
-										left: calc(2rem + 10px)
-								&.form_control_panel
-									.editors	
-										width: calc(100vw - 2px)
-										position: sticky
-										left: 1px
-									div
-										&.caption_editors
-											width: max-content
-											position: sticky
-											left: 1px
-				div
-					&.caption_editors
-						color: var(--NavigationTextColor)
-					&.caption_inline
-						display: inline-block
-						margin-left: 2px
-									
-				width: 100%
-				margin: 0 1px
-				display: inline-block
-				vertical-align: top
-
-			&.form-group
-				margin-top: 7px
-				margin-bottom: 0px
-
-		button
-			@media screen and (max-aspect-ratio: 13/9)
-				@media screen and (max-device-width: 480px)
-					position: sticky
-					left: 0

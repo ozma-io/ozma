@@ -24,26 +24,26 @@
         <div class="nested-menu" v-if="actions.length > 0">
             <ActionsMenu title="☰"
                          :actions="actions" />
-            <div v-if="caption.length > 0" class="caption_editors caption_inline">
+            <div v-if="caption.length > 0" class="caption-editors">
                 {{caption}}
             </div>
         </div>
-        <div v-else-if="caption.length > 0" class="caption_editors">
+        <div v-else-if="caption.length > 0" class="caption-editors">
             {{caption}}
         </div>
         <template v-if="inputType.name === 'error'">
             {{ inputType.text }}
         </template>
-        <b-form-checkbox v-else-if="inputType.name === 'check'"
+        <input type="checkbox" v-else-if="inputType.name === 'check'"
                          :value="value"
-                         :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
+                         :class="(isInvalid || isAwaited) ? 'form-control-panel_checkbox_error form-control-panel_checkbox' : 'form-control-panel_checkbox'"
                          @input="updateValue($event)"
                          :disabled="isDisabled"
                          ref="control" />
-        <b-form-textarea v-else-if="inputType.name === 'textarea'"
+        <textarea v-else-if="inputType.name === 'textarea'"
                          :style="inputType.style"
                          :value="valueText"
-                         :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
+                         :class="(isInvalid || isAwaited) ? 'form-control-panel_textarea_error form-control-panel_textarea' : 'form-control-panel_textarea'"
                          @input="updateValue($event)"
                          :disabled="isDisabled"
                          :rows="3"
@@ -62,32 +62,35 @@
                     :defaultValues="inputType.defaultValues"
                     @update:actions="extraActions = $event"
                     ref="control" />
-        <b-form-select v-else-if="inputType.name === 'select'"
-                       :value="value"
-                       :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
-                       @input="updateValue($event)"
-                       :disabled="isDisabled"
-                       :options="inputType.options"
-                       ref="control" />
+        <select v-else-if="inputType.name === 'select'"
+                :value="value"
+                :class="(isInvalid || isAwaited) ? 'form-control-panel_select_error form-control-panel_select' : 'form-control-panel_select'"
+                @input="updateValue($event)"
+                :disabled="isDisabled"
+                ref="control">
+            <option v-for="option in inputType.options" v-bind:value="option.value">
+                {{ option.text }}
+            </option>
+        </select>
         <!-- We don't use bootstrap-vue's b-form-input type=text because of problems with Safari
                 https://github.com/bootstrap-vue/bootstrap-vue/issues/1951
         -->
-        <b-form-textarea v-else-if="inputType.type === 'text'"
+        <textarea v-else-if="inputType.type === 'text'"
                 @keydown.enter.prevent=""
                 wrap="soft"
                 :value="valueText"
                 :style="inputType.style"
-                :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
+                :class="(isInvalid || isAwaited) ? 'form-control-panel_textarea_error form-control-panel_textarea' : 'form-control-panel_textarea'"
                 @input="updateValue($event)"
                 :disabled="isDisabled"
                 :rows="3"
                 :max-rows="6"
                 :required="!isNullable"
                 ref="control" />
-        <b-form-textarea v-else
+        <textarea v-else
                 :value="valueText"
                 :style="inputType.style"
-                :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
+                :class="(isInvalid || isAwaited) ? 'form-control-panel_textarea_error form-control-panel_textarea' : 'form-control-panel_textarea'"
                 @input="updateValue($event)"
                 :disabled="isDisabled"
                 :rows="3"
@@ -120,32 +123,57 @@
         margin-bottom: 2px;
         z-index: 1000;
     }
+    .caption-editors {
+        display: inline-block;
+        margin-left: 2px;
+    }
+
     .form-control-panel {
         padding-right: 2px;
     }
     .form-control-panel_select {
         border-color: var(--NavigationBackColor);
+        width: 100%;
+        padding: .375rem .75rem;
+        height: calc(1.5em + .75rem + 2px);
     }
-    .form-control-panel_input {
+    .form-control-panel_checkbox {
         border-color: var(--NavigationBackColor)
     }
     .form-control-panel_textarea {
         border-color: var(--NavigationBackColor);
-        max-width: 98%;
-        resize: none;
+        width: 100%;
         overflow-y: hidden !important;
         overflow-x: hidden !important;
         word-wrap: unset !important;
+        padding: .375rem .75rem;
     }
-    .form-control-panel_select_error, .form-control-panel_input_error, .form-control-panel_textarea_error {
+    .form-control-panel_select_error, .form-control-panel_checkbox_error, .form-control-panel_textarea_error {
         background-color: var(--ErrorBackColor)
     }
-    .form-control-panel_select:focus, .form-control-panel_input:focus, .form-control-panel_textarea:focus {
+    .form-control-panel_select:focus, .form-control-panel_checkbox:focus, .form-control-panel_textarea:focus {
         border-color: var(--NavigationBackColor);
         box-shadow: 0 0 0 white;
     }
-    .form-control-panel_select:disabled, .form-control-panel_input:disabled, .form-control-panel_textarea:disabled {
+    .form-control-panel_select:disabled, .form-control-panel_checkbox:disabled, .form-control-panel_textarea:disabled {
         background-color: var(--ControlDisableColor);
+    }
+    @media screen and (max-aspect-ratio: 13/9) {
+        @media screen and (max-device-width: 480px) {
+
+            .form-control-panel_select, .form-control-panel_checkbox, .form-control-panel_textarea {
+                width: calc(100vw - 2px);
+                position: -webkit-sticky;
+                position: sticky;
+                left: 1px;
+                display: block
+            }
+            .caption-editors {
+                position: sticky;
+                left: 1px;
+                width: max-content;
+            }
+        }
     }
 </style>
 <script lang="ts">

@@ -154,7 +154,6 @@
             this.showActions = !this.showActions
         }
         private actionsHidden() {
-            
             this.showActions = false
         }
     }

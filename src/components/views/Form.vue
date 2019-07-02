@@ -27,10 +27,10 @@
 <template>
     <b-container fluid class="view-form">
         <div v-for="entry in shownEntries" :key="entry.index">
-            <b-form class="form-entry">
+            <form class="form-entry">
                 <div v-for="(block, blockI) in blocks" :key="blockI" class="form-block" :style="{ width: `${block.width * 100}%` }">
                     <template v-for="fieldInfo in block.fields" class="form_data">
-                        <b-form-group v-if="fieldInfo.visible" :key="fieldInfo.column.name" :label-for="fieldInfo.column.name">
+                        <div class="form-data" v-if="fieldInfo.visible" :key="fieldInfo.column.name" :label-for="fieldInfo.column.name">
                             <FormControl
                                 :caption="fieldInfo.column.name"
                                 v-bind="entry.fields[fieldInfo.index]"
@@ -41,7 +41,7 @@
                                 :uv="uv"
                                 @update="beforeUpdateEntry(entry)"
                                 :added="entry.added" />
-                        </b-form-group>
+                        </div>
                     </template>
                 </div>
 
@@ -52,7 +52,7 @@
                 <b-modal lazy :id="`deleteConfirm_${entry.id}`" ok-variant="danger" :ok-title="$t('ok')" @ok="deleteRecord(entry.added, entry.id)" :cancel-title="$t('cancel')">
                     {{ $t('delete_confirmation') }}
                 </b-modal>
-            </b-form>
+            </form>
         </div>
     </b-container>
 </template>
@@ -67,9 +67,16 @@
     .form-entry {
         border-bottom: 0;
         border-top: 0;
+        
     }
     .form-block{
-
+        display:inline-block;
+        vertical-align: top;
+        margin: 0 1px;
+    }
+    .form-data {
+        margin-top: 7px;
+        color: var(--NavigationTextColor);
     }
     .delete-block{
         background: var(--MenuColor);
@@ -96,12 +103,19 @@
                 width: 100% !important;
                 display: block;
             }
+            .delete-block {
+                position: sticky;
+                left: 0;
+            }
+            .form-entry{
+                display: grid;
+            }
         }
     }
     @media screen and (orientation: portrait) {
         @media screen and (max-device-width: 480px) {
             .form-entry {
-                width: max-content
+                width: max-content;
             }
         }
     }
