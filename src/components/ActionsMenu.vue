@@ -1,5 +1,5 @@
 <template>
-    <div class="actions-menu" v-if="actions.length > 0" >
+    <div :class="showActions? 'actions-menu_active actions-menu' : 'actions-menu'" v-if="actions.length > 0" >
         <input type="button" class="actions-menu_actions-button"  @click="actionsShow"  :value="title" >
         <div v-if="showActions" class="black-block" onklick>
             <button class="black-block_button" @click="actionsHidden()"></button>
@@ -44,6 +44,10 @@
     .actions-menu {
         z-index: 1000;
         background-color: var(--MenuColor);
+        
+    }
+
+    .actions-menu_active {
         position: relative;
     }
     .black-block{
@@ -68,6 +72,10 @@
         border: solid 1px var(--MenuColor) !important;
         border-left: 0px !important;
         text-align: left;
+        height: 100%;
+        padding-bottom: 4px;
+        padding-top: 4px;
+        line-height: normal;
     }
     @media screen and (max-aspect-ratio: 13/9) {
         @media screen and (max-device-width: 480px) {
@@ -88,9 +96,13 @@
                 background-color: black !important;
                 height: 200vh;
             }
+            .actions-menu{
+                position:relative;
+            }
             .actions-menu_actions-button {
                 position: sticky;
             }
+
             .actions-menu::after {
                 content: "";
                 display: block;

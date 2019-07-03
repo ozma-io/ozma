@@ -37,14 +37,14 @@
         <input type="checkbox" v-else-if="inputType.name === 'check'"
                          :value="value"
                          :class="(isInvalid || isAwaited) ? 'form-control-panel_checkbox_error form-control-panel_checkbox' : 'form-control-panel_checkbox'"
-                         @input="updateValue($event)"
+                         @input="updateValue($event.target.value)"
                          :disabled="isDisabled"
                          ref="control" />
         <textarea v-else-if="inputType.name === 'textarea'"
                          :style="inputType.style"
                          :value="valueText"
                          :class="(isInvalid || isAwaited) ? 'form-control-panel_textarea_error form-control-panel_textarea' : 'form-control-panel_textarea'"
-                         @input="updateValue($event)"
+                         @input="updateValue($event.target.value)"
                          :disabled="isDisabled"
                          :rows="3"
                          :max-rows="6"
@@ -62,16 +62,21 @@
                     :defaultValues="inputType.defaultValues"
                     @update:actions="extraActions = $event"
                     ref="control" />
-        <select v-else-if="inputType.name === 'select'"
+        <div v-else-if="inputType.name === 'select'" class="select-container">
+        <select 
                 :value="value"
                 :class="(isInvalid || isAwaited) ? 'form-control-panel_select_error form-control-panel_select' : 'form-control-panel_select'"
-                @input="updateValue($event)"
+                @input="updateValue($event.target.value)"
                 :disabled="isDisabled"
                 ref="control">
             <option v-for="option in inputType.options" v-bind:value="option.value">
                 {{ option.text }}
             </option>
         </select>
+        <div class="select-container-after">
+
+        </div>
+        </div>
         <!-- We don't use bootstrap-vue's b-form-input type=text because of problems with Safari
                 https://github.com/bootstrap-vue/bootstrap-vue/issues/1951
         -->
@@ -81,7 +86,7 @@
                 :value="valueText"
                 :style="inputType.style"
                 :class="(isInvalid || isAwaited) ? 'form-control-panel_textarea_error form-control-panel_textarea' : 'form-control-panel_textarea'"
-                @input="updateValue($event)"
+                @input="updateValue($event.target.value)"
                 :disabled="isDisabled"
                 :rows="3"
                 :max-rows="6"
@@ -91,7 +96,7 @@
                 :value="valueText"
                 :style="inputType.style"
                 :class="(isInvalid || isAwaited) ? 'form-control-panel_textarea_error form-control-panel_textarea' : 'form-control-panel_textarea'"
-                @input="updateValue($event)"
+                @input="updateValue($event.target.value)"
                 :disabled="isDisabled"
                 :rows="3"
                 :max-rows="6"
@@ -104,16 +109,17 @@
         width: max-content;
         display: inline-block;
     }
-    .nested-menu > > > .actions-menu_actions-button {
+    .nested-menu >>> .actions-menu_actions-button {
         border: 0px !important;
         line-height: normal;
         padding-bottom: 3px;
         padding-top: 3px;
-        padding-left: 0px;
+        padding-left: 5px;
+        height: 100%;
+        text-align: left;
     }
     .nested-menu {
         margin-left: -1px;
-        position: sticky;
         left: 0;
         color: var(--ButtonTextColor) !important;
         width: max-content !important;
@@ -121,7 +127,6 @@
         margin-right: 7px;
         margin-top: 10px;
         margin-bottom: 2px;
-        z-index: 1000;
     }
     .caption-editors {
         display: inline-block;
@@ -148,6 +153,45 @@
         word-wrap: unset !important;
         padding: .375rem .75rem;
     }
+    .select-container {
+        display: flex;
+    }
+    .select-container:after {
+        display: inline-block;
+        margin-left: .255em;
+        vertical-align: .255em;
+        content: "";
+        border-top: .25em solid;
+        border-right: .25em solid transparent;
+        border-bottom: 0;
+        border-left: .25em solid transparent;
+        color: black;
+        margin-left: -1.3em;
+        margin-top: 1.3em;
+        z-index:1;
+    }
+    .select-container-after{
+        width: 0px;
+        z-index:1;
+    }
+    .select-container-after:after {
+        display: inline-block;
+        margin-left: .255em;
+        vertical-align: .255em;
+        content: "";
+        border-right: .25em solid transparent;
+        border-bottom: .25em solid;
+        border-left: .25em solid transparent;
+        color: black;
+        margin-bottom: -0.3em;
+        margin-left: -1.3em;
+    }
+    .form-control-panel_select, .form-control-panel_checkbox, .form-control-panel_textarea {
+        border-radius: 0;
+        box-shadow: none;
+        -webkit-appearance: none;
+        background: white;
+    }
     .form-control-panel_select_error, .form-control-panel_checkbox_error, .form-control-panel_textarea_error {
         background-color: var(--ErrorBackColor)
     }
@@ -160,13 +204,19 @@
     }
     @media screen and (max-aspect-ratio: 13/9) {
         @media screen and (max-device-width: 480px) {
-
+            .nested-menu {
+                z-index: 0;
+                position: sticky;
+            }
+            .nested-menu:hover {
+                z-index: 1200;
+            }
             .form-control-panel_select, .form-control-panel_checkbox, .form-control-panel_textarea {
                 width: calc(100vw - 2px);
                 position: -webkit-sticky;
                 position: sticky;
                 left: 1px;
-                display: block
+                display: block;
             }
             .caption-editors {
                 position: sticky;
