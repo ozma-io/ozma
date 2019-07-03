@@ -11,8 +11,7 @@
             "translations_error": "Failed to fetch translations: {msg}",
             "save": "Save",
             "account": "Account",
-            "logout": "Logout",
-            "confirm_close": "You have unsaved changes, do you want to discard them?"
+            "logout": "Logout"
         },
         "ru": {
             "actions": "Действия",
@@ -25,8 +24,7 @@
             "translations_error": "Ошибка получения переводов: {msg}",
             "save": "Сохранить",
             "account": "Профиль",
-            "logout": "Выйти",
-            "confirm_close": "У вас есть несохранённые изменения, отбросить их?"
+            "logout": "Выйти"
         }
     }
 </i18n>

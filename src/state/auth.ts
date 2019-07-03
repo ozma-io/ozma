@@ -5,7 +5,7 @@ import jwtDecode from "jwt-decode"
 import { IRef } from "@/utils"
 import * as Api from "@/api"
 import * as Utils from "@/utils"
-import { router, getQueryValue } from "@/modules"
+import { router, asyncPush, getQueryValue } from "@/modules"
 
 export class CurrentAuth {
     createdTime: number
@@ -150,6 +150,7 @@ const getToken = (context: ActionContext<IAuthState, {}>, params: Record<string,
             if (state.pending === pending.ref) {
                 dispatch("removeAuth", undefined, { root: true })
                 commit("setError", e.message)
+                dispatch("requestLogin", false)
             }
             throw e
         }
@@ -220,6 +221,7 @@ export const authModule: Module<IAuthState, {}> = {
     },
     mutations: {
         setError: (state, lastError: string) => {
+            console.error(`Auth error: ${lastError}`)
             state.lastError = lastError
             state.pending = null
         },
@@ -266,7 +268,7 @@ export const authModule: Module<IAuthState, {}> = {
             root: true,
             handler: () => { return },
         },
-        startAuth: context => {
+        startAuth: async context => {
             const { state, commit, dispatch } = context
 
             let tryExisting = true
@@ -277,6 +279,7 @@ export const authModule: Module<IAuthState, {}> = {
                 const stateString = getQueryValue("state")
                 if (stateString !== null) {
                     const savedState: IOIDCState = JSON.parse(atob(stateString))
+                    console.log("auth state", savedState)
                     const nonce = localStorage.getItem(authNonceKey)
                     if (nonce === null || savedState.nonce !== nonce) {
                         commit("setError", "Invalid client nonce")
@@ -297,7 +300,7 @@ export const authModule: Module<IAuthState, {}> = {
                         router.push(savedState.path)
                     }
                 } else {
-                    // We get here is redirected from logout.
+                    // We got here after logout, redirect.
                     router.push({ name: "main" })
                 }
             } else {
@@ -355,9 +358,14 @@ export const authModule: Module<IAuthState, {}> = {
             const redirectParams = new URLSearchParams({ url: window.location.href })
             const nonce = uuidv4()
             localStorage.setItem(authNonceKey, nonce)
+            console.log("current path", router.currentRoute.fullPath)
+            const path =
+                router.currentRoute.name === "auth_response" ?
+                router.resolve({ name: "main" }).href :
+                router.currentRoute.fullPath
             const savedState: IOIDCState = {
                 nonce,
-                path: router.currentRoute.fullPath,
+                path,
             }
             const params = {
                 client_id: Api.authClientId,
