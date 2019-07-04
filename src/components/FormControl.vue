@@ -117,6 +117,7 @@
         padding-left: 5px;
         height: 100%;
         text-align: left;
+        border-radius: 0 !important;
     }
     .nested-menu {
         margin-left: -1px;
@@ -152,6 +153,7 @@
         overflow-x: hidden !important;
         word-wrap: unset !important;
         padding: .375rem .75rem;
+        resize: none
     }
     .select-container {
         display: flex;
@@ -220,7 +222,7 @@
             }
             .caption-editors {
                 position: sticky;
-                left: 1px;
+                left: 3px;
                 width: max-content;
             }
         }
