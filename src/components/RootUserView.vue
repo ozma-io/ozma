@@ -59,36 +59,36 @@
                           @update:bodyStyle="styleNode.innerHTML = $event" />
             </b-col>
         </div>
-        <nav v-if="!uvIsError && bottomBarNeeded" class="fix-bot navbar fixed-bottom navbar-light bg-light">
-            <div class="count_row">{{ statusLine }}</div>
-            <b-alert v-for="error in uvErrors"
+        <nav v-if="!uvIsError && bottomBarNeeded" class="fix-bot">
+            <div class="count-row">{{ statusLine }}</div>
+            <div v-for="error in uvErrors"
                      :key="error"
-                     class="error custom_danger"
+                     class="error custom-danger"
                      variant="danger"
                      show>
                 {{ $t('fetch_error', { msg: error }) }}
-            </b-alert>
-            <b-alert class="error custom_danger"
+            </div>
+            <div class="error custom-danger"
                      variant="danger"
-                     :show="settingsLastError !== null">
+                     v-if="settingsLastError !== null">
                 {{ $t('settings_error', { msg: settingsLastError }) }}
-            </b-alert>
-            <b-alert class="error custom_danger"
+            </div>
+            <div class="error custom-danger"
                      variant="danger"
-                     :show="translationsLastError !== null">
+                     v-if="translationsLastError !== null">
                 {{ $t('translations_error', { msg: translationsLastError }) }}
-            </b-alert>
-            <b-alert v-for="error in stagingErrors"
+            </div>
+            <div v-for="error in stagingErrors"
                      :key="error"
-                     class="error custom_danger"
+                     class="error custom-danger"
                      variant="danger"
                      show>
                 {{ $t('submit_error', { msg: error }) }}
-            </b-alert>
-            <b-alert class="error custom_warning" variant="warning" :show="!changes.isEmpty">
-                <button @click="submitChangesWithHook" variant="primary">{{ $t('save') }}</button>
+            </div>
+            <div class="error custom-warning" variant="warning" v-if="!changes.isEmpty">
+                <button class="error_button" @click="submitChangesWithHook" variant="primary">{{ $t('save') }}</button>
                 {{ $t('pending_changes') }}
-            </b-alert>
+            </div>
         </nav>
     </div>
 </template>
@@ -136,19 +136,6 @@
         background-color: var(--MenuColor);
         width: 100%;
     }
-    @media screen and (max-aspect-ratio: 13/9) {
-        @media screen and (max-device-width: 480px) {
-            .head-menu_main-menu-button {
-                width: 100vw;
-                text-align: left;
-                border-top: 0 !important;
-                border-right: 0 !important;
-                border-left: 0 !important;
-                box-sizing: content-box;
-                display: block;
-            }
-        }
-    }
     .head-menu_main-menu-button {
         color: var(--ButtonTextColor) !important;
         background: hsla(0,0%,100%,.3);
@@ -161,6 +148,94 @@
         z-index: 1000;
         padding-bottom: 4px;
         padding-top: 4px;
+    }
+    .fix-bot {
+        padding: 0;
+        line-height: normal;
+        width: 100vw;
+        white-space: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        text-align: right;
+        margin-left: -1px !important;
+        position: relative;
+        background-color: var(--MenuColor) !important;
+        z-index: 1030;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -ms-flex-wrap: nowrap;
+        flex-wrap: nowrap;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+    }
+
+    .count-row {
+        bottom: 0;
+        z-index: 2000;
+        line-height: normal;
+        float: left;
+        display: inline-block;
+        margin-left: 2px;
+        color: var(--ButtonTextColor)
+    }
+    .custom-warning {
+        background-color: var(--MenuColor); 
+        color: var(--ButtonTextColor);
+        float: right;
+    }
+    .custom-danger {
+        background-color: var(--DangerBackColor); 
+        float: left;
+        overflow-x: auto;
+        overflow-y:hidden;
+        width: 100%;
+        text-align: left;
+    }
+    .custom-success {
+        background-color: var(--SuccessBackColor)
+    }
+    .error {
+        margin-left: 1px !important;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: inherit;
+        display: inline-block;
+        position: relative;
+    }
+    .error_button {
+        padding: 0;
+        margin: 0px;
+        margin-left: 0;
+        line-height: normal;
+        position: relative;
+        font-size: inherit;
+        background: hsla(0,0%,100%,.3);
+        color: var(--ButtonTextColor);
+        float: none;
+        vertical-align: unset;
+    }
+    @media screen and (max-aspect-ratio: 13/9) {
+        @media screen and (max-device-width: 480px) {
+            .head-menu_main-menu-button {
+                width: 100vw;
+                text-align: left;
+                border-top: 0 !important;
+                border-right: 0 !important;
+                border-left: 0 !important;
+                box-sizing: content-box;
+                display: block;
+            }
+        }
     }
 </style>
 <script lang="ts">
