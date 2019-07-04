@@ -148,6 +148,7 @@
         z-index: 1000;
         padding-bottom: 4px;
         padding-top: 4px;
+        border-radius: 0 !important;
     }
     .fix-bot {
         padding: 0;
@@ -223,6 +224,7 @@
         color: var(--ButtonTextColor);
         float: none;
         vertical-align: unset;
+        border-radius: 0 !important;
     }
     @media screen and (max-aspect-ratio: 13/9) {
         @media screen and (max-device-width: 480px) {
@@ -234,6 +236,7 @@
                 border-left: 0 !important;
                 box-sizing: content-box;
                 display: block;
+                border-radius: 0 !important;
             }
         }
     }

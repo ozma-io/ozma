@@ -120,6 +120,12 @@
             .form-entry {
                 width: max-content;
             }
+            .form-data {
+                margin-top: 0 !important;
+            }
+            .form-block {
+                display: grid;
+            }
         }
     }
         @media print {

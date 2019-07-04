@@ -40,6 +40,7 @@
         text-align: left;
         border: solid 1px var(--MenuColor) !important;
         border-top: 0px !important;
+        border-radius: 0 !important;
     }
     .actions-menu {
         z-index: 1000;
@@ -62,6 +63,7 @@
         height: 100%;
         opacity: 0;
         cursor: auto !important;
+
     }
     .actions-menu_actions-button:focus {
         outline: none;
@@ -76,6 +78,7 @@
         padding-bottom: 4px;
         padding-top: 4px;
         line-height: normal;
+        border-radius: 0 !important;
     }
     @media screen and (max-aspect-ratio: 13/9) {
         @media screen and (max-device-width: 480px) {
