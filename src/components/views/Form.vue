@@ -25,15 +25,15 @@
 </i18n>
 
 <template>
-    <b-container fluid class="cont_form without_padding">
+    <b-container fluid class="view-form">
         <div v-if="shownEntries.length === 0">
           {{ $t('item_not_found') }}
         </div>
-        <div v-else v-for="entry in shownEntries" :key="entry.index" class="form_entry">
-            <b-form class="view_form">
-                <div v-for="(block, blockI) in blocks" :key="blockI" class="form_block" :style="{ width: `${block.width * 100}%` }">
+        <div v-else v-for="entry in shownEntries" :key="entry.index">
+            <form class="form-entry">
+                <div v-for="(block, blockI) in blocks" :key="blockI" class="form-block" :style="{ width: `${block.width * 100}%` }">
                     <template v-for="fieldInfo in block.fields" class="form_data">
-                        <b-form-group v-if="fieldInfo.visible" :key="fieldInfo.column.name" :label-for="fieldInfo.column.name">
+                        <div class="form-data" v-if="fieldInfo.visible" :key="fieldInfo.column.name" :label-for="fieldInfo.column.name">
                             <FormControl
                                 :caption="fieldInfo.column.name"
                                 v-bind="entry.fields[fieldInfo.index]"
@@ -44,19 +44,90 @@
                                 :uv="uv"
                                 @update="beforeUpdateEntry(entry)"
                                 :added="entry.added" />
-                        </b-form-group>
+                        </div>
                     </template>
                 </div>
 
                 <!-- FIXME FIXME FIXME look at permissions! -->
-                <b-button class="delete_btn" v-if="entry.id !== undefined && uv.info.mainEntity !== null" variant="danger" v-b-modal="`deleteConfirm_${entry.id}`">{{ $t('delete') }}</b-button>
+                <div class="delete-block">
+                <input type="button" :value="$t('delete')" class="delete-block_delete-button" v-if="entry.id !== undefined && uv.info.mainEntity !== null" v-b-modal="`deleteConfirm_${entry.id}`">
+                </div>
                 <b-modal lazy :id="`deleteConfirm_${entry.id}`" ok-variant="danger" :ok-title="$t('ok')" @ok="deleteRecord(entry.added, entry.id)" :cancel-title="$t('cancel')">
                     {{ $t('delete_confirmation') }}
                 </b-modal>
-            </b-form>
+            </form>
         </div>
     </b-container>
 </template>
+<style scoped>
+    .view-form {
+        padding: 0px !important;
+        overflow-y: auto;
+        overflow-x: hidden; 
+        height: 100%;
+        width: 100vw;
+    }
+    .form-entry {
+        border-bottom: 0;
+        border-top: 0;
+        
+    }
+    .form-block{
+        display:inline-block;
+        vertical-align: top;
+        margin: 0 1px;
+    }
+    .form-data {
+        margin-top: 7px;
+        color: var(--NavigationTextColor);
+    }
+    .delete-block{
+        background: var(--MenuColor);
+        width: max-content;
+    }
+    .delete-block_delete-button {
+        background: hsla(0,0%,100%,.3) !important;
+        padding: 0px;
+        padding-left: 7px;
+        padding-right: 7px;
+        line-height: normal;
+        height: calc(1.5em + 4px);
+        border: 0px;
+        box-shadow: none;
+        outline: none;
+        color: var(--ButtonTextColor)
+    }
+    @media screen and (max-aspect-ratio: 13/9) {
+        @media screen and (max-device-width: 480px) {
+            .view-form {
+                overflow: auto !important;
+            }
+            .form-block {
+                width: 100% !important;
+                display: block;
+            }
+            .delete-block {
+                position: sticky;
+                left: 0;
+            }
+            .form-entry{
+                display: grid;
+            }
+        }
+    }
+    @media screen and (orientation: portrait) {
+        @media screen and (max-device-width: 480px) {
+            .form-entry {
+                width: max-content;
+            }
+        }
+    }
+        @media print {
+        .delete-block_delete-button {
+            display: none !important;
+        }
+    }
+</style>
 
 <script lang="ts">
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"

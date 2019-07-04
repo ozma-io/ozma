@@ -20,31 +20,31 @@
 </i18n>
 
 <template>
-    <div class="form_control_panel">
-        <div class="nested_menu" v-if="actions.length > 0">
+    <div class="form-control-panel">
+        <div class="nested-menu" v-if="actions.length > 0">
             <ActionsMenu title="☰"
                          :actions="actions" />
-            <div v-if="caption.length > 0" class="caption_editors caption_inline">
+            <div v-if="caption.length > 0" class="caption-editors">
                 {{caption}}
             </div>
         </div>
-        <div v-else-if="caption.length > 0" class="caption_editors">
+        <div v-else-if="caption.length > 0" class="caption-editors">
             {{caption}}
         </div>
         <template v-if="inputType.name === 'error'">
             {{ inputType.text }}
         </template>
-        <b-form-checkbox v-else-if="inputType.name === 'check'"
+        <input type="checkbox" v-else-if="inputType.name === 'check'"
                          :value="value"
-                         :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
-                         @input="updateValue($event)"
+                         :class="(isInvalid || isAwaited) ? 'form-control-panel_checkbox_error form-control-panel_checkbox' : 'form-control-panel_checkbox'"
+                         @input="updateValue($event.target.value)"
                          :disabled="isDisabled"
                          ref="control" />
-        <b-form-textarea v-else-if="inputType.name === 'textarea'"
+        <textarea v-else-if="inputType.name === 'textarea'"
                          :style="inputType.style"
                          :value="valueText"
-                         :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
-                         @input="updateValue($event)"
+                         :class="(isInvalid || isAwaited) ? 'form-control-panel_textarea_error form-control-panel_textarea' : 'form-control-panel_textarea'"
+                         @input="updateValue($event.target.value)"
                          :disabled="isDisabled"
                          :rows="3"
                          :max-rows="6"
@@ -62,33 +62,41 @@
                     :defaultValues="inputType.defaultValues"
                     @update:actions="extraActions = $event"
                     ref="control" />
-        <b-form-select v-else-if="inputType.name === 'select'"
-                       :value="value"
-                       :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
-                       @input="updateValue($event)"
-                       :disabled="isDisabled"
-                       :options="inputType.options"
-                       ref="control" />
+        <div v-else-if="inputType.name === 'select'" class="select-container">
+        <select 
+                :value="value"
+                :class="(isInvalid || isAwaited) ? 'form-control-panel_select_error form-control-panel_select' : 'form-control-panel_select'"
+                @input="updateValue($event.target.value)"
+                :disabled="isDisabled"
+                ref="control">
+            <option v-for="option in inputType.options" v-bind:value="option.value">
+                {{ option.text }}
+            </option>
+        </select>
+        <div class="select-container-after">
+
+        </div>
+        </div>
         <!-- We don't use bootstrap-vue's b-form-input type=text because of problems with Safari
                 https://github.com/bootstrap-vue/bootstrap-vue/issues/1951
         -->
-        <b-form-textarea v-else-if="inputType.type === 'text'"
+        <textarea v-else-if="inputType.type === 'text'"
                 @keydown.enter.prevent=""
                 wrap="soft"
                 :value="valueText"
                 :style="inputType.style"
-                :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
-                @input="updateValue($event)"
+                :class="(isInvalid || isAwaited) ? 'form-control-panel_textarea_error form-control-panel_textarea' : 'form-control-panel_textarea'"
+                @input="updateValue($event.target.value)"
                 :disabled="isDisabled"
                 :rows="3"
                 :max-rows="6"
                 :required="!isNullable"
                 ref="control" />
-        <b-form-textarea v-else
+        <textarea v-else
                 :value="valueText"
                 :style="inputType.style"
-                :class="(isInvalid || isAwaited) ? 'error-style editors' : 'none editors'"
-                @input="updateValue($event)"
+                :class="(isInvalid || isAwaited) ? 'form-control-panel_textarea_error form-control-panel_textarea' : 'form-control-panel_textarea'"
+                @input="updateValue($event.target.value)"
                 :disabled="isDisabled"
                 :rows="3"
                 :max-rows="6"
@@ -96,7 +104,128 @@
                 ref="control" />
     </div>
 </template>
+<style scoped>
+    .nested-menu > .actions-menu{
+        width: max-content;
+        display: inline-block;
+    }
+    .nested-menu >>> .actions-menu_actions-button {
+        border: 0px !important;
+        line-height: normal;
+        padding-bottom: 3px;
+        padding-top: 3px;
+        padding-left: 5px;
+        height: 100%;
+        text-align: left;
+    }
+    .nested-menu {
+        margin-left: -1px;
+        left: 0;
+        color: var(--ButtonTextColor) !important;
+        width: max-content !important;
+        display: block;
+        margin-right: 7px;
+        margin-top: 10px;
+        margin-bottom: 2px;
+    }
+    .caption-editors {
+        display: inline-block;
+        margin-left: 2px;
+    }
 
+    .form-control-panel {
+        padding-right: 2px;
+    }
+    .form-control-panel_select {
+        border-color: var(--NavigationBackColor);
+        width: 100%;
+        padding: .375rem .75rem;
+        height: calc(1.5em + .75rem + 2px);
+    }
+    .form-control-panel_checkbox {
+        border-color: var(--NavigationBackColor)
+    }
+    .form-control-panel_textarea {
+        border-color: var(--NavigationBackColor);
+        width: 100%;
+        overflow-y: hidden !important;
+        overflow-x: hidden !important;
+        word-wrap: unset !important;
+        padding: .375rem .75rem;
+    }
+    .select-container {
+        display: flex;
+    }
+    .select-container:after {
+        display: inline-block;
+        margin-left: .255em;
+        vertical-align: .255em;
+        content: "";
+        border-top: .25em solid;
+        border-right: .25em solid transparent;
+        border-bottom: 0;
+        border-left: .25em solid transparent;
+        color: black;
+        margin-left: -1.3em;
+        margin-top: 1.3em;
+        z-index:1;
+    }
+    .select-container-after{
+        width: 0px;
+        z-index:1;
+    }
+    .select-container-after:after {
+        display: inline-block;
+        margin-left: .255em;
+        vertical-align: .255em;
+        content: "";
+        border-right: .25em solid transparent;
+        border-bottom: .25em solid;
+        border-left: .25em solid transparent;
+        color: black;
+        margin-bottom: -0.3em;
+        margin-left: -1.3em;
+    }
+    .form-control-panel_select, .form-control-panel_checkbox, .form-control-panel_textarea {
+        border-radius: 0;
+        box-shadow: none;
+        -webkit-appearance: none;
+        background: white;
+    }
+    .form-control-panel_select_error, .form-control-panel_checkbox_error, .form-control-panel_textarea_error {
+        background-color: var(--ErrorBackColor)
+    }
+    .form-control-panel_select:focus, .form-control-panel_checkbox:focus, .form-control-panel_textarea:focus {
+        border-color: var(--NavigationBackColor);
+        box-shadow: 0 0 0 white;
+    }
+    .form-control-panel_select:disabled, .form-control-panel_checkbox:disabled, .form-control-panel_textarea:disabled {
+        background-color: var(--ControlDisableColor);
+    }
+    @media screen and (max-aspect-ratio: 13/9) {
+        @media screen and (max-device-width: 480px) {
+            .nested-menu {
+                z-index: 0;
+                position: sticky;
+            }
+            .nested-menu:hover {
+                z-index: 1200;
+            }
+            .form-control-panel_select, .form-control-panel_checkbox, .form-control-panel_textarea {
+                width: calc(100vw - 2px);
+                position: -webkit-sticky;
+                position: sticky;
+                left: 1px;
+                display: block;
+            }
+            .caption-editors {
+                position: sticky;
+                left: 1px;
+                width: max-content;
+            }
+        }
+    }
+</style>
 <script lang="ts">
     import { Component, Vue, Prop, Watch } from "vue-property-decorator"
     import { namespace } from "vuex-class"

@@ -27,6 +27,7 @@ html
  *overflow:hidden запрещает скролл для удобства пролистывания таблиц и прочего (где нужно можно выставить возможность скрола на самой странице)
  */
 body
+	font-family: var(--Font);
 	top: 0px
 	margin-top: 0px
 	margin-bottom: 1px
@@ -50,38 +51,16 @@ body
 	body
 		-webkit-print-color-adjust: exact
 		 color-adjust: exact
-
-/*
- *bootstrap любит внутри обычного блока выставлять отступы убираем их
- */
-div.without_padding
-	padding: 0px
-div.main_div
-	height: 100%
-	display: flex
-	flex-direction: column
-	div
-		&.userview_div
-			width: 100%
-			overflow: hidden
-			flex: 1
+		 background-color: white !important
 
 /*
  *убираем красивости у кнопок селектов ссылок и прочего (без important придется прописывать этоже буквально для каждой кнопки)
  */
 button
     border: 0px !important
-
+.without_padding
+	padding: 0px !important
 /* Навигация */
-.scrol_menu
-	display: block
-	overflow: auto
-	height:	inherit
-.none_scrol
-	overflow: hidden
-	height:	inherit
-	display: flex
-	flex-direction: column
 div
 	&.main_nav
 		width: 100%
@@ -225,63 +204,6 @@ div
 										text-decoration: none
 										border: 0px
 
-/*фиксированная строка внизу*/
-nav
-	&.fix-bot
-		padding: 0
-		line-height: normal
-		width: 100vw
-		white-space: nowrap
-		overflow-x: auto
-		overflow-y: hidden
-		text-align: right
-		margin-left: -1px !important
-		position: relative
-		background-color: var(--MenuColor) !important
-		display: -webkit-box
-		display: -ms-flexbox
-		display: flex
-		-webkit-box-orient: horizontal
-		-webkit-box-direction: normal
-		-ms-flex-direction: row
-		flex-direction: row
-		-ms-flex-wrap: nowrap
-		flex-wrap: nowrap
-		
-		div.custom_warning
-			background-color: var(--MenuColor)
-			color: var(--ButtonTextColor)
-			float: right
-		div.custom_danger
-			background-color: var(--DangerBackColor)
-			float: left
-			overflow-x: auto
-			width: 100%
-			text-align: left
-		div.custom_success
-			background-color: var(--SuccessBackColor)
-
-		div
-			&.error
-				margin-left: 1px !important
-				margin: 0
-				padding: 0
-				border: 0
-				border-radius: inherit
-				display: inline-block
-				button
-					padding: 0
-					margin: 0px
-					margin-left: 0
-					line-height: normal
-					position: relative
-					font-size: inherit
-					background: hsla(0,0%,100%,.3)
-					color: var(--ButtonTextColor)
-					float: none
-					vertical-align: unset
-
-
 /* Таблица */
 div
 	&.cont_table
@@ -344,7 +266,7 @@ div
 								@media screen and (max-aspect-ratio: 13/9)
 									@media screen and (max-device-width: 480px)
 										border: 0
-								height: calc(1.5em + 6px)
+								height: calc(1.5em + 4px)
 								padding-left: 7px
 								background: hsla(0,0%,100%,.3)
 								border-left: 0
@@ -474,15 +396,15 @@ div
 				.opemform-cells
 					left: 20px
 				.fixed-column:first-child
-					box-shadow: 3px 0 0px var(--NavigationBackColor), inset 1px 0px 0px 0px var(--MenuColor)
+					box-shadow: 3px 0 0px var(--TableBorderColor), inset 1px 0px 0px 0px var(--TableBorderColor)
 				.fixed-column
 						position: sticky
 						z-index: 20
 						background-color: inherit
-						box-shadow: 3px 0 0px var(--NavigationBackColor)
+						box-shadow: 3px 0 0px var(--TableBorderColor)
 						border-left: 0
 						@-moz-document url-prefix()
-							outline: solid 1px  var(--NavigationBackColor)
+							outline: solid 1px  var(--TableBorderColor)
 			thead
 				height: 25px
 				border-right: solid 1px  var(--NavigationBackColor) !important
@@ -617,7 +539,7 @@ div
 			tbody
 				td
 					div
-						&.form_control_panel
+						&.form-control-panel
 							@media screen and (max-device-width: 480px)
 								left: 2px
 								width: calc(100% - 4px)
@@ -639,404 +561,3 @@ div
 
 
 /* Форма */
-.custom-select
-	display: block !important
-@media print
-	button.delete_btn
-		display: none !important
-button.delete_btn
-	background: hsla(0,0%,100%,.3) !important
-	padding: 0px
-	padding-left: 7px
-	padding-right: 7px
-	line-height: normal
-	height: calc(1.5em + 4px)
-div
-	&.cont_form
-		overflow-y: auto
-		overflow-x: hidden
-		height: 100%
-		width: 100vw
-		@media screen and (max-aspect-ratio: 13/9)
-				@media screen and (max-device-width: 480px)
-					overflow: auto !important
-form
-	&.view_form
-		@media screen and (orientation: portrait)
-			@media screen and (max-device-width: 480px)
-				width: max-content
-		border-bottom: 0
-		border-top: 0
-		@media print
-			div
-				&.form_block
-					width: 148vw !important
-					div
-						page-break-inside: avoid
-						div
-							page-break-inside: avoid
-				
-		div
-			&.form_control_panel
-				padding-right: 2px
-				select
-					border-color: var(--NavigationBackColor)
-					&.error-style
-						background-color: var(--ErrorBackColor)
-				*:focus
-					border-color: var(--NavigationBackColor)
-					box-shadow: 0 0 0 white
-					&.error-style
-						background-color: var(--ErrorBackColor)
-				input
-					border-color: var(--NavigationBackColor)
-					&.error-style
-						background-color: var(--ErrorBackColor)
-				textarea
-					border-color: var(--NavigationBackColor)
-					max-width: 98%
-					min-width:
-					resize: none
-					overflow-y: hidden !important
-					overflow-x: hidden !important
-					word-wrap: unset !important
-					&.error-style
-						background-color: var(--ErrorBackColor)
-				*:disabled
-					background-color: var(--ControlDisableColor)
-
-			&.form_block
-				@media screen and (max-aspect-ratio: 13/9)
-					@media screen and (max-device-width: 480px)
-						width: 100% !important
-						display: block
-						div
-							width: 100%
-							&.form-group
-								display: table
-							div
-								width: 100%
-								div
-									&.nested
-										left: calc(2rem + 10px)
-								&.form_control_panel
-									.editors	
-										width: calc(100vw - 2px)
-										position: sticky
-										left: 1px
-									div
-										&.caption_editors
-											width: max-content
-											position: sticky
-											left: 1px
-				div
-					&.caption_editors
-						color: var(--NavigationTextColor)
-					&.caption_inline
-						display: inline-block
-						margin-left: 2px
-									
-				width: 100%
-				margin: 0 1px
-				display: inline-block
-				vertical-align: top
-
-			&.form-group
-				margin-top: 7px
-				margin-bottom: 0px
-
-		button
-			@media screen and (max-aspect-ratio: 13/9)
-				@media screen and (max-device-width: 480px)
-					position: sticky
-					left: 0
-			margin-top: 4px
-
-/* меню */
-div
-	&.loading
-		padding-left: 7px
-div
-	div
-		&.without_padding
-			@media print
-				div
-					&.head_menu
-						display: none !important
-			@media screen and (max-aspect-ratio: 13/9)
-				@media screen and (max-device-width: 480px)
-					div
-						&.head_menu
-							display: flex !important
-							width: 100%
-							a
-								&#menu_btn
-									width: 100vw
-									text-align: left
-									border-bottom: 0 !important
-									border-right: 0 !important
-									box-sizing: content-box
-							
-							div
-								width: 100%
-								border-right: 0 !important
-								box-sizing: content-box
-								&.dropdown:after
-									content: ""
-									display: block
-									width: 100%
-									background: var(--MenuColor)
-									position: absolute
-									height: 100%
-									z-index: 1100
-									opacity: 1
-								&.dropdown
-									div
-										div
-											&.black_block
-												top: -50vh !important
-												right: 0
-												left: 0
-												position: fixed
-												width: 100vw
-												height: 0
-												z-index: 700
-												opacity: 0
-												display: block !important
-												overflow: scroll
-												background-color: black !important
-												div
-													height: calc(100vh + 10px)
-													background-color: black !important
-													opacity: 0
-													height: 100%
-													a
-														height: 100%
-										&.show > .black_block
-											height: 160vh
-											opacity: 0.7
-								button:hover
-								button
-									width: 100vw
-									text-align: left
-									z-index: 1200 !important
-								div
-									top: calc(1.5em + 4px) !important
-									min-width: calc(100% + 2px) !important
-									a
-										&.menu_btn
-											z-index: 1000
-											position: relative
-											border-left: 0 !important
-											border-right: 0 !important
-											width: 100%
-											box-sizing: content-box
-
-			div
-				&.head_menu
-					display: inline-flex
-					white-space: nowrap
-					background-color: var(--MenuColor)
-
-					li:last-child
-						float: none
-						width: auto
-					a
-						&#menu_btn
-							color: var(--ButtonTextColor) !important
-							background: hsla(0,0%,100%,.3)
-							padding-top: 5px
-							line-height: normal
-							padding-bottom: 5px
-							border: solid 1px var(--MenuColor)
-							border-left: 0px
-							text-decoration: none
-							padding-left: 7px
-							padding-right: 7px
-							z-index: 1000
-					div
-						&.black_block
-							display: none
-					div
-						/*height: 30px*/
-						&.menu_btn
-							border: solid 1px var(--MenuColor)
-							border-left: 0px
-							z-index: 1000
-							button
-								background: hsla(0,0%,100%,.3) !important
-								padding: 5px
-								
-								line-height: normal
-								padding-left: 7px
-								padding-right: 7px
-								color: var(--ButtonTextColor) !important
-							div.show
-								background: var(--MenuColor)
-								transform: translate3d(0px, calc(1.5em + 4px), 0px) !important
-								@media screen and (max-device-width: 767px) and (orientation: portrait)
-									transform: translateX(0px) !important
-									top: calc(1.5em + 4px) !important
-							div
-								padding: 0
-								min-width: 0
-								background-color: white
-								border: 0
-								border-radius: 0
-								background-clip: unset
-								margin: 0px -0px 0px -1px
-								@media screen and (max-device-width: 767px) and (orientation: portrait)
-									transform: none !important
-									top: calc(1.5em + 4px) !important
-								will-change: unset !important
-								a
-									&.menu_btn
-										color: var(--ButtonTextColor)
-										background: hsla(0,0%,100%,.3)
-										padding: 5px
-										border: solid 1px var(--MenuColor)
-										line-height: normal
-										text-decoration: none
-										padding-left: 7px
-										padding-right: 7px
-										border-bottom: 0
-										display: block
-									&.menu_btn:last-child
-										border-bottom: 1px solid var(--MenuColor)
-/*меню вложенное*/
-div.nested_menu
-	display: contents
-	color: var(--ButtonTextColor) !important
-	width: max-content !important
-	display: block
-	margin-right: 7px
-	margin-top: 10px
-	margin-bottom: 2px
-	&:hover
-		z-index: 1200
-	@media screen and (orientation: portrait)
-		@media screen and (max-device-width: 480px)
-			position: sticky
-			left: 1px
-			button
-				text-align: left
-				margin-left: -1px
-				color: black !important
-			div
-				&.black_block
-					top: 0
-					right: 0
-					left: 0
-					position: fixed
-					width: 100%
-					height: 0
-					background-color: black !important
-					z-index: 1100
-					opacity: 0
-					display: block !important
-					overflow: scroll
-					div
-						height: calc(100vh + 10px)
-			div
-				width: 100%
-				border-right: 0 !important
-				box-sizing: content-box
-				&.dropdown
-					button
-						z-index: 1200!important
-				&.dropdown:after
-					content: ""
-					display: block
-					width: 100%
-					background: var(--MenuColor)
-					position: absolute
-					height: 1.7rem
-					z-index: 1100
-					opacity: 1
-					bottom: 0
-				&.dropdown:hover
-					z-index: 1200
-					div
-						div
-							&.black_block
-								top: -100vh !important
-								right: 0
-								left: 0
-								position: fixed
-								width: 100vw
-								height: 0
-								z-index: 700
-								opacity: 0
-								display: block !important
-								overflow: scroll
-								background-color: black !important
-								div
-									height: calc(400vh + 10px)
-									background-color: black !important
-									opacity: 0
-									a
-										height: 100%
-
-
-						&.show > .black_block
-								height: 400vh
-								opacity: 0.7
-				a
-					&.menu_btn
-						position: relative
-						z-index: 700
-						color: black !important
-						background-color: white !important
-						border-color: var(--MenuColor) !important
-						border-right: 0 !important
-						border-left: 0 !important
-						width: 100vw
-						box-sizing: content-box
-	div
-		&.menu_btn
-			width: 42px !important
-			border: 0
-			border-left: 0px
-			vertical-align: bottom
-			button
-				background: hsla(0,0%,100%,.3) !important
-				padding: 0px
-				padding-left: 7px
-				padding-right: 7px
-				line-height: normal
-				height: calc(1.5em + 4px)
-				margin-top: -12px
-			div.show
-				transform: none !important
-				top: calc(1.5em - 8px) !important
-				@media screen and (max-device-width: 767px) and (orientation: portrait)
-					transform: none !important
-					top: calc(1.5em - 8px) !important
-			div
-				padding: 0
-				min-width: 0
-				background-color: var(--MenuColor)
-				border: 0
-				border-radius: 0
-				background-clip: unset
-				margin: 0px -0px 0px -1px
-				will-change: unset !important
-				div
-					&.black_block
-						display: none
-				a
-					&.menu_btn
-						background: hsla(0,0%,100%,.3)
-						color: var(--ButtonTextColor)
-						padding: 5px
-						border: solid 1px var(--MenuColor)
-						line-height: normal
-						text-decoration: none
-						padding-left: 7px
-						padding-right: 7px
-						border-bottom: 0
-						display: block
-			button
-				text-align: left
-				margin-left: -1px
-				color: var(--ButtonTextColor) !important

@@ -30,13 +30,13 @@
 </i18n>
 
 <template>
-    <b-container class="without_padding main_div">
+    <div class="main-div">
         <!-- FIXME: This shouldn't depend on type! -->
-        <div :class="uvIsReady && uv.attributes.Type === 'Menu' ? 'scrol_menu' : 'none_scrol'">
-            <b-button-toolbar class="head_menu">
-                <b-button v-if="!isMainView" :to="{ name: 'main' }" class="nav_batton, goto_nav" id="menu_btn">
+        <div :class="uvIsReady && uv.attributes.Type === 'Menu' ? 'menu_scrol' : 'menu_none-scrol'">
+            <div class="head-menu">
+                <router-link v-if="!isMainView" :to="{ name: 'main' }" class="head-menu_main-menu-button">
                     {{ $t('goto_nav') }}
-                </b-button>
+                </router-link>
                 <ActionsMenu v-if="uvIsReady" :title="$t('actions')" :actions="actions" />
                 <b-form v-if="enableFilter" v-on:submit.prevent="submitFilter()" inline class="find">
                     <b-input-group>
@@ -46,8 +46,8 @@
                         </b-input-group-append>
                     </b-input-group>
                 </b-form>
-            </b-button-toolbar>
-            <b-col class="without_padding userview_div">
+            </div>
+            <b-col class="userview-div">
                 <UserView :uv="uv"
                           :filter="filterWords"
                           isRoot
@@ -59,40 +59,185 @@
                           @update:bodyStyle="styleNode.innerHTML = $event" />
             </b-col>
         </div>
-        <nav v-if="!uvIsError && bottomBarNeeded" class="fix-bot navbar fixed-bottom navbar-light bg-light">
-            <div class="count_row">{{ statusLine }}</div>
-            <b-alert v-for="error in uvErrors"
+        <nav v-if="!uvIsError && bottomBarNeeded" class="fix-bot">
+            <div class="count-row">{{ statusLine }}</div>
+            <div v-for="error in uvErrors"
                      :key="error"
-                     class="error custom_danger"
+                     class="error custom-danger"
                      variant="danger"
                      show>
                 {{ $t('fetch_error', { msg: error }) }}
-            </b-alert>
-            <b-alert class="error custom_danger"
+            </div>
+            <div class="error custom-danger"
                      variant="danger"
-                     :show="settingsLastError !== null">
+                     v-if="settingsLastError !== null">
                 {{ $t('settings_error', { msg: settingsLastError }) }}
-            </b-alert>
-            <b-alert class="error custom_danger"
+            </div>
+            <div class="error custom-danger"
                      variant="danger"
-                     :show="translationsLastError !== null">
+                     v-if="translationsLastError !== null">
                 {{ $t('translations_error', { msg: translationsLastError }) }}
-            </b-alert>
-            <b-alert v-for="error in stagingErrors"
+            </div>
+            <div v-for="error in stagingErrors"
                      :key="error"
-                     class="error custom_danger"
+                     class="error custom-danger"
                      variant="danger"
                      show>
                 {{ $t('submit_error', { msg: error }) }}
-            </b-alert>
-            <b-alert class="error custom_warning" variant="warning" :show="!changes.isEmpty">
-                <button @click="submitChangesWithHook" variant="primary">{{ $t('save') }}</button>
+            </div>
+            <div class="error custom-warning" variant="warning" v-if="!changes.isEmpty">
+                <button class="error_button" @click="submitChangesWithHook" variant="primary">{{ $t('save') }}</button>
                 {{ $t('pending_changes') }}
-            </b-alert>
+            </div>
         </nav>
-    </b-container>
+    </div>
 </template>
+<style scoped >
+    .main-div {
+        padding: 0px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .userview-div {
+        padding: 0px;
+        width: 100%;
+        overflow: hidden;
+        flex: 1;
+    }
+    .menu_scrol {
+        display: block;
+        overflow: auto;
+        height: inherit;
+    }
+    .menu_none-scrol {
+        overflow: hidden;
+        height: inherit;
+        display: flex;
+        flex-direction: column;
+        z-index: 1050;
+    }
+    @media print {
+        .head-menu {
+            display: none !important;
+        }
+    }
+    @media screen and (max-aspect-ratio: 13/9) {
+        @media screen and (max-device-width: 480px) {
+            .head-menu {
+                display: block !important;
+                width: 100%;
+            }
+        }
+    }
+    .head-menu {
+        display: inline-flex;
+        white-space: nowrap;
+        background-color: var(--MenuColor);
+        width: 100%;
+    }
+    .head-menu_main-menu-button {
+        color: var(--ButtonTextColor) !important;
+        background: hsla(0,0%,100%,.3);
+        line-height: normal;
+        border: solid 1px var(--MenuColor);
+        border-left: 0px;
+        text-decoration: none;
+        padding-left: 7px;
+        padding-right: 7px;
+        z-index: 1000;
+        padding-bottom: 4px;
+        padding-top: 4px;
+    }
+    .fix-bot {
+        padding: 0;
+        line-height: normal;
+        width: 100vw;
+        white-space: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        text-align: right;
+        margin-left: -1px !important;
+        position: relative;
+        background-color: var(--MenuColor) !important;
+        z-index: 1030;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -ms-flex-wrap: nowrap;
+        flex-wrap: nowrap;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+    }
 
+    .count-row {
+        bottom: 0;
+        z-index: 2000;
+        line-height: normal;
+        float: left;
+        display: inline-block;
+        margin-left: 2px;
+        color: var(--ButtonTextColor)
+    }
+    .custom-warning {
+        background-color: var(--MenuColor); 
+        color: var(--ButtonTextColor);
+        float: right;
+    }
+    .custom-danger {
+        background-color: var(--DangerBackColor); 
+        float: left;
+        overflow-x: auto;
+        overflow-y:hidden;
+        width: 100%;
+        text-align: left;
+    }
+    .custom-success {
+        background-color: var(--SuccessBackColor)
+    }
+    .error {
+        margin-left: 1px !important;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: inherit;
+        display: inline-block;
+        position: relative;
+    }
+    .error_button {
+        padding: 0;
+        margin: 0px;
+        margin-left: 0;
+        line-height: normal;
+        position: relative;
+        font-size: inherit;
+        background: hsla(0,0%,100%,.3);
+        color: var(--ButtonTextColor);
+        float: none;
+        vertical-align: unset;
+    }
+    @media screen and (max-aspect-ratio: 13/9) {
+        @media screen and (max-device-width: 480px) {
+            .head-menu_main-menu-button {
+                width: 100vw;
+                text-align: left;
+                border-top: 0 !important;
+                border-right: 0 !important;
+                border-left: 0 !important;
+                box-sizing: content-box;
+                display: block;
+            }
+        }
+    }
+</style>
 <script lang="ts">
     import { Route } from "vue-router"
     import { Component, Watch, Vue } from "vue-property-decorator"
