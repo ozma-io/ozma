@@ -94,44 +94,47 @@ export class UserViewResult {
                     const entityIds = row.entityIds
                     info.columns.forEach((columnInfo, colI) => {
                         const field = domain[columnInfo.name]
-                        if (field !== undefined) {
-                            const cell = row.values[colI]
-                            const id = entityIds[field.idColumn]
-                            const updateInfo = {
-                                field: field.field,
-                                fieldRef: field.ref,
-                                id,
-                            }
-                            cell.update = updateInfo
 
-                            const ref = field.ref.entity
-                            let entityMappings = mappings[ref.schema]
-                            if (entityMappings === undefined) {
-                                entityMappings = {}
-                                mappings[ref.schema] = entityMappings
-                            }
-                            let mapping = entityMappings[ref.name]
-                            if (mapping === undefined) {
-                                mapping = {
-                                    idsToRows: {},
-                                    fieldsToColumns: {},
-                                }
-                                entityMappings[ref.name] = mapping
-                            }
+                        if (field === undefined || !(field.idColumn in entityIds)) {
+                            return
+                        }
 
-                            const mappedRows = mapping.idsToRows[id]
-                            if (mappedRows === undefined) {
-                                mapping.idsToRows[id] = [rowI]
-                            } else {
-                                mappedRows.push(rowI)
-                            }
+                        const cell = row.values[colI]
+                        const id = entityIds[field.idColumn]
+                        const updateInfo = {
+                            field: field.field,
+                            fieldRef: field.ref,
+                            id,
+                        }
+                        cell.update = updateInfo
 
-                            const mappedCols = mapping.fieldsToColumns[field.ref.name]
-                            if (mappedCols === undefined) {
-                                mapping.fieldsToColumns[field.ref.name] = [colI]
-                            } else {
-                                mappedCols.push(colI)
+                        const ref = field.ref.entity
+                        let entityMappings = mappings[ref.schema]
+                        if (entityMappings === undefined) {
+                            entityMappings = {}
+                            mappings[ref.schema] = entityMappings
+                        }
+                        let mapping = entityMappings[ref.name]
+                        if (mapping === undefined) {
+                            mapping = {
+                                idsToRows: {},
+                                fieldsToColumns: {},
                             }
+                            entityMappings[ref.name] = mapping
+                        }
+
+                        const mappedRows = mapping.idsToRows[id]
+                        if (mappedRows === undefined) {
+                            mapping.idsToRows[id] = [rowI]
+                        } else {
+                            mappedRows.push(rowI)
+                        }
+
+                        const mappedCols = mapping.fieldsToColumns[field.ref.name]
+                        if (mappedCols === undefined) {
+                            mapping.fieldsToColumns[field.ref.name] = [colI]
+                        } else {
+                            mappedCols.push(colI)
                         }
                     })
                 }
