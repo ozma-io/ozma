@@ -176,18 +176,10 @@ export class UserViewError extends Error {
     args: IUserViewArguments
 
     constructor(type: UserViewErrorType, description: string, args: IUserViewArguments) {
-        super(type)
+        super(description !== "" ? description : type)
         this.type = type
         this.description = description
         this.args = args
-    }
-
-    get message() {
-        if (this.description !== "") {
-            return this.description
-        } else {
-            return this.type
-        }
     }
 }
 
