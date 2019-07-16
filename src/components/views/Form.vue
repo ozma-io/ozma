@@ -365,7 +365,7 @@
                         this.uv.info.columns.forEach((info, colI) => {
                             if (info.mainField !== null) {
                                 const cell = form.fields[colI]
-                                const value = fields[info.mainField.name]
+                                const value = fields.cells[info.mainField.name]
                                 if (value === undefined) {
                                     cell.value = undefined
                                     cell.valueText = ""

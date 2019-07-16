@@ -543,7 +543,7 @@
                         this.uv.info.columns.forEach((info, colI) => {
                             if (info.mainField !== null) {
                                 const cell = row.cells[colI]
-                                const value = newRow[info.mainField.name]
+                                const value = newRow.cells[info.mainField.name]
                                 if (value === undefined) {
                                     cell.value = undefined
                                     cell.valueText = ""
