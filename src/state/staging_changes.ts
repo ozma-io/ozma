@@ -440,7 +440,12 @@ const stagingModule: Module<IStagingState, {}> = {
 
             const entityChanges = state.current.getOrCreateChanges(schema, entity)
             const fieldInfo = getFieldInfo(state, schema, entity, field)
-            const added = entityChanges.added[newId]
+            const added = entityChanges.added.find(item => {
+                if (item !== null && item !== undefined) {
+                    return item.id === newId
+                }
+                return false
+            })
             if (added === undefined || added === null) {
                 throw new Error(`New entity id ${newId} is not found`)
             }

@@ -536,15 +536,26 @@
             if (this.uv.info.mainEntity !== null) {
                 const entity = this.uv.info.mainEntity.entity
                 const changedRows = this.changes.changesForEntity(entity.schema, entity.name)
+                const offset = this.showEmptyRow ? 1 : 0
+
                 changedRows.added.forEach((newRow, newRowI) => {
                     let row: IRow
-                    if (this.newEntries.length <= newRowI) {
-                        row = this.newEmptyRow(newRowI)
-                    } else {
-                        row = this.newEntries[newRowI]
-                    }
 
                     if (newRow === null) {
+                        return
+                    }
+
+                    if (this.newEntries[newRowI + offset] === undefined) {
+                        row = this.newEmptyRow(newRow.id)
+                    } else if (this.newEntries[newRowI + offset].id < newRow.id) {
+                        row = this.newEmptyRow(newRow.id, newRowI + offset)
+                    } else if (this.newEntries[newRowI + offset].id === newRow.id) {
+                        row = this.newEntries[newRowI + offset]
+                    } else {
+                        throw new Error("New rows are broken")
+                    }
+
+                    if (newRow.cells === null) {
                         row.deleted = true
                     } else {
                         row.deleted = false
@@ -709,6 +720,9 @@
         private buildEntries() {
             // .rows === null means that we are in "create new" mode -- there are no selected existing values.
             this.newEntries = []
+            if (this.showEmptyRow) {
+                this.newEmptyRow(-1, 0)
+            }
             if (this.uv.rows === null) {
                 // Not supported in table yet.
                 this.entries = []
@@ -848,6 +862,25 @@
             return homeSchema(this.uv.args)
         }
 
+        private changeRowId(row: IRow, newId: number) {
+            if (row === undefined || row === null) {
+                return
+            }
+            row.id = newId
+            row.cells.forEach(item => {
+                if (item.update !== null) {
+                    item.update.id = newId
+                }
+            })
+        }
+
+        get currentIdAdded() {
+            const mainEntity = this.uv.info.mainEntity as IMainEntityInfo
+            const entity = mainEntity.entity
+            const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
+            return changedFields.idAdded
+        }
+
         private beforeAddEntry(row: IRow) {
             // Check if an entry is already added; if it isn't, create it with our default values.
             const mainEntity = this.uv.info.mainEntity as IMainEntityInfo
@@ -855,8 +888,9 @@
             const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
             if (row.id > changedFields.added.length) {
                 throw new Error("Invalid added entry id")
-            } else if (row.id === changedFields.added.length) {
-                this.addEntry({ schema: entity.schema, entity: entity.name })
+            } else if (row.id === -1) {
+                this.addEntry({ schema: entity.schema, entity: entity.name, position: 0 })
+                this.changeRowId(row, this.currentIdAdded)
                 row.cells.forEach((cell, i) => {
                     const info = this.columns[i]
                     if (info.columnInfo.mainField !== null && cell.valueText !== "") {
@@ -869,6 +903,7 @@
                         })
                     }
                 })
+                this.newEmptyRow(-1, 0)
             }
         }
     }
