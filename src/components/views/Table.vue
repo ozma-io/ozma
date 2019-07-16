@@ -545,14 +545,16 @@
                         return
                     }
 
-                    if (this.newEntries[newRowI + offset] === undefined) {
+                    const newItem = this.newEntries[newRowI + offset]
+                    if (newItem === undefined || newItem === null) {
                         row = this.newEmptyRow(newRow.id)
-                    } else if (this.newEntries[newRowI + offset].id < newRow.id) {
+                    } else if (newItem.id < newRow.id) {
                         row = this.newEmptyRow(newRow.id, newRowI + offset)
-                    } else if (this.newEntries[newRowI + offset].id === newRow.id) {
-                        row = this.newEntries[newRowI + offset]
+                    } else if (newItem.id === newRow.id) {
+                        row = newItem
                     } else {
-                        throw new Error("New rows are broken")
+                        this.newEntries.splice(newRowI + offset, 1)
+                        return
                     }
 
                     if (newRow.cells === null) {
@@ -886,9 +888,8 @@
             const mainEntity = this.uv.info.mainEntity as IMainEntityInfo
             const entity = mainEntity.entity
             const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
-            if (row.id > changedFields.added.length) {
-                throw new Error("Invalid added entry id")
-            } else if (row.id === -1) {
+            const hasId = changedFields.added.some(item => item !== null && item.id === row.id)
+            if (row.id === -1) {
                 this.addEntry({ schema: entity.schema, entity: entity.name, position: 0 })
                 this.changeRowId(row, this.currentIdAdded)
                 row.cells.forEach((cell, i) => {
@@ -904,6 +905,8 @@
                     }
                 })
                 this.newEmptyRow(-1, 0)
+            } else if (!hasId) {
+                throw new Error("Invalid added entry id")
             }
         }
     }
