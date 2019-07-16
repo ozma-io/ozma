@@ -37,8 +37,8 @@
                 <thead>
                     <tr>
                         <th class="fixed-column checkbox-cells"></th>
-                        <th v-if="hasRowLinks" class="fixed-column opemform-cells">
-                            <input value="+" type="button" id="add-new-row">
+                        <th v-if="hasRowLinks" class="fixed-column opemform-cells links-style">
+                            <span @click="changeShowEmptyRow()">{{showEmptyRow ? "-" : "+"}}</span>
                         </th>
                         <th v-for="i in columnIndexes" :key="i" :title="columns[i].caption" @click="updateSort(i)" :class="columns[i].fixed ? 'fixed-column sorting' : 'sorting'" :style="columns[i].style">
                             {{ columns[i].caption }}
@@ -184,13 +184,15 @@
         private oldCell: ICell | null = null
         private clickTimeoutId: NodeJS.Timeout | null = null
         private newEntries: IRow[] = []
+        private showEmptyRow: boolean = false
 
-        get showEmptyRow() {
-            const value = this.uv.attributes["ShowEmptyRow"]
-            if (value !== undefined) {
-                return Boolean(value)
+        private changeShowEmptyRow() {
+            this.showEmptyRow = !this.showEmptyRow
+
+            if (this.showEmptyRow) {
+                this.newEmptyRow(-1, 0)
             } else {
-                return true
+                this.newEntries.shift()
             }
         }
 
@@ -445,7 +447,7 @@
             }
         }
 
-        private newEmptyRow(rowId: number): IRow {
+        private newEmptyRow(rowId: number, position?: number): IRow {
             if (this.uv.info.mainEntity === null) {
                 throw new Error("Main entity cannot be null")
             }
@@ -501,7 +503,11 @@
                 linkForRow: null,
                 attrs: {},
             }
-            this.newEntries.push(row)
+            if (position === undefined) {
+                this.newEntries.push(row)
+            } else {
+                this.newEntries.splice(position, 0, row)
+            }
             return row
         }
 
@@ -561,9 +567,6 @@
                         })
                     }
                 })
-                if (this.newEntries.length === 0 && this.showEmptyRow) {
-                    this.newEmptyRow(0)
-                }
             }
             if (this.uv.rows !== null) {
                 const rows = this.uv.rows
