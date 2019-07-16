@@ -37,7 +37,9 @@
                 <thead>
                     <tr>
                         <th class="fixed-column checkbox-cells"></th>
-                        <th v-if="hasRowLinks" class="fixed-column opemform-cells"></th>
+                        <th v-if="hasRowLinks" class="fixed-column opemform-cells">
+                            <input value="+" type="button" id="add-new-row">
+                        </th>
                         <th v-for="i in columnIndexes" :key="i" :title="columns[i].caption" @click="updateSort(i)" :class="columns[i].fixed ? 'fixed-column sorting' : 'sorting'" :style="columns[i].style">
                             {{ columns[i].caption }}
                         </th>
