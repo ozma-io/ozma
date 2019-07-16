@@ -493,7 +493,7 @@
             })
             const row = {
                 cells: newCells,
-                index: rowId,
+                id: rowId,
                 deleted: false,
                 style: {},
                 linkForRow: null,
@@ -762,7 +762,7 @@
                     })
 
                     return {
-                        index: rowI,
+                        id: rowI,
                         cells,
                         deleted: false,
                         style: rowStyle,
@@ -848,9 +848,9 @@
             const mainEntity = this.uv.info.mainEntity as IMainEntityInfo
             const entity = mainEntity.entity
             const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
-            if (row.index > changedFields.added.length) {
+            if (row.id > changedFields.added.length) {
                 throw new Error("Invalid added entry id")
-            } else if (row.index === changedFields.added.length) {
+            } else if (row.id === changedFields.added.length) {
                 this.addEntry({ schema: entity.schema, entity: entity.name })
                 row.cells.forEach((cell, i) => {
                     const info = this.columns[i]
@@ -859,7 +859,7 @@
                             schema: entity.schema,
                             entity: entity.name,
                             field: info.columnInfo.mainField.name,
-                            newId: row.index,
+                            newId: row.id,
                             value: cell.valueText,
                         })
                     }
