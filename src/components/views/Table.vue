@@ -582,7 +582,7 @@
                         })
                     }
                 })
-                this.newEntries.splice(addedLenght) // remove other elements
+                this.newEntries.splice(addedLenght + offset) // remove other elements
             }
             if (this.uv.rows !== null) {
                 const rows = this.uv.rows
