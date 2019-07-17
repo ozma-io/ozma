@@ -206,6 +206,14 @@
     }
     @media screen and (max-aspect-ratio: 13/9) {
         @media screen and (max-device-width: 480px) {
+            .select-container:after {
+                position: sticky;
+                left: calc(100vw - 1.3em - 1px);
+            }            
+            .select-container-after {
+                position: sticky;
+                left: calc(100vw - 1px);
+            }
             .nested-menu {
                 z-index: 0;
                 position: sticky;
