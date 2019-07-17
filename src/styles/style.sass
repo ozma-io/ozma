@@ -545,8 +545,13 @@ div
 							@media screen and (max-device-width: 480px)
 								left: 2px
 								width: calc(100% - 4px)
-								*
+								.select-container
 									width: calc(100vw - 44px) !important // padding 20px and left 2px
+									.form-control-panel_select
+										width: 100%;
+								.select-container:after
+									position: relative;
+									left: 0px
 							left: calc(50% - 175px)
 							top: calc(50% - 50px)
 							position: fixed
@@ -555,7 +560,7 @@ div
 							display: block
 							align-items: center
 							padding: 20px
-							*
+							.select-container
 								width: 300px
 							*:focus
 								border: 0 !important
