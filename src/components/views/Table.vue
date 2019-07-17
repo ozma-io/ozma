@@ -537,6 +537,7 @@
                 const entity = this.uv.info.mainEntity.entity
                 const changedRows = this.changes.changesForEntity(entity.schema, entity.name)
                 const offset = this.showEmptyRow ? 1 : 0
+                let addedLenght = 0 // no empty elements
 
                 changedRows.added.forEach((newRow, newRowI) => {
                     let row: IRow
@@ -545,6 +546,7 @@
                         return
                     }
 
+                    addedLenght += 1
                     const newItem = this.newEntries[newRowI + offset]
                     if (newItem === undefined || newItem === null) {
                         row = this.newEmptyRow(newRow.id)
@@ -580,6 +582,7 @@
                         })
                     }
                 })
+                this.newEntries.splice(addedLenght) // remove other elements
             }
             if (this.uv.rows !== null) {
                 const rows = this.uv.rows
@@ -890,8 +893,8 @@
             const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
             const hasId = changedFields.added.some(item => item !== null && item.id === row.id)
             if (row.id === -1) {
-                this.addEntry({ schema: entity.schema, entity: entity.name, position: 0 })
-                this.changeRowId(row, this.currentIdAdded)
+                this.addEntry({ schema: entity.schema, entity: entity.name, position: 0 }) // add new entry
+                this.changeRowId(row, this.currentIdAdded) // change old id to current addedId
                 row.cells.forEach((cell, i) => {
                     const info = this.columns[i]
                     if (info.columnInfo.mainField !== null && cell.valueText !== "") {

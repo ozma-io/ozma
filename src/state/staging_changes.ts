@@ -15,6 +15,12 @@ export interface IUpdatedCell {
     erroredOnce: boolean // failed on submit
 }
 
+/*
+README
+Added is an array with indexes and data
+It simplifies synchronization
+Add-on elements should be accessed through object indexes
+*/
 export interface IAddedCells {
     id: number
     cells: UpdatedCells
@@ -28,7 +34,7 @@ export interface IEntityChanges {
     updated: Record<RowIdString, UpdatedCells | null>
     // Applied to user views with FOR INSERT INTO
     added: Array<IAddedCells | null>
-    idAdded: number
+    idAdded: number // current id of last entry
     // Applied to user views with FOR UPDATE OF (or FOR INSERT INTO)
     deleted: Record<RowIdString, boolean>
 }
