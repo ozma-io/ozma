@@ -5,14 +5,16 @@
             "yes": "Yes",
             "no": "No",
             "export_to_csv": "Export to .csv",
-            "remove_selected_rows" : "Remove selected rows"
+            "remove_selected_rows": "Remove selected rows",
+            "show_new_row": { "add": "Add new row", "rm": "Remove new row"}
         },
         "ru": {
             "clear": "Очистить",
             "yes": "Да",
             "no": "Нет",
             "export_to_csv": "Экспорт в .csv",
-            "remove_selected_rows" : "Удалить выбранные записи"
+            "remove_selected_rows": "Удалить выбранные записи",
+            "show_new_row": {"add": "Добавить новую строку", "rm": "Убрать новую строку"} 
         }
     }
 </i18n>
@@ -38,7 +40,9 @@
                     <tr>
                         <th class="fixed-column checkbox-cells"></th>
                         <th v-if="hasRowLinks" class="fixed-column opemform-cells links-style">
-                            <span @click="changeShowEmptyRow()">{{showEmptyRow ? "-" : "+"}}</span>
+                            <span @click="changeShowEmptyRow()" :title="this.$tc(`show_new_row.${showEmptyRow ? 'rm' : 'add'}`)">
+                                {{ showEmptyRow ? "-" : "+" }}
+                            </span>
                         </th>
                         <th v-for="i in columnIndexes" :key="i" :title="columns[i].caption" @click="updateSort(i)" :class="columns[i].fixed ? 'fixed-column sorting' : 'sorting'" :style="columns[i].style">
                             {{ columns[i].caption }}
