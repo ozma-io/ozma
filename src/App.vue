@@ -61,7 +61,6 @@
                 "MenuColor": this.settings.getEntry("MenuColor", String, "#F5C700"),
                 "TableBackColor": this.settings.getEntry("TableBackColor", String, "white"),
                 "TableSelectColor": this.settings.getEntry("TableSelectColor", String, "#CCCCCC"),
-                "TableBorderColor": this.settings.getEntry("TableBorderColor", String, "#CCCCCC"),
                 "WarningBackColor": this.settings.getEntry("WarningBackColor", String, "#fff3cd"),
                 "DangerBackColor": this.settings.getEntry("DangerBackColor", String, "#f8d7da"),
                 "SuccessBackColor": this.settings.getEntry("SuccessBackColor", String, "#d4edda"),
