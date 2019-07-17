@@ -153,10 +153,12 @@
         overflow-x: hidden !important;
         word-wrap: unset !important;
         padding: .375rem .75rem;
-        resize: none
+        resize: none;
+        vertical-align: top;
     }
     .select-container {
         display: flex;
+        height: calc(2em + 6px)
     }
     .select-container:after {
         display: inline-block;
