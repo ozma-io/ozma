@@ -173,7 +173,7 @@
         z-index:1;
     }
     .select-container-after{
-        width: 0px;
+        width: 0px !important;
         z-index:1;
     }
     .select-container-after:after {

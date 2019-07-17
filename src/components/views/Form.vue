@@ -95,7 +95,8 @@
         border: 0px;
         box-shadow: none;
         outline: none;
-        color: var(--ButtonTextColor)
+        color: var(--ButtonTextColor);
+        border-radius: 0;
     }
     @media screen and (max-aspect-ratio: 13/9) {
         @media screen and (max-device-width: 480px) {
@@ -109,6 +110,7 @@
             .delete-block {
                 position: sticky;
                 left: 0;
+                margin-top: 10px;
             }
             .form-entry{
                 display: grid;
