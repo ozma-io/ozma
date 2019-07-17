@@ -294,7 +294,7 @@
             }
         }
 
-        private newEmptyRow(rowId: number): IForm {
+        private newEmptyRow(rowId: number, position?: number): IForm {
             if (this.uv.info.mainEntity === null) {
                 throw new Error("Main entity cannot be null")
             }
@@ -339,7 +339,11 @@
                 fields: newFields,
                 id: rowId,
             }
-            this.newEntries.push(form)
+            if (position === undefined) {
+                this.newEntries.push(form)
+            } else {
+                this.newEntries.splice(position, 0, form)
+            }
             return form
         }
 
@@ -349,23 +353,36 @@
             if (this.uv.info.mainEntity !== null) {
                 const entity = this.uv.info.mainEntity.entity
                 const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
+                let addedLenght = 0 // no empty elements
 
                 changedFields.added.forEach((fields, newRowI) => {
                     let form: IForm
-                    if (this.newEntries.length <= newRowI) {
-                        form = this.newEmptyRow(newRowI)
-                    } else {
-                        form = this.newEntries[newRowI]
-                    }
 
                     if (fields === null) {
+                        return
+                    }
+
+                    addedLenght += 1
+                    const newItem = this.newEntries[newRowI]
+                    if (newItem === undefined || newItem.id === null || newItem === null) {
+                        form = this.newEmptyRow(fields.id)
+                    } else if (newItem.id < fields.id) {
+                        form = this.newEmptyRow(fields.id, newRowI)
+                    } else if (newItem.id === fields.id) {
+                        form = newItem
+                    } else {
+                        this.newEntries.splice(newRowI, 1)
+                        return
+                    }
+
+                    if (fields.cells === null) {
                         form.deleted = true
                     } else {
                         form.deleted = false
                         this.uv.info.columns.forEach((info, colI) => {
                             if (info.mainField !== null) {
                                 const cell = form.fields[colI]
-                                const value = fields[info.mainField.name]
+                                const value = fields.cells[info.mainField.name]
                                 if (value === undefined) {
                                     cell.value = undefined
                                     cell.valueText = ""
@@ -379,6 +396,8 @@
                         })
                     }
                 })
+
+                this.newEntries.splice(addedLenght) // remove other elements
                 for (let i = changedFields.added.length; i < this.newEntries.length; i++) {
                     const row = this.newEntries[i]
                     this.uv.info.columns.forEach((info, colI) => {
@@ -544,9 +563,8 @@
                 const entity = mainEntity.entity
                 const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
                 const id = form.id as number
-                if (id > changedFields.added.length) {
-                    throw new Error("Invalid added entry id")
-                } else if (id === changedFields.added.length) {
+                const hasId = changedFields.added.some(item => item !== null && item.id === id)
+                if (id === changedFields.added.length) { // FIXME -- dont use lenght! use id in added
                     this.addEntry({ schema: entity.schema, entity: entity.name })
                     form.fields.forEach((field, i) => {
                         const info = this.fields[i]
@@ -560,6 +578,8 @@
                             })
                         }
                     })
+                } else if (!hasId) {
+                    throw new Error("Invalid added entry id")
                 }
             }
         }

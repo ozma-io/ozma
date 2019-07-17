@@ -5,14 +5,16 @@
             "yes": "Yes",
             "no": "No",
             "export_to_csv": "Export to .csv",
-            "remove_selected_rows" : "Remove selected rows"
+            "remove_selected_rows": "Remove selected rows",
+            "show_new_row": { "add": "Add new row", "rm": "Remove new row"}
         },
         "ru": {
             "clear": "Очистить",
             "yes": "Да",
             "no": "Нет",
             "export_to_csv": "Экспорт в .csv",
-            "remove_selected_rows" : "Удалить выбранные записи"
+            "remove_selected_rows": "Удалить выбранные записи",
+            "show_new_row": {"add": "Добавить новую строку", "rm": "Убрать новую строку"} 
         }
     }
 </i18n>
@@ -37,7 +39,11 @@
                 <thead>
                     <tr>
                         <th class="fixed-column checkbox-cells"></th>
-                        <th v-if="hasRowLinks" class="fixed-column opemform-cells"></th>
+                        <th v-if="hasRowLinks" class="fixed-column opemform-cells links-style">
+                            <span @click="changeShowEmptyRow()" :title="this.$tc(`show_new_row.${showEmptyRow ? 'rm' : 'add'}`)">
+                                {{ showEmptyRow ? "-" : "+" }}
+                            </span>
+                        </th>
                         <th v-for="i in columnIndexes" :key="i" :title="columns[i].caption" @click="updateSort(i)" :class="columns[i].fixed ? 'fixed-column sorting' : 'sorting'" :style="columns[i].style">
                             {{ columns[i].caption }}
                         </th>
@@ -182,13 +188,15 @@
         private oldCell: ICell | null = null
         private clickTimeoutId: NodeJS.Timeout | null = null
         private newEntries: IRow[] = []
+        private showEmptyRow: boolean = false
 
-        get showEmptyRow() {
-            const value = this.uv.attributes["ShowEmptyRow"]
-            if (value !== undefined) {
-                return Boolean(value)
+        private changeShowEmptyRow() {
+            this.showEmptyRow = !this.showEmptyRow
+
+            if (this.showEmptyRow) {
+                this.newEmptyRow(-1, 0)
             } else {
-                return true
+                this.newEntries.shift()
             }
         }
 
@@ -443,7 +451,7 @@
             }
         }
 
-        private newEmptyRow(rowId: number): IRow {
+        private newEmptyRow(rowId: number, position?: number): IRow {
             if (this.uv.info.mainEntity === null) {
                 throw new Error("Main entity cannot be null")
             }
@@ -493,13 +501,17 @@
             })
             const row = {
                 cells: newCells,
-                index: rowId,
+                id: rowId,
                 deleted: false,
                 style: {},
                 linkForRow: null,
                 attrs: {},
             }
-            this.newEntries.push(row)
+            if (position === undefined) {
+                this.newEntries.push(row)
+            } else {
+                this.newEntries.splice(position, 0, row)
+            }
             return row
         }
 
@@ -528,22 +540,37 @@
             if (this.uv.info.mainEntity !== null) {
                 const entity = this.uv.info.mainEntity.entity
                 const changedRows = this.changes.changesForEntity(entity.schema, entity.name)
+                const offset = this.showEmptyRow ? 1 : 0
+                let addedLenght = 0 // no empty elements
+
                 changedRows.added.forEach((newRow, newRowI) => {
                     let row: IRow
-                    if (this.newEntries.length <= newRowI) {
-                        row = this.newEmptyRow(newRowI)
-                    } else {
-                        row = this.newEntries[newRowI]
-                    }
 
                     if (newRow === null) {
+                        return
+                    }
+
+                    addedLenght += 1
+                    const newItem = this.newEntries[newRowI + offset]
+                    if (newItem === undefined || newItem === null) {
+                        row = this.newEmptyRow(newRow.id)
+                    } else if (newItem.id < newRow.id) {
+                        row = this.newEmptyRow(newRow.id, newRowI + offset)
+                    } else if (newItem.id === newRow.id) {
+                        row = newItem
+                    } else {
+                        this.newEntries.splice(newRowI + offset, 1)
+                        return
+                    }
+
+                    if (newRow.cells === null) {
                         row.deleted = true
                     } else {
                         row.deleted = false
                         this.uv.info.columns.forEach((info, colI) => {
                             if (info.mainField !== null) {
                                 const cell = row.cells[colI]
-                                const value = newRow[info.mainField.name]
+                                const value = newRow.cells[info.mainField.name]
                                 if (value === undefined) {
                                     cell.value = undefined
                                     cell.valueText = ""
@@ -559,9 +586,7 @@
                         })
                     }
                 })
-                if (this.newEntries.length === 0 && this.showEmptyRow) {
-                    this.newEmptyRow(0)
-                }
+                this.newEntries.splice(addedLenght + offset) // remove other elements
             }
             if (this.uv.rows !== null) {
                 const rows = this.uv.rows
@@ -704,6 +729,9 @@
         private buildEntries() {
             // .rows === null means that we are in "create new" mode -- there are no selected existing values.
             this.newEntries = []
+            if (this.showEmptyRow) {
+                this.newEmptyRow(-1, 0)
+            }
             if (this.uv.rows === null) {
                 // Not supported in table yet.
                 this.entries = []
@@ -762,7 +790,7 @@
                     })
 
                     return {
-                        index: rowI,
+                        id: rowI,
                         cells,
                         deleted: false,
                         style: rowStyle,
@@ -843,15 +871,34 @@
             return homeSchema(this.uv.args)
         }
 
+        private changeRowId(row: IRow, newId: number) {
+            if (row === undefined || row === null) {
+                return
+            }
+            row.id = newId
+            row.cells.forEach(item => {
+                if (item.update !== null) {
+                    item.update.id = newId
+                }
+            })
+        }
+
+        get currentIdAdded() {
+            const mainEntity = this.uv.info.mainEntity as IMainEntityInfo
+            const entity = mainEntity.entity
+            const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
+            return changedFields.idAdded
+        }
+
         private beforeAddEntry(row: IRow) {
             // Check if an entry is already added; if it isn't, create it with our default values.
             const mainEntity = this.uv.info.mainEntity as IMainEntityInfo
             const entity = mainEntity.entity
             const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
-            if (row.index > changedFields.added.length) {
-                throw new Error("Invalid added entry id")
-            } else if (row.index === changedFields.added.length) {
-                this.addEntry({ schema: entity.schema, entity: entity.name })
+            const hasId = changedFields.added.some(item => item !== null && item.id === row.id)
+            if (row.id === -1) {
+                this.addEntry({ schema: entity.schema, entity: entity.name, position: 0 }) // add new entry
+                this.changeRowId(row, this.currentIdAdded) // change old id to current addedId
                 row.cells.forEach((cell, i) => {
                     const info = this.columns[i]
                     if (info.columnInfo.mainField !== null && cell.valueText !== "") {
@@ -859,11 +906,14 @@
                             schema: entity.schema,
                             entity: entity.name,
                             field: info.columnInfo.mainField.name,
-                            newId: row.index,
+                            newId: row.id,
                             value: cell.valueText,
                         })
                     }
                 })
+                this.newEmptyRow(-1, 0)
+            } else if (!hasId) {
+                throw new Error("Invalid added entry id")
             }
         }
     }

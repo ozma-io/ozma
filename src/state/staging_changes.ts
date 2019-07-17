@@ -15,6 +15,17 @@ export interface IUpdatedCell {
     erroredOnce: boolean // failed on submit
 }
 
+/*
+README
+Added is an array with indexes and data
+It simplifies synchronization
+Add-on elements should be accessed through object indexes
+*/
+export interface IAddedCells {
+    id: number
+    cells: UpdatedCells
+}
+
 export type UpdatedCells = Record<FieldName, IUpdatedCell>
 
 export type AutoSaveLock = number
@@ -22,7 +33,8 @@ export type AutoSaveLock = number
 export interface IEntityChanges {
     updated: Record<RowIdString, UpdatedCells | null>
     // Applied to user views with FOR INSERT INTO
-    added: Array<UpdatedCells | null>
+    added: Array<IAddedCells | null>
+    idAdded: number // current id of last entry
     // Applied to user views with FOR UPDATE OF (or FOR INSERT INTO)
     deleted: Record<RowIdString, boolean>
 }
@@ -30,6 +42,7 @@ export interface IEntityChanges {
 const emptyUpdates: IEntityChanges = {
     updated: {},
     added: [],
+    idAdded: -1,
     deleted: {},
 }
 
@@ -52,6 +65,7 @@ export class CurrentChanges {
             entity = {
                 updated: {},
                 added: [],
+                idAdded: -1,
                 deleted: {},
             }
             Vue.set(entities, entityName, entity)
@@ -318,7 +332,7 @@ const stagingModule: Module<IStagingState, {}> = {
                     })
                     entityChanges.added.forEach(addedFields => {
                         if (addedFields !== null) {
-                            checkUpdatedFields(addedFields)
+                            checkUpdatedFields(addedFields.cells)
                         }
                     })
                 })
@@ -417,9 +431,9 @@ const stagingModule: Module<IStagingState, {}> = {
             }
             const newEntry = getEmptyCells(entityInfo)
             if (position === undefined) {
-                entityChanges.added.push(newEntry)
+                entityChanges.added.push({cells: newEntry, id: ++entityChanges.idAdded})
             } else {
-                entityChanges.added.splice(position, 0, newEntry)
+                entityChanges.added.splice(position, 0, {cells: newEntry, id: ++entityChanges.idAdded})
             }
             state.addedCount += 1
             state.touched = true
@@ -432,11 +446,13 @@ const stagingModule: Module<IStagingState, {}> = {
 
             const entityChanges = state.current.getOrCreateChanges(schema, entity)
             const fieldInfo = getFieldInfo(state, schema, entity, field)
-            const added = entityChanges.added[newId]
+            const added = entityChanges.added.find(item => {
+                return item !== null && item !== undefined && item.id === newId
+            })
             if (added === undefined || added === null) {
                 throw new Error(`New entity id ${newId} is not found`)
             }
-            Vue.set(added, field, validateValue(fieldInfo, value))
+            Vue.set(added.cells, field, validateValue(fieldInfo, value))
             state.touched = true
         },
         deleteEntry: (state, { schema, entity, id }: { schema: SchemaName, entity: FieldName, id: number }) => {
@@ -463,10 +479,14 @@ const stagingModule: Module<IStagingState, {}> = {
         },
         resetAddedEntry: (state, { schema, entity, newId }: { schema: SchemaName, entity: EntityName, newId: number }) => {
             const entityChanges = state.current.getOrCreateChanges(schema, entity)
-            if (newId < entityChanges.added.length) {
-                entityChanges.added[newId] = null
-                state.addedCount -= 1
-            }
+
+            entityChanges.added.forEach((item, itemI) => {
+                if (item !== null && item.id === newId) {
+                    entityChanges.added.splice(itemI, 1)
+                    state.addedCount -= 1
+                    return
+                }
+            })
         },
         resetDeleteEntry: (state, { schema, entity, id }: { schema: SchemaName, entity: EntityName, id: number }) => {
             const entityChanges = state.current.getOrCreateChanges(schema, entity)
@@ -546,10 +566,12 @@ const stagingModule: Module<IStagingState, {}> = {
                             entityChanges.added
                             .filter(addedFields => addedFields !== null)
                             .map(addedFields => {
-                                return {
-                                    type: "insert",
-                                    entity,
-                                    entries: changesToParams(addedFields as Record<FieldName, IUpdatedCell>),
+                                if (addedFields) {
+                                    return {
+                                        type: "insert",
+                                        entity,
+                                        entries: changesToParams(addedFields.cells as Record<FieldName, IUpdatedCell>),
+                                    }
                                 }
                             }) as Api.TransactionOp[]
                         const deleted =

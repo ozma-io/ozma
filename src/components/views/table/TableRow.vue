@@ -77,7 +77,7 @@
     }
 
     export interface IRow {
-        index: number
+        id: number
         cells: ICell[]
         deleted: boolean
         style: Record<string, any>
