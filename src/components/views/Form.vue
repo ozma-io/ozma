@@ -407,9 +407,9 @@
                         cell.isInvalid = false
                     })
                 }
-                // if (this.newEntries.length === 0 && this.uv.rows === null) {
-                //     this.newEmptyRow(0)
-                // }
+                if (this.newEntries.length === 0 && this.uv.rows === null) {
+                    this.newEmptyRow(0)
+                }
             }
 
             if (this.uv.rows !== null) {
