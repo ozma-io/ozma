@@ -169,8 +169,10 @@ const checkCounters = (context: ActionContext<IStagingState, {}>) => {
 const changesToParams = (changes: UpdatedCells): Record<string, any> | null => {
     return seq(changes).map<[string, any]>(([name, change]) => {
         if (change.value === undefined) {
+            change.erroredOnce = true
             throw new Error("Value didn't pass validation")
         }
+        change.erroredOnce = false
         let arg
         if (change.value instanceof moment) {
             arg = Math.floor((change.value as Moment).unix())

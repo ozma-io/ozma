@@ -430,6 +430,14 @@ div
 					&.links-style
 						text-align: center
 						cursor: pointer
+						padding: 0
+						span
+							background: rgba(255, 255, 255, 0.3)
+							padding: 0
+							height: 100%
+							width: 100%
+							white-space: nowrap
+							display: inline-block
 
 			tbody
 				border-right: solid 1px  var(--NavigationBackColor) !important
@@ -509,6 +517,8 @@ div
 					div
 						&.div_checkbox
 							margin-left: 1px
+					&.required_cell_style
+						background-color: var(--RequiredBackColor)
 					&.error_style
 						background-color: var(--ErrorBackColor)
 					button

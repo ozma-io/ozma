@@ -36,14 +36,18 @@
         </template>
         <input type="checkbox" v-else-if="inputType.name === 'check'"
                          :value="value"
-                         :class="(isInvalid || isAwaited) ? 'form-control-panel_checkbox_error form-control-panel_checkbox' : 'form-control-panel_checkbox'"
+                         :class="['form-control-panel_checkbox',
+                                 {'form-control-panel_checkbox_error': isInvalid},
+                                 {'form-control-panel_checkbox_req': isAwaited}]"
                          @input="updateValue($event.target.value)"
                          :disabled="isDisabled"
                          ref="control" />
         <textarea v-else-if="inputType.name === 'textarea'"
                          :style="inputType.style"
                          :value="valueText"
-                         :class="(isInvalid || isAwaited) ? 'form-control-panel_textarea_error form-control-panel_textarea' : 'form-control-panel_textarea'"
+                         :class="['form-control-panel_textarea',
+                                  {'form-control-panel_textarea_error': isInvalid},
+                                  {'form-control-panel_textarea_req': isAwaited}]"
                          @input="updateValue($event.target.value)"
                          :disabled="isDisabled"
                          :rows="3"
@@ -65,7 +69,9 @@
         <div v-else-if="inputType.name === 'select'" class="select-container">
         <select 
                 :value="value"
-                :class="(isInvalid || isAwaited) ? 'form-control-panel_select_error form-control-panel_select' : 'form-control-panel_select'"
+                :class="['form-control-panel_select',
+                         {'form-control-panel_select_error': isInvalid},
+                         {'form-control-panel_select_req': isAwaited}]"
                 @input="updateValue($event.target.value)"
                 :disabled="isDisabled"
                 ref="control">
@@ -85,7 +91,9 @@
                 wrap="soft"
                 :value="valueText"
                 :style="inputType.style"
-                :class="(isInvalid || isAwaited) ? 'form-control-panel_textarea_error form-control-panel_textarea' : 'form-control-panel_textarea'"
+                :class="['form-control-panel_textarea',
+                         {'form-control-panel_textarea_error': isInvalid},
+                         {'form-control-panel_textarea_req': isAwaited}]"
                 @input="updateValue($event.target.value)"
                 :disabled="isDisabled"
                 :rows="3"
@@ -95,7 +103,9 @@
         <textarea v-else
                 :value="valueText"
                 :style="inputType.style"
-                :class="(isInvalid || isAwaited) ? 'form-control-panel_textarea_error form-control-panel_textarea' : 'form-control-panel_textarea'"
+                :class="['form-control-panel_textarea',
+                         {'form-control-panel_textarea_error': isInvalid},
+                         {'form-control-panel_textarea_req': isAwaited}]"
                 @input="updateValue($event.target.value)"
                 :disabled="isDisabled"
                 :rows="3"
@@ -195,6 +205,9 @@
         box-shadow: none;
         -webkit-appearance: none;
         background: white;
+    }
+    .form-control-panel_select_req, .form-control-panel_checkbox_req, .form-control-panel_textarea_req {
+        background-color: var(--RequiredBackColor)
     }
     .form-control-panel_select_error, .form-control-panel_checkbox_error, .form-control-panel_textarea_error {
         background-color: var(--ErrorBackColor)
