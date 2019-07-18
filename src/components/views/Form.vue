@@ -50,10 +50,10 @@
 
                 <!-- FIXME FIXME FIXME look at permissions! -->
                 <div class="delete-block">
-                <input type="button" :value="$t('delete')" class="delete-block_delete-button" v-if="entry.id !== undefined && uv.info.mainEntity !== null" v-b-modal="`deleteConfirm_${entry.id}`">
+                <input type="button" :value="$t('delete') + entry.id" class="delete-block_delete-button" v-if="entry.id !== undefined && uv.info.mainEntity !== null" v-b-modal="`deleteConfirm_${entry.id}`">
                 </div>
                 <b-modal lazy :id="`deleteConfirm_${entry.id}`" ok-variant="danger" :ok-title="$t('ok')" @ok="deleteRecord(entry.added, entry.id)" :cancel-title="$t('cancel')">
-                    {{ $t('delete_confirmation') }}
+                    {{ $t('delete_confirmation') + entry.id}}
                 </b-modal>
             </form>
         </div>
