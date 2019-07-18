@@ -53,7 +53,7 @@
                 <input  type="button"
                         :value="$t('delete')"
                         class="delete-block_delete-button"
-                        v-if="entry.id !== null && uv.info.mainEntity !== null"
+                        v-if="entry.id !== null && entry.id !== undefined && uv.info.mainEntity !== null"
                         v-b-modal="`deleteConfirm_${entryI}`">
                 </div>
                 <b-modal lazy
