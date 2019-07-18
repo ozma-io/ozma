@@ -29,7 +29,7 @@
         <div v-if="shownEntries.length === 0">
           {{ $t('item_not_found') }}
         </div>
-        <div v-else v-for="entry in shownEntries" :key="entry.index">
+        <div v-else v-for="(entry, entryI) in shownEntries" :key="entry.index">
             <form class="form-entry">
                 <div v-for="(block, blockI) in blocks" :key="blockI" class="form-block" :style="{ width: `${block.width * 100}%` }">
                     <template v-for="fieldInfo in block.fields" class="form_data">
@@ -51,18 +51,18 @@
                 <!-- FIXME FIXME FIXME look at permissions! -->
                 <div class="delete-block">
                 <input  type="button"
-                        :value="$t('delete') + entry.id"
+                        :value="$t('delete')"
                         class="delete-block_delete-button"
                         v-if="entry.id !== null && uv.info.mainEntity !== null"
-                        v-b-modal="`deleteConfirm_${entry.id}`">
+                        v-b-modal="`deleteConfirm_${entryI}`">
                 </div>
                 <b-modal lazy
-                         :id="`deleteConfirm_${entry.id}`"
+                         :id="`deleteConfirm_${entryI}`"
                          ok-variant="danger"
                          :ok-title="$t('ok')"
                          @ok="deleteRecord(entry.added, entry.id)"
                          :cancel-title="$t('cancel')">
-                    {{ $t('delete_confirmation') + entry.id}}
+                    {{ $t('delete_confirmation') }}
                 </b-modal>
             </form>
         </div>
