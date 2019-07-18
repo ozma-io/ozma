@@ -22,25 +22,25 @@
 </i18n>
 
 <template>
-    <b-container fluid class="main_nav">
+    <div fluid class="main-menu-block">
         <span v-if="error !== null">
             {{ error }}
         </span>
-        <b-container v-else class="submain_nav">
-            <b-row class="subsubmain_nav" v-for="category in showedCategories" :key="category.index">
-                <b-container class="nav_sec">
-                    <b-row class="nav_sec_tit"><a>{{ category.name }}</a></b-row>
-                    <b-row>
-                        <div class="filter_back" v-for="button in category.buttons" :key="button.index">
-                            <b-button class="nav_ent" :to="button.to">
+        <div v-else class="submain-menu-block">
+            <div class="row subsubmain-menu-block" v-for="category in showedCategories" :key="category.index">
+                <div class="navigation-sector">
+                    <div class="row navigation-sector-titel"><a class="navigation-sector-titel-head">{{ category.name }}</a></div>
+                    <div class="row navigation-sector-body">
+                        <div class="filter-back" v-for="button in category.buttons" :key="button.index">
+                            <b-button class="navigation-entry" :to="button.to">
                                 {{ button.name }}
                             </b-button>
                         </div>
-                    </b-row>
-                </b-container>
-            </b-row>
-        </b-container>
-    </b-container>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script lang="ts">
@@ -159,3 +159,158 @@
         }
     }
 </script>
+
+
+<style scoped>
+    .main-menu-block {
+        width: 100%; 
+        height: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        display: flex;
+        padding: 0;
+        overflow: auto;
+    }
+    .row {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        margin-right: -15px;
+        margin-left: -15px;
+    }
+    .submain-menu-block {
+        width: 650px; /*450px*/
+        display: block;
+        margin: auto;
+        padding: 0;
+        padding-top: 35px;
+        padding-bottom: 35px;
+    }
+    .subsubmain-menu-block {
+        width: 90%;
+        height: 90%;
+        display: flex;
+        align-items: center; /*для разных браузеров*/
+        justify-content: center; /*для разных браузеров*/
+        flex-direction: column;
+        align-items: flex-start;
+        margin: auto;
+        border: 0px;
+        padding: 0;
+        background-color: transparent;
+    }
+    .filter-back {
+        margin: 0;
+        padding: 0;
+        display: inline-block;
+        background: var(--MenuColor);
+        margin-right: 2px;
+        margin-bottom: 2px;
+    }
+	.filter-back >> *{
+        padding-left: 30px;
+    }
+    .navigation-sector {
+        margin-bottom: 20px;
+        float: left;
+        clear: left;
+        padding: 0;
+    }
+    .navigation-sector-titel {
+        padding: 5px;
+        padding-left: 1px;
+        min-height: 18px;
+        width: 100%;
+        height: calc(1.5em + 4px) !important;
+    }
+    .navigation-sector-titel-head {
+        color: var(--NavigationTextColor) !important;
+        font-weight: bold;
+    }
+    .navigation-entry {
+        display: table;
+        padding: 5px;
+        padding-left: 7px;
+        padding-right: 7px;
+        line-height: normal;
+        height: calc(1.5em + 4px) !important;
+        color: var(--ButtonTextColor) !important;
+        background: rgba(255, 255, 255, 0.3);
+        text-decoration: none;
+        border: 0px;
+    }
+    @media screen and (orientation: portrait) {
+        @media screen and (max-device-width: 480px) {
+            .main-menu-block {
+                position: relative !important;
+            }
+
+            .submain-menu-block {
+                width: 100% !important;
+                margin-top: 0px !important;
+                padding-top: 0px !important;
+                padding-bottom: 0px !important;
+            }
+
+            .subsubmain-menu-block {
+                height: auto !important;
+                margin: 0px !important;
+                width: 100% !important;
+            }
+
+            .navigation-sector {
+                margin: 0px !important;
+                width: 100%;
+            }
+
+            .navigation-sector-titel {
+                height: 29px !important;
+                margin: 0px !important;
+                padding: 5px !important;
+                background-color: var(--NavigationBackColor);
+                overflow-x: scroll;
+            }
+
+            .navigation-sector-titel-head {
+                padding: 0px !important;
+                line-height: normal;
+                color: var(--NavigationTextColor) !important;
+                font-weight: 700;
+            }
+
+            .navigation-sector-body {
+                width: 100% !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                padding: 0px !important;
+                background-color: var(--MenuColor);
+            }
+            .filter-back {
+                margin-bottom: 1px !important;
+                width: 100%;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+
+            .filter-back:first-child {
+                margin-top: 1px !important;
+            }
+
+            .navigation-entry {
+                background: hsla(0,0%,100%,.3);
+                margin-right: 0px !important;
+                margin-bottom: 1px;
+                width: 100%;
+                text-align: left;
+                opacity: 1;
+            }
+
+                .navigation-entry:last-child {
+                    margin-bottom: 0px;
+                }
+        }
+    }
+</style>
