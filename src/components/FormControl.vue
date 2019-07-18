@@ -168,7 +168,7 @@
     }
     .select-container {
         display: flex;
-        height: calc(2em + 6px)
+        height: calc(2em + 6px);
     }
     .select-container:after {
         display: inline-block;
