@@ -243,12 +243,53 @@
                 left: 1px;
                 display: block;
             }
+            .form-control-panel_textarea {
+                width: 100%;
+            }
             .caption-editors {
                 position: sticky;
                 left: 3px;
                 width: max-content;
             }
         }
+    }
+    /*для формконтрола внутри таблицы*/
+    td > div.form-control-panel {
+        left: calc(50% - 175px);
+        top: calc(50% - 50px);
+        position: fixed;
+        z-index: 1000;
+        background-color: var(--MenuColor);
+        display: block;
+        align-items: center;
+        padding: 20px;
+    }
+    @media screen and (max-device-width: 480px){
+        td > div.form-control-panel {
+            left: 2px;
+            width: calc(100% - 4px);
+        }
+        td > div.form-control-panel > div.select-container {
+            width: calc(100vw - 44px) !important;
+            /*padding 20px and left 2px*/
+        }
+        td > div.form-control-panel > div.select-container > select.form-control-panel_select {
+            width: 100%;
+        }
+        td > div.form-control-panel > div.select-container:after {
+            position: relative;
+            left: 0px;
+        }
+    }
+    td > div.form-control-panel > div.select-container {
+        width: 300px
+    }
+    td > div.form-control-panel > textarea {
+       white-space:nowrap;
+    }
+    *:focus {
+        border: 0 !important;
+        box-shadow: none !important;
     }
 </style>
 <script lang="ts">

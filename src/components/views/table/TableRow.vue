@@ -1,6 +1,6 @@
 <template functional>
     <!-- When you change anything here, also make corresponding changes in TableFixedRow! -->
-    <tr :style="props.entry.style" :class="props.selected ? 'selected' : 'none_selected'">
+    <tr :style="props.entry.style" :class="props.selected ? 'selected table-tr' : 'none_selected table-tr'">
         <td @click="'select' in listeners && listeners.select($event)" class="fixed-column checkbox-cells">
             <input type="checkbox" :checked="props.selected">
         </td>
@@ -110,3 +110,103 @@
         },
     }
 </script>
+<style scoped>
+    .fixed-place-tr {
+        display: none
+    }
+    .selected {
+        background-color: var(--TableSelectColor);
+    }
+    .none_selected {
+        background-color: var(--TableBackColor) !important;
+    }
+    .table-tr {
+        background-color: white; /*цвет таблицы возможно надо сменить на настраевоемый*/
+        border-right: solid 1px var(--NavigationBackColor);
+        height: 100% @-moz-document url-prefix();
+    }
+    td {
+        height: 100%;
+        border: solid 1px var(--NavigationBackColor);
+        padding: 0px;
+        padding-left: 3px;
+        overflow-wrap: break-word; /* перенос по словам */
+        overflow: hidden;
+    }
+    .editing_style {
+        z-index: 200 !important;
+        overflow: visible !important;
+    }
+    td >>> p, td >>> a {
+        color: var(--TableTextColor) !important;
+    }
+    td >>> p {
+        display: inline-block;
+        overflow: hidden;
+        width: 100%;
+        text-overflow: ellipsis;
+        line-height: normal;
+        padding-right: 4px; 
+        margin-bottom: 0;
+        margin-top: 2px;
+    }
+    td.required_cell_style {
+        background-color: var(--RequiredBackColor);
+    }
+    td.error_style {
+        background-color: var(--ErrorBackColor);
+    }
+    td.select_fixed {
+        box-shadow: inset 0 0 0 2px var(--SelectBorderColor);
+        position: sticky;
+        z-index: 20;
+    }
+    td.select {
+        box-shadow: inset 0 0 0 2px var(--SelectBorderColor);
+        z-index: 15;
+    }
+
+    @media screen and (max-device-width: 768px), screen and (orientation: portrait) {
+        .checkbox-cells {
+            left: auto !important;
+            width: 0px !important;
+        }
+
+        .opemform-cells {
+            left: auto !important;
+            width: 0px !important;
+        }
+
+        .fixed-column {
+            left: auto !important;
+        }
+    }
+
+    @media screen and (min-device-width: 813px) and (orientation: landscape) {
+        .checkbox-cells {
+            left: 0px;
+        }
+
+        .opemform-cells {
+            left: 20px;
+        }
+
+        .fixed-column:first-child {
+            box-shadow: 3px 0 0px var(--NavigationBackColor), inset 1px 0px 0px 0px var(--NavigationBackColor)
+        }
+
+        .fixed-column {
+            position: sticky;
+            z-index: 20;
+            background-color: inherit;
+            box-shadow: 3px 0 0px var(--NavigationBackColor);
+            border-left: 0;
+        }
+    }
+
+    @-moz-document url-prefix() {
+        .fixed-column {
+            outline: solid 1px var(--NavigationBackColor)
+        }
+    }
+</style>

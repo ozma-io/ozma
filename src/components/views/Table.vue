@@ -21,35 +21,35 @@
 
 
 <template>
-    <b-container fluid
-                :class="[isRoot ? 'cont_table without_padding' : 'nested_table cont_table without_padding',
+    <div fluid
+                :class="[isRoot ? 'table-block' : 'nested-table-block table-block',
                         {'active_editing': isActiveEdit}]">
         <div id="disable_edit"
         :class="{'edit_active': isActiveEdit}"
             @click="disable_edit()">
         </div>
         <div ref="tableContainer" class="tabl" @scroll="updateShowLength()" @resize="updateShowLength()">
-            <table class="tabl table b-table"
+            <table class="custom-table table b-table"
                     :class="{'edit_active': isActiveEdit}">
                 <colgroup>
                     <col :class="showFixedRow ? 'checkbox-col checkbox-cells' : 'checkbox-col'"> <!-- Checkbox column -->
                     <col v-if="hasRowLinks" :class="showFixedRow ? 'open-form-col opemform-cells' : 'open-form-col'"> <!-- Row link column -->
                     <col v-for="i in columnIndexes" :key="i" :style="columns[i].style">
                 </colgroup>
-                <thead>
+                <thead class="table-head">
                     <tr>
-                        <th class="fixed-column checkbox-cells"></th>
-                        <th v-if="hasRowLinks" class="fixed-column opemform-cells links-style">
-                            <span @click="changeShowEmptyRow()" :title="this.$tc('show_new_row')">
+                        <th class="fixed-column checkbox-cells table-th"></th>
+                        <th v-if="hasRowLinks" class="fixed-column opemform-cells links-style table-th">
+                            <span class="table-th_span" @click="changeShowEmptyRow()" :title="this.$tc('show_new_row')">
                                 {{ showEmptyRow ? "-" : "+" }}
                             </span>
                         </th>
-                        <th v-for="i in columnIndexes" :key="i" :title="columns[i].caption" @click="updateSort(i)" :class="columns[i].fixed ? 'fixed-column sorting' : 'sorting'" :style="columns[i].style">
+                        <th v-for="i in columnIndexes" :key="i" :title="columns[i].caption" @click="updateSort(i)" :class="columns[i].fixed ? 'fixed-column sorting table-th' : 'sorting table-th'" :style="columns[i].style">
                             {{ columns[i].caption }}
                         </th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="table-body">
                     <template v-for="(entry, entryI) in newEntries">
                         <TableFixedRow v-if="showFixedRow"
                                 :key="`fixed-new-${entryI}`"
@@ -95,7 +95,7 @@
                 </tbody>
             </table>
         </div>
-    </b-container>
+    </div>
 </template>
 <script lang="ts">
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
@@ -919,3 +919,184 @@
         }
     }
 </script>
+<style scoped>
+    .table-block {
+        width: 100%;
+        margin: 0px;
+        position: relative;
+        height: 100%;
+    }
+    .checkbox-col, .open-form-col{
+        width: 20px;
+    }
+    /* блок для отключения редактирования в таблице */
+    #disable_edit {
+        position: fixed;
+        top: calc(1.5em + 6px);
+        left: 0;
+    }
+    #disable_edit > .edit_active {
+        width: 100vw;
+        height: 100vh;
+        z-index: 500;
+    }
+    /* таблица поверх блока отключения редактирования */
+    table.edit_active {
+        position: relative;
+        z-index: 1000
+    }
+    .tabl {
+        float: left; 
+        margin-bottom: 10px;
+        height: 100%;
+        width: 100%; /*на весь экран*/
+        padding: 0;
+        overflow: auto; /*чтобы скролить таблицу в том числе на мобилке*/
+    }
+    .custom-table {
+        table-layout: fixed;
+        width: 0px;
+        border: 0;
+        background-color: var(--TableBackColor);
+        margin-bottom: 0px !important;
+    }
+    .table-head {
+        height: 25px;
+        border-right: solid 1px var(--NavigationBackColor) !important;
+
+    }
+    .table-th {
+        background: var(--NavigationBackColor) !important;
+        color: var(--ButtonTextColor) !important;
+        padding: 0;
+        border: 0;
+        font-weight: normal;
+        max-width: 50px !important;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        position: sticky; /*фиксация шапки при скроле*/
+        z-index: 20; /*при скроле таблицы чтобы шапка была видна*/
+        top: 0;
+        padding-left: 3px;
+    }
+    th.fixed-column {
+        z-index: 25;
+    }
+    th.tabl_heading {
+        text-overflow: ellipsis;
+        vertical-align: top;
+    }
+    th.links-style {
+        text-align: center;
+        cursor: pointer;
+        padding: 0;
+    }
+    .table-th_span {
+        background: rgba(255, 255, 255, 0.3);
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        white-space: nowrap;
+        display: inline-block;
+    }
+    .table-body{
+        border-right: solid 1px  var(--NavigationBackColor) !important
+    }
+
+
+    @media screen and (max-aspect-ratio: 13/9) {
+        @media screen and (max-device-width: 480px) {
+            .nested-table-block {
+                width: max-content !important;
+                position: sticky;
+                float: right;
+                right: 0;
+            }
+
+                .nested-table-block > .tabl {
+                    width: max-content !important;
+                }
+        }
+    }
+
+
+    @media screen and (max-device-width: 650px) {
+        .tabl{
+            flex: 1;
+            height: none;
+            margin-bottom:0;
+        }
+        .table-block {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .active_editing {
+            position: sticky !important;
+            z-index: 100000;
+        }
+    }
+    
+    @media screen and (max-device-width: 768px), screen and (orientation: portrait) {
+        .fixed-column {
+            left: auto !important;
+        }
+    }
+	
+    @media screen and (min-device-width: 813px) and (orientation: landscape){
+        .checkbox-cells {
+            left: 0px;
+        }
+		.opemform-cells
+        {
+            left: 20px;
+        }
+        .fixed-column {
+            position: sticky;
+            z-index: 20;
+            background-color: inherit;
+            box-shadow: 3px 0 0px var(--NavigationBackColor);
+            border-left: 0;
+        }
+    }
+
+    @-moz-document url-prefix() {
+        .fixed-column {
+            outline: solid 1px var(--NavigationBackColor)
+        }
+    }
+
+
+    @media print {
+        .tabl {
+            height: 100%;
+            float: none !important; /*при печати для правильной масштабируемости*/
+            overflow: visible !important; /*чтобы при печати была возможность видеть таблицу*/
+        }
+
+        @-moz-document url-prefix() { /*стили в лисе исправляем баги с отображением границ таблицы*/
+            .custom-table {
+                border-collapse: separate !important;
+                border-right: solid 1px var(--NavigationBackColor);
+            }
+        }
+
+        .custom-table {
+            max-width: 100% !important;
+            page-break-inside: auto;
+            border-spacing: 0;
+        }
+
+        th {
+            border: solid 1px var(--NavigationBackColor);
+        }
+
+        td {
+            border: solid 1px var(--NavigationBackColor);
+        }
+        td >>> a {
+            text-decoration: none !important;
+        }
+    }
+</style>

@@ -210,7 +210,7 @@
         margin-right: 2px;
         margin-bottom: 2px;
     }
-	.filter-back >> *{
+	.filter-back > *{
         padding-left: 30px;
     }
     .navigation-sector {
