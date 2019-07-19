@@ -273,6 +273,7 @@
             width: calc(100vw - 44px) !important;
             /*padding 20px and left 2px*/
         }
+
         td > div.form-control-panel > div.select-container > select.form-control-panel_select {
             width: 100%;
         }
@@ -283,6 +284,11 @@
     }
     td > div.form-control-panel > div.select-container {
         width: 300px
+    }
+    td > div.form-control-panel > pre {
+        min-width: 600px;
+        height: 200px !important;
+        margin-bottom: 0px;
     }
     td > div.form-control-panel > textarea {
        white-space:nowrap;
