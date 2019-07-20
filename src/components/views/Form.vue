@@ -353,7 +353,7 @@
             if (this.uv.info.mainEntity !== null) {
                 const entity = this.uv.info.mainEntity
                 const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
-                let addedLenght = 0 // no empty elements
+                let addedLength = 0 // no empty elements
 
                 changedFields.added.forEach((fields, newRowI) => {
                     let form: IForm
@@ -362,7 +362,7 @@
                         return
                     }
 
-                    addedLenght += 1
+                    addedLength += 1
                     const newItem = this.newEntries[newRowI]
                     if (newItem === undefined || newItem.id === null || newItem === null) {
                         form = this.newEmptyRow(fields.id)
@@ -397,7 +397,7 @@
                     }
                 })
 
-                this.newEntries.splice(addedLenght) // remove other elements
+                this.newEntries.splice(addedLength) // remove other elements
                 for (let i = changedFields.added.length; i < this.newEntries.length; i++) {
                     const row = this.newEntries[i]
                     this.uv.info.columns.forEach((info, colI) => {

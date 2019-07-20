@@ -103,7 +103,7 @@
     import { namespace } from "vuex-class"
     import { tryDicts } from "@/utils"
     import seq from "@/sequences"
-    import { IUpdatableField, UserViewResult, printValue, homeSchema } from "@/state/user_view"
+    import { IUpdatableField, UserViewResult, EntriesMap, printValue, homeSchema } from "@/state/user_view"
     import { CurrentChanges, IEntityChanges, IUpdatedCell, convertValue, AutoSaveLock } from "@/state/staging_changes"
     import { IExecutedRow, IExecutedValue, ValueType, IResultColumnInfo, SchemaName, EntityName, FieldName, IEntityRef } from "@/api"
     import { IQuery, attrToQuerySelf, attrToQueryRef } from "@/state/query"
@@ -154,6 +154,7 @@
     }
 
     const staging = namespace("staging")
+    const userView = namespace("userView")
 
     @Component({
         components: {
@@ -168,6 +169,8 @@
         @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>
         @staging.Action("addEntry") addEntry!: (args: { schema: SchemaName, entity: EntityName, position?: number }) => Promise<void>
         @staging.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => Promise<void>
+        @userView.Action("getEntries") getEntries!: (_: { schemaName: SchemaName, entityName: EntityName }) => Promise<void>
+        @userView.State("entries") entriesMap!: EntriesMap
 
         @Prop({ type: UserViewResult }) uv!: UserViewResult
         @Prop({ type: Boolean, default: false }) isRoot!: boolean
@@ -553,7 +556,7 @@
                 const entity = this.uv.info.mainEntity
                 const changedRows = this.changes.changesForEntity(entity.schema, entity.name)
                 const offset = this.showEmptyRow ? 1 : 0
-                let addedLenght = 0 // no empty elements
+                let addedLength = 0 // no empty elements
 
                 changedRows.added.forEach((newRow, newRowI) => {
                     let row: IRow
@@ -562,7 +565,7 @@
                         return
                     }
 
-                    addedLenght += 1
+                    addedLength += 1
                     const newItem = this.newEntries[newRowI + offset]
                     if (newItem === undefined || newItem === null) {
                         row = this.newEmptyRow(newRow.id)
@@ -598,7 +601,7 @@
                         })
                     }
                 })
-                this.newEntries.splice(addedLenght + offset) // remove other elements
+                this.newEntries.splice(addedLength + offset) // remove other elements
             }
             if (this.uv.rows !== null) {
                 const rows = this.uv.rows
@@ -790,6 +793,15 @@
                             style["height"] = `${rowHeight}px`
                         }
 
+                        if (cellValue.update !== undefined) {
+                            if (cellValue.update.field !== null) {
+                                const type = cellValue.update.field.fieldType
+                                if (type.type === "reference") {
+                                    this.getEntries({ schemaName: type.entity.schema, entityName: type.entity.name })
+                                }
+                            }
+                        }
+
                         return {
                             value, valueText, link, style,
                             valueLowerText: valueText.toLowerCase(),
@@ -930,6 +942,7 @@
         }
     }
 </script>
+
 <style scoped>
     .table-block {
         width: 100%;
