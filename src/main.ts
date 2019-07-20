@@ -17,7 +17,6 @@ import App from "@/App.vue"
 
 import authModule from "@/state/auth"
 import settingsModule from "@/state/settings"
-import translationsModule from "@/state/translations"
 import userViewModule from "@/state/user_view"
 import stagingChangesModule from "@/state/staging_changes"
 import queryModule from "@/state/query"
@@ -32,7 +31,6 @@ export const store = new Vuex.Store({
     modules: {
         auth: authModule,
         settings: settingsModule,
-        translations: translationsModule,
         userView: userViewModule,
         staging: stagingChangesModule,
         query: queryModule,

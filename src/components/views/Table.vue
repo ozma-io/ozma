@@ -105,8 +105,7 @@
     import seq from "@/sequences"
     import { IUpdatableField, UserViewResult, printValue, homeSchema } from "@/state/user_view"
     import { CurrentChanges, IEntityChanges, IUpdatedCell, convertValue, AutoSaveLock } from "@/state/staging_changes"
-    import { IExecutedRow, IExecutedValue, ValueType, IResultColumnInfo, SchemaName, EntityName, FieldName, IMainEntityInfo } from "@/api"
-    import { CurrentTranslations } from "@/state/translations"
+    import { IExecutedRow, IExecutedValue, ValueType, IResultColumnInfo, SchemaName, EntityName, FieldName, IEntityRef } from "@/api"
     import { IQuery, attrToQuerySelf, attrToQueryRef } from "@/state/query"
     import TableRow, { IRow, ICell, IColumn } from "@/components/views/table/TableRow.vue"
     import TableFixedRow from "@/components/views/table/TableFixedRow.vue"
@@ -155,7 +154,6 @@
     }
 
     const staging = namespace("staging")
-    const translations = namespace("translations")
 
     @Component({
         components: {
@@ -169,7 +167,6 @@
         @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>
         @staging.Action("addEntry") addEntry!: (args: { schema: SchemaName, entity: EntityName, position?: number }) => Promise<void>
         @staging.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => Promise<void>
-        @translations.Getter("field") fieldTranslation!: (schema: string, entity: string, field: string, defValue: string) => string
 
         @Prop({ type: UserViewResult }) uv!: UserViewResult
         @Prop({ type: Boolean, default: false }) isRoot!: boolean
@@ -211,17 +208,8 @@
                 const columnAttrs = this.uv.columnAttributes[i]
                 const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs)
 
-                let caption: string
                 const captionAttr = getColumnAttr("Caption")
-                if (captionAttr !== undefined) {
-                    caption = String(captionAttr)
-                } else if (this.uv.info.mainEntity !== null && columnInfo.mainField !== null) {
-                    // FIXME: get rid of this; use default field attributes instead
-                    const entity = this.uv.info.mainEntity.entity
-                    caption = this.fieldTranslation(entity.schema, entity.name, columnInfo.mainField.name, columnInfo.name)
-                } else {
-                    caption = columnInfo.name
-                }
+                const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name
 
                 const style: Record<string, any> = {}
 
@@ -455,7 +443,7 @@
             if (this.uv.info.mainEntity === null) {
                 throw new Error("Main entity cannot be null")
             }
-            const entity = this.uv.info.mainEntity.entity
+            const entity = this.uv.info.mainEntity
             const newCells = this.uv.info.columns.map((info, colI) => {
                 const columnAttrs = this.uv.columnAttributes[colI]
                 const viewAttrs = this.uv.attributes
@@ -519,7 +507,7 @@
             if (this.uv.info.mainEntity === null || this.uv.rows === null) {
                 throw new Error("View doesn't have a main entity")
             }
-            const entity = this.uv.info.mainEntity.entity
+            const entity = this.uv.info.mainEntity
             // tslint:disable-next-line:forin
             for (const rowI of this.selectedRows) {
                 const row = this.uv.rows[rowI]
@@ -538,7 +526,7 @@
         // TODO: make this even more granular, ideally: dynamically bind a watcher to every changed and added entry.
         private applyChanges() {
             if (this.uv.info.mainEntity !== null) {
-                const entity = this.uv.info.mainEntity.entity
+                const entity = this.uv.info.mainEntity
                 const changedRows = this.changes.changesForEntity(entity.schema, entity.name)
                 const offset = this.showEmptyRow ? 1 : 0
                 let addedLenght = 0 // no empty elements
@@ -885,16 +873,14 @@
         }
 
         get currentIdAdded() {
-            const mainEntity = this.uv.info.mainEntity as IMainEntityInfo
-            const entity = mainEntity.entity
+            const entity = this.uv.info.mainEntity as IEntityRef
             const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
             return changedFields.idAdded
         }
 
         private beforeAddEntry(row: IRow) {
             // Check if an entry is already added; if it isn't, create it with our default values.
-            const mainEntity = this.uv.info.mainEntity as IMainEntityInfo
-            const entity = mainEntity.entity
+            const entity = this.uv.info.mainEntity as IEntityRef
             const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
             const hasId = changedFields.added.some(item => item !== null && item.id === row.id)
             if (row.id === -1) {

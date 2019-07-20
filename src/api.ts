@@ -129,16 +129,11 @@ export interface IDomainField {
     idColumn: ColumnName
 }
 
-export interface IMainEntityInfo {
-    entity: IEntityRef
-    name: FieldName
-}
-
 export interface IResultViewInfo {
     attributeTypes: AttributeTypesMap
     rowAttributeTypes: AttributeTypesMap
     domains: Record<DomainId, Record<ColumnName, IDomainField>>
-    mainEntity: IMainEntityInfo | null
+    mainEntity: IEntityRef | null
     columns: IResultColumnInfo[]
 }
 
@@ -153,6 +148,7 @@ export interface IExecutedRow {
     domainId: DomainId
     attributes?: AttributesMap
     entityIds?: Record<ColumnName, RowId>
+    mainId?: RowId
 }
 
 export interface IExecutedViewExpr {

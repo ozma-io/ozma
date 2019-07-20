@@ -8,7 +8,6 @@
             "pending_changes": "Saving",
             "submit_error": "Error while submitting changes: {msg}",
             "settings_error": "Failed to fetch settings: {msg}",
-            "translations_error": "Failed to fetch translations: {msg}",
             "save": "Save",
             "account": "Account",
             "logout": "Logout"
@@ -21,7 +20,6 @@
             "pending_changes": "Сохраняется",
             "submit_error": "Ошибка сохранения изменений: {msg}",
             "settings_error": "Ошибка получения настроек: {msg}",
-            "translations_error": "Ошибка получения переводов: {msg}",
             "save": "Сохранить",
             "account": "Профиль",
             "logout": "Выйти"
@@ -72,11 +70,6 @@
                      variant="danger"
                      v-if="settingsLastError !== null">
                 {{ $t('settings_error', { msg: settingsLastError }) }}
-            </div>
-            <div class="error custom-danger"
-                     variant="danger"
-                     v-if="translationsLastError !== null">
-                {{ $t('translations_error', { msg: translationsLastError }) }}
             </div>
             <div v-for="error in stagingErrors"
                      :key="error"
@@ -250,7 +243,6 @@
     import * as Api from "@/api"
     import { setHeadTitle } from "@/elements"
     import { IUserViewArguments, UserViewResult, UserViewError, CurrentUserViews } from "@/state/user_view"
-    import { CurrentTranslations } from "@/state/translations"
     import { CurrentChanges } from "@/state/staging_changes"
     import { IAction } from "@/components/ActionsMenu.vue"
     import { CurrentQuery, replaceSearch, defaultValuePrefix } from "@/state/query"
@@ -259,7 +251,6 @@
     const userView = namespace("userView")
     const staging = namespace("staging")
     const settings = namespace("settings")
-    const translations = namespace("translations")
     const query = namespace("query")
 
     const makeWordsRegex = () => {
@@ -314,8 +305,6 @@
         @staging.Action("reset") clearChanges!: () => Promise<void>
         @staging.Mutation("removeError") stagingRemoveError!: (errorIndex: number) => void
         @staging.State("errors") stagingErrors!: string[]
-        @translations.State("lastError") translationsLastError!: string | null
-        @translations.Mutation("clearError") translationsClearError!: () => void
         @settings.State("lastError") settingsLastError!: string | null
         @settings.Mutation("clearError") settingsClearError!: () => void
         @query.State("current") query!: CurrentQuery
@@ -428,7 +417,6 @@
         get bottomBarNeeded() {
             return this.uvErrors.length > 0 ||
                 this.settingsLastError !== null ||
-                this.translationsLastError !== null ||
                 this.stagingErrors.length > 0 ||
                 !this.changes.isEmpty ||
                 this.statusLine !== ""

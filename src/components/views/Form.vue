@@ -35,7 +35,7 @@
                     <template v-for="fieldInfo in block.fields" class="form_data">
                         <div class="form-data" v-if="fieldInfo.visible" :key="fieldInfo.column.name" :label-for="fieldInfo.column.name">
                             <FormControl
-                                :caption="fieldInfo.column.name"
+                                :caption="fieldInfo.caption"
                                 v-bind="entry.fields[fieldInfo.index]"
                                 :update="entry.fields[fieldInfo.index].update"
                                 :type="fieldInfo.column.valueType"
@@ -150,8 +150,8 @@
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
     import { namespace } from "vuex-class"
     import { tryDicts } from "@/utils"
-    import { AttributesMap, IMainFieldInfo, IColumnField, IExecutedRow, RowId, FieldType, FieldName, IResultColumnInfo, IExecutedValue } from "@/api"
-    import { SchemaName, EntityName, IMainEntityInfo } from "@/api"
+    import { AttributesMap, IMainFieldInfo, IColumnField, IExecutedRow, RowId, FieldType, FieldName, IResultColumnInfo, IExecutedValue, IEntityRef } from "@/api"
+    import { SchemaName, EntityName } from "@/api"
     import { IUpdatableField, IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, IProcessedRow, printValue, homeSchema } from "@/state/user_view"
     import { CurrentChanges, IEntityChanges, IUpdatedCell, convertValue } from "@/state/staging_changes"
     import { CurrentAuth } from "@/state/auth"
@@ -186,7 +186,6 @@
     }
 
     const staging = namespace("staging")
-    const translations = namespace("translations")
     const auth = namespace("auth")
 
     @Component
@@ -198,7 +197,6 @@
         @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { schema: string, entity: string, newId: number }) => Promise<void>
         @staging.Action("deleteEntry") deleteEntry!: (args: { schema: string, entity: string, id: number }) => Promise<void>
         @staging.Action("submit") submitChanges!: () => Promise<void>
-        @translations.Getter("field") fieldTranslation!: (schema: string, entity: string, field: string, defValue: string) => string
 
         @Prop({ type: UserViewResult }) uv!: UserViewResult
         @Prop({ type: Boolean, default: false }) isRoot!: boolean
@@ -220,17 +218,8 @@
                 const columnAttrs = this.uv.columnAttributes[i]
                 const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs)
 
-                let caption: string
                 const captionAttr = getColumnAttr("Caption")
-                if (captionAttr !== undefined) {
-                    caption = String(captionAttr)
-                } else if (this.uv.info.mainEntity !== null && columnInfo.mainField !== null) {
-                    // FIXME: get rid of this; use default field attributes instead
-                    const entity = this.uv.info.mainEntity.entity
-                    caption = this.fieldTranslation(entity.schema, entity.name, columnInfo.mainField.name, columnInfo.name)
-                } else {
-                    caption = columnInfo.name
-                }
+                const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name
 
                 const visibleColumnAttr = getColumnAttr("Visible")
                 const visible = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr)
@@ -269,7 +258,7 @@
             if (this.uv.info.mainEntity === null) {
                 throw new Error("View doesn't have a main entity")
             }
-            const entity = this.uv.info.mainEntity.entity
+            const entity = this.uv.info.mainEntity
 
             if (added) {
                 this.resetAddedEntry({
@@ -309,7 +298,7 @@
             if (this.uv.info.mainEntity === null) {
                 throw new Error("Main entity cannot be null")
             }
-            const entity = this.uv.info.mainEntity.entity
+            const entity = this.uv.info.mainEntity
             const newFields = this.uv.info.columns.map((info, colI) => {
                 const columnAttrs = this.uv.columnAttributes[colI]
                 const viewAttrs = this.uv.attributes
@@ -362,7 +351,7 @@
         // TODO: make this even more granular, ideally: dynamically bind a watcher to every changed and added entry.
         private applyChanges() {
             if (this.uv.info.mainEntity !== null) {
-                const entity = this.uv.info.mainEntity.entity
+                const entity = this.uv.info.mainEntity
                 const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
                 let addedLenght = 0 // no empty elements
 
@@ -534,12 +523,7 @@
                     }
                 })
 
-                let id
-                if (this.uv.info.mainEntity !== null) {
-                    id = (row.entityIds as Record<string, number>)[this.uv.info.mainEntity.name]
-                } else {
-                    id = null
-                }
+                const id = this.uv.info.mainEntity !== null ? row.mainId as number : null
 
                 return {
                     deleted: false,
@@ -570,8 +554,7 @@
         private beforeUpdateEntry(form: IForm) {
             if (form.added) {
                 // Check if an entry is already added; if it isn't, create it with our default values.
-                const mainEntity = this.uv.info.mainEntity as IMainEntityInfo
-                const entity = mainEntity.entity
+                const entity = this.uv.info.mainEntity as IEntityRef
                 const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
                 const id = form.id as number
                 const hasId = changedFields.added.some(item => item !== null && item.id === id)
