@@ -1,10 +1,8 @@
 <i18n>
     {
         "en": {
-            "actions": "Actions",
             "search_placeholder": "Type to search",
             "fetch_error": "Failed to fetch user view: {msg}",
-            "goto_nav": "Menu",
             "pending_changes": "Saving",
             "submit_error": "Error while submitting changes: {msg}",
             "settings_error": "Failed to fetch settings: {msg}",
@@ -13,10 +11,8 @@
             "logout": "Logout"
         },
         "ru": {
-            "actions": "Действия",
             "search_placeholder": "Поиск",
             "fetch_error": "Ошибка получения представления: {msg}",
-            "goto_nav": "Меню",
             "pending_changes": "Сохраняется",
             "submit_error": "Ошибка сохранения изменений: {msg}",
             "settings_error": "Ошибка получения настроек: {msg}",
@@ -32,10 +28,11 @@
         <!-- FIXME: This shouldn't depend on type! -->
         <div :class="uvIsReady && uv.attributes.Type === 'Menu' ? 'menu_scrol' : 'menu_none-scrol'">
             <div class="head-menu">
-                <router-link v-if="!isMainView" :to="{ name: 'main' }" class="head-menu_main-menu-button">
-                    {{ $t('goto_nav') }}
+                <input v-if="!isMainView" type="button" @click="$router.go(-1)"  value="arrow_back" class="head-menu_back-button material-icons"/>
+                <router-link v-if="!isMainView" :to="{ name: 'main' }" class="head-menu_main-menu-button material-icons">
+                    home
                 </router-link>
-                <ActionsMenu v-if="uvIsReady" :title="$t('actions')" :actions="actions" />
+                <ActionsMenu v-if="uvIsReady" title="view_headline" :actions="actions" />
                 <b-form v-if="enableFilter" v-on:submit.prevent="submitFilter()" inline class="find">
                     <b-input-group>
                         <b-form-input v-model="filterString" class="find_in form-control" :placeholder="$t('search_placeholder')" />
@@ -129,6 +126,14 @@
         background-color: var(--MenuColor);
         width: 100%;
     }
+    .head-menu_back-button {
+        adding-top: 3px;
+        padding-bottom: 3px;
+    }
+    .head-menu_back-button:focus{
+       outline:none;
+    }
+    .head-menu_back-button,
     .head-menu_main-menu-button {
         color: var(--ButtonTextColor) !important;
         background: hsla(0,0%,100%,.3);
@@ -136,12 +141,17 @@
         border: solid 1px var(--MenuColor);
         border-left: 0px;
         text-decoration: none;
-        padding-left: 7px;
-        padding-right: 7px;
+        padding-left: 5px;
+        padding-right: 5px;
         z-index: 1000;
         padding-bottom: 4px;
-        padding-top: 4px;
+        padding-top: 1px !important;
         border-radius: 0 !important;
+        font-size: 1.4em !important;
+        height: 1.25em;
+    }
+    .head-menu_main-menu-button {
+        padding-top: 3px;
     }
     .fix-bot {
         padding: 0;
@@ -221,15 +231,20 @@
     }
     @media screen and (max-aspect-ratio: 13/9) {
         @media screen and (max-device-width: 480px) {
-            .head-menu_main-menu-button {
-                width: 100vw;
-                text-align: left;
-                border-top: 0 !important;
-                border-right: 0 !important;
-                border-left: 0 !important;
-                box-sizing: content-box;
+            .find{
                 display: block;
+            }
+            .head-menu_back-button,
+            .head-menu_main-menu-button {
+                text-align: left;
+                border-top: 0px !important;
+                border-left: 0px !important;
+                box-sizing: content-box;
+                display: inline-block;
                 border-radius: 0 !important;
+                height: 1em;
+                vertical-align: bottom;
+                border: solid 1px var(--MenuColor)
             }
         }
     }

@@ -22,7 +22,7 @@
 <template>
     <div class="form-control-panel">
         <div class="nested-menu" v-if="actions.length > 0">
-            <ActionsMenu title="☰"
+            <ActionsMenu title="view_headline"
                          :actions="actions" />
             <div v-if="caption.length > 0" class="caption-editors">
                 {{caption}}
@@ -122,9 +122,8 @@
     .nested-menu >>> .actions-menu_actions-button {
         border: 0px !important;
         line-height: normal;
-        padding-bottom: 3px;
-        padding-top: 3px;
-        padding-left: 5px;
+        padding: 2px;
+        padding-left: 1px;
         height: 100%;
         text-align: left;
         border-radius: 0 !important;
@@ -233,6 +232,9 @@
                 z-index: 0;
                 position: sticky;
             }
+            .nested-menu > .actions-menu >>>  .div-with-actions{
+                position: absolute !important;
+            }
             .nested-menu:hover {
                 z-index: 1200;
             }
@@ -243,8 +245,11 @@
                 left: 1px;
                 display: block;
             }
-            .form-control-panel_textarea {
+            td > .form-control-panel > .form-control-panel_textarea {
                 width: 100%;
+            }
+            td > div.form-control-panel > pre{
+                min-width: 0 !important;
             }
             .caption-editors {
                 position: sticky;
