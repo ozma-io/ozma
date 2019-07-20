@@ -75,8 +75,8 @@
         border-left: 0px !important;
         text-align: left;
         height: 100%;
-        padding-bottom: 4px;
-        padding-top: 4px;
+        padding-bottom: 3px;
+        padding-top: 2px;
         line-height: normal;
         border-radius: 0 !important;
     }
@@ -84,6 +84,8 @@
         @media screen and (max-device-width: 480px) {
             .div-with-actions{
                 width: 100vw !important;
+                position: fixed;
+                left: 0;
             }
             .black-block {
                 top: -50vh !important;
@@ -99,8 +101,9 @@
                 background-color: black !important;
                 height: 200vh;
             }
-            .actions-menu{
-                position:relative;
+            .actions-menu {
+                position: relative;
+                display: inline-block;
             }
             .actions-menu_actions-button {
                 position: sticky;

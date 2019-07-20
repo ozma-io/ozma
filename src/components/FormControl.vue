@@ -233,6 +233,9 @@
                 z-index: 0;
                 position: sticky;
             }
+            .nested-menu > .actions-menu >>>  .div-with-actions{
+                position: absolute !important;
+            }
             .nested-menu:hover {
                 z-index: 1200;
             }
@@ -243,8 +246,11 @@
                 left: 1px;
                 display: block;
             }
-            .form-control-panel_textarea {
+            td > .form-control-panel > .form-control-panel_textarea {
                 width: 100%;
+            }
+            td > div.form-control-panel > pre{
+                min-width: 0 !important;
             }
             .caption-editors {
                 position: sticky;
