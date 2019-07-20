@@ -1,8 +1,8 @@
 <template>
     <div :class="showActions? 'actions-menu_active actions-menu' : 'actions-menu'" v-if="actions.length > 0" >
-        <input type="button" class="actions-menu_actions-button"  @click="actionsShow"  :value="title" >
+        <input type="button" class="actions-menu_actions-button material-icons"  @click="actionsShow"  :value="title" >
         <div v-if="showActions" class="black-block" onklick>
-            <button class="black-block_button" @click="actionsHidden()"></button>
+            <button class="black-block_button " @click="actionsHidden()"></button>
         </div>
         <div v-show="showActions" class="div-with-actions">
         <template  v-for="action in actions">
@@ -79,6 +79,9 @@
         padding-top: 2px;
         line-height: normal;
         border-radius: 0 !important;
+        font-size: 1.4em !important;
+        vertical-align: bottom;
+        height: 1.25em;
     }
     @media screen and (max-aspect-ratio: 13/9) {
         @media screen and (max-device-width: 480px) {

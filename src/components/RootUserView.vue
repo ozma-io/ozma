@@ -30,11 +30,11 @@
         <!-- FIXME: This shouldn't depend on type! -->
         <div :class="uvIsReady && uv.attributes.Type === 'Menu' ? 'menu_scrol' : 'menu_none-scrol'">
             <div class="head-menu">
-                <input v-if="!isMainView" type="button" @click="$router.go(-1)"  value="🔙" class="head-menu_back-button"/>
-                <router-link v-if="!isMainView" :to="{ name: 'main' }" class="head-menu_main-menu-button">
-                    🏠
+                <input v-if="!isMainView" type="button" @click="$router.go(-1)"  value="arrow_back" class="head-menu_back-button material-icons"/>
+                <router-link v-if="!isMainView" :to="{ name: 'main' }" class="head-menu_main-menu-button material-icons">
+                    home
                 </router-link>
-                <ActionsMenu v-if="uvIsReady" title="☰" :actions="actions" />
+                <ActionsMenu v-if="uvIsReady" title="view_headline" :actions="actions" />
                 <b-form v-if="enableFilter" v-on:submit.prevent="submitFilter()" inline class="find">
                     <b-input-group>
                         <b-form-input v-model="filterString" class="find_in form-control" :placeholder="$t('search_placeholder')" />
@@ -142,7 +142,6 @@
     }
     .head-menu_back-button,
     .head-menu_main-menu-button {
-        font-family: Segoe UI Symbol;
         color: var(--ButtonTextColor) !important;
         background: hsla(0,0%,100%,.3);
         line-height: normal;
@@ -153,8 +152,13 @@
         padding-right: 5px;
         z-index: 1000;
         padding-bottom: 4px;
-        padding-top: 2px;
+        padding-top: 1px !important;
         border-radius: 0 !important;
+        font-size: 1.4em !important;
+        height: 1.25em;
+    }
+    .head-menu_main-menu-button {
+        padding-top: 3px;
     }
     .fix-bot {
         padding: 0;
@@ -240,11 +244,14 @@
             .head-menu_back-button,
             .head-menu_main-menu-button {
                 text-align: left;
-                border-top: 0 !important; 
-                border-left: 0 !important;
+                border-top: 0px !important;
+                border-left: 0px !important;
                 box-sizing: content-box;
-                display:   inline-block;
+                display: inline-block;
                 border-radius: 0 !important;
+                height: 1em;
+                vertical-align: bottom;
+                border: solid 1px var(--MenuColor)
             }
         }
     }
