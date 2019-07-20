@@ -24,7 +24,7 @@
     <NodejsPort>1337</NodejsPort>
     <TypeScriptSourceMap>true</TypeScriptSourceMap>
     <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
-    <TypeScriptToolsVersion>3.1</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>3.4</TypeScriptToolsVersion>
     <EnableTypeScript>true</EnableTypeScript>
     <StartWebBrowser>True</StartWebBrowser>
     <ScriptArguments>serve</ScriptArguments>
