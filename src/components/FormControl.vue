@@ -75,7 +75,7 @@
                 @input="updateValue($event.target.value)"
                 :disabled="isDisabled"
                 ref="control">
-            <option v-for="option in inputType.options" v-bind:value="option.value">
+            <option v-for="option in inputType.options" v-bind:key="option.value" v-bind:value="option.value">
                 {{ option.text }}
             </option>
         </select>

@@ -18,7 +18,8 @@
                         'select' : props.entry.cells[i].selected && !props.columns[i].fixed,
                         'error_style' : props.entry.cells[i].isInvalid,
                         'required_cell_style' : props.entry.cells[i].isAwaited,
-                        'editing_style' : props.entry.cells[i].isEditing !== null}]">
+                        'editing_style' : props.entry.cells[i].isEditing !== null,
+                        'disable_cell' : (props.entry.cells[i].update === null || props.entry.cells[i].update.field === null) && props.added}]">
             <FormControl v-if="props.entry.cells[i].isEditing !== null"
                     :value="props.entry.cells[i].value"
                     :valueText="props.entry.cells[i].valueText"
@@ -113,6 +114,9 @@
 <style scoped>
     .fixed-place-tr {
         display: none
+    }
+    .disable_cell {
+        background-color: var(--ControlDisableColor)
     }
     .selected {
         background-color: var(--TableSelectColor);

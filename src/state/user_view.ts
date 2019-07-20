@@ -52,6 +52,7 @@ export interface IProcessedRow {
     attributes?: AttributesMap
     domainId: DomainId
     entityIds?: Record<ColumnName, RowId>
+    mainId?: RowId
 }
 
 export type IUpdateMappings = Record<SchemaName, Record<EntityName, IUpdateMapping>>
@@ -395,13 +396,10 @@ const userViewModule: Module<IUserViewState, {}> = {
             const pending: IRef<Promise<Entries>> = {}
             pending.ref = (async () => {
                 try {
-                    const ref = {
-                        schema: Api.funappSchema,
-                        name: `Summary-${schemaName}-${entityName}`,
-                    }
+                    const query = `SELECT "Id", __main AS "Main" FROM "${schemaName}"."${entityName}" ORDER BY __main`
                     const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
-                        func: Api.fetchNamedView,
-                        args: [ref, {}],
+                        func: Api.fetchAnonymousView,
+                        args: [query, {}],
                     }, { root: true })
                     if (!(schemaName in state.entries && state.entries[schemaName][entityName] === pending.ref)) {
                         throw Error("Pending operation cancelled")
