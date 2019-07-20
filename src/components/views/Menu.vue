@@ -182,7 +182,7 @@
         margin-left: -15px;
     }
     .submain-menu-block {
-        width: 650px; /*450px*/
+        max-width: 650px !important; /*450px*/
         display: block;
         margin: auto;
         padding: 0;
@@ -190,7 +190,7 @@
         padding-bottom: 35px;
     }
     .subsubmain-menu-block {
-        width: 90%;
+        width: auto;
         height: 90%;
         display: flex;
         align-items: center; /*для разных браузеров*/
