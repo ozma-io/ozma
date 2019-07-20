@@ -1,7 +1,7 @@
 <template functional>
     <!-- When you change anything here, also make corresponding changes in TableFixedRow! -->
     <tr :style="props.entry.style" :class="props.selected ? 'selected table-tr' : 'none_selected table-tr'">
-        <td @click="'select' in listeners && listeners.select($event)" class="fixed-column checkbox-cells">
+        <td @click="'select' in listeners && listeners.select($event)" class=" fixed-column checkbox-cells">
             <input type="checkbox" :checked="props.selected">
         </td>
         <td v-if="props.hasRowLinks" class="fixed-column opemform-cells">
@@ -13,12 +13,12 @@
                 :key="i"
                 @click="'cellClick' in listeners && listeners.cellClick(props.entry.cells[i], $event)"
                 :style="props.entry.cells[i].style"
-                :class="{'fixed-column' : props.columns[i].fixed,
+                :class="['table-td', {'fixed-column' : props.columns[i].fixed,
                         'select_fixed' : props.entry.cells[i].selected && props.columns[i].fixed,
                         'select' : props.entry.cells[i].selected && !props.columns[i].fixed,
                         'error_style' : props.entry.cells[i].isInvalid,
                         'required_cell_style' : props.entry.cells[i].isAwaited,
-                        'editing_style' : props.entry.cells[i].isEditing !== null}">
+                        'editing_style' : props.entry.cells[i].isEditing !== null}]">
             <FormControl v-if="props.entry.cells[i].isEditing !== null"
                     :value="props.entry.cells[i].value"
                     :valueText="props.entry.cells[i].valueText"
@@ -146,7 +146,8 @@
         width: 100%;
         text-overflow: ellipsis;
         line-height: normal;
-        padding-right: 4px; 
+        padding-right: 4px;
+        padding-left: 1px;
         margin-bottom: 0;
         margin-top: 2px;
     }
@@ -202,8 +203,15 @@
             box-shadow: 3px 0 0px var(--NavigationBackColor);
             border-left: 0;
         }
-    }
 
+        td.fixed-column + td.table-td {
+            padding-left: 5.5px;
+        }
+
+        td.fixed-column {
+            padding-left: 3px !important
+        }
+    }
     @-moz-document url-prefix() {
         .fixed-column {
             outline: solid 1px var(--NavigationBackColor)

@@ -25,7 +25,7 @@
 </i18n>
 
 <template>
-    <b-container fluid class="view-form">
+    <div fluid class="view-form">
         <div v-if="shownEntries.length === 0">
           {{ $t('item_not_found') }}
         </div>
@@ -66,7 +66,7 @@
                 </b-modal>
             </form>
         </div>
-    </b-container>
+    </div>
 </template>
 <style scoped>
     .view-form {
