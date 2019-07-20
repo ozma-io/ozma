@@ -11,7 +11,7 @@
         </td>
         <td v-for="i in props.columnIndexes"
                 :key="i"
-                @click="'cellClick' in listeners && listeners.cellClick(props.entry.cells[i], $event)"
+                @click="'cellClick' in listeners && listeners.cellClick(props.entry.cells[i], props.entry, $event)"
                 :style="props.entry.cells[i].style"
                 :class="['table-td', {'fixed-column' : props.columns[i].fixed,
                         'select_fixed' : props.entry.cells[i].selected && props.columns[i].fixed,
@@ -85,6 +85,7 @@
         style: Record<string, any>
         linkForRow: IQuery | null
         attrs: Record<string, any>
+        added: boolean
     }
 
     export interface IColumn {

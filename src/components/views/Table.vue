@@ -164,6 +164,7 @@
         @staging.State("current") changes!: CurrentChanges
         @staging.Action("deleteEntry") deleteEntry!: (args: { schema: SchemaName, entity: EntityName, id: number }) => Promise<void>
         @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>
+        @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { schema: string, entity: string, newId: number }) => Promise<void>
         @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>
         @staging.Action("addEntry") addEntry!: (args: { schema: SchemaName, entity: EntityName, position?: number }) => Promise<void>
         @staging.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => Promise<void>
@@ -183,6 +184,7 @@
         private lastSelected: number | null = null
         private printListener: { query: MediaQueryList, queryCallback: (mql: MediaQueryListEvent) => void, printCallback: () => void } | null = null
         private oldCell: ICell | null = null
+        private oldRow: IRow | null = null
         private clickTimeoutId: NodeJS.Timeout | null = null
         private newEntries: IRow[] = []
         private showEmptyRow: boolean = false
@@ -360,7 +362,22 @@
             }
         }
 
-        private cellClick(cell: ICell) {
+        private cellClick(cell: ICell, row: IRow) {
+
+            if (this.oldRow !== null && row !== this.oldRow && this.oldRow.added && this.isEmptyRow(this.oldRow)) {
+                if (this.uv.info.mainEntity === null) {
+                    throw new Error("View doesn't have a main entity")
+                }
+
+                const entity = this.uv.info.mainEntity
+
+                this.resetAddedEntry({
+                    schema: entity.schema,
+                    entity: entity.name,
+                    newId: this.oldRow.id,
+                })
+            }
+
             if (this.clickTimeoutId === null) {
                 this.clickTimeoutId = setTimeout(() => {
                     this.clickTimeoutId = null
@@ -371,6 +388,7 @@
                     this.setCellEditing(this.oldCell, false)
                 }
                 this.oldCell = cell
+                this.oldRow = row
                 cell.selected = true
             } else {
                 clearTimeout(this.clickTimeoutId)
@@ -386,9 +404,14 @@
                         this.setCellEditing(this.oldCell, false)
                     }
                     this.oldCell = cell
+                    this.oldRow = row
                     cell.selected = true
                 }
             }
+        }
+
+        private isEmptyRow(row: IRow) {
+            return row.cells.every(cell => cell.value === undefined || cell.valueText === "" || cell.update === null || cell.update.field === null)
         }
 
         private selectRow(rowI: number, event: MouseEvent) {
@@ -494,6 +517,7 @@
                 style: {},
                 linkForRow: null,
                 attrs: {},
+                added: true,
             }
             if (position === undefined) {
                 this.newEntries.push(row)
@@ -785,6 +809,7 @@
                         style: rowStyle,
                         linkForRow,
                         attrs: rowAttrs,
+                        added: false,
                     }
                 })
             }

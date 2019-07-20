@@ -13,7 +13,7 @@
                 </div>
                 <div v-for="i in props.columnIndexes"
                         :key="i"
-                        @click="'cellClick' in listeners && listeners.cellClick(props.entry.cells[i], $event)"
+                        @click="'cellClick' in listeners && listeners.cellClick(props.entry.cells[i], props.entry, $event)"
                         :style="Object.assign({}, props.entry.cells[i].style, props.columns[i].style)">
                     <FormControl v-if="props.entry.cells[i].isEditing !== null"
                             :value="props.entry.cells[i].value"
