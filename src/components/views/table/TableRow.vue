@@ -120,7 +120,7 @@
         background-color: var(--ControlDisableColor)
     }
     .selected {
-        background-color: var(--TableSelectColor);
+        background-color: var(--TableSelectColor) !important;
     }
     .none_selected {
         background-color: var(--TableBackColor) !important;
