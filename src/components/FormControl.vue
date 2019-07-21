@@ -67,7 +67,7 @@
                     @update:actions="extraActions = $event"
                     ref="control" />
         <div v-else-if="inputType.name === 'select'" class="select-container">
-        <select 
+        <select
                 :value="value"
                 :class="['form-control-panel_select',
                          {'form-control-panel_select_error': isInvalid},
@@ -223,7 +223,7 @@
             .select-container:after {
                 position: sticky;
                 left: calc(100vw - 1.3em - 1px);
-            }            
+            }
             .select-container-after {
                 position: sticky;
                 left: calc(100vw - 1px);

@@ -163,7 +163,7 @@
 
 <style scoped>
     .main-menu-block {
-        width: 100%; 
+        width: 100%;
         height: 100%;
         position: fixed;
         top: 0;

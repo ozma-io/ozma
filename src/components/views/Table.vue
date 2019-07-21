@@ -6,7 +6,7 @@
             "no": "No",
             "export_to_csv": "Export to .csv",
             "remove_selected_rows": "Remove selected rows",
-            "show_new_row": "Add/Remove new row"
+            "show_new_row": "Add/remove new row"
         },
         "ru": {
             "clear": "Очистить",
@@ -14,7 +14,7 @@
             "no": "Нет",
             "export_to_csv": "Экспорт в .csv",
             "remove_selected_rows": "Удалить выбранные записи",
-            "show_new_row": "Добавить/Убрать новую строку"
+            "show_new_row": "Добавить/убрать новую строку"
         }
     }
 </i18n>
@@ -22,18 +22,19 @@
 
 <template>
     <div fluid
-                :class="[isRoot ? 'table-block' : 'nested-table-block table-block',
-                        {'active_editing': isActiveEdit}]">
+         :class="['table-block',
+                  {'nested-table-block': isRoot,
+                  'active_editing': isActiveEdit}]">
         <div id="disable_edit"
-        :class="{'edit_active': isActiveEdit}"
-            @click="disable_edit()">
+             :class="{'edit_active': isActiveEdit}"
+             @click="disableEdit()">
         </div>
         <div ref="tableContainer" class="tabl" @scroll="updateShowLength()" @resize="updateShowLength()">
-            <table class="custom-table table b-table"
-                    :class="{'edit_active': isActiveEdit}">
+            <table :class="['custom-table', 'table', 'b-table',
+                            {'edit_active': isActiveEdit}]">
                 <colgroup>
-                    <col :class="showFixedRow ? 'checkbox-col checkbox-cells' : 'checkbox-col'"> <!-- Checkbox column -->
-                    <col v-if="hasRowLinks" :class="showFixedRow ? 'open-form-col opemform-cells' : 'open-form-col'"> <!-- Row link column -->
+                    <col :class="['checkbox-col', {'checkbox-cells': showFixedRow}]"> <!-- Checkbox column -->
+                    <col v-if="hasRowLinks" :class="['open-form-col', {'opemform-cells': showFixedRow}]"> <!-- Row link column -->
                     <col v-for="i in columnIndexes" :key="i" :style="columns[i].style">
                 </colgroup>
                 <thead class="table-head">
@@ -356,7 +357,9 @@
             this.lastSelected = null
         }
 
-        private disable_edit() {
+        // REVIEW: Стиль названия
+        private disableEdit() {
+            // REVIEW: Нет смысла проверять на undefined
             if (this.oldCell !== undefined && this.oldCell !== null) {
                 this.oldCell.isEditing = null
                 this.oldCell.selected = false
@@ -587,17 +590,14 @@
                 const entity = this.uv.info.mainEntity
                 const changedRows = this.changes.changesForEntity(entity.schema, entity.name)
                 const offset = this.showEmptyRow ? 1 : 0
-                let addedLength = 0 // no empty elements
 
                 changedRows.added.forEach((newRow, newRowI) => {
-                    let row: IRow
-
                     if (newRow === null) {
                         return
                     }
 
-                    addedLength += 1
                     const newItem = this.newEntries[newRowI + offset]
+                    let row: IRow
                     if (newItem === undefined || newItem === null) {
                         row = this.newEmptyRow(newRow.id)
                     } else if (newItem.id < newRow.id) {
@@ -609,31 +609,28 @@
                         return
                     }
 
-                    if (newRow.cells === null) {
-                        row.deleted = true
-                    } else {
-                        row.deleted = false
-                        this.uv.info.columns.forEach((info, colI) => {
-                            if (info.mainField !== null) {
-                                const cell = row.cells[colI]
-                                const value = newRow.cells[info.mainField.name]
-                                if (value === undefined) {
-                                    cell.value = undefined
-                                    cell.valueText = ""
-                                    cell.valueLowerText = ""
-                                } else {
-                                    cell.value = value.value
-                                    cell.valueText = (value.rawValue === undefined) ? "" : value.rawValue
-                                    cell.valueLowerText = cell.valueText.toLowerCase()
-                                    cell.isInvalid = value.erroredOnce
-                                    cell.isAwaited = !info.mainField.field.isNullable && cell.value === undefined
-                                }
+                    /* REVIEW: cells никогда не будет null */
+                    this.uv.info.columns.forEach((info, colI) => {
+                        if (info.mainField !== null) {
+                            const cell = row.cells[colI]
+                            const value = newRow.cells[info.mainField.name]
+                            if (value === undefined) {
+                                cell.value = undefined
+                                cell.valueText = ""
+                                cell.valueLowerText = ""
+                            } else {
+                                cell.value = value.value
+                                cell.valueText = (value.rawValue === undefined) ? "" : value.rawValue
+                                cell.valueLowerText = cell.valueText.toLowerCase()
+                                cell.isInvalid = value.erroredOnce
+                                cell.isAwaited = !info.mainField.field.isNullable && cell.value === undefined
                             }
-                        })
-                    }
+                        }
+                    })
                 })
-                this.newEntries.splice(addedLength + offset) // remove other elements
+                this.newEntries.splice(offset + changedRows.added.length) // remove other elements
             }
+
             if (this.uv.rows !== null) {
                 const rows = this.uv.rows
 
@@ -780,7 +777,6 @@
                 this.newEmptyRow(-1, 0)
             }
             if (this.uv.rows === null) {
-                // Not supported in table yet.
                 this.entries = []
             } else {
                 const viewAttrs = this.uv.attributes
@@ -861,7 +857,8 @@
                 this.changeShowEmptyRow(true)
             }
 
-            this.disable_edit() // if saving when FormControl is active
+            // REVIEW: Почему здесь это нужно? Не совсем понял комментарий.
+            this.disableEdit() // if saving when FormControl is active
 
             this.buildRows()
             this.applyChanges()
@@ -932,7 +929,9 @@
             return homeSchema(this.uv.args)
         }
 
+        // REVIEW: Функция не зависит от класса - давай вынесем её отдельно выше в этот файл
         private changeRowId(row: IRow, newId: number) {
+            // REVIEW: Проверка не нужна, это проверяет TypeScript
             if (row === undefined || row === null) {
                 return
             }
@@ -954,6 +953,7 @@
             // Check if an entry is already added; if it isn't, create it with our default values.
             const entity = this.uv.info.mainEntity as IEntityRef
             const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
+            // REVIEW: Нужно только для проверки что всё ок, правильно понял?
             const hasId = changedFields.added.some(item => item !== null && item.id === row.id)
             if (row.id === -1) {
                 this.addEntry({ schema: entity.schema, entity: entity.name, position: 0 }) // add new entry
@@ -1005,7 +1005,7 @@
         z-index: 1000
     }
     .tabl {
-        float: left; 
+        float: left;
         margin-bottom: 10px;
         height: 100%;
         width: 100%; /*на весь экран*/
@@ -1097,7 +1097,7 @@
             z-index: 100000;
         }
     }
-    
+
     @media screen and (max-device-width: 768px), screen and (orientation: portrait) {
         .fixed-column {
             left: auto !important;

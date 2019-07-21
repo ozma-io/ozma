@@ -1,6 +1,8 @@
 <template>
-    <div :class="showActions? 'actions-menu_active actions-menu' : 'actions-menu'" v-if="actions.length > 0" >
-        <input type="button" class="actions-menu_actions-button material-icons"  @click="actionsShow"  :value="title" >
+    <!-- REVIEW: В каких-то случаях ты используешь префиксы по БЭМу а в каких-то нет, чем это обсуловлено?
+         по идее тут они не нужны потому что scoped style. -->
+    <div :class="['actions-menu', {'actions-menu_active': showActions}]" v-if="actions.length > 0">
+        <input type="button" class="actions-menu_actions-button material-icons"  @click="actionsShow"  :value="title">
         <div v-if="showActions" class="black-block" onklick>
             <button class="black-block_button " @click="actionsHidden()"></button>
         </div>
@@ -18,6 +20,44 @@
         </div>
     </div>
 </template>
+
+<script lang="ts">
+    import { Component, Vue, Prop } from "vue-property-decorator"
+    import { RawLocation } from "vue-router"
+
+    export interface ILocationAction {
+        name: string
+        location: RawLocation
+    }
+
+    export interface IHrefAction {
+        name: string
+        href: string
+    }
+
+    export interface ICallbackAction {
+        name: string
+        callback: () => void
+    }
+
+    export type IAction = ILocationAction | IHrefAction | ICallbackAction
+
+    @Component
+    export default class ActionsMenu extends Vue {
+        @Prop({ type: Array }) actions!: IAction[]
+        @Prop({ type: String }) title!: string
+
+        private showActions: boolean = false
+
+        private actionsShow() {
+            this.showActions = !this.showActions
+        }
+        private actionsHidden() {
+            this.showActions = false
+        }
+    }
+</script>
+
 <style scoped>
     .div-with-actions {
         width: max-content;
@@ -29,6 +69,7 @@
     }
     .div-with-actions_button {
         display: block;
+        /* REVIEW: Эти !important всё ещё нужны? Мне кажется мы перебивали ими стили бутстрапа но мы уже не испольуем их тут. */
         background: hsla(0,0%,100%,.3) !important;
         padding: 5px;
         line-height: normal;
@@ -45,7 +86,7 @@
     .actions-menu {
         z-index: 1000;
         background-color: var(--MenuColor);
-        
+
     }
 
     .actions-menu_active {
@@ -143,39 +184,3 @@
         }
     }
 </style>
-<script lang="ts">
-    import { Component, Vue, Prop } from "vue-property-decorator"
-    import { RawLocation } from "vue-router"
-
-    export interface ILocationAction {
-        name: string
-        location: RawLocation
-    }
-
-    export interface IHrefAction {
-        name: string
-        href: string
-    }
-
-    export interface ICallbackAction {
-        name: string
-        callback: () => void
-    }
-
-    export type IAction = ILocationAction | IHrefAction | ICallbackAction
-
-    @Component
-    export default class ActionsMenu extends Vue {
-        @Prop({ type: Array }) actions!: IAction[]
-        @Prop({ type: String }) title!: string
-
-        private showActions: boolean = false
-
-        private actionsShow() {
-            this.showActions = !this.showActions
-        }
-        private actionsHidden() {
-            this.showActions = false
-        }
-    }
-</script>

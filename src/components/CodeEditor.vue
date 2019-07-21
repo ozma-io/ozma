@@ -63,9 +63,10 @@
     }
 </script>
 
-<style lang="sass">
-    .ace_editor
-        position: relative
-        width: 100%
-        height: 500px
+<style scoped>
+    .ace_editor {
+        position: relative;
+        width: 100%;
+        height: 500px;
+    }
 </style>

@@ -68,83 +68,6 @@
         </div>
     </div>
 </template>
-<style scoped>
-    .view-form {
-        padding: 0px !important;
-        overflow-y: auto;
-        overflow-x: hidden; 
-        height: 100%;
-        width: 100vw;
-    }
-    .form-entry {
-        border-bottom: 0;
-        border-top: 0;
-        
-    }
-    .form-block{
-        display:inline-block;
-        vertical-align: top;
-        margin: 0 1px;
-    }
-    .form-data {
-        margin-top: 7px;
-        color: var(--NavigationTextColor);
-    }
-    .delete-block{
-        background: var(--MenuColor);
-        width: max-content;
-    }
-    .delete-block_delete-button {
-        background: hsla(0,0%,100%,.3) !important;
-        padding: 0px;
-        padding-left: 7px;
-        padding-right: 7px;
-        line-height: normal;
-        height: calc(1.5em + 4px);
-        border: 0px;
-        box-shadow: none;
-        outline: none;
-        color: var(--ButtonTextColor);
-        border-radius: 0;
-    }
-    @media screen and (max-aspect-ratio: 13/9) {
-        @media screen and (max-device-width: 480px) {
-            .view-form {
-                overflow: auto !important;
-            }
-            .form-block {
-                width: 100% !important;
-                display: block;
-            }
-            .delete-block {
-                position: sticky;
-                left: 0;
-                margin-top: 10px;
-            }
-            .form-entry{
-                display: grid;
-            }
-        }
-    }
-    @media screen and (orientation: portrait) {
-        @media screen and (max-device-width: 480px) {
-            .form-entry {
-                width: max-content;
-            }
-            .form-data {
-                margin-top: 0 !important;
-            }
-            .form-block {
-                display: grid;
-            }
-        }
-    }
-        @media print {
-        .delete-block_delete-button {
-            display: none !important;
-        }
-    }
-</style>
 
 <script lang="ts">
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
@@ -353,16 +276,10 @@
             if (this.uv.info.mainEntity !== null) {
                 const entity = this.uv.info.mainEntity
                 const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
-                let addedLength = 0 // no empty elements
 
                 changedFields.added.forEach((fields, newRowI) => {
                     let form: IForm
 
-                    if (fields === null) {
-                        return
-                    }
-
-                    addedLength += 1
                     const newItem = this.newEntries[newRowI]
                     if (newItem === undefined || newItem.id === null || newItem === null) {
                         form = this.newEmptyRow(fields.id)
@@ -375,38 +292,25 @@
                         return
                     }
 
-                    if (fields.cells === null) {
-                        form.deleted = true
-                    } else {
-                        form.deleted = false
-                        this.uv.info.columns.forEach((info, colI) => {
-                            if (info.mainField !== null) {
-                                const cell = form.fields[colI]
-                                const value = fields.cells[info.mainField.name]
-                                if (value === undefined) {
-                                    cell.value = undefined
-                                    cell.valueText = ""
-                                    cell.isInvalid = false
-                                } else {
-                                    cell.value = value.value
-                                    cell.valueText = value.rawValue
-                                    cell.isInvalid = value.erroredOnce
-                                }
+                    /* REVIEW: cells никогда не будет null */
+                    this.uv.info.columns.forEach((info, colI) => {
+                        if (info.mainField !== null) {
+                            const cell = form.fields[colI]
+                            const value = fields.cells[info.mainField.name]
+                            if (value === undefined) {
+                                cell.value = undefined
+                                cell.valueText = ""
+                                cell.isInvalid = false
+                            } else {
+                                cell.value = value.value
+                                cell.valueText = value.rawValue
+                                cell.isInvalid = value.erroredOnce
                             }
-                        })
-                    }
+                        }
+                    })
                 })
 
-                this.newEntries.splice(addedLength) // remove other elements
-                for (let i = changedFields.added.length; i < this.newEntries.length; i++) {
-                    const row = this.newEntries[i]
-                    this.uv.info.columns.forEach((info, colI) => {
-                        const cell = row.fields[colI]
-                        cell.value = undefined
-                        cell.valueText = ""
-                        cell.isInvalid = false
-                    })
-                }
+                this.newEntries.splice(changedFields.added.length)
                 if (this.newEntries.length === 0 && this.uv.rows === null) {
                     this.newEmptyRow(0)
                 }
@@ -557,8 +461,9 @@
                 const entity = this.uv.info.mainEntity as IEntityRef
                 const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
                 const id = form.id as number
+                /* REVIEW: нужно только для проверки, верно? Можно выкинуть или отделить в отладочный код. */
                 const hasId = changedFields.added.some(item => item !== null && item.id === id)
-                if (id === changedFields.added.length) { // FIXME -- dont use lenght! use id in added
+                if (id === changedFields.added.length) { // FIXME -- dont use length! use id in added
                     this.addEntry({ schema: entity.schema, entity: entity.name })
                     form.fields.forEach((field, i) => {
                         const info = this.fields[i]
@@ -579,3 +484,81 @@
         }
     }
 </script>
+
+<style scoped>
+    .view-form {
+        padding: 0px !important;
+        overflow-y: auto;
+        overflow-x: hidden;
+        height: 100%;
+        width: 100vw;
+    }
+    .form-entry {
+        border-bottom: 0;
+        border-top: 0;
+
+    }
+    .form-block{
+        display:inline-block;
+        vertical-align: top;
+        margin: 0 1px;
+    }
+    .form-data {
+        margin-top: 7px;
+        color: var(--NavigationTextColor);
+    }
+    .delete-block{
+        background: var(--MenuColor);
+        width: max-content;
+    }
+    .delete-block_delete-button {
+        background: hsla(0,0%,100%,.3) !important;
+        padding: 0px;
+        padding-left: 7px;
+        padding-right: 7px;
+        line-height: normal;
+        height: calc(1.5em + 4px);
+        border: 0px;
+        box-shadow: none;
+        outline: none;
+        color: var(--ButtonTextColor);
+        border-radius: 0;
+    }
+    @media screen and (max-aspect-ratio: 13/9) {
+        @media screen and (max-device-width: 480px) {
+            .view-form {
+                overflow: auto !important;
+            }
+            .form-block {
+                width: 100% !important;
+                display: block;
+            }
+            .delete-block {
+                position: sticky;
+                left: 0;
+                margin-top: 10px;
+            }
+            .form-entry{
+                display: grid;
+            }
+        }
+    }
+    @media screen and (orientation: portrait) {
+        @media screen and (max-device-width: 480px) {
+            .form-entry {
+                width: max-content;
+            }
+            .form-data {
+                margin-top: 0 !important;
+            }
+            .form-block {
+                display: grid;
+            }
+        }
+    }
+        @media print {
+        .delete-block_delete-button {
+            display: none !important;
+        }
+    }
+</style>

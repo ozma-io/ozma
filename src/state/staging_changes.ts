@@ -33,7 +33,7 @@ export type AutoSaveLock = number
 export interface IEntityChanges {
     updated: Record<RowIdString, UpdatedCells | null>
     // Applied to user views with FOR INSERT INTO
-    added: Array<IAddedCells | null>
+    added: IAddedCells[]
     idAdded: number // current id of last entry
     // Applied to user views with FOR UPDATE OF (or FOR INSERT INTO)
     deleted: Record<RowIdString, boolean>
@@ -333,9 +333,7 @@ const stagingModule: Module<IStagingState, {}> = {
                         }
                     })
                     entityChanges.added.forEach(addedFields => {
-                        if (addedFields !== null) {
-                            checkUpdatedFields(addedFields.cells)
-                        }
+                        checkUpdatedFields(addedFields.cells)
                     })
                 })
             })
@@ -367,9 +365,10 @@ const stagingModule: Module<IStagingState, {}> = {
         clearAdded: state => {
             Object.entries(state.current.changes).forEach(([schemaName, entities]) => {
                 Object.entries(entities).forEach(([entityName, entityChanges]) => {
-                    entityChanges.added = new Array(entityChanges.added.length).fill(null)
+                    entityChanges.added = []
                 })
             })
+            state.addedCount = 0
         },
         addError: (state, lastError: string) => {
             state.errors.push(lastError)

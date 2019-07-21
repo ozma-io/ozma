@@ -82,173 +82,7 @@
         </nav>
     </div>
 </template>
-<style scoped >
-    .main-div {
-        padding: 0px;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-    }
-    .userview-div {
-        padding: 0px;
-        width: 100%;
-        overflow: hidden;
-        flex: 1;
-    }
-    .menu_scrol {
-        display: block;
-        overflow: auto;
-        height: inherit;
-    }
-    .menu_none-scrol {
-        overflow: hidden;
-        height: inherit;
-        display: flex;
-        flex-direction: column;
-        z-index: 1050;
-    }
-    @media print {
-        .head-menu {
-            display: none !important;
-        }
-    }
-    @media screen and (max-aspect-ratio: 13/9) {
-        @media screen and (max-device-width: 480px) {
-            .head-menu {
-                display: block !important;
-                width: 100%;
-            }
-        }
-    }
-    .head-menu {
-        display: inline-flex;
-        white-space: nowrap;
-        background-color: var(--MenuColor);
-        width: 100%;
-    }
-    .head-menu_back-button {
-        adding-top: 3px;
-        padding-bottom: 3px;
-    }
-    .head-menu_back-button:focus{
-       outline:none;
-    }
-    .head-menu_back-button,
-    .head-menu_main-menu-button {
-        color: var(--ButtonTextColor) !important;
-        background: hsla(0,0%,100%,.3);
-        line-height: normal;
-        border: solid 1px var(--MenuColor);
-        border-left: 0px;
-        text-decoration: none;
-        padding-left: 5px;
-        padding-right: 5px;
-        z-index: 1000;
-        padding-bottom: 4px;
-        padding-top: 1px !important;
-        border-radius: 0 !important;
-        font-size: 1.4em !important;
-        height: 1.25em;
-    }
-    .head-menu_main-menu-button {
-        padding-top: 3px;
-    }
-    .fix-bot {
-        padding: 0;
-        line-height: normal;
-        width: 100vw;
-        white-space: nowrap;
-        overflow-x: auto;
-        overflow-y: hidden;
-        text-align: right;
-        margin-left: -1px !important;
-        position: relative;
-        background-color: var(--MenuColor) !important;
-        z-index: 1030;
-        display: -webkit-box;
-        display: -ms-flexbox;
-        display: flex;
-        -webkit-box-orient: horizontal;
-        -webkit-box-direction: normal;
-        -ms-flex-direction: row;
-        flex-direction: row;
-        -ms-flex-wrap: nowrap;
-        flex-wrap: nowrap;
-        -webkit-box-align: center;
-        -ms-flex-align: center;
-        align-items: center;
-        -webkit-box-pack: justify;
-        -ms-flex-pack: justify;
-        justify-content: space-between;
-    }
 
-    .count-row {
-        bottom: 0;
-        z-index: 2000;
-        line-height: normal;
-        float: left;
-        display: inline-block;
-        margin-left: 2px;
-        color: var(--ButtonTextColor)
-    }
-    .custom-warning {
-        background-color: var(--MenuColor); 
-        color: var(--ButtonTextColor);
-        float: right;
-    }
-    .custom-danger {
-        background-color: var(--DangerBackColor); 
-        float: left;
-        overflow-x: auto;
-        overflow-y:hidden;
-        width: 100%;
-        text-align: left;
-    }
-    .custom-success {
-        background-color: var(--SuccessBackColor)
-    }
-    .error {
-        margin-left: 1px !important;
-        margin: 0;
-        padding: 0;
-        border: 0;
-        border-radius: inherit;
-        display: inline-block;
-        position: relative;
-    }
-    .error_button {
-        padding: 0;
-        margin: 0px;
-        margin-left: 0;
-        line-height: normal;
-        position: relative;
-        font-size: inherit;
-        background: hsla(0,0%,100%,.3);
-        color: var(--ButtonTextColor);
-        float: none;
-        vertical-align: unset;
-        border-radius: 0 !important;
-    }
-    @media screen and (max-aspect-ratio: 13/9) {
-        @media screen and (max-device-width: 480px) {
-            .find{
-                display: block;
-            }
-            .head-menu_back-button,
-            .head-menu_main-menu-button {
-                text-align: left;
-                border-top: 0px !important;
-                border-left: 0px !important;
-                box-sizing: content-box;
-                display: inline-block;
-                border-radius: 0 !important;
-                height: 1em;
-                vertical-align: bottom;
-                border: solid 1px var(--MenuColor)
-            }
-        }
-    }
-</style>
 <script lang="ts">
     import { Route } from "vue-router"
     import { Component, Watch, Vue } from "vue-property-decorator"
@@ -448,3 +282,172 @@
         }
     }
 </script>
+
+<style scoped>
+    .main-div {
+        padding: 0px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .userview-div {
+        padding: 0px;
+        width: 100%;
+        overflow: hidden;
+        flex: 1;
+    }
+    .menu_scrol {
+        display: block;
+        overflow: auto;
+        height: inherit;
+    }
+    .menu_none-scrol {
+        overflow: hidden;
+        height: inherit;
+        display: flex;
+        flex-direction: column;
+        z-index: 1050;
+    }
+    @media print {
+        .head-menu {
+            display: none !important;
+        }
+    }
+    @media screen and (max-aspect-ratio: 13/9) {
+        @media screen and (max-device-width: 480px) {
+            .head-menu {
+                display: block !important;
+                width: 100%;
+            }
+        }
+    }
+    .head-menu {
+        display: inline-flex;
+        white-space: nowrap;
+        background-color: var(--MenuColor);
+        width: 100%;
+    }
+    .head-menu_back-button {
+        padding-top: 3px;
+        padding-bottom: 3px;
+    }
+    .head-menu_back-button:focus{
+       outline:none;
+    }
+    .head-menu_back-button,
+    .head-menu_main-menu-button {
+        color: var(--ButtonTextColor) !important;
+        background: hsla(0,0%,100%,.3);
+        line-height: normal;
+        border: solid 1px var(--MenuColor);
+        border-left: 0px;
+        text-decoration: none;
+        padding-left: 5px;
+        padding-right: 5px;
+        z-index: 1000;
+        padding-bottom: 4px;
+        padding-top: 1px !important;
+        border-radius: 0 !important;
+        font-size: 1.4em !important;
+        height: 1.25em;
+    }
+    .head-menu_main-menu-button {
+        padding-top: 3px;
+    }
+    .fix-bot {
+        padding: 0;
+        line-height: normal;
+        width: 100vw;
+        white-space: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        text-align: right;
+        margin-left: -1px !important;
+        position: relative;
+        background-color: var(--MenuColor) !important;
+        z-index: 1030;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -ms-flex-wrap: nowrap;
+        flex-wrap: nowrap;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+    }
+
+    .count-row {
+        bottom: 0;
+        z-index: 2000;
+        line-height: normal;
+        float: left;
+        /* REVIEW: display: inline-block; не работает с float: left; */
+        display: inline-block;
+        margin-left: 2px;
+        color: var(--ButtonTextColor)
+    }
+    .custom-warning {
+        background-color: var(--MenuColor);
+        color: var(--ButtonTextColor);
+        float: right;
+    }
+    .custom-danger {
+        background-color: var(--DangerBackColor);
+        float: left;
+        overflow-x: auto;
+        overflow-y:hidden;
+        width: 100%;
+        text-align: left;
+    }
+    .custom-success {
+        background-color: var(--SuccessBackColor)
+    }
+    .error {
+        margin-left: 1px !important;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: inherit;
+        display: inline-block;
+        position: relative;
+    }
+    .error_button {
+        padding: 0;
+        margin: 0px;
+        margin-left: 0;
+        line-height: normal;
+        position: relative;
+        font-size: inherit;
+        background: hsla(0,0%,100%,.3);
+        color: var(--ButtonTextColor);
+        float: none;
+        vertical-align: unset;
+        border-radius: 0 !important;
+    }
+    @media screen and (max-aspect-ratio: 13/9) {
+        @media screen and (max-device-width: 480px) {
+            .find{
+                display: block;
+            }
+            .head-menu_back-button,
+            .head-menu_main-menu-button {
+                text-align: left;
+                border-top: 0px !important;
+                border-left: 0px !important;
+                box-sizing: content-box;
+                display: inline-block;
+                border-radius: 0 !important;
+                height: 1em;
+                vertical-align: bottom;
+                border: solid 1px var(--MenuColor)
+            }
+        }
+    }
+</style>

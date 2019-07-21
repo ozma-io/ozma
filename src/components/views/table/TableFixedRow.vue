@@ -136,7 +136,7 @@
             border-left: solid 1px var(--NavigationBackColor);
         }
         div.fix {
-            margin-left: -1px; 
+            margin-left: -1px;
             max-width: inherit !important;
             width: 100vw !important;
             overflow: auto;
