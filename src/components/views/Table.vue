@@ -46,8 +46,17 @@
                                 {{ showEmptyRow ? "-" : "+" }}
                             </span>
                         </th>
-                        <th v-for="i in columnIndexes" :key="i" :title="columns[i].caption" @click="updateSort(i)" :class="columns[i].fixed ? 'fixed-column sorting table-th' : 'sorting table-th'" :style="columns[i].style">
-                            {{ columns[i].caption }}
+                        <th v-for="i in columnIndexes"
+                            :class="['sorting', 'table-th', { 'fixed-colum' : columns[i].fixed }]"
+                            :style="columns[i].style"
+                            :key="i"
+                            :title="columns[i].caption"
+                            @click="updateSort(i)">
+                                {{ columns[i].caption }}
+                                <template v-if="sortColumn === i">
+                                    <span v-if="sortAsc">▲</span>
+                                    <span v-else>▼</span>
+                                </template>
                         </th>
                     </tr>
                 </thead>
@@ -1029,6 +1038,7 @@
         z-index: 20; /*при скроле таблицы чтобы шапка была видна*/
         top: 0;
         padding-left: 3px;
+        cursor: pointer;
     }
     th.fixed-column {
         z-index: 25;
