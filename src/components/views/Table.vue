@@ -195,8 +195,16 @@
         private newEntries: IRow[] = []
         private showEmptyRow: boolean = false
 
-        private changeShowEmptyRow() {
-            this.showEmptyRow = !this.showEmptyRow
+        private changeShowEmptyRow(on?: boolean) {
+            if (on !== undefined) {
+                if (this.showEmptyRow === on) {
+                    return
+                } else {
+                    this.showEmptyRow = on
+                }
+            } else {
+                this.showEmptyRow = !this.showEmptyRow
+            }
 
             if (this.showEmptyRow) {
                 this.newEmptyRow(-1, 0)
@@ -838,6 +846,10 @@
                         added: false,
                     }
                 })
+            }
+
+            if (this.entries.length === 0) {
+                this.changeShowEmptyRow(true)
             }
 
             this.disable_edit() // if saving when FormControl is active
