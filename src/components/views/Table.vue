@@ -38,7 +38,9 @@
                 </colgroup>
                 <thead class="table-head">
                     <tr>
-                        <th class="fixed-column checkbox-cells table-th"></th>
+                        <th class="fixed-column checkbox-cells table-th" @click="selectAllRows">
+                            <input type="checkbox" :checked="selectedAll">
+                        </th>
                         <th v-if="hasRowLinks" class="fixed-column opemform-cells links-style table-th">
                             <span class="table-th_span" @click="changeShowEmptyRow()" :title="this.$tc('show_new_row')">
                                 {{ showEmptyRow ? "-" : "+" }}
@@ -184,6 +186,7 @@
         private rows: number[] = []
         private showLength: number = 0
         private selectedRows: number[] = []
+        private selectedAll: boolean = false
         private lastSelected: number | null = null
         private printListener: { query: MediaQueryList, queryCallback: (mql: MediaQueryListEvent) => void, printCallback: () => void } | null = null
         private oldCell: ICell | null = null
@@ -442,8 +445,19 @@
                 this.lastSelected = this.shownRows[rowI]
             }
             this.selectedRows = Array.from(setsSelected)
+
+            this.selectedAll = this.selectedRows.length === this.entries.length ? true : false
             this.updateStatusLine()
             return false
+        }
+
+        private selectAllRows() {
+            if (!this.selectedAll) {
+                this.selectedRows = this.entries.map((row, rowI) => rowI)
+            } else {
+                this.selectedRows = []
+            }
+            this.selectedAll = !this.selectedAll
         }
 
         /* To optimize performance when staging entries change, we first pre-build entries and then update them selectively watching staging entries.
