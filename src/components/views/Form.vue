@@ -279,17 +279,28 @@
 
                 changedFields.added.forEach((fields, newRowI) => {
                     let form: IForm
-
-                    const newItem = this.newEntries[newRowI]
-                    if (newItem === undefined || newItem.id === null || newItem === null) {
+                    let newItem = this.newEntries[newRowI]
+                    /* REVIEW: Могло быть удалено сразу несколько элементов, поэтому надо их пропускать подряд. */
+                    while (newItem !== undefined) {
+                        if (newItem.id === null) {
+                            throw Error("impossible")
+                        } else if (newItem.id > fields.id) {
+                            this.newEntries.splice(newRowI, 1)
+                            newItem = this.newEntries[newRowI]
+                        } else {
+                            break
+                        }
+                    }
+                    if (newItem === undefined) {
                         form = this.newEmptyRow(fields.id)
+                    } else if (newItem.id === null) {
+                        throw Error("impossible")
                     } else if (newItem.id < fields.id) {
                         form = this.newEmptyRow(fields.id, newRowI)
                     } else if (newItem.id === fields.id) {
                         form = newItem
                     } else {
-                        this.newEntries.splice(newRowI, 1)
-                        return
+                        throw Error("impossible")
                     }
 
                     /* REVIEW: cells никогда не будет null */
