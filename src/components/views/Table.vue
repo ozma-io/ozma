@@ -34,7 +34,7 @@
                             {'edit_active': isActiveEdit}]">
                 <colgroup>
                     <col :class="['checkbox-col', {'checkbox-cells': showFixedRow}]"> <!-- Checkbox column -->
-                    <col v-if="hasRowLinks" :class="['open-form-col', {'opemform-cells': showFixedRow}]"> <!-- Row link column -->
+                    <col v-if="hasRowLinks" :class="['open-form-col', {'openform-cells': showFixedRow}]"> <!-- Row link column -->
                     <col v-for="i in columnIndexes" :key="i" :style="columns[i].style">
                 </colgroup>
                 <thead class="table-head">
@@ -42,7 +42,7 @@
                         <th class="fixed-column checkbox-cells table-th" @click="selectAllRows">
                             <input type="checkbox" :checked="selectedAll">
                         </th>
-                        <th v-if="hasRowLinks" class="fixed-column opemform-cells links-style table-th">
+                        <th v-if="hasRowLinks" class="fixed-column openform-cells links-style table-th">
                             <span class="table-th_span" @click="changeShowEmptyRow()" :title="this.$tc('show_new_row')">
                                 {{ showEmptyRow ? "-" : "+" }}
                             </span>
@@ -1049,12 +1049,14 @@
         white-space: nowrap;
         display: inline-block;
     }
-    .table-body{
+    .table-body {
         border-right: solid 1px  var(--NavigationBackColor) !important
     }
 
-
-    @media screen and (max-aspect-ratio: 13/9) {
+    /* FIXME: Этот блок ломал мобильную версию:
+       https://trello.com/c/3B1qPM1V/771-%D0%BD%D0%B0-%D1%82%D0%B5%D0%BB%D0%B5%D1%84%D0%BE%D0%BD%D0%B5-%D1%82%D0%B0%D0%B1%D0%BB%D0%B8%D1%86%D0%B0-%D0%B2%D1%8B%D1%80%D0%B0%D0%B2%D0%BD%D0%B8%D0%B2%D0%B0%D0%B5%D1%82%D1%81%D1%8F-%D0%BF%D0%BE-%D0%BA%D1%80%D0%B0%D0%B9%D0%BD%D0%B5%D0%BC%D1%83-%D0%BF%D1%80%D0%B0%D0%B2%D0%BE%D0%BC%D1%83-%D1%81%D1%82%D0%BE%D0%BB%D0%B1%D1%86%D1%83
+    */
+    /*@media screen and (max-aspect-ratio: 13/9) {
         @media screen and (max-device-width: 480px) {
             .nested-table-block {
                 width: max-content !important;
@@ -1067,8 +1069,7 @@
                 width: max-content !important;
             }
         }
-    }
-
+    }*/
 
     @media screen and (max-device-width: 650px) {
         .tabl{
@@ -1093,12 +1094,11 @@
         }
     }
 	
-    @media screen and (min-device-width: 813px) and (orientation: landscape){
+    @media screen and (min-device-width: 813px) and (orientation: landscape) {
         .checkbox-cells {
             left: 0px;
         }
-		.opemform-cells
-        {
+        .openform-cells {
             left: 20px;
         }
         .fixed-column {
