@@ -35,7 +35,6 @@ export const router = new VueRouter({
 
 export const i18n = new VueI18n({
     locale: Utils.shortLanguage,
-    fallbackLocale: "en",
     messages: globalMessages,
 })
 

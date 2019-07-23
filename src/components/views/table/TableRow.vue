@@ -132,7 +132,6 @@
     .table-tr {
         background-color: white; /*цвет таблицы возможно надо сменить на настраевоемый*/
         border-right: solid 1px var(--NavigationBackColor);
-        /* REVIEW: что это (@-moz-document url-prefix())? Не смог найти такого. */
         height: 100% @-moz-document url-prefix();
     }
     td {

@@ -1,6 +1,4 @@
 <template>
-    <!-- REVIEW: В каких-то случаях ты используешь префиксы по БЭМу а в каких-то нет, чем это обсуловлено?
-         по идее тут они не нужны потому что scoped style. -->
     <div :class="['actions-menu', {'actions-menu_active': showActions}]" v-if="actions.length > 0">
         <input type="button" class="actions-menu_actions-button material-icons"  @click="actionsShow"  :value="title">
         <div v-if="showActions" class="black-block" onklick>
@@ -69,7 +67,6 @@
     }
     .div-with-actions_button {
         display: block;
-        /* REVIEW: Эти !important всё ещё нужны? Мне кажется мы перебивали ими стили бутстрапа но мы уже не испольуем их тут. */
         background: hsla(0,0%,100%,.3) !important;
         padding: 5px;
         line-height: normal;

@@ -388,8 +388,6 @@
         z-index: 2000;
         line-height: normal;
         float: left;
-        /* REVIEW: display: inline-block; не работает с float: left; */
-        display: inline-block;
         margin-left: 2px;
         color: var(--ButtonTextColor)
     }
