@@ -37,8 +37,8 @@
         <input type="checkbox" v-else-if="inputType.name === 'check'"
                          :value="value"
                          :class="['form-control-panel_checkbox',
-                                 {'form-control-panel_checkbox_error': isInvalid},
-                                 {'form-control-panel_checkbox_req': isAwaited}]"
+                                 {'form-control-panel_checkbox_error': isInvalid,
+                                  'form-control-panel_checkbox_req': isAwaited}]"
                          @input="updateValue($event.target.value)"
                          :disabled="isDisabled"
                          ref="control" />
@@ -46,8 +46,8 @@
                          :style="inputType.style"
                          :value="valueText"
                          :class="['form-control-panel_textarea',
-                                  {'form-control-panel_textarea_error': isInvalid},
-                                  {'form-control-panel_textarea_req': isAwaited}]"
+                                 {'form-control-panel_textarea_error': isInvalid,
+                                  'form-control-panel_textarea_req': isAwaited}]"
                          @input="updateValue($event.target.value)"
                          :disabled="isDisabled"
                          :rows="3"
@@ -70,8 +70,8 @@
         <select
                 :value="value"
                 :class="['form-control-panel_select',
-                         {'form-control-panel_select_error': isInvalid},
-                         {'form-control-panel_select_req': isAwaited}]"
+                        {'form-control-panel_select_error': isInvalid,
+                         'form-control-panel_select_req': isAwaited}]"
                 @input="updateValue($event.target.value)"
                 :disabled="isDisabled"
                 ref="control">
@@ -92,8 +92,8 @@
                 :value="valueText"
                 :style="inputType.style"
                 :class="['form-control-panel_textarea',
-                         {'form-control-panel_textarea_error': isInvalid},
-                         {'form-control-panel_textarea_req': isAwaited}]"
+                        {'form-control-panel_textarea_error': isInvalid,
+                         'form-control-panel_textarea_req': isAwaited}]"
                 @input="updateValue($event.target.value)"
                 :disabled="isDisabled"
                 :rows="3"
@@ -104,8 +104,8 @@
                 :value="valueText"
                 :style="inputType.style"
                 :class="['form-control-panel_textarea',
-                         {'form-control-panel_textarea_error': isInvalid},
-                         {'form-control-panel_textarea_req': isAwaited}]"
+                        {'form-control-panel_textarea_error': isInvalid,
+                         'form-control-panel_textarea_req': isAwaited}]"
                 @input="updateValue($event.target.value)"
                 :disabled="isDisabled"
                 :rows="3"
