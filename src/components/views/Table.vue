@@ -472,6 +472,7 @@
                 this.selectedRows = []
             }
             this.selectedAll = !this.selectedAll
+            this.updateStatusLine()
         }
 
         /* To optimize performance when staging entries change, we first pre-build entries and then update them selectively watching staging entries.
