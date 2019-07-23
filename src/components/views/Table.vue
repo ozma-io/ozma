@@ -476,7 +476,8 @@
 
         private selectAllRows() {
             if (!this.selectedAll) {
-                this.selectedRows = this.entries.map((row, rowI) => rowI).concat(this.newEntries.map(row => -1 - row.id))
+                const tmpSelected = new Set(this.entries.map((row, rowI) => rowI).concat(this.newEntries.map(row => -1 - row.id)))
+                this.selectedRows = Array.from(tmpSelected)
             } else {
                 this.selectedRows = []
             }
