@@ -48,7 +48,7 @@
                             </span>
                         </th>
                         <th v-for="i in columnIndexes"
-                            :class="['sorting', 'table-th', { 'fixed-colum' : columns[i].fixed }]"
+                            :class="['sorting', 'table-th', { 'fixed-column' : columns[i].fixed }]"
                             :style="columns[i].style"
                             :key="i"
                             :title="columns[i].caption"
@@ -1063,9 +1063,9 @@
                 right: 0;
             }
 
-                .nested-table-block > .tabl {
-                    width: max-content !important;
-                }
+            .nested-table-block > .tabl {
+                width: max-content !important;
+            }
         }
     }
 
