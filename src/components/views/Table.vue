@@ -27,7 +27,7 @@
                   'active_editing': isActiveEdit}]">
         <div id="disable_edit"
              :class="{'edit_active': isActiveEdit}"
-             @click="disableEdit()">
+             @click="CloseFormControl()">
         </div>
         <div ref="tableContainer" class="tabl" @scroll="updateShowLength()" @resize="updateShowLength()">
             <table :class="['custom-table', 'table', 'b-table',
@@ -134,6 +134,15 @@
             }
         }
         return true
+    }
+
+    const changeRowId = (row: IRow, newId: number) => {
+        row.id = newId
+        row.cells.forEach(item => {
+            if (item.update !== null) {
+                item.update.id = newId
+            }
+        })
     }
 
     const rowIndicesCompare = (aIndex: number, bIndex: number, entries: IRow[], sortColumn: number) => {
@@ -357,10 +366,8 @@
             this.lastSelected = null
         }
 
-        // REVIEW: Стиль названия
-        private disableEdit() {
-            // REVIEW: Нет смысла проверять на undefined
-            if (this.oldCell !== undefined && this.oldCell !== null) {
+        private CloseFormControl() {
+            if (this.oldCell !== null) {
                 this.oldCell.isEditing = null
                 this.oldCell.selected = false
             }
@@ -568,8 +575,8 @@
             if (this.uv.info.mainEntity === null || this.uv.rows === null) {
                 throw new Error("View doesn't have a main entity")
             }
+
             const entity = this.uv.info.mainEntity
-            // tslint:disable-next-line:forin
             for (const rowI of this.selectedRows) {
                 const row = this.uv.rows[rowI]
                 if (row.entityIds === undefined) {
@@ -592,13 +599,9 @@
                 const offset = this.showEmptyRow ? 1 : 0
 
                 changedRows.added.forEach((newRow, newRowI) => {
-                    if (newRow === null) {
-                        return
-                    }
-
                     const newItem = this.newEntries[newRowI + offset]
                     let row: IRow
-                    if (newItem === undefined || newItem === null) {
+                    if (newItem === undefined) {
                         row = this.newEmptyRow(newRow.id)
                     } else if (newItem.id < newRow.id) {
                         row = this.newEmptyRow(newRow.id, newRowI + offset)
@@ -609,7 +612,6 @@
                         return
                     }
 
-                    /* REVIEW: cells никогда не будет null */
                     this.uv.info.columns.forEach((info, colI) => {
                         if (info.mainField !== null) {
                             const cell = row.cells[colI]
@@ -857,9 +859,6 @@
                 this.changeShowEmptyRow(true)
             }
 
-            // REVIEW: Почему здесь это нужно? Не совсем понял комментарий.
-            this.disableEdit() // if saving when FormControl is active
-
             this.buildRows()
             this.applyChanges()
             this.fixColumns()
@@ -929,20 +928,6 @@
             return homeSchema(this.uv.args)
         }
 
-        // REVIEW: Функция не зависит от класса - давай вынесем её отдельно выше в этот файл
-        private changeRowId(row: IRow, newId: number) {
-            // REVIEW: Проверка не нужна, это проверяет TypeScript
-            if (row === undefined || row === null) {
-                return
-            }
-            row.id = newId
-            row.cells.forEach(item => {
-                if (item.update !== null) {
-                    item.update.id = newId
-                }
-            })
-        }
-
         get currentIdAdded() {
             const entity = this.uv.info.mainEntity as IEntityRef
             const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
@@ -953,11 +938,10 @@
             // Check if an entry is already added; if it isn't, create it with our default values.
             const entity = this.uv.info.mainEntity as IEntityRef
             const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
-            // REVIEW: Нужно только для проверки что всё ок, правильно понял?
-            const hasId = changedFields.added.some(item => item !== null && item.id === row.id)
+
             if (row.id === -1) {
                 this.addEntry({ schema: entity.schema, entity: entity.name, position: 0 }) // add new entry
-                this.changeRowId(row, this.currentIdAdded) // change old id to current addedId
+                changeRowId(row, this.currentIdAdded) // change old id to current addedId
                 row.cells.forEach((cell, i) => {
                     const info = this.columns[i]
                     if (info.columnInfo.mainField !== null && cell.valueText !== "") {
@@ -971,8 +955,13 @@
                     }
                 })
                 this.newEmptyRow(-1, 0)
-            } else if (!hasId) {
-                throw new Error("Invalid added entry id")
+            } else {
+                if (process.env["NODE_ENV"] !== "production") {
+                    const hasId = changedFields.added.some(item => item !== null && item.id === row.id)
+                    if (!hasId) {
+                        throw Error("impossible")
+                    }
+                }
             }
         }
     }
@@ -994,7 +983,7 @@
         top: calc(1.5em + 6px);
         left: 0;
     }
-    #disable_edit > .edit_active {
+    #disable_edit.edit_active {
         width: 100vw;
         height: 100vh;
         z-index: 500;

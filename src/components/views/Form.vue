@@ -280,7 +280,7 @@
                 changedFields.added.forEach((fields, newRowI) => {
                     let form: IForm
                     let newItem = this.newEntries[newRowI]
-                    /* REVIEW: Могло быть удалено сразу несколько элементов, поэтому надо их пропускать подряд. */
+
                     while (newItem !== undefined) {
                         if (newItem.id === null) {
                             throw Error("impossible")
@@ -303,7 +303,6 @@
                         throw Error("impossible")
                     }
 
-                    /* REVIEW: cells никогда не будет null */
                     this.uv.info.columns.forEach((info, colI) => {
                         if (info.mainField !== null) {
                             const cell = form.fields[colI]
@@ -472,8 +471,7 @@
                 const entity = this.uv.info.mainEntity as IEntityRef
                 const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
                 const id = form.id as number
-                /* REVIEW: нужно только для проверки, верно? Можно выкинуть или отделить в отладочный код. */
-                const hasId = changedFields.added.some(item => item !== null && item.id === id)
+
                 if (id === changedFields.added.length) { // FIXME -- dont use length! use id in added
                     this.addEntry({ schema: entity.schema, entity: entity.name })
                     form.fields.forEach((field, i) => {
@@ -488,8 +486,13 @@
                             })
                         }
                     })
-                } else if (!hasId) {
-                    throw new Error("Invalid added entry id")
+                } else {
+                    if (process.env["NODE_ENV"] !== "production") {
+                        const hasId = changedFields.added.some(item => item !== null && item.id === id)
+                        if (!hasId) {
+                            throw Error("impossible")
+                        }
+                    }
                 }
             }
         }

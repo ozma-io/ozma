@@ -20,6 +20,7 @@ README
 Added is an array with indexes and data
 It simplifies synchronization
 Add-on elements should be accessed through object indexes
+ids are must arranged in descending order
 */
 export interface IAddedCells {
     id: number
