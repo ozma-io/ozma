@@ -3,12 +3,11 @@
 </template>
 
 <script lang="ts">
-    // https://github.com/ajaxorg/ace/pull/3835
-    // import * as Ace from "ace-builds"
-    // @ts-ignore
-    import * as Ace from "ace-builds/src-noconflict/ace.js"
+    import * as Ace from "ace-builds"
     import { Component, Prop, Vue, Watch } from "vue-property-decorator"
-    import { randomId } from "@/utils"
+    // outputs a lot of crap into /dist
+    // import "ace-builds/webpack-resolver"
+    import "ace-builds/src-noconflict/mode-pgsql"
 
     @Component
     export default class CodeEditor extends Vue {
@@ -22,7 +21,7 @@
         isUpdating = false
 
         private mounted() {
-            const editor = Ace.edit(this.$refs.pre)
+            const editor = Ace.edit(this.$refs.pre as Element)
             this.editor = editor
             editor.session.setMode(this.mode)
             editor.setTheme(this.theme)
@@ -30,7 +29,7 @@
 
             editor.on("change", () => {
                 if (!this.isUpdating) {
-                    const newValue = this.editor.getValue()
+                    const newValue = editor.getValue()
                     this.$emit("update:content", newValue)
                 }
             })
