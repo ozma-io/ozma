@@ -595,8 +595,20 @@
                 const offset = this.showEmptyRow ? 1 : 0
 
                 changedRows.added.forEach((newRow, newRowI) => {
-                    const newItem = this.newEntries[newRowI + offset]
+                    let newItem = this.newEntries[newRowI + offset]
                     let row: IRow
+
+                    while (newItem !== undefined) {
+                        if (newItem.id === null) {
+                            throw Error("impossible")
+                        } else if (newItem.id > newRow.id) {
+                            this.newEntries.splice(newRowI + offset, 1)
+                            newItem = this.newEntries[newRowI + offset]
+                        } else {
+                            break
+                        }
+                    }
+
                     if (newItem === undefined) {
                         row = this.newEmptyRow(newRow.id)
                     } else if (newItem.id < newRow.id) {
