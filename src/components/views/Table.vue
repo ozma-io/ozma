@@ -354,18 +354,6 @@
             document.body.removeChild(element)
         }
 
-        private updateSort(sortColumn: number) {
-            if (this.sortColumn !== sortColumn) {
-                this.sortColumn = sortColumn
-                this.sortAsc = true
-            } else {
-                this.sortAsc = !this.sortAsc
-            }
-
-            this.sortRows()
-            this.lastSelected = null
-        }
-
         private closeFormControl() {
             if (this.oldCell !== null) {
                 this.oldCell.isEditing = null
@@ -748,6 +736,24 @@
             }
         }
 
+    /*
+        bool: true -> false
+        number: 1 -> 0
+        string: a -> b
+    */
+
+        private updateSort(sortColumn: number) {
+            if (this.sortColumn !== sortColumn) {
+                this.sortColumn = sortColumn
+                this.sortAsc = true
+            } else {
+                this.sortAsc = !this.sortAsc
+            }
+
+            this.sortRows()
+            this.lastSelected = null
+        }
+
         private sortRows() {
             if (this.sortColumn !== null) {
                 const sortColumn = this.sortColumn
@@ -983,7 +989,7 @@
         top: calc(1.5em + 6px);
         left: 0;
     }
-    #disable_edit.edit_active {
+    #disable_edit > .edit_active {
         width: 100vw;
         height: 100vh;
         z-index: 500;
