@@ -165,8 +165,8 @@ export class UserViewResult {
     }
 }
 
-// For each entity contains array of all accessible entries identified by main field
-export type Entries = Record<string, number>
+// For each entity contains array of all accessible entries (main fields) identified by id
+export type Entries = Record<number, string>
 export type EntriesMap = Record<SchemaName, Record<EntityName, Entries | Promise<Entries>>>
 
 export type UserViewErrorType = "forbidden" | "not_found" | "bad_request" | "unknown"
@@ -404,10 +404,11 @@ const userViewModule: Module<IUserViewState, {}> = {
                     if (!(schemaName in state.entries && state.entries[schemaName][entityName] === pending.ref)) {
                         throw Error("Pending operation cancelled")
                     }
-                    const entries = seq(res.result.rows).map<[string, number]>(row => {
+                    const mainType = res.info.columns[1].valueType
+                    const entries = seq(res.result.rows).map<[number, string]>(row => {
                         const id = row.values[0].value
-                        const main = row.values[1].value
-                        return [main, id]
+                        const main = printValue(mainType, row.values[1].value)
+                        return [id, main]
                     }).toObject()
                     commit("setEntries", { schemaName, entityName, entries })
                     return entries

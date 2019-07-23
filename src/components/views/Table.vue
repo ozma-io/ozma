@@ -119,9 +119,9 @@
     import { namespace } from "vuex-class"
     import { tryDicts } from "@/utils"
     import seq from "@/sequences"
-    import { IUpdatableField, UserViewResult, EntriesMap, printValue, homeSchema } from "@/state/user_view"
+    import { IUpdatableField, IProcessedValue, UserViewResult, EntriesMap, printValue, homeSchema } from "@/state/user_view"
     import { CurrentChanges, IEntityChanges, IUpdatedCell, convertValue, AutoSaveLock } from "@/state/staging_changes"
-    import { IExecutedRow, IExecutedValue, ValueType, IResultColumnInfo, SchemaName, EntityName, FieldName, IEntityRef } from "@/api"
+    import { IExecutedRow, IExecutedValue, ValueType, IResultColumnInfo, SchemaName, EntityName, FieldName, IEntityRef, IColumnField } from "@/api"
     import { IQuery, attrToQuerySelf, attrToQueryRef } from "@/state/query"
     import TableRow, { IRow, ICell, IColumn } from "@/components/views/table/TableRow.vue"
     import TableFixedRow from "@/components/views/table/TableFixedRow.vue"
@@ -493,6 +493,11 @@
             this.buildEntries()
         }
 
+        @Watch("entriesMap", { deep: true })
+        private setSummaries() {
+            this.applyChanges()
+        }
+
         @Watch("changes", { deep: true })
         private updateChanges() {
             if (this.changes.isEmpty) {
@@ -597,6 +602,20 @@
             }
         }
 
+        private getUpdatedValueText(field: IColumnField | null, updValue: IUpdatedCell) {
+            if (field !== null && updValue.value !== undefined && field.fieldType.type === "reference") {
+                const ref = field.fieldType.entity
+                const schemaMap = this.entriesMap[ref.schema]
+                if (schemaMap !== undefined) {
+                    const refEntries = schemaMap[ref.name]
+                    if (refEntries !== undefined && !(refEntries instanceof Promise)) {
+                        return refEntries[updValue.value]
+                    }
+                }
+            }
+            return (updValue.rawValue === undefined) ? "" : String(updValue.rawValue)
+        }
+
         // Apply changes on top of built entries.
         // TODO: make this even more granular, ideally: dynamically bind a watcher to every changed and added entry.
         private applyChanges() {
@@ -641,7 +660,7 @@
                                 cell.valueLowerText = ""
                             } else {
                                 cell.value = value.value
-                                cell.valueText = (value.rawValue === undefined) ? "" : value.rawValue
+                                cell.valueText = this.getUpdatedValueText(info.mainField.field, value)
                                 cell.valueLowerText = cell.valueText.toLowerCase()
                                 cell.isInvalid = value.erroredOnce
                                 cell.isAwaited = !info.mainField.field.isNullable && cell.value === undefined
@@ -680,37 +699,35 @@
                             }
                             rowIs.forEach(rowI => {
                                 const entry = this.entries[rowI]
-                                if (fields === null) {
-                                    // Reset to original values
-                                    rows[rowI].values.forEach((value, colI) => {
-                                        const columnInfo = this.uv.info.columns[colI]
+                                const row = rows[rowI]
+                                Object.entries(fields).forEach(([fieldName, updValue]) => {
+                                    const colIs = mapping.fieldsToColumns[fieldName]
+                                    if (colIs === undefined) {
+                                        return
+                                    }
+                                    colIs.forEach(colI => {
                                         const cell = entry.cells[colI]
+                                        const value = row.values[colI]
                                         const getCellAttr = (name: string) => tryDicts(name, cell.attrs, entry.attrs, this.uv.columnAttributes[colI], this.uv.attributes)
 
-                                        cell.value = value.value
-                                        cell.valueText = printValue(columnInfo.valueType, value)
-                                        cell.valueLowerText = cell.valueText.toLowerCase()
-                                        cell.isInvalid = false
-                                        cell.link = attrToQueryRef(cell.update, cell.value, this.homeSchema, getCellAttr("LinkedView"))
-                                    })
-                                } else {
-                                    Object.entries(fields).forEach(([fieldName, value]) => {
-                                        const colIs = mapping.fieldsToColumns[fieldName]
-                                        if (colIs === undefined) {
-                                            return
-                                        }
-                                        colIs.forEach(colI => {
-                                            const cell = entry.cells[colI]
-                                            const getCellAttr = (name: string) => tryDicts(name, cell.attrs, entry.attrs, this.uv.columnAttributes[colI], this.uv.attributes)
-
+                                        if (updValue === null) {
+                                            const columnInfo = this.uv.info.columns[colI]
+                                            // Restore old values
                                             cell.value = value.value
-                                            cell.valueText = (value.rawValue === undefined) ? "" : value.rawValue
+                                            cell.valueText = printValue(columnInfo.valueType, value)
                                             cell.valueLowerText = cell.valueText.toLowerCase()
-                                            cell.isInvalid = value.erroredOnce
+                                            cell.isInvalid = false
                                             cell.link = attrToQueryRef(cell.update, cell.value, this.homeSchema, getCellAttr("LinkedView"))
-                                        })
+                                        } else {
+                                            cell.value = updValue.value
+                                            const field = (updValue.value !== undefined && value.update !== undefined) ? value.update.field : null
+                                            cell.valueText = this.getUpdatedValueText(field, updValue)
+                                            cell.valueLowerText = cell.valueText.toLowerCase()
+                                            cell.isInvalid = updValue.erroredOnce
+                                            cell.link = attrToQueryRef(cell.update, cell.value, this.homeSchema, getCellAttr("LinkedView"))
+                                        }
                                     })
-                                }
+                                })
                             })
                         })
                     })
@@ -878,15 +895,6 @@
                             style["height"] = `${rowHeight}px`
                         }
 
-                        if (cellValue.update !== undefined) {
-                            if (cellValue.update.field !== null) {
-                                const type = cellValue.update.field.fieldType
-                                if (type.type === "reference") {
-                                    this.getEntries({ schemaName: type.entity.schema, entityName: type.entity.name })
-                                }
-                            }
-                        }
-
                         return {
                             value, valueText, link, style,
                             valueLowerText: valueText.toLowerCase(),
@@ -915,9 +923,22 @@
                 this.changeShowEmptyRow(true)
             }
 
+            this.requestSummaries()
             this.buildRows()
             this.applyChanges()
             this.fixColumns()
+        }
+
+        private requestSummaries() {
+            Object.entries(this.uv.info.domains).forEach(([name, domain]) => Object.entries(domain).forEach(([field, info]) => {
+                if (info.field !== null && info.field.fieldType.type === "reference") {
+                    const ref = info.field.fieldType.entity
+                    this.getEntries({
+                        schemaName: ref.schema,
+                        entityName: ref.name,
+                    })
+                }
+            }))
         }
 
         private updateShowLength() {

@@ -114,195 +114,7 @@
                 ref="control" />
     </div>
 </template>
-<style scoped>
-    .nested-menu > .actions-menu{
-        width: max-content;
-        display: inline-block;
-    }
-    .nested-menu >>> .actions-menu_actions-button {
-        border: 0px !important;
-        line-height: normal;
-        padding: 2px;
-        padding-left: 1px;
-        height: 100%;
-        text-align: left;
-        border-radius: 0 !important;
-    }
-    .nested-menu {
-        margin-left: -1px;
-        left: 0;
-        color: var(--ButtonTextColor) !important;
-        width: max-content !important;
-        display: block;
-        margin-right: 7px;
-        margin-top: 10px;
-        margin-bottom: 2px;
-    }
-    .caption-editors {
-        display: inline-block;
-        margin-left: 2px;
-    }
 
-    .form-control-panel {
-        padding-right: 2px;
-    }
-    .form-control-panel_select {
-        border-color: var(--NavigationBackColor);
-        width: 100%;
-        padding: .375rem .75rem;
-        height: calc(1.5em + .75rem + 2px);
-    }
-    .form-control-panel_checkbox {
-        border-color: var(--NavigationBackColor)
-    }
-    .form-control-panel_textarea {
-        border-color: var(--NavigationBackColor);
-        width: 100%;
-        overflow-y: hidden !important;
-        overflow-x: hidden !important;
-        word-wrap: unset !important;
-        padding: .375rem .75rem;
-        resize: none;
-        vertical-align: top;
-    }
-    .select-container {
-        display: flex;
-        height: calc(2em + 6px);
-    }
-    .select-container:after {
-        display: inline-block;
-        margin-left: .255em;
-        vertical-align: .255em;
-        content: "";
-        border-top: .25em solid;
-        border-right: .25em solid transparent;
-        border-bottom: 0;
-        border-left: .25em solid transparent;
-        color: black;
-        margin-left: -1.3em;
-        margin-top: 1.3em;
-        z-index:1;
-    }
-    .select-container-after{
-        width: 0px !important;
-        z-index:1;
-    }
-    .select-container-after:after {
-        display: inline-block;
-        margin-left: .255em;
-        vertical-align: .255em;
-        content: "";
-        border-right: .25em solid transparent;
-        border-bottom: .25em solid;
-        border-left: .25em solid transparent;
-        color: black;
-        margin-bottom: -0.3em;
-        margin-left: -1.3em;
-    }
-    .form-control-panel_select, .form-control-panel_checkbox, .form-control-panel_textarea {
-        border-radius: 0;
-        box-shadow: none;
-        -webkit-appearance: none;
-        background: white;
-    }
-    .form-control-panel_select_req, .form-control-panel_checkbox_req, .form-control-panel_textarea_req {
-        background-color: var(--RequiredBackColor)
-    }
-    .form-control-panel_select_error, .form-control-panel_checkbox_error, .form-control-panel_textarea_error {
-        background-color: var(--ErrorBackColor)
-    }
-    .form-control-panel_select:focus, .form-control-panel_checkbox:focus, .form-control-panel_textarea:focus {
-        border-color: var(--NavigationBackColor);
-        box-shadow: 0 0 0 white;
-    }
-    .form-control-panel_select:disabled, .form-control-panel_checkbox:disabled, .form-control-panel_textarea:disabled {
-        background-color: var(--ControlDisableColor);
-    }
-    @media screen and (max-aspect-ratio: 13/9) {
-        @media screen and (max-device-width: 480px) {
-            .select-container:after {
-                position: sticky;
-                left: calc(100vw - 1.3em - 1px);
-            }
-            .select-container-after {
-                position: sticky;
-                left: calc(100vw - 1px);
-            }
-            .nested-menu {
-                z-index: 0;
-                position: sticky;
-            }
-            .nested-menu > .actions-menu >>>  .div-with-actions{
-                position: absolute !important;
-            }
-            .nested-menu:hover {
-                z-index: 1200;
-            }
-            .form-control-panel_select, .form-control-panel_checkbox, .form-control-panel_textarea {
-                width: calc(100vw - 2px);
-                position: -webkit-sticky;
-                position: sticky;
-                left: 1px;
-                display: block;
-            }
-            td > .form-control-panel > .form-control-panel_textarea {
-                width: 100%;
-            }
-            td > div.form-control-panel > pre{
-                min-width: 0 !important;
-            }
-            .caption-editors {
-                position: sticky;
-                left: 3px;
-                width: max-content;
-            }
-        }
-    }
-    /*для формконтрола внутри таблицы*/
-    td > div.form-control-panel {
-        left: calc(50% - 175px);
-        top: calc(50% - 50px);
-        position: fixed;
-        z-index: 1000;
-        background-color: var(--MenuColor);
-        display: block;
-        align-items: center;
-        padding: 20px;
-    }
-    @media screen and (max-device-width: 480px){
-        td > div.form-control-panel {
-            left: 2px;
-            width: calc(100% - 4px);
-        }
-        td > div.form-control-panel > div.select-container {
-            width: calc(100vw - 44px) !important;
-            /*padding 20px and left 2px*/
-        }
-
-        td > div.form-control-panel > div.select-container > select.form-control-panel_select {
-            width: 100%;
-        }
-        td > div.form-control-panel > div.select-container:after {
-            position: relative;
-            left: 0px;
-        }
-    }
-    td > div.form-control-panel > div.select-container {
-        width: 300px
-    }
-    td > div.form-control-panel > pre {
-        min-width: 600px;
-        height: 200px !important;
-        margin-bottom: 0px;
-    }
-    td > div.form-control-panel > textarea {
-       white-space:nowrap;
-    }
-    *:focus {
-        border: 0 !important;
-        box-shadow: none !important;
-    }
-</style>
 <script lang="ts">
     import { Component, Vue, Prop, Watch } from "vue-property-decorator"
     import { namespace } from "vuex-class"
@@ -509,7 +321,7 @@
                         if (entries === undefined || entries instanceof Promise) {
                             return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
                         } else {
-                            const select = Object.entries(entries).map(([name, id]) => ({ text: name, value: String(id) }))
+                            const select = Object.entries(entries).map(([id, name]) => ({ text: name, value: String(id) }))
                             return {
                                 name: "select",
                                 options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), ...select],
@@ -587,3 +399,193 @@
         }
     }
 </script>
+
+<style scoped>
+    .nested-menu > .actions-menu{
+        width: max-content;
+        display: inline-block;
+    }
+    .nested-menu >>> .actions-menu_actions-button {
+        border: 0px !important;
+        line-height: normal;
+        padding: 2px;
+        padding-left: 1px;
+        height: 100%;
+        text-align: left;
+        border-radius: 0 !important;
+    }
+    .nested-menu {
+        margin-left: -1px;
+        left: 0;
+        color: var(--ButtonTextColor) !important;
+        width: max-content !important;
+        display: block;
+        margin-right: 7px;
+        margin-top: 10px;
+        margin-bottom: 2px;
+    }
+    .caption-editors {
+        display: inline-block;
+        margin-left: 2px;
+    }
+
+    .form-control-panel {
+        padding-right: 2px;
+    }
+    .form-control-panel_select {
+        border-color: var(--NavigationBackColor);
+        width: 100%;
+        padding: .375rem .75rem;
+        height: calc(1.5em + .75rem + 2px);
+    }
+    .form-control-panel_checkbox {
+        border-color: var(--NavigationBackColor)
+    }
+    .form-control-panel_textarea {
+        border-color: var(--NavigationBackColor);
+        width: 100%;
+        overflow-y: hidden !important;
+        overflow-x: hidden !important;
+        word-wrap: unset !important;
+        padding: .375rem .75rem;
+        resize: none;
+        vertical-align: top;
+    }
+    .select-container {
+        display: flex;
+        height: calc(2em + 6px);
+    }
+    .select-container:after {
+        display: inline-block;
+        margin-left: .255em;
+        vertical-align: .255em;
+        content: "";
+        border-top: .25em solid;
+        border-right: .25em solid transparent;
+        border-bottom: 0;
+        border-left: .25em solid transparent;
+        color: black;
+        margin-left: -1.3em;
+        margin-top: 1.3em;
+        z-index:1;
+    }
+    .select-container-after{
+        width: 0px !important;
+        z-index:1;
+    }
+    .select-container-after:after {
+        display: inline-block;
+        margin-left: .255em;
+        vertical-align: .255em;
+        content: "";
+        border-right: .25em solid transparent;
+        border-bottom: .25em solid;
+        border-left: .25em solid transparent;
+        color: black;
+        margin-bottom: -0.3em;
+        margin-left: -1.3em;
+    }
+    .form-control-panel_select, .form-control-panel_checkbox, .form-control-panel_textarea {
+        border-radius: 0;
+        box-shadow: none;
+        -webkit-appearance: none;
+        background: white;
+    }
+    .form-control-panel_select_req, .form-control-panel_checkbox_req, .form-control-panel_textarea_req {
+        background-color: var(--RequiredBackColor)
+    }
+    .form-control-panel_select_error, .form-control-panel_checkbox_error, .form-control-panel_textarea_error {
+        background-color: var(--ErrorBackColor)
+    }
+    .form-control-panel_select:focus, .form-control-panel_checkbox:focus, .form-control-panel_textarea:focus {
+        border-color: var(--NavigationBackColor);
+        box-shadow: 0 0 0 white;
+    }
+    .form-control-panel_select:disabled, .form-control-panel_checkbox:disabled, .form-control-panel_textarea:disabled {
+        background-color: var(--ControlDisableColor);
+    }
+    @media screen and (max-aspect-ratio: 13/9) {
+        @media screen and (max-device-width: 480px) {
+            .select-container:after {
+                position: sticky;
+                left: calc(100vw - 1.3em - 1px);
+            }
+            .select-container-after {
+                position: sticky;
+                left: calc(100vw - 1px);
+            }
+            .nested-menu {
+                z-index: 0;
+                position: sticky;
+            }
+            .nested-menu > .actions-menu >>>  .div-with-actions{
+                position: absolute !important;
+            }
+            .nested-menu:hover {
+                z-index: 1200;
+            }
+            .form-control-panel_select, .form-control-panel_checkbox, .form-control-panel_textarea {
+                width: calc(100vw - 2px);
+                position: -webkit-sticky;
+                position: sticky;
+                left: 1px;
+                display: block;
+            }
+            td > .form-control-panel > .form-control-panel_textarea {
+                width: 100%;
+            }
+            td > div.form-control-panel > pre{
+                min-width: 0 !important;
+            }
+            .caption-editors {
+                position: sticky;
+                left: 3px;
+                width: max-content;
+            }
+        }
+    }
+    /*для формконтрола внутри таблицы*/
+    td > div.form-control-panel {
+        left: calc(50% - 175px);
+        top: calc(50% - 50px);
+        position: fixed;
+        z-index: 1000;
+        background-color: var(--MenuColor);
+        display: block;
+        align-items: center;
+        padding: 20px;
+    }
+    @media screen and (max-device-width: 480px){
+        td > div.form-control-panel {
+            left: 2px;
+            width: calc(100% - 4px);
+        }
+        td > div.form-control-panel > div.select-container {
+            width: calc(100vw - 44px) !important;
+            /*padding 20px and left 2px*/
+        }
+
+        td > div.form-control-panel > div.select-container > select.form-control-panel_select {
+            width: 100%;
+        }
+        td > div.form-control-panel > div.select-container:after {
+            position: relative;
+            left: 0px;
+        }
+    }
+    td > div.form-control-panel > div.select-container {
+        width: 300px
+    }
+    td > div.form-control-panel > pre {
+        min-width: 600px;
+        height: 200px !important;
+        margin-bottom: 0px;
+    }
+    td > div.form-control-panel > textarea {
+       white-space:nowrap;
+    }
+    *:focus {
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+</style>

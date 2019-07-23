@@ -354,31 +354,29 @@
                             }
                             rowIs.forEach(rowI => {
                                 const entry = this.entries[rowI]
-                                if (fields === null) {
-                                    // Reset to original values
-                                    rows[rowI].values.forEach((value, colI) => {
-                                        const columnInfo = this.uv.info.columns[colI]
+                                const row = rows[rowI]
+                                Object.entries(fields).forEach(([fieldName, updValue]) => {
+                                    const colIs = mapping.fieldsToColumns[fieldName]
+                                    if (colIs === undefined) {
+                                        return
+                                    }
+                                    colIs.forEach(colI => {
                                         const cell = entry.fields[colI]
+                                        if (updValue == null) {
+                                            const value = row.values[colI]
+                                            const columnInfo = this.uv.info.columns[colI]
 
-                                        cell.value = value.value
-                                        cell.valueText = printValue(columnInfo.valueType, value)
-                                        cell.isInvalid = false
-                                    })
-                                } else {
-                                    Object.entries(fields).forEach(([fieldName, value]) => {
-                                        const colIs = mapping.fieldsToColumns[fieldName]
-                                        if (colIs === undefined) {
-                                            return
-                                        }
-                                        colIs.forEach(colI => {
-                                            const cell = entry.fields[colI]
-
+                                            // Reset to original values
                                             cell.value = value.value
-                                            cell.valueText = value.rawValue
-                                            cell.isInvalid = value.erroredOnce
-                                        })
+                                            cell.valueText = printValue(columnInfo.valueType, value)
+                                            cell.isInvalid = false
+                                        } else {
+                                            cell.value = updValue.value
+                                            cell.valueText = updValue.rawValue
+                                            cell.isInvalid = updValue.erroredOnce
+                                        }
                                     })
-                                }
+                                })
                             })
                         })
                     })

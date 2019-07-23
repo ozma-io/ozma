@@ -11,9 +11,13 @@ import { dateFormat, dateTimeFormat } from "@/state/user_view"
 
 export interface IUpdatedCell {
     rawValue: any
+    // `undefined` here means that value didn't pass validation
     value: any
     erroredOnce: boolean // failed on submit
 }
+
+export type UpdatedCells = Record<FieldName, IUpdatedCell>
+export type MaybeUpdatedCells = Record<FieldName, IUpdatedCell | null>
 
 /*
 README
@@ -27,12 +31,10 @@ export interface IAddedCells {
     cells: UpdatedCells
 }
 
-export type UpdatedCells = Record<FieldName, IUpdatedCell>
-
 export type AutoSaveLock = number
 
 export interface IEntityChanges {
-    updated: Record<RowIdString, UpdatedCells | null>
+    updated: Record<RowIdString, MaybeUpdatedCells>
     // Applied to user views with FOR INSERT INTO
     added: IAddedCells[]
     idAdded: number // current id of last entry
@@ -289,9 +291,17 @@ const getEmptyCells = (entityInfo: EntityFieldsInfo): UpdatedCells => {
     }).toObject()
 }
 
-const checkUpdatedFields = (fields: Record<string, IUpdatedCell>) => {
+const checkUpdatedFields = (fields: UpdatedCells) => {
     Object.values(fields).forEach(field => {
         if (field.value === undefined) {
+            field.erroredOnce = true
+        }
+    })
+}
+
+const checkMaybeUpdatedFields = (fields: MaybeUpdatedCells) => {
+    Object.values(fields).forEach(field => {
+        if (field !== null && field.value === undefined) {
             field.erroredOnce = true
         }
     })
@@ -324,14 +334,8 @@ const stagingModule: Module<IStagingState, {}> = {
         validate: state => {
             Object.entries(state.current.changes).forEach(([schemaName, entities]) => {
                 Object.entries(entities).forEach(([entityName, entityChanges]) => {
-                    const entity = {
-                        schema: schemaName,
-                        name: entityName,
-                    }
                     Object.entries(entityChanges.updated).forEach(([updatedIdStr, updatedFields]) => {
-                        if (updatedFields !== null) {
-                            checkUpdatedFields(updatedFields)
-                        }
+                        checkMaybeUpdatedFields(updatedFields)
                     })
                     entityChanges.added.forEach(addedFields => {
                         checkUpdatedFields(addedFields.cells)
@@ -403,9 +407,11 @@ const stagingModule: Module<IStagingState, {}> = {
             const entityChanges = state.current.getOrCreateChanges(schema, entity)
             let fields = entityChanges.updated[id]
             const fieldInfo = getFieldInfo(state, schema, entity, field)
-            if (fields === undefined || fields === null) {
+            if (fields === undefined) {
                 fields = {}
                 Vue.set(entityChanges.updated, String(id), fields)
+            }
+            if (Object.values(fields).every(f => f === null)) {
                 state.updatedCount += 1
                 const deleted = entityChanges.deleted[id]
                 if (deleted !== undefined && deleted) {
@@ -451,7 +457,7 @@ const stagingModule: Module<IStagingState, {}> = {
             const added = entityChanges.added.find(item => {
                 return item !== null && item !== undefined && item.id === newId
             })
-            if (added === undefined || added === null) {
+            if (added === undefined) {
                 throw new Error(`New entity id ${newId} is not found`)
             }
             Vue.set(added.cells, field, validateValue(fieldInfo, value))
@@ -464,8 +470,10 @@ const stagingModule: Module<IStagingState, {}> = {
                 Vue.set(entityChanges.deleted, String(id), true)
                 state.deletedCount += 1
                 const updated = entityChanges.updated[id]
-                if (updated !== undefined && updated !== null) {
-                    entityChanges.updated[id] = null
+                if (updated !== undefined) {
+                    Object.keys(updated).forEach(name => {
+                        updated[name] = null
+                    })
                     state.updatedCount -= 1
                 }
                 state.touched = true
@@ -474,8 +482,10 @@ const stagingModule: Module<IStagingState, {}> = {
         resetUpdatedEntry: (state, { schema, entity, id }: { schema: SchemaName, entity: EntityName, id: number }) => {
             const entityChanges = state.current.getOrCreateChanges(schema, entity)
             const fields = entityChanges.updated[id]
-            if (fields !== undefined && fields !== null) {
-                entityChanges.updated[id] = null
+            if (fields !== undefined) {
+                Object.keys(fields).forEach(name => {
+                    fields[name] = null
+                })
                 state.updatedCount -= 1
             }
         },
