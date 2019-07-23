@@ -434,6 +434,15 @@
             return row.cells.every(cell => cell.value === undefined || cell.valueText === "" || cell.update === null || cell.update.field === null)
         }
 
+        /*
+        Negative ids for added
+        Positive ids for entries
+
+        selectedRows has keep a value of (-1 - newRow.id)
+        When we delete new records, we use -1 - the value of selectedRows
+
+        This makes it easy to store all entries in the selectedRows and use shift key
+        */
         private selectRow(rowI: number, event: MouseEvent) {
             const setsSelected = new Set(this.selectedRows)
 
