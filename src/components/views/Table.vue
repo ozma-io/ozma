@@ -27,7 +27,7 @@
                   'active_editing': isActiveEdit}]">
         <div id="disable_edit"
              :class="{'edit_active': isActiveEdit}"
-             @click="CloseFormControl()">
+             @click="closeFormControl()">
         </div>
         <div ref="tableContainer" class="tabl" @scroll="updateShowLength()" @resize="updateShowLength()">
             <table :class="['custom-table', 'table', 'b-table',
@@ -366,7 +366,7 @@
             this.lastSelected = null
         }
 
-        private CloseFormControl() {
+        private closeFormControl() {
             if (this.oldCell !== null) {
                 this.oldCell.isEditing = null
                 this.oldCell.selected = false
@@ -396,7 +396,6 @@
         }
 
         private cellClick(cell: ICell, row: IRow) {
-
             if (this.oldRow !== null && row !== this.oldRow && this.oldRow.added && this.isEmptyRow(this.oldRow)) {
                 if (this.uv.info.mainEntity === null) {
                     throw new Error("View doesn't have a main entity")
@@ -572,11 +571,11 @@
         }
 
         private removeSelectedRows() {
-            if (this.uv.info.mainEntity === null || this.uv.rows === null) {
+            const entity = this.uv.info.mainEntity
+            if (entity === null || this.uv.rows === null) {
                 throw new Error("View doesn't have a main entity")
             }
 
-            const entity = this.uv.info.mainEntity
             for (const rowI of this.selectedRows) {
                 const row = this.uv.rows[rowI]
                 if (row.entityIds === undefined) {
@@ -585,7 +584,8 @@
                 this.deleteEntry({
                     schema: entity.schema,
                     entity: entity.name,
-                    id: row.entityIds[entity.name],
+                    // Guaranteed to exist if mainEntity exists
+                    id: row.mainId as number,
                 })
             }
         }
