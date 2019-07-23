@@ -6,4 +6,4 @@ set -x
 rm -rf dist
 npm install
 npm run build
-rm dist/js/*.map
+rm dist/static/js/*.map
