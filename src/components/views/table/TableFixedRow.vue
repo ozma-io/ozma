@@ -15,16 +15,7 @@
                         :key="i"
                         @click="'cellClick' in listeners && listeners.cellClick(props.entry.cells[i], props.entry, $event)"
                         :style="Object.assign({}, props.entry.cells[i].style, props.columns[i].style)">
-                    <FormControl v-if="props.entry.cells[i].isEditing !== null"
-                            :value="props.entry.cells[i].value"
-                            :valueText="props.entry.cells[i].valueText"
-                            :attributes="Object.assign({}, props.entry.cells[i].attrs, props.entry.attrs, props.columns[i].attrs, props.uv.attributes)"
-                            :added="props.added"
-                            :update="props.entry.cells[i].update"
-                            :type="props.columns[i].columnInfo.valueType"
-                            :uv="props.uv"
-                            @update="'update' in listeners && listeners.update(props.entry.cells[i], $event)"
-                            autofocus />
+                    <!-- We don't have FormControl here because it already exists in TableRow for the same cell -->
                     <template>
                         <p>
                             <UserViewLink v-if="props.entry.cells[i].link !== null" :uv="props.entry.cells[i].link">
