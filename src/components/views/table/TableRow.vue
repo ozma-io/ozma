@@ -1,9 +1,13 @@
 <template functional>
     <!-- When you change anything here, also make corresponding changes in TableFixedRow! -->
     <tr :style="props.entry.style" :class="props.selected ? 'selected table-tr' : 'none_selected table-tr'">
-        <td @click="'select' in listeners && listeners.select($event)" class=" fixed-column checkbox-cells">
-            <input type="checkbox" :checked="props.selected">
-        </td>
+        <template>
+            <td v-if="props.entry.id !== -1" @click="'select' in listeners && listeners.select($event)" class="fixed-column checkbox-cells">
+                <input type="checkbox" :checked="props.selected">
+            </td>
+            <td v-else class="fixed-column checkbox-cells">
+            </td>
+        </template>
         <td v-if="props.hasRowLinks" class="fixed-column opemform-cells">
             <UserViewLink v-if="props.entry.linkForRow !== null" :uv="props.entry.linkForRow">
                 ⤢

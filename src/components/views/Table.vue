@@ -71,6 +71,8 @@
                                 :uv="uv"
                                 added
                                 :hasRowLinks="hasRowLinks"
+                                :selected="entry.id !== -1 ? rowIsSelected(-1 - entry.id) : false"
+                                @select="entry.id !== -1 ? selectRow(-1 - entry.id, $event) : () => {}"
                                 @cellClick="cellClick"
                                 @update="beforeAddEntry(entry)" />
                         <TableRow :key="`new-${entryI}`"
@@ -80,6 +82,8 @@
                                 :uv="uv"
                                 added
                                 :hasRowLinks="hasRowLinks"
+                                :selected="entry.id !== -1 ? rowIsSelected(-1 - entry.id) : false"
+                                @select="entry.id !== -1 ? selectRow(-1 - entry.id, $event) : () => {}"
                                 @cellClick="cellClick"
                                 @update="beforeAddEntry(entry)" />
                     </template>
@@ -447,12 +451,12 @@
                     }
                 }
             } else {
-                if (!setsSelected.has(this.shownRows[rowI])) {
-                    setsSelected.add(this.shownRows[rowI])
+                if (!setsSelected.has(rowI)) {
+                    setsSelected.add(rowI)
                 } else {
-                    setsSelected.delete(this.shownRows[rowI])
+                    setsSelected.delete(rowI)
                 }
-                this.lastSelected = this.shownRows[rowI]
+                this.lastSelected = rowI
             }
             this.selectedRows = Array.from(setsSelected)
 
@@ -463,7 +467,7 @@
 
         private selectAllRows() {
             if (!this.selectedAll) {
-                this.selectedRows = this.entries.map((row, rowI) => rowI)
+                this.selectedRows = this.entries.map((row, rowI) => rowI).concat(this.newEntries.map(row => -1 - row.id))
             } else {
                 this.selectedRows = []
             }
@@ -561,16 +565,24 @@
             }
 
             for (const rowI of this.selectedRows) {
-                const row = this.uv.rows[rowI]
-                if (row.entityIds === undefined) {
-                    throw new Error("View doesn't have a main entity")
+                if (rowI < 0) {
+                    this.resetAddedEntry({
+                        schema: entity.schema,
+                        entity: entity.name,
+                        newId: -1 - rowI,
+                    })
+                } else {
+                    const row = this.uv.rows[rowI]
+                    if (row.entityIds === undefined) {
+                        throw new Error("View doesn't have a main entity")
+                    }
+                    this.deleteEntry({
+                        schema: entity.schema,
+                        entity: entity.name,
+                        // Guaranteed to exist if mainEntity exists
+                        id: row.mainId as number,
+                    })
                 }
-                this.deleteEntry({
-                    schema: entity.schema,
-                    entity: entity.name,
-                    // Guaranteed to exist if mainEntity exists
-                    id: row.mainId as number,
-                })
             }
         }
 
