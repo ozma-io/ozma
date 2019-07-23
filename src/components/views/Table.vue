@@ -737,15 +737,20 @@
         }
 
     /*
-        bool: true -> false
-        number: 1 -> 0
-        string: a -> b
+        first sort
+        bool:   descending
+        number: descending
+        string: ascending
     */
-
         private updateSort(sortColumn: number) {
             if (this.sortColumn !== sortColumn) {
                 this.sortColumn = sortColumn
-                this.sortAsc = true
+                const type = this.columns[sortColumn].columnInfo.valueType.type
+                if (type === "string") {
+                    this.sortAsc = true
+                } else {
+                    this.sortAsc = false
+                }
             } else {
                 this.sortAsc = !this.sortAsc
             }
@@ -989,7 +994,7 @@
         top: calc(1.5em + 6px);
         left: 0;
     }
-    #disable_edit > .edit_active {
+    #disable_edit.edit_active {
         width: 100vw;
         height: 100vh;
         z-index: 500;
