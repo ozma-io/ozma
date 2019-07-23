@@ -145,16 +145,11 @@
         })
     }
 
-    const rowIndicesCompare = (aIndex: number, bIndex: number, entries: IRow[], sortColumn: number) => {
+    const rowIndicesCompare = (aIndex: number, bIndex: number, entries: IRow[], sortColumn: number, collator: Intl.Collator) => {
         const a = entries[aIndex]
         const b = entries[bIndex]
-        if (a.cells[sortColumn].value < b.cells[sortColumn].value) {
-            return -1
-        } else if (a.cells[sortColumn].value > b.cells[sortColumn].value) {
-            return 1
-        } else {
-            return 0
-        }
+        return collator.compare(a.cells[sortColumn].value,
+                                b.cells[sortColumn].value)
     }
 
     const getCsvString = (str: string): string => {
@@ -201,6 +196,7 @@
         private currentFilter: string[] = []
         private sortColumn: number | null = null
         private sortAsc: boolean = true
+        private sortOptions: Intl.CollatorOptions = {}
         private entries: IRow[] = []
         private rows: number[] = []
         private showLength: number = 0
@@ -744,29 +740,43 @@
     */
         private updateSort(sortColumn: number) {
             if (this.sortColumn !== sortColumn) {
-                this.sortColumn = sortColumn
                 const type = this.columns[sortColumn].columnInfo.valueType.type
-                if (type === "string") {
-                    this.sortAsc = true
-                } else {
-                    this.sortAsc = false
+                this.sortColumn = sortColumn
+
+                switch (type) {
+                    case "int":
+                        this.sortOptions = {numeric: true}
+                        this.sortAsc = false
+                        break
+                    case "bool":
+                        this.sortAsc = false
+                        this.sortOptions = {}
+                        break
+                    case "string":
+                        this.sortAsc = true
+                        this.sortOptions = {sensitivity: "accent"}
+                        break
+                    default:
+                        this.sortAsc = true
+                        this.sortOptions = {}
                 }
             } else {
                 this.sortAsc = !this.sortAsc
             }
 
-            this.sortRows()
+            this.sortRows(this.sortOptions)
             this.lastSelected = null
         }
 
-        private sortRows() {
+        private sortRows(options?: Intl.CollatorOptions) {
             if (this.sortColumn !== null) {
                 const sortColumn = this.sortColumn
                 const entries = this.entries
+                const collator = new Intl.Collator(["en", "ru"], options)
                 const sortFunction: (a: number, b: number) => number =
                     this.sortAsc ?
-                        (a, b) => rowIndicesCompare(a, b, entries, sortColumn) :
-                        (a, b) => rowIndicesCompare(b, a, entries, sortColumn)
+                        (a, b) => rowIndicesCompare(a, b, entries, sortColumn, collator) :
+                        (a, b) => rowIndicesCompare(b, a, entries, sortColumn, collator)
                 this.rows.sort(sortFunction)
             }
         }
