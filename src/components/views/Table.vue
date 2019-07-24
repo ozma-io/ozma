@@ -113,6 +113,7 @@
         </div>
     </div>
 </template>
+
 <script lang="ts">
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
     import { Location } from "vue-router"
