@@ -474,7 +474,7 @@
             this.selectedRows = Array.from(setsSelected)
 
             const offset = (this.newEntries[0] !== undefined && this.newEntries[0].id === -1) ? 1 : 0
-            this.selectedAll = (this.selectedRows.length === this.entries.length + this.newEntries.length - offset) ? true : false
+            this.selectedAll = this.selectedRows.length === (this.entries.length + this.newEntries.length - offset) ? true : false
             this.updateStatusLine()
             return false
         }
