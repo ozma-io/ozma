@@ -502,6 +502,17 @@
         @Watch("entriesMap", { deep: true })
         private setSummaries() {
             this.applyChanges()
+            if (this.showEmptyRow) {
+                // Update summary for an empty row
+                this.uv.info.columns.map((info, colI) => {
+                    if (info.mainField !== null) {
+                        const cell = this.newEntries[0].cells[colI]
+                        const text = this.getSummaryValueText(info.mainField.field, cell.value)
+                        cell.valueText = text === null ? printValue(info.valueType, cell.value) : text
+                        cell.valueLowerText = cell.valueText.toLowerCase()
+                    }
+                })
+            }
         }
 
         @Watch("changes", { deep: true })
@@ -537,7 +548,8 @@
                     }
                     const defaultValue = convertValue(info.mainField.field, rawValue)
                     value = defaultValue !== undefined ? defaultValue : info.mainField.field.defaultValue
-                    valueText = printValue(info.valueType, value)
+                    const text = this.getSummaryValueText(info.mainField.field, value)
+                    valueText = text === null ? printValue(info.valueType, value) : text
                     valueLowerText = valueText.toLowerCase()
                 } else {
                     value = undefined
@@ -608,18 +620,27 @@
             }
         }
 
-        private getUpdatedValueText(field: IColumnField | null, updValue: IUpdatedCell) {
-            if (field !== null && updValue.value !== undefined && field.fieldType.type === "reference") {
+        private getSummaryValueText(field: IColumnField | null, value: any) {
+            if (field !== null && value !== undefined && value !== null && field.fieldType.type === "reference") {
                 const ref = field.fieldType.entity
                 const schemaMap = this.entriesMap[ref.schema]
                 if (schemaMap !== undefined) {
                     const refEntries = schemaMap[ref.name]
                     if (refEntries !== undefined && !(refEntries instanceof Promise)) {
-                        return refEntries[updValue.value]
+                        return refEntries[value]
                     }
                 }
             }
-            return (updValue.rawValue === undefined) ? "" : String(updValue.rawValue)
+            return null
+        }
+
+        private getUpdatedValueText(field: IColumnField | null, updValue: IUpdatedCell) {
+            const text = this.getSummaryValueText(field, updValue.value)
+            if (text === null) {
+                return (updValue.rawValue === undefined) ? "" : String(updValue.rawValue)
+            } else {
+                return text
+            }
         }
 
         // Apply changes on top of built entries.
