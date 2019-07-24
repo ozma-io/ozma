@@ -57,6 +57,7 @@
         <!-- Do NOT add any `class` to CodeEditor; it breaks stuff! -->
         <CodeEditor v-else-if="inputType.name === 'codeeditor'"
                     :style="inputType.style"
+                    mode="ace/mode/pgsql"
                     :content="valueText"
                     @update:content="updateValue($event)"
                     :readOnly="isDisabled"
