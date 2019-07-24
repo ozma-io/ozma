@@ -443,33 +443,38 @@
 
         This makes it easy to store all entries in the selectedRows and use shift key
         */
+
         private selectRow(rowI: number, event: MouseEvent) {
             const setsSelected = new Set(this.selectedRows)
 
             if (this.lastSelected !== null && this.lastSelected !== rowI && event.shiftKey) {
                 // Select all rows between current one and the previous selected one.
-                const func = (setsSelected.has(this.lastSelected)) ? setsSelected.add.bind(setsSelected) : setsSelected.delete.bind(setsSelected)
+                const lastEl = this.lastSelected < 0 ? this.lastSelected : this.shownRows[this.lastSelected]
+                const func = setsSelected.has(lastEl) ? setsSelected.add.bind(setsSelected) : setsSelected.delete.bind(setsSelected)
 
                 if (this.lastSelected < rowI) {
                     for (let i = this.lastSelected; i <= rowI; i++) {
-                        func(i)
+                        i < 0 ? func(i) : func(this.shownRows[i])
                     }
                 } else if (this.lastSelected > rowI) {
                     for (let i = rowI; i <= this.lastSelected; i++) {
-                        func(i)
+                        i < 0 ? func(i) : func(this.shownRows[i])
                     }
                 }
             } else {
-                if (!setsSelected.has(rowI)) {
-                    setsSelected.add(rowI)
+                const el = rowI < 0 ? rowI : this.shownRows[rowI]
+
+                if (!setsSelected.has(el)) {
+                    setsSelected.add(el)
                 } else {
-                    setsSelected.delete(rowI)
+                    setsSelected.delete(el)
                 }
                 this.lastSelected = rowI
             }
             this.selectedRows = Array.from(setsSelected)
 
-            this.selectedAll = this.selectedRows.length === this.entries.length ? true : false
+            const offset = (this.newEntries[0] !== undefined && this.newEntries[0].id === -1) ? 1 : 0
+            this.selectedAll = (this.selectedRows.length === this.entries.length + this.newEntries.length - offset) ? true : false
             this.updateStatusLine()
             return false
         }
