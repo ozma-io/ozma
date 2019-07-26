@@ -474,13 +474,13 @@
                     this.addEntry({ schema: entity.schema, entity: entity.name })
                     form.fields.forEach((field, i) => {
                         const info = this.fields[i]
-                        if (info.column.mainField !== null && field.valueText !== "") {
+                        if (info.column.mainField !== null && field.value !== undefined) {
                             this.setAddedField({
                                 schema: entity.schema,
                                 entity: entity.name,
                                 field: info.column.mainField.name,
                                 newId: id,
-                                value: field.valueText,
+                                value: field.value,
                             })
                         }
                     })

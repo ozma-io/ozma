@@ -1048,13 +1048,13 @@
                 changeRowId(row, this.currentIdAdded) // change old id to current addedId
                 row.cells.forEach((cell, i) => {
                     const info = this.columns[i]
-                    if (info.columnInfo.mainField !== null && cell.valueText !== "") {
+                    if (info.columnInfo.mainField !== null && cell.value !== undefined) {
                         this.setAddedField({
                             schema: entity.schema,
                             entity: entity.name,
                             field: info.columnInfo.mainField.name,
                             newId: row.id,
-                            value: cell.valueText,
+                            value: cell.value,
                         })
                     }
                 })
