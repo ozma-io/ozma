@@ -20,7 +20,7 @@
 </i18n>
 
 <template>
-    <div class="form-control-panel">
+    <div :class="['form-control-panel',{'form-control-panel-hidden': inputType.name === 'connectionfield'}]">
         <div class="nested-menu" v-if="actions.length > 0">
             <ActionsMenu title="view_headline"
                          :actions="actions" />
@@ -54,6 +54,12 @@
                          :max-rows="6"
                          :required="!isNullable"
                          ref="control" />
+        <ConnectionField v-else-if="inputType.name === 'connectionfield'" 
+                         :options="inputType.options"
+                         :menyFields="true"
+                          @update:content="updateValue($event)"
+                         ref="control"
+                         />
         <!-- Do NOT add any `class` to CodeEditor; it breaks stuff! -->
         <CodeEditor v-else-if="inputType.name === 'codeeditor'"
                     :style="inputType.style"
@@ -142,6 +148,11 @@
         style: Record<string, any>
     }
 
+    interface IConnectionField {
+        name: "connectionfield"
+        options: ISelectOption[]
+    }
+
     interface ISelectOption {
         text: string
         value: string
@@ -167,7 +178,7 @@
         text: string
     }
 
-    type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | ICheckType | IUserViewType | IErrorType
+    type IType = ITextType | ITextAreaType | ICodeEditorType | IConnectionField | ISelectType | ICheckType | IUserViewType | IErrorType
 
     const userView = namespace("userView")
     const staging = namespace("staging")
@@ -176,6 +187,7 @@
     @Component({
         components: {
             CodeEditor: () => import("@/components/CodeEditor.vue"),
+            ConnectionField: () => import("@/components/ConnectionField.vue"),
         },
     })
     export default class FormControl extends Vue {
@@ -323,16 +335,25 @@
                             return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
                         } else {
                             const select = Object.entries(entries).map(([id, name]) => ({ text: name, value: String(id) }))
+                           // return {
+                               // name: "select",
+                               // options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), ...select],
+                            // }
                             return {
-                                name: "select",
+                                name: "connectionfield",
                                 options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), ...select],
                             }
                         }
                     case "enum":
                         return {
-                            name: "select",
+                            name: "connectionfield",
                             options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), ...fieldType.values.map(x => ({ text: x, value: x }))],
                         }
+                    // case "enum":
+                        // return {
+                          //  name: "select",
+                            // options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), ...fieldType.values.map(x => ({ text: x, value: x }))],
+                        // }
                     case "bool":
                         return {
                             name: "select",
@@ -432,6 +453,10 @@
 
     .form-control-panel {
         padding-right: 2px;
+    }
+    .form-control-panel-hidden {
+        overflow: hidden;
+        width: calc(100% - 3px);
     }
     .form-control-panel_select {
         border-color: var(--NavigationBackColor);

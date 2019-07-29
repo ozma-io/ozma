@@ -7,6 +7,7 @@
     <RootNamespace>FunApp</RootNamespace>
     <LastActiveSolutionConfig>Debug|Any CPU</LastActiveSolutionConfig>
     <SaveNodeJsSettingsInProjectFile>True</SaveNodeJsSettingsInProjectFile>
+    <ToolsVersionPromptShown>3.4</ToolsVersionPromptShown>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -45,6 +46,9 @@
     <Content Include="src\components\ActionsMenu.vue" />
     <Content Include="src\components\AuthResponse.vue" />
     <Content Include="src\components\CodeEditor.vue" />
+    <Content Include="src\components\ConnectionField.vue">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="src\components\FormControl.vue" />
     <Content Include="src\components\NotFound.vue" />
     <Content Include="src\components\RootUserView.vue">
