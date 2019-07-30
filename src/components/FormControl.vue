@@ -55,9 +55,10 @@
                          :required="!isNullable"
                          ref="control" />
         <ConnectionField v-else-if="inputType.name === 'connectionfield'" 
+                         :value="value"
                          :options="inputType.options"
-                         :menyFields="true"
-                          @update:content="updateValue($event)"
+                         :menyFields="false"
+                          @update:value="updateValue($event)"
                          ref="control"
                          />
         <!-- Do NOT add any `class` to CodeEditor; it breaks stuff! -->
@@ -335,12 +336,8 @@
                             return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
                         } else {
                             const select = Object.entries(entries).map(([id, name]) => ({ text: name, value: String(id) }))
-                           // return {
-                               // name: "select",
-                               // options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), ...select],
-                            // }
                             return {
-                                name: "connectionfield",
+                                name: "select",
                                 options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), ...select],
                             }
                         }
