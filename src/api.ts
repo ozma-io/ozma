@@ -12,15 +12,6 @@ export const authClientSecret = (process.env["NODE_ENV"] === "production") ? und
 
 export const funappSchema = "funapp"
 
-interface IAuthRequest {
-    username: string
-    password: string
-}
-
-interface IAuthResponse {
-    token: string
-}
-
 export interface IAuthToken {
     sub: string
     exp: number
