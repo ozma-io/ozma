@@ -189,8 +189,17 @@ export interface IDeleteEntityOp {
 
 export type TransactionOp = IInsertEntityOp | IUpdateEntityOp | IDeleteEntityOp
 
+const fetchGetApi = async (subUrl: string, token: string): Promise<any> => {
+    return await Utils.fetchJson(`${apiUrl}/${subUrl}`, {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+        },
+    })
+}
+
 const fetchFormApi = async (subUrl: string, token: string, method: string, body?: string): Promise<any> => {
-    return await Utils.fetchSuccess(`${apiUrl}/${subUrl}`, {
+    return await Utils.fetchJson(`${apiUrl}/${subUrl}`, {
         method,
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -264,4 +273,12 @@ export const deleteEntry = async (token: string, ref: IEntityRef, id: number): P
 
 export const runTransaction = async (token: string, ops: TransactionOp[]): Promise<void> => {
     return await fetchJsonApi("transaction", token, "POST", { operations: ops })
+}
+
+export const saveSchema = async (token: string, schema: string): Promise<object> => {
+    return await fetchGetApi(`layouts/${schema}`, token)
+}
+
+export const restoreSchema = async (token: string, schema: string, data: object): Promise<void> => {
+    await fetchJsonApi(`layouts/${schema}`, token, "PUT", data)
 }

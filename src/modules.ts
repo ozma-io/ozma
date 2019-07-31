@@ -6,6 +6,7 @@ import { RawLocation, Dictionary } from "vue-router/types/router"
 import * as Utils from "@/utils"
 import NotFound from "@/components/NotFound.vue"
 import AuthResponse from "@/components/AuthResponse.vue"
+import SaveRestoreSchema from "@/components/SaveRestoreSchema.vue"
 import RootUserView from "@/components/RootUserView.vue"
 
 Vue.use(VueRouter)
@@ -16,6 +17,7 @@ const routes = [
     { path: "/views/:schema/:name", name: "view", component: RootUserView },
     { path: "/views/:schema/:name/new", name: "view_create", component: RootUserView },
     { path: "/auth_response", name: "auth_response", component: AuthResponse },
+    { path: "/save_restore", name: "save_restore", component: SaveRestoreSchema },
     { path: "*", component: NotFound },
 ]
 
