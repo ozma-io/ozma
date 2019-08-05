@@ -81,6 +81,7 @@
                                 :columns="columns"
                                 :uv="uv"
                                 added
+                                :showFixedRow="showFixedRow"
                                 :hasRowLinks="hasRowLinks"
                                 :selected="entry.id !== -1 ? rowIsSelected(-1 - entry.id) : false"
                                 @select="entry.id !== -1 ? selectRow(-1 - entry.id, $event) : () => {}"
@@ -104,6 +105,7 @@
                                 :columns="columns"
                                 :uv="uv"
                                 :selected="rowIsSelected(entryI)"
+                                :showFixedRow="showFixedRow"
                                 :hasRowLinks="hasRowLinks"
                                 @select="selectRow(rowI, $event)"
                                 @cellClick="cellClick" />
