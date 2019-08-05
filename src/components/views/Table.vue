@@ -1092,7 +1092,7 @@
     #disable_edit.edit_active {
         width: 100vw;
         height: 100vh;
-        z-index: 500;
+        z-index: 500; /* чтоб таблица была поверх этого блока */
     }
     /* таблица поверх блока отключения редактирования */
     table.edit_active {
@@ -1136,7 +1136,7 @@
         cursor: pointer;
     }
     th.fixed-column {
-        z-index: 25;
+        z-index: 25; /* поверх обычных столбцов */
     }
     th.tabl_heading {
         text-overflow: ellipsis;
@@ -1188,7 +1188,7 @@
         }
         .active_editing {
             position: sticky !important;
-            z-index: 100000;
+            z-index: 100000; /* чтобы FormControl был поверх других таблиц, когда их несколько на странице*/
         }
     }
 
