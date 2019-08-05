@@ -2,7 +2,7 @@
     <!-- When you change anything here, also make corresponding changes in TableRow! -->
     <tr :style="props.entry.style" class="fixed-place-tr none_selected table-tr">
         <td class="fixed-place-td table-tr_td">
-            <div class="fix">
+            <div class="fix" :class="{ 'selected' : props.selected}">
                 <div @click="'select' in listeners && listeners.select($event)" class="fixed-column">
                     <input type="checkbox" :checked="props.selected">
                 </div>
