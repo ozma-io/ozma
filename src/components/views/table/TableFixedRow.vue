@@ -87,7 +87,7 @@
         overflow: hidden;
     }
     .editing_style {
-        z-index: 200 !important;
+        z-index: 200 !important; /* чтобы FormControl(расположен в ячейке) отображался поверх таблицы */
         overflow: visible !important;
     }
     td >>> p, td >>> a {
