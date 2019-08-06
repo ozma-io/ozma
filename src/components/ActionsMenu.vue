@@ -64,6 +64,7 @@
         display: block;
         z-index: 1200; /* меню действий для подтаблиц поверх темного фона */
         background-color: var(--MenuColor);
+        margin-left: -1px
     }
     .div-with-actions_button {
         display: block;
