@@ -306,7 +306,7 @@
         height: inherit;
         display: flex;
         flex-direction: column;
-        z-index: 1050;
+        z-index: 1050;  /* вся страница, кроме низа */
     }
     @media print {
         .head-menu {
@@ -344,7 +344,7 @@
         text-decoration: none;
         padding-left: 5px;
         padding-right: 5px;
-        z-index: 1000;
+        z-index: 1000; /* панель наверху */
         padding-bottom: 4px;
         padding-top: 1px !important;
         border-radius: 0 !important;
@@ -365,7 +365,7 @@
         margin-left: -1px !important;
         position: relative;
         background-color: var(--MenuColor) !important;
-        z-index: 1030;
+        z-index: 1030; /* низ страницы */
         display: -webkit-box;
         display: -ms-flexbox;
         display: flex;
@@ -385,7 +385,7 @@
 
     .count-row {
         bottom: 0;
-        z-index: 2000;
+        z-index: 2000; /* кол-во записей внизу */
         line-height: normal;
         float: left;
         margin-left: 2px;

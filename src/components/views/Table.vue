@@ -81,6 +81,7 @@
                                 :columns="columns"
                                 :uv="uv"
                                 added
+                                :showFixedRow="showFixedRow"
                                 :hasRowLinks="hasRowLinks"
                                 :selected="entry.id !== -1 ? rowIsSelected(-1 - entry.id) : false"
                                 @select="entry.id !== -1 ? selectRow(-1 - entry.id, $event) : () => {}"
@@ -104,6 +105,7 @@
                                 :columns="columns"
                                 :uv="uv"
                                 :selected="rowIsSelected(entryI)"
+                                :showFixedRow="showFixedRow"
                                 :hasRowLinks="hasRowLinks"
                                 @select="selectRow(rowI, $event)"
                                 @cellClick="cellClick" />
@@ -1048,13 +1050,13 @@
                 changeRowId(row, this.currentIdAdded) // change old id to current addedId
                 row.cells.forEach((cell, i) => {
                     const info = this.columns[i]
-                    if (info.columnInfo.mainField !== null && cell.valueText !== "") {
+                    if (info.columnInfo.mainField !== null && cell.value !== undefined) {
                         this.setAddedField({
                             schema: entity.schema,
                             entity: entity.name,
                             field: info.columnInfo.mainField.name,
                             newId: row.id,
-                            value: cell.valueText,
+                            value: cell.value,
                         })
                     }
                 })
@@ -1090,7 +1092,7 @@
     #disable_edit.edit_active {
         width: 100vw;
         height: 100vh;
-        z-index: 500;
+        z-index: 500; /* чтоб таблица была поверх этого блока */
     }
     /* таблица поверх блока отключения редактирования */
     table.edit_active {
@@ -1134,7 +1136,7 @@
         cursor: pointer;
     }
     th.fixed-column {
-        z-index: 25;
+        z-index: 25; /* поверх обычных столбцов */
     }
     th.tabl_heading {
         text-overflow: ellipsis;
@@ -1186,7 +1188,7 @@
         }
         .active_editing {
             position: sticky !important;
-            z-index: 100000;
+            z-index: 100000; /* чтобы FormControl был поверх других таблиц, когда их несколько на странице*/
         }
     }
 

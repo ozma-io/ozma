@@ -544,14 +544,14 @@
                 left: calc(100vw - 1px);
             }
             .nested-menu {
-                z-index: 0;
+                z-index: 0; /* чтобы при нажатии на "действия" в подтаблице остальные аналогичные кнопки других подтаблиц были ниже темного блока */
                 position: sticky;
             }
             .nested-menu > .actions-menu >>>  .div-with-actions{
                 position: absolute !important;
             }
             .nested-menu:hover {
-                z-index: 1200;
+                z-index: 1200; /* меню действий для подтаблиц поверх темного фона */
             }
             .form-control-panel_select, .form-control-panel_checkbox, .form-control-panel_textarea {
                 width: calc(100vw - 2px);
@@ -578,7 +578,7 @@
         left: calc(50% - 175px);
         top: calc(50% - 50px);
         position: fixed;
-        z-index: 1000;
+        z-index: 1000; /* FormControl поверх таблицы */
         background-color: var(--MenuColor);
         display: block;
         align-items: center;
