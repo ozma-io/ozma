@@ -252,7 +252,14 @@
                 const style: Record<string, any> = {}
 
                 const columnWidthAttr = Number(getColumnAttr("ColumnWidth"))
-                const columnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr
+
+                let columnWidth
+                if (!Number.isNaN(columnWidthAttr)) {
+                    columnWidth = screen.width < columnWidthAttr ? screen.width : columnWidthAttr
+                } else {
+                    columnWidth = 200
+                }
+
                 style["width"] = `${columnWidth}px`
 
                 const fixedColumnAttr = getColumnAttr("Fixed")
