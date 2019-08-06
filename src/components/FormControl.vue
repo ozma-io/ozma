@@ -529,6 +529,12 @@
     }
     @media screen and (max-aspect-ratio: 13/9) {
         @media screen and (max-device-width: 480px) {
+            .form-control-panel-hidden{
+                margin-top: 7px;
+                position: sticky;
+                left: 0;
+                width: calc(100vw - 3px);
+            }
             .select-container:after {
                 position: sticky;
                 left: calc(100vw - 1.3em - 1px);
