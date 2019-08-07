@@ -2,9 +2,13 @@
     <!-- When you change anything here, also make corresponding changes in TableRow! -->
     <tr :style="props.entry.style" class="fixed-place-tr none_selected table-tr">
         <td class="fixed-place-td table-tr_td">
-            <div class="fix">
-                <div @click="'select' in listeners && listeners.select($event)" class="fixed-column">
+            <div class="fix" :class="{ 'selected' : props.selected }">
+                <div v-if="props.entry.id !== -1" 
+                    @click="'select' in listeners && listeners.select($event)"
+                    class="fixed-column">
                     <input type="checkbox" :checked="props.selected">
+                </div>
+                <div v-else class="fixed-column">
                 </div>
                 <div v-if="props.hasRowLinks" class="fixed-column">
                     <UserViewLink v-if="props.entry.linkForRow !== null" :uv="props.entry.linkForRow">
@@ -83,7 +87,7 @@
         overflow: hidden;
     }
     .editing_style {
-        z-index: 200 !important;
+        z-index: 200 !important; /* чтобы FormControl(расположен в ячейке) отображался поверх таблицы */
         overflow: visible !important;
     }
     td >>> p, td >>> a {

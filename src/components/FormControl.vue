@@ -44,13 +44,15 @@
                          ref="control" />
         <textarea v-else-if="inputType.name === 'textarea'"
                          :style="inputType.style"
+						 @keydown.enter.prevent=""
                          :value="valueText"
-                         :class="['form-control-panel_textarea',
+                         :class="['form-control-panel_textarea', 'multilines',
                                  {'form-control-panel_textarea_error': isInvalid,
                                   'form-control-panel_textarea_req': isAwaited}]"
                          @input="updateValue($event.target.value)"
                          :disabled="isDisabled"
                          :rows="3"
+						 wrap="soft"
                          :max-rows="6"
                          :required="!isNullable"
                          ref="control" />
@@ -92,7 +94,7 @@
                 wrap="soft"
                 :value="valueText"
                 :style="inputType.style"
-                :class="['form-control-panel_textarea',
+                :class="['form-control-panel_textarea', 'singleline',
                         {'form-control-panel_textarea_error': isInvalid,
                          'form-control-panel_textarea_req': isAwaited}]"
                 @input="updateValue($event.target.value)"
@@ -216,6 +218,10 @@
                     control.focus()
                 }
             }
+        }
+
+        private beforeDestroy() {
+            this.updateValue(this.valueText.replace(/(\s+$)/, ""))
         }
 
         get isNullable() {
@@ -373,8 +379,8 @@
             if (this.valueText !== text) {
                 const entity = this.update.fieldRef.entity
 
-                if (this.inputType.name === "text") {
-                    text = text.replace(/(\r\n|\n|\r)/gm, "")
+                if (this.inputType.name === "text" || this.inputType.name === "textarea") {
+                    text = text.replace(/(\r\n|\n|\r|^\s+)/gm, "")
                 }
 
                 this.$emit("update", text)
@@ -452,6 +458,12 @@
         resize: none;
         vertical-align: top;
     }
+	.multilines {
+		overflow-y: auto !important
+	}
+	.singleline {
+		overflow-x: auto !important
+	}
     .select-container {
         display: flex;
         height: calc(2em + 6px);
@@ -516,14 +528,14 @@
                 left: calc(100vw - 1px);
             }
             .nested-menu {
-                z-index: 0;
+                z-index: 0; /* чтобы при нажатии на "действия" в подтаблице остальные аналогичные кнопки других подтаблиц были ниже темного блока */
                 position: sticky;
             }
             .nested-menu > .actions-menu >>>  .div-with-actions{
                 position: absolute !important;
             }
             .nested-menu:hover {
-                z-index: 1200;
+                z-index: 1200; /* меню действий для подтаблиц поверх темного фона */
             }
             .form-control-panel_select, .form-control-panel_checkbox, .form-control-panel_textarea {
                 width: calc(100vw - 2px);
@@ -550,7 +562,7 @@
         left: calc(50% - 175px);
         top: calc(50% - 50px);
         position: fixed;
-        z-index: 1000;
+        z-index: 1000; /* FormControl поверх таблицы */
         background-color: var(--MenuColor);
         display: block;
         align-items: center;
@@ -582,7 +594,7 @@
         height: 200px !important;
         margin-bottom: 0px;
     }
-    td > div.form-control-panel > textarea {
+    td > div.form-control-panel > textarea.singleline {
        white-space:nowrap;
     }
     *:focus {

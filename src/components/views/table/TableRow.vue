@@ -2,14 +2,14 @@
     <!-- When you change anything here, also make corresponding changes in TableFixedRow! -->
     <tr :style="props.entry.style" :class="props.selected ? 'selected table-tr' : 'none_selected table-tr'">
         <template>
-            <td v-if="props.entry.id !== -1" @click="'select' in listeners && listeners.select($event)" class="fixed-column checkbox-cells">
+            <td v-if="props.entry.id !== -1 && !props.showFixedRow" @click="'select' in listeners && listeners.select($event)" class="fixed-column checkbox-cells">
                 <input type="checkbox" :checked="props.selected">
             </td>
             <td v-else class="fixed-column checkbox-cells">
             </td>
         </template>
         <td v-if="props.hasRowLinks" class="fixed-column opemform-cells">
-            <UserViewLink v-if="props.entry.linkForRow !== null" :uv="props.entry.linkForRow">
+            <UserViewLink v-if="props.entry.linkForRow !== null && !props.showFixedRow" :uv="props.entry.linkForRow">
                 ⤢
             </UserViewLink>
         </td>
@@ -113,6 +113,7 @@
             added: { type: Boolean, default: false },
             hasRowLinks: { type: Boolean, required: true },
             selected: { type: Boolean, default: false },
+            showFixedRow: { type: Boolean, default: false },
         },
     }
 </script>
@@ -143,7 +144,7 @@
         overflow: hidden;
     }
     .editing_style {
-        z-index: 200 !important;
+        z-index: 200 !important; /* чтобы FormControl(расположен в ячейке) отображался поверх таблицы */
         overflow: visible !important;
     }
     td >>> p, td >>> a {
@@ -169,11 +170,11 @@
     td.select_fixed {
         box-shadow: inset 0 0 0 2px var(--SelectBorderColor);
         position: sticky;
-        z-index: 20;
+        z-index: 20; /* поверх обычных ячеек */
     }
     td.select {
         box-shadow: inset 0 0 0 2px var(--SelectBorderColor);
-        z-index: 15;
+        z-index: 15; /* обычные ячейки ниже фиксированных */
     }
 
     @media screen and (max-device-width: 768px), screen and (orientation: portrait) {
