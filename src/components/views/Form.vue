@@ -480,7 +480,7 @@
                                 entity: entity.name,
                                 field: info.column.mainField.name,
                                 newId: id,
-                                value: field.value,
+                                value: printValue(info.column.valueType, field.value),
                             })
                         }
                     })

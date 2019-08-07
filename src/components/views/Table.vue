@@ -1063,7 +1063,8 @@
                             entity: entity.name,
                             field: info.columnInfo.mainField.name,
                             newId: row.id,
-                            value: cell.value,
+                            // FIXME: hack to ensure rawValue has strings
+                            value: printValue(info.columnInfo.valueType, cell.value),
                         })
                     }
                 })
