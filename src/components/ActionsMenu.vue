@@ -62,7 +62,7 @@
         flex: 1;
         position: absolute;
         display: block;
-        z-index: 1200; /* меню действий для подтаблиц поверх темного фона */
+        z-index: 1200;
         background-color: var(--MenuColor);
         margin-left: -1px
     }
@@ -82,9 +82,11 @@
         border-radius: 0 !important;
     }
     .actions-menu {
-        z-index: 1000; /* шапка-меню */
+        z-index: 1000;
         background-color: var(--MenuColor);
+
     }
+
     .actions-menu_active {
         position: relative;
     }
@@ -93,7 +95,7 @@
        width: 150vw;
        height: 150vh;
        top: -50vh;
-       left: -50vw;
+       left:-50vw;
     }
     .black-block_button{
         width: 100%;
@@ -168,7 +170,7 @@
                 border: solid 1px var(--MenuColor) !important;
                 border-left: 0px !important;
                 border-top: 0px !important;
-                z-index: 1000 !important; /* кнопка выбора действий выше темного блока */
+                z-index: 1000 !important;
                 padding-left: 7px !important;
                 padding-right: 7px !important;
             }
