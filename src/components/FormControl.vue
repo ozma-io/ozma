@@ -44,7 +44,6 @@
                          ref="control" />
         <textarea v-else-if="inputType.name === 'textarea'"
                          :style="inputType.style"
-						 @keydown.enter.prevent=""
                          :value="valueText"
                          :class="['form-control-panel_textarea', 'multilines',
                                  {'form-control-panel_textarea_error': isInvalid,
@@ -106,7 +105,8 @@
         <textarea v-else
                 :value="valueText"
                 :style="inputType.style"
-                :class="['form-control-panel_textarea',
+                @keydown.enter.prevent=""
+                :class="['form-control-panel_textarea', 'singleline',
                         {'form-control-panel_textarea_error': isInvalid,
                          'form-control-panel_textarea_req': isAwaited}]"
                 @input="updateValue($event.target.value)"
@@ -221,7 +221,11 @@
         }
 
         private beforeDestroy() {
-            this.updateValue(this.valueText.replace(/(\s+$)/, ""))
+            if (this.inputType.name === "textarea") { 
+                this.updateValue(this.valueText.replace(/(\n+)|(\r+)|((\r\n)+)/gm, '\n').replace(/(\s+$)|(^\s+)/gm, ""))
+            } else if (this.inputType.name === "text") {
+                 this.updateValue(this.valueText.replace(/(\s+$)|(^\s+)/gm, ""))
+            }
         }
 
         get isNullable() {
@@ -378,10 +382,6 @@
 
             if (this.valueText !== text) {
                 const entity = this.update.fieldRef.entity
-
-                if (this.inputType.name === "text" || this.inputType.name === "textarea") {
-                    text = text.replace(/(\r\n|\n|\r|^\s+)/gm, "")
-                }
 
                 this.$emit("update", text)
 
