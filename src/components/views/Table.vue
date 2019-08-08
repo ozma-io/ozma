@@ -35,7 +35,7 @@
                 <colgroup>
                     <col :class="['checkbox-col', {'checkbox-cells': showFixedRow}]"> <!-- Checkbox column -->
                     <col v-if="hasRowLinks" :class="['open-form-col', {'openform-cells': showFixedRow}]"> <!-- Row link column -->
-                    <col v-for="i in columnIndexes" :key="i" :style="columns[i].style">
+                    <col v-for="i in columnIndexes" :key="i" class="data-col" :style="columns[i].style">
                 </colgroup>
                 <thead class="table-head">
                     <tr>
@@ -252,13 +252,7 @@
                 const style: Record<string, any> = {}
 
                 const columnWidthAttr = Number(getColumnAttr("ColumnWidth"))
-
-                let columnWidth
-                if (!Number.isNaN(columnWidthAttr)) {
-                    columnWidth = screen.width < columnWidthAttr ? screen.width : columnWidthAttr
-                } else {
-                    columnWidth = 200
-                }
+                const columnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr
 
                 style["width"] = `${columnWidth}px`
 
@@ -1091,6 +1085,9 @@
     .checkbox-col, .open-form-col{
         width: 20px;
     }
+    .data-col {
+        max-width: 100vw !important;
+    }
     /* блок для отключения редактирования в таблице */
     #disable_edit {
         position: fixed;
@@ -1117,7 +1114,7 @@
     }
     .custom-table {
         table-layout: fixed;
-        width: 0px;
+        width: max-content;
         border: 0;
         background-color: var(--TableBackColor);
         margin-bottom: 0px !important;
