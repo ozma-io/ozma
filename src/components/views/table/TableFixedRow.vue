@@ -143,6 +143,7 @@
             border-left: solid 1px var(--NavigationBackColor);
             padding-left: 3px;
             padding-right: 3px;
+            max-width: 100vw !important;
         }
     }
 </style>
