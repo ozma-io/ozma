@@ -1114,7 +1114,7 @@
     }
     .custom-table {
         table-layout: fixed;
-        width: max-content;
+        width: 0px;
         border: 0;
         background-color: var(--TableBackColor);
         margin-bottom: 0px !important;
