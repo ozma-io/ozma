@@ -195,7 +195,7 @@
     }
     
     @media screen and (max-device-width: 813px), screen and (orientation: portrait) {
-        .hide_content > a,input {
+        .hide_content > a, .hide_content > input {
             display: none;
         }
     }
