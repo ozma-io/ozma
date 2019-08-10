@@ -2,10 +2,9 @@ import { Module } from "vuex"
 import { RawLocation, Route } from "vue-router"
 
 import { IUserViewRef, SchemaName } from "@/api"
-import { convertString, deepUpdateObject } from "@/utils"
-import seq from "@/sequences"
+import { convertString, deepUpdateObject, mapMaybe } from "@/utils"
 import { routerQueryValue, router } from "@/modules"
-import { IUserViewArguments, IUpdatableField, userViewHash } from "@/state/user_view"
+import { IUserViewArguments, IUpdatableField } from "@/state/user_view"
 
 export class CurrentQuery {
     search: Record<string, string> = {}
@@ -35,9 +34,9 @@ export const queryLocation = (query: IQuery): RawLocation => {
         throw new Error("Unnamed user views aren't supported now")
     }
 
-    const searchArgs = seq(query.search).map<[string, string]>(([name, value]) => [`__${name}`, value])
-    const uvArgs = query.rootViewArgs.args === null ? [] : seq(query.rootViewArgs.args).map<[string, string]>(([name, value]) => [name, JSON.stringify(value)])
-    const args = searchArgs.append(uvArgs).toObject()
+    const searchArgs = Object.entries(query.search).map<[string, string]>(([name, value]) => [`__${name}`, value])
+    const uvArgs = query.rootViewArgs.args === null ? [] : Object.entries(query.rootViewArgs.args).map<[string, string]>(([name, value]) => [name, JSON.stringify(value)])
+    const args = Object.fromEntries(searchArgs.concat(uvArgs))
     return {
         name: query.rootViewArgs.args !== null ? "view" : "view_create",
         params: query.rootViewArgs.source.ref as any,
@@ -188,7 +187,7 @@ const queryModule: Module<IQueryState, {}> = {
 
             // Gracefully update so that we don't reload without need.
             const searchPrefix = "__"
-            const search = seq(route.query).mapMaybe<[string, string]>(([name, value]) => {
+            const search = Object.fromEntries(mapMaybe(([name, value]) => {
                 const strName = String(name)
                 const strValue = routerQueryValue(value)
                 if (strName.startsWith(searchPrefix) && strValue !== null) {
@@ -197,12 +196,12 @@ const queryModule: Module<IQueryState, {}> = {
                 } else {
                     return undefined
                 }
-            }).toObject()
+            }, Object.entries(route.query)))
             deepUpdateObject(state.current.search, search)
 
             let reqArgs: Record<string, any> | null
             if (route.name === "view") {
-                reqArgs = seq(route.query).mapMaybe<[string, string]>(([name, value]) => {
+                reqArgs = Object.fromEntries(mapMaybe(([name, value]) => {
                     const strName = String(name)
                     const strValue = routerQueryValue(value)
                     if (!strName.startsWith("__") && strValue !== null) {
@@ -210,7 +209,7 @@ const queryModule: Module<IQueryState, {}> = {
                     } else {
                         return undefined
                     }
-                }).toObject()
+                }, Object.entries(route.query)))
             } else if (route.name === "view_create") {
                 reqArgs = null
             } else {

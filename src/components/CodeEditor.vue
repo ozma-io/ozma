@@ -3,7 +3,10 @@
 </template>
 
 <script lang="ts">
-    import * as Ace from "ace-builds"
+    // Breaks often with new TypeScript versions
+    // import * as Ace from "ace-builds"
+    // @ts-ignore
+    import * as Ace from "ace-builds/src-noconflict/ace.js"
     import { Component, Prop, Vue, Watch } from "vue-property-decorator"
     // outputs a lot of crap into /dist
     // import "ace-builds/webpack-resolver"

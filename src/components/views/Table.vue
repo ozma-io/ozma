@@ -24,91 +24,102 @@
     <div fluid
          :class="['table-block',
                   {'nested-table-block': !isRoot,
-                  'active_editing': isActiveEdit}]">
+                  'active_editing': editingValue !== null}]">
         <div id="disable_edit"
-             :class="{'edit_active': isActiveEdit}"
-             @click="closeFormControl()">
+             :class="{'edit_active': editingValue !== null}"
+             @click="removeCellEditing()">
         </div>
+
+        <FormControl v-if="editingValue !== null"
+                :value="editingValue.value"
+                :attributes="editingValue.attributes"
+                :type="editingValue.valueType"
+                :locked="editingLocked"
+                :uv="uv"
+                autofocus
+                @update="updateCurrentValue" />
+
         <div ref="tableContainer" class="tabl" @scroll="updateShowLength()" @resize="updateShowLength()">
             <table :class="['custom-table', 'table', 'b-table',
-                            {'edit_active': isActiveEdit}]">
+                            {'edit_active': editingValue !== null}]">
                 <colgroup>
                     <col :class="['checkbox-col', {'checkbox-cells': showFixedRow}]"> <!-- Checkbox column -->
-                    <col v-if="hasRowLinks" :class="['open-form-col', {'openform-cells': showFixedRow}]"> <!-- Row link column -->
-                    <col v-for="i in columnIndexes" :key="i" class="data-col" :style="columns[i].style">
+                    <col v-if="local.extra.hasRowLinks" :class="['open-form-col', {'openform-cells': showFixedRow}]"> <!-- Row link column -->
+                    <col v-for="i in columnIndexes" :key="i" class="data-col" :style="local.extra.columns[i].style">
                 </colgroup>
                 <thead class="table-head">
                     <tr>
                         <th class="fixed-column checkbox-cells table-th" @click="selectAllRows">
-                            <input type="checkbox" :checked="selectedAll">
+                            <input type="checkbox" :checked="local.extra.selectedAll">
                         </th>
-                        <th v-if="hasRowLinks" class="fixed-column openform-cells links-style table-th">
-                            <span class="table-th_span" @click="changeShowEmptyRow()" :title="this.$tc('show_new_row')">
+                        <th v-if="local.extra.hasRowLinks" class="fixed-column openform-cells links-style table-th">
+                            <span class="table-th_span" @click="setShowEmptyRow(!showEmptyRow)" :title="this.$tc('show_new_row')">
                                 {{ showEmptyRow ? "-" : "+" }}
                             </span>
                         </th>
                         <th v-for="i in columnIndexes"
-                            :class="['sorting', 'table-th', { 'fixed-column' : columns[i].fixed }]"
-                            :style="columns[i].style"
-                            :key="i"
-                            :title="columns[i].caption"
-                            @click="updateSort(i)">
-                                {{ columns[i].caption }}
-                                <template v-if="sortColumn === i">
-                                    <span v-if="sortAsc">▲</span>
-                                    <span v-else>▼</span>
-                                </template>
+                                :key="i"
+                                :class="['sorting', 'table-th', { 'fixed-column' : local.extra.columns[i].fixed }]"
+                                :style="local.extra.columns[i].style"
+                                :title="local.extra.columns[i].caption"
+                                @click="updateSort(i)">
+                            {{ local.extra.columns[i].caption }}
+                            <span v-if="sortColumn === i">{{ sortAsc ? "▲" : "▼" }}</span>
                         </th>
                     </tr>
                 </thead>
                 <tbody class="table-body">
-                    <template v-for="(entry, entryI) in newEntries">
+                    <template v-if="showEmptyRow">
                         <TableFixedRow v-if="showFixedRow"
-                                :key="`fixed-new-${entryI}`"
-                                :entry="entry"
+                                :row="local.emptyRow.row"
+                                :localRow="local.emptyRow.local"
                                 :columnIndexes="fixedRowColumnIndexes"
-                                :columns="columns"
-                                :uv="uv"
-                                added
-                                :hasRowLinks="hasRowLinks"
-                                :selected="entry.id !== -1 ? rowIsSelected(-1 - entry.id) : false"
-                                @select="entry.id !== -1 ? selectRow(-1 - entry.id, $event) : () => {}"
-                                @cellClick="cellClick"
-                                @update="beforeAddEntry(entry)" />
-                        <TableRow :key="`new-${entryI}`"
-                                :entry="entry"
+                                :localUv="local.extra"
+                                from="new"
+                                @cellClick="clickCell({ type: 'new', column: arguments[0] }, arguments[1])" />
+                        <TableRow
+                                :row="local.emptyRow.row"
+                                :localRow="local.emptyRow.local"
                                 :columnIndexes="columnIndexes"
-                                :columns="columns"
-                                :uv="uv"
-                                added
-                                :showFixedRow="showFixedRow"
-                                :hasRowLinks="hasRowLinks"
-                                :selected="entry.id !== -1 ? rowIsSelected(-1 - entry.id) : false"
-                                @select="entry.id !== -1 ? selectRow(-1 - entry.id, $event) : () => {}"
-                                @cellClick="cellClick"
-                                @update="beforeAddEntry(entry)" />
+                                :localUv="local.extra"
+                                from="new"
+                                @cellClick="clickCell({ type: 'new', column: arguments[0] }, arguments[1])" />                        
                     </template>
-                    <template v-for="(entryI, rowI) in shownRows">
+                    <template v-for="(rowId, rowIndex) in uv.newRowsPositions">
                         <TableFixedRow v-if="showFixedRow"
-                                :key="`fixed-${entryI}`"
-                                :entry="entries[entryI]"
+                                :key="`fixed-new-${rowId}`"
+                                :row="uv.newRows[rowId]"
+                                :localRow="local.newRows[rowId]"
                                 :columnIndexes="fixedRowColumnIndexes"
-                                :columns="columns"
-                                :uv="uv"
-                                :hasRowLinks="hasRowLinks"
-                                :selected="rowIsSelected(entryI)"
-                                @select="selectRow(rowI, $event)"
-                                @cellClick="cellClick" />
-                        <TableRow :key="entryI"
-                                :entry="entries[entryI]"
+                                :localUv="local.extra"
+                                from="added"
+                                @select="selectRow({ added: true, position: rowIndex }, $event)"
+                                @cellClick="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])" />
+                        <TableRow :key="`new-${rowId}`"
+                                :row="uv.newRows[rowId]"
+                                :localRow="local.newRows[rowId]"
                                 :columnIndexes="columnIndexes"
-                                :columns="columns"
-                                :uv="uv"
-                                :selected="rowIsSelected(entryI)"
-                                :showFixedRow="showFixedRow"
-                                :hasRowLinks="hasRowLinks"
-                                @select="selectRow(rowI, $event)"
-                                @cellClick="cellClick" />
+                                :localUv="local.extra"
+                                from="added"
+                                @select="selectRow({ added: true, position: rowIndex }, $event)"
+                                @cellClick="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])" />
+                    </template>
+                    <template v-for="(rowI, rowIndex) in shownRowPositions">
+                        <TableFixedRow v-if="showFixedRow"
+                                :key="`fixed-${rowI}`"
+                                :row="uv.rows[rowI]"
+                                :localRow="local.rows[rowI]"
+                                :columnIndexes="fixedRowColumnIndexes"
+                                :localUv="local.extra"
+                                @select="selectRow({ added: false, position: rowIndex }, $event)"
+                                @cellClick="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])" />
+                        <TableRow :key="rowI"
+                                :row="uv.rows[rowI]"
+                                :localRow="local.rows[rowI]"
+                                :columnIndexes="columnIndexes"
+                                :localUv="local.extra"
+                                @select="selectRow({ added: false, position: rowIndex }, $event)"
+                                @cellClick="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])" />
                     </template>
                 </tbody>
             </table>
@@ -118,45 +129,427 @@
 
 <script lang="ts">
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
+    import { mixins } from "vue-class-component"
     import { Location } from "vue-router"
     import { namespace } from "vuex-class"
-    import { tryDicts } from "@/utils"
-    import seq from "@/sequences"
-    import { IUpdatableField, IProcessedValue, UserViewResult, EntriesMap, printValue, homeSchema } from "@/state/user_view"
-    import { CurrentChanges, IEntityChanges, IUpdatedCell, convertValue, AutoSaveLock } from "@/state/staging_changes"
-    import { IExecutedRow, IExecutedValue, ValueType, IResultColumnInfo, SchemaName, EntityName, FieldName, IEntityRef, IColumnField } from "@/api"
+    import { Store } from "vuex"
+
+    import { RecordSet, tryDicts, mapMaybe } from "@/utils"
+    import { IResultColumnInfo } from "@/api"
+    import {
+        ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, CombinedUserView, homeSchema, valueToText,
+    } from "@/state/user_view"
+    import { AutoSaveLock, AddedRowId } from "@/state/staging_changes"
     import { IQuery, attrToQuerySelf, attrToQueryRef } from "@/state/query"
-    import TableRow, { IRow, ICell, IColumn } from "@/components/views/table/TableRow.vue"
+    import { LocalUserView, ILocalRowInfo, ILocalRow, ValueRef } from "@/local_user_view"
+    import { UserView } from "@/components"
+    import BaseUserView from "@/components/BaseUserView"
+    import TableRow from "@/components/views/table/TableRow.vue"
     import TableFixedRow from "@/components/views/table/TableFixedRow.vue"
+
+    interface ITableEditing {
+        lock: AutoSaveLock
+        ref: ValueRef
+    }
+
+    interface IColumn {
+        caption: string
+        style: Record<string, any>
+        visible: boolean
+        fixed: boolean
+        mobileFixed: boolean
+        columnInfo: IResultColumnInfo
+        width: number // in px
+    }
+
+    interface IRowPositionRef {
+        added: boolean
+        position: number
+    }
+
+    interface ITableValueExtra {
+        valueText: string
+        link?: IQuery
+        style?: Record<string, any>
+        selected: boolean
+    }
+
+    interface ITableRowExtra {
+        searchText: string
+        selected: boolean
+        style?: Record<string, any>
+        height?: number
+        link?: IQuery
+    }
+
+    interface ITableUserViewExtra {
+        hasRowLinks: boolean
+        rowCount: number
+        selectedCount: number
+        selectedRows: RecordSet<number>
+        selectedAddedRows: RecordSet<AddedRowId>
+        columns: IColumn[]
+        fixedColumnPositions: Record<number, string>
+        homeSchema: string | null
+    }
+
+    type ITableLocalRowInfo = ILocalRowInfo<ITableRowExtra>
+    type ITableLocalRow = ILocalRow<ITableValueExtra, ITableRowExtra>
 
     const showStep = 20
     const doubleClickTime = 700
     // FIXME: Use CSS variables to avoid this constant
     const technicalFieldsWidth = 20 // checkbox's and openform's td width
 
-    const rowContains = (row: IRow, searchWords: string[]) => {
+    const createColumns = (uv: CombinedUserView): IColumn[] => {
+        const viewAttrs = uv.attributes
+
+        return uv.info.columns.map((columnInfo, i) => {
+            const columnAttrs = uv.columnAttributes[i]
+            const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs)
+
+            const captionAttr = getColumnAttr("Caption")
+            const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name
+
+            const style: Record<string, any> = {}
+
+            const columnWidthAttr = Number(getColumnAttr("ColumnWidth"))
+            const columnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr
+            style["width"] = `${columnWidth}px`
+
+            const fixedColumnAttr = getColumnAttr("Fixed")
+            const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr)
+
+            const fixedFieldAttr = getColumnAttr("MobileFixed")
+            const fixedField = fixedFieldAttr === undefined ? false : Boolean(fixedFieldAttr)
+
+            const visibleColumnAttr = getColumnAttr("Visible")
+            const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr)
+
+            return {
+                caption, style,
+                visible: visibleColumn,
+                fixed: fixedColumn,
+                mobileFixed: fixedField,
+                columnInfo,
+                attrs: columnAttrs,
+                width: columnWidth,
+            }
+        })
+    }
+
+    export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRowExtra, ITableUserViewExtra> {
+        constructor(store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>) {
+            super(store, uv, defaultRawValues)
+        }
+
+        createCommonLocalValue(row: IRowCommon, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue): ITableValueExtra {
+            const columnInfo = this.uv.info.columns[columnIndex]
+            const columnAttrs = this.uv.columnAttributes[columnIndex]
+            const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, this.uv.attributes)
+
+            const valueText = valueToText(columnInfo.valueType, value)
+
+            let link: IQuery | null = null
+            if (value.info !== undefined) {
+                link = attrToQueryRef(value.info, value, this.extra.homeSchema, getCellAttr("LinkedView"))
+                const currLinkForRow = attrToQuerySelf(value.info, this.extra.homeSchema, getCellAttr("RowLinkedView"))
+                if (currLinkForRow !== null) {
+                    localRow.extra.link = currLinkForRow
+                    this.extra.hasRowLinks = true
+                }
+            }
+
+            const style: Record<string, any> = {}
+            let touchedStyle = false
+
+            const cellColor = getCellAttr("CellColor")
+            if (cellColor !== undefined) {
+                style["background-color"] = String(cellColor)
+                touchedStyle = true
+            }
+
+            if (localRow.extra.height !== undefined) {
+                style["height"] = `${localRow.extra.height}px`
+                touchedStyle = true
+            }
+
+            const fixedPosition = this.extra.fixedColumnPositions[columnIndex]
+            if (fixedPosition !== undefined) {
+                style["left"] = fixedPosition
+                touchedStyle = true
+            }
+
+            const extra: ITableValueExtra = {
+                selected: false,
+                valueText,
+            }
+            if (link !== null) {
+                extra.link = link
+            }
+            if (touchedStyle) {
+                extra.style = style
+            }
+            return extra
+        }
+
+        createLocalValue(row: ICombinedRow, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue) {
+            return this.createCommonLocalValue(row, localRow, columnIndex, value)
+        }
+
+        createAddedLocalValue(row: IAddedRow, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue) {
+            return this.createCommonLocalValue(row, localRow, columnIndex, value)
+        }
+
+        createEmptyLocalValue(row: IRowCommon, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue) {
+            return this.createCommonLocalValue(row, localRow, columnIndex, value)
+        }
+
+        updateCommonValue(row: IRowCommon, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, extra: ITableValueExtra) {
+            const columnInfo = this.uv.info.columns[columnIndex]
+
+            extra.valueText = valueToText(columnInfo.valueType, value)
+        }
+
+        updateValue(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, localValue: ITableValueExtra) {
+            this.updateCommonValue(row, localRow, columnIndex, value, localValue)
+        }
+
+        updateAddedValue(rowId: number, row: IAddedRow, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, localValue: ITableValueExtra) {
+            this.updateCommonValue(row, localRow, columnIndex, value, localValue)
+        }
+
+        createCommonLocalRow(row: IRowCommon): ITableRowExtra {
+            const getRowAttr = (name: string) => tryDicts(name, row.attributes, this.uv.attributes)
+
+            const extra: ITableRowExtra = {
+                selected: false,
+                searchText: "",
+            }
+
+            const style: Record<string, any> = {}
+            let touchedStyle = false
+
+            const height = Number(getRowAttr("RowHeight"))
+            if (!Number.isNaN(height)) {
+                style["white-space"] = "nowrap"
+                extra.height = height
+                touchedStyle = true
+            }
+
+            if (touchedStyle) {
+                extra.style = style
+            }
+
+            this.extra.rowCount++
+
+            return extra
+        }
+
+        createLocalRow(row: ICombinedRow) {
+            return this.createCommonLocalRow(row)
+        }
+
+        createAddedLocalRow(row: IAddedRow) {
+            return this.createCommonLocalRow(row)
+        }
+
+        createEmptyLocalRow(row: IRowCommon) {
+            return this.createCommonLocalRow(row)
+        }
+
+        postInitCommonRow(row: IRowCommon, localRow: ITableLocalRow) {
+            const searchStrings = localRow.values.map(extra => {
+                return extra.valueText.toLocaleLowerCase()
+            })
+            localRow.extra.searchText = "\0".concat(...searchStrings)
+        }
+
+        postInitRow(row: ICombinedRow, localRow: ITableLocalRow) {
+            this.postInitCommonRow(row, localRow)
+            if (row.deleted) {
+                this.extra.rowCount--
+            }
+        }
+
+        postInitAddedRow(row: IAddedRow, localRow: ITableLocalRow) {
+            this.postInitCommonRow(row, localRow)
+        }
+
+        deleteCommonRow(row: ICombinedRow, localRow: ITableLocalRowInfo) {
+            this.extra.rowCount--
+            if (localRow.extra.selected) {
+                this.extra.selectedCount--
+            }
+        }
+
+        deleteRow(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRowInfo) {
+            this.deleteCommonRow(row, localRow)
+            if (localRow.extra.selected) {
+                localRow.extra.selected = false
+                Vue.delete(this.extra.selectedRows, rowIndex)
+            }
+        }
+
+        deleteAddedRow(rowId: AddedRowId, row: ICombinedRow, localRow: ITableLocalRowInfo) {
+            this.deleteCommonRow(row, localRow)
+            if (localRow.extra.selected) {
+                Vue.delete(this.extra.selectedAddedRows, rowId)
+            }
+        }
+
+        undeleteRow(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRowInfo) {
+            this.extra.rowCount++
+        }
+
+        createLocalUserView(): ITableUserViewExtra {
+            const columns = createColumns(this.uv)
+            const extra = {
+                hasRowLinks: false,
+                selectedCount: 0,
+                rowCount: 0,
+                selectedRows: {},
+                selectedAddedRows: {},
+                columns,
+                fixedColumnPositions: {},
+                homeSchema: homeSchema(this.uv.args),
+            }
+            return extra
+        }
+
+        postInitUserView() {
+            this.extra.fixedColumnPositions = this.fixedColumnPositions(this.extra.columns)
+            Object.entries(this.extra.fixedColumnPositions).forEach(([colIRaw, position]) => {
+                const colI = Number(colIRaw)
+                this.extra.columns[colI].style["left"] = position
+
+                const applyPosition = (row: ITableLocalRow) => {
+                    const value = row.values[colI]
+                    let style = value.style
+                    if (style === undefined) {
+                        style = {}
+                        value.style = style
+                    }
+                    style["left"] = position
+                }
+                this.rows.forEach(applyPosition)
+                Object.values(this.newRows).forEach(applyPosition)
+            })
+        }
+
+        selectRow(ref: IRowPositionRef, selectedStatus: boolean) {
+            let row: ITableLocalRow
+            let set: RecordSet<number>
+            let setId: number
+            if (ref.added) {
+                set = this.extra.selectedAddedRows
+                setId = this.uv.newRowsPositions[ref.position]
+                row = this.newRows[setId]
+            } else {
+                set = this.extra.selectedRows
+                setId = ref.position
+                row = this.rows[setId]
+            }
+            const extra = row.extra
+            if (extra.selected !== selectedStatus) {
+                extra.selected = selectedStatus
+                if (selectedStatus) {
+                    this.extra.selectedCount++
+                    Vue.set(set, setId, null)
+                } else {
+                    this.extra.selectedCount--
+                    Vue.delete(set, setId)
+                }
+            }
+        }
+
+        selectAll(selectedStatus: boolean) {
+            Object.entries(this.newRows).forEach(([rowIdRaw, row]) => {
+                const rowId = Number(rowIdRaw)
+                row.extra.selected = selectedStatus
+                if (selectedStatus) {
+                    Vue.set(this.extra.selectedAddedRows, rowId, null)
+                }
+            })
+            if (this.uv.rows !== null) {
+                this.rows.forEach((localRow, rowI) => {
+                    const row = (this.uv.rows as ICombinedRow[])[rowI]
+                    if (!row.deleted) {
+                        localRow.extra.selected = selectedStatus
+                        if (selectedStatus) {
+                            Vue.set(this.extra.selectedRows, rowI, null)
+                        }
+                    }
+                })
+            }
+
+            if (selectedStatus) {
+                this.extra.selectedCount = this.extra.rowCount
+            } else {
+                this.extra.selectedCount = 0
+                this.extra.selectedRows = {}
+                this.extra.selectedAddedRows = {}
+            }
+        }
+
+        get selectedAll() {
+            return this.extra.selectedCount === this.extra.rowCount
+        }
+
+        get technicalWidth() {
+            let left = technicalFieldsWidth
+            if (this.extra.hasRowLinks) {
+                left += technicalFieldsWidth
+            }
+            return left
+        }
+
+        private fixedColumnPositions(columns: IColumn[]): Record<number, string> {
+            let left = this.technicalWidth
+            const fixedColumnIndexes = mapMaybe((col, colI) => col.fixed ? colI : undefined, columns)
+            const positions: Record<number, string> = {}
+            for (const fixedColumnIndex of fixedColumnIndexes) {
+                positions[fixedColumnIndex] = `${left}px`
+                left += columns[fixedColumnIndex].width
+            }
+            return positions
+        }
+    }
+
+    const equalColumnValueRef = (a: ValueRef, b: ValueRef) => {
+        return (a.type === "added" && a.type === b.type && a.id === b.id) ||
+               (a.type === "existing" && a.type === b.type && a.position === b.position) ||
+               (a.type === "new" && a.type === b.type)
+    }
+
+    const equalValueRef = (a: ValueRef, b: ValueRef) => {
+        return equalColumnValueRef(a, b) && a.column === b.column
+    }
+
+    const ordRowPositionRef = (a: IRowPositionRef, b: IRowPositionRef) => {
+        if (a.added && !b.added) {
+            return -1
+        } else if (!a.added && b.added) {
+            return 1
+        } else {
+            return Math.sign(b.position - a.position)
+        }
+    }
+
+    const rowContains = (row: ITableLocalRow, searchWords: string[]) => {
         for (const word of searchWords) {
-            if (!row.cells.some(cell => cell.valueLowerText.includes(word))) {
+            if (!row.extra.searchText.includes(word)) {
                 return false
             }
         }
         return true
     }
 
-    const changeRowId = (row: IRow, newId: number) => {
-        row.id = newId
-        row.cells.forEach(item => {
-            if (item.update !== null) {
-                item.update.id = newId
-            }
-        })
-    }
-
-    const rowIndicesCompare = (aIndex: number, bIndex: number, entries: IRow[], sortColumn: number, collator: Intl.Collator) => {
+    const rowIndicesCompare = (aIndex: number, bIndex: number, entries: IRowCommon[], sortColumn: number, collator: Intl.Collator) => {
         const a = entries[aIndex]
         const b = entries[bIndex]
-        return collator.compare(a.cells[sortColumn].value,
-                                b.cells[sortColumn].value)
+        return collator.compare(a.values[sortColumn].value,
+                                b.values[sortColumn].value)
     }
 
     const getCsvString = (str: string): string => {
@@ -168,136 +561,90 @@
         return csvstr
     }
 
-    const getValueText = (valType: ValueType, val: IExecutedValue) => {
-        if (val.value === null) {
-            return ""
-        } else {
-            return val.pun === undefined ? printValue(valType, val.value) : printValue(valType, val.pun)
-        }
+    const isEmptyRow = (row: IRowCommon) => {
+        return row.values.every(cell => cell.value === null || cell.value === undefined || cell.info === null)
     }
 
     const staging = namespace("staging")
     const userView = namespace("userView")
 
+    @UserView({
+        localConstructor: LocalTableUserView,
+    })
     @Component({
         components: {
             TableRow, TableFixedRow,
         },
     })
-    export default class UserViewTable extends Vue {
-        @staging.State("current") changes!: CurrentChanges
-        @staging.Action("deleteEntry") deleteEntry!: (args: { schema: SchemaName, entity: EntityName, id: number }) => Promise<void>
+    export default class UserViewTable extends mixins<BaseUserView<LocalTableUserView, ITableValueExtra, ITableRowExtra, ITableUserViewExtra>>(BaseUserView) {
         @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>
-        @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { schema: string, entity: string, newId: number }) => Promise<void>
         @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>
-        @staging.Action("addEntry") addEntry!: (args: { schema: SchemaName, entity: EntityName, position?: number }) => Promise<void>
-        @staging.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => Promise<void>
-        @userView.Action("getEntries") getEntries!: (_: { schemaName: SchemaName, entityName: EntityName }) => Promise<void>
-        @userView.State("entries") entriesMap!: EntriesMap
-
-        @Prop({ type: UserViewResult }) uv!: UserViewResult
-        @Prop({ type: Boolean, default: false }) isRoot!: boolean
-        @Prop({ type: Array, default: () => [] }) filter!: string[]
-        @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, any>
+        @staging.State("currentSubmit") currentSubmit!: Promise<void> | null
 
         private currentFilter: string[] = []
         private sortColumn: number | null = null
         private sortAsc: boolean = true
         private sortOptions: Intl.CollatorOptions = {}
-        private entries: IRow[] = []
-        private rows: number[] = []
+        private rowPositions: number[] = []
         private showLength: number = 0
-        private selectedRows: number[] = []
-        private selectedAll: boolean = false
-        private lastSelected: number | null = null
+        private lastSelectedRow: IRowPositionRef | null = null
+        private lastSelectedValue: ValueRef | null = null
+        private editing: ITableEditing | null = null
         private printListener: { query: MediaQueryList, queryCallback: (mql: MediaQueryListEvent) => void, printCallback: () => void } | null = null
-        private oldCell: ICell | null = null
-        private oldRow: IRow | null = null
         private clickTimeoutId: NodeJS.Timeout | null = null
-        private newEntries: IRow[] = []
         private showEmptyRow: boolean = false
-
-        private changeShowEmptyRow(on?: boolean) {
-            if (on !== undefined) {
-                if (this.showEmptyRow === on) {
-                    return
-                } else {
-                    this.showEmptyRow = on
-                }
-            } else {
-                this.showEmptyRow = !this.showEmptyRow
-            }
-
-            if (this.showEmptyRow) {
-                this.newEmptyRow(-1, 0)
-            } else {
-                this.newEntries.shift()
-            }
-        }
-
-        get hasRowLinks() {
-            return this.entries.some(e => e.linkForRow !== null)
-        }
-
-        get columns(): IColumn[] {
-            const viewAttrs = this.uv.attributes
-
-            return this.uv.info.columns.map((columnInfo, i) => {
-                const columnAttrs = this.uv.columnAttributes[i]
-                const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs)
-
-                const captionAttr = getColumnAttr("Caption")
-                const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name
-
-                const style: Record<string, any> = {}
-
-                const columnWidthAttr = Number(getColumnAttr("ColumnWidth"))
-                const columnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr
-
-                style["width"] = `${columnWidth}px`
-
-                const fixedColumnAttr = getColumnAttr("Fixed")
-                const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr)
-
-                const fixedFieldAttr = getColumnAttr("MobileFixed")
-                const fixedField = fixedFieldAttr === undefined ? false : Boolean(fixedFieldAttr)
-
-                const visibleColumnAttr = getColumnAttr("Visible")
-                const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr)
-
-                return {
-                    caption, style,
-                    visible: visibleColumn,
-                    fixed: fixedColumn,
-                    mobileFixed: fixedField,
-                    columnInfo,
-                    attrs: columnAttrs,
-                    width: columnWidth,
-                }
-            })
-        }
-
-        private rowIsSelected(id: number) {
-            return this.selectedRows.indexOf(id) !== -1
-        }
+        private emptyLocalRow: ITableLocalRow | null = null
 
         get columnIndexes() {
-            const columns = this.columns.map((column, index) => ({ index, fixed: column.fixed, visible: column.visible })).filter(c => c.visible)
+            const columns = this.local.extra.columns.map((column, index) => ({ index, fixed: column.fixed, visible: column.visible })).filter(c => c.visible)
             const fixed = columns.filter(c => c.fixed)
             const nonFixed = columns.filter(c => !c.fixed)
             return fixed.concat(nonFixed).map(c => c.index)
         }
 
         get fixedColumnIndexes() {
-            return seq(this.columns).map((c, index) => ({ index, fixed: c.fixed })).filter(c => c.fixed).map(c => c.index).toArray()
+            return mapMaybe((col, colI) => col.fixed ? colI : undefined, this.local.extra.columns)
         }
 
         get fixedRowColumnIndexes() {
-            return seq(this.columns).map((c, index) => ({ index, fixed: c.mobileFixed })).filter(c => c.fixed).map(c => c.index).toArray()
+            return mapMaybe((col, colI) => col.mobileFixed ? colI : undefined, this.local.extra.columns)
+        }
+
+        get editingLocked() {
+            if (this.editing === null) {
+                return false
+            } else {
+                return this.editing.ref.type !== "existing" && this.currentSubmit !== null
+            }
+        }
+
+        get editingValue() {
+            if (this.editing === null) {
+                return null
+            } else {
+                const value = this.getValueByRef(this.editing.ref)
+                if (value === null) {
+                    return null
+                } else {
+                    const columnInfo = this.uv.info.columns[this.editing.ref.column]
+                    const columnAttrs = this.uv.columnAttributes[this.editing.ref.column]
+                    const type = columnInfo.valueType
+                    const attributes = Object.assign({}, this.uv.attributes, columnAttrs, value.row.row.attributes, value.value.attributes)
+                    return {
+                        value: value.value,
+                        attributes,
+                        type,
+                    }
+                }
+            }
         }
 
         @Watch("filter")
         private updateFilter() {
+            if (this.uv.rows === null) {
+                throw Error("Impossible")
+            }
+
             const oldFilter = this.currentFilter
             const currentFilter = this.filter
             this.currentFilter = currentFilter
@@ -325,25 +672,62 @@
             }
 
             if (!contained) {
-                this.buildRows()
+                this.buildRowPositions()
             } else {
                 // Filter existing rows when we filter a subset of already filtered ones.
                 const newFilterWords = Array.from(new Set(newWords))
-                this.rows = this.rows.filter(rowI => rowContains(this.entries[rowI], newFilterWords))
+                this.rowPositions = this.rowPositions.filter(rowI => rowContains((this.local as LocalTableUserView).rows[rowI], newFilterWords))
             }
 
-            this.lastSelected = null
+            this.lastSelectedRow = null
+        }
+
+        private setShowEmptyRow(newValue: boolean) {
+            const emptyRow = this.local.emptyRow
+            if (emptyRow !== null) {
+                this.showEmptyRow = newValue
+                if (!newValue) {
+                    emptyRow.local.extra.selected = false
+                    emptyRow.local.values.forEach(value => {
+                        value.selected = false
+                    })
+                }
+            }
+        }
+
+        // Update this.rows from this.entries
+        private buildRowPositions() {
+            const rows = this.uv.rows
+
+            if (rows === null) {
+                this.rowPositions = []
+            } else {
+                this.rowPositions = rows.map((row, rowI) => rowI)
+                if (this.filter.length !== 0) {
+                    this.rowPositions = this.rowPositions.filter(rowI => rowContains((this.local as LocalTableUserView).rows[rowI], this.filter))
+                }
+
+                this.sortRows()
+                this.updateShowLength()
+            }
         }
 
         private export2csv() {
             let data: string = ""
-            for (const col of this.columns) {
+            for (const col of this.local.extra.columns) {
                 data += getCsvString(col.caption)
             }
             data += "\n"
-            for (const row of this.entries) {
-                for (const cell of row.cells) {
-                    data += getCsvString(cell.valueText)
+            for (const rowId of this.uv.newRowsPositions) {
+                const row = this.local.newRows[rowId]
+                for (const extra of row.values) {
+                    data += getCsvString(extra.valueText)
+                }
+                data += "\n"
+            }
+            for (const row of this.local.rows) {
+                for (const extra of row.values) {
+                    data += getCsvString(extra.valueText)
                 }
                 data += "\n"
             }
@@ -358,47 +742,51 @@
             document.body.removeChild(element)
         }
 
-        private closeFormControl() {
-            if (this.oldCell !== null) {
-                this.oldCell.isEditing = null
-                this.oldCell.selected = false
+        private removeCellEditing() {
+            if (this.editing === null) {
+                return
+            }
+
+            this.removeAutoSaveLock(this.editing.lock)
+            this.editing = null
+        }
+
+        @Watch("editingValue")
+        private removeEditingIfInvalid() {
+            if (this.editingValue === null) {
+                this.removeCellEditing()
             }
         }
 
-        get isActiveEdit() {
-            return this.oldCell !== null && this.oldCell.isEditing !== null
-        }
+        private setCellEditing(ref: ValueRef) {
+            this.removeCellEditing()
 
-        private setCellEditing(cell: ICell, isEditing: boolean) {
-            if ((cell.isEditing !== null) !== isEditing) {
-                if (cell.isEditing !== null) {
-                    this.removeAutoSaveLock(cell.isEditing)
-                    cell.isEditing = null
+            this.addAutoSaveLock().then(lock => {
+                if (this.editing !== null) {
+                    // Lock already taken (somehow)
+                    this.removeAutoSaveLock(lock)
                 } else {
-                    this.addAutoSaveLock().then(id => {
-                        if (cell.isEditing !== null) {
-                            // The lock is already taken; release this one
-                            this.removeAutoSaveLock(id)
-                        } else {
-                            cell.isEditing = id
-                        }
-                    })
+                    const value = this.getValueByRef(ref)
+                    if (value !== null && value.value.info !== undefined) {
+                        this.editing = { ref, lock }
+                    }
                 }
-            }
+            })
         }
 
-        private cellClick(cell: ICell, row: IRow) {
-            if (this.oldRow !== null && row !== this.oldRow && this.oldRow.added && this.isEmptyRow(this.oldRow)) {
-                if (this.uv.info.mainEntity === null) {
+        private clickCell(ref: ValueRef, event: MouseEvent) {
+            if (this.lastSelectedValue !== null &&
+                    !equalColumnValueRef(this.lastSelectedValue, ref) &&
+                    this.lastSelectedValue.type === "added" && isEmptyRow(this.uv.newRows[this.lastSelectedValue.id])) {
+                const entity = this.uv.info.mainEntity
+                if (entity === null) {
                     throw new Error("View doesn't have a main entity")
                 }
-
-                const entity = this.uv.info.mainEntity
 
                 this.resetAddedEntry({
                     schema: entity.schema,
                     entity: entity.name,
-                    newId: this.oldRow.id,
+                    id: this.lastSelectedValue.id,
                 })
             }
 
@@ -407,192 +795,85 @@
                     this.clickTimeoutId = null
                 }, doubleClickTime)
 
-                if (this.oldCell !== null && this.oldCell !== cell) {
-                    this.oldCell.selected = false
-                    this.setCellEditing(this.oldCell, false)
+                if (this.lastSelectedValue !== null && !equalValueRef(this.lastSelectedValue, ref)) {
+                    this.removeCellEditing()
                 }
-                this.oldCell = cell
-                this.oldRow = row
-                cell.selected = true
             } else {
                 clearTimeout(this.clickTimeoutId)
                 this.clickTimeoutId = null
 
-                if (cell === this.oldCell) {
-                    if (cell.update !== null && cell.update.field !== null) {
-                        this.setCellEditing(cell, cell.isEditing === null)
-                    }
-                } else {
-                    if (this.oldCell !== null) {
-                        this.oldCell.selected = false
-                        this.setCellEditing(this.oldCell, false)
-                    }
-                    this.oldCell = cell
-                    this.oldRow = row
-                    cell.selected = true
+                if (this.lastSelectedValue !== null && equalValueRef(this.lastSelectedValue, ref)) {
+                    this.setCellEditing(ref)
                 }
+            }
+
+            this.selectCell(ref)
+        }
+
+        private selectCell(ref: ValueRef) {
+            if (this.lastSelectedValue !== null) {
+                const lastValue = this.getValueByRef(this.lastSelectedValue)
+                if (lastValue !== null) {
+                    lastValue.local.selected = false
+                }
+            }
+            const value = this.getValueByRef(ref)
+            if (value === null) {
+                throw Error("Impossible")
+            }
+            value.local.selected = true
+            this.lastSelectedValue = ref
+        }
+
+        private getRowPosition(rowRef: IRowPositionRef): ITableRowExtra | null {
+            const row = rowRef.added ? this.local.newRows[this.uv.newRowsPositions[rowRef.position]] : this.local.rows[rowRef.position]
+            if (row === undefined) {
+                return null
+            } else {
+                return row.extra
             }
         }
 
-        private isEmptyRow(row: IRow) {
-            return row.cells.every(cell => cell.value === undefined || cell.valueText === "" || cell.update === null || cell.update.field === null)
-        }
-
-        /*
-        Negative ids for added
-        Positive ids for entries
-
-        selectedRows has keep a value of (-1 - newRow.id)
-        When we delete new records, we use -1 - the value of selectedRows
-
-        This makes it easy to store all entries in the selectedRows and use shift key
-        */
-
-        private selectRow(rowI: number, event: MouseEvent) {
-            const setsSelected = new Set(this.selectedRows)
-
-            if (this.lastSelected !== null && this.lastSelected !== rowI && event.shiftKey) {
-                // Select all rows between current one and the previous selected one.
-                const lastEl = this.lastSelected < 0 ? this.lastSelected : this.shownRows[this.lastSelected]
-                const func = setsSelected.has(lastEl) ? setsSelected.add.bind(setsSelected) : setsSelected.delete.bind(setsSelected)
-
-                if (this.lastSelected < rowI) {
-                    for (let i = this.lastSelected; i <= rowI; i++) {
-                        i < 0 ? func(i) : func(this.shownRows[i])
-                    }
-                } else if (this.lastSelected > rowI) {
-                    for (let i = rowI; i <= this.lastSelected; i++) {
-                        i < 0 ? func(i) : func(this.shownRows[i])
-                    }
+        private nextRowPosition(rowRef: IRowPositionRef): IRowPositionRef | null {
+            let newPosition: number
+            if (rowRef.added) {
+                if (rowRef.position + 1 < this.uv.newRowsPositions.length) {
+                    return { added: true, position: rowRef.position + 1 }
+                } else {
+                    newPosition = 0
                 }
             } else {
-                const el = rowI < 0 ? rowI : this.shownRows[rowI]
-
-                if (!setsSelected.has(el)) {
-                    setsSelected.add(el)
-                } else {
-                    setsSelected.delete(el)
-                }
-                this.lastSelected = rowI
+                newPosition = rowRef.position + 1
             }
-            this.selectedRows = Array.from(setsSelected)
 
-            const offset = (this.newEntries[0] !== undefined && this.newEntries[0].id === -1) ? 1 : 0
-            this.selectedAll = this.selectedRows.length === (this.entries.length + this.newEntries.length - offset) ? true : false
-            this.updateStatusLine()
+            if (this.uv.rows !== null && newPosition < this.uv.rows.length) {
+                return { added: false, position: newPosition }
+            } else {
+                return null
+            }
+        }
+
+        private selectRow(rowRef: IRowPositionRef, event: MouseEvent) {
+            const row = this.getRowPosition(rowRef)
+            if (row === null) {
+                throw Error("Impossible")
+            }
+            if (this.lastSelectedRow !== null && event.shiftKey) {
+                // Select all rows between current one and the previous selected one.
+                const [from, to] = ordRowPositionRef(this.lastSelectedRow, rowRef) <= 0 ? [this.lastSelectedRow, rowRef] : [rowRef, this.lastSelectedRow]
+                let i = this.getRowPosition(from) !== null ? from : this.nextRowPosition(from)
+                while (i !== null) {
+                    this.local.selectRow(i, row.selected)
+                    i = this.nextRowPosition(i)
+                }
+            } else {
+                this.local.selectRow(rowRef, !row.selected)
+            }
             return false
         }
 
         private selectAllRows() {
-            if (!this.selectedAll) {
-                const tmpSelected = new Set(this.entries.map((row, rowI) => rowI).concat(this.newEntries.map(row => -1 - row.id)))
-                this.selectedRows = Array.from(tmpSelected)
-            } else {
-                this.selectedRows = []
-            }
-            this.selectedAll = !this.selectedAll
-            this.updateStatusLine()
-        }
-
-        /* To optimize performance when staging entries change, we first pre-build entries and then update them selectively watching staging entries.
-           This is to avoid rebuilding complete rows array each time user changes a field.
-        */
-        @Watch("uv", { deep: true })
-        private updateEntries() {
-            this.buildEntries()
-        }
-
-        @Watch("entriesMap", { deep: true })
-        private setSummaries() {
-            this.applyChanges()
-            if (this.showEmptyRow) {
-                // Update summary for an empty row
-                this.uv.info.columns.map((info, colI) => {
-                    if (info.mainField !== null) {
-                        const cell = this.newEntries[0].cells[colI]
-                        const text = this.getSummaryValueText(info.mainField.field, cell.value)
-                        cell.valueText = text === null ? printValue(info.valueType, cell.value) : text
-                        cell.valueLowerText = cell.valueText.toLowerCase()
-                    }
-                })
-            }
-        }
-
-        @Watch("changes", { deep: true })
-        private updateChanges() {
-            if (this.changes.isEmpty) {
-                // Changes got reset -- rebuild entries.
-                // This could be done more efficiently but it would require tracking of what fields were changed.
-                this.buildEntries()
-            } else {
-                this.applyChanges()
-            }
-        }
-
-        private newEmptyRow(rowId: number, position?: number): IRow {
-            if (this.uv.info.mainEntity === null) {
-                throw new Error("Main entity cannot be null")
-            }
-            const entity = this.uv.info.mainEntity
-            const newCells = this.uv.info.columns.map((info, colI) => {
-                const columnAttrs = this.uv.columnAttributes[colI]
-                const viewAttrs = this.uv.attributes
-                const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs)
-                let value: any
-                let valueText: string
-                let valueLowerText: string
-                const style: Record<string, any> = {}
-                if (info.mainField !== null) {
-                    let rawValue: any
-                    if (info.mainField.name in this.defaultValues) {
-                        rawValue = this.defaultValues[info.mainField.name]
-                    } else {
-                        rawValue = getColumnAttr("DefaultValue")
-                    }
-                    const defaultValue = convertValue(info.mainField.field, rawValue)
-                    value = defaultValue !== undefined ? defaultValue : info.mainField.field.defaultValue
-                    const text = this.getSummaryValueText(info.mainField.field, value)
-                    valueText = text === null ? printValue(info.valueType, value) : text
-                    valueLowerText = valueText.toLowerCase()
-                } else {
-                    value = undefined
-                    valueText = ""
-                    valueLowerText = ""
-                }
-                return {
-                    value, valueText, valueLowerText,
-                    link: null,
-                    style,
-                    update: info.mainField === null ? null : {
-                        field: info.mainField.field,
-                        fieldRef: {
-                            entity,
-                            name: info.mainField.name,
-                        },
-                        id: rowId,
-                    },
-                    attrs: {},
-                    isEditing: null,
-                    selected: false,
-                    isInvalid: false,
-                    isAwaited: info.mainField !== null && !info.mainField.field.isNullable && value === undefined,
-                }
-            })
-            const row = {
-                cells: newCells,
-                id: rowId,
-                deleted: false,
-                style: {},
-                linkForRow: null,
-                attrs: {},
-                added: true,
-            }
-            if (position === undefined) {
-                this.newEntries.push(row)
-            } else {
-                this.newEntries.splice(position, 0, row)
-            }
-            return row
+            this.local.selectAll(!this.local.selectedAll)
         }
 
         private removeSelectedRows() {
@@ -601,172 +882,32 @@
                 throw new Error("View doesn't have a main entity")
             }
 
-            for (const rowI of this.selectedRows) {
-                if (rowI < 0) {
-                    this.resetAddedEntry({
-                        schema: entity.schema,
-                        entity: entity.name,
-                        newId: -1 - rowI,
-                    })
-                } else {
-                    const row = this.uv.rows[rowI]
-                    if (row.entityIds === undefined) {
-                        throw new Error("View doesn't have a main entity")
-                    }
-                    this.deleteEntry({
-                        schema: entity.schema,
-                        entity: entity.name,
-                        // Guaranteed to exist if mainEntity exists
-                        id: row.mainId as number,
-                    })
+            Object.keys(this.local.extra.selectedRows).forEach(rowIRaw => {
+                const rowI = Number(rowIRaw)
+                const row = (this.uv.rows as ICombinedRow[])[rowI]
+                if (row.entityIds === undefined) {
+                    throw new Error("View doesn't have a main entity")
                 }
-            }
-        }
-
-        private getSummaryValueText(field: IColumnField | null, value: any) {
-            if (field !== null && value !== undefined && value !== null && field.fieldType.type === "reference") {
-                const ref = field.fieldType.entity
-                const schemaMap = this.entriesMap[ref.schema]
-                if (schemaMap !== undefined) {
-                    const refEntries = schemaMap[ref.name]
-                    if (refEntries !== undefined && !(refEntries instanceof Promise)) {
-                        return refEntries[value]
-                    }
-                }
-            }
-            return null
-        }
-
-        private getUpdatedValueText(field: IColumnField | null, updValue: IUpdatedCell) {
-            const text = this.getSummaryValueText(field, updValue.value)
-            if (text === null) {
-                return (updValue.rawValue === undefined) ? "" : String(updValue.rawValue)
-            } else {
-                return text
-            }
-        }
-
-        // Apply changes on top of built entries.
-        // TODO: make this even more granular, ideally: dynamically bind a watcher to every changed and added entry.
-        private applyChanges() {
-            if (this.uv.info.mainEntity !== null) {
-                const entity = this.uv.info.mainEntity
-                const changedRows = this.changes.changesForEntity(entity.schema, entity.name)
-                const offset = this.showEmptyRow ? 1 : 0
-
-                changedRows.added.forEach((newRow, newRowI) => {
-                    let newItem = this.newEntries[newRowI + offset]
-                    let row: IRow
-
-                    while (newItem !== undefined) {
-                        if (newItem.id === null) {
-                            throw Error("impossible")
-                        } else if (newItem.id > newRow.id) {
-                            this.newEntries.splice(newRowI + offset, 1)
-                            newItem = this.newEntries[newRowI + offset]
-                        } else {
-                            break
-                        }
-                    }
-
-                    if (newItem === undefined) {
-                        row = this.newEmptyRow(newRow.id)
-                    } else if (newItem.id < newRow.id) {
-                        row = this.newEmptyRow(newRow.id, newRowI + offset)
-                    } else if (newItem.id === newRow.id) {
-                        row = newItem
-                    } else {
-                        this.newEntries.splice(newRowI + offset, 1)
-                        return
-                    }
-
-                    this.uv.info.columns.forEach((info, colI) => {
-                        if (info.mainField !== null) {
-                            const cell = row.cells[colI]
-                            const value = newRow.cells[info.mainField.name]
-                            if (value === undefined) {
-                                cell.value = undefined
-                                cell.valueText = ""
-                                cell.valueLowerText = ""
-                            } else {
-                                cell.value = value.value
-                                cell.valueText = this.getUpdatedValueText(info.mainField.field, value)
-                                cell.valueLowerText = cell.valueText.toLowerCase()
-                                cell.isInvalid = value.erroredOnce
-                                cell.isAwaited = !info.mainField.field.isNullable && cell.value === undefined
-                            }
-                        }
-                    })
+                this.deleteEntry({
+                    schema: entity.schema,
+                    entity: entity.name,
+                    // Guaranteed to exist if mainEntity exists
+                    id: row.mainId as number,
                 })
-                this.newEntries.splice(offset + changedRows.added.length) // remove other elements
-            }
+            })
 
-            if (this.uv.rows !== null) {
-                const rows = this.uv.rows
+            Object.keys(this.local.extra.selectedAddedRows).forEach(rowIdRaw => {
+                const rowId = Number(rowIdRaw)
 
-                Object.entries(this.changes.changes).forEach(([schemaName, entityChanges]) => {
-                    Object.entries(entityChanges).forEach(([entityName, changedFields]) => {
-                        const mapping = this.uv.mappingForEntity(schemaName, entityName)
-                        if (mapping === null) {
-                            return
-                        }
-
-                        Object.entries(changedFields.deleted).forEach(([rowId, deleted]) => {
-                            const rowIs = mapping.idsToRows[rowId]
-                            if (rowIs === undefined) {
-                                return
-                            }
-                            rowIs.forEach(rowI => {
-                                const entry = this.entries[rowI]
-                                entry.deleted = deleted
-                            })
-                        })
-
-                        Object.entries(changedFields.updated).forEach(([rowId, fields]) => {
-                            const rowIs = mapping.idsToRows[rowId]
-                            if (rowIs === undefined) {
-                                return
-                            }
-                            rowIs.forEach(rowI => {
-                                const entry = this.entries[rowI]
-                                const row = rows[rowI]
-                                Object.entries(fields).forEach(([fieldName, updValue]) => {
-                                    const colIs = mapping.fieldsToColumns[fieldName]
-                                    if (colIs === undefined) {
-                                        return
-                                    }
-                                    colIs.forEach(colI => {
-                                        const cell = entry.cells[colI]
-                                        const value = row.values[colI]
-                                        const getCellAttr = (name: string) => tryDicts(name, cell.attrs, entry.attrs, this.uv.columnAttributes[colI], this.uv.attributes)
-
-                                        if (updValue === null) {
-                                            const columnInfo = this.uv.info.columns[colI]
-                                            // Restore old values
-                                            cell.value = value.value
-                                            cell.valueText = printValue(columnInfo.valueType, value)
-                                            cell.valueLowerText = cell.valueText.toLowerCase()
-                                            cell.isInvalid = false
-                                            cell.link = attrToQueryRef(cell.update, cell.value, this.homeSchema, getCellAttr("LinkedView"))
-                                        } else {
-                                            cell.value = updValue.value
-                                            const field = (updValue.value !== undefined && value.update !== undefined) ? value.update.field : null
-                                            cell.valueText = this.getUpdatedValueText(field, updValue)
-                                            cell.valueLowerText = cell.valueText.toLowerCase()
-                                            cell.isInvalid = updValue.erroredOnce
-                                            cell.link = attrToQueryRef(cell.update, cell.value, this.homeSchema, getCellAttr("LinkedView"))
-                                        }
-                                    })
-                                })
-                            })
-                        })
-                    })
+                this.resetAddedEntry({
+                    schema: entity.schema,
+                    entity: entity.name,
+                    id: rowId,
                 })
-            }
-            this.selectedRows = []
+            })
         }
 
-        private created() {
+        private init() {
             if (this.isRoot) {
                 this.$emit("update:bodyStyle", `
                     @media print {
@@ -775,29 +916,47 @@
                         }
                     }
                 `)
+            }
 
+            const actions = [
+                { name: this.$tc("export_to_csv"), callback: () => this.export2csv() },
+            ]
+            if (this.uv.info.mainEntity !== null) {
+                actions.push(
+                    { name: this.$tc("remove_selected_rows"), callback: () => this.removeSelectedRows() },
+                    { name: this.$tc("show_new_row"), callback: () => this.setShowEmptyRow(true) },
+                )
+            }
+
+            this.$emit("update:actions", actions)
+            this.$emit("update:enableFilter", this.uv.rows !== null)
+
+            this.buildRowPositions()
+        }
+
+        private created() {
+            this.init()
+
+            if (this.isRoot) {
                 const queryCallback = (mql: MediaQueryListEvent) => {
                     if (mql.matches) {
-                        this.showLength = this.rows.length
+                        this.showLength = (this.local as LocalTableUserView).rows.length
                     }
                 }
                 const query = window.matchMedia("print")
                 query.addListener(queryCallback)
                 const printCallback = () => {
-                    this.showLength = this.rows.length
+                    this.showLength = (this.local as LocalTableUserView).rows.length
                 }
                 window.addEventListener("beforeprint", printCallback)
                 this.printListener = { query, queryCallback, printCallback }
             }
+        }
 
-            this.$emit("update:actions", [
-                { name: this.$tc("export_to_csv"), callback: () => this.export2csv() },
-                { name: this.$tc("remove_selected_rows"), callback: () => this.removeSelectedRows() },
-                { name: this.$tc("show_new_row"), callback: () => this.changeShowEmptyRow() },
-            ])
-            this.$emit("update:enableFilter", true)
-
-            this.buildEntries()
+        @Watch("uv")
+        private uvChanged() {
+            this.init()
+            this.updateShowLength()
         }
 
         private mounted() {
@@ -814,20 +973,20 @@
             }
         }
 
-    /*
-        first sort
-        bool:   descending
-        number: descending
-        string: ascending
-    */
+        /*
+            first sort
+            bool:   descending
+            number: descending
+            string: ascending
+        */
         private updateSort(sortColumn: number) {
             if (this.sortColumn !== sortColumn) {
-                const type = this.columns[sortColumn].columnInfo.valueType.type
+                const type = this.local.extra.columns[sortColumn].columnInfo.valueType.type
                 this.sortColumn = sortColumn
 
                 switch (type) {
                     case "int":
-                        this.sortOptions = {numeric: true}
+                        this.sortOptions = { numeric: true }
                         this.sortAsc = false
                         break
                     case "bool":
@@ -836,7 +995,7 @@
                         break
                     case "string":
                         this.sortAsc = true
-                        this.sortOptions = {sensitivity: "accent"}
+                        this.sortOptions = { sensitivity: "accent" }
                         break
                     default:
                         this.sortAsc = true
@@ -847,128 +1006,24 @@
             }
 
             this.sortRows(this.sortOptions)
-            this.lastSelected = null
+            this.lastSelectedRow = null
         }
 
         private sortRows(options?: Intl.CollatorOptions) {
+            if (this.uv.rows === null) {
+                throw Error("Impossible")
+            }
+            const rows = this.uv.rows
+
             if (this.sortColumn !== null) {
                 const sortColumn = this.sortColumn
-                const entries = this.entries
                 const collator = new Intl.Collator(["en", "ru"], options)
                 const sortFunction: (a: number, b: number) => number =
                     this.sortAsc ?
-                        (a, b) => rowIndicesCompare(a, b, entries, sortColumn, collator) :
-                        (a, b) => rowIndicesCompare(b, a, entries, sortColumn, collator)
-                this.rows.sort(sortFunction)
+                        (a, b) => rowIndicesCompare(a, b, rows, sortColumn, collator) :
+                        (a, b) => rowIndicesCompare(b, a, rows, sortColumn, collator)
+                this.rowPositions.sort(sortFunction)
             }
-        }
-
-        // Update this.rows from this.entries
-        private buildRows() {
-            this.rows = Array.from({ length: this.entries.length }, (v, i) => i)
-            if (this.filter.length !== 0) {
-                this.rows = this.rows.filter(rowI => rowContains(this.entries[rowI], this.filter))
-            }
-
-            this.sortRows()
-            this.updateShowLength()
-        }
-
-        // Update this.entries
-        private buildEntries() {
-            // .rows === null means that we are in "create new" mode -- there are no selected existing values.
-            this.newEntries = []
-            if (this.showEmptyRow) {
-                this.newEmptyRow(-1, 0)
-            }
-            if (this.uv.rows === null) {
-                this.entries = []
-            } else {
-                const viewAttrs = this.uv.attributes
-
-                this.entries = this.uv.rows.map((row, rowI) => {
-                    const rowAttrs = row.attributes === undefined ? {} : row.attributes
-                    const getRowAttr = (name: string) => tryDicts(name, rowAttrs, viewAttrs)
-
-                    let linkForRow: IQuery | null = null
-
-                    const rowStyle: Record<string, any> = {}
-                    const rowHeight = Number(getRowAttr("RowHeight"))
-                    if (!Number.isNaN(rowHeight)) {
-                        rowStyle["white-space"] = "nowrap"
-                    }
-
-                    const cells = row.values.map((cellValue, colI): ICell => {
-                        const columnInfo = this.uv.info.columns[colI]
-                        const columnAttrs = this.uv.columnAttributes[colI]
-                        const cellAttrs = cellValue.attributes === undefined ? {} : cellValue.attributes
-
-                        const getCellAttr = (name: string) => tryDicts(name, cellAttrs, rowAttrs, columnAttrs, viewAttrs)
-
-                        const value = cellValue.value
-                        const valueText = getValueText(columnInfo.valueType, cellValue)
-
-                        const link = attrToQueryRef(cellValue.update, value, this.homeSchema, getCellAttr("LinkedView"))
-                        // Row links use current cell id by default, hence Self instead of Ref.
-                        const currLinkForRow = attrToQuerySelf(cellValue.update, this.homeSchema, getCellAttr("RowLinkedView"))
-                        if (currLinkForRow !== null) {
-                            linkForRow = currLinkForRow
-                        }
-
-                        const style: Record<string, any> = {}
-
-                        const cellColor = getCellAttr("CellColor")
-                        if (cellColor !== undefined) {
-                            style["background-color"] = String(cellColor)
-                        }
-                        if (!Number.isNaN(rowHeight)) {
-                            style["height"] = `${rowHeight}px`
-                        }
-
-                        return {
-                            value, valueText, link, style,
-                            valueLowerText: valueText.toLowerCase(),
-                            isEditing: null,
-                            attrs: cellAttrs,
-                            update: cellValue.update === undefined ? null : cellValue.update,
-                            selected: false,
-                            isInvalid: false,
-                            isAwaited: false,
-                        }
-                    })
-
-                    return {
-                        id: rowI,
-                        cells,
-                        deleted: false,
-                        style: rowStyle,
-                        linkForRow,
-                        attrs: rowAttrs,
-                        added: false,
-                    }
-                })
-            }
-
-            if (this.entries.length === 0) {
-                this.changeShowEmptyRow(true)
-            }
-
-            this.requestSummaries()
-            this.buildRows()
-            this.applyChanges()
-            this.fixColumns()
-        }
-
-        private requestSummaries() {
-            Object.entries(this.uv.info.domains).forEach(([name, domain]) => Object.entries(domain).forEach(([field, info]) => {
-                if (info.field !== null && info.field.fieldType.type === "reference") {
-                    const ref = info.field.fieldType.entity
-                    this.getEntries({
-                        schemaName: ref.schema,
-                        entityName: ref.name,
-                    })
-                }
-            }))
         }
 
         private updateShowLength() {
@@ -979,97 +1034,62 @@
             }
             // + 1 is needed because of rare cases like that:
             // top 974.4000244140625, client height 690, scroll height 1665
-            if (tableContainer.scrollTop + tableContainer.clientHeight + 1 >= tableContainer.scrollHeight && this.showLength < this.rows.length) {
-                this.showLength = Math.min(this.showLength + showStep, this.rows.length)
+            if (tableContainer.scrollTop + tableContainer.clientHeight + 1 >= tableContainer.scrollHeight && this.showLength < this.rowPositions.length) {
+                this.showLength = Math.min(this.showLength + showStep, this.local.rows.length)
                 Vue.nextTick(() => this.updateShowLength())
             }
         }
 
-        get filteredRows() {
-            return this.rows.filter(rowI => !this.entries[rowI].deleted)
+        get nonDeletedRowPositions() {
+            const rows = this.uv.rows
+            if (rows === null) {
+                return []
+            } else {
+                return this.rowPositions.filter(rowI => !rows[rowI].deleted)
+            }
         }
 
-        @Watch("filteredRows")
+        get statusLine() {
+            const selected = (this.local.extra.selectedCount > 0) ? `${this.local.extra.selectedCount}/` : ""
+            return `${selected}${this.nonDeletedRowPositions.length}`
+        }
+
+        @Watch("statusLine")
         private updateStatusLine() {
-            const selected = (this.selectedRows.length > 0) ? `${this.selectedRows.length}/` : ""
-            const line = `${selected}${this.filteredRows.length}`
-            this.$emit("update:statusLine", line)
+            this.$emit("update:statusLine", this.statusLine)
         }
 
-        get shownRows() {
-            return this.filteredRows.slice(0, this.showLength)
+        get shownRowPositions() {
+            return this.nonDeletedRowPositions.slice(0, this.showLength)
         }
 
         get technicalWidth() {
             let left = technicalFieldsWidth
-            if (this.hasRowLinks) {
+            if (this.local.extra.hasRowLinks) {
                 left += technicalFieldsWidth
             }
             return left
         }
 
-        private fixColumns() {
-            let left = this.technicalWidth
-            for (const fixedColumnIndex of this.fixedColumnIndexes) {
-                const leftStr = `${left}px`
-                this.columns[fixedColumnIndex].style["left"] = leftStr
-                for (const row of this.newEntries) {
-                    row.cells[fixedColumnIndex].style["left"] = leftStr
-                }
-                for (const row of this.entries) {
-                    row.cells[fixedColumnIndex].style["left"] = leftStr
-                }
-                left += this.columns[fixedColumnIndex].width
-            }
-        }
-
         get showFixedRow() {
             let tableWidth = this.technicalWidth
-            for (const column of this.columns) {
+            for (const column of this.local.extra.columns) {
                 tableWidth += column.width
             }
             return tableWidth > screen.width && this.fixedRowColumnIndexes.length > 0
         }
 
-        get homeSchema() {
-            return homeSchema(this.uv.args)
-        }
+        private async updateCurrentValue(rawValue: any) {
+            if (this.editing === null) {
+                throw Error("Impossible")
+            }
 
-        get currentIdAdded() {
-            const entity = this.uv.info.mainEntity as IEntityRef
-            const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
-            return changedFields.idAdded
-        }
-
-        private beforeAddEntry(row: IRow) {
-            // Check if an entry is already added; if it isn't, create it with our default values.
-            const entity = this.uv.info.mainEntity as IEntityRef
-            const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
-
-            if (row.id === -1) {
-                this.addEntry({ schema: entity.schema, entity: entity.name, position: 0 }) // add new entry
-                changeRowId(row, this.currentIdAdded) // change old id to current addedId
-                row.cells.forEach((cell, i) => {
-                    const info = this.columns[i]
-                    if (info.columnInfo.mainField !== null && cell.value !== undefined) {
-                        this.setAddedField({
-                            schema: entity.schema,
-                            entity: entity.name,
-                            field: info.columnInfo.mainField.name,
-                            newId: row.id,
-                            // FIXME: hack to ensure rawValue has strings
-                            value: printValue(info.columnInfo.valueType, cell.value),
-                        })
-                    }
-                })
-                this.newEmptyRow(-1, 0)
-            } else {
-                if (process.env["NODE_ENV"] !== "production") {
-                    const hasId = changedFields.added.some(item => item !== null && item.id === row.id)
-                    if (!hasId) {
-                        throw Error("impossible")
-                    }
-                }
+            const ref = this.editing.ref
+            await this.updateValue(ref, rawValue)
+            if (ref.type === "new") {
+                const newRef: ValueRef = { type: "added", id: this.uv.newRowsPositions[0], column: ref.column }
+                this.editing.ref = newRef
+                this.selectCell(newRef)
             }
         }
     }
@@ -1078,6 +1098,7 @@
 <style scoped>
 /* Current Z layout:
 
+* Form control          (2000)
 * Disable-edit block    (500) 
 * Table head            (20)
 * FixedColumn           (25)
@@ -1232,7 +1253,6 @@
         }
     }
 
-
     @media print {
         .tabl {
             height: 100%;
@@ -1263,5 +1283,46 @@
         td >>> a {
             text-decoration: none !important;
         }
+    }
+
+    /* FormControl */
+    div.form-control-panel {
+        left: calc(50% - 175px);
+        top: calc(50% - 50px);
+        position: fixed;
+        z-index: 2000; /* FormControl поверх таблицы */
+        background-color: var(--MenuColor);
+        display: block;
+        align-items: center;
+        padding: 20px;
+    }
+    @media screen and (max-device-width: 480px){
+        div.form-control-panel {
+            left: 2px;
+            width: calc(100% - 4px);
+        }
+        div.form-control-panel > div.select-container {
+            width: calc(100vw - 44px) !important;
+            /*padding 20px and left 2px*/
+        }
+
+        div.form-control-panel > div.select-container > select.form-control-panel_select {
+            width: 100%;
+        }
+        div.form-control-panel > div.select-container:after {
+            position: relative;
+            left: 0px;
+        }
+    }
+    div.form-control-panel > div.select-container {
+        width: 300px
+    }
+    div.form-control-panel > pre {
+        min-width: 600px;
+        height: 200px !important;
+        margin-bottom: 0px;
+    }
+    div.form-control-panel > textarea.singleline {
+       white-space:nowrap;
     }
 </style>
