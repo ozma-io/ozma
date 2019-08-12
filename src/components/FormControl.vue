@@ -235,7 +235,9 @@
 
         private beforeDestroy() {
             if (this.inputType.name === "textarea") {
-                this.updateValue(this.valueText.replace(/(\n+)|(\r+)|((\r\n)+)/gm, "\n").replace(/(\s+$)|(^\s+)/gm, ""))
+                this.updateValue(this.valueText.replace(/^ +| +$/gm, "")
+                                               .replace(/(^\n+)|(\n+$)/g, "")
+                                               .replace(/\n+|\r+|(\r\n)+/gm, "\n"))
             } else if (this.inputType.name === "text") {
                 this.updateValue(this.valueText.replace(/(\s+$)|(^\s+)/gm, ""))
             }
