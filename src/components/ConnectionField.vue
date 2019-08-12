@@ -21,7 +21,9 @@
         <input v-if="showedField && (meny ||(!meny && !selectedEntrys.length))" type="button" class="button_leave"  @click="unShowFieldToAdd()"/>
         <div v-if="!selectedEntrys.length && !showedField" class="empty-block">{{$t('empty')}}</div>
         <div :class="['entrys-block',{'entrys-meny-block':(meny && selectedEntrys.length > 1)||showedField}]">
-            <div v-for="entry in selectedEntrys" :class="['entry-block',{'entry-meny-block':meny && selectedEntrys.length > 1}]">{{entry.text}}
+            <div v-for="entry in selectedEntrys" :class="['entry-block',{'entry-meny-block':meny && selectedEntrys.length > 1}]"> 
+                <UserViewLink v-if="entry.link !== null" :uv="entry.link">{{entry.text}}</UserViewLink>
+                <span v-else>{{entry.text}}</span>
                 <div class="buttoncolor-block clear-block"><input type="button" class="material-icons button_clear" value="clear" @click="deletion(entry.text)"/></div>
             </div>
         </div>
@@ -29,15 +31,18 @@
 </template>
 <script lang="ts">
     import { Component, Prop, Vue, Watch } from "vue-property-decorator"
+    import { IQuery } from "@/state/query"
 
     export interface ISelectOption {
         text: string
         value: string
+        link: IQuery | null
     }
 
     interface ISelectedEntry {
         text: string
         value: string
+        link: IQuery | null
     }
 
     @Component
@@ -45,6 +50,7 @@
         @Prop({ type: Array }) options!: ISelectOption[]
         @Prop() value!: any
         @Prop({ type: Boolean }) menyFields!: boolean
+        @Prop() link!: IQuery | null
 
         private search: string = ""
         private showedField: boolean = false
@@ -54,7 +60,7 @@
         private mounted() {
             for (const i of this.options) {
                 if (i.value === this.value.toString()) {
-                    this.selectedEntrys.push({ text: i.text, value: i.value })
+                    this.selectedEntrys.push({ text: i.text, value: i.value, link: i.link })
                 }
             }
         }
@@ -103,7 +109,8 @@
             }
             const entrytext: string = newentry.value
             const entryvalue: string = this.options[indexarray(this.options, entrytext)].value
-            const elemoftext: ISelectedEntry = { text: entrytext, value: entryvalue }
+            const entrylink: IQuery | null = this.options[indexarray(this.options, entrytext)].link
+            const elemoftext: ISelectedEntry = { text: entrytext, value: entryvalue, link: entrylink }
 
             if (!inarray(this.selectedEntrys, entrytext) && inarray(this.options, entrytext)) {
                 this.selectedEntrys.push(elemoftext)

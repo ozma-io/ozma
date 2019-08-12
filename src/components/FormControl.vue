@@ -133,8 +133,7 @@
     import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef } from "@/api"
     import { IAction } from "@/components/ActionsMenu.vue"
     import { IUpdatableField, IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, printValue, homeSchema } from "@/state/user_view"
-    import { attrToQueryRef, queryLocation } from "@/state/query"
-
+    import { IQuery, attrToQuerySelf, attrToQueryRef, queryLocation } from "@/state/query"
     interface ITextType {
         name: "text"
         type: "text" | "number"
@@ -159,6 +158,7 @@
     interface ISelectOption {
         text: string
         value: string
+        link: IQuery | null
     }
 
     interface ISelectType {
@@ -345,16 +345,16 @@
                         if (entries === undefined || entries instanceof Promise) {
                             return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
                         } else {
-                            const select = Object.entries(entries).map(([id, name]) => ({ text: name, value: String(id) }))
+                            const select = Object.entries(entries).map(([id, name]) => ({ text: name, value: String(id), link: null}))
                             return {
                                 name: "select",
-                                options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), ...select],
+                                options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: null }] : []), ...select],
                             }
                         }
                     case "enum":
                         return {
                             name: "connectionfield",
-                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), ...fieldType.values.map(x => ({ text: x, value: x }))],
+                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: attrToQueryRef(this.update, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]) }] : []), ...fieldType.values.map(x => ({ text: x, value: x, link: attrToQueryRef(this.update, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]) }))],
                         }
                     // case "enum":
                         // return {
@@ -364,7 +364,7 @@
                     case "bool":
                         return {
                             name: "select",
-                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
+                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: null }] : []), { text: this.$tc("yes"), value: "true", link: null }, { text: this.$tc("no"), value: "false", link: null }],
                         }
                     case "int":
                         return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
@@ -374,7 +374,7 @@
                     case "bool":
                         return {
                             name: "select",
-                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
+                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" , link: null}] : []), { text: this.$tc("yes"), value: "true", link: null }, { text: this.$tc("no"), value: "false", link: null }],
                         }
                     case "int":
                         return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
