@@ -29,7 +29,7 @@
         <div v-else class="submain-menu-block">
             <div class="row subsubmain-menu-block" v-for="category in showedCategories" :key="category.index">
                 <div class="navigation-sector">
-                    <div class="row navigation-sector-titel"><a class="navigation-sector-titel-head">{{ category.name }}</a></div>
+                    <div class="row navigation-sector-title"><a class="navigation-sector-title-head">{{ category.name }}</a></div>
                     <div class="row navigation-sector-body">
                         <div class="filter-back" v-for="button in category.buttons" :key="button.index">
                             <b-button class="navigation-entry" :to="button.to">
@@ -210,7 +210,7 @@
         margin-right: 2px;
         margin-bottom: 2px;
     }
-	.filter-back > *{
+    .filter-back > *{
         padding-left: 30px;
     }
     .navigation-sector {
@@ -219,14 +219,15 @@
         clear: left;
         padding: 0;
     }
-    .navigation-sector-titel {
+    .navigation-sector-title {
         padding: 5px;
         padding-left: 1px;
         min-height: 18px;
         width: 100%;
         height: calc(1.5em + 4px) !important;
+        white-space: nowrap;
     }
-    .navigation-sector-titel-head {
+    .navigation-sector-title-head {
         color: var(--NavigationTextColor) !important;
         font-weight: bold;
     }
@@ -266,7 +267,7 @@
                 width: 100%;
             }
 
-            .navigation-sector-titel {
+            .navigation-sector-title {
                 height: 29px !important;
                 margin: 0px !important;
                 padding: 5px !important;
@@ -274,7 +275,7 @@
                 overflow-x: scroll;
             }
 
-            .navigation-sector-titel-head {
+            .navigation-sector-title-head {
                 padding: 0px !important;
                 line-height: normal;
                 color: var(--NavigationTextColor) !important;
