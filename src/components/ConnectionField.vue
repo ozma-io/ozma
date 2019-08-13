@@ -55,12 +55,16 @@
         private meny: boolean = this.menyFields
         private selectedEntrys: ISelectedEntry[] = []
 
-        private mounted() {
+        private created() {
             for (const i of this.options) {
                 if (i.value === this.value.toString()) {
                     this.selectedEntrys.push({ text: i.text, value: i.value, link: i.link })
                 }
             }
+        }
+        @Watch("foo")
+        private change() {
+            this.created()
         }
         private clear() {
             this.selectedEntrys = []
