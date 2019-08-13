@@ -20,8 +20,8 @@
         <div v-if="!selectedEntrys.length && !showedField" class="empty-block">{{$t('empty')}}</div>
         <div :class="['entrys-block',{'entrys-meny-block':(meny && selectedEntrys.length > 1)||showedField}]">
             <div v-for="entry in selectedEntrys" :class="['entry-block',{'entry-meny-block':meny && selectedEntrys.length > 1}]"> 
-                <UserViewLink v-if="entry.link !== null" :uv="entry.link">{{entry.text}}</UserViewLink>
-                <span v-else>{{entry.text}}</span>
+                <UserViewLink v-if="entry.link !== null" :uv="entry.link" class="link">{{entry.text}}</UserViewLink>
+                <a v-else>{{entry.text}}</a>
                 <div v-if="meny" class="buttoncolor-block clear-block"><input type="button" class="material-icons button_clear" value="clear" @click="deletion(entry.text)"/></div>
             </div>
         </div>
@@ -123,6 +123,10 @@
 </script>
 
 <style scoped>
+    .link {
+        z-index: 1000;
+        position: sticky;
+    }
     .field-block{
         display: contents;
         vertical-align: bottom;

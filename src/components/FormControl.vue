@@ -347,10 +347,10 @@
                         if (entries === undefined || entries instanceof Promise) {
                             return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
                         } else {
-                            const select = Object.entries(entries).map(([id, name]) => ({ text: name, value: String(id), link: null}))
+                            const select = Object.entries(entries).map(([id, name]) => ({ text: name, value: String(id), link: attrToQueryRef(this.update, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"])}))
                             return {
-                                name: "select",
-                                options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: null }] : []), ...select],
+                                name: "connectionfield",
+                                options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: attrToQueryRef(this.update, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]) }] : []), ...select],
                             }
                         }
                     case "enum":
