@@ -64,6 +64,11 @@
 </script>
 
 <style scoped>
+/* Current Z layout:
+
+* FormControl (200)
+
+*/
     .fixed-place-tr {
         display: none
     }

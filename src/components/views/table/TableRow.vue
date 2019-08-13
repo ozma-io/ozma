@@ -119,6 +119,14 @@
     }
 </script>
 <style scoped>
+/* Current Z layout:
+
+* FormControl           (200)
+* Selected fixed cell   (20) 
+* Selected cell         (15)
+
+*/
+
     .fixed-place-tr {
         display: none
     }
