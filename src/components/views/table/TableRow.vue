@@ -36,7 +36,7 @@
                     @update="'update' in listeners && listeners.update(props.entry.cells[i], $event)"
                     autofocus />
             <template>
-                <p>
+                <p :style="props.entry.cells[i].style">
                     <UserViewLink v-if="props.entry.cells[i].link !== null" :uv="props.entry.cells[i].link">
                         <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"
                                 :checked="props.entry.cells[i].value"
@@ -119,6 +119,14 @@
     }
 </script>
 <style scoped>
+/* Current Z layout:
+
+* FormControl           (200)
+* Selected fixed cell   (20) 
+* Selected cell         (15)
+
+*/
+
     .fixed-place-tr {
         display: none
     }
@@ -161,6 +169,9 @@
         padding-left: 1px;
         margin-bottom: 0;
         margin-top: 2px;
+        white-space: initial;
+        word-wrap: break-word;
+        word-break: break-all;
     }
     td.required_cell_style {
         background-color: var(--RequiredBackColor);

@@ -1076,6 +1076,13 @@
 </script>
 
 <style scoped>
+/* Current Z layout:
+
+* Disable-edit block    (500) 
+* Table head            (20)
+* FixedColumn           (25)
+
+*/
     .table-block {
         width: 100%;
         margin: 0px;

@@ -21,7 +21,7 @@
                         :style="Object.assign({}, props.entry.cells[i].style, props.columns[i].style)">
                     <!-- We don't have FormControl here because it already exists in TableRow for the same cell -->
                     <template>
-                        <p>
+                        <p :style="props.entry.cells[i].style">
                             <UserViewLink v-if="props.entry.cells[i].link !== null" :uv="props.entry.cells[i].link">
                                 <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"
                                         :checked="props.entry.cells[i].value"
@@ -64,6 +64,11 @@
 </script>
 
 <style scoped>
+/* Current Z layout:
+
+* FormControl (200)
+
+*/
     .fixed-place-tr {
         display: none
     }
@@ -103,6 +108,9 @@
         margin-bottom: 0;
         margin-top: 2px;
         line-height: calc(1rem - 1px);
+        white-space: initial;
+        word-wrap: break-word;
+        word-break: break-all;
     }
     @media screen and (max-device-width: 813px), screen and (orientation: portrait) {
         .fixed-place-tr {

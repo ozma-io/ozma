@@ -57,6 +57,14 @@
 </script>
 
 <style scoped>
+/* Current Z layout:
+
+* Drop-down menu         (1200)
+* Button drop-down menu  (1000)
+* Div around button menu (900)
+* Black-block (for mob)  (700)
+
+*/
     .div-with-actions {
         width: max-content;
         flex: 1;

@@ -235,7 +235,9 @@
 
         private beforeDestroy() {
             if (this.inputType.name === "textarea") {
-                this.updateValue(this.valueText.replace(/(\n+)|(\r+)|((\r\n)+)/gm, "\n").replace(/(\s+$)|(^\s+)/gm, ""))
+                this.updateValue(this.valueText.replace(/^ +| +$/gm, "")
+                                               .replace(/(^\n+)|(\n+$)/g, "")
+                                               .replace(/\n+|\r+|(\r\n)+/gm, "\n"))
             } else if (this.inputType.name === "text") {
                 this.updateValue(this.valueText.replace(/(\s+$)|(^\s+)/gm, ""))
             }
@@ -426,6 +428,13 @@
 </script>
 
 <style scoped>
+/* Current Z layout:
+
+* Drop-down menu    (1200)
+* FormControl       (1000)
+
+*/
+
     .nested-menu > .actions-menu{
         width: max-content;
         display: inline-block;

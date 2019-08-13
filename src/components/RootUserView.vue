@@ -284,6 +284,14 @@
 </script>
 
 <style scoped>
+/* Current Z layout:
+
+* Count off all entries     (2000)
+* All page without footer   (1050)
+* Footer of page            (1030)
+* Head menu                 (1000)
+
+*/
     .main-div {
         padding: 0px;
         height: 100%;
