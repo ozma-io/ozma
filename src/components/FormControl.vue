@@ -21,7 +21,7 @@
 
 <template>
     <div :class="['form-control-panel',{'form-control-panel-hidden': inputType.name === 'connectionfield'}]">
-        <div class="nested-menu" v-if="actions.length > 0">
+        <div class="nested-menu" v-if="actions.length > 0 && inputType.name !== 'connectionfield'">
             <ActionsMenu title="view_headline"
                          :actions="actions" />
             <div v-if="caption.length > 0" class="caption-editors">
