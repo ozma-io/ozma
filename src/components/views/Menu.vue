@@ -23,11 +23,11 @@
 
 <template>
     <div fluid class="main-menu-block">
-        <span v-if="error !== null">
+        <span v-if="typeof categoriesOrError === 'string'">
             {{ error }}
         </span>
         <div v-else class="submain-menu-block">
-            <div class="row subsubmain-menu-block" v-for="category in showedCategories" :key="category.index">
+            <div class="row subsubmain-menu-block" v-for="category in categoriesOrError" :key="category.index">
                 <div class="navigation-sector">
                     <div class="row navigation-sector-title"><a class="navigation-sector-title-head">{{ category.name }}</a></div>
                     <div class="row navigation-sector-body">
@@ -48,15 +48,15 @@
     import { Location } from "vue-router"
     import { namespace } from "vuex-class"
     import { tryDicts } from "@/utils"
-    import { UserViewResult, printValue, homeSchema } from "@/state/user_view"
+    import { CombinedUserView, valueToText, homeSchema } from "@/state/user_view"
     import { attrToQuery, queryLocation } from "@/state/query"
     import { CurrentChanges, IEntityChanges } from "@/state/staging_changes"
+    import { UserView } from "@/components"
 
     interface IMainMenuButton {
         index: number
         name: string
         categoryName: string
-        deleted: boolean
         to: Location | null
     }
 
@@ -66,45 +66,18 @@
         buttons: IMainMenuButton[]
     }
 
-    const staging = namespace("staging")
-
+    @UserView()
     @Component
     export default class UserViewMenu extends Vue {
-        @staging.State("current") changes!: CurrentChanges
-        @Prop({ type: UserViewResult }) uv!: UserViewResult
-        @Prop({ type: Boolean, default: false }) isRoot!: boolean
+        @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView
 
-        private categories: IMainMenuCategory[] = []
-        private rows: IMainMenuButton[] = []
-        private error: string | null = null
-
-        /* To optimize performance when staging entries change, we first pre-build entries and then update them selectively watching staging entries.
-           This is to avoid rebuilding complete rows array each time user changes a field.
-        */
-        @Watch("uv", { deep: true })
-        private updateEntries() {
-            this.buildEntries()
-        }
-
-        // TODO: implement
-        /*@Watch("changes", { deep: true })
-        private updateChanges() {
-        }*/
-
-        private created() {
-            this.buildEntries()
-        }
-
-        // Update this.entries
-        private buildEntries() {
+        get categoriesOrError() {
             // .rows === null means that we are in "create new" mode -- there are no selected existing values.
             if (this.uv.rows === null) {
-                // Not supported in table yet.
-                this.categories = []
+                // Not supported in menu yet.
+                return []
             } else if (this.uv.info.columns.length !== 2) {
-                this.error = this.$tc("invalid_menu")
-                this.categories = []
-                this.rows = []
+                return this.$tc("invalid_menu")
             } else {
                 const viewAttrs = this.uv.attributes
 
@@ -114,12 +87,16 @@
                 const buttonsAttrs = this.uv.columnAttributes[1]
 
                 const categories = new Map<string, IMainMenuCategory>()
-                this.rows = this.uv.rows.map((row, rowI) => {
+                this.uv.rows.forEach((row, rowI) => {
+                    if (row.deleted) {
+                        return
+                    }
+
                     const rowAttrs = row.attributes === undefined ? {} : row.attributes
                     const getRowAttr = (name: string) => tryDicts(name, rowAttrs, viewAttrs)
 
                     const categoryCell = row.values[0]
-                    const categoryName = printValue(categoryColumnInfo.valueType, categoryCell.value)
+                    const categoryName = valueToText(categoryColumnInfo.valueType, categoryCell)
                     let category: IMainMenuCategory | undefined = categories.get(categoryName)
                     if (category === undefined) {
                         category = {
@@ -131,7 +108,7 @@
                     }
 
                     const buttonCell = row.values[1]
-                    const buttonName = printValue(buttonColumnInfo.valueType, buttonCell.value)
+                    const buttonName = valueToText(buttonColumnInfo.valueType, buttonCell)
                     const buttonAttrs = buttonCell.attributes || {}
                     const getButtonAttr = (name: string) => tryDicts(name, buttonAttrs, rowAttrs, buttonsAttrs, viewAttrs)
 
@@ -141,25 +118,15 @@
                     const button = {
                         index: rowI,
                         name: buttonName,
-                        deleted: false,
                         categoryName, to,
                     }
                     category.buttons.push(button)
-                    return button
                 })
-                this.categories = Array.from(categories.values())
-                this.error = null
+                return Array.from(categories.values())
             }
-        }
-
-        get showedCategories() {
-            return this.categories
-                .map(category => Object.assign({}, category, { buttons: category.buttons.filter(button => !button.deleted) }))
-                .filter(category => category.buttons.length !== 0)
         }
     }
 </script>
-
 
 <style scoped>
     .main-menu-block {

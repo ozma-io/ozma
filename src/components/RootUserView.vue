@@ -43,7 +43,7 @@
                 </b-form>
             </div>
             <b-col class="userview-div">
-                <UserView :uv="uv"
+                <UserView :args="query.rootViewArgs"
                           :filter="filterWords"
                           isRoot
                           :defaultValues="defaultValues"
@@ -88,10 +88,10 @@
     import { Component, Watch, Vue } from "vue-property-decorator"
     import { Action, namespace } from "vuex-class"
 
-    import seq from "@/sequences"
+    import { mapMaybe } from "@/utils"
     import * as Api from "@/api"
     import { setHeadTitle } from "@/elements"
-    import { IUserViewArguments, UserViewResult, UserViewError, CurrentUserViews } from "@/state/user_view"
+    import { IUserViewArguments, CombinedUserView, UserViewError, CurrentUserViews } from "@/state/user_view"
     import { CurrentChanges } from "@/state/staging_changes"
     import { IAction } from "@/components/ActionsMenu.vue"
     import { CurrentQuery, replaceSearch, defaultValuePrefix } from "@/state/query"
@@ -203,6 +203,7 @@
         private created() {
             document.head.appendChild(this.styleNode)
             this.setRoute(this.$route)
+            this.filterString = this.query.getSearch("q", String, "")
         }
 
         private destroyed() {
@@ -247,16 +248,17 @@
             }
         }
 
+        // FIMXE: needed only for a style workaround
         get uv() {
             return this.userViews.rootView
         }
 
         get uvIsReady() {
-            return this.uv instanceof UserViewResult
+            return this.userViews.rootView instanceof CombinedUserView
         }
 
         get uvIsError() {
-            return this.uv instanceof UserViewError
+            return this.userViews.rootView instanceof UserViewError
         }
 
         get isMainView() {
@@ -272,13 +274,13 @@
         }
 
         get defaultValues() {
-            return seq(this.query.search).mapMaybe<[string, any]>(([name, val]) => {
+            return Object.fromEntries(mapMaybe(([name, val]) => {
                 if (name.startsWith(defaultValuePrefix)) {
                     return [name.slice(defaultValuePrefix.length), JSON.parse(val)]
                 } else {
                     return undefined
                 }
-            }).toObject()
+            }, Object.entries(this.query.search)))
         }
     }
 </script>

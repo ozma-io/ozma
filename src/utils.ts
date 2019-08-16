@@ -1,9 +1,9 @@
 import moment from "moment"
 import Vue from "vue"
 
-import seq from "@/sequences"
-
 export type Result<A> = A | Error
+
+export type RecordSet<K extends string | number | symbol> = Record<K, null>
 
 export interface IRef<A> {
     ref?: A
@@ -112,13 +112,13 @@ export const convertString = <T>(value: string, constructor: (_: string) => T, d
 }
 
 export const updateObject = (to: object, from: object) => {
-    seq(to).forEach(([name, oldValue]) => {
+    Object.entries(to).forEach(([name, oldValue]) => {
         if (!(name in from)) {
             Vue.delete(to, name)
         }
     })
-    seq(from).forEach(([name, newValue]) => {
-        if (!(name in to) || to[name] !== newValue) {
+    Object.entries(from).forEach(([name, newValue]) => {
+        if (!(name in to) || (to as any)[name] !== newValue) {
             Vue.set(to, name, newValue)
         }
     })
@@ -129,16 +129,16 @@ export const deepUpdateObject = (to: object, from: object) => {
         throw new Error("deepUpdateObject: expected two objects")
     }
 
-    seq(to).forEach(([name, oldValue]) => {
+    Object.entries(to).forEach(([name, oldValue]) => {
         if (!(name in from)) {
             Vue.delete(to, name)
         }
     })
-    seq(from).forEach(([name, newValue]) => {
+    Object.entries(from).forEach(([name, newValue]) => {
         if (!(name in to)) {
             Vue.set(to, name, newValue)
         } else {
-            const oldValue = to[name]
+            const oldValue = (to as any)[name]
             if (typeof oldValue === "object" && oldValue !== null && typeof newValue === "object" && newValue !== null) {
                 deepUpdateObject(oldValue, newValue)
             } else if (oldValue !== newValue) {
@@ -148,11 +148,32 @@ export const deepUpdateObject = (to: object, from: object) => {
     })
 }
 
-export const tryDicts = <K extends string | number | symbol, V>(key: K, ...dicts: Array<Record<K, V>>): V | undefined => {
+export const tryDicts = <K extends string | number | symbol, V>(key: K, ...dicts: Array<Record<K, V> | undefined>): V | undefined => {
     for (const dict of dicts) {
-        if (key in dict) {
+        if (dict && key in dict) {
             return dict[key]
         }
     }
     return undefined
+}
+
+export const hasUserPrototype = (a: object) => {
+    return Object.getPrototypeOf(a) !== Object.prototype
+}
+
+// Works only on simple data
+export const deepClone = <T>(a: T): T => {
+    if (typeof a !== "object" || a === null) {
+        return a
+    } else if (a instanceof Array) {
+        return a.map(deepClone) as any
+    } else if (!hasUserPrototype(a as any)) {
+        return Object.fromEntries(Object.entries(a).map(([k, v]) => [k, deepClone(v)]))
+    } else {
+        throw Error("Cannot deep clone an object")
+    }
+}
+
+export const mapMaybe = <A, B>(func: (arg: A, index: number, array: A[]) => B | undefined, arr: A[]): B[] => {
+    return arr.map(func).filter(val => val !== undefined) as B[]
 }
