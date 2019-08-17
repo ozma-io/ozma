@@ -26,64 +26,56 @@
 
 <template>
     <div fluid class="view-form">
-        <div v-if="shownEntries.length === 0">
-          {{ $t('item_not_found') }}
+        <div v-if="rowPositions.length === 0 && uv.newRowsPositions.length === 0 && !showEmptyRow">
+            {{ $t('item_not_found') }}
         </div>
-        <div v-else v-for="(entry, entryI) in shownEntries" :key="entry.index">
-            <form class="form-entry">
-                <div v-for="(block, blockI) in blocks" :key="blockI" class="form-block" :style="{ width: `${block.width * 100}%` }">
-                    <template v-for="fieldInfo in block.fields" class="form_data">
-                        <div class="form-data" v-if="fieldInfo.visible" :key="fieldInfo.column.name" :label-for="fieldInfo.column.name">
-                            <FormControl
-                                :caption="fieldInfo.caption"
-                                v-bind="entry.fields[fieldInfo.index]"
-                                :update="entry.fields[fieldInfo.index].update"
-                                :type="fieldInfo.column.valueType"
-                                :locked="locked"
-                                :isInvalid="entry.fields[fieldInfo.index].isInvalid"
-                                :uv="uv"
-                                @update="beforeUpdateEntry(entry)"
-                                :added="entry.added" />
-                        </div>
-                    </template>
-                </div>
-
-                <!-- FIXME FIXME FIXME look at permissions! -->
-                <div class="delete-block">
-                <input  type="button"
-                        :value="$t('delete')"
-                        class="delete-block_delete-button"
-                        v-if="entry.id !== null && entry.id !== undefined && uv.info.mainEntity !== null"
-                        v-b-modal="`deleteConfirm_${entryI}`">
-                </div>
-                <b-modal lazy
-                         :id="`deleteConfirm_${entryI}`"
-                         ok-variant="danger"
-                         :ok-title="$t('ok')"
-                         @ok="deleteRecord(entry.added, entry.id)"
-                         :cancel-title="$t('cancel')">
-                    {{ $t('delete_confirmation') }}
-                </b-modal>
-            </form>
-        </div>
+        <template v-else>
+            <!-- The first form control is special, it points either to the empty row or to the first added row
+                 _dynamically_. This is as to not lose focus when user starts editing empty row. -->
+            <FormEntry v-if="uv.newRowsPositions.length > 0 || showEmptyRow"
+                    :uv="uv"
+                    :blocks="blocks"
+                    :row="showEmptyRow ? local.emptyRow.row : uv.newRows[uv.newRowsPositions[0]]"
+                    :localRow="showEmptyRow ? local.emptyRow.local : local.newRows[uv.newRowsPositions[0]]"
+                    :locked="addedLocked"
+                    @update="updateValue(showEmptyRow ? { type: 'new', column: arguments[0] } : { type: 'added', id: uv.newRowsPositions[0], column: arguments[0] }, arguments[1])" />
+            <FormEntry v-for="rowId in newRowsPositions" :key="`added-${rowId}`"
+                    :uv="uv"
+                    :blocks="blocks"
+                    :row="uv.newRows[rowId]"
+                    :localRow="local.newRows[rowId]"
+                    :locked="addedLocked"
+                    @update="updateValue({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
+                    @delete="deleteRow({ type: 'added', id: rowId })" />
+            <FormEntry v-for="rowI in rowPositions" :key="rowI"
+                    :uv="uv"
+                    :blocks="blocks"
+                    :row="uv.rows[rowI]"
+                    :localRow="local.rows[rowI]"
+                    @update="updateValue({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
+                    @delete="deleteRow({ type: 'existing', position: rowI })" />
+        </template>
     </div>
 </template>
 
 <script lang="ts">
     import { Component, Prop, Watch, Vue } from "vue-property-decorator"
+    import { mixins } from "vue-class-component"
     import { namespace } from "vuex-class"
-    import { tryDicts } from "@/utils"
-    import { AttributesMap, IMainFieldInfo, IColumnField, IExecutedRow, RowId, FieldType, FieldName, IResultColumnInfo, IExecutedValue, IEntityRef } from "@/api"
-    import { SchemaName, EntityName } from "@/api"
-    import { IUpdatableField, IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, IProcessedRow, printValue, homeSchema } from "@/state/user_view"
-    import { CurrentChanges, IEntityChanges, IUpdatedCell, convertValue } from "@/state/staging_changes"
-    import { CurrentAuth } from "@/state/auth"
+    import { Store } from "vuex"
+
+    import { tryDicts, mapMaybe } from "@/utils"
+    import { AttributesMap, IResultColumnInfo } from "@/api"
+    import { CombinedUserView, ICombinedValue, IRowCommon, homeSchema } from "@/state/user_view"
+    import { SimpleLocalUserView, ILocalRowInfo, ILocalRow, ValueRef, RowRef } from "@/local_user_view"
+    import { UserView } from "@/components"
+    import BaseUserView from "@/components/BaseUserView"
+    import FormEntry from "@/components/views/form/FormEntry.vue"
     import { IAction } from "@/components/ActionsMenu.vue"
-    import FormControl from "@/components/views/form/FormControl.vue"
 
     interface IFieldInfo {
         index: number
-        column: IResultColumnInfo
+        columnInfo: IResultColumnInfo
         caption: string
         visible: boolean
     }
@@ -93,49 +85,77 @@
         fields: IFieldInfo[]
     }
 
-    interface IField {
-        value: any
-        valueText: string
+    interface IFormValueExtra {
         attributes: AttributesMap
-        update: IUpdatableField | null
-        isInvalid: boolean
     }
 
-    interface IForm {
-        deleted: boolean
-        added: boolean
-        id: number | null
-        fields: IField[]
+    interface IFormUserViewExtra {
+        homeSchema: string | null
+    }
+
+    type IFormLocalRowInfo = ILocalRowInfo<null>
+    type IFormLocalRow = ILocalRow<IFormValueExtra, null>
+
+    class LocalFormUserView extends SimpleLocalUserView<IFormValueExtra, null, IFormUserViewExtra> {
+        constructor(store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>) {
+            super(store, uv, defaultRawValues)
+        }
+
+        createCommonLocalValue(row: IRowCommon, localRow: IFormLocalRow, columnIndex: number, value: ICombinedValue) {
+            const columnAttrs = this.uv.columnAttributes[columnIndex]
+            const attributes = Object.assign({}, this.uv.attributes, columnAttrs, row.attributes, value.attributes)
+            const extra = {
+                attributes,
+            }
+            return extra
+        }
+
+        createCommonLocalRow() {
+            return null
+        }
+
+        createLocalUserView(): IFormUserViewExtra {
+            const extra = {
+                homeSchema: homeSchema(this.uv.args),
+            }
+            return extra
+        }
     }
 
     const staging = namespace("staging")
-    const auth = namespace("auth")
 
-    @Component
-    export default class UserViewForm extends Vue {
-        @staging.State("current") changes!: CurrentChanges
+    @UserView({
+        localConstructor: LocalFormUserView,
+    })
+    @Component({
+        components: {
+            FormEntry,
+        },
+    })
+    export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView, IFormValueExtra, null, IFormUserViewExtra>>(BaseUserView) {
         @staging.State("currentSubmit") currentSubmit!: Promise<void> | null
-        @staging.Action("addEntry") addEntry!: (args: { schema: SchemaName, entity: EntityName, position?: number }) => Promise<void>
-        @staging.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => Promise<void>
-        @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { schema: string, entity: string, newId: number }) => Promise<void>
-        @staging.Action("deleteEntry") deleteEntry!: (args: { schema: string, entity: string, id: number }) => Promise<void>
-        @staging.Action("submit") submitChanges!: () => Promise<void>
 
-        @Prop({ type: UserViewResult }) uv!: UserViewResult
+        @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView
         @Prop({ type: Boolean, default: false }) isRoot!: boolean
-        @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, any>
+        @Prop({ type: Object, required: true }) local!: LocalFormUserView
 
-        // Internal arrays are fields in columns order
-        private entries: IForm[] = []
-        private newEntries: IForm[] = []
-        // Used for returning back if "Delete" is used
-        private deletedOne: boolean = false
+        private deletedOne = false
 
-        get locked() {
+        get addedLocked() {
             return this.uv.rows === null && this.currentSubmit !== null
         }
 
-        get fields() {
+        // Show empty row only if it's a create view and there are no already created rows.
+        get showEmptyRow() {
+            return this.uv.newRowsPositions.length === 0 && this.uv.rows === null && this.uv.info.mainEntity !== null
+        }
+
+        // Because we treat the first added row specially we use only second+ new rows here.
+        get newRowsPositions() {
+            return this.uv.newRowsPositions.slice(1)
+        }
+
+        get fields(): IFieldInfo[] {
             const viewAttrs = this.uv.attributes
             return this.uv.info.columns.map((columnInfo, i) => {
                 const columnAttrs = this.uv.columnAttributes[i]
@@ -149,14 +169,14 @@
 
                 return {
                     index: i,
-                    column: columnInfo,
+                    columnInfo,
                     caption,
                     visible,
                 }
             })
         }
 
-        get blocks() {
+        get blocks(): IBlockInfo[] {
             const viewAttrs = this.uv.attributes
             // Relative block widths. [0..1]. Each block contains zero or more inputs.
             const blockWidths: number[] = viewAttrs["FormBlockWidths"] || [1]
@@ -177,214 +197,12 @@
             return blocks
         }
 
-        private deleteRecord(added: boolean, id: number) {
-            if (this.uv.info.mainEntity === null) {
-                throw new Error("View doesn't have a main entity")
-            }
-            const entity = this.uv.info.mainEntity
-
-            if (added) {
-                this.resetAddedEntry({
-                    schema: entity.schema,
-                    entity: entity.name,
-                    newId: id,
-                })
-            } else {
-                this.deleteEntry({
-                    schema: entity.schema,
-                    entity: entity.name,
-                    id,
-                })
-            }
-
+        protected deleteRow(ref: RowRef) {
+            super.deleteRow(ref)
             this.deletedOne = true
         }
 
-        @Watch("uv", { deep: true })
-        private updateEntries() {
-            this.buildEntries()
-        }
-
-        // See Table for description of why is this meddling with Watch is needed.
-        @Watch("changes", { deep: true })
-        private updateChanges() {
-            if (this.changes.isEmpty) {
-                // Changes got reset -- rebuild entries.
-                // This could be done more efficiently but it would require tracking of what fields were changed.
-                this.buildEntries()
-            } else {
-                this.applyChanges()
-            }
-        }
-
-        private newEmptyRow(rowId: number, position?: number): IForm {
-            if (this.uv.info.mainEntity === null) {
-                throw new Error("Main entity cannot be null")
-            }
-            const entity = this.uv.info.mainEntity
-            const newFields = this.uv.info.columns.map((info, colI) => {
-                const columnAttrs = this.uv.columnAttributes[colI]
-                const viewAttrs = this.uv.attributes
-                const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs)
-                let value: any
-                let valueText: string
-                if (info.mainField !== null) {
-                    let rawValue: any
-                    if (info.mainField.name in this.defaultValues) {
-                        rawValue = this.defaultValues[info.mainField.name]
-                    } else {
-                        rawValue = getColumnAttr("DefaultValue")
-                    }
-                    const defaultValue = convertValue(info.mainField.field, rawValue)
-                    value = defaultValue !== undefined ? defaultValue : info.mainField.field.defaultValue
-                    valueText = printValue(info.valueType, value)
-                } else {
-                    value = undefined
-                    valueText = ""
-                }
-                return {
-                    value, valueText,
-                    attributes: Object.assign({}, this.uv.attributes, this.uv.columnAttributes[colI]),
-                    update: info.mainField === null ? null : {
-                        field: info.mainField.field,
-                        fieldRef: {
-                            entity,
-                            name: info.mainField.name,
-                        },
-                        id: rowId,
-                    },
-                    isInvalid: false,
-                }
-            })
-            const form = {
-                deleted: false,
-                added: true,
-                fields: newFields,
-                id: rowId,
-            }
-            if (position === undefined) {
-                this.newEntries.push(form)
-            } else {
-                this.newEntries.splice(position, 0, form)
-            }
-            return form
-        }
-
-        // Apply changes on top of built entries.
-        // TODO: make this even more granular, ideally: dynamically bind a watcher to every changed and added entry.
-        private applyChanges() {
-            if (this.uv.info.mainEntity !== null) {
-                const entity = this.uv.info.mainEntity
-                const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
-
-                changedFields.added.forEach((fields, newRowI) => {
-                    let form: IForm
-                    let newItem = this.newEntries[newRowI]
-
-                    while (newItem !== undefined) {
-                        if (newItem.id === null) {
-                            throw Error("impossible")
-                        } else if (newItem.id > fields.id) {
-                            this.newEntries.splice(newRowI, 1)
-                            newItem = this.newEntries[newRowI]
-                        } else {
-                            break
-                        }
-                    }
-                    if (newItem === undefined) {
-                        form = this.newEmptyRow(fields.id)
-                    } else if (newItem.id === null) {
-                        throw Error("impossible")
-                    } else if (newItem.id < fields.id) {
-                        form = this.newEmptyRow(fields.id, newRowI)
-                    } else if (newItem.id === fields.id) {
-                        form = newItem
-                    } else {
-                        throw Error("impossible")
-                    }
-
-                    this.uv.info.columns.forEach((info, colI) => {
-                        if (info.mainField !== null) {
-                            const cell = form.fields[colI]
-                            const value = fields.cells[info.mainField.name]
-                            if (value === undefined) {
-                                cell.value = undefined
-                                cell.valueText = ""
-                                cell.isInvalid = false
-                            } else {
-                                cell.value = value.value
-                                cell.valueText = value.rawValue
-                                cell.isInvalid = value.erroredOnce
-                            }
-                        }
-                    })
-                })
-
-                this.newEntries.splice(changedFields.added.length)
-                if (this.newEntries.length === 0 && this.uv.rows === null) {
-                    this.newEmptyRow(0)
-                }
-            }
-
-            if (this.uv.rows !== null) {
-                const rows = this.uv.rows
-
-                Object.entries(this.changes.changes).forEach(([schemaName, entityChanges]) => {
-                    Object.entries(entityChanges).forEach(([entityName, changedFields]) => {
-                        const mapping = this.uv.mappingForEntity(schemaName, entityName)
-                        if (mapping === null) {
-                            return
-                        }
-
-                        Object.entries(changedFields.deleted).forEach(([rowId, deleted]) => {
-                            const rowIs = mapping.idsToRows[rowId]
-                            if (rowIs === undefined) {
-                                return
-                            }
-                            rowIs.forEach(rowI => {
-                                const entry = this.entries[rowI]
-                                entry.deleted = deleted
-                            })
-                        })
-
-                        Object.entries(changedFields.updated).forEach(([rowId, fields]) => {
-                            const rowIs = mapping.idsToRows[rowId]
-                            if (rowIs === undefined) {
-                                return
-                            }
-                            rowIs.forEach(rowI => {
-                                const entry = this.entries[rowI]
-                                const row = rows[rowI]
-                                Object.entries(fields).forEach(([fieldName, updValue]) => {
-                                    const colIs = mapping.fieldsToColumns[fieldName]
-                                    if (colIs === undefined) {
-                                        return
-                                    }
-                                    colIs.forEach(colI => {
-                                        const cell = entry.fields[colI]
-                                        if (updValue == null) {
-                                            const value = row.values[colI]
-                                            const columnInfo = this.uv.info.columns[colI]
-
-                                            // Reset to original values
-                                            cell.value = value.value
-                                            cell.valueText = printValue(columnInfo.valueType, value)
-                                            cell.isInvalid = false
-                                        } else {
-                                            cell.value = updValue.value
-                                            cell.valueText = updValue.rawValue
-                                            cell.isInvalid = updValue.erroredOnce
-                                        }
-                                    })
-                                })
-                            })
-                        })
-                    })
-                })
-            }
-        }
-
-        private created() {
+        private init() {
             if (this.isRoot) {
                 this.$emit("update:bodyStyle", `
                     @media print {
@@ -405,93 +223,30 @@
                 })
             }
 
-            this.buildEntries()
+            this.deletedOne = false
         }
 
-        private buildEntries() {
-            const viewAttrs = this.uv.attributes
+        private created() {
+            this.init()
+        }
 
-            // Build one form from a result row
-            const makeForm = (row: IProcessedRow, rowI: number): IForm => {
-                const rowAttrs = row.attributes === undefined ? {} : row.attributes
-                const getRowAttr = (name: string) => rowAttrs[name] || viewAttrs[name]
-                const fields = this.uv.info.columns.map((columnInfo, i): IField => {
-                    const cellValue = row.values[i]
-                    const columnAttrs = this.uv.columnAttributes[i]
-                    const cellAttrs = cellValue.attributes === undefined ? {} : cellValue.attributes
-                    const getCellAttr = (name: string) => tryDicts(name, cellAttrs, rowAttrs, columnAttrs, viewAttrs)
+        @Watch("uv")
+        private uvChanged() {
+            this.init()
+        }
 
-                    const value = cellValue.value
-                    const valueText = printValue(columnInfo.valueType, value)
-
-                    const attributes = Object.assign({}, cellAttrs, columnAttrs, rowAttrs, viewAttrs)
-
-                    return {
-                        value,
-                        valueText,
-                        attributes,
-                        update: cellValue.update === undefined ? null : cellValue.update,
-                        isInvalid: false,
-                    }
-                })
-
-                const id = this.uv.info.mainEntity !== null ? row.mainId as number : null
-
-                return {
-                    deleted: false,
-                    added: false,
-                    id,
-                    fields,
-                }
+        get rowPositions() {
+            if (this.uv.rows === null) {
+                return []
+            } else {
+                return mapMaybe((row, rowI) => row.deleted ? undefined : rowI, this.uv.rows)
             }
-
-            this.newEntries = []
-            if (this.uv.rows !== null) {
-                this.entries = this.uv.rows.map((row, rowI) => makeForm(row, rowI))
-            }
-            this.applyChanges()
         }
 
-        get shownEntries() {
-            return this.entries.filter(entry => !entry.deleted).concat(this.newEntries.filter(entry => !entry.deleted))
-        }
-
-        @Watch("shownEntries")
+        @Watch("rowPositions")
         private returnIfEmpty() {
-            if (this.isRoot && this.deletedOne && this.shownEntries.length === 0) {
+            if (this.isRoot && this.deletedOne && this.rowPositions.length === 0 && this.uv.newRowsPositions.length === 0) {
                 this.$router.back()
-            }
-        }
-
-        private beforeUpdateEntry(form: IForm) {
-            if (form.added) {
-                // Check if an entry is already added; if it isn't, create it with our default values.
-                const entity = this.uv.info.mainEntity as IEntityRef
-                const changedFields = this.changes.changesForEntity(entity.schema, entity.name)
-                const id = form.id as number
-
-                if (id === changedFields.added.length) { // FIXME -- dont use length! use id in added
-                    this.addEntry({ schema: entity.schema, entity: entity.name })
-                    form.fields.forEach((field, i) => {
-                        const info = this.fields[i]
-                        if (info.column.mainField !== null && field.value !== undefined) {
-                            this.setAddedField({
-                                schema: entity.schema,
-                                entity: entity.name,
-                                field: info.column.mainField.name,
-                                newId: id,
-                                value: printValue(info.column.valueType, field.value),
-                            })
-                        }
-                    })
-                } else {
-                    if (process.env["NODE_ENV"] !== "production") {
-                        const hasId = changedFields.added.some(item => item !== null && item.id === id)
-                        if (!hasId) {
-                            throw Error("impossible")
-                        }
-                    }
-                }
             }
         }
     }
@@ -505,72 +260,12 @@
         height: 100%;
         width: 100vw;
     }
-    .form-entry {
-        border-bottom: 0;
-        border-top: 0;
-
-    }
-    .form-block{
-        display:inline-block;
-        vertical-align: top;
-        margin: 0 1px;
-    }
-    .form-data {
-        margin-top: 7px;
-        color: var(--NavigationTextColor);
-    }
-    .delete-block{
-        background: var(--MenuColor);
-        width: max-content;
-    }
-    .delete-block_delete-button {
-        background: hsla(0,0%,100%,.3) !important;
-        padding: 0px;
-        padding-left: 7px;
-        padding-right: 7px;
-        line-height: normal;
-        height: calc(1.5em + 4px);
-        border: 0px;
-        box-shadow: none;
-        outline: none;
-        color: var(--ButtonTextColor);
-        border-radius: 0;
-    }
+ 
     @media screen and (max-aspect-ratio: 13/9) {
         @media screen and (max-device-width: 480px) {
             .view-form {
                 overflow: auto !important;
             }
-            .form-block {
-                width: 100% !important;
-                display: block;
-            }
-            .delete-block {
-                position: sticky;
-                left: 0;
-                margin-top: 10px;
-            }
-            .form-entry{
-                display: grid;
-            }
-        }
-    }
-    @media screen and (orientation: portrait) {
-        @media screen and (max-device-width: 480px) {
-            .form-entry {
-                width: max-content;
-            }
-            .form-data {
-                margin-top: 0 !important;
-            }
-            .form-block {
-                display: grid;
-            }
-        }
-    }
-        @media print {
-        .delete-block_delete-button {
-            display: none !important;
         }
     }
 </style>

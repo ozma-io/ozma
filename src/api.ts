@@ -1,5 +1,4 @@
 import * as Utils from "@/utils"
-import seq from "@/sequences"
 
 const apiUrl = (process.env["NODE_ENV"] === "production") ? `https://api.${location.hostname}` : `http://${location.hostname}:5000`
 
@@ -19,7 +18,6 @@ export interface IAuthToken {
 
 export type DomainId = number
 export type RowId = number
-export type RowIdString = string
 export type FieldName = string
 export type EntityName = string
 export type SchemaName = string
@@ -225,7 +223,7 @@ const fetchViewInfo = async (path: string, token: string, args: URLSearchParams)
 
 const convertArgs = (args: Record<string, any>): URLSearchParams => {
     const params = new URLSearchParams()
-    seq(args).forEach(([name, arg]) => {
+    Object.entries(args).forEach(([name, arg]) => {
         params.append(name, JSON.stringify(arg))
     })
     return params

@@ -35,18 +35,18 @@
             {{ inputType.text }}
         </template>
         <input type="checkbox" v-else-if="inputType.name === 'check'"
-                         :value="value"
+                         :value="value.value"
                          :class="['form-control-panel_checkbox',
-                                 {'form-control-panel_checkbox_error': isInvalid,
+                                 {'form-control-panel_checkbox_error': value.erroredOnce,
                                   'form-control-panel_checkbox_req': isAwaited}]"
                          @input="updateValue($event.target.value)"
                          :disabled="isDisabled"
                          ref="control" />
         <textarea v-else-if="inputType.name === 'textarea'"
                          :style="inputType.style"
-                         :value="valueText"
+                         :value="value.rawValue"
                          :class="['form-control-panel_textarea', 'multilines',
-                                 {'form-control-panel_textarea_error': isInvalid,
+                                 {'form-control-panel_textarea_error': value.erroredOnce,
                                   'form-control-panel_textarea_req': isAwaited}]"
                          @input="updateValue($event.target.value)"
                          :disabled="isDisabled"
@@ -56,7 +56,7 @@
                          :required="!isNullable"
                          ref="control" />
         <ConnectionField v-else-if="inputType.name === 'connectionfield'" 
-                         :value="value"
+                         :value="value.rawValue"
                          :options="inputType.options"
                          :menyFields="false"
                           @update:value="updateValue($event)"
@@ -66,31 +66,32 @@
         <CodeEditor v-else-if="inputType.name === 'codeeditor'"
                     :style="inputType.style"
                     mode="ace/mode/pgsql"
-                    :content="valueText"
+                    :content="value.rawValue"
                     @update:content="updateValue($event)"
                     :readOnly="isDisabled"
                     ref="control" />
         <UserView v-else-if="inputType.name === 'userview'"
-                    :uv="nestedUv"
+                    :uv="inputType.args"
                     :defaultValues="inputType.defaultValues"
                     @update:actions="extraActions = $event"
                     ref="control" />
         <div v-else-if="inputType.name === 'select'" class="select-container">
-        <select
-                :value="value"
-                :class="['form-control-panel_select',
-                        {'form-control-panel_select_error': isInvalid,
-                         'form-control-panel_select_req': isAwaited}]"
-                @input="updateValue($event.target.value)"
-                :disabled="isDisabled"
-                ref="control">
-            <option v-for="option in inputType.options" v-bind:key="option.value" v-bind:value="option.value">
-                {{ option.text }}
-            </option>
-        </select>
-        <div class="select-container-after">
+            <select
+                    :value="value.rawValue"
+                    :class="['form-control-panel_select',
+                            {'form-control-panel_select_error': value.erroredOnce,
+                            'form-control-panel_select_req': isAwaited}]"
+                    @input="updateValue($event.target.value)"
+                    :disabled="isDisabled"
+                    ref="control">
+                <option v-for="option in inputType.options" v-bind:key="option.value" v-bind:value="option.value">
+                    {{ option.text }}
+                </option>
+            </select>
 
-        </div>
+            <div class="select-container-after">
+
+            </div>
         </div>
         <!-- We don't use bootstrap-vue's b-form-input type=text because of problems with Safari
                 https://github.com/bootstrap-vue/bootstrap-vue/issues/1951
@@ -98,10 +99,10 @@
         <textarea v-else-if="inputType.type === 'text'"
                 @keydown.enter.prevent=""
                 wrap="soft"
-                :value="valueText"
+                :value="value.rawValue"
                 :style="inputType.style"
                 :class="['form-control-panel_textarea', 'singleline',
-                        {'form-control-panel_textarea_error': isInvalid,
+                        {'form-control-panel_textarea_error': value.erroredOnce,
                          'form-control-panel_textarea_req': isAwaited}]"
                 @input="updateValue($event.target.value)"
                 :disabled="isDisabled"
@@ -110,11 +111,11 @@
                 :required="!isNullable"
                 ref="control" />
         <textarea v-else
-                :value="valueText"
+                :value="value.rawValue"
                 :style="inputType.style"
                 @keydown.enter.prevent=""
                 :class="['form-control-panel_textarea', 'singleline',
-                        {'form-control-panel_textarea_error': isInvalid,
+                        {'form-control-panel_textarea_error': value.erroredOnce,
                          'form-control-panel_textarea_req': isAwaited}]"
                 @input="updateValue($event.target.value)"
                 :disabled="isDisabled"
@@ -129,11 +130,11 @@
     import { Component, Vue, Prop, Watch } from "vue-property-decorator"
     import { namespace } from "vuex-class"
 
-    import seq from "@/sequences"
     import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef } from "@/api"
     import { IAction } from "@/components/ActionsMenu.vue"
-    import { IUpdatableField, IUserViewArguments, UserViewResult, EntriesMap, CurrentUserViews, printValue, homeSchema } from "@/state/user_view"
-    import { IQuery, attrToQuerySelf, attrToQueryRef, queryLocation } from "@/state/query"
+    import { IUpdatableField, IUserViewArguments, CombinedUserView, EntriesMap, CurrentUserViews, homeSchema, ICombinedValue } from "@/state/user_view"
+    import { IQuery, attrToQueryRef, queryLocation } from "@/state/query"
+
     interface ITextType {
         name: "text"
         type: "text" | "number"
@@ -184,7 +185,6 @@
     type IType = ITextType | ITextAreaType | ICodeEditorType | IConnectionField | ISelectType | ICheckType | IUserViewType | IErrorType
 
     const userView = namespace("userView")
-    const staging = namespace("staging")
 
     // TODO: this could be rewritten as a functional component with a UserViewControl sub-component for handling UV state.
     @Component({
@@ -195,20 +195,13 @@
     })
     export default class FormControl extends Vue {
         @Prop({ type: Object }) type!: ValueType
-        // Can be undefined which means failed validation.
-        @Prop() value!: any
-        @Prop({ type: String }) valueText!: string
+        @Prop({ type: Object, required: true }) value!: ICombinedValue
         @Prop({ type: Object, default: {} }) attributes!: AttributesMap
         @Prop({ type: Boolean, default: false }) locked!: boolean
-        @Prop({ type: Boolean }) added!: boolean
-        @Prop({ type: Object, default: null }) update!: IUpdatableField | null
         @Prop({ type: Boolean, default: false }) autofocus!: boolean
-        @Prop({ type: Boolean, default: false }) isInvalid!: boolean
-        @Prop({ type: UserViewResult }) uv!: UserViewResult
+        @Prop({ type: CombinedUserView }) uv!: CombinedUserView
         @Prop({ type: String, default: ""}) caption!: string
 
-        @staging.Action("updateField") updateField!: (args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => Promise<void>
-        @staging.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, newId: number, field: FieldName, value: any }) => Promise<void>
         @userView.State("entries") entriesMap!: EntriesMap
         @userView.Action("getEntries") getEntries!: (_: { schemaName: SchemaName, entityName: EntityName }) => Promise<void>
         @userView.State("current") userViews!: CurrentUserViews
@@ -235,37 +228,29 @@
 
         private beforeDestroy() {
             if (this.inputType.name === "textarea") {
-                this.updateValue(this.valueText.replace(/^ +| +$/gm, "")
+                this.updateValue(this.value.rawValue.replace(/^ +| +$/gm, "")
                                                .replace(/(^\n+)|(\n+$)/g, "")
                                                .replace(/\n+|\r+|(\r\n)+/gm, "\n"))
             } else if (this.inputType.name === "text") {
-                this.updateValue(this.valueText.replace(/(\s+$)|(^\s+)/gm, ""))
+                this.updateValue(this.value.rawValue.replace(/(\s+$)|(^\s+)/gm, ""))
             }
         }
 
         get isNullable() {
-            return this.update === null || this.update.field === null ? true : this.update.field.isNullable
+            return this.value.info === undefined ? true : this.value.info.field.isNullable
         }
 
         get isAwaited() {
-            return !this.isNullable && this.valueText === ""
+            return !this.isNullable && this.value.rawValue === ""
         }
 
         get isDisabled() {
-            return this.locked || this.update === null || this.update.field === null
-        }
-
-        get nestedUv() {
-            if (this.inputType.name !== "userview") {
-                return null
-            } else {
-                return this.userViews.getUserView(this.inputType.args)
-            }
+            return this.locked || this.value.info === undefined
         }
 
         get actions() {
             const actions: IAction[] = []
-            const link = attrToQueryRef(this.update, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"])
+            const link = attrToQueryRef(this.value.info, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"])
             if (link !== null) {
                 actions.push({ name: this.$tc("follow_reference"), location: queryLocation(link) })
             }
@@ -283,37 +268,38 @@
         get inputType(): IType {
             const controlAttr = this.attributes["Control"]
             if (controlAttr === "UserView") {
-                if (this.value === undefined) {
+                const value = this.value.value
+                if (value === undefined) {
                     return { name: "error", text: this.$tc("no_uv") }
                 }
-                if (typeof this.value !== "object" || this.value === null) {
+                if (typeof value !== "object" || value === null) {
                     return { name: "error", text: this.$tc("invalid_uv") }
                 }
 
                 let ref: IUserViewRef
-                if (typeof this.value.ref === "object" && this.value.ref !== null) {
-                    ref = this.value.ref
+                if (typeof value.ref === "object" && value.ref !== null) {
+                    ref = value.ref
                 } else {
-                    ref = this.value
+                    ref = value
                 }
                 if (typeof ref.schema !== "string" || typeof ref.name !== "string") {
                     return { name: "error", text: this.$tc("no_uv") }
                 }
 
                 let args: Record<string, any>
-                if (typeof this.value.args === "object" && this.value.args !== null) {
-                    args = this.value.args
+                if (typeof value.args === "object" && value.args !== null) {
+                    args = value.args
                 } else {
-                    if (this.update === null) {
+                    if (this.value.info === undefined) {
                         return { name: "error", text: this.$tc("invalid_uv") }
                     } else {
-                        args = { id: this.update.id }
+                        args = { id: this.value.info.id }
                     }
                 }
 
                 let defaultValues: Record<string, any> = {}
-                if (typeof this.value.defaultValues === "object" && this.value.defaultValues !== null) {
-                    defaultValues = this.value.defaultValues
+                if (typeof value.defaultValues === "object" && value.defaultValues !== null) {
+                    defaultValues = value.defaultValues
                 }
                 const viewArgs: IUserViewArguments = {
                     source: {
@@ -333,8 +319,8 @@
             const heightSinglelineText = "calc(2em + 6px)"
             const heightMultilineText = "calc(4em + 12px)"
             const heightCodeEditor = "500px"
-            if (this.update !== null && this.update.field !== null) {
-                const fieldType = this.update.field.fieldType
+            if (this.value.info !== undefined) {
+                const fieldType = this.value.info.field.fieldType
                 switch (fieldType.type) {
                     case "reference":
                         const { schema, name: entity } = fieldType.entity
@@ -356,7 +342,7 @@
                     case "enum":
                         return {
                             name: "connectionfield",
-                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: attrToQueryRef(this.update, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]) }] : []), ...fieldType.values.map(x => ({ text: x, value: x, link: attrToQueryRef(this.update, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]) }))],
+                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: attrToQueryRef(this.value.info, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]) }] : []), ...fieldType.values.map(x => ({ text: x, value: x, link: attrToQueryRef(this.value.info, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]) }))],
                         }
                     // case "enum":
                         // return {
@@ -395,33 +381,13 @@
         }
 
         private updateValue(text: string) {
-            if (this.update === null || this.update.field === null) {
+            if (this.value.info === undefined) {
                 console.assert(false, "No update entity defined in view")
                 return
             }
 
-            if (this.valueText !== text) {
-                const entity = this.update.fieldRef.entity
-
+            if (this.value.rawValue !== text) {
                 this.$emit("update", text)
-
-                if (this.added) {
-                    this.setAddedField({
-                       schema: entity.schema,
-                        entity: entity.name,
-                        newId: this.update.id,
-                        field: this.update.fieldRef.name,
-                        value: text,
-                    })
-                } else {
-                    this.updateField({
-                        schema: entity.schema,
-                        entity: entity.name,
-                        id: this.update.id,
-                        field: this.update.fieldRef.name,
-                        value: text,
-                    })
-                }
             }
         }
     }
@@ -513,7 +479,7 @@
         margin-top: 1.3em;
         z-index:1;
     }
-    .select-container-after{
+    .select-container-after {
         width: 0px !important;
         z-index:1;
     }
@@ -594,46 +560,7 @@
             }
         }
     }
-    /*для формконтрола внутри таблицы*/
-    td > div.form-control-panel {
-        left: calc(50% - 175px);
-        top: calc(50% - 50px);
-        position: fixed;
-        z-index: 1000; /* FormControl поверх таблицы */
-        background-color: var(--MenuColor);
-        display: block;
-        align-items: center;
-        padding: 20px;
-    }
-    @media screen and (max-device-width: 480px){
-        td > div.form-control-panel {
-            left: 2px;
-            width: calc(100% - 4px);
-        }
-        td > div.form-control-panel > div.select-container {
-            width: calc(100vw - 44px) !important;
-            /*padding 20px and left 2px*/
-        }
 
-        td > div.form-control-panel > div.select-container > select.form-control-panel_select {
-            width: 100%;
-        }
-        td > div.form-control-panel > div.select-container:after {
-            position: relative;
-            left: 0px;
-        }
-    }
-    td > div.form-control-panel > div.select-container {
-        width: 300px
-    }
-    td > div.form-control-panel > pre {
-        min-width: 600px;
-        height: 200px !important;
-        margin-bottom: 0px;
-    }
-    td > div.form-control-panel > textarea.singleline {
-       white-space:nowrap;
-    }
     *:focus {
         border: 0 !important;
         box-shadow: none !important;

@@ -1,65 +1,50 @@
-<template functional>
+<template>
     <!-- When you change anything here, also make corresponding changes in TableRow! -->
-    <tr :style="props.entry.style" class="fixed-place-tr none_selected table-tr">
+    <tr :style="localRow.extra.style" class="fixed-place-tr none_selected table-tr">
         <td class="fixed-place-td table-tr_td">
-            <div class="fix" :class="{ 'selected' : props.selected }">
-                <div v-if="props.entry.id !== -1" 
-                    @click="'select' in listeners && listeners.select($event)"
-                    class="fixed-column">
-                    <input type="checkbox" :checked="props.selected">
+            <div class="fix"  :class="{ 'selected': localRow.extra.selected }">
+                <div v-if="from !== 'new'"
+                        @click="$emit('select', $event)"
+                        class="fixed-column">
+                    <input type="checkbox" :checked="localRow.extra.selected">
                 </div>
-                <div v-else class="fixed-column">
-                </div>
-                <div v-if="props.hasRowLinks" class="fixed-column">
-                    <UserViewLink v-if="props.entry.linkForRow !== null" :uv="props.entry.linkForRow">
+                <div v-else class="fixed-column"></div>
+                <div v-if="localUv.hasRowLinks" class="fixed-column">
+                    <UserViewLink v-if="localRow.extra.link !== undefined" :uv="localRow.extra.link">
                         ⤢
                     </UserViewLink>
                 </div>
-                <div v-for="i in props.columnIndexes"
+                <TableFixedCell v-for="i in columnIndexes"
                         :key="i"
-                        @click="'cellClick' in listeners && listeners.cellClick(props.entry.cells[i], props.entry, $event)"
-                        :style="Object.assign({}, props.entry.cells[i].style, props.columns[i].style)">
-                    <!-- We don't have FormControl here because it already exists in TableRow for the same cell -->
-                    <template>
-                        <p :style="props.entry.cells[i].style">
-                            <UserViewLink v-if="props.entry.cells[i].link !== null" :uv="props.entry.cells[i].link">
-                                <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"
-                                        :checked="props.entry.cells[i].value"
-                                        class="div_checkbox"
-                                        disabled />
-                                <template v-else>
-                                    {{ props.entry.cells[i].valueText }}
-                                </template>
-                            </UserViewLink>
-                            <template v-else>
-                                <b-checkbox v-if="typeof props.entry.cells[i].value === 'boolean'"
-                                        :checked="props.entry.cells[i].value"
-                                        class="div_checkbox"
-                                        disabled />
-                                <template v-else>
-                                    {{ props.entry.cells[i].valueText }}
-                                </template>
-                            </template>
-                        </p>
-                    </template>
-                </div>
+                        @cellClick="$emit('cellClick', ...arguments)"
+                        :value="row.values[i]"
+                        :localValue="localRow.values[i]"
+                        :columnPosition="i"
+                        :column="localUv.columns[i]" />
             </div>
         </td>
     </tr>
 </template>
 
 <script lang="ts">
-    export default {
-        name: "TableFixedRow",
-        props: {
-            entry: { type: Object, required: true },
-            columnIndexes: { type: Array, required: true },
-            columns: { type: Array, required: true },
-            uv: { type: Object, required: true },
-            added: { type: Boolean, default: false },
-            hasRowLinks: { type: Boolean, required: true },
-            selected: { type: Boolean, default: false },
+    import { Component, Vue, Prop, Watch } from "vue-property-decorator"
+
+    import TableFixedCell from "@/components/views/table/TableFixedCell.vue"
+
+    @Component({
+        components: {
+            TableFixedCell,
         },
+    })
+    export default class TableFixedRow extends Vue {
+        // We don't bother to set types here properly, they matter no more than for TableRow.
+        // The reason this is not a functional component is because of performance.
+        // See https://forum.vuejs.org/t/performance-for-large-numbers-of-components/13545/10
+        @Prop({ type: Object, required: true }) row!: any
+        @Prop({ type: Object, required: true }) localRow!: any
+        @Prop({ type: Array, required: true }) columnIndexes!: any[]
+        @Prop({ type: Object, required: true }) localUv!: any
+        @Prop({ type: String, default: "existing" }) from!: string
     }
 </script>
 

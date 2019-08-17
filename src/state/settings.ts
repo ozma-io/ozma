@@ -1,7 +1,6 @@
 import { Module } from "vuex"
 
 import { IRef, convertString } from "@/utils"
-import seq from "@/sequences"
 import * as Api from "@/api"
 
 export class CurrentSettings {
@@ -83,7 +82,7 @@ const settingsModule: Module<ISettingsState, {}> = {
                     if (state.pending !== pending.ref) {
                         throw Error("Pending operation cancelled")
                     }
-                    const values = seq(res.result.rows).map<[string, string]>(row => [row.values[0].value, row.values[1].value]).toObject()
+                    const values = Object.fromEntries(res.result.rows.map(row => [row.values[0].value, row.values[1].value]))
                     const settings = new CurrentSettings(values)
                     commit("setSettings", settings)
                     return settings
