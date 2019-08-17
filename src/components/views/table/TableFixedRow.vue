@@ -1,48 +1,50 @@
-<template functional>
+<template>
     <!-- When you change anything here, also make corresponding changes in TableRow! -->
-    <tr :style="props.localRow.extra.style" class="fixed-place-tr none_selected table-tr">
+    <tr :style="localRow.extra.style" class="fixed-place-tr none_selected table-tr">
         <td class="fixed-place-td table-tr_td">
-            <div class="fix"  :class="{ 'selected': props.localRow.extra.selected }">
-                <div v-if="props.from !== 'new'"
-                        @click="'select' in listeners && listeners.select($event)"
+            <div class="fix"  :class="{ 'selected': localRow.extra.selected }">
+                <div v-if="from !== 'new'"
+                        @click="$emit('select', $event)"
                         class="fixed-column">
-                    <input type="checkbox" :checked="props.localRow.extra.selected">
+                    <input type="checkbox" :checked="localRow.extra.selected">
                 </div>
                 <div v-else class="fixed-column"></div>
-                <div v-if="props.localUv.hasRowLinks" class="fixed-column">
-                    <UserViewLink v-if="props.localRow.extra.link !== undefined" :uv="props.localRow.extra.link">
+                <div v-if="localUv.hasRowLinks" class="fixed-column">
+                    <UserViewLink v-if="localRow.extra.link !== undefined" :uv="localRow.extra.link">
                         ⤢
                     </UserViewLink>
                 </div>
-                <TableFixedCell v-for="i in props.columnIndexes"
+                <TableFixedCell v-for="i in columnIndexes"
                         :key="i"
-                        @cellClick="listeners.cellClick"
-                        :value="props.row.values[i]"
-                        :localValue="props.localRow.values[i]"
+                        @cellClick="$emit('cellClick', ...arguments)"
+                        :value="row.values[i]"
+                        :localValue="localRow.values[i]"
                         :columnPosition="i"
-                        :column="props.localUv.columns[i]" />
+                        :column="localUv.columns[i]" />
             </div>
         </td>
     </tr>
 </template>
 
 <script lang="ts">
-    import Vue from "vue"
+    import { Component, Vue, Prop, Watch } from "vue-property-decorator"
 
     import TableFixedCell from "@/components/views/table/TableFixedCell.vue"
 
-    // FIXME: workaround for https://github.com/vuejs/vue/issues/7492
-    Vue.component("TableFixedCell", TableFixedCell)
-
-    export default {
-        name: "TableFixedRow",
-        props: {
-            row: { type: Object, required: true },
-            localRow: { type: Object, required: true },
-            columnIndexes: { type: Array, required: true },
-            localUv: { type: Object, required: true },
-            from: { type: String, default: "existing" },
+    @Component({
+        components: {
+            TableFixedCell,
         },
+    })
+    export default class TableFixedRow extends Vue {
+        // We don't bother to set types here properly, they matter no more than for TableRow.
+        // The reason this is not a functional component is because of performance.
+        // See https://forum.vuejs.org/t/performance-for-large-numbers-of-components/13545/10
+        @Prop({ type: Object, required: true }) row!: any
+        @Prop({ type: Object, required: true }) localRow!: any
+        @Prop({ type: Array, required: true }) columnIndexes!: any[]
+        @Prop({ type: Object, required: true }) localUv!: any
+        @Prop({ type: String, default: "existing" }) from!: string
     }
 </script>
 

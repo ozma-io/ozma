@@ -82,6 +82,7 @@
                                 :localRow="local.emptyRow.local"
                                 :columnIndexes="columnIndexes"
                                 :localUv="local.extra"
+                                :showFixedRow="showFixedRow"
                                 from="new"
                                 @cellClick="clickCell({ type: 'new', column: arguments[0] }, arguments[1])" />                        
                     </template>
@@ -100,6 +101,7 @@
                                 :localRow="local.newRows[rowId]"
                                 :columnIndexes="columnIndexes"
                                 :localUv="local.extra"
+                                :showFixedRow="showFixedRow"
                                 from="added"
                                 @select="selectRow({ added: true, position: rowIndex }, $event)"
                                 @cellClick="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])" />
@@ -118,6 +120,7 @@
                                 :localRow="local.rows[rowI]"
                                 :columnIndexes="columnIndexes"
                                 :localUv="local.extra"
+                                :showFixedRow="showFixedRow"
                                 @select="selectRow({ added: false, position: rowIndex }, $event)"
                                 @cellClick="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])" />
                     </template>

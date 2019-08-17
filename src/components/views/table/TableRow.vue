@@ -1,44 +1,47 @@
-<template functional>
+<template>
     <!-- When you change anything here, also make corresponding changes in TableFixedRow! -->
-    <tr :style="props.localRow.extra.style" :class="props.localRow.extra.selected ? 'selected table-tr' : 'none_selected table-tr'">
-        <td v-if="props.from !== 'new'" @click="'select' in listeners && listeners.select($event)"
-                :class="[{ 'hide_content': props.showFixedRow }, 'fixed-column', 'checkbox-cells']">
-            <input type="checkbox" :checked="props.localRow.extra.selected">
+    <tr :style="localRow.extra.style" :class="localRow.extra.selected ? 'selected table-tr' : 'none_selected table-tr'">
+        <td v-if="from !== 'new'" @click="$emit('select', $event)"
+                :class="[{ 'hide_content': showFixedRow }, 'fixed-column', 'checkbox-cells']">
+            <input type="checkbox" :checked="localRow.extra.selected">
         </td>
         <td v-else class="fixed-column checkbox-cells"></td>
-        <td v-if="props.localUv.hasRowLinks" :class="[{'hide_content' : props.showFixedRow},'fixed-column', 'opemform-cells']">
-            <UserViewLink v-if="props.localRow.extra.link !== undefined" :uv="props.localRow.extra.link">
+        <td v-if="localUv.hasRowLinks" :class="[{ 'hide_content': showFixedRow },'fixed-column', 'opemform-cells']">
+            <UserViewLink v-if="localRow.extra.link !== undefined" :uv="localRow.extra.link">
                 ⤢
             </UserViewLink>
         </td>
-        <TableCell v-for="i in props.columnIndexes"
+        <TableCell v-for="i in columnIndexes"
                 :key="i"
-                @cellClick="listeners.cellClick"
-                :value="props.row.values[i]"
-                :localValue="props.localRow.values[i]"
+                @cellClick="$emit('cellClick', arguments[0], arguments[1])"
+                :value="row.values[i]"
+                :localValue="localRow.values[i]"
                 :columnPosition="i"
-                :column="props.localUv.columns[i]"
+                :column="localUv.columns[i]"
                 :from="from" />
     </tr>
 </template>
 
 <script lang="ts">
-    import Vue from "vue"
+    import { Component, Vue, Prop, Watch } from "vue-property-decorator"
 
     import TableCell from "@/components/views/table/TableCell.vue"
 
-    // FIXME: workaround for https://github.com/vuejs/vue/issues/7492
-    Vue.component("TableCell", TableCell)
-
-    export default {
-        name: "TableRow",
-        props: {
-            row: { type: Object, required: true },
-            localRow: { type: Object, required: true },
-            columnIndexes: { type: Array, required: true },
-            localUv: { type: Object, required: true },
-            from: { type: String, default: "existing" },
+    @Component({
+        components: {
+            TableCell,
         },
+    })
+    export default class TableRow extends Vue {
+        // We don't bother to set types here properly, they matter no more than for TableRow.
+        // The reason this is not a functional component is because of performance.
+        // See https://forum.vuejs.org/t/performance-for-large-numbers-of-components/13545/10
+        @Prop({ type: Object, required: true }) row!: any
+        @Prop({ type: Object, required: true }) localRow!: any
+        @Prop({ type: Array, required: true }) columnIndexes!: any[]
+        @Prop({ type: Object, required: true }) localUv!: any
+        @Prop({ type: String, default: "existing" }) from!: string
+        @Prop({ type: Boolean, default: false }) showFixedRow!: boolean
     }
 </script>
 
