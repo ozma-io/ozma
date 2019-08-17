@@ -1,10 +1,10 @@
 <i18n>
     {
         "en": {
-            "empty": "Is empty"
+            "empty": "(Empty)"
         },
         "ru": {
-            "empty": "Пусто"
+            "empty": "(Пусто)"
         }
     }
 </i18n>
@@ -17,12 +17,12 @@
                 <option v-for="option in options" v-bind:key="option.value" v-bind:value="option.text" ></option>
             </datalist>
         </div>
-        <div v-if="!selectedEntrys.length && !showedField" class="empty-block">{{$t('empty')}}</div>
-        <div :class="['entrys-block',{'entrys-meny-block':(meny && selectedEntrys.length > 1)||showedField}]">
-            <div v-for="entry in selectedEntrys" :class="['entry-block',{'entry-meny-block':meny && selectedEntrys.length > 1}]"> 
+        <div v-if="!selectedEntries.length && !showedField" class="empty-block">{{$t('empty')}}</div>
+        <div :class="['entrys-block',{'entrys-meny-block':(meny && selectedEntries.length > 1)||showedField}]">
+            <div v-for="entry in selectedEntries" :class="['entry-block',{'entry-meny-block':manyFields && selectedEntries.length > 1}]"> 
                 <UserViewLink v-if="entry.link !== null" :uv="entry.link">{{entry.text}}</UserViewLink>
                 <span v-else>{{entry.text}}</span>
-                <div v-if="meny" class="buttoncolor-block clear-block"><input type="button" class="material-icons button_clear" value="clear" @click="deletion(entry.text)"/></div>
+                <div v-if="manyFields" class="buttoncolor-block clear-block"><input type="button" class="material-icons button_clear" value="clear" @click="deletion(entry.text)"/></div>
             </div>
         </div>
     </div>
@@ -47,18 +47,17 @@
     export default class ActionsMenu extends Vue {
         @Prop({ type: Array }) options!: ISelectOption[]
         @Prop() value!: any
-        @Prop({ type: Boolean }) menyFields!: boolean
+        @Prop({ type: Boolean }) manyFields!: boolean
         @Prop() link!: IQuery | null
 
         private search: string = ""
         private showedField: boolean = false
-        private meny: boolean = this.menyFields
-        private selectedEntrys: ISelectedEntry[] = []
+        private selectedEntries: ISelectedEntry[] = []
 
         private created() {
             for (const i of this.options) {
                 if (i.value === this.value.toString()) {
-                    this.selectedEntrys.push({ text: i.text, value: i.value, link: i.link })
+                    this.selectedEntries.push({ text: i.text, value: i.value, link: i.link })
                 }
             }
         }
@@ -67,7 +66,7 @@
             this.created()
         }
         private clear() {
-            this.selectedEntrys = []
+            this.selectedEntries = []
         }
         private deletion(text: string) {
             const indexarray = (a: ISelectedEntry[], txt: string) => {
@@ -79,7 +78,7 @@
                 return -1
 
             }
-            this.selectedEntrys.splice(indexarray(this.selectedEntrys, text), 1)
+            this.selectedEntries.splice(indexarray(this.selectedEntries, text), 1)
             const newValue = null
             this.$emit("update:value", newValue)
         }
@@ -105,15 +104,15 @@
             const entryvalue: string = this.options[indexarray(this.options, entrytext)].value
             const entrylink: IQuery | null = this.options[indexarray(this.options, entrytext)].link
             const elemoftext: ISelectedEntry = { text: entrytext, value: entryvalue, link: entrylink }
-            if (!this.meny) {
+            if (!this.manyFields) {
                 this.clear()
             }
-            if (!inarray(this.selectedEntrys, entrytext) && inarray(this.options, entrytext)) {
-                this.selectedEntrys.push(elemoftext)
+            if (!inarray(this.selectedEntries, entrytext) && inarray(this.options, entrytext)) {
+                this.selectedEntries.push(elemoftext)
                 this.search = ""
 
-                if (!this.meny) {
-                    const newValue = this.selectedEntrys[0].value
+                if (!this.manyFields) {
+                    const newValue = this.selectedEntries[0].value
                     this.$emit("update:value", newValue)
                 }
             }

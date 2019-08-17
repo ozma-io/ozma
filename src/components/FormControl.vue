@@ -56,7 +56,7 @@
                          :required="!isNullable"
                          ref="control" />
         <ConnectionField v-else-if="inputType.name === 'connectionfield'" 
-                         :value="value"
+                         :value="value.rawValue"
                          :options="inputType.options"
                          :menyFields="false"
                           @update:value="updateValue($event)"
@@ -76,21 +76,22 @@
                     @update:actions="extraActions = $event"
                     ref="control" />
         <div v-else-if="inputType.name === 'select'" class="select-container">
-        <select
-                :value="value.rawValue"
-                :class="['form-control-panel_select',
-                        {'form-control-panel_select_error': value.erroredOnce,
-                         'form-control-panel_select_req': isAwaited}]"
-                @input="updateValue($event.target.value)"
-                :disabled="isDisabled"
-                ref="control">
-            <option v-for="option in inputType.options" v-bind:key="option.value" v-bind:value="option.value">
-                {{ option.text }}
-            </option>
-        </select>
-        <div class="select-container-after">
+            <select
+                    :value="value.rawValue"
+                    :class="['form-control-panel_select',
+                            {'form-control-panel_select_error': value.erroredOnce,
+                            'form-control-panel_select_req': isAwaited}]"
+                    @input="updateValue($event.target.value)"
+                    :disabled="isDisabled"
+                    ref="control">
+                <option v-for="option in inputType.options" v-bind:key="option.value" v-bind:value="option.value">
+                    {{ option.text }}
+                </option>
+            </select>
 
-        </div>
+            <div class="select-container-after">
+
+            </div>
         </div>
         <!-- We don't use bootstrap-vue's b-form-input type=text because of problems with Safari
                 https://github.com/bootstrap-vue/bootstrap-vue/issues/1951
