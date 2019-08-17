@@ -1,31 +1,31 @@
-<template functional>
+<template>
     <!-- When you change anything here, also make corresponding changes in TableFixedCell! -->
-    <td @click="listeners.cellClick !== undefined && listeners.cellClick(props.columnPosition, $event)"
-            :style="props.localValue.style"
-            :class="['table-td', {'fixed-column': props.column.fixed,
-                'select_fixed': props.localValue.selected && props.column.fixed,
-                'select': props.localValue.selected && !props.column.fixed,
-                'error_style': props.value.erroredOnce,
-                'required_cell_style': props.from === 'added' && props.value.rawValue === '' && props.value.info !== undefined && !props.value.info.field.isNullable,
-                'editing_style': props.localValue.editing !== undefined,
-                'disable_cell': props.value.update === undefined && props.from !== 'existing'}]">
+    <td @click="$emit('cellClick', columnPosition, $event)"
+            :style="localValue.style"
+            :class="['table-td', {'fixed-column': column.fixed,
+                'select_fixed': localValue.selected && column.fixed,
+                'select': localValue.selected && !column.fixed,
+                'error_style': value.erroredOnce,
+                'required_cell_style': from === 'added' && value.rawValue === '' && value.info !== undefined && !value.info.field.isNullable,
+                'editing_style': localValue.editing !== undefined,
+                'disable_cell': value.update === undefined && from !== 'existing'}]">
         <p>
-            <UserViewLink v-if="props.localValue.link !== undefined" :uv="props.localValue.link">
-                <b-checkbox v-if="typeof props.value.value === 'boolean'"
-                        :checked="props.value.value"
+            <UserViewLink v-if="localValue.link !== undefined" :uv="localValue.link">
+                <b-checkbox v-if="typeof value.value === 'boolean'"
+                        :checked="value.value"
                         class="div_checkbox"
                         disabled />
                 <template v-else>
-                    {{ props.localValue.valueText }}
+                    {{ localValue.valueText }}
                 </template>
             </UserViewLink>
             <template v-else>
-                <b-checkbox v-if="typeof props.value.value === 'boolean'"
-                        :checked="props.value.value"
+                <b-checkbox v-if="typeof value.value === 'boolean'"
+                        :checked="value.value"
                         class="div_checkbox"
                         disabled />
                 <template v-else>
-                    {{ props.localValue.valueText }}
+                    {{ localValue.valueText }}
                 </template>
             </template>
         </p>
@@ -33,14 +33,17 @@
 </template>
 
 <script lang="ts">
-    export default {
-        name: "TableCell",
-        props: {
-            value: { type: Object, required: true },
-            localValue: { type: Object, required: true },
-            column: { type: Object, required: true },
-            columnPosition: { type: Number, required: true },
-            from: { type: String, default: "existing" },
-        },
+    import { Component, Vue, Prop, Watch } from "vue-property-decorator"
+
+    @Component
+    export default class TableCell extends Vue {
+        // We don't bother to set types here properly, they matter no more than for TableRow.
+        // The reason this is not a functional component is because of performance.
+        // See https://forum.vuejs.org/t/performance-for-large-numbers-of-components/13545/10
+        @Prop({ type: Object, required: true }) value!: any
+        @Prop({ type: Object, required: true }) localValue!: any
+        @Prop({ type: Object, required: true }) column!: any
+        @Prop({ type: Number, required: true }) columnPosition!: number
+        @Prop({ type: String, default: "existing" }) from!: string
     }
 </script>
