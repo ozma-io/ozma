@@ -19,7 +19,8 @@
         </div>
         <div v-if="!selectedEntries.length && !showedField" class="empty-block">{{$t('empty')}}</div>
         <div :class="['entrys-block',{'entrys-meny-block':(meny && selectedEntries.length > 1)||showedField}]">
-            <div v-for="entry in selectedEntries" :class="['entry-block',{'entry-meny-block':manyFields && selectedEntries.length > 1}]"> 
+            <div v-for="entry in selectedEntries" :class="['entry-block',{'entry-meny-block':manyFields && selectedEntries.length > 1,
+                                                                           'link':entry.link}]"> 
                 <UserViewLink v-if="entry.link !== null" :uv="entry.link">{{entry.text}}</UserViewLink>
                 <span v-else>{{entry.text}}</span>
                 <div v-if="manyFields" class="buttoncolor-block clear-block"><input type="button" class="material-icons button_clear" value="clear" @click="deletion(entry.text)"/></div>
@@ -122,6 +123,13 @@
 </script>
 
 <style scoped>
+    a {
+        color: var(--ButtonTextColor) !important;
+    }
+    .link {
+        z-index: 101;
+        position: sticky;
+    }
     .field-block{
         display: contents;
         vertical-align: bottom;
@@ -133,8 +141,6 @@
         order: 0;
     }
     .added-block{
-        position:relative;
-        z-index: 101;
         display: inline-block;
         width: 5px;
     }
@@ -162,12 +168,15 @@
     .search-input {
         padding: 0;
         border: 0;
-        width: 100vh;
+        width: 300vh;
         opacity: 0;
         margin-left: 5px;
+
     }
     .search-input:focus{
         opacity:1;
+        position:relative;
+        z-index: 102;
     }
     .empty-block {
         color: #D6D5D5;

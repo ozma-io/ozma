@@ -21,7 +21,7 @@
 
 <template>
     <div :class="['form-control-panel',{'form-control-panel-hidden': inputType.name === 'connectionfield'}]">
-        <div class="nested-menu" v-if="actions.length > 0">
+        <div class="nested-menu" v-if="actions.length > 0 && inputType.name !== 'connectionfield'">
             <ActionsMenu title="view_headline"
                          :actions="actions" />
             <div v-if="caption.length > 0" class="caption-editors">
@@ -333,10 +333,10 @@
                         if (entries === undefined || entries instanceof Promise) {
                             return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
                         } else {
-                            const select = Object.entries(entries).map(([id, name]) => ({ text: name, value: String(id), link: null}))
+                            const select = Object.entries(entries).map(([id, name]) => ({ text: name, value: String(id), link: attrToQueryRef(this.value.info, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]) }))
                             return {
-                                name: "select",
-                                options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: null }] : []), ...select],
+                                name: "connectionfield",
+                                options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: attrToQueryRef(this.value.info, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]) }] : []), ...select],
                             }
                         }
                     case "enum":
