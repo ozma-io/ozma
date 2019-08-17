@@ -27,7 +27,8 @@ Vue.use(Vuex)
 Vue.use(BootstrapVue)
 
 export const store = new Vuex.Store({
-    strict: process.env["NODE_ENV"] !== "production",
+    // Big performance hog on dev!
+    // strict: process.env["NODE_ENV"] !== "production",
     modules: {
         auth: authModule,
         settings: settingsModule,
