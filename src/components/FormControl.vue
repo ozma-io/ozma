@@ -130,7 +130,7 @@
     import { Component, Vue, Prop, Watch } from "vue-property-decorator"
     import { namespace } from "vuex-class"
 
-    import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef } from "@/api"
+    import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef, IEntityRef } from "@/api"
     import { IAction } from "@/components/ActionsMenu.vue"
     import { IUpdatableField, IUserViewArguments, CombinedUserView, EntriesMap, CurrentUserViews, homeSchema, ICombinedValue } from "@/state/user_view"
     import { IQuery, attrToQueryRef, queryLocation } from "@/state/query"
@@ -203,7 +203,7 @@
         @Prop({ type: String, default: ""}) caption!: string
 
         @userView.State("entries") entriesMap!: EntriesMap
-        @userView.Action("getEntries") getEntries!: (_: { schemaName: SchemaName, entityName: EntityName }) => Promise<void>
+        @userView.Action("getEntries") getEntries!: (_: IEntityRef) => Promise<void>
         @userView.State("current") userViews!: CurrentUserViews
         @userView.Action("getNestedView") getNestedView!: (_: IUserViewArguments) => Promise<void>
 
@@ -323,13 +323,13 @@
                 const fieldType = this.value.info.field.fieldType
                 switch (fieldType.type) {
                     case "reference":
-                        const { schema, name: entity } = fieldType.entity
-                        this.getEntries({ schemaName: schema, entityName: entity })
-                        const currentSchema = this.entriesMap[schema]
+                        const ref = fieldType.entity
+                        this.getEntries(ref)
+                        const currentSchema = this.entriesMap[ref.schema]
                         if (currentSchema === undefined) {
                             return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
                         }
-                        const entries = currentSchema[entity]
+                        const entries = currentSchema[ref.name]
                         if (entries === undefined || entries instanceof Promise) {
                             return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
                         } else {
