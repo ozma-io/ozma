@@ -70,45 +70,20 @@
             this.selectedEntries = []
         }
         private deletion(text: string) {
-            const indexarray = (a: ISelectedEntry[], txt: string) => {
-                for (let i = 0; i < a.length; i++) {
-                    if (a[i].text === txt) {
-                        return i
-                    }
-                }
-                return -1
-
-            }
-            this.selectedEntries.splice(indexarray(this.selectedEntries, text), 1)
+            this.selectedEntries.splice(this.selectedEntries.findIndex((currenValue) => { return currenValue.text = text }), 1)
             const newValue = null
             this.$emit("update:value", newValue)
         }
         private addEntry() {
             const newentry: any = this.$refs["newentry"]
-            const indexarray = (a: ISelectedEntry[], txt: string) => {
-                for (let i = 0; i < a.length; i++) {
-                    if (a[i].text === txt) {
-                        return i
-                    }
-                }
-                return -1
-
-            }
-            const inarray = (a: ISelectedEntry[], txt: string) => {
-                if (indexarray(a, txt) >= 0) {
-                    return true
-                }
-                return false
-
-            }
             const entrytext: string = newentry.value
-            const entryvalue: string = this.options[indexarray(this.options, entrytext)].value
-            const entrylink: IQuery | null = this.options[indexarray(this.options, entrytext)].link
+            const entryvalue: string = this.options[this.options.findIndex((currenValue) => { return currenValue.text = entrytext })].value
+            const entrylink: IQuery | null = this.options[this.options.findIndex((currenValue) => { return currenValue.text = entrytext })].link
             const elemoftext: ISelectedEntry = { text: entrytext, value: entryvalue, link: entrylink }
             if (!this.manyFields) {
                 this.clear()
             }
-            if (!inarray(this.selectedEntries, entrytext) && inarray(this.options, entrytext)) {
+            if (this.selectedEntries.some((currenValue) => { return currenValue.text = entrytext }) && this.options.some((currenValue) => { return currenValue.text = entrytext })) {
                 this.selectedEntries.push(elemoftext)
                 this.search = ""
 
