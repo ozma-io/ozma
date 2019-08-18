@@ -20,8 +20,8 @@
 </i18n>
 
 <template>
-    <div :class="['form-control-panel',{'form-control-panel-hidden': inputType.name === 'connectionfield'}]">
-        <div class="nested-menu" v-if="actions.length > 0 && inputType.name !== 'connectionfield'">
+    <div :class="['form-control-panel',{'form-control-panel-hidden': inputType.name === 'select'}]">
+        <div class="nested-menu" v-if="actions.length > 0 && inputType.name !== 'select'">
             <ActionsMenu title="view_headline"
                          :actions="actions" />
             <div v-if="caption.length > 0" class="caption-editors">
@@ -55,10 +55,9 @@
                          :max-rows="6"
                          :required="!isNullable"
                          ref="control" />
-        <ConnectionField v-else-if="inputType.name === 'connectionfield'" 
+        <SelectionField v-else-if="inputType.name === 'select'"
                          :value="value.rawValue"
                          :options="inputType.options"
-                         :menyFields="false"
                           @update:value="updateValue($event)"
                          ref="control"
                          />
@@ -151,8 +150,8 @@
         style: Record<string, any>
     }
 
-    interface IConnectionField {
-        name: "connectionfield"
+    interface ISelectType {
+        name: "select"
         options: ISelectOption[]
     }
 
@@ -160,11 +159,6 @@
         text: string
         value: string
         link: IQuery | null
-    }
-
-    interface ISelectType {
-        name: "select"
-        options: ISelectOption[]
     }
 
     interface ICheckType {
@@ -182,15 +176,14 @@
         text: string
     }
 
-    type IType = ITextType | ITextAreaType | ICodeEditorType | IConnectionField | ISelectType | ICheckType | IUserViewType | IErrorType
+    type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | ICheckType | IUserViewType | IErrorType
 
     const userView = namespace("userView")
 
-    // TODO: this could be rewritten as a functional component with a UserViewControl sub-component for handling UV state.
     @Component({
         components: {
             CodeEditor: () => import("@/components/CodeEditor.vue"),
-            ConnectionField: () => import("@/components/ConnectionField.vue"),
+            SelectionField: () => import("@/components/SelectionField.vue"),
         },
     })
     export default class FormControl extends Vue {
@@ -335,20 +328,15 @@
                         } else {
                             const select = Object.entries(entries).map(([id, name]) => ({ text: name, value: String(id), link: attrToQueryRef(this.value.info, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]) }))
                             return {
-                                name: "connectionfield",
+                                name: "select",
                                 options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: attrToQueryRef(this.value.info, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]) }] : []), ...select],
                             }
                         }
                     case "enum":
                         return {
-                            name: "connectionfield",
+                            name: "select",
                             options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: null }] : []), ...fieldType.values.map(x => ({ text: x, value: x, link: null }))],
                         }
-                    // case "enum":
-                        // return {
-                          //  name: "select",
-                            // options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), ...fieldType.values.map(x => ({ text: x, value: x }))],
-                        // }
                     case "bool":
                         return {
                             name: "select",

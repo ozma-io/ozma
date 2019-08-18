@@ -45,7 +45,7 @@
     }
 
     @Component
-    export default class ConnectionField extends Vue {
+    export default class SelectionField extends Vue {
         @Prop({ type: Array }) options!: ISelectOption[]
         @Prop({ required: true }) value!: any
         @Prop({ type: Boolean, default: false }) manyFields!: boolean
