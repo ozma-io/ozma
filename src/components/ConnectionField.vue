@@ -70,20 +70,20 @@
             this.selectedEntries = []
         }
         private deletion(text: string) {
-            this.selectedEntries.splice(this.selectedEntries.findIndex((currentValue) => { return currentValue.text === text }), 1)
+            this.selectedEntries.splice(this.selectedEntries.findIndex(currentValue =>  currentValue.text === text ), 1)
             const newValue = null
             this.$emit("update:value", newValue)
         }
         private addEntry() {
             const newentry: any = this.$refs["newentry"]
             const entrytext: string = newentry.value
-            const entryvalue: string = this.options[this.options.findIndex((currentValue) => { return currentValue.text === entrytext })].value
-            const entrylink: IQuery | null = this.options[this.options.findIndex((currentValue) => { return currentValue.text === entrytext })].link
+            const entryvalue: string = this.options[this.options.findIndex(currentValue =>  currentValue.text === entrytext )].value
+            const entrylink: IQuery | null = this.options[this.options.findIndex(currentValue =>  currentValue.text === entrytext )].link
             const elemoftext: ISelectedEntry = { text: entrytext, value: entryvalue, link: entrylink }
             if (!this.manyFields) {
                 this.clear()
             }
-            if (!this.selectedEntries.some((currentValue) => { return currentValue.text === entrytext }) && this.options.some((currentValue) => { return currentValue.text === entrytext })) {
+            if (!this.selectedEntries.some(currentValue => currentValue.text === entrytext) && this.options.some(currentValue => currentValue.text === entrytext )) {
                 this.selectedEntries.push(elemoftext)
                 this.search = ""
 
