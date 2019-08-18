@@ -326,10 +326,10 @@
                         if (entries === undefined || entries instanceof Promise) {
                             return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
                         } else {
-                            const select = Object.entries(entries).map(([id, name]) => ({ text: name, value: String(id), link: attrToQueryRef(this.value.info, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]) }))
+                            const select = Object.entries(entries).map(([id, name]) => ({ text: name, value: String(id), link: attrToQueryRef(this.value.info, id, homeSchema(this.uv.args), this.attributes["LinkedView"]) }))
                             return {
                                 name: "select",
-                                options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: attrToQueryRef(this.value.info, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]) }] : []), ...select],
+                                options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: null }] : []), ...select],
                             }
                         }
                     case "enum":
@@ -370,8 +370,7 @@
 
         private updateValue(text: string) {
             if (this.value.info === undefined) {
-                console.assert(false, "No update entity defined in view")
-                return
+                throw Error("No update entity defined in view")
             }
 
             if (this.value.rawValue !== text) {

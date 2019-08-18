@@ -141,6 +141,6 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, value: any):
             return undefined
         }
     } else {
-        console.assert(false, "Invalid field type")
+        throw Error("Invalid field type")
     }
 }

@@ -719,11 +719,11 @@ const userViewModule: Module<IUserViewState, {}> = {
             state.pending = pending
         },
         clear: state => {
-            state.pending = null
             state.current = new CurrentUserViews()
             state.entries = {}
             state.errors = []
             state.fieldsInfo = {}
+            state.pending = null
         },
 
         setEntries: (state, { ref, entries }: { ref: IEntityRef, entries: Entries | Promise<Entries> }) => {
@@ -1098,11 +1098,9 @@ const userViewModule: Module<IUserViewState, {}> = {
     },
     actions: {
         getEntries: ({ state, rootState, commit, dispatch }, ref: IEntityRef) => {
-            const currentSchema = state.entries[ref.schema]
-            if (currentSchema !== undefined) {
-                if (ref.name in currentSchema) {
-                    return
-                }
+            console.assert(state.pending === null)
+            if (ref.schema in state.entries && ref.name in state.entries[ref.schema]) {
+                return
             }
 
             const pending: IRef<Promise<Entries>> = {}
@@ -1168,6 +1166,8 @@ const userViewModule: Module<IUserViewState, {}> = {
         },
         getNestedView: (store, args: IUserViewArguments) => {
             const { state, commit } = store
+
+            console.assert(state.pending === null)
             const uvHash = userViewHash(args)
             if (uvHash in state.current.userViews) {
                 return
