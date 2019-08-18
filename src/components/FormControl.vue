@@ -342,7 +342,7 @@
                     case "enum":
                         return {
                             name: "connectionfield",
-                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: attrToQueryRef(this.value.info, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]) }] : []), ...fieldType.values.map(x => ({ text: x, value: x, link: attrToQueryRef(this.value.info, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]) }))],
+                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: null }] : []), ...fieldType.values.map(x => ({ text: x, value: x, link: null }))],
                         }
                     // case "enum":
                         // return {
