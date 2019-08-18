@@ -130,7 +130,7 @@
     import { Component, Vue, Prop, Watch } from "vue-property-decorator"
     import { namespace } from "vuex-class"
 
-    import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef, IEntityRef } from "@/api"
+    import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef } from "@/api"
     import { IAction } from "@/components/ActionsMenu.vue"
     import { IUpdatableField, IUserViewArguments, CombinedUserView, EntriesMap, CurrentUserViews, homeSchema, ICombinedValue } from "@/state/user_view"
     import { IQuery, attrToQueryRef, queryLocation } from "@/state/query"
@@ -203,7 +203,7 @@
         @Prop({ type: String, default: ""}) caption!: string
 
         @userView.State("entries") entriesMap!: EntriesMap
-        @userView.Action("getEntries") getEntries!: (_: IEntityRef) => Promise<void>
+        @userView.Action("getEntries") getEntries!: (_: { schemaName: SchemaName, entityName: EntityName }) => Promise<void>
         @userView.State("current") userViews!: CurrentUserViews
         @userView.Action("getNestedView") getNestedView!: (_: IUserViewArguments) => Promise<void>
 
@@ -323,13 +323,13 @@
                 const fieldType = this.value.info.field.fieldType
                 switch (fieldType.type) {
                     case "reference":
-                        const ref = fieldType.entity
-                        this.getEntries(ref)
-                        const currentSchema = this.entriesMap[ref.schema]
+                        const { schema, name: entity } = fieldType.entity
+                        this.getEntries({ schemaName: schema, entityName: entity })
+                        const currentSchema = this.entriesMap[schema]
                         if (currentSchema === undefined) {
                             return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
                         }
-                        const entries = currentSchema[ref.name]
+                        const entries = currentSchema[entity]
                         if (entries === undefined || entries instanceof Promise) {
                             return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
                         } else {
@@ -342,7 +342,7 @@
                     case "enum":
                         return {
                             name: "connectionfield",
-                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: attrToQueryRef(this.value.info, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]) }] : []), ...fieldType.values.map(x => ({ text: x, value: x, link: attrToQueryRef(this.value.info, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]) }))],
+                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: null }] : []), ...fieldType.values.map(x => ({ text: x, value: x, link: null }))],
                         }
                     // case "enum":
                         // return {
