@@ -18,7 +18,7 @@
             </datalist>
         </div>
         <div v-if="!selectedEntries.length && !showedField" class="empty-block">{{$t('empty')}}</div>
-        <div :class="['entrys-block',{'entrys-meny-block':(menyFields && selectedEntries.length > 1)||showedField}]">
+        <div :class="['entrys-block',{'entrys-meny-block':(manyFields && selectedEntries.length > 1)||showedField}]">
             <div v-for="entry in selectedEntries" :class="['entry-block',{'entry-meny-block':manyFields && selectedEntries.length > 1,
                                                                            'link':entry.link}]"> 
                 <UserViewLink v-if="entry.link !== null" :uv="entry.link">{{entry.text}}</UserViewLink>
@@ -45,11 +45,10 @@
     }
 
     @Component
-    export default class ActionsMenu extends Vue {
+    export default class ConnectionField extends Vue {
         @Prop({ type: Array }) options!: ISelectOption[]
-        @Prop() value!: any
-        @Prop({ type: Boolean }) manyFields!: boolean
-        @Prop() link!: IQuery | null
+        @Prop({ required: true }) value!: any
+        @Prop({ type: Boolean, default: false }) manyFields!: boolean
 
         private search: string = ""
         private showedField: boolean = false

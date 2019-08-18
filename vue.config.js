@@ -1,4 +1,5 @@
-const webpack = require("webpack")
+const { IgnorePlugin } = require("webpack")
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 
 module.exports = {
     assetsDir: 'static',
@@ -11,7 +12,8 @@ module.exports = {
     },
     configureWebpack: {
         plugins: [
-            new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/)
+            new IgnorePlugin(/^\.\/locale$/, /moment$/)
+            //new BundleAnalyzerPlugin()
         ]
     }
 }

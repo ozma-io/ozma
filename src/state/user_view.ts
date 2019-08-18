@@ -147,7 +147,7 @@ const setOrRequestUpdatedPun = (context: { dispatch: Dispatch, state: IUserViewS
 
     // We don't use `getEntitySummaries` because we request new entries only if Promise wasn't found -- for performance.
     if (fieldType.type === "reference") {
-        if (value.value === null) {
+        if (value.value === null || value.value === undefined) {
             value.pun = ""
         } else {
             const schemaSummaries = state.entries[fieldType.entity.schema]
@@ -1122,11 +1122,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                         const main = valueToRaw(mainType, row.values[1].value)
                         return [id, main]
                     }))
-                    let changes: IEntityChanges | undefined
-                    const schemaChanges = ((rootState as any).staging.current as CurrentChanges).changes[ref.schema]
-                    if (schemaChanges !== undefined) {
-                        changes = schemaChanges[ref.name]
-                    }
+                    const changes: CurrentChanges = (rootState as any).staging.current
                     commit("setEntries", { ref, entries })
                     commit("updateUserViewSummaries", { ref, entries, changes })
                     return entries

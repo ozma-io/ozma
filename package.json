@@ -4,25 +4,23 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve --mode development",
-    "build": "vue-cli-service build"
-  },
-  "description": "FunApp",
-  "author": {
-    "name": ""
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "ace-builds": "^1.4.5",
-    "bootstrap-vue": "^2.0.0-rc.28",
-    "jwt-decode": "^2.2.0",
-    "moment": "^2.24.0",
-    "uuid": "^3.3.2",
+    "core-js": "^2.6.5",
     "vue": "^2.6.10",
     "vue-class-component": "^6.2.0",
     "vue-i18n": "^8.14.0",
     "vue-property-decorator": "^7.3.0",
     "vue-router": "^3.1.2",
     "vuex": "^3.1.1",
-    "vuex-class": "^0.3.2"
+    "vuex-class": "^0.3.2",
+    "bootstrap-vue": "^2.0.0-rc.28",
+    "ace-builds": "^1.4.5",
+    "jwt-decode": "^2.2.0",
+    "moment": "^2.24.0",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "@kazupon/vue-i18n-loader": "^0.3.0",
@@ -31,16 +29,13 @@
     "@vue/cli-plugin-babel": "^3.10.0",
     "@vue/cli-plugin-typescript": "^3.10.0",
     "@vue/cli-service": "^3.10.0",
-    "node-sass": "^4.12.0",
+    "fast-async": "^7.0.6",
+    "sass": "^1.18.0",
     "sass-loader": "^7.2.0",
     "tslint": "^5.18.0",
     "typescript": "^3.5.3",
     "vue-cli-plugin-i18n": "^0.5.2",
-    "vue-template-compiler": "^2.6.10"
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not ie <= 8"
-  ]
+    "vue-template-compiler": "^2.6.10",
+    "webpack-bundle-analyzer": "^3.4.1"
+  }
 }

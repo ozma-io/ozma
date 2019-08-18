@@ -71,7 +71,7 @@
                     :readOnly="isDisabled"
                     ref="control" />
         <UserView v-else-if="inputType.name === 'userview'"
-                    :uv="inputType.args"
+                    :args="inputType.args"
                     :defaultValues="inputType.defaultValues"
                     @update:actions="extraActions = $event"
                     ref="control" />

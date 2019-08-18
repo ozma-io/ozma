@@ -1,0 +1,13 @@
+module.exports = {
+  presets: [
+    ['@vue/app', {
+      "exclude": ["babel-plugin-transform-async-to-generator", "babel-plugin-transform-regenerator"]
+    }]
+  ],
+  "plugins": [
+    ["module:fast-async", {
+      "spec": true,
+      "useRuntimeModule": false
+    }]
+  ]
+}
