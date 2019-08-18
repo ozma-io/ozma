@@ -18,7 +18,7 @@
             </datalist>
         </div>
         <div v-if="!selectedEntries.length && !showedField" class="empty-block">{{$t('empty')}}</div>
-        <div :class="['entrys-block',{'entrys-meny-block':(meny && selectedEntries.length > 1)||showedField}]">
+        <div :class="['entrys-block',{'entrys-meny-block':(menyFields && selectedEntries.length > 1)||showedField}]">
             <div v-for="entry in selectedEntries" :class="['entry-block',{'entry-meny-block':manyFields && selectedEntries.length > 1,
                                                                            'link':entry.link}]"> 
                 <UserViewLink v-if="entry.link !== null" :uv="entry.link">{{entry.text}}</UserViewLink>
@@ -70,20 +70,20 @@
             this.selectedEntries = []
         }
         private deletion(text: string) {
-            this.selectedEntries.splice(this.selectedEntries.findIndex((currenValue) => { return currenValue.text = text }), 1)
+            this.selectedEntries.splice(this.selectedEntries.findIndex((currentValue) => { return currentValue.text === text }), 1)
             const newValue = null
             this.$emit("update:value", newValue)
         }
         private addEntry() {
             const newentry: any = this.$refs["newentry"]
             const entrytext: string = newentry.value
-            const entryvalue: string = this.options[this.options.findIndex((currenValue) => { return currenValue.text = entrytext })].value
-            const entrylink: IQuery | null = this.options[this.options.findIndex((currenValue) => { return currenValue.text = entrytext })].link
+            const entryvalue: string = this.options[this.options.findIndex((currentValue) => { return currentValue.text === entrytext })].value
+            const entrylink: IQuery | null = this.options[this.options.findIndex((currentValue) => { return currentValue.text === entrytext })].link
             const elemoftext: ISelectedEntry = { text: entrytext, value: entryvalue, link: entrylink }
             if (!this.manyFields) {
                 this.clear()
             }
-            if (this.selectedEntries.some((currenValue) => { return currenValue.text = entrytext }) && this.options.some((currenValue) => { return currenValue.text = entrytext })) {
+            if (!this.selectedEntries.some((currentValue) => { return currentValue.text === entrytext }) && this.options.some((currentValue) => { return currentValue.text === entrytext })) {
                 this.selectedEntries.push(elemoftext)
                 this.search = ""
 
