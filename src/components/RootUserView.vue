@@ -289,9 +289,9 @@
 /* Current Z layout:
 
 * Count off all entries     (2000)
-* All page without footer   (1050)
 * Footer of page            (1030)
 * Head menu                 (1000)
+* All page without footer   (0)
 
 */
     .main-div {
@@ -316,7 +316,7 @@
         height: inherit;
         display: flex;
         flex-direction: column;
-        z-index: 1050;  /* вся страница, кроме низа */
+        z-index: 0;  /* вся страница, кроме низа */
     }
     @media print {
         .head-menu {

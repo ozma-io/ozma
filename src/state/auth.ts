@@ -5,9 +5,19 @@ import jwtDecode from "jwt-decode"
 import { IRef } from "@/utils"
 import * as Api from "@/api"
 import * as Utils from "@/utils"
-import { router, asyncPush, getQueryValue } from "@/modules"
+import { router, getQueryValue } from "@/modules"
 
-export class CurrentAuth {
+interface IAuthParams {
+    createdTime: number
+    token: string
+    refreshToken: string
+    idToken: string
+    decodedToken: any
+    decodedRefreshToken: any
+    decodedIdToken: any
+}
+
+export class CurrentAuth implements IAuthParams {
     createdTime: number
     token: string
     refreshToken: string
@@ -16,14 +26,14 @@ export class CurrentAuth {
     decodedRefreshToken: any
     decodedIdToken: any
 
-    constructor(token: string, refreshToken: string, idToken: string, createdTime?: number) {
-        this.createdTime = (createdTime !== undefined) ? createdTime : Utils.sse()
-        this.token = token
-        this.refreshToken = refreshToken
-        this.idToken = idToken
-        this.decodedToken = jwtDecode(this.token)
-        this.decodedRefreshToken = jwtDecode(this.refreshToken)
-        this.decodedIdToken = jwtDecode(this.idToken)
+    constructor(params: IAuthParams) {
+        this.createdTime = params.createdTime
+        this.token = params.token
+        this.refreshToken = params.refreshToken
+        this.idToken = params.idToken
+        this.decodedToken = params.decodedToken
+        this.decodedRefreshToken = params.decodedRefreshToken
+        this.decodedIdToken = params.decodedIdToken
     }
 
     get username() {
@@ -40,6 +50,45 @@ export class CurrentAuth {
 
     get session(): string {
         return this.decodedToken.session_state
+    }
+}
+
+class JwtCurrentAuth extends CurrentAuth {
+    constructor(token: string, refreshToken: string, idToken: string, createdTime?: number) {
+        const myCreatedTime = (createdTime !== undefined) ? createdTime : Utils.sse()
+        const decodedToken = jwtDecode(token)
+        const decodedRefreshToken = jwtDecode(refreshToken)
+        const decodedIdToken = jwtDecode(idToken)
+        super({
+            token,
+            refreshToken,
+            idToken,
+            decodedToken,
+            decodedRefreshToken,
+            decodedIdToken,
+            createdTime: myCreatedTime,
+        })
+    }
+}
+
+class MockCurrentAuth extends CurrentAuth {
+    constructor() {
+        super({
+            token: "no_token",
+            refreshToken: "no_token",
+            idToken: "no_token",
+            decodedToken: {
+                exp: 600,
+                iat: 0,
+                session_state: "no_session",
+            },
+            decodedRefreshToken: {
+                exp: 600,
+                iat: 0,
+            },
+            decodedIdToken: {},
+            createdTime: Utils.sse(),
+        })
     }
 }
 
@@ -105,7 +154,7 @@ const loadCurrentAuth = () => {
 
     if (dumpStr !== null) {
         const dump = JSON.parse(dumpStr)
-        const auth = new CurrentAuth(dump.token, dump.refreshToken, dump.idToken, dump.createdTime)
+        const auth = new JwtCurrentAuth(dump.token, dump.refreshToken, dump.idToken, dump.createdTime)
         const timestamp = Utils.sse()
         if (auth.createdTime + auth.refreshValidFor > timestamp) {
             return auth
@@ -142,7 +191,7 @@ const getToken = (context: ActionContext<IAuthState, {}>, params: Record<string,
             if (state.pending !== pending.ref) {
                 throw Error("Pending operation cancelled")
             }
-            const auth = new CurrentAuth(ret.access_token, ret.refresh_token, ret.id_token)
+            const auth = new JwtCurrentAuth(ret.access_token, ret.refresh_token, ret.id_token)
             updateAuth(context, auth)
             startTimeouts(context)
             return auth
@@ -184,6 +233,28 @@ const startCheckTimeout = ({ state, commit }: ActionContext<IAuthState, {}>) => 
     commit("setCheckTimeout", checkTimeoutId)
 }
 
+const renewAuth = async (context: ActionContext<IAuthState, {}>) => {
+    const { commit, state } = context
+    if (state.current === null) {
+        throw Error("Cannot renew without an existing token")
+    }
+
+    if (state.renewalTimeoutId !== null) {
+        clearTimeout(state.renewalTimeoutId)
+        commit("setRenewalTimeout", null)
+    }
+    if (state.checkTimeoutId !== null) {
+        clearTimeout(state.checkTimeoutId)
+        commit("setCheckTimeout", null)
+    }
+
+    const params: Record<string, string> = {
+        grant_type: "refresh_token",
+        refresh_token: state.current.refreshToken,
+    }
+    return getToken(context, params)
+}
+
 const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
     const { state, commit, dispatch } = context
     if (state.current === null) {
@@ -200,7 +271,7 @@ const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
     }
     const renewalTimeoutId = setTimeout(() => {
         if (state.pending === null) {
-            dispatch("renewAuth")
+            renewAuth(context)
         } else {
             commit("setRenewalTimeout", null)
         }
@@ -208,6 +279,39 @@ const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
     commit("setRenewalTimeout", renewalTimeoutId)
 
     startCheckTimeout(context)
+}
+
+const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExisting: boolean) => {
+    const nonce = uuidv4()
+    localStorage.setItem(authNonceKey, nonce)
+    console.log("current path", router.currentRoute.fullPath)
+    const path =
+        router.currentRoute.name === "auth_response" ?
+        router.resolve({ name: "main" }).href :
+        router.currentRoute.fullPath
+    const savedState: IOIDCState = {
+        nonce,
+        path,
+    }
+    const params = {
+        client_id: Api.authClientId,
+        redirect_uri: redirectUri(),
+        state: btoa(JSON.stringify(savedState)),
+        scope: "openid",
+        response_mode: "query",
+        response_type: "code",
+        prompt: tryExisting ? "none" : "login",
+    }
+    const paramsString = new URLSearchParams(params).toString()
+
+    window.location.href = `${Api.authUrl}/auth?${paramsString}`
+    const waitForLoad = new Promise<void>((resolve, reject) => {
+        addEventListener("load", () => {
+            reject()
+        })
+    })
+    commit("setPending", waitForLoad)
+    return waitForLoad
 }
 
 export const authModule: Module<IAuthState, {}> = {
@@ -271,6 +375,13 @@ export const authModule: Module<IAuthState, {}> = {
         startAuth: async context => {
             const { state, commit, dispatch } = context
 
+            if (Api.disableAuth) {
+                const auth = new MockCurrentAuth()
+                commit("setAuth", auth)
+                dispatch("setAuth", undefined, { root: true })
+                return
+            }
+
             let tryExisting = true
             if (router.currentRoute.name === "auth_response") {
                 dropCurrentAuth()
@@ -307,7 +418,7 @@ export const authModule: Module<IAuthState, {}> = {
                 const oldAuth = loadCurrentAuth()
                 if (oldAuth !== null) {
                     updateAuth(context, oldAuth)
-                    dispatch("renewAuth")
+                    renewAuth(context)
                 }
             }
             localStorage.removeItem(authNonceKey)
@@ -349,43 +460,10 @@ export const authModule: Module<IAuthState, {}> = {
             window.addEventListener("message", iframeHandler)
 
             if (state.current === null && state.pending === null) {
-                return dispatch("requestLogin", tryExisting)
+                await requestLogin(context, tryExisting)
             } else if (state.pending !== null) {
-                return state.pending
+                await state.pending
             }
-        },
-        requestLogin: ({ state, commit }, tryExisting: boolean) => {
-            const redirectParams = new URLSearchParams({ url: window.location.href })
-            const nonce = uuidv4()
-            localStorage.setItem(authNonceKey, nonce)
-            console.log("current path", router.currentRoute.fullPath)
-            const path =
-                router.currentRoute.name === "auth_response" ?
-                router.resolve({ name: "main" }).href :
-                router.currentRoute.fullPath
-            const savedState: IOIDCState = {
-                nonce,
-                path,
-            }
-            const params = {
-                client_id: Api.authClientId,
-                redirect_uri: redirectUri(),
-                state: btoa(JSON.stringify(savedState)),
-                scope: "openid",
-                response_mode: "query",
-                response_type: "code",
-                prompt: tryExisting ? "none" : "login",
-            }
-            const paramsString = new URLSearchParams(params).toString()
-
-            window.location.href = `${Api.authUrl}/auth?${paramsString}`
-            const waitForLoad = new Promise((resolve, reject) => {
-                addEventListener("load", () => {
-                    reject()
-                })
-            })
-            commit("setPending", waitForLoad)
-            return waitForLoad
         },
         callProtectedApi: {
             root: true,
@@ -413,30 +491,13 @@ export const authModule: Module<IAuthState, {}> = {
                 }
             },
         },
-        renewAuth: async context => {
-            const { commit, state } = context
-            if (state.current === null) {
-                throw Error("Cannot renew without an existing token")
-            }
-
-            if (state.renewalTimeoutId !== null) {
-                clearTimeout(state.renewalTimeoutId)
-                commit("setRenewalTimeout", null)
-            }
-            if (state.checkTimeoutId !== null) {
-                clearTimeout(state.checkTimeoutId)
-                commit("setCheckTimeout", null)
-            }
-
-            const params: Record<string, string> = {
-                grant_type: "refresh_token",
-                refresh_token: state.current.refreshToken,
-            }
-            return getToken(context, params)
-        },
         logout: async ({ state, dispatch, commit }) => {
             if (state.current === null) {
                 throw Error("Cannot logout without an existing token")
+            }
+
+            if (Api.disableAuth) {
+                return
             }
 
             const params = {
@@ -451,7 +512,7 @@ export const authModule: Module<IAuthState, {}> = {
                 })
             })
             commit("setPending", waitForLoad)
-            return waitForLoad
+            await waitForLoad
         },
     },
 }

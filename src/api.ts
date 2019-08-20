@@ -1,6 +1,9 @@
 import * as Utils from "@/utils"
 
 const apiUrl = (process.env["NODE_ENV"] === "production") ? `https://api.${location.hostname}` : `http://${location.hostname}:5000`
+// FIXME: detect this from environment
+export const disableAuth = false
+export const anonymousUsername = "anonymous@example.com"
 
 export const authOrigin = (process.env["NODE_ENV"] === "production") ? "https://account.myprocessx.com" : "https://keycloak-dev.myprocessx.com"
 const authUrlBase = (process.env["NODE_ENV"] === "production") ? `${authOrigin}/auth/realms/myprocessx` : `${authOrigin}/auth/realms/myprocessx-dev`

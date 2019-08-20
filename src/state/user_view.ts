@@ -390,6 +390,11 @@ export class CombinedUserView {
                     value.initialValue = value.value
                     value.erroredOnce = false
                     if (value.pun !== undefined) {
+                        if (value.pun === null) {
+                            value.pun = ""
+                        } else {
+                            value.pun = String(value.pun)
+                        }
                         value.initialPun = value.pun
                     }
 

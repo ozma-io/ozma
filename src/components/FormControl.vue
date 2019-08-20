@@ -55,7 +55,7 @@
                          :max-rows="6"
                          :required="!isNullable"
                          ref="control" />
-        <SelectionField v-else-if="inputType.name === 'select'"
+        <SelectionField v-else-if="inputType.name === 'extended_select'"
                          :value="value.rawValue"
                          :options="inputType.options"
                           @update:value="updateValue($event)"
@@ -158,6 +158,14 @@
     interface ISelectOption {
         text: string
         value: string
+    }
+
+    interface IExtendedSelectType {
+        name: "extended_select"
+        options: IExtendedSelectOption[]
+    }
+
+    interface IExtendedSelectOption extends ISelectOption {
         link: IQuery | null
     }
 
@@ -176,7 +184,7 @@
         text: string
     }
 
-    type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | ICheckType | IUserViewType | IErrorType
+    type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | IExtendedSelectType | ICheckType | IUserViewType | IErrorType
 
     const userView = namespace("userView")
 
@@ -328,19 +336,19 @@
                         } else {
                             const select = Object.entries(entries).map(([id, name]) => ({ text: name, value: String(id), link: attrToQueryRef(this.value.info, id, homeSchema(this.uv.args), this.attributes["LinkedView"]) }))
                             return {
-                                name: "select",
+                                name: "extended_select",
                                 options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: null }] : []), ...select],
                             }
                         }
                     case "enum":
                         return {
                             name: "select",
-                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: null }] : []), ...fieldType.values.map(x => ({ text: x, value: x, link: null }))],
+                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), ...fieldType.values.map(x => ({ text: x, value: x }))],
                         }
                     case "bool":
                         return {
                             name: "select",
-                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: null }] : []), { text: this.$tc("yes"), value: "true", link: null }, { text: this.$tc("no"), value: "false", link: null }],
+                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
                         }
                     case "int":
                         return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
@@ -350,7 +358,7 @@
                     case "bool":
                         return {
                             name: "select",
-                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" , link: null}] : []), { text: this.$tc("yes"), value: "true", link: null }, { text: this.$tc("no"), value: "false", link: null }],
+                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
                         }
                     case "int":
                         return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
