@@ -6,7 +6,7 @@
                 'select_fixed': localValue.selected && column.fixed,
                 'select': localValue.selected && !column.fixed,
                 'error_style': value.erroredOnce,
-                'required_cell_style': from !== 'existing' && value.rawValue === '' && value.info !== undefined && !value.info.field.isNullable,
+                'required_cell_style': value.rawValue === '' && value.info !== undefined && !value.info.field.isNullable,
                 'editing_style': localValue.editing !== undefined,
                 'disable_cell': value.info === undefined && from !== 'existing'}]">
         <p>
