@@ -935,6 +935,7 @@
             this.$emit("update:enableFilter", this.uv.rows !== null)
 
             this.buildRowPositions()
+            this.setShowEmptyRow(this.uv.rows === null || this.uv.rows.length === 0)
         }
 
         private created() {

@@ -46,14 +46,14 @@
                     :localRow="local.newRows[rowId]"
                     :locked="addedLocked"
                     @update="updateValue({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
-                    @delete="deleteRow({ type: 'added', id: rowId })" />
+                    @delete="deleteRowAndSignal({ type: 'added', id: rowId })" />
             <FormEntry v-for="rowI in rowPositions" :key="rowI"
                     :uv="uv"
                     :blocks="blocks"
                     :row="uv.rows[rowI]"
                     :localRow="local.rows[rowI]"
                     @update="updateValue({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
-                    @delete="deleteRow({ type: 'existing', position: rowI })" />
+                    @delete="deleteRowAndSignal({ type: 'existing', position: rowI })" />
         </template>
     </div>
 </template>
@@ -197,8 +197,8 @@
             return blocks
         }
 
-        protected deleteRow(ref: RowRef) {
-            super.deleteRow(ref)
+        private deleteRowAndSignal(ref: RowRef) {
+            this.deleteRow(ref)
             this.deletedOne = true
         }
 

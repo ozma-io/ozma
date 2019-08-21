@@ -8,7 +8,7 @@
                 'error_style': value.erroredOnce,
                 'required_cell_style': from === 'added' && value.rawValue === '' && value.info !== undefined && !value.info.field.isNullable,
                 'editing_style': localValue.editing !== undefined,
-                'disable_cell': value.update === undefined && from !== 'existing'}]">
+                'disable_cell': value.info === undefined && from !== 'existing'}]">
         <p>
             <UserViewLink v-if="localValue.link !== undefined" :uv="localValue.link">
                 <b-checkbox v-if="typeof value.value === 'boolean'"
