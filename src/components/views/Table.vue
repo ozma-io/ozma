@@ -218,7 +218,7 @@
 
             const columnWidthAttr = Number(getColumnAttr("ColumnWidth"))
             const columnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr
-            style["width"] = `${columnWidth}px`
+            style["width"] = `${Math.min(columnWidth, window.innerWidth)}px`
 
             const fixedColumnAttr = getColumnAttr("Fixed")
             const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr)
@@ -238,6 +238,12 @@
                 attrs: columnAttrs,
                 width: columnWidth,
             }
+        })
+    }
+
+    const updateColumnWidth = (columns: IColumn[]) => {
+        columns.forEach(el => {
+            el.style["width"] = `${Math.min(el.width, window.innerWidth)}px`
         })
     }
 
@@ -954,7 +960,12 @@
                 }
                 window.addEventListener("beforeprint", printCallback)
                 this.printListener = { query, queryCallback, printCallback }
+                window.addEventListener("resize", this.updateWidth)
             }
+        }
+
+        private updateWidth() {
+            updateColumnWidth(this.local.extra.columns)
         }
 
         @Watch("uv")
