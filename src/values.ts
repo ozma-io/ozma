@@ -84,7 +84,7 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, value: any):
     if (value === null || value === undefined || value === "") {
         return isNullable ? null : undefined
     } else if (fieldType.type === "string" || fieldType.type === "enum") {
-        return typeof value === "string" ? value : undefined
+        return typeof value === "string" ? value.replace(/^\s*|\s+$/g, "").replace(/^[\t\f\v ]+|[\t\f\v ]+$ /gm, "") : undefined
     } else if (fieldType.type === "bool") {
         if (typeof value === "boolean") {
             return value
@@ -107,7 +107,7 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, value: any):
             return undefined
         }
     } else if (fieldType.type === "date") {
-        const date = moment.utc(value, dateFormat)
+        const date = moment(value, dateFormat).startOf("day").utc()
         if (!date.isValid()) {
             return undefined
         } else {
