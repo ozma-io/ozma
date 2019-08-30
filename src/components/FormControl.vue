@@ -20,8 +20,8 @@
 </i18n>
 
 <template>
-    <div :class="['form-control-panel',{'form-control-panel-hidden': inputType.name === 'select'}]">
-        <div class="nested-menu" v-if="actions.length > 0 && inputType.name !== 'select'">
+    <div :class="['form-control-panel',{'form-control-panel-hidden': inputType.name === 'extended_select'}]">
+        <div class="nested-menu" v-if="actions.length > 0 && inputType.name !== 'extended_select'">
             <ActionsMenu title="view_headline"
                          :actions="actions" />
             <div v-if="caption.length > 0" class="caption-editors">
