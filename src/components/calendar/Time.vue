@@ -1,23 +1,23 @@
 <template>
-    <div class="times">
-        <div class="hours" v-if="hours !== null">
+    <div class="time">
+        <span class="hours" v-if="hours !== null">
             <div @click="prevVal(hours)">hours</div>
             <div v-for="(el, Iel) in hours.range"
                 :key="Iel"
                 @click="nextValH(Iel)"
-                class="cell">
+                class="time-cell">
                     {{el.text}}
             </div>
-        </div>
-        <div class="mins" v-if="mins !== null">
+        </span>
+        <span class="mins" v-if="mins !== null">
             <div @click="prevVal(mins)">minutes</div>
             <div v-for="(el, Iel) in mins.range"
                 :key="Iel"
                 @click="nextValM(Iel)"
-                class="cell">
+                class="time-cell">
                     {{el.text}}
             </div>
-        </div>
+        </span>
     </div>
 </template>
 
@@ -31,14 +31,14 @@
         text: string
     }
 
-    interface ITimeRangeA {
+    interface ITimeRangeAll {
         range: ITimeRange[]
         history: Array<{ min: number, max: number }>
         steps: number[]
         currStep: number
     }
 
-    const nextRange = (el: ITimeRangeA, rng: number) => {
+    const nextRange = (el: ITimeRangeAll, rng: number) => {
         const step = el.steps[el.currStep + 1]
         if (step === undefined) {
             return null
@@ -57,7 +57,7 @@
         return el
     }
 
-    const prevRange = (el: ITimeRangeA) => {
+    const prevRange = (el: ITimeRangeAll) => {
         if (el.currStep === 0) {
             return null
         }
@@ -99,14 +99,13 @@
             range: getRange(min, max, stepsTmp[0]),
             history: [],
             currStep: 0,
-        } as ITimeRangeA
+        } as ITimeRangeAll
     }
 
-    Vue.prototype.getRange = getRange
     @Component
     export default class DaysInMonth extends Vue {
-        private hours: ITimeRangeA | null = null
-        private mins: ITimeRangeA | null = null
+        private hours: ITimeRangeAll | null = null
+        private mins: ITimeRangeAll | null = null
 
         private mounted() {
             this.hours = DateRange(0, 24, [6, 1])
@@ -125,7 +124,7 @@
             }
         }
 
-        private prevVal(el: ITimeRangeA) {
+        private prevVal(el: ITimeRangeAll) {
             prevRange(el)
         }
     }
@@ -133,21 +132,19 @@
 
 <style scoped>
     .hours {
-        display: inline-grid;
+        display: inline;
         min-width: 70px;
         margin-right: 10px;
         cursor: pointer;
         text-align: center;
     }
-
     .mins {
         min-width: 70px;
-        display: inline-grid;
+        display: inline;
         cursor: pointer;
         text-align: center;
     }
-
-    .cell {
+    .time-cell {
         background-color: white;
         opacity: 0.5;
         margin: 1px;

@@ -1,5 +1,5 @@
 <template>
-    <div class="main_calendar">
+    <div class="main_cal">
         <div class="days">
             <DaysInMonth
                 :shownDate="shownDate"
@@ -58,12 +58,11 @@
 </script>
 
 <style scoped>
-.days {
-    display: inline-grid;
-    margin-right: 10px;
-}
-
- .time {
-     display: inline-grid;
- }
+    .days {
+        display: inline-flex;
+        margin-right: 10px;
+    }
+    .time {
+        display: inline-flex;
+    }
 </style>

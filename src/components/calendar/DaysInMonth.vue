@@ -77,40 +77,33 @@
 </script>
 
 <style scoped>
-#cal{
-  display: grid;
-  grid-template-columns: repeat(7, 30px);
-}
-
-#cal > div{
-  align-items: center;
-  display: flex;
-  justify-content: center;
-}
-
-.actions {
-    float: right;
-}
-
-.actions > span {
-    margin-left: 5px;
-    cursor: pointer;
-}
-
-.day {
-    cursor: pointer;
-    background-color: white;
-    opacity: 0.5;
-    color: black;
-}
-#cal > div {
-    margin: 1px;   
-}
-.diff-month {
-    color: darkgrey;
-}
-
-.curr-day {
-    color: darkred;
-}
+    #cal {
+      display: grid;
+      grid-template-columns: repeat(7, 30px);
+    }
+    #cal > div {
+      align-items: center;
+      display: flex;
+      justify-content: center;
+      margin: 1px;
+    }
+    .actions {
+        float: right;
+    }
+    .actions > span {
+        margin-left: 5px;
+        cursor: pointer;
+    }
+    .day {
+        cursor: pointer;
+        background-color: white;
+        opacity: 0.5;
+        color: black;
+    }
+    .diff-month {
+        color: darkgrey;
+    }
+    .curr-day {
+        color: darkred;
+    }
 </style>
