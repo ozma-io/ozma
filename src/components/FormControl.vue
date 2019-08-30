@@ -61,6 +61,10 @@
                           @update:value="updateValue($event)"
                          ref="control"
                          />
+        <Calendar v-else-if="inputType.name === 'calendar'"
+                  :value="value.rawValue"
+                  @update:value="updateValue($event)"
+                  :showTime="inputType.showTime" />
         <!-- Do NOT add any `class` to CodeEditor; it breaks stuff! -->
         <CodeEditor v-else-if="inputType.name === 'codeeditor'"
                     :style="inputType.style"
@@ -184,7 +188,12 @@
         text: string
     }
 
-    type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | IExtendedSelectType | ICheckType | IUserViewType | IErrorType
+    interface ICalendar {
+        name: "calendar"
+        showTime: boolean
+    }
+
+    type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | IExtendedSelectType | ICheckType | IUserViewType | IErrorType | ICalendar
 
     const userView = namespace("userView")
 
@@ -192,6 +201,7 @@
         components: {
             CodeEditor: () => import("@/components/CodeEditor.vue"),
             SelectionField: () => import("@/components/SelectionField.vue"),
+            Calendar: () => import("@/components/Calendar.vue"),
         },
     })
     export default class FormControl extends Vue {
@@ -352,6 +362,10 @@
                         }
                     case "int":
                         return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
+                    case "date":
+                        return { name: "calendar", showTime: false }
+                    case "datetime":
+                        return { name: "calendar", showTime: true }
                 }
             } else {
                 switch (this.type.type) {
