@@ -138,7 +138,7 @@
     }
     #cal-month {
         display: grid;
-        grid-template-columns: repeat(4, 30px);
+        grid-template-columns: repeat(4, 40px);
     }
     #cal-month > div {
         text-align: center;
