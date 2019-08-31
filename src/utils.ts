@@ -174,6 +174,63 @@ export const deepClone = <T>(a: T): T => {
     }
 }
 
+export const deepEquals = <T>(a: T, b: T): boolean => {
+    if (typeof a !== typeof b) {
+        return false
+    } else if (typeof a !== "object" || a === null || b === null) {
+        return a === b
+    } else if (a instanceof Array) {
+        const bArr = b as any as any[]
+        if (a.length !== bArr.length) {
+            return false
+        } else {
+            return a.every((aVal, idx) => deepEquals(aVal, bArr[idx]))
+        }
+    } else if (!(hasUserPrototype(a as any) || hasUserPrototype(b as any))) {
+        const bObj = b as any
+        return Object.keys(b).every(k => k in a) &&
+            Object.entries(a).every(([k, v]) => k in b && deepEquals(v, bObj[k]))
+    } else {
+        throw Error("Cannot compare objects")
+    }
+}
+
 export const mapMaybe = <A, B>(func: (arg: A, index: number, array: A[]) => B | undefined, arr: A[]): B[] => {
     return arr.map(func).filter(val => val !== undefined) as B[]
+}
+
+// Like JSON.stringify but maintains order of keys in dictionaries.
+export const valueSignature = <T>(a: T): string => {
+    if (typeof a !== "object" || a === null) {
+        return JSON.stringify(a)
+    } else if (a instanceof Array) {
+        return "[" + a.map(valueSignature).join(",") + "]"
+    } else if (!hasUserPrototype(a as any)) {
+        return "{" + Object.keys(a).sort().map(k => JSON.stringify(k) + ":" + valueSignature((a as any)[k])).join(",") + "}"
+    } else {
+        throw Error("Cannot make signatures for objects")
+    }
+}
+
+export class ObjectSet<K> {
+    entries: Record<string, K> = {}
+
+    insert(k: K) {
+        const key = valueSignature(k)
+        Vue.set(this.entries, key, k)
+    }
+
+    exists(k: K) {
+        const key = valueSignature(k)
+        return key in this.entries
+    }
+
+    keys() {
+        return Object.values(this.entries)
+    }
+
+    delete(k: K) {
+        const key = valueSignature(k)
+        Vue.delete(this.entries, key)
+    }
 }

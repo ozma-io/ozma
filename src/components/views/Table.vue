@@ -94,7 +94,7 @@
                                 :columnIndexes="fixedRowColumnIndexes"
                                 :localUv="local.extra"
                                 from="added"
-                                @select="selectRow({ added: true, position: rowIndex }, $event)"
+                                @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
                                 @cellClick="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])" />
                         <TableRow :key="`new-${rowId}`"
                                 :row="uv.newRows[rowId]"
@@ -103,7 +103,7 @@
                                 :localUv="local.extra"
                                 :showFixedRow="showFixedRow"
                                 from="added"
-                                @select="selectRow({ added: true, position: rowIndex }, $event)"
+                                @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
                                 @cellClick="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])" />
                     </template>
                     <template v-for="(rowI, rowIndex) in shownRowPositions">
@@ -113,7 +113,7 @@
                                 :localRow="local.rows[rowI]"
                                 :columnIndexes="fixedRowColumnIndexes"
                                 :localUv="local.extra"
-                                @select="selectRow({ added: false, position: rowIndex }, $event)"
+                                @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
                                 @cellClick="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])" />
                         <TableRow :key="rowI"
                                 :row="uv.rows[rowI]"
@@ -121,7 +121,7 @@
                                 :columnIndexes="columnIndexes"
                                 :localUv="local.extra"
                                 :showFixedRow="showFixedRow"
-                                @select="selectRow({ added: false, position: rowIndex }, $event)"
+                                @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
                                 @cellClick="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])" />
                     </template>
                 </tbody>
@@ -137,14 +137,14 @@
     import { namespace } from "vuex-class"
     import { Store } from "vuex"
 
-    import { RecordSet, tryDicts, mapMaybe } from "@/utils"
+    import { RecordSet, ObjectSet, tryDicts, mapMaybe, deepEquals } from "@/utils"
     import { IResultColumnInfo } from "@/api"
     import {
         ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, CombinedUserView, homeSchema, valueToText,
     } from "@/state/user_view"
     import { AutoSaveLock, AddedRowId } from "@/state/staging_changes"
     import { IQuery, attrToQuerySelf, attrToQueryRef } from "@/state/query"
-    import { LocalUserView, ILocalRowInfo, ILocalRow, ValueRef } from "@/local_user_view"
+    import { LocalUserView, ILocalRowInfo, ILocalRow, ValueRef, RowRef, RowPositionRef, equalRowPositionRef } from "@/local_user_view"
     import { UserView } from "@/components"
     import BaseUserView from "@/components/BaseUserView"
     import TableRow from "@/components/views/table/TableRow.vue"
@@ -165,11 +165,6 @@
         width: number // in px
     }
 
-    interface IRowPositionRef {
-        added: boolean
-        position: number
-    }
-
     interface ITableValueExtra {
         valueText: string
         link?: IQuery
@@ -188,9 +183,8 @@
     interface ITableUserViewExtra {
         hasRowLinks: boolean
         rowCount: number
-        selectedCount: number
-        selectedRows: RecordSet<number>
-        selectedAddedRows: RecordSet<AddedRowId>
+        selectedRows: ObjectSet<RowRef>
+        selectedValues: ObjectSet<ValueRef>
         columns: IColumn[]
         fixedColumnPositions: Record<number, string>
         homeSchema: string | null
@@ -218,7 +212,7 @@
 
             const columnWidthAttr = Number(getColumnAttr("ColumnWidth"))
             const columnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr
-            style["width"] = `${Math.min(columnWidth, window.innerWidth)}px`
+            style["width"] = `${columnWidth}px`
 
             const fixedColumnAttr = getColumnAttr("Fixed")
             const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr)
@@ -241,18 +235,12 @@
         })
     }
 
-    const updateColumnWidth = (columns: IColumn[]) => {
-        columns.forEach(el => {
-            el.style["width"] = `${Math.min(el.width, window.innerWidth)}px`
-        })
-    }
-
     export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRowExtra, ITableUserViewExtra> {
-        constructor(store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>) {
-            super(store, uv, defaultRawValues)
+        constructor(store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>, oldLocal: LocalUserView<ITableValueExtra, ITableRowExtra, ITableUserViewExtra> | null) {
+            super(store, uv, defaultRawValues, oldLocal)
         }
 
-        createCommonLocalValue(row: IRowCommon, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue): ITableValueExtra {
+        createCommonLocalValue(row: IRowCommon, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: ITableValueExtra | null, deleted: boolean): ITableValueExtra {
             const columnInfo = this.uv.info.columns[columnIndex]
             const columnAttrs = this.uv.columnAttributes[columnIndex]
             const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, this.uv.attributes)
@@ -289,8 +277,10 @@
                 touchedStyle = true
             }
 
+            const selected = oldLocal !== null ? oldLocal.selected && !deleted : false
+
             const extra: ITableValueExtra = {
-                selected: false,
+                selected,
                 valueText,
             }
             if (link !== null) {
@@ -302,16 +292,39 @@
             return extra
         }
 
-        createLocalValue(row: ICombinedRow, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue) {
-            return this.createCommonLocalValue(row, localRow, columnIndex, value)
+        createLocalValue(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: ITableValueExtra | null) {
+            const extra = this.createCommonLocalValue(row, localRow, columnIndex, value, oldLocal, row.deleted)
+            if (extra.selected) {
+                this.extra.selectedValues.insert({
+                    type: "existing",
+                    position: rowIndex,
+                    column: columnIndex,
+                })
+            }
+            return extra
         }
 
-        createAddedLocalValue(row: IAddedRow, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue) {
-            return this.createCommonLocalValue(row, localRow, columnIndex, value)
+        createAddedLocalValue(rowId: AddedRowId, row: IAddedRow, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: ITableValueExtra | null) {
+            const extra = this.createCommonLocalValue(row, localRow, columnIndex, value, oldLocal, false)
+            if (extra.selected) {
+                this.extra.selectedValues.insert({
+                    type: "added",
+                    id: rowId,
+                    column: columnIndex,
+                })
+            }
+            return extra
         }
 
-        createEmptyLocalValue(row: IRowCommon, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue) {
-            return this.createCommonLocalValue(row, localRow, columnIndex, value)
+        createEmptyLocalValue(row: IRowCommon, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: ITableValueExtra | null) {
+            const extra = this.createCommonLocalValue(row, localRow, columnIndex, value, oldLocal, false)
+            if (extra.selected) {
+                this.extra.selectedValues.insert({
+                    type: "new",
+                    column: columnIndex,
+                })
+            }
+            return extra
         }
 
         updateCommonValue(row: IRowCommon, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, extra: ITableValueExtra) {
@@ -355,11 +368,11 @@
             return extra
         }
 
-        createLocalRow(row: ICombinedRow) {
+        createLocalRow(rowIndex: number, row: ICombinedRow) {
             return this.createCommonLocalRow(row)
         }
 
-        createAddedLocalRow(row: IAddedRow) {
+        createAddedLocalRow(rowId: AddedRowId, row: IAddedRow) {
             return this.createCommonLocalRow(row)
         }
 
@@ -374,36 +387,39 @@
             localRow.extra.searchText = "\0".concat(...searchStrings)
         }
 
-        postInitRow(row: ICombinedRow, localRow: ITableLocalRow) {
+        postInitRow(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRow) {
             this.postInitCommonRow(row, localRow)
             if (row.deleted) {
                 this.extra.rowCount--
             }
         }
 
-        postInitAddedRow(row: IAddedRow, localRow: ITableLocalRow) {
+        postInitAddedRow(rowId: AddedRowId, row: IAddedRow, localRow: ITableLocalRow) {
             this.postInitCommonRow(row, localRow)
         }
 
         deleteCommonRow(row: ICombinedRow, localRow: ITableLocalRowInfo) {
             this.extra.rowCount--
-            if (localRow.extra.selected) {
-                this.extra.selectedCount--
-            }
         }
 
         deleteRow(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRowInfo) {
             this.deleteCommonRow(row, localRow)
             if (localRow.extra.selected) {
                 localRow.extra.selected = false
-                Vue.delete(this.extra.selectedRows, rowIndex)
+                this.extra.selectedRows.delete({
+                    type: "existing",
+                    position: rowIndex,
+                })
             }
         }
 
         deleteAddedRow(rowId: AddedRowId, row: ICombinedRow, localRow: ITableLocalRowInfo) {
             this.deleteCommonRow(row, localRow)
             if (localRow.extra.selected) {
-                Vue.delete(this.extra.selectedAddedRows, rowId)
+                this.extra.selectedRows.delete({
+                    type: "added",
+                    id: rowId,
+                })
             }
         }
 
@@ -417,8 +433,8 @@
                 hasRowLinks: false,
                 selectedCount: 0,
                 rowCount: 0,
-                selectedRows: {},
-                selectedAddedRows: {},
+                selectedRows: new ObjectSet<RowRef>(),
+                selectedValues: new ObjectSet<ValueRef>(),
                 columns,
                 fixedColumnPositions: {},
                 homeSchema: homeSchema(this.uv.args),
@@ -446,28 +462,32 @@
             })
         }
 
-        selectRow(ref: IRowPositionRef, selectedStatus: boolean) {
-            let row: ITableLocalRow
-            let set: RecordSet<number>
-            let setId: number
-            if (ref.added) {
-                set = this.extra.selectedAddedRows
-                setId = this.uv.newRowsPositions[ref.position]
-                row = this.newRows[setId]
-            } else {
-                set = this.extra.selectedRows
-                setId = ref.position
-                row = this.rows[setId]
+        selectCell(ref: ValueRef, selectedStatus: boolean) {
+            const cell = this.getValueByRef(ref)
+            if (cell === null) {
+                return
             }
-            const extra = row.extra
-            if (extra.selected !== selectedStatus) {
-                extra.selected = selectedStatus
+            if (cell.local.selected !== selectedStatus) {
+                cell.local.selected = selectedStatus
                 if (selectedStatus) {
-                    this.extra.selectedCount++
-                    Vue.set(set, setId, null)
+                    this.extra.selectedValues.insert(ref)
                 } else {
-                    this.extra.selectedCount--
-                    Vue.delete(set, setId)
+                    this.extra.selectedValues.delete(ref)
+                }
+            }
+        }
+
+        selectRow(ref: RowRef, selectedStatus: boolean) {
+            const row = this.getRowByRef(ref)
+            if (row === null) {
+                return
+            }
+            if (row.local.extra.selected !== selectedStatus) {
+                row.local.extra.selected = selectedStatus
+                if (selectedStatus) {
+                    this.extra.selectedRows.insert(ref)
+                } else {
+                    this.extra.selectedRows.delete(ref)
                 }
             }
         }
@@ -477,7 +497,10 @@
                 const rowId = Number(rowIdRaw)
                 row.extra.selected = selectedStatus
                 if (selectedStatus) {
-                    Vue.set(this.extra.selectedAddedRows, rowId, null)
+                    this.extra.selectedRows.insert({
+                        type: "added",
+                        id: rowId,
+                    })
                 }
             })
             if (this.uv.rows !== null) {
@@ -486,23 +509,26 @@
                     if (!row.deleted) {
                         localRow.extra.selected = selectedStatus
                         if (selectedStatus) {
-                            Vue.set(this.extra.selectedRows, rowI, null)
+                            this.extra.selectedRows.insert({
+                                type: "existing",
+                                position: rowI,
+                            })
                         }
                     }
                 })
             }
 
-            if (selectedStatus) {
-                this.extra.selectedCount = this.extra.rowCount
-            } else {
-                this.extra.selectedCount = 0
-                this.extra.selectedRows = {}
-                this.extra.selectedAddedRows = {}
+            if (!selectedStatus) {
+                this.extra.selectedRows = new ObjectSet<RowRef>()
             }
         }
 
+        get selectedCount() {
+            return Object.keys(this.extra.selectedRows).length
+        }
+
         get selectedAll() {
-            return this.extra.selectedCount === this.extra.rowCount
+            return this.selectedCount === this.extra.rowCount
         }
 
         get technicalWidth() {
@@ -525,23 +551,21 @@
         }
     }
 
-    const equalColumnValueRef = (a: ValueRef, b: ValueRef) => {
-        return (a.type === "added" && a.type === b.type && a.id === b.id) ||
-               (a.type === "existing" && a.type === b.type && a.position === b.position) ||
-               (a.type === "new" && a.type === b.type)
-    }
-
-    const equalValueRef = (a: ValueRef, b: ValueRef) => {
-        return equalColumnValueRef(a, b) && a.column === b.column
-    }
-
-    const ordRowPositionRef = (a: IRowPositionRef, b: IRowPositionRef) => {
-        if (a.added && !b.added) {
-            return -1
-        } else if (!a.added && b.added) {
-            return 1
+    const ordRowPositionRef = (a: RowPositionRef, b: RowPositionRef) => {
+        if (a.type !== b.type) {
+            if (a.type === "new") {
+                return -1
+            } else if (a.type === "added" && b.type !== "new") {
+                return -1
+            } else {
+                return 1
+            }
         } else {
-            return Math.sign(b.position - a.position)
+            if (a.type === "new") {
+                return 0
+            } else {
+                return Math.sign((b as any).position - a.position)
+            }
         }
     }
 
@@ -596,7 +620,7 @@
         private sortOptions: Intl.CollatorOptions = {}
         private rowPositions: number[] = []
         private showLength: number = 0
-        private lastSelectedRow: IRowPositionRef | null = null
+        private lastSelectedRow: RowPositionRef | null = null
         private lastSelectedValue: ValueRef | null = null
         private editing: ITableEditing | null = null
         private printListener: { query: MediaQueryList, queryCallback: (mql: MediaQueryListEvent) => void, printCallback: () => void } | null = null
@@ -631,7 +655,7 @@
             if (this.editing === null) {
                 return null
             } else {
-                const value = this.getValueByRef(this.editing.ref)
+                const value = this.local.getValueByRef(this.editing.ref)
                 if (value === null) {
                     return null
                 } else {
@@ -650,10 +674,6 @@
 
         @Watch("filter")
         private updateFilter() {
-            if (this.uv.rows === null) {
-                throw Error("Impossible")
-            }
-
             const oldFilter = this.currentFilter
             const currentFilter = this.filter
             this.currentFilter = currentFilter
@@ -696,9 +716,9 @@
             if (emptyRow !== null) {
                 this.showEmptyRow = newValue
                 if (!newValue) {
-                    emptyRow.local.extra.selected = false
-                    emptyRow.local.values.forEach(value => {
-                        value.selected = false
+                    this.local.selectRow({ type: "new" }, false)
+                    emptyRow.local.values.forEach((_, colI) => {
+                        this.local.selectCell({ type: "new", column: colI }, false)
                     })
                 }
             }
@@ -775,7 +795,7 @@
                     // Lock already taken (somehow)
                     this.removeAutoSaveLock(lock)
                 } else {
-                    const value = this.getValueByRef(ref)
+                    const value = this.local.getValueByRef(ref)
                     if (value !== null && value.value.info !== undefined) {
                         this.editing = { ref, lock }
                     }
@@ -785,7 +805,7 @@
 
         private clickCell(ref: ValueRef, event: MouseEvent) {
             if (this.lastSelectedValue !== null &&
-                    !equalColumnValueRef(this.lastSelectedValue, ref) &&
+                    !deepEquals(this.lastSelectedValue, ref) &&
                     this.lastSelectedValue.type === "added" && isEmptyRow(this.uv.newRows[this.lastSelectedValue.id])) {
                 const entity = this.uv.info.mainEntity
                 if (entity === null) {
@@ -804,14 +824,14 @@
                     this.clickTimeoutId = null
                 }, doubleClickTime)
 
-                if (this.lastSelectedValue !== null && !equalValueRef(this.lastSelectedValue, ref)) {
+                if (this.lastSelectedValue !== null && !deepEquals(this.lastSelectedValue, ref)) {
                     this.removeCellEditing()
                 }
             } else {
                 clearTimeout(this.clickTimeoutId)
                 this.clickTimeoutId = null
 
-                if (this.lastSelectedValue !== null && equalValueRef(this.lastSelectedValue, ref)) {
+                if (this.lastSelectedValue !== null && deepEquals(this.lastSelectedValue, ref)) {
                     this.setCellEditing(ref)
                 }
             }
@@ -820,63 +840,65 @@
         }
 
         private selectCell(ref: ValueRef) {
-            if (this.lastSelectedValue !== null) {
-                const lastValue = this.getValueByRef(this.lastSelectedValue)
-                if (lastValue !== null) {
-                    lastValue.local.selected = false
-                }
-            }
-            const value = this.getValueByRef(ref)
-            if (value === null) {
-                throw Error("Impossible")
-            }
-            value.local.selected = true
+            this.local.extra.selectedValues.keys().forEach(prevRef => {
+                this.local.selectCell(prevRef, false)
+            })
+            this.local.selectCell(ref, true)
             this.lastSelectedValue = ref
         }
 
-        private getRowPosition(rowRef: IRowPositionRef): ITableRowExtra | null {
-            const row = rowRef.added ? this.local.newRows[this.uv.newRowsPositions[rowRef.position]] : this.local.rows[rowRef.position]
-            if (row === undefined) {
-                return null
+        private nextRowPosition(rowRef: RowPositionRef): RowPositionRef | null {
+            let type: string
+            let position: number
+            if (rowRef.type === "new") {
+                type = "added"
+                position = 0
             } else {
-                return row.extra
+                type = rowRef.type
+                position = rowRef.position + 1
             }
-        }
 
-        private nextRowPosition(rowRef: IRowPositionRef): IRowPositionRef | null {
-            let newPosition: number
-            if (rowRef.added) {
-                if (rowRef.position + 1 < this.uv.newRowsPositions.length) {
-                    return { added: true, position: rowRef.position + 1 }
+            if (type === "added") {
+                if (position < this.uv.newRowsPositions.length) {
+                    return {
+                        type, position,
+                    }
                 } else {
-                    newPosition = 0
+                    type = "existing"
+                    position = 0
                 }
-            } else {
-                newPosition = rowRef.position + 1
+            } else if (type === "existing") {
+                position = position + 1
             }
 
-            if (this.uv.rows !== null && newPosition < this.uv.rows.length) {
-                return { added: false, position: newPosition }
-            } else {
-                return null
+            if (type === "existing") {
+                if (this.uv.rows !== null && position < this.uv.rows.length) {
+                    return {
+                        type, position,
+                    }
+                }
             }
+
+            return null
         }
 
-        private selectRow(rowRef: IRowPositionRef, event: MouseEvent) {
-            const row = this.getRowPosition(rowRef)
-            if (row === null) {
-                throw Error("Impossible")
+        private selectRow(posRef: RowPositionRef, event: MouseEvent) {
+            const ref = this.local.getRowPosition(posRef)
+            if (ref === null) {
+                return
             }
+            const row = this.local.getRowByRef(ref)!
             if (this.lastSelectedRow !== null && event.shiftKey) {
                 // Select all rows between current one and the previous selected one.
-                const [from, to] = ordRowPositionRef(this.lastSelectedRow, rowRef) <= 0 ? [this.lastSelectedRow, rowRef] : [rowRef, this.lastSelectedRow]
-                let i = this.getRowPosition(from) !== null ? from : this.nextRowPosition(from)
-                while (i !== null) {
-                    this.local.selectRow(i, row.selected)
+                const [from, to] = ordRowPositionRef(this.lastSelectedRow, posRef) <= 0 ? [this.lastSelectedRow, posRef] : [posRef, this.lastSelectedRow]
+                let i: RowPositionRef | null = from
+                while (i !== null && !equalRowPositionRef(i, to)) {
+                    const currRef = this.local.getRowPosition(posRef)!
+                    this.local.selectRow(currRef, row.local.extra.selected)
                     i = this.nextRowPosition(i)
                 }
             } else {
-                this.local.selectRow(rowRef, !row.selected)
+                this.local.selectRow(ref, !row.local.extra.selected)
             }
             return false
         }
@@ -891,28 +913,26 @@
                 throw new Error("View doesn't have a main entity")
             }
 
-            Object.keys(this.local.extra.selectedRows).forEach(rowIRaw => {
-                const rowI = Number(rowIRaw)
-                const row = (this.uv.rows as ICombinedRow[])[rowI]
-                if (row.entityIds === undefined) {
-                    throw new Error("View doesn't have a main entity")
+            this.local.extra.selectedRows.keys().forEach(rowRef => {
+                const row = this.local.getRowByRef(rowRef)!
+                if (rowRef.type === "added") {
+                    this.resetAddedEntry({
+                        schema: entity.schema,
+                        entity: entity.name,
+                        id: rowRef.id,
+                    })
+                } else if (rowRef.type === "existing") {
+                    const existingRow = row.row as ICombinedRow
+                    if (existingRow.entityIds === undefined) {
+                        throw new Error("View doesn't have a main entity")
+                    }
+                    this.deleteEntry({
+                        schema: entity.schema,
+                        entity: entity.name,
+                        // Guaranteed to exist if mainEntity exists
+                        id: existingRow.mainId as number,
+                    })
                 }
-                this.deleteEntry({
-                    schema: entity.schema,
-                    entity: entity.name,
-                    // Guaranteed to exist if mainEntity exists
-                    id: row.mainId as number,
-                })
-            })
-
-            Object.keys(this.local.extra.selectedAddedRows).forEach(rowIdRaw => {
-                const rowId = Number(rowIdRaw)
-
-                this.resetAddedEntry({
-                    schema: entity.schema,
-                    entity: entity.name,
-                    id: rowId,
-                })
             })
         }
 
@@ -960,12 +980,7 @@
                 }
                 window.addEventListener("beforeprint", printCallback)
                 this.printListener = { query, queryCallback, printCallback }
-                window.addEventListener("resize", this.updateWidth)
             }
-        }
-
-        private updateWidth() {
-            updateColumnWidth(this.local.extra.columns)
         }
 
         @Watch("uv")
@@ -1025,10 +1040,7 @@
         }
 
         private sortRows(options?: Intl.CollatorOptions) {
-            if (this.uv.rows === null) {
-                throw Error("Impossible")
-            }
-            const rows = this.uv.rows
+            const rows = this.uv.rows!
 
             if (this.sortColumn !== null) {
                 const sortColumn = this.sortColumn
@@ -1065,7 +1077,8 @@
         }
 
         get statusLine() {
-            const selected = (this.local.extra.selectedCount > 0) ? `${this.local.extra.selectedCount}/` : ""
+            const selectedCount = this.local.selectedCount
+            const selected = (selectedCount > 0) ? `${selectedCount}/` : ""
             return `${selected}${this.nonDeletedRowPositions.length}`
         }
 
@@ -1095,15 +1108,12 @@
         }
 
         private async updateCurrentValue(rawValue: any) {
-            if (this.editing === null) {
-                throw Error("Impossible")
-            }
-
-            const ref = this.editing.ref
+            const editing = this.editing!
+            const ref = editing.ref
             await this.updateValue(ref, rawValue)
             if (ref.type === "new") {
                 const newRef: ValueRef = { type: "added", id: this.uv.newRowsPositions[0], column: ref.column }
-                this.editing.ref = newRef
+                editing.ref = newRef
                 this.selectCell(newRef)
             }
         }

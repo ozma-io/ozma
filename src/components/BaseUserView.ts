@@ -20,54 +20,6 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
     @Prop({ type: Boolean, default: false }) isRoot!: boolean
     @Prop({ type: Array, required: true }) filter!: string[]
 
-    protected getValueByRef(ref: ValueRef) {
-        const row = this.getValueRowByRef(ref)
-        if (row === null) {
-            return null
-        } else {
-            return {
-                row,
-                value: row.row.values[ref.column],
-                local: row.local.values[ref.column],
-            }
-        }
-    }
-
-    protected getValueRowByRef(ref: RowRef) {
-        if (ref.type === "added") {
-            if (!(ref.id in this.uv.newRows)) {
-                return null
-            } else {
-                return {
-                    row: this.uv.newRows[ref.id],
-                    local: this.local.newRows[ref.id],
-                }
-            }
-        } else if (ref.type === "existing") {
-            if (this.uv.rows === null) {
-                throw Error("Impossible")
-            }
-
-            const row = this.uv.rows[ref.position]
-            if (row.deleted) {
-                return null
-            } else {
-                return {
-                    row: this.uv.rows[ref.position],
-                    local: this.local.rows[ref.position],
-                }
-            }
-        } else if (ref.type === "new") {
-            if (this.local.emptyRow === null) {
-                throw Error("Impossible")
-            }
-
-            return this.local.emptyRow
-        } else {
-            throw Error("Impossible")
-        }
-    }
-
     protected deleteRow(ref: RowRef) {
         if (this.uv.info.mainEntity === null) {
             throw new Error("View doesn't have a main entity")
@@ -81,31 +33,20 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
                 id: ref.id,
             })
         } else if (ref.type === "existing") {
-            if (this.uv.rows === null) {
-                throw Error("Impossible")
-            }
-
+            const rows = this.uv.rows!
             this.deleteEntry({
                 schema: entity.schema,
                 entity: entity.name,
                 // Guaranteed to exist if mainEntity exists.
-                id: this.uv.rows[ref.position].mainId as number,
+                id: rows[ref.position].mainId as number,
             })
         }
     }
 
     protected async updateValue(ref: ValueRef, rawValue: any) {
-        const value = this.getValueByRef(ref)
-        if (value === null) {
-            throw Error("Impossible")
-        }
-
+        const value = this.local.getValueByRef(ref)!
         if (ref.type === "added") {
-            const updateInfo = value.value.info
-            if (updateInfo === undefined) {
-                throw Error("Impossible")
-            }
-
+            const updateInfo = value.value.info!
             await this.setAddedField({
                 schema: updateInfo.fieldRef.entity.schema,
                 entity: updateInfo.fieldRef.entity.name,
@@ -114,11 +55,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
                 value: rawValue,
             })
         } else if (ref.type === "existing") {
-            const updateInfo = value.value.info
-            if (updateInfo === undefined) {
-                throw Error("Impossible")
-            }
-
+            const updateInfo = value.value.info!
             await this.updateField({
                 schema: updateInfo.fieldRef.entity.schema,
                 entity: updateInfo.fieldRef.entity.name,
@@ -131,14 +68,11 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
             if (entity === null) {
                 throw new Error("View doesn't have a main entity")
             }
-            if (this.local.emptyRow === null) {
-                throw new Error("Impossible")
-            }
 
             // FIXME: Theoretical race condition with another addEntry because it's async
             await this.addEntry({ schema: entity.schema, entity: entity.name, position: 0 })
             const rowId = this.uv.newRowsPositions[0]
-            await Promise.all(this.local.emptyRow.row.values.map((cell, colI) => {
+            await Promise.all(this.local.emptyRow!.row.values.map((cell, colI) => {
                 const columnInfo = this.uv.info.columns[colI]
                 if (columnInfo.mainField !== null && cell.value !== undefined) {
                     return this.setAddedField({

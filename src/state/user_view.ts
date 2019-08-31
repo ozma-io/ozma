@@ -406,10 +406,7 @@ export class CombinedUserView {
                         const updated = entityUpdated[field.ref.name]
                         if (updated !== undefined) {
                             Object.assign(value, updated)
-                            if (field.field === null) {
-                                throw Error("Impossible")
-                            }
-                            const fieldType = field.field.fieldType
+                            const fieldType = field.field!.fieldType
                             setOrRequestUpdatedPun(context, value, fieldType)
                         }
                     }
@@ -437,10 +434,7 @@ export class CombinedUserView {
         if (rows !== null && info.mainEntity !== null) {
             const mainRowMapping: IMainRowMapping = {}
             rows.forEach((row, rowI) => {
-                if (row.mainId === undefined) {
-                    throw Error("Impossible")
-                }
-                insertMainRowMapping(mainRowMapping, row.mainId, rowI)
+                insertMainRowMapping(mainRowMapping, row.mainId!, rowI)
             })
             this.mainRowMapping = mainRowMapping
         } else {

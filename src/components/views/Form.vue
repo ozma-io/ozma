@@ -67,7 +67,7 @@
     import { tryDicts, mapMaybe } from "@/utils"
     import { AttributesMap, IResultColumnInfo } from "@/api"
     import { CombinedUserView, ICombinedValue, IRowCommon, homeSchema } from "@/state/user_view"
-    import { SimpleLocalUserView, ILocalRowInfo, ILocalRow, ValueRef, RowRef } from "@/local_user_view"
+    import { LocalUserView, SimpleLocalUserView, ILocalRowInfo, ILocalRow, ValueRef, RowRef } from "@/local_user_view"
     import { UserView } from "@/components"
     import BaseUserView from "@/components/BaseUserView"
     import FormEntry from "@/components/views/form/FormEntry.vue"
@@ -97,8 +97,8 @@
     type IFormLocalRow = ILocalRow<IFormValueExtra, null>
 
     class LocalFormUserView extends SimpleLocalUserView<IFormValueExtra, null, IFormUserViewExtra> {
-        constructor(store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>) {
-            super(store, uv, defaultRawValues)
+        constructor(store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>, oldLocal: LocalUserView<IFormValueExtra, null, IFormUserViewExtra> | null) {
+            super(store, uv, defaultRawValues, oldLocal)
         }
 
         createCommonLocalValue(row: IRowCommon, localRow: IFormLocalRow, columnIndex: number, value: ICombinedValue) {

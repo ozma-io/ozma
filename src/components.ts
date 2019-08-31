@@ -6,20 +6,23 @@ import { Store } from "vuex"
 import { CombinedUserView } from "@/state/user_view"
 import { IHandlerProvider } from "@/local_user_view"
 
-export interface IUserViewOptions {
-    localConstructor?: new (store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>) => IHandlerProvider,
+export interface IUserViewOptions<ConstrT extends IHandlerProvider> {
+    localConstructor?: new (store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>, oldLocal: ConstrT | null) => ConstrT,
 }
 
 export interface IUserViewConstructor<V extends Vue = Vue> extends VueConstructor<V> {
-    localConstructor?: new (store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>) => IHandlerProvider
+    localConstructor?: (store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>, oldLocal: IHandlerProvider | null) => IHandlerProvider
 }
 
-export const UserView = (opts?: IUserViewOptions) => {
+export const UserView = <ConstrT extends IHandlerProvider>(opts?: IUserViewOptions<ConstrT>) => {
     return <VC>(constructor: VC) => {
         const constructorMut = constructor as any as IUserViewConstructor<Vue>
         if (opts !== undefined) {
-            if (opts.localConstructor !== undefined) {
-                constructorMut.localConstructor = opts.localConstructor
+            const localConstructor = opts.localConstructor
+            if (localConstructor !== undefined) {
+                constructorMut.localConstructor = (store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>, oldLocal: IHandlerProvider | null) => {
+                    return new localConstructor(store, uv, defaultRawValues, oldLocal instanceof localConstructor ? oldLocal : null)
+                }
             }
         }
         return constructor

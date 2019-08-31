@@ -49,7 +49,7 @@
     import { namespace } from "vuex-class"
     import { Store } from "vuex"
 
-    import { RecordSet } from "@/utils"
+    import { RecordSet, deepEquals } from "@/utils"
     import { funappSchema } from "@/api"
     import { CombinedUserView, UserViewError, IUserViewArguments, IUserViewEventHandler, CurrentUserViews, IUserViewState } from "@/state/user_view"
     import { CurrentAuth } from "@/state/auth"
@@ -69,6 +69,15 @@
     }))
 
     const userView = namespace("userView")
+
+    const userViewType = (uv: CombinedUserView) => {
+        const typeAttr = uv.attributes["Type"]
+        if (typeAttr in types) {
+            return typeAttr
+        } else {
+            return "Table"
+        }
+    }
 
     @Component({ components })
     export default class UserView extends Vue {
@@ -123,15 +132,22 @@
 
         @Watch("uv")
         // Should clear all user view-specific values.
-        private async updateUserView() {
+        private async updateUserView(uv: CombinedUserView | UserViewError | null, oldUv: CombinedUserView | UserViewError | null) {
             this.extraActions = []
             this.component = null
+            let oldLocal: IHandlerProvider | null = null
+            let oldType: string | null = null
             if (this.oldArgs !== null && this.local !== null) {
                 this.unregisterHandler({ args: this.oldArgs, handler: this.local.handler })
+                if (this.uv instanceof CombinedUserView && oldUv instanceof CombinedUserView && deepEquals(this.uv.args, oldUv.args)) {
+                    oldLocal = this.local
+                    oldType = userViewType(oldUv)
+                }
                 this.local = null
             }
             this.oldArgs = null
 
+            console.log("Updated uv, new value", this.uv, "type", this.userViewType)
             if (this.userViewType !== null) {
                 if (!(this.uv instanceof CombinedUserView)) {
                     throw Error("Impossible")
@@ -144,10 +160,11 @@
                 }
 
                 this.component = component
+                this.oldArgs = args
                 if (component.localConstructor !== undefined) {
-                    const local = new component.localConstructor(this.$store, this.uv, this.defaultValues)
+                    const givenLocal = oldLocal !== null && oldType! === this.userViewType ? oldLocal : null
+                    const local = component.localConstructor(this.$store, this.uv, this.defaultValues, givenLocal)
                     this.local = local
-                    this.oldArgs = args
                     this.registerHandler({ args: this.args, handler: local.handler })
                 }
             }
@@ -162,12 +179,7 @@
             if (!(this.uv instanceof CombinedUserView)) {
                 return null
             } else {
-                const typeAttr = this.uv.attributes["Type"]
-                if (typeAttr in types) {
-                    return typeAttr
-                } else {
-                    return "Table"
-                }
+                return userViewType(this.uv)
             }
         }
 
