@@ -87,7 +87,7 @@
         color: var(--TableTextColor) !important;
     }
     td >>> p {
-        display: inline-block;
+        display: block;
         overflow: hidden;
         width: 100%;
         text-overflow: ellipsis;
@@ -95,10 +95,10 @@
         padding-right: 4px;
         padding-left: 1px;
         margin-bottom: 0;
-        margin-top: 2px;
         white-space: initial;
         word-wrap: break-word;
         word-break: break-all;
+        height: inherit;
     }
     td.required_cell_style {
         background-color: var(--RequiredBackColor);
