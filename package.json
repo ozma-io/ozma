@@ -8,19 +8,20 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "ace-builds": "^1.4.5",
+    "bootstrap-vue": "^2.0.0-rc.28",
     "core-js": "^2.6.5",
+    "dependencies": "0.0.1",
+    "jwt-decode": "^2.2.0",
+    "moment": "^2.24.0",
+    "uuid": "^3.3.2",
     "vue": "^2.6.10",
     "vue-class-component": "^6.2.0",
     "vue-i18n": "^8.14.0",
     "vue-property-decorator": "^7.3.0",
     "vue-router": "^3.1.2",
     "vuex": "^3.1.1",
-    "vuex-class": "^0.3.2",
-    "bootstrap-vue": "^2.0.0-rc.28",
-    "ace-builds": "^1.4.5",
-    "jwt-decode": "^2.2.0",
-    "moment": "^2.24.0",
-    "uuid": "^3.3.2"
+    "vuex-class": "^0.3.2"
   },
   "devDependencies": {
     "@kazupon/vue-i18n-loader": "^0.3.0",
