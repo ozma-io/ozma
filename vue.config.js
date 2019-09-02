@@ -28,10 +28,8 @@ module.exports = {
     },
 
     chainWebpack: webpackConfig => {
-      webpackConfig.plugin('define').tap(definitions => {
-        const nextDefinitions = [{ ...definitions[0], ...config}];
-        console.log(nextDefinitions);
-        return nextDefinitions;
-      });
+      webpackConfig.plugin('define').tap(
+        ([ definitions, ...rest ]) => [{ ...definitions, ...config}, ...rest]
+      );
     },
 }
