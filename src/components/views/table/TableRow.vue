@@ -23,26 +23,26 @@
 </template>
 
 <script lang="ts">
-    import { Component, Vue, Prop, Watch } from "vue-property-decorator"
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
-    import TableCell from "@/components/views/table/TableCell.vue"
+import TableCell from "@/components/views/table/TableCell.vue";
 
-    @Component({
-        components: {
-            TableCell,
-        },
-    })
-    export default class TableRow extends Vue {
-        // We don't bother to set types here properly, they matter no more than for TableRow.
-        // The reason this is not a functional component is because of performance.
-        // See https://forum.vuejs.org/t/performance-for-large-numbers-of-components/13545/10
-        @Prop({ type: Object, required: true }) row!: any
-        @Prop({ type: Object, required: true }) localRow!: any
-        @Prop({ type: Array, required: true }) columnIndexes!: any[]
-        @Prop({ type: Object, required: true }) localUv!: any
-        @Prop({ type: String, default: "existing" }) from!: string
-        @Prop({ type: Boolean, default: false }) showFixedRow!: boolean
-    }
+@Component({
+    components: {
+        TableCell,
+    },
+})
+export default class TableRow extends Vue {
+    // We don't bother to set types here properly, they matter no more than for TableRow.
+    // The reason this is not a functional component is because of performance.
+    // See https://forum.vuejs.org/t/performance-for-large-numbers-of-components/13545/10
+    @Prop({ type: Object, required: true }) row!: any;
+    @Prop({ type: Object, required: true }) localRow!: any;
+    @Prop({ type: Array, required: true }) columnIndexes!: any[];
+    @Prop({ type: Object, required: true }) localUv!: any;
+    @Prop({ type: String, default: "existing" }) from!: string;
+    @Prop({ type: Boolean, default: false }) showFixedRow!: boolean;
+}
 </script>
 
 <style scoped>

@@ -44,88 +44,88 @@
 </template>
 
 <script lang="ts">
-    import { Component, Prop, Watch, Vue } from "vue-property-decorator"
-    import { Location } from "vue-router"
-    import { namespace } from "vuex-class"
-    import { tryDicts } from "@/utils"
-    import { CombinedUserView, valueToText, homeSchema } from "@/state/user_view"
-    import { attrToQuery, queryLocation } from "@/state/query"
-    import { CurrentChanges, IEntityChanges } from "@/state/staging_changes"
-    import { UserView } from "@/components"
+import { Component, Prop, Watch, Vue } from "vue-property-decorator";
+import { Location } from "vue-router";
+import { namespace } from "vuex-class";
+import { tryDicts } from "@/utils";
+import { CombinedUserView, valueToText, homeSchema } from "@/state/user_view";
+import { attrToQuery, queryLocation } from "@/state/query";
+import { CurrentChanges, IEntityChanges } from "@/state/staging_changes";
+import { UserView } from "@/components";
 
-    interface IMainMenuButton {
-        index: number
-        name: string
-        categoryName: string
-        to: Location | null
-    }
+interface IMainMenuButton {
+    index: number;
+    name: string;
+    categoryName: string;
+    to: Location | null;
+}
 
-    interface IMainMenuCategory {
-        index: number
-        name: string
-        buttons: IMainMenuButton[]
-    }
+interface IMainMenuCategory {
+    index: number;
+    name: string;
+    buttons: IMainMenuButton[];
+}
 
-    @UserView()
-    @Component
-    export default class UserViewMenu extends Vue {
-        @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView
+@UserView()
+@Component
+export default class UserViewMenu extends Vue {
+    @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView;
 
-        get categoriesOrError() {
-            // .rows === null means that we are in "create new" mode -- there are no selected existing values.
-            if (this.uv.rows === null) {
-                // Not supported in menu yet.
-                return []
-            } else if (this.uv.info.columns.length !== 2) {
-                return this.$tc("invalid_menu")
-            } else {
-                const viewAttrs = this.uv.attributes
+    get categoriesOrError() {
+        // .rows === null means that we are in "create new" mode -- there are no selected existing values.
+        if (this.uv.rows === null) {
+            // Not supported in menu yet.
+            return [];
+        } else if (this.uv.info.columns.length !== 2) {
+            return this.$tc("invalid_menu");
+        } else {
+            const viewAttrs = this.uv.attributes;
 
-                const categoryColumnInfo = this.uv.info.columns[0]
-                const categoriesAttrs = this.uv.columnAttributes[0]
-                const buttonColumnInfo = this.uv.info.columns[1]
-                const buttonsAttrs = this.uv.columnAttributes[1]
+            const categoryColumnInfo = this.uv.info.columns[0];
+            const categoriesAttrs = this.uv.columnAttributes[0];
+            const buttonColumnInfo = this.uv.info.columns[1];
+            const buttonsAttrs = this.uv.columnAttributes[1];
 
-                const categories = new Map<string, IMainMenuCategory>()
-                this.uv.rows.forEach((row, rowI) => {
-                    if (row.deleted) {
-                        return
-                    }
+            const categories = new Map<string, IMainMenuCategory>();
+            this.uv.rows.forEach((row, rowI) => {
+                if (row.deleted) {
+                    return;
+                }
 
-                    const rowAttrs = row.attributes === undefined ? {} : row.attributes
-                    const getRowAttr = (name: string) => tryDicts(name, rowAttrs, viewAttrs)
+                const rowAttrs = row.attributes === undefined ? {} : row.attributes;
+                const getRowAttr = (name: string) => tryDicts(name, rowAttrs, viewAttrs);
 
-                    const categoryCell = row.values[0]
-                    const categoryName = valueToText(categoryColumnInfo.valueType, categoryCell)
-                    let category: IMainMenuCategory | undefined = categories.get(categoryName)
-                    if (category === undefined) {
-                        category = {
-                            index: rowI,
-                            name: categoryName,
-                            buttons: [],
-                        }
-                        categories.set(categoryName, category)
-                    }
-
-                    const buttonCell = row.values[1]
-                    const buttonName = valueToText(buttonColumnInfo.valueType, buttonCell)
-                    const buttonAttrs = buttonCell.attributes || {}
-                    const getButtonAttr = (name: string) => tryDicts(name, buttonAttrs, rowAttrs, buttonsAttrs, viewAttrs)
-
-                    const toQuery = attrToQuery(homeSchema(this.uv.args), getButtonAttr("LinkedView"))
-                    const to = toQuery === null ? null : this.$router.resolve(queryLocation(toQuery)).location
-
-                    const button = {
+                const categoryCell = row.values[0];
+                const categoryName = valueToText(categoryColumnInfo.valueType, categoryCell);
+                let category: IMainMenuCategory | undefined = categories.get(categoryName);
+                if (category === undefined) {
+                    category = {
                         index: rowI,
-                        name: buttonName,
-                        categoryName, to,
-                    }
-                    category.buttons.push(button)
-                })
-                return Array.from(categories.values())
-            }
+                        name: categoryName,
+                        buttons: [],
+                    };
+                    categories.set(categoryName, category);
+                }
+
+                const buttonCell = row.values[1];
+                const buttonName = valueToText(buttonColumnInfo.valueType, buttonCell);
+                const buttonAttrs = buttonCell.attributes || {};
+                const getButtonAttr = (name: string) => tryDicts(name, buttonAttrs, rowAttrs, buttonsAttrs, viewAttrs);
+
+                const toQuery = attrToQuery(homeSchema(this.uv.args), getButtonAttr("LinkedView"));
+                const to = toQuery === null ? null : this.$router.resolve(queryLocation(toQuery)).location;
+
+                const button = {
+                    index: rowI,
+                    name: buttonName,
+                    categoryName, to,
+                };
+                category.buttons.push(button);
+            });
+            return Array.from(categories.values());
         }
     }
+}
 </script>
 
 <style scoped>

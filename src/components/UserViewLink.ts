@@ -1,7 +1,7 @@
-import Vue from "vue"
+import Vue from "vue";
 
-import { queryLocation } from "@/state/query"
-import { router } from "@/modules"
+import { queryLocation } from "@/state/query";
+import { router } from "@/modules";
 
 export default Vue.component("UserViewLink", {
     functional: true,
@@ -18,21 +18,21 @@ export default Vue.component("UserViewLink", {
                     // Copied from router-link's guardEvent
                     // don't redirect with control keys
                     if (e.metaKey || e.altKey || e.ctrlKey || e.shiftKey) {
-                        return
+                        return;
                     }
                     // don't redirect when preventDefault called
                     if (e.defaultPrevented) {
-                        return
+                        return;
                     }
                     // don't redirect on right click
                     if (e.button !== undefined && e.button !== 0) {
-                        return
+                        return;
                     }
 
-                    e.preventDefault()
-                    router.push(queryLocation(context.props.uv))
+                    e.preventDefault();
+                    router.push(queryLocation(context.props.uv));
                 },
             },
-        }, context.children)
+        }, context.children);
     },
-})
+});

@@ -55,19 +55,19 @@
 </template>
 
 <script lang="ts">
-    import { Component, Vue, Prop, Watch } from "vue-property-decorator"
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
-    @Component
-    export default class FormEntry extends Vue {
-        // We don't bother to set types here properly, they matter no more than for TableRow.
-        // The reason this is not a functional component is because of i18n.
+@Component
+export default class FormEntry extends Vue {
+    // We don't bother to set types here properly, they matter no more than for TableRow.
+    // The reason this is not a functional component is because of i18n.
 
-        @Prop({ type: Object, required: true }) uv!: any
-        @Prop({ type: Array, required: true }) blocks!: any
-        @Prop({ type: Object, required: true  }) row!: any
-        @Prop({ type: Object, required: true  }) localRow!: any
-        @Prop({ type: Boolean, default: false }) locked!: boolean
-    }
+    @Prop({ type: Object, required: true }) uv!: any;
+    @Prop({ type: Array, required: true }) blocks!: any;
+    @Prop({ type: Object, required: true  }) row!: any;
+    @Prop({ type: Object, required: true  }) localRow!: any;
+    @Prop({ type: Boolean, default: false }) locked!: boolean;
+}
 </script>
 
 <style scoped>

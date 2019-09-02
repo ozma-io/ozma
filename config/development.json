@@ -1,0 +1,6 @@
+{
+  "__API_URL__": "'https://api.dev.myprocessx.com'",
+  "__API_AUTH_URL__": "'https://keycloak-dev.myprocessx.com'",
+  "__API_AUTH_URL_BASE__": "'/auth/realms/myprocessx-dev'",
+  "__AUTH_CLIENT_SECRET__": "'f95ff7a4-5e36-44de-aa43-571f86b21638'"
+}
