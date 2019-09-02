@@ -329,7 +329,7 @@ export default class FormControl extends Vue {
         // `calc` is needed because sizes should be relative to base font size.
         const heightSinglelineText = "calc(2em + 6px)";
         const heightMultilineText = "calc(4em + 12px)";
-        const heightCodeEditor = "500px";
+        const heightCodeEditor = "100%";
         if (this.value.info !== undefined) {
             const fieldType = this.value.info.field.fieldType;
             switch (fieldType.type) {
@@ -440,6 +440,8 @@ export default class FormControl extends Vue {
 
     .form-control-panel {
         padding-right: 2px;
+        width: 60%;
+        height: 60%;
     }
     .form-control-panel-hidden {
         overflow: hidden;
