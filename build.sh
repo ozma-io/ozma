@@ -3,7 +3,8 @@
 
 set -x
 
+test -f yarn.lock
 rm -rf dist
-npm install
-npm run build
+yarn
+yarn build
 rm dist/static/js/*.map
