@@ -1,5 +1,5 @@
-{ nixpkgs ? import <nixpkgs> {} }:
+{ nixpkgs ? import <nixpkgs> {} }@args:
 
-nixpkgs.callPackage ../common.nix {
+(import ../common.nix args).shell.override {
   extraPkgs = pkgs: with pkgs; [ pkgs.nodejs ];
 }
