@@ -175,12 +175,7 @@ const getToken = (context: ActionContext<IAuthState, {}>, params: Record<string,
                 "Content-Type": "application/x-www-form-urlencoded",
             };
 
-            if (Api.authClientSecret === undefined) {
-                params.client_id = Api.authClientId;
-            } else {
-                const basicAuth = `${Api.authClientId}:${Api.authClientSecret}`;
-                headers.Authorization = `Basic ${btoa(basicAuth)}`;
-            }
+            params.client_id = Api.authClientId;
             const paramsString = new URLSearchParams(params).toString();
 
             const ret = await Utils.fetchJson(`${Api.authUrl}/token`, {

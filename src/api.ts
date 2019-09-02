@@ -12,8 +12,7 @@ export const authOrigin = __API_AUTH_URL__;
 export const authUrlBase = `${authOrigin}${__API_AUTH_URL_BASE__}`;
 export const authUrl = `${authUrlBase}/protocol/openid-connect`;
 export const accountUrl = `${authUrlBase}/account`;
-export const authClientId = "funapp";
-export const authClientSecret = (process.env["NODE_ENV"] === "production") ? undefined : "f95ff7a4-5e36-44de-aa43-571f86b21638";
+export const authClientId = __AUTH_CLIENT_ID__;
 
 export const funappSchema = "funapp";
 
