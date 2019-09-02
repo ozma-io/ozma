@@ -84,205 +84,205 @@
 </template>
 
 <script lang="ts">
-    import { Route } from "vue-router"
-    import { Component, Watch, Vue } from "vue-property-decorator"
-    import { Action, namespace } from "vuex-class"
+import { Route } from "vue-router";
+import { Component, Watch, Vue } from "vue-property-decorator";
+import { Action, namespace } from "vuex-class";
 
-    import { mapMaybe } from "@/utils"
-    import * as Api from "@/api"
-    import { setHeadTitle } from "@/elements"
-    import { IUserViewArguments, CombinedUserView, UserViewError, CurrentUserViews } from "@/state/user_view"
-    import { CurrentChanges } from "@/state/staging_changes"
-    import { IAction } from "@/components/ActionsMenu.vue"
-    import { CurrentQuery, replaceSearch, defaultValuePrefix } from "@/state/query"
+import { mapMaybe } from "@/utils";
+import * as Api from "@/api";
+import { setHeadTitle } from "@/elements";
+import { IUserViewArguments, CombinedUserView, UserViewError, CurrentUserViews } from "@/state/user_view";
+import { CurrentChanges } from "@/state/staging_changes";
+import { IAction } from "@/components/ActionsMenu.vue";
+import { CurrentQuery, replaceSearch, defaultValuePrefix } from "@/state/query";
 
-    const auth = namespace("auth")
-    const userView = namespace("userView")
-    const staging = namespace("staging")
-    const settings = namespace("settings")
-    const query = namespace("query")
+const auth = namespace("auth");
+const userView = namespace("userView");
+const staging = namespace("staging");
+const settings = namespace("settings");
+const query = namespace("query");
 
-    const makeWordsRegex = () => {
-        // Match words that doesn't start with quotes
-        const wordRegex = `([^"'«„”\\s][^\\s]*)`
-        const quotes = [
-            [`"`, `"`],
-            [`'`, `'`],
-            [`«`, `»`],
-            [`„`, `“`],
-            [`”`, `”`],
-        ]
-        // Match fully-quoted words: e.g. `"foo bar"` will match but `"foo"b` or `"foo ` will not
-        const quoteRegexes = quotes.map(([start, end]) => `${start}([^${end}]+)${end}(?:\\s|$)`)
-        // Match any word
-        const fallbackRegex = `([^\\s]+)`
-        const regexes = [wordRegex].concat(quoteRegexes).concat([fallbackRegex])
-        const regexesStr = regexes.map(reg => `(?:${reg})`).join("|")
-        const fullRegex = `^\\s*(?:${regexesStr})`
-        return fullRegex
+const makeWordsRegex = () => {
+    // Match words that doesn't start with quotes
+    const wordRegex = `([^"'«„”\\s][^\\s]*)`;
+    const quotes = [
+        [`"`, `"`],
+        [`'`, `'`],
+        [`«`, `»`],
+        [`„`, `“`],
+        [`”`, `”`],
+    ];
+    // Match fully-quoted words: e.g. `"foo bar"` will match but `"foo"b` or `"foo ` will not
+    const quoteRegexes = quotes.map(([start, end]) => `${start}([^${end}]+)${end}(?:\\s|$)`);
+    // Match any word
+    const fallbackRegex = `([^\\s]+)`;
+    const regexes = [wordRegex].concat(quoteRegexes).concat([fallbackRegex]);
+    const regexesStr = regexes.map(reg => `(?:${reg})`).join("|");
+    const fullRegex = `^\\s*(?:${regexesStr})`;
+    return fullRegex;
+};
+const wordsRegexString = makeWordsRegex();
+
+const convertToWords = (str: string) => {
+    const regex = new RegExp(wordsRegexString, "g");
+    const words: string[] = [];
+    while (true) {
+        const ret = regex.exec(str);
+        if (ret === null) {
+            break;
+        } else {
+            const word = ret.slice(1).find(x => x !== undefined) as string;
+            words.push(word.toLowerCase());
+        }
     }
-    const wordsRegexString = makeWordsRegex()
+    return words;
+};
 
-    const convertToWords = (str: string) => {
-        const regex = new RegExp(wordsRegexString, "g")
-        const words: string[] = []
-        while (true) {
-            const ret = regex.exec(str)
-            if (ret === null) {
-                break
-            } else {
-                const word = ret.slice(1).find(x => x !== undefined) as string
-                words.push(word.toLowerCase())
-            }
-        }
-        return words
+const searchParam = "__q";
+
+@Component
+export default class RootUserView extends Vue {
+    @auth.Action("logout") logout!: () => Promise<void>;
+    @userView.Mutation("clear") clearView!: () => void;
+    @userView.Action("getRootView") getRootView!: (_: IUserViewArguments) => Promise<void>;
+    @userView.State("current") userViews!: CurrentUserViews;
+    @userView.Mutation("removeError") uvRemoveError!: (errorIndex: number) => void;
+    @userView.State("errors") uvErrors!: string[];
+    @staging.State("current") changes!: CurrentChanges;
+    @staging.State("currentSubmit") submitPromise!: Promise<void> | null;
+    @staging.Action("submit") submitChanges!: () => Promise<void>;
+    @staging.Action("reset") clearChanges!: () => Promise<void>;
+    @staging.Mutation("removeError") stagingRemoveError!: (errorIndex: number) => void;
+    @staging.State("errors") stagingErrors!: string[];
+    @settings.State("lastError") settingsLastError!: string | null;
+    @settings.Mutation("clearError") settingsClearError!: () => void;
+    @query.State("current") query!: CurrentQuery;
+    @query.Mutation("setRoute") setRoute!: (_: Route) => void;
+
+    private extraActions: IAction[] = [];
+    private statusLine: string = "";
+    private filterString: string = "";
+    private enableFilter: boolean = false;
+    private onSubmitStaging: (() => void) | null = null;
+    private styleNode: HTMLStyleElement;
+
+    constructor() {
+        super();
+        this.styleNode = document.createElement("style");
+        this.styleNode.type = "text/css";
     }
 
-    const searchParam = "__q"
-
-    @Component
-    export default class RootUserView extends Vue {
-        @auth.Action("logout") logout!: () => Promise<void>
-        @userView.Mutation("clear") clearView!: () => void
-        @userView.Action("getRootView") getRootView!: (_: IUserViewArguments) => Promise<void>
-        @userView.State("current") userViews!: CurrentUserViews
-        @userView.Mutation("removeError") uvRemoveError!: (errorIndex: number) => void
-        @userView.State("errors") uvErrors!: string[]
-        @staging.State("current") changes!: CurrentChanges
-        @staging.State("currentSubmit") submitPromise!: Promise<void> | null
-        @staging.Action("submit") submitChanges!: () => Promise<void>
-        @staging.Action("reset") clearChanges!: () => Promise<void>
-        @staging.Mutation("removeError") stagingRemoveError!: (errorIndex: number) => void
-        @staging.State("errors") stagingErrors!: string[]
-        @settings.State("lastError") settingsLastError!: string | null
-        @settings.Mutation("clearError") settingsClearError!: () => void
-        @query.State("current") query!: CurrentQuery
-        @query.Mutation("setRoute") setRoute!: (_: Route) => void
-
-        private extraActions: IAction[] = []
-        private statusLine: string = ""
-        private filterString: string = ""
-        private enableFilter: boolean = false
-        private onSubmitStaging: (() => void) | null = null
-        private styleNode: HTMLStyleElement
-
-        constructor() {
-            super()
-            this.styleNode = document.createElement("style")
-            this.styleNode.type = "text/css"
+    get filterWords() {
+        const value = this.query.getSearch("q", String, "");
+        if (value !== undefined) {
+            return Array.from(new Set(convertToWords(value.toString())));
         }
+        return [];
+    }
 
-        get filterWords() {
-            const value = this.query.getSearch("q", String, "")
-            if (value !== undefined) {
-                return Array.from(new Set(convertToWords(value.toString())))
-            }
-            return []
+    // FIXME update when change not query.search
+    @Watch("$route", { deep: true })
+    private onRouteChanged() {
+        this.setRoute(this.$route);
+    }
+
+    @Watch("query.rootViewArgs", { deep: true })
+    private onViewArgsChanged() {
+        this.updateView();
+    }
+
+    private submitFilter() {
+        replaceSearch("q", this.filterString);
+    }
+
+    @Watch("query.search.root")
+    private updateRootParams() {
+        this.filterString = this.query.getSearch("q", String, "");
+    }
+
+    private created() {
+        document.head.appendChild(this.styleNode);
+        this.setRoute(this.$route);
+        this.filterString = this.query.getSearch("q", String, "");
+    }
+
+    private destroyed() {
+        this.styleNode.remove();
+    }
+
+    get actions() {
+        const actions: IAction[] = [];
+        actions.push(...this.extraActions);
+        actions.push({ name: this.$tc("account"), href: Api.accountUrl });
+        actions.push({ name: this.$tc("logout"), callback: this.logout });
+        return actions;
+    }
+
+    private updateView() {
+        this.clearView();
+        this.extraActions = [];
+        this.statusLine = "";
+        this.onSubmitStaging = null;
+        this.enableFilter = false;
+        this.styleNode.innerHTML = "";
+
+        if (this.query.rootViewArgs === null) {
+            throw Error("Invalid root view arguments");
         }
-
-        // FIXME update when change not query.search
-        @Watch("$route", { deep: true })
-        private onRouteChanged() {
-            this.setRoute(this.$route)
+        const args = this.query.rootViewArgs;
+        if (args.source.type !== "named") {
+            throw Error("Anonymous user views are not supported");
         }
+        setHeadTitle(`${args.source.ref.name} - FunApp`);
+        this.getRootView(args);
+    }
 
-        @Watch("query.rootViewArgs", { deep: true })
-        private onViewArgsChanged() {
-            this.updateView()
-        }
-
-        private submitFilter() {
-            replaceSearch("q", this.filterString)
-        }
-
-        @Watch("query.search.root")
-        private updateRootParams() {
-            this.filterString = this.query.getSearch("q", String, "")
-        }
-
-        private created() {
-            document.head.appendChild(this.styleNode)
-            this.setRoute(this.$route)
-            this.filterString = this.query.getSearch("q", String, "")
-        }
-
-        private destroyed() {
-            this.styleNode.remove()
-        }
-
-        get actions() {
-            const actions: IAction[] = []
-            actions.push(...this.extraActions)
-            actions.push({ name: this.$tc("account"), href: Api.accountUrl })
-            actions.push({ name: this.$tc("logout"), callback: this.logout })
-            return actions
-        }
-
-        private updateView() {
-            this.clearView()
-            this.extraActions = []
-            this.statusLine = ""
-            this.onSubmitStaging = null
-            this.enableFilter = false
-            this.styleNode.innerHTML = ""
-
-            if (this.query.rootViewArgs === null) {
-                throw Error("Invalid root view arguments")
-            }
-            const args = this.query.rootViewArgs
-            if (args.source.type !== "named") {
-                throw Error("Anonymous user views are not supported")
-            }
-            setHeadTitle(`${args.source.ref.name} - FunApp`)
-            this.getRootView(args)
-        }
-
-        private submitChangesWithHook() {
-            this.submitChanges()
-            if (this.submitPromise !== null) {
-                this.submitPromise.then(() => {
-                    if (this.onSubmitStaging !== null) {
-                        this.onSubmitStaging()
-                    }
-                })
-            }
-        }
-
-        // FIMXE: needed only for a style workaround
-        get uv() {
-            return this.userViews.rootView
-        }
-
-        get uvIsReady() {
-            return this.userViews.rootView instanceof CombinedUserView
-        }
-
-        get uvIsError() {
-            return this.userViews.rootView instanceof UserViewError
-        }
-
-        get isMainView() {
-            return this.$route.params.schema === "user" && this.$route.params.name === "Main"
-        }
-
-        get bottomBarNeeded() {
-            return this.uvErrors.length > 0 ||
-                this.settingsLastError !== null ||
-                this.stagingErrors.length > 0 ||
-                !this.changes.isEmpty ||
-                this.statusLine !== ""
-        }
-
-        get defaultValues() {
-            return Object.fromEntries(mapMaybe(([name, val]) => {
-                if (name.startsWith(defaultValuePrefix)) {
-                    return [name.slice(defaultValuePrefix.length), JSON.parse(val)]
-                } else {
-                    return undefined
+    private submitChangesWithHook() {
+        this.submitChanges();
+        if (this.submitPromise !== null) {
+            this.submitPromise.then(() => {
+                if (this.onSubmitStaging !== null) {
+                    this.onSubmitStaging();
                 }
-            }, Object.entries(this.query.search)))
+            });
         }
     }
+
+    // FIMXE: needed only for a style workaround
+    get uv() {
+        return this.userViews.rootView;
+    }
+
+    get uvIsReady() {
+        return this.userViews.rootView instanceof CombinedUserView;
+    }
+
+    get uvIsError() {
+        return this.userViews.rootView instanceof UserViewError;
+    }
+
+    get isMainView() {
+        return this.$route.params.schema === "user" && this.$route.params.name === "Main";
+    }
+
+    get bottomBarNeeded() {
+        return this.uvErrors.length > 0 ||
+            this.settingsLastError !== null ||
+            this.stagingErrors.length > 0 ||
+            !this.changes.isEmpty ||
+            this.statusLine !== "";
+    }
+
+    get defaultValues() {
+        return Object.fromEntries(mapMaybe(([name, val]) => {
+            if (name.startsWith(defaultValuePrefix)) {
+                return [name.slice(defaultValuePrefix.length), JSON.parse(val)];
+            } else {
+                return undefined;
+            }
+        }, Object.entries(this.query.search)));
+    }
+}
 </script>
 
 <style scoped>

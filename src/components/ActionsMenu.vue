@@ -20,40 +20,40 @@
 </template>
 
 <script lang="ts">
-    import { Component, Vue, Prop } from "vue-property-decorator"
-    import { RawLocation } from "vue-router"
+import { Component, Vue, Prop } from "vue-property-decorator";
+import { RawLocation } from "vue-router";
 
-    export interface ILocationAction {
-        name: string
-        location: RawLocation
+export interface ILocationAction {
+    name: string;
+    location: RawLocation;
+}
+
+export interface IHrefAction {
+    name: string;
+    href: string;
+}
+
+export interface ICallbackAction {
+    name: string;
+    callback: () => void;
+}
+
+export type IAction = ILocationAction | IHrefAction | ICallbackAction;
+
+@Component
+export default class ActionsMenu extends Vue {
+    @Prop({ type: Array }) actions!: IAction[];
+    @Prop({ type: String }) title!: string;
+
+    private showActions: boolean = false;
+
+    private actionsShow() {
+        this.showActions = !this.showActions;
     }
-
-    export interface IHrefAction {
-        name: string
-        href: string
+    private actionsHidden() {
+        this.showActions = false;
     }
-
-    export interface ICallbackAction {
-        name: string
-        callback: () => void
-    }
-
-    export type IAction = ILocationAction | IHrefAction | ICallbackAction
-
-    @Component
-    export default class ActionsMenu extends Vue {
-        @Prop({ type: Array }) actions!: IAction[]
-        @Prop({ type: String }) title!: string
-
-        private showActions: boolean = false
-
-        private actionsShow() {
-            this.showActions = !this.showActions
-        }
-        private actionsHidden() {
-            this.showActions = false
-        }
-    }
+}
 </script>
 
 <style scoped>

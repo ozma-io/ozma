@@ -29,71 +29,71 @@
     </div>
 </template>
 <script lang="ts">
-    import { Component, Prop, Vue, Watch } from "vue-property-decorator"
-    import { IQuery } from "@/state/query"
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { IQuery } from "@/state/query";
 
-    export interface ISelectOption {
-        text: string
-        value: string
-        link: IQuery | null
-    }
+export interface ISelectOption {
+    text: string;
+    value: string;
+    link: IQuery | null;
+}
 
-    interface ISelectedEntry {
-        text: string
-        value: string
-        link: IQuery | null
-    }
+interface ISelectedEntry {
+    text: string;
+    value: string;
+    link: IQuery | null;
+}
 
-    @Component
-    export default class SelectionField extends Vue {
-        @Prop({ type: Array }) options!: ISelectOption[]
-        @Prop({ required: true }) value!: any
-        @Prop({ type: Boolean, default: false }) manyFields!: boolean
+@Component
+export default class SelectionField extends Vue {
+    @Prop({ type: Array }) options!: ISelectOption[];
+    @Prop({ required: true }) value!: any;
+    @Prop({ type: Boolean, default: false }) manyFields!: boolean;
 
-        private search: string = ""
-        private showedField: boolean = false
-        private selectedEntries: ISelectedEntry[] = []
+    private search: string = "";
+    private showedField: boolean = false;
+    private selectedEntries: ISelectedEntry[] = [];
 
-        private created() {
-            for (const i of this.options) {
-                if (i.value === this.value.toString()) {
-                    this.selectedEntries.push({ text: i.text, value: i.value, link: i.link })
-                }
+    private created() {
+        for (const i of this.options) {
+            if (i.value === this.value.toString()) {
+                this.selectedEntries.push({ text: i.text, value: i.value, link: i.link });
             }
         }
-        @Watch("foo")
-        private change() {
-            this.created()
+    }
+    @Watch("foo")
+    private change() {
+        this.created();
+    }
+    private clear() {
+        this.selectedEntries = [];
+    }
+    private deletion(text: string) {
+        this.selectedEntries.splice(this.selectedEntries.findIndex(currentValue =>  currentValue.text === text ), 1);
+        const newValue = null;
+        this.$emit("update:value", newValue);
+    }
+    private addEntry() {
+        const newentry: any = this.$refs["newentry"];
+        const entrytext: string = newentry.value;
+        const entryvalue: string = this.options[this.options.findIndex(currentValue =>  currentValue.text === entrytext )].value;
+        const entrylink: IQuery | null = this.options[this.options.findIndex(currentValue =>  currentValue.text === entrytext )].link;
+        const elemoftext: ISelectedEntry = { text: entrytext, value: entryvalue, link: entrylink };
+        if (!this.manyFields) {
+            this.clear();
         }
-        private clear() {
-            this.selectedEntries = []
-        }
-        private deletion(text: string) {
-            this.selectedEntries.splice(this.selectedEntries.findIndex(currentValue =>  currentValue.text === text ), 1)
-            const newValue = null
-            this.$emit("update:value", newValue)
-        }
-        private addEntry() {
-            const newentry: any = this.$refs["newentry"]
-            const entrytext: string = newentry.value
-            const entryvalue: string = this.options[this.options.findIndex(currentValue =>  currentValue.text === entrytext )].value
-            const entrylink: IQuery | null = this.options[this.options.findIndex(currentValue =>  currentValue.text === entrytext )].link
-            const elemoftext: ISelectedEntry = { text: entrytext, value: entryvalue, link: entrylink }
+        if (!this.selectedEntries.some(currentValue => currentValue.text === entrytext) && this.options.some(currentValue => currentValue.text === entrytext )) {
+            this.selectedEntries.push(elemoftext);
+            this.search = "";
+
             if (!this.manyFields) {
-                this.clear()
+                const newValue = this.selectedEntries[0].value;
+                this.$emit("update:value", newValue);
             }
-            if (!this.selectedEntries.some(currentValue => currentValue.text === entrytext) && this.options.some(currentValue => currentValue.text === entrytext )) {
-                this.selectedEntries.push(elemoftext)
-                this.search = ""
-
-                if (!this.manyFields) {
-                    const newValue = this.selectedEntries[0].value
-                    this.$emit("update:value", newValue)
-                }
-            }
-            newentry.blur()
         }
+        newentry.blur();
     }
+}
 </script>
 
 <style scoped>

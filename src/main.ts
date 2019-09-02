@@ -1,30 +1,30 @@
-import Vue from "vue"
+import Vue from "vue";
 
-Vue.config.devtools = process.env["NODE_ENV"] !== "production"
-Vue.config.performance = process.env["NODE_ENV"] !== "production"
+Vue.config.devtools = process.env["NODE_ENV"] !== "production";
+Vue.config.performance = process.env["NODE_ENV"] !== "production";
 
-import Vuex from "vuex"
-import BootstrapVue from "bootstrap-vue"
+import Vuex from "vuex";
+import BootstrapVue from "bootstrap-vue";
 
-import * as Modules from "@/modules"
-import { setHeadTitle } from "@/elements"
+import * as Modules from "@/modules";
+import { setHeadTitle } from "@/elements";
 
-import UserView from "@/components/UserView.vue"
-import UserViewLink from "@/components/UserViewLink.ts"
-import ActionsMenu from "@/components/ActionsMenu.vue"
-import FormControl from "@/components/FormControl.vue"
-import App from "@/App.vue"
+import UserView from "@/components/UserView.vue";
+import UserViewLink from "@/components/UserViewLink.ts";
+import ActionsMenu from "@/components/ActionsMenu.vue";
+import FormControl from "@/components/FormControl.vue";
+import App from "@/App.vue";
 
-import authModule from "@/state/auth"
-import settingsModule from "@/state/settings"
-import userViewModule from "@/state/user_view"
-import stagingChangesModule from "@/state/staging_changes"
-import queryModule from "@/state/query"
+import authModule from "@/state/auth";
+import settingsModule from "@/state/settings";
+import userViewModule from "@/state/user_view";
+import stagingChangesModule from "@/state/staging_changes";
+import queryModule from "@/state/query";
 
-import "@/styles/style.sass"
+import "@/styles/style.sass";
 
-Vue.use(Vuex)
-Vue.use(BootstrapVue)
+Vue.use(Vuex);
+Vue.use(BootstrapVue);
 
 export const store = new Vuex.Store({
     // Big performance hog on dev!
@@ -36,22 +36,22 @@ export const store = new Vuex.Store({
         staging: stagingChangesModule,
         query: queryModule,
     },
-})
+});
 
-Vue.component("UserView", UserView)
-Vue.component("ActionsMenu", ActionsMenu)
-Vue.component("FormControl", FormControl)
-Vue.component("UserViewLink", UserViewLink)
+Vue.component("UserView", UserView);
+Vue.component("ActionsMenu", ActionsMenu);
+Vue.component("FormControl", FormControl);
+Vue.component("UserViewLink", UserViewLink);
 
 Modules.router.beforeResolve((to, from, next) => {
     // Reset page title
-    setHeadTitle("FunApp")
-    next()
-})
+    setHeadTitle("FunApp");
+    next();
+});
 
 const app = new Vue({
     router: Modules.router,
     i18n: Modules.i18n,
     store,
     render: f => f(App),
-}).$mount("#app")
+}).$mount("#app");

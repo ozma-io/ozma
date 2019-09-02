@@ -1,146 +1,146 @@
-import { SchemaName, EntityName, FieldName, ValueType, FieldType, IResultViewInfo, IFieldRef, IEntityRef } from "@/api"
-import { Moment } from "moment"
-import * as moment from "moment"
+import { SchemaName, EntityName, FieldName, ValueType, FieldType, IResultViewInfo, IFieldRef, IEntityRef } from "@/api";
+import { Moment } from "moment";
+import * as moment from "moment";
 
-export const dateFormat = "L"
-export const dateTimeFormat = "L LTS"
+export const dateFormat = "L";
+export const dateTimeFormat = "L LTS";
 
 // Raw values are suitable for editing. Type depends on a default editor; currently it's always a string.
 
 export interface IFieldInfo {
-    fieldType: FieldType
-    isNullable: boolean
+    fieldType: FieldType;
+    isNullable: boolean;
 }
 
-export type EntityFieldsInfo = Record<FieldName, IFieldInfo>
+export type EntityFieldsInfo = Record<FieldName, IFieldInfo>;
 
-export type FieldsInfo = Record<SchemaName, Record<EntityName, EntityFieldsInfo>>
+export type FieldsInfo = Record<SchemaName, Record<EntityName, EntityFieldsInfo>>;
 
 export const insertFieldsInfo = (fieldsInfo: FieldsInfo, info: IResultViewInfo) => {
     Object.values(info.domains).forEach(domain => {
         Object.values(domain).forEach(field => {
             if (field.field === null) {
-                return
+                return;
             }
 
-            const schemaName = field.ref.entity.schema
-            const entityName = field.ref.entity.name
-            const fieldName = field.ref.name
-            let schemaInfo = fieldsInfo[schemaName]
+            const schemaName = field.ref.entity.schema;
+            const entityName = field.ref.entity.name;
+            const fieldName = field.ref.name;
+            let schemaInfo = fieldsInfo[schemaName];
             if (schemaInfo === undefined) {
-                schemaInfo = {}
-                fieldsInfo[schemaName] = schemaInfo
+                schemaInfo = {};
+                fieldsInfo[schemaName] = schemaInfo;
             }
-            let entityInfo = schemaInfo[entityName]
+            let entityInfo = schemaInfo[entityName];
             if (entityInfo === undefined) {
-                entityInfo = {}
-                schemaInfo[entityName] = entityInfo
+                entityInfo = {};
+                schemaInfo[entityName] = entityInfo;
             }
-            entityInfo[fieldName] = field.field
-        })
-    })
-}
+            entityInfo[fieldName] = field.field;
+        });
+    });
+};
 
 export const equalEntityRef = (a: IEntityRef, b: IEntityRef) => {
-    return a.schema === b.schema && a.name === b.name
-}
+    return a.schema === b.schema && a.name === b.name;
+};
 
 export const equalFieldRef = (a: IFieldRef, b: IFieldRef) => {
-    return equalEntityRef(a.entity, b.entity) && a.name === b.name
-}
+    return equalEntityRef(a.entity, b.entity) && a.name === b.name;
+};
 
 export interface IUpdatedValue {
-    rawValue: any
+    rawValue: any;
     // `undefined` here means that value didn't pass validation
-    value: any
-    erroredOnce: boolean // failed on submit
+    value: any;
+    erroredOnce: boolean; // failed on submit
 }
 
 // Should be in sync with valueFromRaw
 export const valueToRaw = (valueType: ValueType, value: any): any => {
     if (value === undefined || value === null) {
-        return ""
+        return "";
     } else if (valueType.type === "date") {
-        return (value as Moment).format(dateFormat)
+        return (value as Moment).format(dateFormat);
     } else if (valueType.type === "datetime") {
-        return (value as Moment).format(dateTimeFormat)
+        return (value as Moment).format(dateTimeFormat);
     } else if (valueType.type === "json") {
-        return JSON.stringify(value)
+        return JSON.stringify(value);
     } else {
-        return String(value)
+        return String(value);
     }
-}
+};
 
 const convertArray = (entryType: FieldType, value: any[]): any[] | undefined => {
-    const converted = value.map(entry => valueFromRaw({ fieldType: entryType, isNullable: false }, entry))
+    const converted = value.map(entry => valueFromRaw({ fieldType: entryType, isNullable: false }, entry));
     if (converted.some(entry => entry === undefined)) {
-        return undefined
+        return undefined;
     } else {
-        return converted
+        return converted;
     }
-}
+};
 
 export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, value: any): any => {
     if (value === null || value === undefined || value === "") {
-        return isNullable ? null : undefined
+        return isNullable ? null : undefined;
     } else if (fieldType.type === "string" || fieldType.type === "enum") {
-        return typeof value === "string" ? value.replace(/^\s*|\s+$/g, "").replace(/^[\t\f\v ]+|[\t\f\v ]+$ /gm, "") : undefined
+        return typeof value === "string" ? value.replace(/^\s*|\s+$/g, "").replace(/^[\t\f\v ]+|[\t\f\v ]+$ /gm, "") : undefined;
     } else if (fieldType.type === "bool") {
         if (typeof value === "boolean") {
-            return value
+            return value;
         } else {
-            const str = String(value).toLowerCase()
+            const str = String(value).toLowerCase();
             if (str === "false") {
-                return false
+                return false;
             } else if (str === "true") {
-                return true
+                return true;
             } else {
-                return undefined
+                return undefined;
             }
         }
     } else if (fieldType.type === "array") {
         if (value instanceof Array) {
-            return convertArray({ type: fieldType.subtype }, value)
+            return convertArray({ type: fieldType.subtype }, value);
         } else if (typeof value === "string") {
-            return convertArray({ type: fieldType.subtype }, value.split(","))
+            return convertArray({ type: fieldType.subtype }, value.split(","));
         } else {
-            return undefined
+            return undefined;
         }
     } else if (fieldType.type === "date") {
-        const date = moment(value, dateFormat).startOf("day").utc()
+        const date = moment(value, dateFormat).startOf("day").utc();
         if (!date.isValid()) {
-            return undefined
+            return undefined;
         } else {
-            return date
+            return date;
         }
     } else if (fieldType.type === "datetime") {
-        const date = moment(value, dateTimeFormat)
+        const date = moment(value, dateTimeFormat);
         if (!date.isValid()) {
-            return undefined
+            return undefined;
         } else {
-            return date
+            return date;
         }
     } else if (fieldType.type === "decimal") {
-        const f = Number(value)
+        const f = Number(value);
         if (Number.isFinite(f)) {
-            return f
+            return f;
         } else {
-            return undefined
+            return undefined;
         }
     } else if (fieldType.type === "int" || fieldType.type === "reference") {
-        const f = Number(value)
+        const f = Number(value);
         if (Number.isInteger(f)) {
-            return f
+            return f;
         } else {
-            return undefined
+            return undefined;
         }
     } else if (fieldType.type === "json") {
         try {
-            return JSON.parse(value)
+            return JSON.parse(value);
         } catch (e) {
-            return undefined
+            return undefined;
         }
     } else {
-        throw Error("Invalid field type")
+        throw Error("Invalid field type");
     }
-}
+};

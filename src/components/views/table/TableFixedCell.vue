@@ -26,16 +26,16 @@
 </template>
 
 <script lang="ts">
-    import { Component, Vue, Prop, Watch } from "vue-property-decorator"
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
-    @Component
-    export default class TableFixedCell extends Vue {
-        // We don't bother to set types here properly, they matter no more than for TableRow.
-        // The reason this is not a functional component is because of performance.
-        // See https://forum.vuejs.org/t/performance-for-large-numbers-of-components/13545/10
-        @Prop({ type: Object, required: true }) value!: any
-        @Prop({ type: Object, required: true }) localValue!: any
-        @Prop({ type: Object, required: true }) column!: any
-        @Prop({ type: Number, required: true }) columnPosition!: number
-    }
+@Component
+export default class TableFixedCell extends Vue {
+    // We don't bother to set types here properly, they matter no more than for TableRow.
+    // The reason this is not a functional component is because of performance.
+    // See https://forum.vuejs.org/t/performance-for-large-numbers-of-components/13545/10
+    @Prop({ type: Object, required: true }) value!: any;
+    @Prop({ type: Object, required: true }) localValue!: any;
+    @Prop({ type: Object, required: true }) column!: any;
+    @Prop({ type: Number, required: true }) columnPosition!: number;
+}
 </script>

@@ -1,7 +1,7 @@
 {
     "extends": "tslint:recommended",
     "rules": {
-        "semicolon": [true, "never"],
+        "semicolon": [true, "always"],
         "max-classes-per-file": false,
         "member-access": false,
         "arrow-parens": [true, "ban-single-arg-parens"],

@@ -59,197 +59,197 @@
 </template>
 
 <script lang="ts">
-    import { Component, Prop, Watch, Vue } from "vue-property-decorator"
-    import { mixins } from "vue-class-component"
-    import { namespace } from "vuex-class"
-    import { Store } from "vuex"
+import { Component, Prop, Watch, Vue } from "vue-property-decorator";
+import { mixins } from "vue-class-component";
+import { namespace } from "vuex-class";
+import { Store } from "vuex";
 
-    import { tryDicts, mapMaybe } from "@/utils"
-    import { AttributesMap, IResultColumnInfo } from "@/api"
-    import { CombinedUserView, ICombinedValue, IRowCommon, homeSchema } from "@/state/user_view"
-    import { LocalUserView, SimpleLocalUserView, ILocalRowInfo, ILocalRow, ValueRef, RowRef } from "@/local_user_view"
-    import { UserView } from "@/components"
-    import BaseUserView from "@/components/BaseUserView"
-    import FormEntry from "@/components/views/form/FormEntry.vue"
-    import { IAction } from "@/components/ActionsMenu.vue"
+import { tryDicts, mapMaybe } from "@/utils";
+import { AttributesMap, IResultColumnInfo } from "@/api";
+import { CombinedUserView, ICombinedValue, IRowCommon, homeSchema } from "@/state/user_view";
+import { LocalUserView, SimpleLocalUserView, ILocalRowInfo, ILocalRow, ValueRef, RowRef } from "@/local_user_view";
+import { UserView } from "@/components";
+import BaseUserView from "@/components/BaseUserView";
+import FormEntry from "@/components/views/form/FormEntry.vue";
+import { IAction } from "@/components/ActionsMenu.vue";
 
-    interface IFieldInfo {
-        index: number
-        columnInfo: IResultColumnInfo
-        caption: string
-        visible: boolean
+interface IFieldInfo {
+    index: number;
+    columnInfo: IResultColumnInfo;
+    caption: string;
+    visible: boolean;
+}
+
+interface IBlockInfo {
+    width: number;
+    fields: IFieldInfo[];
+}
+
+interface IFormValueExtra {
+    attributes: AttributesMap;
+}
+
+interface IFormUserViewExtra {
+    homeSchema: string | null;
+}
+
+type IFormLocalRowInfo = ILocalRowInfo<null>;
+type IFormLocalRow = ILocalRow<IFormValueExtra, null>;
+
+class LocalFormUserView extends SimpleLocalUserView<IFormValueExtra, null, IFormUserViewExtra> {
+    constructor(store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>, oldLocal: LocalUserView<IFormValueExtra, null, IFormUserViewExtra> | null) {
+        super(store, uv, defaultRawValues, oldLocal);
     }
 
-    interface IBlockInfo {
-        width: number
-        fields: IFieldInfo[]
+    createCommonLocalValue(row: IRowCommon, localRow: IFormLocalRow, columnIndex: number, value: ICombinedValue) {
+        const columnAttrs = this.uv.columnAttributes[columnIndex];
+        const attributes = Object.assign({}, this.uv.attributes, columnAttrs, row.attributes, value.attributes);
+        const extra = {
+            attributes,
+        };
+        return extra;
     }
 
-    interface IFormValueExtra {
-        attributes: AttributesMap
+    createCommonLocalRow() {
+        return null;
     }
 
-    interface IFormUserViewExtra {
-        homeSchema: string | null
+    createLocalUserView(): IFormUserViewExtra {
+        const extra = {
+            homeSchema: homeSchema(this.uv.args),
+        };
+        return extra;
+    }
+}
+
+const staging = namespace("staging");
+
+@UserView({
+    localConstructor: LocalFormUserView,
+})
+@Component({
+    components: {
+        FormEntry,
+    },
+})
+export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView, IFormValueExtra, null, IFormUserViewExtra>>(BaseUserView) {
+    @staging.State("currentSubmit") currentSubmit!: Promise<void> | null;
+
+    @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView;
+    @Prop({ type: Boolean, default: false }) isRoot!: boolean;
+    @Prop({ type: Object, required: true }) local!: LocalFormUserView;
+
+    private deletedOne = false;
+
+    get addedLocked() {
+        return this.uv.rows === null && this.currentSubmit !== null;
     }
 
-    type IFormLocalRowInfo = ILocalRowInfo<null>
-    type IFormLocalRow = ILocalRow<IFormValueExtra, null>
-
-    class LocalFormUserView extends SimpleLocalUserView<IFormValueExtra, null, IFormUserViewExtra> {
-        constructor(store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>, oldLocal: LocalUserView<IFormValueExtra, null, IFormUserViewExtra> | null) {
-            super(store, uv, defaultRawValues, oldLocal)
-        }
-
-        createCommonLocalValue(row: IRowCommon, localRow: IFormLocalRow, columnIndex: number, value: ICombinedValue) {
-            const columnAttrs = this.uv.columnAttributes[columnIndex]
-            const attributes = Object.assign({}, this.uv.attributes, columnAttrs, row.attributes, value.attributes)
-            const extra = {
-                attributes,
-            }
-            return extra
-        }
-
-        createCommonLocalRow() {
-            return null
-        }
-
-        createLocalUserView(): IFormUserViewExtra {
-            const extra = {
-                homeSchema: homeSchema(this.uv.args),
-            }
-            return extra
-        }
+    // Show empty row only if it's a create view and there are no already created rows.
+    get showEmptyRow() {
+        return this.uv.newRowsPositions.length === 0 && this.uv.rows === null && this.uv.info.mainEntity !== null;
     }
 
-    const staging = namespace("staging")
+    // Because we treat the first added row specially we use only second+ new rows here.
+    get newRowsPositions() {
+        return this.uv.newRowsPositions.slice(1);
+    }
 
-    @UserView({
-        localConstructor: LocalFormUserView,
-    })
-    @Component({
-        components: {
-            FormEntry,
-        },
-    })
-    export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView, IFormValueExtra, null, IFormUserViewExtra>>(BaseUserView) {
-        @staging.State("currentSubmit") currentSubmit!: Promise<void> | null
+    get fields(): IFieldInfo[] {
+        const viewAttrs = this.uv.attributes;
+        return this.uv.info.columns.map((columnInfo, i) => {
+            const columnAttrs = this.uv.columnAttributes[i];
+            const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
 
-        @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView
-        @Prop({ type: Boolean, default: false }) isRoot!: boolean
-        @Prop({ type: Object, required: true }) local!: LocalFormUserView
+            const captionAttr = getColumnAttr("Caption");
+            const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name;
 
-        private deletedOne = false
+            const visibleColumnAttr = getColumnAttr("Visible");
+            const visible = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
 
-        get addedLocked() {
-            return this.uv.rows === null && this.currentSubmit !== null
-        }
+            return {
+                index: i,
+                columnInfo,
+                caption,
+                visible,
+            };
+        });
+    }
 
-        // Show empty row only if it's a create view and there are no already created rows.
-        get showEmptyRow() {
-            return this.uv.newRowsPositions.length === 0 && this.uv.rows === null && this.uv.info.mainEntity !== null
-        }
+    get blocks(): IBlockInfo[] {
+        const viewAttrs = this.uv.attributes;
+        // Relative block widths. [0..1]. Each block contains zero or more inputs.
+        const blockWidths: number[] = viewAttrs["FormBlockWidths"] || [1];
+        const blocks: IBlockInfo[] = blockWidths.map(width => ({ width: width * 0.95, fields: [] }));
 
-        // Because we treat the first added row specially we use only second+ new rows here.
-        get newRowsPositions() {
-            return this.uv.newRowsPositions.slice(1)
-        }
+        this.uv.info.columns.forEach((columnInfo, i) => {
+            const columnAttrs = this.uv.columnAttributes[i];
+            const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
+            const field = this.fields[i];
 
-        get fields(): IFieldInfo[] {
-            const viewAttrs = this.uv.attributes
-            return this.uv.info.columns.map((columnInfo, i) => {
-                const columnAttrs = this.uv.columnAttributes[i]
-                const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs)
+            const blockAttr = Number(getColumnAttr("FormBlock"));
+            const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr;
+            const block = Math.max(0, Math.min(blockNumber, blocks.length - 1));
 
-                const captionAttr = getColumnAttr("Caption")
-                const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name
+            blocks[block].fields.push(field);
+        });
 
-                const visibleColumnAttr = getColumnAttr("Visible")
-                const visible = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr)
+        return blocks;
+    }
 
-                return {
-                    index: i,
-                    columnInfo,
-                    caption,
-                    visible,
+    private deleteRowAndSignal(ref: RowRef) {
+        this.deleteRow(ref);
+        this.deletedOne = true;
+    }
+
+    private init() {
+        if (this.isRoot) {
+            this.$emit("update:bodyStyle", `
+                @media print {
+                    @page {
+                        size: portrait;
+                    }
                 }
-            })
+            `);
         }
 
-        get blocks(): IBlockInfo[] {
-            const viewAttrs = this.uv.attributes
-            // Relative block widths. [0..1]. Each block contains zero or more inputs.
-            const blockWidths: number[] = viewAttrs["FormBlockWidths"] || [1]
-            const blocks: IBlockInfo[] = blockWidths.map(width => ({ width: width * 0.95, fields: [] }))
-
-            this.uv.info.columns.forEach((columnInfo, i) => {
-                const columnAttrs = this.uv.columnAttributes[i]
-                const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs)
-                const field = this.fields[i]
-
-                const blockAttr = Number(getColumnAttr("FormBlock"))
-                const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr
-                const block = Math.max(0, Math.min(blockNumber, blocks.length - 1))
-
-                blocks[block].fields.push(field)
-            })
-
-            return blocks
+        if (this.uv.rows === null) {
+            // When entry is created successfully, return back.
+            const currRoute = this.$route.fullPath;
+            this.$emit("update:onSubmitStaging", () => {
+                if (this.$route.fullPath === currRoute) {
+                    this.$router.back();
+                }
+            });
         }
 
-        private deleteRowAndSignal(ref: RowRef) {
-            this.deleteRow(ref)
-            this.deletedOne = true
-        }
+        this.deletedOne = false;
+    }
 
-        private init() {
-            if (this.isRoot) {
-                this.$emit("update:bodyStyle", `
-                    @media print {
-                        @page {
-                            size: portrait;
-                        }
-                    }
-                `)
-            }
+    private created() {
+        this.init();
+    }
 
-            if (this.uv.rows === null) {
-                // When entry is created successfully, return back.
-                const currRoute = this.$route.fullPath
-                this.$emit("update:onSubmitStaging", () => {
-                    if (this.$route.fullPath === currRoute) {
-                        this.$router.back()
-                    }
-                })
-            }
+    @Watch("uv")
+    private uvChanged() {
+        this.init();
+    }
 
-            this.deletedOne = false
-        }
-
-        private created() {
-            this.init()
-        }
-
-        @Watch("uv")
-        private uvChanged() {
-            this.init()
-        }
-
-        get rowPositions() {
-            if (this.uv.rows === null) {
-                return []
-            } else {
-                return mapMaybe((row, rowI) => row.deleted ? undefined : rowI, this.uv.rows)
-            }
-        }
-
-        @Watch("rowPositions")
-        private returnIfEmpty() {
-            if (this.isRoot && this.deletedOne && this.rowPositions.length === 0 && this.uv.newRowsPositions.length === 0) {
-                this.$router.back()
-            }
+    get rowPositions() {
+        if (this.uv.rows === null) {
+            return [];
+        } else {
+            return mapMaybe((row, rowI) => row.deleted ? undefined : rowI, this.uv.rows);
         }
     }
+
+    @Watch("rowPositions")
+    private returnIfEmpty() {
+        if (this.isRoot && this.deletedOne && this.rowPositions.length === 0 && this.uv.newRowsPositions.length === 0) {
+            this.$router.back();
+        }
+    }
+}
 </script>
 
 <style scoped>

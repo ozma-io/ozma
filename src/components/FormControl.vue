@@ -130,276 +130,276 @@
 </template>
 
 <script lang="ts">
-    import { Component, Vue, Prop, Watch } from "vue-property-decorator"
-    import { namespace } from "vuex-class"
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { namespace } from "vuex-class";
 
-    import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef, IEntityRef } from "@/api"
-    import { IAction } from "@/components/ActionsMenu.vue"
-    import { IUpdatableField, IUserViewArguments, CombinedUserView, EntriesMap, CurrentUserViews, homeSchema, ICombinedValue } from "@/state/user_view"
-    import { IQuery, attrToQueryRef, queryLocation } from "@/state/query"
+import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef, IEntityRef } from "@/api";
+import { IAction } from "@/components/ActionsMenu.vue";
+import { IUpdatableField, IUserViewArguments, CombinedUserView, EntriesMap, CurrentUserViews, homeSchema, ICombinedValue } from "@/state/user_view";
+import { IQuery, attrToQueryRef, queryLocation } from "@/state/query";
 
-    interface ITextType {
-        name: "text"
-        type: "text" | "number"
-        style: Record<string, any>
-    }
+interface ITextType {
+    name: "text";
+    type: "text" | "number";
+    style: Record<string, any>;
+}
 
-    interface ITextAreaType {
-        name: "textarea"
-        style: Record<string, any>
-    }
+interface ITextAreaType {
+    name: "textarea";
+    style: Record<string, any>;
+}
 
-    interface ICodeEditorType {
-        name: "codeeditor"
-        style: Record<string, any>
-    }
+interface ICodeEditorType {
+    name: "codeeditor";
+    style: Record<string, any>;
+}
 
-    interface ISelectType {
-        name: "select"
-        options: ISelectOption[]
-    }
+interface ISelectType {
+    name: "select";
+    options: ISelectOption[];
+}
 
-    interface ISelectOption {
-        text: string
-        value: string
-    }
+interface ISelectOption {
+    text: string;
+    value: string;
+}
 
-    interface IExtendedSelectType {
-        name: "extended_select"
-        options: IExtendedSelectOption[]
-    }
+interface IExtendedSelectType {
+    name: "extended_select";
+    options: IExtendedSelectOption[];
+}
 
-    interface IExtendedSelectOption extends ISelectOption {
-        link: IQuery | null
-    }
+interface IExtendedSelectOption extends ISelectOption {
+    link: IQuery | null;
+}
 
-    interface ICheckType {
-        name: "check"
-    }
+interface ICheckType {
+    name: "check";
+}
 
-    interface IUserViewType {
-        name: "userview"
-        args: IUserViewArguments
-        defaultValues: Record<string, any>
-    }
+interface IUserViewType {
+    name: "userview";
+    args: IUserViewArguments;
+    defaultValues: Record<string, any>;
+}
 
-    interface IErrorType {
-        name: "error"
-        text: string
-    }
+interface IErrorType {
+    name: "error";
+    text: string;
+}
 
-    interface ICalendar {
-        name: "calendar"
-        showTime: boolean
-    }
+interface ICalendar {
+    name: "calendar";
+    showTime: boolean;
+}
 
-    type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | IExtendedSelectType | ICheckType | IUserViewType | IErrorType | ICalendar
+type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | IExtendedSelectType | ICheckType | IUserViewType | IErrorType | ICalendar;
 
-    const userView = namespace("userView")
+const userView = namespace("userView");
 
-    @Component({
-        components: {
-            CodeEditor: () => import("@/components/CodeEditor.vue"),
-            SelectionField: () => import("@/components/SelectionField.vue"),
-            Calendar: () => import("@/components/Calendar.vue"),
-        },
-    })
-    export default class FormControl extends Vue {
-        @Prop({ type: Object }) type!: ValueType
-        @Prop({ type: Object, required: true }) value!: ICombinedValue
-        @Prop({ type: Object, default: {} }) attributes!: AttributesMap
-        @Prop({ type: Boolean, default: false }) locked!: boolean
-        @Prop({ type: Boolean, default: false }) autofocus!: boolean
-        @Prop({ type: CombinedUserView }) uv!: CombinedUserView
-        @Prop({ type: String, default: ""}) caption!: string
+@Component({
+    components: {
+        CodeEditor: () => import("@/components/CodeEditor.vue"),
+        SelectionField: () => import("@/components/SelectionField.vue"),
+        Calendar: () => import("@/components/Calendar.vue"),
+    },
+})
+export default class FormControl extends Vue {
+    @Prop({ type: Object }) type!: ValueType;
+    @Prop({ type: Object, required: true }) value!: ICombinedValue;
+    @Prop({ type: Object, default: {} }) attributes!: AttributesMap;
+    @Prop({ type: Boolean, default: false }) locked!: boolean;
+    @Prop({ type: Boolean, default: false }) autofocus!: boolean;
+    @Prop({ type: CombinedUserView }) uv!: CombinedUserView;
+    @Prop({ type: String, default: ""}) caption!: string;
 
-        @userView.State("entries") entriesMap!: EntriesMap
-        @userView.Action("getEntries") getEntries!: (_: IEntityRef) => Promise<void>
-        @userView.State("current") userViews!: CurrentUserViews
-        @userView.Action("getNestedView") getNestedView!: (_: IUserViewArguments) => Promise<void>
+    @userView.State("entries") entriesMap!: EntriesMap;
+    @userView.Action("getEntries") getEntries!: (_: IEntityRef) => Promise<void>;
+    @userView.State("current") userViews!: CurrentUserViews;
+    @userView.Action("getNestedView") getNestedView!: (_: IUserViewArguments) => Promise<void>;
 
-        private extraActions: IAction[] = []
-        private oldArgs: string = ""
+    private extraActions: IAction[] = [];
+    private oldArgs: string = "";
 
-        private mounted() {
-            if (this.autofocus) {
-                const type = this.inputType
-                const control: any = this.$refs["control"]
-                if (type.name === "text") {
-                    control.focus()
-                } else if (type.name === "textarea") {
-                    control.focus()
-                } else if (type.name === "codeeditor") {
-                    control.editor.focus()
-                } else if (type.name === "check") {
-                    control.focus()
-                }
+    private mounted() {
+        if (this.autofocus) {
+            const type = this.inputType;
+            const control: any = this.$refs["control"];
+            if (type.name === "text") {
+                control.focus();
+            } else if (type.name === "textarea") {
+                control.focus();
+            } else if (type.name === "codeeditor") {
+                control.editor.focus();
+            } else if (type.name === "check") {
+                control.focus();
             }
         }
+    }
 
-        private beforeDestroy() {
-            if (this.inputType.name === "textarea") {
-                this.updateValue(this.value.rawValue.replace(/^ +| +$/gm, "")
-                                               .replace(/(^\n+)|(\n+$)/g, "")
-                                               .replace(/\n+|\r+|(\r\n)+/gm, "\n"))
-            } else if (this.inputType.name === "text") {
-                this.updateValue(this.value.rawValue.replace(/(\s+$)|(^\s+)/gm, ""))
+    private beforeDestroy() {
+        if (this.inputType.name === "textarea") {
+            this.updateValue(this.value.rawValue.replace(/^ +| +$/gm, "")
+                                           .replace(/(^\n+)|(\n+$)/g, "")
+                                           .replace(/\n+|\r+|(\r\n)+/gm, "\n"));
+        } else if (this.inputType.name === "text") {
+            this.updateValue(this.value.rawValue.replace(/(\s+$)|(^\s+)/gm, ""));
+        }
+    }
+
+    get isNullable() {
+        return this.value.info === undefined ? true : this.value.info.field.isNullable;
+    }
+
+    get isAwaited() {
+        return !this.isNullable && this.value.rawValue === "";
+    }
+
+    get isDisabled() {
+        return this.locked || this.value.info === undefined;
+    }
+
+    get actions() {
+        const actions: IAction[] = [];
+        const link = attrToQueryRef(this.value.info, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]);
+        if (link !== null) {
+            actions.push({ name: this.$tc("follow_reference"), location: queryLocation(link) });
+        }
+        actions.push(...this.extraActions);
+        return actions;
+    }
+
+    private controlStyle(defHeight: string) {
+        const style: Record<string, any> = {};
+        const heightAttr = this.attributes["ControlHeight"];
+        style["height"] = isNaN(Number(heightAttr)) ? defHeight : `${Number(heightAttr)}px`;
+        return style;
+    }
+
+    get inputType(): IType {
+        const controlAttr = this.attributes["Control"];
+        if (controlAttr === "UserView") {
+            const value = this.value.value;
+            if (value === undefined) {
+                return { name: "error", text: this.$tc("no_uv") };
             }
-        }
-
-        get isNullable() {
-            return this.value.info === undefined ? true : this.value.info.field.isNullable
-        }
-
-        get isAwaited() {
-            return !this.isNullable && this.value.rawValue === ""
-        }
-
-        get isDisabled() {
-            return this.locked || this.value.info === undefined
-        }
-
-        get actions() {
-            const actions: IAction[] = []
-            const link = attrToQueryRef(this.value.info, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"])
-            if (link !== null) {
-                actions.push({ name: this.$tc("follow_reference"), location: queryLocation(link) })
+            if (typeof value !== "object" || value === null) {
+                return { name: "error", text: this.$tc("invalid_uv") };
             }
-            actions.push(...this.extraActions)
-            return actions
-        }
 
-        private controlStyle(defHeight: string) {
-            const style: Record<string, any> = {}
-            const heightAttr = this.attributes["ControlHeight"]
-            style["height"] = isNaN(Number(heightAttr)) ? defHeight : `${Number(heightAttr)}px`
-            return style
-        }
-
-        get inputType(): IType {
-            const controlAttr = this.attributes["Control"]
-            if (controlAttr === "UserView") {
-                const value = this.value.value
-                if (value === undefined) {
-                    return { name: "error", text: this.$tc("no_uv") }
-                }
-                if (typeof value !== "object" || value === null) {
-                    return { name: "error", text: this.$tc("invalid_uv") }
-                }
-
-                let ref: IUserViewRef
-                if (typeof value.ref === "object" && value.ref !== null) {
-                    ref = value.ref
-                } else {
-                    ref = value
-                }
-                if (typeof ref.schema !== "string" || typeof ref.name !== "string") {
-                    return { name: "error", text: this.$tc("no_uv") }
-                }
-
-                let args: Record<string, any>
-                if (typeof value.args === "object" && value.args !== null) {
-                    args = value.args
-                } else {
-                    if (this.value.info === undefined) {
-                        return { name: "error", text: this.$tc("invalid_uv") }
-                    } else {
-                        args = { id: this.value.info.id }
-                    }
-                }
-
-                let defaultValues: Record<string, any> = {}
-                if (typeof value.defaultValues === "object" && value.defaultValues !== null) {
-                    defaultValues = value.defaultValues
-                }
-                const viewArgs: IUserViewArguments = {
-                    source: {
-                        type: "named",
-                        ref: {
-                            schema: ref.schema,
-                            name: ref.name,
-                        },
-                    },
-                    args,
-                }
-
-                this.getNestedView(viewArgs)
-                return { name: "userview", args: viewArgs, defaultValues }
-            }
-            // `calc` is needed because sizes should be relative to base font size.
-            const heightSinglelineText = "calc(2em + 6px)"
-            const heightMultilineText = "calc(4em + 12px)"
-            const heightCodeEditor = "500px"
-            if (this.value.info !== undefined) {
-                const fieldType = this.value.info.field.fieldType
-                switch (fieldType.type) {
-                    case "reference":
-                        const ref = fieldType.entity
-                        this.getEntries(ref)
-                        const currentSchema = this.entriesMap[ref.schema]
-                        if (currentSchema === undefined) {
-                            return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
-                        }
-                        const entries = currentSchema[ref.name]
-                        if (entries === undefined || entries instanceof Promise) {
-                            return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
-                        } else {
-                            const select = Object.entries(entries).map(([id, name]) => ({ text: name, value: String(id), link: attrToQueryRef(this.value.info, id, homeSchema(this.uv.args), this.attributes["LinkedView"]) }))
-                            return {
-                                name: "extended_select",
-                                options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: null }] : []), ...select],
-                            }
-                        }
-                    case "enum":
-                        return {
-                            name: "select",
-                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), ...fieldType.values.map(x => ({ text: x, value: x }))],
-                        }
-                    case "bool":
-                        return {
-                            name: "select",
-                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
-                        }
-                    case "int":
-                        return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
-                    case "date":
-                        return { name: "calendar", showTime: false }
-                    case "datetime":
-                        return { name: "calendar", showTime: true }
-                }
+            let ref: IUserViewRef;
+            if (typeof value.ref === "object" && value.ref !== null) {
+                ref = value.ref;
             } else {
-                switch (this.type.type) {
-                    case "bool":
-                        return {
-                            name: "select",
-                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
-                        }
-                    case "int":
-                        return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) }
+                ref = value;
+            }
+            if (typeof ref.schema !== "string" || typeof ref.name !== "string") {
+                return { name: "error", text: this.$tc("no_uv") };
+            }
+
+            let args: Record<string, any>;
+            if (typeof value.args === "object" && value.args !== null) {
+                args = value.args;
+            } else {
+                if (this.value.info === undefined) {
+                    return { name: "error", text: this.$tc("invalid_uv") };
+                } else {
+                    args = { id: this.value.info.id };
                 }
             }
 
-            // Plain text
-            switch (this.attributes["TextType"]) {
-                case "multiline":
-                    return { name: "textarea", style: this.controlStyle(heightMultilineText)}
-                case "codeeditor":
-                    return { name: "codeeditor", style: this.controlStyle(heightCodeEditor) }
-                default:
-                    return { name: "text", type: "text", style: this.controlStyle(heightSinglelineText) }
+            let defaultValues: Record<string, any> = {};
+            if (typeof value.defaultValues === "object" && value.defaultValues !== null) {
+                defaultValues = value.defaultValues;
+            }
+            const viewArgs: IUserViewArguments = {
+                source: {
+                    type: "named",
+                    ref: {
+                        schema: ref.schema,
+                        name: ref.name,
+                    },
+                },
+                args,
+            };
+
+            this.getNestedView(viewArgs);
+            return { name: "userview", args: viewArgs, defaultValues };
+        }
+        // `calc` is needed because sizes should be relative to base font size.
+        const heightSinglelineText = "calc(2em + 6px)";
+        const heightMultilineText = "calc(4em + 12px)";
+        const heightCodeEditor = "500px";
+        if (this.value.info !== undefined) {
+            const fieldType = this.value.info.field.fieldType;
+            switch (fieldType.type) {
+                case "reference":
+                    const ref = fieldType.entity;
+                    this.getEntries(ref);
+                    const currentSchema = this.entriesMap[ref.schema];
+                    if (currentSchema === undefined) {
+                        return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) };
+                    }
+                    const entries = currentSchema[ref.name];
+                    if (entries === undefined || entries instanceof Promise) {
+                        return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) };
+                    } else {
+                        const select = Object.entries(entries).map(([id, name]) => ({ text: name, value: String(id), link: attrToQueryRef(this.value.info, id, homeSchema(this.uv.args), this.attributes["LinkedView"]) }));
+                        return {
+                            name: "extended_select",
+                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: null }] : []), ...select],
+                        };
+                    }
+                case "enum":
+                    return {
+                        name: "select",
+                        options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), ...fieldType.values.map(x => ({ text: x, value: x }))],
+                    };
+                case "bool":
+                    return {
+                        name: "select",
+                        options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
+                    };
+                case "int":
+                    return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) };
+                case "date":
+                    return { name: "calendar", showTime: false };
+                case "datetime":
+                    return { name: "calendar", showTime: true };
+            }
+        } else {
+            switch (this.type.type) {
+                case "bool":
+                    return {
+                        name: "select",
+                        options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
+                    };
+                case "int":
+                    return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) };
             }
         }
 
-        private updateValue(text: string) {
-            if (this.value.info === undefined) {
-                throw Error("No update entity defined in view")
-            }
-
-            if (this.value.rawValue !== text) {
-                this.$emit("update", text)
-            }
+        // Plain text
+        switch (this.attributes["TextType"]) {
+            case "multiline":
+                return { name: "textarea", style: this.controlStyle(heightMultilineText)};
+            case "codeeditor":
+                return { name: "codeeditor", style: this.controlStyle(heightCodeEditor) };
+            default:
+                return { name: "text", type: "text", style: this.controlStyle(heightSinglelineText) };
         }
     }
+
+    private updateValue(text: string) {
+        if (this.value.info === undefined) {
+            throw Error("No update entity defined in view");
+        }
+
+        if (this.value.rawValue !== text) {
+            this.$emit("update", text);
+        }
+    }
+}
 </script>
 
 <style scoped>
