@@ -10,8 +10,6 @@ stdenv.mkDerivation {
   '';
 
   buildInputs = [
-    automake autoconf m4 git bash
-    nodejs-10_x libpng libGL gcc
-    nodePackages.tern yarn
+    nodejs-10_x nodePackages.tern yarn
   ];
 }
