@@ -20,7 +20,10 @@
 </i18n>
 
 <template>
-    <div :class="['form-control-panel',{'form-control-panel-hidden': inputType.name === 'extended_select'}]">
+    <div :class="['form-control-panel', {
+                 'form-control-panel-hidden': inputType.name === 'extended_select',
+                 'form-control-panel_editor': inputType.name === 'codeeditor',
+                 }]">
         <div class="nested-menu" v-if="actions.length > 0 && inputType.name !== 'extended_select'">
             <ActionsMenu title="view_headline"
                          :actions="actions" />
@@ -99,7 +102,8 @@
         <!-- We don't use bootstrap-vue's b-form-input type=text because of problems with Safari
                 https://github.com/bootstrap-vue/bootstrap-vue/issues/1951
         -->
-        <textarea v-else-if="inputType.type === 'text'"
+        <input v-else-if="inputType.type === 'text'"
+                :type="text"
                 @keydown.enter.prevent=""
                 wrap="soft"
                 :value="value.rawValue"
@@ -113,7 +117,8 @@
                 :max-rows="6"
                 :required="!isNullable"
                 ref="control" />
-        <textarea v-else
+        <input v-else
+                :type="text"
                 :value="value.rawValue"
                 :style="inputType.style"
                 @keydown.enter.prevent=""
@@ -141,17 +146,17 @@ import { IQuery, attrToQueryRef, queryLocation } from "@/state/query";
 interface ITextType {
     name: "text";
     type: "text" | "number";
-    style: Record<string, any>;
+    style?: Record<string, any>;
 }
 
 interface ITextAreaType {
     name: "textarea";
-    style: Record<string, any>;
+    style?: Record<string, any>;
 }
 
 interface ICodeEditorType {
     name: "codeeditor";
-    style: Record<string, any>;
+    style?: Record<string, any>;
 }
 
 interface ISelectType {
@@ -329,7 +334,7 @@ export default class FormControl extends Vue {
         // `calc` is needed because sizes should be relative to base font size.
         const heightSinglelineText = "calc(2em + 6px)";
         const heightMultilineText = "calc(4em + 12px)";
-        const heightCodeEditor = "500px";
+        const heightCodeEditor = "100%";
         if (this.value.info !== undefined && this.value.info.field !== null) {
             const fieldType = this.value.info.field.fieldType;
             switch (fieldType.type) {
@@ -338,11 +343,11 @@ export default class FormControl extends Vue {
                     this.getEntries(ref);
                     const currentSchema = this.entriesMap[ref.schema];
                     if (currentSchema === undefined) {
-                        return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) };
+                        return { name: "text", type: "number" };
                     }
                     const entries = currentSchema[ref.name];
                     if (entries === undefined || entries instanceof Promise) {
-                        return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) };
+                        return { name: "text", type: "number" };
                     } else {
                         const select = Object.entries(entries).map(([id, name]) => ({ text: name, value: String(id), link: attrToQueryRef(this.value.info, id, homeSchema(this.uv.args), this.attributes["LinkedView"]) }));
                         return {
@@ -361,7 +366,7 @@ export default class FormControl extends Vue {
                         options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
                     };
                 case "int":
-                    return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) };
+                    return { name: "text", type: "number" };
                 case "date":
                     return { name: "calendar", showTime: false };
                 case "datetime":
@@ -375,7 +380,7 @@ export default class FormControl extends Vue {
                         options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
                     };
                 case "int":
-                    return { name: "text", type: "number", style: this.controlStyle(heightSinglelineText) };
+                    return { name: "text", type: "number" };
             }
         }
 
@@ -386,7 +391,7 @@ export default class FormControl extends Vue {
             case "codeeditor":
                 return { name: "codeeditor", style: this.controlStyle(heightCodeEditor) };
             default:
-                return { name: "text", type: "text", style: this.controlStyle(heightSinglelineText) };
+                return { name: "text", type: "text" };
         }
     }
 
@@ -409,7 +414,9 @@ export default class FormControl extends Vue {
 * FormControl       (1000)
 
 */
-
+    input {
+        border: 1px solid rgb(81, 152, 57);
+    }
     .nested-menu > .actions-menu{
         width: max-content;
         display: inline-block;
@@ -438,12 +445,25 @@ export default class FormControl extends Vue {
         margin-left: 2px;
     }
 
+    .form-data > .form-control-panel.form-control-panel_editor {
+        height: 100%;
+        width: 100%;
+        height: 500px;
+    }
+
     .form-control-panel {
         padding-right: 2px;
+        max-width: 60%;
+        max-height: 60%;
+        min-width: 14rem;
+        box-sizing: content-box;
+    }
+    .form-control-panel_editor {
+        width: 60%;
+        height: 60%;
     }
     .form-control-panel-hidden {
         overflow: hidden;
-        width: calc(100% - 3px);
     }
     .form-control-panel_select {
         border-color: var(--NavigationBackColor);
@@ -464,12 +484,13 @@ export default class FormControl extends Vue {
         resize: none;
         vertical-align: top;
     }
-	.multilines {
-		overflow-y: auto !important
-	}
-	.singleline {
-		overflow-x: auto !important
-	}
+    .multilines {
+        overflow-y: auto !important
+    }
+    .singleline {
+        overflow-x: auto !important;
+        max-height: 40px;
+    }
     .select-container {
         display: flex;
         height: calc(2em + 6px);
@@ -528,16 +549,12 @@ export default class FormControl extends Vue {
             .form-control-panel-hidden{
                 margin-top: 7px;
                 position: sticky;
-                left: 0;
-                width: calc(100vw - 3px);
             }
             .select-container:after {
                 position: sticky;
-                left: calc(100vw - 1.3em - 1px);
             }
             .select-container-after {
                 position: sticky;
-                left: calc(100vw - 1px);
             }
             .nested-menu {
                 z-index: 0; /* чтобы при нажатии на "действия" в подтаблице остальные аналогичные кнопки других подтаблиц были ниже темного блока */
@@ -550,7 +567,6 @@ export default class FormControl extends Vue {
                 z-index: 1200; /* меню действий для подтаблиц поверх темного фона */
             }
             .form-control-panel_select, .form-control-panel_checkbox, .form-control-panel_textarea {
-                width: calc(100vw - 2px);
                 position: -webkit-sticky;
                 position: sticky;
                 left: 1px;

@@ -143,10 +143,8 @@ export default class SelectionField extends Vue {
     .search-input {
         padding: 0;
         border: 0;
-        width: 300vh;
+        min-width: 14rem;
         opacity: 0;
-        margin-left: 5px;
-
     }
     .search-input:focus{
         opacity:1;

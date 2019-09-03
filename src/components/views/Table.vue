@@ -84,7 +84,7 @@
                                 :localUv="local.extra"
                                 :showFixedRow="showFixedRow"
                                 from="new"
-                                @cellClick="clickCell({ type: 'new', column: arguments[0] }, arguments[1])" />                        
+                                @cellClick="clickCell({ type: 'new', column: arguments[0] }, arguments[1])" />
                     </template>
                     <template v-for="(rowId, rowIndex) in uv.newRowsPositions">
                         <TableFixedRow v-if="showFixedRow"
@@ -1137,6 +1137,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         position: relative;
         height: 100%;
     }
+    .active_editing {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
     .checkbox-col, .open-form-col{
         width: 20px;
     }
@@ -1314,8 +1319,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
     /* FormControl */
     div.form-control-panel {
-        left: calc(50% - 175px);
-        top: calc(50% - 50px);
         position: fixed;
         z-index: 2000; /* FormControl поверх таблицы */
         background-color: var(--MenuColor);
@@ -1324,10 +1327,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         padding: 20px;
     }
     @media screen and (max-device-width: 480px){
-        div.form-control-panel {
-            left: 2px;
-            width: calc(100% - 4px);
-        }
         div.form-control-panel > div.select-container {
             width: calc(100vw - 44px) !important;
             /*padding 20px and left 2px*/
