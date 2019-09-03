@@ -484,13 +484,13 @@ export default class FormControl extends Vue {
         resize: none;
         vertical-align: top;
     }
-	.multilines {
-		overflow-y: auto !important
-	}
-	.singleline {
-		overflow-x: auto !important;
-    max-height: 40px;
-	}
+    .multilines {
+        overflow-y: auto !important
+    }
+    .singleline {
+        overflow-x: auto !important;
+        max-height: 40px;
+    }
     .select-container {
         display: flex;
         height: calc(2em + 6px);
