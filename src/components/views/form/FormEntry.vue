@@ -43,7 +43,6 @@
             </div>
             <b-modal lazy
                         id="deleteConfirm"
-                        hide-backdrop="false"
                         ok-variant="danger"
                         :ok-title="$t('ok')"
                         @ok="$emit('delete', $event)"
