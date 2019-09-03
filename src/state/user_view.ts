@@ -1097,7 +1097,9 @@ const userViewModule: Module<IUserViewState, {}> = {
     },
     actions: {
         getEntries: ({ state, rootState, commit, dispatch }, ref: IEntityRef) => {
-            console.assert(state.pending === null);
+            if (state.pending !== null) {
+                return;
+            }
             if (ref.schema in state.entries && ref.name in state.entries[ref.schema]) {
                 return;
             }

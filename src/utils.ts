@@ -244,5 +244,5 @@ export const debugLog = (message?: any, ...optionalParams: any[]) => {
             return arg;
         }
     });
-    console.debug(...args);
+    console.trace(...args);
 };
