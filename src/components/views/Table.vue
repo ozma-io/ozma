@@ -33,7 +33,7 @@
         <FormControl v-if="editingValue !== null"
                 :value="editingValue.value"
                 :attributes="editingValue.attributes"
-                :type="editingValue.valueType"
+                :type="editingValue.type"
                 :locked="editingLocked"
                 :uv="uv"
                 autofocus
@@ -787,19 +787,21 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         }
     }
 
+    // Value is not actually required to be editable - it can be opened in read-only mode too.
     private setCellEditing(ref: ValueRef) {
         this.removeCellEditing();
 
         this.addAutoSaveLock().then(lock => {
-            if (this.editing !== null) {
-                // Lock already taken (somehow)
+            const value = this.local.getValueByRef(ref);
+
+            if (this.editing !== null // Lock already taken (somehow)
+                    || value === null // value not found
+                    ) {
                 this.removeAutoSaveLock(lock);
-            } else {
-                const value = this.local.getValueByRef(ref);
-                if (value !== null && value.value.info !== undefined) {
-                    this.editing = { ref, lock };
-                }
+                return;
             }
+
+            this.editing = { ref, lock };
         });
     }
 

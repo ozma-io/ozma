@@ -27,8 +27,8 @@ export interface IUserViewArguments {
     args: Record<string, any> | null;
 }
 
-export interface IUpdatableField {
-    field: IColumnField;
+export interface IValueInfo {
+    field: IColumnField | null;
     fieldRef: IFieldRef;
     id: RowId;
 }
@@ -42,7 +42,7 @@ export interface ICombinedValue extends IExecutedValue {
     // `undefined` is used when pun is not yet resolved, to avoid adding/removing values.
     pun?: string | undefined;
     initialPun?: string;
-    info?: IUpdatableField;
+    info?: IValueInfo;
 }
 
 export interface IRowCommon {
@@ -376,7 +376,7 @@ export class CombinedUserView {
 
                     const value = row.values[colI];
 
-                    if (field === undefined || !(field.idColumn in entityIds) || field.field === null) {
+                    if (field === undefined || !(field.idColumn in entityIds)) {
                         return;
                     }
 

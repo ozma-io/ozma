@@ -234,3 +234,15 @@ export class ObjectSet<K> {
         Vue.delete(this.entries, key);
     }
 }
+
+// Useful for outputting Vue.js values - this trims all properties.
+export const debugLog = (message?: any, ...optionalParams: any[]) => {
+    const args = [message, ...optionalParams].map(arg => {
+        try {
+            return JSON.parse(JSON.stringify(arg));
+        } catch (e) {
+            return arg;
+        }
+    });
+    console.debug(...args);
+};

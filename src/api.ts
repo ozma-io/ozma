@@ -1,14 +1,11 @@
 import * as Utils from "@/utils";
 
-// const apiUrl = (process.env["NODE_ENV"] === "production") ? `https://api.${location.hostname}` : `http://${location.hostname}:5000`
 const apiUrl = __API_URL__;
-console.log(apiUrl);
 // FIXME: detect this from environment
 export const disableAuth = false;
 export const anonymousUsername = "anonymous@example.com";
 
 export const authOrigin = __API_AUTH_URL__;
-// export const authOrigin = (process.env["NODE_ENV"] === "production") ? "https://account.myprocessx.com" : "https://keycloak-dev.myprocessx.com"
 export const authUrlBase = `${authOrigin}${__API_AUTH_URL_BASE__}`;
 export const authUrl = `${authUrlBase}/protocol/openid-connect`;
 export const accountUrl = `${authUrlBase}/account`;
