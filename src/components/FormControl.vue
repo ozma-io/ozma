@@ -103,7 +103,7 @@
                 https://github.com/bootstrap-vue/bootstrap-vue/issues/1951
         -->
         <input v-else-if="inputType.type === 'text'"
-                :type="text"
+                type="text"
                 @keydown.enter.prevent=""
                 wrap="soft"
                 :value="value.rawValue"
@@ -118,7 +118,7 @@
                 :required="!isNullable"
                 ref="control" />
         <input v-else
-                :type="text"
+                type="text"
                 :value="value.rawValue"
                 :style="inputType.style"
                 @keydown.enter.prevent=""
@@ -146,17 +146,17 @@ import { IQuery, attrToQueryRef, queryLocation } from "@/state/query";
 interface ITextType {
     name: "text";
     type: "text" | "number";
-    style?: Record<string, any>;
+    style: Record<string, any>;
 }
 
 interface ITextAreaType {
     name: "textarea";
-    style?: Record<string, any>;
+    style: Record<string, any>;
 }
 
 interface ICodeEditorType {
     name: "codeeditor";
-    style?: Record<string, any>;
+    style: Record<string, any>;
 }
 
 interface ISelectType {
@@ -274,11 +274,11 @@ export default class FormControl extends Vue {
         return actions;
     }
 
-    private controlStyle(defHeight: string) {
-        const style: Record<string, any> = {};
+    private controlStyle(height?: string): Record<string, any> {
         const heightAttr = this.attributes["ControlHeight"];
-        style["height"] = isNaN(Number(heightAttr)) ? defHeight : `${Number(heightAttr)}px`;
-        return style;
+        const systemHeight = height ? { height } : {};
+        const userHeight = !isNaN(heightAttr) ? { height: `${heightAttr}px` } : {};
+        return { ...systemHeight, ...userHeight };
     }
 
     get inputType(): IType {
@@ -334,7 +334,7 @@ export default class FormControl extends Vue {
         // `calc` is needed because sizes should be relative to base font size.
         const heightSinglelineText = "calc(2em + 6px)";
         const heightMultilineText = "calc(4em + 12px)";
-        const heightCodeEditor = "100%";
+        const heightCodeEditor = "calc(100% - 1.5rem)";
         if (this.value.info !== undefined && this.value.info.field !== null) {
             const fieldType = this.value.info.field.fieldType;
             switch (fieldType.type) {
@@ -343,11 +343,11 @@ export default class FormControl extends Vue {
                     this.getEntries(ref);
                     const currentSchema = this.entriesMap[ref.schema];
                     if (currentSchema === undefined) {
-                        return { name: "text", type: "number" };
+                        return { name: "text", type: "number", style: this.controlStyle() };
                     }
                     const entries = currentSchema[ref.name];
                     if (entries === undefined || entries instanceof Promise) {
-                        return { name: "text", type: "number" };
+                        return { name: "text", type: "number", style: this.controlStyle() };
                     } else {
                         const select = Object.entries(entries).map(([id, name]) => ({ text: name, value: String(id), link: attrToQueryRef(this.value.info, id, homeSchema(this.uv.args), this.attributes["LinkedView"]) }));
                         return {
@@ -366,7 +366,7 @@ export default class FormControl extends Vue {
                         options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
                     };
                 case "int":
-                    return { name: "text", type: "number" };
+                    return { name: "text", type: "number", style: this.controlStyle() };
                 case "date":
                     return { name: "calendar", showTime: false };
                 case "datetime":
@@ -380,7 +380,7 @@ export default class FormControl extends Vue {
                         options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
                     };
                 case "int":
-                    return { name: "text", type: "number" };
+                    return { name: "text", type: "number", style: this.controlStyle() };
             }
         }
 
@@ -391,7 +391,7 @@ export default class FormControl extends Vue {
             case "codeeditor":
                 return { name: "codeeditor", style: this.controlStyle(heightCodeEditor) };
             default:
-                return { name: "text", type: "text" };
+                return { name: "text", type: "text", style: this.controlStyle() };
         }
     }
 
