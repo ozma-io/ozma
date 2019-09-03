@@ -1325,10 +1325,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         padding: 20px;
     }
     @media screen and (max-device-width: 480px){
-        div.form-control-panel {
-            left: 2px;
-            width: calc(100% - 4px);
-        }
         div.form-control-panel > div.select-container {
             width: calc(100vw - 44px) !important;
             /*padding 20px and left 2px*/
