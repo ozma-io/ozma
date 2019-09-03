@@ -147,7 +147,6 @@ export default class UserView extends Vue {
         }
         this.oldArgs = null;
 
-        console.log("Updated uv, new value", this.uv, "type", this.userViewType);
         if (this.userViewType !== null) {
             if (!(this.uv instanceof CombinedUserView)) {
                 throw Error("Impossible");
