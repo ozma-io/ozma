@@ -146,17 +146,17 @@ import { IQuery, attrToQueryRef, queryLocation } from "@/state/query";
 interface ITextType {
     name: "text";
     type: "text" | "number";
-    style: Record<string, any>;
+    style?: Record<string, any>;
 }
 
 interface ITextAreaType {
     name: "textarea";
-    style: Record<string, any>;
+    style?: Record<string, any>;
 }
 
 interface ICodeEditorType {
     name: "codeeditor";
-    style: Record<string, any>;
+    style?: Record<string, any>;
 }
 
 interface ISelectType {
