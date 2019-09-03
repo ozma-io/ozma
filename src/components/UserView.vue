@@ -158,13 +158,18 @@ export default class UserView extends Vue {
                 return;
             }
 
-            this.component = component;
-            this.oldArgs = args;
-            if (component.localConstructor !== undefined) {
-                const givenLocal = oldLocal !== null && oldType! === this.userViewType ? oldLocal : null;
-                const local = component.localConstructor(this.$store, this.uv, this.defaultValues, givenLocal);
-                this.local = local;
-                this.registerHandler({ args: this.args, handler: local.handler });
+            // Exceptions in async watchers are silently ignored (?), so print it explicitly.
+            try {
+                if (component.localConstructor !== undefined) {
+                    const givenLocal = oldLocal !== null && oldType! === this.userViewType ? oldLocal : null;
+                    const local = component.localConstructor(this.$store, this.uv, this.defaultValues, givenLocal);
+                    this.local = local;
+                    this.registerHandler({ args: this.args, handler: local.handler });
+                }
+                this.component = component;
+                this.oldArgs = args;
+            } catch (e) {
+                console.trace(e);
             }
         }
     }
