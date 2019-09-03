@@ -4,7 +4,7 @@ import { RawLocation, Route } from "vue-router";
 import { IUserViewRef, SchemaName } from "@/api";
 import { convertString, deepUpdateObject, mapMaybe } from "@/utils";
 import { routerQueryValue, router } from "@/modules";
-import { IUserViewArguments, IUpdatableField } from "@/state/user_view";
+import { IUserViewArguments, IValueInfo } from "@/state/user_view";
 
 export class CurrentQuery {
     search: Record<string, string> = {};
@@ -146,7 +146,8 @@ export const attrToQuery = (homeSchema: SchemaName | null, linkedAttr: any): IQu
     }
 };
 
-export const attrToQuerySelf = (update: IUpdatableField | undefined | null, homeSchema: SchemaName | null, linkedAttr: any): IQuery | null => {
+// Set 'id' argument to the value id.
+export const attrToQuerySelf = (update: IValueInfo | undefined | null, homeSchema: SchemaName | null, linkedAttr: any): IQuery | null => {
     const ret = attrToQuery(homeSchema, linkedAttr);
     if (ret !== null) {
         const args = ret.rootViewArgs.args;
@@ -159,12 +160,13 @@ export const attrToQuerySelf = (update: IUpdatableField | undefined | null, home
     return ret;
 };
 
-export const attrToQueryRef = (update: IUpdatableField | undefined | null, value: any, homeSchema: SchemaName | null, linkedAttr: any): IQuery | null => {
+// Set 'id' argument to the id of the referenced value.
+export const attrToQueryRef = (update: IValueInfo | undefined | null, value: any, homeSchema: SchemaName | null, linkedAttr: any): IQuery | null => {
     const ret = attrToQuery(homeSchema, linkedAttr);
     if (ret !== null) {
         const args = ret.rootViewArgs.args;
         if (args !== null) {
-            if (!("id" in args) && update && update.field !== null && update.field.fieldType.type === "reference") {
+            if (!("id" in args) && value && update && update.field !== null && update.field.fieldType.type === "reference") {
                 args.id = value;
             }
         }

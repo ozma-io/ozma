@@ -12,15 +12,16 @@
 <template>
     <div class="field-block">
         <div class="added-block">
-            <input @input="addEntry();" v-model="search" list="entrys" ref="newentry" class="search-input">
-            <datalist id="entrys">
+            <input @input="addEntry()" v-model="search" :list="$id('entries')" ref="newentry" class="search-input">
+            <datalist :id="$id('entries')">
                 <option v-for="option in options" v-bind:key="option.value" v-bind:value="option.text" ></option>
             </datalist>
         </div>
         <div v-if="!selectedEntries.length && !showedField" class="empty-block">{{$t('empty')}}</div>
         <div :class="['entrys-block',{'entrys-meny-block':(manyFields && selectedEntries.length > 1)||showedField}]">
-            <div v-for="entry in selectedEntries" :class="['entry-block',{'entry-meny-block':manyFields && selectedEntries.length > 1,
-                                                                           'link':entry.link}]"> 
+            <div v-for="entry in selectedEntries" :key="entry.value"
+                    :class="['entry-block', {'entry-meny-block': manyFields && selectedEntries.length > 1,
+                                             'link':entry.link}]">
                 <UserViewLink v-if="entry.link !== null" :uv="entry.link">{{entry.text}}</UserViewLink>
                 <span v-else>{{entry.text}}</span>
                 <div v-if="manyFields" class="buttoncolor-block clear-block"><input type="button" class="material-icons button_clear" value="clear" @click="deletion(entry.text)"/></div>

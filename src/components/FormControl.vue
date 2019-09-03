@@ -140,7 +140,7 @@ import { namespace } from "vuex-class";
 
 import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef, IEntityRef } from "@/api";
 import { IAction } from "@/components/ActionsMenu.vue";
-import { IUpdatableField, IUserViewArguments, CombinedUserView, EntriesMap, CurrentUserViews, homeSchema, ICombinedValue } from "@/state/user_view";
+import { IValueInfo, IUserViewArguments, CombinedUserView, EntriesMap, CurrentUserViews, homeSchema, ICombinedValue } from "@/state/user_view";
 import { IQuery, attrToQueryRef, queryLocation } from "@/state/query";
 
 interface ITextType {
@@ -210,7 +210,7 @@ const userView = namespace("userView");
     },
 })
 export default class FormControl extends Vue {
-    @Prop({ type: Object }) type!: ValueType;
+    @Prop({ type: Object, required: true }) type!: ValueType;
     @Prop({ type: Object, required: true }) value!: ICombinedValue;
     @Prop({ type: Object, default: {} }) attributes!: AttributesMap;
     @Prop({ type: Boolean, default: false }) locked!: boolean;
@@ -253,7 +253,7 @@ export default class FormControl extends Vue {
     }
 
     get isNullable() {
-        return this.value.info === undefined ? true : this.value.info.field.isNullable;
+        return this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable;
     }
 
     get isAwaited() {
@@ -261,7 +261,7 @@ export default class FormControl extends Vue {
     }
 
     get isDisabled() {
-        return this.locked || this.value.info === undefined;
+        return this.locked || this.value.info === undefined || this.value.info.field === null;
     }
 
     get actions() {
@@ -335,7 +335,7 @@ export default class FormControl extends Vue {
         const heightSinglelineText = "calc(2em + 6px)";
         const heightMultilineText = "calc(4em + 12px)";
         const heightCodeEditor = "100%";
-        if (this.value.info !== undefined) {
+        if (this.value.info !== undefined && this.value.info.field !== null) {
             const fieldType = this.value.info.field.fieldType;
             switch (fieldType.type) {
                 case "reference":
