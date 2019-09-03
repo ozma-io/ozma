@@ -447,6 +447,7 @@ export default class FormControl extends Vue {
 
     .form-data > .form-control-panel.form-control-panel_editor {
       height: 100%;
+      width: 100%;
       height: 500px;
     }
 
