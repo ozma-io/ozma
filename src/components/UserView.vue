@@ -25,7 +25,7 @@
     <span>
         <component v-if="uvIsReady"
                 :is="`UserView${userViewType}`"
-                :uv="uv"
+                :uv="oldUv"
                 :isRoot="isRoot"
                 :filter="filter"
                 :local="local"
@@ -73,7 +73,7 @@ const userView = namespace("userView");
 const userViewType = (uv: CombinedUserView) => {
     const typeAttr = uv.attributes["Type"];
     if (typeAttr in types) {
-        return typeAttr;
+        return String(typeAttr);
     } else {
         return "Table";
     }
@@ -93,13 +93,15 @@ export default class UserView extends Vue {
     private component: IUserViewConstructor<Vue> | null = null;
     private local: IHandlerProvider | null = null;
     private oldArgs: IUserViewArguments | null = null;
+    // oldUv is shown while new component for uv is loaded.
+    private oldUv: CombinedUserView | null = null;
 
-    get uv() {
+    get newUv() {
         return this.currentUvs.getUserView(this.args);
     }
 
     get uvIsReady() {
-        return this.uv instanceof CombinedUserView && this.component !== null;
+        return this.oldUv instanceof CombinedUserView && this.component !== null;
     }
 
     get actions() {
@@ -107,7 +109,7 @@ export default class UserView extends Vue {
         if (this.createView !== null) {
             actions.push({ name: this.$tc("create"), location: queryLocation(this.createView) });
         }
-        if (this.uv instanceof CombinedUserView && this.uv.args.source.type === "named") {
+        if (this.oldUv !== null && this.oldUv.args.source.type === "named") {
             const query: IQuery = {
                 search: {},
                 rootViewArgs: {
@@ -119,8 +121,8 @@ export default class UserView extends Vue {
                         },
                     },
                     args: {
-                        schema: this.uv.args.source.ref.schema,
-                        name: this.uv.args.source.ref.name,
+                        schema: this.oldUv.args.source.ref.schema,
+                        name: this.oldUv.args.source.ref.name,
                     },
                 },
             };
@@ -130,47 +132,44 @@ export default class UserView extends Vue {
         return actions;
     }
 
-    @Watch("uv")
+    @Watch("newUv")
     // Should clear all user view-specific values.
-    private async updateUserView(uv: CombinedUserView | UserViewError | null, oldUv: CombinedUserView | UserViewError | null) {
+    private async updateUserView() {
         this.extraActions = [];
-        this.component = null;
-        let oldLocal: IHandlerProvider | null = null;
-        let oldType: string | null = null;
         if (this.oldArgs !== null && this.local !== null) {
             this.unregisterHandler({ args: this.oldArgs, handler: this.local.handler });
-            if (this.uv instanceof CombinedUserView && oldUv instanceof CombinedUserView && deepEquals(this.uv.args, oldUv.args)) {
-                oldLocal = this.local;
-                oldType = userViewType(oldUv);
-            }
-            this.local = null;
         }
-        this.oldArgs = null;
 
-        if (this.userViewType !== null) {
-            if (!(this.uv instanceof CombinedUserView)) {
-                throw Error("Impossible");
-            }
-            const args = this.args;
-            const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${this.userViewType}.vue`)).default;
+        const newUv = this.newUv;
+        if (newUv instanceof CombinedUserView) {
+            const newType = userViewType(newUv);
+            const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType}.vue`)).default;
             // Check we weren't restarted.
-            if (args !== this.args || !(this.uv instanceof CombinedUserView)) {
+            if (newUv !== this.newUv) {
                 return;
             }
 
             // Exceptions in async watchers are silently ignored (?), so print it explicitly.
             try {
                 if (component.localConstructor !== undefined) {
-                    const givenLocal = oldLocal !== null && oldType! === this.userViewType ? oldLocal : null;
-                    const local = component.localConstructor(this.$store, this.uv, this.defaultValues, givenLocal);
+                    const givenLocal = this.local !== null && this.userViewType === newType ? this.local : null;
+                    const local = component.localConstructor(this.$store, newUv, this.defaultValues, givenLocal);
                     this.local = local;
                     this.registerHandler({ args: this.args, handler: local.handler });
+                } else {
+                    this.local = null;
                 }
                 this.component = component;
-                this.oldArgs = args;
+                this.oldArgs = this.args;
+                this.oldUv = newUv;
             } catch (e) {
                 console.trace(e);
             }
+        } else {
+            this.oldUv = null;
+            this.component = null;
+            this.local = null;
+            this.oldArgs = null;
         }
     }
 
@@ -180,33 +179,33 @@ export default class UserView extends Vue {
     }
 
     get userViewType() {
-        if (!(this.uv instanceof CombinedUserView)) {
+        if (this.oldUv === null) {
             return null;
         } else {
-            return userViewType(this.uv);
+            return userViewType(this.oldUv);
         }
     }
 
     get createView() {
-        if (!(this.uv instanceof CombinedUserView)) {
+        if (this.oldUv === null) {
             return null;
         } else {
-            return attrToInfoQuery(this.uv.attributes["CreateView"]);
+            return attrToInfoQuery(this.oldUv.attributes["CreateView"]);
         }
     }
 
     get errorMessage() {
-        if (!(this.uv instanceof UserViewError)) {
+        if (!(this.newUv instanceof UserViewError)) {
             return null;
         } else {
-            if (this.uv.type === "forbidden") {
+            if (this.newUv.type === "forbidden") {
                 return this.$t("forbidden");
-            } else if (this.uv.type === "not_found") {
+            } else if (this.newUv.type === "not_found") {
                 return this.$t("not_found");
-            } else if (this.uv.type === "bad_request") {
-                return this.$t("bad_request", { msg: this.uv.message });
+            } else if (this.newUv.type === "bad_request") {
+                return this.$t("bad_request", { msg: this.newUv.message });
             } else {
-                return this.$t("unknown_error", { msg: this.uv.message });
+                return this.$t("unknown_error", { msg: this.newUv.message });
             }
         }
     }
