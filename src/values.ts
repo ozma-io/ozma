@@ -84,7 +84,8 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, value: any):
     if (value === null || value === undefined || value === "") {
         return isNullable ? null : undefined;
     } else if (fieldType.type === "string" || fieldType.type === "enum") {
-        return typeof value === "string" ? value.replace(/^\s*|\s+$/g, "").replace(/^[\t\f\v ]+|[\t\f\v ]+$ /gm, "") : undefined;
+        // Remove whitespaces
+        return typeof value === "string" ? value.replace(/^\s+/, "").replace(/\s+$/, "") : undefined;
     } else if (fieldType.type === "bool") {
         if (typeof value === "boolean") {
             return value;
