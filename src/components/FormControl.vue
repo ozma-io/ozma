@@ -278,7 +278,8 @@ export default class FormControl extends Vue {
         const heightAttr = this.attributes["ControlHeight"];
         const systemHeight = height ? { height } : {};
         const userHeight = !isNaN(heightAttr) ? { height: `${heightAttr}px` } : {};
-        return { ...systemHeight, ...userHeight };
+        const editorStyle = this.attributes["TextType"] === "codeeditor" ? { minHeight: "200px" } : {};
+        return { ...systemHeight, ...userHeight, ...editorStyle };
     }
 
     get inputType(): IType {
@@ -449,7 +450,7 @@ export default class FormControl extends Vue {
     .form-data > .form-control-panel.form-control-panel_editor {
         height: 100%;
         width: 100%;
-        height: 500px;
+        max-height: 500px;
     }
 
     .form-control-panel {
