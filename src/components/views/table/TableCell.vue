@@ -16,7 +16,7 @@
                         class="div_checkbox"
                         disabled />
                 <template v-else>
-                    {{ localValue.valueText }}
+                    {{ localValue.valueText || '&nbsp;' }}
                 </template>
             </UserViewLink>
             <template v-else>
@@ -25,7 +25,7 @@
                         class="div_checkbox"
                         disabled />
                 <template v-else>
-                    {{ localValue.valueText }}
+                    {{ localValue.valueText || '&nbsp;' }}
                 </template>
             </template>
         </p>
