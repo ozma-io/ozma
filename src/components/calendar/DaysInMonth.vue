@@ -161,6 +161,7 @@ export default class DaysInMonth extends Vue {
         color: darkgrey;
     }
     .curr-day {
-        color: darkred;
+        background-color: #FA0000;
+        color: #FFFFFF;
     }
 </style>

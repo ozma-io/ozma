@@ -5,7 +5,9 @@
   "scripts": {
     "serve": "vue-cli-service serve --mode development",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "storybook:build": "vue-cli-service storybook:build -c config/storybook",
+    "storybook:serve": "vue-cli-service storybook:serve -p 8000 -c config/storybook"
   },
   "dependencies": {
     "ace-builds": "^1.4.5",
@@ -15,6 +17,7 @@
     "jwt-decode": "^2.2.0",
     "moment": "^2.24.0",
     "uuid": "^3.3.2",
+    "v-click-outside": "^2.1.3",
     "vue": "^2.6.10",
     "vue-class-component": "^6.2.0",
     "vue-i18n": "^8.14.0",
@@ -25,18 +28,31 @@
     "vuex-class": "^0.3.2"
   },
   "devDependencies": {
+    "@babel/core": "^7.6.0",
     "@kazupon/vue-i18n-loader": "^0.3.0",
+    "@storybook/addon-actions": "^5.1.11",
+    "@storybook/addon-knobs": "^4.1.0 || ^5.0.0",
+    "@storybook/addon-links": "^5.1.11",
+    "@storybook/addon-notes": "^4.1.0 || ^5.0.0",
+    "@storybook/addons": "^5.1.11",
+    "@storybook/vue": "^5.1.11",
+    "@storybook/addon-centered": "^5.1.11",
     "@types/jwt-decode": "^2.2.1",
+    "@types/storybook__addon-knobs": "^5.0.3",
+    "@types/storybook__vue": "^5.0.2",
     "@types/uuid": "^3.4.5",
     "@vue/cli-plugin-babel": "^3.10.0",
     "@vue/cli-plugin-typescript": "^3.10.0",
     "@vue/cli-service": "^3.10.0",
+    "babel-loader": "^8.0.6",
+    "babel-preset-vue": "^2.0.2",
     "fast-async": "^7.0.6",
     "sass": "^1.18.0",
     "sass-loader": "^7.2.0",
     "tslint": "^5.18.0",
     "typescript": "^3.5.3",
     "vue-cli-plugin-i18n": "^0.5.2",
+    "vue-cli-plugin-storybook": "^0.6.1",
     "vue-template-compiler": "^2.6.10",
     "webpack-bundle-analyzer": "^3.4.1"
   }

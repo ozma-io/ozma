@@ -369,10 +369,10 @@ export default class FormControl extends Vue {
                 case "int":
                     return { name: "text", type: "number", style: this.controlStyle() };
                 // FIXME: Fix calendar field.
-                /*case "date":
-                    return { name: "calendar", showTime: false };
+                case "date":
+                  return { name: "calendar", showTime: false };
                 case "datetime":
-                    return { name: "calendar", showTime: true };*/
+                  return { name: "calendar", showTime: true };
             }
         } else {
             switch (this.type.type) {
