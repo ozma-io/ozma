@@ -95,7 +95,7 @@
                                 :columnIndexes="fixedRowColumnIndexes"
                                 :localUv="local.extra"
                                 from="added"
-                                @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
+                                @select="selectRow({ type: 'added', position: rowIndex }, $event)"
                                 @cellClick="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])" />
                         <TableRow :key="`new-${rowId}`"
                                 :row="uv.newRows[rowId]"
@@ -104,7 +104,7 @@
                                 :localUv="local.extra"
                                 :showFixedRow="showFixedRow"
                                 from="added"
-                                @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
+                                @select="selectRow({ type: 'added', position: rowIndex }, $event)"
                                 @cellClick="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])" />
                     </template>
                     <template v-for="(rowI, rowIndex) in shownRowPositions">
