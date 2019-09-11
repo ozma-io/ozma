@@ -35,6 +35,7 @@
                 :attributes="editingValue.attributes"
                 :type="editingValue.type"
                 :locked="editingLocked"
+                :disableColor="editing.ref.type === 'new'"
                 :uv="uv"
                 autofocus
                 @update="updateCurrentValue" />

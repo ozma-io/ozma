@@ -41,7 +41,7 @@
                          :value="value.value"
                          :class="['form-control-panel_checkbox',
                                  {'form-control-panel_checkbox_error': value.erroredOnce,
-                                  'form-control-panel_checkbox_req': isAwaited}]"
+                                  'form-control-panel_checkbox_req': isAwaited && !disableColor}]"
                          @input="updateValue($event.target.value)"
                          :disabled="isDisabled"
                          ref="control" />
@@ -50,7 +50,7 @@
                          :value="value.rawValue"
                          :class="['form-control-panel_textarea', 'multilines',
                                  {'form-control-panel_textarea_error': value.erroredOnce,
-                                  'form-control-panel_textarea_req': isAwaited}]"
+                                  'form-control-panel_textarea_req': isAwaited && !disableColor}]"
                          @input="updateValue($event.target.value)"
                          :disabled="isDisabled"
                          :rows="3"
@@ -86,7 +86,7 @@
                     :value="value.rawValue"
                     :class="['form-control-panel_select',
                             {'form-control-panel_select_error': value.erroredOnce,
-                            'form-control-panel_select_req': isAwaited}]"
+                            'form-control-panel_select_req': isAwaited && !disableColor}]"
                     @input="updateValue($event.target.value)"
                     :disabled="isDisabled"
                     ref="control">
@@ -110,7 +110,7 @@
                 :style="inputType.style"
                 :class="['form-control-panel_textarea', 'singleline',
                         {'form-control-panel_textarea_error': value.erroredOnce,
-                         'form-control-panel_textarea_req': isAwaited}]"
+                         'form-control-panel_textarea_req': isAwaited && !disableColor}]"
                 @input="updateValue($event.target.value)"
                 :disabled="isDisabled"
                 :rows="3"
@@ -124,7 +124,7 @@
                 @keydown.enter.prevent=""
                 :class="['form-control-panel_textarea', 'singleline',
                         {'form-control-panel_textarea_error': value.erroredOnce,
-                         'form-control-panel_textarea_req': isAwaited}]"
+                         'form-control-panel_textarea_req': isAwaited && !disableColor}]"
                 @input="updateValue($event.target.value)"
                 :disabled="isDisabled"
                 :rows="3"
@@ -217,6 +217,7 @@ export default class FormControl extends Vue {
     @Prop({ type: Boolean, default: false }) autofocus!: boolean;
     @Prop({ type: CombinedUserView }) uv!: CombinedUserView;
     @Prop({ type: String, default: ""}) caption!: string;
+    @Prop({ type: Boolean, default: false}) disableColor!: boolean;
 
     @userView.State("entries") entriesMap!: EntriesMap;
     @userView.Action("getEntries") getEntries!: (_: IEntityRef) => Promise<void>;

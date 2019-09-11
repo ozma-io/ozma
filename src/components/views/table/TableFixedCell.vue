@@ -1,4 +1,5 @@
 <template>
+    <!-- FIXME: Pls add yellow background on required -->
     <!-- When you change anything here, also make corresponding changes in TableFixedCell! -->
     <div @click="$emit('cellClick', columnPosition, $event)"
             :style="Object.assign({}, localValue.style, column.style)">
