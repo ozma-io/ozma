@@ -178,6 +178,9 @@ const clearUpdatedValue = (value: ICombinedValue) => {
     }
     console.assert(value.initialValue !== undefined);
     value.value = value.initialValue;
+    if ("erroredOnce" in value) {
+        value.erroredOnce = false;
+    }
 };
 
 export const newEmptyRow = (store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>): IRowCommon => {
@@ -271,6 +274,7 @@ export class CombinedUserView {
     mainRowMapping: IMainRowMapping;
     handlers: IUserViewEventHandler[] = [];
 
+    // Warning: it takes ownership of all params and mutates!
     constructor(context: ActionContext<IUserViewState, {}>, params: ICombinedUserViewParams) {
         const { args, info, attributes, columnAttributes, rows, changes } = params;
         this.args = args;
@@ -388,7 +392,6 @@ export class CombinedUserView {
                     };
                     value.info = updateInfo;
                     value.initialValue = value.value;
-                    value.erroredOnce = false;
                     if (value.pun !== undefined) {
                         if (value.pun === null) {
                             value.pun = "";
@@ -820,8 +823,9 @@ const userViewModule: Module<IUserViewState, {}> = {
 
                 updatedValues.forEach(valueRef => {
                     const row = (uv.rows as ICombinedRow[])[valueRef.index];
-                    const value = row.values[valueRef.column];
-                    Object.assign(value, params.updatedValue);
+                    // New object because otherwise Vue won't detect changes.
+                    const value = Object.assign({}, row.values[valueRef.column], params.updatedValue);
+                    Vue.set(row.values, valueRef.column, value);
                     if (entitySummaries !== null && "pun" in value) {
                         setUpdatedPun(entitySummaries, value);
                     }
@@ -860,7 +864,6 @@ const userViewModule: Module<IUserViewState, {}> = {
                             return {
                                 value: null,
                                 rawValue: "",
-                                erroredOnce: false,
                                 info: updateInfo,
                             };
                         }
@@ -894,9 +897,10 @@ const userViewModule: Module<IUserViewState, {}> = {
 
                 const newRow = uv.newRows[params.id];
                 uv.mainColumnMapping[params.field].forEach(colI => {
-                    const value = newRow.values[colI];
+                    // New object because otherwise Vue won't detect changes.
                     const updated = params.addedEntry.values[params.field];
-                    Object.assign(value, updated);
+                    const value = Object.assign({}, newRow.values[colI], updated);
+                    Vue.set(newRow.values, colI, value);
                     if (entitySummaries !== null && "pun" in value) {
                         setUpdatedPun(entitySummaries, value);
                     }
@@ -1073,6 +1077,70 @@ const userViewModule: Module<IUserViewState, {}> = {
                 uv.newRows = [];
             });
         },
+        updateErroredOnce: (state, changes: CurrentChanges) => {
+            Object.values(state.current.userViews).forEach(uv => {
+                if (!(uv instanceof CombinedUserView)) {
+                    return;
+                }
+
+                const mainEntity = uv.info.mainEntity;
+                if (mainEntity !== null) {
+                    const schemaChanges = changes.changes[mainEntity.schema];
+                    if (schemaChanges !== undefined) {
+                        const entityChanges = schemaChanges[mainEntity.name];
+                        if (entityChanges !== undefined) {
+                            Object.entries(entityChanges.added.entries).forEach(([addedIdStr, rowValues]) => {
+                                const addedId = Number(addedIdStr);
+                                const newRow = uv.newRows[addedId];
+                                Object.entries(rowValues.values).forEach(([fieldName, addedValue]) => {
+                                    uv.mainColumnMapping[fieldName].forEach(colI => {
+                                        const value = newRow.values[colI];
+                                        Vue.set(value, "erroredOnce", addedValue.erroredOnce);
+                                    });
+                                });
+                            });
+                        }
+                    }
+                }
+
+                if (uv.rows !== null) {
+                    Object.entries(changes.changes).forEach(([schemaName, schemaChanges]) => {
+                        const updatedEntities = uv.updateMapping[schemaName];
+                        if (updatedEntities === undefined) {
+                            return;
+                        }
+
+                        Object.entries(schemaChanges).forEach(([entityName, entityChanges]) => {
+                            const updatedIds = updatedEntities[entityName];
+                            if (updatedIds === undefined) {
+                                return;
+                            }
+
+                            Object.entries(entityChanges.updated).forEach(([rowIdStr, rowChanges]) => {
+                                const rowId = Number(rowIdStr);
+                                const updatedFields = updatedIds[rowId];
+                                if (updatedFields === undefined) {
+                                    return;
+                                }
+
+                                Object.entries(rowChanges).forEach(([fieldName, fieldChanges]) => {
+                                    const updatedValues = updatedFields[fieldName];
+                                    if (updatedValues === undefined) {
+                                        return;
+                                    }
+
+                                    updatedValues.forEach(valueRef => {
+                                        const row = (uv.rows as ICombinedRow[])[valueRef.index];
+                                        const value = row.values[valueRef.column];
+                                        Vue.set(value, "erroredOnce", fieldChanges.erroredOnce);
+                                    });
+                                });
+                            });
+                        });
+                    });
+                }
+            });
+        },
 
         registerHandler: (state, { args, handler }: { args: IUserViewArguments, handler: IUserViewEventHandler }) => {
             const uv = state.current.getUserView(args);
@@ -1208,78 +1276,61 @@ const userViewModule: Module<IUserViewState, {}> = {
             await dispatch("getRootView", state.current.rootView.args);
         },
 
-        // Wrappers aroungd stagingChanges which also modify user views.
-        updateField: async ({ state, rootState, commit, dispatch }, args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => {
-            await dispatch("staging/updateField", args, { root: true });
-            const mutArgs = args as any;
+        // Called from stagingChanges.
+        afterUpdateField: ({ state, rootState, commit, dispatch }, args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => {
             const changes = (rootState as any).staging.current as CurrentChanges;
-            mutArgs.updatedValue = changes.changes[args.schema][args.entity].updated[args.id][args.field];
+            const updatedValue = changes.changes[args.schema][args.entity].updated[args.id][args.field];
             const fieldType = state.fieldsInfo[args.schema][args.entity][args.field].fieldType;
             if (fieldType.type === "reference") {
                 dispatch("getEntries", fieldType.entity);
             }
-            mutArgs.fieldType = fieldType;
-            commit("updateField", mutArgs);
+            commit("updateField", { ...args, updatedValue, fieldType });
         },
-        addEntry: async ({ state, rootState, commit, dispatch }, args: { schema: SchemaName, entity: EntityName, position?: number }) => {
-            await dispatch("staging/addEntry", args, { root: true });
-            const mutArgs = args as any;
+        afterAddEntry: ({ state, rootState, commit }, args: { schema: SchemaName, entity: EntityName, position?: number }) => {
             const changes = (rootState as any).staging.current as CurrentChanges;
             const added = changes.changes[args.schema][args.entity].added;
-            let newId: number;
+            let id: number;
             if (args.position === undefined) {
-                newId = added.positions[added.positions.length - 1];
+                id = added.positions[added.positions.length - 1];
             } else {
-                newId = added.positions[args.position];
+                id = added.positions[args.position];
             }
-            mutArgs.id = newId;
             // We take a slice to ensure positions won't be updated externally in staging before our newRows object gets populated.
-            mutArgs.positions = added.positions.slice();
-            mutArgs.newValues = added.entries[newId];
-            commit("addEntry", args);
+            const positions = added.positions.slice();
+            const newValues = added.entries[id];
+            commit("addEntry", { ...args, id, positions, newValues });
         },
-        setAddedField: async ({ state, rootState, commit, dispatch }, args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => {
-            await dispatch("staging/setAddedField", args, { root: true });
-            const mutArgs = args as any;
+        afterSetAddedField: ({ state, rootState, commit, dispatch }, args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => {
             const changes = (rootState as any).staging.current as CurrentChanges;
-            mutArgs.addedEntry = changes.changes[args.schema][args.entity].added.entries[args.id];
+            const addedEntry = changes.changes[args.schema][args.entity].added.entries[args.id];
             const fieldType = state.fieldsInfo[args.schema][args.entity][args.field].fieldType;
             if (fieldType.type === "reference") {
                 dispatch("getEntries", fieldType.entity);
             }
-            mutArgs.fieldType = fieldType;
-            commit("setAddedField", args);
+            commit("setAddedField", { ...args, addedEntry, fieldType });
         },
-        deleteEntry: async ({ commit, dispatch }, args: { schema: SchemaName, entity: EntityName, id: number }) => {
-            await dispatch("staging/deleteEntry", args, { root: true });
+        afterDeleteEntry: ({ commit }, args: { schema: SchemaName, entity: EntityName, id: number }) => {
             commit("deleteEntry", args);
         },
-        resetChanges: async ({ rootState, commit, dispatch }) => {
+        beforeResetChanges: ({ rootState, commit }) => {
             const changes = (rootState as any).staging.current as CurrentChanges;
             commit("resetChanges", changes);
-            await dispatch("staging/reset", undefined, { root: true });
         },
-        resetUpdatedEntry: async ({ rootState, commit, dispatch }, args: { schema: SchemaName, entity: EntityName, id: number }) => {
-            const mutArgs = args as any;
+        beforeResetUpdatedEntry: ({ rootState, commit }, args: { schema: SchemaName, entity: EntityName, id: number }) => {
+            const currentChanges = (rootState as any).staging.current as CurrentChanges;
+            commit("resetUpdatedEntry", { ...args, currentChanges });
+        },
+        beforeResetAddedEntry: ({ rootState, commit }, args: { schema: SchemaName, entity: EntityName, id: number }) => {
             const changes = (rootState as any).staging.current as CurrentChanges;
-            mutArgs.currentChanges = changes;
-            commit("resetUpdatedEntry", args);
-            await dispatch("staging/resetUpdatedEntry", args, { root: true });
+            const positions = changes.changes[args.schema][args.entity].added.positions.slice();
+            commit("resetAddedEntry", { ...args, positions });
         },
-        resetAddedEntry: async ({ rootState, commit, dispatch }, args: { schema: SchemaName, entity: EntityName, id: number }) => {
-            const mutArgs = args as any;
-            const changes = (rootState as any).staging.current as CurrentChanges;
-            mutArgs.positions = changes.changes[args.schema][args.entity].added.positions.slice();
-            commit("resetAddedEntry", args);
-            await dispatch("staging/resetAddedEntry", args, { root: true });
-        },
-        resetDeleteEntry: async ({ rootState, commit, dispatch }, args: { schema: SchemaName, entity: EntityName, id: number }) => {
+        beforeResetDeleteEntry: ({ commit }, args: { schema: SchemaName, entity: EntityName, id: number }) => {
             commit("resetDeleteEntry", args);
-            await dispatch("staging/resetDeleteEntry", args, { root: true });
         },
-        clearAdded: async ({ rootState, commit, dispatch }) => {
-            commit("clearAdded");
-            await dispatch("staging/clearAdded", undefined, { root: true });
+        updateErroredOnce: ({ rootState, commit }) => {
+            const changes = (rootState as any).staging.current as CurrentChanges;
+            commit("updateErroredOnce", changes);
         },
     },
 };

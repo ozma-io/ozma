@@ -137,9 +137,9 @@ const checkAutoSave = (context: ActionContext<IStagingState, {}>) => {
 };
 
 const checkCounters = async (context: ActionContext<IStagingState, {}>) => {
-    const { state, commit } = context;
+    const { state } = context;
     if (state.updatedCount === 0 && state.addedCount === 0 && state.deletedCount === 0) {
-        await context.dispatch("userView/resetChanges", undefined, { root: true });
+        await context.dispatch("reset");
     } else {
         window.addEventListener("beforeunload", askOnClose);
         checkAutoSave(context);
@@ -149,10 +149,8 @@ const checkCounters = async (context: ActionContext<IStagingState, {}>) => {
 const changesToParams = (changes: UpdatedValues): Record<string, any> | null => {
     return Object.fromEntries(Object.entries(changes).map<[string, any]>(([name, change]) => {
         if (change.value === undefined) {
-            change.erroredOnce = true;
             throw new Error("Value didn't pass validation");
         }
-        change.erroredOnce = false;
         let arg;
         if (change.value instanceof moment) {
             arg = Math.floor((change.value as Moment).unix());
@@ -202,9 +200,7 @@ const getEmptyValues = (entityInfo: EntityFieldsInfo): UpdatedValues => {
 
 const checkUpdatedFields = (fields: UpdatedValues) => {
     Object.values(fields).forEach(field => {
-        if (field.value === undefined) {
-            field.erroredOnce = true;
-        }
+        field.erroredOnce = field.value === undefined;
     });
 };
 
@@ -385,47 +381,62 @@ const stagingModule: Module<IStagingState, {}> = {
         },
     },
     actions: {
-        // Be careful; each operation there should be wrapped by corresponding call in userView state which also updates
-        // current user views. DO NOT call these directly, even in staging module itself!
         updateField: async (context, args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => {
-            (args as any).fieldInfo = getFieldInfo(context, args.schema, args.entity, args.field);
-            context.commit("updateField", args);
+            const { commit, dispatch } = context;
+            const fieldInfo = getFieldInfo(context, args.schema, args.entity, args.field);
+            commit("updateField", { ...args, fieldInfo });
             await checkCounters(context);
+            await dispatch("userView/afterUpdateField", args, { root: true });
         },
         addEntry: async (context, args: { schema: SchemaName, entity: EntityName, position?: number }) => {
-            (args as any).entityInfo = getEntityFieldsInfo(context, args.schema, args.entity);
-            context.commit("addEntry", args);
+            const { commit, dispatch } = context;
+            const entityInfo = getEntityFieldsInfo(context, args.schema, args.entity);
+            commit("addEntry", { ...args, entityInfo });
             await checkCounters(context);
+            await dispatch("userView/afterAddEntry", args, { root: true });
         },
         setAddedField: async (context, args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => {
-            (args as any).fieldInfo = getFieldInfo(context, args.schema, args.entity, args.field);
-            context.commit("setAddedField", args);
+            const { commit, dispatch } = context;
+            const fieldInfo = getFieldInfo(context, args.schema, args.entity, args.field);
+            commit("setAddedField", { ...args, fieldInfo });
             await checkCounters(context);
+            await dispatch("userView/afterSetAddedField", args, { root: true });
         },
         deleteEntry: async (context, args: { schema: SchemaName, entity: EntityName, id: number }) => {
-            context.commit("deleteEntry", args);
+            const { commit, dispatch } = context;
+            commit("deleteEntry", args);
             await checkCounters(context);
+            await dispatch("userView/afterDeleteEntry", args, { root: true });
         },
-        reset: context => {
-            const { commit } = context;
+        reset: async context => {
+            const { commit, dispatch } = context;
+            await dispatch("userView/beforeResetChanges", undefined, { root: true });
             commit("clear");
             stopAutoSave(context);
             window.removeEventListener("beforeunload", askOnClose);
         },
         resetUpdatedEntry: async (context, args: { schema: SchemaName, entity: EntityName, id: number }) => {
-            context.commit("resetUpdatedEntry", args);
+            const { commit, dispatch } = context;
+            await dispatch("userView/beforeResetUpdatedEntry", args, { root: true });
+            commit("resetUpdatedEntry", args);
             await checkCounters(context);
         },
         resetAddedEntry: async (context, args: { schema: SchemaName, entity: EntityName, id: number }) => {
-            context.commit("resetAddedEntry", args);
+            const { commit, dispatch } = context;
+            await dispatch("userView/beforeResetAddedEntry", args, { root: true });
+            commit("resetAddedEntry", args);
             await checkCounters(context);
         },
         resetDeleteEntry: async (context, args: { schema: SchemaName, entity: EntityName, id: number }) => {
-            context.commit("resetDeleteEntry", args);
+            const { commit, dispatch } = context;
+            await dispatch("userView/beforeResetDeleteEntry", args, { root: true });
+            commit("resetDeleteEntry", args);
             await checkCounters(context);
         },
         clearAdded: async context => {
-            context.commit("clearAdded");
+            const { commit, dispatch } = context;
+            await dispatch("userView/beforeClearAdded", undefined, { root: true });
+            commit("clearAdded");
             await checkCounters(context);
         },
 
@@ -484,6 +495,7 @@ const stagingModule: Module<IStagingState, {}> = {
                         return updated.concat(added, deleted);
                     } catch (e) {
                         commit("addError", `Invalid value for ${schemaName}.${entityName}`);
+                        dispatch("userView/updateErroredOnce", undefined, { root: true });
                         throw e;
                     }
                 });
@@ -511,9 +523,10 @@ const stagingModule: Module<IStagingState, {}> = {
                 commit("finishSubmit");
                 if (failed === null) {
                     if (state.touched) {
-                        await dispatch("userView/clearAdded", undefined, { root: true });
+                        await dispatch("clearAdded");
+                        await dispatch("userView/updateErroredOnce", undefined, { root: true });
                     } else {
-                        await dispatch("userView/resetChanges", undefined, { root: true });
+                        await dispatch("reset");
                     }
                 } else {
                     commit("addError", failed.message);
