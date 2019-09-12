@@ -2,18 +2,19 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { SchemaName, EntityName, FieldName } from "@/api";
+import { valueToRaw } from "@/values";
 import { CombinedUserView } from "@/state/user_view";
 import { LocalUserView, RowRef, ValueRef } from "@/local_user_view";
 
-const userView = namespace("userView");
+const staging = namespace("staging");
 
 @Component
 export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, ValueT, RowT, ViewT> extends Vue {
-    @userView.Action("deleteEntry") deleteEntry!: (args: { schema: SchemaName, entity: EntityName, id: number }) => Promise<void>;
-    @userView.Action("resetAddedEntry") resetAddedEntry!: (args: { schema: string, entity: string, id: number }) => Promise<void>;
-    @userView.Action("addEntry") addEntry!: (args: { schema: SchemaName, entity: EntityName, position?: number }) => Promise<void>;
-    @userView.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => Promise<void>;
-    @userView.Action("updateField") updateField!: (args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => Promise<void>;
+    @staging.Action("deleteEntry") deleteEntry!: (args: { schema: SchemaName, entity: EntityName, id: number }) => Promise<void>;
+    @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { schema: string, entity: string, id: number }) => Promise<void>;
+    @staging.Action("addEntry") addEntry!: (args: { schema: SchemaName, entity: EntityName, position?: number }) => Promise<void>;
+    @staging.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => Promise<void>;
+    @staging.Action("updateField") updateField!: (args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => Promise<void>;
 
     @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView;
     @Prop({ type: Object, required: true }) local!: T;
@@ -80,9 +81,8 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
                         entity: entity.name,
                         field: columnInfo.mainField.name,
                         id: rowId,
-                        // FIXME: hack to ensure rawValue has strings
-                        // value: printValue(info.columnInfo.valueType, cell.value),
-                        value: colI === ref.column ? rawValue : cell.value,
+                        // valueToRaw ensures that rawValues are strings
+                        value: colI === ref.column ? rawValue : valueToRaw(columnInfo.valueType, cell.value),
                     });
                 } else {
                     return Promise.resolve();
