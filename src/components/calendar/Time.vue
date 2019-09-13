@@ -1,19 +1,19 @@
 <template>
     <div class="time">
-        <span class="hours" v-if="hours !== null">
+        <span class="hours" v-show="hours !== null">
             <div @click="prevVal(hours)">hours</div>
             <div v-for="(el, Iel) in hours.range"
                 :key="Iel"
-                @click="nextValH(Iel)"
+                @click="nextValH(Iel, $event)"
                 class="time-cell">
                     {{el.text}}
             </div>
         </span>
-        <span class="mins" v-if="mins !== null">
+        <span class="mins" v-show="mins !== null">
             <div @click="prevVal(mins)">minutes</div>
             <div v-for="(el, Iel) in mins.range"
                 :key="Iel"
-                @click="nextValM(Iel)"
+                @click="nextValM(Iel, $event)"
                 class="time-cell">
                     {{el.text}}
             </div>
@@ -106,19 +106,18 @@ const DateRange = (min: number, max: number, steps: number[]) => {
 export default class DaysInMonth extends Vue {
     private hours: ITimeRangeAll | null = null;
     private mins: ITimeRangeAll | null = null;
+    private hours = DateRange(0, 24, [6, 1]);
+    private mins = DateRange(0, 60, [15, 5, 1]);
 
-    private mounted() {
-        this.hours = DateRange(0, 24, [6, 1]);
-        this.mins = DateRange(0, 60, [15, 5, 1]);
-    }
-
-    private nextValM(rng: number) {
+    private nextValM(rng: number, event) {
+        event.preventDefault();
         if (this.mins !== null && nextRange(this.mins, rng) === null) {
             this.$emit("update:mins", this.mins.range[rng].value);
         }
     }
 
-    private nextValH(rng: number) {
+    private nextValH(rng: number, event) {
+        event.preventDefault();
         if (this.hours !== null && nextRange(this.hours, rng) === null) {
             this.$emit("update:hours", this.hours.range[rng].value);
         }

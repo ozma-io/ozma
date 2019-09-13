@@ -13,7 +13,6 @@ export default function makeFormField(Component: any, componentName: string) {
       },
       methods: {
         updateValue(val: any) {
-          console.log(this.value);
           this.stateValue = val;
         },
       },

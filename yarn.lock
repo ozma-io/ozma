@@ -4510,6 +4510,11 @@ etag@~1.8.1:
   resolved "https://registry.yarnpkg.com/etag/-/etag-1.8.1.tgz#41ae2eeb65efa62268aebfea83ac7d79299b0887"
   integrity sha1-Qa4u62XvpiJorr/qg6x9eSmbCIc=
 
+event-propagation-path@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/event-propagation-path/-/event-propagation-path-1.0.5.tgz#1eeffa9878c9043e314849cbfa275c7e6e8f15fc"
+  integrity sha512-1/UU/xRPq3h/7UrWejsYj3ZzJtEA3FdUxKZtWjQ26KLy6yDXxtD+z1wP5mdE+BrlZAIHk7W7cGyG1uaV/Cpstg==
+
 event-pubsub@4.3.0:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/event-pubsub/-/event-pubsub-4.3.0.tgz#f68d816bc29f1ec02c539dc58c8dd40ce72cb36e"
@@ -10301,10 +10306,11 @@ uuid@^3.0.1, uuid@^3.3.2:
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.3.3.tgz#4568f0216e78760ee1dbf3a4d2cf53e224112866"
   integrity sha512-pW0No1RGHgzlpHJO1nsVrHKpOEIxkGg1xB+v0ZmdNH5OAeAwzAVrCnI2/6Mtx+Uys6iaylxa+D3g4j63IKKjSQ==
 
-v-click-outside@^2.1.3:
+v-click-outside@deiru2k/v-click-outside#a82dab57d544fa46e127da98418a3c30f4bd02db:
   version "2.1.3"
-  resolved "https://registry.yarnpkg.com/v-click-outside/-/v-click-outside-2.1.3.tgz#b7297abe833a439dc0895e6418a494381e64b5e7"
-  integrity sha512-8d11/fN+nkSPeor87K8OtGc/lDbRwbUiFwdzxQEGidlXt6eko3gIgRM7ghgi4p/zohF3Ja9hAaydAajV3gnlPQ==
+  resolved "https://codeload.github.com/deiru2k/v-click-outside/tar.gz/a82dab57d544fa46e127da98418a3c30f4bd02db"
+  dependencies:
+    event-propagation-path "^1.0.5"
 
 validate-npm-package-license@^3.0.1:
   version "3.0.4"

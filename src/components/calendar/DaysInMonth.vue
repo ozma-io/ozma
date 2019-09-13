@@ -13,10 +13,10 @@
                 {{ weekName }}
                 </div>
             <div v-for="(day, Iday) in allDays"
-                :key="7 + Iday"
+                :key="day.valueOf()"
                 :class="['date-cell',
                         {'diff-month' : !day.isSame(currShownDate, 'month')},
-                        {'curr-day' : day.isSame(currShownDate, 'day')}]"
+                        {'curr-day' : day.isSame(valueDate, 'day')}]"
                 @click="setValue(day)"
                 :style="{ gridColumn: day.day() + 1 }">
                 {{ day.format('D') }}
@@ -50,9 +50,15 @@ type IMode = IModeDays | IModeMonths;
 
 @Component
 export default class DaysInMonth extends Vue {
-    @Prop({ default: moment() }) shownDate!: Moment;
+    @Prop({ default: (new Date()) }) value!: Date;
 
-    private currShownDate: Moment = (this.shownDate !== null && this.shownDate.isValid()) ? moment(this.shownDate) : moment();
+    @Watch('value')
+    watchValue(v: Date) {
+      this.valueDate = moment(this.value);
+    }
+
+    private currShownDate: Moment = moment(this.value).isValid() ? moment(this.value) : moment();
+    private valueDate: Moment = moment(this.value);
     private allDays: Moment[] = [];
     private allMonths: string[] = [];
     private currMode: IMode = {name: "days"};
@@ -69,15 +75,20 @@ export default class DaysInMonth extends Vue {
         }
     }
 
-    private buildDaysInMonth() {
-        const startDate = this.currShownDate.startOf("month");
-        let lenArr = startDate.daysInMonth() + startDate.day();
-        if (lenArr > 28 && lenArr < 35) {
-            lenArr = 35;
-        } else if (lenArr > 35 && lenArr < 42) {
-            lenArr = 42;
-        }
-        this.allDays = [...Array(lenArr)].map((_, i) => startDate.clone().add(i - startDate.day(), "day"));
+    private getWeekDayForCalendar(isoWeekDay: number) {
+      if (isoWeekDay === 7) return 1;
+      return isoWeekDay + 1;
+    }
+
+    private buildDaysInMonth(currDate?: Moment) {
+      const startDate = currDate ? currDate.clone().startOf("month") : this.currShownDate.clone().startOf("month");
+      let lenArr = startDate.daysInMonth() + startDate.day();
+      if (lenArr > 28 && lenArr < 35) {
+        lenArr = 35;
+      } else if (lenArr > 35 && lenArr < 42) {
+        lenArr = 42;
+      }
+      this.allDays = [...Array(lenArr)].map((_, i) => startDate.clone().add(i - startDate.day(), "day"));
     }
 
     private buildMonths() {
@@ -86,11 +97,11 @@ export default class DaysInMonth extends Vue {
 
     private setValue(date: Moment) {
         if (date.month() !== this.currShownDate.month()) {
-            this.buildDaysInMonth();
+            this.buildDaysInMonth(date);
         }
-        this.currShownDate = date;
-        this.updateShown();
-        this.updateValue(date);
+        const newDate = date.clone().hour(this.valueDate.hour()).minute(this.valueDate.minute());
+        this.currShownDate = newDate;
+        this.updateValue(newDate);
     }
 
     private changeDate(val: number) {
@@ -99,12 +110,7 @@ export default class DaysInMonth extends Vue {
         } else if (this.currMode.name === "months") {
             this.currShownDate.add(val, "year");
         }
-        this.buildCal();
-        this.updateShown();
-    }
-
-    private updateShown() {
-        this.$emit("update:shown", this.currShownDate);
+        this.buildCal(this.currShownDate);
     }
 
     private updateValue(date: Moment) {

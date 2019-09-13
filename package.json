@@ -17,7 +17,7 @@
     "jwt-decode": "^2.2.0",
     "moment": "^2.24.0",
     "uuid": "^3.3.2",
-    "v-click-outside": "^2.1.3",
+    "v-click-outside": "deiru2k/v-click-outside#a82dab57d544fa46e127da98418a3c30f4bd02db",
     "vue": "^2.6.10",
     "vue-class-component": "^6.2.0",
     "vue-i18n": "^8.14.0",

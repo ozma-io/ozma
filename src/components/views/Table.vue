@@ -1253,6 +1253,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         }
         .active_editing {
             position: sticky !important;
+            justify-content: flex-start;
             z-index: 100000; /* чтобы FormControl был поверх других таблиц, когда их несколько на странице*/
         }
     }
@@ -1327,6 +1328,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         padding: 20px;
     }
     @media screen and (max-device-width: 480px){
+        div.form-control-panel {
+          margin-top: 7%;
+        }
         div.form-control-panel > div.select-container {
             width: calc(100vw - 44px) !important;
             /*padding 20px and left 2px*/

@@ -4,19 +4,13 @@
           <input type="text"
             :value="this.getInputString()"
             @blur="onBlur($event)"
+            @focus="setCalendarOpen(true)"
           />
-          <div class="main_input__trigger">
-            <input type="button"
-              @click="toggleCalendarOpen()"
-              value="calendar_today"
-              class="main_input__trigger_button material-icons" />
-          </div>
       </div>
       <div :class="['main_cal', {'main_cal__open': isCalendarOpen }]">
           <div class="days">
               <DaysInMonth
-                  :shownDate="shownDate"
-                  @update:shown="updateShownDate($event)"
+                  :value="value"
                   @update:value="updateValueDate($event)"
               />
           </div>
@@ -50,23 +44,31 @@ Vue.prototype.moment = moment;
 export default class Calendar extends Vue {
     @Prop({ default: "" }) value!: string;
     @Prop({ default: "MM.DD.YYYY"}) DateFormat!: string;
-    @Prop({ default: "HH:mm:ss"}) TimeFormat!: string;
+    @Prop({ default: "HH:m m"}) TimeFormat!: string;
     @Prop({ default: true }) showTime!: boolean;
 
     private isCalendarOpen: boolean = false;
-    private contentDate: Moment = moment(this.value, dateFormat);
-    private shownDate: Moment = (this.contentDate.isValid()) ? this.contentDate.local() : moment().local();
+    private contentDate: Moment = moment(this.value, this.getInputFormat());
 
-    private getInputFormat() {
+    @Watch('value')
+    private watchValue(v: string) {
+      console.log(v);
+      this.contentDate = moment(v, this.getInputFormat());
+    }
+
+    private getOutputFormat() {
       return this.showTime ? `${this.DateFormat} ${this.TimeFormat}` : this.DateFormat;
     }
 
+    private getInputFormat() {
+      return this.showTime ? dateTimeFormat : dateFormat;
+    }
+
     private getInputString() {
-      console.log(this.value);
-      if (!moment(this.value, dateFormat).isValid()) {
+      if (!this.contentDate.isValid()) {
         return "-";
       }
-      return this.shownDate.format(this.getInputFormat());
+      return this.contentDate.format(this.getOutputFormat());
 
     }
 
@@ -83,28 +85,31 @@ export default class Calendar extends Vue {
     }
 
     private onBlur(event: Event) {
-      const eValue = (event.target as HTMLInputElement).value;
-      const momentValue = moment.utc(eValue, this.getInputFormat());
-      this.updateValueDate(momentValue);
-      this.updateShownDate(momentValue);
+        const eValue = (event.target as HTMLInputElement).value;
+        const momentValue = moment.utc(eValue, this.getOutputFormat());
+        if (this.contentValue && !this.contentValue.isSame(momentValue)) {
+          this.updateValueDate(momentValue);
+          this.updateShownDate(momentValue);
+        }
+    }
+
+    private convertDateForUpdate(date: Moment) {
+        if (!this.showTime) return date.clone().startOf('day');
+        return date;
     }
 
     private updateValueDate(date: Moment) {
         this.$emit("update:value", date.format(this.showTime ? dateTimeFormat : dateFormat));
     }
 
-    private updateShownDate(date: Moment) {
-        this.shownDate = date;
-    }
-
     private updateMins(val: number) {
-        this.shownDate.minute(val);
-        this.updateValueDate(this.shownDate);
+        const newValue = this.contentDate.clone().minute(val);
+        this.updateValueDate(newValue);
     }
 
     private updateHours(val: number) {
-        this.shownDate.hour(val);
-        this.updateValueDate(this.shownDate);
+        const newValue = this.contentDate.clone().hour(val);
+        this.updateValueDate(newValue);
     }
 }
 </script>
@@ -155,5 +160,10 @@ export default class Calendar extends Vue {
     }
     .time {
         display: inline-flex;
+    }
+    @media screen and (max-device-width: 480px) {
+      .main_cal__open {
+        flex-direction: column;
+      }
     }
 </style>
