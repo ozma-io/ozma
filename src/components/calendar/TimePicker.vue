@@ -92,31 +92,29 @@ const getRange = (min: number, max: number, step: number) => {
     return range;
 };
 
-const DateRange = (min: number, max: number, steps: number[]) => {
+const DateRange = (min: number, max: number, steps: number[]): ITimeRangeAll => {
     const stepsTmp = steps.length > 0 ? steps : [1];
     return {
         steps: stepsTmp,
         range: getRange(min, max, stepsTmp[0]),
         history: [],
         currStep: 0,
-    } as ITimeRangeAll;
+    };
 };
 
 @Component
 export default class TimePicker extends Vue {
-    private hours: ITimeRangeAll | null = null;
-    private mins: ITimeRangeAll | null = null;
-    private hours = DateRange(0, 24, [6, 1]);
-    private mins = DateRange(0, 60, [15, 5, 1]);
+    private hours: ITimeRangeAll = DateRange(0, 24, [6, 1]);
+    private mins: ITimeRangeAll = DateRange(0, 60, [15, 5, 1]);
 
-    private nextValM(rng: number, event) {
+    private nextValM(rng: number, event: Event) {
         event.preventDefault();
         if (this.mins !== null && nextRange(this.mins, rng) === null) {
             this.$emit("update:mins", this.mins.range[rng].value);
         }
     }
 
-    private nextValH(rng: number, event) {
+    private nextValH(rng: number, event: Event) {
         event.preventDefault();
         if (this.hours !== null && nextRange(this.hours, rng) === null) {
             this.$emit("update:hours", this.hours.range[rng].value);
