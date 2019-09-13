@@ -61,9 +61,9 @@ export const valueToRaw = (valueType: ValueType, value: any): any => {
     if (value === undefined || value === null) {
         return "";
     } else if (valueType.type === "date") {
-        return (value as Moment).format(dateFormat);
+        return (value as Moment).utc().format(dateFormat);
     } else if (valueType.type === "datetime") {
-        return (value as Moment).format(dateTimeFormat);
+        return (value as Moment).local().format(dateTimeFormat);
     } else if (valueType.type === "json") {
         return JSON.stringify(value);
     } else {
@@ -83,14 +83,16 @@ const convertArray = (entryType: FieldType, value: any[]): any[] | undefined => 
 export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, value: any): any => {
     if (value === null || value === undefined || value === "") {
         return isNullable ? null : undefined;
-    } else if (fieldType.type === "string" || fieldType.type === "enum") {
+    } else if (fieldType.type === "string") {
         // Remove whitespaces
         return typeof value === "string" ? value.replace(/^\s+/, "").replace(/\s+$/, "") : undefined;
+    } else if (fieldType.type === "enum") {
+        return typeof value === "string" ? value : undefined;
     } else if (fieldType.type === "bool") {
         if (typeof value === "boolean") {
             return value;
-        } else {
-            const str = String(value).toLowerCase();
+        } else if (typeof value === "string") {
+            const str = value.toLowerCase();
             if (str === "false") {
                 return false;
             } else if (str === "true") {
@@ -98,6 +100,8 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, value: any):
             } else {
                 return undefined;
             }
+        } else {
+            return undefined;
         }
     } else if (fieldType.type === "array") {
         if (value instanceof Array) {
@@ -108,14 +112,14 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, value: any):
             return undefined;
         }
     } else if (fieldType.type === "date") {
-        const date = moment(value, dateFormat).startOf("day").utc();
+        const date = moment.utc(value, dateFormat);
         if (!date.isValid()) {
             return undefined;
         } else {
             return date;
         }
     } else if (fieldType.type === "datetime") {
-        const date = moment(value, dateTimeFormat);
+        const date = moment(value, dateTimeFormat).utc();
         if (!date.isValid()) {
             return undefined;
         } else {
