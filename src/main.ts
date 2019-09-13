@@ -6,6 +6,7 @@ Vue.config.performance = process.env["NODE_ENV"] !== "production";
 import Vuex from "vuex";
 import BootstrapVue from "bootstrap-vue";
 import UniqueId from "vue-unique-id";
+import vClickOutside from "v-click-outside";
 
 import * as Modules from "@/modules";
 import { setHeadTitle } from "@/elements";
@@ -27,6 +28,7 @@ import "@/styles/style.sass";
 Vue.use(Vuex);
 Vue.use(BootstrapVue);
 Vue.use(UniqueId);
+Vue.use(vClickOutside);
 
 export const store = new Vuex.Store({
     // Big performance hog on dev!

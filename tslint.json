@@ -1,6 +1,7 @@
 {
     "extends": "tslint:recommended",
     "rules": {
+        "indent": [true, "spaces", 4],
         "semicolon": [true, "always"],
         "max-classes-per-file": false,
         "member-access": false,

@@ -133,7 +133,6 @@
 
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
-import vClickOutside from "v-click-outside";
 import { mixins } from "vue-class-component";
 import { Location } from "vue-router";
 import { namespace } from "vuex-class";
@@ -611,9 +610,6 @@ const userView = namespace("userView");
     localConstructor: LocalTableUserView,
 })
 @Component({
-    directives: {
-        vClickOutside,
-    },
     components: {
         TableRow, TableFixedRow,
     },
@@ -1273,6 +1269,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         }
         .active_editing {
             position: sticky !important;
+            justify-content: flex-start;
             z-index: 100000; /* чтобы FormControl был поверх других таблиц, когда их несколько на странице*/
         }
     }
@@ -1347,6 +1344,12 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         padding: 20px;
     }
     @media screen and (max-device-width: 480px){
+        .edit_container {
+            align-items: flex-start;
+        }
+        div.form-control-panel {
+            margin-top: 15%;
+        }
         div.form-control-panel > div.select-container {
             width: calc(100vw - 44px) !important;
             /*padding 20px and left 2px*/

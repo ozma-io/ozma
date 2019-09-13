@@ -1,21 +1,21 @@
 <template>
     <div class="time">
-        <span class="hours" v-if="hours !== null">
+        <span class="hours" v-show="hours !== null">
             <div @click="prevVal(hours)">hours</div>
             <div v-for="(el, Iel) in hours.range"
-                :key="Iel"
-                @click="nextValH(Iel)"
-                class="time-cell">
-                    {{el.text}}
+                    :key="Iel"
+                    @click="nextValH(Iel, $event)"
+                    class="time-cell">
+                {{el.text}}
             </div>
         </span>
-        <span class="mins" v-if="mins !== null">
+        <span class="mins" v-show="mins !== null">
             <div @click="prevVal(mins)">minutes</div>
             <div v-for="(el, Iel) in mins.range"
-                :key="Iel"
-                @click="nextValM(Iel)"
-                class="time-cell">
-                    {{el.text}}
+                    :key="Iel"
+                    @click="nextValM(Iel, $event)"
+                    class="time-cell">
+                {{el.text}}
             </div>
         </span>
     </div>
@@ -92,33 +92,30 @@ const getRange = (min: number, max: number, step: number) => {
     return range;
 };
 
-const DateRange = (min: number, max: number, steps: number[]) => {
+const DateRange = (min: number, max: number, steps: number[]): ITimeRangeAll => {
     const stepsTmp = steps.length > 0 ? steps : [1];
     return {
         steps: stepsTmp,
         range: getRange(min, max, stepsTmp[0]),
         history: [],
         currStep: 0,
-    } as ITimeRangeAll;
+    };
 };
 
 @Component
-export default class DaysInMonth extends Vue {
-    private hours: ITimeRangeAll | null = null;
-    private mins: ITimeRangeAll | null = null;
+export default class TimePicker extends Vue {
+    private hours: ITimeRangeAll = DateRange(0, 24, [6, 1]);
+    private mins: ITimeRangeAll = DateRange(0, 60, [15, 5, 1]);
 
-    private mounted() {
-        this.hours = DateRange(0, 24, [6, 1]);
-        this.mins = DateRange(0, 60, [15, 5, 1]);
-    }
-
-    private nextValM(rng: number) {
+    private nextValM(rng: number, event: Event) {
+        event.preventDefault();
         if (this.mins !== null && nextRange(this.mins, rng) === null) {
             this.$emit("update:mins", this.mins.range[rng].value);
         }
     }
 
-    private nextValH(rng: number) {
+    private nextValH(rng: number, event: Event) {
+        event.preventDefault();
         if (this.hours !== null && nextRange(this.hours, rng) === null) {
             this.$emit("update:hours", this.hours.range[rng].value);
         }

@@ -65,7 +65,8 @@
                          ref="control"
                          />
         <Calendar v-else-if="inputType.name === 'calendar'"
-                  :value="value.rawValue"
+                  :value="value.value"
+                  :rawValue="value.rawValue"
                   @update:value="updateValue($event)"
                   :showTime="inputType.showTime" />
         <!-- Do NOT add any `class` to CodeEditor; it breaks stuff! -->
@@ -369,10 +370,10 @@ export default class FormControl extends Vue {
                 case "int":
                     return { name: "text", type: "number", style: this.controlStyle() };
                 // FIXME: Fix calendar field.
-                /*case "date":
-                    return { name: "calendar", showTime: false };
+                case "date":
+                  return { name: "calendar", showTime: false };
                 case "datetime":
-                    return { name: "calendar", showTime: true };*/
+                  return { name: "calendar", showTime: true };
             }
         } else {
             switch (this.type.type) {
@@ -397,13 +398,13 @@ export default class FormControl extends Vue {
         }
     }
 
-    private updateValue(text: string) {
+    private updateValue(newValue: any) {
         if (this.value.info === undefined) {
             throw Error("No update entity defined in view");
         }
 
-        if (this.value.rawValue !== text) {
-            this.$emit("update", text);
+        if (this.value.rawValue !== newValue) {
+            this.$emit("update", newValue);
         }
     }
 }

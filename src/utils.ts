@@ -65,6 +65,10 @@ export const sse = () => {
     return Math.floor((new Date()).getTime() / 1000);
 };
 
+export const roundUp = (a: number, b: number) => {
+    return Math.ceil(a / b) * b;
+};
+
 export const deepFreeze = (o: any) => {
     Object.freeze(o);
 
