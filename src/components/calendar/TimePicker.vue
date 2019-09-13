@@ -3,19 +3,19 @@
         <span class="hours" v-show="hours !== null">
             <div @click="prevVal(hours)">hours</div>
             <div v-for="(el, Iel) in hours.range"
-                :key="Iel"
-                @click="nextValH(Iel, $event)"
-                class="time-cell">
-                    {{el.text}}
+                    :key="Iel"
+                    @click="nextValH(Iel, $event)"
+                    class="time-cell">
+                {{el.text}}
             </div>
         </span>
         <span class="mins" v-show="mins !== null">
             <div @click="prevVal(mins)">minutes</div>
             <div v-for="(el, Iel) in mins.range"
-                :key="Iel"
-                @click="nextValM(Iel, $event)"
-                class="time-cell">
-                    {{el.text}}
+                    :key="Iel"
+                    @click="nextValM(Iel, $event)"
+                    class="time-cell">
+                {{el.text}}
             </div>
         </span>
     </div>
@@ -103,7 +103,7 @@ const DateRange = (min: number, max: number, steps: number[]) => {
 };
 
 @Component
-export default class DaysInMonth extends Vue {
+export default class TimePicker extends Vue {
     private hours: ITimeRangeAll | null = null;
     private mins: ITimeRangeAll | null = null;
     private hours = DateRange(0, 24, [6, 1]);

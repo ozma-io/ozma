@@ -2,20 +2,20 @@
     <div class="calendar_container" v-click-outside="onClickOutside">
       <div class="main_input">
           <input type="text"
-            :value="this.getInputString()"
+            :value="getInputString()"
             @blur="onBlur($event)"
             @focus="setCalendarOpen(true)"
           />
       </div>
       <div :class="['main_cal', {'main_cal__open': isCalendarOpen }]">
           <div class="days">
-              <DaysInMonth
-                  :value="value"
+              <DatePicker
+                  :value="contentValue"
                   @update:value="updateValueDate($event)"
               />
           </div>
           <div class="time">
-              <Time v-if="showTime"
+              <TimePicker v-if="showTime"
                   @update:mins="updateMins($event)"
                   @update:hours="updateHours($event)"
               />
@@ -30,30 +30,31 @@ import moment, { Moment, months, Duration } from "moment";
 import {dateFormat, dateTimeFormat} from "@/values";
 import vClickOutside from "v-click-outside";
 
-Vue.prototype.moment = moment;
+import DatePicker from "@/components/calendar/DatePicker.vue";
+import TimePicker from "@/components/calendar/TimePicker.vue";
 
 @Component({
     directives: {
         clickOutside: vClickOutside.directive,
     },
     components: {
-        DaysInMonth: () => import("@/components/calendar/DaysInMonth.vue"),
-        Time: () => import("@/components/calendar/Time.vue"),
+        DatePicker, TimePicker,
     },
 })
 export default class Calendar extends Vue {
     @Prop({ default: "" }) value!: string;
-    @Prop({ default: "MM.DD.YYYY"}) DateFormat!: string;
-    @Prop({ default: "HH:m m"}) TimeFormat!: string;
+    @Prop({ default: "MM.DD.YYYY" }) DateFormat!: string;
+    @Prop({ default: "HH:mm" }) TimeFormat!: string;
     @Prop({ default: true }) showTime!: boolean;
 
     private isCalendarOpen: boolean = false;
-    private contentDate: Moment = moment(this.value, this.getInputFormat());
+    private contentValue: Moment = moment(this.value, this.getInputFormat());
 
-    @Watch('value')
+    @Watch("value")
     private watchValue(v: string) {
-      console.log(v);
-      this.contentDate = moment(v, this.getInputFormat());
+      console.log("value", v);
+      this.contentValue = moment(v, this.getInputFormat());
+      console.log("lol", this.contentValue.toString());
     }
 
     private getOutputFormat() {
@@ -65,11 +66,10 @@ export default class Calendar extends Vue {
     }
 
     private getInputString() {
-      if (!this.contentDate.isValid()) {
+      if (!this.contentValue.isValid()) {
         return "-";
       }
-      return this.contentDate.format(this.getOutputFormat());
-
+      return this.contentValue.format(this.getOutputFormat());
     }
 
     private setCalendarOpen(val: boolean) {
@@ -99,16 +99,17 @@ export default class Calendar extends Vue {
     }
 
     private updateValueDate(date: Moment) {
+        console.log("update", date.toString());
         this.$emit("update:value", date.format(this.showTime ? dateTimeFormat : dateFormat));
     }
 
     private updateMins(val: number) {
-        const newValue = this.contentDate.clone().minute(val);
+        const newValue = this.contentValue.clone().minute(val);
         this.updateValueDate(newValue);
     }
 
     private updateHours(val: number) {
-        const newValue = this.contentDate.clone().hour(val);
+        const newValue = this.contentValue.clone().hour(val);
         this.updateValueDate(newValue);
     }
 }
