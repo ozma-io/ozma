@@ -18,6 +18,7 @@ export default class CodeEditor extends Vue {
     @Prop({ default: "" }) mode!: string;
     @Prop({ default: "" }) theme!: string;
     @Prop({ default: false }) readOnly!: boolean;
+    @Prop({ default: false }) autofocus!: boolean;
 
     editor: Ace.Ace.Editor | null = null;
     // Workaround for Ace editor's bug: it calls on(change) with an empty string during an update.
@@ -29,6 +30,10 @@ export default class CodeEditor extends Vue {
         editor.session.setMode(this.mode);
         editor.setTheme(this.theme);
         editor.setValue(this.content, 1);
+
+        if (this.autofocus) {
+            editor.focus();
+        }
 
         editor.on("change", () => {
             if (!this.isUpdating) {

@@ -25,20 +25,20 @@
          :class="['table-block',
                   {'nested-table-block': !isRoot,
                   'active_editing': editingValue !== null}]">
-        <div id="disable_edit"
-             :class="{'edit_active': editingValue !== null}"
-             @click="removeCellEditing()">
+        <div class="edit_container" v-if="editingValue !== null">
+            <div id="disable_edit"
+                :class="{'edit_active': editingValue !== null}"
+                @click="removeCellEditing()">
+            </div>
+            <FormControl :value="editingValue.value"
+                    :attributes="editingValue.attributes"
+                    :type="editingValue.type"
+                    :locked="editingLocked"
+                    :disableColor="editing.ref.type === 'new'"
+                    :uv="uv"
+                    autofocus
+                    @update="updateCurrentValue" />
         </div>
-
-        <FormControl v-if="editingValue !== null"
-                :value="editingValue.value"
-                :attributes="editingValue.attributes"
-                :type="editingValue.type"
-                :locked="editingLocked"
-                :disableColor="editing.ref.type === 'new'"
-                :uv="uv"
-                autofocus
-                @update="updateCurrentValue" />
 
         <div ref="tableContainer" class="tabl" @scroll="updateShowLength()" @resize="updateShowLength()">
             <table :class="['custom-table', 'table', 'b-table',
@@ -133,6 +133,7 @@
 
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
+import vClickOutside from "v-click-outside";
 import { mixins } from "vue-class-component";
 import { Location } from "vue-router";
 import { namespace } from "vuex-class";
@@ -610,6 +611,9 @@ const userView = namespace("userView");
     localConstructor: LocalTableUserView,
 })
 @Component({
+    directives: {
+        vClickOutside,
+    },
     components: {
         TableRow, TableFixedRow,
     },
@@ -1152,6 +1156,17 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
     .data-col {
         max-width: 100vw !important;
+    }
+    .edit_container {
+        width: 100vw;
+        height: 100vh;
+        z-index: 10000;
+        position: fixed;
+        top: calc(1.5em + 6px);
+        left: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     /* блок для отключения редактирования в таблице */
     #disable_edit {
