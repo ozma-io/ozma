@@ -1,25 +1,25 @@
 <template>
     <div class="calendar_container" v-click-outside="onClickOutside">
-      <div class="main_input">
-          <input type="text"
-            :value="getInputString()"
-            @blur="onBlur($event)"
-            @focus="setCalendarOpen(true)"
-          />
-      </div>
+        <div class="main_input">
+            <input type="text"
+                    :value="rawValue"
+                    @input="$emit('update:value', $event.target.value)"
+                    @focus="isCalendarOpen = true"
+            />
+        </div>
       <div :class="['main_cal', {'main_cal__open': isCalendarOpen }]">
-          <div class="days">
-              <DatePicker
-                  :value="contentValue"
-                  @update:value="updateValueDate($event)"
-              />
-          </div>
-          <div class="time">
-              <TimePicker v-if="showTime"
-                  @update:mins="updateMins($event)"
-                  @update:hours="updateHours($event)"
-              />
-          </div>
+            <div class="days">
+                <DatePicker
+                    :value="dateValue"
+                    @update:value="updateDate"
+                />
+            </div>
+            <div class="time">
+                <TimePicker v-if="showTime"
+                    @update:mins="updateMins"
+                    @update:hours="updateHours"
+                />
+            </div>
       </div>
     </div>
 </template>
@@ -27,9 +27,9 @@
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import moment, { Moment, months, Duration } from "moment";
-import {dateFormat, dateTimeFormat} from "@/values";
 import vClickOutside from "v-click-outside";
 
+import { dateFormat, dateTimeFormat } from "@/values";
 import DatePicker from "@/components/calendar/DatePicker.vue";
 import TimePicker from "@/components/calendar/TimePicker.vue";
 
@@ -42,75 +42,37 @@ import TimePicker from "@/components/calendar/TimePicker.vue";
     },
 })
 export default class Calendar extends Vue {
-    @Prop({ default: "" }) value!: string;
-    @Prop({ default: "MM.DD.YYYY" }) DateFormat!: string;
-    @Prop({ default: "HH:mm" }) TimeFormat!: string;
-    @Prop({ default: true }) showTime!: boolean;
+    @Prop() value!: Moment | undefined;
+    @Prop({ type: String }) rawValue!: string;
+    @Prop({ default: true, type: Boolean }) showTime!: boolean;
 
     private isCalendarOpen: boolean = false;
-    private contentValue: Moment = moment(this.value, this.getInputFormat());
 
-    @Watch("value")
-    private watchValue(v: string) {
-      console.log("value", v);
-      this.contentValue = moment(v, this.getInputFormat());
-      console.log("lol", this.contentValue.toString());
-    }
-
-    private getOutputFormat() {
-      return this.showTime ? `${this.DateFormat} ${this.TimeFormat}` : this.DateFormat;
-    }
-
-    private getInputFormat() {
-      return this.showTime ? dateTimeFormat : dateFormat;
-    }
-
-    private getInputString() {
-      if (!this.contentValue.isValid()) {
-        return "-";
-      }
-      return this.contentValue.format(this.getOutputFormat());
-    }
-
-    private setCalendarOpen(val: boolean) {
-      this.isCalendarOpen = val;
+    get dateValue() {
+        return this.value === undefined ? moment.invalid() : this.value;
     }
 
     private onClickOutside() {
-      this.setCalendarOpen(false);
+        this.isCalendarOpen = false;
     }
 
-    private toggleCalendarOpen() {
-      this.setCalendarOpen(!this.isCalendarOpen);
-    }
-
-    private onBlur(event: Event) {
-        const eValue = (event.target as HTMLInputElement).value;
-        const momentValue = moment.utc(eValue, this.getOutputFormat());
-        if (this.contentValue && !this.contentValue.isSame(momentValue)) {
-          this.updateValueDate(momentValue);
-          this.updateShownDate(momentValue);
-        }
-    }
-
-    private convertDateForUpdate(date: Moment) {
-        if (!this.showTime) return date.clone().startOf('day');
-        return date;
-    }
-
-    private updateValueDate(date: Moment) {
-        console.log("update", date.toString());
-        this.$emit("update:value", date.format(this.showTime ? dateTimeFormat : dateFormat));
+    private updateDate(date: Moment) {
+        const dateStr = this.showTime ? date.format(dateTimeFormat) : date.format(dateFormat);
+        this.$emit("update:value", dateStr);
     }
 
     private updateMins(val: number) {
-        const newValue = this.contentValue.clone().minute(val);
-        this.updateValueDate(newValue);
+        if (this.dateValue.isValid()) {
+            const newValue = this.dateValue.clone().minute(val);
+            this.updateDate(newValue);
+        }
     }
 
     private updateHours(val: number) {
-        const newValue = this.contentValue.clone().hour(val);
-        this.updateValueDate(newValue);
+        if (this.dateValue.isValid()) {
+            const newValue = this.dateValue.clone().hour(val);
+            this.updateDate(newValue);
+        }
     }
 }
 </script>
