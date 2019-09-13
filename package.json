@@ -16,6 +16,7 @@
     "moment": "^2.24.0",
     "uuid": "^3.3.2",
     "vue": "^2.6.10",
+    "v-click-outside": "deiru2k/v-click-outside#a82dab57d544fa46e127da98418a3c30f4bd02db",
     "vue-class-component": "^6.2.0",
     "vue-i18n": "^8.14.0",
     "vue-property-decorator": "^7.3.0",

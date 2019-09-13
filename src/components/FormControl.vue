@@ -75,6 +75,7 @@
                     :content="value.rawValue"
                     @update:content="updateValue($event)"
                     :readOnly="isDisabled"
+                    :autofocus="autofocus"
                     ref="control" />
         <UserView v-else-if="inputType.name === 'userview'"
                     :args="inputType.args"
@@ -235,8 +236,6 @@ export default class FormControl extends Vue {
                 control.focus();
             } else if (type.name === "textarea") {
                 control.focus();
-            } else if (type.name === "codeeditor") {
-                control.editor.focus();
             } else if (type.name === "check") {
                 control.focus();
             }
