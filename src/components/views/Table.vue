@@ -35,6 +35,7 @@
                 :attributes="editingValue.attributes"
                 :type="editingValue.type"
                 :locked="editingLocked"
+                :disableColor="editing.ref.type === 'new'"
                 :uv="uv"
                 autofocus
                 @update="updateCurrentValue" />
@@ -94,7 +95,7 @@
                                 :columnIndexes="fixedRowColumnIndexes"
                                 :localUv="local.extra"
                                 from="added"
-                                @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
+                                @select="selectRow({ type: 'added', position: rowIndex }, $event)"
                                 @cellClick="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])" />
                         <TableRow :key="`new-${rowId}`"
                                 :row="uv.newRows[rowId]"
@@ -103,7 +104,7 @@
                                 :localUv="local.extra"
                                 :showFixedRow="showFixedRow"
                                 from="added"
-                                @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
+                                @select="selectRow({ type: 'added', position: rowIndex }, $event)"
                                 @cellClick="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])" />
                     </template>
                     <template v-for="(rowI, rowIndex) in shownRowPositions">
@@ -247,16 +248,6 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
 
         const valueText = valueToText(columnInfo.valueType, value);
 
-        let link: IQuery | null = null;
-        if (value.info !== undefined) {
-            link = attrToQueryRef(value.info, value, this.extra.homeSchema, getCellAttr("LinkedView"));
-            const currLinkForRow = attrToQuerySelf(value.info, this.extra.homeSchema, getCellAttr("RowLinkedView"));
-            if (currLinkForRow !== null) {
-                localRow.extra.link = currLinkForRow;
-                this.extra.hasRowLinks = true;
-            }
-        }
-
         const style: Record<string, any> = {};
         let touchedStyle = false;
 
@@ -283,9 +274,6 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
             selected,
             valueText,
         };
-        if (link !== null) {
-            extra.link = link;
-        }
         if (touchedStyle) {
             extra.style = style;
         }
@@ -294,6 +282,23 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
 
     createLocalValue(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: ITableValueExtra | null) {
         const extra = this.createCommonLocalValue(row, localRow, columnIndex, value, oldLocal, row.deleted);
+
+        const columnInfo = this.uv.info.columns[columnIndex];
+        const columnAttrs = this.uv.columnAttributes[columnIndex];
+        const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, this.uv.attributes);
+
+        if (value.info !== undefined) {
+            const link = attrToQueryRef(value.info, value, this.extra.homeSchema, getCellAttr("LinkedView"));
+            if (link !== null) {
+                extra.link = link;
+            }
+            const currLinkForRow = attrToQuerySelf(value.info, this.extra.homeSchema, getCellAttr("RowLinkedView"));
+            if (currLinkForRow !== null) {
+                localRow.extra.link = currLinkForRow;
+                this.extra.hasRowLinks = true;
+            }
+        }
+
         if (extra.selected) {
             this.extra.selectedValues.insert({
                 type: "existing",

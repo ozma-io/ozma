@@ -56,8 +56,8 @@
         </div>
         <nav v-if="!uvIsError && bottomBarNeeded" class="fix-bot">
             <div class="count-row">{{ statusLine }}</div>
-            <div v-for="error in uvErrors"
-                     :key="error"
+            <div v-for="(error, errorI) in uvErrors"
+                     :key="errorI"
                      class="error custom-danger"
                      variant="danger"
                      show>
@@ -68,8 +68,8 @@
                      v-if="settingsLastError !== null">
                 {{ $t('settings_error', { msg: settingsLastError }) }}
             </div>
-            <div v-for="error in stagingErrors"
-                     :key="error"
+            <div v-for="(error, errorI) in stagingErrors"
+                     :key="errorI"
                      class="error custom-danger"
                      variant="danger"
                      show>
