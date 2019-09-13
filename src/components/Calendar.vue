@@ -27,16 +27,12 @@
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import moment, { Moment, months, Duration } from "moment";
-import vClickOutside from "v-click-outside";
 
 import { dateFormat, dateTimeFormat } from "@/values";
 import DatePicker from "@/components/calendar/DatePicker.vue";
 import TimePicker from "@/components/calendar/TimePicker.vue";
 
 @Component({
-    directives: {
-        clickOutside: vClickOutside.directive,
-    },
     components: {
         DatePicker, TimePicker,
     },
