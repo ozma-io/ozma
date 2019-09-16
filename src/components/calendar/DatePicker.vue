@@ -31,7 +31,9 @@ type Mode = "days" | "months";
 export default class DatePicker extends Vue {
     @Prop({ type: moment }) value!: Moment;
 
-    private startValue: Moment = moment();
+    private startValue: Moment = this.value.isValid()
+                                  ? this.value.clone()
+                                  : moment();
     private mode: Mode = "days";
 
     get shownValue() {
