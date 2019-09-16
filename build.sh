@@ -7,4 +7,3 @@ test -f yarn.lock
 rm -rf dist
 yarn
 yarn build
-rm dist/static/js/*.map
