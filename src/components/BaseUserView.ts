@@ -2,7 +2,6 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { SchemaName, EntityName, FieldName } from "@/api";
-import { valueToRaw } from "@/values";
 import { CombinedUserView } from "@/state/user_view";
 import { LocalUserView, RowRef, ValueRef } from "@/local_user_view";
 
@@ -81,8 +80,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
                         entity: entity.name,
                         field: columnInfo.mainField.name,
                         id: rowId,
-                        // valueToRaw ensures that rawValues are strings
-                        value: colI === ref.column ? rawValue : valueToRaw(columnInfo.valueType, cell.value),
+                        value: colI === ref.column ? rawValue : cell.rawValue,
                     });
                 } else {
                     return Promise.resolve();

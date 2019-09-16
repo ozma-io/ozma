@@ -2,7 +2,7 @@
     <div class="calendar_container" v-click-outside="onClickOutside">
         <div class="main_input">
             <input type="text"
-                    :value="rawValue"
+                    :value="textValue"
                     @input="$emit('update:value', $event.target.value)"
                     @focus="isCalendarOpen = true"
             />
@@ -28,7 +28,7 @@
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import moment, { Moment, months, Duration } from "moment";
 
-import { dateFormat, dateTimeFormat } from "@/values";
+import { dateFormat, dateTimeFormat, valueToText } from "@/values";
 import DatePicker from "@/components/calendar/DatePicker.vue";
 import TimePicker from "@/components/calendar/TimePicker.vue";
 
@@ -38,37 +38,45 @@ import TimePicker from "@/components/calendar/TimePicker.vue";
     },
 })
 export default class Calendar extends Vue {
-    @Prop() value!: Moment | undefined;
-    @Prop({ type: String }) rawValue!: string;
+    @Prop() value!: Moment | undefined | null;
+    @Prop({ type: String }) textValue!: string;
     @Prop({ default: true, type: Boolean }) showTime!: boolean;
 
     private isCalendarOpen: boolean = false;
 
     get dateValue() {
-        return this.value === undefined ? moment.invalid() : this.value;
+        return this.value ? this.value : moment.invalid();
     }
 
     private onClickOutside() {
         this.isCalendarOpen = false;
     }
 
-    private updateDate(date: Moment) {
-        const dateStr = this.showTime ? date.format(dateTimeFormat) : date.format(dateFormat);
-        this.$emit("update:value", dateStr);
+    private updatePart(mutate: (m: Moment) => void) {
+        const newValue = this.dateValue.isValid() ? this.dateValue.clone() : moment.utc().millisecond(0);
+        mutate(newValue.local());
+        this.$emit("update:value", newValue);
+    }
+
+    private updateDate(val: Moment) {
+        this.updatePart(newValue => {
+            newValue.year(val.year());
+            newValue.month(val.month());
+            newValue.date(val.date());
+        });
     }
 
     private updateMins(val: number) {
-        if (this.dateValue.isValid()) {
-            const newValue = this.dateValue.clone().minute(val);
-            this.updateDate(newValue);
-        }
+        this.updatePart(newValue => {
+            newValue.minute(val);
+            newValue.second(0);
+        });
     }
 
     private updateHours(val: number) {
-        if (this.dateValue.isValid()) {
-            const newValue = this.dateValue.clone().hour(val);
-            this.updateDate(newValue);
-        }
+        this.updatePart(newValue => {
+            newValue.hour(val);
+        });
     }
 }
 </script>

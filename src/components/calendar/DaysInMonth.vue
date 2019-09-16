@@ -27,7 +27,7 @@ export default class DaysInMonth extends Vue {
     @Prop({ type: moment }) selectedValue!: Moment;
 
     get days() {
-        const startDate = this.startValue.clone().startOf("month");
+        const startDate = this.startValue.clone().local().startOf("month");
         const daysNumber = startDate.daysInMonth() + startDate.day();
         const daysCount = startDate.daysInMonth() + startDate.day();
         const totalDaysCount = Utils.roundUp(daysCount, 7);

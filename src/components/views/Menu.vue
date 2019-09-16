@@ -48,7 +48,7 @@ import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { Location } from "vue-router";
 import { namespace } from "vuex-class";
 import { tryDicts } from "@/utils";
-import { CombinedUserView, valueToText, homeSchema } from "@/state/user_view";
+import { CombinedUserView, valueToPunnedText, homeSchema } from "@/state/user_view";
 import { attrToQuery, queryLocation } from "@/state/query";
 import { CurrentChanges, IEntityChanges } from "@/state/staging_changes";
 import { UserView } from "@/components";
@@ -96,7 +96,7 @@ export default class UserViewMenu extends Vue {
                 const getRowAttr = (name: string) => tryDicts(name, rowAttrs, viewAttrs);
 
                 const categoryCell = row.values[0];
-                const categoryName = valueToText(categoryColumnInfo.valueType, categoryCell);
+                const categoryName = valueToPunnedText(categoryColumnInfo.valueType, categoryCell);
                 let category: IMainMenuCategory | undefined = categories.get(categoryName);
                 if (category === undefined) {
                     category = {
@@ -108,7 +108,7 @@ export default class UserViewMenu extends Vue {
                 }
 
                 const buttonCell = row.values[1];
-                const buttonName = valueToText(buttonColumnInfo.valueType, buttonCell);
+                const buttonName = valueToPunnedText(buttonColumnInfo.valueType, buttonCell);
                 const buttonAttrs = buttonCell.attributes || {};
                 const getButtonAttr = (name: string) => tryDicts(name, buttonAttrs, rowAttrs, buttonsAttrs, viewAttrs);
 

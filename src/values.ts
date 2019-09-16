@@ -2,10 +2,9 @@ import { SchemaName, EntityName, FieldName, ValueType, FieldType, IResultViewInf
 import { Moment } from "moment";
 import * as moment from "moment";
 
+// Date/time is stored as Moment objects in UTC.
 export const dateFormat = "L";
 export const dateTimeFormat = "L LTS";
-
-// Raw values are suitable for editing. Type depends on a default editor; currently it's always a string.
 
 export interface IFieldInfo {
     fieldType: FieldType;
@@ -56,12 +55,14 @@ export interface IUpdatedValue {
     erroredOnce: boolean; // failed on submit
 }
 
-// Should be in sync with valueFromRaw
-export const valueToRaw = (valueType: ValueType, value: any): any => {
-    if (value === undefined || value === null) {
+// Should be in sync with valueFromRaw and be idempotent.
+export const valueToText = (valueType: ValueType, value: any): any => {
+    if (typeof value === "string") {
+        return value;
+    } else if (value === undefined || value === null) {
         return "";
     } else if (valueType.type === "date") {
-        return (value as Moment).utc().format(dateFormat);
+        return (value as Moment).format(dateFormat);
     } else if (valueType.type === "datetime") {
         return (value as Moment).local().format(dateTimeFormat);
     } else if (valueType.type === "json") {
@@ -70,6 +71,9 @@ export const valueToRaw = (valueType: ValueType, value: any): any => {
         return String(value);
     }
 };
+
+// Checks if raw value is null.
+export const valueIsNull = (value: any) => !(value !== null && value !== undefined && value !== "");
 
 const convertArray = (entryType: FieldType, value: any[]): any[] | undefined => {
     const converted = value.map(entry => valueFromRaw({ fieldType: entryType, isNullable: false }, entry));
@@ -81,11 +85,11 @@ const convertArray = (entryType: FieldType, value: any[]): any[] | undefined => 
 };
 
 export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, value: any): any => {
-    if (value === null || value === undefined || value === "") {
+    if (valueIsNull(value)) {
         return isNullable ? null : undefined;
     } else if (fieldType.type === "string") {
         // Remove whitespaces
-        return typeof value === "string" ? value.replace(/^\s+/, "").replace(/\s+$/, "") : undefined;
+        return typeof value === "string" ? value.trim() : undefined;
     } else if (fieldType.type === "enum") {
         return typeof value === "string" ? value : undefined;
     } else if (fieldType.type === "bool") {
