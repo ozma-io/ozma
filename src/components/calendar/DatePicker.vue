@@ -32,12 +32,12 @@ export default class DatePicker extends Vue {
     @Prop({ type: moment }) value!: Moment;
 
     private startValue: Moment = this.value.isValid()
-                                  ? this.value.clone()
-                                  : moment();
+                                  ? this.value
+                                  : moment.utc();
     private mode: Mode = "days";
 
     get shownValue() {
-        return this.value.isValid() ? this.value : moment();
+        return this.value.isValid() ? this.value : moment.utc();
     }
 
     @Watch("shownValue")

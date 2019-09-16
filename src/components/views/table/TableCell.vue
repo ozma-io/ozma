@@ -7,7 +7,7 @@
                 'select_fixed': localValue.selected && column.fixed,
                 'select': localValue.selected && !column.fixed,
                 'error_style': value.erroredOnce,
-                'required_cell_style': value.rawValue === '' && value.info !== undefined && !value.info.field.isNullable && from !== 'new',
+                'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable && from !== 'new',
                 'editing_style': localValue.editing !== undefined,
                 'disable_cell': value.info === undefined && from !== 'existing'}]">
         <p>
@@ -36,6 +36,8 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
+import { valueIsNull } from "@/values";
+
 @Component
 export default class TableCell extends Vue {
     // We don't bother to set types here properly, they matter no more than for TableRow.
@@ -46,5 +48,9 @@ export default class TableCell extends Vue {
     @Prop({ type: Object, required: true }) column!: any;
     @Prop({ type: Number, required: true }) columnPosition!: number;
     @Prop({ type: String, default: "existing" }) from!: string;
+
+    get isNull() {
+        return valueIsNull(this.value.rawValue);
+    }
 }
 </script>

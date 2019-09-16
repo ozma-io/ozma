@@ -9,7 +9,7 @@ import {
     IReferenceFieldType, SchemaName, EntityName, RowId, FieldName, AttributeName,
     ValueType, FieldType, AttributesMap,
 } from "@/api";
-import { IUpdatedValue, FieldsInfo, valueToRaw, insertFieldsInfo, equalEntityRef, valueFromRaw } from "@/values";
+import { IUpdatedValue, FieldsInfo, valueToText, insertFieldsInfo, equalEntityRef, valueFromRaw } from "@/values";
 import { CurrentChanges, UpdatedValues, IEntityChanges, IAddedEntry, AddedRowId } from "@/state/staging_changes";
 
 export interface IAnonymousUserView {
@@ -218,7 +218,7 @@ export const newEmptyRow = (store: Store<any>, uv: CombinedUserView, defaultRawV
             };
             const value = {
                 value: initialValue,
-                rawValue: valueToRaw(info.valueType, initialValue),
+                rawValue: initialValue,
                 info: updateInfo,
             };
             setOrRequestUpdatedPun(context, value, info.mainField.field.fieldType);
@@ -415,7 +415,7 @@ export class CombinedUserView {
                     }
 
                     if (value.rawValue === undefined) {
-                        value.rawValue = valueToRaw(columnInfo.valueType, value.value);
+                        value.rawValue = value.value;
                     }
 
                     const valueRef = {
@@ -590,11 +590,11 @@ export const valueReferenceName = (entriesMap: EntriesMap, fieldType: IReference
     return null;
 };
 
-export const valueToText = (valueType: ValueType, value: ICombinedValue): string => {
+export const valueToPunnedText = (valueType: ValueType, value: ICombinedValue): string => {
     if (value.pun !== undefined) {
         return value.pun;
     } else {
-        return String(valueToRaw(valueType, value.value));
+        return valueToText(valueType, value.value);
     }
 };
 
@@ -1186,7 +1186,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                     const mainType = res.info.columns[1].valueType;
                     const entries = Object.fromEntries(res.result.rows.map<[number, string]>(row => {
                         const id = row.values[0].value;
-                        const main = valueToRaw(mainType, row.values[1].value);
+                        const main = valueToText(mainType, row.values[1].value);
                         return [id, main];
                     }));
                     const changes: CurrentChanges = (rootState as any).staging.current;

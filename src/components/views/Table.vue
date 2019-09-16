@@ -141,7 +141,7 @@ import { Store } from "vuex";
 import { RecordSet, ObjectSet, tryDicts, mapMaybe, deepEquals } from "@/utils";
 import { IResultColumnInfo } from "@/api";
 import {
-    ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, CombinedUserView, homeSchema, valueToText,
+    ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, CombinedUserView, homeSchema, valueToPunnedText,
 } from "@/state/user_view";
 import { AutoSaveLock, AddedRowId } from "@/state/staging_changes";
 import { IQuery, attrToQuerySelf, attrToQueryRef } from "@/state/query";
@@ -246,7 +246,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
         const columnAttrs = this.uv.columnAttributes[columnIndex];
         const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, this.uv.attributes);
 
-        const valueText = valueToText(columnInfo.valueType, value);
+        const valueText = valueToPunnedText(columnInfo.valueType, value);
 
         const style: Record<string, any> = {};
         let touchedStyle = false;
@@ -335,7 +335,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     updateCommonValue(row: IRowCommon, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, extra: ITableValueExtra) {
         const columnInfo = this.uv.info.columns[columnIndex];
 
-        extra.valueText = valueToText(columnInfo.valueType, value);
+        extra.valueText = valueToPunnedText(columnInfo.valueType, value);
     }
 
     updateValue(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, localValue: ITableValueExtra) {

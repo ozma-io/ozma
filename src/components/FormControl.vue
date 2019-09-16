@@ -38,7 +38,7 @@
             {{ inputType.text }}
         </template>
         <input type="checkbox" v-else-if="inputType.name === 'check'"
-                         :value="value.value"
+                         :value="value.rawValue"
                          :class="['form-control-panel_checkbox',
                                  {'form-control-panel_checkbox_error': value.erroredOnce,
                                   'form-control-panel_checkbox_req': isAwaited && !disableColor}]"
@@ -47,7 +47,7 @@
                          ref="control" />
         <textarea v-else-if="inputType.name === 'textarea'"
                          :style="inputType.style"
-                         :value="value.rawValue"
+                         :value="textValue"
                          :class="['form-control-panel_textarea', 'multilines',
                                  {'form-control-panel_textarea_error': value.erroredOnce,
                                   'form-control-panel_textarea_req': isAwaited && !disableColor}]"
@@ -66,14 +66,14 @@
                          />
         <Calendar v-else-if="inputType.name === 'calendar'"
                   :value="value.value"
-                  :rawValue="value.rawValue"
+                  :textValue="textValue"
                   @update:value="updateValue($event)"
                   :showTime="inputType.showTime" />
         <!-- Do NOT add any `class` to CodeEditor; it breaks stuff! -->
         <CodeEditor v-else-if="inputType.name === 'codeeditor'"
                     :style="inputType.style"
                     mode="ace/mode/pgsql"
-                    :content="value.rawValue"
+                    :content="textValue"
                     @update:content="updateValue($event)"
                     :readOnly="isDisabled"
                     :autofocus="autofocus"
@@ -108,7 +108,7 @@
                 type="text"
                 @keydown.enter.prevent=""
                 wrap="soft"
-                :value="value.rawValue"
+                :value="textValue"
                 :style="inputType.style"
                 :class="['form-control-panel_textarea', 'singleline',
                         {'form-control-panel_textarea_error': value.erroredOnce,
@@ -121,7 +121,7 @@
                 ref="control" />
         <input v-else
                 type="text"
-                :value="value.rawValue"
+                :value="textValue"
                 :style="inputType.style"
                 @keydown.enter.prevent=""
                 :class="['form-control-panel_textarea', 'singleline',
@@ -140,6 +140,7 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
+import { valueToText, valueIsNull } from "@/values";
 import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef, IEntityRef } from "@/api";
 import { IAction } from "@/components/ActionsMenu.vue";
 import { IValueInfo, IUserViewArguments, CombinedUserView, EntriesMap, CurrentUserViews, homeSchema, ICombinedValue } from "@/state/user_view";
@@ -243,26 +244,20 @@ export default class FormControl extends Vue {
         }
     }
 
-    private beforeDestroy() {
-        if (this.inputType.name === "textarea") {
-            this.updateValue(this.value.rawValue.replace(/^ +| +$/gm, "")
-                                           .replace(/(^\n+)|(\n+$)/g, "")
-                                           .replace(/\n+|\r+|(\r\n)+/gm, "\n"));
-        } else if (this.inputType.name === "text") {
-            this.updateValue(this.value.rawValue.replace(/(\s+$)|(^\s+)/gm, ""));
-        }
-    }
-
     get isNullable() {
         return this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable;
     }
 
     get isAwaited() {
-        return !this.isNullable && this.value.rawValue === "";
+        return !this.isNullable && valueIsNull(this.value.rawValue);
     }
 
     get isDisabled() {
         return this.locked || this.value.info === undefined || this.value.info.field === null;
+    }
+
+    get textValue() {
+        return valueToText(this.type, this.value.rawValue);
     }
 
     get actions() {
