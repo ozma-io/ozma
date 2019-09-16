@@ -13,6 +13,8 @@ try {
 module.exports = {
     assetsDir: "static",
 
+    productionSourceMap: false,
+
     pluginOptions: {
         i18n: {
             fallbackLocale: "en",
