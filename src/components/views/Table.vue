@@ -684,33 +684,14 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         this.currentFilter = currentFilter;
 
         // Check if current filter contained this one
-        let contained = true;
-        const newWords = [];
-        if (currentFilter.length !== 0) {
-            for (const newWord of currentFilter) {
-                let hasThis = false;
-                for (const oldWord of oldFilter) {
-                    if (newWord.startsWith(oldWord)) {
-                        hasThis = true;
-                        newWords.push(newWord);
-                        break;
-                    }
-                }
-                if (!hasThis) {
-                    contained = false;
-                    break;
-                }
-            }
-        } else {
-            contained = false;
-        }
+        const contained = oldFilter.every(oldWord => currentFilter.some(newWord => newWord.startsWith(oldWord)));
 
         if (!contained) {
             this.buildRowPositions();
         } else {
             // Filter existing rows when we filter a subset of already filtered ones.
-            const newFilterWords = Array.from(new Set(newWords));
-            this.rowPositions = this.rowPositions.filter(rowI => rowContains((this.local as LocalTableUserView).rows[rowI], newFilterWords));
+            const newWords = currentFilter.filter(newWord => !oldFilter.some(oldWord => oldWord.startsWith(newWord)));
+            this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], newWords));
         }
 
         this.lastSelectedRow = null;
