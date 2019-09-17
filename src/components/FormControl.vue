@@ -27,12 +27,12 @@
         <div class="nested-menu" v-if="actions.length > 0 && inputType.name !== 'extended_select'">
             <ActionsMenu title="view_headline"
                          :actions="actions" />
-            <div v-if="caption.length > 0" class="caption-editors">
-                {{caption}}
+            <div v-if="caption !== ''" class="caption-editors">
+                {{ caption }}
             </div>
         </div>
-        <div v-else-if="caption.length > 0" class="caption-editors">
-            {{caption}}
+        <div v-else-if="caption !== ''" class="caption-editors">
+            {{ caption }}
         </div>
         <template v-if="inputType.name === 'error'">
             {{ inputType.text }}
