@@ -23,7 +23,7 @@
     <div :class="['form-control-panel', {
                  'form-control-panel-hidden': inputType.name === 'extended_select',
                  'form-control-panel_editor': inputType.name === 'codeeditor',
-                 }]" :style="controlPanelStyle()">
+                 }]" :style="controlPanelStyle">
         <div class="nested-menu" v-if="actions.length > 0 && inputType.name !== 'extended_select'">
             <ActionsMenu title="view_headline"
                          :actions="actions" />
@@ -270,9 +270,9 @@ export default class FormControl extends Vue {
         return actions;
     }
 
-    private controlPanelStyle() {
+    private get controlPanelStyle() {
         const heightAttr = this.attributes["ControlHeight"];
-        return heightAttr ? { height: `${heightAttr}px`, maxHeight: 'initial' } : {};
+        return heightAttr ? { height: `${heightAttr}px`, maxHeight: "initial" } : {};
     }
 
     private controlStyle(height?: string): Record<string, any> {

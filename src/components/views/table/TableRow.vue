@@ -78,6 +78,7 @@ export default class TableRow extends Vue {
         padding-left: 3px;
         overflow-wrap: break-word; /* перенос по словам */
         overflow: hidden;
+        height: 26px;
     }
     .editing_style {
         z-index: 200 !important; /* чтобы FormControl(расположен в ячейке) отображался поверх таблицы */
