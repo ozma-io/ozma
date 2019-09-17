@@ -121,10 +121,13 @@ export default class FormEntry extends Vue {
     @media screen and (orientation: portrait) {
         @media screen and (max-device-width: 480px) {
             .form-entry {
-                width: max-content;
+                padding-left: 15px;
+                width: 100%;
+                padding-right: 15px;
             }
             .form-data {
                 margin-top: 0 !important;
+                margin-bottom: 15px;
             }
             .form-block {
                 display: grid;
