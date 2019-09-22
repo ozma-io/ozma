@@ -46,14 +46,14 @@
                     :localRow="local.newRows[rowId]"
                     :locked="addedLocked"
                     @update="updateValue({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
-                    @delete="deleteRowAndSignal({ type: 'added', id: rowId })" />
+                    @delete="deleteRow({ type: 'added', id: rowId })" />
             <FormEntry v-for="rowI in rowPositions" :key="rowI"
                     :uv="uv"
                     :blocks="blocks"
                     :row="uv.rows[rowI]"
                     :localRow="local.rows[rowI]"
                     @update="updateValue({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
-                    @delete="deleteRowAndSignal({ type: 'existing', position: rowI })" />
+                    @delete="deleteRow({ type: 'existing', position: rowI })" />
         </template>
     </div>
 </template>
@@ -139,8 +139,6 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
     @Prop({ type: Boolean, default: false }) isRoot!: boolean;
     @Prop({ type: Object, required: true }) local!: LocalFormUserView;
 
-    private deletedOne = false;
-
     get addedLocked() {
         return this.uv.rows === null && this.currentSubmit !== null;
     }
@@ -197,11 +195,6 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
         return blocks;
     }
 
-    private deleteRowAndSignal(ref: RowRef) {
-        this.deleteRow(ref);
-        this.deletedOne = true;
-    }
-
     private init() {
         if (this.isRoot) {
             this.$emit("update:bodyStyle", `
@@ -212,18 +205,6 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
                 }
             `);
         }
-
-        if (this.uv.rows === null) {
-            // When entry is created successfully, return back.
-            const currRoute = this.$route.fullPath;
-            this.$emit("update:onSubmitStaging", () => {
-                if (this.$route.fullPath === currRoute) {
-                    this.$router.back();
-                }
-            });
-        }
-
-        this.deletedOne = false;
     }
 
     private created() {
@@ -240,13 +221,6 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
             return [];
         } else {
             return mapMaybe((row, rowI) => row.deleted ? undefined : rowI, this.uv.rows);
-        }
-    }
-
-    @Watch("rowPositions")
-    private returnIfEmpty() {
-        if (this.isRoot && this.deletedOne && this.rowPositions.length === 0 && this.uv.newRowsPositions.length === 0) {
-            this.$router.back();
         }
     }
 }

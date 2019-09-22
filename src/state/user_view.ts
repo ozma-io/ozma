@@ -5,7 +5,7 @@ import moment from "moment";
 import { IRef, FetchError, momentLocale, tryDicts } from "@/utils";
 import * as Api from "@/api";
 import {
-    IColumnField, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
+    IColumnField, IUserViewRef, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
     IReferenceFieldType, SchemaName, EntityName, RowId, FieldName, AttributeName,
     ValueType, FieldType, AttributesMap,
 } from "@/api";
@@ -19,7 +19,7 @@ export interface IAnonymousUserView {
 
 export interface INamedUserView {
     type: "named";
-    ref: Api.IUserViewRef;
+    ref: IUserViewRef;
 }
 
 export interface IUserViewArguments {
@@ -67,7 +67,7 @@ export type IUpdateMapping = Record<SchemaName, Record<EntityName, Record<RowId,
 // Mapping from fields to column indices with main field.
 export type IMainColumnMapping = Record<FieldName, number[]>;
 // Mapping from main entity ids to row indices.
-export type IMainRowMapping = Record<number, number[]>;
+export type IMainRowMapping = Record<RowId, number[]>;
 
 const insertUpdateMapping = (updateMapping: IUpdateMapping, ref: IFieldRef, id: RowId, valueRef: IUserViewValueRef) => {
     let entitiesMapping = updateMapping[ref.entity.schema];
@@ -552,7 +552,7 @@ export class CurrentUserViews {
 
     getUserView(args: IUserViewArguments) {
         const uv = this.userViews[userViewHash(args)];
-        if (uv === null || uv instanceof Promise) {
+        if (uv === undefined || uv instanceof Promise) {
             return null;
         } else {
             return uv;
@@ -791,7 +791,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             Vue.delete(entities, ref.name);
         },
 
-        updateField: (state, params: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, updatedValue: IUpdatedValue, fieldType: FieldType }) => {
+        updateField: (state, params: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName, updatedValue: IUpdatedValue, fieldType: FieldType }) => {
             const entitySummaries = getEntitySummaries(state.entries, params.fieldType);
 
             Object.values(state.current.userViews).forEach(uv => {
@@ -837,7 +837,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             });
         },
         // Expects all values to be empty, therefore doesn't set updated puns!
-        addEntry: (state, params: { schema: SchemaName, entity: EntityName, id: number, positions: AddedRowId[], newValues: UpdatedValues }) => {
+        addEntry: (state, params: { schema: SchemaName, entity: EntityName, id: AddedRowId, positions: number[], newValues: UpdatedValues }) => {
             Object.values(state.current.userViews).forEach(uv => {
                 if (!(uv instanceof CombinedUserView) ||
                         uv.info.mainEntity === null ||
@@ -891,7 +891,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                 uv.newRowsPositions = params.positions;
             });
         },
-        setAddedField: (state, params: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, addedEntry: IAddedEntry, fieldType: FieldType }) => {
+        setAddedField: (state, params: { schema: SchemaName, entity: EntityName, id: AddedRowId, field: FieldName, addedEntry: IAddedEntry, fieldType: FieldType }) => {
             const entitySummaries = getEntitySummaries(state.entries, params.fieldType);
             Object.values(state.current.userViews).forEach(uv => {
                 if (!(uv instanceof CombinedUserView) ||
@@ -917,7 +917,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                 });
             });
         },
-        deleteEntry: (state, params: { schema: SchemaName, entity: EntityName, id: number }) => {
+        deleteEntry: (state, params: { schema: SchemaName, entity: EntityName, id: RowId }) => {
             Object.values(state.current.userViews).forEach(uv => {
                 if (!(uv instanceof CombinedUserView)) {
                     return;
@@ -985,22 +985,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                 }
             });
         },
-        resetUpdatedEntry: (state, params: { schema: SchemaName, entity: EntityName, id: number, currentChanges: CurrentChanges }) => {
-            const changedSchema = params.currentChanges.changes[params.schema];
-            if (changedSchema === undefined) {
-                return;
-            }
-
-            const changedEntity = changedSchema[params.entity];
-            if (changedEntity === undefined) {
-                return;
-            }
-
-            const changedEntry = changedEntity.updated[params.id];
-            if (changedEntry === undefined) {
-                return;
-            }
-
+        resetUpdatedField: (state, params: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName }) => {
             Object.values(state.current.userViews).forEach(uv => {
                 if (!(uv instanceof CombinedUserView)) {
                     return;
@@ -1023,25 +1008,23 @@ const userViewModule: Module<IUserViewState, {}> = {
                     return;
                 }
 
-                Object.keys(changedEntry).forEach(field => {
-                    const updatedValues = updatedFields[field];
-                    if (updatedValues === undefined) {
-                        return;
-                    }
+                const updatedValues = updatedFields[params.field];
+                if (updatedValues === undefined) {
+                    return;
+                }
 
-                    updatedValues.forEach(valueRef => {
-                        const row = (uv.rows as ICombinedRow[])[valueRef.index];
-                        const value = row.values[valueRef.column];
-                        clearUpdatedValue(value);
+                updatedValues.forEach(valueRef => {
+                    const row = (uv.rows as ICombinedRow[])[valueRef.index];
+                    const value = row.values[valueRef.column];
+                    clearUpdatedValue(value);
 
-                        uv.handlers.forEach(handler => {
-                            handler.updateValue(valueRef.index, row, valueRef.column, value);
-                        });
+                    uv.handlers.forEach(handler => {
+                        handler.updateValue(valueRef.index, row, valueRef.column, value);
                     });
                 });
             });
         },
-        resetAddedEntry: (state, params: { schema: SchemaName, entity: EntityName, id: number, positions: AddedRowId[] }) => {
+        resetAddedEntry: (state, params: { schema: SchemaName, entity: EntityName, id: AddedRowId, positions: number[] }) => {
             Object.values(state.current.userViews).forEach(uv => {
                 if (!(uv instanceof CombinedUserView) ||
                         uv.info.mainEntity === null ||
@@ -1058,7 +1041,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                 });
             });
         },
-        resetDeleteEntry: (state, params: { schema: SchemaName, entity: EntityName, id: number }) => {
+        resetDeleteEntry: (state, params: { schema: SchemaName, entity: EntityName, id: RowId }) => {
             Object.values(state.current.userViews).forEach(uv => {
                 if (!(uv instanceof CombinedUserView)) {
                     return;
@@ -1072,15 +1055,6 @@ const userViewModule: Module<IUserViewState, {}> = {
                 };
 
                 uv.forEachDeletedRow(undeleteOneRow, params.schema, params.entity, params.id);
-            });
-        },
-        clearAdded: state => {
-            Object.values(state.current.userViews).forEach(uv => {
-                if (!(uv instanceof CombinedUserView)) {
-                    return;
-                }
-
-                uv.newRows = [];
             });
         },
         updateErroredOnce: (state, changes: CurrentChanges) => {
@@ -1283,7 +1257,7 @@ const userViewModule: Module<IUserViewState, {}> = {
         },
 
         // Called from stagingChanges.
-        afterUpdateField: ({ state, rootState, commit, dispatch }, args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => {
+        afterUpdateField: ({ state, rootState, commit, dispatch }, args: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName, value: any }) => {
             const changes = (rootState as any).staging.current as CurrentChanges;
             const updatedValue = changes.changes[args.schema][args.entity].updated[args.id][args.field];
             const fieldType = state.fieldsInfo[args.schema][args.entity][args.field].fieldType;
@@ -1292,21 +1266,15 @@ const userViewModule: Module<IUserViewState, {}> = {
             }
             commit("updateField", { ...args, updatedValue, fieldType });
         },
-        afterAddEntry: ({ state, rootState, commit }, args: { schema: SchemaName, entity: EntityName, position?: number }) => {
+        afterAddEntry: ({ state, rootState, commit }, args: { schema: SchemaName, entity: EntityName, id: AddedRowId, position: number }) => {
             const changes = (rootState as any).staging.current as CurrentChanges;
             const added = changes.changes[args.schema][args.entity].added;
-            let id: number;
-            if (args.position === undefined) {
-                id = added.positions[added.positions.length - 1];
-            } else {
-                id = added.positions[args.position];
-            }
             // We take a slice to ensure positions won't be updated externally in staging before our newRows object gets populated.
             const positions = added.positions.slice();
-            const newValues = added.entries[id];
-            commit("addEntry", { ...args, id, positions, newValues });
+            const newValues = added.entries[args.id];
+            commit("addEntry", { ...args, positions, newValues });
         },
-        afterSetAddedField: ({ state, rootState, commit, dispatch }, args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => {
+        afterSetAddedField: ({ state, rootState, commit, dispatch }, args: { schema: SchemaName, entity: EntityName, id: AddedRowId, field: FieldName, value: any }) => {
             const changes = (rootState as any).staging.current as CurrentChanges;
             const addedEntry = changes.changes[args.schema][args.entity].added.entries[args.id];
             const fieldType = state.fieldsInfo[args.schema][args.entity][args.field].fieldType;
@@ -1315,23 +1283,22 @@ const userViewModule: Module<IUserViewState, {}> = {
             }
             commit("setAddedField", { ...args, addedEntry, fieldType });
         },
-        afterDeleteEntry: ({ commit }, args: { schema: SchemaName, entity: EntityName, id: number }) => {
+        afterDeleteEntry: ({ commit }, args: { schema: SchemaName, entity: EntityName, id: RowId }) => {
             commit("deleteEntry", args);
         },
         beforeResetChanges: ({ rootState, commit }) => {
             const changes = (rootState as any).staging.current as CurrentChanges;
             commit("resetChanges", changes);
         },
-        beforeResetUpdatedEntry: ({ rootState, commit }, args: { schema: SchemaName, entity: EntityName, id: number }) => {
-            const currentChanges = (rootState as any).staging.current as CurrentChanges;
-            commit("resetUpdatedEntry", { ...args, currentChanges });
+        beforeResetUpdatedField: ({ rootState, commit }, args: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName }) => {
+            commit("resetUpdatedField", args);
         },
-        beforeResetAddedEntry: ({ rootState, commit }, args: { schema: SchemaName, entity: EntityName, id: number }) => {
+        beforeResetAddedEntry: ({ rootState, commit }, args: { schema: SchemaName, entity: EntityName, id: AddedRowId }) => {
             const changes = (rootState as any).staging.current as CurrentChanges;
             const positions = changes.changes[args.schema][args.entity].added.positions.slice();
             commit("resetAddedEntry", { ...args, positions });
         },
-        beforeResetDeleteEntry: ({ commit }, args: { schema: SchemaName, entity: EntityName, id: number }) => {
+        beforeResetDeleteEntry: ({ commit }, args: { schema: SchemaName, entity: EntityName, id: RowId }) => {
             commit("resetDeleteEntry", args);
         },
         updateErroredOnce: ({ rootState, commit }) => {

@@ -4,7 +4,7 @@
     <div @click="$emit('cellClick', columnPosition, $event)"
             :style="Object.assign({}, localValue.style, column.style)">
         <p>
-            <UserViewLink v-if="localValue.link !== undefined" :uv="localValue.link">
+            <UserViewLink v-if="localValue.link !== undefined" :uv="localValue.link" @[indirectLinks?`click`:null]="$emit('follow', localValue.link)">
                 <b-checkbox v-if="typeof value.value === 'boolean'"
                         :checked="value.value"
                         class="div_checkbox"
@@ -38,5 +38,6 @@ export default class TableFixedCell extends Vue {
     @Prop({ type: Object, required: true }) localValue!: any;
     @Prop({ type: Object, required: true }) column!: any;
     @Prop({ type: Number, required: true }) columnPosition!: number;
+    @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 }
 </script>

@@ -599,7 +599,6 @@ const isEmptyRow = (row: IRowCommon) => {
 };
 
 const staging = namespace("staging");
-const userView = namespace("userView");
 
 @UserView({
     localConstructor: LocalTableUserView,
@@ -927,27 +926,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
             throw new Error("View doesn't have a main entity");
         }
 
-        this.local.extra.selectedRows.keys().forEach(rowRef => {
-            const row = this.local.getRowByRef(rowRef)!;
-            if (rowRef.type === "added") {
-                this.resetAddedEntry({
-                    schema: entity.schema,
-                    entity: entity.name,
-                    id: rowRef.id,
-                });
-            } else if (rowRef.type === "existing") {
-                const existingRow = row.row as ICombinedRow;
-                if (existingRow.entityIds === undefined) {
-                    throw new Error("View doesn't have a main entity");
-                }
-                this.deleteEntry({
-                    schema: entity.schema,
-                    entity: entity.name,
-                    // Guaranteed to exist if mainEntity exists
-                    id: existingRow.mainId as number,
-                });
-            }
-        });
+        this.local.extra.selectedRows.keys().forEach(rowRef => this.deleteRow(rowRef));
     }
 
     private init() {

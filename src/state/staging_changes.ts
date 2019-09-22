@@ -3,22 +3,36 @@ import { Module, ActionContext } from "vuex";
 import { Moment } from "moment";
 import moment from "moment";
 
-import { RecordSet, deepClone } from "@/utils";
-import { RowId, SchemaName, FieldName, EntityName } from "@/api";
+import { RecordSet, deepClone, mapMaybe, map2 } from "@/utils";
+import { TransactionResult, RowId, SchemaName, FieldName, EntityName } from "@/api";
 import { IUpdatedValue, IFieldInfo, EntityFieldsInfo, valueFromRaw, FieldsInfo } from "@/values";
 import * as Api from "@/api";
 import { i18n } from "@/modules";
 
-export type UpdatedValues = Record<FieldName, IUpdatedValue>;
+export type ScopeName = string;
+
+export type Scopes = RecordSet<ScopeName>;
+
+export interface IScopedUpdatedValue extends IUpdatedValue {
+    scopes: Scopes;
+}
+
+export type AddedValues = Record<FieldName, IUpdatedValue>;
+export type UpdatedValues = Record<FieldName, IScopedUpdatedValue>;
 
 export type AddedRowId = number;
 
 export interface IAddedEntry {
-    values: UpdatedValues;
+    scopes: Scopes;
+    values: AddedValues;
+}
+
+export interface IDeletedEntry {
+    scopes: Scopes;
 }
 
 export interface IAddedEntries {
-    lastId: number;
+    nextId: number;
     // Actual updated values, indexed by unique id
     entries: Record<AddedRowId, IAddedEntry>;
     // Value positions
@@ -32,11 +46,16 @@ export interface IEntityChanges {
     // Applied to user views with FOR INSERT INTO
     added: IAddedEntries;
     // Applied to user views with FOR UPDATE OF (or FOR INSERT INTO)
-    deleted: RecordSet<RowId>;
+    deleted: Record<RowId, IDeletedEntry>;
+}
+
+export interface IAddedResult {
+    position: number;
+    id: AddedRowId;
 }
 
 const emptyAdded: IAddedEntries = {
-    lastId: 0,
+    nextId: 0,
     entries: {},
     positions: [],
 };
@@ -46,6 +65,17 @@ const emptyUpdates: IEntityChanges = {
     added: emptyAdded,
     deleted: {},
 };
+
+export interface ICombinedInsertEntityResult extends Api.IInsertEntityOp, Api.IInsertEntityResult {
+}
+
+export interface ICombinedUpdateEntityResult extends Api.IUpdateEntityOp, Api.IUpdateEntityResult {
+}
+
+export interface ICombinedDeleteEntityResult extends Api.IDeleteEntityOp, Api.IDeleteEntityResult {
+}
+
+export type CombinedTransactionResult = ICombinedInsertEntityResult | ICombinedUpdateEntityResult | ICombinedDeleteEntityResult;
 
 export class CurrentChanges {
     changes: Record<SchemaName, Record<EntityName, IEntityChanges>> = {};
@@ -85,11 +115,10 @@ export class CurrentChanges {
 
 export interface IStagingState {
     current: CurrentChanges;
+    // Needed for quick checking whether any entries are added.
     addedCount: number;
-    updatedCount: number;
-    deletedCount: number;
     // Current submit promise
-    currentSubmit: Promise<void> | null;
+    currentSubmit: Promise<TransactionResult[]> | null;
     // Set if changes were made during the submit to decide how to clear.
     // We allow updating and removing entries while submit is ongoing, but not adding new ones to prevent duplicate inserts.
     touched: boolean;
@@ -138,7 +167,7 @@ const checkAutoSave = (context: ActionContext<IStagingState, {}>) => {
 
 const checkCounters = async (context: ActionContext<IStagingState, {}>) => {
     const { state } = context;
-    if (state.updatedCount === 0 && state.addedCount === 0 && state.deletedCount === 0) {
+    if (state.current.isEmpty) {
         await context.dispatch("reset");
     } else {
         window.addEventListener("beforeunload", askOnClose);
@@ -146,19 +175,17 @@ const checkCounters = async (context: ActionContext<IStagingState, {}>) => {
     }
 };
 
-const changesToParams = (changes: UpdatedValues): Record<string, any> | null => {
-    return Object.fromEntries(Object.entries(changes).map<[string, any]>(([name, change]) => {
-        if (change.value === undefined) {
-            throw new Error("Value didn't pass validation");
-        }
-        let arg;
-        if (change.value instanceof moment) {
-            arg = Math.floor((change.value as Moment).unix());
-        } else {
-            arg = change.value;
-        }
-        return [ name, arg ];
-    }));
+const changeToParam = (change: IUpdatedValue): any => {
+    if (change.value === undefined) {
+        throw new Error("Value didn't pass validation");
+    }
+    let arg;
+    if (change.value instanceof moment) {
+        arg = Math.floor((change.value as Moment).unix());
+    } else {
+        arg = change.value;
+    }
+    return arg;
 };
 
 const validateValue = (info: IFieldInfo, value: any): IUpdatedValue => {
@@ -191,16 +218,74 @@ const getFieldInfo = (context: ActionContext<IStagingState, {}>, schema: SchemaN
     return fieldInfo;
 };
 
-const getEmptyValues = (entityInfo: EntityFieldsInfo): UpdatedValues => {
+const getEmptyValues = (scope: ScopeName, entityInfo: EntityFieldsInfo): UpdatedValues => {
     return Object.fromEntries(Object.entries(entityInfo).filter(([name, info]) => !info.isNullable).map(([name, info]) => {
-        const value = { value: undefined, rawValue: "", erroredOnce: false };
+        const value = { value: undefined, rawValue: "", erroredOnce: false, scopes: { [scope]: null } };
         return [name, value];
     }));
 };
 
-const checkUpdatedFields = (fields: UpdatedValues) => {
+const checkUpdatedFields = (fields: Record<FieldName, IUpdatedValue>) => {
     Object.values(fields).forEach(field => {
         field.erroredOnce = field.value === undefined;
+    });
+};
+
+const resetUpdatedEntryValue = (state: IStagingState, entityChanges: IEntityChanges, id: RowId) => {
+    Vue.delete(entityChanges.updated, id);
+};
+
+const resetAddedEntryValue = (state: IStagingState, entityChanges: IEntityChanges, id: AddedRowId) => {
+    Vue.delete(entityChanges.added.entries, id);
+    const position = entityChanges.added.positions.indexOf(id);
+
+    if (position === -1) {
+        throw Error("Impossible");
+    }
+    entityChanges.added.positions.splice(position, 1);
+    state.addedCount -= 1;
+};
+
+const resetDeletedEntryValue = (state: IStagingState, entityChanges: IEntityChanges, id: RowId) => {
+    Vue.delete(entityChanges.deleted, id);
+};
+
+const cleanupEntity = (state: IStagingState, schema: SchemaName, entity: EntityName, entityChanges: IEntityChanges) => {
+    if (Object.keys(entityChanges.updated).length === 0 && entityChanges.added.positions.length === 0 && Object.keys(entityChanges.deleted).length === 0) {
+        const schemaChanges = state.current.changes[schema];
+        Vue.delete(schemaChanges, entity);
+        if (Object.keys(schemaChanges).length === 0) {
+            Vue.delete(state.current.changes, schema);
+        }
+    }
+};
+
+const resetScopeBy = ({ state, dispatch }: ActionContext<IStagingState, {}>, checkScope: (scopes: Scopes) => boolean) => {
+    Object.entries(state.current.changes).forEach(([schema, schemaChanges]) => {
+        Object.entries(schemaChanges).forEach(([entity, entityChanges]) => {
+            Object.entries(entityChanges.added.entries).forEach(([addedIdStr, addedEntry]) => {
+                const addedId = Number(addedIdStr);
+                if (!checkScope(addedEntry.scopes)) {
+                    dispatch("resetAddedEntry", { schema, entity, id: addedId });
+                }
+            });
+
+            Object.entries(entityChanges.updated).forEach(([updatedIdStr, updatedEntry]) => {
+                const updatedId = Number(updatedIdStr);
+                Object.entries(updatedEntry).forEach(([fieldName, updatedField]) => {
+                    if (!checkScope(updatedField.scopes)) {
+                        dispatch("resetUpdatedField", { schema, entity, id: updatedId, field: fieldName });
+                    }
+                });
+            });
+
+            Object.entries(entityChanges.deleted).forEach(([deletedIdStr, deletedEntry]) => {
+                const deletedId = Number(deletedIdStr);
+                if (!checkScope(deletedEntry.scopes)) {
+                    dispatch("resetDeleteEntry", { schema, entity, id: deletedId });
+                }
+            });
+        });
     });
 };
 
@@ -209,8 +294,6 @@ const stagingModule: Module<IStagingState, {}> = {
     state: {
         current: new CurrentChanges(),
         addedCount: 0,
-        updatedCount: 0,
-        deletedCount: 0,
         currentSubmit: null,
         touched: false,
         errors: [],
@@ -223,8 +306,6 @@ const stagingModule: Module<IStagingState, {}> = {
         clear: state => {
             state.current = new CurrentChanges();
             state.addedCount = 0;
-            state.updatedCount = 0;
-            state.deletedCount = 0;
             state.touched = false;
         },
         validate: state => {
@@ -255,7 +336,7 @@ const stagingModule: Module<IStagingState, {}> = {
         removeAutoSaveLock: (state, lock: AutoSaveLock) => {
             delete state.autoSaveLocks[lock];
         },
-        startSubmit: (state, submit: Promise<void>) => {
+        startSubmit: (state, submit: Promise<TransactionResult[]>) => {
             state.touched = false;
             state.currentSubmit = submit;
         },
@@ -263,39 +344,31 @@ const stagingModule: Module<IStagingState, {}> = {
             state.currentSubmit = null;
             state.errors = [];
         },
-        clearAdded: state => {
-            Object.entries(state.current.changes).forEach(([schemaName, entities]) => {
-                Object.entries(entities).forEach(([entityName, entityChanges]) => {
-                    entityChanges.added = deepClone(emptyAdded);
-                });
-            });
-            state.addedCount = 0;
-        },
         addError: (state, lastError: string) => {
             state.errors.push(lastError);
         },
         removeError: (state, errorIndex: number) => {
             state.errors.splice(errorIndex, 1);
         },
-        updateField: (state, params: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any, fieldInfo: IFieldInfo }) => {
-            const { schema, entity, id, field, value, fieldInfo } = params;
+        updateField: (state, params: { scope: ScopeName, schema: SchemaName, entity: EntityName, id: RowId, field: FieldName, value: any, fieldInfo: IFieldInfo }) => {
+            const { scope, schema, entity, id, field, value, fieldInfo } = params;
 
             const entityChanges = state.current.getOrCreateChanges(schema, entity);
             let fields = entityChanges.updated[id];
             if (fields === undefined) {
                 fields = {};
-                state.updatedCount += 1;
                 if (id in entityChanges.deleted) {
-                    Vue.delete(entityChanges.deleted, id);
-                    state.deletedCount -= 1;
+                    resetDeletedEntryValue(state, entityChanges, id);
                 }
                 Vue.set(entityChanges.updated, String(id), fields);
             }
-            Vue.set(fields, field, validateValue(fieldInfo, value));
+            const oldField = fields[field];
+            const scopes = oldField === undefined ? { [scope]: null } : { [scope]: null, ...oldField.scopes };
+            Vue.set(fields, field, { scopes, ...validateValue(fieldInfo, value) });
             state.touched = true;
         },
-        addEntry: (state, params: { schema: SchemaName, entity: EntityName, position?: number, entityInfo: EntityFieldsInfo }) => {
-            const { schema, entity, position, entityInfo } = params;
+        addEntry: (state, params: { scope: ScopeName, schema: SchemaName, entity: EntityName, position?: number, entityInfo: EntityFieldsInfo }) => {
+            const { scope, schema, entity, position, entityInfo } = params;
 
             // During submit new entries aren't allowed to be added because this can result in duplicates.
             if (state.currentSubmit !== null) {
@@ -304,10 +377,10 @@ const stagingModule: Module<IStagingState, {}> = {
 
             const entityChanges = state.current.getOrCreateChanges(schema, entity);
             const newEntry = {
-                position: position === undefined ? entityChanges.added.positions.length : position,
-                values: getEmptyValues(entityInfo),
+                values: getEmptyValues(scope, entityInfo),
+                scopes: { [scope]: null },
             };
-            const newId = entityChanges.added.lastId++;
+            const newId = entityChanges.added.nextId++;
             entityChanges.added.entries[newId] = newEntry;
             if (position === undefined) {
                 entityChanges.added.positions.push(newId);
@@ -317,8 +390,8 @@ const stagingModule: Module<IStagingState, {}> = {
             state.addedCount += 1;
             state.touched = true;
         },
-        setAddedField: (state, params: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any, fieldInfo: IFieldInfo }) => {
-            const { schema, entity, id, field, value, fieldInfo } = params;
+        setAddedField: (state, params: { scope: ScopeName, schema: SchemaName, entity: EntityName, id: AddedRowId, field: FieldName, value: any, fieldInfo: IFieldInfo }) => {
+            const { scope, schema, entity, id, field, value, fieldInfo } = params;
             // During submit new entries aren't allowed to be added because this can result in duplicates.
             if (state.currentSubmit !== null) {
                 throw Error("Adding entries are forbidden while submitting");
@@ -329,30 +402,43 @@ const stagingModule: Module<IStagingState, {}> = {
             if (added === undefined) {
                 throw new Error(`New entity id ${id} is not found`);
             }
+            Vue.set(added.scopes, scope, null);
             Vue.set(added.values, field, validateValue(fieldInfo, value));
             state.touched = true;
         },
-        deleteEntry: (state, { schema, entity, id }: { schema: SchemaName, entity: FieldName, id: number }) => {
+        deleteEntry: (state, params: { scope: ScopeName, schema: SchemaName, entity: FieldName, id: RowId }) => {
+            const { scope, schema, entity, id } = params;
             const entityChanges = state.current.getOrCreateChanges(schema, entity);
             const deleted = entityChanges.deleted[id];
             if (deleted === undefined) {
-                Vue.set(entityChanges.deleted, String(id), null);
-                state.deletedCount += 1;
+                const entry = {
+                    scopes: { [scope]: null },
+                };
+                Vue.set(entityChanges.deleted, String(id), entry);
                 if (id in entityChanges.updated) {
-                    Vue.delete(entityChanges.updated, id);
-                    state.updatedCount -= 1;
+                    resetUpdatedEntryValue(state, entityChanges, id);
                 }
                 state.touched = true;
+            } else {
+                Vue.set(deleted.scopes, scope, null);
             }
         },
-        resetUpdatedEntry: (state, { schema, entity, id }: { schema: SchemaName, entity: EntityName, id: number }) => {
+        resetUpdatedField: (state, params: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName }) => {
+            const { schema, entity, id, field } = params;
             const entityChanges = state.current.getOrCreateChanges(schema, entity);
-            if (id in entityChanges.updated) {
-                Vue.delete(entityChanges.updated, id);
-                state.updatedCount -= 1;
+            const fieldUpdates = entityChanges.updated[id];
+            if (fieldUpdates === undefined) {
+                return;
+            }
+            if (field in fieldUpdates) {
+                Vue.delete(fieldUpdates, field);
+                if (Object.keys(fieldUpdates).length === 0) {
+                    resetUpdatedEntryValue(state, entityChanges, id);
+                    cleanupEntity(state, schema, entity, entityChanges);
+                }
             }
         },
-        resetAddedEntry: (state, { schema, entity, id }: { schema: SchemaName, entity: EntityName, id: number }) => {
+        resetAddedEntry: (state, { schema, entity, id }: { schema: SchemaName, entity: EntityName, id: AddedRowId }) => {
             const entityChanges = state.current.getOrCreateChanges(schema, entity);
             // During submit new entries aren't allowed to be added because this can result in duplicates.
             if (state.currentSubmit !== null) {
@@ -361,48 +447,54 @@ const stagingModule: Module<IStagingState, {}> = {
 
             const added = entityChanges.added.entries[id];
             if (added !== undefined) {
-                Vue.delete(entityChanges.added.entries, id);
-                const position = entityChanges.added.positions.indexOf(id);
-
-                if (position === -1) {
-                    throw Error("Impossible");
-                }
-                entityChanges.added.positions.splice(position, 1);
-                state.addedCount -= 1;
-                return;
+                resetAddedEntryValue(state, entityChanges, id);
+                cleanupEntity(state, schema, entity, entityChanges);
             }
         },
         resetDeleteEntry: (state, { schema, entity, id }: { schema: SchemaName, entity: EntityName, id: number }) => {
             const entityChanges = state.current.getOrCreateChanges(schema, entity);
             if (id in entityChanges.deleted) {
-                Vue.delete(entityChanges.deleted, id);
-                state.deletedCount -= 1;
+                resetDeletedEntryValue(state, entityChanges, id);
+                cleanupEntity(state, schema, entity, entityChanges);
             }
         },
     },
     actions: {
-        updateField: async (context, args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => {
+        updateField: async (context, args: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName, value: any }) => {
             const { commit, dispatch } = context;
             const fieldInfo = getFieldInfo(context, args.schema, args.entity, args.field);
             commit("updateField", { ...args, fieldInfo });
             await checkCounters(context);
             await dispatch("userView/afterUpdateField", args, { root: true });
         },
-        addEntry: async (context, args: { schema: SchemaName, entity: EntityName, position?: number }) => {
-            const { commit, dispatch } = context;
+        addEntry: async (context, args: { schema: SchemaName, entity: EntityName, position?: number }): Promise<IAddedResult> => {
+            const { state, commit, dispatch } = context;
             const entityInfo = getEntityFieldsInfo(context, args.schema, args.entity);
             commit("addEntry", { ...args, entityInfo });
+            const entityChanges = state.current.changesForEntity(args.schema, args.entity);
+            const newId = entityChanges.added.nextId - 1;
+            let position: number;
+            if (args.position === undefined) {
+                position = entityChanges.added.positions.length - 1;
+            } else {
+                position = args.position;
+            }
+            const result = {
+                id: newId,
+                position,
+            };
             await checkCounters(context);
-            await dispatch("userView/afterAddEntry", args, { root: true });
+            await dispatch("userView/afterAddEntry", { ...args, ...result }, { root: true });
+            return result;
         },
-        setAddedField: async (context, args: { schema: SchemaName, entity: EntityName, id: number, field: FieldName, value: any }) => {
+        setAddedField: async (context, args: { schema: SchemaName, entity: EntityName, id: AddedRowId, field: FieldName, value: any }) => {
             const { commit, dispatch } = context;
             const fieldInfo = getFieldInfo(context, args.schema, args.entity, args.field);
             commit("setAddedField", { ...args, fieldInfo });
             await checkCounters(context);
             await dispatch("userView/afterSetAddedField", args, { root: true });
         },
-        deleteEntry: async (context, args: { schema: SchemaName, entity: EntityName, id: number }) => {
+        deleteEntry: async (context, args: { schema: SchemaName, entity: EntityName, id: RowId }) => {
             const { commit, dispatch } = context;
             commit("deleteEntry", args);
             await checkCounters(context);
@@ -415,29 +507,47 @@ const stagingModule: Module<IStagingState, {}> = {
             stopAutoSave(context);
             window.removeEventListener("beforeunload", askOnClose);
         },
-        resetUpdatedEntry: async (context, args: { schema: SchemaName, entity: EntityName, id: number }) => {
+        resetUpdatedField: async (context, args: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName }) => {
             const { commit, dispatch } = context;
-            await dispatch("userView/beforeResetUpdatedEntry", args, { root: true });
+            await dispatch("userView/beforeResetUpdatedField", args, { root: true });
             commit("resetUpdatedEntry", args);
             await checkCounters(context);
         },
-        resetAddedEntry: async (context, args: { schema: SchemaName, entity: EntityName, id: number }) => {
+        resetAddedEntry: async (context, args: { schema: SchemaName, entity: EntityName, id: AddedRowId }) => {
             const { commit, dispatch } = context;
             await dispatch("userView/beforeResetAddedEntry", args, { root: true });
             commit("resetAddedEntry", args);
             await checkCounters(context);
         },
-        resetDeleteEntry: async (context, args: { schema: SchemaName, entity: EntityName, id: number }) => {
+        resetDeleteEntry: async (context, args: { schema: SchemaName, entity: EntityName, id: RowId }) => {
             const { commit, dispatch } = context;
             await dispatch("userView/beforeResetDeleteEntry", args, { root: true });
             commit("resetDeleteEntry", args);
             await checkCounters(context);
         },
-        clearAdded: async context => {
-            const { commit, dispatch } = context;
-            await dispatch("userView/beforeClearAdded", undefined, { root: true });
-            commit("clearAdded");
-            await checkCounters(context);
+        // If scope is specified, clears only entries which have it.
+        clearAdded: ({ state, dispatch }, scope?: ScopeName) => {
+            Object.entries(state.current.changes).forEach(([schema, entities]) => {
+                Object.entries(entities).forEach(([entity, entityChanges]) => {
+                    Object.entries(entityChanges.added.entries).forEach(([addedIdStr, addedEntry]) => {
+                        const addedId = Number(addedIdStr);
+                        if (scope === undefined || scope in addedEntry.scopes) {
+                            dispatch("resetAddedEntry", { schema, entity, id: addedId });
+                        }
+                    });
+                });
+            });
+        },
+        // Removes scope and entries that are only bound to it.
+        removeScope: (context, scope: ScopeName) => {
+            resetScopeBy(context, scopes => {
+                Vue.delete(scopes, scope);
+                return Object.keys(scopes).length !== 0;
+            });
+        },
+        // Clears all scoped entries (when they have been successfully submitted).
+        resetScoped: (context, scope: ScopeName) => {
+            resetScopeBy(context, scopes => scope in scopes);
         },
 
         addAutoSaveLock: context => {
@@ -450,7 +560,7 @@ const stagingModule: Module<IStagingState, {}> = {
             context.commit("removeAutoSaveLock", id);
             checkAutoSave(context);
         },
-        submit: context => {
+        submit: (context, scope?: ScopeName): Promise<TransactionResult[]> => {
             const { state, commit, dispatch } = context;
             if (state.currentSubmit !== null) {
                 return state.currentSubmit;
@@ -465,34 +575,47 @@ const stagingModule: Module<IStagingState, {}> = {
                             name: entityName,
                         };
                         const updated =
-                            Object.entries(entityChanges.updated)
-                            .map(([updatedIdStr, updatedFields]) => {
-                                return {
-                                    type: "update",
-                                    entity,
-                                    id: Number(updatedIdStr),
-                                    entries: changesToParams(updatedFields),
-                                };
-                            }) as Api.TransactionOp[];
+                            mapMaybe(([updatedIdStr, updatedFields]) => {
+                                const entries =
+                                    mapMaybe(([name, change]) => (scope && !(scope in change.scopes)) ? undefined : [name, changeToParam(change)],
+                                        Object.entries(updatedFields));
+                                if (entries.length === 0) {
+                                    return undefined;
+                                } else {
+                                    return {
+                                        type: "update",
+                                        entity,
+                                        id: Number(updatedIdStr),
+                                        entries: Object.fromEntries(entries),
+                                    } as Api.TransactionOp;
+                                }
+                            }, Object.entries(entityChanges.updated));
                         const added =
-                            Object.values(entityChanges.added.entries)
-                            .map(addedFields => {
-                                return {
-                                    type: "insert",
-                                    entity,
-                                    entries: changesToParams(addedFields.values),
-                                };
-                            }) as Api.TransactionOp[];
+                            mapMaybe(addedFields => {
+                                if (scope && !(scope in addedFields.scopes)) {
+                                    return undefined;
+                                } else {
+                                    const entries = Object.entries(addedFields.values).map(([name, value]) => [name, changeToParam(value)]);
+                                    return {
+                                        type: "insert",
+                                        entity,
+                                        entries: Object.fromEntries(entries),
+                                    } as Api.TransactionOp;
+                                }
+                            }, Object.values(entityChanges.added.entries));
                         const deleted =
-                            Object.keys(entityChanges.deleted)
-                            .map(deletedIdStr => {
-                                return {
-                                    type: "delete",
-                                    entity,
-                                    id: Number(deletedIdStr),
-                                };
-                            }) as Api.TransactionOp[];
-                        return updated.concat(added, deleted);
+                            mapMaybe(([deletedIdStr, deletedEntry]) => {
+                                if (scope && !(scope in deletedEntry.scopes)) {
+                                    return undefined;
+                                } else {
+                                    return {
+                                        type: "delete",
+                                        entity,
+                                        id: Number(deletedIdStr),
+                                    } as Api.TransactionOp;
+                                }
+                            }, Object.entries(entityChanges.deleted));
+                        return [...updated, ...added, ...deleted];
                     } catch (e) {
                         commit("addError", `Invalid value for ${schemaName}.${entityName}`);
                         dispatch("userView/updateErroredOnce", undefined, { root: true });
@@ -501,17 +624,17 @@ const stagingModule: Module<IStagingState, {}> = {
                 });
             });
 
-            commit("startSubmit", (async () => {
-                let failed: Error | null = null;
+            const submit = (async (): Promise<CombinedTransactionResult[]> => {
+                let result: TransactionResult[] | Error;
                 try {
-                    await dispatch("callProtectedApi", {
+                    result = await dispatch("callProtectedApi", {
                         func: Api.runTransaction,
                         args: [ops],
                     }, { root: true });
                 } catch (e) {
-                    failed = e;
+                    result = e;
                 }
-                if (failed === null) {
+                if (result instanceof Array) {
                     try {
                         await dispatch("userView/reload", undefined, { root: true });
                     } catch (e) {
@@ -521,18 +644,25 @@ const stagingModule: Module<IStagingState, {}> = {
                 }
 
                 commit("finishSubmit");
-                if (failed === null) {
+                if (result instanceof Array) {
                     if (state.touched) {
-                        await dispatch("clearAdded");
+                        await dispatch("clearAdded", scope);
                         await dispatch("userView/updateErroredOnce", undefined, { root: true });
                     } else {
-                        await dispatch("reset");
+                        if (scope) {
+                            await dispatch("resetScoped", scope);
+                        } else {
+                            await dispatch("reset");
+                        }
                     }
+                    return map2((op, res) => ({ ...op, ...res } as CombinedTransactionResult), ops, result);
                 } else {
-                    commit("addError", failed.message);
-                    throw failed;
+                    commit("addError", result.message);
+                    throw result;
                 }
-            })());
+            })();
+            commit("startSubmit", submit);
+            return submit;
         },
     },
 };

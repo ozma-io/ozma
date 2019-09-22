@@ -5,7 +5,7 @@
             "yes": "Yes",
             "no": "No",
             "invalid_uv": "Nested user view rows should be JSON objects with 'name' and 'args' defined",
-            "no_uv": "(empty)",
+            "select_view": "Select in view",
             "follow_reference": "Follow reference"
         },
         "ru": {
@@ -13,7 +13,7 @@
             "yes": "Да",
             "no": "Нет",
             "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'name' и 'args'",
-            "no_uv": "(пусто)",
+            "select_view": "Выбрать из представления",
             "follow_reference": "Перейти к сущности"
         }
     }
@@ -59,11 +59,10 @@
                          :required="!isNullable"
                          ref="control" />
         <SelectionField v-else-if="inputType.name === 'extended_select'"
-                         :value="value.rawValue"
-                         :options="inputType.options"
-                          @update:value="updateValue($event)"
-                         ref="control"
-                         />
+                        :value="value.rawValue"
+                        :options="inputType.options"
+                        @update:value="updateValue($event)"
+                        ref="control" />
         <Calendar v-else-if="inputType.name === 'calendar'"
                   :value="value.value"
                   :textValue="textValue"
@@ -92,7 +91,7 @@
                     @input="updateValue($event.target.value)"
                     :disabled="isDisabled"
                     ref="control">
-                <option v-for="option in inputType.options" v-bind:key="option.value" v-bind:value="option.value">
+                <option v-for="option in inputType.options" :key="option.value" :value="option.value">
                     {{ option.text }}
                 </option>
             </select>
@@ -137,7 +136,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { Component, Vue, Prop } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { valueToText, valueIsNull } from "@/values";
@@ -185,10 +184,13 @@ interface ICheckType {
     name: "check";
 }
 
-interface IUserViewType {
-    name: "userview";
+interface INestedUserViewRef {
     args: IUserViewArguments;
     defaultValues: Record<string, any>;
+}
+
+interface IUserViewType extends INestedUserViewRef {
+    name: "userview";
 }
 
 interface IErrorType {
@@ -205,6 +207,54 @@ type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | IExtend
 
 const userView = namespace("userView");
 
+const toUserViewRef = (makeDefaultArgs: () => Record<string, any> | null, value: any): INestedUserViewRef | null => {
+    if (typeof value !== "object" || value === null) {
+        return null;
+    }
+
+    let ref: IUserViewRef;
+    if (typeof value.ref === "object" && value.ref !== null) {
+        ref = value.ref;
+    } else {
+        ref = value;
+    }
+    if (typeof ref.schema !== "string" || typeof ref.name !== "string") {
+        return null;
+    }
+
+    let args: Record<string, any>;
+    if (typeof value.args === "object" && value.args !== null) {
+        args = value.args;
+    } else {
+        const defArgs = makeDefaultArgs();
+        if (defArgs === null) {
+            return null;
+        } else {
+            args = defArgs;
+        }
+    }
+
+    let defaultValues: Record<string, any>;
+    if (typeof value.defaultValues === "object" && value.defaultValues !== null) {
+        defaultValues = value.defaultValues;
+    } else {
+        defaultValues = {};
+    }
+
+    const userViewArgs: IUserViewArguments = {
+        source: {
+            type: "named",
+            ref: {
+                schema: ref.schema,
+                name: ref.name,
+            },
+        },
+        args,
+    };
+
+    return { args: userViewArgs, defaultValues };
+};
+
 @Component({
     components: {
         CodeEditor: () => import("@/components/CodeEditor.vue"),
@@ -220,7 +270,7 @@ export default class FormControl extends Vue {
     @Prop({ type: Boolean, default: false }) autofocus!: boolean;
     @Prop({ type: CombinedUserView }) uv!: CombinedUserView;
     @Prop({ type: String, default: ""}) caption!: string;
-    @Prop({ type: Boolean, default: false}) disableColor!: boolean;
+    @Prop({ type: Boolean, default: false }) disableColor!: boolean;
 
     @userView.State("entries") entriesMap!: EntriesMap;
     @userView.Action("getEntries") getEntries!: (_: IEntityRef) => Promise<void>;
@@ -228,7 +278,7 @@ export default class FormControl extends Vue {
     @userView.Action("getNestedView") getNestedView!: (_: IUserViewArguments) => Promise<void>;
 
     private extraActions: IAction[] = [];
-    private oldArgs: string = "";
+    private createView: INestedUserViewRef | null = null;
 
     private mounted() {
         if (this.autofocus) {
@@ -266,6 +316,13 @@ export default class FormControl extends Vue {
         if (link !== null) {
             actions.push({ name: this.$tc("follow_reference"), location: queryLocation(link) });
         }
+        const createView = toUserViewRef(() => ({}), this.attributes["SelectView"]);
+        if (createView !== null) {
+            actions.push( { name: this.$tc("select_view"), callback: () => {
+                this.createView = createView;
+            } });
+        }
+
         actions.push(...this.extraActions);
         return actions;
     }
@@ -286,52 +343,20 @@ export default class FormControl extends Vue {
     get inputType(): IType {
         const controlAttr = this.attributes["Control"];
         if (controlAttr === "UserView") {
-            const value = this.value.value;
-            if (value === undefined) {
-                return { name: "error", text: this.$tc("no_uv") };
-            }
-            if (typeof value !== "object" || value === null) {
-                return { name: "error", text: this.$tc("invalid_uv") };
-            }
-
-            let ref: IUserViewRef;
-            if (typeof value.ref === "object" && value.ref !== null) {
-                ref = value.ref;
-            } else {
-                ref = value;
-            }
-            if (typeof ref.schema !== "string" || typeof ref.name !== "string") {
-                return { name: "error", text: this.$tc("no_uv") };
-            }
-
-            let args: Record<string, any>;
-            if (typeof value.args === "object" && value.args !== null) {
-                args = value.args;
-            } else {
+            const nestedRef = toUserViewRef(() => {
                 if (this.value.info === undefined) {
-                    return { name: "error", text: this.$tc("invalid_uv") };
+                    throw new Error("invalid_uv");
                 } else {
-                    args = { id: this.value.info.id };
+                    return { id: this.value.info.id };
                 }
-            }
+            }, this.value.rawValue);
 
-            let defaultValues: Record<string, any> = {};
-            if (typeof value.defaultValues === "object" && value.defaultValues !== null) {
-                defaultValues = value.defaultValues;
+            if (nestedRef === null) {
+                return { name: "error", text: this.$tc("invalid_uv") };
+            } else {
+                this.getNestedView(nestedRef.args);
+                return { name: "userview", ...nestedRef };
             }
-            const viewArgs: IUserViewArguments = {
-                source: {
-                    type: "named",
-                    ref: {
-                        schema: ref.schema,
-                        name: ref.name,
-                    },
-                },
-                args,
-            };
-
-            this.getNestedView(viewArgs);
-            return { name: "userview", args: viewArgs, defaultValues };
         }
         // `calc` is needed because sizes should be relative to base font size.
         const heightSinglelineText = "calc(2em + 6px)";

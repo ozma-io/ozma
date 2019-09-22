@@ -180,6 +180,21 @@ export interface IDeleteEntityOp {
 
 export type TransactionOp = IInsertEntityOp | IUpdateEntityOp | IDeleteEntityOp;
 
+export interface IInsertEntityResult {
+    type: "insert";
+    id: number;
+}
+
+export interface IUpdateEntityResult {
+    type: "update";
+}
+
+export interface IDeleteEntityResult {
+    type: "delete";
+}
+
+export type TransactionResult = IInsertEntityResult | IUpdateEntityResult | IDeleteEntityResult;
+
 const fetchGetApi = async (subUrl: string, token: string): Promise<any> => {
     return await Utils.fetchJson(`${apiUrl}/${subUrl}`, {
         method: "GET",
@@ -262,7 +277,7 @@ export const deleteEntry = async (token: string, ref: IEntityRef, id: number): P
     await changeEntity(`/${id}`, "DELETE", token, ref);
 };
 
-export const runTransaction = async (token: string, ops: TransactionOp[]): Promise<void> => {
+export const runTransaction = async (token: string, ops: TransactionOp[]): Promise<TransactionResult[]> => {
     return await fetchJsonApi("transaction", token, "POST", { operations: ops });
 };
 

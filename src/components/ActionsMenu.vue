@@ -42,8 +42,8 @@ export type IAction = ILocationAction | IHrefAction | ICallbackAction;
 
 @Component
 export default class ActionsMenu extends Vue {
-    @Prop({ type: Array }) actions!: IAction[];
-    @Prop({ type: String }) title!: string;
+    @Prop({ type: Array, required: true }) actions!: IAction[];
+    @Prop({ type: String, required: true }) title!: string;
 
     private showActions: boolean = false;
 

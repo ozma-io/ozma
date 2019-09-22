@@ -1,5 +1,6 @@
 import moment from "moment";
-import Vue from "vue";
+import Vue, { RenderContext } from "vue";
+import { RSA_NO_PADDING } from "constants";
 
 export type Result<A> = A | Error;
 
@@ -133,7 +134,7 @@ export const deepUpdateObject = (to: object, from: object) => {
         throw new Error("deepUpdateObject: expected two objects");
     }
 
-    Object.entries(to).forEach(([name, oldValue]) => {
+    Object.keys(to).forEach(name => {
         if (!(name in from)) {
             Vue.delete(to, name);
         }
@@ -172,7 +173,12 @@ export const deepClone = <T>(a: T): T => {
     } else if (a instanceof Array) {
         return a.map(deepClone) as any;
     } else if (!hasUserPrototype(a as any)) {
-        return Object.fromEntries(Object.entries(a).map(([k, v]) => [k, deepClone(v)]));
+        const res: any = { ...a };
+        /* tslint:disable:forin */
+        for (const k in res) {
+            res[k] = deepClone(res[k]);
+        }
+        return res;
     } else {
         throw Error("Cannot deep clone an object");
     }
@@ -199,8 +205,12 @@ export const deepEquals = <T>(a: T, b: T): boolean => {
     }
 };
 
-export const mapMaybe = <A, B>(func: (arg: A, index: number, array: A[]) => B | undefined, arr: A[]): B[] => {
-    return arr.map(func).filter(val => val !== undefined) as B[];
+export const mapMaybe = <A, R>(func: (arg: A, index: number, array: A[]) => R | undefined, arr: A[]): R[] => {
+    return arr.map(func).filter(val => val !== undefined) as R[];
+};
+
+export const map2 = <A, B, R>(func: (arg1: A, arg2: B, index: number, array1: A[], array2: B[]) => R, arr1: A[], arr2: B[]): R[] => {
+    return arr1.map((a, i) => func(a, arr2[i], i, arr1, arr2));
 };
 
 // Like JSON.stringify but maintains order of keys in dictionaries.
@@ -249,4 +259,14 @@ export const debugLog = (message?: any, ...optionalParams: any[]) => {
         }
     });
     console.trace(...args);
+};
+
+/* tslint:disable:ban-types */
+export const vueEmit = (context: RenderContext, name: string, ...args: any[]) => {
+    const listener = context.listeners[name];
+    if (listener instanceof Array) {
+        listener.forEach(handler => handler(...args));
+    } else if (listener instanceof Function) {
+        listener(...args);
+    }
 };

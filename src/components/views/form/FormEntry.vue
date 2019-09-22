@@ -63,8 +63,8 @@ export default class FormEntry extends Vue {
 
     @Prop({ type: Object, required: true }) uv!: any;
     @Prop({ type: Array, required: true }) blocks!: any;
-    @Prop({ type: Object, required: true  }) row!: any;
-    @Prop({ type: Object, required: true  }) localRow!: any;
+    @Prop({ type: Object, required: true }) row!: any;
+    @Prop({ type: Object, required: true }) localRow!: any;
     @Prop({ type: Boolean, default: false }) locked!: boolean;
 }
 </script>

@@ -4,15 +4,12 @@ Vue.config.devtools = process.env["NODE_ENV"] !== "production";
 Vue.config.performance = process.env["NODE_ENV"] !== "production";
 
 import Vuex from "vuex";
-import BootstrapVue from "bootstrap-vue";
-import UniqueId from "vue-unique-id";
-import vClickOutside from "v-click-outside";
 
 import * as Modules from "@/modules";
 import { setHeadTitle } from "@/elements";
 
 import UserView from "@/components/UserView.vue";
-import UserViewLink from "@/components/UserViewLink.ts";
+import UserViewLink from "@/components/UserViewLink";
 import ActionsMenu from "@/components/ActionsMenu.vue";
 import FormControl from "@/components/FormControl.vue";
 import App from "@/App.vue";
@@ -24,11 +21,6 @@ import stagingChangesModule from "@/state/staging_changes";
 import queryModule from "@/state/query";
 
 import "@/styles/style.sass";
-
-Vue.use(Vuex);
-Vue.use(BootstrapVue);
-Vue.use(UniqueId);
-Vue.use(vClickOutside);
 
 export const store = new Vuex.Store({
     // Big performance hog on dev!
