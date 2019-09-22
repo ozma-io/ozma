@@ -138,7 +138,7 @@ import { Location } from "vue-router";
 import { namespace } from "vuex-class";
 import { Store } from "vuex";
 
-import { RecordSet, ObjectSet, tryDicts, mapMaybe, deepEquals, debugLog } from "@/utils";
+import { RecordSet, ObjectSet, tryDicts, mapMaybe, deepEquals } from "@/utils";
 import { IResultColumnInfo } from "@/api";
 import {
     ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, CombinedUserView, homeSchema, valueToPunnedText,
@@ -897,10 +897,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
                 return false;
             }
             const [from, to] = ordRowPositionRef(prevLocalRef, posRef) <= 0 ? [prevLocalRef, posRef] : [posRef, prevLocalRef];
-            debugLog("selecting few", from, to);
             let i: RowPositionRef | null = from;
             while (i !== null && !equalRowPositionRef(i, to)) {
-                debugLog("selecting", i);
                 const currRef = this.getRowByLocalPosition(i);
                 if (currRef === null) {
                     throw Error("impossible");

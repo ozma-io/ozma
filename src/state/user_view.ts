@@ -859,15 +859,20 @@ const userViewModule: Module<IUserViewState, {}> = {
                         };
 
                         const updated = params.newValues[column.mainField.name];
+                        let result: ICombinedValue;
                         if (updated !== undefined) {
-                            return { info: updateInfo, ...updated };
+                            result = { info: updateInfo, ...updated };
                         } else {
-                            return {
+                            result = {
                                 value: null,
                                 rawValue: "",
                                 info: updateInfo,
                             };
                         }
+                        if (updateInfo.field.fieldType.type === "reference") {
+                            result.pun = "";
+                        }
+                        return result;
                     } else {
                         return {
                             value: undefined,
@@ -902,7 +907,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                     const updated = params.addedEntry.values[params.field];
                     const value: ICombinedValue = Object.assign({}, newRow.values[colI], updated);
                     Vue.set(newRow.values, colI, value);
-                    if (entitySummaries !== null && value.info!.field!.fieldType.type === "reference") {
+                    if (entitySummaries !== null && "pun" in value) {
                         setUpdatedPun(entitySummaries, value);
                     }
 
