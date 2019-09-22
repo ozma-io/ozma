@@ -132,7 +132,7 @@ const getEntitySummaries = (entries: EntriesMap, fieldType: FieldType) => {
 };
 
 // Expects "updated" to exist
-const setUpdatedPun = (entitySummaries: Record<RowId, string>, value: any) => {
+const setUpdatedPun = (entitySummaries: Record<RowId, string>, value: ICombinedValue) => {
     if (value.value !== null) {
         value.pun = entitySummaries[value.value];
         console.assert(value.pun !== undefined);
@@ -847,7 +847,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                 }
                 const eref = uv.info.mainEntity;
 
-                const values = uv.info.columns.map((column, colI) => {
+                const values = uv.info.columns.map((column, colI): ICombinedValue => {
                     if (column.mainField !== null) {
                         const updateInfo = {
                             id: params.id,
@@ -857,6 +857,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                                 name: column.mainField.name,
                             },
                         };
+
                         const updated = params.newValues[column.mainField.name];
                         if (updated !== undefined) {
                             return { info: updateInfo, ...updated };
@@ -874,7 +875,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                     }
                 });
 
-                const newRow = {
+                const newRow: IRowCommon = {
                     values,
                 };
 
@@ -899,9 +900,9 @@ const userViewModule: Module<IUserViewState, {}> = {
                 uv.mainColumnMapping[params.field].forEach(colI => {
                     // New object because otherwise Vue won't detect changes.
                     const updated = params.addedEntry.values[params.field];
-                    const value = Object.assign({}, newRow.values[colI], updated);
+                    const value: ICombinedValue = Object.assign({}, newRow.values[colI], updated);
                     Vue.set(newRow.values, colI, value);
-                    if (entitySummaries !== null && "pun" in value) {
+                    if (entitySummaries !== null && value.info!.field!.fieldType.type === "reference") {
                         setUpdatedPun(entitySummaries, value);
                     }
 
