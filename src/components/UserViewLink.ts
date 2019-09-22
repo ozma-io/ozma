@@ -1,5 +1,6 @@
 import Vue from "vue";
 
+import { vueEmit } from "@/utils";
 import { queryLocation } from "@/state/query";
 import { router } from "@/modules";
 
@@ -30,9 +31,13 @@ export default Vue.component("UserViewLink", {
                     }
 
                     e.preventDefault();
-                    router.push(queryLocation(context.props.uv));
+                    if ("click" in context.listeners) {
+                        vueEmit(context, "click");
+                    } else {
+                        router.push(queryLocation(context.props.uv));
+                    }
                 },
             },
-        }, context.children);
+        });
     },
 });

@@ -1,6 +1,10 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
 import VueI18n from "vue-i18n";
+import Vuex from "vuex";
+import BootstrapVue from "bootstrap-vue";
+import UniqueId from "vue-unique-id";
+import vClickOutside from "v-click-outside";
 import { RawLocation, Dictionary } from "vue-router/types/router";
 
 import * as Utils from "@/utils";
@@ -11,6 +15,10 @@ import RootUserView from "@/components/RootUserView.vue";
 
 Vue.use(VueRouter);
 Vue.use(VueI18n);
+Vue.use(Vuex);
+Vue.use(BootstrapVue);
+Vue.use(UniqueId);
+Vue.use(vClickOutside);
 
 const routes = [
     { path: "/", name: "main", redirect: { name: "view", params: { schema: "user", name: "Main" } } },

@@ -69,7 +69,7 @@ interface IMainMenuCategory {
 @UserView()
 @Component
 export default class UserViewMenu extends Vue {
-    @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView;
+    @Prop() uv!: CombinedUserView;
 
     get categoriesOrError() {
         // .rows === null means that we are in "create new" mode -- there are no selected existing values.

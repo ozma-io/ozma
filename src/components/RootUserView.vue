@@ -47,6 +47,7 @@
                           :filter="filterWords"
                           isRoot
                           :defaultValues="defaultValues"
+                          @goto="goto"
                           @update:actions="extraActions = $event"
                           @update:statusLine="statusLine = $event"
                           @update:onSubmitStaging="onSubmitStaging = $event"
@@ -76,7 +77,7 @@
                 {{ $t('submit_error', { msg: error }) }}
             </div>
             <div class="error custom-warning" variant="warning" v-if="!changes.isEmpty">
-                <button class="error_button" @click="submitChangesWithHook" variant="primary">{{ $t('save') }}</button>
+                <button class="error_button" @click="submitChanges()" variant="primary">{{ $t('save') }}</button>
                 {{ $t('pending_changes') }}
             </div>
         </nav>
@@ -94,7 +95,7 @@ import { setHeadTitle } from "@/elements";
 import { IUserViewArguments, CombinedUserView, UserViewError, CurrentUserViews } from "@/state/user_view";
 import { CurrentChanges } from "@/state/staging_changes";
 import { IAction } from "@/components/ActionsMenu.vue";
-import { CurrentQuery, replaceSearch, defaultValuePrefix } from "@/state/query";
+import { CurrentQuery, queryLocation, replaceSearch, defaultValuePrefix } from "@/state/query";
 
 const auth = namespace("auth");
 const userView = namespace("userView");
@@ -149,7 +150,6 @@ export default class RootUserView extends Vue {
     @userView.Mutation("removeError") uvRemoveError!: (errorIndex: number) => void;
     @userView.State("errors") uvErrors!: string[];
     @staging.State("current") changes!: CurrentChanges;
-    @staging.State("currentSubmit") submitPromise!: Promise<void> | null;
     @staging.Action("submit") submitChanges!: () => Promise<void>;
     @staging.Action("reset") clearChanges!: () => Promise<void>;
     @staging.Mutation("removeError") stagingRemoveError!: (errorIndex: number) => void;
@@ -163,7 +163,6 @@ export default class RootUserView extends Vue {
     private statusLine: string = "";
     private filterString: string = "";
     private enableFilter: boolean = false;
-    private onSubmitStaging: (() => void) | null = null;
     private styleNode: HTMLStyleElement;
 
     constructor() {
@@ -181,12 +180,12 @@ export default class RootUserView extends Vue {
     }
 
     // FIXME update when change not query.search
-    @Watch("$route", { deep: true })
+    @Watch("$route", { deep: true, immediate: true })
     private onRouteChanged() {
         this.setRoute(this.$route);
     }
 
-    @Watch("query.rootViewArgs", { deep: true })
+    @Watch("query.rootViewArgs", { deep: true, immediate: true })
     private onViewArgsChanged() {
         this.updateView();
     }
@@ -195,15 +194,13 @@ export default class RootUserView extends Vue {
         replaceSearch("q", this.filterString);
     }
 
-    @Watch("query.search.root")
+    @Watch("query.search.root", { deep: true, immediate: true })
     private updateRootParams() {
         this.filterString = this.query.getSearch("q", String, "");
     }
 
     private created() {
         document.head.appendChild(this.styleNode);
-        this.setRoute(this.$route);
-        this.filterString = this.query.getSearch("q", String, "");
     }
 
     private destroyed() {
@@ -222,7 +219,6 @@ export default class RootUserView extends Vue {
         this.clearView();
         this.extraActions = [];
         this.statusLine = "";
-        this.onSubmitStaging = null;
         this.enableFilter = false;
         this.styleNode.innerHTML = "";
 
@@ -237,15 +233,13 @@ export default class RootUserView extends Vue {
         this.getRootView(args);
     }
 
-    private submitChangesWithHook() {
-        this.submitChanges();
-        if (this.submitPromise !== null) {
-            this.submitPromise.then(() => {
-                if (this.onSubmitStaging !== null) {
-                    this.onSubmitStaging();
-                }
-            });
-        }
+    private goto(args: IUserViewArguments) {
+        const newQuery = {
+            rootViewArgs: args,
+            search: {},
+        };
+        const location = queryLocation(newQuery);
+        this.$router.push(location);
     }
 
     // FIMXE: needed only for a style workaround

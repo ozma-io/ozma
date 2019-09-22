@@ -18,10 +18,12 @@
                 <TableFixedCell v-for="i in columnIndexes"
                         :key="i"
                         @cellClick="$emit('cellClick', ...arguments)"
+                        @follow="$emit('follow', $event)"
                         :value="row.values[i]"
                         :localValue="localRow.values[i]"
                         :columnPosition="i"
-                        :column="localUv.columns[i]" />
+                        :column="localUv.columns[i]"
+                        :indirectLinks="indirectLinks" />
             </div>
         </td>
     </tr>
@@ -46,6 +48,7 @@ export default class TableFixedRow extends Vue {
     @Prop({ type: Array, required: true }) columnIndexes!: any[];
     @Prop({ type: Object, required: true }) localUv!: any;
     @Prop({ type: String, default: "existing" }) from!: string;
+    @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 }
 </script>
 

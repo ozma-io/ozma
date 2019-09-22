@@ -15,11 +15,13 @@
         <TableCell v-for="i in columnIndexes"
                 :key="i"
                 @cellClick="$emit('cellClick', arguments[0], arguments[1])"
+                @follow="$emit('follow', $event)"
                 :value="row.values[i]"
                 :localValue="localRow.values[i]"
                 :columnPosition="i"
                 :column="localUv.columns[i]"
-                :from="from" />
+                :from="from"
+                :indirectLinks="indirectLinks" />
     </tr>
 </template>
 
@@ -43,6 +45,7 @@ export default class TableRow extends Vue {
     @Prop({ type: Object, required: true }) localUv!: any;
     @Prop({ type: String, default: "existing" }) from!: string;
     @Prop({ type: Boolean, default: false }) showFixedRow!: boolean;
+    @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 }
 </script>
 
