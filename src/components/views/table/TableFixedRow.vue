@@ -2,11 +2,12 @@
     <!-- When you change anything here, also make corresponding changes in TableRow! -->
     <tr :style="localRow.extra.style" class="fixed-place-tr none_selected table-tr">
         <td class="fixed-place-td table-tr_td">
-            <div class="fix"  :class="{ 'selected': localRow.extra.selected }">
+            <div class="fix" :class="{ 'selected': localRow.extra.selected }">
                 <div v-if="from !== 'new'"
                         @click="$emit('select', $event)"
                         class="fixed-column">
-                    <input type="checkbox" :checked="localRow.extra.selected">
+                    <!-- Key is needed to force checkbox re-render when `selected` changes. Not sure why. -->
+                    <input type="checkbox" :key="localRow.extra.selected" :checked="localRow.extra.selected" @click="$event.preventDefault()">
                 </div>
                 <div v-else class="fixed-column"></div>
                 <div v-if="localUv.hasRowLinks" class="fixed-column">

@@ -138,7 +138,7 @@ import { Location } from "vue-router";
 import { namespace } from "vuex-class";
 import { Store } from "vuex";
 
-import { RecordSet, ObjectSet, tryDicts, mapMaybe, deepEquals } from "@/utils";
+import { RecordSet, ObjectSet, tryDicts, mapMaybe, deepEquals, debugLog } from "@/utils";
 import { IResultColumnInfo } from "@/api";
 import {
     ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, CombinedUserView, homeSchema, valueToPunnedText,
@@ -569,18 +569,13 @@ const ordRowPositionRef = (a: RowPositionRef, b: RowPositionRef) => {
         if (a.type === "new") {
             return 0;
         } else {
-            return Math.sign((b as any).position - a.position);
+            return Math.sign(a.position - (b as any).position);
         }
     }
 };
 
 const rowContains = (row: ITableLocalRow, searchWords: string[]) => {
-    for (const word of searchWords) {
-        if (!row.extra.searchText.includes(word)) {
-            return false;
-        }
-    }
-    return true;
+    return searchWords.every(word => row.extra.searchText.includes(word));
 };
 
 const rowIndicesCompare = (aIndex: number, bIndex: number, entries: IRowCommon[], sortColumn: number, collator: Intl.Collator) => {
@@ -625,6 +620,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     private sortOptions: Intl.CollatorOptions = {};
     private rowPositions: number[] = [];
     private showLength: number = 0;
+    // XXX: this has positions relative to current sorting and filtering. It needs to be converted to a global position ref using `getRowByLocalPosition`.
     private lastSelectedRow: RowPositionRef | null = null;
     private lastSelectedValue: ValueRef | null = null;
     private editing: ITableEditing | null = null;
@@ -693,8 +689,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
             const newWords = currentFilter.filter(newWord => !oldFilter.some(oldWord => oldWord.startsWith(newWord)));
             this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], newWords));
         }
-
-        this.lastSelectedRow = null;
     }
 
     private setShowEmptyRow(newValue: boolean) {
@@ -719,7 +713,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         } else {
             this.rowPositions = rows.map((row, rowI) => rowI);
             if (this.filter.length !== 0) {
-                this.rowPositions = this.rowPositions.filter(rowI => rowContains((this.local as LocalTableUserView).rows[rowI], this.filter));
+                this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], this.filter));
             }
 
             this.sortRows();
@@ -835,7 +829,12 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         this.lastSelectedValue = ref;
     }
 
-    private nextRowPosition(rowRef: RowPositionRef): RowPositionRef | null {
+    @Watch("rowPositions")
+    private clearSelectedRow() {
+        this.lastSelectedRow = null;
+    }
+
+    private nextLocalRowPosition(rowRef: RowPositionRef): RowPositionRef | null {
         let type: string;
         let position: number;
         if (rowRef.type === "new") {
@@ -855,12 +854,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
                 type = "existing";
                 position = 0;
             }
-        } else if (type === "existing") {
-            position = position + 1;
         }
 
         if (type === "existing") {
-            if (this.uv.rows !== null && position < this.uv.rows.length) {
+            if (position < this.rowPositions.length) {
                 return {
                     type, position,
                 };
@@ -870,25 +867,56 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         return null;
     }
 
+    private getRowByLocalPosition(rowRef: RowPositionRef): RowRef | null {
+        if (rowRef.type === "existing") {
+            return this.local.getRowByPosition({ type: "existing", position: this.rowPositions[rowRef.position] });
+        } else {
+            return this.local.getRowByPosition(rowRef);
+        }
+    }
+
     private selectRow(posRef: RowPositionRef, event: MouseEvent) {
-        const ref = this.local.getRowPosition(posRef);
+        const ref = this.getRowByLocalPosition(posRef);
         if (ref === null) {
             return;
         }
-        const row = this.local.getRowByRef(ref)!;
-        if (this.lastSelectedRow !== null && event.shiftKey) {
+        const row = this.local.getRowByRef(ref);
+        if (row === null) {
+            return;
+        }
+
+        const proc = () => {
+            const prevLocalRef = this.lastSelectedRow!;
             // Select all rows between current one and the previous selected one.
-            const [from, to] = ordRowPositionRef(this.lastSelectedRow, posRef) <= 0 ? [this.lastSelectedRow, posRef] : [posRef, this.lastSelectedRow];
+            const prevRef = this.getRowByLocalPosition(prevLocalRef);
+            if (prevRef === null) {
+                return false;
+            }
+            const prevRow = this.local.getRowByRef(prevRef);
+            if (prevRow === null) {
+                return false;
+            }
+            const [from, to] = ordRowPositionRef(prevLocalRef, posRef) <= 0 ? [prevLocalRef, posRef] : [posRef, prevLocalRef];
+            debugLog("selecting few", from, to);
             let i: RowPositionRef | null = from;
             while (i !== null && !equalRowPositionRef(i, to)) {
-                const currRef = this.local.getRowPosition(posRef)!;
-                this.local.selectRow(currRef, row.local.extra.selected);
-                i = this.nextRowPosition(i);
+                debugLog("selecting", i);
+                const currRef = this.getRowByLocalPosition(i);
+                if (currRef === null) {
+                    throw Error("impossible");
+                }
+                this.local.selectRow(currRef, prevRow.local.extra.selected);
+                i = this.nextLocalRowPosition(i);
             }
-        } else {
+            this.local.selectRow(this.getRowByLocalPosition(to)!, prevRow.local.extra.selected);
+            return true;
+        };
+
+        if (!(this.lastSelectedRow !== null && event.shiftKey && proc())) {
             this.local.selectRow(ref, !row.local.extra.selected);
         }
-        return false;
+
+        this.lastSelectedRow = posRef;
     }
 
     private selectAllRows() {
@@ -949,6 +977,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         this.$emit("update:enableFilter", this.uv.rows !== null);
 
         this.buildRowPositions();
+        this.updateFilter();
         this.setShowEmptyRow(this.uv.rows === null || this.uv.rows.length === 0);
     }
 
@@ -958,13 +987,13 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         if (this.isRoot) {
             const queryCallback = (mql: MediaQueryListEvent) => {
                 if (mql.matches) {
-                    this.showLength = (this.local as LocalTableUserView).rows.length;
+                    this.showLength = this.local.rows.length;
                 }
             };
             const query = window.matchMedia("print");
             query.addListener(queryCallback);
             const printCallback = () => {
-                this.showLength = (this.local as LocalTableUserView).rows.length;
+                this.showLength = this.local.rows.length;
             };
             window.addEventListener("beforeprint", printCallback);
             this.printListener = { query, queryCallback, printCallback };
@@ -1024,7 +1053,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         }
 
         this.sortRows(this.sortOptions);
-        this.lastSelectedRow = null;
     }
 
     private sortRows(options?: Intl.CollatorOptions) {

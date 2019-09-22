@@ -265,7 +265,7 @@ export abstract class LocalUserView<ValueT, RowT, ViewT> implements IHandlerProv
         }
     }
 
-    getRowPosition(rowRef: RowPositionRef): RowRef | null {
+    getRowByPosition(rowRef: RowPositionRef): RowRef | null {
         if (rowRef.type === "added") {
             const id = this.uv.newRowsPositions[rowRef.position];
             if (id === undefined) {
