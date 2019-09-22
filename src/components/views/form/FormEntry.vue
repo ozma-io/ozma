@@ -34,21 +34,21 @@
             </div>
 
             <!-- FIXME FIXME FIXME look at permissions! -->
-            <div class="delete-block">
+            <div class="delete-block" v-if="row.mainId !== undefined">
                 <input  type="button"
                         :value="$t('delete')"
                         class="delete-block_delete-button"
-                        v-if="row.mainId !== undefined"
                         v-b-modal="'deleteConfirm'" >
+
+                <b-modal lazy
+                            id="deleteConfirm"
+                            ok-variant="danger"
+                            :ok-title="$t('ok')"
+                            @ok="$emit('delete', $event)"
+                            :cancel-title="$t('cancel')" >
+                    {{ $t('delete_confirmation') }}
+                </b-modal>
             </div>
-            <b-modal lazy
-                        id="deleteConfirm"
-                        ok-variant="danger"
-                        :ok-title="$t('ok')"
-                        @ok="$emit('delete', $event)"
-                        :cancel-title="$t('cancel')" >
-                {{ $t('delete_confirmation') }}
-            </b-modal>
         </form>
     </div>
 </template>
