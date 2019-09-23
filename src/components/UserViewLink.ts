@@ -38,6 +38,6 @@ export default Vue.component("UserViewLink", {
                     }
                 },
             },
-        });
+        }, context.children);
     },
 });
