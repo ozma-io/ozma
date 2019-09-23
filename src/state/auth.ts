@@ -96,7 +96,7 @@ export interface IAuthState {
     current: CurrentAuth | null;
     lastError: string | null;
     renewalTimeoutId: NodeJS.Timeout | null;
-    checkTimeoutId: NodeJS.Timeout | null;
+    checkIntervalId: NodeJS.Timeout | null;
     pending: Promise<CurrentAuth> | null;
 }
 
@@ -112,7 +112,7 @@ interface IAuthPersistedState {
     createdTime: number;
 }
 
-const checkTimeout = 5000;
+const checkInterval = 5000;
 
 const authKey = "auth";
 const authNonceKey = "authNonce";
@@ -212,22 +212,6 @@ const updateAuth = ({ state, commit, dispatch }: ActionContext<IAuthState, {}>, 
     }
 };
 
-const startCheckTimeout = ({ state, commit }: ActionContext<IAuthState, {}>) => {
-    if (state.checkTimeoutId !== null) {
-        clearTimeout(state.checkTimeoutId);
-    }
-
-    const checkTimeoutId = setTimeout(async () => {
-        commit("setCheckTimeout", null);
-        await iframeLoaded;
-        if (state.pending === null && state.current !== null && iframe.contentWindow !== null) {
-            const msg = `${Api.authClientId} ${state.current.session}`;
-            iframe.contentWindow.postMessage(msg, Api.authOrigin);
-        }
-    }, checkTimeout);
-    commit("setCheckTimeout", checkTimeoutId);
-};
-
 const renewAuth = async (context: ActionContext<IAuthState, {}>) => {
     const { commit, state } = context;
     if (state.current === null) {
@@ -238,9 +222,9 @@ const renewAuth = async (context: ActionContext<IAuthState, {}>) => {
         clearTimeout(state.renewalTimeoutId);
         commit("setRenewalTimeout", null);
     }
-    if (state.checkTimeoutId !== null) {
-        clearTimeout(state.checkTimeoutId);
-        commit("setCheckTimeout", null);
+    if (state.checkIntervalId !== null) {
+        clearInterval(state.checkIntervalId);
+        commit("setCheckInterval", null);
     }
 
     const params: Record<string, string> = {
@@ -275,7 +259,17 @@ const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
     }, timeoutSecs * 1000);
     commit("setRenewalTimeout", renewalTimeoutId);
 
-    startCheckTimeout(context);
+    if (state.checkIntervalId !== null) {
+        clearTimeout(state.checkIntervalId);
+    }
+    const checkIntervalId = setInterval(async () => {
+        await iframeLoaded;
+        if (state.pending === null && state.current !== null && iframe.contentWindow !== null) {
+            const msg = `${Api.authClientId} ${state.current.session}`;
+            iframe.contentWindow.postMessage(msg, Api.authOrigin);
+        }
+    }, checkInterval);
+    commit("setCheckInterval", checkIntervalId);
 };
 
 const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExisting: boolean) => {
@@ -318,7 +312,7 @@ export const authModule: Module<IAuthState, {}> = {
         pending: null,
         lastError: null,
         renewalTimeoutId: null,
-        checkTimeoutId: null,
+        checkIntervalId: null,
     },
     mutations: {
         setError: (state, lastError: string) => {
@@ -337,8 +331,8 @@ export const authModule: Module<IAuthState, {}> = {
         setRenewalTimeout: (state, renewalTimeoutId: NodeJS.Timeout | null) => {
             state.renewalTimeoutId = renewalTimeoutId;
         },
-        setCheckTimeout: (state, checkTimeoutId: NodeJS.Timeout | null) => {
-            state.checkTimeoutId = checkTimeoutId;
+        setCheckInterval: (state, checkTimeoutId: NodeJS.Timeout | null) => {
+            state.checkIntervalId = checkTimeoutId;
         },
         clearAuth: state => {
             state.current = null;
@@ -356,8 +350,8 @@ export const authModule: Module<IAuthState, {}> = {
                 if (state.renewalTimeoutId !== null) {
                     clearTimeout(state.renewalTimeoutId);
                 }
-                if (state.checkTimeoutId !== null) {
-                    clearTimeout(state.checkTimeoutId);
+                if (state.checkIntervalId !== null) {
+                    clearTimeout(state.checkIntervalId);
                 }
                 if (state.current !== null) {
                     commit("clearAuth");
@@ -443,11 +437,7 @@ export const authModule: Module<IAuthState, {}> = {
                 }
                 const reply = e.data;
 
-                if (reply === "unchanged") {
-                    if (state.current !== null) {
-                        startCheckTimeout(context);
-                    }
-                } else if (reply === "changed") {
+                if (reply === "changed") {
                     dispatch("removeAuth", undefined, { root: true });
                 } else if (reply === "error") {
                     dispatch("removeAuth", undefined, { root: true });
