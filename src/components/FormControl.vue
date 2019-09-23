@@ -485,6 +485,8 @@ export default class FormControl extends Vue {
         max-height: 60%;
         min-width: 14rem;
         box-sizing: content-box;
+        display: flex;
+        flex-direction: column;
     }
     .form-control-panel_editor {
         width: 60%;
