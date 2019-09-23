@@ -260,7 +260,7 @@ const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
     commit("setRenewalTimeout", renewalTimeoutId);
 
     if (state.checkIntervalId !== null) {
-        clearTimeout(state.checkIntervalId);
+        clearInterval(state.checkIntervalId);
     }
     const checkIntervalId = setInterval(async () => {
         await iframeLoaded;
@@ -351,7 +351,7 @@ export const authModule: Module<IAuthState, {}> = {
                     clearTimeout(state.renewalTimeoutId);
                 }
                 if (state.checkIntervalId !== null) {
-                    clearTimeout(state.checkIntervalId);
+                    clearInterval(state.checkIntervalId);
                 }
                 if (state.current !== null) {
                     commit("clearAuth");
