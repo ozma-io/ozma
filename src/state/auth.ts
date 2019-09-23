@@ -250,16 +250,18 @@ const renewAuth = async (context: ActionContext<IAuthState, {}>) => {
     return getToken(context, params);
 };
 
+const constantFactorStart = 0.8;
+const constantFactorEnd = 0.9;
+
 const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
     const { state, commit, dispatch } = context;
     if (state.current === null) {
         throw new Error("Cannot start timeouts with no tokens");
     }
 
-    const constantFactor = 0.6;
     const validFor = state.current.validFor;
-    // Random timeouts for different tabs not to overload the server.
-    const timeout = (validFor * constantFactor + Math.random() * validFor * (1 - 1.1 * constantFactor)) * 1000;
+    // Random timeouts to not overload the server with different tabs.
+    const timeoutSecs = constantFactorStart * validFor + Math.random() * (constantFactorEnd - constantFactorStart) * validFor;
 
     if (state.renewalTimeoutId !== null) {
         clearTimeout(state.renewalTimeoutId);
@@ -270,7 +272,7 @@ const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
         } else {
             commit("setRenewalTimeout", null);
         }
-    }, timeout);
+    }, timeoutSecs * 1000);
     commit("setRenewalTimeout", renewalTimeoutId);
 
     startCheckTimeout(context);
