@@ -72,7 +72,6 @@ export default class CodeEditor extends Vue {
 
 <style scoped>
     .ace_editor {
-        position: relative;
         width: 100%;
         height: 100%;
     }
