@@ -162,6 +162,7 @@ import { UserView } from "@/components";
 import { AutoSaveLock, AddedRowId } from "@/state/staging_changes";
 import { IQuery, attrToQuerySelf, attrToQueryRef } from "@/state/query";
 import { LocalUserView, ILocalRowInfo, ILocalRow, ValueRef, RowRef, RowPositionRef, equalRowPositionRef } from "@/local_user_view";
+import { ISelectionRef } from "@/components/BaseUserView";
 import BaseUserView from "@/components/BaseUserView";
 import TableRow from "@/components/views/table/TableRow.vue";
 import TableFixedRow from "@/components/views/table/TableFixedRow.vue";
@@ -194,6 +195,7 @@ interface ITableRowExtra {
     style?: Record<string, any>;
     height?: number;
     link?: IQuery;
+    selectionEntry?: ISelectionRef;
 }
 
 interface ITableUserViewExtra {
@@ -314,6 +316,13 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
             }
         }
 
+        if (getCellAttr("Selectable") && value.info !== undefined) {
+            localRow.extra.selectionEntry = {
+                entity: value.info.fieldRef.entity,
+                id: value.info.id,
+            };
+        }
+
         if (extra.selected) {
             this.extra.selectedValues.insert({
                 type: "existing",
@@ -389,7 +398,14 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     }
 
     createLocalRow(rowIndex: number, row: ICombinedRow) {
-        return this.createCommonLocalRow(row);
+        const extra = this.createCommonLocalRow(row);
+        if (row.mainId !== undefined) {
+            extra.selectionEntry = {
+                entity: this.uv.info.mainEntity!,
+                id: row.mainId,
+            };
+        }
+        return extra;
     }
 
     createAddedLocalRow(rowId: AddedRowId, row: IAddedRow) {
@@ -896,6 +912,12 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         }
         const row = this.local.getRowByRef(ref);
         if (row === null) {
+            return;
+        }
+
+        // If we are in a selection mode, just emit selected row.
+        if (this.selectionMode && posRef.type === "existing" && row.local.extra.selectionEntry !== undefined) {
+            this.$emit("select", row.local.extra.selectionEntry);
             return;
         }
 

@@ -60,9 +60,11 @@
                     :localRow="local.rows[rowI]"
                     :indirectLinks="indirectLinks"
                     :scope="scope"
+                    :selectionMode="selectionMode"
                     @update="updateValue({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
                     @delete="deleteRow({ type: 'existing', position: rowI })"
-                    @goto="$emit('goto', $event)" />
+                    @goto="$emit('goto', $event)"
+                    @select="$emit('select', $event)" />
         </template>
     </div>
 </template>
@@ -75,9 +77,11 @@ import { Store } from "vuex";
 
 import { tryDicts, mapMaybe } from "@/utils";
 import { AttributesMap, IResultColumnInfo } from "@/api";
-import { CombinedUserView, ICombinedValue, IRowCommon, homeSchema } from "@/state/user_view";
+import { CombinedUserView, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, homeSchema } from "@/state/user_view";
+import { AddedRowId } from "@/state/staging_changes";
 import { LocalUserView, SimpleLocalUserView, ILocalRowInfo, ILocalRow, ValueRef, RowRef } from "@/local_user_view";
 import { UserView } from "@/components";
+import { ISelectionRef } from "@/components/BaseUserView";
 import BaseUserView from "@/components/BaseUserView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
 import { IAction } from "@/components/ActionsMenu.vue";
@@ -98,19 +102,23 @@ interface IFormValueExtra {
     attributes: AttributesMap;
 }
 
+interface IFormRowExtra {
+    selectionEntry?: ISelectionRef;
+}
+
 interface IFormUserViewExtra {
     homeSchema: string | null;
 }
 
-type IFormLocalRowInfo = ILocalRowInfo<null>;
-type IFormLocalRow = ILocalRow<IFormValueExtra, null>;
+type IFormLocalRowInfo = ILocalRowInfo<IFormRowExtra>;
+type IFormLocalRow = ILocalRow<IFormValueExtra, IFormRowExtra>;
 
-class LocalFormUserView extends SimpleLocalUserView<IFormValueExtra, null, IFormUserViewExtra> {
-    constructor(store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>, oldLocal: LocalUserView<IFormValueExtra, null, IFormUserViewExtra> | null) {
+class LocalFormUserView extends LocalUserView<IFormValueExtra, IFormRowExtra, IFormUserViewExtra> {
+    constructor(store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>, oldLocal: LocalUserView<IFormValueExtra, IFormRowExtra, IFormUserViewExtra> | null) {
         super(store, uv, defaultRawValues, oldLocal);
     }
 
-    createCommonLocalValue(row: IRowCommon, localRow: IFormLocalRow, columnIndex: number, value: ICombinedValue) {
+    createCommonLocalValue(row: IRowCommon, localRow: IFormLocalRowInfo, columnIndex: number, value: ICombinedValue): IFormValueExtra {
         const columnAttrs = this.uv.columnAttributes[columnIndex];
         const attributes = Object.assign({}, this.uv.attributes, columnAttrs, row.attributes, value.attributes);
         const extra = {
@@ -119,8 +127,48 @@ class LocalFormUserView extends SimpleLocalUserView<IFormValueExtra, null, IForm
         return extra;
     }
 
-    createCommonLocalRow() {
-        return null;
+    createLocalValue(rowIndex: number, row: ICombinedRow, localRow: IFormLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: IFormValueExtra | null) {
+        const extra = this.createCommonLocalValue(row, localRow, columnIndex, value);
+        if (extra.attributes["Selectable"] && value.info !== undefined) {
+            localRow.extra.selectionEntry = {
+                entity: value.info.fieldRef.entity,
+                id: value.info.id,
+            };
+        }
+        return extra;
+    }
+
+    createAddedLocalValue(rowId: AddedRowId, row: IAddedRow, localRow: IFormLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: IFormValueExtra | null) {
+        const extra = this.createCommonLocalValue(row, localRow, columnIndex, value);
+        return extra;
+    }
+
+    createEmptyLocalValue(row: IRowCommon, localRow: IFormLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: IFormValueExtra | null) {
+        const extra = this.createCommonLocalValue(row, localRow, columnIndex, value);
+        return extra;
+    }
+
+    createCommonLocalRow(row: IRowCommon): IFormRowExtra {
+        return {};
+    }
+
+    createLocalRow(rowIndex: number, row: ICombinedRow) {
+        const extra = this.createCommonLocalRow(row);
+        if (row.mainId !== undefined) {
+            extra.selectionEntry = {
+                entity: this.uv.info.mainEntity!,
+                id: row.mainId,
+            };
+        }
+        return extra;
+    }
+
+    createAddedLocalRow(rowId: AddedRowId, row: IAddedRow) {
+        return this.createCommonLocalRow(row);
+    }
+
+    createEmptyLocalRow(row: IRowCommon) {
+        return this.createCommonLocalRow(row);
     }
 
     createLocalUserView(): IFormUserViewExtra {
@@ -141,7 +189,7 @@ const staging = namespace("staging");
         FormEntry,
     },
 })
-export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView, IFormValueExtra, null, IFormUserViewExtra>>(BaseUserView) {
+export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView, IFormValueExtra, IFormRowExtra, IFormUserViewExtra>>(BaseUserView) {
     @staging.State("currentSubmit") currentSubmit!: Promise<void> | null;
 
     @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView;

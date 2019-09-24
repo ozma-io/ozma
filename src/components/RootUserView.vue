@@ -32,7 +32,9 @@
                 <router-link v-if="!isMainView" :to="{ name: 'main' }" class="head-menu_main-menu-button material-icons">
                     home
                 </router-link>
-                <ActionsMenu v-if="uvIsReady" title="view_headline" :actions="actions" />
+                <ActionsMenu v-if="uvIsReady"
+                        title="view_headline"
+                        :actions="actions" />
                 <b-form v-if="enableFilter" v-on:submit.prevent="submitFilter()" inline class="find">
                     <b-input-group>
                         <b-form-input v-model="filterString" class="find_in form-control" :placeholder="$t('search_placeholder')" />
@@ -47,6 +49,7 @@
                           :filter="filterWords"
                           isRoot
                           :defaultValues="defaultValues"
+                          scope="root"
                           @goto="goto"
                           @update:actions="extraActions = $event"
                           @update:statusLine="statusLine = $event"
@@ -95,7 +98,7 @@ import { setHeadTitle } from "@/elements";
 import { IUserViewArguments, CombinedUserView, UserViewError, CurrentUserViews } from "@/state/user_view";
 import { CurrentChanges } from "@/state/staging_changes";
 import { IAction } from "@/components/ActionsMenu.vue";
-import { CurrentQuery, queryLocation, replaceSearch, defaultValuePrefix } from "@/state/query";
+import { CurrentQuery, IQuery, queryLocation, replaceSearch, defaultValuePrefix } from "@/state/query";
 
 const auth = namespace("auth");
 const userView = namespace("userView");
@@ -233,11 +236,7 @@ export default class RootUserView extends Vue {
         this.getRootView(args);
     }
 
-    private goto(args: IUserViewArguments) {
-        const newQuery = {
-            rootViewArgs: args,
-            search: {},
-        };
+    private goto(newQuery: IQuery) {
         const location = queryLocation(newQuery);
         this.$router.push(location);
     }

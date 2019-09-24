@@ -32,6 +32,8 @@
                 :scope="scope"
                 :selectionMode="selectionMode"
                 :indirectLinks="indirectLinks"
+                @goto="$emit('goto', $event)"
+                @select="$emit('select', $event)"
                 @update:actions="extraActions = $event"
                 @update:statusLine="$emit('update:statusLine', $event)"
                 @update:enableFilter="$emit('update:enableFilter', $event)"
@@ -92,13 +94,13 @@ export default class UserView extends Vue {
     @staging.State("currentSubmit") submitPromise!: Promise<CombinedTransactionResult[]> | null;
     @Prop({ type: Object, required: true }) args!: IUserViewArguments;
     @Prop({ type: Boolean, default: false }) isRoot!: boolean;
+    @Prop({ type: String, required: true }) scope!: ScopeName;
     @Prop({ type: Array, default: () => [] }) filter!: string[];
     @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, any>;
     // Use this user view to select and return an entry.
     @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
     // Emit events to jump to other user views. If `false` insert simple <href>s instead.
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
-    @Prop({ type: String, default: "root" }) scope!: ScopeName;
 
     private extraActions: IAction[] = [];
     private component: IUserViewConstructor<Vue> | null = null;
@@ -118,7 +120,7 @@ export default class UserView extends Vue {
     get actions() {
         const actions: IAction[] = [];
         if (this.createView !== null) {
-            actions.push({ name: this.$tc("create"), location: queryLocation(this.createView) });
+            actions.push({ name: this.$tc("create"), query: this.createView });
         }
         if (this.oldUv !== null && this.oldUv.args.source.type === "named") {
             const query: IQuery = {
@@ -137,7 +139,7 @@ export default class UserView extends Vue {
                     },
                 },
             };
-            actions.push({ name: this.$tc("edit_view"), location: queryLocation(query) });
+            actions.push({ name: this.$tc("edit_view"), query });
         }
         actions.push(...this.extraActions);
         return actions;
@@ -252,8 +254,12 @@ export default class UserView extends Vue {
                     return;
                 }
                 const id = (createOp as ICombinedInsertEntityResult).id;
-                const args = { source: oldUv.args.source, args: { id } };
-                this.$emit("goto", args);
+                const args: IUserViewArguments = { source: oldUv.args.source, args: { id } };
+                const query: IQuery = {
+                    search: {},
+                    rootViewArgs: args,
+                };
+                this.$emit("goto", query);
             })();
         }
     }

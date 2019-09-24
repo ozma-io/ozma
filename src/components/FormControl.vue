@@ -24,7 +24,9 @@
          :style="controlPanelStyle">
         <div class="nested-menu" v-if="actions.length > 0">
             <ActionsMenu title="view_headline"
-                         :actions="actions" />
+                         :actions="actions"
+                         :indirectLinks="indirectLinks"
+                         @goto="$emit('goto', $event)" />
             <div v-if="caption !== ''" class="caption-editors">
                 {{ caption }}
             </div>
@@ -95,7 +97,9 @@
                   :args="inputType.args"
                   :defaultValues="inputType.defaultValues"
                   :indirectLinks="indirectLinks"
+                  :scope="scope"
                   @update:actions="extraActions = $event"
+                  @goto="$emit('goto', $event)"
                   ref="control" />
         <!-- We don't use bootstrap-vue's b-form-input type=text because of problems with Safari
                 https://github.com/bootstrap-vue/bootstrap-vue/issues/1951
@@ -256,6 +260,7 @@ export default class FormControl extends Vue {
     @Prop({ type: String, default: ""}) caption!: string;
     @Prop({ type: Boolean, default: false }) disableColor!: boolean;
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
+    @Prop({ type: String, required: true }) scope!: string;
 
     @userView.State("entries") entriesMap!: EntriesMap;
     @userView.Action("getEntries") getEntries!: (_: IEntityRef) => Promise<void>;
@@ -304,7 +309,7 @@ export default class FormControl extends Vue {
         const actions: IAction[] = [];
         const link = attrToQueryRef(this.value.info, this.currentValue, homeSchema(this.uv.args), this.attributes["LinkedView"]);
         if (link !== null) {
-            actions.push({ name: this.$tc("follow_reference"), location: queryLocation(link) });
+            actions.push({ name: this.$tc("follow_reference"), query: link });
         }
         const createView = toUserViewRef(() => ({}), this.attributes["SelectView"]);
         if (createView !== null) {

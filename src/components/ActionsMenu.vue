@@ -1,20 +1,32 @@
 <template>
     <div :class="['actions-menu', {'actions-menu_active': showActions}]" v-if="actions.length > 0">
-        <input type="button" class="actions-menu_actions-button material-icons"  @click="actionsShow"  :value="title">
+        <input type="button" class="actions-menu_actions-button material-icons" @click="showActions = !showActions" :value="title">
         <div v-if="showActions" class="black-block" onklick>
-            <button class="black-block_button " @click="actionsHidden()"></button>
+            <button class="black-block_button " @click="showActions = false"></button>
         </div>
         <div v-show="showActions" class="div-with-actions">
-        <template  v-for="action in actions">
-            <!-- Passing v-on:click to v-bind doesn't seem to work, hence this ugly solution -->
-            <router-link v-if="'location' in action" :key="action.name" class="div-with-actions_button" variant="primary" :to="action.location">
-                {{ action.name }}
-            </router-link>
-            <a v-else-if="'href' in action" :key="action.name" class="div-with-actions_button" variant="primary" :href="action.href">
-                {{ action.name }}
-            </a>
-            <input type="button" :value="action.name" v-else-if="'callback' in action" :key="action.name" class="div-with-actions_button" variant="primary" @click="action.callback(); actionsHidden();">
-        </template>
+            <template v-for="action in actions">
+                <!-- Passing v-on:click to v-bind doesn't seem to work, hence this ugly solution -->
+                <router-link v-if="'location' in action" :key="action.name" class="div-with-actions_button" :to="action.location">
+                    {{ action.name }}
+                </router-link>
+                <a v-else-if="'href' in action" :key="action.name" class="div-with-actions_button" :href="action.href">
+                    {{ action.name }}
+                </a>
+                <UserViewLink v-else-if="'query' in action"
+                        :key="action.name"
+                        :uv="action.query"
+                        class="div-with-actions_button"
+                        @[indirectLinks?`click`:null]="$emit('goto', $event)">
+                    {{ action.name }}
+                </UserViewLink>
+                <input v-else-if="'callback' in action"
+                        :key="action.name"
+                        type="button"
+                        :value="action.name"
+                        class="div-with-actions_button"
+                        @click="action.callback(); showActions = false">
+            </template>
         </div>
     </div>
 </template>
@@ -22,6 +34,9 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { RawLocation } from "vue-router";
+
+import { IQuery } from "@/state/query";
+import UserViewLink from "@/components/UserViewLink";
 
 export interface ILocationAction {
     name: string;
@@ -33,23 +48,30 @@ export interface IHrefAction {
     href: string;
 }
 
+export interface IQueryAction {
+    name: string;
+    query: IQuery;
+}
+
 export interface ICallbackAction {
     name: string;
     callback: () => void;
 }
 
-export type IAction = ILocationAction | IHrefAction | ICallbackAction;
+export type IAction = ILocationAction | IHrefAction | IQueryAction | ICallbackAction;
 
-@Component
+@Component({
+    components: {
+        UserViewLink,
+    },
+})
 export default class ActionsMenu extends Vue {
     @Prop({ type: Array, required: true }) actions!: IAction[];
     @Prop({ type: String, required: true }) title!: string;
+    @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 
     private showActions: boolean = false;
 
-    private actionsShow() {
-        this.showActions = !this.showActions;
-    }
     private actionsHidden() {
         this.showActions = false;
     }

@@ -1,10 +1,15 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import { SchemaName, EntityName, FieldName, RowId } from "@/api";
+import { SchemaName, EntityName, FieldName, RowId, IEntityRef } from "@/api";
 import { CombinedUserView, currentValue } from "@/state/user_view";
 import { ScopeName, AddedRowId, IAddedResult } from "@/state/staging_changes";
 import { LocalUserView, RowRef, ValueRef } from "@/local_user_view";
+
+export interface ISelectionRef {
+    entity: IEntityRef;
+    id: number;
+}
 
 const staging = namespace("staging");
 
