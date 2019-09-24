@@ -1,6 +1,9 @@
 <template>
     <!-- When you change anything here, also make corresponding changes in TableFixedRow! -->
-    <tr :style="localRow.extra.style" :class="['table-tr', localRow.extra.selected ? 'selected' : 'none_selected']">
+    <tr :style="localRow.extra.style" :class="['table-tr',
+                localRow.extra.selected ? 'selected' : 'none_selected',
+                {'table-tr-new': from==='new' },
+                ]">
         <td v-if="from !== 'new'" @click="$emit('select', $event)"
                 :class="[{ 'hide_content': showFixedRow }, 'fixed-column', 'checkbox-cells']">
             <!-- Key is needed to force checkbox re-render when `selected` changes. Not sure why. -->
@@ -53,7 +56,7 @@ export default class TableRow extends Vue {
 /* Current Z layout:
 
 * FormControl           (200)
-* Selected fixed cell   (20) 
+* Selected fixed cell   (20)
 * Selected cell         (15)
 
 */
@@ -75,6 +78,9 @@ export default class TableRow extends Vue {
         border-right: solid 1px var(--NavigationBackColor);
         height: 100% @-moz-document url-prefix();
     }
+    .table-tr-new > td {
+        height: 26px;
+    }
     td {
         height: 100%;
         border: solid 1px var(--NavigationBackColor);
@@ -82,7 +88,6 @@ export default class TableRow extends Vue {
         padding-left: 3px;
         overflow-wrap: break-word; /* перенос по словам */
         overflow: hidden;
-        height: 26px;
     }
     .editing_style {
         z-index: 200 !important; /* чтобы FormControl(расположен в ячейке) отображался поверх таблицы */
@@ -136,7 +141,7 @@ export default class TableRow extends Vue {
             left: auto !important;
         }
     }
-    
+
     @media screen and (max-device-width: 813px), screen and (orientation: portrait) {
         .hide_content > a, .hide_content > input {
             display: none;
