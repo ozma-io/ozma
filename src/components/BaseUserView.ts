@@ -2,7 +2,7 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { SchemaName, EntityName, FieldName, RowId } from "@/api";
-import { CombinedUserView } from "@/state/user_view";
+import { CombinedUserView, currentValue } from "@/state/user_view";
 import { ScopeName, AddedRowId, IAddedResult } from "@/state/staging_changes";
 import { LocalUserView, RowRef, ValueRef } from "@/local_user_view";
 
@@ -84,13 +84,14 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
             });
             await Promise.all(this.local.emptyRow!.row.values.map((cell, colI) => {
                 const columnInfo = this.uv.info.columns[colI];
-                if (columnInfo.mainField !== null && cell.value !== undefined) {
+                const currValue = currentValue(cell);
+                if (columnInfo.mainField !== null && currValue !== undefined) {
                     return this.setAddedField({
                         schema: entity.schema,
                         entity: entity.name,
                         field: columnInfo.mainField.name,
                         id: res.id,
-                        value: colI === ref.column ? rawValue : cell.rawValue,
+                        value: colI === ref.column ? rawValue : currValue,
                     });
                 } else {
                     return Promise.resolve();

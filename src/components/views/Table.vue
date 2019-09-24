@@ -36,6 +36,8 @@
                     :locked="editingLocked"
                     :disableColor="editing.ref.type === 'new'"
                     :uv="uv"
+                    :indirectLinks="indirectLinks"
+                    :scope="scope"
                     autofocus
                     @update="updateCurrentValue" />
         </div>
@@ -77,7 +79,9 @@
                                 :columnIndexes="fixedRowColumnIndexes"
                                 :localUv="local.extra"
                                 from="new"
-                                @cellClick="clickCell({ type: 'new', column: arguments[0] }, arguments[1])" />
+                                :indirectLinks="indirectLinks"
+                                @cellClick="clickCell({ type: 'new', column: arguments[0] }, arguments[1])"
+                                @goto="$emit('goto', $event)" />
                         <TableRow
                                 :row="local.emptyRow.row"
                                 :localRow="local.emptyRow.local"
@@ -85,7 +89,9 @@
                                 :localUv="local.extra"
                                 :showFixedRow="showFixedRow"
                                 from="new"
-                                @cellClick="clickCell({ type: 'new', column: arguments[0] }, arguments[1])" />
+                                :indirectLinks="indirectLinks"
+                                @cellClick="clickCell({ type: 'new', column: arguments[0] }, arguments[1])"
+                                @goto="$emit('goto', $event)" />
                     </template>
                     <template v-for="(rowId, rowIndex) in uv.newRowsPositions">
                         <TableFixedRow v-if="showFixedRow"
@@ -95,8 +101,10 @@
                                 :columnIndexes="fixedRowColumnIndexes"
                                 :localUv="local.extra"
                                 from="added"
+                                :indirectLinks="indirectLinks"
                                 @select="selectRow({ type: 'added', position: rowIndex }, $event)"
-                                @cellClick="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])" />
+                                @cellClick="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
+                                @goto="$emit('goto', $event)" />
                         <TableRow :key="`new-${rowId}`"
                                 :row="uv.newRows[rowId]"
                                 :localRow="local.newRows[rowId]"
@@ -104,8 +112,10 @@
                                 :localUv="local.extra"
                                 :showFixedRow="showFixedRow"
                                 from="added"
+                                :indirectLinks="indirectLinks"
                                 @select="selectRow({ type: 'added', position: rowIndex }, $event)"
-                                @cellClick="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])" />
+                                @cellClick="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
+                                @goto="$emit('goto', $event)" />
                     </template>
                     <template v-for="(rowI, rowIndex) in shownRowPositions">
                         <TableFixedRow v-if="showFixedRow"
@@ -114,16 +124,20 @@
                                 :localRow="local.rows[rowI]"
                                 :columnIndexes="fixedRowColumnIndexes"
                                 :localUv="local.extra"
+                                :indirectLinks="indirectLinks"
                                 @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
-                                @cellClick="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])" />
+                                @cellClick="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
+                                @goto="$emit('goto', $event)" />
                         <TableRow :key="rowI"
                                 :row="uv.rows[rowI]"
                                 :localRow="local.rows[rowI]"
                                 :columnIndexes="columnIndexes"
                                 :localUv="local.extra"
                                 :showFixedRow="showFixedRow"
+                                :indirectLinks="indirectLinks"
                                 @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
-                                @cellClick="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])" />
+                                @cellClick="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
+                                @goto="$emit('goto', $event)" />
                     </template>
                 </tbody>
             </table>
@@ -139,14 +153,15 @@ import { namespace } from "vuex-class";
 import { Store } from "vuex";
 
 import { RecordSet, ObjectSet, tryDicts, mapMaybe, deepEquals } from "@/utils";
+import { valueIsNull } from "@/values";
 import { IResultColumnInfo } from "@/api";
 import {
     ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, CombinedUserView, homeSchema, valueToPunnedText,
 } from "@/state/user_view";
+import { UserView } from "@/components";
 import { AutoSaveLock, AddedRowId } from "@/state/staging_changes";
 import { IQuery, attrToQuerySelf, attrToQueryRef } from "@/state/query";
 import { LocalUserView, ILocalRowInfo, ILocalRow, ValueRef, RowRef, RowPositionRef, equalRowPositionRef } from "@/local_user_view";
-import { UserView } from "@/components";
 import BaseUserView from "@/components/BaseUserView";
 import TableRow from "@/components/views/table/TableRow.vue";
 import TableFixedRow from "@/components/views/table/TableFixedRow.vue";
@@ -595,7 +610,7 @@ const getCsvString = (str: string): string => {
 };
 
 const isEmptyRow = (row: IRowCommon) => {
-    return row.values.every(cell => cell.value === null || cell.value === undefined || cell.info === null);
+    return row.values.every(cell => valueIsNull(cell.rawValue) || cell.info === null);
 };
 
 const staging = namespace("staging");

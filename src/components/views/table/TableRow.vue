@@ -11,14 +11,16 @@
         </td>
         <td v-else class="fixed-column checkbox-cells"></td>
         <td v-if="localUv.hasRowLinks" :class="[{ 'hide_content': showFixedRow },'fixed-column', 'opemform-cells']">
-            <UserViewLink v-if="localRow.extra.link !== undefined" :uv="localRow.extra.link">
+            <UserViewLink v-if="localRow.extra.link !== undefined"
+                    :uv="localRow.extra.link"
+                    @[indirectLinks?`click`:null]="$emit('goto', $event)">
                 ⤢
             </UserViewLink>
         </td>
         <TableCell v-for="i in columnIndexes"
                 :key="i"
                 @cellClick="$emit('cellClick', arguments[0], arguments[1])"
-                @follow="$emit('follow', $event)"
+                @goto="$emit('goto', $event)"
                 :value="row.values[i]"
                 :localValue="localRow.values[i]"
                 :columnPosition="i"
