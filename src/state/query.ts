@@ -166,8 +166,11 @@ export const attrToQueryRef = (update: IValueInfo | undefined | null, value: any
     if (ret !== null) {
         const args = ret.rootViewArgs.args;
         if (args !== null) {
-            if (!("id" in args) && value && update && update.field !== null && update.field.fieldType.type === "reference") {
-                args.id = value;
+            if (!("id" in args) && value !== null && value !== undefined && update && update.field !== null && update.field.fieldType.type === "reference") {
+                const id = Number(value);
+                if (!Number.isNaN(id)) {
+                    args.id = id;
+                }
             }
         }
     }
