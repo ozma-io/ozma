@@ -1,7 +1,6 @@
 <i18n>
     {
         "en": {
-            "no_value": "(No value)",
             "yes": "Yes",
             "no": "No",
             "invalid_uv": "Nested user view rows should be JSON objects with 'ref' and 'args' defined",
@@ -9,7 +8,6 @@
             "follow_reference": "Follow reference"
         },
         "ru": {
-            "no_value": "(Пусто)",
             "yes": "Да",
             "no": "Нет",
             "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'ref' и 'args'",
@@ -21,10 +19,10 @@
 
 <template>
     <div :class="['form-control-panel', {
-                 'form-control-panel-hidden': inputType.name === 'extended_select',
                  'form-control-panel_editor': inputType.name === 'codeeditor',
-                 }]" :style="controlPanelStyle">
-        <div class="nested-menu" v-if="actions.length > 0 && inputType.name !== 'extended_select'">
+                 }]"
+         :style="controlPanelStyle">
+        <div class="nested-menu" v-if="actions.length > 0">
             <ActionsMenu title="view_headline"
                          :actions="actions" />
             <div v-if="caption !== ''" class="caption-editors">
@@ -38,31 +36,47 @@
             {{ inputType.text }}
         </template>
         <input type="checkbox" v-else-if="inputType.name === 'check'"
-                         :value="currentValue"
-                         :class="['form-control-panel_checkbox',
-                                 {'form-control-panel_checkbox_error': value.erroredOnce,
-                                  'form-control-panel_checkbox_req': isAwaited && !disableColor}]"
-                         @input="updateValue($event.target.value)"
-                         :disabled="isDisabled"
-                         ref="control" />
+               :value="currentValue"
+               :class="['form-control-panel_checkbox',
+                       {'form-control-panel_checkbox_error': value.erroredOnce,
+                       'form-control-panel_checkbox_req': isAwaited && !disableColor}]"
+               @input="updateValue($event.target.value)"
+               :disabled="isDisabled"
+               ref="control" />
         <textarea v-else-if="inputType.name === 'textarea'"
-                         :style="inputType.style"
-                         :value="textValue"
-                         :class="['form-control-panel_textarea', 'multilines',
-                                 {'form-control-panel_textarea_error': value.erroredOnce,
-                                  'form-control-panel_textarea_req': isAwaited && !disableColor}]"
-                         @input="updateValue($event.target.value)"
-                         :disabled="isDisabled"
-                         :rows="3"
-						 wrap="soft"
-                         :max-rows="6"
-                         :required="!isNullable"
-                         ref="control" />
-        <SelectionField v-else-if="inputType.name === 'extended_select'"
-                        :value="currentValue"
-                        :options="inputType.options"
-                        @update:value="updateValue($event)"
-                        ref="control" />
+                  :style="inputType.style"
+                  :value="textValue"
+                  :class="['form-control-panel_textarea', 'multilines',
+                          {'form-control-panel_textarea_error': value.erroredOnce,
+                          'form-control-panel_textarea_req': isAwaited && !disableColor}]"
+                  @input="updateValue($event.target.value)"
+                  :disabled="isDisabled"
+                  :rows="3"
+                  wrap="soft"
+                  :max-rows="6"
+                  :required="!isNullable"
+                  ref="control" />
+        <MultiSelect v-else-if="inputType.name === 'select'"
+                     :value="currentValue"
+                     :options="inputType.options"
+                     :height="attributes['ControlHeight']"
+                     single
+                     @update:value="updateValue($event)"
+                     ref="control">
+            <template v-slot:singleValue="select">
+                <span v-if="select.valueOption.meta && select.valueOption.meta.link"
+                  :style="select.listValueStyle"
+                  class="single_value">
+                    <UserViewLink :uv="select.valueOption.meta.link"
+                                  @[indirectLinks?`click`:null]="$emit('goto', $event)">
+                        {{select.valueOption.label}}
+                    </UserViewLink>
+                </span>
+                <span v-else
+                      :style="select.listValueStyle"
+                      class="single_value">{{select.valueOption.label}}</span>
+            </template>
+        </MultiSelect>
         <Calendar v-else-if="inputType.name === 'calendar'"
                   :value="value.value"
                   :textValue="textValue"
@@ -78,29 +92,11 @@
                     :autofocus="autofocus"
                     ref="control" />
         <UserView v-else-if="inputType.name === 'userview'"
-                    :args="inputType.args"
-                    :defaultValues="inputType.defaultValues"
-                    :indirectLinks="indirectLinks"
-                    @update:actions="extraActions = $event"
-                    ref="control" />
-        <div v-else-if="inputType.name === 'select'" class="select-container">
-            <select
-                    :value="currentValue"
-                    :class="['form-control-panel_select',
-                            {'form-control-panel_select_error': value.erroredOnce,
-                            'form-control-panel_select_req': isAwaited && !disableColor}]"
-                    @input="updateValue($event.target.value)"
-                    :disabled="isDisabled"
-                    ref="control">
-                <option v-for="option in inputType.options" :key="option.value" :value="option.value">
-                    {{ option.text }}
-                </option>
-            </select>
-
-            <div class="select-container-after">
-
-            </div>
-        </div>
+                  :args="inputType.args"
+                  :defaultValues="inputType.defaultValues"
+                  :indirectLinks="indirectLinks"
+                  @update:actions="extraActions = $event"
+                  ref="control" />
         <!-- We don't use bootstrap-vue's b-form-input type=text because of problems with Safari
                 https://github.com/bootstrap-vue/bootstrap-vue/issues/1951
         -->
@@ -145,6 +141,7 @@ import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType,
 import { IAction } from "@/components/ActionsMenu.vue";
 import { IValueInfo, IUserViewArguments, CombinedUserView, EntriesMap, CurrentUserViews, homeSchema, ICombinedValue, currentValue } from "@/state/user_view";
 import { IQuery, attrToQueryRef, queryLocation } from "@/state/query";
+import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 
 interface ITextType {
     name: "text";
@@ -165,20 +162,6 @@ interface ICodeEditorType {
 interface ISelectType {
     name: "select";
     options: ISelectOption[];
-}
-
-interface ISelectOption {
-    text: string;
-    value: string;
-}
-
-interface IExtendedSelectType {
-    name: "extended_select";
-    options: IExtendedSelectOption[];
-}
-
-interface IExtendedSelectOption extends ISelectOption {
-    link: IQuery | null;
 }
 
 interface ICheckType {
@@ -204,7 +187,7 @@ interface ICalendar {
     showTime: boolean;
 }
 
-type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | IExtendedSelectType | ICheckType | IUserViewType | IErrorType | ICalendar;
+type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | ICheckType | IUserViewType | IErrorType | ICalendar;
 
 const userView = namespace("userView");
 
@@ -259,7 +242,7 @@ const toUserViewRef = (makeDefaultArgs: () => Record<string, any> | null, value:
 @Component({
     components: {
         CodeEditor: () => import("@/components/CodeEditor.vue"),
-        SelectionField: () => import("@/components/SelectionField.vue"),
+        MultiSelect: () => import("@/components/multiselect/MultiSelect.vue"),
         Calendar: () => import("@/components/Calendar.vue"),
     },
 })
@@ -336,7 +319,8 @@ export default class FormControl extends Vue {
 
     private get controlPanelStyle() {
         const heightAttr = this.attributes["ControlHeight"];
-        return heightAttr ? { height: `${heightAttr}px`, maxHeight: "initial" } : {};
+        const isSelect = this.inputType.name === "select";
+        return heightAttr && !isSelect ? { height: `${heightAttr}px`, maxHeight: "initial" } : {};
     }
 
     private controlStyle(height?: string): Record<string, any> {
@@ -383,21 +367,21 @@ export default class FormControl extends Vue {
                     if (entries === undefined || entries instanceof Promise) {
                         return { name: "text", type: "number", style: this.controlStyle() };
                     } else {
-                        const select = Object.entries(entries).map(([id, name]) => ({ text: name, value: String(id), link: attrToQueryRef(this.value.info, id, homeSchema(this.uv.args), this.attributes["LinkedView"]) }));
+                        const select = Object.entries(entries).map(([id, name]) => ({ label: name, value: Number(id), meta: { link: attrToQueryRef(this.value.info, id, homeSchema(this.uv.args), this.attributes["LinkedView"]) } }));
                         return {
-                            name: "extended_select",
-                            options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "", link: null }] : []), ...select],
+                            name: "select",
+                            options: select,
                         };
                     }
                 case "enum":
                     return {
                         name: "select",
-                        options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), ...fieldType.values.map(x => ({ text: x, value: x }))],
+                        options: fieldType.values.map(x => ({ label: x, value: x })),
                     };
                 case "bool":
                     return {
                         name: "select",
-                        options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
+                        options: [{ label: this.$tc("yes"), value: "true" }, { label: this.$tc("no"), value: "false" }],
                     };
                 case "int":
                     return { name: "text", type: "number", style: this.controlStyle() };
@@ -412,7 +396,7 @@ export default class FormControl extends Vue {
                 case "bool":
                     return {
                         name: "select",
-                        options: [...(this.isNullable ? [{ text: this.$tc("no_value"), value: "" }] : []), { text: this.$tc("yes"), value: "true" }, { text: this.$tc("no"), value: "false" }],
+                        options: [  {label: this.$tc("yes"), value: "true" }, { label: this.$tc("no"), value: "false" }],
                     };
                 case "int":
                     return { name: "text", type: "number", style: this.controlStyle() };
@@ -492,15 +476,10 @@ export default class FormControl extends Vue {
         max-height: 60%;
         min-width: 14rem;
         box-sizing: content-box;
-        display: flex;
-        flex-direction: column;
     }
     .form-control-panel_editor {
         width: 60%;
         height: 60%;
-    }
-    .form-control-panel-hidden {
-        overflow: hidden;
     }
     .form-control-panel_select {
         border-color: var(--NavigationBackColor);
@@ -528,40 +507,6 @@ export default class FormControl extends Vue {
         overflow-x: auto !important;
         max-height: 40px;
     }
-    .select-container {
-        display: flex;
-        height: calc(2em + 6px);
-    }
-    .select-container:after {
-        display: inline-block;
-        margin-left: .255em;
-        vertical-align: .255em;
-        content: "";
-        border-top: .25em solid;
-        border-right: .25em solid transparent;
-        border-bottom: 0;
-        border-left: .25em solid transparent;
-        color: black;
-        margin-left: -1.3em;
-        margin-top: 1.3em;
-        z-index:1;
-    }
-    .select-container-after {
-        width: 0px !important;
-        z-index:1;
-    }
-    .select-container-after:after {
-        display: inline-block;
-        margin-left: .255em;
-        vertical-align: .255em;
-        content: "";
-        border-right: .25em solid transparent;
-        border-bottom: .25em solid;
-        border-left: .25em solid transparent;
-        color: black;
-        margin-bottom: -0.3em;
-        margin-left: -1.3em;
-    }
     .form-control-panel_select, .form-control-panel_checkbox, .form-control-panel_textarea {
         border-radius: 0;
         box-shadow: none;
@@ -585,12 +530,6 @@ export default class FormControl extends Vue {
         @media screen and (max-device-width: 480px) {
             .form-control-panel-hidden{
                 margin-top: 7px;
-                position: sticky;
-            }
-            .select-container:after {
-                position: sticky;
-            }
-            .select-container-after {
                 position: sticky;
             }
             .nested-menu {
