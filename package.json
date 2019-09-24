@@ -10,12 +10,14 @@
     "storybook:serve": "vue-cli-service storybook:serve -p 8000 -c config/storybook"
   },
   "dependencies": {
+    "@types/ramda": "^0.26.22",
     "ace-builds": "^1.4.5",
     "bootstrap-vue": "^2.0.0-rc.28",
     "core-js": "^2.6.5",
     "dependencies": "0.0.1",
     "jwt-decode": "^2.2.0",
     "moment": "^2.24.0",
+    "ramda": "^0.26.1",
     "uuid": "^3.3.2",
     "v-click-outside": "deiru2k/v-click-outside#a82dab57d544fa46e127da98418a3c30f4bd02db",
     "vue": "^2.6.10",
