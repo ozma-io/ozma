@@ -38,22 +38,31 @@
                     :row="showEmptyRow ? local.emptyRow.row : uv.newRows[uv.newRowsPositions[0]]"
                     :localRow="showEmptyRow ? local.emptyRow.local : local.newRows[uv.newRowsPositions[0]]"
                     :locked="addedLocked"
-                    @update="updateValue(showEmptyRow ? { type: 'new', column: arguments[0] } : { type: 'added', id: uv.newRowsPositions[0], column: arguments[0] }, arguments[1])" />
+                    :indirectLinks="indirectLinks"
+                    :scope="scope"
+                    @update="updateValue(showEmptyRow ? { type: 'new', column: arguments[0] } : { type: 'added', id: uv.newRowsPositions[0], column: arguments[0] }, arguments[1])"
+                    @goto="$emit('goto', $event)" />
             <FormEntry v-for="rowId in newRowsPositions" :key="`added-${rowId}`"
                     :uv="uv"
                     :blocks="blocks"
                     :row="uv.newRows[rowId]"
                     :localRow="local.newRows[rowId]"
                     :locked="addedLocked"
+                    :indirectLinks="indirectLinks"
+                    :scope="scope"
                     @update="updateValue({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
-                    @delete="deleteRow({ type: 'added', id: rowId })" />
+                    @delete="deleteRow({ type: 'added', id: rowId })"
+                    @goto="$emit('goto', $event)" />
             <FormEntry v-for="rowI in rowPositions" :key="rowI"
                     :uv="uv"
                     :blocks="blocks"
                     :row="uv.rows[rowI]"
                     :localRow="local.rows[rowI]"
+                    :indirectLinks="indirectLinks"
+                    :scope="scope"
                     @update="updateValue({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
-                    @delete="deleteRow({ type: 'existing', position: rowI })" />
+                    @delete="deleteRow({ type: 'existing', position: rowI })"
+                    @goto="$emit('goto', $event)" />
         </template>
     </div>
 </template>

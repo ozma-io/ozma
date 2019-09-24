@@ -92,8 +92,8 @@ export default class UserView extends Vue {
     @staging.State("currentSubmit") submitPromise!: Promise<CombinedTransactionResult[]> | null;
     @Prop({ type: Object, required: true }) args!: IUserViewArguments;
     @Prop({ type: Boolean, default: false }) isRoot!: boolean;
-    @Prop({ type: Array, default: [] }) filter!: string[];
-    @Prop({ type: Object, default: {} }) defaultValues!: Record<string, any>;
+    @Prop({ type: Array, default: () => [] }) filter!: string[];
+    @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, any>;
     // Use this user view to select and return an entry.
     @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
     // Emit events to jump to other user views. If `false` insert simple <href>s instead.

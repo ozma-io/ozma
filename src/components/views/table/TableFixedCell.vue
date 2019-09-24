@@ -4,7 +4,9 @@
     <div @click="$emit('cellClick', columnPosition, $event)"
             :style="Object.assign({}, localValue.style, column.style)">
         <p>
-            <UserViewLink v-if="localValue.link !== undefined" :uv="localValue.link" @[indirectLinks?`click`:null]="$emit('follow', localValue.link)">
+            <UserViewLink v-if="localValue.link !== undefined"
+                    :uv="localValue.link"
+                    @[indirectLinks?`click`:null]="$emit('goto', $event)">
                 <b-checkbox v-if="typeof value.value === 'boolean'"
                         :checked="value.value"
                         class="div_checkbox"

@@ -9,7 +9,7 @@ import {
     IReferenceFieldType, SchemaName, EntityName, RowId, FieldName, AttributeName,
     ValueType, FieldType, AttributesMap,
 } from "@/api";
-import { IUpdatedValue, FieldsInfo, valueToText, insertFieldsInfo, equalEntityRef, valueFromRaw } from "@/values";
+import { IUpdatedValue, FieldsInfo, valueToText, insertFieldsInfo, equalEntityRef, valueFromRaw, valueIsNull } from "@/values";
 import { CurrentChanges, UpdatedValues, IEntityChanges, IAddedEntry, AddedRowId } from "@/state/staging_changes";
 
 export interface IAnonymousUserView {
@@ -36,6 +36,9 @@ export interface IValueInfo {
 export interface ICombinedValue extends IExecutedValue {
     // `undefined` here means that value didn't pass validation
     value: any;
+    // See `values.ts` for explanation of this. The idea is to use `rawValue` everywhere when it's defined,
+    // unless you need validated value.
+    // Even better, use `currentValue()`.
     rawValue?: any;
     erroredOnce?: boolean;
     initialValue?: any;
@@ -131,23 +134,28 @@ const getEntitySummaries = (entries: EntriesMap, fieldType: FieldType) => {
     return null;
 };
 
-// Expects "updated" to exist
 const setUpdatedPun = (entitySummaries: Record<RowId, string>, value: ICombinedValue) => {
-    if (value.value !== null) {
-        value.pun = entitySummaries[value.value];
-        console.assert(value.pun !== undefined);
-    } else {
+    const ref = currentValue(value);
+    if (valueIsNull(ref)) {
         value.pun = "";
+    } else {
+        const pun = entitySummaries[ref];
+        if (pun === undefined) {
+            value.pun = String(ref);
+        } else {
+            value.pun = pun;
+        }
     }
 };
 
 // Returns `null` when there's no pun. Returns `undefined` when pun cannot be resolved now.
 const setOrRequestUpdatedPun = (context: { dispatch: Dispatch, state: IUserViewState }, value: ICombinedValue, fieldType: FieldType) => {
     const { dispatch, state } = context;
+    const ref = currentValue(value);
 
     // We don't use `getEntitySummaries` because we request new entries only if Promise wasn't found -- for performance.
     if (fieldType.type === "reference") {
-        if (value.value === null || value.value === undefined) {
+        if (valueIsNull(ref)) {
             value.pun = "";
         } else {
             const schemaSummaries = state.entries[fieldType.entity.schema];
@@ -155,8 +163,12 @@ const setOrRequestUpdatedPun = (context: { dispatch: Dispatch, state: IUserViewS
                 const entitySummaries = schemaSummaries[fieldType.entity.name];
                 if (entitySummaries !== undefined) {
                     if (!(entitySummaries instanceof Promise)) {
-                        value.pun = entitySummaries[value.value];
-                        console.assert(value.pun !== undefined);
+                        const pun = entitySummaries[ref];
+                        if (pun === undefined) {
+                            value.pun = String(ref);
+                        } else {
+                            value.pun = pun;
+                        }
                         return;
                     }
                 } else {
@@ -172,12 +184,15 @@ const setOrRequestUpdatedPun = (context: { dispatch: Dispatch, state: IUserViewS
 };
 
 const clearUpdatedValue = (value: ICombinedValue) => {
+    console.assert(value.initialValue !== undefined);
+    value.value = value.initialValue;
     if ("pun" in value) {
         console.assert(value.initialPun !== undefined);
         value.pun = value.initialPun;
     }
-    console.assert(value.initialValue !== undefined);
-    value.value = value.initialValue;
+    if ("rawValue" in value) {
+        value.rawValue = value.value;
+    }
     if ("erroredOnce" in value) {
         value.erroredOnce = false;
     }
@@ -236,6 +251,8 @@ export const newEmptyRow = (store: Store<any>, uv: CombinedUserView, defaultRawV
 
     return row;
 };
+
+export const currentValue = (value: ICombinedValue) => "rawValue" in value ? value.rawValue : value.value;
 
 // For each entity contains array of all accessible entries (main fields) identified by id
 export type Entries = Record<RowId, string>;
@@ -414,10 +431,6 @@ export class CombinedUserView {
                         }
                     }
 
-                    if (value.rawValue === undefined) {
-                        value.rawValue = value.value;
-                    }
-
                     const valueRef = {
                         index: rowI,
                         column: colI,
@@ -594,7 +607,7 @@ export const valueToPunnedText = (valueType: ValueType, value: ICombinedValue): 
     if (value.pun !== undefined) {
         return value.pun;
     } else {
-        return valueToText(valueType, value.value);
+        return valueToText(valueType, currentValue(value));
     }
 };
 

@@ -11,14 +11,17 @@
                 </div>
                 <div v-else class="fixed-column"></div>
                 <div v-if="localUv.hasRowLinks" class="fixed-column">
-                    <UserViewLink v-if="localRow.extra.link !== undefined" :uv="localRow.extra.link">
+                    <UserViewLink v-if="localRow.extra.link !== undefined"
+                            :uv="localRow.extra.link"
+                            :indirectLinks="indirectLinks"
+                            @[indirectLinks?`click`:null]="$emit('goto', $event)">
                         ⤢
                     </UserViewLink>
                 </div>
                 <TableFixedCell v-for="i in columnIndexes"
                         :key="i"
                         @cellClick="$emit('cellClick', ...arguments)"
-                        @follow="$emit('follow', $event)"
+                        @goto="$emit('goto', $event)"
                         :value="row.values[i]"
                         :localValue="localRow.values[i]"
                         :columnPosition="i"

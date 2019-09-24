@@ -4,7 +4,7 @@
             "no_value": "(No value)",
             "yes": "Yes",
             "no": "No",
-            "invalid_uv": "Nested user view rows should be JSON objects with 'name' and 'args' defined",
+            "invalid_uv": "Nested user view rows should be JSON objects with 'ref' and 'args' defined",
             "select_view": "Select in view",
             "follow_reference": "Follow reference"
         },
@@ -12,7 +12,7 @@
             "no_value": "(Пусто)",
             "yes": "Да",
             "no": "Нет",
-            "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'name' и 'args'",
+            "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'ref' и 'args'",
             "select_view": "Выбрать из представления",
             "follow_reference": "Перейти к сущности"
         }
@@ -38,7 +38,7 @@
             {{ inputType.text }}
         </template>
         <input type="checkbox" v-else-if="inputType.name === 'check'"
-                         :value="value.rawValue"
+                         :value="currentValue"
                          :class="['form-control-panel_checkbox',
                                  {'form-control-panel_checkbox_error': value.erroredOnce,
                                   'form-control-panel_checkbox_req': isAwaited && !disableColor}]"
@@ -59,7 +59,7 @@
                          :required="!isNullable"
                          ref="control" />
         <SelectionField v-else-if="inputType.name === 'extended_select'"
-                        :value="value.rawValue"
+                        :value="currentValue"
                         :options="inputType.options"
                         @update:value="updateValue($event)"
                         ref="control" />
@@ -80,11 +80,12 @@
         <UserView v-else-if="inputType.name === 'userview'"
                     :args="inputType.args"
                     :defaultValues="inputType.defaultValues"
+                    :indirectLinks="indirectLinks"
                     @update:actions="extraActions = $event"
                     ref="control" />
         <div v-else-if="inputType.name === 'select'" class="select-container">
             <select
-                    :value="value.rawValue"
+                    :value="currentValue"
                     :class="['form-control-panel_select',
                             {'form-control-panel_select_error': value.erroredOnce,
                             'form-control-panel_select_req': isAwaited && !disableColor}]"
@@ -142,7 +143,7 @@ import { namespace } from "vuex-class";
 import { valueToText, valueIsNull } from "@/values";
 import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef, IEntityRef } from "@/api";
 import { IAction } from "@/components/ActionsMenu.vue";
-import { IValueInfo, IUserViewArguments, CombinedUserView, EntriesMap, CurrentUserViews, homeSchema, ICombinedValue } from "@/state/user_view";
+import { IValueInfo, IUserViewArguments, CombinedUserView, EntriesMap, CurrentUserViews, homeSchema, ICombinedValue, currentValue } from "@/state/user_view";
 import { IQuery, attrToQueryRef, queryLocation } from "@/state/query";
 
 interface ITextType {
@@ -271,6 +272,7 @@ export default class FormControl extends Vue {
     @Prop({ type: CombinedUserView }) uv!: CombinedUserView;
     @Prop({ type: String, default: ""}) caption!: string;
     @Prop({ type: Boolean, default: false }) disableColor!: boolean;
+    @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 
     @userView.State("entries") entriesMap!: EntriesMap;
     @userView.Action("getEntries") getEntries!: (_: IEntityRef) => Promise<void>;
@@ -298,8 +300,13 @@ export default class FormControl extends Vue {
         return this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable;
     }
 
+    get currentValue() {
+        return currentValue(this.value);
+    }
+
     get isAwaited() {
-        return !this.isNullable && valueIsNull(this.value.rawValue);
+        // We use `value.value` here to highlight unvalidated values.
+        return !this.isNullable && valueIsNull(this.value.value);
     }
 
     get isDisabled() {
@@ -307,7 +314,7 @@ export default class FormControl extends Vue {
     }
 
     get textValue() {
-        return valueToText(this.type, this.value.rawValue);
+        return valueToText(this.type, this.currentValue);
     }
 
     get actions() {
@@ -349,7 +356,7 @@ export default class FormControl extends Vue {
                 } else {
                     return { id: this.value.info.id };
                 }
-            }, this.value.rawValue);
+            }, this.currentValue);
 
             if (nestedRef === null) {
                 return { name: "error", text: this.$tc("invalid_uv") };
@@ -428,7 +435,7 @@ export default class FormControl extends Vue {
             throw Error("No update entity defined in view");
         }
 
-        if (this.value.rawValue !== newValue) {
+        if (this.currentValue !== newValue) {
             this.$emit("update", newValue);
         }
     }

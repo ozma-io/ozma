@@ -28,6 +28,9 @@
                                 :type="fieldInfo.columnInfo.valueType"
                                 :locked="locked"
                                 :uv="uv"
+                                :indirectLinks="indirectLinks"
+                                :scope="scope"
+                                @goto="$emit('goto', $event)"
                                 @update="$emit('update', fieldInfo.index, $event)" />
                     </div>
                 </template>
@@ -66,6 +69,8 @@ export default class FormEntry extends Vue {
     @Prop({ type: Object, required: true }) row!: any;
     @Prop({ type: Object, required: true }) localRow!: any;
     @Prop({ type: Boolean, default: false }) locked!: boolean;
+    @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
+    @Prop({ type: String, required: true }) scope!: string;
 }
 </script>
 

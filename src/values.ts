@@ -49,13 +49,14 @@ export const equalFieldRef = (a: IFieldRef, b: IFieldRef) => {
 };
 
 export interface IUpdatedValue {
+    // "edited" value - may come in several different types, like parsed moment date or a string for a "datetime" field.
     rawValue: any;
     // `undefined` here means that value didn't pass validation
     value: any;
     erroredOnce: boolean; // failed on submit
 }
 
-// Should be in sync with valueFromRaw and be idempotent.
+// Should be in sync with `valueFromRaw` and be idempotent.
 export const valueToText = (valueType: ValueType, value: any): any => {
     if (typeof value === "string") {
         return value;

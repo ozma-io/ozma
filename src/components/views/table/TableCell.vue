@@ -11,7 +11,9 @@
                 'editing_style': localValue.editing !== undefined,
                 'disable_cell': value.info === undefined && from !== 'existing'}]">
         <p>
-            <UserViewLink v-if="localValue.link !== undefined" :uv="localValue.link" @[indirectLinks?`click`:null]="$emit('follow', localValue.link)">
+            <UserViewLink v-if="localValue.link !== undefined"
+                    :uv="localValue.link"
+                    @[indirectLinks?`click`:null]="$emit('goto', $event)">
                 <b-checkbox v-if="typeof value.value === 'boolean'"
                         :checked="value.value"
                         class="div_checkbox"
@@ -51,7 +53,8 @@ export default class TableCell extends Vue {
     @Prop({ type: String, default: "existing" }) from!: string;
 
     get isNull() {
-        return valueIsNull(this.value.rawValue);
+        // We use `value.value` here to highlight unvalidated values.
+        return valueIsNull(this.value.value);
     }
 }
 </script>
