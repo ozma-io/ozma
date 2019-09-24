@@ -304,7 +304,7 @@ export default class FormControl extends Vue {
 
     get actions() {
         const actions: IAction[] = [];
-        const link = attrToQueryRef(this.value.info, this.value, homeSchema(this.uv.args), this.attributes["LinkedView"]);
+        const link = attrToQueryRef(this.value.info, this.currentValue, homeSchema(this.uv.args), this.attributes["LinkedView"]);
         if (link !== null) {
             actions.push({ name: this.$tc("follow_reference"), location: queryLocation(link) });
         }

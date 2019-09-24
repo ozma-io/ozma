@@ -156,7 +156,7 @@ import { RecordSet, ObjectSet, tryDicts, mapMaybe, deepEquals } from "@/utils";
 import { valueIsNull } from "@/values";
 import { IResultColumnInfo } from "@/api";
 import {
-    ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, CombinedUserView, homeSchema, valueToPunnedText,
+    ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, CombinedUserView, homeSchema, valueToPunnedText, currentValue,
 } from "@/state/user_view";
 import { UserView } from "@/components";
 import { AutoSaveLock, AddedRowId } from "@/state/staging_changes";
@@ -303,7 +303,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
         const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, this.uv.attributes);
 
         if (value.info !== undefined) {
-            const link = attrToQueryRef(value.info, value, this.extra.homeSchema, getCellAttr("LinkedView"));
+            const link = attrToQueryRef(value.info, currentValue(value), this.extra.homeSchema, getCellAttr("LinkedView"));
             if (link !== null) {
                 extra.link = link;
             }

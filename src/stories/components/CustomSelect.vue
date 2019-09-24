@@ -95,7 +95,6 @@ export default class CustomSelect extends Vue {
 
   private getUserBarStyle(option: ISelectOption) {
     const url = R.pathOr(null, ["meta", "img"], option);
-    console.log(this.disabled);
     return { backgroundImage: `url(${url})` };
   }
 

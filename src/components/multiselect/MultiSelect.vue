@@ -141,11 +141,11 @@ export default class MultiSelect extends Vue {
         return R.pathOr(value, ["label"], this.getOption(value));
     }
 
-  private get showValueRemove(): boolean {
-    const isLastValueLeft = this.single ? true : this.currentValues.length <= 1;
-    console.log(isLastValueLeft);
-    return (!this.disabled && !(isLastValueLeft && this.required));
-  }
+    private get showValueRemove(): boolean {
+        const isLastValueLeft = this.single ? true : this.currentValues.length <= 1;
+        console.log(isLastValueLeft);
+        return (!this.disabled && !(isLastValueLeft && this.required));
+    }
 
     private get valueOption(): ISelectOption | undefined {
         return this.getOption(this.currentValue);
@@ -217,11 +217,11 @@ export default class MultiSelect extends Vue {
                    .filter(this.optionFilterFN(this.inputValue));
     }
 
-  private focusInput() {
-      if (this.$refs.controlInput) {
-          (this.$refs.controlInput as HTMLInputElement).focus();
-      }
-  }
+    private focusInput() {
+        if (this.$refs.controlInput) {
+            (this.$refs.controlInput as HTMLInputElement).focus();
+        }
+    }
 
     private setIsOpen(val: boolean) {
         if (this.disabled) {
@@ -284,9 +284,9 @@ export default class MultiSelect extends Vue {
         }
     }
 
-    private removeValue(index: number) {
-        if (Number.isInteger(index) && !this.single)  {
-            const newValue = this.currentValues.filter((_: any, i: number) => index !== i);
+    private removeValue(index?: number) {
+        if (index && !this.single)  {
+            const newValue = this.currentValue.filter((_: any, i: number) => index !== i);
             this.$emit("update:value", newValue);
         } else {
             this.$emit("update:value", this.emptyValue);
