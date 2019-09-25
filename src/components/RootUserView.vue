@@ -229,10 +229,10 @@ export default class RootUserView extends Vue {
 
         const args = this.query.rootViewArgs;
         if (args === null) {
-            throw Error("Invalid root view arguments");
+            throw new Error("Invalid root view arguments");
         }
         if (args.source.type !== "named") {
-            throw Error("Anonymous user views are not supported");
+            throw new Error("Anonymous user views are not supported");
         }
         setHeadTitle(`${args.source.ref.name} - FunApp`);
         this.getRootView(args);

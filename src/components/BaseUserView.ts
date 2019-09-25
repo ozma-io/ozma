@@ -108,7 +108,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
             }));
             return { type: "added", id: res.id, column: ref.column };
         } else {
-            throw Error("Impossible");
+            throw new Error("Impossible");
         }
     }
 }

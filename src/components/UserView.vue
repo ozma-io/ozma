@@ -53,13 +53,13 @@ import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { Store } from "vuex";
 
-import { RecordSet, deepEquals } from "@/utils";
+import { RecordSet, ReferenceName, deepEquals } from "@/utils";
 import { funappSchema } from "@/api";
 import { equalEntityRef } from "@/values";
-import { CombinedUserView, UserViewError, IUserViewArguments, IUserViewEventHandler, CurrentUserViews, IUserViewState, homeSchema, ConsumerName } from "@/state/user_view";
+import { CombinedUserView, UserViewError, IUserViewArguments, IUserViewEventHandler, CurrentUserViews, IUserViewState, homeSchema } from "@/state/user_view";
 import { CurrentAuth } from "@/state/auth";
 import { CombinedTransactionResult, ICombinedInsertEntityResult, ScopeName } from "@/state/staging_changes";
-import { attrToQuery, queryLocation, IQuery, IAttrToQueryOpts } from "@/state/query";
+import { CurrentQuery, attrToQuery, queryLocation, IQuery, IAttrToQueryOpts } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
 import { IHandlerProvider } from "@/local_user_view";
 import { IAction } from "@/components/ActionsMenu.vue";
@@ -76,6 +76,7 @@ const components = Object.fromEntries(Object.keys(types).map(name => {
 
 const userView = namespace("userView");
 const staging = namespace("staging");
+const query = namespace("query");
 
 const userViewType = (uv: CombinedUserView) => {
     const typeAttr = uv.attributes["Type"];
@@ -89,11 +90,13 @@ const userViewType = (uv: CombinedUserView) => {
 @Component({ components })
 export default class UserView extends Vue {
     @userView.State("current") currentUvs!: CurrentUserViews;
-    @userView.Mutation("removeUserViewConsumer") removeUserViewConsumer!: (args: { args: IUserViewArguments, consumer: ConsumerName }) => void;
+    @userView.Mutation("removeUserViewConsumer") removeUserViewConsumer!: (args: { args: IUserViewArguments, reference: ReferenceName }) => void;
     @userView.Mutation("registerHandler") registerHandler!: (args: { args: IUserViewArguments, handler: IUserViewEventHandler }) => void;
     @userView.Mutation("unregisterHandler") unregisterHandler!: (args: { args: IUserViewArguments, handler: IUserViewEventHandler }) => void;
-    @userView.Action("getNestedView") getNestedView!: (args: { args: IUserViewArguments, consumer: ConsumerName }) => Promise<void>;
+    @userView.Action("getNestedView") getNestedView!: (args: { args: IUserViewArguments, reference: ReferenceName }) => Promise<CombinedUserView>;
     @staging.State("currentSubmit") submitPromise!: Promise<CombinedTransactionResult[]> | null;
+    @query.State("current") query!: CurrentQuery;
+
     @Prop({ type: Object, required: true }) args!: IUserViewArguments;
     @Prop({ type: Boolean, default: false }) isRoot!: boolean;
     @Prop({ type: String, required: true }) scope!: ScopeName;
@@ -111,7 +114,8 @@ export default class UserView extends Vue {
     private oldUv: CombinedUserView | UserViewError | null = null;
 
     get newUv() {
-        return this.currentUvs.getUserView(this.args);
+        const ret = this.currentUvs.getUserView(this.args);
+        return ret === undefined ? null : ret;
     }
 
     get uvIsReady() {
@@ -124,7 +128,7 @@ export default class UserView extends Vue {
             actions.push({ name: this.$tc("create"), query: this.createView });
         }
         if (this.oldUv !== null && this.oldUv.args.source.type === "named") {
-            const query: IQuery = {
+            const editQuery: IQuery = {
                 defaultValues: {},
                 args: {
                     source: {
@@ -140,7 +144,7 @@ export default class UserView extends Vue {
                     },
                 },
             };
-            actions.push({ name: this.$tc("edit_view"), query });
+            actions.push({ name: this.$tc("edit_view"), query: editQuery });
         }
         actions.push(...this.extraActions);
         return actions;
@@ -177,34 +181,32 @@ export default class UserView extends Vue {
             }
 
             this.extraActions = [];
-            this.component = component;
             this.oldUv = newUv;
             this.local = local;
+            this.component = component;
         } else if (newUv instanceof UserViewError) {
             this.extraActions = [];
-            this.component = null;
             this.oldUv = newUv;
             this.local = null;
+            this.component = null;
         }
     }
 
-    private destroyOldUv() {
-        if (this.oldUv instanceof CombinedUserView) {
-            if (this.local !== null) {
-                this.unregisterHandler({ args: this.oldUv.args, handler: this.local.handler });
-            }
-            this.removeUserViewConsumer({ args: this.oldUv.args, consumer: this.uid });
+    private destroyUserView(args: IUserViewArguments) {
+        if (this.local !== null) {
+            this.unregisterHandler({ args, handler: this.local.handler });
         }
+        this.removeUserViewConsumer({ args, reference: this.uid });
     }
 
     private setUvError(error: UserViewError) {
-        this.destroyOldUv();
+        this.destroyUserView(this.args);
         this.oldUv = error;
         this.local = null;
         this.component = null;
     }
 
-    @Watch("actions", { deep: true })
+    @Watch("actions", { deep: true, immediate: true })
     private pushActions() {
         this.$emit("update:actions", this.actions);
     }
@@ -249,14 +251,18 @@ export default class UserView extends Vue {
     }
 
     private destroyed() {
-        this.destroyOldUv();
+        this.destroyUserView(this.args);
     }
 
     @Watch("args", { deep: true, immediate: true })
-    private argsChanged(newArgs: IUserViewArguments, oldArgs: IUserViewArguments) {
-        if (!deepEquals(oldArgs, newArgs)) {
-            this.destroyOldUv();
-            this.getNestedView({ args: this.args, consumer: this.uid });
+    private argsChanged(newArgs: IUserViewArguments, oldArgs: IUserViewArguments | undefined) {
+        if (oldArgs === undefined || !deepEquals(oldArgs, newArgs)) {
+            if (oldArgs !== undefined) {
+                this.destroyUserView(oldArgs);
+            }
+            if (this.query.rootViewArgs !== null && !deepEquals(newArgs, this.query.rootViewArgs)) {
+                this.getNestedView({ args: newArgs, reference: this.uid });
+            }
         }
     }
 
@@ -283,11 +289,11 @@ export default class UserView extends Vue {
                 }
                 const id = (createOp as ICombinedInsertEntityResult).id;
                 const args: IUserViewArguments = { source: oldUv.args.source, args: { id } };
-                const query: IQuery = {
+                const newQuery: IQuery = {
                     defaultValues: {},
                     args,
                 };
-                this.$emit("goto", query);
+                this.$emit("goto", newQuery);
             })();
         }
     }
