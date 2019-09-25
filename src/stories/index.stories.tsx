@@ -1,4 +1,4 @@
-import { boolean, text, withKnobs } from "@storybook/addon-knobs";
+import { boolean, text, number, withKnobs } from "@storybook/addon-knobs";
 import { storiesOf } from "@storybook/vue";
 
 import Calendar from "../components/Calendar.vue";
@@ -83,7 +83,9 @@ storiesOf("MultiSelect", module)
           type: Object,
           default: {
             options: testOptions,
-            height:  text("Height (as passed in field options)", ""),
+            height:  number("Height (as passed in field options)", 0),
+            disabled:  boolean("Disable", false),
+            required:  boolean("Required", false),
           },
         },
       },
@@ -108,7 +110,9 @@ storiesOf("MultiSelect", module)
           default: {
             options: testOptions,
             single: true,
-            height:  text("Height (as passed in field options)", ""),
+            height:  number("Height (as passed in field options)", 0),
+            disabled:  boolean("Disable", true),
+            required:  boolean("Required", false),
           },
         },
       },
@@ -133,7 +137,9 @@ storiesOf("MultiSelect", module)
           default: {
             options: testOptions,
             single: true,
-            height:  text("Height (as passed in field options)", ""),
+            height:  number("Height (as passed in field options)", 0),
+            disabled:  boolean("Disable", false),
+            required:  boolean("Required", false),
           },
         },
       },
@@ -157,7 +163,9 @@ storiesOf("MultiSelect", module)
           type: Object,
           default: {
             options: testOptions,
-            height:  text("Height (as passed in field options)", ""),
+            height:  number("Height (as passed in field options)", 0),
+            disabled:  boolean("Disable", false),
+            required:  boolean("Required", false),
           },
         },
       },

@@ -62,6 +62,8 @@
                      :height="attributes['ControlHeight']"
                      single
                      @update:value="updateValue($event)"
+                     :required="!isNullable"
+                     :disabled="isDisabled"
                      ref="control">
             <template v-slot:singleValue="select">
                 <span v-if="select.valueOption.meta && select.valueOption.meta.link"

@@ -53,7 +53,7 @@
                           :style="listValueStyle"
                           @click.stop>
                           {{option.label}}
-                          <input @click="removeValue(index)" type="button" class="material-icons values_list__value__close" value="close">
+                          <input v-if="showValueRemove" @click="removeValue(index)" type="button" class="material-icons values_list__value__close" value="close">
                     </span>
                 </slot>
                 <input v-if="isOpen"
@@ -85,16 +85,16 @@
                     </li>
                 </ul>
             </slot>
-            <input v-if="isEmpty || !single"
+            <input v-if="(single && required && !disabled) || (single && isEmpty) || !single"
                    type="button" class="material-icons select_container__chevron"
                    @click="setIsOpen(true)"
                    :value="isOpen ? 'arrow_drop_up' : 'arrow_drop_down'" />
-            <input v-if="single && !isEmpty"
+            <input v-if="single && !isEmpty && !required && !disabled"
                    type="button" class="material-icons select_container__chevron"
                    @click.stop="removeValue()"
                    value="close" />
         </div>
-        <div v-if="!single && !isOpen" @click="clearValues" class="clear_all_button">{{ $t('clear_all') }}</div>
+        <div v-if="!single && !required && showValueRemove" @click="clearValues" class="clear_all_button">{{ $t('clear_all') }}</div>
     </div>
 </template>
 
@@ -115,9 +115,11 @@ export default class MultiSelect extends Vue {
     @Prop({}) value!: any;
     @Prop({ type: Array, default: new Array() }) options!: ISelectOption[];
     @Prop({ type: Boolean, default: false }) single!: boolean;
+    @Prop({ type: Boolean, default: false }) required!: boolean;
+    @Prop({ type: Boolean, default: false }) disabled!: boolean;
     @Prop({ type: Function, default: defaultOptionFilter}) optionFilterFN!: (query: string) => (option: ISelectOption) => boolean;
     @Prop({ default: null }) emptyValue: any;
-    @Prop({ type: Number, default: null }) height!: string;
+    @Prop({ type: Number, default: null }) height!: number;
     @Prop({ type: String, default: null }) optionsListHeight!: string;
 
     private isOpen: boolean = false;
@@ -126,7 +128,7 @@ export default class MultiSelect extends Vue {
     private inputValue: string = "";
 
     private onBackspace() {
-        if (this.inputValue === "" && !this.single) {
+        if (this.inputValue === "" && !this.single && !this.disabled && (!this.required || (this.required && this.currentValues.length > 1))) {
             this.removeValue(this.currentValues.length - 1);
         }
     }
@@ -137,6 +139,12 @@ export default class MultiSelect extends Vue {
 
     private getLabel(value: string): string {
         return R.pathOr(value, ["label"], this.getOption(value));
+    }
+
+    private get showValueRemove(): boolean {
+        const isLastValueLeft = this.single ? true : this.currentValues.length <= 1;
+        console.log(isLastValueLeft);
+        return (!this.disabled && !(isLastValueLeft && this.required));
     }
 
     private get valueOption(): ISelectOption | undefined {
@@ -209,13 +217,22 @@ export default class MultiSelect extends Vue {
                    .filter(this.optionFilterFN(this.inputValue));
     }
 
+    private focusInput() {
+        if (this.$refs.controlInput) {
+            (this.$refs.controlInput as HTMLInputElement).focus();
+        }
+    }
+
     private setIsOpen(val: boolean) {
+        if (this.disabled) {
+            return;
+        }
         this.isOpen = val;
         this.selectedOption = -1;
         if (val) {
             // Using nextTick() to set focus because upon setting isOpen it's not present yet
             Vue.nextTick().then(() => {
-                (this.$refs.controlInput as HTMLInputElement).focus();
+                this.focusInput();
             });
         }
     }
@@ -239,16 +256,18 @@ export default class MultiSelect extends Vue {
     }
 
     private addOptionToValue(option: ISelectOption) {
-        if (this.single) {
-            this.setIsOpen(false);
-            this.$emit("update:value", option.value);
-        } else {
-            const newValue = R.uniq([...this.currentValues, option.value]);
-            this.$emit("update:value", newValue);
+        if (!this.disabled) {
+            if (this.single) {
+                this.setIsOpen(false);
+                this.$emit("update:value", option.value);
+            } else {
+                const newValue = R.uniq([...this.currentValues, option.value]);
+                this.$emit("update:value", newValue);
+            }
+            this.inputValue = "";
+            (this.$refs.controlInput as HTMLInputElement).focus();
+            this.findNewSelected();
         }
-        this.inputValue = "";
-        (this.$refs.controlInput as HTMLInputElement).focus();
-        this.findNewSelected();
     }
 
     private addSelectedOptionToValue() {
@@ -308,7 +327,7 @@ export default class MultiSelect extends Vue {
      display: flex;
      flex-wrap: wrap;
      min-height: 40px;
-     align-content: start;
+     align-content: flex-start;
  }
  .select_container__content_fixed_height {
      overflow: hidden;

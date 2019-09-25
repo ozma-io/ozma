@@ -4,7 +4,9 @@
     :height="height"
     @update:value="updateValue"
     :options="users"
-    :single="single">
+    :single="single"
+    :disabled="disabled"
+    :required="required">
     <template v-slot:singleValue="select">
       <span class="user_bar__container user_bar__container_single" :style="select.listValueStyle">
         <img
@@ -85,6 +87,8 @@ const users: ISelectOption[] = [
 export default class CustomSelect extends Vue {
   @Prop({}) value!: any;
   @Prop({ type: Boolean, default: false }) single!: boolean;
+  @Prop({ type: Boolean, default: false }) disabled!: boolean;
+  @Prop({ type: Boolean, default: false }) required!: boolean;
   @Prop({ type: Number, default: null }) height?: number;
 
   private users: ISelectOption[] = users;
