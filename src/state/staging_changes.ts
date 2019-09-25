@@ -3,7 +3,7 @@ import { Module, ActionContext } from "vuex";
 import { Moment } from "moment";
 import moment from "moment";
 
-import { RecordSet, deepClone, mapMaybe, map2 } from "@/utils";
+import { RecordSet, deepClone, mapMaybe, map2, debugLog } from "@/utils";
 import { TransactionResult, RowId, SchemaName, FieldName, EntityName } from "@/api";
 import { IUpdatedValue, IFieldInfo, EntityFieldsInfo, valueFromRaw, FieldsInfo } from "@/values";
 import * as Api from "@/api";
@@ -408,7 +408,7 @@ const stagingModule: Module<IStagingState, {}> = {
             const oldField = fields[field];
             const scopes = oldField === undefined ? { [scope]: null } : { [scope]: null, ...oldField.scopes };
             Vue.set(fields, field, { scopes, ...validateValue(fieldInfo, value) });
-            if (oldField !== undefined && !(scope in oldField.scopes)) {
+            if (oldField === undefined || !(scope in oldField.scopes)) {
                 state.current.incrementCounts(scope, counts => {
                     counts.updated += 1;
                 });
@@ -578,7 +578,7 @@ const stagingModule: Module<IStagingState, {}> = {
         resetUpdatedField: async (context, args: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName }) => {
             const { commit, dispatch } = context;
             await dispatch("userView/beforeResetUpdatedField", args, { root: true });
-            commit("resetUpdatedEntry", args);
+            commit("resetUpdatedField", args);
             await checkCounters(context);
         },
         resetAddedEntry: async (context, args: { schema: SchemaName, entity: EntityName, id: AddedRowId }) => {
