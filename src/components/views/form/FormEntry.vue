@@ -4,13 +4,15 @@
             "delete": "Delete",
             "delete_confirmation": "Are you sure want to delete this record?",
             "ok": "OK",
-            "cancel": "Cancel"
+            "cancel": "Cancel",
+            "select": "Select"
         },
         "ru": {
             "delete": "Удалить",
             "delete_confirmation": "Вы действительно хотите удалить эту запись?",
             "ok": "ОК",
-            "cancel": "Отмена"
+            "cancel": "Отмена",
+            "select": "Выбрать"
         }
     }
 </i18n>
@@ -41,16 +43,23 @@
                 <input  type="button"
                         :value="$t('delete')"
                         class="delete-block_delete-button"
-                        v-b-modal="'deleteConfirm'" >
+                        v-b-modal="$id('deleteConfirm')" >
 
                 <b-modal lazy
-                            id="deleteConfirm"
+                            :id="$id('deleteConfirm')"
                             ok-variant="danger"
                             :ok-title="$t('ok')"
                             @ok="$emit('delete', $event)"
                             :cancel-title="$t('cancel')" >
                     {{ $t('delete_confirmation') }}
                 </b-modal>
+            </div>
+
+            <div class="delete-block" v-if="selectionMode && localRow.extra.selectionEntry !== undefined">
+                <input  type="button"
+                        :value="$t('select')"
+                        class="delete-block_delete-button"
+                        @click="$emit('select', localRow.extra.selectionEntry)" >
             </div>
         </form>
     </div>
@@ -70,6 +79,7 @@ export default class FormEntry extends Vue {
     @Prop({ type: Object, required: true }) localRow!: any;
     @Prop({ type: Boolean, default: false }) locked!: boolean;
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
+    @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
     @Prop({ type: String, required: true }) scope!: string;
 }
 </script>

@@ -25,27 +25,33 @@ export interface IQueryState {
 }
 
 export interface IQuery {
-    search: Record<string, string>;
-    rootViewArgs: IUserViewArguments;
+    defaultValues: Record<string, any>;
+    args: IUserViewArguments;
 }
 
 export const queryLocation = (query: IQuery): RawLocation => {
-    if (query.rootViewArgs.source.type !== "named") {
+    if (query.args.source.type !== "named") {
         throw new Error("Unnamed user views aren't supported now");
     }
 
-    const searchArgs = Object.entries(query.search).map<[string, string]>(([name, value]) => [`__${name}`, value]);
-    const uvArgs = query.rootViewArgs.args === null ? [] : Object.entries(query.rootViewArgs.args).map<[string, string]>(([name, value]) => [name, JSON.stringify(value)]);
-    const args = Object.fromEntries(searchArgs.concat(uvArgs));
+    const search: Record<string, any> = {};
+    Object.entries(query.defaultValues).forEach(([name, value]) => {
+        search[`__${defaultValuePrefix}${name}`] = JSON.stringify(value);
+    });
+    if (query.args.args !== null) {
+        Object.entries(query.args.args).forEach(([name, value]) => {
+            search[name] = JSON.stringify(value);
+        });
+    }
     return {
-        name: query.rootViewArgs.args !== null ? "view" : "view_create",
-        params: query.rootViewArgs.source.ref as any,
-        query: args,
+        name: query.args.args !== null ? "view" : "view_create",
+        params: query.args.source.ref as any,
+        query: search,
     };
 };
 
 export const replaceSearch = (name: string, value: string) => {
-    const query = Object.assign({}, router.currentRoute.query);
+    const query = { ...router.currentRoute.query };
     const key = `__${name}`;
     if (value === "") {
         delete query[key];
@@ -57,44 +63,13 @@ export const replaceSearch = (name: string, value: string) => {
 
 export const defaultValuePrefix = "def__";
 
-export const attrToInfoQuery = (linkedAttr: any): IQuery | null => {
-    if (typeof linkedAttr === "object" && linkedAttr !== null) {
-        let ref: IUserViewRef;
-        if (typeof linkedAttr.ref === "object" && linkedAttr.ref !== null) {
-            ref = linkedAttr.ref;
-        } else {
-            ref = linkedAttr;
-        }
-        if (typeof ref.schema !== "string" || typeof ref.name !== "string") {
-            return null;
-        }
+export interface IAttrToQueryOpts {
+    homeSchema?: SchemaName;
+    infoByDefault?: boolean;
+    makeDefaultValues?: () => Record<string, any>;
+}
 
-        const search: Record<string, string> = {};
-        if (typeof linkedAttr.defaultValues === "object" && linkedAttr.defaultValues !== null) {
-            Object.entries(linkedAttr.defaultValues).forEach(([name, val]) => {
-                search[`${defaultValuePrefix}${name}`] = JSON.stringify(val);
-            });
-        }
-
-        return {
-            search,
-            rootViewArgs: {
-                source: {
-                    type: "named",
-                    ref: {
-                        schema: ref.schema,
-                        name: ref.name,
-                    },
-                },
-                args: null,
-            },
-        };
-    } else {
-        return null;
-    }
-};
-
-export const attrToQuery = (homeSchema: SchemaName | null, linkedAttr: any): IQuery | null => {
+export const attrToQuery = (linkedAttr: any, opts?: IAttrToQueryOpts): IQuery | null => {
     if (typeof linkedAttr === "object" && linkedAttr !== null) {
         let ref: IUserViewRef;
         if (typeof linkedAttr.ref === "object" && linkedAttr.ref !== null) {
@@ -105,32 +80,35 @@ export const attrToQuery = (homeSchema: SchemaName | null, linkedAttr: any): IQu
         if (typeof ref.name !== "string") {
             return null;
         }
-        let schema: SchemaName;
         if (typeof ref.schema !== "string") {
-            if (homeSchema === null) {
-                return null;
+            if (opts && opts.homeSchema !== undefined) {
+                ref.schema = opts.homeSchema;
             } else {
-                schema = homeSchema;
+                return null;
             }
-        } else {
-            schema = ref.schema;
         }
 
-        let args: Record<string, any> = {};
-        if (typeof linkedAttr.args === "object" && linkedAttr.args !== null) {
+        let args: Record<string, any> | null;
+        if (linkedAttr.new || (opts && opts.infoByDefault)) {
+            args = null;
+        } else if (typeof linkedAttr.args === "object" && linkedAttr.args !== null) {
             args = linkedAttr.args;
+        } else {
+            args = {};
         }
 
-        const search: Record<string, string> = {};
+        let defaultValues: Record<string, any>;
         if (typeof linkedAttr.defaultValues === "object" && linkedAttr.defaultValues !== null) {
-            Object.entries(linkedAttr.defaultValues).forEach(([name, val]) => {
-                search[`${defaultValuePrefix}${name}`] = JSON.stringify(val);
-            });
+            defaultValues = linkedAttr.defaultValues;
+        } else if (opts && opts.makeDefaultValues !== undefined) {
+            defaultValues = opts.makeDefaultValues();
+        } else {
+            defaultValues = {};
         }
 
         return {
-            search,
-            rootViewArgs: {
+            defaultValues,
+            args: {
                 source: {
                     type: "named",
                     ref: {
@@ -147,10 +125,10 @@ export const attrToQuery = (homeSchema: SchemaName | null, linkedAttr: any): IQu
 };
 
 // Set 'id' argument to the value id.
-export const attrToQuerySelf = (update: IValueInfo | undefined | null, homeSchema: SchemaName | null, linkedAttr: any): IQuery | null => {
-    const ret = attrToQuery(homeSchema, linkedAttr);
+export const attrToQuerySelf = (linkedAttr: any, update?: IValueInfo, opts?: IAttrToQueryOpts): IQuery | null => {
+    const ret = attrToQuery(linkedAttr, opts);
     if (ret !== null) {
-        const args = ret.rootViewArgs.args;
+        const args = ret.args.args;
         if (args !== null) {
             if (!("id" in args) && update) {
                 args.id = update.id;
@@ -161,16 +139,13 @@ export const attrToQuerySelf = (update: IValueInfo | undefined | null, homeSchem
 };
 
 // Set 'id' argument to the id of the referenced value.
-export const attrToQueryRef = (update: IValueInfo | undefined | null, value: any, homeSchema: SchemaName | null, linkedAttr: any): IQuery | null => {
-    const ret = attrToQuery(homeSchema, linkedAttr);
+export const attrToQueryRef = (linkedAttr: any, value: any, update?: IValueInfo, opts?: IAttrToQueryOpts): IQuery | null => {
+    const ret = attrToQuery(linkedAttr, opts);
     if (ret !== null) {
-        const args = ret.rootViewArgs.args;
+        const args = ret.args.args;
         if (args !== null) {
-            if (!("id" in args) && value !== null && value !== undefined && update && update.field !== null && update.field.fieldType.type === "reference") {
-                const id = Number(value);
-                if (!Number.isNaN(id)) {
-                    args.id = id;
-                }
+            if (!("id" in args) && value && update && update.field !== null && update.field.fieldType.type === "reference") {
+                args.id = value;
             }
         }
     }

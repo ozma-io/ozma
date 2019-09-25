@@ -48,6 +48,7 @@
     "@vue/cli-plugin-typescript": "^3.10.0",
     "@vue/cli-service": "^3.10.0",
     "babel-loader": "^8.0.6",
+    "babel-plugin-ramda": "^2.0.0",
     "babel-preset-vue": "^2.0.2",
     "fast-async": "^7.0.6",
     "sass": "^1.18.0",

@@ -48,7 +48,8 @@
                       v-bind:listValueStyle="listValueStyle"
                       v-bind:removeValue="removeValue"
                       v-bind:getLabel="getLabel">
-                    <span v-for="option, index in valueOptions"
+                    <span v-for="(option, index) in valueOptions"
+                          :key="option.value"
                           class="values_list__value"
                           :style="listValueStyle"
                           @click.stop>
@@ -74,13 +75,13 @@
                   v-bind:selectedOption="selectedOption"
                   v-bind:isEmpty="isEmpty">
                 <ul class="select_container__options_list" :style="optionsListStyle" ref="optionsList">
-                    <li v-for="option, index in selectedOptions"
-                      :key="option.value"
-                      @click="addOptionToValue(option, $event)"
-                      :class="[
-                        'select_container__options_list__option',
-                        {'select_container__options_list__option_active': selectedOption === index }
-                      ]">
+                    <li v-for="(option, index) in selectedOptions"
+                            :key="option.value"
+                            @click="addOptionToValue(option, $event)"
+                            :class="[
+                                'select_container__options_list__option',
+                                {'select_container__options_list__option_active': selectedOption === index }
+                            ]">
                         {{option.label}}
                     </li>
                 </ul>

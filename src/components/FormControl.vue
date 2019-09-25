@@ -22,9 +22,11 @@
                  'form-control-panel_editor': inputType.name === 'codeeditor',
                  }]"
          :style="controlPanelStyle">
-        <div class="nested-menu" v-if="actions.length > 0">
+        <div v-if="actions.length > 0" class="nested-menu">
             <ActionsMenu title="view_headline"
-                         :actions="actions" />
+                         :actions="actions"
+                         :indirectLinks="indirectLinks"
+                         @goto="$emit('goto', $event)" />
             <div v-if="caption !== ''" class="caption-editors">
                 {{ caption }}
             </div>
@@ -32,6 +34,13 @@
         <div v-else-if="caption !== ''" class="caption-editors">
             {{ caption }}
         </div>
+
+        <SelectUserView v-if="selectViewActive"
+                :selectView="selectView"
+                :fieldType="fieldType"
+                @update:actions="extraActions = $event"
+                @select="updateValue($event); selectViewActive = false" />
+
         <template v-if="inputType.name === 'error'">
             {{ inputType.text }}
         </template>
@@ -97,11 +106,10 @@
                   :args="inputType.args"
                   :defaultValues="inputType.defaultValues"
                   :indirectLinks="indirectLinks"
+                  :scope="scope"
                   @update:actions="extraActions = $event"
+                  @goto="$emit('goto', $event)"
                   ref="control" />
-        <!-- We don't use bootstrap-vue's b-form-input type=text because of problems with Safari
-                https://github.com/bootstrap-vue/bootstrap-vue/issues/1951
-        -->
         <input v-else-if="inputType.type === 'text'"
                 type="text"
                 @keydown.enter.prevent=""
@@ -135,15 +143,16 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import { valueToText, valueIsNull } from "@/values";
+import { valueToText, valueIsNull, equalEntityRef } from "@/values";
 import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef, IEntityRef } from "@/api";
 import { IAction } from "@/components/ActionsMenu.vue";
 import { IValueInfo, IUserViewArguments, CombinedUserView, EntriesMap, CurrentUserViews, homeSchema, ICombinedValue, currentValue } from "@/state/user_view";
-import { IQuery, attrToQueryRef, queryLocation } from "@/state/query";
+import { IQuery, attrToQueryRef, attrToQuerySelf, IAttrToQueryOpts } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
+import { ISelectionRef } from "@/components/BaseUserView";
 
 interface ITextType {
     name: "text";
@@ -170,12 +179,7 @@ interface ICheckType {
     name: "check";
 }
 
-interface INestedUserViewRef {
-    args: IUserViewArguments;
-    defaultValues: Record<string, any>;
-}
-
-interface IUserViewType extends INestedUserViewRef {
+interface IUserViewType extends IQuery {
     name: "userview";
 }
 
@@ -193,59 +197,12 @@ type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | ICheckT
 
 const userView = namespace("userView");
 
-const toUserViewRef = (makeDefaultArgs: () => Record<string, any> | null, value: any): INestedUserViewRef | null => {
-    if (typeof value !== "object" || value === null) {
-        return null;
-    }
-
-    let ref: IUserViewRef;
-    if (typeof value.ref === "object" && value.ref !== null) {
-        ref = value.ref;
-    } else {
-        ref = value;
-    }
-    if (typeof ref.schema !== "string" || typeof ref.name !== "string") {
-        return null;
-    }
-
-    let args: Record<string, any>;
-    if (typeof value.args === "object" && value.args !== null) {
-        args = value.args;
-    } else {
-        const defArgs = makeDefaultArgs();
-        if (defArgs === null) {
-            return null;
-        } else {
-            args = defArgs;
-        }
-    }
-
-    let defaultValues: Record<string, any>;
-    if (typeof value.defaultValues === "object" && value.defaultValues !== null) {
-        defaultValues = value.defaultValues;
-    } else {
-        defaultValues = {};
-    }
-
-    const userViewArgs: IUserViewArguments = {
-        source: {
-            type: "named",
-            ref: {
-                schema: ref.schema,
-                name: ref.name,
-            },
-        },
-        args,
-    };
-
-    return { args: userViewArgs, defaultValues };
-};
-
 @Component({
     components: {
         CodeEditor: () => import("@/components/CodeEditor.vue"),
         MultiSelect: () => import("@/components/multiselect/MultiSelect.vue"),
         Calendar: () => import("@/components/Calendar.vue"),
+        SelectUserView: () => import("@/components/SelectUserView.vue"),
     },
 })
 export default class FormControl extends Vue {
@@ -258,28 +215,13 @@ export default class FormControl extends Vue {
     @Prop({ type: String, default: ""}) caption!: string;
     @Prop({ type: Boolean, default: false }) disableColor!: boolean;
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
+    @Prop({ type: String, required: true }) scope!: string;
 
     @userView.State("entries") entriesMap!: EntriesMap;
     @userView.Action("getEntries") getEntries!: (_: IEntityRef) => Promise<void>;
-    @userView.State("current") userViews!: CurrentUserViews;
-    @userView.Action("getNestedView") getNestedView!: (_: IUserViewArguments) => Promise<void>;
 
     private extraActions: IAction[] = [];
-    private createView: INestedUserViewRef | null = null;
-
-    private mounted() {
-        if (this.autofocus) {
-            const type = this.inputType;
-            const control: any = this.$refs["control"];
-            if (type.name === "text") {
-                control.focus();
-            } else if (type.name === "textarea") {
-                control.focus();
-            } else if (type.name === "check") {
-                control.focus();
-            }
-        }
-    }
+    private selectViewActive = false;
 
     get isNullable() {
         return this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable;
@@ -302,16 +244,24 @@ export default class FormControl extends Vue {
         return valueToText(this.type, this.currentValue);
     }
 
+    get selectView() {
+        const home = homeSchema(this.uv.args);
+        const linkOpts = home !== null ? { homeSchema: home } : undefined;
+        return attrToQuerySelf(this.attributes["SelectView"], this.value.info, linkOpts);
+    }
+
     get actions() {
         const actions: IAction[] = [];
-        const link = attrToQueryRef(this.value.info, this.currentValue, homeSchema(this.uv.args), this.attributes["LinkedView"]);
+        const home = homeSchema(this.uv.args);
+        const linkOpts = home !== null ? { homeSchema: home } : undefined;
+        const link = attrToQueryRef(this.attributes["LinkedView"], this.currentValue, this.value.info, linkOpts);
         if (link !== null) {
-            actions.push({ name: this.$tc("follow_reference"), location: queryLocation(link) });
+            actions.push({ name: this.$tc("follow_reference"), query: link });
         }
-        const createView = toUserViewRef(() => ({}), this.attributes["SelectView"]);
-        if (createView !== null) {
+
+        if (this.selectView !== null && !this.selectViewActive) {
             actions.push( { name: this.$tc("select_view"), callback: () => {
-                this.createView = createView;
+                this.selectViewActive = true;
             } });
         }
 
@@ -333,21 +283,25 @@ export default class FormControl extends Vue {
         return { ...systemHeight, ...userHeight, ...editorStyle };
     }
 
+    get fieldType() {
+        if (this.value.info !== undefined && this.value.info.field !== null) {
+            return this.value.info.field.fieldType;
+        } else {
+            return null;
+        }
+    }
+
     get inputType(): IType {
+        const home = homeSchema(this.uv.args);
+        const linkOpts = home !== null ? { homeSchema: home } : undefined;
+
         const controlAttr = this.attributes["Control"];
         if (controlAttr === "UserView") {
-            const nestedRef = toUserViewRef(() => {
-                if (this.value.info === undefined) {
-                    throw new Error("invalid_uv");
-                } else {
-                    return { id: this.value.info.id };
-                }
-            }, this.currentValue);
+            const nestedRef = attrToQuerySelf(this.currentValue, this.value.info, linkOpts);
 
             if (nestedRef === null) {
                 return { name: "error", text: this.$tc("invalid_uv") };
             } else {
-                this.getNestedView(nestedRef.args);
                 return { name: "userview", ...nestedRef };
             }
         }
@@ -355,11 +309,10 @@ export default class FormControl extends Vue {
         const heightSinglelineText = "calc(2em + 6px)";
         const heightMultilineText = "calc(4em + 12px)";
         const heightCodeEditor = "calc(100% - 1.5rem)";
-        if (this.value.info !== undefined && this.value.info.field !== null) {
-            const fieldType = this.value.info.field.fieldType;
-            switch (fieldType.type) {
+        if (this.fieldType !== null) {
+            switch (this.fieldType.type) {
                 case "reference":
-                    const ref = fieldType.entity;
+                    const ref = this.fieldType.entity;
                     this.getEntries(ref);
                     const currentSchema = this.entriesMap[ref.schema];
                     if (currentSchema === undefined) {
@@ -369,7 +322,13 @@ export default class FormControl extends Vue {
                     if (entries === undefined || entries instanceof Promise) {
                         return { name: "text", type: "number", style: this.controlStyle() };
                     } else {
-                        const select = Object.entries(entries).map(([id, name]) => ({ label: name, value: Number(id), meta: { link: attrToQueryRef(this.value.info, id, homeSchema(this.uv.args), this.attributes["LinkedView"]) } }));
+                        const select = Object.entries(entries).map(([id, name]) => ({
+                            label: name,
+                            value: Number(id),
+                            meta: {
+                                link: attrToQueryRef(this.attributes["LinkedView"], id, this.value.info, linkOpts),
+                            },
+                        }));
                         return {
                             name: "select",
                             options: select,
@@ -378,7 +337,7 @@ export default class FormControl extends Vue {
                 case "enum":
                     return {
                         name: "select",
-                        options: fieldType.values.map(x => ({ label: x, value: x })),
+                        options: this.fieldType.values.map(x => ({ label: x, value: x })),
                     };
                 case "bool":
                     return {
@@ -416,13 +375,34 @@ export default class FormControl extends Vue {
         }
     }
 
+    private mounted() {
+        if (this.autofocus) {
+            const type = this.inputType;
+            const control: any = this.$refs["control"];
+            if (type.name === "text") {
+                control.focus();
+            } else if (type.name === "textarea") {
+                control.focus();
+            } else if (type.name === "check") {
+                control.focus();
+            }
+        }
+    }
+
     private updateValue(newValue: any) {
         if (this.value.info === undefined) {
-            throw Error("No update entity defined in view");
+            throw new Error("No update entity defined in view");
         }
 
         if (this.currentValue !== newValue) {
             this.$emit("update", newValue);
+        }
+    }
+
+    @Watch("selectView")
+    private clearActions() {
+        if (this.selectView === null) {
+            this.extraActions = [];
         }
     }
 }

@@ -1,10 +1,15 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import { SchemaName, EntityName, FieldName, RowId } from "@/api";
+import { SchemaName, EntityName, FieldName, RowId, IEntityRef } from "@/api";
 import { CombinedUserView, currentValue } from "@/state/user_view";
 import { ScopeName, AddedRowId, IAddedResult } from "@/state/staging_changes";
 import { LocalUserView, RowRef, ValueRef } from "@/local_user_view";
+
+export interface ISelectionRef {
+    entity: IEntityRef;
+    id: number;
+}
 
 const staging = namespace("staging");
 
@@ -13,7 +18,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
     @staging.Action("deleteEntry") deleteEntry!: (args: { scope: ScopeName, schema: SchemaName, entity: EntityName, id: RowId }) => Promise<void>;
     @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { schema: SchemaName, entity: EntityName, id: AddedRowId }) => Promise<void>;
     @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName, schema: SchemaName, entity: EntityName, position?: number }) => Promise<IAddedResult>;
-    @staging.Action("setAddedField") setAddedField!: (args: { schema: SchemaName, entity: EntityName, id: AddedRowId, field: FieldName, value: any }) => Promise<void>;
+    @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName, schema: SchemaName, entity: EntityName, id: AddedRowId, field: FieldName, value: any }) => Promise<void>;
     @staging.Action("updateField") updateField!: (args: { scope: ScopeName, schema: SchemaName, entity: EntityName, id: RowId, field: FieldName, value: any }) => Promise<void>;
 
     @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView;
@@ -48,17 +53,19 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
         }
     }
 
-    protected async updateValue(ref: ValueRef, rawValue: any) {
+    protected async updateValue(ref: ValueRef, rawValue: any): Promise<ValueRef> {
         const value = this.local.getValueByRef(ref)!;
         if (ref.type === "added") {
             const updateInfo = value.value.info!;
             await this.setAddedField({
+                scope: this.scope,
                 schema: updateInfo.fieldRef.entity.schema,
                 entity: updateInfo.fieldRef.entity.name,
                 field: updateInfo.fieldRef.name,
                 id: updateInfo.id,
                 value: rawValue,
             });
+            return ref;
         } else if (ref.type === "existing") {
             const updateInfo = value.value.info!;
             await this.updateField({
@@ -69,6 +76,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
                 field: updateInfo.fieldRef.name,
                 value: rawValue,
             });
+            return ref;
         } else if (ref.type === "new") {
             const entity = this.uv.info.mainEntity;
             if (entity === null) {
@@ -87,6 +95,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
                 const currValue = currentValue(cell);
                 if (columnInfo.mainField !== null && currValue !== undefined) {
                     return this.setAddedField({
+                        scope: this.scope,
                         schema: entity.schema,
                         entity: entity.name,
                         field: columnInfo.mainField.name,
@@ -97,6 +106,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
                     return Promise.resolve();
                 }
             }));
+            return { type: "added", id: res.id, column: ref.column };
         } else {
             throw Error("Impossible");
         }

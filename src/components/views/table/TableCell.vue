@@ -14,7 +14,7 @@
             <UserViewLink v-if="localValue.link !== undefined"
                     :uv="localValue.link"
                     @[indirectLinks?`click`:null]="$emit('goto', $event)">
-                <b-checkbox v-if="typeof value.value === 'boolean'"
+                <checkbox v-if="typeof value.value === 'boolean'"
                         :checked="value.value"
                         class="div_checkbox"
                         disabled />
@@ -23,7 +23,7 @@
                 </template>
             </UserViewLink>
             <template v-else>
-                <b-checkbox v-if="typeof value.value === 'boolean'"
+                <input type="checkbox" v-if="typeof value.value === 'boolean'"
                         :checked="value.value"
                         class="div_checkbox"
                         disabled />

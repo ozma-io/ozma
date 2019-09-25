@@ -160,8 +160,9 @@ import {
 } from "@/state/user_view";
 import { UserView } from "@/components";
 import { AutoSaveLock, AddedRowId } from "@/state/staging_changes";
-import { IQuery, attrToQuerySelf, attrToQueryRef } from "@/state/query";
+import { IQuery, attrToQuerySelf, attrToQueryRef, IAttrToQueryOpts } from "@/state/query";
 import { LocalUserView, ILocalRowInfo, ILocalRow, ValueRef, RowRef, RowPositionRef, equalRowPositionRef } from "@/local_user_view";
+import { ISelectionRef } from "@/components/BaseUserView";
 import BaseUserView from "@/components/BaseUserView";
 import TableRow from "@/components/views/table/TableRow.vue";
 import TableFixedRow from "@/components/views/table/TableFixedRow.vue";
@@ -194,6 +195,7 @@ interface ITableRowExtra {
     style?: Record<string, any>;
     height?: number;
     link?: IQuery;
+    selectionEntry?: ISelectionRef;
 }
 
 interface ITableUserViewExtra {
@@ -203,7 +205,7 @@ interface ITableUserViewExtra {
     selectedValues: ObjectSet<ValueRef>;
     columns: IColumn[];
     fixedColumnPositions: Record<number, string>;
-    homeSchema: string | null;
+    linkOpts?: IAttrToQueryOpts;
 }
 
 type ITableLocalRowInfo = ILocalRowInfo<ITableRowExtra>;
@@ -303,15 +305,27 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
         const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, this.uv.attributes);
 
         if (value.info !== undefined) {
-            const link = attrToQueryRef(value.info, currentValue(value), this.extra.homeSchema, getCellAttr("LinkedView"));
+            const link = attrToQueryRef(getCellAttr("LinkedView"), currentValue(value), value.info, this.extra.linkOpts);
             if (link !== null) {
                 extra.link = link;
             }
-            const currLinkForRow = attrToQuerySelf(value.info, this.extra.homeSchema, getCellAttr("RowLinkedView"));
+            const currLinkForRow = attrToQuerySelf(getCellAttr("RowLinkedView"), value.info, this.extra.linkOpts);
             if (currLinkForRow !== null) {
                 localRow.extra.link = currLinkForRow;
                 this.extra.hasRowLinks = true;
             }
+        }
+
+        if (getCellAttr("Selectable") && value.info !== undefined) {
+            localRow.extra.selectionEntry = {
+                entity: value.info.fieldRef.entity,
+                id: value.info.id,
+            };
+        } else if (this.uv.info.mainEntity !== null) {
+            localRow.extra.selectionEntry = {
+                entity: this.uv.info.mainEntity,
+                id: row.mainId!,
+            };
         }
 
         if (extra.selected) {
@@ -383,16 +397,27 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
             extra.style = style;
         }
 
+        return extra;
+    }
+
+    createLocalRow(rowIndex: number, row: ICombinedRow) {
+        const extra = this.createCommonLocalRow(row);
+        if (row.mainId !== undefined) {
+            extra.selectionEntry = {
+                entity: this.uv.info.mainEntity!,
+                id: row.mainId,
+            };
+        }
+
         this.extra.rowCount++;
 
         return extra;
     }
 
-    createLocalRow(rowIndex: number, row: ICombinedRow) {
-        return this.createCommonLocalRow(row);
-    }
-
     createAddedLocalRow(rowId: AddedRowId, row: IAddedRow) {
+        console.log("adding row");
+        this.extra.rowCount++;
+
         return this.createCommonLocalRow(row);
     }
 
@@ -449,16 +474,18 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
 
     createLocalUserView(): ITableUserViewExtra {
         const columns = createColumns(this.uv);
-        const extra = {
+        const extra: ITableUserViewExtra = {
             hasRowLinks: false,
-            selectedCount: 0,
             rowCount: 0,
             selectedRows: new ObjectSet<RowRef>(),
             selectedValues: new ObjectSet<ValueRef>(),
             columns,
             fixedColumnPositions: {},
-            homeSchema: homeSchema(this.uv.args),
         };
+        const home = homeSchema(this.uv.args);
+        if (home !== null) {
+            extra.linkOpts = { homeSchema: home };
+        }
         return extra;
     }
 
@@ -544,7 +571,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     }
 
     get selectedCount() {
-        return Object.keys(this.extra.selectedRows).length;
+        return this.extra.selectedRows.length;
     }
 
     get selectedAll() {
@@ -677,7 +704,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
                 const columnInfo = this.uv.info.columns[this.editing.ref.column];
                 const columnAttrs = this.uv.columnAttributes[this.editing.ref.column];
                 const type = columnInfo.valueType;
-                const attributes = Object.assign({}, this.uv.attributes, columnAttrs, value.row.row.attributes, value.value.attributes);
+                const attributes = { ...this.uv.attributes, ...columnAttrs, ...value.row.row.attributes, ...value.value.attributes };
                 return {
                     value: value.value,
                     attributes,
@@ -802,17 +829,22 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     private clickCell(ref: ValueRef, event: MouseEvent) {
         if (this.lastSelectedValue !== null &&
                 !deepEquals(this.lastSelectedValue, ref) &&
-                this.lastSelectedValue.type === "added" && isEmptyRow(this.uv.newRows[this.lastSelectedValue.id])) {
-            const entity = this.uv.info.mainEntity;
-            if (entity === null) {
-                throw new Error("View doesn't have a main entity");
-            }
+                this.lastSelectedValue.type === "added") {
+            const row = this.uv.newRows[this.lastSelectedValue.id];
+            if (row === undefined) {
+                this.lastSelectedValue = null;
+            } else if (isEmptyRow(row)) {
+                const entity = this.uv.info.mainEntity;
+                if (entity === null) {
+                    throw new Error("View doesn't have a main entity");
+                }
 
-            this.resetAddedEntry({
-                schema: entity.schema,
-                entity: entity.name,
-                id: this.lastSelectedValue.id,
-            });
+                this.resetAddedEntry({
+                    schema: entity.schema,
+                    entity: entity.name,
+                    id: this.lastSelectedValue.id,
+                });
+            }
         }
 
         if (this.clickTimeoutId === null) {
@@ -896,6 +928,12 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         }
         const row = this.local.getRowByRef(ref);
         if (row === null) {
+            return;
+        }
+
+        // If we are in a selection mode, just emit selected row.
+        if (this.selectionMode && posRef.type === "existing" && row.local.extra.selectionEntry !== undefined) {
+            this.$emit("select", row.local.extra.selectionEntry);
             return;
         }
 
@@ -1087,7 +1125,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     get statusLine() {
         const selectedCount = this.local.selectedCount;
         const selected = (selectedCount > 0) ? `${selectedCount}/` : "";
-        return `${selected}${this.nonDeletedRowPositions.length}`;
+        return `${selected}${this.uv.newRowsPositions.length + this.nonDeletedRowPositions.length}`;
     }
 
     @Watch("statusLine")
@@ -1118,9 +1156,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     private async updateCurrentValue(rawValue: any) {
         const editing = this.editing!;
         const ref = editing.ref;
-        await this.updateValue(ref, rawValue);
+        const newRef = await this.updateValue(ref, rawValue);
         if (ref.type === "new") {
-            const newRef: ValueRef = { type: "added", id: this.uv.newRowsPositions[0], column: ref.column };
             editing.ref = newRef;
             this.selectCell(newRef);
         }

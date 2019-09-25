@@ -11,6 +11,7 @@ export default Vue.component("UserViewLink", {
     },
     render: (createElement, context) => {
         return createElement("a", {
+            ...context.data,
             attrs: {
                 href: router.resolve(queryLocation(context.props.uv)).href,
             },
@@ -32,7 +33,7 @@ export default Vue.component("UserViewLink", {
 
                     e.preventDefault();
                     if ("click" in context.listeners) {
-                        vueEmit(context, "click");
+                        vueEmit(context, "click", context.props.uv);
                     } else {
                         router.push(queryLocation(context.props.uv));
                     }

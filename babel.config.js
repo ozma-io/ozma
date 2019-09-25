@@ -8,6 +8,7 @@ module.exports = {
     ["module:fast-async", {
       "spec": true,
       "useRuntimeModule": false
-    }]
+    }],
+    "ramda"
   ]
 }
