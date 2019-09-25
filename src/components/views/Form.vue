@@ -120,7 +120,7 @@ class LocalFormUserView extends LocalUserView<IFormValueExtra, IFormRowExtra, IF
 
     createCommonLocalValue(row: IRowCommon, localRow: IFormLocalRowInfo, columnIndex: number, value: ICombinedValue): IFormValueExtra {
         const columnAttrs = this.uv.columnAttributes[columnIndex];
-        const attributes = Object.assign({}, this.uv.attributes, columnAttrs, row.attributes, value.attributes);
+        const attributes = { ...this.uv.attributes, ...columnAttrs, ...row.attributes, ...value.attributes };
         const extra = {
             attributes,
         };
@@ -133,6 +133,11 @@ class LocalFormUserView extends LocalUserView<IFormValueExtra, IFormRowExtra, IF
             localRow.extra.selectionEntry = {
                 entity: value.info.fieldRef.entity,
                 id: value.info.id,
+            };
+        } else if (this.uv.info.mainEntity !== null) {
+            localRow.extra.selectionEntry = {
+                entity: this.uv.info.mainEntity,
+                id: row.mainId!,
             };
         }
         return extra;

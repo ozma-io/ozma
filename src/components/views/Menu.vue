@@ -32,9 +32,12 @@
                     <div class="row navigation-sector-title"><a class="navigation-sector-title-head">{{ category.name }}</a></div>
                     <div class="row navigation-sector-body">
                         <div class="filter-back" v-for="button in category.buttons" :key="button.index">
-                            <b-button class="navigation-entry" :to="button.to">
+                            <UserViewLink
+                                    class="navigation-entry"
+                                    :uv="button.uv"
+                                    @[indirectLinks?`click`:null]="$emit('goto', $event)">
                                 {{ button.name }}
-                            </b-button>
+                            </UserViewLink>
                         </div>
                     </div>
                 </div>
@@ -49,7 +52,7 @@ import { Location } from "vue-router";
 import { namespace } from "vuex-class";
 import { tryDicts } from "@/utils";
 import { CombinedUserView, valueToPunnedText, homeSchema } from "@/state/user_view";
-import { attrToQuery, queryLocation } from "@/state/query";
+import { IQuery, attrToQuery } from "@/state/query";
 import { CurrentChanges, IEntityChanges } from "@/state/staging_changes";
 import { UserView } from "@/components";
 
@@ -57,7 +60,7 @@ interface IMainMenuButton {
     index: number;
     name: string;
     categoryName: string;
-    to: Location | null;
+    uv: IQuery;
 }
 
 interface IMainMenuCategory {
@@ -70,6 +73,7 @@ interface IMainMenuCategory {
 @Component
 export default class UserViewMenu extends Vue {
     @Prop() uv!: CombinedUserView;
+    @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 
     get categoriesOrError() {
         // .rows === null means that we are in "create new" mode -- there are no selected existing values.
@@ -87,6 +91,8 @@ export default class UserViewMenu extends Vue {
             const buttonsAttrs = this.uv.columnAttributes[1];
 
             const categories = new Map<string, IMainMenuCategory>();
+            const home = homeSchema(this.uv.args);
+            const linkOpts = home !== null ? { homeSchema: home } : undefined;
             this.uv.rows.forEach((row, rowI) => {
                 if (row.deleted) {
                     return;
@@ -112,13 +118,16 @@ export default class UserViewMenu extends Vue {
                 const buttonAttrs = buttonCell.attributes || {};
                 const getButtonAttr = (name: string) => tryDicts(name, buttonAttrs, rowAttrs, buttonsAttrs, viewAttrs);
 
-                const toQuery = attrToQuery(homeSchema(this.uv.args), getButtonAttr("LinkedView"));
-                const to = toQuery === null ? null : this.$router.resolve(queryLocation(toQuery)).location;
+                const toQuery = attrToQuery(getButtonAttr("LinkedView"), linkOpts);
+                if (toQuery === null) {
+                    return;
+                }
 
                 const button = {
                     index: rowI,
                     name: buttonName,
-                    categoryName, to,
+                    categoryName,
+                    uv: toQuery,
                 };
                 category.buttons.push(button);
             });

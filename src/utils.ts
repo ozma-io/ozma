@@ -243,6 +243,10 @@ export class ObjectSet<K> {
         return Object.values(this.entries);
     }
 
+    get length() {
+        return Object.keys(this.entries).length;
+    }
+
     delete(k: K) {
         const key = valueSignature(k);
         Vue.delete(this.entries, key);

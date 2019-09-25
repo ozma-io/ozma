@@ -2,7 +2,7 @@ import Vue from "vue";
 import { Store, Dispatch, Module, ActionContext } from "vuex";
 import moment from "moment";
 
-import { IRef, FetchError, momentLocale, tryDicts } from "@/utils";
+import { IRef, FetchError, RecordSet, momentLocale, tryDicts } from "@/utils";
 import * as Api from "@/api";
 import {
     IColumnField, IUserViewRef, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
@@ -11,6 +11,7 @@ import {
 } from "@/api";
 import { IUpdatedValue, FieldsInfo, valueToText, insertFieldsInfo, equalEntityRef, valueFromRaw, valueIsNull } from "@/values";
 import { CurrentChanges, UpdatedValues, IEntityChanges, IAddedEntry, AddedRowId } from "@/state/staging_changes";
+import { CurrentQuery } from "@/state/query";
 
 export interface IAnonymousUserView {
     type: "anonymous";
@@ -546,35 +547,75 @@ export class UserViewError extends Error {
     }
 }
 
+export type ConsumerName = string;
+
+export type UserViewResult = CombinedUserView | UserViewError | Promise<CombinedUserView>;
+
+export interface IUserViewContainer {
+    uv: UserViewResult;
+    consumers: RecordSet<ConsumerName>;
+}
+
 export class CurrentUserViews {
-    rootArgs: IUserViewArguments | null = null;
-    userViews: Record<string, CombinedUserView | UserViewError | Promise<CombinedUserView>> = {};
+    userViews: Record<string, IUserViewContainer> = {};
     lastLocalId: number = 0;
 
-    get rootView() {
-        if (this.rootArgs === null) {
-            return null;
-        } else {
-            return this.getUserView(this.rootArgs);
+    initUserView(args: IUserViewArguments, consumer: ConsumerName, uv: CombinedUserView | UserViewError | Promise<CombinedUserView>) {
+        const hash = userViewHash(args);
+        if (hash in this.userViews) {
+            throw new Error("User view already exists");
+        }
+        const container: IUserViewContainer = {
+            uv,
+            consumers: { [consumer]: null },
+        };
+        Vue.set(this.userViews, hash, container);
+    }
+
+    updateUserView(args: IUserViewArguments, uv: CombinedUserView | UserViewError | Promise<CombinedUserView>) {
+        const container = this.userViews[userViewHash(args)];
+        if (container !== undefined) {
+            container.uv = uv;
         }
     }
 
-    setUserView(args: IUserViewArguments, uv: CombinedUserView | UserViewError | Promise<CombinedUserView>) {
-        Vue.set(this.userViews, userViewHash(args), uv);
+    addConsumer(args: IUserViewArguments, name: ConsumerName) {
+        const container = this.userViews[userViewHash(args)];
+        if (container !== undefined) {
+            Vue.set(container.consumers, name, null);
+        }
+    }
+
+    removeConsumer(args: IUserViewArguments, name: ConsumerName) {
+        const hash = userViewHash(args);
+        const container = this.userViews[hash];
+        if (container !== undefined) {
+            Vue.delete(container.consumers, name);
+
+            if (Object.keys(container.consumers).length === 0) {
+                Vue.delete(this.userViews, hash);
+            }
+        }
+    }
+
+    getUserViewContainer(args: IUserViewArguments) {
+        const container = this.userViews[userViewHash(args)];
+        return container === undefined ? null : container;
     }
 
     getUserView(args: IUserViewArguments) {
-        const uv = this.userViews[userViewHash(args)];
-        if (uv === undefined || uv instanceof Promise) {
+        const container = this.getUserViewContainer(args);
+        if (container === null || container.uv instanceof Promise) {
             return null;
         } else {
-            return uv;
+            return container.uv;
         }
     }
 }
 
 export interface IUserViewState {
     current: CurrentUserViews;
+    // Needed because during user view reloads we don't want to replace CurrentUserView right away.
     pending: Promise<CombinedUserView> | null;
     entries: EntriesMap;
     fieldsInfo: FieldsInfo;
@@ -721,11 +762,17 @@ const userViewModule: Module<IUserViewState, {}> = {
             state.errors.splice(errorIndex, 1);
         },
 
-        setUserView: (state, { args, userView, isRoot }: { args: IUserViewArguments, userView: CombinedUserView | Promise<CombinedUserView>, isRoot?: boolean }) => {
-            state.current.setUserView(args, userView);
-            if (isRoot) {
-                state.current.rootArgs = args;
-            }
+        initUserView: (state, { args, consumer, userView }: { args: IUserViewArguments, consumer: ConsumerName, userView: UserViewResult }) => {
+            state.current.initUserView(args, consumer, userView);
+        },
+        updateUserView: (state, { args, userView }: { args: IUserViewArguments, userView: UserViewResult }) => {
+            state.current.updateUserView(args, userView);
+        },
+        addUserViewConsumer: (state, { args, consumer }: { args: IUserViewArguments, consumer: ConsumerName }) => {
+            state.current.addConsumer(args, consumer);
+        },
+        removeUserViewConsumer: (state, { args, consumer }: { args: IUserViewArguments, consumer: ConsumerName }) => {
+            state.current.removeConsumer(args, consumer);
         },
         addFieldsInfo: (state, info: IResultViewInfo) => {
             insertFieldsInfo(state.fieldsInfo, info);
@@ -742,7 +789,6 @@ const userViewModule: Module<IUserViewState, {}> = {
         },
 
         setEntries: (state, { ref, entries }: { ref: IEntityRef, entries: Entries | Promise<Entries> }) => {
-
             let entities = state.entries[ref.schema];
             if (entities === undefined) {
                 entities = {};
@@ -758,7 +804,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                 return field.fieldType.type === "reference" && equalEntityRef(field.fieldType.entity, ref);
             };
 
-            Object.values(state.current.userViews).forEach(uv => {
+            Object.values(state.current.userViews).forEach(({ uv }) => {
                 if (!(uv instanceof CombinedUserView)) {
                     return;
                 }
@@ -807,7 +853,7 @@ const userViewModule: Module<IUserViewState, {}> = {
         updateField: (state, params: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName, updatedValue: IUpdatedValue, fieldType: FieldType }) => {
             const entitySummaries = getEntitySummaries(state.entries, params.fieldType);
 
-            Object.values(state.current.userViews).forEach(uv => {
+            Object.values(state.current.userViews).forEach(({ uv }) => {
                 if (!(uv instanceof CombinedUserView)) {
                     return;
                 }
@@ -851,7 +897,7 @@ const userViewModule: Module<IUserViewState, {}> = {
         },
         // Expects all values to be empty, therefore doesn't set updated puns!
         addEntry: (state, params: { schema: SchemaName, entity: EntityName, id: AddedRowId, positions: number[], newValues: UpdatedValues }) => {
-            Object.values(state.current.userViews).forEach(uv => {
+            Object.values(state.current.userViews).forEach(({ uv }) => {
                 if (!(uv instanceof CombinedUserView) ||
                         uv.info.mainEntity === null ||
                         uv.info.mainEntity.schema !== params.schema ||
@@ -906,7 +952,7 @@ const userViewModule: Module<IUserViewState, {}> = {
         },
         setAddedField: (state, params: { schema: SchemaName, entity: EntityName, id: AddedRowId, field: FieldName, addedEntry: IAddedEntry, fieldType: FieldType }) => {
             const entitySummaries = getEntitySummaries(state.entries, params.fieldType);
-            Object.values(state.current.userViews).forEach(uv => {
+            Object.values(state.current.userViews).forEach(({ uv }) => {
                 if (!(uv instanceof CombinedUserView) ||
                         uv.info.mainEntity === null ||
                         uv.info.mainEntity.schema !== params.schema ||
@@ -931,7 +977,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             });
         },
         deleteEntry: (state, params: { schema: SchemaName, entity: EntityName, id: RowId }) => {
-            Object.values(state.current.userViews).forEach(uv => {
+            Object.values(state.current.userViews).forEach(({ uv }) => {
                 if (!(uv instanceof CombinedUserView)) {
                     return;
                 }
@@ -947,7 +993,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             });
         },
         resetChanges: (state, current: CurrentChanges) => {
-            Object.values(state.current.userViews).forEach(uv => {
+            Object.values(state.current.userViews).forEach(({ uv }) => {
                 if (!(uv instanceof CombinedUserView)) {
                     return;
                 }
@@ -999,7 +1045,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             });
         },
         resetUpdatedField: (state, params: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName }) => {
-            Object.values(state.current.userViews).forEach(uv => {
+            Object.values(state.current.userViews).forEach(({ uv }) => {
                 if (!(uv instanceof CombinedUserView)) {
                     return;
                 }
@@ -1038,7 +1084,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             });
         },
         resetAddedEntry: (state, params: { schema: SchemaName, entity: EntityName, id: AddedRowId, positions: number[] }) => {
-            Object.values(state.current.userViews).forEach(uv => {
+            Object.values(state.current.userViews).forEach(({ uv }) => {
                 if (!(uv instanceof CombinedUserView) ||
                         uv.info.mainEntity === null ||
                         uv.info.mainEntity.schema !== params.schema ||
@@ -1055,7 +1101,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             });
         },
         resetDeleteEntry: (state, params: { schema: SchemaName, entity: EntityName, id: RowId }) => {
-            Object.values(state.current.userViews).forEach(uv => {
+            Object.values(state.current.userViews).forEach(({ uv }) => {
                 if (!(uv instanceof CombinedUserView)) {
                     return;
                 }
@@ -1071,7 +1117,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             });
         },
         updateErroredOnce: (state, changes: CurrentChanges) => {
-            Object.values(state.current.userViews).forEach(uv => {
+            Object.values(state.current.userViews).forEach(({ uv }) => {
                 if (!(uv instanceof CombinedUserView)) {
                     return;
                 }
@@ -1145,7 +1191,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             }
             uv.handlers.push(handler);
         },
-        unregisterHandler: (state, { args, handler }: { args: IUserViewArguments, handler: IUserViewEventHandler }) => {
+        unregisterHandler: (state, { args, handler }: { args: IUserViewArguments, name: ConsumerName, handler: IUserViewEventHandler }) => {
             const uv = state.current.getUserView(args);
             if (!(uv instanceof CombinedUserView)) {
                 return;
@@ -1195,7 +1241,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             })();
             commit("setEntries", { ref, entries: pending.ref });
         },
-        getRootView: (store, args: IUserViewArguments) => {
+        getRootView: (store, args: IUserViewArguments): Promise<CombinedUserView> => {
             const { state, commit } = store;
             const pending: IRef<Promise<CombinedUserView>> = {};
             pending.ref = (async () => {
@@ -1206,7 +1252,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                         throw Error("Pending operation cancelled");
                     }
                     commit("clear");
-                    commit("setUserView", { args, userView: current, isRoot: true });
+                    commit("initUserView", { args, consumer: "root", userView: current });
                     if (current instanceof CombinedUserView) {
                         commit("addFieldsInfo", current.info);
                     }
@@ -1226,13 +1272,24 @@ const userViewModule: Module<IUserViewState, {}> = {
             commit("setPending", pending.ref);
             return pending.ref;
         },
-        getNestedView: (store, args: IUserViewArguments) => {
+        getNestedView: (store, { consumer, args }: { consumer: ConsumerName, args: IUserViewArguments }): Promise<CombinedUserView> => {
             const { state, commit } = store;
 
-            console.assert(state.pending === null);
-            const uvHash = userViewHash(args);
-            if (uvHash in state.current.userViews) {
-                return;
+            if (state.pending !== null) {
+                return Promise.reject("Reload in progress");
+            }
+            const oldContainer = state.current.getUserViewContainer(args);
+            if (oldContainer !== null) {
+                if (!(consumer in oldContainer.consumers)) {
+                    commit("addUserViewConsumer", { args, consumer });
+                }
+                if (oldContainer.uv instanceof CombinedUserView) {
+                    return Promise.resolve(oldContainer.uv);
+                } else if (oldContainer.uv instanceof Promise) {
+                    return oldContainer.uv;
+                } else {
+                    return Promise.reject(oldContainer.uv);
+                }
             }
 
             const pending: IRef<Promise<CombinedUserView>> = {};
@@ -1240,15 +1297,17 @@ const userViewModule: Module<IUserViewState, {}> = {
                 let current: UserViewError | CombinedUserView;
                 try {
                     current = await getUserView(store, args);
-                    if (state.current.userViews[uvHash] !== pending.ref) {
-                        throw Error("Pending operation cancelled");
+                    const currContainer = state.current.getUserViewContainer(args);
+                    if (currContainer === null || currContainer.uv !== pending.ref) {
+                        throw Error(`Pending operation cancelled for scope ${consumer}, args ${JSON.stringify(args)}`);
                     }
-                    commit("setUserView", { args, userView: current });
+                    commit("updateUserView", { args, userView: current });
                     if (current instanceof CombinedUserView) {
                         commit("addFieldsInfo", current.info);
                     }
                 } catch (e) {
-                    if (state.current.userViews[uvHash] === pending.ref) {
+                    const currContainer = state.current.getUserViewContainer(args);
+                    if (currContainer === null || currContainer.uv !== pending.ref) {
                         commit("addError", e.message);
                     }
                     throw e;
@@ -1259,14 +1318,15 @@ const userViewModule: Module<IUserViewState, {}> = {
                     return current;
                 }
             })();
-            commit("setUserView", { args, userView: pending.ref });
+            commit("initUserView", { args, consumer, userView: pending.ref });
             return pending.ref;
         },
-        reload: async ({ state, dispatch }) => {
-            if (state.current.rootView === null) {
+        reload: async ({ rootState, dispatch }) => {
+            const query = (rootState as any).query.current as CurrentQuery;
+            if (query.rootViewArgs === null) {
                 return;
             }
-            await dispatch("getRootView", state.current.rootView.args);
+            await dispatch("getRootView", query.rootViewArgs);
         },
 
         // Called from stagingChanges.
@@ -1279,7 +1339,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             }
             commit("updateField", { ...args, updatedValue, fieldType });
         },
-        afterAddEntry: ({ state, rootState, commit }, args: { schema: SchemaName, entity: EntityName, id: AddedRowId, position: number }) => {
+        afterAddEntry: ({ rootState, commit }, args: { schema: SchemaName, entity: EntityName, id: AddedRowId, position: number }) => {
             const changes = (rootState as any).staging.current as CurrentChanges;
             const added = changes.changes[args.schema][args.entity].added;
             // We take a slice to ensure positions won't be updated externally in staging before our newRows object gets populated.
@@ -1303,7 +1363,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             const changes = (rootState as any).staging.current as CurrentChanges;
             commit("resetChanges", changes);
         },
-        beforeResetUpdatedField: ({ rootState, commit }, args: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName }) => {
+        beforeResetUpdatedField: ({ commit }, args: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName }) => {
             commit("resetUpdatedField", args);
         },
         beforeResetAddedEntry: ({ rootState, commit }, args: { schema: SchemaName, entity: EntityName, id: AddedRowId }) => {

@@ -55,11 +55,11 @@
                 </b-modal>
             </div>
 
-            <div class="delete-block" v-if="selectionMode && localRow.selectionEntry !== undefined">
+            <div class="delete-block" v-if="selectionMode && localRow.extra.selectionEntry !== undefined">
                 <input  type="button"
                         :value="$t('select')"
                         class="delete-block_delete-button"
-                        @click="$emit('select', localRow.selectionEntry)" >
+                        @click="$emit('select', localRow.extra.selectionEntry)" >
             </div>
         </form>
     </div>

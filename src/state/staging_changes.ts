@@ -79,9 +79,38 @@ export type CombinedTransactionResult = ICombinedInsertEntityResult | ICombinedU
 
 export class CurrentChanges {
     changes: Record<SchemaName, Record<EntityName, IEntityChanges>> = {};
+    // Needed for determining whether there are changes for a given scope.
+    counts: Record<ScopeName, IChangesCount> = {};
+    // Needed for quick checking whether any entries are added.
+    addedCount: number = 0;
 
     get isEmpty() {
         return Object.entries(this.changes).length === 0;
+    }
+
+    isScopeEmpty(name: ScopeName) {
+        return !(name in this.counts);
+    }
+
+    incrementCounts(scope: ScopeName, op: (counts: IChangesCount) => void) {
+        let counts = this.counts[scope];
+        if (counts === undefined) {
+            counts = {
+                added: 0,
+                updated: 0,
+                deleted: 0,
+            };
+            Vue.set(this.counts, scope, counts);
+        }
+        op(counts);
+    }
+
+    checkDecrementCounts(scope: ScopeName, op: (counts: IChangesCount) => void) {
+        const counts = this.counts[scope];
+        op(counts);
+        if (counts.added === 0 && counts.deleted === 0 && counts.updated === 0) {
+            Vue.delete(this.counts, scope);
+        }
     }
 
     getOrCreateChanges(schemaName: string, entityName: string): IEntityChanges {
@@ -100,6 +129,47 @@ export class CurrentChanges {
         return entity;
     }
 
+    resetUpdatedEntryValue(entityChanges: IEntityChanges, id: RowId) {
+        const entry = entityChanges.updated[id];
+        Vue.delete(entityChanges.updated, id);
+        Object.values(entry).forEach(update => Object.keys(update.scopes).forEach(scope => this.checkDecrementCounts(scope, counts => {
+            counts.updated -= 1;
+        })));
+    }
+
+    resetAddedEntryValue(entityChanges: IEntityChanges, id: AddedRowId) {
+        const entry = entityChanges.added.entries[id];
+        Vue.delete(entityChanges.added.entries, id);
+        const position = entityChanges.added.positions.indexOf(id);
+
+        if (position === -1) {
+            throw Error("Impossible");
+        }
+        entityChanges.added.positions.splice(position, 1);
+        this.addedCount -= 1;
+        Object.keys(entry.scopes).forEach(scope => this.checkDecrementCounts(scope, counts => {
+            counts.added -= 1;
+        }));
+    }
+
+    resetDeletedEntryValue(entityChanges: IEntityChanges, id: RowId) {
+        const entry = entityChanges.deleted[id];
+        Vue.delete(entityChanges.deleted, id);
+        Object.keys(entry.scopes).forEach(scope => this.checkDecrementCounts(scope, counts => {
+            counts.deleted -= 1;
+        }));
+    }
+
+    cleanupEntity(schema: SchemaName, entity: EntityName, entityChanges: IEntityChanges) {
+        if (Object.keys(entityChanges.updated).length === 0 && entityChanges.added.positions.length === 0 && Object.keys(entityChanges.deleted).length === 0) {
+            const schemaChanges = this.changes[schema];
+            Vue.delete(schemaChanges, entity);
+            if (Object.keys(schemaChanges).length === 0) {
+                Vue.delete(this.changes, schema);
+            }
+        }
+    }
+
     changesForEntity(schemaName: string, entityName: string): IEntityChanges {
         const entities = this.changes[schemaName];
         if (entities === undefined) {
@@ -113,10 +183,14 @@ export class CurrentChanges {
     }
 }
 
+export interface IChangesCount {
+    added: number;
+    updated: number;
+    deleted: number;
+}
+
 export interface IStagingState {
     current: CurrentChanges;
-    // Needed for quick checking whether any entries are added.
-    addedCount: number;
     // Current submit promise
     currentSubmit: Promise<TransactionResult[]> | null;
     // Set if changes were made during the submit to decide how to clear.
@@ -158,7 +232,7 @@ const startAutoSave = (context: ActionContext<IStagingState, {}>) => {
 
 const checkAutoSave = (context: ActionContext<IStagingState, {}>) => {
     const { state, commit } = context;
-    if (state.addedCount === 0 && state.currentSubmit === null && Object.entries(state.autoSaveLocks).length === 0) {
+    if (state.current.addedCount === 0 && state.currentSubmit === null && Object.keys(state.autoSaveLocks).length === 0) {
         startAutoSave(context);
     } else {
         stopAutoSave(context);
@@ -231,35 +305,6 @@ const checkUpdatedFields = (fields: Record<FieldName, IUpdatedValue>) => {
     });
 };
 
-const resetUpdatedEntryValue = (state: IStagingState, entityChanges: IEntityChanges, id: RowId) => {
-    Vue.delete(entityChanges.updated, id);
-};
-
-const resetAddedEntryValue = (state: IStagingState, entityChanges: IEntityChanges, id: AddedRowId) => {
-    Vue.delete(entityChanges.added.entries, id);
-    const position = entityChanges.added.positions.indexOf(id);
-
-    if (position === -1) {
-        throw Error("Impossible");
-    }
-    entityChanges.added.positions.splice(position, 1);
-    state.addedCount -= 1;
-};
-
-const resetDeletedEntryValue = (state: IStagingState, entityChanges: IEntityChanges, id: RowId) => {
-    Vue.delete(entityChanges.deleted, id);
-};
-
-const cleanupEntity = (state: IStagingState, schema: SchemaName, entity: EntityName, entityChanges: IEntityChanges) => {
-    if (Object.keys(entityChanges.updated).length === 0 && entityChanges.added.positions.length === 0 && Object.keys(entityChanges.deleted).length === 0) {
-        const schemaChanges = state.current.changes[schema];
-        Vue.delete(schemaChanges, entity);
-        if (Object.keys(schemaChanges).length === 0) {
-            Vue.delete(state.current.changes, schema);
-        }
-    }
-};
-
 const resetScopeBy = ({ state, dispatch }: ActionContext<IStagingState, {}>, checkScope: (scopes: Scopes) => boolean) => {
     Object.entries(state.current.changes).forEach(([schema, schemaChanges]) => {
         Object.entries(schemaChanges).forEach(([entity, entityChanges]) => {
@@ -293,7 +338,6 @@ const stagingModule: Module<IStagingState, {}> = {
     namespaced: true,
     state: {
         current: new CurrentChanges(),
-        addedCount: 0,
         currentSubmit: null,
         touched: false,
         errors: [],
@@ -305,7 +349,6 @@ const stagingModule: Module<IStagingState, {}> = {
     mutations: {
         clear: state => {
             state.current = new CurrentChanges();
-            state.addedCount = 0;
             state.touched = false;
         },
         validate: state => {
@@ -358,13 +401,18 @@ const stagingModule: Module<IStagingState, {}> = {
             if (fields === undefined) {
                 fields = {};
                 if (id in entityChanges.deleted) {
-                    resetDeletedEntryValue(state, entityChanges, id);
+                    state.current.resetDeletedEntryValue(entityChanges, id);
                 }
                 Vue.set(entityChanges.updated, String(id), fields);
             }
             const oldField = fields[field];
             const scopes = oldField === undefined ? { [scope]: null } : { [scope]: null, ...oldField.scopes };
             Vue.set(fields, field, { scopes, ...validateValue(fieldInfo, value) });
+            if (oldField !== undefined && !(scope in oldField.scopes)) {
+                state.current.incrementCounts(scope, counts => {
+                    counts.updated += 1;
+                });
+            }
             state.touched = true;
         },
         addEntry: (state, params: { scope: ScopeName, schema: SchemaName, entity: EntityName, position?: number, entityInfo: EntityFieldsInfo }) => {
@@ -387,7 +435,10 @@ const stagingModule: Module<IStagingState, {}> = {
             } else {
                 entityChanges.added.positions.splice(position, 0, newId);
             }
-            state.addedCount += 1;
+            state.current.addedCount += 1;
+            state.current.incrementCounts(scope, counts => {
+                counts.added += 1;
+            });
             state.touched = true;
         },
         setAddedField: (state, params: { scope: ScopeName, schema: SchemaName, entity: EntityName, id: AddedRowId, field: FieldName, value: any, fieldInfo: IFieldInfo }) => {
@@ -402,7 +453,12 @@ const stagingModule: Module<IStagingState, {}> = {
             if (added === undefined) {
                 throw new Error(`New entity id ${id} is not found`);
             }
-            Vue.set(added.scopes, scope, null);
+            if (!(scope in added.scopes)) {
+                Vue.set(added.scopes, scope, null);
+                state.current.incrementCounts(scope, counts => {
+                    counts.added += 1;
+                });
+            }
             Vue.set(added.values, field, validateValue(fieldInfo, value));
             state.touched = true;
         },
@@ -416,10 +472,18 @@ const stagingModule: Module<IStagingState, {}> = {
                 };
                 Vue.set(entityChanges.deleted, String(id), entry);
                 if (id in entityChanges.updated) {
-                    resetUpdatedEntryValue(state, entityChanges, id);
+                    state.current.resetUpdatedEntryValue(entityChanges, id);
                 }
+                state.current.incrementCounts(scope, counts => {
+                    counts.deleted += 1;
+                });
                 state.touched = true;
             } else {
+                if (!(scope in deleted.scopes)) {
+                    state.current.incrementCounts(scope, counts => {
+                        counts.deleted += 1;
+                    });
+                }
                 Vue.set(deleted.scopes, scope, null);
             }
         },
@@ -430,11 +494,15 @@ const stagingModule: Module<IStagingState, {}> = {
             if (fieldUpdates === undefined) {
                 return;
             }
-            if (field in fieldUpdates) {
+            const update = fieldUpdates[field];
+            if (update !== undefined) {
                 Vue.delete(fieldUpdates, field);
+                Object.keys(update.scopes).forEach(scope => state.current.checkDecrementCounts(scope, counts => {
+                    counts.updated -= 1;
+                }));
                 if (Object.keys(fieldUpdates).length === 0) {
-                    resetUpdatedEntryValue(state, entityChanges, id);
-                    cleanupEntity(state, schema, entity, entityChanges);
+                    state.current.resetUpdatedEntryValue(entityChanges, id);
+                    state.current.cleanupEntity(schema, entity, entityChanges);
                 }
             }
         },
@@ -447,15 +515,15 @@ const stagingModule: Module<IStagingState, {}> = {
 
             const added = entityChanges.added.entries[id];
             if (added !== undefined) {
-                resetAddedEntryValue(state, entityChanges, id);
-                cleanupEntity(state, schema, entity, entityChanges);
+                state.current.resetAddedEntryValue(entityChanges, id);
+                state.current.cleanupEntity(schema, entity, entityChanges);
             }
         },
         resetDeleteEntry: (state, { schema, entity, id }: { schema: SchemaName, entity: EntityName, id: number }) => {
             const entityChanges = state.current.getOrCreateChanges(schema, entity);
             if (id in entityChanges.deleted) {
-                resetDeletedEntryValue(state, entityChanges, id);
-                cleanupEntity(state, schema, entity, entityChanges);
+                state.current.resetDeletedEntryValue(entityChanges, id);
+                state.current.cleanupEntity(schema, entity, entityChanges);
             }
         },
     },
@@ -547,7 +615,7 @@ const stagingModule: Module<IStagingState, {}> = {
         },
         // Clears all scoped entries (when they have been successfully submitted).
         resetScoped: (context, scope: ScopeName) => {
-            resetScopeBy(context, scopes => scope in scopes);
+            resetScopeBy(context, scopes => !(scope in scopes));
         },
 
         addAutoSaveLock: context => {

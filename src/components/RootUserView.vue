@@ -4,6 +4,7 @@
             "search_placeholder": "Type to search",
             "fetch_error": "Failed to fetch user view: {msg}",
             "pending_changes": "Saving",
+            "loading": "Now loading",
             "submit_error": "Error while submitting changes: {msg}",
             "settings_error": "Failed to fetch settings: {msg}",
             "save": "Save",
@@ -14,6 +15,7 @@
             "search_placeholder": "Поиск",
             "fetch_error": "Ошибка получения представления: {msg}",
             "pending_changes": "Сохраняется",
+            "loading": "Загрузка данных",
             "submit_error": "Ошибка сохранения изменений: {msg}",
             "settings_error": "Ошибка получения настроек: {msg}",
             "save": "Сохранить",
@@ -44,7 +46,7 @@
                     </b-input-group>
                 </b-form>
             </div>
-            <b-col class="userview-div">
+            <div v-if="uv !== null" class="userview-div">
                 <UserView :args="query.rootViewArgs"
                           :filter="filterWords"
                           isRoot
@@ -56,31 +58,31 @@
                           @update:onSubmitStaging="onSubmitStaging = $event"
                           @update:enableFilter="enableFilter = $event"
                           @update:bodyStyle="styleNode.innerHTML = $event" />
-            </b-col>
+            </div>
+            <div v-else class="loading">
+                {{ $t('loading') }}
+            </div>
         </div>
         <nav v-if="!uvIsError && bottomBarNeeded" class="fix-bot">
             <div class="count-row">{{ statusLine }}</div>
             <div v-for="(error, errorI) in uvErrors"
                      :key="errorI"
                      class="error custom-danger"
-                     variant="danger"
                      show>
                 {{ $t('fetch_error', { msg: error }) }}
             </div>
             <div class="error custom-danger"
-                     variant="danger"
                      v-if="settingsLastError !== null">
                 {{ $t('settings_error', { msg: settingsLastError }) }}
             </div>
             <div v-for="(error, errorI) in stagingErrors"
                      :key="errorI"
                      class="error custom-danger"
-                     variant="danger"
                      show>
                 {{ $t('submit_error', { msg: error }) }}
             </div>
-            <div class="error custom-warning" variant="warning" v-if="!changes.isEmpty">
-                <button class="error_button" @click="submitChanges()" variant="primary">{{ $t('save') }}</button>
+            <div class="error custom-warning" v-if="!changes.isScopeEmpty('root')">
+                <button class="error_button" @click="submitChanges('root')">{{ $t('save') }}</button>
                 {{ $t('pending_changes') }}
             </div>
         </nav>
@@ -96,7 +98,7 @@ import { mapMaybe } from "@/utils";
 import * as Api from "@/api";
 import { setHeadTitle } from "@/elements";
 import { IUserViewArguments, CombinedUserView, UserViewError, CurrentUserViews } from "@/state/user_view";
-import { CurrentChanges } from "@/state/staging_changes";
+import { CurrentChanges, ScopeName } from "@/state/staging_changes";
 import { IAction } from "@/components/ActionsMenu.vue";
 import { CurrentQuery, IQuery, queryLocation, replaceSearch, defaultValuePrefix } from "@/state/query";
 
@@ -153,7 +155,7 @@ export default class RootUserView extends Vue {
     @userView.Mutation("removeError") uvRemoveError!: (errorIndex: number) => void;
     @userView.State("errors") uvErrors!: string[];
     @staging.State("current") changes!: CurrentChanges;
-    @staging.Action("submit") submitChanges!: () => Promise<void>;
+    @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
     @staging.Action("reset") clearChanges!: () => Promise<void>;
     @staging.Mutation("removeError") stagingRemoveError!: (errorIndex: number) => void;
     @staging.State("errors") stagingErrors!: string[];
@@ -225,10 +227,10 @@ export default class RootUserView extends Vue {
         this.enableFilter = false;
         this.styleNode.innerHTML = "";
 
-        if (this.query.rootViewArgs === null) {
+        const args = this.query.rootViewArgs;
+        if (args === null) {
             throw Error("Invalid root view arguments");
         }
-        const args = this.query.rootViewArgs;
         if (args.source.type !== "named") {
             throw Error("Anonymous user views are not supported");
         }
@@ -241,17 +243,20 @@ export default class RootUserView extends Vue {
         this.$router.push(location);
     }
 
-    // FIMXE: needed only for a style workaround
     get uv() {
-        return this.userViews.rootView;
+        if (this.query.rootViewArgs === null) {
+            return null;
+        } else {
+            return this.userViews.getUserView(this.query.rootViewArgs);
+        }
     }
 
     get uvIsReady() {
-        return this.userViews.rootView instanceof CombinedUserView;
+        return this.uv instanceof CombinedUserView;
     }
 
     get uvIsError() {
-        return this.userViews.rootView instanceof UserViewError;
+        return this.uv instanceof UserViewError;
     }
 
     get isMainView() {
