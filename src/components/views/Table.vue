@@ -35,7 +35,7 @@
                     :type="editingValue.type"
                     :locked="editingLocked"
                     :disableColor="editing.ref.type === 'new'"
-                    :uv="uv"
+                    :uvArgs="uv.args"
                     :indirectLinks="indirectLinks"
                     :scope="scope"
                     autofocus
@@ -953,7 +953,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
             while (i !== null && !equalRowPositionRef(i, to)) {
                 const currRef = this.getRowByLocalPosition(i);
                 if (currRef === null) {
-                    throw Error("impossible");
+                    throw new Error("impossible");
                 }
                 this.local.selectRow(currRef, prevRow.local.extra.selected);
                 i = this.nextLocalRowPosition(i);

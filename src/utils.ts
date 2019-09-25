@@ -180,7 +180,7 @@ export const deepClone = <T>(a: T): T => {
         }
         return res;
     } else {
-        throw Error("Cannot deep clone an object");
+        throw new Error("Cannot deep clone an object");
     }
 };
 
@@ -201,7 +201,7 @@ export const deepEquals = <T>(a: T, b: T): boolean => {
         return Object.keys(b).every(k => k in a) &&
             Object.entries(a).every(([k, v]) => k in b && deepEquals(v, bObj[k]));
     } else {
-        throw Error("Cannot compare objects");
+        throw new Error("Cannot compare objects");
     }
 };
 
@@ -215,19 +215,21 @@ export const map2 = <A, B, R>(func: (arg1: A, arg2: B, index: number, array1: A[
 
 // Like JSON.stringify but maintains order of keys in dictionaries.
 export const valueSignature = <T>(a: T): string => {
-    if (typeof a !== "object" || a === null) {
+    if (a === undefined) {
+        return "undefined";
+    } else if (typeof a !== "object" || a === null) {
         return JSON.stringify(a);
     } else if (a instanceof Array) {
         return "[" + a.map(valueSignature).join(",") + "]";
     } else if (!hasUserPrototype(a as any)) {
         return "{" + Object.keys(a).sort().map(k => JSON.stringify(k) + ":" + valueSignature((a as any)[k])).join(",") + "}";
     } else {
-        throw Error("Cannot make signatures for objects");
+        throw new Error("Cannot make signatures for objects");
     }
 };
 
 export class ObjectSet<K> {
-    entries: Record<string, K> = {};
+    private entries: Record<string, K> = {};
 
     insert(k: K) {
         const key = valueSignature(k);
@@ -274,3 +276,114 @@ export const vueEmit = (context: RenderContext, name: string, ...args: any[]) =>
         listener(...args);
     }
 };
+
+export type ReferenceName = string;
+
+export interface IResource<T> {
+    value: T;
+    refs: RecordSet<ReferenceName>;
+}
+
+// Implements a map with named references which supports removing unreferenced entries.
+export class ResourceMap<V> {
+    private resourcesMap: Record<string, IResource<V>> = {};
+
+    createResource(key: string, reference: ReferenceName, value: V) {
+        if (key in this.resourcesMap) {
+            throw new Error("Resource is already allocated");
+        }
+        const resource: IResource<V> = {
+            value,
+            refs: { [reference]: null },
+        };
+        Vue.set(this.resourcesMap, key, resource);
+    }
+
+    updateResource(key: string, value: V) {
+        const resource = this.resourcesMap[key];
+        if (resource === undefined) {
+            throw new Error("Resource doesn't exist");
+        }
+        resource.value = value;
+    }
+
+    addReference(key: string, name: ReferenceName) {
+        const resource = this.resourcesMap[key];
+        if (resource === undefined) {
+            throw new Error("Resource doesn't exist");
+        }
+        Vue.set(resource.refs, name, null);
+    }
+
+    removeReference(key: string, name: ReferenceName) {
+        const resource = this.resourcesMap[key];
+        if (resource !== undefined) {
+            Vue.delete(resource.refs, name);
+
+            if (Object.keys(resource.refs).length === 0) {
+                Vue.delete(this.resourcesMap, key);
+            }
+
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    getResource(key: string): IResource<V> | undefined {
+        return this.resourcesMap[key];
+    }
+
+    get(key: string) {
+        const resource = this.resourcesMap[key];
+        return resource === undefined ? undefined : resource.value;
+    }
+
+    keys() {
+        return Object.keys(this.resourcesMap);
+    }
+
+    resources() {
+        return Object.values(this.resourcesMap);
+    }
+
+    values() {
+        return Object.values(this.resourcesMap).map(res => res.value);
+    }
+}
+
+export class ObjectResourceMap<K, V> {
+    private map = new ResourceMap<V>();
+
+    createResource(key: K, reference: ReferenceName, value: V) {
+        this.map.createResource(valueSignature(key), reference, value);
+    }
+
+    updateResource(key: K, value: V) {
+        this.map.updateResource(valueSignature(key), value);
+    }
+
+    addReference(key: K, name: ReferenceName) {
+        this.map.addReference(valueSignature(key), name);
+    }
+
+    removeReference(key: K, name: ReferenceName) {
+        return this.map.removeReference(valueSignature(key), name);
+    }
+
+    getResource(key: K) {
+        return this.map.getResource(valueSignature(key));
+    }
+
+    get(key: K) {
+        return this.map.get(valueSignature(key));
+    }
+
+    resources() {
+        return this.map.resources();
+    }
+
+    values() {
+        return this.map.values();
+    }
+}

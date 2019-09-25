@@ -25,7 +25,7 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import { IReferenceFieldType } from "@/api";
+import { IEntityRef } from "@/api";
 import { equalEntityRef } from "@/values";
 import { IAction } from "@/components/ActionsMenu.vue";
 import { IQuery } from "@/state/query";
@@ -39,7 +39,7 @@ export default class SelectUserView extends Vue {
     @staging.State("current") changes!: CurrentChanges;
     @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
     @staging.Action("removeScope") removeScope!: (scope: ScopeName) => Promise<void>;
-    @Prop({ type: Object, required: true }) fieldType!: IReferenceFieldType;
+    @Prop({ type: Object, required: true }) entity!: IEntityRef;
     @Prop({ type: Object, required: true }) selectView!: IQuery;
 
     private extraActions: IAction[] = [];
@@ -60,14 +60,14 @@ export default class SelectUserView extends Vue {
     }
 
     private selectFromView(selection: ISelectionRef) {
-        if (!equalEntityRef(this.fieldType.entity, selection.entity)) {
+        if (!equalEntityRef(this.entity, selection.entity)) {
             throw new Error("Entry from invalid entity selected");
         }
 
         this.$emit("select", selection.id);
     }
 
-    @Watch("actions", { deep: true })
+    @Watch("actions", { deep: true, immediate: true })
     private pushActions() {
         this.$emit("update:actions", this.actions);
     }
