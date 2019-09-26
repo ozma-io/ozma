@@ -10,6 +10,8 @@ try {
     config = defaultConfig;
 }
 
+const analyzeBundle = process.env["ANALYZE"];
+
 module.exports = {
     assetsDir: "static",
 
@@ -19,14 +21,14 @@ module.exports = {
         i18n: {
             fallbackLocale: "en",
             localeDir: "locales",
-            enableInSFC: true
+            enableInSFC: true,
         }
     },
 
     configureWebpack: {
         plugins: [
             new IgnorePlugin(/^\.\/locale$/, /moment$/),
-            //new BundleAnalyzerPlugin()
+            ...(analyzeBundle ? [new BundleAnalyzerPlugin()] : []),
         ]
     },
 
