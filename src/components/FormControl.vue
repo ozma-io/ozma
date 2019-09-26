@@ -74,6 +74,7 @@
                        :entity="inputType.ref"
                        :linkedAttr="inputType.linkedAttr"
                        :selectView="inputType.selectView"
+                       :controlStyle="inputType.style"
                        :uvArgs="uvArgs"
                         @update:actions="actions = $event"
                         @update="updateValue($event)"
@@ -160,6 +161,7 @@ interface IReferenceType {
     ref: IEntityRef;
     linkedAttr?: any;
     selectView?: IQuery;
+    style?: Record<string, any>;
 }
 
 interface ICheckType {
@@ -228,9 +230,10 @@ export default class FormControl extends Vue {
     }
 
     private get controlPanelStyle() {
+        const heightExclusions = ["select", "reference"];
         const heightAttr = this.attributes["ControlHeight"];
-        const isSelect = this.inputType.name === "select";
-        return heightAttr && !isSelect ? { height: `${heightAttr}px`, maxHeight: "initial" } : {};
+        const excludeHeight = heightExclusions.includes(this.inputType.name);
+        return heightAttr && !excludeHeight ? { height: `${heightAttr}px`, maxHeight: "initial" } : {};
     }
 
     private controlStyle(height?: string): Record<string, any> {
@@ -275,6 +278,7 @@ export default class FormControl extends Vue {
                         ref: this.fieldType.entity,
                     };
                     refEntry.linkedAttr = this.attributes["LinkedView"];
+                    refEntry.style = this.controlStyle();
                     const selectView = attrToQuerySelf(this.attributes["SelectView"], this.value.info, linkOpts);
                     if (selectView !== null) {
                         refEntry.selectView = selectView;
@@ -374,7 +378,7 @@ export default class FormControl extends Vue {
         display: block;
         margin-right: 7px;
         margin-top: 10px;
-        margin-bottom: 2px;
+        margin-bottom: 5px;
     }
     .caption-editors {
         display: inline-block;
