@@ -2,11 +2,11 @@ import Vue from "vue";
 import { Store, Dispatch, Module, ActionContext } from "vuex";
 import moment from "moment";
 
-import { IRef, FetchError, RecordSet, momentLocale, tryDicts } from "@/utils";
+import { IRef, FetchError, ObjectResourceMap, ReferenceName, momentLocale, tryDicts, debugLog } from "@/utils";
 import * as Api from "@/api";
 import {
     IColumnField, IUserViewRef, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
-    IReferenceFieldType, SchemaName, EntityName, RowId, FieldName, AttributeName,
+    SchemaName, EntityName, RowId, FieldName, AttributeName,
     ValueType, FieldType, AttributesMap,
 } from "@/api";
 import { IUpdatedValue, FieldsInfo, valueToText, insertFieldsInfo, equalEntityRef, valueFromRaw, valueIsNull } from "@/values";
@@ -120,21 +120,6 @@ const insertMainRowMapping = (mainRowMapping: IMainRowMapping, id: RowId, index:
     rowsMapping.push(index);
 };
 
-const getEntitySummaries = (entries: EntriesMap, fieldType: FieldType) => {
-    if (fieldType.type === "reference") {
-        const schemaSummaries = entries[fieldType.entity.schema];
-        if (schemaSummaries !== undefined) {
-            const entitySummaries = schemaSummaries[fieldType.entity.name];
-            if (entitySummaries !== undefined) {
-                if (!(entitySummaries instanceof Promise)) {
-                    return entitySummaries;
-                }
-            }
-        }
-    }
-    return null;
-};
-
 const setUpdatedPun = (entitySummaries: Record<RowId, string>, value: ICombinedValue) => {
     const ref = currentValue(value);
     if (valueIsNull(ref)) {
@@ -154,32 +139,24 @@ const setOrRequestUpdatedPun = (context: { dispatch: Dispatch, state: IUserViewS
     const { dispatch, state } = context;
     const ref = currentValue(value);
 
-    // We don't use `getEntitySummaries` because we request new entries only if Promise wasn't found -- for performance.
     if (fieldType.type === "reference") {
         if (valueIsNull(ref)) {
             value.pun = "";
         } else {
-            const schemaSummaries = state.entries[fieldType.entity.schema];
-            if (schemaSummaries !== undefined) {
-                const entitySummaries = schemaSummaries[fieldType.entity.name];
-                if (entitySummaries !== undefined) {
-                    if (!(entitySummaries instanceof Promise)) {
-                        const pun = entitySummaries[ref];
-                        if (pun === undefined) {
-                            value.pun = String(ref);
-                        } else {
-                            value.pun = pun;
-                        }
-                        return;
-                    }
+            const entitySummaries = state.entries.getEntries(fieldType.entity);
+            if (entitySummaries === undefined) {
+                dispatch("userView/getEntries", { ref: fieldType.entity, reference: "update" }, { root: true });
+                value.pun = undefined;
+            } else if (!(entitySummaries instanceof Promise)) {
+                const pun = entitySummaries[ref];
+                if (pun === undefined) {
+                    value.pun = String(ref);
                 } else {
-                    // We use global naming here because this function is used both from global store and the module.
-                    dispatch("userView/getEntries", fieldType.entity, { root: true });
+                    value.pun = pun;
                 }
             } else {
-                dispatch("userView/getEntries", fieldType.entity, { root: true });
+                value.pun = undefined;
             }
-            value.pun = undefined;
         }
     }
 };
@@ -216,13 +193,13 @@ export const newEmptyRow = (store: Store<any>, uv: CombinedUserView, defaultRawV
         const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
 
         if (info.mainField !== null) {
-            let rawValue: any;
+            let rawDefaultValue: any;
             if (info.mainField.name in defaultRawValues) {
-                rawValue = defaultRawValues[info.mainField.name];
+                rawDefaultValue = defaultRawValues[info.mainField.name];
             } else {
-                rawValue = getColumnAttr("DefaultValue");
+                rawDefaultValue = getColumnAttr("DefaultValue");
             }
-            const defaultValue = valueFromRaw(info.mainField.field, rawValue);
+            const defaultValue = valueFromRaw(info.mainField.field, rawDefaultValue);
             const initialValue = defaultValue !== undefined ? defaultValue : info.mainField.field.defaultValue;
             const updateInfo = {
                 field: info.mainField.field,
@@ -254,10 +231,6 @@ export const newEmptyRow = (store: Store<any>, uv: CombinedUserView, defaultRawV
 };
 
 export const currentValue = (value: ICombinedValue) => "rawValue" in value ? value.rawValue : value.value;
-
-// For each entity contains array of all accessible entries (main fields) identified by id
-export type Entries = Record<RowId, string>;
-export type EntriesMap = Record<SchemaName, Record<EntityName, Entries | Promise<Entries>>>;
 
 export interface IUserViewEventHandler {
     updateValue: (rowIndex: number, row: ICombinedRow, columnIndex: number, value: ICombinedValue) => void;
@@ -547,77 +520,43 @@ export class UserViewError extends Error {
     }
 }
 
-export type ConsumerName = string;
+// For each entity contains array of all accessible entries (main fields) identified by id
+export type Entries = Record<RowId, string>;
+export type EntriesResult = Entries | Promise<Entries> | Error;
+
+export class CurrentEntries {
+    entries = new ObjectResourceMap<IEntityRef, EntriesResult>();
+
+    getEntries(ref: IEntityRef) {
+        const entries = this.entries.get(ref);
+        if (entries === undefined || entries instanceof Promise || entries instanceof Error) {
+            return undefined;
+        } else {
+            return entries;
+        }
+    }
+}
 
 export type UserViewResult = CombinedUserView | UserViewError | Promise<CombinedUserView>;
 
-export interface IUserViewContainer {
-    uv: UserViewResult;
-    consumers: RecordSet<ConsumerName>;
-}
-
 export class CurrentUserViews {
-    userViews: Record<string, IUserViewContainer> = {};
-    lastLocalId: number = 0;
-
-    initUserView(args: IUserViewArguments, consumer: ConsumerName, uv: CombinedUserView | UserViewError | Promise<CombinedUserView>) {
-        const hash = userViewHash(args);
-        if (hash in this.userViews) {
-            throw new Error("User view already exists");
-        }
-        const container: IUserViewContainer = {
-            uv,
-            consumers: { [consumer]: null },
-        };
-        Vue.set(this.userViews, hash, container);
-    }
-
-    updateUserView(args: IUserViewArguments, uv: CombinedUserView | UserViewError | Promise<CombinedUserView>) {
-        const container = this.userViews[userViewHash(args)];
-        if (container !== undefined) {
-            container.uv = uv;
-        }
-    }
-
-    addConsumer(args: IUserViewArguments, name: ConsumerName) {
-        const container = this.userViews[userViewHash(args)];
-        if (container !== undefined) {
-            Vue.set(container.consumers, name, null);
-        }
-    }
-
-    removeConsumer(args: IUserViewArguments, name: ConsumerName) {
-        const hash = userViewHash(args);
-        const container = this.userViews[hash];
-        if (container !== undefined) {
-            Vue.delete(container.consumers, name);
-
-            if (Object.keys(container.consumers).length === 0) {
-                Vue.delete(this.userViews, hash);
-            }
-        }
-    }
-
-    getUserViewContainer(args: IUserViewArguments) {
-        const container = this.userViews[userViewHash(args)];
-        return container === undefined ? null : container;
-    }
+    userViews = new ObjectResourceMap<IUserViewArguments, UserViewResult>();
 
     getUserView(args: IUserViewArguments) {
-        const container = this.getUserViewContainer(args);
-        if (container === null || container.uv instanceof Promise) {
-            return null;
+        const uv = this.userViews.get(args);
+        if (uv === undefined || uv instanceof Promise) {
+            return undefined;
         } else {
-            return container.uv;
+            return uv;
         }
     }
 }
 
 export interface IUserViewState {
     current: CurrentUserViews;
+    entries: CurrentEntries;
     // Needed because during user view reloads we don't want to replace CurrentUserView right away.
     pending: Promise<CombinedUserView> | null;
-    entries: EntriesMap;
     fieldsInfo: FieldsInfo;
     errors: string[];
 }
@@ -630,46 +569,12 @@ export const homeSchema = (args: IUserViewArguments): SchemaName | null => {
     }
 };
 
-export const valueReferenceName = (entriesMap: EntriesMap, fieldType: IReferenceFieldType, value: any) => {
-    if (value !== undefined && value !== null) {
-        const ref = fieldType.entity;
-        const schemaMap = entriesMap[ref.schema];
-        if (schemaMap !== undefined) {
-            const refEntries = schemaMap[ref.name];
-            if (refEntries !== undefined && !(refEntries instanceof Promise)) {
-                return refEntries[value];
-            }
-        }
-    }
-    return null;
-};
-
 export const valueToPunnedText = (valueType: ValueType, value: ICombinedValue): string => {
     if (value.pun !== undefined) {
         return value.pun;
     } else {
         return valueToText(valueType, currentValue(value));
     }
-};
-
-const userViewHash = (args: IUserViewArguments): string => {
-    let query: string[];
-    if (args.source.type === "anonymous") {
-        query = ["anonymous", args.source.query];
-    } else if (args.source.type === "named") {
-        query = [args.source.ref.schema, args.source.ref.name];
-    } else {
-        throw new Error("Invalid source type");
-    }
-    if (args.args === null) {
-        query.push("info");
-    } else {
-        const queryArgs = Object.entries(args.args).map(([name, arg]) => `${name}=${JSON.stringify(arg)}`);
-        if (queryArgs.length !== 0) {
-            query.push(queryArgs.join(","));
-        }
-    }
-    return query.join(".");
 };
 
 const getUserView = async (context: ActionContext<IUserViewState, {}>, args: IUserViewArguments): Promise<CombinedUserView | UserViewError> => {
@@ -708,7 +613,7 @@ const getUserView = async (context: ActionContext<IUserViewState, {}>, args: IUs
             }
         } else if (args.source.type === "anonymous") {
             if (args.args === null) {
-                throw Error("Getting information about anonymous views is not supported");
+                throw new Error("Getting information about anonymous views is not supported");
             } else {
                 const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
                     func: Api.fetchAnonymousView,
@@ -749,8 +654,8 @@ const userViewModule: Module<IUserViewState, {}> = {
     namespaced: true,
     state: {
         current: new CurrentUserViews(),
+        entries: new CurrentEntries(),
         pending: null,
-        entries: {},
         errors: [],
         fieldsInfo: {},
     },
@@ -762,17 +667,17 @@ const userViewModule: Module<IUserViewState, {}> = {
             state.errors.splice(errorIndex, 1);
         },
 
-        initUserView: (state, { args, consumer, userView }: { args: IUserViewArguments, consumer: ConsumerName, userView: UserViewResult }) => {
-            state.current.initUserView(args, consumer, userView);
+        initUserView: (state, { args, reference, userView }: { args: IUserViewArguments, reference: ReferenceName, userView: UserViewResult }) => {
+            state.current.userViews.createResource(args, reference, userView);
         },
         updateUserView: (state, { args, userView }: { args: IUserViewArguments, userView: UserViewResult }) => {
-            state.current.updateUserView(args, userView);
+            state.current.userViews.updateResource(args, userView);
         },
-        addUserViewConsumer: (state, { args, consumer }: { args: IUserViewArguments, consumer: ConsumerName }) => {
-            state.current.addConsumer(args, consumer);
+        addUserViewConsumer: (state, { args, reference }: { args: IUserViewArguments, reference: ReferenceName }) => {
+            state.current.userViews.addReference(args, reference);
         },
-        removeUserViewConsumer: (state, { args, consumer }: { args: IUserViewArguments, consumer: ConsumerName }) => {
-            state.current.removeConsumer(args, consumer);
+        removeUserViewConsumer: (state, { args, reference }: { args: IUserViewArguments, reference: ReferenceName }) => {
+            state.current.userViews.removeReference(args, reference);
         },
         addFieldsInfo: (state, info: IResultViewInfo) => {
             insertFieldsInfo(state.fieldsInfo, info);
@@ -782,21 +687,25 @@ const userViewModule: Module<IUserViewState, {}> = {
         },
         clear: state => {
             state.current = new CurrentUserViews();
-            state.entries = {};
+            state.entries = new CurrentEntries();
             state.errors = [];
             state.fieldsInfo = {};
             state.pending = null;
         },
 
-        setEntries: (state, { ref, entries }: { ref: IEntityRef, entries: Entries | Promise<Entries> }) => {
-            let entities = state.entries[ref.schema];
-            if (entities === undefined) {
-                entities = {};
-                Vue.set(state.entries, ref.schema, entities);
-            }
-
-            Vue.set(entities, ref.name, entries);
+        initEntries: (state, { ref, reference, entries }: { ref: IEntityRef, reference: ReferenceName, entries: EntriesResult }) => {
+            state.entries.entries.createResource(ref, reference, entries);
         },
+        updateEntries: (state, { ref, entries }: { ref: IEntityRef, entries: EntriesResult }) => {
+            state.entries.entries.updateResource(ref, entries);
+        },
+        addEntriesConsumer: (state, { ref, reference }: { ref: IEntityRef, reference: ReferenceName }) => {
+            state.entries.entries.addReference(ref, reference);
+        },
+        removeEntriesConsumer: (state, { ref, reference }: { ref: IEntityRef, reference: ReferenceName }) => {
+            state.entries.entries.removeReference(ref, reference);
+        },
+
         updateUserViewSummaries: (state, params: { ref: IEntityRef, entries: Entries, changes: CurrentChanges }) => {
             const { ref, entries, changes } = params;
 
@@ -804,7 +713,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                 return field.fieldType.type === "reference" && equalEntityRef(field.fieldType.entity, ref);
             };
 
-            Object.values(state.current.userViews).forEach(({ uv }) => {
+            state.current.userViews.values().forEach(uv => {
                 if (!(uv instanceof CombinedUserView)) {
                     return;
                 }
@@ -841,19 +750,11 @@ const userViewModule: Module<IUserViewState, {}> = {
                 });
             });
         },
-        clearEntries: (state, ref: IEntityRef) => {
-            const entities = state.entries[ref.schema];
-            if (entities === undefined) {
-                return;
-            }
-
-            Vue.delete(entities, ref.name);
-        },
 
         updateField: (state, params: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName, updatedValue: IUpdatedValue, fieldType: FieldType }) => {
-            const entitySummaries = getEntitySummaries(state.entries, params.fieldType);
+            const entitySummaries = params.fieldType.type === "reference" ? state.entries.getEntries(params.fieldType.entity) : undefined;
 
-            Object.values(state.current.userViews).forEach(({ uv }) => {
+            state.current.userViews.values().forEach(uv => {
                 if (!(uv instanceof CombinedUserView)) {
                     return;
                 }
@@ -883,9 +784,9 @@ const userViewModule: Module<IUserViewState, {}> = {
                 updatedValues.forEach(valueRef => {
                     const row = (uv.rows as ICombinedRow[])[valueRef.index];
                     // New object because otherwise Vue won't detect changes.
-                    const value = Object.assign({}, row.values[valueRef.column], params.updatedValue);
+                    const value = { ...row.values[valueRef.column], ...params.updatedValue };
                     Vue.set(row.values, valueRef.column, value);
-                    if (entitySummaries !== null && "pun" in value) {
+                    if (entitySummaries !== undefined && "pun" in value) {
                         setUpdatedPun(entitySummaries, value);
                     }
 
@@ -897,7 +798,7 @@ const userViewModule: Module<IUserViewState, {}> = {
         },
         // Expects all values to be empty, therefore doesn't set updated puns!
         addEntry: (state, params: { schema: SchemaName, entity: EntityName, id: AddedRowId, positions: number[], newValues: UpdatedValues }) => {
-            Object.values(state.current.userViews).forEach(({ uv }) => {
+            state.current.userViews.values().forEach(uv => {
                 if (!(uv instanceof CombinedUserView) ||
                         uv.info.mainEntity === null ||
                         uv.info.mainEntity.schema !== params.schema ||
@@ -951,8 +852,9 @@ const userViewModule: Module<IUserViewState, {}> = {
             });
         },
         setAddedField: (state, params: { schema: SchemaName, entity: EntityName, id: AddedRowId, field: FieldName, addedEntry: IAddedEntry, fieldType: FieldType }) => {
-            const entitySummaries = getEntitySummaries(state.entries, params.fieldType);
-            Object.values(state.current.userViews).forEach(({ uv }) => {
+            const entitySummaries = params.fieldType.type === "reference" ? state.entries.getEntries(params.fieldType.entity) : undefined;
+
+            state.current.userViews.values().forEach(uv => {
                 if (!(uv instanceof CombinedUserView) ||
                         uv.info.mainEntity === null ||
                         uv.info.mainEntity.schema !== params.schema ||
@@ -966,7 +868,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                     const updated = params.addedEntry.values[params.field];
                     const value: ICombinedValue = Object.assign({}, newRow.values[colI], updated);
                     Vue.set(newRow.values, colI, value);
-                    if (entitySummaries !== null && "pun" in value) {
+                    if (entitySummaries !== undefined && "pun" in value) {
                         setUpdatedPun(entitySummaries, value);
                     }
 
@@ -977,7 +879,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             });
         },
         deleteEntry: (state, params: { schema: SchemaName, entity: EntityName, id: RowId }) => {
-            Object.values(state.current.userViews).forEach(({ uv }) => {
+            state.current.userViews.values().forEach(uv => {
                 if (!(uv instanceof CombinedUserView)) {
                     return;
                 }
@@ -993,7 +895,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             });
         },
         resetChanges: (state, current: CurrentChanges) => {
-            Object.values(state.current.userViews).forEach(({ uv }) => {
+            state.current.userViews.values().forEach(uv => {
                 if (!(uv instanceof CombinedUserView)) {
                     return;
                 }
@@ -1045,7 +947,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             });
         },
         resetUpdatedField: (state, params: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName }) => {
-            Object.values(state.current.userViews).forEach(({ uv }) => {
+            state.current.userViews.values().forEach(uv => {
                 if (!(uv instanceof CombinedUserView)) {
                     return;
                 }
@@ -1084,7 +986,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             });
         },
         resetAddedEntry: (state, params: { schema: SchemaName, entity: EntityName, id: AddedRowId, positions: number[] }) => {
-            Object.values(state.current.userViews).forEach(({ uv }) => {
+            state.current.userViews.values().forEach(uv => {
                 if (!(uv instanceof CombinedUserView) ||
                         uv.info.mainEntity === null ||
                         uv.info.mainEntity.schema !== params.schema ||
@@ -1101,7 +1003,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             });
         },
         resetDeleteEntry: (state, params: { schema: SchemaName, entity: EntityName, id: RowId }) => {
-            Object.values(state.current.userViews).forEach(({ uv }) => {
+            state.current.userViews.values().forEach(uv => {
                 if (!(uv instanceof CombinedUserView)) {
                     return;
                 }
@@ -1117,7 +1019,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             });
         },
         updateErroredOnce: (state, changes: CurrentChanges) => {
-            Object.values(state.current.userViews).forEach(({ uv }) => {
+            state.current.userViews.values().forEach(uv => {
                 if (!(uv instanceof CombinedUserView)) {
                     return;
                 }
@@ -1184,14 +1086,14 @@ const userViewModule: Module<IUserViewState, {}> = {
         registerHandler: (state, { args, handler }: { args: IUserViewArguments, handler: IUserViewEventHandler }) => {
             const uv = state.current.getUserView(args);
             if (!(uv instanceof CombinedUserView)) {
-                throw Error("User view does not exist");
+                throw new Error("User view does not exist");
             }
             if (uv.handlers.includes(handler)) {
                 return;
             }
             uv.handlers.push(handler);
         },
-        unregisterHandler: (state, { args, handler }: { args: IUserViewArguments, name: ConsumerName, handler: IUserViewEventHandler }) => {
+        unregisterHandler: (state, { args, handler }: { args: IUserViewArguments, name: ReferenceName, handler: IUserViewEventHandler }) => {
             const uv = state.current.getUserView(args);
             if (!(uv instanceof CombinedUserView)) {
                 return;
@@ -1203,12 +1105,23 @@ const userViewModule: Module<IUserViewState, {}> = {
         },
     },
     actions: {
-        getEntries: ({ state, rootState, commit, dispatch }, ref: IEntityRef) => {
+        getEntries: ({ state, rootState, commit, dispatch }, { reference, ref }: { reference: ReferenceName, ref: IEntityRef }): Promise<Entries> => {
             if (state.pending !== null) {
-                return;
+                debugLog("getEntries", reference, ref);
+                return Promise.reject("Reload in progress");
             }
-            if (ref.schema in state.entries && ref.name in state.entries[ref.schema]) {
-                return;
+            const oldResource = state.entries.entries.getResource(ref);
+            if (oldResource !== undefined) {
+                if (!(reference in oldResource.refs)) {
+                    commit("addEntriesConsumer", { ref, reference });
+                }
+                if (oldResource.value instanceof Error) {
+                    return Promise.reject(oldResource.value);
+                } else if (oldResource.value instanceof Promise) {
+                    return oldResource.value;
+                } else {
+                    return Promise.resolve(oldResource.value);
+                }
             }
 
             const pending: IRef<Promise<Entries>> = {};
@@ -1219,8 +1132,9 @@ const userViewModule: Module<IUserViewState, {}> = {
                         func: Api.fetchAnonymousView,
                         args: [query, {}],
                     }, { root: true });
-                    if (!(ref.schema in state.entries && state.entries[ref.schema][ref.name] === pending.ref)) {
-                        throw Error("Pending operation cancelled");
+                    const currPending = state.entries.entries.get(ref);
+                    if (currPending !== pending.ref) {
+                        throw new Error("Pending operation cancelled");
                     }
                     const mainType = res.info.columns[1].valueType;
                     const entries = Object.fromEntries(res.result.rows.map<[number, string]>(row => {
@@ -1229,17 +1143,20 @@ const userViewModule: Module<IUserViewState, {}> = {
                         return [id, main];
                     }));
                     const changes: CurrentChanges = (rootState as any).staging.current;
-                    commit("setEntries", { ref, entries });
+                    commit("updateEntries", { ref, entries });
                     commit("updateUserViewSummaries", { ref, entries, changes });
                     return entries;
                 } catch (e) {
-                    if (ref.schema in state.entries && state.entries[ref.schema][ref.name] === pending.ref) {
-                        commit("clearEntries", ref);
+                    const currPending = state.entries.entries.get(ref);
+                    if (currPending === pending.ref) {
+                        console.log("caught", e);
+                        commit("updateEntries", { ref, entries: e });
                     }
                     throw e;
                 }
             })();
-            commit("setEntries", { ref, entries: pending.ref });
+            commit("initEntries", { ref, reference, entries: pending.ref });
+            return pending.ref;
         },
         getRootView: (store, args: IUserViewArguments): Promise<CombinedUserView> => {
             const { state, commit } = store;
@@ -1249,10 +1166,10 @@ const userViewModule: Module<IUserViewState, {}> = {
                 try {
                     current = await getUserView(store, args);
                     if (state.pending !== pending.ref) {
-                        throw Error("Pending operation cancelled");
+                        throw new Error("Pending operation cancelled");
                     }
                     commit("clear");
-                    commit("initUserView", { args, consumer: "root", userView: current });
+                    commit("initUserView", { args, reference: "root", userView: current });
                     if (current instanceof CombinedUserView) {
                         commit("addFieldsInfo", current.info);
                     }
@@ -1272,23 +1189,24 @@ const userViewModule: Module<IUserViewState, {}> = {
             commit("setPending", pending.ref);
             return pending.ref;
         },
-        getNestedView: (store, { consumer, args }: { consumer: ConsumerName, args: IUserViewArguments }): Promise<CombinedUserView> => {
+        getNestedView: (store, { reference, args }: { reference: ReferenceName, args: IUserViewArguments }): Promise<CombinedUserView> => {
             const { state, commit } = store;
 
             if (state.pending !== null) {
+                debugLog("getNestedView", reference, args);
                 return Promise.reject("Reload in progress");
             }
-            const oldContainer = state.current.getUserViewContainer(args);
-            if (oldContainer !== null) {
-                if (!(consumer in oldContainer.consumers)) {
-                    commit("addUserViewConsumer", { args, consumer });
+            const oldResource = state.current.userViews.getResource(args);
+            if (oldResource !== undefined) {
+                if (!(reference in oldResource.refs)) {
+                    commit("addUserViewConsumer", { args, reference });
                 }
-                if (oldContainer.uv instanceof CombinedUserView) {
-                    return Promise.resolve(oldContainer.uv);
-                } else if (oldContainer.uv instanceof Promise) {
-                    return oldContainer.uv;
+                if (oldResource.value instanceof CombinedUserView) {
+                    return Promise.resolve(oldResource.value);
+                } else if (oldResource.value instanceof Promise) {
+                    return oldResource.value;
                 } else {
-                    return Promise.reject(oldContainer.uv);
+                    return Promise.reject(oldResource.value);
                 }
             }
 
@@ -1297,18 +1215,18 @@ const userViewModule: Module<IUserViewState, {}> = {
                 let current: UserViewError | CombinedUserView;
                 try {
                     current = await getUserView(store, args);
-                    const currContainer = state.current.getUserViewContainer(args);
-                    if (currContainer === null || currContainer.uv !== pending.ref) {
-                        throw Error(`Pending operation cancelled for scope ${consumer}, args ${JSON.stringify(args)}`);
+                    const currContainer = state.current.userViews.get(args);
+                    if (currContainer !== pending.ref) {
+                        throw new Error(`Pending operation cancelled for scope ${reference}, args ${JSON.stringify(args)}`);
                     }
                     commit("updateUserView", { args, userView: current });
                     if (current instanceof CombinedUserView) {
                         commit("addFieldsInfo", current.info);
                     }
                 } catch (e) {
-                    const currContainer = state.current.getUserViewContainer(args);
-                    if (currContainer === null || currContainer.uv !== pending.ref) {
-                        commit("addError", e.message);
+                    const currContainer = state.current.userViews.get(args);
+                    if (currContainer === pending.ref) {
+                        commit("updateUserView", { args, userView: e });
                     }
                     throw e;
                 }
@@ -1318,7 +1236,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                     return current;
                 }
             })();
-            commit("initUserView", { args, consumer, userView: pending.ref });
+            commit("initUserView", { args, reference, userView: pending.ref });
             return pending.ref;
         },
         reload: async ({ rootState, dispatch }) => {
@@ -1335,7 +1253,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             const updatedValue = changes.changes[args.schema][args.entity].updated[args.id][args.field];
             const fieldType = state.fieldsInfo[args.schema][args.entity][args.field].fieldType;
             if (fieldType.type === "reference") {
-                dispatch("getEntries", fieldType.entity);
+                dispatch("getEntries", { ref: fieldType.entity, reference: "update" });
             }
             commit("updateField", { ...args, updatedValue, fieldType });
         },
@@ -1352,7 +1270,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             const addedEntry = changes.changes[args.schema][args.entity].added.entries[args.id];
             const fieldType = state.fieldsInfo[args.schema][args.entity][args.field].fieldType;
             if (fieldType.type === "reference") {
-                dispatch("getEntries", fieldType.entity);
+                dispatch("getEntries", { ref: fieldType.entity, reference: "update" });
             }
             commit("setAddedField", { ...args, addedEntry, fieldType });
         },

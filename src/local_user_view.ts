@@ -261,7 +261,7 @@ export abstract class LocalUserView<ValueT, RowT, ViewT> implements IHandlerProv
         } else if (ref.type === "new") {
             return this.emptyRow;
         } else {
-            throw Error("Impossible");
+            throw new Error("Impossible");
         }
     }
 
@@ -281,7 +281,7 @@ export abstract class LocalUserView<ValueT, RowT, ViewT> implements IHandlerProv
         } else if (rowRef.type === "new") {
             return rowRef;
         } else {
-            throw Error("Impossible");
+            throw new Error("Impossible");
         }
     }
 

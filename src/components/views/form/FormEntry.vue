@@ -29,7 +29,7 @@
                                 :attributes="localRow.values[fieldInfo.index].attributes"
                                 :type="fieldInfo.columnInfo.valueType"
                                 :locked="locked"
-                                :uv="uv"
+                                :uvArgs="uv.args"
                                 :indirectLinks="indirectLinks"
                                 :scope="scope"
                                 @goto="$emit('goto', $event)"

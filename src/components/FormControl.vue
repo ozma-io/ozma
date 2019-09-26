@@ -35,12 +35,6 @@
             {{ caption }}
         </div>
 
-        <SelectUserView v-if="selectViewActive"
-                :selectView="selectView"
-                :fieldType="fieldType"
-                @update:actions="extraActions = $event"
-                @select="updateValue($event); selectViewActive = false" />
-
         <template v-if="inputType.name === 'error'">
             {{ inputType.text }}
         </template>
@@ -73,26 +67,26 @@
                      @update:value="updateValue($event)"
                      :required="!isNullable"
                      :disabled="isDisabled"
-                     ref="control">
-            <template v-slot:singleValue="select">
-                <span v-if="select.valueOption.meta && select.valueOption.meta.link"
-                  :style="select.listValueStyle"
-                  class="single_value">
-                    <UserViewLink :uv="select.valueOption.meta.link"
-                                  @[indirectLinks?`click`:null]="$emit('goto', $event)">
-                        {{select.valueOption.label}}
-                    </UserViewLink>
-                </span>
-                <span v-else
-                      :style="select.listValueStyle"
-                      class="single_value">{{select.valueOption.label}}</span>
-            </template>
-        </MultiSelect>
+                     ref="control" />
+        <ReferenceField v-else-if="inputType.name === 'reference'"
+                       :value="value"
+                       :height="attributes['ControlHeight']"
+                       :entity="inputType.ref"
+                       :linkedAttr="inputType.linkedAttr"
+                       :selectView="inputType.selectView"
+                       :controlStyle="inputType.style"
+                       :uvArgs="uvArgs"
+                        @update:actions="actions = $event"
+                        @update="updateValue($event)"
+                        :isNullable="isNullable"
+                        :isDisabled="isDisabled"
+                        ref="control" />
         <Calendar v-else-if="inputType.name === 'calendar'"
                   :value="value.value"
                   :textValue="textValue"
                   @update:value="updateValue($event)"
-                  :showTime="inputType.showTime" />
+                  :showTime="inputType.showTime"
+                  ref="control" />
         <!-- Do NOT add any `class` to CodeEditor; it breaks stuff! -->
         <CodeEditor v-else-if="inputType.name === 'codeeditor'"
                     :style="inputType.style"
@@ -107,29 +101,15 @@
                   :defaultValues="inputType.defaultValues"
                   :indirectLinks="indirectLinks"
                   :scope="scope"
-                  @update:actions="extraActions = $event"
+                  @update:actions="actions = $event"
                   @goto="$emit('goto', $event)"
                   ref="control" />
-        <input v-else-if="inputType.type === 'text'"
+        <input v-else
                 type="text"
                 @keydown.enter.prevent=""
                 wrap="soft"
                 :value="textValue"
                 :style="inputType.style"
-                :class="['form-control-panel_textarea', 'singleline',
-                        {'form-control-panel_textarea_error': value.erroredOnce,
-                         'form-control-panel_textarea_req': isAwaited && !disableColor}]"
-                @input="updateValue($event.target.value)"
-                :disabled="isDisabled"
-                :rows="3"
-                :max-rows="6"
-                :required="!isNullable"
-                ref="control" />
-        <input v-else
-                type="text"
-                :value="textValue"
-                :style="inputType.style"
-                @keydown.enter.prevent=""
                 :class="['form-control-panel_textarea', 'singleline',
                         {'form-control-panel_textarea_error': value.erroredOnce,
                          'form-control-panel_textarea_req': isAwaited && !disableColor}]"
@@ -149,10 +129,11 @@ import { namespace } from "vuex-class";
 import { valueToText, valueIsNull, equalEntityRef } from "@/values";
 import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef, IEntityRef } from "@/api";
 import { IAction } from "@/components/ActionsMenu.vue";
-import { IValueInfo, IUserViewArguments, CombinedUserView, EntriesMap, CurrentUserViews, homeSchema, ICombinedValue, currentValue } from "@/state/user_view";
+import { IValueInfo, IUserViewArguments, CombinedUserView, CurrentUserViews, homeSchema, ICombinedValue, currentValue } from "@/state/user_view";
 import { IQuery, attrToQueryRef, attrToQuerySelf, IAttrToQueryOpts } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { ISelectionRef } from "@/components/BaseUserView";
+import { debugLog } from "@/utils";
 
 interface ITextType {
     name: "text";
@@ -175,6 +156,14 @@ interface ISelectType {
     options: ISelectOption[];
 }
 
+interface IReferenceType {
+    name: "reference";
+    ref: IEntityRef;
+    linkedAttr?: any;
+    selectView?: IQuery;
+    style?: Record<string, any>;
+}
+
 interface ICheckType {
     name: "check";
 }
@@ -193,7 +182,7 @@ interface ICalendar {
     showTime: boolean;
 }
 
-type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | ICheckType | IUserViewType | IErrorType | ICalendar;
+type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | IReferenceType | ICheckType | IUserViewType | IErrorType | ICalendar;
 
 const userView = namespace("userView");
 
@@ -202,26 +191,22 @@ const userView = namespace("userView");
         CodeEditor: () => import("@/components/CodeEditor.vue"),
         MultiSelect: () => import("@/components/multiselect/MultiSelect.vue"),
         Calendar: () => import("@/components/Calendar.vue"),
-        SelectUserView: () => import("@/components/SelectUserView.vue"),
+        ReferenceField: () => import("@/components/ReferenceField.vue"),
     },
 })
 export default class FormControl extends Vue {
     @Prop({ type: Object, required: true }) type!: ValueType;
     @Prop({ type: Object, required: true }) value!: ICombinedValue;
-    @Prop({ type: Object, default: {} }) attributes!: AttributesMap;
+    @Prop({ type: Object, default: () => ({}) }) attributes!: AttributesMap;
     @Prop({ type: Boolean, default: false }) locked!: boolean;
     @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-    @Prop({ type: CombinedUserView }) uv!: CombinedUserView;
-    @Prop({ type: String, default: ""}) caption!: string;
+    @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
+    @Prop({ type: String, default: "" }) caption!: string;
     @Prop({ type: Boolean, default: false }) disableColor!: boolean;
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
     @Prop({ type: String, required: true }) scope!: string;
 
-    @userView.State("entries") entriesMap!: EntriesMap;
-    @userView.Action("getEntries") getEntries!: (_: IEntityRef) => Promise<void>;
-
-    private extraActions: IAction[] = [];
-    private selectViewActive = false;
+    private actions: IAction[] = [];
 
     get isNullable() {
         return this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable;
@@ -244,35 +229,11 @@ export default class FormControl extends Vue {
         return valueToText(this.type, this.currentValue);
     }
 
-    get selectView() {
-        const home = homeSchema(this.uv.args);
-        const linkOpts = home !== null ? { homeSchema: home } : undefined;
-        return attrToQuerySelf(this.attributes["SelectView"], this.value.info, linkOpts);
-    }
-
-    get actions() {
-        const actions: IAction[] = [];
-        const home = homeSchema(this.uv.args);
-        const linkOpts = home !== null ? { homeSchema: home } : undefined;
-        const link = attrToQueryRef(this.attributes["LinkedView"], this.currentValue, this.value.info, linkOpts);
-        if (link !== null) {
-            actions.push({ name: this.$tc("follow_reference"), query: link });
-        }
-
-        if (this.selectView !== null && !this.selectViewActive) {
-            actions.push( { name: this.$tc("select_view"), callback: () => {
-                this.selectViewActive = true;
-            } });
-        }
-
-        actions.push(...this.extraActions);
-        return actions;
-    }
-
     private get controlPanelStyle() {
+        const heightExclusions = ["select", "reference"];
         const heightAttr = this.attributes["ControlHeight"];
-        const isSelect = this.inputType.name === "select";
-        return heightAttr && !isSelect ? { height: `${heightAttr}px`, maxHeight: "initial" } : {};
+        const excludeHeight = heightExclusions.includes(this.inputType.name);
+        return heightAttr && !excludeHeight ? { height: `${heightAttr}px`, maxHeight: "initial" } : {};
     }
 
     private controlStyle(height?: string): Record<string, any> {
@@ -292,7 +253,7 @@ export default class FormControl extends Vue {
     }
 
     get inputType(): IType {
-        const home = homeSchema(this.uv.args);
+        const home = homeSchema(this.uvArgs);
         const linkOpts = home !== null ? { homeSchema: home } : undefined;
 
         const controlAttr = this.attributes["Control"];
@@ -312,28 +273,17 @@ export default class FormControl extends Vue {
         if (this.fieldType !== null) {
             switch (this.fieldType.type) {
                 case "reference":
-                    const ref = this.fieldType.entity;
-                    this.getEntries(ref);
-                    const currentSchema = this.entriesMap[ref.schema];
-                    if (currentSchema === undefined) {
-                        return { name: "text", type: "number", style: this.controlStyle() };
+                    const refEntry: IReferenceType = {
+                        name: "reference",
+                        ref: this.fieldType.entity,
+                    };
+                    refEntry.linkedAttr = this.attributes["LinkedView"];
+                    refEntry.style = this.controlStyle();
+                    const selectView = attrToQuerySelf(this.attributes["SelectView"], this.value.info, linkOpts);
+                    if (selectView !== null) {
+                        refEntry.selectView = selectView;
                     }
-                    const entries = currentSchema[ref.name];
-                    if (entries === undefined || entries instanceof Promise) {
-                        return { name: "text", type: "number", style: this.controlStyle() };
-                    } else {
-                        const select = Object.entries(entries).map(([id, name]) => ({
-                            label: name,
-                            value: Number(id),
-                            meta: {
-                                link: attrToQueryRef(this.attributes["LinkedView"], id, this.value.info, linkOpts),
-                            },
-                        }));
-                        return {
-                            name: "select",
-                            options: select,
-                        };
-                    }
+                    return refEntry;
                 case "enum":
                     return {
                         name: "select",
@@ -390,19 +340,8 @@ export default class FormControl extends Vue {
     }
 
     private updateValue(newValue: any) {
-        if (this.value.info === undefined) {
-            throw new Error("No update entity defined in view");
-        }
-
         if (this.currentValue !== newValue) {
             this.$emit("update", newValue);
-        }
-    }
-
-    @Watch("selectView")
-    private clearActions() {
-        if (this.selectView === null) {
-            this.extraActions = [];
         }
     }
 }
@@ -439,7 +378,7 @@ export default class FormControl extends Vue {
         display: block;
         margin-right: 7px;
         margin-top: 10px;
-        margin-bottom: 2px;
+        margin-bottom: 5px;
     }
     .caption-editors {
         display: inline-block;
