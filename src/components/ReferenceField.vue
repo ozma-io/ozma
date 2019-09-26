@@ -44,10 +44,12 @@
         </MultiSelect>
         <input v-else
                 type="text"
+                class="reference_backup_input"
                 :value="currentValue"
                 @input="$emit('update', $event.target.value)"
                 :disabled="isDisabled"
                 :required="!isNullable"
+                :style="controlStyle"
                 ref="control" />
     </div>
 </template>
@@ -88,6 +90,7 @@ export default class ReferenceField extends Vue {
     @Prop({ type: Boolean, default: false }) isNullable!: boolean;
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
     @Prop({ type: Number }) height!: number | undefined;
+    @Prop({ type: Object }) controlStyle!: any;
 
     private extraActions: IAction[] = [];
     private selectViewActive = false;
@@ -180,3 +183,9 @@ export default class ReferenceField extends Vue {
     }
 }
 </script>
+
+<style scoped>
+ .reference_backup_input {
+     width: 100%;
+ }
+</style>
