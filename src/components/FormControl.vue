@@ -133,7 +133,6 @@ import { IValueInfo, IUserViewArguments, CombinedUserView, CurrentUserViews, hom
 import { IQuery, attrToQueryRef, attrToQuerySelf, IAttrToQueryOpts } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { ISelectionRef } from "@/components/BaseUserView";
-import { debugLog } from "@/utils";
 
 interface ITextType {
     name: "text";

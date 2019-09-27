@@ -150,67 +150,6 @@ export default class UserView extends Vue {
         return actions;
     }
 
-    // Should clear all user view-specific values.
-    @Watch("newUv", { immediate: true })
-    private async updateUserView() {
-        const newUv = this.newUv;
-        if (newUv !== null && newUv === this.oldUv) {
-            return;
-        }
-
-        if (newUv instanceof CombinedUserView) {
-            if (newUv.rows === null && newUv.info.mainEntity === null) {
-                this.setUvError(new UserViewError("bad_request", "Creation mode requires main entity to be specified", newUv.args));
-                return;
-            }
-            const newType = userViewType(newUv);
-            const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType}.vue`)).default;
-            // Check we weren't restarted.
-            if (newUv !== this.newUv) {
-                return;
-            }
-
-            // Exceptions in async watchers are silently ignored (?), so print it explicitly.
-            let local: IHandlerProvider | null;
-            if (component.localConstructor !== undefined) {
-                const givenLocal = this.local !== null && this.userViewType === newType ? this.local : null;
-                local = component.localConstructor(this.$store, newUv, this.defaultValues, givenLocal);
-                this.registerHandler({ args: newUv.args, handler: local.handler });
-            } else {
-                local = null;
-            }
-
-            this.extraActions = [];
-            this.oldUv = newUv;
-            this.local = local;
-            this.component = component;
-        } else if (newUv instanceof UserViewError) {
-            this.extraActions = [];
-            this.oldUv = newUv;
-            this.local = null;
-            this.component = null;
-        }
-    }
-
-    private destroyUserView(args: IUserViewArguments) {
-        if (this.local !== null) {
-            this.unregisterHandler({ args, handler: this.local.handler });
-        }
-        this.removeUserViewConsumer({ args, reference: this.uid });
-    }
-
-    private setUvError(error: UserViewError) {
-        this.destroyUserView(this.args);
-        this.oldUv = error;
-        this.local = null;
-        this.component = null;
-    }
-
-    @Watch("actions", { deep: true, immediate: true })
-    private pushActions() {
-        this.$emit("update:actions", this.actions);
-    }
-
     get userViewType() {
         if (this.oldUv instanceof CombinedUserView) {
             return userViewType(this.oldUv);
@@ -250,19 +189,87 @@ export default class UserView extends Vue {
         }
     }
 
+    // Should clear all user view-specific values.
+    @Watch("newUv", { immediate: true })
+    private async updateUserView() {
+        const newUv = this.newUv;
+        if (newUv !== null && newUv === this.oldUv) {
+            return;
+        }
+
+        if (newUv instanceof CombinedUserView) {
+            if (newUv.rows === null && newUv.info.mainEntity === null) {
+                this.setUvError(new UserViewError("bad_request", "Creation mode requires main entity to be specified", newUv.args));
+                return;
+            }
+            const newType = userViewType(newUv);
+            const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType}.vue`)).default;
+            // Check we weren't restarted.
+            if (newUv !== this.newUv) {
+                return;
+            }
+
+            // Exceptions in async watchers are silently ignored (?), so print it explicitly.
+            let local: IHandlerProvider | null;
+            if (component.localConstructor !== undefined) {
+                const givenLocal = this.local !== null && this.userViewType === newType ? this.local : null;
+                local = component.localConstructor(this.$store, newUv, this.defaultValues, givenLocal);
+                this.registerHandler({ args: newUv.args, handler: local.handler });
+            } else {
+                local = null;
+            }
+
+            this.extraActions = [];
+            this.oldUv = newUv;
+            this.local = local;
+            this.component = component;
+        } else if (newUv instanceof UserViewError) {
+            this.extraActions = [];
+            this.oldUv = newUv;
+            this.local = null;
+            this.component = null;
+        } else if (newUv === null) {
+            this.requestView();
+        }
+    }
+
+    // We should request nested view:
+    // * when arguments change (different view selected);
+    // * when current view is `null` (view is not yet requested).
+    private requestView() {
+        if (this.query.rootViewArgs !== null && !deepEquals(this.args, this.query.rootViewArgs)) {
+            this.getNestedView({ args: this.args, reference: this.uid });
+        }
+    }
+
+    private destroyUserView(args: IUserViewArguments) {
+        if (this.local !== null) {
+            this.unregisterHandler({ args, handler: this.local.handler });
+        }
+        this.removeUserViewConsumer({ args, reference: this.uid });
+    }
+
+    private setUvError(error: UserViewError) {
+        this.destroyUserView(this.args);
+        this.oldUv = error;
+        this.local = null;
+        this.component = null;
+    }
+
+    @Watch("actions", { deep: true, immediate: true })
+    private pushActions() {
+        this.$emit("update:actions", this.actions);
+    }
+
     private destroyed() {
         this.destroyUserView(this.args);
     }
 
-    @Watch("args", { deep: true, immediate: true })
-    private argsChanged(newArgs: IUserViewArguments, oldArgs: IUserViewArguments | undefined) {
-        if (oldArgs === undefined || !deepEquals(oldArgs, newArgs)) {
-            if (oldArgs !== undefined) {
-                this.destroyUserView(oldArgs);
-            }
-            if (this.query.rootViewArgs !== null && !deepEquals(newArgs, this.query.rootViewArgs)) {
-                this.getNestedView({ args: newArgs, reference: this.uid });
-            }
+    @Watch("args", { deep: true })
+    private argsChanged(newArgs: IUserViewArguments, oldArgs: IUserViewArguments) {
+        if (!deepEquals(oldArgs, newArgs)) {
+            this.destroyUserView(oldArgs);
+            this.requestView();
         }
     }
 

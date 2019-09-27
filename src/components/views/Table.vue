@@ -415,7 +415,6 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     }
 
     createAddedLocalRow(rowId: AddedRowId, row: IAddedRow) {
-        console.log("adding row");
         this.extra.rowCount++;
 
         return this.createCommonLocalRow(row);
