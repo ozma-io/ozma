@@ -143,7 +143,7 @@ export class CurrentChanges {
         const position = entityChanges.added.positions.indexOf(id);
 
         if (position === -1) {
-            throw Error("Impossible");
+            throw new Error("Impossible");
         }
         entityChanges.added.positions.splice(position, 1);
         this.addedCount -= 1;
@@ -420,7 +420,7 @@ const stagingModule: Module<IStagingState, {}> = {
 
             // During submit new entries aren't allowed to be added because this can result in duplicates.
             if (state.currentSubmit !== null) {
-                throw Error("Adding entries are forbidden while submitting");
+                throw new Error("Adding entries are forbidden while submitting");
             }
 
             const entityChanges = state.current.getOrCreateChanges(schema, entity);
@@ -445,7 +445,7 @@ const stagingModule: Module<IStagingState, {}> = {
             const { scope, schema, entity, id, field, value, fieldInfo } = params;
             // During submit new entries aren't allowed to be added because this can result in duplicates.
             if (state.currentSubmit !== null) {
-                throw Error("Adding entries are forbidden while submitting");
+                throw new Error("Adding entries are forbidden while submitting");
             }
 
             const entityChanges = state.current.getOrCreateChanges(schema, entity);
@@ -510,7 +510,7 @@ const stagingModule: Module<IStagingState, {}> = {
             const entityChanges = state.current.getOrCreateChanges(schema, entity);
             // During submit new entries aren't allowed to be added because this can result in duplicates.
             if (state.currentSubmit !== null) {
-                throw Error("Adding entries are forbidden while submitting");
+                throw new Error("Adding entries are forbidden while submitting");
             }
 
             const added = entityChanges.added.entries[id];
@@ -628,13 +628,13 @@ const stagingModule: Module<IStagingState, {}> = {
             context.commit("removeAutoSaveLock", id);
             checkAutoSave(context);
         },
-        submit: (context, scope?: ScopeName): Promise<TransactionResult[]> => {
+        submit: async (context, scope?: ScopeName): Promise<TransactionResult[]> => {
             const { state, commit, dispatch } = context;
             if (state.currentSubmit !== null) {
-                return state.currentSubmit;
+                await state.currentSubmit;
             }
-            commit("validate");
 
+            commit("validate");
             const ops = Object.entries(state.current.changes).flatMap(([schemaName, entities]) => {
                 return Object.entries(entities).flatMap(([entityName, entityChanges]) => {
                     try {
@@ -691,6 +691,9 @@ const stagingModule: Module<IStagingState, {}> = {
                     }
                 });
             });
+            if (ops.length === 0) {
+                return [];
+            }
 
             const submit = (async (): Promise<CombinedTransactionResult[]> => {
                 let result: TransactionResult[] | Error;
@@ -730,7 +733,7 @@ const stagingModule: Module<IStagingState, {}> = {
                 }
             })();
             commit("startSubmit", submit);
-            return submit;
+            return await submit;
         },
     },
 };

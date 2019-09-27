@@ -1,7 +1,7 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import { SchemaName, EntityName, FieldName, RowId, IEntityRef } from "@/api";
+import { SchemaName, EntityName, FieldName, RowId, IEntityRef, TransactionResult } from "@/api";
 import { CombinedUserView, currentValue } from "@/state/user_view";
 import { ScopeName, AddedRowId, IAddedResult } from "@/state/staging_changes";
 import { LocalUserView, RowRef, ValueRef } from "@/local_user_view";
@@ -15,6 +15,7 @@ const staging = namespace("staging");
 
 @Component
 export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, ValueT, RowT, ViewT> extends Vue {
+    @staging.State("currentSubmit") currentSubmit!: Promise<TransactionResult[]> | null;
     @staging.Action("deleteEntry") deleteEntry!: (args: { scope: ScopeName, schema: SchemaName, entity: EntityName, id: RowId }) => Promise<void>;
     @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { schema: SchemaName, entity: EntityName, id: AddedRowId }) => Promise<void>;
     @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName, schema: SchemaName, entity: EntityName, position?: number }) => Promise<IAddedResult>;
@@ -28,6 +29,10 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
     @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
     @Prop({ type: String, required: true }) scope!: ScopeName;
+
+    get addedLocked() {
+        return this.uv.rows === null && this.currentSubmit !== null;
+    }
 
     protected deleteRow(ref: RowRef) {
         if (this.uv.info.mainEntity === null) {

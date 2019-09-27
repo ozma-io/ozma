@@ -285,6 +285,14 @@ export abstract class LocalUserView<ValueT, RowT, ViewT> implements IHandlerProv
         }
     }
 
+    protected forEachLocalRow(func: (row: ILocalRow<ValueT, RowT>) => void) {
+        this.rows.forEach(func);
+        Object.values(this.newRows).forEach(func);
+        if (this.emptyRow !== null) {
+            func(this.emptyRow.local);
+        }
+    }
+
     private createAddedRow(rowId: AddedRowId, row: IAddedRow, oldLocalRow: ILocalRow<ValueT, RowT> | null) {
         const newRow: ILocalRowInfo<RowT> = {
             extra: this.createAddedLocalRow(rowId, row, oldLocalRow !== null ? oldLocalRow.extra : null),
