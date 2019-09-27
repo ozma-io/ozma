@@ -495,7 +495,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
             const colI = Number(colIRaw);
             this.extra.columns[colI].style["left"] = position;
 
-            const applyPosition = (row: ITableLocalRow) => {
+            this.forEachLocalRow(row => {
                 const value = row.values[colI];
                 let style = value.style;
                 if (style === undefined) {
@@ -503,9 +503,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
                     value.style = style;
                 }
                 style["left"] = position;
-            };
-            this.rows.forEach(applyPosition);
-            Object.values(this.newRows).forEach(applyPosition);
+            });
         });
     }
 
@@ -653,7 +651,6 @@ const staging = namespace("staging");
 export default class UserViewTable extends mixins<BaseUserView<LocalTableUserView, ITableValueExtra, ITableRowExtra, ITableUserViewExtra>>(BaseUserView) {
     @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
     @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
-    @staging.State("currentSubmit") currentSubmit!: Promise<void> | null;
 
     private currentFilter: string[] = [];
     private sortColumn: number | null = null;
@@ -689,7 +686,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         if (this.editing === null) {
             return false;
         } else {
-            return this.editing.ref.type !== "existing" && this.currentSubmit !== null;
+            return this.editing.ref.type !== "existing" && this.addedLocked;
         }
     }
 

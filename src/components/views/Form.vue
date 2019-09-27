@@ -72,7 +72,6 @@
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-import { namespace } from "vuex-class";
 import { Store } from "vuex";
 
 import { tryDicts, mapMaybe } from "@/utils";
@@ -184,8 +183,6 @@ class LocalFormUserView extends LocalUserView<IFormValueExtra, IFormRowExtra, IF
     }
 }
 
-const staging = namespace("staging");
-
 @UserView({
     localConstructor: LocalFormUserView,
 })
@@ -195,15 +192,9 @@ const staging = namespace("staging");
     },
 })
 export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView, IFormValueExtra, IFormRowExtra, IFormUserViewExtra>>(BaseUserView) {
-    @staging.State("currentSubmit") currentSubmit!: Promise<void> | null;
-
     @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView;
     @Prop({ type: Boolean, default: false }) isRoot!: boolean;
     @Prop({ type: Object, required: true }) local!: LocalFormUserView;
-
-    get addedLocked() {
-        return this.uv.rows === null && this.currentSubmit !== null;
-    }
 
     // Show empty row only if it's a create view and there are no already created rows.
     get showEmptyRow() {
