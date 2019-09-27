@@ -86,7 +86,7 @@
                     </li>
                 </ul>
             </slot>
-            <input v-if="(single && required && !disabled) || (single && isEmpty) || !single"
+            <input v-if="!disabled && ((single && required) || (single && isEmpty) || !single)"
                    type="button" class="material-icons select_container__chevron"
                    @click="setIsOpen(true)"
                    :value="isOpen ? 'arrow_drop_up' : 'arrow_drop_down'" />
@@ -102,6 +102,7 @@
 <script lang="ts">
 import * as R from "ramda";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { valueIsNull } from "@/values";
 
 export interface ISelectOption {
     value: any;
@@ -144,7 +145,6 @@ export default class MultiSelect extends Vue {
 
     private get showValueRemove(): boolean {
         const isLastValueLeft = this.single ? true : this.currentValues.length <= 1;
-        console.log(isLastValueLeft);
         return (!this.disabled && !(isLastValueLeft && this.required));
     }
 
@@ -202,7 +202,7 @@ export default class MultiSelect extends Vue {
 
     private get isEmpty(): boolean {
         if (this.single) {
-          return !this.currentValue;
+            return valueIsNull(this.currentValue);
         }
         return !this.currentValues.length;
     }
