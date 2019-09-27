@@ -292,7 +292,7 @@ export default class FormControl extends Vue {
                 case "bool":
                     return {
                         name: "select",
-                        options: [{ label: this.$tc("yes"), value: "true" }, { label: this.$tc("no"), value: "false" }],
+                        options: [{ label: this.$tc("yes"), value: true }, { label: this.$tc("no"), value: false }],
                     };
                 case "int":
                     return { name: "text", type: "number", style: this.controlStyle() };
@@ -307,7 +307,7 @@ export default class FormControl extends Vue {
                 case "bool":
                     return {
                         name: "select",
-                        options: [  {label: this.$tc("yes"), value: "true" }, { label: this.$tc("no"), value: "false" }],
+                        options: [  {label: this.$tc("yes"), value: true }, { label: this.$tc("no"), value: false }],
                     };
                 case "int":
                     return { name: "text", type: "number", style: this.controlStyle() };
