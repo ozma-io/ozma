@@ -184,7 +184,7 @@ const getToken = (context: ActionContext<IAuthState, {}>, params: Record<string,
                 body: paramsString,
             });
             if (state.pending !== pending.ref) {
-                throw Error("Pending operation cancelled");
+                throw new Error("Pending operation cancelled");
             }
             const auth = new JwtCurrentAuth(ret.access_token, ret.refresh_token, ret.id_token);
             updateAuth(context, auth);
@@ -215,7 +215,7 @@ const updateAuth = ({ state, commit, dispatch }: ActionContext<IAuthState, {}>, 
 const renewAuth = async (context: ActionContext<IAuthState, {}>) => {
     const { commit, state } = context;
     if (state.current === null) {
-        throw Error("Cannot renew without an existing token");
+        throw new Error("Cannot renew without an existing token");
     }
 
     if (state.renewalTimeoutId !== null) {
@@ -480,7 +480,7 @@ export const authModule: Module<IAuthState, {}> = {
         },
         logout: async ({ state, dispatch, commit }) => {
             if (state.current === null) {
-                throw Error("Cannot logout without an existing token");
+                throw new Error("Cannot logout without an existing token");
             }
 
             if (Api.disableAuth) {
