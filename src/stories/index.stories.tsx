@@ -172,5 +172,32 @@ storiesOf("MultiSelect", module)
       components: { FormField },
       template: "<div class=\"input_container\"><div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div></div>",
     };
+  })
+  .add("Single with boolean value", () => {
+      const FormField = makeFormControl(MultiSelect, "MultiSelect");
+      return {
+          props: {
+              value: {
+                  type: Array,
+                  default: false,
+              },
+              style: {
+                  type: Object,
+                  default: { width: text("Width of input field", "600px") },
+              },
+              bindProps: {
+                  type: Object,
+                  default: {
+                      options: [{ value: false, label: "Нет" }, { value: true, label: "Да" }],
+                      height:  number("Height (as passed in field options)", 0),
+                      single: true,
+                      disabled:  boolean("Disable", false),
+                      required:  boolean("Required", false),
+                  },
+              },
+          },
+          components: { FormField },
+          template: "<div class=\"input_container\"><div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div></div>",
+      };
   });
 /*  */
