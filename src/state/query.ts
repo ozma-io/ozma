@@ -2,27 +2,9 @@ import { Module } from "vuex";
 import { RawLocation, Route } from "vue-router";
 
 import { IUserViewRef, SchemaName } from "@/api";
-import { convertString, deepUpdateObject, mapMaybe } from "@/utils";
+import { convertString, deepUpdateObject, mapMaybe, deepClone } from "@/utils";
 import { routerQueryValue, router } from "@/modules";
 import { IUserViewArguments, IValueInfo } from "@/state/user_view";
-
-export class CurrentQuery {
-    search: Record<string, string> = {};
-    rootViewArgs: IUserViewArguments | null = null;
-
-    getSearch<T>(name: string, constructor: (_: string) => T, defValue: T): T {
-        const ret = this.search[name];
-        if (ret === undefined) {
-            return defValue;
-        } else {
-            return convertString(ret, constructor, defValue);
-        }
-    }
-}
-
-export interface IQueryState {
-    current: CurrentQuery;
-}
 
 export interface IQuery {
     defaultValues: Record<string, any>;
@@ -61,7 +43,7 @@ export const replaceSearch = (name: string, value: string) => {
     router.replace({ query });
 };
 
-export const defaultValuePrefix = "def__";
+const defaultValuePrefix = "def__";
 
 export interface IAttrToQueryOpts {
     homeSchema?: SchemaName;
@@ -155,15 +137,58 @@ export const attrToQueryRef = (linkedAttr: any, value: any, update?: IValueInfo,
     return ret;
 };
 
+export class CurrentQuery {
+    search: Record<string, string> = {};
+    rootViewArgs: IUserViewArguments | null = null;
+
+    getSearch<T>(name: string, constructor: (_: string) => T, defValue: T): T {
+        const ret = this.search[name];
+        if (ret === undefined) {
+            return defValue;
+        } else {
+            return convertString(ret, constructor, defValue);
+        }
+    }
+
+    getQuery(): IQuery | null {
+        if (this.rootViewArgs === null) {
+            return null;
+        } else {
+            return {
+                defaultValues: getDefaultValues(this.search),
+                args: this.rootViewArgs,
+            };
+        }
+    }
+}
+
+export const getDefaultValues = (search: Record<string, string>): Record<string, any> => {
+    return Object.fromEntries(mapMaybe(([name, val]) => {
+        if (name.startsWith(defaultValuePrefix)) {
+            return [name.slice(defaultValuePrefix.length), JSON.parse(val)];
+        } else {
+            return undefined;
+        }
+    }, Object.entries(search)));
+};
+
+export interface IQueryState {
+    current: CurrentQuery;
+    previous: IQuery | null;
+}
+
 // While in user_view views we use this module to reduce complete page reloads.
 // Route updates are parsed and existing query is granularly updated.
 const queryModule: Module<IQueryState, {}> = {
     namespaced: true,
     state: {
         current: new CurrentQuery(),
+        previous: null,
     },
     mutations: {
         setRoute: (state, route: Route) => {
+            state.previous = deepClone(state.current.getQuery());
+
             if (route.name !== "view" && route.name !== "view_create") {
                 state.current = new CurrentQuery();
             }
