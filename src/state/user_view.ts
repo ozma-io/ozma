@@ -2,7 +2,7 @@ import Vue from "vue";
 import { Store, Dispatch, Module, ActionContext } from "vuex";
 import moment from "moment";
 
-import { IRef, FetchError, ObjectResourceMap, ReferenceName, momentLocale, tryDicts, debugLog } from "@/utils";
+import { IRef, FetchError, ObjectResourceMap, ReferenceName, momentLocale, tryDicts } from "@/utils";
 import * as Api from "@/api";
 import {
     IColumnField, IUserViewRef, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
@@ -1107,7 +1107,6 @@ const userViewModule: Module<IUserViewState, {}> = {
     actions: {
         getEntries: ({ state, rootState, commit, dispatch }, { reference, ref }: { reference: ReferenceName, ref: IEntityRef }): Promise<Entries> => {
             if (state.pending !== null) {
-                debugLog("getEntries", reference, ref);
                 return Promise.reject("Reload in progress");
             }
             const oldResource = state.entries.entries.getResource(ref);
@@ -1149,7 +1148,6 @@ const userViewModule: Module<IUserViewState, {}> = {
                 } catch (e) {
                     const currPending = state.entries.entries.get(ref);
                     if (currPending === pending.ref) {
-                        console.log("caught", e);
                         commit("updateEntries", { ref, entries: e });
                     }
                     throw e;
@@ -1193,7 +1191,6 @@ const userViewModule: Module<IUserViewState, {}> = {
             const { state, commit } = store;
 
             if (state.pending !== null) {
-                debugLog("getNestedView", reference, args);
                 return Promise.reject("Reload in progress");
             }
             const oldResource = state.current.userViews.getResource(args);
