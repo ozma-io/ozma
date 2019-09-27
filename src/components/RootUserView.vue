@@ -100,7 +100,7 @@ import { setHeadTitle } from "@/elements";
 import { IUserViewArguments, CombinedUserView, UserViewError, CurrentUserViews } from "@/state/user_view";
 import { CurrentChanges, ScopeName } from "@/state/staging_changes";
 import { IAction } from "@/components/ActionsMenu.vue";
-import { CurrentQuery, IQuery, queryLocation, replaceSearch, defaultValuePrefix } from "@/state/query";
+import { CurrentQuery, IQuery, queryLocation, replaceSearch, getDefaultValues } from "@/state/query";
 
 const auth = namespace("auth");
 const userView = namespace("userView");
@@ -272,13 +272,7 @@ export default class RootUserView extends Vue {
     }
 
     get defaultValues() {
-        return Object.fromEntries(mapMaybe(([name, val]) => {
-            if (name.startsWith(defaultValuePrefix)) {
-                return [name.slice(defaultValuePrefix.length), JSON.parse(val)];
-            } else {
-                return undefined;
-            }
-        }, Object.entries(this.query.search)));
+        return getDefaultValues(this.query.search);
     }
 }
 </script>

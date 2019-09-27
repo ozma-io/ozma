@@ -51,7 +51,7 @@
                     :indirectLinks="indirectLinks"
                     :scope="scope"
                     @update="updateValue({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
-                    @delete="deleteRow({ type: 'added', id: rowId })"
+                    @delete="deleteRowAndSignal({ type: 'added', id: rowId })"
                     @goto="$emit('goto', $event)" />
             <FormEntry v-for="rowI in rowPositions" :key="rowI"
                     :uv="uv"
@@ -62,7 +62,7 @@
                     :scope="scope"
                     :selectionMode="selectionMode"
                     @update="updateValue({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
-                    @delete="deleteRow({ type: 'existing', position: rowI })"
+                    @delete="deleteRowAndSignal({ type: 'existing', position: rowI })"
                     @goto="$emit('goto', $event)"
                     @select="$emit('select', $event)" />
         </template>
@@ -73,11 +73,13 @@
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { Store } from "vuex";
+import { namespace } from "vuex-class";
 
 import { tryDicts, mapMaybe } from "@/utils";
 import { AttributesMap, IResultColumnInfo } from "@/api";
 import { CombinedUserView, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, homeSchema } from "@/state/user_view";
 import { AddedRowId } from "@/state/staging_changes";
+import { IQuery } from "@/state/query";
 import { LocalUserView, SimpleLocalUserView, ILocalRowInfo, ILocalRow, ValueRef, RowRef } from "@/local_user_view";
 import { UserView } from "@/components";
 import { ISelectionRef } from "@/components/BaseUserView";
@@ -183,6 +185,8 @@ class LocalFormUserView extends LocalUserView<IFormValueExtra, IFormRowExtra, IF
     }
 }
 
+const query = namespace("query");
+
 @UserView({
     localConstructor: LocalFormUserView,
 })
@@ -192,9 +196,13 @@ class LocalFormUserView extends LocalUserView<IFormValueExtra, IFormRowExtra, IF
     },
 })
 export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView, IFormValueExtra, IFormRowExtra, IFormUserViewExtra>>(BaseUserView) {
+    @query.State("previous") previousQuery!: IQuery | null;
+
     @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView;
     @Prop({ type: Boolean, default: false }) isRoot!: boolean;
     @Prop({ type: Object, required: true }) local!: LocalFormUserView;
+
+    private deletedOne = false;
 
     // Show empty row only if it's a create view and there are no already created rows.
     get showEmptyRow() {
@@ -264,9 +272,21 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
         this.init();
     }
 
+    private deleteRowAndSignal(ref: RowRef) {
+        this.deleteRow(ref);
+        this.deletedOne = true;
+    }
+
     @Watch("uv")
     private uvChanged() {
         this.init();
+    }
+
+    @Watch("rowPositions")
+    private returnIfEmpty() {
+        if (this.isRoot && this.deletedOne && this.rowPositions.length === 0 && this.uv.newRowsPositions.length === 0 && this.previousQuery !== null) {
+            this.$emit("goto", this.previousQuery);
+        }
     }
 
     get rowPositions() {
