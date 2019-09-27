@@ -58,7 +58,7 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import { ReferenceName, debugLog } from "@/utils";
+import { ReferenceName } from "@/utils";
 import { IReferenceFieldType, IEntityRef } from "@/api";
 import { Entries, CurrentEntries, IUserViewArguments, ICombinedValue, homeSchema, currentValue } from "@/state/user_view";
 import { IQuery, attrToQueryRef } from "@/state/query";
@@ -153,6 +153,8 @@ export default class ReferenceField extends Vue {
             this.oldEntries = null;
         } else if (this.newEntries !== null) {
             this.oldEntries = this.newEntries;
+        } else {
+            this.getEntries({ ref: this.entity, reference: this.uid });
         }
     }
 
@@ -168,9 +170,9 @@ export default class ReferenceField extends Vue {
         }
     }
 
-    @Watch("entity", { immediate: true, deep: true })
-    private entityChanged(newEntity: IEntityRef, oldEntity: IEntityRef | undefined) {
-        if (oldEntity === undefined || !equalEntityRef(newEntity, oldEntity)) {
+    @Watch("entity", { deep: true })
+    private entityChanged(newEntity: IEntityRef, oldEntity: IEntityRef) {
+        if (!equalEntityRef(newEntity, oldEntity)) {
             if (oldEntity !== undefined) {
                 this.destroyEntities(oldEntity);
             }
