@@ -80,7 +80,7 @@ const settingsModule: Module<ISettingsState, {}> = {
                         args: [ref, {}],
                     }, { root: true });
                     if (state.pending !== pending.ref) {
-                        throw Error("Pending operation cancelled");
+                        throw new Error("Pending operation cancelled");
                     }
                     const values = Object.fromEntries(res.result.rows.map(row => [row.values[0].value, row.values[1].value]));
                     const settings = new CurrentSettings(values);
