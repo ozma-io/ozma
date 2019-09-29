@@ -23,7 +23,7 @@
                   class="single_value_button">
                 <slot name="singleValue"
                       v-bind:listValueStyle="listValueStyle"
-                      v-bind:valueOption="valueOption">
+                    v-bind:valueOption="valueOption">
                     <span :style="listValueStyle"
                           class="single_value">{{valueOption.label}}</span>
                 </slot>
@@ -46,8 +46,7 @@
                       v-if="!single"
                       v-bind:valueOptions="valueOptions"
                       v-bind:listValueStyle="listValueStyle"
-                      v-bind:removeValue="removeValue"
-                      v-bind:getLabel="getLabel">
+                      v-bind:removeValue="removeValue">
                     <span v-for="(option, index) in valueOptions"
                           :key="option.value"
                           class="values_list__value"
@@ -110,7 +109,8 @@ export interface ISelectOption {
     meta?: { [key: string]: any };
 }
 
-const defaultOptionFilter = (query: string) => (option: ISelectOption) => R.contains(query.toLowerCase(), option.label.toLowerCase());
+const defaultOptionFilter = (query: string) => (option: ISelectOption) =>
+    R.contains(query.toLowerCase(), R.pathOr("", ["label"], option).toLowerCase());
 
 @Component({})
 export default class MultiSelect extends Vue {
@@ -136,11 +136,16 @@ export default class MultiSelect extends Vue {
     }
 
     private getOption(value: any): ISelectOption | undefined {
-        return this.options.find(R.propEq("value", value)) || { value, label: value };
+        const option = this.options.find(R.propEq("value", value)) || { value, label: value };
+        return {
+            ...option,
+            label: this.getLabel(option),
+        };
     }
 
-    private getLabel(value: string): string {
-        return R.pathOr(value, ["label"], this.getOption(value));
+    private getLabel(option: ISelectOption): string {
+        const label = R.pathOr(option.value, ["label"], option);
+        return label !== "" ? label : option.value;
     }
 
     private get showValueRemove(): boolean {
@@ -211,11 +216,13 @@ export default class MultiSelect extends Vue {
         if (this.single) {
             return this.options
                        .filter(option => option.value !== this.currentValue)
-                       .filter(this.optionFilterFN(this.inputValue));
+                       .filter(this.optionFilterFN(this.inputValue))
+                       .map(option => ({ ...option, label: this.getLabel(option) }));
         }
         return this.options
                    .filter(option => !R.includes(option.value, this.currentValues))
-                   .filter(this.optionFilterFN(this.inputValue));
+                   .filter(this.optionFilterFN(this.inputValue))
+                   .map(option => ({ ...option, label: this.getLabel(option) }));
     }
 
     private focusInput() {
