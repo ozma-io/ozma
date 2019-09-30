@@ -30,6 +30,7 @@ export default class CodeEditor extends Vue {
         editor.session.setMode(this.mode);
         editor.setTheme(this.theme);
         editor.setValue(this.content, 1);
+        editor.getSession().setUndoManager(new Ace.UndoManager());
 
         if (this.autofocus) {
             editor.focus();
