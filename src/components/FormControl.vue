@@ -5,14 +5,16 @@
             "no": "No",
             "invalid_uv": "Nested user view rows should be JSON objects with 'ref' and 'args' defined",
             "select_view": "Select in view",
-            "follow_reference": "Follow reference"
+            "follow_reference": "Follow reference",
+            "empty": "(empty)"
         },
         "ru": {
             "yes": "Да",
             "no": "Нет",
             "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'ref' и 'args'",
             "select_view": "Выбрать из представления",
-            "follow_reference": "Перейти к сущности"
+            "follow_reference": "Перейти к сущности",
+            "empty": "(пусто)"
         }
     }
 </i18n>
@@ -257,6 +259,10 @@ export default class FormControl extends Vue {
 
         const controlAttr = this.attributes["Control"];
         if (controlAttr === "UserView") {
+            if (this.currentValue === null || this.currentValue === undefined) {
+                return { name: "error", text: this.$tc("empty") };
+            }
+
             const nestedRef = attrToQuerySelf(this.currentValue, this.value.info, linkOpts);
 
             if (nestedRef === null) {
