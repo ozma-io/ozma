@@ -55,7 +55,14 @@ export default class SelectUserView extends Vue {
             });
         }
 
-        actions.push(...this.extraActions);
+        const convertedActions = this.extraActions.map(action => {
+            if ("query" in action) {
+                return { name: action.name, callback: () => this.goto(action.query) };
+            } else {
+                return action;
+            }
+        });
+        actions.push(...convertedActions);
         return actions;
     }
 
