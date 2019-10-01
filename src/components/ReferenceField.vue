@@ -56,19 +56,18 @@
 
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
-import { namespace } from "vuex-class";
+import { mixins } from "vue-class-component";
 
 import { ReferenceName } from "@/utils";
 import { IReferenceFieldType, IEntityRef } from "@/api";
-import { Entries, CurrentEntries, IUserViewArguments, ICombinedValue, homeSchema, currentValue } from "@/state/user_view";
+import { IUserViewArguments, ICombinedValue, homeSchema, currentValue } from "@/state/user_view";
 import { IQuery, attrToQueryRef } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import MultiSelect from "@/components/multiselect/MultiSelect.vue";
 import { IAction } from "@/components/ActionsMenu.vue";
 import { equalEntityRef } from "@/values";
-
-const userView = namespace("userView");
+import BaseEntriesView from "@/components/BaseEntriesView";
 
 @Component({
     components: {
@@ -76,11 +75,7 @@ const userView = namespace("userView");
         MultiSelect,
     },
 })
-export default class ReferenceField extends Vue {
-    @userView.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IEntityRef, reference: ReferenceName }) => void;
-    @userView.State("entries") entriesMap!: CurrentEntries;
-    @userView.Action("getEntries") getEntries!: (args: { reference: ReferenceName, ref: IEntityRef }) => Promise<Entries>;
-
+export default class ReferenceField extends mixins(BaseEntriesView) {
     @Prop({ type: Object, required: true }) value!: ICombinedValue;
     @Prop({ type: Object, required: true }) entity!: IEntityRef;
     @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
@@ -94,7 +89,10 @@ export default class ReferenceField extends Vue {
 
     private extraActions: IAction[] = [];
     private selectViewActive = false;
-    private oldEntries: Entries | Error | null = null;
+
+    get entriesEntity() {
+        return this.entity;
+    }
 
     get currentValue() {
         return currentValue(this.value);
@@ -122,39 +120,19 @@ export default class ReferenceField extends Vue {
     }
 
     get options(): ISelectOption[] | null {
-        if (this.oldEntries === null) {
+        if (this.currentEntries === null) {
             return null;
         } else {
             const home = homeSchema(this.uvArgs);
             const linkOpts = home !== null ? { homeSchema: home } : undefined;
 
-            return Object.entries(this.oldEntries).map(([id, name]) => ({
+            return Object.entries(this.currentEntries).map(([id, name]) => ({
                 label: name,
                 value: Number(id),
                 meta: {
                     link: attrToQueryRef(this.linkedAttr, id, this.value.info, linkOpts),
                 },
             }));
-        }
-    }
-
-    get newEntries() {
-        const ret = this.entriesMap.getEntries(this.entity);
-        return ret === undefined ? null : ret;
-    }
-
-    private destroyEntities(ref: IEntityRef) {
-        this.removeEntriesConsumer({ ref, reference: this.uid });
-    }
-
-    @Watch("newEntries", { immediate: true })
-    private updateEntries() {
-        if (this.newEntries instanceof Error) {
-            this.oldEntries = null;
-        } else if (this.newEntries !== null) {
-            this.oldEntries = this.newEntries;
-        } else {
-            this.getEntries({ ref: this.entity, reference: this.uid });
         }
     }
 
@@ -168,20 +146,6 @@ export default class ReferenceField extends Vue {
         if (this.selectView === null) {
             this.extraActions = [];
         }
-    }
-
-    @Watch("entity", { deep: true })
-    private entityChanged(newEntity: IEntityRef, oldEntity: IEntityRef) {
-        if (!equalEntityRef(newEntity, oldEntity)) {
-            if (oldEntity !== undefined) {
-                this.destroyEntities(oldEntity);
-            }
-            this.getEntries({ ref: newEntity, reference: this.uid });
-        }
-    }
-
-    private destroyed() {
-        this.destroyEntities(this.entity);
     }
 }
 </script>

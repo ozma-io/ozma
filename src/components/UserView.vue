@@ -25,7 +25,7 @@
     <span>
         <component v-if="uvIsReady"
                 :is="`UserView${userViewType}`"
-                :uv="oldUv"
+                :uv="currentUv"
                 :isRoot="isRoot"
                 :filter="filter"
                 :local="local"
@@ -110,8 +110,8 @@ export default class UserView extends Vue {
     private extraActions: IAction[] = [];
     private component: IUserViewConstructor<Vue> | null = null;
     private local: IHandlerProvider | null = null;
-    // oldUv is shown while new component for uv is loaded.
-    private oldUv: CombinedUserView | UserViewError | null = null;
+    // currentUv is shown while new component for uv is loaded.
+    private currentUv: CombinedUserView | UserViewError | null = null;
 
     get newUv() {
         const ret = this.currentUvs.getUserView(this.args);
@@ -119,7 +119,7 @@ export default class UserView extends Vue {
     }
 
     get uvIsReady() {
-        return this.oldUv instanceof CombinedUserView && this.component !== null;
+        return this.currentUv instanceof CombinedUserView && this.component !== null;
     }
 
     get actions() {
@@ -127,7 +127,7 @@ export default class UserView extends Vue {
         if (this.createView !== null) {
             actions.push({ name: this.$tc("create"), query: this.createView });
         }
-        if (this.oldUv !== null && this.oldUv.args.source.type === "named") {
+        if (this.currentUv !== null && this.currentUv.args.source.type === "named") {
             const editQuery: IQuery = {
                 defaultValues: {},
                 args: {
@@ -139,8 +139,8 @@ export default class UserView extends Vue {
                         },
                     },
                     args: {
-                        schema: this.oldUv.args.source.ref.schema,
-                        name: this.oldUv.args.source.ref.name,
+                        schema: this.currentUv.args.source.ref.schema,
+                        name: this.currentUv.args.source.ref.name,
                     },
                 },
             };
@@ -151,40 +151,40 @@ export default class UserView extends Vue {
     }
 
     get userViewType() {
-        if (this.oldUv instanceof CombinedUserView) {
-            return userViewType(this.oldUv);
+        if (this.currentUv instanceof CombinedUserView) {
+            return userViewType(this.currentUv);
         } else {
             return null;
         }
     }
 
     get createView() {
-        if (this.oldUv instanceof CombinedUserView) {
+        if (this.currentUv instanceof CombinedUserView) {
             const opts: IAttrToQueryOpts = {
                 infoByDefault: true,
             };
-            const home = homeSchema(this.oldUv.args);
+            const home = homeSchema(this.currentUv.args);
             if (home !== null) {
                 opts.homeSchema = home;
             }
-            return attrToQuery(this.oldUv.attributes["CreateView"], opts);
+            return attrToQuery(this.currentUv.attributes["CreateView"], opts);
         } else {
             return null;
         }
     }
 
     get errorMessage() {
-        if (!(this.oldUv instanceof UserViewError)) {
+        if (!(this.currentUv instanceof UserViewError)) {
             return null;
         } else {
-            if (this.oldUv.type === "forbidden") {
+            if (this.currentUv.type === "forbidden") {
                 return this.$t("forbidden");
-            } else if (this.oldUv.type === "not_found") {
+            } else if (this.currentUv.type === "not_found") {
                 return this.$t("not_found");
-            } else if (this.oldUv.type === "bad_request") {
-                return this.$t("bad_request", { msg: this.oldUv.message });
+            } else if (this.currentUv.type === "bad_request") {
+                return this.$t("bad_request", { msg: this.currentUv.message });
             } else {
-                return this.$t("unknown_error", { msg: this.oldUv.message });
+                return this.$t("unknown_error", { msg: this.currentUv.message });
             }
         }
     }
@@ -193,7 +193,7 @@ export default class UserView extends Vue {
     @Watch("newUv", { immediate: true })
     private async updateUserView() {
         const newUv = this.newUv;
-        if (newUv !== null && newUv === this.oldUv) {
+        if (newUv !== null && newUv === this.currentUv) {
             return;
         }
 
@@ -220,12 +220,12 @@ export default class UserView extends Vue {
             }
 
             this.extraActions = [];
-            this.oldUv = newUv;
+            this.currentUv = newUv;
             this.local = local;
             this.component = component;
         } else if (newUv instanceof UserViewError) {
             this.extraActions = [];
-            this.oldUv = newUv;
+            this.currentUv = newUv;
             this.local = null;
             this.component = null;
         } else if (newUv === null) {
@@ -251,7 +251,7 @@ export default class UserView extends Vue {
 
     private setUvError(error: UserViewError) {
         this.destroyUserView(this.args);
-        this.oldUv = error;
+        this.currentUv = error;
         this.local = null;
         this.component = null;
     }
@@ -275,8 +275,8 @@ export default class UserView extends Vue {
 
     @Watch("submitPromise", { immediate: true })
     private changesSubmitted(submitPromise: Promise<CombinedTransactionResult[]> | null) {
-        const oldUv = this.oldUv;
-        if (oldUv instanceof CombinedUserView && oldUv.rows === null && submitPromise !== null) {
+        const currentUv = this.currentUv;
+        if (currentUv instanceof CombinedUserView && currentUv.rows === null && submitPromise !== null) {
             (async () => {
                 let ret: CombinedTransactionResult[];
                 try {
@@ -285,17 +285,17 @@ export default class UserView extends Vue {
                     return;
                 }
 
-                if (!deepEquals(this.args, oldUv.args)) {
+                if (!deepEquals(this.args, currentUv.args)) {
                     // We went somewhere else meanwhile.
                     return;
                 }
 
-                const createOp = ret.find(x => x.type === "insert" && equalEntityRef(x.entity, oldUv.info.mainEntity!));
+                const createOp = ret.find(x => x.type === "insert" && equalEntityRef(x.entity, currentUv.info.mainEntity!));
                 if (createOp === undefined) {
                     return;
                 }
                 const id = (createOp as ICombinedInsertEntityResult).id;
-                const args: IUserViewArguments = { source: oldUv.args.source, args: { id } };
+                const args: IUserViewArguments = { source: currentUv.args.source, args: { id } };
                 const newQuery: IQuery = {
                     defaultValues: {},
                     args,
