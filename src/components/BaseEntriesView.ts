@@ -16,28 +16,32 @@ export default class BaseEntriesView extends Vue {
 
     protected currentEntries: Entries | Error | null = null;
 
+    get entriesEntity(): IEntityRef {
+        throw Error("Not implemented");
+    }
+
     get newEntries() {
-        const ret = this.entriesMap.getEntries(this.getEntriesEntity());
+        const ret = this.entriesMap.getEntries(this.entriesEntity);
         return ret === undefined ? null : ret;
     }
 
-    destroyEntries(ref: IEntityRef) {
+    private destroyEntries(ref: IEntityRef) {
         this.removeEntriesConsumer({ ref, reference: this.uid });
     }
 
     @Watch("newEntries", { immediate: true })
-    updateEntries() {
+    private updateEntries() {
         if (this.newEntries instanceof Error) {
             this.currentEntries = null;
         } else if (this.newEntries !== null) {
             this.currentEntries = this.newEntries;
         } else {
-            this.getEntries({ ref: this.getEntriesEntity(), reference: this.uid });
+            this.getEntries({ ref: this.entriesEntity, reference: this.uid });
         }
     }
 
-    @Watch("entity", { deep: true })
-    entityChanged(newEntity: IEntityRef, oldEntity: IEntityRef) {
+    @Watch("entriesEntity", { deep: true })
+    private entityChanged(newEntity: IEntityRef, oldEntity: IEntityRef) {
         if (!equalEntityRef(newEntity, oldEntity)) {
             if (oldEntity !== undefined) {
                 this.destroyEntries(oldEntity);
@@ -46,11 +50,7 @@ export default class BaseEntriesView extends Vue {
         }
     }
 
-    destroyed() {
-        this.destroyEntries(this.getEntriesEntity());
-    }
-
-    protected getEntriesEntity(): IEntityRef {
-        throw Error("Not implemented");
+    private destroyed() {
+        this.destroyEntries(this.entriesEntity);
     }
 }

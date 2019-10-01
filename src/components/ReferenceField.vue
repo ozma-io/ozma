@@ -90,7 +90,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
     private extraActions: IAction[] = [];
     private selectViewActive = false;
 
-    protected getEntriesEntity() {
+    get entriesEntity() {
         return this.entity;
     }
 
