@@ -286,8 +286,8 @@ export default class MultiSelect extends Vue {
     }
 
     private removeValue(index?: number) {
-        if (index && !this.single)  {
-            const newValue = this.currentValue.filter((_: any, i: number) => index !== i);
+        if ((index || index === 0) && !this.single)  {
+            const newValue = this.currentValues.filter((_: any, i: number) => index !== i);
             this.$emit("update:value", newValue);
         } else {
             this.$emit("update:value", this.emptyValue);
@@ -311,6 +311,7 @@ export default class MultiSelect extends Vue {
      align-items: center;
      padding-left: 5px;
      height: 40px;
+     color: black;
  }
  .select_container {
      display: flex;
