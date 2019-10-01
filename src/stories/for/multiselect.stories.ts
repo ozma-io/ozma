@@ -1,70 +1,12 @@
-import { boolean, text, number, withKnobs } from "@storybook/addon-knobs";
 import { storiesOf } from "@storybook/vue";
+import { boolean, text, number, withKnobs } from "@storybook/addon-knobs";
 
-import Calendar from "../components/Calendar.vue";
-import MultiSelect from "../components/multiselect/MultiSelect.vue";
+import makeFormControl from "../utility/makeFormField";
 
-import makeFormControl from "./utility/makeFormField";
-import CustomSelect from "./components/CustomSelect.vue";
+import CustomSelect from "../components/CustomSelect.vue";
+import MultiSelect from "../../components/multiselect/MultiSelect.vue";
+import testOptions from "./multiselectOptions";
 
-storiesOf("Calendar", module)
-  .addDecorator(withKnobs as any)
-  .add("Default", () => {
-    const FormField = makeFormControl(Calendar, "Calendar");
-    return {
-      props: {
-        value: {
-          type: Date,
-          default: undefined,
-        },
-        bindProps: {
-          type: Object,
-          default: { showTime: boolean("Show Time", false)},
-        },
-      },
-      components: { FormField },
-      template: "<div class=\"input_container\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div>",
-    } as any;
-  });
-
-const testOptions = [
-  {
-    value: "fruit_lemon",
-    label: "Lemon",
-  },
-  {
-    value: "fruit_apple",
-    label: "Apple",
-  },
-  {
-    value: "vegetable_potato",
-    label: "Potato",
-  },
-  {
-    value: "fruit_tomato",
-    label: "Tomato",
-  },
-  {
-    value: "fruit_strawberry",
-    label: "Strawberry",
-  },
-  {
-    value: "fruit_blueberry",
-    label: "Blueberry",
-  },
-  {
-    value: "vegetable_carrot",
-    label: "Carrot",
-  },
-  {
-    value: "vegetable_cabbage",
-    label: "Cabbage",
-  },
-  {
-    value: "vegetable_radish",
-    label: "Radish",
-  },
-];
 storiesOf("MultiSelect", module)
   .addDecorator(withKnobs as any)
   .add("With multiple values", () => {
@@ -199,5 +141,36 @@ storiesOf("MultiSelect", module)
           components: { FormField },
           template: "<div class=\"input_container\"><div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div></div>",
       };
+  })
+  .add("Empty Option", () => {
+      const FormField = makeFormControl(MultiSelect, "MultiSelect");
+      const noValueOptions = [{ value: "raw_value", label: "" }, { value: 6 }, { value: "has_label", label: "This one has label" }];
+      return {
+          props: {
+              value: {
+                  type: Array,
+                  default: null,
+              },
+              style: {
+                  type: Object,
+                  default: { width: text("Width of input field", "600px") },
+              },
+              noValueOptions: {
+                  type: Object,
+                  default: JSON.stringify(noValueOptions),
+              },
+              bindProps: {
+                  type: Object,
+                  default: {
+                      options: noValueOptions,
+                      height:  number("Height (as passed in field options)", 0),
+                      single: true,
+                      disabled:  boolean("Disable", false),
+                      required:  boolean("Required", false),
+                  },
+              },
+          },
+          components: { FormField },
+        template: "<div><span>{{(noValueOptions)}}</span><div class=\"input_container\"><div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div></div></div>",
+      };
   });
-/*  */
