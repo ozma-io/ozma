@@ -87,6 +87,12 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
             if (entity === null) {
                 throw new Error("View doesn't have a main entity");
             }
+            if (this.uv.info.columns[ref.column].mainField === null) {
+                throw new Error("Invalid column number");
+            }
+            if (rawValue === undefined) {
+                throw new Error("Invalid value");
+            }
 
             // FIXME: Theoretical race condition with another addEntry because it's async
             const res = await this.addEntry({
@@ -97,7 +103,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
             });
             await Promise.all(this.local.emptyRow!.row.values.map((cell, colI) => {
                 const columnInfo = this.uv.info.columns[colI];
-                const currValue = currentValue(cell);
+                const currValue = colI === ref.column ? rawValue : currentValue(cell);
                 if (columnInfo.mainField !== null && currValue !== undefined) {
                     return this.setAddedField({
                         scope: this.scope,
@@ -105,7 +111,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
                         entity: entity.name,
                         field: columnInfo.mainField.name,
                         id: res.id,
-                        value: colI === ref.column ? rawValue : currValue,
+                        value: currValue,
                     });
                 } else {
                     return Promise.resolve();
