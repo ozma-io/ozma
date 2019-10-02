@@ -228,30 +228,65 @@ export const valueSignature = <T>(a: T): string => {
     }
 };
 
-export class ObjectSet<K> {
-    private entries: Record<string, K> = {};
+export class ObjectMap<K, V> {
+    private entriesMap: Record<string, [K, V]> = {};
 
-    insert(k: K) {
+    insert(k: K, v: V) {
         const key = valueSignature(k);
-        Vue.set(this.entries, key, k);
+        Vue.set(this.entriesMap, key, [k, v]);
     }
 
     exists(k: K) {
         const key = valueSignature(k);
-        return key in this.entries;
+        return key in this.entriesMap;
+    }
+
+    entries() {
+        return Object.values(this.entriesMap);
     }
 
     keys() {
-        return Object.values(this.entries);
+        return this.entries().map(([k, v]) => k);
+    }
+
+    values() {
+        return this.entries().map(([k, v]) => v);
     }
 
     get length() {
-        return Object.keys(this.entries).length;
+        return Object.keys(this.entriesMap).length;
     }
 
     delete(k: K) {
         const key = valueSignature(k);
         Vue.delete(this.entries, key);
+    }
+}
+
+export class ObjectSet<K> {
+    private entriesMap: Record<string, K> = {};
+
+    insert(k: K) {
+        const key = valueSignature(k);
+        Vue.set(this.entriesMap, key, k);
+    }
+
+    exists(k: K) {
+        const key = valueSignature(k);
+        return key in this.entriesMap;
+    }
+
+    keys() {
+        return Object.values(this.entriesMap);
+    }
+
+    get length() {
+        return Object.keys(this.entriesMap).length;
+    }
+
+    delete(k: K) {
+        const key = valueSignature(k);
+        Vue.delete(this.entriesMap, key);
     }
 }
 
