@@ -68,6 +68,7 @@ const types: RecordSet<string> = {
     "Form": null,
     "Menu": null,
     "Table": null,
+    "MultiSelect": null,
 };
 
 const components = Object.fromEntries(Object.keys(types).map(name => {
