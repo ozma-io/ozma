@@ -22,8 +22,8 @@
                   @click="setIsOpen(true)"
                   class="single_value_button">
                 <slot name="singleValue"
-                      v-bind:listValueStyle="listValueStyle"
-                    v-bind:valueOption="valueOption">
+                      :listValueStyle="listValueStyle"
+                      :valueOption="valueOption">
                     <span :style="listValueStyle"
                           class="single_value">{{valueOption.label}}</span>
                 </slot>
@@ -44,9 +44,9 @@
                  ref="valuesList">
                 <slot name="label"
                       v-if="!single"
-                      v-bind:valueOptions="valueOptions"
-                      v-bind:listValueStyle="listValueStyle"
-                      v-bind:removeValue="removeValue">
+                      :valueOptions="valueOptions"
+                      :listValueStyle="listValueStyle"
+                      :removeValue="removeValue">
                     <span v-for="(option, index) in valueOptions"
                           :key="option.value"
                           class="values_list__value"
@@ -69,10 +69,10 @@
             </div>
             <slot name="option"
                   v-if="isOpen"
-                  v-bind:selectedOptions="selectedOptions"
-                  v-bind:addOptionToValue="addOptionToValue"
-                  v-bind:selectedOption="selectedOption"
-                  v-bind:isEmpty="isEmpty">
+                  :selectedOptions="selectedOptions"
+                  :addOptionToValue="addOptionToValue"
+                  :selectedOption="selectedOption"
+                  :isEmpty="isEmpty">
                 <ul class="select_container__options_list" :style="optionsListStyle" ref="optionsList">
                     <li v-for="(option, index) in selectedOptions"
                             :key="option.value"
@@ -115,11 +115,11 @@ const defaultOptionFilter = (query: string) => (option: ISelectOption) =>
 @Component({})
 export default class MultiSelect extends Vue {
     @Prop({}) value!: any;
-    @Prop({ type: Array, default: new Array() }) options!: ISelectOption[];
+    @Prop({ type: Array, default: () => new Array() }) options!: ISelectOption[];
     @Prop({ type: Boolean, default: false }) single!: boolean;
     @Prop({ type: Boolean, default: false }) required!: boolean;
     @Prop({ type: Boolean, default: false }) disabled!: boolean;
-    @Prop({ type: Function, default: defaultOptionFilter}) optionFilterFN!: (query: string) => (option: ISelectOption) => boolean;
+    @Prop({ type: Function, default: defaultOptionFilter }) optionFilterFN!: (query: string) => (option: ISelectOption) => boolean;
     @Prop({ default: null }) emptyValue: any;
     @Prop({ type: Number, default: null }) height!: number;
     @Prop({ type: String, default: null }) optionsListHeight!: string;
@@ -293,7 +293,7 @@ export default class MultiSelect extends Vue {
     }
 
     private removeValue(index?: number) {
-        if ((index || index === 0) && !this.single)  {
+        if ((index !== undefined) && !this.single)  {
             const newValue = this.currentValues.filter((_: any, i: number) => index !== i);
             this.$emit("update:value", newValue);
         } else {

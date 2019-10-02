@@ -34,15 +34,15 @@ export default class BaseEntriesView extends Vue {
 
     @Watch("newEntries", { immediate: true })
     private updateEntries() {
-      if (this.entriesEntity) {
-        if (this.newEntries instanceof Error) {
-          this.currentEntries = null;
-        } else if (this.newEntries !== null) {
-          this.currentEntries = this.newEntries;
-        } else {
-          this.getEntries({ ref: this.entriesEntity, reference: this.uid });
+        if (this.entriesEntity) {
+            if (this.newEntries instanceof Error) {
+                this.currentEntries = null;
+            } else if (this.newEntries !== null) {
+                this.currentEntries = this.newEntries;
+            } else {
+                this.getEntries({ ref: this.entriesEntity, reference: this.uid });
+            }
         }
-      }
     }
 
     @Watch("entriesEntity", { deep: true })
@@ -57,7 +57,7 @@ export default class BaseEntriesView extends Vue {
 
     private destroyed() {
         if (this.entriesEntity) {
-          this.destroyEntries(this.entriesEntity);
+            this.destroyEntries(this.entriesEntity);
         }
     }
 }

@@ -29,15 +29,14 @@
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import * as R from "ramda";
 import { mixins } from "vue-class-component";
-import { Store } from "vuex";
-import { namespace } from "vuex-class";
 
 import { RecordSet, tryDicts, mapMaybe } from "@/utils";
 import { AttributesMap, IResultColumnInfo, IReferenceFieldType, IMainFieldInfo, IEntityRef } from "@/api";
 import { CurrentEntries, CombinedUserView, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, homeSchema } from "@/state/user_view";
+import { RowRef, ValueRef } from "@/local_user_view";
 import { AddedRowId } from "@/state/staging_changes";
 import { IQuery } from "@/state/query";
-import LocalEmptyUserView from "@/components/LocalEmptyUserView";
+import LocalEmptyUserView from "@/LocalEmptyUserView";
 import { UserView } from "@/components";
 import BaseUserView, { ISelectionRef } from "@/components/BaseUserView";
 import BaseEntriesView from "@/components/BaseEntriesView";
@@ -45,53 +44,35 @@ import FormEntry from "@/components/views/form/FormEntry.vue";
 import MultiSelect from "@/components/multiselect/MultiSelect.vue";
 import { IAction } from "@/components/ActionsMenu.vue";
 
-const query = namespace("query");
-const userView = namespace("userView");
-
 const findSelectColumnIndex = (attrs: { [key: string]: any}) =>
     Number(Object.keys(attrs).filter(key => R.pathOr(false, [key, "Select"], attrs))[0]);
 
-interface IValueDeltaExisting {
-    type: "existing";
-    position: number;
-}
-
-interface IValueDeltaAdded {
-    type: "added";
-    id: number;
-}
-
-type IValueDeltaStore = IValueDeltaExisting | IValueDeltaAdded;
-
-interface IValueDeltaNew {
-    ref: { column: number; type: "new"; };
-    value: number;
-}
-
 interface IValueDelta {
-    rowsToRemove: IValueDeltaStore[];
+    rowsToRemove: RowRef[];
     rowsToAdd: IValueDeltaNew[];
 }
 
+interface IValueDeltaNew { ref: ValueRef; value: number; }
+
 const findValueDelta = (rows: ICombinedRow[], newRows: Record<number, IRowCommon>, value: any[], indexColumn: number): IValueDelta => {
-    const valuesOld = rows.reduce((acc, row, index) => {
-        return { ...acc, [row.values[indexColumn].value]: { type: "existing", position: index } };
-    }, {});
-    const valuesNew = Object.entries(newRows).reduce((acc, [rowId, row]) => {
-        return { ...acc, [row.values[indexColumn].value]: { type: "added", id: Number(rowId) } };
-    }, {});
-    const storeValues = { ...valuesOld, ...valuesNew };
-    const selectValues = value.reduce((acc, vl) => {
-        return { ...acc, [vl]: { ref: { column: indexColumn, type: "new" }, value: vl } };
+    const storeValues: Record<string, RowRef> = {};
+    rows.forEach((row, index) => {
+        storeValues[row.values[indexColumn].value] = { type: "existing", position: index };
+    });
+    Object.entries(newRows).forEach(([rowId, row]) => {
+        storeValues[row.values[indexColumn].value] = { type: "added", id: Number(rowId) };
+    });
+    const selectValues: Record<string, IValueDeltaNew>  = value.reduce((acc, vl) => {
+        return { ...acc, [vl]: { column: indexColumn, type: "new" } };
     }, {});
 
-    const rowsToAdd: IValueDeltaNew[] = mapMaybe(([id, ref]) => {
+    const rowsToAdd = mapMaybe(([id, ref]) => {
         if (id in storeValues) {
             return undefined;
         }
         return ref;
     }, Object.entries(selectValues));
-    const rowsToRemove: IValueDeltaStore[] = mapMaybe(([id, ref]) => {
+    const rowsToRemove = mapMaybe(([id, ref]) => {
         if (id in selectValues) {
             return undefined;
         }
@@ -111,13 +92,7 @@ const findValueDelta = (rows: ICombinedRow[], newRows: Record<number, IRowCommon
         MultiSelect,
     },
 })
-export default class UserViewForm extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>, BaseEntriesView>(BaseUserView, BaseEntriesView) {
-    @query.State("previous") previousQuery!: IQuery | null;
-
-    @Prop({ type: Boolean, default: false }) isRoot!: boolean;
-
-    private selectedValueIndex = findSelectColumnIndex(this.uv.columnAttributes);
-
+export default class UserViewMultiselect extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>, BaseEntriesView>(BaseUserView, BaseEntriesView) {
     get entriesEntity() {
         const mainField = this.uv.info.columns[this.selectedValueIndex].mainField;
         if (mainField) {
@@ -127,6 +102,10 @@ export default class UserViewForm extends mixins<BaseUserView<LocalEmptyUserView
             }
         }
         return null;
+    }
+
+    private get selectedValueIndex() {
+        return findSelectColumnIndex(this.uv.columnAttributes);
     }
 
     private onSelectChange(value: any[]) {
@@ -144,9 +123,9 @@ export default class UserViewForm extends mixins<BaseUserView<LocalEmptyUserView
     private get selectValues() {
         const existingValues = this.uv.rows ? this.uv.rows.filter(row => !row.deleted)
                                    .map(row => row.values[this.selectedValueIndex].value) : [];
-        const addedValues = Object.entries(this.uv.newRows)
-                                  .map(([_, row]) => row.values[this.selectedValueIndex].value);
-        return R.uniq([...existingValues, ...addedValues]);
+        const addedValues = Object.values(this.uv.newRows)
+                                  .map(row => row.values[this.selectedValueIndex].value);
+        return [...existingValues, ...addedValues];
     }
 
     private get options() {
@@ -157,14 +136,11 @@ export default class UserViewForm extends mixins<BaseUserView<LocalEmptyUserView
                 return Object.entries(entries).map(([key, value]) => ({ value: Number(key), label: value }));
             }
         }
-        return [];
+        return null;
     }
 
     private get disabled() {
-        return !this.uv.info.mainEntity || this.addedLocked;
+        return !this.uv.info.mainEntity || this.addedLocked || this.options === null;
     }
 }
 </script>
-
-<style scoped>
-</style>
