@@ -13,7 +13,7 @@
     <div fluid class="view-form">
         <MultiSelect
             v-if="selectedValueIndex"
-            :options="options"
+            :options="options || []"
             :value="selectValues"
             :emptyValue="[]"
             :disabled="disabled"
@@ -63,7 +63,7 @@ const findValueDelta = (rows: ICombinedRow[], newRows: Record<number, IRowCommon
         storeValues[row.values[indexColumn].value] = { type: "added", id: Number(rowId) };
     });
     const selectValues: Record<string, IValueDeltaNew>  = value.reduce((acc, vl) => {
-        return { ...acc, [vl]: { column: indexColumn, type: "new" } };
+        return { ...acc, [vl]: { ref: { column: indexColumn, type: "new" }, value: vl } };
     }, {});
 
     const rowsToAdd = mapMaybe(([id, ref]) => {
