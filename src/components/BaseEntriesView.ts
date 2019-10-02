@@ -16,13 +16,16 @@ export default class BaseEntriesView extends Vue {
 
     protected currentEntries: Entries | Error | null = null;
 
-    get entriesEntity(): IEntityRef {
+    get entriesEntity(): IEntityRef | null {
         throw Error("Not implemented");
     }
 
     get newEntries() {
-        const ret = this.entriesMap.getEntries(this.entriesEntity);
-        return ret === undefined ? null : ret;
+        if (this.entriesEntity) {
+            const ret = this.entriesMap.getEntries(this.entriesEntity);
+            return ret === undefined ? null : ret;
+        }
+        return null;
     }
 
     private destroyEntries(ref: IEntityRef) {
@@ -31,13 +34,15 @@ export default class BaseEntriesView extends Vue {
 
     @Watch("newEntries", { immediate: true })
     private updateEntries() {
+      if (this.entriesEntity) {
         if (this.newEntries instanceof Error) {
-            this.currentEntries = null;
+          this.currentEntries = null;
         } else if (this.newEntries !== null) {
-            this.currentEntries = this.newEntries;
+          this.currentEntries = this.newEntries;
         } else {
-            this.getEntries({ ref: this.entriesEntity, reference: this.uid });
+          this.getEntries({ ref: this.entriesEntity, reference: this.uid });
         }
+      }
     }
 
     @Watch("entriesEntity", { deep: true })
@@ -51,6 +56,8 @@ export default class BaseEntriesView extends Vue {
     }
 
     private destroyed() {
-        this.destroyEntries(this.entriesEntity);
+        if (this.entriesEntity) {
+          this.destroyEntries(this.entriesEntity);
+        }
     }
 }
