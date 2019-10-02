@@ -115,7 +115,7 @@ const defaultOptionFilter = (query: string) => (option: ISelectOption) =>
 @Component({})
 export default class MultiSelect extends Vue {
     @Prop({}) value!: any;
-    @Prop({ type: Array, default: () => new Array() }) options!: ISelectOption[];
+    @Prop({ type: Array, default: () => [] }) options!: ISelectOption[];
     @Prop({ type: Boolean, default: false }) single!: boolean;
     @Prop({ type: Boolean, default: false }) required!: boolean;
     @Prop({ type: Boolean, default: false }) disabled!: boolean;
