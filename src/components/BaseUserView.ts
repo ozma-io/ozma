@@ -31,7 +31,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
     @Prop({ type: String, required: true }) scope!: ScopeName;
 
     get addedLocked() {
-        return this.uv.rows === null && this.currentSubmit !== null;
+        return this.currentSubmit !== null;
     }
 
     protected deleteRow(ref: RowRef) {
