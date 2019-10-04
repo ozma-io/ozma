@@ -305,9 +305,11 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
         const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, this.uv.attributes);
 
         if (value.info !== undefined) {
-            const link = attrToQueryRef(getCellAttr("LinkedView"), currentValue(value), value.info, this.extra.linkOpts);
-            if (link !== null) {
-                extra.link = link;
+            if (value.info.field !== null && value.info.field.fieldType.type === "reference") {
+                const link = attrToQueryRef(getCellAttr("LinkedView"), currentValue(value), this.extra.linkOpts);
+                if (link !== null) {
+                    extra.link = link;
+                }
             }
             const currLinkForRow = attrToQuerySelf(getCellAttr("RowLinkedView"), value.info, this.extra.linkOpts);
             if (currLinkForRow !== null) {

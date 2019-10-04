@@ -104,7 +104,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 
         const actions: IAction[] = [];
 
-        const linkedView = attrToQueryRef(this.linkedAttr, this.currentValue, this.value.info, linkOpts);
+        const linkedView = attrToQueryRef(this.linkedAttr, this.currentValue, linkOpts);
         if (linkedView !== null) {
             actions.push({ name: this.$tc("follow_reference"), query: linkedView });
         }
@@ -130,7 +130,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
                 label: name,
                 value: Number(id),
                 meta: {
-                    link: attrToQueryRef(this.linkedAttr, id, this.value.info, linkOpts),
+                    link: attrToQueryRef(this.linkedAttr, id, linkOpts),
                 },
             }));
         }

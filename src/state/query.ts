@@ -121,12 +121,12 @@ export const attrToQuerySelf = (linkedAttr: any, update?: IValueInfo, opts?: IAt
 };
 
 // Set 'id' argument to the id of the referenced value.
-export const attrToQueryRef = (linkedAttr: any, value: any, update?: IValueInfo, opts?: IAttrToQueryOpts): IQuery | null => {
+export const attrToQueryRef = (linkedAttr: any, value: any, opts?: IAttrToQueryOpts): IQuery | null => {
     const ret = attrToQuery(linkedAttr, opts);
     if (ret !== null) {
         const args = ret.args.args;
         if (args !== null) {
-            if (!("id" in args) && value !== null && value !== undefined && update && update.field !== null && update.field.fieldType.type === "reference") {
+            if (!("id" in args) && value !== null && value !== undefined) {
                 const id = Number(value);
                 if (!Number.isNaN(id)) {
                     args.id = id;

@@ -132,7 +132,7 @@ import { valueToText, valueIsNull, equalEntityRef } from "@/values";
 import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef, IEntityRef } from "@/api";
 import { IAction } from "@/components/ActionsMenu.vue";
 import { IValueInfo, IUserViewArguments, CombinedUserView, CurrentUserViews, homeSchema, ICombinedValue, currentValue } from "@/state/user_view";
-import { IQuery, attrToQueryRef, attrToQuerySelf, IAttrToQueryOpts } from "@/state/query";
+import { IQuery, attrToQuerySelf, IAttrToQueryOpts } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { ISelectionRef } from "@/components/BaseUserView";
 
