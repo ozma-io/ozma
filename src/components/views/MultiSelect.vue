@@ -18,7 +18,45 @@
             :emptyValue="[]"
             :disabled="disabled"
             @update:value="onSelectChange"
-        />
+        >
+            <template v-slot:label="select">
+                <span v-for="(option, index) in select.valueOptions"
+                    :key="option.value"
+                    class="values_list__value"
+                    :style="select.listValueStyle"
+                    @click.stop>
+                    <UserViewLink v-if="option.meta.link"
+                        :uv="option.meta.link"
+                        @[indirectLinks?`click`:null]="$emit('goto', $event)">
+                        {{option.label}}
+                    </UserViewLink>
+                    <span v-if="!option.meta.link">
+                        {{option.label}}
+                    </span>
+                    <input v-if="select.showValueRemove" @click="select.removeValue(index)" type="button" class="material-icons values_list__value__close" value="close">
+                </span>
+            </template>
+            <template v-slot:option="select">
+                <ul class="select_container__options_list" :style="select.optionsListStyle" ref="optionsList">
+                    <li v-for="(option, index) in select.selectedOptions"
+                        :key="option.value"
+                        @click="select.addOptionToValue(option, $event)"
+                        :class="[
+                               'select_container__options_list__option',
+                               {'select_container__options_list__option_active': select.selectedOption === index }
+                               ]">
+                        <UserViewLink v-if="option.meta && option.meta.link"
+                            :uv="option.meta.link"
+                            @[indirectLinks?`click`:null]="$emit('goto', $event)">
+                            {{option.label}}
+                        </UserViewLink>
+                        <span v-if="!option.meta.link">
+                            {{option.label}}
+                        </span>
+                    </li>
+                </ul>
+            </template>
+        </MultiSelect>
         <div v-if="!selectedValueIndex" style="color: red;">
             {{$t('no_select_column')}}
         </div>
@@ -35,7 +73,7 @@ import { AttributesMap, IResultColumnInfo, IReferenceFieldType, IMainFieldInfo, 
 import { CurrentEntries, CombinedUserView, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, homeSchema } from "@/state/user_view";
 import { RowRef, ValueRef } from "@/local_user_view";
 import { AddedRowId } from "@/state/staging_changes";
-import { IQuery } from "@/state/query";
+import { IQuery, attrToQueryRef } from "@/state/query";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
 import { UserView } from "@/components";
 import BaseUserView, { ISelectionRef } from "@/components/BaseUserView";
@@ -130,10 +168,21 @@ export default class UserViewMultiselect extends mixins<BaseUserView<LocalEmptyU
 
     private get options() {
         const entity = this.entriesEntity;
+        const linkedView = R.pathOr(
+            null, [this.selectedValueIndex, "RowLinkedView"], this.uv.columnAttributes,
+        );
         if (entity) {
             const entries = this.entriesMap.getEntries(entity);
             if (entries) {
-                return Object.entries(entries).map(([key, value]) => ({ value: Number(key), label: value }));
+                const options = Object.entries(entries).map(([key, value]) => ({
+                    value: Number(key),
+                    label: value,
+                    meta: {
+                        link: attrToQueryRef(linkedView, Number(key)),
+                    },
+                }));
+                console.log(options);
+                return options;
             }
         }
         return null;

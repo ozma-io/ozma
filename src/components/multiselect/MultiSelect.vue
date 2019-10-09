@@ -18,14 +18,14 @@
                 'select_container',
                 { 'select_container_fixed_height': hasHeight && !isOpen && !single },
              ]">
-            <span v-if="single && !isOpen && !isEmpty"
+            <span v-if="showSingleValue"
                   @click="setIsOpen(true)"
                   class="single_value_button">
                 <slot name="singleValue"
                       :listValueStyle="listValueStyle"
                       :valueOption="valueOption">
                     <span :style="listValueStyle"
-                          class="single_value">{{valueOption.label}}</span>
+                          :class="[ 'single_value', { 'single_value_open': isOpen } ]">{{valueOption.label}}</span>
                 </slot>
             </span>
             <span v-if="isEmpty && !isOpen"
@@ -36,6 +36,7 @@
                  :class="[
                       'select_container__content',
                       {
+                        'select_container__content__single': showSingleValue,
                         'select_container__content_fixed_height': hasHeight && !isOpen,
                       }
                       ]"
@@ -46,7 +47,8 @@
                       v-if="!single"
                       :valueOptions="valueOptions"
                       :listValueStyle="listValueStyle"
-                      :removeValue="removeValue">
+                      :removeValue="removeValue"
+                      :showValueRemove="showValueRemove">
                     <span v-for="(option, index) in valueOptions"
                           :key="option.value"
                           class="values_list__value"
@@ -146,6 +148,11 @@ export default class MultiSelect extends Vue {
     private getLabel(option: ISelectOption): string {
         const label = R.pathOr(option.value, ["label"], option);
         return label !== "" ? label : option.value;
+    }
+
+    private get showSingleValue() {
+        const showIfEditing = !this.isOpen || (this.isOpen && this.inputValue === "");
+        return this.single && !this.isEmpty && showIfEditing;
     }
 
     private get showValueRemove(): boolean {
@@ -338,6 +345,15 @@ export default class MultiSelect extends Vue {
      min-height: 40px;
      align-content: flex-start;
  }
+ .select_container__content__single {
+     position: absolute;
+     left: 0;
+     background-color: rgba(0, 0, 0, 0);
+ }
+ .select_container__content__single > input {
+     background-color: rgba(0, 0, 0, 0);
+     margin-left: 5px;
+ }
  .select_container__content_fixed_height {
      overflow: hidden;
  }
@@ -350,7 +366,7 @@ export default class MultiSelect extends Vue {
      border: 0;
      height: 30px;
      padding: 5px;
-     margin: 5px;
+     margin: 5px 5px 5px 0;
      flex: 1;
      box-sizing: border-box;
      color: black;
@@ -410,11 +426,15 @@ export default class MultiSelect extends Vue {
      color: black;
      padding: 2px 5px 2px 5px;
      box-sizing: border-box;
- }
- .single_value {
+}
+.single_value {
      width: 100%;
      height: 40px;
+     padding-left: 0px;
      align-self: center;
+ }
+ .single_value_open {
+     color: gray;
  }
  .single_value_button {
      cursor: pointer;
