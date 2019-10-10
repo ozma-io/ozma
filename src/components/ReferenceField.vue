@@ -154,4 +154,9 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
  .reference_backup_input {
      width: 100%;
  }
+ .single_value > a,
+ .select_container__options_list__option > a {
+     color: var(--TableTextColor);
+     text-decoration: underline;
+ }
 </style>

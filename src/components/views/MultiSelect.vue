@@ -30,7 +30,7 @@
                         @[indirectLinks?`click`:null]="$emit('goto', $event)">
                         {{option.label}}
                     </UserViewLink>
-                    <span v-if="!option.meta.link">
+                    <span v-else>
                         {{option.label}}
                     </span>
                     <input v-if="select.showValueRemove" @click="select.removeValue(index)" type="button" class="material-icons values_list__value__close" value="close">
@@ -50,7 +50,7 @@
                             @[indirectLinks?`click`:null]="$emit('goto', $event)">
                             {{option.label}}
                         </UserViewLink>
-                        <span v-if="!option.meta.link">
+                        <span v-else>
                             {{option.label}}
                         </span>
                     </li>
@@ -181,7 +181,6 @@ export default class UserViewMultiselect extends mixins<BaseUserView<LocalEmptyU
                         link: attrToQueryRef(linkedView, Number(key)),
                     },
                 }));
-                console.log(options);
                 return options;
             }
         }
@@ -193,3 +192,10 @@ export default class UserViewMultiselect extends mixins<BaseUserView<LocalEmptyU
     }
 }
 </script>
+<style scoped>
+ .values_list__value > a,
+ .select_container__options_list__option > a {
+     color: var(--TableTextColor);
+     text-decoration: underline;
+ }
+</style>
