@@ -10,15 +10,17 @@
 </i18n>
 
 <template>
-    <UserView
-        :args="currentView.args"
-        :defaultValues="currentView.defaultValues"
-        selectionMode
-        indirectLinks
-        :scope="uid"
-        @update:actions="extraActions = $event"
-        @goto="goto"
-        @select="selectFromView" />
+    <portal to="tabbed-modal" :slot-props="{title: 'LMAO'}">
+        <UserView
+            :args="currentView.args"
+            :defaultValues="currentView.defaultValues"
+            selectionMode
+            indirectLinks
+            :scope="uid"
+            @update:actions="extraActions = $event"
+            @goto="goto"
+            @select="selectFromView" />
+    </portal>
 </template>
 
 <script lang="ts">

@@ -19,6 +19,13 @@
                 @update:actions="extraActions = $event"
                 @select="$emit('update', $event); selectViewActive = false" />
 
+        <SelectUserView v-if="uv"
+            :selectView="uv"
+            :entity="entity"
+            @update:actions="extraActions = $event"
+            @select="$emit('update', $event); selectViewActive = false"
+        />
+
         <MultiSelect v-if="options !== null"
                         :value="currentValue"
                         :options="options"
@@ -89,6 +96,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 
     private extraActions: IAction[] = [];
     private selectViewActive = false;
+    private uv: IQuery | null = null;
 
     get entriesEntity() {
         return this.entity;
@@ -106,7 +114,10 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 
         const linkedView = attrToQueryRef(this.linkedAttr, this.currentValue, linkOpts);
         if (linkedView !== null) {
-            actions.push({ name: this.$tc("follow_reference"), query: linkedView });
+            // actions.push({ name: this.$tc("follow_reference"), query: linkedView });
+            actions.push({ name: this.$tc("follow_reference"), callback: () => {
+                this.uv = linkedView;
+            } });
         }
 
         if (this.selectView !== undefined && !this.selectViewActive && !this.isDisabled) {
@@ -153,5 +164,8 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 <style scoped>
  .reference_backup_input {
      width: 100%;
+ }
+ .form-view {
+     width: 85vw;
  }
 </style>

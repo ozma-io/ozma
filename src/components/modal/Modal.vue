@@ -1,5 +1,5 @@
 <template>
-    <VueModal :name="modalName" @before-close="$emit('modal:beforeClose', $event)">
+    <VueModal :width="width" :height="height" :name="modalName" @before-close="onBeforeClose">
         <div slot="top-right">
             <input type="button" value="close" class="material-icons modal__close_button" @click="$modal.hide(modalName)">
         </div>
@@ -11,7 +11,9 @@
             </div>
         </div>
         <div v-if="hasTabs" class="modal__content">
-            <ModalContent :nodes="currentTabContent" />
+            <div v-for="tab, index in tabs" v-show="index === selectedTab">
+                <ModalContent  :nodes="tab.content" />
+            </div>
         </div>
         <div v-if="!hasTabs" class="modal__content">
             <slot name="content">
@@ -34,6 +36,9 @@ const sortTabsByOrder: (tabs: IModalTab[]) => IModalTab[] = R.sortBy(R.prop("ord
 export default class Modal extends Vue {
     @Prop({ type: Object }) modalTabs!: IModalTabsProp | undefined;
     @Prop({ type: Boolean }) isOpen!: boolean;
+    @Prop({ type: String }) width!: string;
+    @Prop({ type: String }) height!: string;
+    @Prop({ type: Function }) beforeClose!: (evt: Event) => void;
     @Prop({ type: Number, default: 0 }) startingTab!: number;
     @Prop({ type: String, default: "modal" }) modalName!: string;
 
@@ -48,7 +53,16 @@ export default class Modal extends Vue {
         if (isOpen) {
             this.$modal.show(this.modalName);
         } else {
+            console.log(isOpen);
             this.$modal.hide(this.modalName);
+        }
+    }
+
+    private onBeforeClose(evt: Event) {
+        if (this.beforeClose) {
+            this.beforeClose(evt);
+        } else {
+            this.$emit("modal:beforeClose", evt);
         }
     }
 
@@ -103,6 +117,12 @@ export default class Modal extends Vue {
  }
  .modal__content {
      padding: 10px;
+     overflow: auto;
+     height: 85vh;
+ }
+
+ .modal__content >>> .view-form {
+     width: 85vw;
  }
 </style>
 

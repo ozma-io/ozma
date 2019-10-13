@@ -13,6 +13,7 @@
 
 <template>
     <div id="app">
+        <ModalPortalTarget name="tabbed-modal" multiple />
         <router-view v-if="currentAuth !== null || pendingAuth !== null"></router-view>
         <span v-else-if="authLastError !== null">
             {{ $t('auth_error', { msg: authLastError }) }}
@@ -28,12 +29,13 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { CurrentSettings } from "@/state/settings";
 import { CurrentAuth } from "@/state/auth";
+import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 
 const settings = namespace("settings");
 const auth = namespace("auth");
 const staging = namespace("staging");
 
-@Component
+@Component({ components: { ModalPortalTarget } })
 export default class App extends Vue {
     @settings.State("current") settings!: CurrentSettings;
     @auth.Action("startAuth") startAuth!: () => Promise<void>;
