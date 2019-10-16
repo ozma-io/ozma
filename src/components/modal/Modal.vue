@@ -4,11 +4,14 @@
             <input type="button" value="close" class="material-icons modal__close_button" @click="$modal.hide(modalName)">
         </div>
         <div class="modal__tab_headers" v-if="hasTabs">
-            <div v-for="tab, index in tabs"
-                :class="['modal__tab_header', {'selected': index === selectedTab}]"
-                @click="switchTab(index)">
-                {{tab.title}}
-            </div>
+            <ModalTabHeader v-for="tab, index in tabs"
+                :isActive="index === selectedTab"
+                :originalTitle="tab.title"
+                :originalUID="tab.uid"
+                :tabIndex="index"
+                @tab:click="switchTab"
+                @tab:close="onModalTabClose"
+            />
         </div>
         <div v-if="hasTabs" class="modal__content">
             <div v-for="tab, index in tabs" v-show="index === selectedTab">
@@ -28,11 +31,13 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { valueIsNull } from "@/values";
 
 import ModalContent from "./ModalContent";
+import ModalTabHeader  from "./ModalTabHeader.vue";
 import { IModalTabsProp, IModalTab } from "./types";
+import { modalPortalBus } from './ModalPortalTarget';
 
 const sortTabsByOrder: (tabs: IModalTab[]) => IModalTab[] = R.sortBy(R.prop("order"));
 
-@Component({ components: { ModalContent } })
+@Component({ components: { ModalContent, ModalTabHeader } })
 export default class Modal extends Vue {
     @Prop({ type: Object }) modalTabs!: IModalTabsProp | undefined;
     @Prop({ type: Boolean }) isOpen!: boolean;
@@ -53,9 +58,12 @@ export default class Modal extends Vue {
         if (isOpen) {
             this.$modal.show(this.modalName);
         } else {
-            console.log(isOpen);
             this.$modal.hide(this.modalName);
         }
+    }
+
+    private onModalTabClose(uid: string) {
+        modalPortalBus.$emit('modalPortal:tabClose', uid)
     }
 
     private onBeforeClose(evt: Event) {
@@ -104,25 +112,14 @@ export default class Modal extends Vue {
      padding: 10px 10px 0 0;
      cursor: pointer;
  }
- .modal__tab_header {
-     padding: 0 10px 0 10px;
-     flex: 1 1 auto;
-     text-align: center;
- }
- .modal__tab_header.selected,
- .modal__tab_header:hover {
-    color: var(--NavigationBackColor);
-    background-color: var(--NavigationTextColor);
-    cursor: pointer;
- }
  .modal__content {
      padding: 10px;
      overflow: auto;
-     height: 85vh;
+     height: 80vh;
  }
 
  .modal__content >>> .view-form {
-     width: 85vw;
+     width: 82vw;
  }
 </style>
 

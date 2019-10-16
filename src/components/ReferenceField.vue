@@ -22,6 +22,8 @@
         <SelectUserView v-if="uv"
             :selectView="uv"
             :entity="entity"
+            :onModalClose="onModalClose"
+            :entityTitle="entityTitle"
             @update:actions="extraActions = $event"
             @select="$emit('update', $event); selectViewActive = false"
         />
@@ -62,6 +64,7 @@
 </template>
 
 <script lang="ts">
+import * as R from 'ramda';
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
@@ -104,6 +107,21 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 
     get currentValue() {
         return currentValue(this.value);
+    }
+
+    private onModalClose() {
+        this.uv = null;
+    }
+
+    private get entityTitle(): string {
+        const home = homeSchema(this.uvArgs);
+        const linkOpts = home !== null ? { homeSchema: home } : undefined;
+        const linkedView = attrToQueryRef(this.linkedAttr, this.currentValue, linkOpts);
+
+        if (linkedView !== null) {
+            return R.pathOr<string>("", ["args", "source","ref", "name"], linkedView);
+        }
+        return "";
     }
 
     get actions() {

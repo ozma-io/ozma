@@ -22,7 +22,7 @@
 </i18n>
 
 <template>
-    <span>
+    <span :title="title">
         <component v-if="uvIsReady"
                 :is="`UserView${userViewType}`"
                 :uv="currentUv"
@@ -113,6 +113,14 @@ export default class UserView extends Vue {
     private local: IHandlerProvider | null = null;
     // currentUv is shown while new component for uv is loaded.
     private currentUv: CombinedUserView | UserViewError | null = null;
+
+    get title() {
+        const args = this.query.rootViewArgs;
+        if (args === null) {
+            throw new Error("Invalid root view arguments");
+        }
+        return args.source.ref.name;
+    }
 
     get newUv() {
         const ret = this.currentUvs.getUserView(this.args);

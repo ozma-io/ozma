@@ -10,7 +10,7 @@
 </i18n>
 
 <template>
-    <portal to="tabbed-modal" :slot-props="{title: 'LMAO'}">
+    <ModalPortal to="tabbed-modal" :tabName="entityTitle" :onModalClose="onModalClose">
         <UserView
             :args="currentView.args"
             :defaultValues="currentView.defaultValues"
@@ -20,7 +20,7 @@
             @update:actions="extraActions = $event"
             @goto="goto"
             @select="selectFromView" />
-    </portal>
+    </ModalPortal>
 </template>
 
 <script lang="ts">
@@ -33,14 +33,17 @@ import { IAction } from "@/components/ActionsMenu.vue";
 import { IQuery } from "@/state/query";
 import { CurrentChanges, ScopeName } from "@/state/staging_changes";
 import { ISelectionRef } from "@/components/BaseUserView";
+import ModalPortal from "@/components/modal/ModalPortal";
 
 const staging = namespace("staging");
 
-@Component
+@Component({ components: { ModalPortal }})
 export default class SelectUserView extends Vue {
     @staging.State("current") changes!: CurrentChanges;
     @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
     @staging.Action("removeScope") removeScope!: (scope: ScopeName) => Promise<void>;
+    @Prop({ type: Function }) onModalClose!: () => void;
+    @Prop({ entityTitle: String }) entityTitle!: string;
     @Prop({ type: Object, required: true }) entity!: IEntityRef;
     @Prop({ type: Object, required: true }) selectView!: IQuery;
 
