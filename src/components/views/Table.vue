@@ -825,6 +825,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
 
     private clickCell(ref: ValueRef, event: MouseEvent) {
+        this.selectCell(ref);
         if (this.lastSelectedValue !== null &&
                 !deepEquals(this.lastSelectedValue, ref) &&
                 this.lastSelectedValue.type === "added") {
@@ -845,24 +846,31 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
             }
         }
 
-        if (this.clickTimeoutId === null) {
-            this.clickTimeoutId = setTimeout(() => {
-                this.clickTimeoutId = null;
-            }, doubleClickTime);
+        const iOS = !!navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform);
 
+        if (!iOS) {
+            if (this.clickTimeoutId === null) {
+                this.clickTimeoutId = setTimeout(() => {
+                    this.clickTimeoutId = null;
+                }, doubleClickTime);
+                if (this.lastSelectedValue !== null && !deepEquals(this.lastSelectedValue, ref)) {
+                    this.removeCellEditing();
+                }
+            } else {
+                clearTimeout(this.clickTimeoutId);
+                this.clickTimeoutId = null;
+                if (this.lastSelectedValue !== null && deepEquals(this.lastSelectedValue, ref)) {
+                    this.setCellEditing(ref);
+                }
+            }
+        } else {
             if (this.lastSelectedValue !== null && !deepEquals(this.lastSelectedValue, ref)) {
                 this.removeCellEditing();
             }
-        } else {
-            clearTimeout(this.clickTimeoutId);
-            this.clickTimeoutId = null;
-
             if (this.lastSelectedValue !== null && deepEquals(this.lastSelectedValue, ref)) {
                 this.setCellEditing(ref);
             }
         }
-
-        this.selectCell(ref);
     }
 
     private selectCell(ref: ValueRef) {
