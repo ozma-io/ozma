@@ -113,7 +113,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
         }
 
         if (this.selectView !== undefined && !this.selectViewActive && !this.isDisabled) {
-            actions.push( { name: this.$tc("select_view"), callback: () => {
+            actions.push({ name: this.$tc("select_view"), callback: () => {
                 this.selectViewActive = true;
             } });
         }
@@ -144,9 +144,9 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
         this.$emit("update:actions", this.actions);
     }
 
-    @Watch("selectView")
+    @Watch("selectViewActive")
     private clearActions() {
-        if (this.selectView === null) {
+        if (!this.selectViewActive) {
             this.extraActions = [];
         }
     }
