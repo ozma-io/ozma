@@ -1,5 +1,5 @@
 <template>
-    <VueModal :width="width" :height="height" :name="uid">
+    <VueModal :width="width" :height="height" :name="uid" @before-close="beforeClose">
         <div slot="top-right">
             <input type="button" value="close" class="material-icons modal__close_button" @click="$emit('close')">
         </div>
@@ -54,6 +54,14 @@ export default class Modal extends Vue {
         } else {
             this.$modal.hide(this.uid);
         }
+    }
+
+    // Event is not typed for vue-js-modal
+    private beforeClose(ev: any) {
+        if (this.show) {
+            ev.stop();
+        }
+        this.$emit("close");
     }
 
     private switchTab(index: number) {

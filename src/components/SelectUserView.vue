@@ -10,7 +10,7 @@
 </i18n>
 
 <template>
-    <ModalPortal to="tabbed-modal" :tabName="title" :onModalClose="() => this.$emit('close')">
+    <ModalPortal to="tabbed-modal" :tabName="title" @close="$emit('close')">
         <UserView
             :args="currentView.args"
             :defaultValues="currentView.defaultValues"

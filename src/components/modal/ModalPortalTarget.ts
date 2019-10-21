@@ -1,7 +1,7 @@
 import * as R from "ramda";
 import { mixins } from "vue-class-component";
 import { Component } from "vue-property-decorator";
-import { PortalTarget, Wormhole } from "portal-vue";
+import { PortalTarget } from "portal-vue";
 
 import { mapMaybe } from "@/utils";
 import { IModalTab } from "@/components/modal/types";
@@ -49,19 +49,13 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
 
   private close(index: number) {
     const modalPortal: ModalPortal | undefined = R.path([index, "context", "$children", "0"], this.passengers);
-    const onModalClose: () => void | undefined = (modalPortal as any).onModalClose;
-    if (onModalClose) {
-      onModalClose();
-    }
+    modalPortal!.$emit("close");
   }
 
   private closeAll() {
     this.passengers.forEach(node => {
       const modalPortal: ModalPortal | undefined = R.path<ModalPortal | undefined>(["context", "$children", "0"], node);
-      const onModalClose: () => void | undefined = (modalPortal as any).onModalClose;
-      if (onModalClose) {
-        onModalClose();
-      }
+      modalPortal!.$emit("close");
     });
   }
 }
