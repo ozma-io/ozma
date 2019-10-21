@@ -1,21 +1,20 @@
 <template>
-    <VueModal :width="width" :height="height" :name="modalName" @before-close="onBeforeClose">
+    <VueModal :width="width" :height="height" :name="uid">
         <div slot="top-right">
-            <input type="button" value="close" class="material-icons modal__close_button" @click="$modal.hide(modalName)">
+            <input type="button" value="close" class="material-icons modal__close_button" @click="$emit('close')">
         </div>
         <div class="modal__tab_headers" v-if="hasTabs">
-            <ModalTabHeader v-for="tab, index in tabs"
+            <ModalTabHeader v-for="(tab, index) in modalTabs"
+                :key="index"
                 :isActive="index === selectedTab"
-                :originalTitle="tab.title"
-                :originalUID="tab.uid"
-                :tabIndex="index"
-                @tab:click="switchTab"
-                @tab:close="onModalTabClose"
+                :title="tab.title"
+                @tab:click="switchTab(index)"
+                @tab:close="$emit('tab:close', index)"
             />
         </div>
         <div v-if="hasTabs" class="modal__content">
-            <div v-for="tab, index in tabs" v-show="index === selectedTab">
-                <ModalContent  :nodes="tab.content" />
+            <div v-for="(tab, index) in modalTabs" :key="index" v-show="index === selectedTab">
+                <ModalContent :nodes="tab.content" />
             </div>
         </div>
         <div v-if="!hasTabs" class="modal__content">
@@ -30,72 +29,45 @@ import * as R from "ramda";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { valueIsNull } from "@/values";
 
-import ModalContent from "./ModalContent";
-import ModalTabHeader  from "./ModalTabHeader.vue";
-import { IModalTabsProp, IModalTab } from "./types";
-import { modalPortalBus } from './ModalPortalTarget';
-
-const sortTabsByOrder: (tabs: IModalTab[]) => IModalTab[] = R.sortBy(R.prop("order"));
+import ModalContent from "@/components/modal/ModalContent";
+import ModalTabHeader from "@/components/modal/ModalTabHeader.vue";
+import { IModalTab } from "@/components/modal/types";
 
 @Component({ components: { ModalContent, ModalTabHeader } })
 export default class Modal extends Vue {
-    @Prop({ type: Object }) modalTabs!: IModalTabsProp | undefined;
-    @Prop({ type: Boolean }) isOpen!: boolean;
+    @Prop({ type: Array }) modalTabs!: IModalTab[] | undefined;
+    @Prop({ type: Boolean, default: true }) show!: boolean;
     @Prop({ type: String }) width!: string;
     @Prop({ type: String }) height!: string;
-    @Prop({ type: Function }) beforeClose!: (evt: Event) => void;
     @Prop({ type: Number, default: 0 }) startingTab!: number;
-    @Prop({ type: String, default: "modal" }) modalName!: string;
 
     private selectedTab: number = this.startingTab;
 
     private mounted() {
-        this.watchIsOpen(this.isOpen);
+        this.watchIsOpen();
     }
 
-    @Watch("isOpen")
-    private watchIsOpen(isOpen: boolean) {
-        if (isOpen) {
-            this.$modal.show(this.modalName);
+    @Watch("show")
+    private watchIsOpen() {
+        if (this.show) {
+            this.$modal.show(this.uid);
         } else {
-            this.$modal.hide(this.modalName);
-        }
-    }
-
-    private onModalTabClose(uid: string) {
-        modalPortalBus.$emit('modalPortal:tabClose', uid)
-    }
-
-    private onBeforeClose(evt: Event) {
-        if (this.beforeClose) {
-            this.beforeClose(evt);
-        } else {
-            this.$emit("modal:beforeClose", evt);
+            this.$modal.hide(this.uid);
         }
     }
 
     private switchTab(index: number) {
-        if (index < this.tabs.length) {
+        if (index < this.modalTabs!.length) {
             this.selectedTab = index;
         }
     }
 
     private get hasTabs(): boolean {
-        return !!this.modalTabs;
-    }
-
-    private get tabs(): IModalTab[] {
-        if (this.modalTabs) {
-            return sortTabsByOrder(
-                Object.entries(this.modalTabs)
-                      .map(([order, tab]) => ({ order, ...tab })),
-            );
-        }
-        return [];
+        return this.modalTabs !== undefined;
     }
 
     private get currentTabContent(): Vue | string {
-        return R.pathOr("No Content", [this.selectedTab, "content"], this.tabs);
+        return R.pathOr("No Content", [this.selectedTab, "content"], this.modalTabs);
     }
 }
 </script>

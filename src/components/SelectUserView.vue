@@ -10,7 +10,7 @@
 </i18n>
 
 <template>
-    <ModalPortal to="tabbed-modal" :tabName="entityTitle" :onModalClose="onModalClose">
+    <ModalPortal to="tabbed-modal" :tabName="title" :onModalClose="() => this.$emit('close')">
         <UserView
             :args="currentView.args"
             :defaultValues="currentView.defaultValues"
@@ -18,6 +18,7 @@
             indirectLinks
             :scope="uid"
             @update:actions="extraActions = $event"
+            @update:title="title = $event"
             @goto="goto"
             @select="selectFromView" />
     </ModalPortal>
@@ -42,13 +43,12 @@ export default class SelectUserView extends Vue {
     @staging.State("current") changes!: CurrentChanges;
     @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
     @staging.Action("removeScope") removeScope!: (scope: ScopeName) => Promise<void>;
-    @Prop({ type: Function }) onModalClose!: () => void;
-    @Prop({ entityTitle: String }) entityTitle!: string;
     @Prop({ type: Object, required: true }) entity!: IEntityRef;
     @Prop({ type: Object, required: true }) selectView!: IQuery;
 
     private extraActions: IAction[] = [];
     private currentView: IQuery = this.selectView;
+    private title: string = "";
 
     get actions() {
         const actions: IAction[] = [];

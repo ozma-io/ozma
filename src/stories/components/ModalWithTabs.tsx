@@ -1,7 +1,7 @@
 import Vue from "vue";
 import { Prop, Component } from "vue-property-decorator";
 
-import { IModalTabsProp } from "@/components/modal/types";
+import { IModalTab } from "@/components/modal/types";
 import Modal from "@/components/modal/Modal.vue";
 
 @Component
@@ -16,10 +16,10 @@ export default class ModalWithTabs extends Vue {
             on: { "modal:beforeClose": (evt: any) => console.log(evt) },
         } });
     }
-    private getModalTabs(createElement: (...args: any) => any): IModalTabsProp {
-        return {
-            3: { title: "Yes", content: createElement("div", "First Tab") },
-            5: { title: "No", content: createElement("div", "Second Tab") },
-        };
+    private getModalTabs(createElement: (...args: any) => any): IModalTab[] {
+        return [
+            { title: "Yes", content: createElement("div", "First Tab") },
+            { title: "No", content: createElement("div", "Second Tab") },
+        ];
     }
 }

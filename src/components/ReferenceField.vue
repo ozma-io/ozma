@@ -17,16 +17,8 @@
                 :selectView="selectView"
                 :entity="entity"
                 @update:actions="extraActions = $event"
-                @select="$emit('update', $event); selectViewActive = false" />
-
-        <SelectUserView v-if="uv"
-            :selectView="uv"
-            :entity="entity"
-            :onModalClose="onModalClose"
-            :entityTitle="entityTitle"
-            @update:actions="extraActions = $event"
-            @select="$emit('update', $event); selectViewActive = false"
-        />
+                @select="$emit('update', $event); selectViewActive = false"
+                @close="selectViewActive = false" />
 
         <MultiSelect v-if="options !== null"
                         :value="currentValue"
@@ -64,7 +56,7 @@
 </template>
 
 <script lang="ts">
-import * as R from 'ramda';
+import * as R from "ramda";
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
@@ -109,21 +101,6 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
         return currentValue(this.value);
     }
 
-    private onModalClose() {
-        this.uv = null;
-    }
-
-    private get entityTitle(): string {
-        const home = homeSchema(this.uvArgs);
-        const linkOpts = home !== null ? { homeSchema: home } : undefined;
-        const linkedView = attrToQueryRef(this.linkedAttr, this.currentValue, linkOpts);
-
-        if (linkedView !== null) {
-            return R.pathOr<string>("", ["args", "source","ref", "name"], linkedView);
-        }
-        return "";
-    }
-
     get actions() {
         const home = homeSchema(this.uvArgs);
         const linkOpts = home !== null ? { homeSchema: home } : undefined;
@@ -132,10 +109,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 
         const linkedView = attrToQueryRef(this.linkedAttr, this.currentValue, linkOpts);
         if (linkedView !== null) {
-            // actions.push({ name: this.$tc("follow_reference"), query: linkedView });
-            actions.push({ name: this.$tc("follow_reference"), callback: () => {
-                this.uv = linkedView;
-            } });
+            actions.push({ name: this.$tc("follow_reference"), query: linkedView });
         }
 
         if (this.selectView !== undefined && !this.selectViewActive && !this.isDisabled) {
