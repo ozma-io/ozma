@@ -1,5 +1,5 @@
 import { mixins } from "vue-class-component";
-import { Component } from "vue-property-decorator";
+import { Component, Watch } from "vue-property-decorator";
 import { PortalTarget } from "portal-vue";
 
 import { mapMaybe } from "@/utils";
@@ -8,6 +8,8 @@ import Modal from "@/components/modal/Modal.vue";
 
 @Component
 export default class ModalPortalTarget extends mixins(PortalTarget) {
+  private startingTab = 0;
+
   render(createElement: any) {
     return createElement(Modal, {
       props: {
@@ -15,6 +17,7 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
         show: this.showModal,
         width: "85%",
         height: "85%",
+        startingTab: this.startingTab,
       },
       on: {
         close: this.closeAll,
@@ -34,6 +37,13 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
         order: order || -1,
       };
     }, this.passengers).sort((a, b) => b.order - a.order);
+  }
+
+  @Watch("modalTabs")
+  private modalTabsChanged(tabs: IModalTab[], prevTabs: IModalTab[]) {
+    if (prevTabs.length < tabs.length) {
+      this.startingTab = tabs.length - 1;
+    }
   }
 
   private get showModal(): boolean {

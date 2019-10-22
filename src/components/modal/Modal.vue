@@ -41,7 +41,7 @@ export default class Modal extends Vue {
     @Prop({ type: String }) height!: string;
     @Prop({ type: Number, default: 0 }) startingTab!: number;
 
-    private selectedTab: number = this.startingTab;
+    private selectedTab: number = 0;
 
     private mounted() {
         this.watchIsOpen();
@@ -53,6 +53,23 @@ export default class Modal extends Vue {
             this.$modal.show(this.uid);
         } else {
             this.$modal.hide(this.uid);
+        }
+    }
+
+    @Watch("startingTab", { immediate: true })
+    private changeStartingTab() {
+        this.selectedTab = this.startingTab;
+        this.fixupTab();
+    }
+
+    @Watch("modalTabs")
+    private changeModalTabs() {
+        this.fixupTab();
+    }
+
+    private fixupTab() {
+        if (this.modalTabs && this.modalTabs.length > 0 && this.selectedTab >= this.modalTabs.length) {
+            this.selectedTab = this.modalTabs.length - 1;
         }
     }
 
