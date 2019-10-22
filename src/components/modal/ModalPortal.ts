@@ -6,5 +6,4 @@ import { Portal } from "portal-vue";
 export default class ModalPortal extends mixins(Portal) {
     @Prop({ type: String }) tabName!: string;
     @Prop({ type: Number }) order!: number;
-    @Prop({ type: Function }) onModalClose!: () => void;
 }
