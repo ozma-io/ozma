@@ -5,6 +5,7 @@ import Vuex from "vuex";
 import BootstrapVue from "bootstrap-vue";
 import UniqueId from "vue-unique-id";
 import vClickOutside from "v-click-outside";
+import VueGrid from "@liqueflies/vue-flex-grid";
 import { RawLocation, Dictionary } from "vue-router/types/router";
 
 import * as Utils from "@/utils";
@@ -19,6 +20,7 @@ Vue.use(Vuex);
 Vue.use(BootstrapVue);
 Vue.use(UniqueId);
 Vue.use(vClickOutside);
+Vue.use(VueGrid);
 
 const routes = [
     { path: "/", name: "main", redirect: { name: "view", params: { schema: "user", name: "Main" } } },
