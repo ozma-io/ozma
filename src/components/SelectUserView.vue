@@ -58,24 +58,13 @@ export default class SelectUserView extends Vue {
     private title: string = "";
 
     get actions() {
-        const actions: IAction[] = [];
-
-        // if (!this.changes.isScopeEmpty(this.uid)) {
-        //     actions.push({
-        //         name: this.$tc("save_scoped"),
-        //         callback: () => this.submitChanges(this.uid),
-        //     });
-        // }
-
-        const convertedActions = this.extraActions.map(action => {
+        return this.extraActions.map(action => {
             if ("query" in action) {
                 return { name: action.name, callback: () => this.goto(action.query) };
             } else {
                 return action;
             }
         });
-        actions.push(...convertedActions);
-        return actions;
     }
 
     private saveView() {
