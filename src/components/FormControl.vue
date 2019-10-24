@@ -187,6 +187,9 @@ type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | IRefere
 
 const userView = namespace("userView");
 
+const heightExclusions = ["select", "reference"];
+const multilineTypes = [ "codeeditor", "textarea" ];
+
 @Component({
     components: {
         CodeEditor: () => import("@/components/CodeEditor.vue"),
@@ -231,10 +234,11 @@ export default class FormControl extends Vue {
     }
 
     private get controlPanelStyle() {
-        const heightExclusions = ["select", "reference"];
         const heightAttr = this.attributes["ControlHeight"];
         const excludeHeight = heightExclusions.includes(this.inputType.name);
-        return heightAttr && !excludeHeight ? { height: `${heightAttr}px`, maxHeight: "initial" } : {};
+        const isHeightOnPanel = !multilineTypes.includes(this.inputType.name);
+        const height = isHeightOnPanel ? { height: `${heightAttr}px` } : {};
+        return heightAttr && !excludeHeight ? { ...height, maxHeight: "initial" } : {};
     }
 
     private controlStyle(height?: string): Record<string, any> {

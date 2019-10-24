@@ -160,4 +160,9 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
  .form-view {
      width: 85vw;
  }
+ .single_value > a,
+ .select_container__options_list__option > a {
+     color: var(--TableTextColor);
+     text-decoration: underline;
+ }
 </style>
