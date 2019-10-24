@@ -7,6 +7,8 @@ import UniqueId from "vue-unique-id";
 import vClickOutside from "v-click-outside";
 import VueGrid from "@liqueflies/vue-flex-grid";
 import { RawLocation, Dictionary } from "vue-router/types/router";
+import PortalVue from "portal-vue";
+import VueJSModal from "vue-js-modal";
 
 import * as Utils from "@/utils";
 import NotFound from "@/components/NotFound.vue";
@@ -21,6 +23,8 @@ Vue.use(BootstrapVue);
 Vue.use(UniqueId);
 Vue.use(vClickOutside);
 Vue.use(VueGrid);
+Vue.use(PortalVue);
+Vue.use(VueJSModal, { componentName: "VueModal" });
 
 const routes = [
     { path: "/", name: "main", redirect: { name: "view", params: { schema: "user", name: "Main" } } },

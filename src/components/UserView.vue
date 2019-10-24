@@ -7,7 +7,8 @@
             "forbidden": "Sorry, you are not authorized to use this user view. Contact your administrator.",
             "not_found": "User view not found",
             "bad_request": "User view request error: {msg}",
-            "unknown_error": "Unknown user view fetch error: {msg}"
+            "unknown_error": "Unknown user view fetch error: {msg}",
+            "anonymous_query": "(anonymous query)"
         },
         "ru": {
             "create": "Создать новую",
@@ -16,7 +17,8 @@
             "forbidden": "К сожалению у вас нет прав доступа для просмотра этого представления. Свяжитесь с администратором.",
             "not_found": "Представление не найдено",
             "bad_request": "Неверный запрос для этого представления: {msg}",
-            "unknown_error": "Неизвестная ошибка загрузки представления: {msg}"
+            "unknown_error": "Неизвестная ошибка загрузки представления: {msg}",
+            "anonymous_query": "(анонимный запрос)"
         }
     }
 </i18n>
@@ -113,6 +115,14 @@ export default class UserView extends Vue {
     private local: IHandlerProvider | null = null;
     // currentUv is shown while new component for uv is loaded.
     private currentUv: CombinedUserView | UserViewError | null = null;
+
+    get title() {
+        if (this.args.source.type === "named") {
+            return this.args.source.ref.name;
+        } else {
+            return this.$tc("anonymous_query");
+        }
+    }
 
     get newUv() {
         const ret = this.currentUvs.getUserView(this.args);
@@ -272,6 +282,11 @@ export default class UserView extends Vue {
             this.destroyUserView(oldArgs);
             this.requestView();
         }
+    }
+
+    @Watch("title", { immediate: true })
+    private updateTitle() {
+        this.$emit("update:title", this.title);
     }
 
     @Watch("submitPromise", { immediate: true })

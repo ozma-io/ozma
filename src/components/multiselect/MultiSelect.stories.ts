@@ -53,7 +53,7 @@ storiesOf("MultiSelect", module)
             options: testOptions,
             single: true,
             height:  number("Height (as passed in field options)", 0),
-            disabled:  boolean("Disable", true),
+            disabled:  boolean("Disable", false),
             required:  boolean("Required", false),
           },
         },
