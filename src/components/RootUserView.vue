@@ -170,7 +170,6 @@ export default class RootUserView extends Vue {
     private filterString: string = "";
     private enableFilter: boolean = false;
     private styleNode: HTMLStyleElement;
-    private title: string = "(No title)";
 
     constructor() {
         super();
