@@ -57,7 +57,8 @@
                           @update:statusLine="statusLine = $event"
                           @update:onSubmitStaging="onSubmitStaging = $event"
                           @update:enableFilter="enableFilter = $event"
-                          @update:bodyStyle="styleNode.innerHTML = $event" />
+                          @update:bodyStyle="styleNode.innerHTML = $event"
+                          @update:title="updateTitle" />
             </div>
             <div v-else class="loading">
                 {{ $t('loading') }}
@@ -204,6 +205,10 @@ export default class RootUserView extends Vue {
         this.filterString = this.query.getSearch("q", String, "");
     }
 
+    private updateTitle(title: string) {
+        setHeadTitle(`${title} - FunApp`);
+    }
+
     private created() {
         document.head.appendChild(this.styleNode);
     }
@@ -234,7 +239,6 @@ export default class RootUserView extends Vue {
         if (args.source.type !== "named") {
             throw new Error("Anonymous user views are not supported");
         }
-        setHeadTitle(`${args.source.ref.name} - FunApp`);
         this.getRootView(args);
     }
 

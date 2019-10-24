@@ -1,12 +1,12 @@
 <i18n>
     {
         "en": {
-            "select_view": "Select in view",
-            "follow_reference": "Follow reference"
+            "select_view": "Add in modal window",
+            "follow_reference": "Open in modal window"
         },
         "ru": {
-            "select_view": "Выбрать из представления",
-            "follow_reference": "Перейти к сущности"
+            "select_view": "Создать во вложенном окне",
+            "follow_reference": "Открыть во вложенном окне"
         }
     }
 </i18n>
@@ -17,7 +17,15 @@
                 :selectView="selectView"
                 :entity="entity"
                 @update:actions="extraActions = $event"
-                @select="$emit('update', $event); selectViewActive = false" />
+                @select="$emit('update', $event); selectViewActive = false"
+                @close="selectViewActive = false" />
+
+        <SelectUserView v-if="uv"
+            :selectView="uv"
+            :entity="entity"
+            @update:actions="extraActions = $event"
+            @select="$emit('update', $event); selectViewActive = false"
+            @close="uv = null" />
 
         <MultiSelect v-if="options !== null"
                         :value="currentValue"
@@ -55,6 +63,7 @@
 </template>
 
 <script lang="ts">
+import * as R from "ramda";
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
@@ -89,6 +98,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 
     private extraActions: IAction[] = [];
     private selectViewActive = false;
+    private uv: IQuery | null = null;
 
     get entriesEntity() {
         return this.entity;
@@ -106,11 +116,13 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 
         const linkedView = attrToQueryRef(this.linkedAttr, this.currentValue, linkOpts);
         if (linkedView !== null) {
-            actions.push({ name: this.$tc("follow_reference"), query: linkedView });
+            actions.push({ name: this.$tc("follow_reference"), callback: () => {
+                this.uv = linkedView;
+            } });
         }
 
         if (this.selectView !== undefined && !this.selectViewActive && !this.isDisabled) {
-            actions.push( { name: this.$tc("select_view"), callback: () => {
+            actions.push({ name: this.$tc("select_view"), callback: () => {
                 this.selectViewActive = true;
             } });
         }
@@ -141,9 +153,9 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
         this.$emit("update:actions", this.actions);
     }
 
-    @Watch("selectView")
+    @Watch("selectViewActive")
     private clearActions() {
-        if (this.selectView === null) {
+        if (!this.selectViewActive) {
             this.extraActions = [];
         }
     }
@@ -153,6 +165,9 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 <style scoped>
  .reference_backup_input {
      width: 100%;
+ }
+ .form-view {
+     width: 85vw;
  }
  .single_value > a,
  .select_container__options_list__option > a {

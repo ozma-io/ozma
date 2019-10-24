@@ -14,13 +14,14 @@
           class="user_bar__image"
           :src="select.valueOption.meta.img"
           :style="getUserBarStyle(select.valueOption)"
-        ></img>
+        >
         <span>{{select.valueOption.label}}</span>
       </span>
     </template>
     <template v-slot:label="select">
       <span
-        v-for="option, index in select.valueOptions"
+        v-for="(option, index) in select.valueOptions"
+        :key="index"
         class="values_list__value"
         :style="select.listValueStyle"
         @click.stop>
@@ -29,7 +30,7 @@
           class="user_bar__image"
           :src="option.meta.img"
           :style="getUserBarStyle(option)"
-        ></img>
+        >
         {{option.label}}
         <input @click="select.removeValue(index)" type="button" class="material-icons values_list__value__close" value="close">
       </span>
@@ -44,7 +45,8 @@
         </thead>
         <tbody>
           <tr
-            v-for="option, index in select.selectedOptions"
+            v-for="(option, index) in select.selectedOptions"
+            :key="index"
             @click="select.addOptionToValue(option)"
             :class="[
                    'user_row',
