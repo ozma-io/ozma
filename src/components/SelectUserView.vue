@@ -11,16 +11,23 @@
 
 <template>
     <ModalPortal to="tabbed-modal" :tabName="title" @close="$emit('close')">
-        <UserView
-            :args="currentView.args"
-            :defaultValues="currentView.defaultValues"
-            selectionMode
-            indirectLinks
-            :scope="uid"
-            @update:actions="extraActions = $event"
-            @update:title="title = $event"
-            @goto="goto"
-            @select="selectFromView" />
+        <section>
+            <UserView
+                :args="currentView.args"
+                :defaultValues="currentView.defaultValues"
+                selectionMode
+                indirectLinks
+                :scope="uid"
+                @update:actions="extraActions = $event"
+                @update:title="title = $event"
+                @goto="goto"
+                @select="selectFromView" />
+            <div class="selection_view_save__container">
+                <button type="button" class="selection_view_save__button" @click="this.saveView">
+                    {{ $t('save_scoped') }}
+                </button>
+            </div>
+        </section>
     </ModalPortal>
 </template>
 
@@ -53,12 +60,12 @@ export default class SelectUserView extends Vue {
     get actions() {
         const actions: IAction[] = [];
 
-        if (!this.changes.isScopeEmpty(this.uid)) {
-            actions.push({
-                name: this.$tc("save_scoped"),
-                callback: () => this.submitChanges(this.uid),
-            });
-        }
+        // if (!this.changes.isScopeEmpty(this.uid)) {
+        //     actions.push({
+        //         name: this.$tc("save_scoped"),
+        //         callback: () => this.submitChanges(this.uid),
+        //     });
+        // }
 
         const convertedActions = this.extraActions.map(action => {
             if ("query" in action) {
@@ -69,6 +76,10 @@ export default class SelectUserView extends Vue {
         });
         actions.push(...convertedActions);
         return actions;
+    }
+
+    private saveView() {
+        this.submitChanges(this.uid);
     }
 
     private selectFromView(selection: ISelectionRef) {
@@ -93,3 +104,22 @@ export default class SelectUserView extends Vue {
     }
 }
 </script>
+
+<style>
+ .selection_view_save__container {
+     width: 100%;
+     display: flex;
+     justify-content: flex-end;
+     position: sticky;
+ }
+ .selection_view_save__button {
+     border: var(--NavigationTextColor) 1px solid !important;
+     color: var(--NavigationTextColor);
+     background-color: var(--NavigationBackColor);
+ }
+ @media screen and (min-width: 480px) {
+     .selection_view_save__container {
+         bottom: 25px;
+     }
+ }
+</style>

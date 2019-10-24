@@ -117,6 +117,7 @@ export default class Modal extends Vue {
 
  .modal__content >>> .view-form {
      width: 82vw;
+     height: calc(80vh + 60px)
  }
 </style>
 

@@ -1,4 +1,4 @@
 export interface IModalTab {
-  title: string;
-  content: any;
+    title: string;
+    content: any;
 }

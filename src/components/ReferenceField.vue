@@ -1,12 +1,12 @@
 <i18n>
     {
         "en": {
-            "select_view": "Select in view",
-            "follow_reference": "Follow reference"
+            "select_view": "Add in modal window",
+            "follow_reference": "Open in modal window"
         },
         "ru": {
-            "select_view": "Выбрать из представления",
-            "follow_reference": "Перейти к сущности"
+            "select_view": "Создать во вложенном окне",
+            "follow_reference": "Открыть во вложенном окне"
         }
     }
 </i18n>
@@ -19,6 +19,13 @@
                 @update:actions="extraActions = $event"
                 @select="$emit('update', $event); selectViewActive = false"
                 @close="selectViewActive = false" />
+
+        <SelectUserView v-if="uv"
+            :selectView="uv"
+            :entity="entity"
+            @update:actions="extraActions = $event"
+            @select="$emit('update', $event); selectViewActive = false"
+            @close="uv = null" />
 
         <MultiSelect v-if="options !== null"
                         :value="currentValue"
@@ -109,7 +116,9 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 
         const linkedView = attrToQueryRef(this.linkedAttr, this.currentValue, linkOpts);
         if (linkedView !== null) {
-            actions.push({ name: this.$tc("follow_reference"), query: linkedView });
+            actions.push({ name: this.$tc("follow_reference"), callback: () => {
+                this.uv = linkedView;
+            } });
         }
 
         if (this.selectView !== undefined && !this.selectViewActive && !this.isDisabled) {
