@@ -1,6 +1,7 @@
 import moment from "moment";
 import Vue, { RenderContext } from "vue";
 import { RSA_NO_PADDING } from "constants";
+import { isObject } from "util";
 
 export type Result<A> = A | Error;
 
@@ -422,3 +423,5 @@ export class ObjectResourceMap<K, V> {
         return this.map.values();
     }
 }
+
+export const isIOS = () => !!navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform);
