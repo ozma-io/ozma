@@ -377,6 +377,10 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
         this.updateCommonValue(row, localRow, columnIndex, value, localValue);
     }
 
+    updateNewValue(columnIndex: number, value: ICombinedValue, localValue: ITableValueExtra) {
+        this.updateCommonValue(this.emptyRow!.row, this.emptyRow!.local, columnIndex, value, localValue);
+    }
+
     createCommonLocalRow(row: IRowCommon): ITableRowExtra {
         const getRowAttr = (name: string) => tryDicts(name, row.attributes, this.uv.attributes);
 

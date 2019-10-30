@@ -120,7 +120,7 @@ const insertMainRowMapping = (mainRowMapping: IMainRowMapping, id: RowId, index:
     rowsMapping.push(index);
 };
 
-const setUpdatedPun = (entitySummaries: Record<RowId, string>, value: ICombinedValue) => {
+export const setUpdatedPun = (entitySummaries: Entries, value: ICombinedValue) => {
     const ref = currentValue(value);
     if (valueIsNull(ref)) {
         value.pun = "";
@@ -239,6 +239,7 @@ export interface IUserViewEventHandler {
     undeleteRow: (rowIndex: number, row: ICombinedRow) => void;
     insertAddedRow: (rowId: AddedRowId, row: IAddedRow) => void;
     deleteAddedRow: (rowId: AddedRowId, row: IAddedRow) => void;
+    updateSummary: (columnIndex: number, entries: Entries) => void;
 }
 
 interface ICombinedUserViewParams {
@@ -746,6 +747,10 @@ const userViewModule: Module<IUserViewState, {}> = {
                         uv.handlers.forEach(handler => {
                             handler.updateAddedValue(rowId, row, colI, value);
                         });
+                    });
+
+                    uv.handlers.forEach(handler => {
+                        handler.updateSummary(colI, entries);
                     });
                 });
             });

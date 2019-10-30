@@ -1,7 +1,7 @@
 import Vue from "vue";
 import { Store } from "vuex";
 
-import { CombinedUserView, IUserViewEventHandler, IRowCommon, ICombinedValue, ICombinedRow, IAddedRow, IUpdateMapping, newEmptyRow } from "@/state/user_view";
+import { CombinedUserView, IUserViewEventHandler, IRowCommon, ICombinedValue, ICombinedRow, IAddedRow, Entries, newEmptyRow, setUpdatedPun } from "@/state/user_view";
 import { AddedRowId } from "@/state/staging_changes";
 
 export interface ILocalRowInfo<RowT> {
@@ -165,6 +165,11 @@ export abstract class LocalUserView<ValueT, RowT, ViewT> implements IHandlerProv
                 Vue.delete(this.newRows, rowId);
                 this.deleteAddedRow(rowId, row, localRow);
             },
+            updateSummary: (columnIndex: number, entries: Entries) => {
+                const value = this.emptyRow!.row.values[columnIndex];
+                setUpdatedPun(entries, value);
+                this.updateNewValue(columnIndex, value, this.emptyRow!.local.values[columnIndex]);
+            },
         };
 
         this.postInitUserView();
@@ -187,6 +192,10 @@ export abstract class LocalUserView<ValueT, RowT, ViewT> implements IHandlerProv
     }
 
     updateAddedValue(rowId: AddedRowId, row: IAddedRow, localRow: ILocalRowInfo<RowT>, columnIndex: number, value: ICombinedValue, localValue: ValueT) {
+        return;
+    }
+
+    updateNewValue(columnIndex: number, value: ICombinedValue, localValue: ValueT) {
         return;
     }
 
@@ -354,6 +363,10 @@ export abstract class SimpleLocalUserView<ValueT, RowT, ViewT> extends LocalUser
 
     updateAddedValue(rowId: AddedRowId, row: IAddedRow, localRow: ILocalRowInfo<RowT>, columnIndex: number, value: ICombinedValue, localValue: ValueT) {
         this.updateCommonValue(row, localRow, columnIndex, value, localValue);
+    }
+
+    updateNewValue(columnIndex: number, value: ICombinedValue, localValue: ValueT) {
+        this.updateCommonValue(this.emptyRow!.row, this.emptyRow!.local, columnIndex, value, localValue);
     }
 
     deleteCommonRow(row: IRowCommon, localRow: ILocalRow<ValueT, RowT>) {
