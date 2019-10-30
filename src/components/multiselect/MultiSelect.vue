@@ -75,21 +75,27 @@
                   :addOptionToValue="addOptionToValue"
                   :selectedOption="selectedOption"
                   :isEmpty="isEmpty">
-                <ul class="select_container__options_list" :style="optionsListStyle" ref="optionsList">
-                    <li v-for="(option, index) in selectedOptions"
-                            :key="option.value"
-                            @click="addOptionToValue(option, $event)"
-                            :class="[
-                                'select_container__options_list__option',
-                                {'select_container__options_list__option_active': selectedOption === index }
-                            ]">
-                        {{option.label}}
-                    </li>
-                </ul>
+                <div class="select_container__options_container">
+                    <ul class="select_container__options_list" :style="optionsListStyle" ref="optionsList">
+                        <li v-for="(option, index) in selectedOptions"
+                                :key="option.value"
+                                @click="addOptionToValue(option, $event)"
+                                :class="[
+                                    'select_container__options_list__option',
+                                    {'select_container__options_list__option_active': selectedOption === index }
+                                ]">
+                            {{option.label}}
+                        </li>
+                    </ul>
+                    <div class="select_container__options__actions" @click="setIsOpen(false)">
+                        <slot name="actions" v-if="isOpen">
+                        </slot>
+                    </div>
+                </div>
             </slot>
             <input v-if="!disabled && ((single && required) || (single && isEmpty) || !single)"
                    type="button" class="material-icons select_container__chevron"
-                   @click="setIsOpen(true)"
+                   @click="isOpen ? setIsOpen(false) : setIsOpen(true)"
                    :value="isOpen ? 'arrow_drop_up' : 'arrow_drop_down'" />
             <input v-if="single && !isEmpty && !required && !disabled"
                    type="button" class="material-icons select_container__chevron"
@@ -382,15 +388,20 @@ export default class MultiSelect extends Vue {
      background: 0;
      padding: 0;
      cursor: pointer;
+     z-index: 10;
      color: var(--NavigationBackColor);
  }
- .select_container__options_list {
+ .select_container__options_container {
      z-index: 1000;
      list-style: none;
      width: 100%;
      position: absolute;
      top: 100%;
      left: 0;
+     padding: 0;
+     margin: 0;
+ }
+ .select_container__options_list {
      padding: 0;
      margin: 0;
      box-sizing: border-box;
@@ -413,6 +424,12 @@ export default class MultiSelect extends Vue {
      cursor: pointer;
      background-color: var(--NavigationBackColor);
      color: var(--NavigationTextColor);
+ }
+ div.select_container__options__actions {
+     background-color: white;
+     bottom: 0;
+     padding: 5px 10px 5px 10px;
+     color: red;
  }
  .values_list__value {
      margin: 5px;

@@ -16,14 +16,12 @@
         <SelectUserView v-if="selectViewActive"
                 :selectView="selectView"
                 :entity="entity"
-                @update:actions="extraActions = $event"
                 @select="$emit('update', $event); selectViewActive = false"
                 @close="selectViewActive = false" />
 
         <SelectUserView v-if="uv"
             :selectView="uv"
             :entity="entity"
-            @update:actions="extraActions = $event"
             @select="$emit('update', $event); selectViewActive = false"
             @close="uv = null" />
 
@@ -40,6 +38,7 @@
                 <span v-if="select.valueOption.meta && select.valueOption.meta.link"
                     :style="select.listValueStyle"
                     class="single_value">
+                    <input @click.stop="openModal()" type="button" class="material-icons reference__open_modal" value="flip_to_front">
                     <UserViewLink :uv="select.valueOption.meta.link"
                                     @[indirectLinks?`click`:null]="$emit('goto', $event)">
                         {{select.valueOption.label}}
@@ -48,6 +47,12 @@
                 <span v-else
                         :style="select.listValueStyle"
                         class="single_value">{{select.valueOption.label}}</span>
+            </template>
+            <template v-slot:actions="actions">
+                <button type="button" class="reference__new_modal__button" @click="openNewModal">
+                    <input type="button" class="material-icons reference__open_modal" value="add">
+                    {{ $t("select_view") }}
+                </button>
             </template>
         </MultiSelect>
         <input v-else
@@ -108,7 +113,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
         return currentValue(this.value);
     }
 
-    get actions() {
+    private openModal() {
         const home = homeSchema(this.uvArgs);
         const linkOpts = home !== null ? { homeSchema: home } : undefined;
 
@@ -116,19 +121,14 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 
         const linkedView = attrToQueryRef(this.linkedAttr, this.currentValue, linkOpts);
         if (linkedView !== null) {
-            actions.push({ name: this.$tc("follow_reference"), callback: () => {
-                this.uv = linkedView;
-            } });
+            this.uv = linkedView;
         }
+    }
 
+    private openNewModal() {
         if (this.selectView !== undefined && !this.selectViewActive && !this.isDisabled) {
-            actions.push({ name: this.$tc("select_view"), callback: () => {
-                this.selectViewActive = true;
-            } });
+            this.selectViewActive = true;
         }
-
-        actions.push(...this.extraActions);
-        return actions;
     }
 
     get options(): ISelectOption[] | null {
@@ -146,11 +146,6 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
                 },
             }));
         }
-    }
-
-    @Watch("actions", { deep: true, immediate: true })
-    private pushActions() {
-        this.$emit("update:actions", this.actions);
     }
 
     @Watch("selectViewActive")
@@ -173,5 +168,17 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
  .select_container__options_list__option > a {
      color: var(--TableTextColor);
      text-decoration: underline;
+ }
+ .reference__open_modal {
+     border: none;
+     background: none;
+     padding: 0;
+     margin: 0 10px 0 0;
+ }
+ .reference__new_modal__button {
+    background-color: var(--NavigationBackColor);
+    color: var(--NavigationTextColor);
+    display: flex;
+    align-items: center;
  }
 </style>
