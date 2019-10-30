@@ -29,6 +29,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
     @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
     @Prop({ type: String, required: true }) scope!: ScopeName;
+    @Prop({ type: Number, required: true }) level!: number;
 
     get addedLocked() {
         return this.currentSubmit !== null;

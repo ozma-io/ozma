@@ -40,6 +40,7 @@
                     :locked="addedLocked"
                     :indirectLinks="indirectLinks"
                     :scope="scope"
+                    :level="level"
                     @update="updateValue(showEmptyRow ? { type: 'new', column: arguments[0] } : { type: 'added', id: uv.newRowsPositions[0], column: arguments[0] }, arguments[1])"
                     @goto="$emit('goto', $event)" />
             <FormEntry v-for="rowId in newRowsPositions" :key="`added-${rowId}`"
@@ -50,6 +51,7 @@
                     :locked="addedLocked"
                     :indirectLinks="indirectLinks"
                     :scope="scope"
+                    :level="level"
                     @update="updateValue({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
                     @delete="deleteRowAndSignal({ type: 'added', id: rowId })"
                     @goto="$emit('goto', $event)" />
@@ -60,6 +62,7 @@
                     :localRow="local.rows[rowI]"
                     :indirectLinks="indirectLinks"
                     :scope="scope"
+                    :level="level"
                     :selectionMode="selectionMode"
                     @update="updateValue({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
                     @delete="deleteRowAndSignal({ type: 'existing', position: rowI })"

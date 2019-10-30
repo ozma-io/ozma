@@ -52,6 +52,7 @@
                           isRoot
                           :defaultValues="defaultValues"
                           scope="root"
+                          :level="0"
                           @goto="goto"
                           @update:actions="extraActions = $event"
                           @update:statusLine="statusLine = $event"
