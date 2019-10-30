@@ -106,7 +106,7 @@ export default class UserView extends Vue {
     @Prop({ type: Object, required: true }) args!: IUserViewArguments;
     @Prop({ type: Boolean, default: false }) isRoot!: boolean;
     @Prop({ type: String, required: true }) scope!: ScopeName;
-    @Prop({ type: Number, required: true }) level!: number;
+    @Prop({ type: Number, default: 0 }) level!: number;
     @Prop({ type: Array, default: () => [] }) filter!: string[];
     @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, any>;
     // Use this user view to select and return an entry.
