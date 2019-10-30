@@ -32,6 +32,7 @@
                 :filter="filter"
                 :local="local"
                 :scope="scope"
+                :level="level"
                 :selectionMode="selectionMode"
                 :indirectLinks="indirectLinks"
                 @goto="$emit('goto', $event)"
@@ -90,6 +91,8 @@ const userViewType = (uv: CombinedUserView) => {
     }
 };
 
+const maxLevel = 4;
+
 @Component({ components })
 export default class UserView extends Vue {
     @userView.State("current") currentUvs!: CurrentUserViews;
@@ -103,6 +106,7 @@ export default class UserView extends Vue {
     @Prop({ type: Object, required: true }) args!: IUserViewArguments;
     @Prop({ type: Boolean, default: false }) isRoot!: boolean;
     @Prop({ type: String, required: true }) scope!: ScopeName;
+    @Prop({ type: Number, required: true }) level!: number;
     @Prop({ type: Array, default: () => [] }) filter!: string[];
     @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, any>;
     // Use this user view to select and return an entry.
@@ -125,8 +129,12 @@ export default class UserView extends Vue {
     }
 
     get newUv() {
-        const ret = this.currentUvs.getUserView(this.args);
-        return ret === undefined ? null : ret;
+        if (this.level >= maxLevel) {
+            return new UserViewError("bad_request", "Too many levels of nested user views", this.args);
+        } else {
+            const ret = this.currentUvs.getUserView(this.args);
+            return ret === undefined ? null : ret;
+        }
     }
 
     get uvIsReady() {

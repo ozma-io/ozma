@@ -38,6 +38,7 @@
                     :uvArgs="uv.args"
                     :indirectLinks="indirectLinks"
                     :scope="scope"
+                    :level="level"
                     autofocus
                     @update="updateCurrentValue" />
         </div>

@@ -103,6 +103,7 @@
                   :defaultValues="inputType.defaultValues"
                   :indirectLinks="indirectLinks"
                   :scope="scope"
+                  :level="level + 1"
                   @update:actions="actions = $event"
                   @goto="$emit('goto', $event)"
                   ref="control" />
@@ -209,6 +210,7 @@ export default class FormControl extends Vue {
     @Prop({ type: Boolean, default: false }) disableColor!: boolean;
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
     @Prop({ type: String, required: true }) scope!: string;
+    @Prop({ type: Number, required: true }) level!: number;
 
     private actions: IAction[] = [];
 
