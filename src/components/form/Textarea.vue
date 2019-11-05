@@ -9,11 +9,8 @@
     }
 </i18n>
 <template>
-    <b-row :class="[
-                 'input_container',
-                 {'input_container__row': inline}
-                 ]">
-        <Modal v-if="isMobile"
+    <div class="textarea_field_container">
+        <Modal v-show="isMobile"
             :show="isModalOpen"
             :name="`${uid}-field-modal`"
             @opened="onModalOpen"
@@ -24,19 +21,15 @@
                         <label v-if="label" class="input_modal_label">
                             {{ label }}
                         </label>
-                        <input :class="['input_field input_modal_field',
-                                            {
-                                                'input_field__disabled': disabled,
-                                            }
-                                    ]"
-                            autocomplete="off"
+                        <textarea :class="['textarea_field', 'modal_textarea_field', {'textarea_field__disabled': disabled}]"
                             :id="inputName"
                             :type="type"
                             :placeholder="$t('input_placeholder')"
                             :disabled="disabled"
+                            :rows="rows"
                             v-model="modalValue"
                             ref="controlModal"
-                        >
+                        />
                     </div>
                     <div class="input_modal__button_container">
                         <button type="button" class="input_modal__button__ok" @click="updateValueFromModal">
@@ -49,68 +42,49 @@
                 </div>
             </template>
         </Modal>
-        <b-col cols="4" class="input_label__container">
-            <label :class="['input_label', { 'input_label__focused': focused }]"
-                :for="inputName"
-                v-if="label"
-                :title="label"
-            >{{ label }}</label>
-        </b-col>
-        <b-col cols="8">
-            <div>
-                <input :class="['input_field',
-                                    {
-                                        'input_field__disabled': disabled,
-                                        'input_field__focused': focused,
-                                    }
-                            ]"
-                    :id="inputName"
-                    autocomplete="off"
-                    :type="type"
-                    :value="value"
-                    :placeholder="$t('input_placeholder')"
-                    :disabled="disabled"
-                    ref="control"
-                    @input="updateInput"
-                    @focus="onFocus"
-                    @blur="onBlur"
-                >
-            </div>
-        </b-col>
-    </b-row>
+        <label class="input_label"
+            :for="inputName"
+            v-if="label"
+        >
+            {{ label }}
+        </label>
+        <textarea :class="['textarea_field', {'textarea_field__disabled': disabled}]"
+            :id="inputName"
+            :type="type"
+            :value="value"
+            :placeholder="$t('input_placeholder')"
+            :disabled="disabled"
+            :rows="rows"
+            ref="control"
+            @focus="onFocus"
+            @blur="onBlur"
+            @input="$emit('update:value', $event.target.value)"
+        />
+    </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
-// 496264
-// 628183
-
-import { getTextWidth } from "@/utils";
-import MobileMixin from '@/MobileMixin';
-
+import MobileMixin from "@/MobileMixin";
 import Modal from "@/components/modal/Modal";
 
 @Component({ components: { Modal } })
-export default class Input extends MobileMixin {
+export default class Textarea extends MobileMixin {
     @Prop({ type: String }) label!: string;
     @Prop({ type: String }) value!: string;
     @Prop({ type: String }) error!: string;
     @Prop({ type: String }) warning!: string;
     @Prop({ type: Number }) height!: number;
     @Prop({ type: Boolean }) disabled!: boolean;
+    @Prop({ type: Number, default: 5 }) rows!: number;
     @Prop({ type: Boolean, default: true }) inline!: boolean;
     @Prop({ type: String, default: "text" }) type!: string;
 
     private focused: boolean = false;
     private modalValue: string = this.value;
     private isModalOpen: boolean = false;
-
-    @Watch("value")
-    private onValueUpdate(value: string) {
-        this.modalValue = value;
-    }
 
     private get inputName(): string {
         return `${this.uid}-input`;
@@ -135,16 +109,26 @@ export default class Input extends MobileMixin {
         this.focused = true;
         if (this.isMobile) {
             this.isModalOpen = true;
-        }
-        if (!this.isMobile) {
-            this.updateWidth(evt);
+        } else {
+            this.positionField();
         }
     }
 
     private onBlur(evt: Event<HTMLInputElement>) {
         this.focused = false;
-        if (!this.isMobile) {
-            this.$refs.control.style.width = "100%";
+    }
+
+    private positionField() {
+        const controlElement = this.$refs.control;
+        const eWidth = controlElement.offsetWidth;
+        const rightPosition = controlElement.getBoundingClientRect().right;
+        const screenWidth = document.documentElement.clientWidth - 10;
+        if (rightPosition + eWidth >= screenWidth) {
+            controlElement.style.right = 0;
+            controlElement.style.left = "initial";
+        } else {
+            controlElement.style.right = "initial";
+            controlElement.style.left = 0;
         }
     }
 
@@ -157,103 +141,72 @@ export default class Input extends MobileMixin {
         this.focused = false;
         this.isModalOpen = false;
     }
-
-    private updateInput(evt: Event<HTMLInputElement>) {
-        this.$emit("update:value", evt.target.value);
-        if (!this.isMobile) {
-            this.updateWidth(evt);
-        }
-    }
-
-    private updateWidth(evt: Event<HTMLInputElement>) {
-        const controlElement = this.$refs.control;
-        const computed = window.getComputedStyle(controlElement);
-        const font = computed.getPropertyValue("font-size");
-        const placeholderWidth = getTextWidth(this.$t("input_placeholder"), font) * 1.67;
-        const textWidth = Math.ceil(getTextWidth(evt.target.value, font)) * 1.67;
-        const inputWidth = textWidth || placeholderWidth;
-        const leftPos = controlElement.getBoundingClientRect().left;
-        const viewportWidth = document.documentElement.clientWidth - 10;
-        const rightPos = leftPos + inputWidth;
-
-        if (rightPos < viewportWidth) {
-            controlElement.style.width = `${inputWidth}px`;
-        } else {
-            controlElement.style.width = `${viewportWidth - leftPos}px`;
-        }
-    }
 }
+
+// #292b2e
+// #b1b1b2
 </script>
 
 <style lang="scss" scoped>
- .input_container {
+ .textarea_field_container {
      position: relative;
      display: inline-flex;
      flex-direction: column;
      color: var(--MainTextColor);
      width: 100%;
-     padding-left: 15px;
- }
- .input_container__row {
-     flex-direction: row;
- }
- .input_label__container {
-     padding: 0;
-     display: flex;
-     height: 2em;
+     height: 100%;
  }
  .input_label {
-     align-self: center;
-     margin-bottom: 0;
-     overflow: hidden;
-     text-overflow: ellipsis;
-     white-space: pre;
-     cursor: question;
-     color: var(--MainTextColorLight)
+     color: var(--MainTextColorLight);
  }
- .input_label__focused::after {
-    content:"";
-    position:absolute;
-    width:100%;
-    bottom:1px;
-    z-index:-1;
-    transform:scale(.9);
-    box-shadow: 0px 0px 8px 2px #000000;
+ .textarea_label {
+     align-self: flex-start;
+     margin-right: 15px;
  }
- .input_field {
+ .textarea_field {
      padding: 5px 2px 5px 0;
      background-color: rgba(0, 0, 0, 0);
      border: 0px;
      z-index: 2;
      order: 2;
      flex: 2;
-     height: 2em;
      cursor: pointer;
-     border-bottom: none;
      width: 100%;
+     border: none;
+     resize: none;
+     height: 100%;
+     overflow: hidden;
      text-overflow: ellipsis;
+     white-space: pre-wrap;
+     border: 0px solid var(--MainBorderColor);
+     color: var(--MainTextColor);
  }
- .input_field::placeholder {
+ .textarea_field::placeholder {
      color: var(--MainTextColorLight);
  }
- .input_field:focus {
+ .textarea_field:hover {
+     overflow-y: auto;
+ }
+ .textarea_field:focus {
      outline: none;
-     border-bottom: 1px solid var(--MainBorderColor);
-     cursor: text;
-     /* max-width: 40vw; */
      background-color: var(--MainBackgroundColor);
- }
- .input_field__disabled {
-     cursor: not-allowed;
- }
- .input_field__focused {
+     border: 1px solid var(--MainBorderColor);
+     padding: 5px;
      position: absolute;
+     top: 2em;
+     right: 0;
+     width: 400px;
+     height: 300px;
+     transition: all 300ms ease-in-out, height 300ms ease-in-out;
+     overflow: auto;
+     z-index: 10;
+ }
+ .textarea_field__disabled {
+     cursor: not-allowed;
  }
  .input_modal_field {
      color: var(--MainTextColor);
      background-color: var(--MainBackgroundColor);
-     padding-right: 5px;
-     padding-left: 5px;
  }
  .input_modal_label {
      color: var(--MainTextColor);
@@ -285,5 +238,13 @@ export default class Input extends MobileMixin {
  }
  .input_modal__button__cancel {
      background-color: var(--FailColor);
+ }
+ .modal_textarea_field {
+     position: initial !important;
+     width: 100% !important;
+     border-left: none !important;
+     border-right: none !important;
+     box-sizing: content-box;
+     padding: 5px;
  }
 </style>

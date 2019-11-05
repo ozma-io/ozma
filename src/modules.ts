@@ -16,6 +16,9 @@ import AuthResponse from "@/components/AuthResponse.vue";
 import SaveRestoreSchema from "@/components/SaveRestoreSchema.vue";
 import RootUserView from "@/components/RootUserView.vue";
 
+import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap-vue/dist/bootstrap-vue.css';
+
 Vue.use(VueRouter);
 Vue.use(VueI18n);
 Vue.use(Vuex);

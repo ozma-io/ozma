@@ -3,24 +3,19 @@ import { storiesOf } from "@storybook/vue";
 
 import makeFormControl from "@/stories/utility/makeFormField";
 
-import Input from "@/components/form/Input.vue";
+import Textarea from "@/components/form/Textarea.vue";
 
-storiesOf("Input", module)
+storiesOf("Textarea", module)
   .addDecorator(withKnobs as any)
   .add("Default", () => {
-    const FormField = makeFormControl(Input, "Input");
+    const FormField = makeFormControl(Textarea, "Textarea");
     return {
       props: {
-        value: {
-          type: Date,
-          default: undefined,
-        },
         bindProps: {
           type: Object,
           default: {
-            label: text("Label", "Input Field"),
+            label: text("Label", "Textarea Field"),
             disabled: boolean("Disable Input", false),
-            inline: boolean("Inline Label", true),
           },
         },
       },
