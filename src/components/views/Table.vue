@@ -1299,8 +1299,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
                 right: 0;
             }
 
+            /* This is a potential hack. Here's to hoping it would go away soon. */
             .nested-table-block > .tabl {
-                width: max-content !important;
+                width: 90vw !important;
             }
         }
     }
