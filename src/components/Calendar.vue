@@ -96,7 +96,7 @@ export default class Calendar extends Vue {
       padding: 10px;
       border: 2px solid white;
       top: calc(100% + 10px);
-      z-index: 1;
+      z-index: 250;
     }
     .main_input {
       display: flex;
