@@ -66,6 +66,7 @@ import { CurrentQuery, attrToQuery, queryLocation, IQuery, IAttrToQueryOpts } fr
 import { IUserViewConstructor } from "@/components";
 import { IHandlerProvider } from "@/local_user_view";
 import { IAction } from "@/components/ActionsMenu.vue";
+import { ISelectionRef } from "@/components/BaseUserView";
 
 const types: RecordSet<string> = {
     "Form": null,
@@ -319,12 +320,20 @@ export default class UserView extends Vue {
                     return;
                 }
                 const id = (createOp as ICombinedInsertEntityResult).id;
-                const args: IUserViewArguments = { source: currentUv.args.source, args: { id } };
-                const newQuery: IQuery = {
-                    defaultValues: {},
-                    args,
-                };
-                this.$emit("goto", newQuery);
+                if (this.selectionMode) {
+                    const ref: ISelectionRef = {
+                        entity: currentUv.info.mainEntity!,
+                        id,
+                    };
+                    this.$emit("select", ref);
+                } else {
+                    const args: IUserViewArguments = { source: currentUv.args.source, args: { id } };
+                    const newQuery: IQuery = {
+                        defaultValues: {},
+                        args,
+                    };
+                    this.$emit("goto", newQuery);
+                }
             })();
         }
     }

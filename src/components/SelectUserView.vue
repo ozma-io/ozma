@@ -1,10 +1,12 @@
 <i18n>
     {
         "en": {
-            "save_scoped": "Save scoped"
+            "save_scoped": "Save scoped",
+            "save_and_select_scoped": "Save and select"
         },
         "ru": {
-            "save_scoped": "Сохранить вложенное"
+            "save_scoped": "Сохранить вложенное",
+            "save_and_select_scoped": "Сохранить и закрыть"
         }
     }
 </i18n>
@@ -24,7 +26,7 @@
                 @select="selectFromView" />
             <div class="selection_view_save__container">
                 <button type="button" class="selection_view_save__button" @click="this.saveView">
-                    {{ $t('save_scoped') }}
+                    {{ $t(saveAndSelect ? 'save_and_select_scoped' : 'save_scoped') }}
                 </button>
             </div>
         </section>
@@ -65,6 +67,10 @@ export default class SelectUserView extends Vue {
                 return action;
             }
         });
+    }
+
+    get saveAndSelect() {
+        return this.currentView.args.args === null;
     }
 
     private saveView() {
