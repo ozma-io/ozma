@@ -74,7 +74,7 @@ import { mixins } from "vue-class-component";
 
 import { ReferenceName } from "@/utils";
 import { IReferenceFieldType, IEntityRef } from "@/api";
-import { IUserViewArguments, ICombinedValue, homeSchema, currentValue } from "@/state/user_view";
+import { IUserViewArguments, ICombinedValue, homeSchema, currentValue, IEntriesRef } from "@/state/user_view";
 import { IQuery, attrToQueryRef } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
@@ -91,7 +91,7 @@ import BaseEntriesView from "@/components/BaseEntriesView";
 })
 export default class ReferenceField extends mixins(BaseEntriesView) {
     @Prop({ type: Object, required: true }) value!: ICombinedValue;
-    @Prop({ type: Object, required: true }) entity!: IEntityRef;
+    @Prop({ type: Object, required: true }) entry!: IEntriesRef;
     @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
     @Prop({ type: Object }) selectView!: IQuery | undefined;
     @Prop({ type: Object }) linkedAttr!: any | undefined;
@@ -106,7 +106,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
     private uv: IQuery | null = null;
 
     get entriesEntity() {
-        return this.entity;
+        return this.entry;
     }
 
     get currentValue() {
