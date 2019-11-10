@@ -136,7 +136,7 @@ export default class UserViewMultiselect extends mixins<BaseUserView<LocalEmptyU
         if (mainField) {
             const fieldType = mainField.field.fieldType;
             if (fieldType.type === "reference") {
-                return fieldType.entity;
+                return fieldType;
             }
         }
         return null;

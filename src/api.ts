@@ -84,7 +84,7 @@ export interface IArrayFieldType {
 export interface IReferenceFieldType {
     type: "reference";
     entity: IEntityRef;
-    where: string;
+    where: string | null;
 }
 
 export interface IEnumFieldType {
