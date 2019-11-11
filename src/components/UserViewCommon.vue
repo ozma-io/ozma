@@ -13,6 +13,11 @@
 
 <template>
     <span>
+        <SelectUserView v-if="modalUV"
+            :selectView="modalUV"
+            :entity="modalReferenceField.entity"
+            @select="selectFromUserView($event)"
+            @close="modalUV = null" />
     </span>
 </template>
 
@@ -20,16 +25,28 @@
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { mixins } from "vue-class-component";
+import * as R from "ramda";
 
 import BaseUserView from "@/components/BaseUserView";
 import { LocalUserView } from "@/local_user_view";
 import { IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
+import { ValueRef } from "@/local_user_view";
 import { homeSchema } from "@/state/user_view";
 import { IAction } from "@/components/ActionsMenu.vue";
-import { funappSchema } from "@/api";
+import { funappSchema, IEntityRef } from "@/api";
+import SelectUserView from "@/components/SelectUserView.vue";
+import { mapMaybe } from "@/utils";
 
-@Component
+interface IModalReferenceField {
+    field: ValueRef;
+    uv: IQuery;
+    entity: IEntityRef;
+}
+
+@Component({ components: { SelectUserView } })
 export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<null, null, null>, null, null, null>>(BaseUserView) {
+    modalUV: IQuery | null = null;
+
     get createView() {
         const opts: IAttrToQueryOpts = {
             infoByDefault: true,
@@ -45,6 +62,10 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
         const actions: IAction[] = [];
         if (this.createView !== null) {
             actions.push({ name: this.$tc("create"), query: this.createView });
+        }
+        const modalReferenceField = this.modalReferenceField;
+        if (modalReferenceField) {
+            actions.push({ name: this.$tc("create_in_modal"), callback: () => this.modalUV = modalReferenceField.uv });
         }
         if (this.uv.args.source.type === "named") {
             const editQuery: IQuery = {
@@ -68,9 +89,36 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
         return actions;
     }
 
+    get modalReferenceField(): IModalReferenceField | null {
+        const modalReferenceField = R.head(mapMaybe((column, columnIndex): IModalReferenceField | undefined => {
+            console.log(this.uv);
+            const referenceViewAttr = R.pathOr(null, ["columnAttributes", String(columnIndex), "ReferenceView"], this.uv);
+            const referenceUV = attrToQuery(referenceViewAttr);
+            const entity = R.path<IEntityRef>(["info", "columns", String(columnIndex), "mainField", "field", "fieldType", "entity"], this.uv);
+            console.log(entity, referenceUV);
+            if (referenceUV && entity) {
+                return {
+                    field: { type: "new", column: columnIndex },
+                    uv: referenceUV,
+                    entity,
+                };
+            }
+            return undefined;
+        }, this.uv.columnAttributes));
+
+        return modalReferenceField || null;
+    }
+
     @Watch("actions", { deep: true, immediate: true })
     private pushActions() {
         this.$emit("update:actions", this.actions);
+    }
+
+    private selectFromUserView(id: number) {
+        if (this.modalReferenceField) {
+            this.updateValue(this.modalReferenceField.field, id);
+        }
+        this.modalUV = null;
     }
 }
 </script>
