@@ -25,22 +25,22 @@
 
 <template>
     <div fluid class="view-form">
-        <div v-if="rowPositions.length === 0 && uv.newRowsPositions.length === 0 && !showEmptyRow">
+        <div v-if="rowPositions.length === 0 && firstRow === null">
             {{ $t('item_not_found') }}
         </div>
         <template v-else>
             <!-- The first form control is special, it points either to the empty row or to the first added row
                  _dynamically_. This is as to not lose focus when user starts editing empty row. -->
-            <FormEntry v-if="uv.newRowsPositions.length > 0 || showEmptyRow"
+            <FormEntry v-if="firstRow !== null"
                     :uv="uv"
                     :blocks="blocks"
-                    :row="showEmptyRow ? local.emptyRow.row : uv.newRows[uv.newRowsPositions[0]]"
-                    :localRow="showEmptyRow ? local.emptyRow.local : local.newRows[uv.newRowsPositions[0]]"
+                    :row="firstRow.row"
+                    :localRow="firstRow.local"
                     :locked="addedLocked"
                     :indirectLinks="indirectLinks"
                     :scope="scope"
                     :level="level"
-                    @update="updateValue(showEmptyRow ? { type: 'new', column: arguments[0] } : { type: 'added', id: uv.newRowsPositions[0], column: arguments[0] }, arguments[1])"
+                    @update="updateValue({ ...firstRow.rowRef, column: arguments[0] }, arguments[1])"
                     @goto="$emit('goto', $event)" />
             <FormEntry v-for="rowId in newRowsPositions" :key="`added-${rowId}`"
                     :uv="uv"
@@ -206,9 +206,22 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
 
     private deletedOne = false;
 
-    // Show empty row only if it's a create view and there are no already created rows.
-    get showEmptyRow() {
-        return this.uv.newRowsPositions.length === 0 && this.uv.rows === null && this.uv.info.mainEntity !== null;
+    get firstRow() {
+        if (this.uv.newRowsPositions.length === 0 && this.uv.rows === null && this.uv.info.mainEntity !== null) {
+            return {
+                row: this.local.emptyRow!.row,
+                local: this.local.emptyRow!.local,
+                rowRef: { type: "new" },
+            };
+        } else if (this.uv.newRowsPositions.length > 0) {
+            return {
+                row: this.uv.newRows[this.uv.newRowsPositions[0]],
+                local: this.local.newRows[this.uv.newRowsPositions[0]],
+                rowRef: { type: "added", id: this.uv.newRowsPositions[0] },
+            };
+        } else {
+            return null;
+        }
     }
 
     // Because we treat the first added row specially we use only second+ new rows here.

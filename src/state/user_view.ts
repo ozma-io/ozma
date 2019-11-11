@@ -2,7 +2,7 @@ import Vue from "vue";
 import { Store, Dispatch, Module, ActionContext } from "vuex";
 import moment from "moment";
 
-import { IRef, FetchError, ObjectResourceMap, ReferenceName, momentLocale, tryDicts } from "@/utils";
+import { IRef, FetchError, ObjectResourceMap, ReferenceName, momentLocale, tryDicts, debugLog } from "@/utils";
 import * as Api from "@/api";
 import {
     IColumnField, IUserViewRef, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
@@ -145,7 +145,7 @@ const setOrRequestUpdatedPun = (context: { dispatch: Dispatch, state: IUserViewS
         } else {
             const entitySummaries = state.entries.getEntries(fieldType);
             if (entitySummaries === undefined) {
-                dispatch("userView/getEntries", { ref: fieldType.entity, reference: "update" }, { root: true });
+                dispatch("userView/getEntries", { ref: fieldType, reference: "update" }, { root: true });
                 value.pun = undefined;
             } else if (!(entitySummaries instanceof Promise)) {
                 const pun = entitySummaries[ref];
@@ -329,11 +329,11 @@ export class CombinedUserView {
                 return [newId, newEntry];
             }));
 
-            this.newRowsPositions = mainChanges.added.positions;
+            this.newRowsPositions = mainChanges.added.positions.slice();
             this.mainColumnMapping = mainColumnMapping;
         } else {
-            this.newRows = {};
             this.newRowsPositions = [];
+            this.newRows = {};
             this.mainColumnMapping = {};
         }
 
@@ -1008,7 +1008,11 @@ const userViewModule: Module<IUserViewState, {}> = {
                     return;
                 }
 
-                uv.newRowsPositions = params.positions;
+                const position = uv.newRowsPositions.indexOf(params.id);
+                if (position === -1) {
+                    throw new Error("Impossible");
+                }
+                uv.newRowsPositions.splice(position, 1);
                 const row = uv.newRows[params.id];
                 Vue.delete(uv.newRows, params.id);
                 uv.handlers.forEach(handler => {
@@ -1265,7 +1269,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             const updatedValue = changes.changes[args.schema][args.entity].updated[args.id][args.field];
             const fieldType = state.fieldsInfo[args.schema][args.entity][args.field].fieldType;
             if (fieldType.type === "reference") {
-                dispatch("getEntries", { ref: fieldType.entity, reference: "update" });
+                dispatch("getEntries", { ref: fieldType, reference: "update" });
             }
             commit("updateField", { ...args, updatedValue, fieldType });
         },
@@ -1282,7 +1286,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             const addedEntry = changes.changes[args.schema][args.entity].added.entries[args.id];
             const fieldType = state.fieldsInfo[args.schema][args.entity][args.field].fieldType;
             if (fieldType.type === "reference") {
-                dispatch("getEntries", { ref: fieldType.entity, reference: "update" });
+                dispatch("getEntries", { ref: fieldType, reference: "update" });
             }
             commit("setAddedField", { ...args, addedEntry, fieldType });
         },
@@ -1298,8 +1302,7 @@ const userViewModule: Module<IUserViewState, {}> = {
         },
         beforeResetAddedEntry: ({ rootState, commit }, args: { schema: SchemaName, entity: EntityName, id: AddedRowId }) => {
             const changes = (rootState as any).staging.current as CurrentChanges;
-            const positions = changes.changes[args.schema][args.entity].added.positions.slice();
-            commit("resetAddedEntry", { ...args, positions });
+            commit("resetAddedEntry", args);
         },
         beforeResetDeleteEntry: ({ commit }, args: { schema: SchemaName, entity: EntityName, id: RowId }) => {
             commit("resetDeleteEntry", args);

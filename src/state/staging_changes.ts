@@ -278,6 +278,7 @@ const getEntityFieldsInfo = (context: ActionContext<IStagingState, {}>, schema: 
     }
     const entityInfo = schemaInfo[entity];
     if (entityInfo === undefined) {
+        console.trace("error fieldsInfo");
         throw new Error(`No entity info for entity ${schema}.${entity}`);
     }
     return entityInfo;
