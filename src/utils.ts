@@ -242,6 +242,12 @@ export class ObjectMap<K, V> {
         return key in this.entriesMap;
     }
 
+    get(k: K) {
+        const key = valueSignature(k);
+        const value = this.entriesMap[key];
+        return value !== undefined ? value[1] : undefined;
+    }
+
     entries() {
         return Object.values(this.entriesMap);
     }
@@ -386,17 +392,21 @@ export class ResourceMap<V> {
     values() {
         return Object.values(this.resourcesMap).map(res => res.value);
     }
+
+    entries() {
+        return Object.entries(this.resourcesMap).map(([name, res]) => [name, res.value]);
+    }
 }
 
 export class ObjectResourceMap<K, V> {
-    private map = new ResourceMap<V>();
+    private map = new ResourceMap<[K, V]>();
 
     createResource(key: K, reference: ReferenceName, value: V) {
-        this.map.createResource(valueSignature(key), reference, value);
+        this.map.createResource(valueSignature(key), reference, [key, value]);
     }
 
     updateResource(key: K, value: V) {
-        this.map.updateResource(valueSignature(key), value);
+        this.map.updateResource(valueSignature(key), [key, value]);
     }
 
     addReference(key: K, name: ReferenceName) {
@@ -407,19 +417,29 @@ export class ObjectResourceMap<K, V> {
         return this.map.removeReference(valueSignature(key), name);
     }
 
-    getResource(key: K) {
-        return this.map.getResource(valueSignature(key));
+    getResource(key: K): IResource<V> | undefined {
+        const ret = this.map.getResource(valueSignature(key));
+        return ret !== undefined ? { value: ret.value[1], refs: ret.refs } : undefined;
     }
 
-    get(key: K) {
-        return this.map.get(valueSignature(key));
+    get(key: K): V | undefined {
+        const ret = this.map.get(valueSignature(key));
+        return ret !== undefined ? ret[1] : undefined;
     }
 
     resources() {
         return this.map.resources();
     }
 
-    values() {
+    keys(): K[] {
+        return this.map.values().map(x => x[0]);
+    }
+
+    values(): V[] {
+        return this.map.values().map(x => x[1]);
+    }
+
+    entries(): Array<[K, V]> {
         return this.map.values();
     }
 }

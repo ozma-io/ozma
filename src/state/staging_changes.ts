@@ -4,8 +4,8 @@ import { Moment } from "moment";
 import moment from "moment";
 
 import { RecordSet, deepClone, mapMaybe, map2 } from "@/utils";
-import { TransactionResult, RowId, SchemaName, FieldName, EntityName } from "@/api";
-import { IUpdatedValue, IFieldInfo, EntityFieldsInfo, valueFromRaw, FieldsInfo } from "@/values";
+import { IEntity, TransactionResult, RowId, SchemaName, FieldName, EntityName } from "@/api";
+import { IUpdatedValue, IFieldInfo, valueFromRaw } from "@/values";
 import * as Api from "@/api";
 import { i18n } from "@/modules";
 
@@ -270,31 +270,21 @@ const validateValue = (info: IFieldInfo, value: any): IUpdatedValue => {
     };
 };
 
-const getEntityFieldsInfo = (context: ActionContext<IStagingState, {}>, schema: SchemaName, entity: EntityName): EntityFieldsInfo => {
-    const fieldsInfo: FieldsInfo = (context.rootState as any).userView.fieldsInfo;
-    const schemaInfo = fieldsInfo[schema];
-    if (schemaInfo === undefined) {
-        throw new Error(`No schema info for schema ${schema}`);
-    }
-    const entityInfo = schemaInfo[entity];
-    if (entityInfo === undefined) {
-        console.trace("error fieldsInfo");
-        throw new Error(`No entity info for entity ${schema}.${entity}`);
-    }
-    return entityInfo;
+const getEntityInfo = async (context: ActionContext<IStagingState, {}>, schema: SchemaName, entity: EntityName): Promise<IEntity> => {
+    return await context.dispatch("userView/getEntity", { schema, name: entity }, { root: true });
 };
 
-const getFieldInfo = (context: ActionContext<IStagingState, {}>, schema: SchemaName, entity: EntityName, field: FieldName): IFieldInfo => {
-    const entityInfo = getEntityFieldsInfo(context, schema, entity);
-    const fieldInfo = entityInfo[field];
+const getFieldInfo = async (context: ActionContext<IStagingState, {}>, schema: SchemaName, entity: EntityName, field: FieldName): Promise<IFieldInfo> => {
+    const entityInfo = await getEntityInfo(context, schema, entity);
+    const fieldInfo = entityInfo.columnFields[field];
     if (fieldInfo === undefined) {
         throw new Error(`No field info for field ${schema}.${entity}.${field}`);
     }
     return fieldInfo;
 };
 
-const getEmptyValues = (scope: ScopeName, entityInfo: EntityFieldsInfo): UpdatedValues => {
-    return Object.fromEntries(Object.entries(entityInfo).filter(([name, info]) => !info.isNullable).map(([name, info]) => {
+const getEmptyValues = (scope: ScopeName, entity: IEntity): UpdatedValues => {
+    return Object.fromEntries(Object.entries(entity.columnFields).filter(([name, info]) => !info.isNullable).map(([name, info]) => {
         const value = { value: undefined, rawValue: "", erroredOnce: false, scopes: { [scope]: null } };
         return [name, value];
     }));
@@ -416,7 +406,7 @@ const stagingModule: Module<IStagingState, {}> = {
             }
             state.touched = true;
         },
-        addEntry: (state, params: { scope: ScopeName, schema: SchemaName, entity: EntityName, position?: number, entityInfo: EntityFieldsInfo }) => {
+        addEntry: (state, params: { scope: ScopeName, schema: SchemaName, entity: EntityName, position?: number, entityInfo: IEntity }) => {
             const { scope, schema, entity, position, entityInfo } = params;
 
             // During submit new entries aren't allowed to be added because this can result in duplicates.
@@ -531,14 +521,14 @@ const stagingModule: Module<IStagingState, {}> = {
     actions: {
         updateField: async (context, args: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName, value: any }) => {
             const { commit, dispatch } = context;
-            const fieldInfo = getFieldInfo(context, args.schema, args.entity, args.field);
+            const fieldInfo = await getFieldInfo(context, args.schema, args.entity, args.field);
             commit("updateField", { ...args, fieldInfo });
             await checkCounters(context);
             await dispatch("userView/afterUpdateField", args, { root: true });
         },
         addEntry: async (context, args: { schema: SchemaName, entity: EntityName, position?: number }): Promise<IAddedResult> => {
             const { state, commit, dispatch } = context;
-            const entityInfo = getEntityFieldsInfo(context, args.schema, args.entity);
+            const entityInfo = await getEntityInfo(context, args.schema, args.entity);
             commit("addEntry", { ...args, entityInfo });
             const entityChanges = state.current.changesForEntity(args.schema, args.entity);
             const newId = entityChanges.added.nextId - 1;
@@ -558,7 +548,7 @@ const stagingModule: Module<IStagingState, {}> = {
         },
         setAddedField: async (context, args: { schema: SchemaName, entity: EntityName, id: AddedRowId, field: FieldName, value: any }) => {
             const { commit, dispatch } = context;
-            const fieldInfo = getFieldInfo(context, args.schema, args.entity, args.field);
+            const fieldInfo = await getFieldInfo(context, args.schema, args.entity, args.field);
             commit("setAddedField", { ...args, fieldInfo });
             await checkCounters(context);
             await dispatch("userView/afterSetAddedField", args, { root: true });

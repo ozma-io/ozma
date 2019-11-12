@@ -2,14 +2,14 @@ import Vue from "vue";
 import { Store, Dispatch, Module, ActionContext } from "vuex";
 import moment from "moment";
 
-import { IRef, FetchError, ObjectResourceMap, ReferenceName, momentLocale, tryDicts, debugLog } from "@/utils";
+import { IRef, FetchError, ObjectResourceMap, ReferenceName, momentLocale, tryDicts, ObjectMap } from "@/utils";
 import * as Api from "@/api";
 import {
     IColumnField, IUserViewRef, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
     SchemaName, EntityName, RowId, FieldName, AttributeName,
-    ValueType, FieldType, AttributesMap,
+    ValueType, FieldType, AttributesMap, IEntity,
 } from "@/api";
-import { IUpdatedValue, FieldsInfo, valueToText, insertFieldsInfo, equalEntityRef, valueFromRaw, valueIsNull } from "@/values";
+import { IUpdatedValue, valueToText, equalEntityRef, valueFromRaw, valueIsNull } from "@/values";
 import { CurrentChanges, UpdatedValues, IEntityChanges, IAddedEntry, AddedRowId } from "@/state/staging_changes";
 import { CurrentQuery } from "@/state/query";
 
@@ -547,6 +547,22 @@ export class CurrentEntries {
     }
 }
 
+// For each entity contains array of all accessible entries (main fields) identified by id
+export type EntityResult = IEntity | Promise<IEntity> | Error;
+
+export class CurrentEntities {
+    entities = new ObjectMap<IEntityRef, EntityResult>();
+
+    getEntity(ref: IEntityRef) {
+        const entity = this.entities.get(ref);
+        if (entity === undefined || entity instanceof Promise || entity instanceof Error) {
+            return undefined;
+        } else {
+            return entity;
+        }
+    }
+}
+
 export type UserViewResult = CombinedUserView | UserViewError | Promise<CombinedUserView>;
 
 export class CurrentUserViews {
@@ -565,9 +581,9 @@ export class CurrentUserViews {
 export interface IUserViewState {
     current: CurrentUserViews;
     entries: CurrentEntries;
+    entities: CurrentEntities;
     // Needed because during user view reloads we don't want to replace CurrentUserView right away.
     pending: Promise<CombinedUserView> | null;
-    fieldsInfo: FieldsInfo;
     errors: string[];
 }
 
@@ -642,6 +658,7 @@ const getUserView = async (context: ActionContext<IUserViewState, {}>, args: IUs
         } else {
             throw new Error("Invalid source type");
         }
+
         return current;
     } catch (e) {
         if (e instanceof FetchError) {
@@ -660,14 +677,28 @@ const getUserView = async (context: ActionContext<IUserViewState, {}>, args: IUs
     }
 };
 
+const prefetchUserView = ({ dispatch }: ActionContext<IUserViewState, {}>, uv: CombinedUserView) => {
+    // Preload entities information.
+    if (uv.info.mainEntity !== null) {
+        dispatch("getEntity", uv.info.mainEntity);
+    }
+    if (uv.rows !== null) {
+        Object.values(uv.info.domains).forEach(domain => {
+            Object.values(domain).forEach(column => {
+                dispatch("getEntity", column.ref.entity);
+            });
+        });
+    }
+};
+
 const userViewModule: Module<IUserViewState, {}> = {
     namespaced: true,
     state: {
         current: new CurrentUserViews(),
         entries: new CurrentEntries(),
+        entities: new CurrentEntities(),
         pending: null,
         errors: [],
-        fieldsInfo: {},
     },
     mutations: {
         addError: (state, lastError: string) => {
@@ -689,8 +720,8 @@ const userViewModule: Module<IUserViewState, {}> = {
         removeUserViewConsumer: (state, { args, reference }: { args: IUserViewArguments, reference: ReferenceName }) => {
             state.current.userViews.removeReference(args, reference);
         },
-        addFieldsInfo: (state, info: IResultViewInfo) => {
-            insertFieldsInfo(state.fieldsInfo, info);
+        updateEntity: (state, { ref, entity }: { ref: IEntityRef, entity: EntityResult }) => {
+            state.entities.entities.insert(ref, entity);
         },
         setPending: (state, pending: Promise<CombinedUserView>) => {
             state.pending = pending;
@@ -698,8 +729,8 @@ const userViewModule: Module<IUserViewState, {}> = {
         clear: state => {
             state.current = new CurrentUserViews();
             state.entries = new CurrentEntries();
+            state.entities = new CurrentEntities();
             state.errors = [];
-            state.fieldsInfo = {};
             state.pending = null;
         },
 
@@ -765,8 +796,8 @@ const userViewModule: Module<IUserViewState, {}> = {
             });
         },
 
-        updateField: (state, params: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName, updatedValue: IUpdatedValue, fieldType: FieldType }) => {
-            const entitySummaries = params.fieldType.type === "reference" ? state.entries.getEntries(params.fieldType) : undefined;
+        updateField: (state, params: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName, updatedValue: IUpdatedValue, fieldType?: FieldType }) => {
+            const entitySummaries = params.fieldType && params.fieldType.type === "reference" ? state.entries.getEntries(params.fieldType) : undefined;
 
             state.current.userViews.values().forEach(uv => {
                 if (!(uv instanceof CombinedUserView)) {
@@ -865,8 +896,8 @@ const userViewModule: Module<IUserViewState, {}> = {
                 uv.newRowsPositions = params.positions;
             });
         },
-        setAddedField: (state, params: { schema: SchemaName, entity: EntityName, id: AddedRowId, field: FieldName, addedEntry: IAddedEntry, fieldType: FieldType }) => {
-            const entitySummaries = params.fieldType.type === "reference" ? state.entries.getEntries(params.fieldType) : undefined;
+        setAddedField: (state, params: { schema: SchemaName, entity: EntityName, id: AddedRowId, field: FieldName, addedEntry: IAddedEntry, fieldType?: FieldType }) => {
+            const entitySummaries = params.fieldType && params.fieldType.type === "reference" ? state.entries.getEntries(params.fieldType) : undefined;
 
             state.current.userViews.values().forEach(uv => {
                 if (!(uv instanceof CombinedUserView) ||
@@ -1144,12 +1175,15 @@ const userViewModule: Module<IUserViewState, {}> = {
             const pending: IRef<Promise<Entries>> = {};
             pending.ref = (async () => {
                 try {
+                    const entityPromise = dispatch("getEntity", ref.entity);
                     const whereStr = ref.where ? `WHERE ${ref.where}` : "";
                     const query = `SELECT "Id", __main AS "Main" FROM "${ref.entity.schema}"."${ref.entity.name}" ${whereStr} ORDER BY __main`;
-                    const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
+                    const resPromise = dispatch("callProtectedApi", {
                         func: Api.fetchAnonymousView,
                         args: [query, {}],
                     }, { root: true });
+                    await entityPromise;
+                    const res: Api.IViewExprResult = await resPromise;
                     const currPending = state.entries.entries.get(ref);
                     if (currPending !== pending.ref) {
                         throw new Error("Pending operation cancelled");
@@ -1175,6 +1209,45 @@ const userViewModule: Module<IUserViewState, {}> = {
             commit("initEntries", { ref, reference, entries: pending.ref });
             return pending.ref;
         },
+        getEntity: ({ state, commit, dispatch }, ref: IEntityRef): Promise<IEntity> => {
+            if (state.pending !== null) {
+                return Promise.reject("Reload in progress");
+            }
+            const old = state.entities.entities.get(ref);
+            if (old !== undefined) {
+                if (old instanceof Error) {
+                    return Promise.reject(old);
+                } else if (old instanceof Promise) {
+                    return old;
+                } else {
+                    return Promise.resolve(old);
+                }
+            }
+
+            const pending: IRef<Promise<IEntity>> = {};
+            pending.ref = (async () => {
+                try {
+                    const entity: IEntity = await dispatch("callProtectedApi", {
+                        func: Api.getEntityInfo,
+                        args: [ref],
+                    }, { root: true });
+                    const currPending = state.entities.entities.get(ref);
+                    if (currPending !== pending.ref) {
+                        throw new Error("Pending operation cancelled");
+                    }
+                    commit("updateEntity", { ref, entity });
+                    return entity;
+                } catch (e) {
+                    const currPending = state.entities.entities.get(ref);
+                    if (currPending === pending.ref) {
+                        commit("updateEntity", { ref, entity: e });
+                    }
+                    throw e;
+                }
+            })();
+            commit("updateEntity", { ref, entity: pending.ref });
+            return pending.ref;
+        },
         getRootView: (store, args: IUserViewArguments): Promise<CombinedUserView> => {
             const { state, commit } = store;
             const pending: IRef<Promise<CombinedUserView>> = {};
@@ -1188,7 +1261,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                     commit("clear");
                     commit("initUserView", { args, reference: "root", userView: current });
                     if (current instanceof CombinedUserView) {
-                        commit("addFieldsInfo", current.info);
+                        prefetchUserView(store, current);
                     }
                 } catch (e) {
                     if (state.pending === pending.ref) {
@@ -1237,7 +1310,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                     }
                     commit("updateUserView", { args, userView: current });
                     if (current instanceof CombinedUserView) {
-                        commit("addFieldsInfo", current.info);
+                        prefetchUserView(store, current);
                     }
                 } catch (e) {
                     const currContainer = state.current.userViews.get(args);
@@ -1267,8 +1340,9 @@ const userViewModule: Module<IUserViewState, {}> = {
         afterUpdateField: ({ state, rootState, commit, dispatch }, args: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName, value: any }) => {
             const changes = (rootState as any).staging.current as CurrentChanges;
             const updatedValue = changes.changes[args.schema][args.entity].updated[args.id][args.field];
-            const fieldType = state.fieldsInfo[args.schema][args.entity][args.field].fieldType;
-            if (fieldType.type === "reference") {
+            const entity = state.entities.getEntity({ schema: args.schema, name: args.entity });
+            const fieldType = entity !== undefined ? entity.columnFields[args.field].fieldType : undefined;
+            if (fieldType && fieldType.type === "reference") {
                 dispatch("getEntries", { ref: fieldType, reference: "update" });
             }
             commit("updateField", { ...args, updatedValue, fieldType });
@@ -1284,8 +1358,9 @@ const userViewModule: Module<IUserViewState, {}> = {
         afterSetAddedField: ({ state, rootState, commit, dispatch }, args: { schema: SchemaName, entity: EntityName, id: AddedRowId, field: FieldName, value: any }) => {
             const changes = (rootState as any).staging.current as CurrentChanges;
             const addedEntry = changes.changes[args.schema][args.entity].added.entries[args.id];
-            const fieldType = state.fieldsInfo[args.schema][args.entity][args.field].fieldType;
-            if (fieldType.type === "reference") {
+            const entity = state.entities.getEntity({ schema: args.schema, name: args.entity });
+            const fieldType = entity !== undefined ? entity.columnFields[args.field].fieldType : undefined;
+            if (fieldType && fieldType.type === "reference") {
                 dispatch("getEntries", { ref: fieldType, reference: "update" });
             }
             commit("setAddedField", { ...args, addedEntry, fieldType });

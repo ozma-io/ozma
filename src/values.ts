@@ -11,35 +11,6 @@ export interface IFieldInfo {
     isNullable: boolean;
 }
 
-export type EntityFieldsInfo = Record<FieldName, IFieldInfo>;
-
-export type FieldsInfo = Record<SchemaName, Record<EntityName, EntityFieldsInfo>>;
-
-export const insertFieldsInfo = (fieldsInfo: FieldsInfo, info: IResultViewInfo) => {
-    Object.values(info.domains).forEach(domain => {
-        Object.values(domain).forEach(field => {
-            if (field.field === null) {
-                return;
-            }
-
-            const schemaName = field.ref.entity.schema;
-            const entityName = field.ref.entity.name;
-            const fieldName = field.ref.name;
-            let schemaInfo = fieldsInfo[schemaName];
-            if (schemaInfo === undefined) {
-                schemaInfo = {};
-                fieldsInfo[schemaName] = schemaInfo;
-            }
-            let entityInfo = schemaInfo[entityName];
-            if (entityInfo === undefined) {
-                entityInfo = {};
-                schemaInfo[entityName] = entityInfo;
-            }
-            entityInfo[fieldName] = field.field;
-        });
-    });
-};
-
 export const equalEntityRef = (a: IEntityRef, b: IEntityRef) => {
     return a.schema === b.schema && a.name === b.name;
 };
