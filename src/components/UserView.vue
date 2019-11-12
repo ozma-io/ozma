@@ -1,8 +1,6 @@
 <i18n>
     {
         "en": {
-            "create": "Create new",
-            "edit_view": "Edit user view",
             "loading": "Now loading",
             "forbidden": "Sorry, you are not authorized to use this user view. Contact your administrator.",
             "not_found": "User view not found",
@@ -11,8 +9,6 @@
             "anonymous_query": "(anonymous query)"
         },
         "ru": {
-            "create": "Создать новую",
-            "edit_view": "Редактировать представление",
             "loading": "Загрузка данных",
             "forbidden": "К сожалению у вас нет прав доступа для просмотра этого представления. Свяжитесь с администратором.",
             "not_found": "Представление не найдено",
@@ -25,21 +21,35 @@
 
 <template>
     <span>
-        <component v-if="uvIsReady"
-                :is="`UserView${userViewType}`"
-                :uv="currentUv"
-                :isRoot="isRoot"
-                :filter="filter"
-                :local="local"
-                :scope="scope"
-                :selectionMode="selectionMode"
-                :indirectLinks="indirectLinks"
-                @goto="$emit('goto', $event)"
-                @select="$emit('select', $event)"
-                @update:actions="extraActions = $event"
-                @update:statusLine="$emit('update:statusLine', $event)"
-                @update:enableFilter="$emit('update:enableFilter', $event)"
-                @update:bodyStyle="$emit('update:bodyStyle', $event)" />
+        <template v-if="uvIsReady">
+            <UserViewCommon
+                    :uv="currentUv"
+                    :isRoot="isRoot"
+                    :filter="filter"
+                    :local="local"
+                    :scope="scope"
+                    :level="level"
+                    :selectionMode="selectionMode"
+                    :indirectLinks="indirectLinks"
+                    @update:actions="extraCommonActions = $event" />
+
+            <component
+                    :is="`UserView${userViewType}`"
+                    :uv="currentUv"
+                    :isRoot="isRoot"
+                    :filter="filter"
+                    :local="local"
+                    :scope="scope"
+                    :level="level"
+                    :selectionMode="selectionMode"
+                    :indirectLinks="indirectLinks"
+                    @goto="$emit('goto', $event)"
+                    @select="$emit('select', $event)"
+                    @update:actions="extraActions = $event"
+                    @update:statusLine="$emit('update:statusLine', $event)"
+                    @update:enableFilter="$emit('update:enableFilter', $event)"
+                    @update:bodyStyle="$emit('update:bodyStyle', $event)" />
+        </template>
         <div v-else-if="errorMessage !== null" class="loading">
             {{ errorMessage }}
         </div>
@@ -65,6 +75,8 @@ import { CurrentQuery, attrToQuery, queryLocation, IQuery, IAttrToQueryOpts } fr
 import { IUserViewConstructor } from "@/components";
 import { IHandlerProvider } from "@/local_user_view";
 import { IAction } from "@/components/ActionsMenu.vue";
+import { ISelectionRef } from "@/components/BaseUserView";
+import UserViewCommon from "@/components/UserViewCommon.vue";
 
 const types: RecordSet<string> = {
     "Form": null,
@@ -90,7 +102,9 @@ const userViewType = (uv: CombinedUserView) => {
     }
 };
 
-@Component({ components })
+const maxLevel = 4;
+
+@Component({ components: { UserViewCommon, ...components } })
 export default class UserView extends Vue {
     @userView.State("current") currentUvs!: CurrentUserViews;
     @userView.Mutation("removeUserViewConsumer") removeUserViewConsumer!: (args: { args: IUserViewArguments, reference: ReferenceName }) => void;
@@ -103,6 +117,7 @@ export default class UserView extends Vue {
     @Prop({ type: Object, required: true }) args!: IUserViewArguments;
     @Prop({ type: Boolean, default: false }) isRoot!: boolean;
     @Prop({ type: String, required: true }) scope!: ScopeName;
+    @Prop({ type: Number, default: 0 }) level!: number;
     @Prop({ type: Array, default: () => [] }) filter!: string[];
     @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, any>;
     // Use this user view to select and return an entry.
@@ -111,6 +126,7 @@ export default class UserView extends Vue {
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 
     private extraActions: IAction[] = [];
+    private extraCommonActions: IAction[] = [];
     private component: IUserViewConstructor<Vue> | null = null;
     private local: IHandlerProvider | null = null;
     // currentUv is shown while new component for uv is loaded.
@@ -125,8 +141,12 @@ export default class UserView extends Vue {
     }
 
     get newUv() {
-        const ret = this.currentUvs.getUserView(this.args);
-        return ret === undefined ? null : ret;
+        if (this.level >= maxLevel) {
+            return new UserViewError("bad_request", "Too many levels of nested user views", this.args);
+        } else {
+            const ret = this.currentUvs.getUserView(this.args);
+            return ret === undefined ? null : ret;
+        }
     }
 
     get uvIsReady() {
@@ -134,51 +154,12 @@ export default class UserView extends Vue {
     }
 
     get actions() {
-        const actions: IAction[] = [];
-        if (this.createView !== null) {
-            actions.push({ name: this.$tc("create"), query: this.createView });
-        }
-        if (this.currentUv !== null && this.currentUv.args.source.type === "named") {
-            const editQuery: IQuery = {
-                defaultValues: {},
-                args: {
-                    source: {
-                        type: "named",
-                        ref: {
-                            schema: funappSchema,
-                            name: "UserViewByName",
-                        },
-                    },
-                    args: {
-                        schema: this.currentUv.args.source.ref.schema,
-                        name: this.currentUv.args.source.ref.name,
-                    },
-                },
-            };
-            actions.push({ name: this.$tc("edit_view"), query: editQuery });
-        }
-        actions.push(...this.extraActions);
-        return actions;
+        return [...this.extraCommonActions, ...this.extraActions];
     }
 
     get userViewType() {
         if (this.currentUv instanceof CombinedUserView) {
             return userViewType(this.currentUv);
-        } else {
-            return null;
-        }
-    }
-
-    get createView() {
-        if (this.currentUv instanceof CombinedUserView) {
-            const opts: IAttrToQueryOpts = {
-                infoByDefault: true,
-            };
-            const home = homeSchema(this.currentUv.args);
-            if (home !== null) {
-                opts.homeSchema = home;
-            }
-            return attrToQuery(this.currentUv.attributes["CreateView"], opts);
         } else {
             return null;
         }
@@ -231,11 +212,13 @@ export default class UserView extends Vue {
             }
 
             this.extraActions = [];
+            this.extraCommonActions = [];
             this.currentUv = newUv;
             this.local = local;
             this.component = component;
         } else if (newUv instanceof UserViewError) {
             this.extraActions = [];
+            this.extraCommonActions = [];
             this.currentUv = newUv;
             this.local = null;
             this.component = null;
@@ -311,12 +294,20 @@ export default class UserView extends Vue {
                     return;
                 }
                 const id = (createOp as ICombinedInsertEntityResult).id;
-                const args: IUserViewArguments = { source: currentUv.args.source, args: { id } };
-                const newQuery: IQuery = {
-                    defaultValues: {},
-                    args,
-                };
-                this.$emit("goto", newQuery);
+                if (this.selectionMode) {
+                    const ref: ISelectionRef = {
+                        entity: currentUv.info.mainEntity!,
+                        id,
+                    };
+                    this.$emit("select", ref);
+                } else {
+                    const args: IUserViewArguments = { source: currentUv.args.source, args: { id } };
+                    const newQuery: IQuery = {
+                        defaultValues: {},
+                        args,
+                    };
+                    this.$emit("goto", newQuery);
+                }
             })();
         }
     }

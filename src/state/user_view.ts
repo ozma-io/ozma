@@ -120,7 +120,7 @@ const insertMainRowMapping = (mainRowMapping: IMainRowMapping, id: RowId, index:
     rowsMapping.push(index);
 };
 
-const setUpdatedPun = (entitySummaries: Record<RowId, string>, value: ICombinedValue) => {
+export const setUpdatedPun = (entitySummaries: Entries, value: ICombinedValue) => {
     const ref = currentValue(value);
     if (valueIsNull(ref)) {
         value.pun = "";
@@ -143,7 +143,7 @@ const setOrRequestUpdatedPun = (context: { dispatch: Dispatch, state: IUserViewS
         if (valueIsNull(ref)) {
             value.pun = "";
         } else {
-            const entitySummaries = state.entries.getEntries(fieldType.entity);
+            const entitySummaries = state.entries.getEntries(fieldType);
             if (entitySummaries === undefined) {
                 dispatch("userView/getEntries", { ref: fieldType.entity, reference: "update" }, { root: true });
                 value.pun = undefined;
@@ -239,6 +239,7 @@ export interface IUserViewEventHandler {
     undeleteRow: (rowIndex: number, row: ICombinedRow) => void;
     insertAddedRow: (rowId: AddedRowId, row: IAddedRow) => void;
     deleteAddedRow: (rowId: AddedRowId, row: IAddedRow) => void;
+    updateSummary: (columnIndex: number, entries: Entries) => void;
 }
 
 interface ICombinedUserViewParams {
@@ -524,10 +525,19 @@ export class UserViewError extends Error {
 export type Entries = Record<RowId, string>;
 export type EntriesResult = Entries | Promise<Entries> | Error;
 
-export class CurrentEntries {
-    entries = new ObjectResourceMap<IEntityRef, EntriesResult>();
+export interface IEntriesRef {
+    entity: IEntityRef;
+    where: string | null;
+}
 
-    getEntries(ref: IEntityRef) {
+export const equalEntriesRef = (a: IEntriesRef, b: IEntriesRef): boolean => {
+    return equalEntityRef(a.entity, b.entity) && a.where === b.where;
+};
+
+export class CurrentEntries {
+    entries = new ObjectResourceMap<IEntriesRef, EntriesResult>();
+
+    getEntries(ref: IEntriesRef) {
         const entries = this.entries.get(ref);
         if (entries === undefined || entries instanceof Promise || entries instanceof Error) {
             return undefined;
@@ -693,16 +703,16 @@ const userViewModule: Module<IUserViewState, {}> = {
             state.pending = null;
         },
 
-        initEntries: (state, { ref, reference, entries }: { ref: IEntityRef, reference: ReferenceName, entries: EntriesResult }) => {
+        initEntries: (state, { ref, reference, entries }: { ref: IEntriesRef, reference: ReferenceName, entries: EntriesResult }) => {
             state.entries.entries.createResource(ref, reference, entries);
         },
-        updateEntries: (state, { ref, entries }: { ref: IEntityRef, entries: EntriesResult }) => {
+        updateEntries: (state, { ref, entries }: { ref: IEntriesRef, entries: EntriesResult }) => {
             state.entries.entries.updateResource(ref, entries);
         },
-        addEntriesConsumer: (state, { ref, reference }: { ref: IEntityRef, reference: ReferenceName }) => {
+        addEntriesConsumer: (state, { ref, reference }: { ref: IEntriesRef, reference: ReferenceName }) => {
             state.entries.entries.addReference(ref, reference);
         },
-        removeEntriesConsumer: (state, { ref, reference }: { ref: IEntityRef, reference: ReferenceName }) => {
+        removeEntriesConsumer: (state, { ref, reference }: { ref: IEntriesRef, reference: ReferenceName }) => {
             state.entries.entries.removeReference(ref, reference);
         },
 
@@ -747,12 +757,16 @@ const userViewModule: Module<IUserViewState, {}> = {
                             handler.updateAddedValue(rowId, row, colI, value);
                         });
                     });
+
+                    uv.handlers.forEach(handler => {
+                        handler.updateSummary(colI, entries);
+                    });
                 });
             });
         },
 
         updateField: (state, params: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName, updatedValue: IUpdatedValue, fieldType: FieldType }) => {
-            const entitySummaries = params.fieldType.type === "reference" ? state.entries.getEntries(params.fieldType.entity) : undefined;
+            const entitySummaries = params.fieldType.type === "reference" ? state.entries.getEntries(params.fieldType) : undefined;
 
             state.current.userViews.values().forEach(uv => {
                 if (!(uv instanceof CombinedUserView)) {
@@ -852,7 +866,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             });
         },
         setAddedField: (state, params: { schema: SchemaName, entity: EntityName, id: AddedRowId, field: FieldName, addedEntry: IAddedEntry, fieldType: FieldType }) => {
-            const entitySummaries = params.fieldType.type === "reference" ? state.entries.getEntries(params.fieldType.entity) : undefined;
+            const entitySummaries = params.fieldType.type === "reference" ? state.entries.getEntries(params.fieldType) : undefined;
 
             state.current.userViews.values().forEach(uv => {
                 if (!(uv instanceof CombinedUserView) ||
@@ -1105,7 +1119,7 @@ const userViewModule: Module<IUserViewState, {}> = {
         },
     },
     actions: {
-        getEntries: ({ state, rootState, commit, dispatch }, { reference, ref }: { reference: ReferenceName, ref: IEntityRef }): Promise<Entries> => {
+        getEntries: ({ state, rootState, commit, dispatch }, { reference, ref }: { reference: ReferenceName, ref: IEntriesRef }): Promise<Entries> => {
             if (state.pending !== null) {
                 return Promise.reject("Reload in progress");
             }
@@ -1126,7 +1140,8 @@ const userViewModule: Module<IUserViewState, {}> = {
             const pending: IRef<Promise<Entries>> = {};
             pending.ref = (async () => {
                 try {
-                    const query = `SELECT "Id", __main AS "Main" FROM "${ref.schema}"."${ref.name}" ORDER BY __main`;
+                    const whereStr = ref.where ? `WHERE ${ref.where}` : "";
+                    const query = `SELECT "Id", __main AS "Main" FROM "${ref.entity.schema}"."${ref.entity.name}" ${whereStr} ORDER BY __main`;
                     const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
                         func: Api.fetchAnonymousView,
                         args: [query, {}],

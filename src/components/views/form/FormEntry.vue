@@ -32,6 +32,7 @@
                                 :uvArgs="uv.args"
                                 :indirectLinks="indirectLinks"
                                 :scope="scope"
+                                :level="level"
                                 @goto="$emit('goto', $event)"
                                 @update="$emit('update', fieldInfo.index, $event)" />
                     </div>
@@ -81,6 +82,7 @@ export default class FormEntry extends Vue {
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
     @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
     @Prop({ type: String, required: true }) scope!: string;
+    @Prop({ type: Number, required: true }) level!: number;
 }
 </script>
 

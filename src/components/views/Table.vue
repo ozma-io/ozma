@@ -38,6 +38,7 @@
                     :uvArgs="uv.args"
                     :indirectLinks="indirectLinks"
                     :scope="scope"
+                    :level="level"
                     autofocus
                     @update="updateCurrentValue" />
         </div>
@@ -375,6 +376,10 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
 
     updateAddedValue(rowId: number, row: IAddedRow, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, localValue: ITableValueExtra) {
         this.updateCommonValue(row, localRow, columnIndex, value, localValue);
+    }
+
+    updateNewValue(columnIndex: number, value: ICombinedValue, localValue: ITableValueExtra) {
+        this.updateCommonValue(this.emptyRow!.row, this.emptyRow!.local, columnIndex, value, localValue);
     }
 
     createCommonLocalRow(row: IRowCommon): ITableRowExtra {
@@ -1294,8 +1299,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
                 right: 0;
             }
 
+            /* This is a potential hack. Here's to hoping it would go away soon. */
             .nested-table-block > .tabl {
-                width: max-content !important;
+                width: 90vw !important;
             }
         }
     }

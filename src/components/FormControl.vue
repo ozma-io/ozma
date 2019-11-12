@@ -73,7 +73,7 @@
         <ReferenceField v-else-if="inputType.name === 'reference'"
                        :value="value"
                        :height="attributes['ControlHeight']"
-                       :entity="inputType.ref"
+                       :entry="inputType.ref"
                        :linkedAttr="inputType.linkedAttr"
                        :selectView="inputType.selectView"
                        :controlStyle="inputType.style"
@@ -103,6 +103,7 @@
                   :defaultValues="inputType.defaultValues"
                   :indirectLinks="indirectLinks"
                   :scope="scope"
+                  :level="level + 1"
                   @update:actions="actions = $event"
                   @goto="$emit('goto', $event)"
                   ref="control" />
@@ -131,7 +132,7 @@ import { namespace } from "vuex-class";
 import { valueToText, valueIsNull, equalEntityRef } from "@/values";
 import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef, IEntityRef } from "@/api";
 import { IAction } from "@/components/ActionsMenu.vue";
-import { IValueInfo, IUserViewArguments, CombinedUserView, CurrentUserViews, homeSchema, ICombinedValue, currentValue } from "@/state/user_view";
+import { IValueInfo, IUserViewArguments, CombinedUserView, CurrentUserViews, homeSchema, ICombinedValue, currentValue, IEntriesRef } from "@/state/user_view";
 import { IQuery, attrToQuerySelf, IAttrToQueryOpts } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { ISelectionRef } from "@/components/BaseUserView";
@@ -159,7 +160,7 @@ interface ISelectType {
 
 interface IReferenceType {
     name: "reference";
-    ref: IEntityRef;
+    ref: IEntriesRef;
     linkedAttr?: any;
     selectView?: IQuery;
     style?: Record<string, any>;
@@ -209,6 +210,7 @@ export default class FormControl extends Vue {
     @Prop({ type: Boolean, default: false }) disableColor!: boolean;
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
     @Prop({ type: String, required: true }) scope!: string;
+    @Prop({ type: Number, required: true }) level!: number;
 
     private actions: IAction[] = [];
 
@@ -284,7 +286,7 @@ export default class FormControl extends Vue {
                 case "reference":
                     const refEntry: IReferenceType = {
                         name: "reference",
-                        ref: this.fieldType.entity,
+                        ref: this.fieldType,
                     };
                     refEntry.linkedAttr = this.attributes["LinkedView"];
                     refEntry.style = this.controlStyle();

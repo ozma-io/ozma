@@ -2,21 +2,19 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { ReferenceName } from "@/utils";
-import { IEntityRef } from "@/api";
-import { Entries, CurrentEntries } from "@/state/user_view";
-import { equalEntityRef } from "@/values";
+import { Entries, CurrentEntries, IEntriesRef, equalEntriesRef } from "@/state/user_view";
 
 const userView = namespace("userView");
 
 @Component
 export default class BaseEntriesView extends Vue {
-    @userView.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IEntityRef, reference: ReferenceName }) => void;
+    @userView.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IEntriesRef, reference: ReferenceName }) => void;
     @userView.State("entries") entriesMap!: CurrentEntries;
-    @userView.Action("getEntries") getEntries!: (args: { reference: ReferenceName, ref: IEntityRef }) => Promise<Entries>;
+    @userView.Action("getEntries") getEntries!: (args: { reference: ReferenceName, ref: IEntriesRef }) => Promise<Entries>;
 
     protected currentEntries: Entries | Error | null = null;
 
-    get entriesEntity(): IEntityRef | null {
+    get entriesEntity(): IEntriesRef | null {
         throw Error("Not implemented");
     }
 
@@ -28,7 +26,7 @@ export default class BaseEntriesView extends Vue {
         return null;
     }
 
-    private destroyEntries(ref: IEntityRef) {
+    private destroyEntries(ref: IEntriesRef) {
         this.removeEntriesConsumer({ ref, reference: this.uid });
     }
 
@@ -46,8 +44,8 @@ export default class BaseEntriesView extends Vue {
     }
 
     @Watch("entriesEntity", { deep: true })
-    private entityChanged(newEntity: IEntityRef, oldEntity: IEntityRef) {
-        if (!equalEntityRef(newEntity, oldEntity)) {
+    private entityChanged(newEntity: IEntriesRef, oldEntity: IEntriesRef) {
+        if (!equalEntriesRef(newEntity, oldEntity)) {
             if (oldEntity !== undefined) {
                 this.destroyEntries(oldEntity);
             }
