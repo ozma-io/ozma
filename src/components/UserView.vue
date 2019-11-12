@@ -131,6 +131,7 @@ export default class UserView extends Vue {
     private local: IHandlerProvider | null = null;
     // currentUv is shown while new component for uv is loaded.
     private currentUv: CombinedUserView | UserViewError | null = null;
+    private waitReload: boolean = false;
 
     get title() {
         if (this.args.source.type === "named") {
@@ -231,8 +232,15 @@ export default class UserView extends Vue {
     // * when arguments change (different view selected);
     // * when current view is `null` (view is not yet requested).
     private requestView() {
-        if (this.query.rootViewArgs !== null && !deepEquals(this.args, this.query.rootViewArgs)) {
+        if (this.query.rootViewArgs !== null && !deepEquals(this.args, this.query.rootViewArgs) && !this.waitReload) {
             this.getNestedView({ args: this.args, reference: this.uid });
+        }
+    }
+
+    @Watch("waitReload")
+    private reloadWhenUnblocked(newValue: boolean, oldValue: boolean) {
+        if (oldValue && !newValue) {
+            this.requestView();
         }
     }
 
@@ -278,19 +286,23 @@ export default class UserView extends Vue {
         if (currentUv instanceof CombinedUserView && currentUv.rows === null && submitPromise !== null) {
             (async () => {
                 let ret: CombinedTransactionResult[];
+                this.waitReload = true;
                 try {
                     ret = await submitPromise;
                 } catch (e) {
+                    this.waitReload = false;
                     return;
                 }
 
                 if (!deepEquals(this.args, currentUv.args)) {
                     // We went somewhere else meanwhile.
+                    this.waitReload = false;
                     return;
                 }
 
                 const createOp = ret.find(x => x.type === "insert" && equalEntityRef(x.entity, currentUv.info.mainEntity!));
                 if (createOp === undefined) {
+                    this.waitReload = false;
                     return;
                 }
                 const id = (createOp as ICombinedInsertEntityResult).id;
@@ -308,6 +320,7 @@ export default class UserView extends Vue {
                     };
                     this.$emit("goto", newQuery);
                 }
+                this.waitReload = false;
             })();
         }
     }

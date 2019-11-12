@@ -100,6 +100,10 @@ export interface IColumnField {
     isNullable: boolean;
 }
 
+export interface IEntity {
+    columnFields: Record<FieldName, IColumnField>;
+}
+
 export interface IMainFieldInfo {
     name: FieldName;
     field: IColumnField;
@@ -260,9 +264,12 @@ export const fetchNamedViewInfo = async (token: string, ref: IUserViewRef): Prom
     return await fetchViewInfo(`by_name/${ref.schema}/${ref.name}`, token, new URLSearchParams());
 };
 
+export const getEntityInfo = async (token: string, ref: IEntityRef): Promise<IEntity> => {
+    return await fetchJsonApi(`entity/${ref.schema}/${ref.name}`, token, "GET");
+};
+
 const changeEntity = async (path: string, method: string, token: string, ref: IEntityRef, body?: string): Promise<any> => {
-    const schema = ref.schema === null ? "public" : ref.schema;
-    return await fetchFormApi(`entity/${schema}/${ref.name}${path}`, token, method, body);
+    return await fetchFormApi(`entity/${ref.schema}/${ref.name}${path}`, token, method, body);
 };
 
 export const insertEntry = async (token: string, ref: IEntityRef, args: Record<string, any>): Promise<void> => {

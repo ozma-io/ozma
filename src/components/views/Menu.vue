@@ -50,11 +50,15 @@
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { Location } from "vue-router";
 import { namespace } from "vuex-class";
+import { mixins } from "vue-class-component";
+
 import { tryDicts } from "@/utils";
 import { CombinedUserView, valueToPunnedText, homeSchema } from "@/state/user_view";
 import { IQuery, attrToQuery } from "@/state/query";
 import { CurrentChanges, IEntityChanges } from "@/state/staging_changes";
+import LocalEmptyUserView from "@/LocalEmptyUserView";
 import { UserView } from "@/components";
+import BaseUserView from "@/components/BaseUserView";
 
 interface IMainMenuButton {
     index: number;
@@ -69,9 +73,11 @@ interface IMainMenuCategory {
     buttons: IMainMenuButton[];
 }
 
-@UserView()
+@UserView({
+    localConstructor: LocalEmptyUserView,
+})
 @Component
-export default class UserViewMenu extends Vue {
+export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>>(BaseUserView) {
     @Prop() uv!: CombinedUserView;
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 

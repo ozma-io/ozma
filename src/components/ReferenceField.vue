@@ -15,13 +15,13 @@
     <div>
         <SelectUserView v-if="selectViewActive"
                 :selectView="selectView"
-                :entity="entity"
+                :entity="entry.entity"
                 @select="$emit('update', $event); selectViewActive = false"
                 @close="selectViewActive = false" />
 
         <SelectUserView v-if="uv"
             :selectView="uv"
-            :entity="entity"
+            :entity="entry.entity"
             @select="$emit('update', $event); selectViewActive = false"
             @close="uv = null" />
 
