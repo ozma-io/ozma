@@ -3,12 +3,12 @@
         "en": {
             "create": "Create new",
             "edit_view": "Edit user view",
-            "create_in_modal": "Create referenced in modal window",
+            "create_in_modal": "Create referenced in modal window"
         },
         "ru": {
             "create": "Создать новую",
             "edit_view": "Редактировать представление",
-            "create_in_modal": "Создать связанную запись в окне",
+            "create_in_modal": "Создать связанную запись в окне"
         }
     }
 </i18n>
