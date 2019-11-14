@@ -284,7 +284,7 @@ const getFieldInfo = async (context: ActionContext<IStagingState, {}>, schema: S
 };
 
 const getEmptyValues = (scope: ScopeName, entity: IEntity): UpdatedValues => {
-    return Object.fromEntries(Object.entries(entity.columnFields).filter(([name, info]) => !info.isNullable).map(([name, info]) => {
+    return Object.fromEntries(Object.entries(entity.columnFields).filter(([name, info]) => !(info.isNullable || info.defaultValue !== undefined)).map(([name, info]) => {
         const value = { value: undefined, rawValue: "", erroredOnce: false, scopes: { [scope]: null } };
         return [name, value];
     }));
