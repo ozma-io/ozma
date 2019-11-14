@@ -292,7 +292,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
         this.deletedOne = true;
     }
 
-    @Watch("uv")
+    @Watch("uv", { deep: true })
     private uvChanged() {
         this.init();
     }
@@ -300,6 +300,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
     @Watch("rowPositions")
     private returnIfEmpty() {
         if (this.isRoot && this.deletedOne && this.rowPositions.length === 0 && this.uv.newRowsPositions.length === 0 && this.previousQuery !== null) {
+            this.deletedOne = false; // In case we end up in the same uv.
             this.$emit("goto", this.previousQuery);
         }
     }
