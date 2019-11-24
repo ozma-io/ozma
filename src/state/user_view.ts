@@ -44,7 +44,7 @@ export interface ICombinedValue extends IExecutedValue {
     erroredOnce?: boolean;
     initialValue?: any;
     // `undefined` is used when pun is not yet resolved, to avoid adding/removing values.
-    pun?: string | undefined;
+    pun?: string | null | undefined;
     initialPun?: string;
     info?: IValueInfo;
 }
@@ -597,7 +597,11 @@ export const homeSchema = (args: IUserViewArguments): SchemaName | null => {
 
 export const valueToPunnedText = (valueType: ValueType, value: ICombinedValue): string => {
     if (value.pun !== undefined) {
-        return value.pun;
+        if (value.pun === null) {
+            return "";
+        } else {
+            return value.pun;
+        }
     } else {
         return valueToText(valueType, currentValue(value));
     }
