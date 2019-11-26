@@ -249,9 +249,9 @@ const checkCounters = async (context: ActionContext<IStagingState, {}>) => {
     }
 };
 
-const changeToParam = (change: IUpdatedValue): any => {
+const changeToParam = (name: FieldName, change: IUpdatedValue): any => {
     if (change.value === undefined) {
-        throw new Error("Value didn't pass validation");
+        throw new Error(`Value for ${name} didn't pass validation`);
     }
     let arg;
     if (change.value instanceof moment) {
@@ -640,7 +640,7 @@ const stagingModule: Module<IStagingState, {}> = {
                         const updated =
                             mapMaybe(([updatedIdStr, updatedFields]) => {
                                 const entries =
-                                    mapMaybe(([name, change]) => (scope && !(scope in change.scopes)) ? undefined : [name, changeToParam(change)],
+                                    mapMaybe(([name, change]) => (scope && !(scope in change.scopes)) ? undefined : [name, changeToParam(name, change)],
                                         Object.entries(updatedFields));
                                 if (entries.length === 0) {
                                     return undefined;
@@ -658,7 +658,7 @@ const stagingModule: Module<IStagingState, {}> = {
                                 if (scope && !(scope in addedFields.scopes)) {
                                     return undefined;
                                 } else {
-                                    const entries = Object.entries(addedFields.values).map(([name, value]) => [name, changeToParam(value)]);
+                                    const entries = Object.entries(addedFields.values).map(([name, value]) => [name, changeToParam(name, value)]);
                                     return {
                                         type: "insert",
                                         entity,
@@ -680,7 +680,7 @@ const stagingModule: Module<IStagingState, {}> = {
                             }, Object.entries(entityChanges.deleted));
                         return [...updated, ...added, ...deleted];
                     } catch (e) {
-                        commit("addError", `Invalid value for ${schemaName}.${entityName}`);
+                        commit("addError", `Invalid value for ${schemaName}.${entityName}: ${e.message}`);
                         dispatch("userView/updateErroredOnce", undefined, { root: true });
                         throw e;
                     }
