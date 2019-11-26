@@ -384,6 +384,9 @@ const stagingModule: Module<IStagingState, {}> = {
         removeError: (state, errorIndex: number) => {
             state.errors.splice(errorIndex, 1);
         },
+        clearErrors: state => {
+            state.errors = [];
+        },
         updateField: (state, params: { scope: ScopeName, schema: SchemaName, entity: EntityName, id: RowId, field: FieldName, value: any, fieldInfo: IFieldInfo }) => {
             const { scope, schema, entity, id, field, value, fieldInfo } = params;
 
@@ -625,6 +628,7 @@ const stagingModule: Module<IStagingState, {}> = {
                 await state.currentSubmit;
             }
 
+            commit("clearErrors");
             commit("validate");
             const ops = Object.entries(state.current.changes).flatMap(([schemaName, entities]) => {
                 return Object.entries(entities).flatMap(([entityName, entityChanges]) => {
