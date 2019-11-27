@@ -177,12 +177,18 @@ export interface IExecutedValue {
     pun?: any;
 }
 
+export interface IEntityId {
+    id: RowId;
+    subEntity?: IEntityRef;
+}
+
 export interface IExecutedRow {
     values: IExecutedValue[];
     domainId: DomainId;
     attributes?: AttributesMap;
-    entityIds?: Record<ColumnName, RowId>;
+    entityIds?: Record<ColumnName, IEntityId>;
     mainId?: RowId;
+    mainSubEntity?: IEntityRef;
 }
 
 export interface IExecutedViewExpr {

@@ -377,10 +377,11 @@ export class CombinedUserView {
                     }
 
                     const id = entityIds[field.idColumn];
+                    const fieldRef = id.subEntity ? { entity: id.subEntity, name: field.ref.name } : field.ref;
                     const updateInfo = {
                         field: field.field,
-                        fieldRef: field.ref,
-                        id,
+                        fieldRef,
+                        id: id.id,
                     };
                     value.info = updateInfo;
                     value.initialValue = value.value;
@@ -396,7 +397,7 @@ export class CombinedUserView {
                     const eref = field.ref.entity;
 
                     const entityChanges = changes.changesForEntity(eref.schema, eref.name);
-                    const entityUpdated = entityChanges.updated[id];
+                    const entityUpdated = entityChanges.updated[id.id];
                     if (entityUpdated !== undefined) {
                         const updated = entityUpdated[field.ref.name];
                         if (updated !== undefined) {
@@ -411,7 +412,7 @@ export class CombinedUserView {
                         column: colI,
                     };
 
-                    insertUpdateMapping(updateMapping, field.ref, id, valueRef);
+                    insertUpdateMapping(updateMapping, field.ref, id.id, valueRef);
                 });
             });
 
