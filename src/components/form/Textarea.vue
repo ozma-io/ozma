@@ -28,9 +28,8 @@ import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
 import MobileMixin from "@/MobileMixin";
-import Modal from "@/components/modal/Modal";
 
-@Component({ components: { Modal } })
+@Component
 export default class Textarea extends MobileMixin {
     @Prop({ type: String }) label!: string;
     @Prop({ type: String }) value!: string;
@@ -56,16 +55,7 @@ export default class Textarea extends MobileMixin {
         } else { return !!this.value; }
     }
 
-    private onModalOpen() {
-        this.$nextTick(() => {
-            if (this.$refs.controlModal) {
-                this.$refs.controlModal.focus();
-                console.log(this.$refs.controlModal);
-            }
-        })
-    }
-
-    private onFocus(evt: Event<HTMLInputElement>) {
+    private onFocus(evt: HTMLInputElement) {
         this.focused = true;
         if (this.isMobile) {
             this.isModalOpen = true;
@@ -74,21 +64,21 @@ export default class Textarea extends MobileMixin {
         }
     }
 
-    private onBlur(evt: Event<HTMLInputElement>) {
+    private onBlur(evt: HTMLInputElement) {
         this.focused = false;
     }
 
     private positionField() {
-        const controlElement = this.$refs.control;
+        const controlElement = this.$refs.control as HTMLElement;
         const eWidth = controlElement.offsetWidth;
         const rightPosition = controlElement.getBoundingClientRect().right;
         const screenWidth = document.documentElement.clientWidth - 10;
         if (rightPosition + eWidth >= screenWidth) {
-            controlElement.style.right = 0;
+            controlElement.style.right = "0";
             controlElement.style.left = "initial";
         } else {
             controlElement.style.right = "initial";
-            controlElement.style.left = 0;
+            controlElement.style.left = "0";
         }
     }
 

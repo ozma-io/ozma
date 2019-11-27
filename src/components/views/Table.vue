@@ -19,7 +19,6 @@
     }
 </i18n>
 
-
 <template>
     <div fluid
          :class="['table-block',
@@ -1048,7 +1047,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         }
     }
 
-    @Watch("uv")
+    @Watch("uv", { deep: true })
     private uvChanged() {
         this.init();
         this.updateShowLength();

@@ -26,6 +26,7 @@ export type SchemaName = string;
 export type ColumnName = string;
 export type AttributeName = string;
 export type UserViewName = string;
+export type ConstraintName = string;
 
 export interface IAllowedEntity {
     fields: Record<FieldName, void>;
@@ -96,8 +97,50 @@ export type FieldType = IScalarFieldType | IArrayFieldType | IReferenceFieldType
 
 export interface IColumnField {
     fieldType: FieldType;
+    valueType: ValueType;
     defaultValue: any;
     isNullable: boolean;
+    isImmutable: boolean;
+    inheritedFrom: IEntityRef | null;
+}
+
+export type UsedFields = FieldName[];
+export type UsedEntities = Record<EntityName, UsedFields>;
+export type UsedSchemas = Record<SchemaName, UsedEntities>;
+
+export interface IComputedField {
+    expression: string;
+    isLocal: boolean;
+    hasId: boolean;
+    usedSchemas: UsedSchemas;
+    inheritedFrom: IEntityRef | null;
+}
+
+export interface IUniqueConstraint {
+    columns: FieldName[];
+}
+
+export interface ICheckConstraint {
+    expression: string;
+}
+
+export interface IChildEntity {
+    ref: IEntityRef;
+    direct: boolean;
+}
+
+export interface IEntity {
+    columnFields: Record<FieldName, IColumnField>;
+    computedFields: Record<FieldName, IComputedField>;
+    uniqueConstraints: Record<ConstraintName, IUniqueConstraint>;
+    checkConstraints: Record<ConstraintName, ICheckConstraint>;
+    mainField: FieldName;
+    forbidExternalReferences: boolean;
+    hidden: boolean;
+    parent: IEntityRef | null;
+    children: IChildEntity[];
+    isAbstract: boolean;
+    root: IEntityRef;
 }
 
 export interface IMainFieldInfo {
@@ -134,12 +177,18 @@ export interface IExecutedValue {
     pun?: any;
 }
 
+export interface IEntityId {
+    id: RowId;
+    subEntity?: IEntityRef;
+}
+
 export interface IExecutedRow {
     values: IExecutedValue[];
     domainId: DomainId;
     attributes?: AttributesMap;
-    entityIds?: Record<ColumnName, RowId>;
+    entityIds?: Record<ColumnName, IEntityId>;
     mainId?: RowId;
+    mainSubEntity?: IEntityRef;
 }
 
 export interface IExecutedViewExpr {
@@ -260,9 +309,12 @@ export const fetchNamedViewInfo = async (token: string, ref: IUserViewRef): Prom
     return await fetchViewInfo(`by_name/${ref.schema}/${ref.name}`, token, new URLSearchParams());
 };
 
+export const getEntityInfo = async (token: string, ref: IEntityRef): Promise<IEntity> => {
+    return await fetchJsonApi(`entity/${ref.schema}/${ref.name}`, token, "GET");
+};
+
 const changeEntity = async (path: string, method: string, token: string, ref: IEntityRef, body?: string): Promise<any> => {
-    const schema = ref.schema === null ? "public" : ref.schema;
-    return await fetchFormApi(`entity/${schema}/${ref.name}${path}`, token, method, body);
+    return await fetchFormApi(`entity/${ref.schema}/${ref.name}${path}`, token, method, body);
 };
 
 export const insertEntry = async (token: string, ref: IEntityRef, args: Record<string, any>): Promise<void> => {

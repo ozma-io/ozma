@@ -69,30 +69,30 @@
                        :style="listValueStyle"
                        class="select_container__input">
             </div>
-            <slot name="option"
-                  v-show="isOpen"
-                  :selectedOptions="selectedOptions"
-                  :addOptionToValue="addOptionToValue"
-                  :selectedOption="selectedOption"
-                  :isEmpty="isEmpty">
-                <div class="select_container__options_container">
-                    <ul class="select_container__options_list" :style="optionsListStyle" ref="optionsList">
-                        <li v-for="(option, index) in selectedOptions"
-                                :key="option.value"
-                                @click="addOptionToValue(option, $event)"
-                                :class="[
-                                    'select_container__options_list__option',
-                                    {'select_container__options_list__option_active': selectedOption === index }
-                                ]">
-                            {{option.label}}
-                        </li>
-                    </ul>
-                    <div class="select_container__options__actions" @click="setIsOpen(false)">
-                        <slot name="actions" v-if="isOpen">
-                        </slot>
-                    </div>
-                </div>
-            </slot>
+            <div class="select_container__options_container">
+                <slot name="option"
+                    v-if="isOpen"
+                    :selectedOptions="selectedOptions"
+                    :addOptionToValue="addOptionToValue"
+                    :selectedOption="selectedOption"
+                    :isEmpty="isEmpty">
+                        <ul class="select_container__options_list" :style="optionsListStyle" ref="optionsList">
+                            <li v-for="(option, index) in selectedOptions"
+                                    :key="option.value"
+                                    @click="addOptionToValue(option, $event)"
+                                    :class="[
+                                        'select_container__options_list__option',
+                                        {'select_container__options_list__option_active': selectedOption === index }
+                                    ]">
+                                {{option.label}}
+                            </li>
+                        </ul>
+                        <div class="select_container__options__actions" @click="setIsOpen(false)">
+                            <slot name="actions" v-if="isOpen">
+                            </slot>
+                        </div>
+                </slot>
+            </div>
             <input v-if="!disabled && ((single && required) || (single && isEmpty) || !single)"
                    type="button" class="material-icons select_container__chevron"
                    @click="isOpen ? setIsOpen(false) : setIsOpen(true)"
@@ -409,6 +409,7 @@ export default class MultiSelect extends Vue {
      margin: 0;
      box-sizing: border-box;
      background-color: var(--MainBackgroundColor);
+     max-height: 250px;
      overflow: auto;
      height: 0px;
      transition: all ease-in 0.3s;

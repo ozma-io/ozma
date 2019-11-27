@@ -25,7 +25,7 @@
                     class="values_list__value"
                     :style="select.listValueStyle"
                     @click.stop>
-                    <UserViewLink v-if="option.meta.link"
+                    <UserViewLink v-if="option.meta && option.meta.link"
                         :uv="option.meta.link"
                         @[indirectLinks?`click`:null]="$emit('goto', $event)">
                         {{option.label}}
