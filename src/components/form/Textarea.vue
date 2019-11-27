@@ -9,58 +9,18 @@
     }
 </i18n>
 <template>
-    <div class="textarea_field_container">
-        <Modal v-show="isMobile"
-            :show="isModalOpen"
-            :name="`${uid}-field-modal`"
-            @opened="onModalOpen"
-            fullscreen>
-            <template v-slot:content>
-                <div class="input_modal__input_group">
-                    <div>
-                        <label v-if="label" class="input_modal_label">
-                            {{ label }}
-                        </label>
-                        <textarea :class="['textarea_field', 'modal_textarea_field', {'textarea_field__disabled': disabled}]"
-                            :id="inputName"
-                            :type="type"
-                            :placeholder="$t('input_placeholder')"
-                            :disabled="disabled"
-                            :rows="rows"
-                            v-model="modalValue"
-                            ref="controlModal"
-                        />
-                    </div>
-                    <div class="input_modal__button_container">
-                        <button type="button" class="input_modal__button__ok" @click="updateValueFromModal">
-                            {{$t('ok')}}
-                        </button>
-                        <button type="button" class="input_modal__button__cancel" @click="closeModal">
-                            {{$t('cancel')}}
-                        </button>
-                    </div>
-                </div>
-            </template>
-        </Modal>
-        <label class="input_label"
-            :for="inputName"
-            v-if="label"
-        >
-            {{ label }}
-        </label>
-        <textarea :class="['textarea_field', {'textarea_field__disabled': disabled}]"
-            :id="inputName"
-            :type="type"
-            :value="value"
-            :placeholder="$t('input_placeholder')"
-            :disabled="disabled"
-            :rows="rows"
-            ref="control"
-            @focus="onFocus"
-            @blur="onBlur"
-            @input="$emit('update:value', $event.target.value)"
-        />
-    </div>
+    <textarea :class="['textarea_field', {'textarea_field__disabled': disabled}]"
+        :id="inputName"
+        :type="type"
+        :value="value"
+        :placeholder="$t('input_placeholder')"
+        :disabled="disabled"
+        :rows="rows"
+        ref="control"
+        @focus="onFocus"
+        @blur="onBlur"
+        @input="$emit('update:value', $event.target.value)"
+    />
 </template>
 
 <script lang="ts">
@@ -193,7 +153,6 @@ export default class Textarea extends MobileMixin {
      border: 1px solid var(--MainBorderColor);
      padding: 5px;
      position: absolute;
-     top: 2em;
      right: 0;
      width: 400px;
      height: 300px;

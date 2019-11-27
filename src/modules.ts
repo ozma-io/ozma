@@ -9,6 +9,7 @@ import VueGrid from "@liqueflies/vue-flex-grid";
 import { RawLocation, Dictionary } from "vue-router/types/router";
 import PortalVue from "portal-vue";
 import VueJSModal from "vue-js-modal";
+import { Plugin as FragmentPlugin } from "vue-fragment";
 
 import * as Utils from "@/utils";
 import NotFound from "@/components/NotFound.vue";
@@ -27,6 +28,7 @@ Vue.use(UniqueId);
 Vue.use(vClickOutside);
 Vue.use(VueGrid);
 Vue.use(PortalVue);
+Vue.use(FragmentPlugin);
 Vue.use(VueJSModal, { componentName: "VueModal" });
 
 const routes = [

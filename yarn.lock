@@ -10216,6 +10216,11 @@ vue-cli-plugin-tsx-support@^0.4.1:
   resolved "https://registry.yarnpkg.com/vue-cli-plugin-tsx-support/-/vue-cli-plugin-tsx-support-0.4.1.tgz#439b750f5a8dc95f87bf450c853bd46923bc4589"
   integrity sha512-0C4kCmSAvcjYUadC8kr3VmZkCKjZksmYmax9eonMlJNnWsKb4Y/QuHIpJu3x/fD1HOKkPq/ZysoBfxFpENmsUA==
 
+vue-fragment@^1.5.1:
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/vue-fragment/-/vue-fragment-1.5.1.tgz#44c070d55ed1e9a6c698ef57a5c83f64bb06feeb"
+  integrity sha512-ig6eES6TcMBbANW71ylB+AJgRN+Zksb3f50AxjGpAk6hMzqmeuD80qeh4LJP0jVw2dMBMjgRUfIkrvxygoRgtQ==
+
 vue-functional-data-merge@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/vue-functional-data-merge/-/vue-functional-data-merge-3.1.0.tgz#08a7797583b7f35680587f8a1d51d729aa1dc657"

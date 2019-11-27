@@ -16,58 +16,63 @@
         }
     }
 </i18n>
+                    <!-- div v-for="(block, blockI) in blocks" :key="blockI" class="form-block" :style="{ width: `${block.width * 100}%` }">
+                        <template v-for="fieldInfo in block.fields" class="form_data">
+                            <div class="form-data" v-if="fieldInfo.visible" :key="fieldInfo.columnInfo.name" :label-for="fieldInfo.columnInfo.name">
+                                <FormControl
+                                        :caption="fieldInfo.caption"
+                                        :value="row.values[fieldInfo.index]"
+                                        :attributes="localRow.values[fieldInfo.index].attributes"
+                                        :type="fieldInfo.columnInfo.valueType"
+                                        :locked="locked"
+                                        :uvArgs="uv.args"
+                                        :indirectLinks="indirectLinks"
+                                        :scope="scope"
+                                        :level="level"
+                                        @goto="$emit('goto', $event)"
+                                        @update="$emit('update', fieldInfo.index, $event)" />
+                            </div>
+                        </template>
+                    </div !-->
 
 <template>
-    <div>
-        <form class="form-entry">
-            <div v-for="(block, blockI) in blocks" :key="blockI" class="form-block" :style="{ width: `${block.width * 100}%` }">
-                <template v-for="fieldInfo in block.fields" class="form_data">
-                    <div class="form-data" v-if="fieldInfo.visible" :key="fieldInfo.columnInfo.name" :label-for="fieldInfo.columnInfo.name">
-                        <FormControl
-                                :caption="fieldInfo.caption"
-                                :value="row.values[fieldInfo.index]"
-                                :attributes="localRow.values[fieldInfo.index].attributes"
-                                :type="fieldInfo.columnInfo.valueType"
-                                :locked="locked"
-                                :uvArgs="uv.args"
-                                :indirectLinks="indirectLinks"
-                                :scope="scope"
-                                :level="level"
-                                @goto="$emit('goto', $event)"
-                                @update="$emit('update', fieldInfo.index, $event)" />
+    <b-container>
+        <b-row>
+            <b-col size="12">
+                <form class="form-entry">
+                    <FormGrid :blockContent="gridBlocks"  />
+                    <!-- FIXME FIXME FIXME look at permissions! -->
+                    <div class="delete-block" v-if="row.mainId !== undefined">
+                        <input  type="button"
+                                :value="$t('delete')"
+                                class="delete-block_delete-button"
+                                v-b-modal="$id('deleteConfirm')" >
+
+                        <b-modal lazy
+                                    :id="$id('deleteConfirm')"
+                                    ok-variant="danger"
+                                    :ok-title="$t('ok')"
+                                    @ok="$emit('delete', $event)"
+                                    :cancel-title="$t('cancel')" >
+                            {{ $t('delete_confirmation') }}
+                        </b-modal>
                     </div>
-                </template>
-            </div>
 
-            <!-- FIXME FIXME FIXME look at permissions! -->
-            <div class="delete-block" v-if="row.mainId !== undefined">
-                <input  type="button"
-                        :value="$t('delete')"
-                        class="delete-block_delete-button"
-                        v-b-modal="$id('deleteConfirm')" >
-
-                <b-modal lazy
-                            :id="$id('deleteConfirm')"
-                            ok-variant="danger"
-                            :ok-title="$t('ok')"
-                            @ok="$emit('delete', $event)"
-                            :cancel-title="$t('cancel')" >
-                    {{ $t('delete_confirmation') }}
-                </b-modal>
-            </div>
-
-            <div class="delete-block" v-if="selectionMode && localRow.extra.selectionEntry !== undefined">
-                <input  type="button"
-                        :value="$t('select')"
-                        class="delete-block_delete-button"
-                        @click="$emit('select', localRow.extra.selectionEntry)" >
-            </div>
-        </form>
-    </div>
+                    <div class="delete-block" v-if="selectionMode && localRow.extra.selectionEntry !== undefined">
+                        <input  type="button"
+                                :value="$t('select')"
+                                class="delete-block_delete-button"
+                                @click="$emit('select', localRow.extra.selectionEntry)" >
+                    </div>
+                </form>
+            </b-col>
+    </b-container>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import FormGrid from "@/components/form/FormGrid.vue";
+import { IGridProps } from "@/components/form/types";
 
 @Component
 export default class FormEntry extends Vue {
@@ -83,6 +88,29 @@ export default class FormEntry extends Vue {
     @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
     @Prop({ type: String, required: true }) scope!: string;
     @Prop({ type: Number, required: true }) level!: number;
+
+    private onGoto = (event: any) => {
+        this.$emit("goto", event);
+    }
+
+    private onUpdate = (event: any, fieldIndex: number) => {
+        this.$emit("update", fieldIndex, event)
+    }
+
+    get gridProps(): IGridProps {
+        return {
+            uv: this.uv,
+            row: this.row,
+            localRow: this.localRow,
+            locked: this.locked,
+            indirectLinks: this.indirectLinks,
+            selectionMode: this.selectionMode,
+            scope: this.scope,
+            level: this.level,
+            onUpdate: this.onUpdate,
+            onGoto: this.onGoto,
+        }
+    }
 }
 </script>
 

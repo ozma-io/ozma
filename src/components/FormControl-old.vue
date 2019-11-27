@@ -19,43 +19,110 @@
     }
 </i18n>
 
-<!-- <div v-if="actions.length > 0" class="nested-menu">
-     <ActionsMenu title="view_headline"
-     :actions="actions"
-     :indirectLinks="indirectLinks"
-     @goto="$emit('goto', $event)" />
-     <div v-if="caption !== ''" class="caption-editors">
-     {{ caption }}
-     </div>
-     </div>
-     <div v-else-if="caption !== ''" class="caption-editors">
-     {{ caption }}
-     </div> -->
-
-<template v-if="inputType.name === 'error'">
-    {{ inputType.text }}
-</template>
 <template>
-    <fragment>
-        <InputSlot :label="caption" v-if="inputType.name !== 'userview'">
-            <template v-slot:input>
-                <Input v-if="inputType.name === 'text'"
-                    :value="currentValue"
-                    @input="updateValue($event.target.value)"
-                    :unfocusing="unfocusing"
-                    :disabled="isDisabled" />
-            </template>
-        </InputSlot>
-        <UserView v-else
-            :args="inputType.args"
-            :defaultValues="inputType.defaultValues"
-            :indirectLinks="indirectLinks"
-            :scope="scope"
-            :level="level + 1"
-            @update:actions="actions = $event"
-            @goto="$emit('goto', $event)"
-            ref="control" />
-    </fragment>
+    <div :class="['form-control-panel', {
+                 'form-control-panel_editor': inputType.name === 'codeeditor',
+                 }]"
+         :style="controlPanelStyle">
+        <div v-if="actions.length > 0" class="nested-menu">
+            <ActionsMenu title="view_headline"
+                         :actions="actions"
+                         :indirectLinks="indirectLinks"
+                         @goto="$emit('goto', $event)" />
+            <div v-if="caption !== ''" class="caption-editors">
+                {{ caption }}
+            </div>
+        </div>
+        <div v-else-if="caption !== ''" class="caption-editors">
+            {{ caption }}
+        </div>
+
+        <template v-if="inputType.name === 'error'">
+            {{ inputType.text }}
+        </template>
+        <input type="checkbox" v-else-if="inputType.name === 'check'"
+               :value="currentValue"
+               :class="['form-control-panel_checkbox',
+                       {'form-control-panel_checkbox_error': value.erroredOnce,
+                       'form-control-panel_checkbox_req': isAwaited && !disableColor}]"
+               @input="updateValue($event.target.value)"
+               :disabled="isDisabled"
+               ref="control" />
+        <textarea v-else-if="inputType.name === 'textarea'"
+                  :style="inputType.style"
+                  :value="textValue"
+                  :class="['form-control-panel_textarea', 'multilines',
+                          {'form-control-panel_textarea_error': value.erroredOnce,
+                          'form-control-panel_textarea_req': isAwaited && !disableColor}]"
+                  @input="updateValue($event.target.value)"
+                  :disabled="isDisabled"
+                  :rows="3"
+                  wrap="soft"
+                  :max-rows="6"
+                  :required="!isNullable"
+                  ref="control" />
+        <MultiSelect v-else-if="inputType.name === 'select'"
+                     :value="currentValue"
+                     :options="inputType.options"
+                     :height="attributes['ControlHeight']"
+                     single
+                     @update:value="updateValue($event)"
+                     :required="!isNullable"
+                     :disabled="isDisabled"
+                     ref="control" />
+        <ReferenceField v-else-if="inputType.name === 'reference'"
+                       :value="value"
+                       :height="attributes['ControlHeight']"
+                       :entry="inputType.ref"
+                       :linkedAttr="inputType.linkedAttr"
+                       :selectView="inputType.selectView"
+                       :controlStyle="inputType.style"
+                       :uvArgs="uvArgs"
+                        @update:actions="actions = $event"
+                        @update="updateValue($event)"
+                        :isNullable="isNullable"
+                        :isDisabled="isDisabled"
+                        ref="control" />
+        <Calendar v-else-if="inputType.name === 'calendar'"
+                  :value="value.value"
+                  :textValue="textValue"
+                  @update:value="updateValue($event)"
+                  :showTime="inputType.showTime"
+                  ref="control" />
+        <!-- Do NOT add any `class` to CodeEditor; it breaks stuff! -->
+        <CodeEditor v-else-if="inputType.name === 'codeeditor'"
+                    :style="inputType.style"
+                    mode="ace/mode/pgsql"
+                    :content="textValue"
+                    @update:content="updateValue($event)"
+                    :readOnly="isDisabled"
+                    :autofocus="autofocus"
+                    ref="control" />
+        <UserView v-else-if="inputType.name === 'userview'"
+                  :args="inputType.args"
+                  :defaultValues="inputType.defaultValues"
+                  :indirectLinks="indirectLinks"
+                  :scope="scope"
+                  :level="level + 1"
+                  @update:actions="actions = $event"
+                  @goto="$emit('goto', $event)"
+                  ref="control" />
+        <input v-else
+                type="text"
+                @keydown.enter.prevent=""
+                wrap="soft"
+                :value="textValue"
+                :style="inputType.style"
+                :class="['form-control-panel_textarea', 'singleline',
+                        {'form-control-panel_textarea_error': value.erroredOnce,
+                         'form-control-panel_textarea_req': isAwaited && !disableColor}]"
+                @input="updateValue($event.target.value)"
+                :disabled="isDisabled"
+                :rows="3"
+                :max-rows="6"
+                :required="!isNullable"
+                ref="control" />
+    </div>
 </template>
 
 <script lang="ts">
@@ -130,8 +197,6 @@ const multilineTypes = [ "codeeditor", "textarea" ];
         MultiSelect: () => import("@/components/multiselect/MultiSelect.vue"),
         Calendar: () => import("@/components/Calendar.vue"),
         ReferenceField: () => import("@/components/ReferenceField.vue"),
-        InputSlot: () => import("@/components/form/InputSlot.vue"),
-        Input: () => import("@/components/form/Input.vue"),
     },
 })
 export default class FormControl extends Vue {
@@ -140,7 +205,6 @@ export default class FormControl extends Vue {
     @Prop({ type: Object, default: () => ({}) }) attributes!: AttributesMap;
     @Prop({ type: Boolean, default: false }) locked!: boolean;
     @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-    @Prop({ type: Boolean, default: false }) unfocusing!: boolean;
     @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
     @Prop({ type: String, default: "" }) caption!: string;
     @Prop({ type: Boolean, default: false }) disableColor!: boolean;

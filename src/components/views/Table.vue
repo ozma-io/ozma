@@ -30,17 +30,24 @@
                 :class="{'edit_active': editingValue !== null}"
                 @click="removeCellEditing()">
             </div>
-            <FormControl :value="editingValue.value"
-                    :attributes="editingValue.attributes"
-                    :type="editingValue.type"
-                    :locked="editingLocked"
-                    :disableColor="editing.ref.type === 'new'"
-                    :uvArgs="uv.args"
-                    :indirectLinks="indirectLinks"
-                    :scope="scope"
-                    :level="level"
-                    autofocus
-                    @update="updateCurrentValue" />
+            <div class="form_background">
+                <b-row>
+                    <b-col cols="12">
+                        <FormControl :value="editingValue.value"
+                                :attributes="editingValue.attributes"
+                                :type="editingValue.type"
+                                :locked="editingLocked"
+                                :disableColor="editing.ref.type === 'new'"
+                                :uvArgs="uv.args"
+                                :indirectLinks="indirectLinks"
+                                :scope="scope"
+                                :level="level"
+                                autofocus
+                                unfocusing
+                                @update="updateCurrentValue" />
+                    </b-col>
+                </b-row>
+            </div>
         </div>
 
         <div ref="tableContainer" class="tabl" @scroll="updateShowLength()" @resize="updateShowLength()">
@@ -1202,6 +1209,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     .data-col {
         max-width: 100vw !important;
     }
+    .form_background {
+        background: var(--MainBackgroundColor);
+    }
+
     .edit_container {
         width: 100vw;
         height: 100vh;
@@ -1222,7 +1233,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     #disable_edit.edit_active {
         width: 100vw;
         height: 100vh;
-        z-index: 500; /* чтоб таблица была поверх этого блока */
+        /* z-index: 500; /* чтоб таблица была поверх этого блока */
     }
     /* таблица поверх блока отключения редактирования */
     table.edit_active {

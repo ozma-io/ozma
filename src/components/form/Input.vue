@@ -9,75 +9,24 @@
     }
 </i18n>
 <template>
-    <b-row :class="[
-                 'input_container',
-                 {'input_container__row': inline}
-                 ]">
-        <Modal v-if="isMobile"
-            :show="isModalOpen"
-            :name="`${uid}-field-modal`"
-            @opened="onModalOpen"
-            fullscreen>
-            <template v-slot:content>
-                <div class="input_modal__input_group">
-                    <div>
-                        <label v-if="label" class="input_modal_label">
-                            {{ label }}
-                        </label>
-                        <input :class="['input_field input_modal_field',
-                                            {
-                                                'input_field__disabled': disabled,
-                                            }
-                                    ]"
-                            autocomplete="off"
-                            :id="inputName"
-                            :type="type"
-                            :placeholder="$t('input_placeholder')"
-                            :disabled="disabled"
-                            v-model="modalValue"
-                            ref="controlModal"
-                        >
-                    </div>
-                    <div class="input_modal__button_container">
-                        <button type="button" class="input_modal__button__ok" @click="updateValueFromModal">
-                            {{$t('ok')}}
-                        </button>
-                        <button type="button" class="input_modal__button__cancel" @click="closeModal">
-                            {{$t('cancel')}}
-                        </button>
-                    </div>
-                </div>
-            </template>
-        </Modal>
-        <b-col cols="4" class="input_label__container">
-            <label :class="['input_label', { 'input_label__focused': focused }]"
-                :for="inputName"
-                v-if="label"
-                :title="label"
-            >{{ label }}</label>
-        </b-col>
-        <b-col cols="8">
-            <div>
-                <input :class="['input_field',
-                                    {
-                                        'input_field__disabled': disabled,
-                                        'input_field__focused': focused,
-                                    }
-                            ]"
-                    :id="inputName"
-                    autocomplete="off"
-                    :type="type"
-                    :value="value"
-                    :placeholder="$t('input_placeholder')"
-                    :disabled="disabled"
-                    ref="control"
-                    @input="updateInput"
-                    @focus="onFocus"
-                    @blur="onBlur"
-                >
-            </div>
-        </b-col>
-    </b-row>
+    <input :class="['input_field',
+                        {
+                            'input_field__disabled': disabled,
+                            'input_field__focused': focused,
+                        }
+                ]"
+        :id="id"
+        v-on:click.stop
+        autocomplete="off"
+        :type="type"
+        :value="value"
+        :placeholder="$t('input_placeholder')"
+        :disabled="disabled"
+        ref="control"
+        @input="updateInput"
+        @focus="onFocus"
+        @blur="onBlur"
+    >
 </template>
 
 <script lang="ts">
@@ -100,20 +49,24 @@ export default class Input extends MobileMixin {
     @Prop({ type: String }) warning!: string;
     @Prop({ type: Number }) height!: number;
     @Prop({ type: Boolean }) disabled!: boolean;
+    @Prop({ type: String }) id!: string;
     @Prop({ type: Boolean, default: true }) inline!: boolean;
+    @Prop({ type: Boolean }) inline!: boolean;
+    @Prop({ type: Boolean, default: false }) unfocusing!: boolean;
     @Prop({ type: String, default: "text" }) type!: string;
 
     private focused: boolean = false;
-    private modalValue: string = this.value;
-    private isModalOpen: boolean = false;
 
     @Watch("value")
     private onValueUpdate(value: string) {
         this.modalValue = value;
     }
 
-    private get inputName(): string {
-        return `${this.uid}-input`;
+    @Watch("focus")
+    private onFocusProp(focus: boolean) {
+        if (focus) {
+            this.$nextTick(() => this.$refs.control.focus);
+        }
     }
 
     private get hasContent(): boolean {
@@ -122,19 +75,9 @@ export default class Input extends MobileMixin {
         } else { return !!this.value; }
     }
 
-    private onModalOpen() {
-        this.$nextTick(() => {
-            if (this.$refs.controlModal) {
-                this.$refs.controlModal.focus();
-                console.log(this.$refs.controlModal);
-            }
-        })
-    }
-
     private onFocus(evt: Event<HTMLInputElement>) {
-        this.focused = true;
-        if (this.isMobile) {
-            this.isModalOpen = true;
+        if (!this.unfocusing) {
+            this.focused = true;
         }
         if (!this.isMobile) {
             this.updateWidth(evt);
@@ -142,35 +85,31 @@ export default class Input extends MobileMixin {
     }
 
     private onBlur(evt: Event<HTMLInputElement>) {
-        this.focused = false;
+        if (!this.unfocusing) {
+            this.focused = false;
+        }
         if (!this.isMobile) {
             this.$refs.control.style.width = "100%";
         }
     }
 
-    private updateValueFromModal() {
-        this.$emit('update:value', this.modalValue);
-        this.closeModal();
-    }
-
-    private closeModal() {
-        this.focused = false;
-        this.isModalOpen = false;
-    }
-
-    private updateInput(evt: Event<HTMLInputElement>) {
-        this.$emit("update:value", evt.target.value);
+    private updateInput(value: string) {
+        this.$emit("input", value);
         if (!this.isMobile) {
-            this.updateWidth(evt);
+            this.updateWidth(value);
         }
     }
 
-    private updateWidth(evt: Event<HTMLInputElement>) {
+    private updateWidth(value: string) {
         const controlElement = this.$refs.control;
         const computed = window.getComputedStyle(controlElement);
         const font = computed.getPropertyValue("font-size");
+        // Unfortunately, this will cause the text field to grow ever slightly as you type
+        // However, the only other option is to have a portion of
+        // the text go out of view to the left
+        // This should pose no inconvinience to the end user
         const placeholderWidth = getTextWidth(this.$t("input_placeholder"), font) * 1.67;
-        const textWidth = Math.ceil(getTextWidth(evt.target.value, font)) * 1.67;
+        const textWidth = Math.ceil(getTextWidth(value, font)) * 1.67;
         const inputWidth = textWidth || placeholderWidth;
         const leftPos = controlElement.getBoundingClientRect().left;
         const viewportWidth = document.documentElement.clientWidth - 10;
@@ -228,6 +167,7 @@ export default class Input extends MobileMixin {
      order: 2;
      flex: 2;
      height: 2em;
+     color: var(--MainTextColor);
      cursor: pointer;
      border-bottom: none;
      width: 100%;
@@ -238,6 +178,7 @@ export default class Input extends MobileMixin {
  }
  .input_field:focus {
      outline: none;
+     color: var(--MainTextColor);
      border-bottom: 1px solid var(--MainBorderColor);
      cursor: text;
      /* max-width: 40vw; */
