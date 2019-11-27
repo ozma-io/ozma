@@ -48,7 +48,7 @@
                         :style="select.listValueStyle"
                         class="single_value">{{select.valueOption.label}}</span>
             </template>
-            <template v-slot:actions="actions">
+            <template v-slot:actions="actions" v-if="showModalButton">
                 <button type="button" class="reference__new_modal__button" @click="openNewModal">
                     <input type="button" class="material-icons reference__open_modal" value="add">
                     {{ $t("select_view") }}
@@ -111,6 +111,14 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 
     get currentValue() {
         return currentValue(this.value);
+    }
+
+    get showModalButton(): boolean {
+        const home = homeSchema(this.uvArgs);
+        const linkOpts = home !== null ? { homeSchema: home } : undefined;
+
+        const linkedView = attrToQueryRef(this.linkedAttr, this.currentValue, linkOpts);
+        return linkedView != null;
     }
 
     private openModal() {
