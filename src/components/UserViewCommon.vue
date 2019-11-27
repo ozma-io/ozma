@@ -93,10 +93,11 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
 
     get modalReferenceField(): IModalReferenceField | null {
         const modalReferenceField = R.head(mapMaybe((column, columnIndex): IModalReferenceField | undefined => {
-            const referenceViewAttr = R.pathOr(null, ["columnAttributes", String(columnIndex), "ReferenceView"], this.uv);
-            const referenceUV = attrToQuery(referenceViewAttr);
+            const referenceViewAttr: boolean = R.pathOr(false, ["columnAttributes", String(columnIndex), "MainReferenceField"], this.uv);
+            const selectViewAttr = R.pathOr(false, ["columnAttributes", String(columnIndex), "SelectView"], this.uv);
+            const referenceUV = attrToQuery(selectViewAttr);
             const entity = R.path<IEntityRef>(["info", "columns", String(columnIndex), "mainField", "field", "fieldType", "entity"], this.uv);
-            if (referenceUV && entity) {
+            if (referenceUV && entity && referenceViewAttr) {
                 return {
                     field: { type: "new", column: columnIndex },
                     uv: referenceUV,
