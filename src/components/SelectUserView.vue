@@ -37,7 +37,7 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import { IEntityRef } from "@/api";
+import { IEntityRef, IEntity } from "@/api";
 import { equalEntityRef } from "@/values";
 import { IAction } from "@/components/ActionsMenu.vue";
 import { IQuery } from "@/state/query";
@@ -46,12 +46,14 @@ import { ISelectionRef } from "@/components/BaseUserView";
 import ModalPortal from "@/components/modal/ModalPortal";
 
 const staging = namespace("staging");
+const userView = namespace("userView");
 
 @Component({ components: { ModalPortal }})
 export default class SelectUserView extends Vue {
     @staging.State("current") changes!: CurrentChanges;
     @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
     @staging.Action("removeScope") removeScope!: (scope: ScopeName) => Promise<void>;
+    @userView.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
     @Prop({ type: Object, required: true }) entity!: IEntityRef;
     @Prop({ type: Object, required: true }) selectView!: IQuery;
 
@@ -77,8 +79,9 @@ export default class SelectUserView extends Vue {
         this.submitChanges(this.uid);
     }
 
-    private selectFromView(selection: ISelectionRef) {
-        if (!equalEntityRef(this.entity, selection.entity)) {
+    private async selectFromView(selection: ISelectionRef) {
+        const entityInfo = await this.getEntity(this.entity);
+        if (!(equalEntityRef(this.entity, selection.entity) || entityInfo.children.some(x => equalEntityRef(x.ref, selection.entity)))) {
             throw new Error("Entry from invalid entity selected");
         }
 

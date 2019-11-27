@@ -26,6 +26,7 @@ export type SchemaName = string;
 export type ColumnName = string;
 export type AttributeName = string;
 export type UserViewName = string;
+export type ConstraintName = string;
 
 export interface IAllowedEntity {
     fields: Record<FieldName, void>;
@@ -96,12 +97,50 @@ export type FieldType = IScalarFieldType | IArrayFieldType | IReferenceFieldType
 
 export interface IColumnField {
     fieldType: FieldType;
+    valueType: ValueType;
     defaultValue: any;
     isNullable: boolean;
+    isImmutable: boolean;
+    inheritedFrom: IEntityRef | null;
+}
+
+export type UsedFields = FieldName[];
+export type UsedEntities = Record<EntityName, UsedFields>;
+export type UsedSchemas = Record<SchemaName, UsedEntities>;
+
+export interface IComputedField {
+    expression: string;
+    isLocal: boolean;
+    hasId: boolean;
+    usedSchemas: UsedSchemas;
+    inheritedFrom: IEntityRef | null;
+}
+
+export interface IUniqueConstraint {
+    columns: FieldName[];
+}
+
+export interface ICheckConstraint {
+    expression: string;
+}
+
+export interface IChildEntity {
+    ref: IEntityRef;
+    direct: boolean;
 }
 
 export interface IEntity {
     columnFields: Record<FieldName, IColumnField>;
+    computedFields: Record<FieldName, IComputedField>;
+    uniqueConstraints: Record<ConstraintName, IUniqueConstraint>;
+    checkConstraints: Record<ConstraintName, ICheckConstraint>;
+    mainField: FieldName;
+    forbidExternalReferences: boolean;
+    hidden: boolean;
+    parent: IEntityRef | null;
+    children: IChildEntity[];
+    isAbstract: boolean;
+    root: IEntityRef;
 }
 
 export interface IMainFieldInfo {

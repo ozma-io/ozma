@@ -19,7 +19,6 @@
     }
 </i18n>
 
-
 <template>
     <div fluid
          :class="['table-block',
