@@ -26,6 +26,12 @@ export default class BaseEntriesView extends Vue {
         return null;
     }
 
+    protected destroyed() {
+        if (this.entriesEntity) {
+            this.destroyEntries(this.entriesEntity);
+        }
+    }
+
     private destroyEntries(ref: IEntriesRef) {
         this.removeEntriesConsumer({ ref, reference: this.uid });
     }
@@ -50,12 +56,6 @@ export default class BaseEntriesView extends Vue {
                 this.destroyEntries(oldEntity);
             }
             this.getEntries({ ref: newEntity, reference: this.uid });
-        }
-    }
-
-    private destroyed() {
-        if (this.entriesEntity) {
-            this.destroyEntries(this.entriesEntity);
         }
     }
 }

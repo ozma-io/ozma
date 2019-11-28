@@ -67,7 +67,7 @@ export default class SaveRestoreSchema extends Vue {
             element.click();
             document.body.removeChild(element);
 
-            this.lastError = this.$tc("success");
+            this.lastError = this.$t("success").toString();
         } catch (e) {
             this.lastError = e.message;
             throw e;
@@ -85,7 +85,7 @@ export default class SaveRestoreSchema extends Vue {
                     args: [this.schema, content],
                 });
 
-                this.lastError = this.$tc("success");
+                this.lastError = this.$t("success").toString();
             } catch (e) {
                 this.lastError = e.message;
                 throw e;

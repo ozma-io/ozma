@@ -2,7 +2,7 @@ import Vue from "vue";
 import { Store, Dispatch, Module, ActionContext } from "vuex";
 import moment from "moment";
 
-import { IRef, FetchError, ObjectResourceMap, ReferenceName, momentLocale, tryDicts, ObjectMap } from "@/utils";
+import { IRef, FetchError, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, mapMaybe } from "@/utils";
 import * as Api from "@/api";
 import {
     IColumnField, IUserViewRef, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
@@ -10,7 +10,7 @@ import {
     ValueType, FieldType, AttributesMap, IEntity,
 } from "@/api";
 import { IUpdatedValue, valueToText, equalEntityRef, valueFromRaw, valueIsNull } from "@/values";
-import { CurrentChanges, UpdatedValues, IEntityChanges, IAddedEntry, AddedRowId } from "@/state/staging_changes";
+import { CurrentChanges, UpdatedValues, IEntityChanges, IAddedEntry, AddedRowId, UserViewKey } from "@/state/staging_changes";
 import { CurrentQuery } from "@/state/query";
 
 export interface IAnonymousUserView {
@@ -265,6 +265,7 @@ export class CombinedUserView {
     mainColumnMapping: IMainColumnMapping;
     mainRowMapping: IMainRowMapping;
     handlers: IUserViewEventHandler[] = [];
+    userViewKey: UserViewKey;
 
     // Warning: it takes ownership of all params and mutates!
     constructor(context: ActionContext<IUserViewState, {}>, params: ICombinedUserViewParams) {
@@ -274,6 +275,7 @@ export class CombinedUserView {
         this.attributes = attributes;
         this.columnAttributes = columnAttributes;
         this.homeSchema = homeSchema(args);
+        this.userViewKey = valueSignature(args);
 
         let mainChanges: IEntityChanges | null = null;
         if (info.mainEntity !== null) {
@@ -288,48 +290,53 @@ export class CombinedUserView {
                 }
             });
 
-            this.newRows = Object.fromEntries(Object.entries(mainChanges.added.entries).map(([newIdRaw, entry]) => {
-                const newId = Number(newIdRaw);
-                const row = entry.values;
+            const uvAdded = mainChanges.added[this.userViewKey];
+            if (uvAdded !== undefined) {
+                this.newRows = Object.fromEntries(Object.entries(uvAdded.entries).map(([newIdRaw, entry]) => {
+                    const newId = Number(newIdRaw);
+                    const row = entry.values;
 
-                const values = info.columns.map(columnInfo => {
-                    const mainField = columnInfo.mainField;
+                    const values = info.columns.map(columnInfo => {
+                        const mainField = columnInfo.mainField;
 
-                    if (mainField !== null) {
-                        const updateInfo = {
-                            field: mainField.field,
-                            fieldRef: {
-                                entity: eref,
-                                name: mainField.name,
-                            },
-                            id: newId,
-                        };
-                        const updated = row[mainField.name];
-                        if (updated !== undefined) {
-                            const fieldType = mainField.field.fieldType;
-                            const value = { info: updateInfo, ...updated };
-                            setOrRequestUpdatedPun(context, value, fieldType);
-                            return value;
+                        if (mainField !== null) {
+                            const updateInfo = {
+                                field: mainField.field,
+                                fieldRef: {
+                                    entity: eref,
+                                    name: mainField.name,
+                                },
+                                id: newId,
+                            };
+                            const updated = row[mainField.name];
+                            if (updated !== undefined) {
+                                const fieldType = mainField.field.fieldType;
+                                const value = { info: updateInfo, ...updated };
+                                setOrRequestUpdatedPun(context, value, fieldType);
+                                return value;
+                            } else {
+                                return {
+                                    info: updateInfo,
+                                    value: undefined,
+                                };
+                            }
                         } else {
                             return {
-                                info: updateInfo,
                                 value: undefined,
                             };
                         }
-                    } else {
-                        return {
-                            value: undefined,
-                        };
-                    }
-                });
+                    });
 
-                const newEntry = {
-                    values,
-                };
-                return [newId, newEntry];
-            }));
-
-            this.newRowsPositions = mainChanges.added.positions.slice();
+                    const newEntry = {
+                        values,
+                    };
+                    return [newId, newEntry];
+                }));
+                this.newRowsPositions = uvAdded.positions.slice();
+            } else {
+                this.newRows = {};
+                this.newRowsPositions = [];
+            }
             this.mainColumnMapping = mainColumnMapping;
         } else {
             this.newRowsPositions = [];
@@ -585,7 +592,6 @@ export interface IUserViewState {
     entities: CurrentEntities;
     // Needed because during user view reloads we don't want to replace CurrentUserView right away.
     pending: Promise<CombinedUserView> | null;
-    errors: string[];
 }
 
 export const homeSchema = (args: IUserViewArguments): SchemaName | null => {
@@ -696,6 +702,8 @@ const prefetchUserView = ({ dispatch }: ActionContext<IUserViewState, {}>, uv: C
     }
 };
 
+const errorKey = "user_view";
+
 const userViewModule: Module<IUserViewState, {}> = {
     namespaced: true,
     state: {
@@ -703,16 +711,8 @@ const userViewModule: Module<IUserViewState, {}> = {
         entries: new CurrentEntries(),
         entities: new CurrentEntities(),
         pending: null,
-        errors: [],
     },
     mutations: {
-        addError: (state, lastError: string) => {
-            state.errors.push(lastError);
-        },
-        removeError: (state, errorIndex: number) => {
-            state.errors.splice(errorIndex, 1);
-        },
-
         initUserView: (state, { args, reference, userView }: { args: IUserViewArguments, reference: ReferenceName, userView: UserViewResult }) => {
             state.current.userViews.createResource(args, reference, userView);
         },
@@ -735,7 +735,6 @@ const userViewModule: Module<IUserViewState, {}> = {
             state.current = new CurrentUserViews();
             state.entries = new CurrentEntries();
             state.entities = new CurrentEntities();
-            state.errors = [];
             state.pending = null;
         },
 
@@ -847,84 +846,86 @@ const userViewModule: Module<IUserViewState, {}> = {
             });
         },
         // Expects all values to be empty, therefore doesn't set updated puns!
-        addEntry: (state, params: { schema: SchemaName, entity: EntityName, id: AddedRowId, positions: number[], newValues: UpdatedValues }) => {
-            state.current.userViews.values().forEach(uv => {
-                if (!(uv instanceof CombinedUserView) ||
-                        uv.info.mainEntity === null ||
-                        uv.info.mainEntity.schema !== params.schema ||
-                        uv.info.mainEntity.name !== params.entity) {
-                    return;
-                }
-                const eref = uv.info.mainEntity;
+        addEntry: (state, params: { schema: SchemaName, entity: EntityName, userView: UserViewKey, id: AddedRowId, positions: number[], newValues: UpdatedValues }) => {
+            const uv = state.current.userViews.getBySignature(params.userView);
+            if (uv === undefined ||
+                    !(uv instanceof CombinedUserView) ||
+                    uv.info.mainEntity === null ||
+                    uv.info.mainEntity.schema !== params.schema ||
+                    uv.info.mainEntity.name !== params.entity) {
+                return;
+            }
 
-                const values = uv.info.columns.map((column, colI): ICombinedValue => {
-                    if (column.mainField !== null) {
-                        const updateInfo = {
-                            id: params.id,
-                            field: column.mainField.field,
-                            fieldRef: {
-                                entity: eref,
-                                name: column.mainField.name,
-                            },
-                        };
+            const eref = uv.info.mainEntity;
 
-                        const updated = params.newValues[column.mainField.name];
-                        let result: ICombinedValue;
-                        if (updated !== undefined) {
-                            result = { info: updateInfo, ...updated };
-                        } else {
-                            result = {
-                                value: null,
-                                rawValue: "",
-                                info: updateInfo,
-                            };
-                        }
-                        if (updateInfo.field.fieldType.type === "reference") {
-                            result.pun = "";
-                        }
-                        return result;
+            const values = uv.info.columns.map((column, colI): ICombinedValue => {
+                if (column.mainField !== null) {
+                    const updateInfo = {
+                        id: params.id,
+                        field: column.mainField.field,
+                        fieldRef: {
+                            entity: eref,
+                            name: column.mainField.name,
+                        },
+                    };
+
+                    const updated = params.newValues[column.mainField.name];
+                    let result: ICombinedValue;
+                    if (updated !== undefined) {
+                        result = { info: updateInfo, ...updated };
                     } else {
-                        return {
-                            value: undefined,
+                        result = {
+                            value: null,
+                            rawValue: "",
+                            info: updateInfo,
                         };
                     }
-                });
-
-                const newRow: IRowCommon = {
-                    values,
-                };
-
-                Vue.set(uv.newRows, params.id, newRow);
-                uv.handlers.forEach(handler => {
-                    handler.insertAddedRow(params.id, newRow);
-                });
-                uv.newRowsPositions = params.positions;
+                    if (updateInfo.field.fieldType.type === "reference") {
+                        result.pun = "";
+                    }
+                    return result;
+                } else {
+                    return {
+                        value: undefined,
+                    };
+                }
             });
+
+            const newRow: IRowCommon = {
+                values,
+            };
+
+            Vue.set(uv.newRows, params.id, newRow);
+            uv.handlers.forEach(handler => {
+                handler.insertAddedRow(params.id, newRow);
+            });
+            uv.newRowsPositions = params.positions;
         },
-        setAddedField: (state, params: { schema: SchemaName, entity: EntityName, id: AddedRowId, field: FieldName, addedEntry: IAddedEntry, fieldType?: FieldType }) => {
+        setAddedField: (state, params: { schema: SchemaName, entity: EntityName, userView: UserViewKey, id: AddedRowId, field: FieldName, addedEntry: IAddedEntry, fieldType?: FieldType }) => {
+            const uv = state.current.userViews.getBySignature(params.userView);
+            if (uv === undefined ||
+                    !(uv instanceof CombinedUserView) ||
+                    uv.info.mainEntity === null ||
+                    uv.info.mainEntity.schema !== params.schema ||
+                    uv.info.mainEntity.name !== params.entity ||
+                    uv.userViewKey !== params.userView) {
+                return;
+            }
+
             const entitySummaries = params.fieldType && params.fieldType.type === "reference" ? state.entries.getEntries(params.fieldType) : undefined;
 
-            state.current.userViews.values().forEach(uv => {
-                if (!(uv instanceof CombinedUserView) ||
-                        uv.info.mainEntity === null ||
-                        uv.info.mainEntity.schema !== params.schema ||
-                        uv.info.mainEntity.name !== params.entity) {
-                    return;
+            const newRow = uv.newRows[params.id];
+            uv.mainColumnMapping[params.field].forEach(colI => {
+                // New object because otherwise Vue won't detect changes.
+                const updated = params.addedEntry.values[params.field];
+                const value: ICombinedValue = Object.assign({}, newRow.values[colI], updated);
+                Vue.set(newRow.values, colI, value);
+                if (entitySummaries !== undefined && "pun" in value) {
+                    setUpdatedPun(entitySummaries, value);
                 }
 
-                const newRow = uv.newRows[params.id];
-                uv.mainColumnMapping[params.field].forEach(colI => {
-                    // New object because otherwise Vue won't detect changes.
-                    const updated = params.addedEntry.values[params.field];
-                    const value: ICombinedValue = Object.assign({}, newRow.values[colI], updated);
-                    Vue.set(newRow.values, colI, value);
-                    if (entitySummaries !== undefined && "pun" in value) {
-                        setUpdatedPun(entitySummaries, value);
-                    }
-
-                    uv.handlers.forEach(handler => {
-                        handler.updateAddedValue(params.id, newRow, colI, value);
-                    });
+                uv.handlers.forEach(handler => {
+                    handler.updateAddedValue(params.id, newRow, colI, value);
                 });
             });
         },
@@ -1035,25 +1036,25 @@ const userViewModule: Module<IUserViewState, {}> = {
                 });
             });
         },
-        resetAddedEntry: (state, params: { schema: SchemaName, entity: EntityName, id: AddedRowId, positions: number[] }) => {
-            state.current.userViews.values().forEach(uv => {
-                if (!(uv instanceof CombinedUserView) ||
-                        uv.info.mainEntity === null ||
-                        uv.info.mainEntity.schema !== params.schema ||
-                        uv.info.mainEntity.name !== params.entity) {
-                    return;
-                }
+        resetAddedEntry: (state, params: { schema: SchemaName, entity: EntityName, userView: UserViewKey, id: AddedRowId, positions: number[] }) => {
+            const uv = state.current.userViews.getBySignature(params.userView);
+            if (uv === undefined ||
+                    !(uv instanceof CombinedUserView) ||
+                    uv.info.mainEntity === null ||
+                    uv.info.mainEntity.schema !== params.schema ||
+                    uv.info.mainEntity.name !== params.entity) {
+                return;
+            }
 
-                const position = uv.newRowsPositions.indexOf(params.id);
-                if (position === -1) {
-                    throw new Error("Impossible");
-                }
-                uv.newRowsPositions.splice(position, 1);
-                const row = uv.newRows[params.id];
-                Vue.delete(uv.newRows, params.id);
-                uv.handlers.forEach(handler => {
-                    handler.deleteAddedRow(params.id, row);
-                });
+            const position = uv.newRowsPositions.indexOf(params.id);
+            if (position === -1) {
+                throw new Error("Impossible");
+            }
+            uv.newRowsPositions.splice(position, 1);
+            const row = uv.newRows[params.id];
+            Vue.delete(uv.newRows, params.id);
+            uv.handlers.forEach(handler => {
+                handler.deleteAddedRow(params.id, row);
             });
         },
         resetDeleteEntry: (state, params: { schema: SchemaName, entity: EntityName, id: RowId }) => {
@@ -1084,16 +1085,19 @@ const userViewModule: Module<IUserViewState, {}> = {
                     if (schemaChanges !== undefined) {
                         const entityChanges = schemaChanges[mainEntity.name];
                         if (entityChanges !== undefined) {
-                            Object.entries(entityChanges.added.entries).forEach(([addedIdStr, rowValues]) => {
-                                const addedId = Number(addedIdStr);
-                                const newRow = uv.newRows[addedId];
-                                Object.entries(rowValues.values).forEach(([fieldName, addedValue]) => {
-                                    uv.mainColumnMapping[fieldName].forEach(colI => {
-                                        const value = newRow.values[colI];
-                                        Vue.set(value, "erroredOnce", addedValue.erroredOnce);
+                            const uvAdded = entityChanges.added[uv.userViewKey];
+                            if (uvAdded !== undefined) {
+                                Object.entries(uvAdded.entries).forEach(([addedIdStr, rowValues]) => {
+                                    const addedId = Number(addedIdStr);
+                                    const newRow = uv.newRows[addedId];
+                                    Object.entries(rowValues.values).forEach(([fieldName, addedValue]) => {
+                                        uv.mainColumnMapping[fieldName].forEach(colI => {
+                                            const value = newRow.values[colI];
+                                            Vue.set(value, "erroredOnce", addedValue.erroredOnce);
+                                        });
                                     });
                                 });
-                            });
+                            }
                         }
                     }
                 }
@@ -1264,6 +1268,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                         throw new Error("Pending operation cancelled");
                     }
                     commit("clear");
+                    commit("errors/resetErrors", errorKey, { root: true });
                     commit("initUserView", { args, reference: "root", userView: current });
                     if (current instanceof CombinedUserView) {
                         prefetchUserView(store, current);
@@ -1271,7 +1276,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                 } catch (e) {
                     if (state.pending === pending.ref) {
                         commit("clear");
-                        commit("addError", e.message);
+                        commit("errors/addError", { key: errorKey, error: e.message }, { root: true });
                     }
                     throw e;
                 }
@@ -1352,17 +1357,17 @@ const userViewModule: Module<IUserViewState, {}> = {
             }
             commit("updateField", { ...args, updatedValue, fieldType });
         },
-        afterAddEntry: ({ rootState, commit }, args: { schema: SchemaName, entity: EntityName, id: AddedRowId, position: number }) => {
+        afterAddEntry: ({ rootState, commit }, args: { schema: SchemaName, entity: EntityName, userView: UserViewKey, id: AddedRowId, position: number }) => {
             const changes = (rootState as any).staging.current as CurrentChanges;
-            const added = changes.changes[args.schema][args.entity].added;
+            const uvAdded = changes.changes[args.schema][args.entity].added[args.userView];
             // We take a slice to ensure positions won't be updated externally in staging before our newRows object gets populated.
-            const positions = added.positions.slice();
-            const newValues = added.entries[args.id];
+            const positions = uvAdded.positions.slice();
+            const newValues = uvAdded.entries[args.id];
             commit("addEntry", { ...args, positions, newValues });
         },
-        afterSetAddedField: ({ state, rootState, commit, dispatch }, args: { schema: SchemaName, entity: EntityName, id: AddedRowId, field: FieldName, value: any }) => {
+        afterSetAddedField: ({ state, rootState, commit, dispatch }, args: { schema: SchemaName, entity: EntityName, userView: UserViewKey, id: AddedRowId, field: FieldName, value: any }) => {
             const changes = (rootState as any).staging.current as CurrentChanges;
-            const addedEntry = changes.changes[args.schema][args.entity].added.entries[args.id];
+            const addedEntry = changes.changes[args.schema][args.entity].added[args.userView].entries[args.id];
             const entity = state.entities.getEntity({ schema: args.schema, name: args.entity });
             const fieldType = entity !== undefined ? entity.columnFields[args.field].fieldType : undefined;
             if (fieldType && fieldType.type === "reference") {
@@ -1380,7 +1385,7 @@ const userViewModule: Module<IUserViewState, {}> = {
         beforeResetUpdatedField: ({ commit }, args: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName }) => {
             commit("resetUpdatedField", args);
         },
-        beforeResetAddedEntry: ({ rootState, commit }, args: { schema: SchemaName, entity: EntityName, id: AddedRowId }) => {
+        beforeResetAddedEntry: ({ rootState, commit }, args: { schema: SchemaName, entity: EntityName, userView: UserViewKey, id: AddedRowId }) => {
             const changes = (rootState as any).staging.current as CurrentChanges;
             commit("resetAddedEntry", args);
         },

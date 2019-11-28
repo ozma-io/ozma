@@ -56,7 +56,7 @@
                             <input type="checkbox" :checked="local.extra.selectedAll">
                         </th>
                         <th v-if="local.extra.hasRowLinks" class="fixed-column openform-cells links-style table-th">
-                            <span class="table-th_span" @click="setShowEmptyRow(!showEmptyRow)" :title="this.$tc('show_new_row')">
+                            <span class="table-th_span" @click="setShowEmptyRow(!showEmptyRow)" :title="this.$t('show_new_row')">
                                 {{ showEmptyRow ? "-" : "+" }}
                             </span>
                         </th>
@@ -164,6 +164,7 @@ import { IQuery, attrToQuerySelf, attrToQueryRef, IAttrToQueryOpts } from "@/sta
 import { LocalUserView, ILocalRowInfo, ILocalRow, ValueRef, RowRef, RowPositionRef, equalRowPositionRef } from "@/local_user_view";
 import { ISelectionRef } from "@/components/BaseUserView";
 import BaseUserView from "@/components/BaseUserView";
+import { IAction } from "@/components/ActionsMenu.vue";
 import TableRow from "@/components/views/table/TableRow.vue";
 import TableFixedRow from "@/components/views/table/TableFixedRow.vue";
 
@@ -716,8 +717,47 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         }
     }
 
+    protected created() {
+        this.init();
+
+        if (this.isRoot) {
+            const queryCallback = (mql: MediaQueryListEvent) => {
+                if (mql.matches) {
+                    this.showLength = this.local.rows.length;
+                }
+            };
+            const query = window.matchMedia("print");
+            query.addListener(queryCallback);
+            const printCallback = () => {
+                this.showLength = this.local.rows.length;
+            };
+            window.addEventListener("beforeprint", printCallback);
+            this.printListener = { query, queryCallback, printCallback };
+        }
+    }
+
+    @Watch("uv", { deep: true })
+    protected uvChanged() {
+        this.init();
+        this.updateShowLength();
+    }
+
+    protected mounted() {
+        this.updateShowLength();
+    }
+
+    protected destroyed() {
+        if (this.printListener !== null) {
+            window.removeEventListener("beforeprint", this.printListener.printCallback);
+            this.printListener.query.removeListener(this.printListener.queryCallback);
+        }
+        if (this.clickTimeoutId !== null) {
+            clearTimeout(this.clickTimeoutId);
+        }
+    }
+
     @Watch("filter")
-    private updateFilter() {
+    protected updateFilter() {
         const oldFilter = this.currentFilter;
         const currentFilter = this.filter;
         this.currentFilter = currentFilter;
@@ -731,6 +771,13 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
             // Filter existing rows when we filter a subset of already filtered ones.
             const newWords = currentFilter.filter(newWord => !oldFilter.some(oldWord => oldWord.startsWith(newWord)));
             this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], newWords));
+        }
+    }
+
+    @Watch("editingValue")
+    protected removeEditingIfInvalid() {
+        if (this.editingValue === null) {
+            this.removeCellEditing();
         }
     }
 
@@ -803,13 +850,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         this.editing = null;
     }
 
-    @Watch("editingValue")
-    private removeEditingIfInvalid() {
-        if (this.editingValue === null) {
-            this.removeCellEditing();
-        }
-    }
-
     // Value is not actually required to be editable - it can be opened in read-only mode too.
     private setCellEditing(ref: ValueRef) {
         this.removeCellEditing();
@@ -845,6 +885,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
                 this.resetAddedEntry({
                     schema: entity.schema,
                     entity: entity.name,
+                    userView: this.uv.userViewKey,
                     id: this.lastSelectedValue.id,
                 });
             }
@@ -1003,13 +1044,13 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
             `);
         }
 
-        const actions = [
-            { name: this.$tc("export_to_csv"), callback: () => this.export2csv() },
+        const actions: IAction[] = [
+            { name: this.$t("export_to_csv").toString(), callback: () => this.export2csv() },
         ];
         if (this.uv.info.mainEntity !== null) {
             actions.push(
-                { name: this.$tc("remove_selected_rows"), callback: () => this.removeSelectedRows() },
-                { name: this.$tc("show_new_row"), callback: () => this.setShowEmptyRow(true) },
+                { name: this.$t("remove_selected_rows").toString(), callback: () => this.removeSelectedRows() },
+                { name: this.$t("show_new_row").toString(), callback: () => this.setShowEmptyRow(true) },
             );
         }
 
@@ -1019,45 +1060,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         this.buildRowPositions();
         this.updateFilter();
         this.setShowEmptyRow(this.uv.rows === null || this.uv.rows.length === 0);
-    }
-
-    private created() {
-        this.init();
-
-        if (this.isRoot) {
-            const queryCallback = (mql: MediaQueryListEvent) => {
-                if (mql.matches) {
-                    this.showLength = this.local.rows.length;
-                }
-            };
-            const query = window.matchMedia("print");
-            query.addListener(queryCallback);
-            const printCallback = () => {
-                this.showLength = this.local.rows.length;
-            };
-            window.addEventListener("beforeprint", printCallback);
-            this.printListener = { query, queryCallback, printCallback };
-        }
-    }
-
-    @Watch("uv", { deep: true })
-    private uvChanged() {
-        this.init();
-        this.updateShowLength();
-    }
-
-    private mounted() {
-        this.updateShowLength();
-    }
-
-    private destroyed() {
-        if (this.printListener !== null) {
-            window.removeEventListener("beforeprint", this.printListener.printCallback);
-            this.printListener.query.removeListener(this.printListener.queryCallback);
-        }
-        if (this.clickTimeoutId !== null) {
-            clearTimeout(this.clickTimeoutId);
-        }
     }
 
     /*
