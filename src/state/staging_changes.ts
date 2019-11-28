@@ -308,11 +308,13 @@ const checkUpdatedFields = (fields: Record<FieldName, IUpdatedValue>) => {
 const resetScopeBy = ({ state, dispatch }: ActionContext<IStagingState, {}>, checkScope: (scopes: Scopes) => boolean) => {
     Object.entries(state.current.changes).forEach(([schema, schemaChanges]) => {
         Object.entries(schemaChanges).forEach(([entity, entityChanges]) => {
-            Object.entries(entityChanges.added.entries).forEach(([addedIdStr, addedEntry]) => {
-                const addedId = Number(addedIdStr);
-                if (!checkScope(addedEntry.scopes)) {
-                    dispatch("resetAddedEntry", { schema, entity, id: addedId });
-                }
+            Object.entries(entityChanges.added).forEach(([userView, uvAdded]) => {
+                Object.entries(uvAdded.entries).forEach(([addedIdStr, addedEntry]) => {
+                    const addedId = Number(addedIdStr);
+                    if (!checkScope(addedEntry.scopes)) {
+                        dispatch("resetAddedEntry", { schema, entity, userView, id: addedId });
+                    }
+                });
             });
 
             Object.entries(entityChanges.updated).forEach(([updatedIdStr, updatedEntry]) => {
@@ -358,8 +360,10 @@ const stagingModule: Module<IStagingState, {}> = {
                     Object.entries(entityChanges.updated).forEach(([updatedIdStr, updatedFields]) => {
                         checkUpdatedFields(updatedFields);
                     });
-                    Object.values(entityChanges.added.entries).forEach(addedFields => {
-                        checkUpdatedFields(addedFields.values);
+                    Object.values(entityChanges.added).forEach(uvAdded => {
+                        Object.values(uvAdded.entries).forEach(addedFields => {
+                            checkUpdatedFields(addedFields.values);
+                        });
                     });
                 });
             });
