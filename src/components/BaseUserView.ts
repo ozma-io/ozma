@@ -3,8 +3,10 @@ import { namespace } from "vuex-class";
 
 import { SchemaName, EntityName, FieldName, RowId, IEntityRef, TransactionResult } from "@/api";
 import { CombinedUserView, currentValue } from "@/state/user_view";
-import { ScopeName, AddedRowId, IAddedResult } from "@/state/staging_changes";
+import { ErrorKey } from "@/state/errors";
+import { ScopeName, UserViewKey, AddedRowId, IAddedResult } from "@/state/staging_changes";
 import { LocalUserView, RowRef, ValueRef } from "@/local_user_view";
+import { equalEntityRef } from "@/values";
 
 export interface ISelectionRef {
     entity: IEntityRef;
@@ -12,15 +14,20 @@ export interface ISelectionRef {
 }
 
 const staging = namespace("staging");
+const errors = namespace("errors");
+
+const errorKey = "base_user_view";
 
 @Component
 export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, ValueT, RowT, ViewT> extends Vue {
     @staging.State("currentSubmit") currentSubmit!: Promise<TransactionResult[]> | null;
     @staging.Action("deleteEntry") deleteEntry!: (args: { scope: ScopeName, schema: SchemaName, entity: EntityName, id: RowId }) => Promise<void>;
-    @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { schema: SchemaName, entity: EntityName, id: AddedRowId }) => Promise<void>;
-    @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName, schema: SchemaName, entity: EntityName, position?: number }) => Promise<IAddedResult>;
-    @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName, schema: SchemaName, entity: EntityName, id: AddedRowId, field: FieldName, value: any }) => Promise<void>;
+    @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { schema: SchemaName, entity: EntityName, userView: UserViewKey, id: AddedRowId }) => Promise<void>;
+    @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName, schema: SchemaName, entity: EntityName, userView: UserViewKey, position?: number }) => Promise<IAddedResult>;
+    @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName, schema: SchemaName, entity: EntityName, userView: UserViewKey, id: AddedRowId, field: FieldName, value: any }) => Promise<void>;
     @staging.Action("updateField") updateField!: (args: { scope: ScopeName, schema: SchemaName, entity: EntityName, id: RowId, field: FieldName, value: any }) => Promise<void>;
+    @errors.Mutation("setError") setError!: (args: { key: ErrorKey, error: string }) => void;
+    @errors.Mutation("resetErrors") resetErrors!: (key: ErrorKey) => void;
 
     @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView;
     @Prop({ type: Object, required: true }) local!: T;
@@ -45,18 +52,31 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
             this.resetAddedEntry({
                 schema: entity.schema,
                 entity: entity.name,
+                userView: this.uv.userViewKey,
                 id: ref.id,
             });
         } else if (ref.type === "existing") {
             const rows = this.uv.rows!;
+            const row = rows[ref.position];
+            if (row.mainSubEntity !== undefined && !equalEntityRef(row.mainSubEntity, entity)) {
+                const message = "Row from a child entity cannot be deleted from user view with parent main entity";
+                this.setError({ key: errorKey, error: message });
+                throw new Error(message);
+            } else {
+                this.resetErrors(errorKey);
+            }
             this.deleteEntry({
                 scope: this.scope,
                 schema: entity.schema,
                 entity: entity.name,
                 // Guaranteed to exist if mainEntity exists.
-                id: rows[ref.position].mainId as number,
+                id: row.mainId as number,
             });
         }
+    }
+
+    protected destroyed() {
+        this.resetErrors(errorKey);
     }
 
     protected async updateValue(ref: ValueRef, rawValue: any): Promise<ValueRef> {
@@ -67,6 +87,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
                 scope: this.scope,
                 schema: updateInfo.fieldRef.entity.schema,
                 entity: updateInfo.fieldRef.entity.name,
+                userView: this.uv.userViewKey,
                 field: updateInfo.fieldRef.name,
                 id: updateInfo.id,
                 value: rawValue,
@@ -100,6 +121,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
                 scope: this.scope,
                 schema: entity.schema,
                 entity: entity.name,
+                userView: this.uv.userViewKey,
                 position: 0,
             });
             await Promise.all(this.local.emptyRow!.row.values.map((cell, colI) => {
@@ -110,6 +132,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
                         scope: this.scope,
                         schema: entity.schema,
                         entity: entity.name,
+                        userView: this.uv.userViewKey,
                         field: columnInfo.mainField.name,
                         id: res.id,
                         value: currValue,

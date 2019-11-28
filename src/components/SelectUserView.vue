@@ -41,12 +41,16 @@ import { IEntityRef, IEntity } from "@/api";
 import { equalEntityRef } from "@/values";
 import { IAction } from "@/components/ActionsMenu.vue";
 import { IQuery } from "@/state/query";
+import { ErrorKey } from "@/state/errors";
 import { CurrentChanges, ScopeName } from "@/state/staging_changes";
 import { ISelectionRef } from "@/components/BaseUserView";
 import ModalPortal from "@/components/modal/ModalPortal";
 
 const staging = namespace("staging");
 const userView = namespace("userView");
+const errors = namespace("errors");
+
+const errorKey = "select_user_view";
 
 @Component({ components: { ModalPortal }})
 export default class SelectUserView extends Vue {
@@ -54,6 +58,8 @@ export default class SelectUserView extends Vue {
     @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
     @staging.Action("removeScope") removeScope!: (scope: ScopeName) => Promise<void>;
     @userView.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
+    @errors.Mutation("setError") setError!: (args: { key: ErrorKey, error: string }) => void;
+    @errors.Mutation("resetErrors") resetErrors!: (key: ErrorKey) => void;
     @Prop({ type: Object, required: true }) entity!: IEntityRef;
     @Prop({ type: Object, required: true }) selectView!: IQuery;
 
@@ -82,7 +88,11 @@ export default class SelectUserView extends Vue {
     private async selectFromView(selection: ISelectionRef) {
         const entityInfo = await this.getEntity(this.entity);
         if (!(equalEntityRef(this.entity, selection.entity) || entityInfo.children.some(x => equalEntityRef(x.ref, selection.entity)))) {
-            throw new Error("Entry from invalid entity selected");
+            const message = "Entry from invalid entity selected";
+            this.setError({ key: errorKey, error: message });
+            throw new Error(message);
+        } else {
+            this.resetErrors(errorKey);
         }
 
         this.$emit("select", selection.id);
@@ -94,6 +104,7 @@ export default class SelectUserView extends Vue {
     }
 
     private destroyed() {
+        this.resetErrors(errorKey);
         this.removeScope(this.uid);
     }
 

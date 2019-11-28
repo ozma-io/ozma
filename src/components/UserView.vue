@@ -137,7 +137,7 @@ export default class UserView extends Vue {
         if (this.args.source.type === "named") {
             return this.args.source.ref.name;
         } else {
-            return this.$tc("anonymous_query");
+            return this.$t("anonymous_query").toString();
         }
     }
 

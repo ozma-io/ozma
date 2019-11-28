@@ -94,7 +94,6 @@ class MockCurrentAuth extends CurrentAuth {
 
 export interface IAuthState {
     current: CurrentAuth | null;
-    lastError: string | null;
     renewalTimeoutId: NodeJS.Timeout | null;
     checkIntervalId: NodeJS.Timeout | null;
     pending: Promise<CurrentAuth> | null;
@@ -193,7 +192,7 @@ const getToken = (context: ActionContext<IAuthState, {}>, params: Record<string,
         } catch (e) {
             if (state.pending === pending.ref) {
                 dispatch("removeAuth", undefined, { root: true });
-                commit("setError", e.message);
+                dispatch("setError", e.message);
                 dispatch("requestLogin", false);
             }
             throw e;
@@ -305,27 +304,19 @@ const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExist
     return waitForLoad;
 };
 
+const errorKey = "auth";
+
 export const authModule: Module<IAuthState, {}> = {
     namespaced: true,
     state: {
         current: null,
         pending: null,
-        lastError: null,
         renewalTimeoutId: null,
         checkIntervalId: null,
     },
     mutations: {
-        setError: (state, lastError: string) => {
-            console.error(`Auth error: ${lastError}`);
-            state.lastError = lastError;
-            state.pending = null;
-        },
-        clearError: state => {
-            state.lastError = null;
-        },
         setAuth: (state, auth: CurrentAuth) => {
             state.current = auth;
-            state.lastError = null;
             state.pending = null;
         },
         setRenewalTimeout: (state, renewalTimeoutId: NodeJS.Timeout | null) => {
@@ -339,7 +330,7 @@ export const authModule: Module<IAuthState, {}> = {
             state.renewalTimeoutId = null;
             state.pending = null;
         },
-        setPending: (state, pending: Promise<CurrentAuth>) => {
+        setPending: (state, pending: Promise<CurrentAuth> | null) => {
             state.pending = pending;
         },
     },
@@ -361,7 +352,13 @@ export const authModule: Module<IAuthState, {}> = {
         },
         setAuth: {
             root: true,
-            handler: () => { return; },
+            handler: ({ commit }) => {
+                commit("errors/resetErrors", errorKey, { root: true });
+            },
+        },
+        setError: ({ commit }, error: string) => {
+            commit("errors/setError", { key: errorKey, error }, { root: true });
+            commit("setPending", null);
         },
         startAuth: async context => {
             const { state, commit, dispatch } = context;
@@ -384,7 +381,7 @@ export const authModule: Module<IAuthState, {}> = {
                     console.log("auth state", savedState);
                     const nonce = localStorage.getItem(authNonceKey);
                     if (nonce === null || savedState.nonce !== nonce) {
-                        commit("setError", "Invalid client nonce");
+                        dispatch("setError", "Invalid client nonce");
                     } else {
                         const code = getQueryValue("code");
                         if (code !== null) {
@@ -397,7 +394,7 @@ export const authModule: Module<IAuthState, {}> = {
                         } else {
                             const error = getQueryValue("error");
                             const errorDescription = getQueryValue("errorDescription");
-                            commit("setError", `Invalid auth response query parameters, error ${error} ${errorDescription}`);
+                            dispatch("setError", `Invalid auth response query parameters, error ${error} ${errorDescription}`);
                         }
                         router.push(savedState.path);
                     }
@@ -441,7 +438,7 @@ export const authModule: Module<IAuthState, {}> = {
                     dispatch("removeAuth", undefined, { root: true });
                 } else if (reply === "error") {
                     dispatch("removeAuth", undefined, { root: true });
-                    commit("setError", "Received an error during authorization check");
+                    dispatch("setError", "Received an error during authorization check");
                 }
             };
             window.addEventListener("message", iframeHandler);
@@ -471,7 +468,7 @@ export const authModule: Module<IAuthState, {}> = {
                     if (e instanceof Utils.FetchError) {
                         if (e.response.status === 401) {
                             dispatch("removeAuth", undefined, { root: true });
-                            commit("setError", e.message);
+                            dispatch("setError", e.message);
                         }
                     }
                     throw e;

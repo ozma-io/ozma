@@ -19,6 +19,7 @@ import settingsModule from "@/state/settings";
 import userViewModule from "@/state/user_view";
 import stagingChangesModule from "@/state/staging_changes";
 import queryModule from "@/state/query";
+import errorsModule from "@/state/errors";
 
 import "@/styles/style.sass";
 
@@ -31,6 +32,7 @@ export const store = new Vuex.Store({
         userView: userViewModule,
         staging: stagingChangesModule,
         query: queryModule,
+        errors: errorsModule,
     },
 });
 
