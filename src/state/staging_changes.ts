@@ -645,7 +645,7 @@ const stagingModule: Module<IStagingState, {}> = {
                 await state.currentSubmit;
             }
 
-            commit("clearErrors");
+            commit("errors/resetErrors", errorKey, { root: true });
             commit("validate");
             const ops = Object.entries(state.current.changes).flatMap(([schemaName, entities]) => {
                 return Object.entries(entities).flatMap(([entityName, entityChanges]) => {
