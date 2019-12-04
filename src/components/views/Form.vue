@@ -72,7 +72,7 @@
 </template>
 
 <script lang="ts">
-import * as R from 'ramda';
+import * as R from "ramda";
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { Store } from "vuex";
@@ -91,9 +91,9 @@ import FormEntry from "@/components/views/form/FormEntry.vue";
 import { IAction } from "@/components/ActionsMenu.vue";
 
 import {
-    IFieldInfo, IBlockInfo, IFormValueExtra,IFormRowExtra, IFormUserViewExtra,
+    IFieldInfo, IBlockInfo, IFormValueExtra, IFormRowExtra, IFormUserViewExtra,
     IGridInputInfo, IGridInputInfoTopLevel,
-} from '@/components/form/types';
+} from "@/components/form/types";
 
 type IFormLocalRowInfo = ILocalRowInfo<IFormRowExtra>;
 type IFormLocalRow = ILocalRow<IFormValueExtra, IFormRowExtra>;
@@ -233,14 +233,16 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
     }
 
     get gridBlocks(): IGridInputInfoTopLevel[] {
-        const viewAttrs =- this.uv.attributes;
+        const viewAttrs = this.uv.attributes;
         const blockWidths: number[] = R.pathOr<number[]>([12], ["BlockSizes"], viewAttrs);
+        const inputWidth: number = R.equals(blockWidths, [12]) ? 6 : 12;
+        console.log(this.blocks);
         const gridBlocks: IGridInputInfoTopLevel[] = this.blocks.map((block, index) => ({
             type: "section",
-            size: R.pathOr(6, blockWidths, [index]),
+            size: R.pathOr(12, blockWidths, [index]),
             content: block.fields.map(field => ({
                  type: "input",
-                 size: 12,
+                 size: inputWidth,
                  field,
             })),
         }));
@@ -252,7 +254,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
         const viewAttrs = this.uv.attributes;
         // Relative block widths. [0..1]. Each block contains zero or more inputs.
         const blockWidths: number[] = viewAttrs["BlockSizes"] || [1];
-        const blocks: IBlockInfo[] = blockWidths.map(width => ({ width: width, fields: [] }));
+        const blocks: IBlockInfo[] = blockWidths.map(width => ({ width, fields: [] }));
 
         this.uv.info.columns.forEach((columnInfo, i) => {
             const columnAttrs = this.uv.columnAttributes[i];
@@ -266,7 +268,6 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
             blocks[block].fields.push(field);
         });
 
-        console.log(blocks);
         return blocks;
     }
 
@@ -321,6 +322,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
         overflow-x: hidden;
         height: 100%;
         width: 100vw;
+        background-color: var(--MainBackgroundColor);
     }
  
     @media screen and (max-aspect-ratio: 13/9) {

@@ -9,18 +9,24 @@
     }
 </i18n>
 <template>
-    <textarea :class="['textarea_field', {'textarea_field__disabled': disabled}]"
-        :id="inputName"
-        :type="type"
-        :value="value"
-        :placeholder="$t('input_placeholder')"
-        :disabled="disabled"
-        :rows="rows"
-        ref="control"
-        @focus="onFocus"
-        @blur="onBlur"
-        @input="$emit('update:value', $event.target.value)"
-    />
+    <fragment>
+        <textarea :class="['textarea_field', {
+                          'textarea_field__disabled': disabled,
+                          'textarea_field__desktop': !this.isMobile,
+                          }]"
+            :id="inputName"
+            :type="type"
+            :value="value"
+            :placeholder="$t('input_placeholder')"
+            :disabled="disabled"
+            :rows="rows"
+            ref="control"
+            @focus="onFocus"
+            @blur="onBlur"
+            @input="$emit('update:value', $event.target.value)"
+        />
+        <div class="textarea_dummy_focus" :style="style" v-show="focused" ref="dummy">&nbsp;</div>
+    </fragment>
 </template>
 
 <script lang="ts">
@@ -45,6 +51,17 @@ export default class Textarea extends MobileMixin {
     private modalValue: string = this.value;
     private isModalOpen: boolean = false;
 
+    private dummyHeight: number = 0;
+    private dummyWidth: number = 0;
+
+    private mounted() {
+        if (this.$refs.control) {
+            const control = this.$refs.control as HTMLInputElement;
+            this.dummyHeight = control.clientHeight;
+            this.dummyWidth = control.clientWidth;
+        }
+    }
+
     private get inputName(): string {
         return `${this.uid}-input`;
     }
@@ -55,11 +72,17 @@ export default class Textarea extends MobileMixin {
         } else { return !!this.value; }
     }
 
+    private get style() {
+        return {
+            height: `${this.dummyHeight}px`,
+            width: `${this.dummyWidth}px`,
+        };
+    }
+
     private onFocus(evt: HTMLInputElement) {
-        this.focused = true;
-        if (this.isMobile) {
-            this.isModalOpen = true;
-        } else {
+        this.$emit("focus", evt);
+        if (!this.isMobile) {
+            this.focused = true;
             this.positionField();
         }
     }
@@ -70,9 +93,14 @@ export default class Textarea extends MobileMixin {
 
     private positionField() {
         const controlElement = this.$refs.control as HTMLElement;
-        const eWidth = controlElement.offsetWidth;
+        const dummyElement = this.$refs.dummy as HTMLElement;
         const rightPosition = controlElement.getBoundingClientRect().right;
+        const eWidth = controlElement.clientWidth;
         const screenWidth = document.documentElement.clientWidth - 10;
+        if (dummyElement) {
+            dummyElement.style.height = `{this.dummyHeight}px`;
+            dummyElement.style.width = `{this.dummyWidth}px`;
+        }
         if (rightPosition + eWidth >= screenWidth) {
             controlElement.style.right = "0";
             controlElement.style.left = "initial";
@@ -80,16 +108,6 @@ export default class Textarea extends MobileMixin {
             controlElement.style.right = "initial";
             controlElement.style.left = "0";
         }
-    }
-
-    private updateValueFromModal() {
-        this.$emit('update:value', this.modalValue);
-        this.closeModal();
-    }
-
-    private closeModal() {
-        this.focused = false;
-        this.isModalOpen = false;
     }
 }
 
@@ -138,14 +156,19 @@ export default class Textarea extends MobileMixin {
      overflow-y: auto;
  }
  .textarea_field:focus {
+     border-bottom: 2px solid var(--MainBorderColor);
+     outline: none;
+     padding: 5px;
+ }
+ .textarea_field__desktop:focus {
      outline: none;
      background-color: var(--MainBackgroundColor);
      border: 1px solid var(--MainBorderColor);
      padding: 5px;
      position: absolute;
      right: 0;
-     width: 400px;
-     height: 300px;
+     width: calc(100% + 150px);
+     height: calc(100% + 100px);
      transition: all 300ms ease-in-out, height 300ms ease-in-out;
      overflow: auto;
      z-index: 10;
@@ -195,5 +218,8 @@ export default class Textarea extends MobileMixin {
      border-right: none !important;
      box-sizing: content-box;
      padding: 5px;
+ }
+ .textarea_dummy_focus {
+     padding: 5px 0 5px 0;
  }
 </style>

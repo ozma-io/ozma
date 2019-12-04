@@ -1,5 +1,5 @@
 <template>
-    <pre ref="pre"></pre>
+    <MonacoEditor :language="language" :value="content" @change="onChange" />
 </template>
 
 <script lang="ts">
@@ -8,17 +8,20 @@
 // @ts-ignore
 import * as Ace from "ace-builds/src-noconflict/ace.js";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+
+import MonacoEditor from "vue-monaco";
 // outputs a lot of crap into /dist
 // import "ace-builds/webpack-resolver"
 import "ace-builds/src-noconflict/mode-pgsql";
 
-@Component
+@Component({ components: { MonacoEditor } })
 export default class CodeEditor extends Vue {
     @Prop({ default: "" }) content!: string;
     @Prop({ default: "" }) mode!: string;
     @Prop({ default: "" }) theme!: string;
     @Prop({ default: false }) readOnly!: boolean;
     @Prop({ default: false }) autofocus!: boolean;
+    @Prop({ default: "MySQL", type: String }) language!: string;
 
     editor: Ace.Ace.Editor | null = null;
     // Workaround for Ace editor's bug: it calls on(change) with an empty string during an update.
@@ -42,6 +45,12 @@ export default class CodeEditor extends Vue {
                 this.$emit("update:content", newValue);
             }
         });
+    }
+
+    private onChange(value: string) {
+        if (!this.isUpdating) {
+            this.$emit("update:content", value);
+        }
     }
 
     @Watch("content")

@@ -37,35 +37,36 @@ import { mixins } from "vue-class-component";
 // 628183
 
 import { getTextWidth } from "@/utils";
-import MobileMixin from '@/MobileMixin';
+import MobileMixin from "@/MobileMixin";
 
-import Modal from "@/components/modal/Modal";
-
-@Component({ components: { Modal } })
+@Component
 export default class Input extends MobileMixin {
     @Prop({ type: String }) label!: string;
-    @Prop({ type: String }) value!: string;
+    @Prop() value!: any;
     @Prop({ type: String }) error!: string;
     @Prop({ type: String }) warning!: string;
     @Prop({ type: Number }) height!: number;
     @Prop({ type: Boolean }) disabled!: boolean;
     @Prop({ type: String }) id!: string;
     @Prop({ type: Boolean, default: true }) inline!: boolean;
-    @Prop({ type: Boolean }) inline!: boolean;
     @Prop({ type: Boolean, default: false }) unfocusing!: boolean;
     @Prop({ type: String, default: "text" }) type!: string;
+    @Prop({ type: Boolean, default: false }) focus!: boolean;
 
     private focused: boolean = false;
 
     @Watch("value")
     private onValueUpdate(value: string) {
-        this.modalValue = value;
+        if (!this.isMobile) {
+            this.updateWidth(value);
+        }
     }
 
     @Watch("focus")
     private onFocusProp(focus: boolean) {
         if (focus) {
-            this.$nextTick(() => this.$refs.control.focus);
+            const control = this.$refs.control as HTMLInputElement;
+            this.$nextTick(() => control.focus);
         }
     }
 
@@ -75,42 +76,41 @@ export default class Input extends MobileMixin {
         } else { return !!this.value; }
     }
 
-    private onFocus(evt: Event<HTMLInputElement>) {
+    private onFocus(evt: Event) {
+        this.$emit("focus", evt);
         if (!this.unfocusing) {
             this.focused = true;
         }
         if (!this.isMobile) {
-            this.updateWidth(evt);
+            this.updateWidth(this.value);
         }
     }
 
-    private onBlur(evt: Event<HTMLInputElement>) {
+    private onBlur(evt: Event) {
         if (!this.unfocusing) {
             this.focused = false;
         }
         if (!this.isMobile) {
-            this.$refs.control.style.width = "100%";
+            const control = this.$refs.control as HTMLInputElement;
+            control.style.width = "100%";
         }
     }
 
     private updateInput(value: string) {
         this.$emit("input", value);
-        if (!this.isMobile) {
-            this.updateWidth(value);
-        }
     }
 
-    private updateWidth(value: string) {
-        const controlElement = this.$refs.control;
+    private updateWidth(text: string) {
+        const value = text !== "" ? text : String(this.$t("input_placeholder"));
+        const controlElement = this.$refs.control as HTMLInputElement;
         const computed = window.getComputedStyle(controlElement);
         const font = computed.getPropertyValue("font-size");
         // Unfortunately, this will cause the text field to grow ever slightly as you type
         // However, the only other option is to have a portion of
         // the text go out of view to the left
         // This should pose no inconvinience to the end user
-        const placeholderWidth = getTextWidth(this.$t("input_placeholder"), font) * 1.67;
         const textWidth = Math.ceil(getTextWidth(value, font)) * 1.67;
-        const inputWidth = textWidth || placeholderWidth;
+        const inputWidth = textWidth;
         const leftPos = controlElement.getBoundingClientRect().left;
         const viewportWidth = document.documentElement.clientWidth - 10;
         const rightPos = leftPos + inputWidth;
@@ -176,12 +176,12 @@ export default class Input extends MobileMixin {
  .input_field::placeholder {
      color: var(--MainTextColorLight);
  }
+ .input_field:hover,
  .input_field:focus {
      outline: none;
      color: var(--MainTextColor);
-     border-bottom: 1px solid var(--MainBorderColor);
+     border-bottom: 1px solid var(--MainBorderColor) !important;
      cursor: text;
-     /* max-width: 40vw; */
      background-color: var(--MainBackgroundColor);
  }
  .input_field__disabled {

@@ -1,7 +1,20 @@
+<i18n>
+{
+    "en": {
+        "input_placeholder": "Fill this value here"
+    },
+    "ru": {
+        "input_placeholder": "Заполните здесь"
+    }
+}
+</i18n>
 <template>
     <div class="calendar_container" v-click-outside="onClickOutside">
         <div class="main_input">
+            <input type="button" class="material-icons calendar_input__icon" value="event">
             <input type="text"
+                    class="calendar_input"
+                    :placeholder="$t('input_placeholder')"
                     :value="textValue"
                     @input="$emit('update:value', $event.target.value)"
                     @focus="isCalendarOpen = true"
@@ -86,15 +99,42 @@ export default class Calendar extends Vue {
       position: relative;
       display: inline-block;
     }
+    .calendar_input {
+        padding: 5px 2px 5px 0;
+        background-color: rgba(0, 0, 0, 0);
+        border: 0px;
+        z-index: 2;
+        order: 2;
+        flex: 2;
+        height: 2em;
+        color: var(--MainTextColor);
+        cursor: pointer;
+        border-bottom: none;
+        width: 100%;
+        text-overflow: ellipsis;
+    }
+    .calendar_input:focus {
+        outline: none;
+        color: var(--MainTextColor);
+        border-bottom: 1px solid var(--MainBorderColor) !important;
+        cursor: text;
+        background-color: var(--MainBackgroundColor);
+    }
+    .calendar_input__icon {
+        background: none;
+        border: none;
+        color: var(--MainBorderColor);
+    }
     .main_cal {
       display: none;
     }
     .main_cal__open {
       display: flex;
       position: absolute;
-      background-color: var(--NavigationBackColor);
+      background-color: var(--MainBackgroundColor);
+      color: var(--MainTextColor);
       padding: 10px;
-      border: 2px solid white;
+      border: 1px solid var(--MainBorderColor);
       top: calc(100% + 10px);
       z-index: 250;
     }

@@ -329,7 +329,6 @@ export default class MultiSelect extends Vue {
      cursor: pointer;
      align-self: center;
      align-items: center;
-     padding-left: 5px;
      height: 40px;
      color: black;
  }
@@ -337,10 +336,7 @@ export default class MultiSelect extends Vue {
      display: flex;
      flex-direction: row;
      position: relative;
-     background-color: white;
-     padding: 0 10px 0 10px;
-     background-color: var(--MainBackgroundColor);
-     border-bottom: 2px solid var(--MainBorderColor);
+     padding: 0 10px 0 0px;
  }
  .select_container_fixed_height {
      box-shadow: inset -5px -5px 8px 5px rgba(0,0,0,0.25);
@@ -356,10 +352,8 @@ export default class MultiSelect extends Vue {
  .select_container__content__single {
      position: absolute;
      left: 0;
-     background-color: rgba(0, 0, 0, 0);
  }
  .select_container__content__single > input {
-     background-color: rgba(0, 0, 0, 0);
      margin-left: 5px;
  }
  .select_container__content_fixed_height {
@@ -377,8 +371,8 @@ export default class MultiSelect extends Vue {
      margin: 5px 5px 5px 0;
      flex: 1;
      box-sizing: border-box;
-     background-color: var(--MainBackgroundColor);
      color: var(--MainTextColor);
+     background-color: var(--MainBackgroundColor);
  }
  .select_container__input:focus {
      outline: none;
@@ -408,15 +402,14 @@ export default class MultiSelect extends Vue {
      padding: 0;
      margin: 0;
      box-sizing: border-box;
-     background-color: var(--MainBackgroundColor);
      max-height: 250px;
      overflow: auto;
-     height: 0px;
      transition: all ease-in 0.3s;
+     height: 100%;
+     border-bottom: 1px solid var(--MainBorderColor);
+     background-color: var(--MainBackgroundColor);
  }
  .select_container__options_list__open {
-     height: 200px;
-     border-bottom: 2px solid var(--MainBorderColor);
  }
  .select_container__options_list > li.select_container__options_list__option {
      color: var(--MainTextColor);
@@ -424,22 +417,17 @@ export default class MultiSelect extends Vue {
      box-sizing: border-box;
      cursor: pointer;
  }
- .select_container__options_list > li.select_container__options_list__option:first-child {
-     padding-top: 15px;
- }
- .select_container__options_list > li.select_container__options_list__option:hover > span,
- .select_container__options_list__option_active > span {
+ .select_container__options_list > li.select_container__options_list__option:hover,
+ .select_container__options_list__option_active {
      cursor: pointer;
-     background-color: var(--MainBorderColor);
      color: var(--MainTextColor);
  }
  .select_container__options_list__option > span {
      margin: 0px;
  }
  div.select_container__options__actions {
-     background-color: white;
      bottom: 0;
-     padding: 5px 10px 5px 10px;
+     padding: 0;
      color: red;
  }
  .values_list__value {

@@ -40,7 +40,7 @@
         <b-row>
             <b-col size="12">
                 <form class="form-entry">
-                    <FormGrid :blockContent="gridBlocks"  />
+                    <FormGrid :gridContent="blocks" :gridProps="gridProps"   />
                     <!-- FIXME FIXME FIXME look at permissions! -->
                     <div class="delete-block" v-if="row.mainId !== undefined">
                         <input  type="button"
@@ -66,6 +66,7 @@
                     </div>
                 </form>
             </b-col>
+        </b-row>
     </b-container>
 </template>
 
@@ -74,7 +75,7 @@ import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import FormGrid from "@/components/form/FormGrid.vue";
 import { IGridProps } from "@/components/form/types";
 
-@Component
+@Component({ components: { FormGrid } })
 export default class FormEntry extends Vue {
     // We don't bother to set types here properly, they matter no more than for TableRow.
     // The reason this is not a functional component is because of i18n.
@@ -89,12 +90,12 @@ export default class FormEntry extends Vue {
     @Prop({ type: String, required: true }) scope!: string;
     @Prop({ type: Number, required: true }) level!: number;
 
-    private onGoto = (event: any) => {
+    public onGoto(event: any) {
         this.$emit("goto", event);
     }
 
-    private onUpdate = (event: any, fieldIndex: number) => {
-        this.$emit("update", fieldIndex, event)
+    public onUpdate(event: any, fieldIndex: number) {
+        this.$emit("update", fieldIndex, event);
     }
 
     get gridProps(): IGridProps {
@@ -109,7 +110,7 @@ export default class FormEntry extends Vue {
             level: this.level,
             onUpdate: this.onUpdate,
             onGoto: this.onGoto,
-        }
+        };
     }
 }
 </script>
@@ -166,9 +167,7 @@ export default class FormEntry extends Vue {
     @media screen and (orientation: portrait) {
         @media screen and (max-device-width: 480px) {
             .form-entry {
-                padding-left: 15px;
                 width: 100%;
-                padding-right: 15px;
             }
             .form-data {
                 margin-top: 0 !important;

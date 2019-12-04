@@ -3,8 +3,8 @@
         <FormControl
             v-if="blockContent.type === 'input'"
             :caption="blockContent.field.caption"
-            :value="girdProps.row.values[blockContent.field.index]"
-            :attributes="girdProps.localRow.values[blockContent.field.index].attributes"
+            :value="gridProps.row.values[blockContent.field.index]"
+            :attributes="gridProps.localRow.values[blockContent.field.index].attributes"
             :type="blockContent.field.columnInfo.valueType"
             :locked="gridProps.locked"
             :uvArgs="gridProps.uv.args"
@@ -12,7 +12,7 @@
             :scope="gridProps.scope"
             :level="gridProps.level"
             @goto="gridProps.onGoto"
-            @update="gridProps.onUpdate"
+            @update="gridProps.onUpdate($event, blockContent.field.index)"
         />
         <b-row v-if="blockContent.type === 'section'">
             <b-col v-for="subBlock in blockContent.content"
@@ -35,7 +35,7 @@ import { IGridInputInfoTopLevel, IGridProps } from "@/components/form/types";
 })
 export default class FormGridBlock extends Vue {
     @Prop({ type: Object }) blockContent!: IGridInputInfoTopLevel;
-    @Prop({ type: Object }) girdProps!: IGridProps;
+    @Prop({ type: Object }) gridProps!: IGridProps;
 }
 </script>
 

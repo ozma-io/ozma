@@ -21,3 +21,8 @@ declare module "@liqueflies/vue-flex-grid" {
 declare module "vue-fragment" {
   export const Plugin: any;
 }
+
+declare module "vue-monaco" {
+  const MonacoEditor: any;
+  export default MonacoEditor;
+}

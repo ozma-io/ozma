@@ -7,14 +7,12 @@
             :show="isModalOpen"
             :name="`${uid}-field-modal`"
             @opened="onModalOpen"
+            @close="onModalClose"
             fullscreen>
             <template v-slot:content>
                 <div class="input_modal__input_group">
                     <div>
-                        <label v-if="label" class="input_modal_label">
-                            {{ label }}
-                        </label>
-                        <slot name="input-modal">
+                        <slot name="input-modal" :onChange="onChange" :value="modalValue">
                         </slot>
                     </div>
                     <div class="input_modal__button_container">
@@ -36,7 +34,7 @@
             >{{ label }}</label>
         </b-col>
         <b-col :cols="!!label ? 8 : 12" class="input_container">
-            <slot name="input">
+            <slot name="input" :onFocus="onFocus">
             </slot>
         </b-col>
     </b-row>
@@ -50,14 +48,14 @@ import { mixins } from "vue-class-component";
 // 628183
 
 import { getTextWidth } from "@/utils";
-import MobileMixin from '@/MobileMixin';
+import MobileMixin from "@/MobileMixin";
 
-import Modal from "@/components/modal/Modal";
+import Modal from "@/components/modal/Modal.vue";
 
 @Component({ components: { Modal } })
 export default class InputSlot extends MobileMixin {
     @Prop({ type: String }) label!: string;
-    @Prop({ type: String }) value!: string;
+    @Prop() value!: any;
     @Prop({ type: String }) error!: string;
     @Prop({ type: String }) warning!: string;
     @Prop({ type: Number }) height!: number;
@@ -66,9 +64,11 @@ export default class InputSlot extends MobileMixin {
     @Prop({ type: String, default: "text" }) type!: string;
 
     private focused: boolean = false;
+    private modalValue: any = this.value;
+    private isModalOpen: boolean = false;
 
     private mounted() {
-        console.log(this.label);
+        console.log(this.value, this.modalValue);
     }
 
     @Watch("value")
@@ -89,20 +89,28 @@ export default class InputSlot extends MobileMixin {
     private onModalOpen() {
         this.$nextTick(() => {
             if (this.$refs.controlModal) {
-                this.$refs.controlModal.focus();
-                console.log(this.$refs.controlModal);
+                const control = this.$refs.controlModal as HTMLElement;
+                control.focus();
             }
-        })
+        });
     }
 
-    private onFocus(evt: Event<HTMLInputElement>) {
+    private onModalClose() {
+        this.modalValue = this.value;
+    }
+
+    private onFocus() {
         if (this.isMobile) {
             this.isModalOpen = true;
         }
     }
 
+    private onChange(value: string) {
+        this.modalValue = value;
+    }
+
     private updateValueFromModal() {
-        this.$emit('update:value', this.modalValue);
+        this.$emit("update:value", this.modalValue);
         this.closeModal();
     }
 
@@ -184,5 +192,8 @@ export default class InputSlot extends MobileMixin {
  }
  .input_modal__button__cancel {
      background-color: var(--FailColor);
+ }
+ .v--modal-overlay {
+     z-index: 1000;
  }
 </style>

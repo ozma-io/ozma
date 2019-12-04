@@ -1,5 +1,6 @@
 const { IgnorePlugin, DefinePlugin } = require("webpack");
 const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
+const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 
 const defaultConfig = require("./config/development.json");
 const configName = process.env["CONFIG"] || process.env["NODE_ENV"];
@@ -27,6 +28,7 @@ module.exports = {
 
     configureWebpack: {
         plugins: [
+            new MonacoWebpackPlugin(),
             new IgnorePlugin(/^\.\/locale$/, /moment$/),
             ...(analyzeBundle ? [new BundleAnalyzerPlugin()] : []),
         ]

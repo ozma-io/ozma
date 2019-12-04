@@ -1,8 +1,8 @@
 <template>
-    <b-container>
+    <b-container class="form_container">
         <b-row>
             <FormGridBlock
-                v-for="block in gridContent" :blockContent="block" />
+                v-for="block in gridContent" :blockContent="block" :gridProps="gridProps" />
         </b-row>
     </b-container>
 </template>
@@ -16,9 +16,13 @@ import { IGridInputInfoTopLevel } from "@/components/form/types";
 @Component({ components: { FormGridBlock } })
 export default class FormGrid extends Vue {
 
-    private mounted() {
-        console.log(this.gridContent);
-    }
+    @Prop({ type: Array }) gridContent!: any;
+    @Prop({ type: Object }) gridProps!: any;
 }
-
 </script>
+
+<style scoped>
+ .form_container {
+     margin-top: 25px;
+ }
+</style>

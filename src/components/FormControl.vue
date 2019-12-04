@@ -19,42 +19,117 @@
     }
 </i18n>
 
-<!-- <div v-if="actions.length > 0" class="nested-menu">
-     <ActionsMenu title="view_headline"
-     :actions="actions"
-     :indirectLinks="indirectLinks"
-     @goto="$emit('goto', $event)" />
-     <div v-if="caption !== ''" class="caption-editors">
-     {{ caption }}
-     </div>
-     </div>
-     <div v-else-if="caption !== ''" class="caption-editors">
-     {{ caption }}
-     </div> -->
-
-<template v-if="inputType.name === 'error'">
-    {{ inputType.text }}
-</template>
 <template>
     <fragment>
-        <InputSlot :label="caption" v-if="inputType.name !== 'userview'">
-            <template v-slot:input>
+        <InputSlot :label="caption"
+            v-if="inputType.name !== 'userview'"
+            :inline="!isInline"
+            :value="currentValue"
+            @update:value="updateValue">
+            <template v-slot:input-modal="iSlot">
+                <Input v-if="inputType.name === 'text'"
+                    :value="iSlot.value"
+                    @input="iSlot.onChange($event.target.value)"
+                    :unfocusing="unfocusing"
+                    :disabled="isDisabled"
+                    focus />
+                <Textarea v-else-if="inputType.name === 'textarea'"
+                    :value="iSlot.value"
+                    @update:value="iSlot.onChange($event)"
+                    :unfocusing="unfocusing"
+                    :disabled="isDisabled" />
+                <Calendar v-else-if="inputType.name === 'calendar'"
+                    :value="iSlot.value"
+                    :textValue="textValue"
+                    @update:value="iSlot.onChange"
+                    :showTime="inputType.showTime"
+                    ref="control" />
+                <CodeEditor v-else-if="inputType.name === 'codeeditor'"
+                    :style="inputType.style"
+                    :content="iSlot.value"
+                    @update:content="iSlot.onChange($event)"
+                    :readOnly="isDisabled"
+                    :autofocus="autofocus"
+                    ref="control" />
+            </template>
+            <template v-slot:input="iSlot">
+                <template v-if="inputType.name === 'error'">
+                    {{ inputType.text }}
+                </template>
                 <Input v-if="inputType.name === 'text'"
                     :value="currentValue"
                     @input="updateValue($event.target.value)"
+                    @focus="iSlot.onFocus"
                     :unfocusing="unfocusing"
                     :disabled="isDisabled" />
+                <Textarea v-else-if="inputType.name === 'textarea'"
+                    :value="currentValue"
+                    @update:value="updateValue($event)"
+                    @focus="iSlot.onFocus"
+                    :unfocusing="unfocusing"
+                    :disabled="isDisabled" />
+                <Calendar v-else-if="inputType.name === 'calendar'"
+                    :value="value.value"
+                    :textValue="textValue"
+                    @focus="iSlot.onFocus"
+                    @update:value="updateValue($event)"
+                    :showTime="inputType.showTime"
+                    ref="control" />
+                <MultiSelect v-else-if="inputType.name === 'select'"
+                    :value="currentValue"
+                    :options="inputType.options"
+                    :height="attributes['ControlHeight']"
+                    single
+                    @update:value="updateValue($event)"
+                    @focus="iSlot.onFocus"
+                    :required="!isNullable"
+                    :disabled="isDisabled"
+                    ref="control" />
+                <CodeEditor v-else-if="inputType.name === 'codeeditor'"
+                    :style="inputType.style"
+                    mode="ace/mode/pgsql"
+                    :content="textValue"
+                    @update:content="updateValue($event)"
+                    @focus="iSlot.onFocus"
+                    :readOnly="isDisabled"
+                    :autofocus="autofocus"
+                    ref="control" />
+                <input type="checkbox" v-else-if="inputType.name === 'check'"
+                    :value="currentValue"
+                    :class="['form-control-panel_checkbox',
+                             {'form-control-panel_checkbox_error': value.erroredOnce,
+                             'form-control-panel_checkbox_req': isAwaited && !disableColor}]"
+                    @input="updateValue($event.target.value)"
+                    @focus="iSlot.onFocus"
+                    :disabled="isDisabled"
+                    ref="control" />
             </template>
         </InputSlot>
-        <UserView v-else
-            :args="inputType.args"
-            :defaultValues="inputType.defaultValues"
-            :indirectLinks="indirectLinks"
-            :scope="scope"
-            :level="level + 1"
-            @update:actions="actions = $event"
-            @goto="$emit('goto', $event)"
-            ref="control" />
+        <template v-if="inputType.name === 'reference' || inputType.name === 'userview'">
+            <label class="input_label">{{ caption }}</label>
+            <ReferenceField v-if="inputType.name === 'reference'"
+                :value="value"
+                :height="attributes['ControlHeight']"
+                :entry="inputType.ref"
+                :linkedAttr="inputType.linkedAttr"
+                :selectView="inputType.selectView"
+                :controlStyle="inputType.style"
+                :uvArgs="uvArgs"
+                @update:actions="actions = $event"
+                @update="updateValue($event)"
+                :isNullable="isNullable"
+                :isDisabled="isDisabled"
+                ref="control" />
+            <UserView v-else-if="inputType.name === 'userview'"
+                :args="inputType.args"
+                :defaultValues="inputType.defaultValues"
+                :indirectLinks="indirectLinks"
+                :scope="scope"
+                :level="level + 1"
+                @update:actions="actions = $event"
+                @goto="$emit('goto', $event)"
+                ref="control" />
+        </template>
     </fragment>
 </template>
 
@@ -123,6 +198,7 @@ const userView = namespace("userView");
 
 const heightExclusions = ["select", "reference"];
 const multilineTypes = [ "codeeditor", "textarea" ];
+const inlineTypes = ["codeeditor", "textarea", "userview"];
 
 @Component({
     components: {
@@ -132,6 +208,7 @@ const multilineTypes = [ "codeeditor", "textarea" ];
         ReferenceField: () => import("@/components/ReferenceField.vue"),
         InputSlot: () => import("@/components/form/InputSlot.vue"),
         Input: () => import("@/components/form/Input.vue"),
+        Textarea: () => import("@/components/form/Textarea.vue"),
     },
 })
 export default class FormControl extends Vue {
@@ -149,6 +226,10 @@ export default class FormControl extends Vue {
     @Prop({ type: Number, required: true }) level!: number;
 
     private actions: IAction[] = [];
+
+    get isInline(): boolean {
+        return inlineTypes.includes(this.inputType.name);
+    }
 
     get isNullable() {
         return this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable;
@@ -301,6 +382,15 @@ export default class FormControl extends Vue {
 * FormControl       (1000)
 
 */
+    .input_label {
+        align-self: center;
+        margin-bottom: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: pre;
+        cursor: question;
+        color: var(--MainTextColor);
+    }
     input {
         border: 1px solid rgb(81, 152, 57);
     }
