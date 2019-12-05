@@ -218,8 +218,10 @@ export default class RootUserView extends Vue {
     get actions() {
         const actions: IAction[] = [];
         actions.push(...this.extraActions);
-        actions.push({ name: this.$t("account").toString(), href: Api.accountUrl });
-        actions.push({ name: this.$t("logout").toString(), callback: this.logout });
+        if (!Api.disableAuth) {
+            actions.push({ name: this.$t("account").toString(), href: Api.accountUrl });
+            actions.push({ name: this.$t("logout").toString(), callback: this.logout });
+        }
         return actions;
     }
 
