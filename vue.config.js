@@ -14,9 +14,11 @@ const defaults = {
 };
 
 const analyzeBundle = process.env["ANALYZE"];
+const outputDir = process.env["OUTDIR"] || "dist";
 
 module.exports = {
     assetsDir: "static",
+    outputDir,
 
     productionSourceMap: false,
 

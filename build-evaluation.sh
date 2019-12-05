@@ -4,7 +4,6 @@
 set -x
 
 test -f yarn.lock
-rm -rf dist dist-evaluation
+rm -rf dist-evaluation
 yarn
-CONFIG=evaluation yarn build
-mv dist dist-evaluation
+CONFIG=evaluation OUTDIR=dist-evaluation yarn build
