@@ -1276,7 +1276,7 @@ const userViewModule: Module<IUserViewState, {}> = {
                 } catch (e) {
                     if (state.pending === pending.ref) {
                         commit("clear");
-                        commit("errors/addError", { key: errorKey, error: e.message }, { root: true });
+                        commit("errors/setError", { key: errorKey, error: e.message }, { root: true });
                     }
                     throw e;
                 }
