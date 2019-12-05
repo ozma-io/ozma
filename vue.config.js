@@ -10,11 +10,10 @@ try {
     config = defaultConfig;
 }
 const defaults = {
-    "__DISABLE_AUTH__": false,
     "__API_URL__": undefined,
     "__API_AUTH_URL__": undefined,
     "__API_AUTH_URL_BASE__": undefined,
-    "__AUTH_CLIENT_ID__": "'funapp'",
+    "__AUTH_CLIENT_ID__": undefined,
 };
 
 const analyzeBundle = process.env["ANALYZE"];
