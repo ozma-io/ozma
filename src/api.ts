@@ -1,8 +1,7 @@
 import * as Utils from "@/utils";
 
 const apiUrl = __API_URL__;
-// FIXME: detect this from environment
-export const disableAuth = false;
+export const disableAuth = __DISABLE_AUTH__;
 export const anonymousUsername = "anonymous@example.com";
 
 export const authOrigin = __API_AUTH_URL__;

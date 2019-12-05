@@ -9,6 +9,9 @@ try {
 } catch (e) {
     config = defaultConfig;
 }
+const defaults = {
+    "__DISABLE_AUTH__": false
+};
 
 const analyzeBundle = process.env["ANALYZE"];
 
@@ -34,7 +37,7 @@ module.exports = {
 
     chainWebpack: webpackConfig => {
       webpackConfig.plugin("define").tap(
-        ([ definitions, ...rest ]) => [{ ...definitions, ...config}, ...rest]
+        ([ definitions, ...rest ]) => [{ ...definitions, ...defaults, ...config}, ...rest]
       );
     },
 }
