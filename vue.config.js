@@ -10,7 +10,7 @@ try {
     config = defaultConfig;
 }
 const defaults = {
-    "__API_URL__": undefined,
+    "__DISABLE_AUTH__": false,
     "__API_AUTH_URL__": undefined,
     "__API_AUTH_URL_BASE__": undefined,
     "__AUTH_CLIENT_ID__": undefined,
