@@ -77,7 +77,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
                         type: "named",
                         ref: {
                             schema: funappSchema,
-                            name: "UserViewByName",
+                            name: "user_view_by_name",
                         },
                     },
                     args: {

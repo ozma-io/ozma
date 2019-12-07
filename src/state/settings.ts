@@ -69,7 +69,7 @@ const settingsModule: Module<ISettingsState, {}> = {
                 try {
                     const ref = {
                         schema: Api.funappSchema,
-                        name: "Settings",
+                        name: "settings",
                     };
                     const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
                         func: Api.fetchNamedView,
