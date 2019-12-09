@@ -15,9 +15,11 @@
     <div id="app">
         <ModalPortalTarget name="tabbed-modal" multiple />
         <router-view v-if="currentAuth !== null || pendingAuth !== null"></router-view>
-        <span v-else-if="authLastError !== null">
-            {{ $t('auth_error', { msg: authLastError }) }}
-        </span>
+        <template v-else-if="authErrors.length > 0">
+            <span v-for="error in authErrors" :key="error">
+                {{ $t('auth_error', { msg: error }) }}
+            </span>
+        </template>
         <span v-else>
             {{ $t('no_auth') }}
         </span>
@@ -30,9 +32,11 @@ import { namespace } from "vuex-class";
 import { CurrentSettings } from "@/state/settings";
 import { CurrentAuth } from "@/state/auth";
 import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
+import { ErrorKey } from "@/state/errors";
 
 const settings = namespace("settings");
 const auth = namespace("auth");
+const errors = namespace("errors");
 const staging = namespace("staging");
 
 @Component({ components: { ModalPortalTarget } })
@@ -41,11 +45,15 @@ export default class App extends Vue {
     @auth.Action("startAuth") startAuth!: () => Promise<void>;
     @auth.State("current") currentAuth!: CurrentAuth | null;
     @auth.State("pending") pendingAuth!: Promise<CurrentAuth> | null;
-    @auth.State("lastError") authLastError!: string | null;
+    @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
     @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
 
     created() {
         this.$router.onReady(() => this.startAuth());
+    }
+
+    get authErrors() {
+        return this.rawErrors["auth"] || [];
     }
 
     @Watch("settings")

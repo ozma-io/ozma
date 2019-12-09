@@ -3,6 +3,8 @@ import { Module } from "vuex";
 import { IRef, convertString } from "@/utils";
 import * as Api from "@/api";
 
+const errorKey = "settings";
+
 export class CurrentSettings {
     settings: Record<string, string>;
 
@@ -23,7 +25,6 @@ export class CurrentSettings {
 export interface ISettingsState {
     current: CurrentSettings;
     pending: Promise<CurrentSettings> | null;
-    lastError: string | null;
 }
 
 const settingsModule: Module<ISettingsState, {}> = {
@@ -31,22 +32,13 @@ const settingsModule: Module<ISettingsState, {}> = {
     state: {
         current: new CurrentSettings({}),
         pending: null,
-        lastError: null,
     },
     mutations: {
-        setError: (state, lastError: string) => {
-            state.lastError = lastError;
-            state.pending = null;
-        },
-        clearError: state => {
-            state.lastError = null;
-        },
         setSettings: (state, settings: CurrentSettings) => {
             state.current = settings;
-            state.lastError = null;
             state.pending = null;
         },
-        setPending: (state, pending: Promise<CurrentSettings>) => {
+        setPending: (state, pending: Promise<CurrentSettings> | null) => {
             state.pending = pending;
         },
         clearSettings: state => {
@@ -67,13 +59,17 @@ const settingsModule: Module<ISettingsState, {}> = {
                 dispatch("getSettings");
             },
         },
+        setError: ({ commit }, error: string) => {
+            commit("errors/setError", { key: errorKey, error }, { root: true });
+            commit("setPending", null);
+        },
         getSettings: ({ state, commit, dispatch }) => {
             const pending: IRef<Promise<CurrentSettings>> = {};
             pending.ref = (async () => {
                 try {
                     const ref = {
                         schema: Api.funappSchema,
-                        name: "Settings",
+                        name: "settings",
                     };
                     const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
                         func: Api.fetchNamedView,
@@ -85,10 +81,11 @@ const settingsModule: Module<ISettingsState, {}> = {
                     const values = Object.fromEntries(res.result.rows.map(row => [row.values[0].value, row.values[1].value]));
                     const settings = new CurrentSettings(values);
                     commit("setSettings", settings);
+                    commit("errors/resetErrors", errorKey, { root: true });
                     return settings;
                 } catch (e) {
                     if (state.pending === pending.ref) {
-                        commit("setError", e.message);
+                        dispatch("setError", e.message);
                     }
                     throw e;
                 }

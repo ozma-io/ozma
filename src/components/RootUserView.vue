@@ -2,25 +2,31 @@
     {
         "en": {
             "search_placeholder": "Type to search",
-            "fetch_error": "Failed to fetch user view: {msg}",
             "pending_changes": "Saving",
             "loading": "Now loading",
-            "submit_error": "Error while submitting changes: {msg}",
-            "settings_error": "Failed to fetch settings: {msg}",
             "save": "Save",
             "account": "Account",
-            "logout": "Logout"
+            "logout": "Logout",
+            "auth_error": "Authentication error: {msg}",
+            "user_view_error": "Failed to fetch user view: {msg}",
+            "staging_error": "Error while submitting changes: {msg}",
+            "settings_error": "Failed to fetch settings: {msg}",
+            "select_user_view_error": "Failed to select an entry: {msg}",
+            "base_user_view_error": "Failed to perform an operation: {msg}"
         },
         "ru": {
             "search_placeholder": "Поиск",
-            "fetch_error": "Ошибка получения представления: {msg}",
             "pending_changes": "Сохраняется",
             "loading": "Загрузка данных",
-            "submit_error": "Ошибка сохранения изменений: {msg}",
-            "settings_error": "Ошибка получения настроек: {msg}",
             "save": "Сохранить",
             "account": "Профиль",
-            "logout": "Выйти"
+            "logout": "Выйти",
+            "auth_error": "Ошибка авторизации: {msg}",
+            "user_view_error": "Ошибка получения представления: {msg}",
+            "staging_error": "Ошибка сохранения изменений: {msg}",
+            "settings_error": "Ошибка получения настроек: {msg}",
+            "select_user_view_error": "Ошибка выбора записи: {msg}",
+            "base_user_view_error": "Ошибка выполнения операции: {msg}"
         }
     }
 </i18n>
@@ -66,23 +72,13 @@
         </div>
         <nav v-if="!uvIsError && bottomBarNeeded" class="fix-bot">
             <div class="count-row">{{ statusLine }}</div>
-            <div v-for="(error, errorI) in uvErrors"
+            <div v-for="(error, errorI) in errors"
                      :key="errorI"
                      class="error custom-danger"
                      show>
-                {{ $t('fetch_error', { msg: error }) }}
+                {{ error }}
             </div>
-            <div class="error custom-danger"
-                     v-if="settingsLastError !== null">
-                {{ $t('settings_error', { msg: settingsLastError }) }}
-            </div>
-            <div v-for="(error, errorI) in stagingErrors"
-                     :key="errorI"
-                     class="error custom-danger"
-                     show>
-                {{ $t('submit_error', { msg: error }) }}
-            </div>
-            <div class="error custom-warning" v-if="!changes.isScopeEmpty('root')">
+            <div v-if="!changes.isScopeEmpty('root')" class="error custom-warning">
                 <button class="error_button" @click="submitChanges('root')">{{ $t('save') }}</button>
                 {{ $t('pending_changes') }}
             </div>
@@ -99,6 +95,7 @@ import { mapMaybe } from "@/utils";
 import * as Api from "@/api";
 import { setHeadTitle } from "@/elements";
 import { IUserViewArguments, CombinedUserView, UserViewError, CurrentUserViews } from "@/state/user_view";
+import { ErrorKey } from "@/state/errors";
 import { CurrentChanges, ScopeName } from "@/state/staging_changes";
 import { IAction } from "@/components/ActionsMenu.vue";
 import { CurrentQuery, IQuery, queryLocation, replaceSearch, getDefaultValues } from "@/state/query";
@@ -108,6 +105,7 @@ const userView = namespace("userView");
 const staging = namespace("staging");
 const settings = namespace("settings");
 const query = namespace("query");
+const errors = namespace("errors");
 
 const makeWordsRegex = () => {
     // Match words that doesn't start with quotes
@@ -153,17 +151,13 @@ export default class RootUserView extends Vue {
     @userView.Mutation("clear") clearView!: () => void;
     @userView.Action("getRootView") getRootView!: (_: IUserViewArguments) => Promise<void>;
     @userView.State("current") userViews!: CurrentUserViews;
-    @userView.Mutation("removeError") uvRemoveError!: (errorIndex: number) => void;
-    @userView.State("errors") uvErrors!: string[];
     @staging.State("current") changes!: CurrentChanges;
     @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
     @staging.Action("reset") clearChanges!: () => Promise<void>;
-    @staging.Mutation("removeError") stagingRemoveError!: (errorIndex: number) => void;
-    @staging.State("errors") stagingErrors!: string[];
-    @settings.State("lastError") settingsLastError!: string | null;
-    @settings.Mutation("clearError") settingsClearError!: () => void;
     @query.State("current") query!: CurrentQuery;
     @query.Mutation("setRoute") setRoute!: (_: Route) => void;
+    @errors.Mutation("removeError") removeError!: (params: { key: ErrorKey, index: number }) => void;
+    @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
 
     private extraActions: IAction[] = [];
     private statusLine: string = "";
@@ -175,6 +169,12 @@ export default class RootUserView extends Vue {
         super();
         this.styleNode = document.createElement("style");
         this.styleNode.type = "text/css";
+    }
+
+    get errors() {
+        return Object.entries(this.rawErrors).flatMap(([key, keyErrors]) => keyErrors.map(error => {
+            return this.$t(`${key}_error`, { msg: error });
+        }));
     }
 
     get filterWords() {
@@ -220,8 +220,10 @@ export default class RootUserView extends Vue {
     get actions() {
         const actions: IAction[] = [];
         actions.push(...this.extraActions);
-        actions.push({ name: this.$tc("account"), href: Api.accountUrl });
-        actions.push({ name: this.$tc("logout"), callback: this.logout });
+        if (!Api.disableAuth) {
+            actions.push({ name: this.$t("account").toString(), href: Api.accountUrl });
+            actions.push({ name: this.$t("logout").toString(), callback: this.logout });
+        }
         return actions;
     }
 
@@ -268,9 +270,7 @@ export default class RootUserView extends Vue {
     }
 
     get bottomBarNeeded() {
-        return this.uvErrors.length > 0 ||
-            this.settingsLastError !== null ||
-            this.stagingErrors.length > 0 ||
+        return this.errors.length > 0 ||
             !this.changes.isEmpty ||
             this.statusLine !== "";
     }

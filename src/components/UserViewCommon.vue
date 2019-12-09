@@ -63,11 +63,11 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
     get actions() {
         const actions: IAction[] = [];
         if (this.createView !== null) {
-            actions.push({ name: this.$tc("create"), query: this.createView });
+            actions.push({ name: this.$t("create").toString(), query: this.createView });
         }
         const modalReferenceField = this.modalReferenceField;
         if (modalReferenceField) {
-            actions.push({ name: this.$tc("create_in_modal"), callback: () => this.modalUV = modalReferenceField.uv });
+            actions.push({ name: this.$t("create_in_modal").toString(), callback: () => this.modalUV = modalReferenceField.uv });
         }
         if (this.uv.args.source.type === "named") {
             const editQuery: IQuery = {
@@ -77,7 +77,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
                         type: "named",
                         ref: {
                             schema: funappSchema,
-                            name: "UserViewByName",
+                            name: "user_view_by_name",
                         },
                     },
                     args: {
@@ -86,7 +86,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
                     },
                 },
             };
-            actions.push({ name: this.$tc("edit_view"), query: editQuery });
+            actions.push({ name: this.$t("edit_view").toString(), query: editQuery });
         }
         return actions;
     }

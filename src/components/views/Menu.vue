@@ -87,7 +87,7 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
             // Not supported in menu yet.
             return [];
         } else if (this.uv.info.columns.length !== 2) {
-            return this.$tc("invalid_menu");
+            return this.$t("invalid_menu").toString();
         } else {
             const viewAttrs = this.uv.attributes;
 

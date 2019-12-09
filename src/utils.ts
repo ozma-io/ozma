@@ -423,7 +423,11 @@ export class ObjectResourceMap<K, V> {
     }
 
     get(key: K): V | undefined {
-        const ret = this.map.get(valueSignature(key));
+        return this.getBySignature(valueSignature(key));
+    }
+
+    getBySignature(signature: string): V | undefined {
+        const ret = this.map.get(signature);
         return ret !== undefined ? ret[1] : undefined;
     }
 

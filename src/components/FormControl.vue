@@ -290,13 +290,13 @@ export default class FormControl extends Vue {
         const controlAttr = this.attributes["Control"];
         if (controlAttr === "UserView") {
             if (this.currentValue === null || this.currentValue === undefined) {
-                return { name: "error", text: this.$tc("empty") };
+                return { name: "error", text: this.$t("empty").toString() };
             }
 
             const nestedRef = attrToQuerySelf(this.currentValue, this.value.info, linkOpts);
 
             if (nestedRef === null) {
-                return { name: "error", text: this.$tc("invalid_uv") };
+                return { name: "error", text: this.$t("invalid_uv").toString() };
             } else {
                 return { name: "userview", ...nestedRef };
             }
@@ -327,7 +327,7 @@ export default class FormControl extends Vue {
                 case "bool":
                     return {
                         name: "select",
-                        options: [{ label: this.$tc("yes"), value: true }, { label: this.$tc("no"), value: false }],
+                        options: [{ label: this.$t("yes").toString(), value: true }, { label: this.$t("no").toString(), value: false }],
                     };
                 case "int":
                     return { name: "text", type: "number", style: this.controlStyle() };
@@ -342,7 +342,7 @@ export default class FormControl extends Vue {
                 case "bool":
                     return {
                         name: "select",
-                        options: [  {label: this.$tc("yes"), value: true }, { label: this.$tc("no"), value: false }],
+                        options: [{ label: this.$t("yes").toString(), value: true }, { label: this.$t("no").toString(), value: false }],
                     };
                 case "int":
                     return { name: "text", type: "number", style: this.controlStyle() };
