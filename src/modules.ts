@@ -5,11 +5,9 @@ import Vuex from "vuex";
 import BootstrapVue from "bootstrap-vue";
 import UniqueId from "vue-unique-id";
 import vClickOutside from "v-click-outside";
-import VueGrid from "@liqueflies/vue-flex-grid";
 import { RawLocation, Dictionary } from "vue-router/types/router";
 import PortalVue from "portal-vue";
 import VueJSModal from "vue-js-modal";
-import { Plugin as FragmentPlugin } from "vue-fragment";
 
 import * as Utils from "@/utils";
 import NotFound from "@/components/NotFound.vue";
@@ -17,18 +15,13 @@ import AuthResponse from "@/components/AuthResponse.vue";
 import SaveRestoreSchema from "@/components/SaveRestoreSchema.vue";
 import RootUserView from "@/components/RootUserView.vue";
 
-import "bootstrap/dist/css/bootstrap.css";
-import "bootstrap-vue/dist/bootstrap-vue.css";
-
 Vue.use(VueRouter);
 Vue.use(VueI18n);
 Vue.use(Vuex);
 Vue.use(BootstrapVue);
 Vue.use(UniqueId);
 Vue.use(vClickOutside);
-Vue.use(VueGrid);
 Vue.use(PortalVue);
-Vue.use(FragmentPlugin);
 Vue.use(VueJSModal, { componentName: "VueModal" });
 
 const routes = [

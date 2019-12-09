@@ -1,9 +1,9 @@
 import { boolean, withKnobs } from "@storybook/addon-knobs";
 import { storiesOf } from "@storybook/vue";
 
-import makeFormControl from "@/stories/utility/makeFormField";
+import Calendar from "../components/Calendar.vue";
 
-import Calendar from "@/components/Calendar.vue";
+import makeFormControl from "./utility/makeFormField";
 
 storiesOf("Calendar", module)
   .addDecorator(withKnobs as any)

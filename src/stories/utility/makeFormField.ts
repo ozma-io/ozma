@@ -16,7 +16,7 @@ export default function makeFormField(Component: any, componentName: string) {
           this.stateValue = val;
         },
       },
-      template: `<component :is="componentName" :value="stateValue" @update:value="updateValue($event)" v-bind="bindProps" />`,
+      template: `<component :is="componentName" :value="stateValue" v-on:update:value="updateValue($event)" v-bind="bindProps" />`,
     })
   );
 }

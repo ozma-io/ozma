@@ -11,56 +11,52 @@
 
 <template>
     <div fluid class="view-form">
-        <InputSlot>
-            <template v-slot:content>
-                <MultiSelect
-                    v-if="selectedValueIndex"
-                    :options="options || []"
-                    :value="selectValues"
-                    :emptyValue="[]"
-                    :disabled="disabled"
-                    @update:value="onSelectChange"
-                >
-                    <template v-slot:label="select">
-                        <span v-for="(option, index) in select.valueOptions"
-                            :key="option.value"
-                            class="values_list__value"
-                            :style="select.listValueStyle"
-                            @click.stop>
-                            <UserViewLink v-if="option.meta && option.meta.link"
-                                :uv="option.meta.link"
-                                @[indirectLinks?`click`:null]="$emit('goto', $event)">
-                                {{option.label}}
-                            </UserViewLink>
-                            <span v-else>
-                                {{option.label}}
-                            </span>
-                            <input v-if="select.showValueRemove" @click="select.removeValue(index)" type="button" class="material-icons values_list__value__close" value="close">
-                        </span>
-                    </template>
-                    <template v-slot:option="select">
-                        <ul class="select_container__options_list" :style="select.optionsListStyle" ref="optionsList">
-                            <li v-for="(option, index) in select.selectedOptions"
-                                :key="option.value"
-                                @click="select.addOptionToValue(option, $event)"
-                                :class="[
-                                    'select_container__options_list__option',
-                                    {'select_container__options_list__option_active': select.selectedOption === index }
-                                    ]">
-                                <UserViewLink v-if="option.meta && option.meta.link"
-                                    :uv="option.meta.link"
-                                    @[indirectLinks?`click`:null]="$emit('goto', $event)">
-                                    {{option.label}}
-                                </UserViewLink>
-                                <span v-else>
-                                    {{option.label}}
-                                </span>
-                            </li>
-                        </ul>
-                    </template>
-                </MultiSelect>
+        <MultiSelect
+            v-if="selectedValueIndex"
+            :options="options || []"
+            :value="selectValues"
+            :emptyValue="[]"
+            :disabled="disabled"
+            @update:value="onSelectChange"
+        >
+            <template v-slot:label="select">
+                <span v-for="(option, index) in select.valueOptions"
+                    :key="option.value"
+                    class="values_list__value"
+                    :style="select.listValueStyle"
+                    @click.stop>
+                    <UserViewLink v-if="option.meta && option.meta.link"
+                        :uv="option.meta.link"
+                        @[indirectLinks?`click`:null]="$emit('goto', $event)">
+                        {{option.label}}
+                    </UserViewLink>
+                    <span v-else>
+                        {{option.label}}
+                    </span>
+                    <input v-if="select.showValueRemove" @click="select.removeValue(index)" type="button" class="material-icons values_list__value__close" value="close">
+                </span>
             </template>
-        </InputSlot>
+            <template v-slot:option="select">
+                <ul class="select_container__options_list" :style="select.optionsListStyle" ref="optionsList">
+                    <li v-for="(option, index) in select.selectedOptions"
+                        :key="option.value"
+                        @click="select.addOptionToValue(option, $event)"
+                        :class="[
+                               'select_container__options_list__option',
+                               {'select_container__options_list__option_active': select.selectedOption === index }
+                               ]">
+                        <UserViewLink v-if="option.meta && option.meta.link"
+                            :uv="option.meta.link"
+                            @[indirectLinks?`click`:null]="$emit('goto', $event)">
+                            {{option.label}}
+                        </UserViewLink>
+                        <span v-else>
+                            {{option.label}}
+                        </span>
+                    </li>
+                </ul>
+            </template>
+        </MultiSelect>
         <div v-if="!selectedValueIndex" style="color: red;">
             {{$t('no_select_column')}}
         </div>
@@ -199,7 +195,7 @@ export default class UserViewMultiselect extends mixins<BaseUserView<LocalEmptyU
 <style scoped>
  .values_list__value > a,
  .select_container__options_list__option > a {
-     color: var(--MainTextColor);
+     color: var(--TableTextColor);
      text-decoration: underline;
  }
 </style>

@@ -1,9 +1,5 @@
 <template>
-    <VueModal :width="modalWidth"
-        :height="modalHeight"
-        :name="uid"
-        @before-close="beforeClose"
-        @opened="$emit('opened')">
+    <VueModal :width="width" :height="height" :name="uid" @before-close="beforeClose">
         <div slot="top-right">
             <input type="button" value="close" class="material-icons modal__close_button" @click="$emit('close')">
         </div>
@@ -21,7 +17,7 @@
                 <ModalContent :nodes="tab.content" />
             </div>
         </div>
-        <div v-if="!hasTabs" :class="['modal__content', {'modal__content__fullscreen': fullscreen }]">
+        <div v-if="!hasTabs" class="modal__content">
             <slot name="content">
             </slot>
         </div>
@@ -41,7 +37,6 @@ import { IModalTab } from "@/components/modal/types";
 export default class Modal extends Vue {
     @Prop({ type: Array }) modalTabs!: IModalTab[] | undefined;
     @Prop({ type: Boolean, default: true }) show!: boolean;
-    @Prop({ type: Boolean, default: false }) fullscreen!: boolean;
     @Prop({ type: String }) width!: string;
     @Prop({ type: String }) height!: string;
     @Prop({ type: Number, default: 0 }) startingTab!: number;
@@ -96,20 +91,6 @@ export default class Modal extends Vue {
         return this.modalTabs !== undefined;
     }
 
-    private get modalWidth(): string {
-        if (this.fullscreen) {
-            return "100%";
-        }
-        return this.width;
-    }
-
-    private get modalHeight(): string {
-        if (this.fullscreen) {
-            return "100%";
-        }
-        return this.height;
-    }
-
     private get currentTabContent(): Vue | string {
         return R.pathOr("No Content", [this.selectedTab, "content"], this.modalTabs);
     }
@@ -137,13 +118,6 @@ export default class Modal extends Vue {
  .modal__content >>> .view-form {
      width: 82vw;
      height: calc(80vh + 60px)
- }
-
- .modal__content__fullscreen {
-     width: 100%;
-     height: 100%;
-     padding: 0;
-     overflow: hidden;
  }
 </style>
 

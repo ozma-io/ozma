@@ -174,7 +174,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
  }
  .single_value > a,
  .select_container__options_list__option > a {
-     color: var(--MainTextColor);
+     color: var(--TableTextColor);
      text-decoration: underline;
  }
  .reference__open_modal {
@@ -182,7 +182,6 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
      background: none;
      padding: 0;
      margin: 0 10px 0 0;
-     color: var(--MainTextColor);
  }
  .reference__new_modal__button {
     background-color: var(--NavigationBackColor);

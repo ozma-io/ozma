@@ -1,8 +1,8 @@
 <template>
     <div class="all-days">
         <div class="select-panel">
-            <span class="select_panel_year">{{ startValue.format("YYYY") }}</span>
-            <span class="select_panel_month" v-if="mode === 'days'" @click="mode = 'months'">{{ startValue.format("MMM") }}</span>
+            <span>{{ startValue.format("YYYY") }}</span>
+            <span v-if="mode === 'days'" @click="mode = 'months'">{{ startValue.format("MMM") }}</span>
             <div class="actions">
                 <span class="arrows" @click="changeDate(-1)">◀</span>
                 <span class="arrows" @click="changeDate(1)">▶</span>
@@ -67,10 +67,5 @@ export default class DatePicker extends Vue {
     .actions > span {
         margin-left: 5px;
         cursor: pointer;
-    }
-    .select_panel_year {
-        margin-right: 5px;
-        padding-right: 5px;
-        border-right: 1px solid var(--MainBorderColor);
     }
 </style>

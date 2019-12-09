@@ -144,8 +144,7 @@ export default class TimePicker extends Vue {
     .time-cell {
         background-color: white;
         opacity: 0.5;
-        margin: 3px;
+        margin: 1px;
         color: black;
-        border-radius: 3px;
     }
 </style>

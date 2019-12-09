@@ -53,16 +53,16 @@ export default class DaysInMonth extends Vue {
     }
     .date-cell {
         cursor: pointer;
-        color: var(--MainBorderColor);
+        background-color: white;
+        opacity: 0.5;
+        color: black;
         margin: 1px;
     }
     .diff-month {
-        color: var(--MainTextColorLight)
+        color: darkgrey;
     }
     .curr-day {
-        background-color: var(--MainBorderColor);
-        background-opacity: 0.5;
-        border-radius: 3px;
-        color: var(--MainTextColor);
+        background-color: #FA0000;
+        color: #FFFFFF;
     }
 </style>
