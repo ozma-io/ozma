@@ -86,9 +86,9 @@ export const deepFreeze = (o: any) => {
     return o;
 };
 
-export const waitForElement = (e: GlobalEventHandlers) => {
+export const waitForElement = <T extends GlobalEventHandlers>(e: T): Promise<T> => {
     return new Promise((resolve, reject) => {
-        e.onload = resolve;
+        e.onload = () => resolve(e);
         e.onerror = reject;
     });
 };

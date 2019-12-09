@@ -121,13 +121,13 @@ const createKeycloakIframe = () => {
     ifr.setAttribute("src", `${Api.authUrl}/login-status-iframe.html`);
     ifr.setAttribute("title", "keycloak-session-iframe");
     ifr.style.display = "none";
+    document.body.appendChild(ifr);
     return ifr;
 };
 
 // We create it immediately so it loads faster.
-const iframe = createKeycloakIframe();
-document.body.appendChild(iframe);
-const iframeLoaded = Utils.waitForElement(iframe);
+const iframe = Api.disableAuth ? undefined : createKeycloakIframe();
+const iframeLoaded = Api.disableAuth ? Promise.resolve() : Utils.waitForElement(iframe!);
 
 const redirectUri = () => {
     const returnPath = router.resolve({ name: "auth_response" }).href;
@@ -263,9 +263,9 @@ const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
     }
     const checkIntervalId = setInterval(async () => {
         await iframeLoaded;
-        if (state.pending === null && state.current !== null && iframe.contentWindow !== null) {
+        if (state.pending === null && state.current !== null && iframe!.contentWindow !== null) {
             const msg = `${Api.authClientId} ${state.current.session}`;
-            iframe.contentWindow.postMessage(msg, Api.authOrigin);
+            iframe!.contentWindow.postMessage(msg, Api.authOrigin);
         }
     }, checkInterval);
     commit("setCheckInterval", checkIntervalId);
@@ -429,7 +429,7 @@ export const authModule: Module<IAuthState, {}> = {
             window.addEventListener("storage", authStorageHandler);
 
             const iframeHandler = (e: MessageEvent) => {
-                if (e.origin !== Api.authOrigin || e.source !== iframe.contentWindow) {
+                if (e.origin !== Api.authOrigin || e.source !== iframe!.contentWindow) {
                     return;
                 }
                 const reply = e.data;
