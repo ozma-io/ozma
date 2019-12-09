@@ -1,9 +1,10 @@
 <template>
     <b-container class="form_container">
         <b-row>
-            <FormGridBlock
-                v-for="(block, blockI) in gridContent" :key="blockI" :blockContent="block" :gridProps="gridProps">
-            </FormGridBlock>
+            <template>
+                <FormGridBlock
+                    v-for="(block, blockI) in gridContent" :key="blockI" :blockContent="block" :gridProps="gridProps" />
+            </template>
         </b-row>
     </b-container>
 </template>
