@@ -2,7 +2,8 @@
     <b-container class="form_container">
         <b-row>
             <FormGridBlock
-                v-for="(block, blockI) in gridContent" :key="blockI" :blockContent="block" :gridProps="gridProps" />
+                v-for="(block, blockI) in gridContent" :key="blockI" :blockContent="block" :gridProps="gridProps">
+            </FormGridBlock>
         </b-row>
     </b-container>
 </template>
