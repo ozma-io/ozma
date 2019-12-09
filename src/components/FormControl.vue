@@ -30,13 +30,13 @@
                 <Input v-if="inputType.name === 'text'"
                     :value="iSlot.value"
                     @input="iSlot.onChange($event.target.value)"
-                    :unfocusing="unfocusing"
+                    :dontFocus="dontFocus"
                     :disabled="isDisabled"
                     focus />
                 <Textarea v-else-if="inputType.name === 'textarea'"
                     :value="iSlot.value"
                     @update:value="iSlot.onChange($event)"
-                    :unfocusing="unfocusing"
+                    :dontFocus="dontFocus"
                     :disabled="isDisabled" />
                 <Calendar v-else-if="inputType.name === 'calendar'"
                     :value="iSlot.value"
@@ -62,13 +62,13 @@
                     :value="currentValue"
                     @input="updateValue($event.target.value)"
                     @focus="iSlot.onFocus"
-                    :unfocusing="unfocusing"
+                    :dontFocus="dontFocus"
                     :disabled="isDisabled" />
                 <Textarea v-else-if="inputType.name === 'textarea'"
                     :value="currentValue"
                     @update:value="updateValue($event)"
                     @focus="iSlot.onFocus"
-                    :unfocusing="unfocusing"
+                    :dontFocus="dontFocus"
                     :disabled="isDisabled" />
                 <Calendar v-else-if="inputType.name === 'calendar'"
                     :value="value.value"
@@ -220,7 +220,7 @@ export default class FormControl extends Vue {
     @Prop({ type: Object, default: () => ({}) }) attributes!: AttributesMap;
     @Prop({ type: Boolean, default: false }) locked!: boolean;
     @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-    @Prop({ type: Boolean, default: false }) unfocusing!: boolean;
+    @Prop({ type: Boolean, default: false }) dontFocus!: boolean;
     @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
     @Prop({ type: String, default: "" }) caption!: string;
     @Prop({ type: Boolean, default: false }) disableColor!: boolean;

@@ -42,7 +42,7 @@
                                 :scope="scope"
                                 :level="level"
                                 autofocus
-                                unfocusing
+                                dontFocus
                                 @update="updateCurrentValue" />
                     </b-col>
                 </b-row>

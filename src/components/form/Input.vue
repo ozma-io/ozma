@@ -45,7 +45,7 @@ export default class Input extends Vue {
     @Prop({ type: Boolean }) disabled!: boolean;
     @Prop({ type: String }) id!: string;
     @Prop({ type: Boolean, default: true }) inline!: boolean;
-    @Prop({ type: Boolean, default: false }) unfocusing!: boolean;
+    @Prop({ type: Boolean, default: false }) dontFocus!: boolean;
     @Prop({ type: String, default: "text" }) type!: string;
     @Prop({ type: Boolean, default: false }) focus!: boolean;
 
@@ -80,7 +80,7 @@ export default class Input extends Vue {
 
     private onFocus(evt: Event) {
         this.$emit("focus", evt);
-        if (!this.unfocusing) {
+        if (!this.dontFocus) {
             this.focused = true;
         }
         if (!this.isMobile) {
@@ -89,7 +89,7 @@ export default class Input extends Vue {
     }
 
     private onBlur(evt: Event) {
-        if (!this.unfocusing) {
+        if (!this.dontFocus) {
             this.focused = false;
         }
         if (!this.isMobile) {
