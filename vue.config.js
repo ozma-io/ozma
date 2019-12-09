@@ -43,6 +43,8 @@ module.exports = {
     },
 
     chainWebpack: webpackConfig => {
+        /* Manually set prefetched chunks */
+        webpackConfig.plugins.delete("prefetch");
         webpackConfig.plugin("define").tap(
             ([ definitions, ...rest ]) => [{ ...definitions, ...defaults, ...config }, ...rest]
         );
