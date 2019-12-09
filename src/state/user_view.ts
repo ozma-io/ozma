@@ -1185,8 +1185,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             pending.ref = (async () => {
                 try {
                     const entityPromise = dispatch("getEntity", ref.entity);
-                    const whereStr = ref.where ? `WHERE ${ref.where}` : "";
-                    const query = `SELECT id, __main FROM "${ref.entity.schema}"."${ref.entity.name}" ${whereStr} ORDER BY __main`;
+                    const query = `SELECT id, __main AS name FROM "${ref.entity.schema}"."${ref.entity.name}" ORDER BY __main`;
                     const resPromise = dispatch("callProtectedApi", {
                         func: Api.fetchAnonymousView,
                         args: [query, {}],
