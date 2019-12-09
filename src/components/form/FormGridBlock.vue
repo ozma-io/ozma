@@ -32,6 +32,7 @@ import FormControl from "@/components/FormControl.vue";
 import { IGridInputInfoTopLevel, IGridProps } from "@/components/form/types";
 
 @Component({
+    name: "FormGridBlock",
     components: { FormControl },
 })
 export default class FormGridBlock extends Vue {
