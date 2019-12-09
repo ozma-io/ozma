@@ -40,9 +40,9 @@ export default class FormGridBlock extends Vue {
 </script>
 
 <style scoped>
- .form_grid_block__sub_column {
-     margin-top: 0;
-     padding-left: 0;
-     padding-right: 0;
- }
+.form_grid_block__sub_column {
+    margin-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+}
 </style>

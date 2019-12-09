@@ -1,10 +1,10 @@
 <i18n>
     {
         "en": {
-            "input_placeholder": "Fill this value here"
+            "input_placeholder": "Empty"
         },
         "ru": {
-            "input_placeholder": "Заполните здесь"
+            "input_placeholder": "Пусто"
         }
     }
 </i18n>
@@ -33,14 +33,10 @@
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
-// 496264
-// 628183
-
-import { getTextWidth } from "@/utils";
-import MobileMixin from "@/MobileMixin";
+import { isMobile, getTextWidth } from "@/utils";
 
 @Component
-export default class Input extends MobileMixin {
+export default class Input extends Vue {
     @Prop({ type: String }) label!: string;
     @Prop() value!: any;
     @Prop({ type: String }) error!: string;
@@ -73,7 +69,13 @@ export default class Input extends MobileMixin {
     private get hasContent(): boolean {
         if (typeof this.value === "string") {
             return this.value.length > 0;
-        } else { return !!this.value; }
+        } else {
+            return !!this.value;
+        }
+    }
+
+    private get isMobile(): boolean {
+        return isMobile();
     }
 
     private onFocus(evt: Event) {
@@ -125,106 +127,106 @@ export default class Input extends MobileMixin {
 </script>
 
 <style lang="scss" scoped>
- .input_container {
-     position: relative;
-     display: inline-flex;
-     flex-direction: column;
-     color: var(--MainTextColor);
-     width: 100%;
-     padding-left: 15px;
- }
- .input_container__row {
-     flex-direction: row;
- }
- .input_label__container {
-     padding: 0;
-     display: flex;
-     height: 2em;
- }
- .input_label {
-     align-self: center;
-     margin-bottom: 0;
-     overflow: hidden;
-     text-overflow: ellipsis;
-     white-space: pre;
-     cursor: question;
-     color: var(--MainTextColorLight)
- }
- .input_label__focused::after {
-    content:"";
-    position:absolute;
-    width:100%;
-    bottom:1px;
-    z-index:-1;
-    transform:scale(.9);
-    box-shadow: 0px 0px 8px 2px #000000;
- }
- .input_field {
-     padding: 5px 2px 5px 0;
-     background-color: rgba(0, 0, 0, 0);
-     border: 0px;
-     z-index: 2;
-     order: 2;
-     flex: 2;
-     height: 2em;
-     color: var(--MainTextColor);
-     cursor: pointer;
-     border-bottom: none;
-     width: 100%;
-     text-overflow: ellipsis;
- }
- .input_field::placeholder {
-     color: var(--MainTextColorLight);
- }
- .input_field:hover,
- .input_field:focus {
-     outline: none;
-     color: var(--MainTextColor);
-     border-bottom: 1px solid var(--MainBorderColor) !important;
-     cursor: text;
-     background-color: var(--MainBackgroundColor);
- }
- .input_field__disabled {
-     cursor: not-allowed;
- }
- .input_field__focused {
-     position: absolute;
- }
- .input_modal_field {
-     color: var(--MainTextColor);
-     background-color: var(--MainBackgroundColor);
-     padding-right: 5px;
-     padding-left: 5px;
- }
- .input_modal_label {
-     color: var(--MainTextColor);
-     margin: 5px;
- }
- .input_modal__input_group {
-     display: flex;
-     flex-direction: column;
-     height: 100%;
-     justify-content: space-between;
-     background-color: var(--MainBackgroundColor);
- }
- .input_modal__button__ok,
- .input_modal__button__cancel {
-     outline: none;
-     border: 0;
-     padding: 10px 18px;
-     cursor: pointer;
-     color: var(--MainTextColor);
-     box-shadow: 0 4px 8px var(--MainBorderColor);
-     background: var(--MainBackgroundColor);
-     font-weight: 600;
-     width: 100%;
-     border-radius: 0;
-     margin-top: 5px;
- }
- .input_modal__button__ok {
-     background-color: var(--SuccessColor);
- }
- .input_modal__button__cancel {
-     background-color: var(--FailColor);
- }
+.input_container {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    color: var(--MainTextColor);
+    width: 100%;
+    padding-left: 15px;
+}
+.input_container__row {
+    flex-direction: row;
+}
+.input_label__container {
+    padding: 0;
+    display: flex;
+    height: 2em;
+}
+.input_label {
+    align-self: center;
+    margin-bottom: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: pre;
+    cursor: question;
+    color: var(--MainTextColorLight)
+}
+.input_label__focused::after {
+content:"";
+position:absolute;
+width:100%;
+bottom:1px;
+z-index:-1;
+transform:scale(.9);
+box-shadow: 0px 0px 8px 2px #000000;
+}
+.input_field {
+    padding: 5px 2px 5px 0;
+    background-color: rgba(0, 0, 0, 0);
+    border: 0px;
+    z-index: 2;
+    order: 2;
+    flex: 2;
+    height: 2em;
+    color: var(--MainTextColor);
+    cursor: pointer;
+    border-bottom: none;
+    width: 100%;
+    text-overflow: ellipsis;
+}
+.input_field::placeholder {
+    color: var(--MainTextColorLight);
+}
+.input_field:hover,
+.input_field:focus {
+    outline: none;
+    color: var(--MainTextColor);
+    border-bottom: 1px solid var(--MainBorderColor) !important;
+    cursor: text;
+    background-color: var(--MainBackgroundColor);
+}
+.input_field__disabled {
+    cursor: not-allowed;
+}
+.input_field__focused {
+    position: absolute;
+}
+.input_modal_field {
+    color: var(--MainTextColor);
+    background-color: var(--MainBackgroundColor);
+    padding-right: 5px;
+    padding-left: 5px;
+}
+.input_modal_label {
+    color: var(--MainTextColor);
+    margin: 5px;
+}
+.input_modal__input_group {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: space-between;
+    background-color: var(--MainBackgroundColor);
+}
+.input_modal__button__ok,
+.input_modal__button__cancel {
+    outline: none;
+    border: 0;
+    padding: 10px 18px;
+    cursor: pointer;
+    color: var(--MainTextColor);
+    box-shadow: 0 4px 8px var(--MainBorderColor);
+    background: var(--MainBackgroundColor);
+    font-weight: 600;
+    width: 100%;
+    border-radius: 0;
+    margin-top: 5px;
+}
+.input_modal__button__ok {
+    background-color: var(--SuccessColor);
+}
+.input_modal__button__cancel {
+    background-color: var(--FailColor);
+}
 </style>

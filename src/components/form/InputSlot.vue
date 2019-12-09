@@ -44,16 +44,12 @@
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
-// 496264
-// 628183
-
-import { getTextWidth } from "@/utils";
-import MobileMixin from "@/MobileMixin";
+import { isMobile, getTextWidth } from "@/utils";
 
 import Modal from "@/components/modal/Modal.vue";
 
 @Component({ components: { Modal } })
-export default class InputSlot extends MobileMixin {
+export default class InputSlot extends Vue {
     @Prop({ type: String }) label!: string;
     @Prop() value!: any;
     @Prop({ type: String }) error!: string;
@@ -84,6 +80,10 @@ export default class InputSlot extends MobileMixin {
         if (typeof this.value === "string") {
             return this.value.length > 0;
         } else { return !!this.value; }
+    }
+
+    private get isMobile(): boolean {
+        return isMobile();
     }
 
     private onModalOpen() {
@@ -122,78 +122,78 @@ export default class InputSlot extends MobileMixin {
 </script>
 
 <style lang="scss" scoped>
- .input_slot {
-     position: relative;
-     display: inline-flex;
-     flex-direction: column;
-     color: var(--MainTextColor);
-     width: 100%;
-     padding-left: 15px;
- }
- .input_slot__row {
-     flex-direction: row;
- }
- .input_label__container {
-     padding: 0;
-     display: flex;
-     height: 2em;
- }
- .input_label {
-     align-self: center;
-     margin-bottom: 0;
-     overflow: hidden;
-     text-overflow: ellipsis;
-     white-space: pre;
-     cursor: question;
-     color: var(--MainTextColorLight)
- }
- .input_label__focused::after {
-    content:"";
-    position:absolute;
-    width:100%;
-    bottom:1px;
-    z-index:-1;
-    transform:scale(.9);
-    box-shadow: 0px 0px 8px 2px #000000;
- }
- .input_container {
-     padding-left: 0;
- }
- .input_field__focused {
-     position: absolute;
- }
- .input_modal_label {
-     color: var(--MainTextColor);
-     margin: 5px;
- }
- .input_modal__input_group {
-     display: flex;
-     flex-direction: column;
-     height: 100%;
-     justify-content: space-between;
-     background-color: var(--MainBackgroundColor);
- }
- .input_modal__button__ok,
- .input_modal__button__cancel {
-     outline: none;
-     border: 0;
-     padding: 10px 18px;
-     cursor: pointer;
-     color: var(--MainTextColor);
-     box-shadow: 0 4px 8px var(--MainBorderColor);
-     background: var(--MainBackgroundColor);
-     font-weight: 600;
-     width: 100%;
-     border-radius: 0;
-     margin-top: 5px;
- }
- .input_modal__button__ok {
-     background-color: var(--SuccessColor);
- }
- .input_modal__button__cancel {
-     background-color: var(--FailColor);
- }
- .v--modal-overlay {
-     z-index: 1000;
- }
+.input_slot {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    color: var(--MainTextColor);
+    width: 100%;
+    padding-left: 15px;
+}
+.input_slot__row {
+    flex-direction: row;
+}
+.input_label__container {
+    padding: 0;
+    display: flex;
+    height: 2em;
+}
+.input_label {
+    align-self: center;
+    margin-bottom: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: pre;
+    cursor: question;
+    color: var(--MainTextColorLight)
+}
+.input_label__focused::after {
+content:"";
+position:absolute;
+width:100%;
+bottom:1px;
+z-index:-1;
+transform:scale(.9);
+box-shadow: 0px 0px 8px 2px #000000;
+}
+.input_container {
+    padding-left: 0;
+}
+.input_field__focused {
+    position: absolute;
+}
+.input_modal_label {
+    color: var(--MainTextColor);
+    margin: 5px;
+}
+.input_modal__input_group {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: space-between;
+    background-color: var(--MainBackgroundColor);
+}
+.input_modal__button__ok,
+.input_modal__button__cancel {
+    outline: none;
+    border: 0;
+    padding: 10px 18px;
+    cursor: pointer;
+    color: var(--MainTextColor);
+    box-shadow: 0 4px 8px var(--MainBorderColor);
+    background: var(--MainBackgroundColor);
+    font-weight: 600;
+    width: 100%;
+    border-radius: 0;
+    margin-top: 5px;
+}
+.input_modal__button__ok {
+    background-color: var(--SuccessColor);
+}
+.input_modal__button__cancel {
+    background-color: var(--FailColor);
+}
+.v--modal-overlay {
+    z-index: 1000;
+}
 </style>

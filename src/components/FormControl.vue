@@ -44,12 +44,14 @@
                     @update:value="iSlot.onChange"
                     :showTime="inputType.showTime"
                     ref="control" />
-                <CodeEditor v-else-if="inputType.name === 'codeeditor'"
-                    :style="inputType.style"
-                    :content="iSlot.value"
-                    @update:content="iSlot.onChange($event)"
-                    :readOnly="isDisabled"
-                    :autofocus="autofocus"
+                <MultiSelect v-else-if="inputType.name === 'select'"
+                    :value="currentValue"
+                    :options="inputType.options"
+                    :height="attributes['ControlHeight']"
+                    single
+                    @update:value="updateValue($event)"
+                    :required="!isNullable"
+                    :disabled="isDisabled"
                     ref="control" />
             </template>
             <template v-slot:input="iSlot">
@@ -82,6 +84,7 @@
                     single
                     @update:value="updateValue($event)"
                     @focus="iSlot.onFocus"
+                    :dontOpen="isMobile"
                     :required="!isNullable"
                     :disabled="isDisabled"
                     ref="control" />
@@ -90,7 +93,6 @@
                     mode="ace/mode/pgsql"
                     :content="textValue"
                     @update:content="updateValue($event)"
-                    @focus="iSlot.onFocus"
                     :readOnly="isDisabled"
                     :autofocus="autofocus"
                     ref="control" />
@@ -144,6 +146,7 @@ import { IValueInfo, IUserViewArguments, CombinedUserView, CurrentUserViews, hom
 import { IQuery, attrToQuerySelf, IAttrToQueryOpts } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { ISelectionRef } from "@/components/BaseUserView";
+import { isMobile } from "@/utils";
 
 interface ITextType {
     name: "text";
@@ -237,6 +240,10 @@ export default class FormControl extends Vue {
 
     get currentValue() {
         return currentValue(this.value);
+    }
+
+    private get isMobile(): boolean {
+        return isMobile();
     }
 
     get isAwaited() {
@@ -357,12 +364,14 @@ export default class FormControl extends Vue {
         if (this.autofocus) {
             const type = this.inputType;
             const control: any = this.$refs["control"];
-            if (type.name === "text") {
-                control.focus();
-            } else if (type.name === "textarea") {
-                control.focus();
-            } else if (type.name === "check") {
-                control.focus();
+            if (control) {
+                if (type.name === "text") {
+                    control.focus();
+                } else if (type.name === "textarea") {
+                    control.focus();
+                } else if (type.name === "check") {
+                    control.focus();
+                }
             }
         }
     }

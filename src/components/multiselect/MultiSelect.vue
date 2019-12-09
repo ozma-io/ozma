@@ -131,6 +131,7 @@ export default class MultiSelect extends Vue {
     @Prop({ default: null }) emptyValue: any;
     @Prop({ type: Number, default: null }) height!: number;
     @Prop({ type: String, default: null }) optionsListHeight!: string;
+    @Prop({ type: Boolean, default: false }) dontOpen!: boolean;
 
     private isOpen: boolean = false;
 
@@ -248,13 +249,18 @@ export default class MultiSelect extends Vue {
         if (this.disabled) {
             return;
         }
-        this.isOpen = val;
-        this.selectedOption = -1;
+        if (!this.dontOpen) {
+            this.isOpen = val;
+            this.selectedOption = -1;
+            if (val) {
+                // Using nextTick() to set focus because upon setting isOpen it's not present yet
+                Vue.nextTick().then(() => {
+                    this.focusInput();
+                });
+            }
+        }
         if (val) {
-            // Using nextTick() to set focus because upon setting isOpen it's not present yet
-            Vue.nextTick().then(() => {
-                this.focusInput();
-            });
+            this.$emit("focus", null);
         }
     }
 

@@ -16,24 +16,6 @@
         }
     }
 </i18n>
-                    <!-- div v-for="(block, blockI) in blocks" :key="blockI" class="form-block" :style="{ width: `${block.width * 100}%` }">
-                        <template v-for="fieldInfo in block.fields" class="form_data">
-                            <div class="form-data" v-if="fieldInfo.visible" :key="fieldInfo.columnInfo.name" :label-for="fieldInfo.columnInfo.name">
-                                <FormControl
-                                        :caption="fieldInfo.caption"
-                                        :value="row.values[fieldInfo.index]"
-                                        :attributes="localRow.values[fieldInfo.index].attributes"
-                                        :type="fieldInfo.columnInfo.valueType"
-                                        :locked="locked"
-                                        :uvArgs="uv.args"
-                                        :indirectLinks="indirectLinks"
-                                        :scope="scope"
-                                        :level="level"
-                                        @goto="$emit('goto', $event)"
-                                        @update="$emit('update', fieldInfo.index, $event)" />
-                            </div>
-                        </template>
-                    </div !-->
 
 <template>
     <b-container>

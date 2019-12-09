@@ -1209,7 +1209,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         max-width: 100vw !important;
     }
     .form_background {
+        padding: 50px;
+        box-sizing: border-box;
+        border-top: 2px solid var(--mainbordercolor);
         background: var(--MainBackgroundColor);
+        width: 40%;
     }
 
     .edit_container {
@@ -1232,7 +1236,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     #disable_edit.edit_active {
         width: 100vw;
         height: 100vh;
-        /* z-index: 500; /* чтоб таблица была поверх этого блока */
     }
     /* таблица поверх блока отключения редактирования */
     table.edit_active {

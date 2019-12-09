@@ -15,14 +15,13 @@ import { IGridInputInfoTopLevel } from "@/components/form/types";
 
 @Component({ components: { FormGridBlock } })
 export default class FormGrid extends Vue {
-
     @Prop({ type: Array }) gridContent!: any;
     @Prop({ type: Object }) gridProps!: any;
 }
 </script>
 
 <style scoped>
- .form_container {
-     margin-top: 25px;
- }
+.form_container {
+    margin-top: 25px;
+}
 </style>

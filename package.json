@@ -12,7 +12,6 @@
   "dependencies": {
     "@liqueflies/vue-flex-grid": "^0.0.1",
     "@types/ramda": "^0.26.22",
-    "ace-builds": "^1.4.5",
     "bootstrap-vue": "^2.0.4",
     "core-js": "^2.6.5",
     "dependencies": "0.0.1",
