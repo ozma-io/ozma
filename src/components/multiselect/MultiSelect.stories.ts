@@ -1,11 +1,11 @@
 import { storiesOf } from "@storybook/vue";
 import { boolean, text, number, withKnobs } from "@storybook/addon-knobs";
 
-import makeFormControl from "../utility/makeFormField";
+import makeFormControl from "@/stories/utility/makeFormField";
+import testOptions from "@/stories/lib/multiselectOptions";
 
-import CustomSelect from "../components/CustomSelect.vue";
-import MultiSelect from "../../components/multiselect/MultiSelect.vue";
-import testOptions from "./multiselectOptions";
+import CustomSelect from "@/stories/components/CustomSelect.vue";
+import MultiSelect from "@/components/multiselect/MultiSelect.vue";
 
 storiesOf("MultiSelect", module)
   .addDecorator(withKnobs as any)
@@ -32,7 +32,7 @@ storiesOf("MultiSelect", module)
         },
       },
       components: { FormField },
-      template: "<div class=\"input_container\"><div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div></div>",
+      template: "<div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div>",
     };
   })
   .add("With single value", () => {
@@ -59,7 +59,7 @@ storiesOf("MultiSelect", module)
         },
       },
       components: { FormField },
-      template: "<div class=\"input_container\"><div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div></div>",
+      template: "<div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div>",
     };
   })
   .add("With Custom Option and Value (Single)", () => {
@@ -86,7 +86,7 @@ storiesOf("MultiSelect", module)
         },
       },
       components: { FormField },
-      template: "<div class=\"input_container\"><div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div></div>",
+      template: "<div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div>",
     };
   })
   .add("With Custom Option and Value (Multiple)", () => {
@@ -112,7 +112,7 @@ storiesOf("MultiSelect", module)
         },
       },
       components: { FormField },
-      template: "<div class=\"input_container\"><div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div></div>",
+      template: "<div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div>",
     };
   })
   .add("Single with boolean value", () => {
@@ -139,7 +139,7 @@ storiesOf("MultiSelect", module)
               },
           },
           components: { FormField },
-          template: "<div class=\"input_container\"><div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div></div>",
+          template: "<div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div>",
       };
   })
   .add("Empty Option", () => {
@@ -171,6 +171,6 @@ storiesOf("MultiSelect", module)
               },
           },
           components: { FormField },
-        template: "<div><span>{{(noValueOptions)}}</span><div class=\"input_container\"><div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div></div></div>",
+        template: "<div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div>",
       };
   });
