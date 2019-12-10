@@ -1337,6 +1337,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
             justify-content: flex-start;
             z-index: 100000; /* чтобы FormControl был поверх других таблиц, когда их несколько на странице*/
         }
+        .form_background {
+            width: 80%;
+        }
     }
 
     @media screen and (max-device-width: 768px), screen and (orientation: portrait) {
