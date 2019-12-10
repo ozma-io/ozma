@@ -212,20 +212,26 @@ export default class UserView extends Vue {
                 local = null;
             }
 
-            this.extraActions = [];
-            this.extraCommonActions = [];
+            this.clearState();
             this.currentUv = newUv;
             this.local = local;
             this.component = component;
         } else if (newUv instanceof UserViewError) {
-            this.extraActions = [];
-            this.extraCommonActions = [];
+            this.clearState();
             this.currentUv = newUv;
             this.local = null;
             this.component = null;
         } else if (newUv === null) {
             this.requestView();
         }
+    }
+
+    private clearState() {
+        this.extraActions = [];
+        this.extraCommonActions = [];
+        this.$emit("update:statusLine", "");
+        this.$emit("update:enableFilter", false);
+        this.$emit("update:bodyStyle", "");
     }
 
     // We should request nested view:

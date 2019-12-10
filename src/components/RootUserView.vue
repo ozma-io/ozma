@@ -61,7 +61,6 @@
                           @goto="goto"
                           @update:actions="extraActions = $event"
                           @update:statusLine="statusLine = $event"
-                          @update:onSubmitStaging="onSubmitStaging = $event"
                           @update:enableFilter="enableFilter = $event"
                           @update:bodyStyle="styleNode.innerHTML = $event"
                           @update:title="updateTitle" />
@@ -229,11 +228,6 @@ export default class RootUserView extends Vue {
 
     private updateView() {
         this.clearView();
-        this.extraActions = [];
-        this.statusLine = "";
-        this.enableFilter = false;
-        this.styleNode.innerHTML = "";
-
         const args = this.query.rootViewArgs;
         if (args === null) {
             throw new Error("Invalid root view arguments");
