@@ -1,7 +1,7 @@
 <template>
     <MonacoEditor :language="mode"
         :value="content"
-        @change="this.onChange"
+        @change="onChange"
         @focus="$emit('focus', $event)" />
 </template>
 
@@ -22,8 +22,8 @@ export default class CodeEditor extends Vue {
     @Prop({ default: false }) readOnly!: boolean;
     @Prop({ default: false }) autofocus!: boolean;
 
-    private onChange(value) {
-        this.$emit('update:content', value)
+    private onChange(value: string) {
+        this.$emit("update:content", value);
     }
 }
 </script>
