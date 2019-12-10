@@ -1,11 +1,11 @@
 <i18n>
     {
       "en": {
-        "empty_message": "Empty. Click to start selecting...",
+        "empty_message": "Empty",
         "clear_all": "Clear all"
       },
       "ru": {
-        "empty_message": "Пусто. Кликните чтобы начать выбирать...",
+        "empty_message": "Пусто",
         "clear_all": "Удалить всё"
       }
     }
