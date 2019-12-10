@@ -94,7 +94,6 @@
                     ref="control" />
                 <CodeEditor v-else-if="inputType.name === 'codeeditor'"
                     :style="inputType.style"
-                    mode="ace/mode/pgsql"
                     :content="textValue"
                     @update:content="updateValue($event)"
                     :readOnly="isDisabled"
