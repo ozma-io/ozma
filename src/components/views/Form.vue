@@ -236,10 +236,9 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
         const viewAttrs = this.uv.attributes;
         const blockWidths: number[] = R.pathOr<number[]>([12], ["BlockSizes"], viewAttrs);
         const inputWidth: number = R.equals(blockWidths, [12]) ? 6 : 12;
-        console.log(this.blocks);
         const gridBlocks: IGridInputInfoTopLevel[] = this.blocks.map((block, index) => ({
             type: "section",
-            size: R.pathOr(12, blockWidths, [index]),
+            size: R.pathOr(12, [index], blockWidths),
             content: block.fields.map(field => ({
                  type: "input",
                  size: inputWidth,

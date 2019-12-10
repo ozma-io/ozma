@@ -65,10 +65,6 @@ export default class InputSlot extends Vue {
     private modalValue: any = this.value;
     private isModalOpen: boolean = false;
 
-    private mounted() {
-        console.log(this.value, this.modalValue);
-    }
-
     @Watch("value")
     private onValueUpdate(value: string) {
         this.modalValue = value;
