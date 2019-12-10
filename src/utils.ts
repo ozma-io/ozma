@@ -449,3 +449,16 @@ export class ObjectResourceMap<K, V> {
 }
 
 export const isIOS = () => !!navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform);
+export const isMobile = () => !!(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+
+export const getTextWidth = (text: string, font: string): number => {
+    // re-use canvas object for better performance
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    if (context) {
+        context.font = font;
+        const metrics = context.measureText(text);
+        return metrics.width;
+    }
+    return 0;
+};

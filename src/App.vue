@@ -83,6 +83,14 @@ export default class App extends Vue {
             "SaveBackColor": this.settings.getEntry("SaveBackColor", String, "blue"),
             "NavigationTextColor": this.settings.getEntry("NavigationTextColor", String, "white"),
             "ControlDisableColor": this.settings.getEntry("ControlDisableColor", String, "#999999"),
+
+            "MainTextColor": this.settings.getEntry("MainTextColor", String, "#b2b2b2"),
+            "MainBackgroundColor": this.settings.getEntry("MainBackgroundColor", String, "#292b2e"),
+            "MainTextColorLight": this.settings.getEntry("MainTextColorLight", String, "#8a8a8a"),
+            "MainBorderColor": this.settings.getEntry("MainBorderColor", String, "#2c936f"),
+
+            "SuccessColor": this.settings.getEntry("SuccessColor", String, "#28a745"),
+            "FailColor": this.settings.getEntry("FailColor", String, "#dc3545"),
         };
         return Object.entries(values).reduce((currSettings, [name, value]) => {
             currSettings[`--${name}`] = value;
