@@ -31,7 +31,7 @@
                 :for="inputName"
                 v-if="label"
                 :title="label"
-            >{{ label }}</label>
+            >{{ capitalizedLabel }}</label>
         </b-col>
         <b-col :cols="!!label ? 8 : 12" class="input_container">
             <slot name="input" :onFocus="onFocus">
@@ -41,10 +41,11 @@
 </template>
 
 <script lang="ts">
+import { IAction } from "@/components/ActionsMenu.vue";
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
-import { isMobile, getTextWidth } from "@/utils";
+import { isMobile, getTextWidth, capitalize } from "@/utils";
 
 import Modal from "@/components/modal/Modal.vue";
 
@@ -55,6 +56,7 @@ export default class InputSlot extends Vue {
     @Prop({ type: String }) error!: string;
     @Prop({ type: String }) warning!: string;
     @Prop({ type: Number }) height!: number;
+    @Prop({ type: Array }) actions!: IAction[];
     @Prop({ type: Boolean }) disabled!: boolean;
     @Prop({ type: Boolean, default: true }) inline!: boolean;
     @Prop({ type: String, default: "text" }) type!: string;
@@ -70,6 +72,10 @@ export default class InputSlot extends Vue {
     @Watch("value")
     private onValueUpdate(value: string) {
         this.modalValue = value;
+    }
+
+    private get capitalizedLabel() {
+        return capitalize(this.label);
     }
 
     private get inputName(): string {
@@ -196,4 +202,5 @@ box-shadow: 0px 0px 8px 2px #000000;
 .v--modal-overlay {
     z-index: 1000;
 }
+
 </style>

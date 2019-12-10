@@ -21,10 +21,14 @@
 
 <template>
     <fragment>
+        <template v-if="inputType.name === 'error'">
+            {{ inputType.text }}
+        </template>
         <InputSlot :label="caption"
             v-if="inputType.name !== 'userview'"
             :inline="!isInline"
             :value="currentValue"
+            :actions="actions"
             @update:value="updateValue">
             <template v-slot:input-modal="iSlot">
                 <Input v-if="inputType.name === 'text'"
@@ -108,7 +112,13 @@
             </template>
         </InputSlot>
         <template v-if="inputType.name === 'reference' || inputType.name === 'userview'">
-            <label class="input_label">{{ caption }}</label>
+            <div v-if="actions.length > 0" class="nested-menu">
+                <ActionsMenu title="view_headline"
+                    :actions="actions"
+                    :indirectLinks="indirectLinks"
+                    @goto="$emit('goto', $event)" />
+                <label class="input_label">{{ capitalizedCaption }}</label>
+            </div>
             <ReferenceField v-if="inputType.name === 'reference'"
                 :value="value"
                 :height="attributes['ControlHeight']"
@@ -146,7 +156,7 @@ import { IValueInfo, IUserViewArguments, CombinedUserView, CurrentUserViews, hom
 import { IQuery, attrToQuerySelf, IAttrToQueryOpts } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { ISelectionRef } from "@/components/BaseUserView";
-import { isMobile } from "@/utils";
+import { isMobile, capitalize } from "@/utils";
 
 interface ITextType {
     name: "text";
@@ -229,6 +239,10 @@ export default class FormControl extends Vue {
     @Prop({ type: Number, required: true }) level!: number;
 
     private actions: IAction[] = [];
+
+    private get capitalizedCaption(): string {
+        return capitalize(this.caption);
+    }
 
     get isInline(): boolean {
         return inlineTypes.includes(this.inputType.name);
@@ -406,6 +420,7 @@ export default class FormControl extends Vue {
     .nested-menu > .actions-menu{
         width: max-content;
         display: inline-block;
+        margin-right: 15px;
     }
     .nested-menu >>> .actions-menu_actions-button {
         border: 0px !important;
@@ -416,14 +431,23 @@ export default class FormControl extends Vue {
         text-align: left;
         border-radius: 0 !important;
     }
+    .actions-menu {
+        width: max-content;
+        display: inline-block;
+    }
+    .actions-menu_actions-button {
+        border: 0px !important;
+        line-height: normal;
+        padding: 2px;
+        padding-left: 1px;
+        height: 100%;
+        text-align: left;
+        border-radius: 0 !important;
+    }
     .nested-menu {
-        margin-left: -1px;
-        left: 0;
-        color: var(--ButtonTextColor) !important;
-        width: max-content !important;
-        display: block;
-        margin-right: 7px;
-        margin-top: 10px;
+        color: var(--MainBorderColor) !important;
+        display: flex;
+        align-items: center;
         margin-bottom: 5px;
     }
     .caption-editors {

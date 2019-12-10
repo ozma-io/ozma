@@ -2,6 +2,7 @@ import moment from "moment";
 import Vue, { RenderContext } from "vue";
 import { RSA_NO_PADDING } from "constants";
 import { isObject } from "util";
+import * as Ramda from "ramda";
 
 export type Result<A> = A | Error;
 
@@ -450,6 +451,11 @@ export class ObjectResourceMap<K, V> {
 
 export const isIOS = () => !!navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform);
 export const isMobile = () => !!(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+
+export const capitalize = (value: any): string => Ramda.compose(
+  Ramda.join(""),
+  Ramda.juxt([Ramda.compose(Ramda.toUpper, Ramda.head), Ramda.tail]),
+)(value);
 
 export const getTextWidth = (text: string, font: string): number => {
     // re-use canvas object for better performance

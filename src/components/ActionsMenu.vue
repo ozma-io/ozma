@@ -93,7 +93,7 @@ export default class ActionsMenu extends Vue {
         position: absolute;
         display: block;
         z-index: 1200; /* меню действий для подтаблиц поверх темного фона */
-        background-color: var(--MenuColor);
+        background-color: var(--MainBorderColor);
         margin-left: -1px
     }
     .div-with-actions_button {
@@ -113,7 +113,7 @@ export default class ActionsMenu extends Vue {
     }
     .actions-menu {
         z-index: 1000; /* шапка-меню */
-        background-color: var(--MenuColor);
+        background-color: var(--MainBorderColor);
     }
     .actions-menu_active {
         position: relative;
