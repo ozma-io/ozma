@@ -18,7 +18,7 @@
 </i18n>
 
 <template>
-    <b-container>
+    <b-container fluid>
         <b-row>
             <b-col size="12">
                 <form class="form-entry">
