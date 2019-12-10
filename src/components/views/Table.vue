@@ -1213,7 +1213,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     .form_background {
         padding: 50px;
         box-sizing: border-box;
-        border-top: 2px solid var(--mainbordercolor);
+        box-shadow: 0px 0px 10px 5px var(--MainBorderColor);
         background: var(--MainBackgroundColor);
         width: 40%;
     }
