@@ -359,9 +359,6 @@ export default class MultiSelect extends Vue {
      position: absolute;
      left: 0;
  }
- .select_container__content__single > input {
-     margin-left: 5px;
- }
  .select_container__content_fixed_height {
      overflow: hidden;
  }
@@ -374,7 +371,7 @@ export default class MultiSelect extends Vue {
      border: 0;
      height: 30px;
      padding: 5px;
-     margin: 5px 5px 5px 0;
+     margin: 5px 0 5px 0;
      flex: 1;
      box-sizing: border-box;
      color: var(--MainTextColor);
@@ -392,7 +389,7 @@ export default class MultiSelect extends Vue {
      padding: 0;
      cursor: pointer;
      z-index: 10;
-     color: var(--NavigationBackColor);
+     color: var(--MainBorderColor);
  }
  .select_container__options_container {
      z-index: 1000;
@@ -419,7 +416,7 @@ export default class MultiSelect extends Vue {
  }
  .select_container__options_list > li.select_container__options_list__option {
      color: var(--MainTextColor);
-     padding: 5px 10px 5px 10px;
+     padding: 5px 10px 5px 0px;
      box-sizing: border-box;
      cursor: pointer;
  }
@@ -452,10 +449,12 @@ export default class MultiSelect extends Vue {
      box-sizing: border-box;
 }
 .single_value {
-     width: 100%;
-     height: 40px;
      padding-left: 0px;
      align-self: center;
+     border-radius: 15px;
+     padding: 2px 10px 2px 10px;
+     background-color: var(--MainBorderColor);
+     color: var(--MainBackgroundColor);
  }
  .single_value_open {
      color: gray;
