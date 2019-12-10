@@ -42,7 +42,7 @@
                                 :scope="scope"
                                 :level="level"
                                 autofocus
-                                unfocusing
+                                dontFocus
                                 @update="updateCurrentValue" />
                     </b-col>
                 </b-row>
@@ -1336,6 +1336,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
             position: sticky !important;
             justify-content: flex-start;
             z-index: 100000; /* чтобы FormControl был поверх других таблиц, когда их несколько на странице*/
+        }
+        .form_background {
+            width: 80%;
         }
     }
 
