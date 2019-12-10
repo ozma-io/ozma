@@ -83,6 +83,7 @@ import { UserView } from "@/components";
 import BaseUserView, { ISelectionRef } from "@/components/BaseUserView";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
+import InputSlot from "@/components/form/InputSlot.vue";
 import MultiSelect from "@/components/multiselect/MultiSelect.vue";
 import { IAction } from "@/components/ActionsMenu.vue";
 
@@ -131,7 +132,7 @@ const findValueDelta = (rows: ICombinedRow[], newRows: Record<number, IRowCommon
 })
 @Component({
     components: {
-        MultiSelect,
+        MultiSelect, InputSlot,
     },
 })
 export default class UserViewMultiselect extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>, BaseEntriesView>(BaseUserView, BaseEntriesView) {
