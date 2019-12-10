@@ -1,5 +1,5 @@
 <template>
-    <b-container class="form_container">
+    <b-container fluid class="form_container">
         <b-row>
             <template>
                 <FormGridBlock
