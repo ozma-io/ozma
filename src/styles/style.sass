@@ -35,7 +35,7 @@ body
     position: absolute
     overflow: hidden
     bottom: 0px
-    background-color: var(--NavigationBackColor)
+    background-color: var(--MainBackgroundColor)
     div#app
         height: 100%
 
@@ -88,26 +88,26 @@ div
                 /*Внутренние части текущего фильтра*/
                 &.find
                     div
-                        background-color: var(--MenuColor)
+                        background-color: var(--MainBackgroundColor)
                         width: 100% !important
+                        padding-left: 5px
                         input:focus
-                            border-color:    var(--MenuColor)
+                            border-color:    var(--MainBorderColor)
                             box-shadow: 0 0 0 white
                         input
-                            border-color: var(--MenuColor)
+                            border-color: var(--MainBorderColor)
+                            border-radius: 3px
                             &.find_in + div
-                                color: var(--ButtonTextColor)
+                                color: var(--MainTextColor)
                             &.find_in
                                 @media screen and (max-aspect-ratio: 13/9)
                                     @media screen and (max-device-width: 480px)
                                         border: 0
                                 height: calc(1.5em + 4px)
                                 padding-left: 7px
-                                background: hsla(0,0%,100%,.3)
-                                border-left: 0
-                                color: var(--ButtonTextColor)
+                                color: var(--MainTextColor)
                             &.find_in::placeholder
-                                color: var(--ButtonTextColor)
+                                color: var(--MainTextColor)
 
                         div
                             margin: 0px

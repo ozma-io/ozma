@@ -22,28 +22,35 @@
 </i18n>
 
 <template>
-    <div fluid class="main-menu-block">
-        <span v-if="typeof categoriesOrError === 'string'">
-            {{ error }}
-        </span>
-        <div v-else class="submain-menu-block">
-            <div class="row subsubmain-menu-block" v-for="category in categoriesOrError" :key="category.index">
-                <div class="navigation-sector">
-                    <div class="row navigation-sector-title"><a class="navigation-sector-title-head">{{ category.name }}</a></div>
-                    <div class="row navigation-sector-body">
-                        <div class="filter-back" v-for="button in category.buttons" :key="button.index">
-                            <UserViewLink
-                                    class="navigation-entry"
-                                    :uv="button.uv"
-                                    @[indirectLinks?`click`:null]="$emit('goto', $event)">
-                                {{ button.name }}
-                            </UserViewLink>
-                        </div>
-                    </div>
+    <b-container>
+        <b-row>
+            <b-col cols="12">
+                <span v-if="typeof categoriesOrError === 'string'">
+                    {{ error }}
+                </span>
+            </b-col>
+        </b-row>
+        <b-row v-for="category in categoriesOrError" :key="category.index" class="menu_category_block">
+            <b-col cols="12">
+                <div class="menu_category_title">
+                    {{ category.name }}
                 </div>
-            </div>
-        </div>
-    </div>
+                <hr />
+            </b-col>
+            <b-col cols="12">
+                <ul class="menu_list">
+                    <li v-for="button in category.buttons" class="menu_entry">
+                        <UserViewLink
+                            class="navigation-entry"
+                            :uv="button.uv"
+                            @[indirectLinks?`click`:null]="$emit('goto', $event)">
+                            {{ button.name }}
+                        </UserViewLink>
+                    </li>
+                </ul>
+            </b-col>
+        </b-row>
+    </b-container>
 </template>
 
 <script lang="ts">
@@ -213,18 +220,6 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
         color: var(--NavigationTextColor) !important;
         font-weight: bold;
     }
-    .navigation-entry {
-        display: table;
-        padding: 5px;
-        padding-left: 7px;
-        padding-right: 7px;
-        line-height: normal;
-        height: calc(1.5em + 4px) !important;
-        color: var(--ButtonTextColor) !important;
-        background: rgba(255, 255, 255, 0.3);
-        text-decoration: none;
-        border: 0px;
-    }
     @media screen and (orientation: portrait) {
         @media screen and (max-device-width: 480px) {
             .main-menu-block {
@@ -296,4 +291,33 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
                 }
         }
     }
+ .menu_list {
+     list-style: none;
+     padding-left: 0;
+ }
+ /deep/ .menu_entry > a {
+     color: var(--MainTextColor);
+     text-decoration: underline;
+     font-size: 1.3rem !important;
+ }
+ .menu_entry {
+     display: inline-flex;
+     align-items: center;
+     color: var(--MainTextColor);
+     padding-right: 5px;
+     padding-left: 5px;
+     border-right: 1px solid var(--MainBorderColor);
+ }
+ .menu_entry:first-child {
+     padding-left: 0;
+ }
+ .menu_entry:last-child {
+     border-right: 0;
+ }
+ .menu_category_block {
+     margin-top: 75px;
+ }
+ .menu_category_title {
+     font-size: 2rem !important;
+ }
 </style>

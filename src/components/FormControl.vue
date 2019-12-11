@@ -29,6 +29,7 @@
             :inline="!isInline"
             :value="currentValue"
             :actions="actions"
+            :autoOpen="autoOpen"
             @update:value="updateValue">
             <template v-slot:input-modal="iSlot">
                 <Input v-if="inputType.name === 'text'"
@@ -236,6 +237,7 @@ export default class FormControl extends Vue {
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
     @Prop({ type: String, required: true }) scope!: string;
     @Prop({ type: Number, required: true }) level!: number;
+    @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
 
     private actions: IAction[] = [];
 
