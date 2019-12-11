@@ -70,33 +70,26 @@ export default class TableRow extends Vue {
         background-color: var(--ControlDisableColor)
     }
     .selected {
-        background-color: var(--TableSelectColor) !important;
-    }
-    .none_selected {
-        background-color: var(--TableBackColor) !important;
+        box-shadow: 10px 10px 52px 0px var(--MainBorderColor);
     }
     .table-tr {
         background-color: white; /*цвет таблицы возможно надо сменить на настраевоемый*/
-        border-right: solid 1px var(--NavigationBackColor);
         height: 100% @-moz-document url-prefix();
     }
     .table-tr-new > td {
         height: 26px;
     }
-    td {
-        height: 100%;
-        border: solid 1px var(--NavigationBackColor);
-        padding: 0px;
-        padding-left: 3px;
-        overflow-wrap: break-word; /* перенос по словам */
-        overflow: hidden;
-    }
     .editing_style {
         z-index: 200 !important; /* чтобы FormControl(расположен в ячейке) отображался поверх таблицы */
         overflow: visible !important;
     }
+    td {
+        border-top: 1px solid var(--MainBorderColor);
+    }
     td >>> p, td >>> a {
         color: var(--TableTextColor) !important;
+        max-height: 100px;
+        overflow-y: auto;
     }
     td >>> p {
         display: block;
@@ -119,35 +112,11 @@ export default class TableRow extends Vue {
         background-color: var(--ErrorBackColor);
     }
     td.select_fixed {
-        box-shadow: inset 0 0 0 2px var(--SelectBorderColor);
         position: sticky;
         z-index: 20; /* поверх обычных ячеек */
     }
     td.select {
-        box-shadow: inset 0 0 0 2px var(--SelectBorderColor);
         z-index: 15; /* обычные ячейки ниже фиксированных */
-    }
-
-    @media screen and (max-device-width: 768px), screen and (orientation: portrait) {
-        .checkbox-cells {
-            left: auto !important;
-            width: 0px !important;
-        }
-
-        .opemform-cells {
-            left: auto !important;
-            width: 0px !important;
-        }
-
-        .fixed-column {
-            left: auto !important;
-        }
-    }
-
-    @media screen and (max-device-width: 813px), screen and (orientation: portrait) {
-        .hide_content > a, .hide_content > input {
-            display: none;
-        }
     }
 
     @media screen and (min-device-width: 813px) and (orientation: landscape) {
@@ -156,32 +125,16 @@ export default class TableRow extends Vue {
         }
 
         .opemform-cells {
-            left: 20px;
-        }
-
-        .fixed-column:first-child {
-            box-shadow: 3px 0 0px var(--NavigationBackColor), inset 1px 0px 0px 0px var(--NavigationBackColor)
+            left: 50px;
         }
 
         .fixed-column {
             position: sticky;
             z-index: 20;
             background-color: inherit;
-            box-shadow: 3px 0 0px var(--NavigationBackColor);
+            box-shadow: 2px 0 0px var(--MainBorderColor);
             border-left: 0;
         }
 
-        td.fixed-column + td.table-td {
-            padding-left: 5.5px;
-        }
-
-        td.fixed-column {
-            padding-left: 3px !important
-        }
-    }
-    @-moz-document url-prefix() {
-        .fixed-column {
-            outline: solid 1px var(--NavigationBackColor)
-        }
     }
 </style>

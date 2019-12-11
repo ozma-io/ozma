@@ -371,7 +371,7 @@ export default class MultiSelect extends Vue {
      border: 0;
      height: 30px;
      padding: 5px;
-     margin: 5px 0 5px 0;
+     margin: 0px 0 5px 0;
      flex: 1;
      box-sizing: border-box;
      color: var(--MainTextColor);

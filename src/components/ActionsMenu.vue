@@ -93,8 +93,9 @@ export default class ActionsMenu extends Vue {
         position: absolute;
         display: block;
         z-index: 1200; /* меню действий для подтаблиц поверх темного фона */
-        background-color: var(--MainBorderColor);
-        margin-left: -1px
+        background-color: var(--MainBackgroundColor);
+        border: 1px solid var(--MainBorderColor);
+        margin-top: 5px;
     }
     .div-with-actions_button {
         display: block;
@@ -103,17 +104,21 @@ export default class ActionsMenu extends Vue {
         line-height: normal;
         padding-left: 7px;
         padding-right: 7px;
-        color: var(--ButtonTextColor) !important;
+        color: var(--MainTextColor) !important;
         text-decoration: none;
         width: 100%;
         text-align: left;
-        border: solid 1px var(--MenuColor) !important;
-        border-top: 0px !important;
-        border-radius: 0 !important;
+        border: 0;
+    }
+    .div-with-actions_button:hover {
+        background-color: var(--MainBorderColor) !important;
+        color: var(--MainTextColor) !important;
     }
     .actions-menu {
         z-index: 1000; /* шапка-меню */
-        background-color: var(--MainBorderColor);
+        background-color: var(--MainBackgroundColor);
+        margin-right: 5px;
+        margin-left: 5px;
     }
     .actions-menu_active {
         position: relative;
@@ -136,16 +141,15 @@ export default class ActionsMenu extends Vue {
         outline: none;
     }
     .actions-menu_actions-button {
-        color: var(--ButtonTextColor) !important;
+        color: var(--MainTextColor) !important;
         background: hsla(0,0%,100%,.3);
-        border: solid 1px var(--MenuColor) !important;
-        border-left: 0px !important;
+        border: 1px solid var(--MainBorderColor);
         text-align: left;
         height: 100%;
         padding-bottom: 3px;
         padding-top: 2px;
         line-height: normal;
-        border-radius: 0 !important;
+        border-radius: 3px !important;
         font-size: 1.4em !important;
         vertical-align: bottom;
         height: 1.25em;

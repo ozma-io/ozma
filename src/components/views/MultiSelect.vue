@@ -12,7 +12,7 @@
 <template>
     <div fluid class="view-form">
         <InputSlot>
-            <template v-slot:content>
+            <template v-slot:input>
                 <MultiSelect
                     v-if="selectedValueIndex"
                     :options="options || []"

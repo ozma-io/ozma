@@ -24,7 +24,7 @@
          :class="['table-block',
                   {'nested-table-block': !isRoot,
                   'active_editing': editingValue !== null}]">
-        <div class="edit_container" v-if="editingValue !== null">
+        <div class="edit_container" v-if="editingValue !== null" :v-show="false">
             <div id="disable_edit"
                 :class="{'edit_active': editingValue !== null}"
                 @click="removeCellEditing()">
@@ -60,7 +60,9 @@
                 <thead class="table-head">
                     <tr>
                         <th class="fixed-column checkbox-cells table-th" @click="selectAllRows">
-                            <input type="checkbox" :checked="local.extra.selectedAll">
+                            <span class="table-th_span">
+                                <input type="checkbox" :checked="local.extra.selectedAll">
+                            </span>
                         </th>
                         <th v-if="local.extra.hasRowLinks" class="fixed-column openform-cells links-style table-th">
                             <span class="table-th_span" @click="setShowEmptyRow(!showEmptyRow)" :title="this.$t('show_new_row')">
@@ -73,7 +75,9 @@
                                 :style="local.extra.columns[i].style"
                                 :title="local.extra.columns[i].caption"
                                 @click="updateSort(i)">
-                            {{ local.extra.columns[i].caption }}
+                            <span class="table_header__content">
+                                {{ local.extra.columns[i].caption }}
+                            </span>
                             <span v-if="sortColumn === i">{{ sortAsc ? "▲" : "▼" }}</span>
                         </th>
                     </tr>
@@ -222,7 +226,7 @@ type ITableLocalRow = ILocalRow<ITableValueExtra, ITableRowExtra>;
 const showStep = 20;
 const doubleClickTime = 700;
 // FIXME: Use CSS variables to avoid this constant
-const technicalFieldsWidth = 20; // checkbox's and openform's td width
+const technicalFieldsWidth = 50; // checkbox's and openform's td width
 
 const createColumns = (uv: CombinedUserView): IColumn[] => {
     const viewAttrs = uv.attributes;
@@ -1244,6 +1248,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         position: relative;
         z-index: 1000
     }
+    /deep/ tr:hover > td {
+        background-color: var(--MainBorderColor);
+    }
     .tabl {
         float: left;
         margin-bottom: 10px;
@@ -1260,16 +1267,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         margin-bottom: 0px !important;
     }
     .table-head {
-        height: 25px;
-        border-right: solid 1px var(--NavigationBackColor) !important;
-
+        height: 50px;
     }
     .table-th {
-        background: var(--NavigationBackColor) !important;
-        color: var(--ButtonTextColor) !important;
-        padding: 0;
         border: 0;
-        font-weight: normal;
+        font-weight: bold;
         max-width: 50px !important;
         overflow: hidden;
         white-space: nowrap;
@@ -1277,11 +1279,17 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         position: sticky; /*фиксация шапки при скроле*/
         z-index: 20; /*при скроле таблицы чтобы шапка была видна*/
         top: 0;
-        padding-left: 3px;
+        font-size: 1.1.rem;
         cursor: pointer;
+        color: var(--MainTextColor);
+        background-color: var(--MainBackgroundColor);
+    }
+    /deep/ td > p {
+        margin-bottom: 0px;
     }
     th.fixed-column {
         z-index: 25; /* поверх обычных столбцов */
+        box-shadow: 2px 0 0px var(--MainBorderColor);
     }
     th.tabl_heading {
         text-overflow: ellipsis;
@@ -1293,15 +1301,13 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         padding: 0;
     }
     .table-th_span {
-        background: rgba(255, 255, 255, 0.3);
         padding: 0;
         height: 100%;
         width: 100%;
         white-space: nowrap;
-        display: inline-block;
-    }
-    .table-body {
-        border-right: solid 1px  var(--NavigationBackColor) !important
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
     }
 
 
@@ -1358,15 +1364,13 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         .fixed-column {
             position: sticky;
             z-index: 20;
-            background-color: inherit;
-            box-shadow: 3px 0 0px var(--NavigationBackColor);
             border-left: 0;
         }
     }
 
     @-moz-document url-prefix() {
         .fixed-column {
-            outline: solid 1px var(--NavigationBackColor)
+            outline: solid 1px var(--MainBorderColor)
         }
     }
 
@@ -1439,7 +1443,31 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         height: 200px !important;
         margin-bottom: 0px;
     }
-    div.form-control-panel > textarea.singleline {
-       white-space:nowrap;
-    }
+ .checkbox-cells, .openform-cells {
+     height: 50px;
+     width: 50px;
+     padding: 0 !important;
+ }
+ .openform-cells > .table-th_span,
+ .checkbox-cells > .table-th_span {
+     justify-content: unset;
+     padding-left: 0.75rem;
+ }
+ th {
+     padding: 0.5rem;
+ }
+ .checkbox-col, .open-form-col {
+     width: 50px;
+ }
+ /deep/ .openform-cells {
+     left: 50px;
+ }
+ thead {
+     line-height: 50px;
+ }
+ .table_header__content {
+     display: inline-flex;
+     justify-items: center;
+     alignt-content: center;
+ }
 </style>

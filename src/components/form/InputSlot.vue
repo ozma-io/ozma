@@ -60,10 +60,17 @@ export default class InputSlot extends Vue {
     @Prop({ type: Boolean }) disabled!: boolean;
     @Prop({ type: Boolean, default: true }) inline!: boolean;
     @Prop({ type: String, default: "text" }) type!: string;
+    @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
 
     private focused: boolean = false;
     private modalValue: any = this.value;
     private isModalOpen: boolean = false;
+
+    private mounted() {
+        if (this.autoOpen && this.isMobile) {
+            this.isModalOpen = true;
+        }
+    }
 
     @Watch("value")
     private onValueUpdate(value: string) {

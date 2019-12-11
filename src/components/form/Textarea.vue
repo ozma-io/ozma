@@ -96,7 +96,7 @@ export default class Textarea extends Vue {
     private positionField() {
         const controlElement = this.$refs.control as HTMLElement;
         const dummyElement = this.$refs.dummy as HTMLElement;
-        const rightPosition = controlElement.getBoundingClientRect().right;
+        const rightPosition = controlElement.getBoundingClientRect().left;
         const eWidth = controlElement.clientWidth;
         const screenWidth = document.documentElement.clientWidth - 10;
         if (dummyElement) {
@@ -166,7 +166,7 @@ export default class Textarea extends Vue {
     padding: 5px;
     position: absolute;
     right: 0;
-    width: calc(100% + 150px);
+    width: 40vw;
     height: calc(100% + 100px);
     transition: all 300ms ease-in-out, height 300ms ease-in-out;
     overflow: auto;

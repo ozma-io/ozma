@@ -87,8 +87,8 @@ export default class App extends Vue {
             // Light Theme, do not remove
             "MainTextColor": this.settings.getEntry("MainTextColor", String, "black"),
             "MainBackgroundColor": this.settings.getEntry("MainBackgroundColor", String, "white"),
-            "MainTextColorLight": this.settings.getEntry("MainTextColorLight", String, "68766d"),
-            "MainBorderColor": this.settings.getEntry("MainBorderColor", String, "#6a6a6a"),
+            "MainTextColorLight": this.settings.getEntry("MainTextColorLight", String, "#68766d"),
+            "MainBorderColor": this.settings.getEntry("MainBorderColor", String, "#dee2e6"),
 
             // Dark Theme, do not remove
             // "MainTextColor": this.settings.getEntry("MainTextColor", String, "#b2b2b2"),
@@ -98,6 +98,8 @@ export default class App extends Vue {
 
             "SuccessColor": this.settings.getEntry("SuccessColor", String, "#28a745"),
             "FailColor": this.settings.getEntry("FailColor", String, "#dc3545"),
+            "WarningColor": this.settings.getEntry("FailColor", String, "#ffc107"),
+            "StateTextColor": this.settings.getEntry("StateTextColor", String, "white"),
         };
         return Object.entries(values).reduce((currSettings, [name, value]) => {
             currSettings[`--${name}`] = value;
