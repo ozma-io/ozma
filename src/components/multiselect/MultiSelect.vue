@@ -392,7 +392,7 @@ export default class MultiSelect extends Vue {
      color: var(--MainBorderColor);
  }
  .select_container__options_container {
-     z-index: 1000;
+     z-index: 1001;
      list-style: none;
      width: 100%;
      position: absolute;
@@ -475,10 +475,10 @@ export default class MultiSelect extends Vue {
      padding: 0;
      margin: 0px 0px 0px 5px;
      font-size: inherit;
-     color: var(--NavigationBackColor);
+     color: var(--MainBackgroundColor);
  }
  .clear_all_button {
-     color: var(--NavigationTextColor);
+     color: var(--MainTextColor);
      padding: 5px;
      font-style: italic;
  }
