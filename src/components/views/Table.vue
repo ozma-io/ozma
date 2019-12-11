@@ -226,7 +226,7 @@ type ITableLocalRow = ILocalRow<ITableValueExtra, ITableRowExtra>;
 const showStep = 20;
 const doubleClickTime = 700;
 // FIXME: Use CSS variables to avoid this constant
-const technicalFieldsWidth = 20; // checkbox's and openform's td width
+const technicalFieldsWidth = 50; // checkbox's and openform's td width
 
 const createColumns = (uv: CombinedUserView): IColumn[] => {
     const viewAttrs = uv.attributes;
@@ -1458,6 +1458,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
  }
  .checkbox-col, .open-form-col {
      width: 50px;
+ }
+ .openform-cells {
+     left: 50px;
  }
  thead {
      line-height: 50px;
