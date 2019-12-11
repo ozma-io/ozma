@@ -84,9 +84,9 @@ export default class TableRow extends Vue {
         z-index: 200 !important; /* чтобы FormControl(расположен в ячейке) отображался поверх таблицы */
         overflow: visible !important;
     }
- td {
-     border-top: 1px solid var(--MainBorderColor);
- }
+    td {
+        border-top: 1px solid var(--MainBorderColor);
+    }
     td >>> p, td >>> a {
         color: var(--TableTextColor) !important;
         max-height: 100px;
@@ -126,7 +126,7 @@ export default class TableRow extends Vue {
         }
 
         .opemform-cells {
-            left: 20px;
+            left: 50px;
         }
 
         .fixed-column {

@@ -1370,7 +1370,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
     @-moz-document url-prefix() {
         .fixed-column {
-            outline: solid 1px var(--NavigationBackColor)
+            outline: solid 1px var(--MainBorderColor)
         }
     }
 
@@ -1459,7 +1459,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
  .checkbox-col, .open-form-col {
      width: 50px;
  }
- .openform-cells {
+ /deep/ .openform-cells {
      left: 50px;
  }
  thead {

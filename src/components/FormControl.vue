@@ -117,7 +117,7 @@
                     :actions="actions"
                     :indirectLinks="indirectLinks"
                     @goto="$emit('goto', $event)" />
-                <label class="input_label">{{ capitalizedCaption }}</label>
+                <label class="input_label">{{ caption }}</label>
             </div>
             <ReferenceField v-if="inputType.name === 'reference'"
                 :value="value"
@@ -156,7 +156,7 @@ import { IValueInfo, IUserViewArguments, CombinedUserView, CurrentUserViews, hom
 import { IQuery, attrToQuerySelf, IAttrToQueryOpts } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { ISelectionRef } from "@/components/BaseUserView";
-import { isMobile, capitalize } from "@/utils";
+import { isMobile } from "@/utils";
 
 interface ITextType {
     name: "text";
@@ -240,10 +240,6 @@ export default class FormControl extends Vue {
     @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
 
     private actions: IAction[] = [];
-
-    private get capitalizedCaption(): string {
-        return capitalize(this.caption);
-    }
 
     get isInline(): boolean {
         return inlineTypes.includes(this.inputType.name);
