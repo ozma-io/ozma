@@ -24,7 +24,7 @@
          :class="['table-block',
                   {'nested-table-block': !isRoot,
                   'active_editing': editingValue !== null}]">
-        <div class="edit_container" v-if="editingValue !== null" :v-show="false">
+        <div class="edit_container" v-if="editingValue !== null">
             <div id="disable_edit"
                 :class="{'edit_active': editingValue !== null}"
                 @click="removeCellEditing()">

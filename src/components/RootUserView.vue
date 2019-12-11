@@ -79,7 +79,6 @@
             </div>
             <div v-if="!changes.isScopeEmpty('root')" class="error custom-warning">
                 <button @click="submitChanges('root')"
-                    v-if=""
                     :class="['save_button', {
                         'save_button__warning': !changes.isScopeEmpty('root'),
                         'save_button__error': errors.length > 0,

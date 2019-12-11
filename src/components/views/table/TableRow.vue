@@ -47,7 +47,6 @@ export default class TableRow extends Vue {
     @Prop({ type: Object, required: true }) row!: any;
     @Prop({ type: Object, required: true }) localRow!: any;
     @Prop({ type: Array, required: true }) columnIndexes!: any[];
-    @Prop({ type: Object, required: true }) uv!: any;
     @Prop({ type: Object, required: true }) localUv!: any;
     @Prop({ type: String, default: "existing" }) from!: string;
     @Prop({ type: Boolean, default: false }) showFixedRow!: boolean;
