@@ -31,7 +31,7 @@
                 :for="inputName"
                 v-if="label"
                 :title="label"
-            >{{ capitalizedLabel }}</label>
+            >{{ label }}</label>
         </b-col>
         <b-col :cols="!!label ? 8 : 12" class="input_container">
             <slot name="input" :onFocus="onFocus">
@@ -45,7 +45,7 @@ import { IAction } from "@/components/ActionsMenu.vue";
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
-import { isMobile, getTextWidth, capitalize } from "@/utils";
+import { isMobile, getTextWidth } from "@/utils";
 
 import Modal from "@/components/modal/Modal.vue";
 
@@ -68,10 +68,6 @@ export default class InputSlot extends Vue {
     @Watch("value")
     private onValueUpdate(value: string) {
         this.modalValue = value;
-    }
-
-    private get capitalizedLabel() {
-        return capitalize(this.label);
     }
 
     private get inputName(): string {
