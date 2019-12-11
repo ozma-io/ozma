@@ -79,8 +79,17 @@
                 {{ error }}
             </div>
             <div v-if="!changes.isScopeEmpty('root')" class="error custom-warning">
-                <button class="error_button" @click="submitChanges('root')">{{ $t('save') }}</button>
-                {{ $t('pending_changes') }}
+                <button @click="submitChanges('root')"
+                    v-if=""
+                    :class="['save_button', {
+                        'save_button__warning': !changes.isScopeEmpty('root'),
+                        'save_button__error': errors.length > 0,
+                                }]" >
+                    {{ $t('save') }}
+                    <input v-if="errors.length > 0" type="button" class="material-icons" value="warning">
+                    <input v-else-if="!changes.isScopeEmpty('root')" type="button" class="material-icons" value="save">
+                    <input v-else type="button" class="material-icons" value="done">
+                </button>
             </div>
         </nav>
     </div>
@@ -330,30 +339,33 @@ export default class RootUserView extends Vue {
     .head-menu {
         display: inline-flex;
         white-space: nowrap;
-        background-color: var(--MenuColor);
+        background-color: var(--MainBackgroundColor);
         width: 100%;
+        padding: 0.75rem;
     }
     .head-menu_back-button {
         padding-top: 3px;
         padding-bottom: 3px;
+        margin-left: 0 !important;
     }
     .head-menu_back-button:focus{
        outline:none;
     }
     .head-menu_back-button,
     .head-menu_main-menu-button {
-        color: var(--ButtonTextColor) !important;
+        color: var(--MainTextColor) !important;
         background: hsla(0,0%,100%,.3);
         line-height: normal;
-        border: solid 1px var(--MenuColor);
-        border-left: 0px;
+        border: solid 1px var(--MainBorderColor);
+        border-radius: 3px;
         text-decoration: none;
         padding-left: 5px;
         padding-right: 5px;
+        margin-left: 5px;
+        margin-right: 5px;
         z-index: 1000; /* панель наверху */
         padding-bottom: 4px;
         padding-top: 1px !important;
-        border-radius: 0 !important;
         font-size: 1.4em !important;
         height: 1.25em;
     }
@@ -361,16 +373,18 @@ export default class RootUserView extends Vue {
         padding-top: 3px;
     }
     .fix-bot {
-        padding: 0;
+        padding: 0.4rem;
+        padding-left: 0.75rem;
         line-height: normal;
-        width: 100vw;
         white-space: nowrap;
         overflow-x: auto;
         overflow-y: hidden;
         text-align: right;
         margin-left: -1px !important;
         position: relative;
-        background-color: var(--MenuColor) !important;
+        background-color: var(--MainBackgroundColor) !important;
+        border-top: 1px solid var(--MainBorderColor);
+        box-shadow: 0px -5px 12px 0px rgba(0,0,0,0.3);
         z-index: 1030; /* низ страницы */
         display: -webkit-box;
         display: -ms-flexbox;
@@ -387,6 +401,7 @@ export default class RootUserView extends Vue {
         -webkit-box-pack: justify;
         -ms-flex-pack: justify;
         justify-content: space-between;
+        margin-top: 15px;
     }
 
     .count-row {
@@ -394,33 +409,60 @@ export default class RootUserView extends Vue {
         z-index: 2000; /* кол-во записей внизу */
         line-height: normal;
         float: left;
-        margin-left: 2px;
-        color: var(--ButtonTextColor)
+        margin-left: 5px;
+        color: var(--MainTextColor)
     }
     .custom-warning {
-        background-color: var(--MenuColor);
-        color: var(--ButtonTextColor);
         float: right;
     }
     .custom-danger {
-        background-color: var(--DangerBackColor);
+        background-color: var(--FailColor);
         float: left;
         overflow-x: auto;
         overflow-y:hidden;
         width: 100%;
         text-align: left;
+        display: flex !important;
+        align-items: center;
+        height: 100%;
+        color: var(--StateTextColor);
+        padding-left: 15px !important;
+        margin-right: 15px !important;
+        border-radius: 3px !important;
     }
     .custom-success {
         background-color: var(--SuccessBackColor)
     }
     .error {
-        margin-left: 1px !important;
         margin: 0;
         padding: 0;
         border: 0;
         border-radius: inherit;
         display: inline-block;
         position: relative;
+    }
+    .save_button {
+        background-color: var(--SuccessColor);
+        color: var(--StateTextColor);
+        padding: 5px;
+        border-radius: 3px;
+        animation: color-change-2x 2s linear infinite alternate both;
+        display: flex;
+        justify-content: center;
+        alignt-items: center;
+    }
+    .save_button__warning {
+        background-color: var(--WarningColor);
+        animation: color-change-2x 2s linear infinite alternate both;
+    }
+    .save_button__error {
+        background-color: var(--FailColor);
+        animation: color-change-2x 2s linear infinite alternate both;
+    }
+    .save_button > input {
+        background: none;
+        border: none;
+        padding: 0 0 0 5px;
     }
     .error_button {
         padding: 0;
