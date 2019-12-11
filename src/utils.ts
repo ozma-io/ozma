@@ -452,10 +452,9 @@ export class ObjectResourceMap<K, V> {
 export const isIOS = () => !!navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform);
 export const isMobile = () => !!(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
 
-export const capitalize = (value: any): string => Ramda.compose(
-  Ramda.join(""),
-  Ramda.juxt([Ramda.compose(Ramda.toUpper, Ramda.head), Ramda.tail]),
-)(value);
+export const capitalize = (value: string): string => {
+    return value.substring(0, 1).toUpperCase() + value.substring(1);
+};
 
 export const getTextWidth = (text: string, font: string): number => {
     // re-use canvas object for better performance
