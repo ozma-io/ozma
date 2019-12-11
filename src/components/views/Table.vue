@@ -24,7 +24,7 @@
          :class="['table-block',
                   {'nested-table-block': !isRoot,
                   'active_editing': editingValue !== null}]">
-        <div class="edit_container" v-if="editingValue !== null">
+        <div class="edit_container" v-if="editingValue !== null" :v-show="false">
             <div id="disable_edit"
                 :class="{'edit_active': editingValue !== null}"
                 @click="removeCellEditing()">
@@ -1248,8 +1248,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         position: relative;
         z-index: 1000
     }
-    /deep/ tr:hover {
-     background-color: rgba(0,0,0,.075)
+    /deep/ tr:hover > td {
+        background-color: var(--MainBorderColor);
     }
     .tabl {
         float: left;
