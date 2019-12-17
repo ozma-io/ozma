@@ -350,7 +350,9 @@ export class CombinedUserView {
                 if (columnInfo.valueType.type === "datetime" || columnInfo.valueType.type === "date") {
                     rows.forEach(row => {
                         const cell = row.values[colI];
-                        cell.value = moment.utc(cell.value);
+                        if (cell.value) {
+                            cell.value = moment.utc(cell.value);
+                        }
                     });
                 }
             });
