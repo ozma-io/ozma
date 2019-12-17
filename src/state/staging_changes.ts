@@ -264,7 +264,7 @@ const changeToParam = (name: FieldName, change: IUpdatedValue): any => {
     }
     let arg;
     if (change.value instanceof moment) {
-        arg = Math.floor((change.value as Moment).unix());
+        arg = (change.value as Moment).toISOString();
     } else {
         arg = change.value;
     }
