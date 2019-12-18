@@ -82,11 +82,11 @@ export default class Textarea extends Vue {
     }
 
     private onFocus(evt: HTMLInputElement) {
-        this.$emit("focus", evt);
         if (!this.isMobile) {
-            this.focused = true;
             this.positionField();
+            this.focused = true;
         }
+        this.$emit("focus", evt);
     }
 
     private onBlur(evt: HTMLInputElement) {
@@ -96,19 +96,27 @@ export default class Textarea extends Vue {
     private positionField() {
         const controlElement = this.$refs.control as HTMLElement;
         const dummyElement = this.$refs.dummy as HTMLElement;
-        const rightPosition = controlElement.getBoundingClientRect().left;
-        const eWidth = controlElement.clientWidth;
-        const screenWidth = document.documentElement.clientWidth - 10;
-        if (dummyElement) {
-            dummyElement.style.height = `{this.dummyHeight}px`;
-            dummyElement.style.width = `{this.dummyWidth}px`;
-        }
-        if (rightPosition + eWidth >= screenWidth) {
+        const leftPosition = controlElement.getBoundingClientRect().left;
+        const rightPosition = controlElement.getBoundingClientRect().right;
+        const maxWidth = 600;
+        const maxHeight = 300;
+
+        const screenWidth = document.documentElement.clientWidth - 15;
+        // const screenHeight = document.documentElement.clientHeight - 15;
+
+        const expandLeft = leftPosition + maxWidth + 15 < screenWidth;
+        const expandRight = rightPosition - maxWidth + 15 < screenWidth;
+        if (expandLeft) {
+            controlElement.style.left = "0";
+            controlElement.style.right = "initial";
+        } else if (expandRight) {
             controlElement.style.right = "0";
             controlElement.style.left = "initial";
-        } else {
-            controlElement.style.right = "initial";
-            controlElement.style.left = "0";
+        }
+
+        if (dummyElement) {
+            dummyElement.style.height = `${this.dummyHeight}px`;
+            dummyElement.style.width = `${this.dummyWidth}px`;
         }
     }
 }
@@ -158,6 +166,7 @@ export default class Textarea extends Vue {
     border-bottom: 2px solid var(--MainBorderColor);
     outline: none;
     padding: 5px;
+    width: 600px !important;
 }
 .textarea_field__desktop:focus {
     outline: none;
