@@ -58,8 +58,9 @@ export default class Input extends Vue {
     private focused: boolean = false;
 
     private mounted() {
-        const styles = window.getComputedStyle(this.$refs.control)
+        const controlElement = this.$refs.control as HTMLInputElement;
         const autosizeMeter = this.$refs.autosizeMeter as HTMLSpanElement;
+        const styles = window.getComputedStyle(controlElement);
 
         Object.assign(autosizeMeter.style, {
             position: "absolute",
@@ -74,8 +75,8 @@ export default class Input extends Vue {
             fontWeight: styles.fontWeight,
             fontStyle: styles.fontStyle,
             letterSpacing: styles.letterSpacing,
-            textTransform: styles.textTransform
-        })
+            textTransform: styles.textTransform,
+        });
     }
 
     @Watch("value")
