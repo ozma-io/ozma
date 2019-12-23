@@ -25,7 +25,7 @@
             {{ inputType.text }}
         </template>
         <InputSlot :label="caption"
-            v-if="inputType.name !== 'userview'"
+            v-if="inputType.name !== 'userview' && inputType.name !== 'reference'"
             :inline="!isInline"
             :value="currentValue"
             :actions="actions"
@@ -112,35 +112,69 @@
             </template>
         </InputSlot>
         <template v-if="inputType.name === 'reference' || inputType.name === 'userview'">
-            <div v-if="actions.length > 0" class="nested-menu">
-                <ActionsMenu title="view_headline"
-                    :actions="actions"
-                    :indirectLinks="indirectLinks"
-                    @goto="$emit('goto', $event)" />
-                <label class="input_label">{{ caption }}</label>
-            </div>
-            <ReferenceField v-if="inputType.name === 'reference'"
-                :value="value"
-                :height="attributes['ControlHeight']"
-                :entry="inputType.ref"
-                :linkedAttr="inputType.linkedAttr"
-                :selectView="inputType.selectView"
-                :controlStyle="inputType.style"
-                :uvArgs="uvArgs"
-                @update:actions="actions = $event"
-                @update="updateValue($event)"
-                :isNullable="isNullable"
-                :isDisabled="isDisabled"
-                ref="control" />
-            <UserView v-else-if="inputType.name === 'userview'"
-                :args="inputType.args"
-                :defaultValues="inputType.defaultValues"
-                :indirectLinks="indirectLinks"
-                :scope="scope"
-                :level="level + 1"
-                @update:actions="actions = $event"
-                @goto="$emit('goto', $event)"
-                ref="control" />
+            <b-row>
+
+                <b-col :cols="isInline ? 4 : 12">
+                    <div v-if="actions.length > 0" class="nested-menu">
+                        <ActionsMenu title="view_headline"
+                            :actions="actions"
+                            :indirectLinks="indirectLinks"
+                            @goto="$emit('goto', $event)" />
+                        <label class="input_label">{{ caption }}</label>
+                    </div>
+                    <div v-else>
+                        <label class="input_label">{{ caption }}</label>
+                    </div>
+                </b-col>
+                <b-col :cols="isInline ? 8 : 12">
+                    <InputSlot
+                        v-if="inputType.name === 'reference'"
+                        :value="value"
+                        :autoOpen="autoOpen"
+                        @update:value="updateValue($event)"
+                    >
+                        <template v-slot:input-modal="iSlot">
+                            <ReferenceField :value="value"
+                                :height="attributes['ControlHeight']"
+                                :entry="inputType.ref"
+                                :linkedAttr="inputType.linkedAttr"
+                                :selectView="inputType.selectView"
+                                :controlStyle="inputType.style"
+                                :uvArgs="uvArgs"
+                                @update:actions="actions = $event"
+                                @update="iSlot.onChange($event)"
+                                :isNullable="isNullable"
+                                :isDisabled="isDisabled"
+                                ref="control" />
+                        </template>
+                        <template v-slot:input="iSlot">
+                            <ReferenceField :value="value"
+                                :height="attributes['ControlHeight']"
+                                :entry="inputType.ref"
+                                :linkedAttr="inputType.linkedAttr"
+                                :selectView="inputType.selectView"
+                                :controlStyle="inputType.style"
+                                :uvArgs="uvArgs"
+                                @update:actions="actions = $event"
+                                :dontOpen="isMobile"
+                                @focus="iSlot.onFocus"
+                                @update="iSlot.onChange($event)"
+                                :isNullable="isNullable"
+                                :isDisabled="isDisabled"
+                                ref="control" />
+                        </template>
+                    </InputSlot>
+                    <UserView v-else-if="inputType.name === 'userview'"
+                        :args="inputType.args"
+                        :defaultValues="inputType.defaultValues"
+                        :indirectLinks="indirectLinks"
+                        :scope="scope"
+                        :level="level + 1"
+                        @update:actions="actions = $event"
+                        @goto="$emit('goto', $event)"
+                        ref="control" />
+                </b-col>
+            </b-row>
         </template>
     </fragment>
 </template>
@@ -211,7 +245,7 @@ const userView = namespace("userView");
 
 const heightExclusions = ["select", "reference"];
 const multilineTypes = [ "codeeditor", "textarea" ];
-const inlineTypes = ["codeeditor", "textarea", "userview"];
+const inlineTypes = ["codeeditor", "textarea", "userview", "reference"];
 
 @Component({
     components: {
