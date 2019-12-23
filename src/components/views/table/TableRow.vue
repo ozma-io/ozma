@@ -104,7 +104,10 @@ export default class TableRow extends Vue {
         white-space: initial;
         word-wrap: break-word;
         word-break: break-all;
-        height: inherit;
+    }
+    td >>> p:hover {
+        overflow-x: hidden;
+        overflow-y: auto;
     }
     td.required_cell_style {
         background-color: var(--RequiredBackColor);
