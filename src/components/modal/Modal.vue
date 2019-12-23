@@ -146,6 +146,10 @@ export default class Modal extends Vue {
      padding: 0;
      overflow: hidden;
  }
+
+ /deep/ .view-form {
+     overflow-y: hidden;
+ }
 </style>
 
 <style>

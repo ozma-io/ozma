@@ -443,7 +443,6 @@ export default class MultiSelect extends Vue {
  .values_list__value {
      margin: 5px;
      border: 1px solid var(--MainBorderColor);
-     height: 30px;
  }
  .values_list__value,
  .single_value {
@@ -452,7 +451,7 @@ export default class MultiSelect extends Vue {
      color: var(--MainTextColor);
      border-radius: 15px;
      /* background-color: white; */
-     padding: 2px 10px 2px 10px;
+     padding: 10px;
      box-sizing: border-box;
 }
 .single_value {
@@ -474,7 +473,6 @@ export default class MultiSelect extends Vue {
  .values_list__value:hover > input.values_list__value__close {
      cursor: pointer;
      background-color: var(--MainBorderColor);
-     color: var(--MainTextColor);
  }
  .values_list__value > input.values_list__value__close {
      background: none;
@@ -482,7 +480,7 @@ export default class MultiSelect extends Vue {
      padding: 0;
      margin: 0px 0px 0px 5px;
      font-size: inherit;
-     color: var(--MainBackgroundColor);
+     color: var(--FailColor);
  }
  .clear_all_button {
      color: var(--MainTextColor);
