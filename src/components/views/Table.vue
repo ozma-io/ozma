@@ -1197,6 +1197,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 * FixedColumn           (25)
 
 */
+ table, th , td {
+     border: 1px solid var(--MainBackgroundColor)
+ }
     .table-block {
         width: 100%;
         margin: 0px;
@@ -1247,9 +1250,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     table.edit_active {
         position: relative;
         z-index: 1000
-    }
-    /deep/ tr:hover > td {
-        background-color: var(--MainBorderColor);
     }
     .tabl {
         float: left;
@@ -1354,6 +1354,12 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         }
     }
 	
+ .openform-cells > span {
+     justify-content: center !important;
+     align-items: center;
+     display: inline-flex;
+     width: 100%;
+ }
     @media screen and (min-device-width: 813px) and (orientation: landscape) {
         .checkbox-cells {
             left: 0px;
@@ -1394,13 +1400,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
             border-spacing: 0;
         }
 
-        th {
-            border: solid 1px var(--NavigationBackColor);
-        }
-
-        td {
-            border: solid 1px var(--NavigationBackColor);
-        }
         td >>> a {
             text-decoration: none !important;
         }
@@ -1451,7 +1450,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
  .openform-cells > .table-th_span,
  .checkbox-cells > .table-th_span {
      justify-content: unset;
-     padding-left: 0.75rem;
+     padding: 0.75rem;
  }
  th {
      padding: 0.5rem;

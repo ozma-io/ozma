@@ -119,6 +119,11 @@ export default class TableRow extends Vue {
         z-index: 15; /* обычные ячейки ниже фиксированных */
     }
 
+    .opemform-cells {
+        text-align: center;
+        width: 100%;
+    }
+
     @media screen and (min-device-width: 813px) and (orientation: landscape) {
         .checkbox-cells {
             left: 0px;
@@ -127,6 +132,12 @@ export default class TableRow extends Vue {
         .opemform-cells {
             left: 50px;
         }
+        /* .opemform-cells > span {
+           justify-content: center !important;
+           align-items: center;
+           display: inline-flex;
+           width: 100%;
+           } */
 
         .fixed-column {
             position: sticky;
