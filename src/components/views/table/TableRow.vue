@@ -85,6 +85,7 @@ export default class TableRow extends Vue {
     }
     td {
         border-top: 1px solid var(--MainBorderColor);
+        border-right: 1px solid var(--MainBorderColor)
     }
     td >>> p, td >>> a {
         color: var(--TableTextColor) !important;
@@ -122,6 +123,7 @@ export default class TableRow extends Vue {
     .opemform-cells {
         text-align: center;
         width: 100%;
+        border-right: 1px solid var(--MainBorderColor)
     }
 
     @media screen and (min-device-width: 813px) and (orientation: landscape) {

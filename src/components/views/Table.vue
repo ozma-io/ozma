@@ -1279,9 +1279,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         position: sticky; /*фиксация шапки при скроле*/
         z-index: 20; /*при скроле таблицы чтобы шапка была видна*/
         top: 0;
-        font-size: 1.1.rem;
         cursor: pointer;
-        color: var(--MainTextColor);
+        color: var(--MainTextColorLight);
         background-color: var(--MainBackgroundColor);
     }
     /deep/ td > p {
@@ -1452,9 +1451,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
      justify-content: unset;
      padding: 0.75rem;
  }
- th {
-     padding: 0.5rem;
- }
  .checkbox-col, .open-form-col {
      width: 50px;
  }
@@ -1462,7 +1458,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
      left: 50px;
  }
  thead {
-     line-height: 50px;
+     line-height: 30px;
  }
  .table_header__content {
      display: inline-flex;

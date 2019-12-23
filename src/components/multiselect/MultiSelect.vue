@@ -459,8 +459,9 @@ export default class MultiSelect extends Vue {
      align-self: center;
      border-radius: 15px;
      padding: 2px 10px 2px 10px;
-     background-color: var(--MainBorderColor);
-     color: var(--MainBackgroundColor);
+     border: 1px solid var(--MainBorderColor);
+     background-color: var(--MainBackgroundColor);
+     color: var(--MainTextColor);
  }
  .single_value_open {
      color: gray;
