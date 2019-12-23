@@ -1278,6 +1278,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         text-overflow: ellipsis;
         position: sticky; /*фиксация шапки при скроле*/
         z-index: 20; /*при скроле таблицы чтобы шапка была видна*/
+        border-right: 1px solid var(--MainBorderColor);
         top: 0;
         cursor: pointer;
         color: var(--MainTextColorLight);
