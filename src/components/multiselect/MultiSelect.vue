@@ -342,7 +342,7 @@ export default class MultiSelect extends Vue {
      align-self: center;
      align-items: center;
      height: 40px;
-     color: black;
+     color: var(--MainTextColorLight);
  }
  .select_container {
      display: flex;
