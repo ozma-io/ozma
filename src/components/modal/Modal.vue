@@ -132,6 +132,7 @@ export default class Modal extends Vue {
      padding: 10px;
      overflow: auto;
      height: 80vh;
+     border-top: 1px solid var(--MainBorderColor);
  }
 
  .modal__content >>> .view-form {
@@ -152,9 +153,10 @@ export default class Modal extends Vue {
     It's their naming so don't touch this
     if you refactor styles */
     .v--modal-box.v--modal {
-        background-color: var(--NavigationBackColor);
-        color: var(--NavigationTextColor);
-        border: 1px solid var(--NavigationTextColor);
+        background-color: var(--MainBackgroundColor);
+        color: var(--MainTextColor);
+        border-radius: 3px;
+        border: 1px solid var(--MainBorderColor);
     }
 </style>
 

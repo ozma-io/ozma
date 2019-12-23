@@ -12,7 +12,8 @@
 </i18n>
 
 <template>
-    <div style="width: 100%;">
+    <div style="width: 100%;"
+        @keydown.tab="() => setIsOpen(false)">
         <div v-click-outside="() => setIsOpen(false)"
              :class="[
                 'select_container',
@@ -55,7 +56,12 @@
                           :style="listValueStyle"
                           @click.stop>
                           {{option.label}}
-                          <input v-if="showValueRemove" @click="removeValue(index)" type="button" class="material-icons values_list__value__close" value="close">
+                          <input v-if="showValueRemove"
+                              @click="removeValue(index)"
+                              @blur="() => setIsOpen(false)"
+                              type="button"
+                              class="material-icons values_list__value__close"
+                              value="close">
                     </span>
                 </slot>
                 <input v-if="isOpen"
