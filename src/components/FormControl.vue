@@ -402,6 +402,9 @@ export default class FormControl extends Vue {
 * FormControl       (1000)
 
 */
+    /deep/ .tabl {
+        height: initial !important;
+    }
     .input_label {
         align-self: center;
         margin-bottom: 0;

@@ -26,14 +26,14 @@
                 </div>
             </template>
         </Modal>
-        <b-col cols="4" class="input_label__container" v-if="label">
+        <b-col :cols="inline ? 4 : 12" class="input_label__container" v-if="label">
             <label :class="['input_label', { 'input_label__focused': focused }]"
                 :for="inputName"
                 v-if="label"
                 :title="label"
             >{{ label }}</label>
         </b-col>
-        <b-col :cols="!!label ? 8 : 12" class="input_container">
+        <b-col :cols="(!!label && inline) ? 8 : 12" class="input_container">
             <slot name="input" :onFocus="onFocus">
             </slot>
         </b-col>

@@ -15,12 +15,10 @@
             @update="gridProps.onUpdate($event, blockContent.field.index)"
         />
         <b-row v-if="blockContent.type === 'section'">
-            <b-col v-for="(subBlock, subBlockI) in blockContent.content"
+            <FormGridBlock v-for="(subBlock, subBlockI) in blockContent.content"
                 :key="subBlockI"
-                cols="12" :lg="subBlock.size"
-                class="form_grid_block__column form_grid_block__sub_column" >
-                <FormGridBlock :blockContent="subBlock" :gridProps="gridProps" />
-            </b-col>
+                :blockContent="subBlock" :gridProps="gridProps"
+            />
         </b-row>
     </b-col>
 </template>
