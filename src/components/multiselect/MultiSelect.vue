@@ -348,7 +348,7 @@ export default class MultiSelect extends Vue {
      display: flex;
      flex-direction: row;
      position: relative;
-     padding: 0 10px 0 0px;
+     padding: 10px 10px 10px 0;
  }
  .select_container_fixed_height {
      box-shadow: inset -5px -5px 8px 5px rgba(0,0,0,0.25);
@@ -422,13 +422,14 @@ export default class MultiSelect extends Vue {
  }
  .select_container__options_list > li.select_container__options_list__option {
      color: var(--MainTextColor);
-     padding: 5px 10px 5px 0px;
+     padding: 10px;
      box-sizing: border-box;
      cursor: pointer;
  }
  .select_container__options_list > li.select_container__options_list__option:hover,
  .select_container__options_list__option_active {
      cursor: pointer;
+     background-color: var(--MainBorderColor);
      color: var(--MainTextColor);
  }
  .select_container__options_list__option > span {
