@@ -478,14 +478,10 @@ export default class RootUserView extends Vue {
             .head-menu_back-button,
             .head-menu_main-menu-button {
                 text-align: left;
-                border-top: 0px !important;
-                border-left: 0px !important;
                 box-sizing: content-box;
                 display: inline-block;
-                border-radius: 0 !important;
                 height: 1em;
                 vertical-align: bottom;
-                border: solid 1px var(--MenuColor)
             }
         }
     }

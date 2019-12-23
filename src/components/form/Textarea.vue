@@ -161,6 +161,7 @@ export default class Textarea extends Vue {
 }
 .textarea_field:hover {
     overflow-y: auto;
+    border-bottom: 1px solid var(--MainBorderColor);
 }
 .textarea_field:focus {
     border-bottom: 2px solid var(--MainBorderColor);
