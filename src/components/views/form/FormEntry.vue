@@ -113,8 +113,10 @@ export default class FormEntry extends Vue {
         color: var(--NavigationTextColor);
     }
     .delete-block{
-        background: var(--MenuColor);
+        background: var(--MainBorderColor);
         width: max-content;
+        display: inline-block;
+        margin-right: 15px;
     }
     .delete-block_delete-button {
         background: hsla(0,0%,100%,.3) !important;
@@ -126,7 +128,7 @@ export default class FormEntry extends Vue {
         border: 0px;
         box-shadow: none;
         outline: none;
-        color: var(--ButtonTextColor);
+        color: var(--MainTextColor);
         border-radius: 0;
     }
 
