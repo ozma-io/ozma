@@ -292,6 +292,12 @@ export default class RootUserView extends Vue {
 * All page without footer   (0)
 
 */
+    /deep/ .input-group {
+        margin-top: 15px;
+        padding-left: 0px;
+        margin-bottom: 15px;
+        border-radius: 3px;
+    }
     .main-div {
         padding: 0px;
         height: 100%;
