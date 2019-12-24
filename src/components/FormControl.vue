@@ -113,7 +113,6 @@
         </InputSlot>
         <template v-if="inputType.name === 'reference' || inputType.name === 'userview'">
             <b-row>
-
                 <b-col :cols="isInline ? 4 : 12">
                     <div v-if="actions.length > 0" class="nested-menu">
                         <ActionsMenu title="view_headline"
@@ -245,7 +244,7 @@ const userView = namespace("userView");
 
 const heightExclusions = ["select", "reference"];
 const multilineTypes = [ "codeeditor", "textarea" ];
-const inlineTypes = ["codeeditor", "textarea", "userview", "reference"];
+const inlineTypes = ["codeeditor", "textarea", "reference"];
 
 @Component({
     components: {
