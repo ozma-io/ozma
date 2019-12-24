@@ -142,7 +142,7 @@ export default class ActionsMenu extends Vue {
     }
     .actions-menu_actions-button {
         color: var(--MainTextColor) !important;
-        background: hsla(0,0%,100%,.3);
+        background: var(--MainBackgroundColor);
         border: 1px solid var(--MainBorderColor);
         text-align: left;
         height: 100%;
@@ -187,7 +187,6 @@ export default class ActionsMenu extends Vue {
                 content: "";
                 display: block;
                 width: 100%;
-                background: var(--MenuColor);
                 position: absolute;
                 height: 100%;
                 z-index: 900;
@@ -197,11 +196,6 @@ export default class ActionsMenu extends Vue {
             .actions-menu_actions-button, .div-with-actions_button {
                 width: 100%;
                 text-align: left;
-                border-bottom: 0 !important;
-                border-right: 0 !important;
-                border: solid 1px var(--MenuColor) !important;
-                border-left: 0px !important;
-                border-top: 0px !important;
                 z-index: 1000 !important; /* кнопка выбора действий выше темного блока */
                 padding-left: 7px !important;
                 padding-right: 7px !important;

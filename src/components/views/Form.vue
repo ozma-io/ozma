@@ -316,14 +316,14 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
 
 <style scoped>
     .view-form {
-        padding: 0px !important;
+        padding: 0px 0px 50px 0px !important;
         overflow-y: auto;
         overflow-x: hidden;
-        height: 100%;
+        height: 100% !important;
         width: 100vw;
         background-color: var(--MainBackgroundColor);
     }
- 
+
     @media screen and (max-aspect-ratio: 13/9) {
         @media screen and (max-device-width: 480px) {
             .view-form {

@@ -155,12 +155,14 @@ export default class Textarea extends Vue {
     white-space: pre-wrap;
     border: 0px solid var(--MainBorderColor);
     color: var(--MainTextColor);
+    transition: all 300ms ease-in-out, height 300ms ease-in-out;
 }
 .textarea_field::placeholder {
     color: var(--MainTextColorLight);
 }
 .textarea_field:hover {
     overflow-y: auto;
+    border-bottom: 1px solid var(--MainBorderColor);
 }
 .textarea_field:focus {
     border-bottom: 2px solid var(--MainBorderColor);

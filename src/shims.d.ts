@@ -27,3 +27,8 @@ declare module "vue-monaco" {
   const MonacoEditor: any;
   export default MonacoEditor;
 }
+
+declare module "vue-input-autowidth" {
+  const VueInputAutowidth: any;
+  export default VueInputAutowidth;
+}

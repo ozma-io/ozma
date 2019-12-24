@@ -85,6 +85,7 @@ export default class TableRow extends Vue {
     }
     td {
         border-top: 1px solid var(--MainBorderColor);
+        border-right: 1px solid var(--MainBorderColor)
     }
     td >>> p, td >>> a {
         color: var(--TableTextColor) !important;
@@ -103,7 +104,10 @@ export default class TableRow extends Vue {
         white-space: initial;
         word-wrap: break-word;
         word-break: break-all;
-        height: inherit;
+    }
+    td >>> p:hover {
+        overflow-x: hidden;
+        overflow-y: auto;
     }
     td.required_cell_style {
         background-color: var(--RequiredBackColor);
@@ -119,6 +123,12 @@ export default class TableRow extends Vue {
         z-index: 15; /* обычные ячейки ниже фиксированных */
     }
 
+    .opemform-cells {
+        text-align: center;
+        width: 100%;
+        border-right: 1px solid var(--MainBorderColor)
+    }
+
     @media screen and (min-device-width: 813px) and (orientation: landscape) {
         .checkbox-cells {
             left: 0px;
@@ -127,6 +137,12 @@ export default class TableRow extends Vue {
         .opemform-cells {
             left: 50px;
         }
+        /* .opemform-cells > span {
+           justify-content: center !important;
+           align-items: center;
+           display: inline-flex;
+           width: 100%;
+           } */
 
         .fixed-column {
             position: sticky;

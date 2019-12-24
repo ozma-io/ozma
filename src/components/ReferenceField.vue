@@ -30,7 +30,9 @@
                         :options="options"
                         :height="height"
                         single
+                        :dontOpen="dontOpen"
                         @update:value="$emit('update', $event)"
+                        @focus="$emit('focus', $event)"
                         :required="!isNullable"
                         :disabled="isDisabled"
                         ref="control">
@@ -97,6 +99,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
     @Prop({ type: Object }) linkedAttr!: any | undefined;
     @Prop({ type: Boolean, default: false }) isDisabled!: boolean;
     @Prop({ type: Boolean, default: false }) isNullable!: boolean;
+    @Prop({ type: Boolean, default: false }) dontOpen!: boolean;
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
     @Prop({ type: Number }) height!: number | undefined;
     @Prop({ type: Object }) controlStyle!: any;

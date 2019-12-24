@@ -28,8 +28,8 @@ export default class ModalTabHeader extends Vue {
  }
  .modal__tab_header.selected,
  .modal__tab_header:hover {
-     color: var(--NavigationBackColor);
-     background-color: var(--NavigationTextColor);
+     color: var(--MainTextColor);
+     background-color: var(--MainBorderColor);
      cursor: pointer;
  }
  .modal__tab_close_button {

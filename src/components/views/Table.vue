@@ -1197,6 +1197,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 * FixedColumn           (25)
 
 */
+ table, th , td {
+     border: 1px solid var(--MainBackgroundColor)
+ }
     .table-block {
         width: 100%;
         margin: 0px;
@@ -1248,9 +1251,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         position: relative;
         z-index: 1000
     }
-    /deep/ tr:hover > td {
-        background-color: var(--MainBorderColor);
-    }
     .tabl {
         float: left;
         margin-bottom: 10px;
@@ -1278,10 +1278,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         text-overflow: ellipsis;
         position: sticky; /*фиксация шапки при скроле*/
         z-index: 20; /*при скроле таблицы чтобы шапка была видна*/
+        border-right: 1px solid var(--MainBorderColor);
         top: 0;
-        font-size: 1.1.rem;
         cursor: pointer;
-        color: var(--MainTextColor);
+        color: var(--MainTextColorLight);
         background-color: var(--MainBackgroundColor);
     }
     /deep/ td > p {
@@ -1354,6 +1354,12 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         }
     }
 	
+ .openform-cells > span {
+     justify-content: center !important;
+     align-items: center;
+     display: inline-flex;
+     width: 100%;
+ }
     @media screen and (min-device-width: 813px) and (orientation: landscape) {
         .checkbox-cells {
             left: 0px;
@@ -1394,13 +1400,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
             border-spacing: 0;
         }
 
-        th {
-            border: solid 1px var(--NavigationBackColor);
-        }
-
-        td {
-            border: solid 1px var(--NavigationBackColor);
-        }
         td >>> a {
             text-decoration: none !important;
         }
@@ -1451,10 +1450,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
  .openform-cells > .table-th_span,
  .checkbox-cells > .table-th_span {
      justify-content: unset;
-     padding-left: 0.75rem;
- }
- th {
-     padding: 0.5rem;
+     padding: 0.75rem;
  }
  .checkbox-col, .open-form-col {
      width: 50px;
@@ -1463,7 +1459,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
      left: 50px;
  }
  thead {
-     line-height: 50px;
+     line-height: 30px;
  }
  .table_header__content {
      display: inline-flex;

@@ -12,7 +12,8 @@
 </i18n>
 
 <template>
-    <div style="width: 100%;">
+    <div style="width: 100%;"
+        @keydown.tab="() => setIsOpen(false)">
         <div v-click-outside="() => setIsOpen(false)"
              :class="[
                 'select_container',
@@ -55,7 +56,12 @@
                           :style="listValueStyle"
                           @click.stop>
                           {{option.label}}
-                          <input v-if="showValueRemove" @click="removeValue(index)" type="button" class="material-icons values_list__value__close" value="close">
+                          <input v-if="showValueRemove"
+                              @click="removeValue(index)"
+                              @blur="() => setIsOpen(false)"
+                              type="button"
+                              class="material-icons values_list__value__close"
+                              value="close">
                     </span>
                 </slot>
                 <input v-if="isOpen"
@@ -336,13 +342,13 @@ export default class MultiSelect extends Vue {
      align-self: center;
      align-items: center;
      height: 40px;
-     color: black;
+     color: var(--MainTextColorLight);
  }
  .select_container {
      display: flex;
      flex-direction: row;
      position: relative;
-     padding: 0 10px 0 0px;
+     padding: 10px 10px 10px 0;
  }
  .select_container_fixed_height {
      box-shadow: inset -5px -5px 8px 5px rgba(0,0,0,0.25);
@@ -416,13 +422,14 @@ export default class MultiSelect extends Vue {
  }
  .select_container__options_list > li.select_container__options_list__option {
      color: var(--MainTextColor);
-     padding: 5px 10px 5px 0px;
+     padding: 10px;
      box-sizing: border-box;
      cursor: pointer;
  }
  .select_container__options_list > li.select_container__options_list__option:hover,
  .select_container__options_list__option_active {
      cursor: pointer;
+     background-color: var(--MainBorderColor);
      color: var(--MainTextColor);
  }
  .select_container__options_list__option > span {
@@ -436,7 +443,6 @@ export default class MultiSelect extends Vue {
  .values_list__value {
      margin: 5px;
      border: 1px solid var(--MainBorderColor);
-     height: 30px;
  }
  .values_list__value,
  .single_value {
@@ -445,7 +451,7 @@ export default class MultiSelect extends Vue {
      color: var(--MainTextColor);
      border-radius: 15px;
      /* background-color: white; */
-     padding: 2px 10px 2px 10px;
+     padding: 10px;
      box-sizing: border-box;
 }
 .single_value {
@@ -453,8 +459,9 @@ export default class MultiSelect extends Vue {
      align-self: center;
      border-radius: 15px;
      padding: 2px 10px 2px 10px;
-     background-color: var(--MainBorderColor);
-     color: var(--MainBackgroundColor);
+     border: 1px solid var(--MainBorderColor);
+     background-color: var(--MainBackgroundColor);
+     color: var(--MainTextColor);
  }
  .single_value_open {
      color: gray;
@@ -467,7 +474,6 @@ export default class MultiSelect extends Vue {
  .values_list__value:hover > input.values_list__value__close {
      cursor: pointer;
      background-color: var(--MainBorderColor);
-     color: var(--MainTextColor);
  }
  .values_list__value > input.values_list__value__close {
      background: none;
@@ -475,7 +481,7 @@ export default class MultiSelect extends Vue {
      padding: 0;
      margin: 0px 0px 0px 5px;
      font-size: inherit;
-     color: var(--MainBackgroundColor);
+     color: var(--FailColor);
  }
  .clear_all_button {
      color: var(--MainTextColor);

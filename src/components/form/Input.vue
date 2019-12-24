@@ -9,24 +9,30 @@
     }
 </i18n>
 <template>
-    <input :class="['input_field',
-                        {
-                            'input_field__disabled': disabled,
-                            'input_field__focused': focused,
-                        }
-                ]"
-        :id="id"
-        v-on:click.stop
-        autocomplete="off"
-        :type="type"
-        :value="value"
-        :placeholder="$t('input_placeholder')"
-        :disabled="disabled"
-        ref="control"
-        @input="updateInput"
-        @focus="onFocus"
-        @blur="onBlur"
-    >
+    <fragment>
+        <span ref="autosizeMeter">
+            {{value || $t('input_placeholder')}}
+        </span>
+        <input :class="['input_field',
+                            {
+                                'input_field__disabled': disabled,
+                                'input_field__focused': focused,
+                                'input_field__unfocused': !focused,
+                            }
+                    ]"
+            :id="id"
+            v-on:click.stop
+            autocomplete="off"
+            :type="type"
+            :value="value"
+            :placeholder="$t('input_placeholder')"
+            :disabled="disabled"
+            ref="control"
+            @input="updateInput"
+            @focus="onFocus"
+            @blur="onBlur"
+        >
+    </fragment>
 </template>
 
 <script lang="ts">
@@ -51,6 +57,28 @@ export default class Input extends Vue {
 
     private focused: boolean = false;
 
+    private mounted() {
+        const controlElement = this.$refs.control as HTMLInputElement;
+        const autosizeMeter = this.$refs.autosizeMeter as HTMLSpanElement;
+        const styles = window.getComputedStyle(controlElement);
+
+        Object.assign(autosizeMeter.style, {
+            position: "absolute",
+            top: "0",
+            left: "0",
+            visibility: "hidden",
+            height: "0",
+            overflow: "hidden",
+            whiteSpace: "pre",
+            fontSize: styles.fontSize,
+            fontFamily: styles.fontFamily,
+            fontWeight: styles.fontWeight,
+            fontStyle: styles.fontStyle,
+            letterSpacing: styles.letterSpacing,
+            textTransform: styles.textTransform,
+        });
+    }
+
     @Watch("value")
     private onValueUpdate(value: string) {
         if (!this.isMobile) {
@@ -64,6 +92,17 @@ export default class Input extends Vue {
             const control = this.$refs.control as HTMLInputElement;
             this.$nextTick(() => control.focus);
         }
+    }
+
+    private get maxWidth(): number {
+        const controlElement = this.$refs.control as HTMLInputElement;
+        if (controlElement) {
+            const leftPosition = controlElement.getBoundingClientRect().left;
+            const screenWidth = document.documentElement.clientWidth - 15;
+            const maxWidth = screenWidth - leftPosition;
+            return this.maxWidth;
+        }
+        return 250;
     }
 
     private get hasContent(): boolean {
@@ -105,20 +144,14 @@ export default class Input extends Vue {
     private updateWidth(text: string) {
         const value = text !== "" ? text : String(this.$t("input_placeholder"));
         const controlElement = this.$refs.control as HTMLInputElement;
-        const computed = window.getComputedStyle(controlElement);
-        const font = computed.getPropertyValue("font-size");
-        // Unfortunately, this will cause the text field to grow ever slightly as you type
-        // However, the only other option is to have a portion of
-        // the text go out of view to the left
-        // This should pose no inconvinience to the end user
-        const textWidth = Math.ceil(getTextWidth(value, font)) * 1.67;
-        const inputWidth = textWidth;
+        const autosizeMeter = this.$refs.autosizeMeter as HTMLSpanElement;
         const leftPos = controlElement.getBoundingClientRect().left;
+        const newWidth = autosizeMeter.scrollWidth;
+        const rightPos = leftPos + newWidth;
         const viewportWidth = document.documentElement.clientWidth - 10;
-        const rightPos = leftPos + inputWidth;
 
-        if (rightPos < viewportWidth) {
-            controlElement.style.width = `${inputWidth}px`;
+        if (rightPos < (viewportWidth - 15)) {
+            controlElement.style.width = `${newWidth}px`;
         } else {
             controlElement.style.width = `${viewportWidth - leftPos}px`;
         }
@@ -185,9 +218,13 @@ box-shadow: 0px 0px 8px 2px #000000;
     border-bottom: 1px solid var(--MainBorderColor) !important;
     cursor: text;
     background-color: var(--MainBackgroundColor);
+    z-index: 2000;
 }
 .input_field__disabled {
     cursor: not-allowed;
+}
+.input_field__unfocused {
+    width: 100% !important;
 }
 .input_field__focused {
     position: absolute;
