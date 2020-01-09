@@ -157,7 +157,7 @@
                                 @update:actions="actions = $event"
                                 :dontOpen="isMobile"
                                 @focus="iSlot.onFocus"
-                                @update="iSlot.onChange($event)"
+                                @update="updateValue($event)"
                                 :isNullable="isNullable"
                                 :isDisabled="isDisabled"
                                 ref="control" />
