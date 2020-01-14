@@ -7,7 +7,9 @@
         <td v-if="from !== 'new'" @click="$emit('select', $event)"
                 :class="[{ 'hide_content': showFixedRow }, 'fixed-column', 'checkbox-cells']">
             <!-- Key is needed to force checkbox re-render when `selected` changes. Not sure why. -->
-            <input type="checkbox" :key="localRow.extra.selected" :checked="localRow.extra.selected" @click="$event.preventDefault()">
+            <span class="table-th_span">
+                <input type="checkbox" :key="localRow.extra.selected" :checked="localRow.extra.selected" @click="$event.preventDefault()">
+            </span>
         </td>
         <td v-else class="fixed-column checkbox-cells"></td>
         <td v-if="localUv.hasRowLinks" :class="[{ 'hide_content': showFixedRow },'fixed-column', 'opemform-cells']">
@@ -76,6 +78,9 @@ export default class TableRow extends Vue {
         background-color: white; /*цвет таблицы возможно надо сменить на настраевоемый*/
         height: 100% @-moz-document url-prefix();
     }
+    .table-tr > td:last-child {
+        border-right: none;
+    }
     .table-tr-new > td {
         height: 26px;
     }
@@ -85,7 +90,8 @@ export default class TableRow extends Vue {
     }
     td {
         border-top: 1px solid var(--MainBorderColor);
-        border-right: 1px solid var(--MainBorderColor)
+        border-right: 1px solid var(--MainBorderColor);
+        padding: 5px !important;
     }
     td >>> p, td >>> a {
         color: var(--TableTextColor) !important;
@@ -127,6 +133,14 @@ export default class TableRow extends Vue {
         text-align: center;
         width: 100%;
         border-right: 1px solid var(--MainBorderColor)
+    }
+
+
+    .checkbox-cells > .table-th_span {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        justify-content: center;
     }
 
     @media screen and (min-device-width: 813px) and (orientation: landscape) {

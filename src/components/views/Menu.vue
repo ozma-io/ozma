@@ -37,17 +37,13 @@
                 </div>
                 <hr />
             </b-col>
-            <b-col cols="12">
-                <ul class="menu_list">
-                    <li v-for="button in category.buttons" class="menu_entry">
-                        <UserViewLink
-                            class="navigation-entry"
-                            :uv="button.uv"
-                            @[indirectLinks?`click`:null]="$emit('goto', $event)">
-                            {{ button.name }}
-                        </UserViewLink>
-                    </li>
-                </ul>
+            <b-col v-for="button in category.buttons"  cols="12" class="menu_entry">
+                <UserViewLink
+                    class="navigation-entry"
+                    :uv="button.uv"
+                    @[indirectLinks?`click`:null]="$emit('goto', $event)">
+                    {{ button.name }}
+                </UserViewLink>
             </b-col>
         </b-row>
     </b-container>
@@ -298,15 +294,14 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
  /deep/ .menu_entry > a {
      color: var(--MainTextColor);
      text-decoration: underline;
+     text-decoration-color: var(--MainBorderColor);
      font-size: 1.3rem !important;
  }
  .menu_entry {
      display: inline-flex;
      align-items: center;
      color: var(--MainTextColor);
-     padding-right: 5px;
-     padding-left: 5px;
-     border-right: 1px solid var(--MainBorderColor);
+     padding-bottom: 5px;
  }
  .menu_entry:first-child {
      padding-left: 0;
@@ -318,6 +313,7 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
      margin-top: 75px;
  }
  .menu_category_title {
-     font-size: 2rem !important;
+     font-size: 1.5rem !important;
+     color: var(--MainTextColorLight);
  }
 </style>
