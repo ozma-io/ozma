@@ -1197,9 +1197,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 * FixedColumn           (25)
 
 */
- table, th , td {
-     border: 1px solid var(--MainBackgroundColor)
- }
+    table, th , td {
+        border: 1px solid var(--MainBackgroundColor)
+    }
     .table-block {
         width: 100%;
         margin: 0px;
@@ -1254,6 +1254,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     .tabl {
         float: left;
         margin-bottom: 10px;
+        margin-right: 600px;
         height: 100%;
         width: 100%; /*на весь экран*/
         padding: 0;
@@ -1275,6 +1276,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         max-width: 50px !important;
         overflow: hidden;
         white-space: nowrap;
+        padding: 8px !important;
         text-overflow: ellipsis;
         position: sticky; /*фиксация шапки при скроле*/
         z-index: 20; /*при скроле таблицы чтобы шапка была видна*/
@@ -1283,6 +1285,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         cursor: pointer;
         color: var(--MainTextColorLight);
         background-color: var(--MainBackgroundColor);
+    }
+    .table-th:last-child {
+        border-right: none;
     }
     /deep/ td > p {
         margin-bottom: 0px;
@@ -1450,7 +1455,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
  .openform-cells > .table-th_span,
  .checkbox-cells > .table-th_span {
      justify-content: unset;
-     padding: 0.75rem;
+     padding: 5px;
+     display: flex;
+     justify-content: center;
  }
  .checkbox-col, .open-form-col {
      width: 50px;
