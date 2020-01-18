@@ -7,17 +7,7 @@ import * as Api from "@/api";
 import * as Utils from "@/utils";
 import { router, getQueryValue } from "@/modules";
 
-interface IAuthParams {
-    createdTime: number;
-    token: string;
-    refreshToken: string;
-    idToken: string;
-    decodedToken: any;
-    decodedRefreshToken: any;
-    decodedIdToken: any;
-}
-
-export class CurrentAuth implements IAuthParams {
+export class CurrentAuth {
     createdTime: number;
     token: string;
     refreshToken: string;
@@ -26,14 +16,14 @@ export class CurrentAuth implements IAuthParams {
     decodedRefreshToken: any;
     decodedIdToken: any;
 
-    constructor(params: IAuthParams) {
-        this.createdTime = params.createdTime;
-        this.token = params.token;
-        this.refreshToken = params.refreshToken;
-        this.idToken = params.idToken;
-        this.decodedToken = params.decodedToken;
-        this.decodedRefreshToken = params.decodedRefreshToken;
-        this.decodedIdToken = params.decodedIdToken;
+    constructor(token: string, refreshToken: string, idToken: string, createdTime?: number) {
+        this.createdTime = (createdTime !== undefined) ? createdTime : Utils.sse();
+        this.decodedToken = jwtDecode(token);
+        this.decodedRefreshToken = jwtDecode(refreshToken);
+        this.decodedIdToken = jwtDecode(idToken);
+        this.token = token;
+        this.refreshToken = refreshToken;
+        this.idToken = idToken;
     }
 
     get username() {
@@ -50,45 +40,6 @@ export class CurrentAuth implements IAuthParams {
 
     get session(): string {
         return this.decodedToken.session_state;
-    }
-}
-
-class JwtCurrentAuth extends CurrentAuth {
-    constructor(token: string, refreshToken: string, idToken: string, createdTime?: number) {
-        const myCreatedTime = (createdTime !== undefined) ? createdTime : Utils.sse();
-        const decodedToken = jwtDecode(token);
-        const decodedRefreshToken = jwtDecode(refreshToken);
-        const decodedIdToken = jwtDecode(idToken);
-        super({
-            token,
-            refreshToken,
-            idToken,
-            decodedToken,
-            decodedRefreshToken,
-            decodedIdToken,
-            createdTime: myCreatedTime,
-        });
-    }
-}
-
-class MockCurrentAuth extends CurrentAuth {
-    constructor() {
-        super({
-            token: "no_token",
-            refreshToken: "no_token",
-            idToken: "no_token",
-            decodedToken: {
-                exp: 600,
-                iat: 0,
-                session_state: "no_session",
-            },
-            decodedRefreshToken: {
-                exp: 600,
-                iat: 0,
-            },
-            decodedIdToken: {},
-            createdTime: Utils.sse(),
-        });
     }
 }
 
@@ -153,7 +104,7 @@ const loadCurrentAuth = () => {
 
     if (dumpStr !== null) {
         const dump = JSON.parse(dumpStr);
-        const auth = new JwtCurrentAuth(dump.token, dump.refreshToken, dump.idToken, dump.createdTime);
+        const auth = new CurrentAuth(dump.token, dump.refreshToken, dump.idToken, dump.createdTime);
         const timestamp = Utils.sse();
         if (auth.createdTime + auth.refreshValidFor > timestamp) {
             return auth;
@@ -185,7 +136,7 @@ const getToken = (context: ActionContext<IAuthState, {}>, params: Record<string,
             if (state.pending !== pending.ref) {
                 throw new Error("Pending operation cancelled");
             }
-            const auth = new JwtCurrentAuth(ret.access_token, ret.refresh_token, ret.id_token);
+            const auth = new CurrentAuth(ret.access_token, ret.refresh_token, ret.id_token);
             updateAuth(context, auth);
             startTimeouts(context);
             return auth;
@@ -364,9 +315,6 @@ export const authModule: Module<IAuthState, {}> = {
             const { state, commit, dispatch } = context;
 
             if (Api.disableAuth) {
-                const auth = new MockCurrentAuth();
-                commit("setAuth", auth);
-                dispatch("setAuth", undefined, { root: true });
                 return;
             }
 
@@ -393,8 +341,10 @@ export const authModule: Module<IAuthState, {}> = {
                             getToken(context, params);
                         } else {
                             const error = getQueryValue("error");
-                            const errorDescription = getQueryValue("errorDescription");
-                            dispatch("setError", `Invalid auth response query parameters, error ${error} ${errorDescription}`);
+                            if (error !== "login_required") {
+                                const errorDescription = getQueryValue("errorDescription");
+                                dispatch("setError", `Invalid auth response query parameters, error ${error} ${errorDescription}`);
+                            }
                         }
                         router.push(savedState.path);
                     }
@@ -444,31 +394,35 @@ export const authModule: Module<IAuthState, {}> = {
             window.addEventListener("message", iframeHandler);
 
             if (state.current === null && state.pending === null) {
-                await requestLogin(context, tryExisting);
+                if (tryExisting) {
+                    await requestLogin(context, tryExisting);
+                }
             } else if (state.pending !== null) {
                 await state.pending;
             }
         },
         callProtectedApi: {
             root: true,
-            handler: async ({ state, commit, dispatch }, { func, args }: { func: ((_1: string, ..._2: any[]) => Promise<any>), args?: any[] }): Promise<any> => {
+            handler: async ({ state, commit, dispatch }, { func, args }: { func: ((_1: string | null, ..._2: any[]) => Promise<any>), args?: any[] }): Promise<any> => {
                 if (state.current === null) {
                     if (state.pending !== null) {
                         await state.pending;
-                    }
-                    if (state.current === null) {
-                        throw new Error("No authentication token");
                     }
                 }
 
                 try {
                     const argsArray = args === undefined ? [] : args;
-                    return await func(state.current.token, ...argsArray);
+                    const token = state.current === null ? null : state.current.token;
+                    return await func(token, ...argsArray);
                 } catch (e) {
                     if (e instanceof Utils.FetchError) {
                         if (e.response.status === 401) {
-                            dispatch("removeAuth", undefined, { root: true });
-                            dispatch("setError", e.message);
+                            if (state.current === null) {
+                                await dispatch("login", undefined);
+                            } else {
+                                await dispatch("removeAuth", undefined, { root: true });
+                                await dispatch("setError", e.message);
+                            }
                         }
                     }
                     throw e;
@@ -497,6 +451,9 @@ export const authModule: Module<IAuthState, {}> = {
             });
             commit("setPending", waitForLoad);
             await waitForLoad;
+        },
+        login: async context => {
+            await requestLogin(context, false);
         },
     },
 };
