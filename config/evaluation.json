@@ -1,4 +1,0 @@
-{
-    "__API_URL__": "`https://api.${location.hostname}`",
-    "__DISABLE_AUTH__": true
- }

@@ -1,6 +1,6 @@
 {
-    "__API_URL__": "`https://api.${location.hostname}`",
-    "__API_AUTH_URL__": "'https://account.myprocessx.com'",
-    "__API_AUTH_URL_BASE__": "'/auth/realms/myprocessx'",
+    "__API_URL__": "'https://' + location.hostname.split('.')[0] + '.api.vabl.org'",
+    "__API_AUTH_URL__": "'https://account.vabl.io'",
+    "__API_AUTH_URL_BASE__": "'/auth/realms/vabl'",
     "__AUTH_CLIENT_ID__": "'funapp'"
  }
