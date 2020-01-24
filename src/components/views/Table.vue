@@ -1254,7 +1254,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     .tabl {
         float: left;
         margin-bottom: 10px;
-        margin-right: 600px;
         height: 100%;
         width: 100%; /*на весь экран*/
         padding: 0;
