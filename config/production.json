@@ -1,5 +1,5 @@
 {
-    "__API_URL__": "'https://' + instanceName + '.api.' + instancesHost",
+    "__API_URL__": "`https://${instanceName}.api.${instancesHost}`",
     "__API_AUTH_URL__": "'https://account.vabl.io'",
     "__API_AUTH_URL_BASE__": "'/auth/realms/vabl'",
     "__AUTH_CLIENT_ID__": "'funapp'"
