@@ -17,7 +17,10 @@
         <div v-click-outside="() => setIsOpen(false)"
              :class="[
                 'select_container',
-                { 'select_container_fixed_height': hasHeight && !isOpen && !single },
+                {
+                    'select_container_fixed_height': hasHeight && !isOpen && !single,
+                    'select_container__error': required && isEmpty,
+                },
              ]">
             <span v-if="showSingleValue"
                   @click="setIsOpen(true)"
@@ -341,13 +344,15 @@ export default class MultiSelect extends Vue {
      cursor: pointer;
      align-self: center;
      align-items: center;
-     height: 40px;
      color: var(--MainTextColorLight);
  }
  .select_container {
      display: flex;
      flex-direction: row;
      position: relative;
+ }
+ .select_container__error {
+     border-bottom: 1px solid var(--FailColor);
  }
  .select_container_fixed_height {
      box-shadow: inset -5px -5px 8px 5px rgba(0,0,0,0.25);
