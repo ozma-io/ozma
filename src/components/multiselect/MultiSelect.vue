@@ -348,7 +348,6 @@ export default class MultiSelect extends Vue {
      display: flex;
      flex-direction: row;
      position: relative;
-     padding: 10px 10px 10px 0;
  }
  .select_container_fixed_height {
      box-shadow: inset -5px -5px 8px 5px rgba(0,0,0,0.25);
