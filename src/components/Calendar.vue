@@ -19,6 +19,7 @@
                     @input="$emit('update:value', $event.target.value)"
                     @focus="isCalendarOpen = true"
             />
+            <input v-if="!!value" type="button" class="material-icons close_input__icon" value="close" @click="clearValue">
         </div>
       <div :class="['main_cal', {'main_cal__open': isCalendarOpen }]">
             <div class="days">
@@ -63,6 +64,10 @@ export default class Calendar extends Vue {
 
     private onClickOutside() {
         this.isCalendarOpen = false;
+    }
+
+    private clearValue() {
+        this.$emit("update:value", null);
     }
 
     private updatePart(mutate: (m: Moment) => void) {
@@ -120,10 +125,15 @@ export default class Calendar extends Vue {
         cursor: text;
         background-color: var(--MainBackgroundColor);
     }
+    .close_input__icon,
     .calendar_input__icon {
         background: none;
         border: none;
         color: var(--MainBorderColor);
+    }
+    .close_input__icon {
+        color: var(--MainBorderColor);
+        order: 3;
     }
     .main_cal {
       display: none;
