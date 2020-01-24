@@ -122,9 +122,9 @@ export default class SelectUserView extends Vue {
      position: sticky;
  }
  .selection_view_save__button {
-     border: var(--NavigationTextColor) 1px solid !important;
-     color: var(--NavigationTextColor);
-     background-color: var(--NavigationBackColor);
+     border: var(--MainBorderColor) 1px solid !important;
+     color: var(--MainTextColor);
+     background-color: var(--MainBackgroundColor);
  }
  @media screen and (min-width: 480px) {
      .selection_view_save__container {
