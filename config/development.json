@@ -1,6 +1,6 @@
 {
-    "__API_URL__": "'https://api.dev-local.myprocessx.com'",
-    "__API_AUTH_URL__": "'https://keycloak-dev.myprocessx.com'",
-    "__API_AUTH_URL_BASE__": "'/auth/realms/myprocessx-dev'",
+    "__API_URL__": "'https://dev.api-dev.vabl-dev.org",
+    "__API_AUTH_URL__": "'https://account-dev.vabl.io'",
+    "__API_AUTH_URL_BASE__": "'/auth/realms/vabl-dev'",
     "__AUTH_CLIENT_ID__": "'funapp'"
-}
+ }

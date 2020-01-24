@@ -1,5 +1,8 @@
 import * as Utils from "@/utils";
 
+const hostnameParts = location.hostname.split(".");
+const instanceName = hostnameParts[0];
+const instancesHost = hostnameParts.length >= 2 ? hostnameParts[hostnameParts.length - 2] + "." + hostnameParts[hostnameParts.length - 1] : null;
 const apiUrl = __API_URL__;
 export const disableAuth = __DISABLE_AUTH__;
 
