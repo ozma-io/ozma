@@ -117,6 +117,9 @@ export default class Calendar extends Vue {
         border-bottom: none;
         width: 100%;
         text-overflow: ellipsis;
+        border-radius: 0px;
+        -webkit-border-radius: 0px;
+        -webkit-appearance: none;
     }
     .calendar_input:focus {
         outline: none;
