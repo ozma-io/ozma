@@ -293,9 +293,7 @@ export default class RootUserView extends Vue {
 
 */
     /deep/ .input-group {
-        margin-top: 15px;
         padding-left: 0px;
-        margin-bottom: 15px;
         border-radius: 3px;
     }
     .main-div {
@@ -327,6 +325,14 @@ export default class RootUserView extends Vue {
             display: none !important;
         }
     }
+ @media screen and (max-device-width: 480px) {
+     @media screen and (orientation: portrait) {
+         /deep/ .input-group {
+             margin-top: 15px;
+             margin-bottom: 15px;
+         }
+     }
+ }
     @media screen and (max-aspect-ratio: 13/9) {
         @media screen and (max-device-width: 480px) {
             .head-menu {
@@ -383,7 +389,6 @@ export default class RootUserView extends Vue {
         position: relative;
         background-color: var(--MainBackgroundColor) !important;
         border-top: 1px solid var(--MainBorderColor);
-        box-shadow: 0px -5px 12px 0px rgba(0,0,0,0.3);
         z-index: 1030; /* низ страницы */
         display: -webkit-box;
         display: -ms-flexbox;
@@ -400,7 +405,6 @@ export default class RootUserView extends Vue {
         -webkit-box-pack: justify;
         -ms-flex-pack: justify;
         justify-content: space-between;
-        margin-top: 15px;
     }
 
     .count-row {
