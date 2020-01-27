@@ -1,11 +1,9 @@
 <i18n>
     {
         "en": {
-            "no_auth": "You were logged out. Refresh the page to log in again.",
             "auth_error": "Error during authentication: {msg}"
         },
         "ru": {
-            "no_auth": "Вы вышли из системы. Обновите страницу чтобы зайти снова.",
             "auth_error": "Ошибка аутентификации: {msg}"
         }
     }
@@ -14,15 +12,12 @@
 <template>
     <div id="app">
         <ModalPortalTarget name="tabbed-modal" multiple />
-        <router-view v-if="currentAuth !== null || pendingAuth !== null"></router-view>
-        <template v-else-if="authErrors.length > 0">
+        <template v-if="authErrors.length > 0">
             <span v-for="error in authErrors" :key="error">
                 {{ $t('auth_error', { msg: error }) }}
             </span>
         </template>
-        <span v-else>
-            {{ $t('no_auth') }}
-        </span>
+        <router-view v-else></router-view>
     </div>
 </template>
 

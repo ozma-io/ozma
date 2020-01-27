@@ -6,6 +6,7 @@
             "loading": "Now loading",
             "save": "Save",
             "account": "Account",
+            "login": "Login",
             "logout": "Logout",
             "auth_error": "Authentication error: {msg}",
             "user_view_error": "Failed to fetch user view: {msg}",
@@ -20,6 +21,7 @@
             "loading": "Загрузка данных",
             "save": "Сохранить",
             "account": "Профиль",
+            "login": "Войти",
             "logout": "Выйти",
             "auth_error": "Ошибка авторизации: {msg}",
             "user_view_error": "Ошибка получения представления: {msg}",
@@ -105,6 +107,7 @@ import { IUserViewArguments, CombinedUserView, UserViewError, CurrentUserViews }
 import { ErrorKey } from "@/state/errors";
 import { CurrentChanges, ScopeName } from "@/state/staging_changes";
 import { IAction } from "@/components/ActionsMenu.vue";
+import { CurrentAuth } from "@/state/auth";
 import { CurrentQuery, IQuery, queryLocation, replaceSearch, getDefaultValues } from "@/state/query";
 
 const auth = namespace("auth");
@@ -154,6 +157,8 @@ const searchParam = "__q";
 
 @Component
 export default class RootUserView extends Vue {
+    @auth.State("current") currentAuth!: CurrentAuth | null;
+    @auth.Action("login") login!: () => Promise<void>;
     @auth.Action("logout") logout!: () => Promise<void>;
     @userView.Mutation("clear") clearView!: () => void;
     @userView.Action("getRootView") getRootView!: (_: IUserViewArguments) => Promise<void>;
@@ -227,9 +232,11 @@ export default class RootUserView extends Vue {
     get actions() {
         const actions: IAction[] = [];
         actions.push(...this.extraActions);
-        if (!Api.disableAuth) {
+        if (this.currentAuth !== null) {
             actions.push({ name: this.$t("account").toString(), href: Api.accountUrl });
             actions.push({ name: this.$t("logout").toString(), callback: this.logout });
+        } else {
+            actions.push({ name: this.$t("login").toString(), callback: this.login });
         }
         return actions;
     }

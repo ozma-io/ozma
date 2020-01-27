@@ -37,7 +37,7 @@
                 </div>
                 <hr />
             </b-col>
-            <b-col v-for="button in category.buttons"  cols="12" class="menu_entry">
+            <b-col v-for="(button, buttonI) in category.buttons" :key="buttonI" cols="12" class="menu_entry">
                 <UserViewLink
                     class="navigation-entry"
                     :uv="button.uv"

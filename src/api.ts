@@ -1,8 +1,10 @@
 import * as Utils from "@/utils";
 
+const hostnameParts = location.hostname.split(".");
+const instanceName = hostnameParts[0];
+const instancesHost = hostnameParts.length >= 2 ? hostnameParts[hostnameParts.length - 2] + "." + hostnameParts[hostnameParts.length - 1] : null;
 const apiUrl = __API_URL__;
 export const disableAuth = __DISABLE_AUTH__;
-export const anonymousUsername = "anonymous@example.com";
 
 export const authOrigin = String(__API_AUTH_URL__);
 export const authUrlBase = `${authOrigin}${__API_AUTH_URL_BASE__}`;
@@ -247,46 +249,54 @@ export interface IDeleteEntityResult {
 
 export type TransactionResult = IInsertEntityResult | IUpdateEntityResult | IDeleteEntityResult;
 
-const fetchGetApi = async (subUrl: string, token: string): Promise<any> => {
+const fetchGetApi = async (subUrl: string, token: string | null): Promise<any> => {
+    const headers: Record<string, string> = {};
+    if (token !== null) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
     return await Utils.fetchJson(`${apiUrl}/${subUrl}`, {
         method: "GET",
-        headers: {
-            "Authorization": `Bearer ${token}`,
-        },
+        headers,
     });
 };
 
-const fetchFormApi = async (subUrl: string, token: string, method: string, body?: string): Promise<any> => {
+const fetchFormApi = async (subUrl: string, token: string | null, method: string, body?: string): Promise<any> => {
+    const headers: Record<string, string> = {
+        "Content-Type": "application/x-www-form-urlencoded",
+    };
+    if (token !== null) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
     return await Utils.fetchJson(`${apiUrl}/${subUrl}`, {
         method,
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Authorization": `Bearer ${token}`,
-        },
+        headers,
         body,
     });
 };
 
-const fetchJsonApi = async (subUrl: string, token: string, method: string, body?: any): Promise<any> => {
+const fetchJsonApi = async (subUrl: string, token: string | null, method: string, body?: any): Promise<any> => {
+    const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+    };
+    if (token !== null) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
     return await Utils.fetchJson(`${apiUrl}/${subUrl}`, {
         method,
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify(body),
     });
 };
 
-export const fetchAllowed = async (token: string): Promise<IAllowedDatabase> => {
+export const fetchAllowed = async (token: string | null): Promise<IAllowedDatabase> => {
     return await fetchJsonApi("permissions/allowed", token, "GET");
 };
 
-const fetchView = async (path: string, token: string, args: URLSearchParams): Promise<IViewExprResult> => {
+const fetchView = async (path: string, token: string | null, args: URLSearchParams): Promise<IViewExprResult> => {
     return await fetchJsonApi(`views/${path}/entries?${args}`, token, "GET");
 };
 
-const fetchViewInfo = async (path: string, token: string, args: URLSearchParams): Promise<IViewInfoResult> => {
+const fetchViewInfo = async (path: string, token: string | null, args: URLSearchParams): Promise<IViewInfoResult> => {
     return await fetchJsonApi(`views/${path}/info?${args}`, token, "GET");
 };
 
@@ -298,48 +308,48 @@ const convertArgs = (args: Record<string, any>): URLSearchParams => {
     return params;
 };
 
-export const fetchAnonymousView = async (token: string, query: string, args: Record<string, any>): Promise<IViewExprResult> => {
+export const fetchAnonymousView = async (token: string | null, query: string, args: Record<string, any>): Promise<IViewExprResult> => {
     const search = convertArgs(args);
     search.set("__query", query);
     return await fetchView("anonymous", token, search);
 };
 
-export const fetchNamedView = async (token: string, ref: IUserViewRef, args: Record<string, any>): Promise<IViewExprResult> => {
+export const fetchNamedView = async (token: string | null, ref: IUserViewRef, args: Record<string, any>): Promise<IViewExprResult> => {
     return await fetchView(`by_name/${ref.schema}/${ref.name}`, token, convertArgs(args));
 };
 
-export const fetchNamedViewInfo = async (token: string, ref: IUserViewRef): Promise<IViewInfoResult> => {
+export const fetchNamedViewInfo = async (token: string | null, ref: IUserViewRef): Promise<IViewInfoResult> => {
     return await fetchViewInfo(`by_name/${ref.schema}/${ref.name}`, token, new URLSearchParams());
 };
 
-export const getEntityInfo = async (token: string, ref: IEntityRef): Promise<IEntity> => {
+export const getEntityInfo = async (token: string | null, ref: IEntityRef): Promise<IEntity> => {
     return await fetchJsonApi(`entity/${ref.schema}/${ref.name}`, token, "GET");
 };
 
-const changeEntity = async (path: string, method: string, token: string, ref: IEntityRef, body?: string): Promise<any> => {
+const changeEntity = async (path: string, method: string, token: string | null, ref: IEntityRef, body?: string): Promise<any> => {
     return await fetchFormApi(`entity/${ref.schema}/${ref.name}${path}`, token, method, body);
 };
 
-export const insertEntry = async (token: string, ref: IEntityRef, args: Record<string, any>): Promise<void> => {
+export const insertEntry = async (token: string | null, ref: IEntityRef, args: Record<string, any>): Promise<void> => {
     return await changeEntity("", "POST", token, ref, convertArgs(args).toString());
 };
 
-export const updateEntry = async (token: string, ref: IEntityRef, id: number, args: Record<string, any>): Promise<void> => {
+export const updateEntry = async (token: string | null, ref: IEntityRef, id: number, args: Record<string, any>): Promise<void> => {
     await changeEntity(`/${id}`, "PUT", token, ref, convertArgs(args).toString());
 };
 
-export const deleteEntry = async (token: string, ref: IEntityRef, id: number): Promise<void> => {
+export const deleteEntry = async (token: string | null, ref: IEntityRef, id: number): Promise<void> => {
     await changeEntity(`/${id}`, "DELETE", token, ref);
 };
 
-export const runTransaction = async (token: string, ops: TransactionOp[]): Promise<TransactionResult[]> => {
+export const runTransaction = async (token: string | null, ops: TransactionOp[]): Promise<TransactionResult[]> => {
     return await fetchJsonApi("transaction", token, "POST", { operations: ops });
 };
 
-export const saveSchema = async (token: string, schema: string): Promise<object> => {
+export const saveSchema = async (token: string | null, schema: string): Promise<object> => {
     return await fetchGetApi(`layouts/${schema}`, token);
 };
 
-export const restoreSchema = async (token: string, schema: string, data: object): Promise<void> => {
+export const restoreSchema = async (token: string | null, schema: string, data: object): Promise<void> => {
     await fetchJsonApi(`layouts/${schema}`, token, "PUT", data);
 };
