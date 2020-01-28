@@ -121,10 +121,6 @@ export default class TableRow extends Vue {
     td.error_style {
         background-color: var(--ErrorBackColor);
     }
-    td.select_fixed {
-        position: sticky;
-        z-index: 20; /* поверх обычных ячеек */
-    }
     td.select {
         z-index: 15; /* обычные ячейки ниже фиксированных */
     }
@@ -150,6 +146,10 @@ export default class TableRow extends Vue {
 
         .opemform-cells {
             left: 50px;
+        }
+        td.select_fixed {
+            position: sticky;
+            z-index: 20; /* поверх обычных ячеек */
         }
         /* .opemform-cells > span {
            justify-content: center !important;
