@@ -332,14 +332,14 @@ export default class RootUserView extends Vue {
             display: none !important;
         }
     }
- @media screen and (max-device-width: 480px) {
-     @media screen and (orientation: portrait) {
-         /deep/ .input-group {
-             margin-top: 15px;
-             margin-bottom: 15px;
-         }
-     }
- }
+    @media screen and (max-device-width: 480px) {
+        @media screen and (orientation: portrait) {
+            /deep/ .input-group {
+                margin-top: 15px;
+                margin-bottom: 15px;
+            }
+        }
+    }
     @media screen and (max-aspect-ratio: 13/9) {
         @media screen and (max-device-width: 480px) {
             .head-menu {
