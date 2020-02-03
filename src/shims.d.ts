@@ -32,3 +32,8 @@ declare module "vue-input-autowidth" {
   const VueInputAutowidth: any;
   export default VueInputAutowidth;
 }
+
+declare module "vuedraggable" {
+  const VueDragable: any;
+  export default VueDragable;
+}
