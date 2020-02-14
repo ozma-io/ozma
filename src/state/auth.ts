@@ -309,7 +309,9 @@ export const authModule: Module<IAuthState, {}> = {
                     const savedState: IOIDCState = JSON.parse(atob(stateString));
                     const nonce = localStorage.getItem(authNonceKey);
                     if (nonce === null || savedState.nonce !== nonce) {
-                        dispatch("setError", "Invalid client nonce");
+                        // Invalid nonce; silently redirect.
+                        console.error("Invalid client nonce");
+                        router.push({ name: "main" });
                     } else {
                         const code = getQueryValue("code");
                         if (code !== null) {
