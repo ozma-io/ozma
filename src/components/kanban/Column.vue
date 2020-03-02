@@ -12,8 +12,10 @@
             class="column_body"
             group="cards"
             ghost-class="card_dragging"
+            @add="onAdd"
+            :options="{delayOnTouchOnly: true, delay: 400}"
             :list="cards">
-            <Card v-for="card in cards" :data="card" />
+            <Card v-for="(card, index) in cards" :key="index" :data="card" />
         </draggable>
     </div>
 </template>
@@ -23,11 +25,25 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 import draggable from "vuedraggable";
 
 import Card, { ICard } from "@/components/kanban/Card.vue";
+import { ValueRef } from "../../local_user_view";
+
+export interface IColumn {
+    title: string;
+    cards: ICard[];
+}
 
 @Component({ components: { Card, draggable } })
 export default class Column extends Vue {
     @Prop({ type: Array, required: true }) cards!: ICard[];
     @Prop({ type: String, required: true }) title!: string;
+    @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
+
+    private onAdd(event: any) {
+        const newCard = this.cards[event.newIndex];
+        if (this.add && newCard.groupRef) {
+            this.add(newCard.groupRef, this.title);
+        }
+    }
 }
 </script>
 
@@ -37,6 +53,8 @@ export default class Column extends Vue {
      border: 1px solid var(--MainBorderColor);
      width: 300px;
      box-sizing: content-box;
+     display: flex;
+     flex-direction: column;
  }
  .column_header {
      border-bottom: 1px solid var(--MainBorderColor);
@@ -47,6 +65,8 @@ export default class Column extends Vue {
  }
  .column_body {
      padding: 15px 10px 0 10px;
+     overflow-y: auto;
+     height: 100%;
  }
  .column_controls {
      float: right;
@@ -72,6 +92,7 @@ export default class Column extends Vue {
      width: 100%;
      height: 15px;
  }
+
  /deep/ .card_dragging > .card_row {
      display: none;
  }
