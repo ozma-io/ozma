@@ -1,17 +1,16 @@
 <template>
     <div class="card_container">
-        <b-row v-for="row, rowIndex in data" class="card_row">
-            <b-col v-for="col, colIndex in row" :cols="col.size" class="card_col">
+        <b-row v-for="(row, rowIndex) in data.rows" :key="rowIndex" class="card_row">
+            <b-col v-for="(col, colIndex) in row" :key="colIndex" :cols="col.size" class="card_col">
                 <template v-if="rowIndex === 0 && colIndex === 0">
                     <input type="checkbox" class="card_select_checkbox">
                     <i class="material-icons card_open_icon">flip_to_front</i>
                 </template>
-                <span v-if="col.type === "text"">
+                <span v-if="col.type === 'text'" class="card_text" :title="col.value">
                     {{col.value}}
                 </span>
-                <div v-if="col.type === "image""
-                    class="card_avatar"
-                    :style="{ backgroundImage: `url("${col.value}")` }" />
+                <div v-if="col.type === 'image'" class="card_avatar"
+                    :style="{ backgroundImage: `url('${col.value}')` }" />
             </b-col>
         </b-row>
     </div>
@@ -19,23 +18,28 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
+import { IExistingValueRef, ValueRef } from "../../local_user_view";
+import { IFieldRef } from "../../api";
 
 export interface ICardCol {
+    fieldName?: string;
+    fieldRef?: IFieldRef;
     type: "text" | "image";
     value: any;
     size: number;
 }
 
 export type ICardRow = ICardCol[];
-export type ICard = ICardRow[];
+export interface ICard {
+    groupRef?: ValueRef;
+    groupValue?: any;
+    orderRef?: IFieldRef;
+    rows: ICardRow[];
+}
 
 @Component
 class Card extends Vue {
-    @Prop({ type: Array, required: true }) data!: ICard;
-
-    private mounted() {
-        console.log(this.data);
-    }
+    @Prop({ type: Object, required: true }) data!: ICard;
 }
 
 export default Card;
@@ -75,10 +79,19 @@ export default Card;
      margin-right: 5px;
  }
 
+ .card_text {
+     text-overflow: ellipsis;
+     width: 100%;
+     display: inline-block;
+     white-space: nowrap;
+     overflow: hidden;
+ }
+
  @media screen and (max-width: 700px) {
      .card_container {
          width: unset;
          max-width: 50vw;
+         user-select: none;
      }
  }
 
