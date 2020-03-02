@@ -25,12 +25,13 @@ export declare var process: {
 };
 
 export class FetchError extends Error {
-    message: string;
+    body: any;
     response: Response;
 
-    constructor(message: string, response: Response) {
+    constructor(rawBody: string, body: any, response: Response) {
+        const message = rawBody === "" ? response.statusText : rawBody;
         super(message);
-        this.message = message;
+        this.body = body;
         this.response = response;
     }
 }
@@ -38,9 +39,16 @@ export class FetchError extends Error {
 export const fetchSuccess = async (input: RequestInfo, init?: RequestInit): Promise<Response> => {
     const response = await fetch(input, init);
     if (!response.ok) {
-        const text = await response.text();
-        const message = text === "" ? response.statusText : text;
-        throw new FetchError(message, response);
+        const rawBody = await response.text();
+        let body: any = rawBody;
+        if (response.headers.get("Content-Type") === "application/json") {
+            try {
+                body = JSON.parse(rawBody);
+            } catch (e) {
+                // Leave it raw.
+            }
+        }
+        throw new FetchError(rawBody, body, response);
     }
     return response;
 };

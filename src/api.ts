@@ -119,6 +119,7 @@ export interface IComputedField {
     hasId: boolean;
     usedSchemas: UsedSchemas;
     inheritedFrom: IEntityRef | null;
+    isVirtual: boolean;
 }
 
 export interface IUniqueConstraint {
@@ -141,7 +142,7 @@ export interface IEntity {
     checkConstraints: Record<ConstraintName, ICheckConstraint>;
     mainField: FieldName;
     forbidExternalReferences: boolean;
-    hidden: boolean;
+    isHidden: boolean;
     parent: IEntityRef | null;
     children: IChildEntity[];
     isAbstract: boolean;

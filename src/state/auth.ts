@@ -46,7 +46,6 @@ export class CurrentAuth {
 export interface IAuthState {
     current: CurrentAuth | null;
     renewalTimeoutId: NodeJS.Timeout | null;
-    checkIntervalId: NodeJS.Timeout | null;
     pending: Promise<CurrentAuth> | null;
 }
 
@@ -66,19 +65,6 @@ const checkInterval = 5000;
 
 const authKey = "auth";
 const authNonceKey = "authNonce";
-
-const createKeycloakIframe = () => {
-    const ifr = document.createElement("iframe");
-    ifr.setAttribute("src", `${Api.authUrl}/login-status-iframe.html`);
-    ifr.setAttribute("title", "keycloak-session-iframe");
-    ifr.style.display = "none";
-    document.body.appendChild(ifr);
-    return ifr;
-};
-
-// We create it immediately so it loads faster.
-const iframe = Api.disableAuth ? undefined : createKeycloakIframe();
-const iframeLoaded = Api.disableAuth ? Promise.resolve() : Utils.waitForElement(iframe!);
 
 const redirectUri = () => {
     const returnPath = router.resolve({ name: "auth_response" }).href;
@@ -142,9 +128,28 @@ const getToken = (context: ActionContext<IAuthState, {}>, params: Record<string,
             return auth;
         } catch (e) {
             if (state.pending === pending.ref) {
+                let description: string | null = e.message;
+                if (e instanceof Utils.FetchError && typeof e.body === "object") {
+                    // try setting a better error
+                    try {
+                        if (e.body.error === "invalid_grant") {
+                            // token got revoked, not an error condition
+                            description = null;
+                        } else {
+                            if ("error_description" in e.body) {
+                                description = e.body.error_description;
+                            }
+                        }
+                    } catch (e) {
+                        // just don't try
+                    }
+                }
+
                 dispatch("removeAuth", undefined, { root: true });
-                dispatch("setError", e.message);
-                dispatch("requestLogin", false);
+                if (description !== null) {
+                    dispatch("setError", `Error when getting token: ${description}`);
+                }
+                requestLogin(context, false);
             }
             throw e;
         }
@@ -171,10 +176,6 @@ const renewAuth = async (context: ActionContext<IAuthState, {}>) => {
     if (state.renewalTimeoutId !== null) {
         clearTimeout(state.renewalTimeoutId);
         commit("setRenewalTimeout", null);
-    }
-    if (state.checkIntervalId !== null) {
-        clearInterval(state.checkIntervalId);
-        commit("setCheckInterval", null);
     }
 
     const params: Record<string, string> = {
@@ -208,24 +209,11 @@ const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
         }
     }, timeoutSecs * 1000);
     commit("setRenewalTimeout", renewalTimeoutId);
-
-    if (state.checkIntervalId !== null) {
-        clearInterval(state.checkIntervalId);
-    }
-    const checkIntervalId = setInterval(async () => {
-        await iframeLoaded;
-        if (state.pending === null && state.current !== null && iframe!.contentWindow !== null) {
-            const msg = `${Api.authClientId} ${state.current.session}`;
-            iframe!.contentWindow.postMessage(msg, Api.authOrigin);
-        }
-    }, checkInterval);
-    commit("setCheckInterval", checkIntervalId);
 };
 
 const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExisting: boolean) => {
     const nonce = uuidv4();
     localStorage.setItem(authNonceKey, nonce);
-    console.log("current path", router.currentRoute.fullPath);
     const path =
         router.currentRoute.name === "auth_response" ?
         router.resolve({ name: "main" }).href :
@@ -263,7 +251,6 @@ export const authModule: Module<IAuthState, {}> = {
         current: null,
         pending: null,
         renewalTimeoutId: null,
-        checkIntervalId: null,
     },
     mutations: {
         setAuth: (state, auth: CurrentAuth) => {
@@ -272,9 +259,6 @@ export const authModule: Module<IAuthState, {}> = {
         },
         setRenewalTimeout: (state, renewalTimeoutId: NodeJS.Timeout | null) => {
             state.renewalTimeoutId = renewalTimeoutId;
-        },
-        setCheckInterval: (state, checkTimeoutId: NodeJS.Timeout | null) => {
-            state.checkIntervalId = checkTimeoutId;
         },
         clearAuth: state => {
             state.current = null;
@@ -291,9 +275,6 @@ export const authModule: Module<IAuthState, {}> = {
             handler: ({ state, commit }) => {
                 if (state.renewalTimeoutId !== null) {
                     clearTimeout(state.renewalTimeoutId);
-                }
-                if (state.checkIntervalId !== null) {
-                    clearInterval(state.checkIntervalId);
                 }
                 if (state.current !== null) {
                     commit("clearAuth");
@@ -326,10 +307,11 @@ export const authModule: Module<IAuthState, {}> = {
                 const stateString = getQueryValue("state");
                 if (stateString !== null) {
                     const savedState: IOIDCState = JSON.parse(atob(stateString));
-                    console.log("auth state", savedState);
                     const nonce = localStorage.getItem(authNonceKey);
                     if (nonce === null || savedState.nonce !== nonce) {
-                        dispatch("setError", "Invalid client nonce");
+                        // Invalid nonce; silently redirect.
+                        console.error("Invalid client nonce");
+                        router.push({ name: "main" });
                     } else {
                         const code = getQueryValue("code");
                         if (code !== null) {
@@ -378,21 +360,6 @@ export const authModule: Module<IAuthState, {}> = {
             };
             window.addEventListener("storage", authStorageHandler);
 
-            const iframeHandler = (e: MessageEvent) => {
-                if (e.origin !== Api.authOrigin || e.source !== iframe!.contentWindow) {
-                    return;
-                }
-                const reply = e.data;
-
-                if (reply === "changed") {
-                    dispatch("removeAuth", undefined, { root: true });
-                } else if (reply === "error") {
-                    dispatch("removeAuth", undefined, { root: true });
-                    dispatch("setError", "Received an error during authorization check");
-                }
-            };
-            window.addEventListener("message", iframeHandler);
-
             if (state.current === null && state.pending === null) {
                 if (tryExisting) {
                     await requestLogin(context, tryExisting);
@@ -421,7 +388,7 @@ export const authModule: Module<IAuthState, {}> = {
                                 await dispatch("login", undefined);
                             } else {
                                 await dispatch("removeAuth", undefined, { root: true });
-                                await dispatch("setError", e.message);
+                                await dispatch("setError", `Authentication error during request: ${e.message}`);
                             }
                         }
                     }
