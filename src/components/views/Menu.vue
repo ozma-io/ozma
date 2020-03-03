@@ -88,7 +88,15 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 
     get blockSizes() {
-        return this.uv.attributes["BlockSizes"];
+        const categoriesArr = Object.values(this.categoriesOrError);
+        const blockSizes: number[] = this.uv.attributes["BlockSizes"];
+        if (!blockSizes) {
+            return categoriesArr.map(() => 6);
+        } else if (blockSizes.length < categoriesArr.length) {
+            return [...blockSizes, ...Array(categoriesArr.length - blockSizes.length).fill(6)];
+        } else {
+            return blockSizes;
+        }
     }
 
     get categoriesOrError() {
