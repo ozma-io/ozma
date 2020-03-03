@@ -6,6 +6,7 @@ import UniqueId from "vue-unique-id";
 import VueI18n from "vue-i18n";
 import VueGrid from "@liqueflies/vue-flex-grid";
 import BootstrapVue from "bootstrap-vue";
+import VueDragable from "vuedraggable";
 
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
@@ -15,6 +16,7 @@ Vue.use(VueI18n);
 Vue.use(VueGrid);
 Vue.use(UniqueId);
 Vue.use(BootstrapVue);
+Vue.use(VueDragable);
 
 const req = require.context('../../src/', true, /\.stories.ts(x?)$/);
 
