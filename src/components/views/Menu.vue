@@ -34,7 +34,7 @@
             <b-col cols="12"
                    v-for="(category, index) in categoriesOrError"
                    :key="index"
-                   :lg="blockSizes[index]"
+                   :lg="getBlockSize(index)"
                    class="menu_category_block">
                 <div class="menu_category_title">
                     {{ category.name }}
@@ -65,6 +65,7 @@ import { CurrentChanges, IEntityChanges } from "@/state/staging_changes";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
 import { UserView } from "@/components";
 import BaseUserView from "@/components/BaseUserView";
+import * as R from "ramda";
 
 interface IMainMenuButton {
     index: number;
@@ -88,15 +89,11 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 
     get blockSizes() {
-        const categoriesArr = Object.values(this.categoriesOrError);
-        const blockSizes: number[] = this.uv.attributes["BlockSizes"];
-        if (!blockSizes) {
-            return categoriesArr.map(() => 6);
-        } else if (blockSizes.length < categoriesArr.length) {
-            return [...blockSizes, ...Array(categoriesArr.length - blockSizes.length).fill(6)];
-        } else {
-            return blockSizes;
-        }
+        return this.uv.attributes["BlockSizes"];
+    }
+
+    getBlockSize(index: number): number {
+        return R.pathOr(6, [index], this.blockSizes);
     }
 
     get categoriesOrError() {
