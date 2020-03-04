@@ -14,11 +14,11 @@
 <template>
     <div>
         <!-- Used when user selects an entry -->
-        <ModalUserView v-if="selectViewActive"
-                :initialView="selectView"
-                :selectEntity="entry.entity"
-                @select="$emit('update', $event); selectViewActive = false"
-                @close="selectViewActive = false" />
+        <ModalUserView v-if="selectedView"
+                       :initialView="selectedView"
+                       :selectEntity="entry.entity"
+                       @select="$emit('update', $event); selectedView = null"
+                       @close="selectedView = null" />
 
         <!-- Used when user opens a model window for an entry ("modal" button) -->
         <ModalUserView v-if="nestedView !== null"
@@ -50,10 +50,13 @@
                         :style="select.listValueStyle"
                         class="single_value">{{select.valueOption.label}}</span>
             </template>
-            <template v-slot:actions="actions" v-if="showModalButton">
-                <button type="button" class="reference__new_modal__button" @click="openNewModal">
+            <template slot="actions" v-if="showModalButton">
+                <button v-for="(action, index) in actions"
+                        :key="index" type="button"
+                        class="reference__new_modal__button"
+                        @click="openActionModal(action)">
                     <input type="button" class="material-icons reference__open_modal" value="add">
-                    {{ $t("select_view") }}
+                    {{ action.name }}
                 </button>
             </template>
         </MultiSelect>
@@ -70,19 +73,14 @@
 </template>
 
 <script lang="ts">
-import * as R from "ramda";
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-
-import { ReferenceName } from "@/utils";
-import { IReferenceFieldType, IEntityRef } from "@/api";
 import { IUserViewArguments, ICombinedValue, homeSchema, currentValue, IEntriesRef } from "@/state/user_view";
 import { IQuery, attrToQueryRef } from "@/state/query";
 import ModalUserView from "@/components/ModalUserView.vue";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import MultiSelect from "@/components/multiselect/MultiSelect.vue";
-import { IAction } from "@/components/ActionsMenu.vue";
-import { equalEntityRef } from "@/values";
+import { IAction, IQueryAction } from "@/components/ActionsMenu.vue";
 import BaseEntriesView from "@/components/BaseEntriesView";
 
 @Component({
@@ -92,6 +90,7 @@ import BaseEntriesView from "@/components/BaseEntriesView";
     },
 })
 export default class ReferenceField extends mixins(BaseEntriesView) {
+    @Prop({type: Array, required: true}) actions!: IQueryAction;
     @Prop({ type: Object, required: true }) value!: ICombinedValue;
     @Prop({ type: Object, required: true }) entry!: IEntriesRef;
     @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
@@ -103,9 +102,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
     @Prop({ type: Number }) height!: number | undefined;
     @Prop({ type: Object }) controlStyle!: any;
-
-    private extraActions: IAction[] = [];
-    private selectViewActive = false;
+    private selectedView: IQuery | null = null;
     private nestedView: IQuery | null = null;
 
     get entriesEntity() {
@@ -134,9 +131,9 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
         }
     }
 
-    private openNewModal() {
-        if (this.selectView !== undefined && !this.selectViewActive && !this.isDisabled) {
-            this.selectViewActive = true;
+    private openActionModal(action: IQueryAction) {
+        if (!this.isDisabled) {
+            this.selectedView = action.query;
         }
     }
 
@@ -154,13 +151,6 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
                     link: attrToQueryRef(this.linkedAttr, id, linkOpts),
                 },
             }));
-        }
-    }
-
-    @Watch("selectViewActive")
-    private clearActions() {
-        if (!this.selectViewActive) {
-            this.extraActions = [];
         }
     }
 }
@@ -187,8 +177,9 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
  }
  .reference__new_modal__button {
     background-color: var(--NavigationBackColor);
-    color: var(--NavigationTextColor);
+    color: var(--TableTextColor);
     display: flex;
     align-items: center;
+     width: 100%;
  }
 </style>
