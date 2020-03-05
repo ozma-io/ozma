@@ -332,4 +332,17 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
      color: #000000;
      font-weight: bold;
  }
+    @media (max-width: 600px) {
+        .menu_category_title {
+            font-size: 30px !important;
+        }
+
+        .menu_entry > a {
+            font-size: 20px !important;
+        }
+
+        .menu_category_block {
+            margin-top: 30px;
+        }
+    }
 </style>
