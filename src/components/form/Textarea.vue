@@ -141,19 +141,18 @@ export default class Textarea extends Vue {
 .textarea_field {
     padding: 5px 2px 5px 0;
     background-color: rgba(0, 0, 0, 0);
-    border: 0px;
     z-index: 2;
     order: 2;
     flex: 2;
     cursor: pointer;
     width: 100%;
-    border: none;
     resize: none;
     height: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: pre-wrap;
-    border: 0px solid var(--MainBorderColor);
+    border: 1px solid transparent;
+    padding: 5px;
     color: var(--MainTextColor);
     transition: all 300ms ease-in-out, height 300ms ease-in-out;
 }
@@ -162,22 +161,19 @@ export default class Textarea extends Vue {
 }
 .textarea_field:hover {
     overflow-y: auto;
-    border-bottom: 1px solid var(--MainBorderColor);
+    border: 1px solid var(--MainBorderColor);
 }
 .textarea_field:focus {
     border-bottom: 2px solid var(--MainBorderColor);
     outline: none;
     padding: 5px;
-    width: 600px !important;
+    width: 100%;
 }
 .textarea_field__desktop:focus {
     outline: none;
     background-color: var(--MainBackgroundColor);
     border: 1px solid var(--MainBorderColor);
     padding: 5px;
-    position: absolute;
-    right: 0;
-    width: 40vw;
     height: calc(100% + 100px);
     transition: all 300ms ease-in-out, height 300ms ease-in-out;
     overflow: auto;
