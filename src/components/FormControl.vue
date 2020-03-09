@@ -113,7 +113,7 @@
         </InputSlot>
         <template v-if="inputType.name === 'reference' || inputType.name === 'userview'">
             <b-row>
-                <b-col :cols="isInline ? 4 : 12">
+                <b-col v-if="caption" :cols="isInline ? 4 : 12">
                     <div v-if="actions.length > 0" class="nested-menu">
                         <ActionsMenu title="view_headline"
                             :actions="actions"
@@ -125,7 +125,7 @@
                         <label class="input_label">{{ caption }}</label>
                     </div>
                 </b-col>
-                <b-col :cols="isInline ? 8 : 12">
+                <b-col :cols="isInline && caption ? 8 : 12">
                     <InputSlot
                         v-if="inputType.name === 'reference'"
                         :value="value"
