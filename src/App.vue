@@ -53,7 +53,6 @@ export default class App extends Vue {
 
     @Watch("settings")
     private updateSettings() {
-        // FIXME: Return to 3 once we fix https://trello.com/c/p26TEPWm
         const rawAutoSaveTimeout = Number(this.settings.getEntry("AutoSaveTimeout", String, "3"));
         const autoSaveTimeout = Number.isNaN(rawAutoSaveTimeout) ? null : rawAutoSaveTimeout * 1000;
         this.setAutoSaveTimeout(autoSaveTimeout);

@@ -13,17 +13,17 @@
 
 <template>
     <div>
-        <SelectUserView v-if="selectViewActive"
-                :selectView="selectView"
-                :entity="entry.entity"
+        <!-- Used when user selects an entry -->
+        <ModalUserView v-if="selectViewActive"
+                :initialView="selectView"
+                :selectEntity="entry.entity"
                 @select="$emit('update', $event); selectViewActive = false"
                 @close="selectViewActive = false" />
 
-        <SelectUserView v-if="uv"
-            :selectView="uv"
-            :entity="entry.entity"
-            @select="$emit('update', $event); selectViewActive = false"
-            @close="uv = null" />
+        <!-- Used when user opens a model window for an entry ("modal" button) -->
+        <ModalUserView v-if="nestedView !== null"
+            :initialView="nestedView"
+            @close="nestedView = null" />
 
         <MultiSelect v-if="options !== null"
                         :value="currentValue"
@@ -78,7 +78,7 @@ import { ReferenceName } from "@/utils";
 import { IReferenceFieldType, IEntityRef } from "@/api";
 import { IUserViewArguments, ICombinedValue, homeSchema, currentValue, IEntriesRef } from "@/state/user_view";
 import { IQuery, attrToQueryRef } from "@/state/query";
-import SelectUserView from "@/components/SelectUserView.vue";
+import ModalUserView from "@/components/ModalUserView.vue";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import MultiSelect from "@/components/multiselect/MultiSelect.vue";
 import { IAction } from "@/components/ActionsMenu.vue";
@@ -87,7 +87,7 @@ import BaseEntriesView from "@/components/BaseEntriesView";
 
 @Component({
     components: {
-        SelectUserView,
+        ModalUserView,
         MultiSelect,
     },
 })
@@ -106,7 +106,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 
     private extraActions: IAction[] = [];
     private selectViewActive = false;
-    private uv: IQuery | null = null;
+    private nestedView: IQuery | null = null;
 
     get entriesEntity() {
         return this.entry;
@@ -128,11 +128,9 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
         const home = homeSchema(this.uvArgs);
         const linkOpts = home !== null ? { homeSchema: home } : undefined;
 
-        const actions: IAction[] = [];
-
         const linkedView = attrToQueryRef(this.linkedAttr, this.currentValue, linkOpts);
         if (linkedView !== null) {
-            this.uv = linkedView;
+            this.nestedView = linkedView;
         }
     }
 
