@@ -445,6 +445,7 @@ export default class FormControl extends Vue {
         text-overflow: ellipsis;
         white-space: pre;
         cursor: question;
+        width: 100%;
         color: var(--MainTextColor);
     }
     input {
