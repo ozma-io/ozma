@@ -165,7 +165,7 @@ export default class Modal extends Vue {
         flex-grow: 1;
     }
     .modal__tab-content {
-        height: 100%;
+        height: calc(100% - 45px)
     }
 </style>
 
