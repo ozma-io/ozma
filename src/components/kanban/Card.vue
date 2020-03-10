@@ -1,9 +1,9 @@
 <template>
-    <div class="card_container">
+    <div class="card_container" :style="cardStyle">
         <b-row v-for="(row, rowIndex) in data.rows" :key="rowIndex" class="card_row">
             <b-col v-for="(col, colIndex) in row" :key="colIndex" :cols="col.size" class="card_col">
                 <template v-if="rowIndex === 0 && colIndex === 0">
-                    <input type="checkbox" class="card_select_checkbox">
+                    <input type="checkbox" class="card_select_checkbox" :selected="selected">
                     <i class="material-icons card_open_icon">flip_to_front</i>
                 </template>
                 <span v-if="col.type === 'text'" class="card_text" :title="col.value">
@@ -17,6 +17,7 @@
 </template>
 
 <script lang="ts">
+import * as R from "ramda";
 import { Vue, Component, Prop } from "vue-property-decorator";
 import { IExistingValueRef, ValueRef } from "../../local_user_view";
 import { IFieldRef } from "../../api";
@@ -31,15 +32,26 @@ export interface ICardCol {
 
 export type ICardRow = ICardCol[];
 export interface ICard {
-    groupRef?: ValueRef;
+    groupRef?: IExistingValueRef;
     groupValue?: any;
     orderRef?: IFieldRef;
     rows: ICardRow[];
+    style?: {
+        color?: string;
+    };
 }
 
 @Component
 class Card extends Vue {
     @Prop({ type: Object, required: true }) data!: ICard;
+    @Prop({ type: Boolean, required: false, default: false }) selected!: boolean;
+
+    private get cardStyle() {
+        const color = R.path(["style", "color"], this.data);
+        return {
+            backgroundColor: color,
+        };
+    }
 }
 
 export default Card;

@@ -1,7 +1,9 @@
 <template>
     <div class="column_container">
         <div class="column_header">
-            <input type="checkbox" class="column_select_checkbox">
+            <input type="checkbox"
+                v-model="isAllSelected"
+                class="column_select_checkbox">
             {{title}}
             <span class="column_controls">
                 <i class="material-icons card_open_icon">add</i>
@@ -15,7 +17,10 @@
             @add="onAdd"
             :options="{delayOnTouchOnly: true, delay: 400}"
             :list="cards">
-            <Card v-for="(card, index) in cards" :key="index" :data="card" />
+            <Card v-for="(card, index) in cards"
+                :key="index"
+                :data="card"
+                :selected="isCardSelected(card.groupRef.position)"/>
         </draggable>
     </div>
 </template>
@@ -23,6 +28,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 import draggable from "vuedraggable";
+import * as R from "ramda";
 
 import Card, { ICard } from "@/components/kanban/Card.vue";
 import { ValueRef } from "../../local_user_view";
@@ -37,6 +43,50 @@ export default class Column extends Vue {
     @Prop({ type: Array, required: true }) cards!: ICard[];
     @Prop({ type: String, required: true }) title!: string;
     @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
+
+    selected: number[] = [26, 27, 28];
+
+    private isCardSelected(rowIndex: number) {
+        return this.selected.includes(rowIndex);
+    }
+
+    private get isAllSelected() {
+        return this.selected.length === this.cards.length;
+    }
+
+    private set isAllSelected(val: boolean) {
+        if (val) {
+            this.selectAll();
+        } else {
+            this.deselectAll();
+        }
+    }
+
+    private onCheckboxClick(event: Event) {
+        event.preventDefault();
+        const target = event.target as HTMLInputElement;
+        if (target.checked) {
+            this.selectAll();
+        } else {
+            this.deselectAll();
+        }
+    }
+
+    private selectAll() {
+        this.selected = this.cards.map(card => R.pathOr(-1, ["groupRef", "position"], card));
+    }
+
+    private deselectAll() {
+        this.selected = [];
+    }
+
+    private onSelect(rowIndex: number) {
+        this.selected = R.uniq([...this.selected, rowIndex]);
+    }
+
+    private onDeselect(rowIndex: number) {
+        this.selected = this.selected.filter(val => val !== rowIndex);
+    }
 
     private onAdd(event: any) {
         const newCard = this.cards[event.newIndex];

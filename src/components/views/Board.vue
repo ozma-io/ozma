@@ -9,6 +9,7 @@ import * as R from "ramda";
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
+import { mapMaybe } from "@/utils";
 import { UserView } from "@/components";
 import BaseUserView from "@/components/BaseUserView";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
@@ -35,6 +36,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
     @Prop() uv!: CombinedUserView;
 
     boardData: IColumn[] = [];
+    selectedCards: any[] = [];
 
     private mounted() {
         const rows = this.uv.rows;
@@ -53,30 +55,42 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
     }
 
     private changeGroup(groupRef: ValueRef, value: any) {
-        console.log(groupRef, value);
         this.updateValue(groupRef, value);
+    }
+
+    private getCardColumns(values: ICombinedValue[]): ICardCol[] {
+        return mapMaybe<ICombinedValue, ICardCol>((value, index) => {
+            const fieldRef = R.path<IFieldRef>(["info", "fieldRef"], value);
+            const pun = value.pun;
+            const trueValue = value.value;
+            const isVisible = R.pathOr<boolean>(
+                true,
+                ["columnAttributes", index, "Visible"],
+                this.uv,
+            );
+            return isVisible ? {
+                fieldName: R.path<string>(["name"], fieldRef),
+                fieldRef,
+                type: "text",
+                value: pun || trueValue,
+                size: 12,
+            } : undefined;
+        }, values);
     }
 
     private makeCardObject(row: ICombinedRow, rowIndex: number): ICard {
         const groupByField = this.uv.attributes.Board.groupBy;
-        const cardColumns: ICardCol[] = row.values.map(value => {
-            const fieldRef = R.path<IFieldRef>(["info", "fieldRef"], value);
-            return {
-                fieldName: R.path<string>(["name"], fieldRef),
-                fieldRef,
-                type: "text",
-                value: value.value,
-                size: 12,
-            };
-        });
-        const groupIndex = row.values.findIndex(value => {
-            const fieldName = R.path<string>(["info", "fieldRef", "name"], value);
+        const cardColumns: ICardCol[] = this.getCardColumns(row.values);
+        const groupIndex = row.values.findIndex(val => {
+            const fieldName = R.path<string>(["info", "fieldRef", "name"], val);
             return fieldName === groupByField;
         });
-        const groupValue = row.values.find(value => {
-            const fieldName = R.path<string>(["info", "fieldRef", "name"], value);
+        const groupValue = row.values.find(val => {
+            const fieldName = R.path<string>(["info", "fieldRef", "name"], val);
             return fieldName === groupByField;
         });
+
+        console.log(groupValue);
 
         const groupRef: ValueRef = {
             type: "existing",
@@ -84,10 +98,17 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
             column: groupIndex,
         };
 
+        const pun = R.pathOr<any>(null, ["pun"], groupValue);
+        const value = R.pathOr<any>(null, ["value"], groupValue);
+        const color = R.pathOr<any>(null, ["attributes", "CellColor"], groupValue);
+
         return {
             groupRef,
-            groupValue: R.pathOr<any>(null, ["value"], groupValue),
+            groupValue: pun || value,
             rows: cardColumns.map(col => [col]),
+            style: {
+                color,
+            },
         };
     }
 
@@ -111,7 +132,6 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
             (column: IColumn) => columns.indexOf(column.title),
             allColumns,
         );
-        console.log(orderedColumns);
         this.boardData = orderedColumns;
     }
 
