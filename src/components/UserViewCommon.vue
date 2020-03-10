@@ -3,12 +3,14 @@
         "en": {
             "create": "Create new",
             "edit_view": "Edit user view",
-            "create_in_modal": "Create referenced in modal window"
+            "create_in_modal": "Create referenced in modal window",
+            "open_as_root": "Open in full screen"
         },
         "ru": {
             "create": "Создать новую",
             "edit_view": "Редактировать представление",
-            "create_in_modal": "Создать связанную запись в окне"
+            "create_in_modal": "Создать связанную запись в окне",
+            "open_as_root": "Открыть на полный экран"
         }
     }
 </i18n>
@@ -87,6 +89,13 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
                 },
             };
             actions.push({ name: this.$t("edit_view").toString(), query: editQuery });
+        }
+        if (!this.isRoot) {
+            const gotoQuery: IQuery = {
+                defaultValues: this.defaultValues,
+                args: this.uv.args,
+            };
+            actions.push({ name: this.$t("open_as_root").toString(), query: gotoQuery });
         }
         return actions;
     }
