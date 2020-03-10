@@ -4,7 +4,7 @@ import { Moment } from "moment";
 import moment from "moment";
 
 import { RecordSet, deepClone, mapMaybe, map2 } from "@/utils";
-import { IEntity, TransactionResult, RowId, SchemaName, FieldName, EntityName } from "@/api";
+import { IEntityRef, IFieldRef, IEntity, TransactionResult, RowId, SchemaName, FieldName, EntityName } from "@/api";
 import { IUpdatedValue, IFieldInfo, valueFromRaw } from "@/values";
 import * as Api from "@/api";
 import { i18n } from "@/modules";
@@ -120,17 +120,17 @@ export class CurrentChanges {
         }
     }
 
-    getOrCreateChanges(schemaName: string, entityName: string): IEntityChanges {
-        let entities = this.changes[schemaName];
+    getOrCreateChanges(ref: IEntityRef): IEntityChanges {
+        let entities = this.changes[ref.schema];
         if (entities === undefined) {
             entities = {};
-            Vue.set(this.changes, schemaName, entities);
+            Vue.set(this.changes, ref.schema, entities);
         }
 
-        let entity = entities[entityName];
+        let entity = entities[ref.name];
         if (entity === undefined) {
             entity = deepClone(emptyUpdates);
-            Vue.set(entities, entityName, entity);
+            Vue.set(entities, ref.name, entity);
         }
 
         return entity;
@@ -171,22 +171,22 @@ export class CurrentChanges {
         }));
     }
 
-    cleanupEntity(schema: SchemaName, entity: EntityName, entityChanges: IEntityChanges) {
+    cleanupEntity(ref: IEntityRef, entityChanges: IEntityChanges) {
         if (Object.keys(entityChanges.updated).length === 0 && Object.keys(entityChanges.added).length === 0 && Object.keys(entityChanges.deleted).length === 0) {
-            const schemaChanges = this.changes[schema];
-            Vue.delete(schemaChanges, entity);
+            const schemaChanges = this.changes[ref.schema];
+            Vue.delete(schemaChanges, ref.name);
             if (Object.keys(schemaChanges).length === 0) {
-                Vue.delete(this.changes, schema);
+                Vue.delete(this.changes, ref.schema);
             }
         }
     }
 
-    changesForEntity(schemaName: string, entityName: string): IEntityChanges {
-        const entities = this.changes[schemaName];
+    changesForEntity(ref: IEntityRef): IEntityChanges {
+        const entities = this.changes[ref.schema];
         if (entities === undefined) {
             return emptyUpdates;
         }
-        const changes = entities[entityName];
+        const changes = entities[ref.name];
         if (changes === undefined) {
             return emptyUpdates;
         }
@@ -279,15 +279,15 @@ const validateValue = (info: IFieldInfo, value: any): IUpdatedValue => {
     };
 };
 
-const getEntityInfo = async (context: ActionContext<IStagingState, {}>, schema: SchemaName, entity: EntityName): Promise<IEntity> => {
-    return await context.dispatch("userView/getEntity", { schema, name: entity }, { root: true });
+const getEntityInfo = async (context: ActionContext<IStagingState, {}>, ref: IEntityRef): Promise<IEntity> => {
+    return await context.dispatch("userView/getEntity", ref, { root: true });
 };
 
-const getFieldInfo = async (context: ActionContext<IStagingState, {}>, schema: SchemaName, entity: EntityName, field: FieldName): Promise<IFieldInfo> => {
-    const entityInfo = await getEntityInfo(context, schema, entity);
-    const fieldInfo = entityInfo.columnFields[field];
+const getFieldInfo = async (context: ActionContext<IStagingState, {}>, ref: IFieldRef): Promise<IFieldInfo> => {
+    const entityInfo = await getEntityInfo(context, ref.entity);
+    const fieldInfo = entityInfo.columnFields[ref.name];
     if (fieldInfo === undefined) {
-        throw new Error(`No field info for field ${schema}.${entity}.${field}`);
+        throw new Error(`No field info for field ${ref.entity.schema}.${ref.entity.name}.${ref.name}`);
     }
     return fieldInfo;
 };
@@ -312,7 +312,7 @@ const resetScopeBy = ({ state, dispatch }: ActionContext<IStagingState, {}>, che
                 Object.entries(uvAdded.entries).forEach(([addedIdStr, addedEntry]) => {
                     const addedId = Number(addedIdStr);
                     if (!checkScope(addedEntry.scopes)) {
-                        dispatch("resetAddedEntry", { schema, entity, userView, id: addedId });
+                        dispatch("resetAddedEntry", { entityRef: { schema, name: entity }, userView, id: addedId });
                     }
                 });
             });
@@ -321,7 +321,7 @@ const resetScopeBy = ({ state, dispatch }: ActionContext<IStagingState, {}>, che
                 const updatedId = Number(updatedIdStr);
                 Object.entries(updatedEntry).forEach(([fieldName, updatedField]) => {
                     if (!checkScope(updatedField.scopes)) {
-                        dispatch("resetUpdatedField", { schema, entity, id: updatedId, field: fieldName });
+                        dispatch("resetUpdatedField", { fieldRef: { entity: { schema, name: entity }, name: fieldName }, id: updatedId });
                     }
                 });
             });
@@ -329,7 +329,7 @@ const resetScopeBy = ({ state, dispatch }: ActionContext<IStagingState, {}>, che
             Object.entries(entityChanges.deleted).forEach(([deletedIdStr, deletedEntry]) => {
                 const deletedId = Number(deletedIdStr);
                 if (!checkScope(deletedEntry.scopes)) {
-                    dispatch("resetDeleteEntry", { schema, entity, id: deletedId });
+                    dispatch("resetDeleteEntry", { entityRef: { schema, name: entity }, id: deletedId });
                 }
             });
         });
@@ -391,10 +391,10 @@ const stagingModule: Module<IStagingState, {}> = {
         finishSubmit: state => {
             state.currentSubmit = null;
         },
-        updateField: (state, params: { scope: ScopeName, schema: SchemaName, entity: EntityName, id: RowId, field: FieldName, value: any, fieldInfo: IFieldInfo }) => {
-            const { scope, schema, entity, id, field, value, fieldInfo } = params;
+        updateField: (state, params: { scope: ScopeName, fieldRef: IFieldRef, id: RowId, value: any, fieldInfo: IFieldInfo }) => {
+            const { scope, fieldRef, id, value, fieldInfo } = params;
 
-            const entityChanges = state.current.getOrCreateChanges(schema, entity);
+            const entityChanges = state.current.getOrCreateChanges(fieldRef.entity);
             let fields = entityChanges.updated[id];
             if (fields === undefined) {
                 fields = {};
@@ -403,9 +403,9 @@ const stagingModule: Module<IStagingState, {}> = {
                 }
                 Vue.set(entityChanges.updated, String(id), fields);
             }
-            const oldField = fields[field];
+            const oldField = fields[fieldRef.name];
             const scopes = oldField === undefined ? { [scope]: null } : { [scope]: null, ...oldField.scopes };
-            Vue.set(fields, field, { scopes, ...validateValue(fieldInfo, value) });
+            Vue.set(fields, fieldRef.name, { scopes, ...validateValue(fieldInfo, value) });
             if (oldField === undefined || !(scope in oldField.scopes)) {
                 state.current.incrementCounts(scope, counts => {
                     counts.updated += 1;
@@ -413,15 +413,15 @@ const stagingModule: Module<IStagingState, {}> = {
             }
             state.touched = true;
         },
-        addEntry: (state, params: { scope: ScopeName, schema: SchemaName, entity: EntityName, userView: UserViewKey, position?: number, entityInfo: IEntity }) => {
-            const { scope, schema, entity, userView, position, entityInfo } = params;
+        addEntry: (state, params: { scope: ScopeName, entityRef: IEntityRef, userView: UserViewKey, position?: number, entityInfo: IEntity }) => {
+            const { scope, entityRef, userView, position, entityInfo } = params;
 
             // During submit new entries aren't allowed to be added because this can result in duplicates.
             if (state.currentSubmit !== null) {
                 throw new Error("Adding entries are forbidden while submitting");
             }
 
-            const entityChanges = state.current.getOrCreateChanges(schema, entity);
+            const entityChanges = state.current.getOrCreateChanges(entityRef);
             let uvAdded = entityChanges.added[userView];
             if (uvAdded === undefined) {
                 uvAdded = deepClone(emptyAdded);
@@ -444,14 +444,14 @@ const stagingModule: Module<IStagingState, {}> = {
             });
             state.touched = true;
         },
-        setAddedField: (state, params: { scope: ScopeName, schema: SchemaName, entity: EntityName, userView: UserViewKey, id: AddedRowId, field: FieldName, value: any, fieldInfo: IFieldInfo }) => {
-            const { scope, schema, entity, userView, id, field, value, fieldInfo } = params;
+        setAddedField: (state, params: { scope: ScopeName, fieldRef: IFieldRef, userView: UserViewKey, id: AddedRowId, value: any, fieldInfo: IFieldInfo }) => {
+            const { scope, fieldRef, userView, id, value, fieldInfo } = params;
             // During submit new entries aren't allowed to be added because this can result in duplicates.
             if (state.currentSubmit !== null) {
                 throw new Error("Adding entries are forbidden while submitting");
             }
 
-            const entityChanges = state.current.getOrCreateChanges(schema, entity);
+            const entityChanges = state.current.getOrCreateChanges(fieldRef.entity);
             const uvAdded = entityChanges.added[userView];
             if (uvAdded === undefined) {
                 throw new Error(`New entity id ${id} is not found`);
@@ -466,12 +466,12 @@ const stagingModule: Module<IStagingState, {}> = {
                     counts.added += 1;
                 });
             }
-            Vue.set(added.values, field, validateValue(fieldInfo, value));
+            Vue.set(added.values, fieldRef.name, validateValue(fieldInfo, value));
             state.touched = true;
         },
-        deleteEntry: (state, params: { scope: ScopeName, schema: SchemaName, entity: FieldName, id: RowId }) => {
-            const { scope, schema, entity, id } = params;
-            const entityChanges = state.current.getOrCreateChanges(schema, entity);
+        deleteEntry: (state, params: { scope: ScopeName, entityRef: IEntityRef, id: RowId }) => {
+            const { scope, entityRef, id } = params;
+            const entityChanges = state.current.getOrCreateChanges(entityRef);
             const deleted = entityChanges.deleted[id];
             if (deleted === undefined) {
                 const entry = {
@@ -494,28 +494,28 @@ const stagingModule: Module<IStagingState, {}> = {
                 Vue.set(deleted.scopes, scope, null);
             }
         },
-        resetUpdatedField: (state, params: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName }) => {
-            const { schema, entity, id, field } = params;
-            const entityChanges = state.current.getOrCreateChanges(schema, entity);
+        resetUpdatedField: (state, params: { fieldRef: IFieldRef, id: RowId }) => {
+            const { fieldRef, id } = params;
+            const entityChanges = state.current.getOrCreateChanges(fieldRef.entity);
             const fieldUpdates = entityChanges.updated[id];
             if (fieldUpdates === undefined) {
                 return;
             }
-            const update = fieldUpdates[field];
+            const update = fieldUpdates[fieldRef.name];
             if (update !== undefined) {
-                Vue.delete(fieldUpdates, field);
+                Vue.delete(fieldUpdates, fieldRef.name);
                 Object.keys(update.scopes).forEach(scope => state.current.checkDecrementCounts(scope, counts => {
                     counts.updated -= 1;
                 }));
                 if (Object.keys(fieldUpdates).length === 0) {
                     state.current.resetUpdatedEntryValue(entityChanges, id);
-                    state.current.cleanupEntity(schema, entity, entityChanges);
+                    state.current.cleanupEntity(fieldRef.entity, entityChanges);
                 }
             }
         },
-        resetAddedEntry: (state, params: { schema: SchemaName, entity: EntityName, userView: UserViewKey, id: AddedRowId }) => {
-            const { schema, entity, userView, id } = params;
-            const entityChanges = state.current.getOrCreateChanges(schema, entity);
+        resetAddedEntry: (state, params: { entityRef: IEntityRef, userView: UserViewKey, id: AddedRowId }) => {
+            const { entityRef, userView, id } = params;
+            const entityChanges = state.current.getOrCreateChanges(entityRef);
             // During submit new entries aren't allowed to be added because this can result in duplicates.
             if (state.currentSubmit !== null) {
                 throw new Error("Adding entries are forbidden while submitting");
@@ -529,29 +529,29 @@ const stagingModule: Module<IStagingState, {}> = {
                 return;
             }
             state.current.resetAddedEntryValue(entityChanges, userView, id);
-            state.current.cleanupEntity(schema, entity, entityChanges);
+            state.current.cleanupEntity(entityRef, entityChanges);
         },
-        resetDeleteEntry: (state, { schema, entity, id }: { schema: SchemaName, entity: EntityName, id: number }) => {
-            const entityChanges = state.current.getOrCreateChanges(schema, entity);
+        resetDeleteEntry: (state, { entityRef, id }: { entityRef: IEntityRef, id: number }) => {
+            const entityChanges = state.current.getOrCreateChanges(entityRef);
             if (id in entityChanges.deleted) {
                 state.current.resetDeletedEntryValue(entityChanges, id);
-                state.current.cleanupEntity(schema, entity, entityChanges);
+                state.current.cleanupEntity(entityRef, entityChanges);
             }
         },
     },
     actions: {
-        updateField: async (context, args: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName, value: any }) => {
+        updateField: async (context, args: { fieldRef: IFieldRef, id: RowId, value: any }) => {
             const { commit, dispatch } = context;
-            const fieldInfo = await getFieldInfo(context, args.schema, args.entity, args.field);
+            const fieldInfo = await getFieldInfo(context, args.fieldRef);
             commit("updateField", { ...args, fieldInfo });
             await checkCounters(context);
             await dispatch("userView/afterUpdateField", args, { root: true });
         },
-        addEntry: async (context, args: { schema: SchemaName, entity: EntityName, userView: UserViewKey, position?: number }): Promise<IAddedResult> => {
+        addEntry: async (context, args: { entityRef: IEntityRef, userView: UserViewKey, position?: number }): Promise<IAddedResult> => {
             const { state, commit, dispatch } = context;
-            const entityInfo = await getEntityInfo(context, args.schema, args.entity);
+            const entityInfo = await getEntityInfo(context, args.entityRef);
             commit("addEntry", { ...args, entityInfo });
-            const entityChanges = state.current.changesForEntity(args.schema, args.entity);
+            const entityChanges = state.current.changesForEntity(args.entityRef);
             const uvAdded = entityChanges.added[args.userView];
             const newId = uvAdded.nextId - 1;
             let position: number;
@@ -568,14 +568,14 @@ const stagingModule: Module<IStagingState, {}> = {
             await dispatch("userView/afterAddEntry", { ...args, ...result }, { root: true });
             return result;
         },
-        setAddedField: async (context, args: { schema: SchemaName, entity: EntityName, userView: UserViewKey, id: AddedRowId, field: FieldName, value: any }) => {
+        setAddedField: async (context, args: { fieldRef: IFieldRef, userView: UserViewKey, id: AddedRowId, value: any }) => {
             const { commit, dispatch } = context;
-            const fieldInfo = await getFieldInfo(context, args.schema, args.entity, args.field);
+            const fieldInfo = await getFieldInfo(context, args.fieldRef);
             commit("setAddedField", { ...args, fieldInfo });
             await checkCounters(context);
             await dispatch("userView/afterSetAddedField", args, { root: true });
         },
-        deleteEntry: async (context, args: { schema: SchemaName, entity: EntityName, id: RowId }) => {
+        deleteEntry: async (context, args: { entityRef: IEntityRef, id: RowId }) => {
             const { commit, dispatch } = context;
             commit("deleteEntry", args);
             await checkCounters(context);
@@ -588,19 +588,19 @@ const stagingModule: Module<IStagingState, {}> = {
             stopAutoSave(context);
             window.removeEventListener("beforeunload", askOnClose);
         },
-        resetUpdatedField: async (context, args: { schema: SchemaName, entity: EntityName, id: RowId, field: FieldName }) => {
+        resetUpdatedField: async (context, args: { entityRef: IEntityRef, id: RowId, field: FieldName }) => {
             const { commit, dispatch } = context;
             await dispatch("userView/beforeResetUpdatedField", args, { root: true });
             commit("resetUpdatedField", args);
             await checkCounters(context);
         },
-        resetAddedEntry: async (context, args: { schema: SchemaName, entity: EntityName, userView: UserViewKey, id: AddedRowId }) => {
+        resetAddedEntry: async (context, args: { entityRef: IEntityRef, userView: UserViewKey, id: AddedRowId }) => {
             const { commit, dispatch } = context;
             await dispatch("userView/beforeResetAddedEntry", args, { root: true });
             commit("resetAddedEntry", args);
             await checkCounters(context);
         },
-        resetDeleteEntry: async (context, args: { schema: SchemaName, entity: EntityName, id: RowId }) => {
+        resetDeleteEntry: async (context, args: { entityRef: IEntityRef, id: RowId }) => {
             const { commit, dispatch } = context;
             await dispatch("userView/beforeResetDeleteEntry", args, { root: true });
             commit("resetDeleteEntry", args);
@@ -614,7 +614,7 @@ const stagingModule: Module<IStagingState, {}> = {
                         Object.entries(uvAdded.entries).forEach(([addedIdStr, addedEntry]) => {
                             const addedId = Number(addedIdStr);
                             if (scope === undefined || scope in addedEntry.scopes) {
-                                dispatch("resetAddedEntry", { schema, entity, userView, id: addedId });
+                                dispatch("resetAddedEntry", { entityRef: { schema, name: entity }, userView, id: addedId });
                             }
                         });
                     });

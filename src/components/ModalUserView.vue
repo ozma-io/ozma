@@ -6,7 +6,7 @@
         },
         "ru": {
             "save_scoped": "Сохранить вложенное",
-            "save_and_select_scoped": "Сохранить и закрыть"
+            "save_and_select_scoped": "Сохранить и выбрать"
         }
     }
 </i18n>
@@ -17,14 +17,14 @@
             <UserView
                 :args="currentView.args"
                 :defaultValues="currentView.defaultValues"
-                selectionMode
+                :selectionMode="selectEntity !== undefined"
                 indirectLinks
                 :scope="uid"
                 @update:actions="extraActions = $event"
                 @update:title="title = $event"
                 @goto="goto"
                 @select="selectFromView" />
-            <div class="selection_view_save__container">
+            <div v-if="!changes.isScopeEmpty(uid)" class="selection_view_save__container">
                 <button type="button" class="selection_view_save__button" @click="this.saveView">
                     {{ $t(saveAndSelect ? 'save_and_select_scoped' : 'save_scoped') }}
                 </button>
@@ -50,21 +50,21 @@ const staging = namespace("staging");
 const userView = namespace("userView");
 const errors = namespace("errors");
 
-const errorKey = "select_user_view";
+const errorKey = "modal_user_view";
 
 @Component({ components: { ModalPortal }})
-export default class SelectUserView extends Vue {
+export default class ModalUserView extends Vue {
     @staging.State("current") changes!: CurrentChanges;
     @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
     @staging.Action("removeScope") removeScope!: (scope: ScopeName) => Promise<void>;
     @userView.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
     @errors.Mutation("setError") setError!: (args: { key: ErrorKey, error: string }) => void;
     @errors.Mutation("resetErrors") resetErrors!: (key: ErrorKey) => void;
-    @Prop({ type: Object, required: true }) entity!: IEntityRef;
-    @Prop({ type: Object, required: true }) selectView!: IQuery;
+    @Prop({ type: Object }) selectEntity!: IEntityRef | undefined;
+    @Prop({ type: Object, required: true }) initialView!: IQuery;
 
     private extraActions: IAction[] = [];
-    private currentView: IQuery = this.selectView;
+    private currentView: IQuery = this.initialView;
     private title: string = "";
 
     get actions() {
@@ -86,8 +86,12 @@ export default class SelectUserView extends Vue {
     }
 
     private async selectFromView(selection: ISelectionRef) {
-        const entityInfo = await this.getEntity(this.entity);
-        if (!(equalEntityRef(this.entity, selection.entity) || entityInfo.children.some(x => equalEntityRef(x.ref, selection.entity)))) {
+        if (this.selectEntity === undefined) {
+            throw new Error("Impossible");
+        }
+
+        const entityInfo = await this.getEntity(this.selectEntity);
+        if (!(equalEntityRef(this.selectEntity, selection.entity) || entityInfo.children.some(x => equalEntityRef(x.ref, selection.entity)))) {
             const message = "Entry from invalid entity selected";
             this.setError({ key: errorKey, error: message });
             throw new Error(message);

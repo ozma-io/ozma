@@ -894,8 +894,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
                 }
 
                 this.resetAddedEntry({
-                    schema: entity.schema,
-                    entity: entity.name,
+                    entityRef: entity,
                     userView: this.uv.userViewKey,
                     id: this.lastSelectedValue.id,
                 });

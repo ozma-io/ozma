@@ -552,7 +552,7 @@ export default class FormControl extends Vue {
     }
     @media screen and (max-aspect-ratio: 13/9) {
         @media screen and (max-device-width: 480px) {
-            .form-control-panel-hidden{
+            .form-control-panel-hidden {
                 margin-top: 7px;
                 position: sticky;
             }
@@ -560,7 +560,7 @@ export default class FormControl extends Vue {
                 z-index: 0; /* чтобы при нажатии на "действия" в подтаблице остальные аналогичные кнопки других подтаблиц были ниже темного блока */
                 position: sticky;
             }
-            .nested-menu > .actions-menu >>>  .div-with-actions{
+            .nested-menu > .actions-menu >>>  .div-with-actions {
                 position: absolute !important;
             }
             .nested-menu:hover {

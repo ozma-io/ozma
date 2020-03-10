@@ -1,7 +1,7 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import { SchemaName, EntityName, FieldName, RowId, IEntityRef, TransactionResult } from "@/api";
+import { SchemaName, EntityName, FieldName, RowId, IEntityRef, IFieldRef, TransactionResult } from "@/api";
 import { CombinedUserView, currentValue } from "@/state/user_view";
 import { ErrorKey } from "@/state/errors";
 import { ScopeName, UserViewKey, AddedRowId, IAddedResult } from "@/state/staging_changes";
@@ -21,11 +21,11 @@ const errorKey = "base_user_view";
 @Component
 export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, ValueT, RowT, ViewT> extends Vue {
     @staging.State("currentSubmit") currentSubmit!: Promise<TransactionResult[]> | null;
-    @staging.Action("deleteEntry") deleteEntry!: (args: { scope: ScopeName, schema: SchemaName, entity: EntityName, id: RowId }) => Promise<void>;
-    @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { schema: SchemaName, entity: EntityName, userView: UserViewKey, id: AddedRowId }) => Promise<void>;
-    @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName, schema: SchemaName, entity: EntityName, userView: UserViewKey, position?: number }) => Promise<IAddedResult>;
-    @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName, schema: SchemaName, entity: EntityName, userView: UserViewKey, id: AddedRowId, field: FieldName, value: any }) => Promise<void>;
-    @staging.Action("updateField") updateField!: (args: { scope: ScopeName, schema: SchemaName, entity: EntityName, id: RowId, field: FieldName, value: any }) => Promise<void>;
+    @staging.Action("deleteEntry") deleteEntry!: (args: { scope: ScopeName, entityRef: IEntityRef, id: RowId }) => Promise<void>;
+    @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { entityRef: IEntityRef, userView: UserViewKey, id: AddedRowId }) => Promise<void>;
+    @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName, entityRef: IEntityRef, userView: UserViewKey, position?: number }) => Promise<IAddedResult>;
+    @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName, fieldRef: IFieldRef, userView: UserViewKey, id: AddedRowId, value: any }) => Promise<void>;
+    @staging.Action("updateField") updateField!: (args: { scope: ScopeName, fieldRef: IFieldRef, id: RowId, value: any }) => Promise<void>;
     @errors.Mutation("setError") setError!: (args: { key: ErrorKey, error: string }) => void;
     @errors.Mutation("resetErrors") resetErrors!: (key: ErrorKey) => void;
 
@@ -50,8 +50,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
 
         if (ref.type === "added") {
             this.resetAddedEntry({
-                schema: entity.schema,
-                entity: entity.name,
+                entityRef: entity,
                 userView: this.uv.userViewKey,
                 id: ref.id,
             });
@@ -67,8 +66,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
             }
             this.deleteEntry({
                 scope: this.scope,
-                schema: entity.schema,
-                entity: entity.name,
+                entityRef: entity,
                 // Guaranteed to exist if mainEntity exists.
                 id: row.mainId as number,
             });
@@ -85,10 +83,8 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
             const updateInfo = value.value.info!;
             await this.setAddedField({
                 scope: this.scope,
-                schema: updateInfo.fieldRef.entity.schema,
-                entity: updateInfo.fieldRef.entity.name,
+                fieldRef: updateInfo.fieldRef,
                 userView: this.uv.userViewKey,
-                field: updateInfo.fieldRef.name,
                 id: updateInfo.id,
                 value: rawValue,
             });
@@ -97,10 +93,8 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
             const updateInfo = value.value.info!;
             await this.updateField({
                 scope: this.scope,
-                schema: updateInfo.fieldRef.entity.schema,
-                entity: updateInfo.fieldRef.entity.name,
+                fieldRef: updateInfo.fieldRef,
                 id: updateInfo.id,
-                field: updateInfo.fieldRef.name,
                 value: rawValue,
             });
             return ref;
@@ -119,8 +113,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
             // FIXME: Theoretical race condition with another addEntry because it's async
             const res = await this.addEntry({
                 scope: this.scope,
-                schema: entity.schema,
-                entity: entity.name,
+                entityRef: entity,
                 userView: this.uv.userViewKey,
                 position: 0,
             });
@@ -130,10 +123,11 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
                 if (columnInfo.mainField !== null && currValue !== undefined) {
                     return this.setAddedField({
                         scope: this.scope,
-                        schema: entity.schema,
-                        entity: entity.name,
+                        fieldRef: {
+                            entity,
+                            name: columnInfo.mainField.name,
+                        },
                         userView: this.uv.userViewKey,
-                        field: columnInfo.mainField.name,
                         id: res.id,
                         value: currValue,
                     });
