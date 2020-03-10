@@ -31,6 +31,7 @@
                     :level="level"
                     :selectionMode="selectionMode"
                     :indirectLinks="indirectLinks"
+                    :defaultValues="defaultValues"
                     @update:actions="extraCommonActions = $event" />
 
             <component
@@ -43,6 +44,7 @@
                     :level="level"
                     :selectionMode="selectionMode"
                     :indirectLinks="indirectLinks"
+                    :defaultValues="defaultValues"
                     @goto="$emit('goto', $event)"
                     @select="$emit('select', $event)"
                     @update:actions="extraActions = $event"
