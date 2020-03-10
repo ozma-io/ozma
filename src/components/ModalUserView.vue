@@ -13,7 +13,7 @@
 
 <template>
     <ModalPortal to="tabbed-modal" :tabName="title" @close="$emit('close')">
-        <section>
+        <section class="section-modal">
             <UserView
                 :args="currentView.args"
                 :defaultValues="currentView.defaultValues"
@@ -124,6 +124,9 @@ export default class ModalUserView extends Vue {
      display: flex;
      justify-content: flex-end;
      position: sticky;
+ }
+ .section-modal {
+     height: 100%;
  }
  .selection_view_save__button {
      border: var(--MainBorderColor) 1px solid !important;

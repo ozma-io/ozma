@@ -17,7 +17,7 @@
             />
         </div>
         <div v-if="hasTabs" class="modal__content">
-            <div v-for="(tab, index) in modalTabs" :key="index" v-show="index === selectedTab">
+            <div class="modal__tab-content" v-for="(tab, index) in modalTabs" :key="index" v-show="index === selectedTab">
                 <ModalContent :nodes="tab.content" />
             </div>
         </div>
@@ -136,7 +136,7 @@ export default class Modal extends Vue {
  }
 
  .modal__content >>> .view-form {
-     width: 82vw;
+     width: 100%;
  }
 
  .modal__content__fullscreen {
@@ -160,6 +160,12 @@ export default class Modal extends Vue {
         color: var(--MainTextColor);
         border-radius: 3px;
         border: 1px solid var(--MainBorderColor);
+        display: flex;
+        flex-flow: column nowrap;
+        flex-grow: 1;
+    }
+    .modal__tab-content {
+        height: 100%;
     }
 </style>
 
