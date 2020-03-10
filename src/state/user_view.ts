@@ -496,8 +496,7 @@ export class CombinedUserView {
     forEachDeletedRow(rowFunc: (row: ICombinedRow, rowI: number) => void, entityRef: IEntityRef, id: RowId) {
         if (this.rows === null ||
                 this.info.mainEntity === null ||
-                this.info.mainEntity.schema !== entityRef.schema ||
-                this.info.mainEntity.name !== entityRef.name) {
+                !equalEntityRef(this.info.mainEntity, entityRef)) {
             return;
         }
 
