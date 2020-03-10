@@ -238,12 +238,10 @@ export default class MultiSelect extends Vue {
     private get selectedOptions(): ISelectOption[] {
         if (this.single) {
             return this.options
-                       .filter(option => option.value !== this.currentValue)
                        .filter(this.optionFilterFN(this.inputValue))
                        .map(option => ({ ...option, label: this.getLabel(option) }));
         }
         return this.options
-                   .filter(option => !R.includes(option.value, this.currentValues))
                    .filter(this.optionFilterFN(this.inputValue))
                    .map(option => ({ ...option, label: this.getLabel(option) }));
     }
