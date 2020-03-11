@@ -204,7 +204,7 @@ box-shadow: 0px 0px 8px 2px #000000;
     height: 2em;
     color: var(--MainTextColor);
     cursor: pointer;
-    border-bottom: none;
+    border-bottom: 1px solid transparent;
     width: 100%;
     text-overflow: ellipsis;
 }

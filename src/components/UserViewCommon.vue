@@ -26,8 +26,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { namespace } from "vuex-class";
+import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import * as R from "ramda";
 
@@ -36,10 +35,10 @@ import { LocalUserView } from "@/local_user_view";
 import { IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
 import { ValueRef } from "@/local_user_view";
 import { homeSchema } from "@/state/user_view";
-import { IAction } from "@/components/ActionsMenu.vue";
 import { funappSchema, IEntityRef } from "@/api";
 import ModalUserView from "@/components/ModalUserView.vue";
 import { mapMaybe } from "@/utils";
+import { IAction } from "@/components/ActionsMenu.vue";
 
 interface IModalReferenceField {
     field: ValueRef;
@@ -63,7 +62,26 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
     }
 
     get actions() {
+        const opts: IAttrToQueryOpts = {
+            infoByDefault: true,
+        };
+        const home = homeSchema(this.uv.args);
+        if (home !== null) {
+            opts.homeSchema = home;
+        }
         const actions: IAction[] = [];
+        const extraActions = this.uv.attributes["ExtraActions"];
+        if (Array.isArray(extraActions)) {
+            extraActions.forEach((action: any) => {
+                const querySelf = attrToQuery(action.ref, opts);
+                if (action.name && action.ref && querySelf) {
+                    actions.push({
+                        name: String(action.name),
+                        query: querySelf,
+                    });
+                }
+            });
+        }
         if (this.createView !== null) {
             actions.push({ name: this.$t("create").toString(), query: this.createView });
         }

@@ -6,7 +6,9 @@
             "invalid_uv": "Nested user view rows should be JSON objects with 'ref' and 'args' defined",
             "select_view": "Select in view",
             "follow_reference": "Follow reference",
-            "empty": "(empty)"
+            "empty": "(empty)",
+            "select_view": "Add in modal window",
+            "follow_reference": "Open in modal window"
         },
         "ru": {
             "yes": "Да",
@@ -14,7 +16,9 @@
             "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'ref' и 'args'",
             "select_view": "Выбрать из представления",
             "follow_reference": "Перейти к сущности",
-            "empty": "(пусто)"
+            "empty": "(пусто)",
+            "select_view": "Создать во вложенном окне",
+            "follow_reference": "Открыть во вложенном окне"
         }
     }
 </i18n>
@@ -134,6 +138,7 @@
                     >
                         <template v-slot:input-modal="iSlot">
                             <ReferenceField :value="value"
+                                :actions="inputType.actions"
                                 :height="attributes['ControlHeight']"
                                 :entry="inputType.ref"
                                 :linkedAttr="inputType.linkedAttr"
@@ -148,6 +153,7 @@
                         </template>
                         <template v-slot:input="iSlot">
                             <ReferenceField :value="value"
+                                :actions="inputType.actions"
                                 :height="attributes['ControlHeight']"
                                 :entry="inputType.ref"
                                 :linkedAttr="inputType.linkedAttr"
@@ -184,7 +190,7 @@ import { namespace } from "vuex-class";
 
 import { valueToText, valueIsNull, equalEntityRef } from "@/values";
 import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef, IEntityRef } from "@/api";
-import { IAction } from "@/components/ActionsMenu.vue";
+import { IAction, IQueryAction } from "@/components/ActionsMenu.vue";
 import { IValueInfo, IUserViewArguments, CombinedUserView, CurrentUserViews, homeSchema, ICombinedValue, currentValue, IEntriesRef } from "@/state/user_view";
 import { IQuery, attrToQuerySelf, IAttrToQueryOpts } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
@@ -216,7 +222,7 @@ interface IReferenceType {
     name: "reference";
     ref: IEntriesRef;
     linkedAttr?: any;
-    selectView?: IQuery;
+    actions: IQueryAction[];
     style?: Record<string, any>;
 }
 
@@ -355,12 +361,31 @@ export default class FormControl extends Vue {
                     const refEntry: IReferenceType = {
                         name: "reference",
                         ref: this.fieldType,
+                        actions: [],
                     };
                     refEntry.linkedAttr = this.attributes["LinkedView"];
                     refEntry.style = this.controlStyle();
+
                     const selectView = attrToQuerySelf(this.attributes["SelectView"], this.value.info, linkOpts);
                     if (selectView !== null) {
-                        refEntry.selectView = selectView;
+                        refEntry.actions.push({
+                            name: this.$t("select_view").toString(),
+                            query: selectView,
+                        });
+                    }
+                    const extraActions = this.attributes["ExtraActions"];
+                    if (Array.isArray(extraActions)) {
+                        extraActions.forEach(action => {
+                            if (typeof action === "object" && action.name && action.ref) {
+                                const querySelf = attrToQuerySelf(action.ref, this.value.info, linkOpts);
+                                if (querySelf) {
+                                    refEntry.actions.push({
+                                        name: String(action.name),
+                                        query: querySelf,
+                                    });
+                                }
+                            }
+                        });
                     }
                     return refEntry;
                 case "enum":
