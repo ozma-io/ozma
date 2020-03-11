@@ -32,7 +32,7 @@ import * as R from "ramda";
 
 import BaseUserView from "@/components/BaseUserView";
 import { LocalUserView } from "@/local_user_view";
-import {IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
+import { IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
 import { ValueRef } from "@/local_user_view";
 import { homeSchema } from "@/state/user_view";
 import { funappSchema, IEntityRef } from "@/api";

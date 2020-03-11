@@ -244,11 +244,6 @@ interface ICalendar {
     showTime: boolean;
 }
 
-export interface IExtraAction {
-    name: string;
-    ref: any;
-}
-
 type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | IReferenceType | ICheckType | IUserViewType | IErrorType | ICalendar;
 
 const userView = namespace("userView");
@@ -374,19 +369,21 @@ export default class FormControl extends Vue {
                     const selectView = attrToQuerySelf(this.attributes["SelectView"], this.value.info, linkOpts);
                     if (selectView !== null) {
                         refEntry.actions.push({
-                            name: (this.$t("select_view") as string),
+                            name: this.$t("select_view").toString(),
                             query: selectView,
                         });
                     }
-                    const extraActions: any = this.attributes["ExtraActions"];
+                    const extraActions = this.attributes["ExtraActions"];
                     if (Array.isArray(extraActions)) {
-                        extraActions.forEach((action: any) => {
-                            const querySelf = attrToQuerySelf(action.ref, this.value.info, linkOpts);
-                            if (action.name && action.ref && querySelf) {
-                                refEntry.actions.push({
-                                    name: String(action.name),
-                                    query: querySelf,
-                                });
+                        extraActions.forEach(action => {
+                            if (typeof action === "object" && action.name && action.ref) {
+                                const querySelf = attrToQuerySelf(action.ref, this.value.info, linkOpts);
+                                if (querySelf) {
+                                    refEntry.actions.push({
+                                        name: String(action.name),
+                                        query: querySelf,
+                                    });
+                                }
                             }
                         });
                     }

@@ -90,7 +90,7 @@ import BaseEntriesView from "@/components/BaseEntriesView";
     },
 })
 export default class ReferenceField extends mixins(BaseEntriesView) {
-    @Prop({type: Array, required: true}) actions!: IQueryAction;
+    @Prop({ type: Array, required: true }) actions!: IQueryAction[];
     @Prop({ type: Object, required: true }) value!: ICombinedValue;
     @Prop({ type: Object, required: true }) entry!: IEntriesRef;
     @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
