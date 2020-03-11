@@ -41,21 +41,25 @@
                     @input="iSlot.onChange($event.target.value)"
                     :dontFocus="dontFocus"
                     :disabled="isDisabled"
+                    :autofocus="autofocus"
                     focus />
                 <Textarea v-else-if="inputType.name === 'textarea'"
                     :value="iSlot.value"
                     @update:value="iSlot.onChange($event)"
+                    :autofocus="autofocus"
                     :dontFocus="dontFocus"
                     :disabled="isDisabled" />
                 <Calendar v-else-if="inputType.name === 'calendar'"
                     :value="iSlot.value"
                     :textValue="textValue"
                     @update:value="iSlot.onChange"
+                    :autofocus="autofocus"
                     :showTime="inputType.showTime"
                     ref="control" />
                 <MultiSelect v-else-if="inputType.name === 'select'"
                     :value="currentValue"
                     :options="inputType.options"
+                     :autofocus="autofocus"
                     :height="attributes['ControlHeight']"
                     single
                     @update:value="updateValue($event)"
@@ -71,11 +75,13 @@
                     :value="currentValue"
                     @input="updateValue($event.target.value)"
                     @focus="iSlot.onFocus"
+                    :autofocus="autofocus"
                     :dontFocus="dontFocus"
                     :disabled="isDisabled" />
                 <Textarea v-else-if="inputType.name === 'textarea'"
                     :value="currentValue"
                     @update:value="updateValue($event)"
+                    :autofocus="autofocus"
                     @focus="iSlot.onFocus"
                     :dontFocus="dontFocus"
                     :disabled="isDisabled" />
@@ -83,6 +89,7 @@
                     :value="value.value"
                     :textValue="textValue"
                     @focus="iSlot.onFocus"
+                    :autofocus="autofocus"
                     @update:value="updateValue($event)"
                     :showTime="inputType.showTime"
                     ref="control" />
@@ -93,6 +100,7 @@
                     single
                     @update:value="updateValue($event)"
                     @focus="iSlot.onFocus"
+                    :autofocus="autofocus"
                     :dontOpen="isMobile"
                     :required="!isNullable"
                     :disabled="isDisabled"
@@ -106,6 +114,7 @@
                     ref="control" />
                 <input type="checkbox" v-else-if="inputType.name === 'check'"
                     :value="currentValue"
+                    :autofocus="autofocus"
                     :class="['form-control-panel_checkbox',
                              {'form-control-panel_checkbox_error': value.erroredOnce,
                              'form-control-panel_checkbox_req': isAwaited && !disableColor}]"
@@ -143,6 +152,7 @@
                                 :entry="inputType.ref"
                                 :linkedAttr="inputType.linkedAttr"
                                 :selectView="inputType.selectView"
+                                :autofocus="autofocus"
                                 :controlStyle="inputType.style"
                                 :uvArgs="uvArgs"
                                 @update:actions="actions = $event"
@@ -160,6 +170,7 @@
                                 :selectView="inputType.selectView"
                                 :controlStyle="inputType.style"
                                 :uvArgs="uvArgs"
+                                :autofocus="autofocus"
                                 @update:actions="actions = $event"
                                 :dontOpen="isMobile"
                                 @focus="iSlot.onFocus"

@@ -25,13 +25,11 @@
             @blur="onBlur"
             @input="$emit('update:value', $event.target.value)"
         />
-        <div class="textarea_dummy_focus" :style="style" v-show="focused" ref="dummy">&nbsp;</div>
     </fragment>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import { mixins } from "vue-class-component";
+import { Vue, Component, Prop } from "vue-property-decorator";
 
 import { isMobile } from "@/utils";
 
@@ -46,6 +44,7 @@ export default class Textarea extends Vue {
     @Prop({ type: Number, default: 5 }) rows!: number;
     @Prop({ type: Boolean, default: true }) inline!: boolean;
     @Prop({ type: String, default: "text" }) type!: string;
+    @Prop({ type: Boolean, default: false }) autofocus!: boolean;
 
     private focused: boolean = false;
     private modalValue: string = this.value;
@@ -58,6 +57,12 @@ export default class Textarea extends Vue {
         const control = this.$refs.control as HTMLInputElement;
         this.dummyHeight = control.clientHeight;
         this.dummyWidth = control.clientWidth;
+
+        if (this.autofocus) {
+            Vue.nextTick().then(() => {
+                control.focus();
+            });
+        }
     }
 
     private get isMobile(): boolean {
