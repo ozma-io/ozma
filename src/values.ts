@@ -1,4 +1,4 @@
-import { SchemaName, EntityName, FieldName, ValueType, FieldType, IResultViewInfo, IFieldRef, IEntityRef } from "@/api";
+import { ValueType, FieldType, IFieldRef, IEntityRef } from "@/api";
 import { Moment } from "moment";
 import * as moment from "moment";
 

@@ -108,8 +108,6 @@ export default class TableRow extends Vue {
         padding-left: 1px;
         margin-bottom: 0;
         white-space: initial;
-        word-wrap: break-word;
-        word-break: break-all;
     }
     td >>> p:hover {
         overflow-x: hidden;

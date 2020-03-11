@@ -3,23 +3,25 @@
         "en": {
             "create": "Create new",
             "edit_view": "Edit user view",
-            "create_in_modal": "Create referenced in modal window"
+            "create_in_modal": "Create referenced in modal window",
+            "open_as_root": "Open in full screen"
         },
         "ru": {
             "create": "Создать новую",
             "edit_view": "Редактировать представление",
-            "create_in_modal": "Создать связанную запись в окне"
+            "create_in_modal": "Создать связанную запись в окне",
+            "open_as_root": "Открыть на полный экран"
         }
     }
 </i18n>
 
 <template>
     <span>
-        <SelectUserView v-if="modalUV"
-            :selectView="modalUV"
+        <ModalUserView v-if="modalView"
+            :selectView="modalView"
             :entity="modalReferenceField.entity"
             @select="selectFromUserView($event)"
-            @close="modalUV = null" />
+            @close="modalView = null" />
     </span>
 </template>
 
@@ -36,7 +38,7 @@ import { ValueRef } from "@/local_user_view";
 import { homeSchema } from "@/state/user_view";
 import { IAction } from "@/components/ActionsMenu.vue";
 import { funappSchema, IEntityRef } from "@/api";
-import SelectUserView from "@/components/SelectUserView.vue";
+import ModalUserView from "@/components/ModalUserView.vue";
 import { mapMaybe } from "@/utils";
 
 interface IModalReferenceField {
@@ -45,9 +47,9 @@ interface IModalReferenceField {
     entity: IEntityRef;
 }
 
-@Component({ components: { SelectUserView } })
+@Component({ components: { ModalUserView } })
 export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<null, null, null>, null, null, null>>(BaseUserView) {
-    modalUV: IQuery | null = null;
+    modalView: IQuery | null = null;
 
     get createView() {
         const opts: IAttrToQueryOpts = {
@@ -67,7 +69,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
         }
         const modalReferenceField = this.modalReferenceField;
         if (modalReferenceField) {
-            actions.push({ name: this.$t("create_in_modal").toString(), callback: () => this.modalUV = modalReferenceField.uv });
+            actions.push({ name: this.$t("create_in_modal").toString(), callback: () => this.modalView = modalReferenceField.uv });
         }
         if (this.uv.args.source.type === "named") {
             const editQuery: IQuery = {
@@ -88,9 +90,17 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
             };
             actions.push({ name: this.$t("edit_view").toString(), query: editQuery });
         }
+        if (!this.isRoot) {
+            const gotoQuery: IQuery = {
+                defaultValues: this.defaultValues,
+                args: this.uv.args,
+            };
+            actions.push({ name: this.$t("open_as_root").toString(), query: gotoQuery });
+        }
         return actions;
     }
 
+    // Used to create referenced entries and automatically insert them into current table.
     get modalReferenceField(): IModalReferenceField | null {
         const modalReferenceField = R.head(mapMaybe((column, columnIndex): IModalReferenceField | undefined => {
             const referenceViewAttr: boolean = R.pathOr(false, ["columnAttributes", String(columnIndex), "MainReferenceField"], this.uv);
@@ -116,10 +126,12 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
     }
 
     private selectFromUserView(id: number) {
-        if (this.modalReferenceField) {
-            this.updateValue(this.modalReferenceField.field, id);
+        if (this.modalReferenceField === null) {
+            throw new Error("Impossible");
         }
-        this.modalUV = null;
+
+        this.updateValue(this.modalReferenceField.field, id);
+        this.modalView = null;
     }
 }
 </script>

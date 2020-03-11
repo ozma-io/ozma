@@ -30,20 +30,23 @@
                 </span>
             </b-col>
         </b-row>
-        <b-row v-for="category in categoriesOrError" :key="category.index" class="menu_category_block">
-            <b-col cols="12">
+        <b-row>
+            <b-col cols="12"
+                   v-for="(category, index) in categoriesOrError"
+                   :key="index"
+                   :lg="getBlockSize(index)"
+                   class="menu_category_block">
                 <div class="menu_category_title">
                     {{ category.name }}
                 </div>
-                <hr />
-            </b-col>
-            <b-col v-for="(button, buttonI) in category.buttons" :key="buttonI" cols="12" class="menu_entry">
-                <UserViewLink
-                    class="navigation-entry"
-                    :uv="button.uv"
-                    @[indirectLinks?`click`:null]="$emit('goto', $event)">
-                    {{ button.name }}
-                </UserViewLink>
+                <div v-for="(button, buttonI) in category.buttons" :key="buttonI" class="menu_entry">
+                    <UserViewLink
+                      class="navigation-entry"
+                      :uv="button.uv"
+                      @[indirectLinks?`click`:null]="$emit('goto', $event)">
+                        {{ button.name }}
+                    </UserViewLink>
+                </div>
             </b-col>
         </b-row>
     </b-container>
@@ -62,6 +65,7 @@ import { CurrentChanges, IEntityChanges } from "@/state/staging_changes";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
 import { UserView } from "@/components";
 import BaseUserView from "@/components/BaseUserView";
+import * as R from "ramda";
 
 interface IMainMenuButton {
     index: number;
@@ -83,6 +87,14 @@ interface IMainMenuCategory {
 export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>>(BaseUserView) {
     @Prop() uv!: CombinedUserView;
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
+
+    get blockSizes() {
+        return this.uv.attributes["BlockSizes"];
+    }
+
+    getBlockSize(index: number): number {
+        return R.pathOr(6, [index], this.blockSizes);
+    }
 
     get categoriesOrError() {
         // .rows === null means that we are in "create new" mode -- there are no selected existing values.
@@ -183,7 +195,7 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
         flex-direction: column;
         align-items: flex-start;
         margin: auto;
-        border: 0px;
+        border: 0;
         padding: 0;
         background-color: transparent;
     }
@@ -294,14 +306,16 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
  /deep/ .menu_entry > a {
      color: var(--MainTextColor);
      text-decoration: underline;
+     line-height: 2;
      text-decoration-color: var(--MainBorderColor);
-     font-size: 1.3rem !important;
+     font-size: 24px !important;
  }
  .menu_entry {
-     display: inline-flex;
+     display: flex;
      align-items: center;
      color: var(--MainTextColor);
      padding-bottom: 5px;
+     padding-left: 20px;
  }
  .menu_entry:first-child {
      padding-left: 0;
@@ -313,7 +327,22 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
      margin-top: 75px;
  }
  .menu_category_title {
-     font-size: 1.5rem !important;
-     color: var(--MainTextColorLight);
+     line-height: 2;
+     font-size: 60px !important;
+     color: #000000;
+     font-weight: bold;
  }
+    @media (max-width: 600px) {
+        .menu_category_title {
+            font-size: 30px !important;
+        }
+
+        .menu_entry > a {
+            font-size: 20px !important;
+        }
+
+        .menu_category_block {
+            margin-top: 30px;
+        }
+    }
 </style>

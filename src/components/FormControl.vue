@@ -113,7 +113,7 @@
         </InputSlot>
         <template v-if="inputType.name === 'reference' || inputType.name === 'userview'">
             <b-row>
-                <b-col :cols="isInline ? 4 : 12">
+                <b-col v-if="caption" :cols="isInline ? 4 : 12">
                     <div v-if="actions.length > 0" class="nested-menu">
                         <ActionsMenu title="view_headline"
                             :actions="actions"
@@ -125,7 +125,7 @@
                         <label class="input_label">{{ caption }}</label>
                     </div>
                 </b-col>
-                <b-col :cols="isInline ? 8 : 12">
+                <b-col :cols="isInline && caption ? 8 : 12">
                     <InputSlot
                         v-if="inputType.name === 'reference'"
                         :value="value"
@@ -445,6 +445,7 @@ export default class FormControl extends Vue {
         text-overflow: ellipsis;
         white-space: pre;
         cursor: question;
+        width: 100%;
         color: var(--MainTextColor);
     }
     input {
@@ -552,7 +553,7 @@ export default class FormControl extends Vue {
     }
     @media screen and (max-aspect-ratio: 13/9) {
         @media screen and (max-device-width: 480px) {
-            .form-control-panel-hidden{
+            .form-control-panel-hidden {
                 margin-top: 7px;
                 position: sticky;
             }
@@ -560,7 +561,7 @@ export default class FormControl extends Vue {
                 z-index: 0; /* чтобы при нажатии на "действия" в подтаблице остальные аналогичные кнопки других подтаблиц были ниже темного блока */
                 position: sticky;
             }
-            .nested-menu > .actions-menu >>>  .div-with-actions{
+            .nested-menu > .actions-menu >>>  .div-with-actions {
                 position: absolute !important;
             }
             .nested-menu:hover {
