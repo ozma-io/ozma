@@ -373,7 +373,7 @@ export default class FormControl extends Vue {
                             query: selectView,
                         });
                     }
-                    const extraActions = this.attributes["ExtraActions"];
+                    const extraActions = this.attributes["ExtraSelectActions"];
                     if (Array.isArray(extraActions)) {
                         extraActions.forEach(action => {
                             if (typeof action === "object" && action.name && action.ref) {
