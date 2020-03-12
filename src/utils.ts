@@ -36,6 +36,10 @@ export class FetchError extends Error {
     }
 }
 
+export function isFirefox(): boolean {
+    return navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
+}
+
 export const fetchSuccess = async (input: RequestInfo, init?: RequestInit): Promise<Response> => {
     const response = await fetch(input, init);
     if (!response.ok) {

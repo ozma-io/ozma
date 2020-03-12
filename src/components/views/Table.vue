@@ -59,19 +59,19 @@
                 </colgroup>
                 <thead class="table-head">
                     <tr>
-                        <th class="fixed-column checkbox-cells table-th" @click="selectAllRows">
+                        <th class="fixed-column checkbox-cells table-th" @click="selectAllRows" :class="{'td-moz': isFirefoxBrowser}">
                             <span class="table-th_span">
                                 <input type="checkbox" :checked="local.extra.selectedAll">
                             </span>
                         </th>
-                        <th v-if="local.extra.hasRowLinks" class="fixed-column openform-cells links-style table-th">
+                        <th v-if="local.extra.hasRowLinks" class="fixed-column openform-cells links-style table-th" :class="{'td-moz': isFirefoxBrowser}">
                             <span class="table-th_span" @click="setShowEmptyRow(!showEmptyRow)" :title="this.$t('show_new_row')">
                                 {{ showEmptyRow ? "-" : "+" }}
                             </span>
                         </th>
                         <th v-for="i in columnIndexes"
                                 :key="i"
-                                :class="['sorting', 'table-th', { 'fixed-column' : local.extra.columns[i].fixed }]"
+                                :class="['sorting', 'table-th', { 'fixed-column' : local.extra.columns[i].fixed, 'td-moz': isFirefoxBrowser }]"
                                 :style="local.extra.columns[i].style"
                                 :title="local.extra.columns[i].caption"
                                 @click="updateSort(i)">
@@ -163,7 +163,7 @@ import { Location } from "vue-router";
 import { namespace } from "vuex-class";
 import { Store } from "vuex";
 
-import { RecordSet, ObjectSet, tryDicts, mapMaybe, deepEquals, isIOS } from "@/utils";
+import { RecordSet, ObjectSet, tryDicts, mapMaybe, deepEquals, isIOS, isFirefox } from "@/utils";
 import { valueIsNull } from "@/values";
 import { IResultColumnInfo } from "@/api";
 import {
@@ -683,6 +683,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     private clickTimeoutId: NodeJS.Timeout | null = null;
     private showEmptyRow: boolean = false;
     private emptyLocalRow: ITableLocalRow | null = null;
+    private isFirefoxBrowser: boolean = isFirefox();
 
     get columnIndexes() {
         const columns = this.local.extra.columns.map((column, index) => ({ index, fixed: column.fixed, visible: column.visible })).filter(c => c.visible);
@@ -1275,6 +1276,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         overflow: hidden;
         white-space: nowrap;
         padding: 8px !important;
+        box-shadow: 0 2px 0 var(--MainBorderColor);
         text-overflow: ellipsis;
         position: sticky; /*фиксация шапки при скроле*/
         z-index: 20; /*при скроле таблицы чтобы шапка была видна*/
@@ -1284,6 +1286,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         color: var(--MainTextColorLight);
         background-color: var(--MainBackgroundColor);
     }
+
+    .td-moz {
+        box-shadow: -1px 2px 0 var(--MainBorderColor);
+    }
+
     .table-th:last-child {
         border-right: none;
     }
@@ -1292,7 +1299,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
     th.fixed-column {
         z-index: 25; /* поверх обычных столбцов */
-        box-shadow: 2px 0 0px var(--MainBorderColor);
+        box-shadow: 2px 2px 0 var(--MainBorderColor);
     }
     th.tabl_heading {
         text-overflow: ellipsis;

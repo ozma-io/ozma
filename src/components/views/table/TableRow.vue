@@ -98,6 +98,7 @@ export default class TableRow extends Vue {
         border-top: 1px solid var(--MainBorderColor);
         border-right: 1px solid var(--MainBorderColor);
         padding: 5px !important;
+        vertical-align: middle;
     }
     td >>> p, td >>> a {
         color: var(--TableTextColor) !important;
@@ -162,11 +163,19 @@ export default class TableRow extends Vue {
            width: 100%;
            } */
 
-        .fixed-column {
+        .table-head .fixed-column {
             position: sticky;
             z-index: 20;
             background-color: inherit;
-            box-shadow: 2px 0 0px var(--MainBorderColor);
+            box-shadow: 2px 2px 0 var(--MainBorderColor);
+            border-left: 0;
+        }
+
+        .table-tr .fixed-column {
+            position: sticky;
+            z-index: 20;
+            background-color: inherit;
+            box-shadow: 2px 0 0 var(--MainBorderColor);
             border-left: 0;
         }
 
