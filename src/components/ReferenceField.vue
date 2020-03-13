@@ -30,6 +30,7 @@
                         :options="options"
                         :height="height"
                         single
+                        :autofocus="autofocus"
                         :dontOpen="dontOpen"
                         @update:value="$emit('update', $event)"
                         @focus="$emit('focus', $event)"
@@ -62,6 +63,7 @@
         </MultiSelect>
         <input v-else
                 type="text"
+               :autofocus="autofocus"
                 class="reference_backup_input"
                 :value="currentValue"
                 @input="$emit('update', $event.target.value)"
@@ -102,6 +104,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
     @Prop({ type: Number }) height!: number | undefined;
     @Prop({ type: Object }) controlStyle!: any;
+    @Prop({ type: Boolean, default: false }) autofocus!: boolean;
     private selectedView: IQuery | null = null;
     private nestedView: IQuery | null = null;
 

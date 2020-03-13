@@ -16,6 +16,7 @@
                     class="calendar_input"
                     :placeholder="$t('input_placeholder')"
                     :value="textValue"
+                    ref="control"
                     @input="$emit('update:value', $event.target.value)"
                     @focus="isCalendarOpen = true"
             />
@@ -55,8 +56,18 @@ export default class Calendar extends Vue {
     @Prop() value!: Moment | undefined | null;
     @Prop({ type: String }) textValue!: string;
     @Prop({ default: true, type: Boolean }) showTime!: boolean;
+    @Prop({ type: Boolean, default: false }) autofocus!: boolean;
 
     private isCalendarOpen: boolean = false;
+
+    private mounted() {
+        const controlElement = this.$refs.control as HTMLInputElement;
+        if (this.autofocus) {
+            Vue.nextTick().then(() => {
+                controlElement.focus();
+            });
+        }
+    }
 
     get dateValue() {
         return this.value ? this.value : moment.invalid();

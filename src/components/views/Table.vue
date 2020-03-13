@@ -1191,7 +1191,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 /* Current Z layout:
 
 * Form control          (2000)
-* Disable-edit block    (500) 
+* Disable-edit block    (500)
 * Table head            (20)
 * FixedColumn           (25)
 
@@ -1356,7 +1356,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
             left: auto !important;
         }
     }
-	
+
  .openform-cells > span {
      justify-content: center !important;
      align-items: center;

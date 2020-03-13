@@ -141,11 +141,19 @@ export default class MultiSelect extends Vue {
     @Prop({ type: Number, default: null }) height!: number;
     @Prop({ type: String, default: null }) optionsListHeight!: string;
     @Prop({ type: Boolean, default: false }) dontOpen!: boolean;
+    @Prop({ type: Boolean, default: false }) autofocus!: boolean;
 
     private isOpen: boolean = false;
-
     private selectedOption: number = -1;
     private inputValue: string = "";
+
+    private mounted() {
+        if (this.autofocus) {
+            Vue.nextTick().then(() => {
+                this.setIsOpen(true);
+            });
+        }
+    }
 
     private onBackspace() {
         if (this.inputValue === "" && !this.single && !this.disabled && (!this.required || (this.required && this.currentValues.length > 1))) {

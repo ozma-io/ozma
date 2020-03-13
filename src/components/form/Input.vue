@@ -37,9 +37,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import { mixins } from "vue-class-component";
-
-import { isMobile, getTextWidth } from "@/utils";
+import { isMobile } from "@/utils";
 
 @Component
 export default class Input extends Vue {
@@ -54,6 +52,7 @@ export default class Input extends Vue {
     @Prop({ type: Boolean, default: false }) dontFocus!: boolean;
     @Prop({ type: String, default: "text" }) type!: string;
     @Prop({ type: Boolean, default: false }) focus!: boolean;
+    @Prop({ type: Boolean, default: false }) autofocus!: boolean;
 
     private focused: boolean = false;
 
@@ -61,6 +60,11 @@ export default class Input extends Vue {
         const controlElement = this.$refs.control as HTMLInputElement;
         const autosizeMeter = this.$refs.autosizeMeter as HTMLSpanElement;
         const styles = window.getComputedStyle(controlElement);
+        if (this.autofocus) {
+            Vue.nextTick().then(() => {
+                  controlElement.focus();
+            });
+        }
 
         Object.assign(autosizeMeter.style, {
             position: "absolute",
