@@ -40,21 +40,21 @@
                 <span v-if="select.valueOption.meta && select.valueOption.meta.link"
                     :style="select.listValueStyle"
                     class="single_value">
-                    <input @click.stop="openModal()" type="button" class="material-icons reference__open_modal" value="flip_to_front">
+                    <input @click.stop="nestedView = select.valueOption.meta.link" type="button" class="material-icons reference__open_modal" value="flip_to_front">
                     <UserViewLink :uv="select.valueOption.meta.link"
                                     @[indirectLinks?`click`:null]="$emit('goto', $event)">
-                        {{select.valueOption.label}}
+                        {{ select.valueOption.label }}
                     </UserViewLink>
                 </span>
                 <span v-else
                         :style="select.listValueStyle"
                         class="single_value">{{select.valueOption.label}}</span>
             </template>
-            <template slot="actions" v-if="showModalButton">
+            <template slot="actions" v-if="!isDisabled">
                 <button v-for="(action, index) in actions"
                         :key="index" type="button"
                         class="reference__new_modal__button"
-                        @click="openActionModal(action)">
+                        @click="selectedView = action.query">
                     <input type="button" class="material-icons reference__open_modal" value="add">
                     {{ action.name }}
                 </button>
@@ -111,30 +111,6 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 
     get currentValue() {
         return currentValue(this.value);
-    }
-
-    get showModalButton(): boolean {
-        const home = homeSchema(this.uvArgs);
-        const linkOpts = home !== null ? { homeSchema: home } : undefined;
-
-        const linkedView = attrToQueryRef(this.linkedAttr, this.currentValue, linkOpts);
-        return linkedView != null;
-    }
-
-    private openModal() {
-        const home = homeSchema(this.uvArgs);
-        const linkOpts = home !== null ? { homeSchema: home } : undefined;
-
-        const linkedView = attrToQueryRef(this.linkedAttr, this.currentValue, linkOpts);
-        if (linkedView !== null) {
-            this.nestedView = linkedView;
-        }
-    }
-
-    private openActionModal(action: IQueryAction) {
-        if (!this.isDisabled) {
-            this.selectedView = action.query;
-        }
     }
 
     get options(): ISelectOption[] | null {
