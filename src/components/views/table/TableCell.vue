@@ -5,6 +5,7 @@
             :style="localValue.style"
             :class="['table-td', {'fixed-column': column.fixed,
                 'select_fixed': localValue.selected && column.fixed,
+                'next-after-last-fixed': index === lastFixedColumnIndex,
                 'select': localValue.selected && !column.fixed,
                 'error_style': value.erroredOnce,
                 'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable && from !== 'new',
@@ -51,6 +52,8 @@ export default class TableCell extends Vue {
     @Prop({ type: Number, required: true }) columnPosition!: number;
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
     @Prop({ type: String, default: "existing" }) from!: string;
+    @Prop({ type: Number, default: null }) lastFixedColumnIndex!: number;
+    @Prop({ type: Number, default: null }) index!: number;
 
     get isNull() {
         // We use `value.value` here to highlight unvalidated values.
@@ -58,3 +61,9 @@ export default class TableCell extends Vue {
     }
 }
 </script>
+
+<style scoped>
+    .next-after-last-fixed {
+        padding-left: 7px !important;
+    }
+</style>

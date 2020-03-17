@@ -19,15 +19,17 @@
                 ⤢
             </UserViewLink>
         </td>
-        <TableCell v-for="i in columnIndexes"
+        <TableCell v-for="(i, index) in columnIndexes"
                 :key="i"
                 @cellClick="$emit('cellClick', arguments[0], arguments[1])"
                 @goto="$emit('goto', $event)"
                 :value="row.values[i]"
                 :localValue="localRow.values[i]"
                 :columnPosition="i"
+                :index="index"
                 :column="localUv.columns[i]"
                 :from="from"
+                :lastFixedColumnIndex="lastFixedColumnIndex"
                 :indirectLinks="indirectLinks" />
     </tr>
 </template>
@@ -53,6 +55,10 @@ export default class TableRow extends Vue {
     @Prop({ type: String, default: "existing" }) from!: string;
     @Prop({ type: Boolean, default: false }) showFixedRow!: boolean;
     @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
+
+    get lastFixedColumnIndex(): number {
+        return this.localUv.columns.filter((item: any) => item.fixed).length;
+    }
 }
 </script>
 
