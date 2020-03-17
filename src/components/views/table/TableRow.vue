@@ -8,7 +8,7 @@
                 :class="[{ 'hide_content': showFixedRow }, 'fixed-column', 'checkbox-cells']">
             <!-- Key is needed to force checkbox re-render when `selected` changes. Not sure why. -->
             <span class="table-th_span">
-                <input type="checkbox" :key="localRow.extra.selected" :checked="localRow.extra.selected" @click="$event.preventDefault()">
+                <checkbox :checked="localRow.extra.selected"/>
             </span>
         </td>
         <td v-else class="fixed-column checkbox-cells"></td>
@@ -16,7 +16,11 @@
             <UserViewLink v-if="localRow.extra.link !== undefined"
                     :uv="localRow.extra.link"
                     @[indirectLinks?`click`:null]="$emit('goto', $event)">
-                ⤢
+                <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+                    <path d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1
+                     0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+                </svg>
             </UserViewLink>
         </td>
         <TableCell v-for="(i, index) in columnIndexes"
@@ -38,10 +42,11 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
 import TableCell from "@/components/views/table/TableCell.vue";
+import Checkbox from "@/components/checkbox/Checkbox.vue";
 
 @Component({
     components: {
-        TableCell,
+        TableCell, Checkbox,
     },
 })
 export default class TableRow extends Vue {
@@ -77,9 +82,11 @@ export default class TableRow extends Vue {
     .disable_cell {
         background-color: var(--ControlDisableColor)
     }
-    .selected {
-        box-shadow: 10px 10px 52px 0px var(--MainBorderColor);
+
+    .selected td {
+        background: #cccccc57;
     }
+
     .table-tr {
         background-color: white; /*цвет таблицы возможно надо сменить на настраевоемый*/
         height: 100% @-moz-document url-prefix();
@@ -88,7 +95,11 @@ export default class TableRow extends Vue {
         border-right: none;
     }
     .table-tr-new > td {
-        height: 26px;
+        height: 36px;
+    }
+
+    .table-tr-new .checkbox-cells {
+        cursor: default;
     }
     .editing_style {
         z-index: 200 !important; /* чтобы FormControl(расположен в ячейке) отображался поверх таблицы */
@@ -98,6 +109,7 @@ export default class TableRow extends Vue {
         border-top: 1px solid var(--MainBorderColor);
         border-right: 1px solid var(--MainBorderColor);
         padding: 5px !important;
+        vertical-align: middle;
     }
     td >>> p, td >>> a {
         color: var(--TableTextColor) !important;
@@ -141,6 +153,10 @@ export default class TableRow extends Vue {
         width: 100%;
         height: 100%;
         justify-content: center;
+    }
+
+    .checkbox-cells {
+        cursor: pointer;
     }
 
     @media screen and (min-device-width: 813px) and (orientation: landscape) {
