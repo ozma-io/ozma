@@ -44,8 +44,6 @@ export default class Column extends Vue {
     @Prop({ type: String, required: true }) title!: string;
     @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
 
-    selected: number[] = [26, 27, 28];
-
     private isCardSelected(rowIndex: number) {
         return this.selected.includes(rowIndex);
     }
