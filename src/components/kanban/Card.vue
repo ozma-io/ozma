@@ -4,7 +4,13 @@
             <b-col v-for="(col, colIndex) in row" :key="colIndex" :cols="col.size" class="card_col">
                 <template v-if="rowIndex === 0 && colIndex === 0">
                     <input type="checkbox" class="card_select_checkbox" :selected="selected">
-                    <i class="material-icons card_open_icon">flip_to_front</i>
+                    <template v-if="data.cardView">
+                        <i class="material-icons card_open_icon"
+                            @click="openModal">flip_to_front</i>
+                        <ModalUserView v-if="modalView !== null"
+                            :initialView="modalView"
+                            @close="modalView = null" />
+                    </template>
                 </template>
                 <span v-if="col.type === 'text'" class="card_text" :title="col.value">
                     {{col.value}}
@@ -21,6 +27,9 @@ import * as R from "ramda";
 import { Vue, Component, Prop } from "vue-property-decorator";
 import { IExistingValueRef, ValueRef } from "../../local_user_view";
 import { IFieldRef } from "../../api";
+import { IQuery } from "../../state/query";
+
+import ModalUserView from "@/components/ModalUserView.vue";
 
 export interface ICardCol {
     fieldName?: string;
@@ -33,7 +42,10 @@ export interface ICardCol {
 export type ICardRow = ICardCol[];
 export interface ICard {
     groupRef?: IExistingValueRef;
+    groupLabel?: any;
     groupValue?: any;
+    groupField?: string;
+    cardView?: IQuery | null;
     orderRef?: IFieldRef;
     rows: ICardRow[];
     style?: {
@@ -41,10 +53,18 @@ export interface ICard {
     };
 }
 
-@Component
+@Component({ components: { ModalUserView }})
 class Card extends Vue {
     @Prop({ type: Object, required: true }) data!: ICard;
     @Prop({ type: Boolean, required: false, default: false }) selected!: boolean;
+
+    modalView: IQuery | null = null;
+
+    private openModal() {
+        if (this.data.cardView) {
+            this.modalView = this.data.cardView;
+        } 
+    }
 
     private get cardStyle() {
         const color = R.path(["style", "color"], this.data);

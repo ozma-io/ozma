@@ -21,11 +21,14 @@ import { ICard, ICardCol, ICardRow } from "@/components/kanban/Card.vue";
 import { IColumn } from "@/components/kanban/Column.vue";
 import { IFieldRef } from "../../api";
 import { Value } from "Misc/JSON/_api";
+import { attrToQuery, attrToQueryRef } from "../../state/query";
 
 interface ICardExtra {
     groupRef: IExistingValueRef;
     orderRef: IExistingValueRef;
 }
+
+type IColumnTitleMap = Record<any, { label: string, field: string }>;
 
 @UserView({
     localConstructor: LocalEmptyUserView,
@@ -37,6 +40,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
 
     boardData: IColumn[] = [];
     selectedCards: any[] = [];
+    columnTitles: IColumnTitleMap = {};
 
     private mounted() {
         const rows = this.uv.rows;
@@ -79,16 +83,9 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
     }
 
     private makeCardObject(row: ICombinedRow, rowIndex: number): ICard {
-        const groupByField = this.uv.attributes.Board.groupBy;
+        const groupIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardGroup"] === true);
+        const groupValue = row.values[groupIndex];
         const cardColumns: ICardCol[] = this.getCardColumns(row.values);
-        const groupIndex = row.values.findIndex(val => {
-            const fieldName = R.path<string>(["info", "fieldRef", "name"], val);
-            return fieldName === groupByField;
-        });
-        const groupValue = row.values.find(val => {
-            const fieldName = R.path<string>(["info", "fieldRef", "name"], val);
-            return fieldName === groupByField;
-        });
 
         const groupRef: ValueRef = {
             type: "existing",
@@ -99,10 +96,16 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
         const pun = R.path<any>(["pun"], groupValue);
         const value = R.path<any>(["value"], groupValue);
         const color = R.path<string>(["attributes", "CellColor"], groupValue);
+        const groupField = R.path<string>(["info", "fieldRef", "name"], groupValue);
+
+        const cardView = attrToQueryRef(this.uv.attributes.CreateView, row.mainId);
 
         return {
             groupRef,
-            groupValue: pun !== undefined ? pun : value,
+            groupLabel: pun !== undefined ? pun : value,
+            groupValue: value,
+            groupField,
+            cardView,
             rows: cardColumns.map(col => [col]),
             style: {
                 color,
@@ -110,9 +113,25 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
         };
     }
 
+    private getColumnTitles(cards: ICard[]): IColumnTitleMap {
+        const onlyGroup = cards.map(card => ({
+            value: card.groupValue,
+            label: card.groupLabel,
+            field: card.groupField,
+        }));
+        return onlyGroup.reduce(
+            (acc, element) => ({ ...acc, [element.value]: element }), {}
+        );
+    }
+
     private makeBoardData(rows: ICombinedRow[]) {
         const cards = rows.map(this.makeCardObject);
+        const createView = attrToQuery(
+            this.uv.attributes.CreateView,
+            { infoByDefault: true },
+        ) || undefined;
         const columns = this.uv.attributes.Board.columns;
+        const columnTitles = this.getColumnTitles(cards);
         const groupedColumns = R.groupBy(card => String(R.path(["groupValue"], card)),
             cards,
         );
@@ -123,7 +142,10 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
             }, {});
         const allColumns: IColumn[] = Object.keys(filteredColumns)
             .map((column: string) => ({
-                title: column,
+                title: columnTitles[column].label,
+                id: column,
+                fieldName: columnTitles[column].field,
+                createView,
                 cards: R.pathOr([], [column], groupedColumns),
             }));
         const orderedColumns: IColumn[] = R.sortBy(
@@ -131,6 +153,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
             allColumns,
         );
         this.boardData = orderedColumns;
+        this.columnTitles = columnTitles;
     }
 
 }

@@ -1,12 +1,15 @@
 <template>
     <div class="column_container">
         <div class="column_header">
+            <ModalUserView v-if="modalView !== null"
+                :initialView="modalView"
+                @close="modalView = null" />
             <input type="checkbox"
                 v-model="isAllSelected"
                 class="column_select_checkbox">
             {{title}}
             <span class="column_controls">
-                <i class="material-icons card_open_icon">add</i>
+                <i class="material-icons card_open_icon" @click="openModal">add</i>
                 <i class="material-icons card_open_icon">more_vert</i>
             </span>
         </div>
@@ -30,21 +33,45 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 import draggable from "vuedraggable";
 import * as R from "ramda";
 
+import ModalUserView from "@/components/ModalUserView.vue";
+
 import Card, { ICard } from "@/components/kanban/Card.vue";
 import { ValueRef } from "../../local_user_view";
+import { IQuery } from "../../state/query";
 
 export interface IColumn {
     title: string;
+    id?: any;
+    createView?: IQuery,
+    fieldName?: string,
     cards: ICard[];
 }
 
-@Component({ components: { Card, draggable } })
+@Component({ components: { Card, draggable, ModalUserView } })
 export default class Column extends Vue {
+    @Prop() id!: any;
     @Prop({ type: Array, required: true }) cards!: ICard[];
     @Prop({ type: String, required: true }) title!: string;
+    @Prop({ type: String, required: true }) fieldName!: string;
+    @Prop({ type: Object, required: true }) createView!: IQuery;
     @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
 
+    modalView: IQuery | null = null;
+
     selected: number[] = [];
+
+    private openModal() {
+        const query: IQuery = {
+            args: {
+                ...this.createView.args,
+            },
+            defaultValues: {
+                [this.fieldName]: this.id,
+            }        
+        }
+
+        this.modalView = query;
+    }
 
     private isCardSelected(rowIndex: number) {
         return this.selected.includes(rowIndex);
