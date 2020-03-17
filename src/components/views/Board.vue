@@ -72,7 +72,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
                 fieldName: R.path<string>(["name"], fieldRef),
                 fieldRef,
                 type: "text",
-                value: pun || trueValue,
+                value: pun !== undefined ? pun : trueValue,
                 size: 12,
             } : undefined;
         }, values);
@@ -90,21 +90,19 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
             return fieldName === groupByField;
         });
 
-        console.log(groupValue);
-
         const groupRef: ValueRef = {
             type: "existing",
             position: rowIndex,
             column: groupIndex,
         };
 
-        const pun = R.pathOr<any>(null, ["pun"], groupValue);
-        const value = R.pathOr<any>(null, ["value"], groupValue);
-        const color = R.pathOr<any>(null, ["attributes", "CellColor"], groupValue);
+        const pun = R.path<any>(["pun"], groupValue);
+        const value = R.path<any>(["value"], groupValue);
+        const color = R.path<string>(["attributes", "CellColor"], groupValue);
 
         return {
             groupRef,
-            groupValue: pun || value,
+            groupValue: pun !== undefined ? pun : value,
             rows: cardColumns.map(col => [col]),
             style: {
                 color,
