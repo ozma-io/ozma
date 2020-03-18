@@ -61,12 +61,19 @@
                     <tr>
                         <th class="fixed-column checkbox-cells table-th" @click="selectAllRows">
                             <span class="table-th_span">
-                                <input type="checkbox" :checked="local.extra.selectedAll">
+                                <checkbox :checked="local.selectedAll"/>
                             </span>
                         </th>
                         <th v-if="local.extra.hasRowLinks" class="fixed-column openform-cells links-style table-th">
                             <span class="table-th_span" @click="setShowEmptyRow(!showEmptyRow)" :title="this.$t('show_new_row')">
-                                {{ showEmptyRow ? "-" : "+" }}
+                                <svg v-if="showEmptyRow" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+                                    <path d="M19 13H5v-2h14v2z"/>
+                                    <path d="M0 0h24v24H0z" fill="none"/>
+                                </svg>
+                                <svg v-else xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                                    <path d="M0 0h24v24H0z" fill="none"/>
+                                </svg>
                             </span>
                         </th>
                         <th v-for="i in columnIndexes"
@@ -178,6 +185,7 @@ import BaseUserView from "@/components/BaseUserView";
 import { IAction } from "@/components/ActionsMenu.vue";
 import TableRow from "@/components/views/table/TableRow.vue";
 import TableFixedRow from "@/components/views/table/TableFixedRow.vue";
+import Checkbox from "@/components/checkbox/Checkbox.vue";
 
 interface ITableEditing {
     lock: AutoSaveLock;
@@ -662,7 +670,7 @@ const staging = namespace("staging");
 })
 @Component({
     components: {
-        TableRow, TableFixedRow,
+        TableRow, TableFixedRow, Checkbox,
     },
 })
 export default class UserViewTable extends mixins<BaseUserView<LocalTableUserView, ITableValueExtra, ITableRowExtra, ITableUserViewExtra>>(BaseUserView) {
