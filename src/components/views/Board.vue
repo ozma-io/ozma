@@ -93,8 +93,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
             column: groupIndex,
         };
 
-        const pun = R.path<any>(["pun"], groupValue);
-        const value = R.path<any>(["value"], groupValue);
+        const { pun, value } = groupValue;
         const color = R.path<string>(["attributes", "CellColor"], groupValue);
         const groupField = R.path<string>(["info", "fieldRef", "name"], groupValue);
 
@@ -120,7 +119,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
             field: card.groupField,
         }));
         return onlyGroup.reduce(
-            (acc, element) => ({ ...acc, [element.value]: element }), {}
+            (acc, element) => ({ ...acc, [element.value]: element }), {},
         );
     }
 

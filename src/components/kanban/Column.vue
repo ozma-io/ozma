@@ -42,8 +42,8 @@ import { IQuery } from "../../state/query";
 export interface IColumn {
     title: string;
     id?: any;
-    createView?: IQuery,
-    fieldName?: string,
+    createView?: IQuery;
+    fieldName?: string;
     cards: ICard[];
 }
 
@@ -67,8 +67,8 @@ export default class Column extends Vue {
             },
             defaultValues: {
                 [this.fieldName]: this.id,
-            }        
-        }
+            },
+        };
 
         this.modalView = query;
     }

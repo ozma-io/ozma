@@ -63,7 +63,7 @@ class Card extends Vue {
     private openModal() {
         if (this.data.cardView) {
             this.modalView = this.data.cardView;
-        } 
+        }
     }
 
     private get cardStyle() {
