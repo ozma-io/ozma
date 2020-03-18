@@ -178,11 +178,19 @@ export default class TableRow extends Vue {
            width: 100%;
            } */
 
-        .fixed-column {
+        .table-head .fixed-column {
             position: sticky;
             z-index: 20;
             background-color: inherit;
-            box-shadow: 2px 0 0px var(--MainBorderColor);
+            box-shadow: 2px 2px 0 var(--MainBorderColor);
+            border-left: 0;
+        }
+
+        .table-tr .fixed-column {
+            position: sticky;
+            z-index: 20;
+            background-color: inherit;
+            box-shadow: 2px 0 0 var(--MainBorderColor);
             border-left: 0;
         }
 
