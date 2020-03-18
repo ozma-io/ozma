@@ -4,6 +4,9 @@
             <Column v-for="(column, columnIndex) in columns"
                 :key="columnIndex"
                 :title="column.title"
+                :id="column.id"
+                :fieldName="column.fieldName"
+                :createView="column.createView"
                 :cards="column.cards"
                 :add="add" />
         </div>

@@ -1,10 +1,15 @@
 <template>
     <div class="column_container">
         <div class="column_header">
-            <input type="checkbox" class="column_select_checkbox">
+            <ModalUserView v-if="modalView !== null"
+                :initialView="modalView"
+                @close="modalView = null" />
+            <input type="checkbox"
+                v-model="isAllSelected"
+                class="column_select_checkbox">
             {{title}}
             <span class="column_controls">
-                <i class="material-icons card_open_icon">add</i>
+                <i class="material-icons card_open_icon" @click="openModal">add</i>
                 <i class="material-icons card_open_icon">more_vert</i>
             </span>
         </div>
@@ -15,7 +20,10 @@
             @add="onAdd"
             :options="{delayOnTouchOnly: true, delay: 400}"
             :list="cards">
-            <Card v-for="(card, index) in cards" :key="index" :data="card" />
+            <Card v-for="(card, index) in cards"
+                :key="index"
+                :data="card"
+                :selected="isCardSelected(card.groupRef.position)"/>
         </draggable>
     </div>
 </template>
@@ -23,20 +31,89 @@
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 import draggable from "vuedraggable";
+import * as R from "ramda";
+
+import ModalUserView from "@/components/ModalUserView.vue";
 
 import Card, { ICard } from "@/components/kanban/Card.vue";
 import { ValueRef } from "../../local_user_view";
+import { IQuery } from "../../state/query";
 
 export interface IColumn {
     title: string;
+    id?: any;
+    createView?: IQuery;
+    fieldName?: string;
     cards: ICard[];
 }
 
-@Component({ components: { Card, draggable } })
+@Component({ components: { Card, draggable, ModalUserView } })
 export default class Column extends Vue {
+    @Prop() id!: any;
     @Prop({ type: Array, required: true }) cards!: ICard[];
     @Prop({ type: String, required: true }) title!: string;
+    @Prop({ type: String, required: true }) fieldName!: string;
+    @Prop({ type: Object, required: true }) createView!: IQuery;
     @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
+
+    modalView: IQuery | null = null;
+
+    selected: number[] = [];
+
+    private openModal() {
+        const query: IQuery = {
+            args: {
+                ...this.createView.args,
+            },
+            defaultValues: {
+                [this.fieldName]: this.id,
+            },
+        };
+
+        this.modalView = query;
+    }
+
+    private isCardSelected(rowIndex: number) {
+        return this.selected.includes(rowIndex);
+    }
+
+    private get isAllSelected() {
+        return this.selected.length === this.cards.length;
+    }
+
+    private set isAllSelected(val: boolean) {
+        if (val) {
+            this.selectAll();
+        } else {
+            this.deselectAll();
+        }
+    }
+
+    private onCheckboxClick(event: Event) {
+        event.preventDefault();
+        const target = event.target as HTMLInputElement;
+        if (target.checked) {
+            this.selectAll();
+        } else {
+            this.deselectAll();
+        }
+    }
+
+    private selectAll() {
+        this.selected = this.cards.map(card => R.pathOr(-1, ["groupRef", "position"], card));
+    }
+
+    private deselectAll() {
+        this.selected = [];
+    }
+
+    private onSelect(rowIndex: number) {
+        this.selected = R.uniq([...this.selected, rowIndex]);
+    }
+
+    private onDeselect(rowIndex: number) {
+        this.selected = this.selected.filter(val => val !== rowIndex);
+    }
 
     private onAdd(event: any) {
         const newCard = this.cards[event.newIndex];
