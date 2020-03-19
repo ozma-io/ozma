@@ -66,14 +66,8 @@
                         </th>
                         <th v-if="local.extra.hasRowLinks" class="fixed-column openform-cells links-style table-th" :class="{'td-moz': isFirefoxBrowser}">
                             <span class="table-th_span" @click="setShowEmptyRow(!showEmptyRow)" :title="this.$t('show_new_row')">
-                                <svg v-if="showEmptyRow" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
-                                    <path d="M19 13H5v-2h14v2z"/>
-                                    <path d="M0 0h24v24H0z" fill="none"/>
-                                </svg>
-                                <svg v-else xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
-                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                                    <path d="M0 0h24v24H0z" fill="none"/>
-                                </svg>
+                                <i v-if="showEmptyRow" class="material-icons md-24">remove</i>
+                                <i v-else class="material-icons md-24">add</i>
                             </span>
                         </th>
                         <th v-for="i in columnIndexes"
