@@ -1,7 +1,7 @@
 <template>
     <div fluid class="view_kanban">
         <Board :columns="boardData"
-            :titles="currentEntries"
+            :titles="boardTitles"
             :add="this.changeGroup"
             :move="this.changeOrder" />
     </div>
@@ -46,27 +46,10 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
     selectedCards: any[] = [];
     columnTitles: IColumnTitleMap = {};
 
-    get entriesEntity() {
-        const groupIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardGroup"] === true);
-        const fieldTypePath = ["info", "columns", groupIndex, "mainField", "field", "fieldType"];
-        const fieldType = R.path<IReferenceFieldType>(fieldTypePath, this.uv);
-        if (fieldType && fieldType.type === "reference") {
-           return { entity: fieldType.entity, where: null };
-        }
-        return null;
-    }
-
     private mounted() {
         const rows = this.uv.rows;
         if (rows) {
             this.makeBoardData(rows);
-        }
-    }
-
-    @Watch("currentEntries")
-    private watchEntries(newEntries: Error | Record<number, string> | null) {
-        if (!R.equals(this.currentEntries, newEntries) && this.uv.rows) {
-            this.makeBoardData(this.uv.rows);
         }
     }
 
@@ -77,6 +60,27 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
                 this.makeBoardData(newUv.rows);
             }
         }
+    }
+    
+    get entriesEntity() {
+        const groupIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardGroup"] === true);
+        const fieldTypePath = ["info", "columns", groupIndex, "mainField", "field", "fieldType"];
+        const fieldType = R.path<IReferenceFieldType>(fieldTypePath, this.uv);
+        if (fieldType && fieldType.type === "reference") {
+           return { entity: fieldType.entity, where: null };
+        }
+        return null;
+    }
+
+    private get boardTitles() {
+        const groupIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardGroup"] === true);
+        const fieldTypePath = ["info", "columns", groupIndex, "mainField", "field", "fieldType"];
+        const fieldType = R.path<IReferenceFieldType>(fieldTypePath, this.uv);
+        if (fieldType && fieldType.type === "reference") {
+            return this.currentEntries
+        }
+        const columns = this.uv.attributes.Board.Columns;
+        return columns.reduce((acc: { [key: string]: string }, column: string) => ({ ...acc, [column]: column }), {});
     }
 
     private changeOrder(orderRef: ValueRef, value: number) {
@@ -119,14 +123,14 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
             position: rowIndex,
             column: groupIndex,
         };
-        const orderRef: ValueRef = {
+        const orderRef: ValueRef | undefined = orderIndex > -1 ? {
             type: "existing",
             position: rowIndex,
             column: orderIndex,
-        };
+        } : undefined;
 
-        const { pun, value } = groupValue;
-        const { value: order } = orderValue;
+        const { pun, value } = groupValue || {};
+        const { value: order } = orderValue || {};
         const color = R.path<string>(["attributes", "CellColor"], groupValue);
         const groupField = R.path<string>(["info", "fieldRef", "name"], groupValue);
 
@@ -191,12 +195,10 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
                 createView,
                 cards: R.pathOr([], [column], groupedColumns),
             }));
-        console.log(columns);
         const orderedColumns: IColumn[] = R.sortBy(
             (column: IColumn) => columns.indexOf(column.id),
             allColumns,
         );
-        console.log(orderedColumns);
         this.boardData = orderedColumns;
         this.columnTitles = columnTitles;
     }
