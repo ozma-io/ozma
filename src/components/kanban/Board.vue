@@ -3,12 +3,13 @@
         <div class="board_container">
             <Column v-for="(column, columnIndex) in columns"
                 :key="columnIndex"
-                :title="column.title"
+                :title="getColumnTitle(column.id, column.title)"
                 :id="column.id"
                 :fieldName="column.fieldName"
                 :createView="column.createView"
                 :cards="column.cards"
-                :add="add" />
+                :add="add"
+                :move="move" />
         </div>
     <!-- </draggable> -->
 </template>
@@ -25,6 +26,15 @@ import { ValueRef } from "../../local_user_view";
 export default class Board extends Vue {
     @Prop({ type: Array, required: true }) columns!: IColumn[];
     @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
+    @Prop({ type: Function, required: false }) move!: (ref: ValueRef, value: any) => void;
+    @Prop({ type: Object }) titles!: { [key: number]: string } | null;
+
+    private getColumnTitle(id: number, title: string) {
+        if (this.titles) {
+            return this.titles[id] || title;
+        }
+        return title;
+    }
 }
 </script>
 

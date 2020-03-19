@@ -3,7 +3,7 @@
         <b-row v-for="(row, rowIndex) in data.rows" :key="rowIndex" class="card_row">
             <b-col v-for="(col, colIndex) in row" :key="colIndex" :cols="col.size" class="card_col">
                 <template v-if="rowIndex === 0 && colIndex === 0">
-                    <input type="checkbox" class="card_select_checkbox" :selected="selected">
+                    <!-- input type="checkbox" class="card_select_checkbox" :selected="selected" -->
                     <template v-if="data.cardView">
                         <i class="material-icons card_open_icon"
                             @click="openModal">flip_to_front</i>
@@ -46,7 +46,8 @@ export interface ICard {
     groupValue?: any;
     groupField?: string;
     cardView?: IQuery | null;
-    orderRef?: IFieldRef;
+    orderRef?: ValueRef;
+    order?: number;
     rows: ICardRow[];
     style?: {
         color?: string;
@@ -79,6 +80,7 @@ export default Card;
 
 <style scoped>
  .card_container {
+     cursor: grab;
      border: 1px solid var(--MainBorderColor);
      background-color: var(--MainBackgroundColor);
      color: var(--MainTextColor);

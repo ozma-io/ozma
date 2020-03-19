@@ -4,13 +4,13 @@
             <ModalUserView v-if="modalView !== null"
                 :initialView="modalView"
                 @close="modalView = null" />
-            <input type="checkbox"
+            <!-- input type="checkbox"
                 v-model="isAllSelected"
-                class="column_select_checkbox">
+                class="column_select_checkbox" -->
             {{title}}
             <span class="column_controls">
                 <i class="material-icons card_open_icon" @click="openModal">add</i>
-                <i class="material-icons card_open_icon">more_vert</i>
+                <!-- i class="material-icons card_open_icon">more_vert</i -->
             </span>
         </div>
         <draggable
@@ -18,12 +18,13 @@
             group="cards"
             ghost-class="card_dragging"
             @add="onAdd"
+            @end="onMove"
             :options="{delayOnTouchOnly: true, delay: 400}"
             :list="cards">
-            <Card v-for="(card, index) in cards"
-                :key="index"
-                :data="card"
-                :selected="isCardSelected(card.groupRef.position)"/>
+                <Card v-for="(card, index) in cards"
+                    :key="index"
+                    :data="card"
+                    :selected="isCardSelected(card.groupRef.position)"/>
         </draggable>
     </div>
 </template>
@@ -55,6 +56,7 @@ export default class Column extends Vue {
     @Prop({ type: String, required: true }) fieldName!: string;
     @Prop({ type: Object, required: true }) createView!: IQuery;
     @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
+    @Prop({ type: Function, required: false }) move!: (ref: ValueRef, value: any) => void;
 
     modalView: IQuery | null = null;
 
@@ -115,10 +117,24 @@ export default class Column extends Vue {
         this.selected = this.selected.filter(val => val !== rowIndex);
     }
 
+    private onMove(event: any) {
+        const newCard = this.cards[event.newIndex];
+        // Avoid calling onMove after onAdd event: It should do it on it's own.
+        if (newCard) {
+            const prevCardOrder = R.pathOr<number>(0, [event.newIndex - 1, "order"], this.cards);
+            const nextCardOrder = R.pathOr<number>(prevCardOrder + 1, [event.newIndex + 1, "order"], this.cards);
+            const mean = (prevCardOrder + nextCardOrder) / 2;
+            if (this.move && newCard.orderRef) {
+                this.move(newCard.orderRef, mean);
+            }
+        }
+    }
+
     private onAdd(event: any) {
         const newCard = this.cards[event.newIndex];
+        this.onMove(event);
         if (this.add && newCard.groupRef) {
-            this.add(newCard.groupRef, this.title);
+            this.add(newCard.groupRef, this.id);
         }
     }
 }
@@ -168,6 +184,23 @@ export default class Column extends Vue {
      background-color: var(--MainBorderColor);
      width: 100%;
      height: 15px;
+ }
+
+ .card_open_icon {
+     padding: 2px;
+     border-radius: 2px;
+     cursor: pointer;
+     background-color: initial;
+     color: initial;
+     transition: background-color 0.5s ease;
+     transition: color 0.25s ease;
+ }
+ 
+ .card_open_icon:hover {
+     transition: background-color 0.5s ease;
+     transition: color 0.25s ease;
+     background-color: var(--SuccessColor);
+     color: var(--MainBackgroundColor);
  }
 
  /deep/ .card_dragging > .card_row {

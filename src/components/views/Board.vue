@@ -1,6 +1,9 @@
 <template>
     <div fluid class="view_kanban">
-        <Board :columns="boardData" :add="this.changeGroup" />
+        <Board :columns="boardData"
+            :titles="currentEntries"
+            :add="this.changeGroup"
+            :move="this.changeOrder" />
     </div>
 </template>
 
@@ -19,9 +22,10 @@ import { CombinedUserView, IValueInfo, IUserViewValueRef, ICombinedValue, IRowCo
 import Board from "@/components/kanban/Board.vue";
 import { ICard, ICardCol, ICardRow } from "@/components/kanban/Card.vue";
 import { IColumn } from "@/components/kanban/Column.vue";
-import { IFieldRef } from "../../api";
+import { IFieldRef, IReferenceFieldType } from "../../api";
 import { Value } from "Misc/JSON/_api";
 import { attrToQuery, attrToQueryRef } from "../../state/query";
+import BaseEntriesView from "../BaseEntriesView";
 
 interface ICardExtra {
     groupRef: IExistingValueRef;
@@ -34,7 +38,7 @@ type IColumnTitleMap = Record<any, { label: string, field: string }>;
     localConstructor: LocalEmptyUserView,
 })
 @Component({ components: { Board } })
-export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>>(BaseUserView) {
+export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>, BaseEntriesView>(BaseUserView, BaseEntriesView) {
 
     @Prop() uv!: CombinedUserView;
 
@@ -42,10 +46,27 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
     selectedCards: any[] = [];
     columnTitles: IColumnTitleMap = {};
 
+    get entriesEntity() {
+        const groupIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardGroup"] === true);
+        const fieldTypePath = ["info", "columns", groupIndex, "mainField", "field", "fieldType"];
+        const fieldType = R.path<IReferenceFieldType>(fieldTypePath, this.uv);
+        if (fieldType && fieldType.type === "reference") {
+           return { entity: fieldType.entity, where: null };
+        }
+        return null;
+    }
+
     private mounted() {
         const rows = this.uv.rows;
         if (rows) {
             this.makeBoardData(rows);
+        }
+    }
+
+    @Watch("currentEntries")
+    private watchEntries(newEntries: Error | Record<number, string> | null) {
+        if (!R.equals(this.currentEntries, newEntries) && this.uv.rows) {
+            this.makeBoardData(this.uv.rows);
         }
     }
 
@@ -58,7 +79,11 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
         }
     }
 
-    private changeGroup(groupRef: ValueRef, value: any) {
+    private changeOrder(orderRef: ValueRef, value: number) {
+        this.updateValue(orderRef, value);
+    }
+
+    private changeGroup(groupRef: ValueRef, value: any, orderRef: ValueRef, orderValue: number) {
         this.updateValue(groupRef, value);
     }
 
@@ -84,7 +109,9 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
 
     private makeCardObject(row: ICombinedRow, rowIndex: number): ICard {
         const groupIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardGroup"] === true);
+        const orderIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardOrder"] === true);
         const groupValue = row.values[groupIndex];
+        const orderValue = row.values[orderIndex];
         const cardColumns: ICardCol[] = this.getCardColumns(row.values);
 
         const groupRef: ValueRef = {
@@ -92,8 +119,14 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
             position: rowIndex,
             column: groupIndex,
         };
+        const orderRef: ValueRef = {
+            type: "existing",
+            position: rowIndex,
+            column: orderIndex,
+        };
 
         const { pun, value } = groupValue;
+        const { value: order } = orderValue;
         const color = R.path<string>(["attributes", "CellColor"], groupValue);
         const groupField = R.path<string>(["info", "fieldRef", "name"], groupValue);
 
@@ -104,6 +137,8 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
             groupLabel: pun !== undefined ? pun : value,
             groupValue: value,
             groupField,
+            orderRef,
+            order,
             cardView,
             rows: cardColumns.map(col => [col]),
             style: {
@@ -123,13 +158,22 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
         );
     }
 
+    private getColumnTitle(id: number, defaultTitle = "NO TITLE"): string {
+       const boardColumn: string = R.pathOr(defaultTitle, [id, "label"], this.columnTitles[id]);
+       const entryColumn: string | null = this.currentEntries
+           ? R.pathOr(null, [id], this.currentEntries)
+           : null;
+
+       return entryColumn || boardColumn;
+    }
+
     private makeBoardData(rows: ICombinedRow[]) {
         const cards = rows.map(this.makeCardObject);
         const createView = attrToQuery(
             this.uv.attributes.CreateView,
             { infoByDefault: true },
         ) || undefined;
-        const columns = this.uv.attributes.Board.columns;
+        const columns = this.uv.attributes.Board.Columns.map((i: any) => String(i));
         const columnTitles = this.getColumnTitles(cards);
         const groupedColumns = R.groupBy(card => String(R.path(["groupValue"], card)),
             cards,
@@ -140,17 +184,19 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
                 return { ...acc, [columTitle]: column };
             }, {});
         const allColumns: IColumn[] = Object.keys(filteredColumns)
-            .map((column: string) => ({
-                title: columnTitles[column].label,
+            .map((column: any) => ({
+                title: this.getColumnTitle(column),
                 id: column,
-                fieldName: columnTitles[column].field,
+                fieldName: R.pathOr("NO Title", [column, "field"], columnTitles),
                 createView,
                 cards: R.pathOr([], [column], groupedColumns),
             }));
+        console.log(columns);
         const orderedColumns: IColumn[] = R.sortBy(
-            (column: IColumn) => columns.indexOf(column.title),
+            (column: IColumn) => columns.indexOf(column.id),
             allColumns,
         );
+        console.log(orderedColumns);
         this.boardData = orderedColumns;
         this.columnTitles = columnTitles;
     }
