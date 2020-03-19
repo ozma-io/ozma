@@ -20,12 +20,13 @@ import { LocalUserView, IExistingValueRef, ValueRef } from "@/local_user_view";
 import { CombinedUserView, IValueInfo, IUserViewValueRef, ICombinedValue, IRowCommon, ICombinedRow } from "@/state/user_view";
 
 import Board from "@/components/kanban/Board.vue";
-import { ICard, ICardCol, ICardRow } from "@/components/kanban/Card.vue";
+import { ICard, ICardCol, ICardRow, CardColType } from "@/components/kanban/Card.vue";
 import { IColumn } from "@/components/kanban/Column.vue";
 import { IFieldRef, IReferenceFieldType } from "../../api";
 import { Value } from "Misc/JSON/_api";
 import { attrToQuery, attrToQueryRef } from "../../state/query";
 import BaseEntriesView from "../BaseEntriesView";
+import { IFieldInfo } from "../../values";
 
 interface ICardExtra {
     groupRef: IExistingValueRef;
@@ -61,7 +62,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
             }
         }
     }
-    
+
     get entriesEntity() {
         const groupIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardGroup"] === true);
         const fieldTypePath = ["info", "columns", groupIndex, "mainField", "field", "fieldType"];
@@ -77,7 +78,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
         const fieldTypePath = ["info", "columns", groupIndex, "mainField", "field", "fieldType"];
         const fieldType = R.path<IReferenceFieldType>(fieldTypePath, this.uv);
         if (fieldType && fieldType.type === "reference") {
-            return this.currentEntries
+            return this.currentEntries;
         }
         const columns = this.uv.attributes.Board.Columns;
         return columns.reduce((acc: { [key: string]: string }, column: string) => ({ ...acc, [column]: column }), {});
@@ -91,9 +92,19 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
         this.updateValue(groupRef, value);
     }
 
+    private getCardValueType(fieldType: string | undefined): CardColType {
+        if (fieldType === "datetime") {
+            return "datetime";
+        } else if (fieldType === "date") {
+            return "date";
+        }
+        return "text";
+    }
+
     private getCardColumns(values: ICombinedValue[]): ICardCol[] {
         return mapMaybe<ICombinedValue, ICardCol>((value, index) => {
             const fieldRef = R.path<IFieldRef>(["info", "fieldRef"], value);
+            const fieldType = R.path<string>(["info", "field", "fieldType", "type"], value);
             const pun = value.pun;
             const trueValue = value.value;
             const isVisible = R.pathOr<boolean>(
@@ -104,7 +115,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
             return isVisible ? {
                 fieldName: R.path<string>(["name"], fieldRef),
                 fieldRef,
-                type: "text",
+                type: this.getCardValueType(fieldType),
                 value: pun !== undefined ? pun : trueValue,
                 size: 12,
             } : undefined;
@@ -172,6 +183,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
     }
 
     private makeBoardData(rows: ICombinedRow[]) {
+        console.log(this.uv);
         const cards = rows.map(this.makeCardObject);
         const createView = attrToQuery(
             this.uv.attributes.CreateView,

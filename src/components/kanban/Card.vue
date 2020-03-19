@@ -15,6 +15,12 @@
                 <span v-if="col.type === 'text'" class="card_text" :title="col.value">
                     {{col.value}}
                 </span>
+                <span v-if="col.type === 'datetime'" class="card_text" :title="col.value">
+                    {{formatDateTime(col.value)}}
+                </span>
+                <span v-if="col.type === 'datetime'" class="card_text" :title="col.value">
+                    {{formatDate(col.value)}}
+                </span>
                 <div v-if="col.type === 'image'" class="card_avatar"
                     :style="{ backgroundImage: `url('${col.value}')` }" />
             </b-col>
@@ -30,11 +36,15 @@ import { IFieldRef } from "../../api";
 import { IQuery } from "../../state/query";
 
 import ModalUserView from "@/components/ModalUserView.vue";
+import { Moment } from "moment";
+import { dateTimeFormat, dateFormat } from "../../values";
+
+export type CardColType = "text" | "date" | "datetime" | "image";
 
 export interface ICardCol {
     fieldName?: string;
     fieldRef?: IFieldRef;
-    type: "text" | "image";
+    type: CardColType;
     value: any;
     size: number;
 }
@@ -72,6 +82,20 @@ class Card extends Vue {
         return {
             backgroundColor: color,
         };
+    }
+
+    private formatDate(date: Moment) {
+        if (date) {
+            return date.local().format(dateFormat);
+        }
+        return "";
+    }
+
+    private formatDateTime(date: Moment) {
+        if (date) {
+            return date.local().format(dateTimeFormat);
+        }
+        return "";
     }
 }
 
