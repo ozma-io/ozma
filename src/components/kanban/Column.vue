@@ -48,18 +48,17 @@ export interface IColumn {
     cards: ICard[];
 }
 
-
 // This is an interface to a 3rd Party Vue plugin
 // It lists only properties that are used or are of use for the board
 // Consult https://github.com/SortableJS/Vue.Draggable
 // Please add types to this interface if something you use is missing
 export interface IVueDraggableEvent {
     type: "start" | "add" | "remove" | "update" | "end" | "choose" | "unchoose" | "sort" | "filter" | "clone";
-    originalEvent: Event,
+    originalEvent: Event;
     newIndex: number;
     oldIndex: number;
     oldDraggableIndex: number;
-    newDraggableIndex: number; 
+    newDraggableIndex: number;
 }
 
 @Component({ components: { Card, draggable, ModalUserView } })
