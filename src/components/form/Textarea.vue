@@ -10,7 +10,24 @@
 </i18n>
 <template>
   <fragment>
+    <textarea-autosize
+      v-if="isCellEdit"
+      ref="controlTextarea"
+      :placeholder="$t('input_placeholder')"
+      :value="value"
+      rows="1"
+      :min-height="144"
+      :max-height="144"
+      :class="['textarea_field', {
+        'textarea_field__disabled': disabled,
+        'textarea-field_cell-edit': isCellEdit,
+        'textarea_field__desktop': !isMobile,
+      }]"
+      @keydown.enter.prevent
+      @input="updateInput"
+    />
     <textarea
+      v-show="!isCellEdit"
       :id="inputName"
       ref="control"
       :class="['textarea_field', {
@@ -46,6 +63,7 @@ export default class Textarea extends Vue {
   @Prop({ type: Boolean, default: true }) inline!: boolean;
   @Prop({ type: String, default: "text" }) type!: string;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
+  @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
 
   private focused = false;
   private modalValue: string = this.value;
@@ -56,12 +74,17 @@ export default class Textarea extends Vue {
 
   private mounted() {
     const control = this.$refs.control as HTMLInputElement;
+    const controlTextareaElement = this.$refs.controlTextarea as any;
     this.dummyHeight = control.clientHeight;
     this.dummyWidth = control.clientWidth;
 
     if (this.autofocus) {
       Vue.nextTick().then(() => {
-        control.focus();
+        if (this.isCellEdit) {
+          controlTextareaElement.$el.focus();
+        } else {
+          control.focus();
+        }
       });
     }
   }
@@ -72,6 +95,18 @@ export default class Textarea extends Vue {
 
   private get inputName(): string {
     return `${this.uid}-input`;
+  }
+
+  private updateInput(value: string) {
+    this.$emit('update:value', value);
+    this.setInputHeight();
+  }
+
+  private setInputHeight() {
+    const controlTextareaElement = this.$refs.controlTextarea as any;
+    setTimeout(() => {
+      this.$emit("setInputHeight", controlTextareaElement.$el.clientHeight);
+    }, 0);
   }
 
   private get hasContent(): boolean {
@@ -154,11 +189,11 @@ export default class Textarea extends Vue {
   }
 
   .textarea_field {
+    padding: 0;
     background-color: rgba(0, 0, 0, 0);
     z-index: 2;
     order: 2;
     flex: 2;
-    cursor: pointer;
     width: 100%;
     resize: none;
     height: 100%;
@@ -166,7 +201,6 @@ export default class Textarea extends Vue {
     text-overflow: ellipsis;
     white-space: pre-wrap;
     border: 1px solid transparent;
-    padding: 5px;
     color: var(--MainTextColor);
     transition: all 300ms ease-in-out, height 300ms ease-in-out;
   }
@@ -177,25 +211,41 @@ export default class Textarea extends Vue {
 
   .textarea_field:hover {
     overflow-y: auto;
-    border: 1px solid var(--MainBorderColor);
   }
 
   .textarea_field:focus {
-    border-bottom: 2px solid var(--MainBorderColor);
     outline: none;
-    padding: 5px;
     width: 100%;
+  }
+
+  .textarea_field__desktop {
+    padding: 5px;
   }
 
   .textarea_field__desktop:focus {
     outline: none;
     background-color: var(--MainBackgroundColor);
-    border: 1px solid var(--MainBorderColor);
-    padding: 5px;
     height: calc(100% + 100px);
     transition: all 300ms ease-in-out, height 300ms ease-in-out;
     overflow: auto;
     z-index: 10;
+    border: 1px solid var(--MainBorderColor);
+  }
+
+  .textarea_field__desktop:hover {
+    border: 1px solid var(--MainBorderColor);
+  }
+
+  .textarea-field_cell-edit {
+    border: none;
+  }
+
+  .textarea-field_cell-edit:focus {
+    border: none;
+  }
+
+  .textarea-field_cell-edit:hover {
+    border: none;
   }
 
   .textarea_field__disabled {
