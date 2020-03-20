@@ -41,8 +41,8 @@ import { ValueRef } from "../../local_user_view";
 import { IQuery } from "../../state/query";
 
 export interface IColumn {
-    title: string;
     id?: any;
+    title: string;
     createView?: IQuery;
     fieldName?: string;
     cards: ICard[];

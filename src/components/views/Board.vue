@@ -19,9 +19,9 @@
 
 <template>
     <div fluid class="view_kanban">
-        <Errorbox v-if="errorMessage" :message="errorMessage" />
-        <Board v-if="!errorMessage"
-            :columns="boardData"
+        <Errorbox v-if="errors" :message="errors" />
+        <Board v-if="!errors"
+            :columns="columns"
             :titles="boardTitles"
             :add="this.changeGroup"
             :move="this.changeOrder" />
@@ -56,7 +56,7 @@ interface ICardExtra {
     orderRef: IExistingValueRef;
 }
 
-type IColumnTitleMap = Record<any, { label: string, field: string }>;
+type IColumnTitleMap = Record<number, string>;
 
 @UserView({
     localConstructor: LocalEmptyUserView,
@@ -65,27 +65,7 @@ type IColumnTitleMap = Record<any, { label: string, field: string }>;
 export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>, BaseEntriesView>(BaseUserView, BaseEntriesView) {
 
     @Prop() uv!: CombinedUserView;
-
-    errorMessage: string | null = null;
-
-    boardData: IColumn[] = [];
     selectedCards: any[] = [];
-    columnTitles: IColumnTitleMap = {};
-
-    private mounted() {
-        const rows = this.uv.rows;
-        this.errorMessage = this.errors;
-        if (rows && !this.errorMessage) {
-            this.makeBoardData(rows);
-        }
-    }
-
-    @Watch("uv")
-    private watchUv(newUv: CombinedUserView) {
-        if (newUv.rows) {
-            this.makeBoardData(newUv.rows);
-        }
-    }
 
     get entriesEntity() {
         const groupIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardGroup"] === true);
@@ -95,6 +75,39 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
            return { entity: fieldType.entity, where: null };
         }
         return null;
+    }
+
+    private get columns() {
+        const rows = this.uv.rows || [];
+        const cards = rows.map(this.makeCardObject);
+        const groupIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardGroup"] === true);
+        const fieldName = this.uv.info.columns[groupIndex].name;
+        const createView = attrToQuery(
+            this.uv.attributes.CreateView,
+            { infoByDefault: true },
+        ) || undefined;
+        const columns = R.pathOr([], ["Board", "Columns"], this.uv.attributes)
+            .map((i: any) => String(i));
+        const groupedColumns = R.groupBy(card => String(R.path(["groupValue"], card)),
+            cards,
+        );
+        const filteredColumns = columns
+            .reduce((acc: object, columTitle: string) => {
+                const column: IColumn[] = R.pathOr([], [columTitle], groupedColumns);
+                return { ...acc, [columTitle]: column };
+            }, {});
+        const allColumns: IColumn[] = Object.keys(filteredColumns)
+            .map((column: string) => ({
+                id: column,
+                title: R.pathOr(column, [column], this.boardTitles),
+                fieldName,
+                createView,
+                cards: R.pathOr([], [column], groupedColumns),
+            }));
+        return R.sortBy(
+            (column: IColumn) => columns.indexOf(column.id),
+            allColumns,
+        );
     }
 
     private get errors() {
@@ -115,15 +128,12 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
         return hasErrors ? errorString : null;
     }
 
-    private get boardTitles() {
-        const groupIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardGroup"] === true);
-        const fieldTypePath = ["info", "columns", groupIndex, "mainField", "field", "fieldType"];
-        const fieldType = R.path<IReferenceFieldType>(fieldTypePath, this.uv);
-        if (fieldType && fieldType.type === "reference") {
+    private get boardTitles(): IColumnTitleMap  {
+        if (!(this.currentEntries instanceof Error) && this.currentEntries) {
             return this.currentEntries;
         }
         const columns = R.pathOr([], ["Board", "Columns"], this.uv.attributes);
-        return columns.reduce((acc: { [key: string]: string }, column: string) => ({ ...acc, [column]: column }), {});
+        return columns.reduce((acc: { [key: string]: string }, column: string) => ({ ...acc, [column]: String(column) }), {});
     }
 
     private changeOrder(orderRef: ValueRef, value: number) {
@@ -158,7 +168,6 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
         const groupIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardGroup"] === true);
         const orderIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardOrder"] === true);
         const groupValue = row.values[groupIndex];
-        const orderValue = row.values[orderIndex];
         const groupValueType = this.uv.info.columns[groupIndex].valueType;
         const cardColumns: ICardCol[] = this.getCardColumns(row.values);
 
@@ -174,7 +183,11 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
         } : undefined;
 
         const punnedValue = valueToPunnedText(groupValueType, groupValue);
-        const { value: order } = orderValue || {};
+        // These two lines are necessary because user can omit BoardOrder attribute
+        // To be replaced with a better ternary version later when we update TS
+        // (should check if orderIndex > -1)
+        const orderValue: ICombinedValue = row.values[orderIndex] || { value: undefined };
+        const { value: order } = orderValue;
         const color = R.path<string>(["attributes", "CellColor"], groupValue);
         const groupField = R.path<string>(["info", "fieldRef", "name"], groupValue);
 
@@ -194,60 +207,6 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
             },
         };
     }
-
-    private getColumnTitles(cards: ICard[]): IColumnTitleMap {
-        const onlyGroup = cards.map(card => ({
-            value: card.groupValue,
-            label: card.groupLabel,
-            field: card.groupField,
-        }));
-        return onlyGroup.reduce(
-            (acc, element) => ({ ...acc, [element.value]: element }), {},
-        );
-    }
-
-    private getColumnTitle(id: number, defaultTitle = this.$t("no_title").toString()): string {
-       const boardColumn: string = R.pathOr(defaultTitle, [id, "label"], this.columnTitles[id]);
-       const entryColumn: string | null = this.currentEntries
-           ? R.pathOr(null, [id], this.currentEntries)
-           : null;
-
-       return entryColumn || boardColumn;
-    }
-
-    private makeBoardData(rows: ICombinedRow[]) {
-        const cards = rows.map(this.makeCardObject);
-        const createView = attrToQuery(
-            this.uv.attributes.CreateView,
-            { infoByDefault: true },
-        ) || undefined;
-        const columns = R.pathOr([], ["Board", "Columns"], this.uv.attributes)
-            .map((i: any) => String(i));
-        const columnTitles = this.getColumnTitles(cards);
-        const groupedColumns = R.groupBy(card => String(R.path(["groupValue"], card)),
-            cards,
-        );
-        const filteredColumns = columns
-            .reduce((acc: object, columTitle: string) => {
-                const column: IColumn[] = R.pathOr([], [columTitle], groupedColumns);
-                return { ...acc, [columTitle]: column };
-            }, {});
-        const allColumns: IColumn[] = Object.keys(filteredColumns)
-            .map((column: any) => ({
-                title: this.getColumnTitle(column),
-                id: column,
-                fieldName: R.pathOr(this.$t("no_title").toString(), [column, "field"], columnTitles),
-                createView,
-                cards: R.pathOr([], [column], groupedColumns),
-            }));
-        const orderedColumns: IColumn[] = R.sortBy(
-            (column: IColumn) => columns.indexOf(column.id),
-            allColumns,
-        );
-        this.boardData = orderedColumns;
-        this.columnTitles = columnTitles;
-    }
-
 }
 </script>
 
