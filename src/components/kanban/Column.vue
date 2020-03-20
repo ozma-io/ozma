@@ -48,6 +48,20 @@ export interface IColumn {
     cards: ICard[];
 }
 
+
+// This is an interface to a 3rd Party Vue plugin
+// It lists only properties that are used or are of use for the board
+// Consult https://github.com/SortableJS/Vue.Draggable
+// Please add types to this interface if something you use is missing
+export interface IVueDraggableEvent {
+    type: "start" | "add" | "remove" | "update" | "end" | "choose" | "unchoose" | "sort" | "filter" | "clone";
+    originalEvent: Event,
+    newIndex: number;
+    oldIndex: number;
+    oldDraggableIndex: number;
+    newDraggableIndex: number; 
+}
+
 @Component({ components: { Card, draggable, ModalUserView } })
 export default class Column extends Vue {
     @Prop() id!: any;
@@ -117,7 +131,7 @@ export default class Column extends Vue {
         this.selected = this.selected.filter(val => val !== rowIndex);
     }
 
-    private onMove(event: any) {
+    private onMove(event: IVueDraggableEvent) {
         const newCard = this.cards[event.newIndex];
         // Avoid calling onMove after onAdd event: It should do it on it's own.
         if (newCard) {
@@ -130,7 +144,7 @@ export default class Column extends Vue {
         }
     }
 
-    private onAdd(event: any) {
+    private onAdd(event: IVueDraggableEvent) {
         const newCard = this.cards[event.newIndex];
         this.onMove(event);
         if (this.add && newCard.groupRef) {

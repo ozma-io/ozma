@@ -17,12 +17,12 @@ import { UserView } from "@/components";
 import BaseUserView from "@/components/BaseUserView";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
 import { LocalUserView, IExistingValueRef, ValueRef } from "@/local_user_view";
-import { CombinedUserView, IValueInfo, IUserViewValueRef, ICombinedValue, IRowCommon, ICombinedRow } from "@/state/user_view";
+import { CombinedUserView, IValueInfo, IUserViewValueRef, ICombinedValue, IRowCommon, ICombinedRow, valueToPunnedText } from "@/state/user_view";
 
 import Board from "@/components/kanban/Board.vue";
 import { ICard, ICardCol, ICardRow, CardColType } from "@/components/kanban/Card.vue";
 import { IColumn } from "@/components/kanban/Column.vue";
-import { IFieldRef, IReferenceFieldType } from "../../api";
+import { IFieldRef, IReferenceFieldType, ValueType } from "../../api";
 import { Value } from "Misc/JSON/_api";
 import { attrToQuery, attrToQueryRef } from "../../state/query";
 import BaseEntriesView from "../BaseEntriesView";
@@ -92,21 +92,11 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
         this.updateValue(groupRef, value);
     }
 
-    private getCardValueType(fieldType: string | undefined): CardColType {
-        if (fieldType === "datetime") {
-            return "datetime";
-        } else if (fieldType === "date") {
-            return "date";
-        }
-        return "text";
-    }
-
     private getCardColumns(values: ICombinedValue[]): ICardCol[] {
         return mapMaybe<ICombinedValue, ICardCol>((value, index) => {
             const fieldRef = R.path<IFieldRef>(["info", "fieldRef"], value);
-            const fieldType = R.path<string>(["info", "field", "fieldType", "type"], value);
-            const pun = value.pun;
-            const trueValue = value.value;
+            const fieldType = R.pathOr<ValueType>({ type: "string" }, ["info", "field", "fieldType"], value);
+            const punnedValue = valueToPunnedText(fieldType, value);
             const isVisible = R.pathOr<boolean>(
                 true,
                 ["columnAttributes", index, "Visible"],
@@ -115,8 +105,8 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
             return isVisible ? {
                 fieldName: R.path<string>(["name"], fieldRef),
                 fieldRef,
-                type: this.getCardValueType(fieldType),
-                value: pun !== undefined ? pun : trueValue,
+                type: "text",
+                value: punnedValue,
                 size: 12,
             } : undefined;
         }, values);
@@ -127,6 +117,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
         const orderIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardOrder"] === true);
         const groupValue = row.values[groupIndex];
         const orderValue = row.values[orderIndex];
+        const groupType = R.pathOr<ValueType>({ type: "string" }, ["info", "field", "fieldType"], groupValue);
         const cardColumns: ICardCol[] = this.getCardColumns(row.values);
 
         const groupRef: ValueRef = {
@@ -140,7 +131,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
             column: orderIndex,
         } : undefined;
 
-        const { pun, value } = groupValue || {};
+        const punnedValue = valueToPunnedText(groupType, groupValue);
         const { value: order } = orderValue || {};
         const color = R.path<string>(["attributes", "CellColor"], groupValue);
         const groupField = R.path<string>(["info", "fieldRef", "name"], groupValue);
@@ -149,8 +140,8 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
 
         return {
             groupRef,
-            groupLabel: pun !== undefined ? pun : value,
-            groupValue: value,
+            groupLabel: punnedValue,
+            groupValue: groupValue.value,
             groupField,
             orderRef,
             order,
