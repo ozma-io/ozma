@@ -3,7 +3,7 @@
         <b-row v-for="(row, rowIndex) in data.rows" :key="rowIndex" class="card_row">
             <b-col v-for="(col, colIndex) in row" :key="colIndex" :cols="col.size" class="card_col">
                 <template v-if="rowIndex === 0 && colIndex === 0">
-                    <input type="checkbox" class="card_select_checkbox" :selected="selected">
+                    <!-- input type="checkbox" class="card_select_checkbox" :selected="selected" -->
                     <template v-if="data.cardView">
                         <i class="material-icons card_open_icon"
                             @click="openModal">flip_to_front</i>
@@ -12,11 +12,11 @@
                             @close="modalView = null" />
                     </template>
                 </template>
-                <span v-if="col.type === 'text'" class="card_text" :title="col.value">
-                    {{col.value}}
-                </span>
                 <div v-if="col.type === 'image'" class="card_avatar"
                     :style="{ backgroundImage: `url('${col.value}')` }" />
+                <span v-else class="card_text" :title="col.value">
+                    {{col.value}}
+                </span>
             </b-col>
         </b-row>
     </div>
@@ -30,11 +30,15 @@ import { IFieldRef } from "../../api";
 import { IQuery } from "../../state/query";
 
 import ModalUserView from "@/components/ModalUserView.vue";
+import { Moment } from "moment";
+import { dateTimeFormat, dateFormat } from "../../values";
+
+export type CardColType = "text" | "image";
 
 export interface ICardCol {
     fieldName?: string;
     fieldRef?: IFieldRef;
-    type: "text" | "image";
+    type: CardColType;
     value: any;
     size: number;
 }
@@ -46,7 +50,8 @@ export interface ICard {
     groupValue?: any;
     groupField?: string;
     cardView?: IQuery | null;
-    orderRef?: IFieldRef;
+    orderRef?: ValueRef;
+    order?: number;
     rows: ICardRow[];
     style?: {
         color?: string;
@@ -79,6 +84,7 @@ export default Card;
 
 <style scoped>
  .card_container {
+     cursor: grab;
      border: 1px solid var(--MainBorderColor);
      background-color: var(--MainBackgroundColor);
      color: var(--MainTextColor);
