@@ -61,8 +61,6 @@ interface IAuthPersistedState {
     createdTime: number;
 }
 
-const checkInterval = 5000;
-
 const authKey = "auth";
 const authNonceKey = "authNonce";
 
