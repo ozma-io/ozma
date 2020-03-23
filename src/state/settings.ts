@@ -49,8 +49,8 @@ const settingsModule: Module<ISettingsState, {}> = {
     actions: {
         removeAuth: {
             root: true,
-            handler: ({ commit }) => {
-                commit("clearSettings");
+            handler: ({ dispatch }) => {
+                dispatch("getSettings");
             },
         },
         setAuth: {
@@ -59,11 +59,15 @@ const settingsModule: Module<ISettingsState, {}> = {
                 dispatch("getSettings");
             },
         },
+
         setError: ({ commit }, error: string) => {
             commit("errors/setError", { key: errorKey, error }, { root: true });
             commit("setPending", null);
         },
         getSettings: ({ state, commit, dispatch }) => {
+            if (state.pending !== null) {
+                return state.pending;
+            }
             const pending: IRef<Promise<CurrentSettings>> = {};
             pending.ref = (async () => {
                 try {

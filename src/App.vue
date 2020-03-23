@@ -10,7 +10,7 @@
 </i18n>
 
 <template>
-    <div id="app">
+    <div id="app" :style="styleSettings">
         <ModalPortalTarget name="tabbed-modal" multiple />
         <template v-if="authErrors.length > 0">
             <span v-for="error in authErrors" :key="error">
@@ -38,13 +38,17 @@ const staging = namespace("staging");
 export default class App extends Vue {
     @settings.State("current") settings!: CurrentSettings;
     @auth.Action("startAuth") startAuth!: () => Promise<void>;
+    @settings.Action("getSettings") getSettings!: () => Promise<void>;
     @auth.State("current") currentAuth!: CurrentAuth | null;
     @auth.State("pending") pendingAuth!: Promise<CurrentAuth> | null;
     @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
     @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
 
     created() {
-        this.$router.onReady(() => this.startAuth());
+        this.$router.onReady(async () => {
+            await this.startAuth();
+            await this.getSettings();
+        });
     }
 
     get authErrors() {
@@ -99,13 +103,6 @@ export default class App extends Vue {
             currSettings[`--${name}`] = value;
             return currSettings;
         }, {} as Record<string, any>);
-    }
-
-    @Watch("styleSettings")
-    private updateStyle() {
-        Object.entries(this.styleSettings).forEach(([name, value]) => {
-            document.documentElement.style.setProperty(name, value);
-        });
     }
 }
 </script>

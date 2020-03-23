@@ -1157,6 +1157,19 @@ const userViewModule: Module<IUserViewState, {}> = {
         },
     },
     actions: {
+        removeAuth: {
+            root: true,
+            handler: ({ dispatch }) => {
+                dispatch("reload");
+            },
+        },
+        setAuth: {
+            root: true,
+            handler: ({ dispatch }) => {
+                dispatch("reload");
+            },
+        },
+
         getEntries: ({ state, rootState, commit, dispatch }, { reference, ref }: { reference: ReferenceName, ref: IEntriesRef }): Promise<Entries> => {
             if (state.pending !== null) {
                 return Promise.reject("Reload in progress");
