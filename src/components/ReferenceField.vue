@@ -155,7 +155,6 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
      color: var(--MainTextColor);
  }
  .reference__new_modal__button {
-    background-color: var(--NavigationBackColor);
     color: var(--TableTextColor);
     display: flex;
     align-items: center;
