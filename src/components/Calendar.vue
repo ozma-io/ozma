@@ -11,7 +11,7 @@
 <template>
     <div class="calendar_container" v-click-outside="onClickOutside">
         <div class="main_input">
-            <input type="button" class="material-icons calendar_input__icon" value="event">
+            <input type="button" class="material-icons calendar_input__icon" style="margin-right: 10px" value="event">
             <input type="text"
                     class="calendar_input"
                     :placeholder="$t('input_placeholder')"
@@ -113,7 +113,7 @@ export default class Calendar extends Vue {
 <style scoped>
     .calendar_container {
       position: relative;
-      display: inline-block;
+      display: block;
     }
     .calendar_input {
         padding: 5px 2px 5px 0;
@@ -143,11 +143,13 @@ export default class Calendar extends Vue {
     .calendar_input__icon {
         background: none;
         border: none;
+        padding: 0;
         color: var(--MainBorderColor);
     }
     .close_input__icon {
         color: var(--MainBorderColor);
         order: 3;
+        padding: 0;
     }
     .main_cal {
       display: none;
