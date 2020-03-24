@@ -140,6 +140,7 @@
                 </b-col>
                 <b-col :cols="isInline && caption ? 8 : 12">
                     <InputSlot
+                        style="padding-left: 0"
                         v-if="inputType.name === 'reference'"
                         :value="value"
                         :autoOpen="autoOpen"
@@ -482,7 +483,7 @@ export default class FormControl extends Vue {
         white-space: pre;
         cursor: question;
         width: 100%;
-        color: var(--MainTextColor);
+        color: var(--MainTextColorLight);
     }
     input {
         border: 1px solid rgb(81, 152, 57);

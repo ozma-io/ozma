@@ -117,6 +117,7 @@ export default class FormEntry extends Vue {
         width: max-content;
         display: inline-block;
         margin-right: 15px;
+        margin-left: 15px;
     }
     .delete-block_delete-button {
         background: hsla(0,0%,100%,.3) !important;
