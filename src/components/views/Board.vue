@@ -186,8 +186,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
         // These two lines are necessary because user can omit BoardOrder attribute
         // To be replaced with a better ternary version later when we update TS
         // (should check if orderIndex > -1)
-        const orderValue: ICombinedValue = row.values[orderIndex] || { value: undefined };
-        const { value: order } = orderValue;
+        const { value: order } = orderIndex === -1 ? { value: undefined } : row.values[orderIndex];
         const color = R.path<string>(["attributes", "CellColor"], groupValue);
         const groupField = R.path<string>(["info", "fieldRef", "name"], groupValue);
 
