@@ -33,7 +33,7 @@ interface ITimeRange {
 
 interface ITimeRangeAll {
     range: ITimeRange[];
-    history: Array<{ min: number, max: number }>;
+    history: { min: number, max: number }[];
     steps: number[];
     currStep: number;
 }

@@ -246,7 +246,7 @@ interface ICombinedUserViewParams {
     args: IUserViewArguments;
     info: IResultViewInfo;
     attributes: Record<AttributeName, any>;
-    columnAttributes: Array<Record<AttributeName, any>>;
+    columnAttributes: Record<AttributeName, any>[];
     rows: IExecutedRow[] | null;
     changes: CurrentChanges;
 }
@@ -257,7 +257,7 @@ export class CombinedUserView {
     homeSchema: SchemaName | null;
     info: IResultViewInfo;
     attributes: Record<AttributeName, any>;
-    columnAttributes: Array<Record<AttributeName, any>>;
+    columnAttributes: Record<AttributeName, any>[];
     newRows: Record<AddedRowId, IAddedRow>;
     newRowsPositions: AddedRowId[];
     rows: ICombinedRow[] | null;

@@ -59,7 +59,7 @@ export const i18n = new VueI18n({
     messages: globalMessages,
 });
 
-export type RouterQueryValues = string | Array<string | null>;
+export type RouterQueryValues = string | (string | null)[];
 export type RouterQuery = Dictionary<RouterQueryValues>;
 
 export const routerQueryValue = (values: RouterQueryValues): string | null => {

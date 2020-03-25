@@ -211,7 +211,7 @@ export interface IViewExprResult {
 export interface IViewInfoResult {
     info: IResultViewInfo;
     pureAttributes: Record<AttributeName, any>;
-    pureColumnAttributes: Array<Record<AttributeName, any>>;
+    pureColumnAttributes: Record<AttributeName, any>[];
 }
 
 export interface IInsertEntityOp {

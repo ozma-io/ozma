@@ -167,7 +167,7 @@ export const deepUpdateObject = (to: object, from: object) => {
     });
 };
 
-export const tryDicts = <K extends string | number | symbol, V>(key: K, ...dicts: Array<Record<K, V> | undefined>): V | undefined => {
+export const tryDicts = <K extends string | number | symbol, V>(key: K, ...dicts: (Record<K, V> | undefined)[]): V | undefined => {
     for (const dict of dicts) {
         if (dict && key in dict) {
             return dict[key];
@@ -456,7 +456,7 @@ export class ObjectResourceMap<K, V> {
         return this.map.values().map(x => x[1]);
     }
 
-    entries(): Array<[K, V]> {
+    entries(): [K, V][] {
         return this.map.values();
     }
 }

@@ -75,7 +75,7 @@ export const equalRowPositionRef = (a: RowPositionRef, b: RowPositionRef) => {
 // Inherit from it and override its public methods.
 export abstract class LocalUserView<ValueT, RowT, ViewT> implements IHandlerProvider {
     uv: CombinedUserView;
-    rows: Array<ILocalRow<ValueT, RowT>>;
+    rows: ILocalRow<ValueT, RowT>[];
     newRows: Record<AddedRowId, ILocalRow<ValueT, RowT>>;
     extra: ViewT;
     handler: IUserViewEventHandler;
