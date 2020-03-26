@@ -388,8 +388,8 @@ export default class FormControl extends Vue {
                     const extraActions = this.attributes["ExtraSelectActions"];
                     if (Array.isArray(extraActions)) {
                         extraActions.forEach(action => {
-                            if (typeof action === "object" && action.name && action.ref) {
-                                const querySelf = attrToQuerySelf(action.ref, this.value.info, linkOpts);
+                            if (typeof action === "object" && action.name) {
+                                const querySelf = attrToQuerySelf(action, this.value.info, linkOpts);
                                 if (querySelf) {
                                     refEntry.actions.push({
                                         name: String(action.name),

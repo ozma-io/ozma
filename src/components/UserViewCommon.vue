@@ -62,19 +62,17 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
     }
 
     get actions() {
-        const opts: IAttrToQueryOpts = {
-            infoByDefault: true,
-        };
-        const home = homeSchema(this.uv.args);
-        if (home !== null) {
-            opts.homeSchema = home;
-        }
         const actions: IAction[] = [];
         const extraActions = this.uv.attributes["ExtraActions"];
         if (Array.isArray(extraActions)) {
+            const opts: IAttrToQueryOpts = {};
+            const home = homeSchema(this.uv.args);
+            if (home !== null) {
+                opts.homeSchema = home;
+            }
             extraActions.forEach((action: any) => {
-                const querySelf = attrToQuery(action.ref, opts);
-                if (action.name && action.ref && querySelf) {
+                const querySelf = attrToQuery(action, opts);
+                if (action.name && querySelf) {
                     actions.push({
                         name: String(action.name),
                         query: querySelf,
