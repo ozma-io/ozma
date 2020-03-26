@@ -87,6 +87,7 @@ export default class App extends Vue {
             "MainBackgroundColor": this.settings.getEntry("MainBackgroundColor", String, "white"),
             "MainTextColorLight": this.settings.getEntry("MainTextColorLight", String, "#68766d"),
             "MainBorderColor": this.settings.getEntry("MainBorderColor", String, "#dee2e6"),
+            "MainBorderTextColor": this.settings.getEntry("MainBorderTextColor", String, "white"),
 
             // Dark Theme, do not remove
             // "MainTextColor": this.settings.getEntry("MainTextColor", String, "#b2b2b2"),
