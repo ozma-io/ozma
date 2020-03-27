@@ -3,15 +3,13 @@
         "en": {
             "view_error": "There are following errors in your view",
             "no_title": "No title",
-            "no_board": "This query is lacking Board attribute",
-            "no_columns": "This query is lacking Columns property of Board attribute",
+            "no_columns": "This query is lacking BoardColumns attribute",
             "no_group": "This query is lacking BoardGroup attribute on the grouping field"
         },
         "ru": {
             "view_error": "В вашем представлении следующие ошибки",
             "no_title": "Без заголовка",
-            "no_board": "В запросе отсутствет аттрибут Board",
-            "no_columns": "В запросе отсутствует параметр Columns у аттрибута Board",
+            "no_columns": "В запросе отсутствует аттрибут BoardColumns",
             "no_group": "В запросе отсутствует аттрибут BoardGroup на поле по которому идёт группировка"
         }
     }
@@ -67,6 +65,11 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
     @Prop() uv!: CombinedUserView;
     selectedCards: any[] = [];
 
+    private get boardOrderIndex(): number | null {
+        const orderIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardOrder"] === true);
+        return orderIndex > -1 ? orderIndex : null;
+    }
+
     get entriesEntity() {
         const groupIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardGroup"] === true);
         const fieldTypePath = ["info", "columns", groupIndex, "mainField", "field", "fieldType"];
@@ -77,17 +80,26 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
         return null;
     }
 
+    private get boardGroupIndex(): number | null {
+        const groupIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardGroup"] === true);
+        return groupIndex > -1 ? groupIndex : null;
+    }
+
+    private get columnsAttr(): string[] | null {
+        const columnsRaw = R.pathOr<any[] | null>(null, ["BoardColumns"], this.uv.attributes);
+        return columnsRaw !== null ? columnsRaw.map((i: any) => String(i)) : null;
+    }
+
     private get columns() {
         const rows = this.uv.rows || [];
         const cards = rows.map(this.makeCardObject);
-        const groupIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardGroup"] === true);
+        const groupIndex = this.boardGroupIndex!;
         const fieldName = this.uv.info.columns[groupIndex].name;
         const createView = attrToQuery(
             this.uv.attributes.CreateView,
             { infoByDefault: true },
         ) || undefined;
-        const columns = R.pathOr([], ["Board", "Columns"], this.uv.attributes)
-            .map((i: any) => String(i));
+        const columns = this.columnsAttr!;
         const groupedColumns = R.groupBy(card => String(R.path(["groupValue"], card)),
             cards,
         );
@@ -111,12 +123,10 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
     }
 
     private get errors() {
-        const hasBoard = R.hasPath(["Board"], this.uv.attributes);
-        const hasColumns = R.hasPath(["Board", "Columns"], this.uv.attributes);
-        const hasGroup = this.uv.columnAttributes.findIndex(attributes => attributes["BoardGroup"] === true) !== -1;
+        const hasColumns = this.columnsAttr !== null;
+        const hasGroup = this.boardGroupIndex !== null;
 
         const messagesArray = [
-            !hasBoard && this.$t("no_board"),
             !hasColumns && this.$t("no_columns"),
             !hasGroup && this.$t("no_group"),
         ].filter(R.identity);
@@ -132,7 +142,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
         if (!(this.currentEntries instanceof Error) && this.currentEntries) {
             return this.currentEntries;
         }
-        const columns = R.pathOr([], ["Board", "Columns"], this.uv.attributes);
+        const columns = this.columnsAttr!;
         return columns.reduce((acc: { [key: string]: string }, column: string) => ({ ...acc, [column]: String(column) }), {});
     }
 
@@ -165,8 +175,8 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
     }
 
     private makeCardObject(row: ICombinedRow, rowIndex: number): ICard {
-        const groupIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardGroup"] === true);
-        const orderIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardOrder"] === true);
+        const groupIndex = this.boardGroupIndex!;
+        const orderIndex = this.boardOrderIndex!;
         const groupValue = row.values[groupIndex];
         const groupValueType = this.uv.info.columns[groupIndex].valueType;
         const cardColumns: ICardCol[] = this.getCardColumns(row.values);
