@@ -66,7 +66,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
 
     @Prop() uv!: CombinedUserView;
     selectedCards: any[] = [];
-    
+
     private get boardOrderIndex(): number | null {
         const orderIndex = this.uv.columnAttributes.findIndex(attributes => attributes["BoardOrder"] === true);
         return orderIndex > -1 ? orderIndex : null;
