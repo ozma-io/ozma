@@ -10464,6 +10464,11 @@ vm-browserify@^1.0.1:
   resolved "https://registry.yarnpkg.com/vm-browserify/-/vm-browserify-1.1.2.tgz#78641c488b8e6ca91a75f511e7a3b32a86e5dda0"
   integrity sha512-2ham8XPWTONajOR0ohOKOHXkm3+gaBmGut3SRuu75xLd/RRaY6vqgh8NBYYk7+RW3u5AtzPQZG8F10LHkl0lAQ==
 
+vue-class-component@^6.3.2:
+  version "6.3.2"
+  resolved "https://registry.yarnpkg.com/vue-class-component/-/vue-class-component-6.3.2.tgz#e6037e84d1df2af3bde4f455e50ca1b9eec02be6"
+  integrity sha512-cH208IoM+jgZyEf/g7mnFyofwPDJTM/QvBNhYMjqGB8fCsRyTf68rH2ISw/G20tJv+5mIThQ3upKwoL4jLTr1A==
+
 vue-class-component@^7.1.0:
   version "7.2.3"
   resolved "https://registry.yarnpkg.com/vue-class-component/-/vue-class-component-7.2.3.tgz#a5b1abd53513a72ad51098752e2dedd499807cca"
@@ -10496,6 +10501,13 @@ vue-cli-plugin-tsx-support@^0.4.1:
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/vue-cli-plugin-tsx-support/-/vue-cli-plugin-tsx-support-0.4.1.tgz#439b750f5a8dc95f87bf450c853bd46923bc4589"
   integrity sha512-0C4kCmSAvcjYUadC8kr3VmZkCKjZksmYmax9eonMlJNnWsKb4Y/QuHIpJu3x/fD1HOKkPq/ZysoBfxFpENmsUA==
+
+vue-debounce-decorator@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/vue-debounce-decorator/-/vue-debounce-decorator-1.0.1.tgz#ab8d59555d9affb85d4045a10939f0c28ce586d9"
+  integrity sha512-2XUI5deMvWDK810Py3b002rpgGdBBUI1Qvggl1rfFo1kDBEo49FDYFYo1yBuwK+Bs7p3XqF++z0K37RuGjgmIQ==
+  dependencies:
+    vue-class-component "^6.3.2"
 
 vue-fragment@^1.5.1:
   version "1.5.1"
