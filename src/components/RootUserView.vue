@@ -38,21 +38,29 @@
         <!-- FIXME: This shouldn't depend on type! -->
         <div :class="uvIsReady && uv.attributes.Type === 'Menu' ? 'menu_scrol' : 'menu_none-scrol'">
             <div class="head-menu">
-                <input v-if="!isMainView" type="button" @click="$router.go(-1)"  value="arrow_back" class="head-menu_back-button material-icons"/>
+                <input v-if="!isMainView" type="button" @click="$router.go(-1)"  value="arrow_back" class="head-menu_back-button material-icons md-14"/>
                 <router-link v-if="!isMainView" :to="{ name: 'main' }" class="head-menu_main-menu-button material-icons">
                     home
                 </router-link>
                 <ActionsMenu v-if="uvIsReady"
                         title="view_headline"
                         :actions="actions" />
-                <b-form v-if="enableFilter" v-on:submit.prevent="submitFilter()" inline class="find">
-                    <b-input-group>
-                        <b-form-input v-model="filterString" class="find_in form-control" :placeholder="$t('search_placeholder')" />
-                        <b-input-group-append v-if="filterString.length > 0">
-                            <span id="searchclear" class="glyphicon glyphicon-remove-circle" @click="filterString = ''">✖</span>
-                        </b-input-group-append>
-                    </b-input-group>
-                </b-form>
+                <div v-if="enableFilter" class="search-wrapper">
+                    <b-form v-if="enableFilter" v-on:submit.prevent="submitFilter()" inline :class="['find', {
+                  'search-field_hidden': !isShownSearchField,
+                }]">
+                        <b-input-group>
+                            <b-form-input v-model="filterString" ref="searchInput" class="find_in form-control" :placeholder="$t('search_placeholder')" />
+                            <b-input-group-append v-if="filterString.length > 0">
+                                <span id="searchclear" class="material-icons clear-search" @click="filterString = ''">backspace</span>
+                            </b-input-group-append>
+                        </b-input-group>
+                    </b-form>
+                    <button @click="toggleSearchFieldVisibility(null)" v-if="enableFilter" class="search-button">
+                        <i v-if="!isShownSearchField" class="material-icons">search</i>
+                        <i v-else class="material-icons">close</i>
+                    </button>
+                </div>
             </div>
             <div v-if="uv !== null" class="userview-div">
                 <UserView :args="query.rootViewArgs"
@@ -109,6 +117,7 @@ import { CurrentChanges, ScopeName } from "@/state/staging_changes";
 import { IAction } from "@/components/ActionsMenu.vue";
 import { CurrentAuth } from "@/state/auth";
 import { CurrentQuery, IQuery, queryLocation, replaceSearch, getDefaultValues } from "@/state/query";
+import {Debounce} from "vue-debounce-decorator";
 
 const auth = namespace("auth");
 const userView = namespace("userView");
@@ -176,6 +185,7 @@ export default class RootUserView extends Vue {
     private filterString: string = "";
     private enableFilter: boolean = false;
     private styleNode: HTMLStyleElement;
+    private isShownSearchField: boolean = false;
 
     constructor() {
         super();
@@ -203,11 +213,18 @@ export default class RootUserView extends Vue {
         this.setRoute(this.$route);
     }
 
+    @Watch("$route.path")
+    private closeSearchField() {
+        this.isShownSearchField = false;
+    }
+
     @Watch("query.rootViewArgs", { deep: true, immediate: true })
     private onViewArgsChanged() {
         this.updateView();
     }
 
+    @Watch("filterString")
+    @Debounce(500)
     private submitFilter() {
         replaceSearch("q", this.filterString);
     }
@@ -240,6 +257,23 @@ export default class RootUserView extends Vue {
         }
         return actions;
     }
+
+    private toggleSearchFieldVisibility(flag?: boolean | null) {
+        if (flag !== null) {
+            this.isShownSearchField = flag as boolean;
+        } else {
+            this.isShownSearchField = !this.isShownSearchField;
+        }
+    }
+
+    @Watch("isShownSearchField") setFocusOnField() {
+        if (this.isShownSearchField) {
+            (this.$refs.searchInput as HTMLElement).focus();
+        } else {
+            this.filterString = "";
+        }
+    }
+
 
     private updateView() {
         this.clearView();
@@ -310,11 +344,29 @@ export default class RootUserView extends Vue {
         flex-direction: column;
     }
     .userview-div {
-        padding: 0px;
+        padding: 50px 0 0 0;
         width: 100%;
         overflow: hidden;
         flex: 1;
     }
+
+    .search-wrapper {
+        display: flex;
+        align-items: center;
+        width: auto;
+        flex: 1;
+    }
+
+    .clear-search {
+        height: 20px;
+        font-size: 20px;
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+    }
+
     .menu_scrol {
         display: block;
         overflow: auto;
@@ -332,28 +384,24 @@ export default class RootUserView extends Vue {
             display: none !important;
         }
     }
-    @media screen and (max-device-width: 480px) {
-        @media screen and (orientation: portrait) {
-            /deep/ .input-group {
-                margin-top: 15px;
-                margin-bottom: 15px;
-            }
-        }
-    }
     @media screen and (max-aspect-ratio: 13/9) {
         @media screen and (max-device-width: 480px) {
             .head-menu {
-                display: block !important;
                 width: 100%;
             }
         }
     }
     .head-menu {
-        display: inline-flex;
+        display: flex;
+        align-items: center;
         white-space: nowrap;
         background-color: var(--MainBackgroundColor);
         width: 100%;
         padding: 0.75rem;
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 999;
     }
     .head-menu_back-button {
         padding-top: 3px;
@@ -368,22 +416,28 @@ export default class RootUserView extends Vue {
         color: var(--MainTextColor) !important;
         background: hsla(0,0%,100%,.3);
         line-height: normal;
-        border: solid 1px var(--MainBorderColor);
-        border-radius: 3px;
+        border: none;
         text-decoration: none;
-        padding-left: 5px;
-        padding-right: 5px;
-        margin-left: 5px;
-        margin-right: 5px;
-        z-index: 1000; /* панель наверху */
-        padding-bottom: 4px;
-        padding-top: 1px !important;
-        font-size: 1.4em !important;
-        height: 1.25em;
+        padding: 0;
+        margin-right: 10px;
+        z-index: 1000;
     }
-    .head-menu_main-menu-button {
-        padding-top: 3px;
+
+    .find_in {
+        border-radius: 0;
+        border-top: 0;
+        border-left: 0;
+        border-right: 0;
+        padding-left: 0 !important;
+        padding-right: 20px !important;
+        font-size: 14px !important;
     }
+
+    .find_in::placeholder {
+        color: var(--MainTextColorLight) !important;
+        font-size: 14px;
+    }
+
     .fix-bot {
         padding: 0.4rem;
         padding-left: 0.75rem;
@@ -469,10 +523,23 @@ export default class RootUserView extends Vue {
         background-color: var(--FailColor);
         animation: color-change-2x 2s linear infinite alternate both;
     }
+    .search-button {
+        padding: 0;
+        background: transparent;
+        height: 24px;
+        outline: none;
+    }
     .save_button > input {
         background: none;
         border: none;
         padding: 0 0 0 5px;
+    }
+    .find {
+        margin-right: 10px;
+    }
+    .search-field_hidden {
+        opacity: 0;
+        pointer-events: none;
     }
     .error_button {
         padding: 0;
