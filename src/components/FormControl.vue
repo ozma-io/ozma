@@ -25,9 +25,6 @@
 
 <template>
     <fragment>
-        <template v-if="inputType.name === 'error'">
-            {{ inputType.text }}
-        </template>
         <InputSlot :label="caption"
             v-if="inputType.name !== 'userview' && inputType.name !== 'reference'"
             :inline="!isInline"
@@ -71,7 +68,7 @@
                 <template v-if="inputType.name === 'error'">
                     {{ inputType.text }}
                 </template>
-                <Input v-if="inputType.name === 'text'"
+                <Input v-else-if="inputType.name === 'text'"
                     :value="currentValue"
                     @input="updateValue($event.target.value)"
                     @focus="iSlot.onFocus"
