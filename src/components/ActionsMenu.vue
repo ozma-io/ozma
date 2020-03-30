@@ -1,8 +1,7 @@
 <template>
     <div :class="['actions-menu', {'actions-menu_active': showActions}]" v-if="actions.length > 0">
-        <button class="actions-menu__burger" @click="showActions = !showActions">
-            <i class="material-icons">menu</i>
-        </button>
+        <input type="button" class="actions-menu_actions-button material-icons" @click="showActions = !showActions"
+               value="menu">
         <div v-if="showActions" class="black-block">
             <button class="black-block_button " @click="showActions = false"></button>
         </div>
@@ -161,11 +160,10 @@ export default class ActionsMenu extends Vue {
         border: none;
         text-align: left;
         height: 100%;
-        padding-bottom: 3px;
-        padding-top: 2px;
+        padding: 0;
         line-height: normal;
-        border-radius: 3px !important;
-        font-size: 1.4em !important;
+        font-size: 24px;
+        margin-right: 10px;
         vertical-align: bottom;
         height: 1.25em;
     }
@@ -175,7 +173,7 @@ export default class ActionsMenu extends Vue {
                 width: 100vw !important;
                 position: fixed;
                 left: 0;
-                top: 0;
+                top: 54px;
             }
             .black-block {
                 top: -50vh !important;
@@ -203,8 +201,6 @@ export default class ActionsMenu extends Vue {
                 width: 100%;
                 text-align: left;
                 z-index: 1000 !important; /* кнопка выбора действий выше темного блока */
-                padding-left: 7px !important;
-                padding-right: 7px !important;
             }
         }
     }

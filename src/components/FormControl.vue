@@ -488,16 +488,17 @@ export default class FormControl extends Vue {
     .nested-menu > .actions-menu{
         width: max-content;
         display: inline-block;
-        margin-right: 15px;
+        margin-right: 10px;
     }
     .nested-menu >>> .actions-menu_actions-button {
-        border: 0px !important;
+        border: 0 !important;
         line-height: normal;
         padding: 2px;
-        padding-left: 1px;
         height: 100%;
+        width: auto;
         text-align: left;
         border-radius: 0 !important;
+        margin-right: 0;
     }
     .actions-menu {
         width: max-content;
@@ -597,6 +598,8 @@ export default class FormControl extends Vue {
             }
             .nested-menu > .actions-menu >>>  .div-with-actions {
                 position: absolute !important;
+                top: 35px;
+                left: -30px;
             }
             .nested-menu:hover {
                 z-index: 1200; /* меню действий для подтаблиц поверх темного фона */
