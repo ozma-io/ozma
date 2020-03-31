@@ -20,8 +20,8 @@
     "dependencies": "0.0.1",
     "jwt-decode": "^2.2.0",
     "moment": "^2.24.0",
-    "monaco-editor-webpack-plugin": "^1.9.0",
     "monaco-editor": "^0.20.0",
+    "monaco-editor-webpack-plugin": "^1.9.0",
     "portal-vue": "^2.1.6",
     "ramda": "^0.27.0",
     "uuid": "^7.0.2",
@@ -67,6 +67,7 @@
     "vue-cli-plugin-i18n": "^0.6.0",
     "vue-cli-plugin-storybook": "^1.2.1",
     "vue-cli-plugin-tsx-support": "^0.4.1",
+    "vue-debounce-decorator": "^1.0.1",
     "vue-jsx-hot-loader": "^1.4.1",
     "vue-template-compiler": "^2.6.10",
     "webpack-bundle-analyzer": "^3.4.1"

@@ -1,7 +1,8 @@
 <template>
     <div :class="['actions-menu', {'actions-menu_active': showActions}]" v-if="actions.length > 0">
-        <input type="button" class="actions-menu_actions-button material-icons" @click="showActions = !showActions" :value="title">
-        <div v-if="showActions" class="black-block" onklick>
+        <input type="button" class="actions-menu_actions-button material-icons" @click="showActions = !showActions"
+               value="menu">
+        <div v-if="showActions" class="black-block">
             <button class="black-block_button " @click="showActions = false"></button>
         </div>
         <div v-show="showActions" class="div-with-actions">
@@ -87,6 +88,18 @@ export default class ActionsMenu extends Vue {
 * Black-block (for mob)  (700)
 
 */
+    .actions-menu {
+        margin: 0;
+    }
+    .actions-menu__burger {
+        border: none;
+        background: transparent;
+        width: 24px;
+        height: 24px;
+        outline: none;
+        padding: 0;
+        margin-right: 20px;
+    }
     .div-with-actions {
         width: max-content;
         flex: 1;
@@ -95,7 +108,8 @@ export default class ActionsMenu extends Vue {
         z-index: 1200; /* меню действий для подтаблиц поверх темного фона */
         background-color: var(--MainBackgroundColor);
         border: 1px solid var(--MainBorderColor);
-        margin-top: 5px;
+        margin-top: 0;
+        top: calc(100% + 5px);
     }
     .div-with-actions_button {
         display: block;
@@ -115,10 +129,9 @@ export default class ActionsMenu extends Vue {
         color: var(--MainTextColor) !important;
     }
     .actions-menu {
-        z-index: 1000; /* шапка-меню */
-        background-color: var(--MainBackgroundColor);
-        margin-right: 5px;
-        margin-left: 5px;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
     }
     .actions-menu_active {
         position: relative;
@@ -144,14 +157,13 @@ export default class ActionsMenu extends Vue {
     .actions-menu_actions-button {
         color: var(--MainTextColor) !important;
         background: var(--MainBackgroundColor);
-        border: 1px solid var(--MainBorderColor);
+        border: none;
         text-align: left;
         height: 100%;
-        padding-bottom: 3px;
-        padding-top: 2px;
+        padding: 0;
         line-height: normal;
-        border-radius: 3px !important;
-        font-size: 1.4em !important;
+        font-size: 24px;
+        margin-right: 10px;
         vertical-align: bottom;
         height: 1.25em;
     }
@@ -161,6 +173,7 @@ export default class ActionsMenu extends Vue {
                 width: 100vw !important;
                 position: fixed;
                 left: 0;
+                top: 54px;
             }
             .black-block {
                 top: -50vh !important;
@@ -177,29 +190,17 @@ export default class ActionsMenu extends Vue {
                 height: 200vh;
             }
             .actions-menu {
-                position: relative;
-                display: inline-block;
+                display: inline-flex;
             }
             .actions-menu_actions-button {
                 position: sticky;
             }
 
-            .actions-menu::after {
-                content: "";
-                display: block;
-                width: 100%;
-                position: absolute;
-                height: 100%;
-                z-index: 900;
-                opacity: 1;
-                top: 0;
-            }
+
             .actions-menu_actions-button, .div-with-actions_button {
                 width: 100%;
                 text-align: left;
                 z-index: 1000 !important; /* кнопка выбора действий выше темного блока */
-                padding-left: 7px !important;
-                padding-right: 7px !important;
             }
         }
     }
