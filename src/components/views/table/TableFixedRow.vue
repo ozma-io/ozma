@@ -46,6 +46,7 @@ export default class TableFixedRow extends Vue {
     // We don't bother to set types here properly, they matter no more than for TableRow.
     // The reason this is not a functional component is because of performance.
     // See https://forum.vuejs.org/t/performance-for-large-numbers-of-components/13545/10
+    @Prop({ type: Object, required: true }) row!: any;
     @Prop({ type: Object, required: true }) localRow!: any;
     @Prop({ type: Array, required: true }) columnIndexes!: any[];
     @Prop({ type: Object, required: true }) localUv!: any;
