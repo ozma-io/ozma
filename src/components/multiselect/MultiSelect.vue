@@ -104,7 +104,7 @@
             </div>
             <input v-if="!disabled && ((single && required) || (single && isEmpty) || !single)"
                    type="button" class="material-icons select_container__chevron"
-                   @click="isOpen ? setIsOpen(false) : setIsOpen(true)"
+                   @click="setIsOpen(!isOpen)"
                    :value="isOpen ? 'arrow_drop_up' : 'arrow_drop_down'" />
             <input v-if="single && !isEmpty && !required && !disabled"
                    type="button" class="material-icons select_container__chevron"
