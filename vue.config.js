@@ -27,6 +27,11 @@ module.exports = {
   productionSourceMap: false,
 
   pluginOptions: {
+    lintStyleOnBuild: true,
+    stylelint: {
+      fix: false
+    },
+
     i18n: {
       fallbackLocale: "en",
       localeDir: "locales",
