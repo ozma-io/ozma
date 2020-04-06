@@ -10,9 +10,9 @@
 </i18n>
 
 <template>
-    <p>
-        {{ $t('not_found') }}
-    </p>
+  <p>
+    {{ $t('not_found') }}
+  </p>
 </template>
 
 <script lang="ts">

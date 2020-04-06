@@ -2,42 +2,54 @@
   <MultiSelect
     :value="value"
     :height="height"
-    @update:value="updateValue"
     :options="users"
     :single="single"
     :disabled="disabled"
-    :required="required">
-    <template v-slot:singleValue="select">
-      <span class="user_bar__container user_bar__container_single" :style="select.listValueStyle">
+    :required="required"
+    @update:value="updateValue"
+  >
+    <template #singleValue="select">
+      <span
+        class="user_bar__container user_bar__container_single"
+        :style="select.listValueStyle"
+      >
         <img
           v-if="select.valueOption.meta && select.valueOption.meta.img"
           class="user_bar__image"
           :src="select.valueOption.meta.img"
           :style="getUserBarStyle(select.valueOption)"
         >
-        <span>{{select.valueOption.label}}</span>
+        <span>{{ select.valueOption.label }}</span>
       </span>
     </template>
-    <template v-slot:label="select">
+    <template #label="select">
       <span
         v-for="(option, index) in select.valueOptions"
         :key="index"
         class="values_list__value"
         :style="select.listValueStyle"
-        @click.stop>
+        @click.stop
+      >
         <img
           v-if="option.meta && option.meta.img"
           class="user_bar__image"
           :src="option.meta.img"
           :style="getUserBarStyle(option)"
         >
-        {{option.label}}
-        <input @click="select.removeValue(index)" type="button" class="material-icons values_list__value__close" value="close">
+        {{ option.label }}
+        <input
+          type="button"
+          class="material-icons values_list__value__close"
+          value="close"
+          @click="select.removeValue(index)"
+        >
       </span>
     </template>
-    <template v-slot:option="select">
-      <table class="options_table select_container__options_list"
-        v-if="getHasOptionsLeft(select.selectedOptions)" >
+    <template #option="select">
+      <table
+        v-if="getHasOptionsLeft(select.selectedOptions)"
+        class="options_table select_container__options_list"
+      >
         <thead>
           <th>&nbsp;</th>
           <th>Username</th>
@@ -47,22 +59,26 @@
           <tr
             v-for="(option, index) in select.selectedOptions"
             :key="index"
-            @click="select.addOptionToValue(option)"
             :class="[
-                   'user_row',
-                  'select_container__options_list__option',
-                  {'select_container__options_list__option_active': select.selectedOption === index }
-                  ]"
+              'user_row',
+              'select_container__options_list__option',
+              {'select_container__options_list__option_active': select.selectedOption === index }
+            ]"
+            @click="select.addOptionToValue(option)"
           >
             <td style="width: 30px;">
               <div
                 v-if="option.meta && option.meta.img"
                 class="user_bar__image"
                 :style="getUserBarStyle(option)"
-              ></div>
+              />
             </td>
-            <td class="table_user_name"><span>{{option.label}}</span></td>
-            <td class="table_user_name"><span>LMAO</span></td>
+            <td class="table_user_name">
+              <span>{{ option.label }}</span>
+            </td>
+            <td class="table_user_name">
+              <span>LMAO</span>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -110,33 +126,39 @@ export default class CustomSelect extends Vue {
 }
 </script>
 
-<style>
- .user_bar__container_single {
-   height: 40px;
- }
- .user_bar__container_multi {
-   height: 30px;
- }
- .user_bar__container {
-   display: flex;
-   flex-direction: row;
-   align-items: center;
- }
- .user_bar__image {
-   height: 30px;
-   width: 30px;
-   background-size: cover;
-   background-repeat: no-repeat;
-   margin-right: 5px;
- }
- .user_row {
-   cursor: pointer;
- }
- .user_row:hover {
-   background-color: var(--NavigationBackColor);
-   color: var(--NavigationTextColor);
- }
- .options_table {
-   width: 100%;
- }
+<style>  
+  .user_bar__container_single {
+    height: 40px;
+  }
+
+  .user_bar__container_multi {
+    height: 30px;
+  }
+
+  .user_bar__container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .user_bar__image {
+    height: 30px;
+    width: 30px;
+    background-size: cover;
+    background-repeat: no-repeat;
+    margin-right: 5px;
+  }
+
+  .user_row {
+    cursor: pointer;
+  }
+
+  .user_row:hover {
+    background-color: var(--NavigationBackColor);
+    color: var(--NavigationTextColor);
+  }
+
+  .options_table {
+    width: 100%;
+  }
 </style>

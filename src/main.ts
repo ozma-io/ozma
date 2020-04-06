@@ -21,19 +21,19 @@ import stagingChangesModule from "@/state/staging_changes";
 import queryModule from "@/state/query";
 import errorsModule from "@/state/errors";
 
-import "@/styles/style.sass";
+import "@/styles/style.scss";
 
 export const store = new Vuex.Store({
-    // Big performance hog on dev!
-    // strict: process.env["NODE_ENV"] !== "production",
-    modules: {
-        auth: authModule,
-        settings: settingsModule,
-        userView: userViewModule,
-        staging: stagingChangesModule,
-        query: queryModule,
-        errors: errorsModule,
-    },
+  // Big performance hog on dev!
+  // strict: process.env["NODE_ENV"] !== "production",
+  modules: {
+    auth: authModule,
+    settings: settingsModule,
+    userView: userViewModule,
+    staging: stagingChangesModule,
+    query: queryModule,
+    errors: errorsModule,
+  },
 });
 
 Vue.component("UserView", UserView);
@@ -42,14 +42,14 @@ Vue.component("FormControl", FormControl);
 Vue.component("UserViewLink", UserViewLink);
 
 Modules.router.beforeResolve((to, from, next) => {
-    // Reset page title
-    setHeadTitle("FunApp");
-    next();
+  // Reset page title
+  setHeadTitle("FunApp");
+  next();
 });
 
 const app = new Vue({
-    router: Modules.router,
-    i18n: Modules.i18n,
-    store,
-    render: f => f(App),
+  router: Modules.router,
+  i18n: Modules.i18n,
+  store,
+  render: f => f(App),
 }).$mount("#app");

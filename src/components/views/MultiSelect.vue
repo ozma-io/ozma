@@ -10,61 +10,85 @@
 </i18n>
 
 <template>
-    <div fluid class="view-form">
-        <InputSlot>
-            <template v-slot:input>
-                <MultiSelect
-                    v-if="selectedValueIndex"
-                    :options="options || []"
-                    :value="selectValues"
-                    :emptyValue="[]"
-                    :disabled="disabled"
-                    @update:value="onSelectChange"
+  <div
+    fluid
+    class="view-form"
+  >
+    <InputSlot>
+      <template #input>
+        <MultiSelect
+          v-if="selectedValueIndex"
+          :options="options || []"
+          :value="selectValues"
+          :empty-value="[]"
+          :disabled="disabled"
+          @update:value="onSelectChange"
+        >
+          <template #label="select">
+            <span
+              v-for="(option, index) in select.valueOptions"
+              :key="option.value"
+              class="values_list__value"
+              :style="select.listValueStyle"
+              @click.stop
+            >
+              <UserViewLink
+                v-if="option.meta && option.meta.link"
+                :uv="option.meta.link"
+                @[indirectLinks?`click`:null]="$emit('goto', $event)"
+              >
+                {{ option.label }}
+              </UserViewLink>
+              <span v-else>
+                {{ option.label }}
+              </span>
+              <input
+                v-if="select.showValueRemove"
+                type="button"
+                class="material-icons values_list__value__close"
+                value="close"
+                @click="select.removeValue(index)"
+              >
+            </span>
+          </template>
+          <template #option="select">
+            <ul
+              ref="optionsList"
+              class="select_container__options_list"
+              :style="select.optionsListStyle"
+            >
+              <li
+                v-for="(option, index) in select.selectedOptions"
+                :key="option.value"
+                :class="[
+                  'select_container__options_list__option',
+                  {'select_container__options_list__option_active': select.selectedOption === index }
+                ]"
+                @click="select.addOptionToValue(option, $event)"
+              >
+                <UserViewLink
+                  v-if="option.meta && option.meta.link"
+                  :uv="option.meta.link"
+                  @[indirectLinks?`click`:null]="$emit('goto', $event)"
                 >
-                    <template v-slot:label="select">
-                        <span v-for="(option, index) in select.valueOptions"
-                            :key="option.value"
-                            class="values_list__value"
-                            :style="select.listValueStyle"
-                            @click.stop>
-                            <UserViewLink v-if="option.meta && option.meta.link"
-                                :uv="option.meta.link"
-                                @[indirectLinks?`click`:null]="$emit('goto', $event)">
-                                {{option.label}}
-                            </UserViewLink>
-                            <span v-else>
-                                {{option.label}}
-                            </span>
-                            <input v-if="select.showValueRemove" @click="select.removeValue(index)" type="button" class="material-icons values_list__value__close" value="close">
-                        </span>
-                    </template>
-                    <template v-slot:option="select">
-                        <ul class="select_container__options_list" :style="select.optionsListStyle" ref="optionsList">
-                            <li v-for="(option, index) in select.selectedOptions"
-                                :key="option.value"
-                                @click="select.addOptionToValue(option, $event)"
-                                :class="[
-                                    'select_container__options_list__option',
-                                    {'select_container__options_list__option_active': select.selectedOption === index }
-                                    ]">
-                                <UserViewLink v-if="option.meta && option.meta.link"
-                                    :uv="option.meta.link"
-                                    @[indirectLinks?`click`:null]="$emit('goto', $event)">
-                                    {{option.label}}
-                                </UserViewLink>
-                                <span v-else>
-                                    {{option.label}}
-                                </span>
-                            </li>
-                        </ul>
-                    </template>
-                </MultiSelect>
-            </template>
-        </InputSlot>
-        <div v-if="!selectedValueIndex" style="color: red;">
-            {{$t('no_select_column')}}
-        </div>
+                  {{ option.label }}
+                </UserViewLink>
+                <span v-else>
+                  {{ option.label }}
+                </span>
+              </li>
+            </ul>
+          </template>
+        </MultiSelect>
+      </template>
+    </InputSlot>
+    <div
+      v-if="!selectedValueIndex"
+      style="color: red;"
+    >
+      {{ $t('no_select_column') }}
     </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -88,119 +112,119 @@ import MultiSelect from "@/components/multiselect/MultiSelect.vue";
 import { IAction } from "@/components/ActionsMenu.vue";
 
 const findSelectColumnIndex = (attrs: { [key: string]: any}) =>
-    Number(Object.keys(attrs).filter(key => R.pathOr(false, [key, "Select"], attrs))[0]);
+  Number(Object.keys(attrs).filter(key => R.pathOr(false, [key, "Select"], attrs))[0]);
 
 interface IValueDelta {
-    rowsToRemove: RowRef[];
-    rowsToAdd: IValueDeltaNew[];
+  rowsToRemove: RowRef[];
+  rowsToAdd: IValueDeltaNew[];
 }
 
-interface IValueDeltaNew { ref: ValueRef; value: number; }
+interface IValueDeltaNew { ref: ValueRef; value: number }
 
 const findValueDelta = (rows: ICombinedRow[], newRows: Record<number, IRowCommon>, value: any[], indexColumn: number): IValueDelta => {
-    const storeValues: Record<string, RowRef> = {};
-    rows.forEach((row, index) => {
-        storeValues[row.values[indexColumn].value] = { type: "existing", position: index };
-    });
-    Object.entries(newRows).forEach(([rowId, row]) => {
-        storeValues[row.values[indexColumn].value] = { type: "added", id: Number(rowId) };
-    });
-    const selectValues: Record<string, IValueDeltaNew>  = value.reduce((acc, vl) => {
-        return { ...acc, [vl]: { ref: { column: indexColumn, type: "new" }, value: vl } };
-    }, {});
+  const storeValues: Record<string, RowRef> = {};
+  rows.forEach((row, index) => {
+    storeValues[row.values[indexColumn].value] = { type: "existing", position: index };
+  });
+  Object.entries(newRows).forEach(([rowId, row]) => {
+    storeValues[row.values[indexColumn].value] = { type: "added", id: Number(rowId) };
+  });
+  const selectValues: Record<string, IValueDeltaNew>  = value.reduce((acc, vl) => {
+    return { ...acc, [vl]: { ref: { column: indexColumn, type: "new" }, value: vl } };
+  }, {});
 
-    const rowsToAdd = mapMaybe(([id, ref]) => {
-        if (id in storeValues) {
-            return undefined;
-        }
-        return ref;
-    }, Object.entries(selectValues));
-    const rowsToRemove = mapMaybe(([id, ref]) => {
-        if (id in selectValues) {
-            return undefined;
-        }
-        return ref;
-    }, Object.entries(storeValues));
-    return {
-        rowsToAdd,
-        rowsToRemove,
-    };
+  const rowsToAdd = mapMaybe(([id, ref]) => {
+    if (id in storeValues) {
+      return undefined;
+    }
+    return ref;
+  }, Object.entries(selectValues));
+  const rowsToRemove = mapMaybe(([id, ref]) => {
+    if (id in selectValues) {
+      return undefined;
+    }
+    return ref;
+  }, Object.entries(storeValues));
+  return {
+    rowsToAdd,
+    rowsToRemove,
+  };
 };
 
 @UserView({
-    localConstructor: LocalEmptyUserView,
+  localConstructor: LocalEmptyUserView,
 })
 @Component({
-    components: {
-        MultiSelect, InputSlot,
-    },
+  components: {
+    MultiSelect, InputSlot,
+  },
 })
 export default class UserViewMultiselect extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>, BaseEntriesView>(BaseUserView, BaseEntriesView) {
-    get entriesEntity() {
-        const mainField = this.uv.info.columns[this.selectedValueIndex].mainField;
-        if (mainField) {
-            const fieldType = mainField.field.fieldType;
-            if (fieldType.type === "reference") {
-                return fieldType;
-            }
-        }
-        return null;
+  get entriesEntity() {
+    const mainField = this.uv.info.columns[this.selectedValueIndex].mainField;
+    if (mainField) {
+      const fieldType = mainField.field.fieldType;
+      if (fieldType.type === "reference") {
+        return fieldType;
+      }
     }
+    return null;
+  }
 
-    private get selectedValueIndex() {
-        return findSelectColumnIndex(this.uv.columnAttributes);
-    }
+  private get selectedValueIndex() {
+    return findSelectColumnIndex(this.uv.columnAttributes);
+  }
 
-    private onSelectChange(value: any[]) {
-        if (this.uv.rows) {
-            const delta = findValueDelta(this.uv.rows, this.uv.newRows, value, this.selectedValueIndex);
-            delta.rowsToRemove.forEach(row => {
-                this.deleteRow(row);
-            });
-            delta.rowsToAdd.forEach(row => {
-                this.updateValue(row.ref, row.value);
-            });
-        }
+  private onSelectChange(value: any[]) {
+    if (this.uv.rows) {
+      const delta = findValueDelta(this.uv.rows, this.uv.newRows, value, this.selectedValueIndex);
+      delta.rowsToRemove.forEach(row => {
+        this.deleteRow(row);
+      });
+      delta.rowsToAdd.forEach(row => {
+        this.updateValue(row.ref, row.value);
+      });
     }
+  }
 
-    private get selectValues() {
-        const existingValues = this.uv.rows ? this.uv.rows.filter(row => !row.deleted)
-                                   .map(row => row.values[this.selectedValueIndex].value) : [];
-        const addedValues = Object.values(this.uv.newRows)
-                                  .map(row => row.values[this.selectedValueIndex].value);
-        return [...existingValues, ...addedValues];
-    }
+  private get selectValues() {
+    const existingValues = this.uv.rows ? this.uv.rows.filter(row => !row.deleted)
+      .map(row => row.values[this.selectedValueIndex].value) : [];
+    const addedValues = Object.values(this.uv.newRows)
+      .map(row => row.values[this.selectedValueIndex].value);
+    return [...existingValues, ...addedValues];
+  }
 
-    private get options() {
-        const entity = this.entriesEntity;
-        const linkedView = R.pathOr(
-            null, [this.selectedValueIndex, "RowLinkedView"], this.uv.columnAttributes,
-        );
-        if (entity) {
-            const entries = this.entriesMap.getEntries(entity);
-            if (entries) {
-                const options = Object.entries(entries).map(([key, value]) => ({
-                    value: Number(key),
-                    label: value,
-                    meta: {
-                        link: attrToQueryRef(linkedView, Number(key)),
-                    },
-                }));
-                return options;
-            }
-        }
-        return null;
+  private get options() {
+    const entity = this.entriesEntity;
+    const linkedView = R.pathOr(
+      null, [this.selectedValueIndex, "RowLinkedView"], this.uv.columnAttributes,
+    );
+    if (entity) {
+      const entries = this.entriesMap.getEntries(entity);
+      if (entries) {
+        const options = Object.entries(entries).map(([key, value]) => ({
+          value: Number(key),
+          label: value,
+          meta: {
+            link: attrToQueryRef(linkedView, Number(key)),
+          },
+        }));
+        return options;
+      }
     }
+    return null;
+  }
 
-    private get disabled() {
-        return !this.uv.info.mainEntity || this.addedLocked || this.options === null;
-    }
+  private get disabled() {
+    return !this.uv.info.mainEntity || this.addedLocked || this.options === null;
+  }
 }
 </script>
-<style scoped>
- .values_list__value > a,
- .select_container__options_list__option > a {
-     color: var(--MainTextColor);
-     text-decoration: underline;
- }
+<style scoped>  
+  .values_list__value > a,
+  .select_container__options_list__option > a {
+    color: var(--MainTextColor);
+    text-decoration: underline;
+  }
 </style>

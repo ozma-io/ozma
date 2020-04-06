@@ -4,6 +4,6 @@ import { Portal } from "portal-vue";
 
 @Component
 export default class ModalPortal extends mixins(Portal) {
-    @Prop({ type: String }) tabName!: string;
-    @Prop({ type: Number }) order!: number;
+  @Prop({ type: String }) tabName!: string;
+  @Prop({ type: Number }) order!: number;
 }

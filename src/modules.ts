@@ -32,50 +32,50 @@ Vue.use(FragmentPlugin);
 Vue.use(VueJSModal, { componentName: "VueModal" });
 
 const routes = [
-    { path: "/", name: "main", redirect: { name: "view", params: { schema: "user", name: "Main" } } },
-    { path: "/views/:schema/:name", name: "view", component: RootUserView },
-    { path: "/views/:schema/:name/new", name: "view_create", component: RootUserView },
-    { path: "/auth_response", name: "auth_response", component: AuthResponse },
-    { path: "/save_restore", name: "save_restore", component: SaveRestoreSchema },
-    { path: "*", component: NotFound },
+  { path: "/", name: "main", redirect: { name: "view", params: { schema: "user", name: "Main" } } },
+  { path: "/views/:schema/:name", name: "view", component: RootUserView },
+  { path: "/views/:schema/:name/new", name: "view_create", component: RootUserView },
+  { path: "/auth_response", name: "auth_response", component: AuthResponse },
+  { path: "/save_restore", name: "save_restore", component: SaveRestoreSchema },
+  { path: "*", component: NotFound },
 ];
 
 const globalMessages = {
-    "en": {
-        "confirm_close": "You have unsaved changes, do you want to discard them?",
-    },
-    "ru": {
-        "confirm_close": "У вас есть несохранённые изменения, отбросить их?",
-    },
+  "en": {
+    "confirm_close": "You have unsaved changes, do you want to discard them?",
+  },
+  "ru": {
+    "confirm_close": "У вас есть несохранённые изменения, отбросить их?",
+  },
 };
 
 export const router = new VueRouter({
-    mode: "history",
-    routes,
+  mode: "history",
+  routes,
 });
 
 export const i18n = new VueI18n({
-    locale: Utils.shortLanguage,
-    messages: globalMessages,
+  locale: Utils.shortLanguage,
+  messages: globalMessages,
 });
 
 export type RouterQueryValues = string | (string | null)[];
 export type RouterQuery = Dictionary<RouterQueryValues>;
 
 export const routerQueryValue = (values: RouterQueryValues): string | null => {
-    // Array is always non-empty
-    return Array.isArray(values) ? values[values.length - 1] : values;
+  // Array is always non-empty
+  return Array.isArray(values) ? values[values.length - 1] : values;
 };
 
 export const asyncPush = async (location: RawLocation) => new Promise((resolve, reject) => {
-    router.push(location, resolve, reject);
+  router.push(location, resolve, reject);
 });
 
 export const getQueryValue = (name: string) => {
-    const value = router.currentRoute.query[name];
-    if (value === undefined) {
-        return null;
-    } else {
-        return routerQueryValue(value);
-    }
+  const value = router.currentRoute.query[name];
+  if (value === undefined) {
+    return null;
+  } else {
+    return routerQueryValue(value);
+  }
 };

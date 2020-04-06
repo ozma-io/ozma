@@ -1,10 +1,11 @@
 <template>
-    <MonacoEditor
-        :value="content"
-        @change="onChange"
-        @focus="$emit('focus', $event)"
-        @editorDidMount="onEditorMounted"
-        :options="options" />
+  <MonacoEditor
+    :value="content"
+    :options="options"
+    @change="onChange"
+    @focus="$emit('focus', $event)"
+    @editorDidMount="onEditorMounted"
+  />
 </template>
 
 <script lang="ts">
@@ -18,27 +19,27 @@ import MonacoEditor from "vue-monaco";
 
 @Component({ components: { MonacoEditor } })
 export default class CodeEditor extends Vue {
-    @Prop({ default: "" }) content!: string;
-    @Prop({ default: "sql", type: String }) mode!: string;
-    @Prop({ default: "" }) theme!: string;
-    @Prop({ default: false }) readOnly!: boolean;
-    @Prop({ default: false }) autofocus!: boolean;
+  @Prop({ default: "" }) content!: string;
+  @Prop({ default: "sql", type: String }) mode!: string;
+  @Prop({ default: "" }) theme!: string;
+  @Prop({ default: false }) readOnly!: boolean;
+  @Prop({ default: false }) autofocus!: boolean;
 
-    get options() {
-        return {
-            language: this.mode,
-            readOnly: this.readOnly,
-        };
-    }
+  get options() {
+    return {
+      language: this.mode,
+      readOnly: this.readOnly,
+    };
+  }
 
-    private onEditorMounted(editor: any) {
-        if (this.autofocus) {
-            editor.focus();
-        }
+  private onEditorMounted(editor: any) {
+    if (this.autofocus) {
+      editor.focus();
     }
+  }
 
-    private onChange(value: string) {
-        this.$emit("update:content", value);
-    }
+  private onChange(value: string) {
+    this.$emit("update:content", value);
+  }
 }
 </script>

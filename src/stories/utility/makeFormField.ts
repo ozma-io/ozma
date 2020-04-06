@@ -4,7 +4,10 @@ export default function makeFormField(Component: any, componentName: string) {
   return (
     Vue.component("FormField", {
       components: {[componentName]: Component},
-      props: ["bindProps", "value"],
+      props: {
+        bindProps: { type: Object, required: true },
+        value: { type: Object, required: true },
+      },
       data() {
         return {
           stateValue: this.value,

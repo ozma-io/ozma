@@ -116,61 +116,61 @@ storiesOf("MultiSelect", module)
     };
   })
   .add("Single with boolean value", () => {
-      const FormField = makeFormControl(MultiSelect, "MultiSelect");
-      return {
-          props: {
-              value: {
-                  type: Array,
-                  default: false,
-              },
-              style: {
-                  type: Object,
-                  default: { width: text("Width of input field", "600px") },
-              },
-              bindProps: {
-                  type: Object,
-                  default: {
-                      options: [{ value: false, label: "Нет" }, { value: true, label: "Да" }],
-                      height:  number("Height (as passed in field options)", 0),
-                      single: true,
-                      disabled:  boolean("Disable", false),
-                      required:  boolean("Required", false),
-                  },
-              },
+    const FormField = makeFormControl(MultiSelect, "MultiSelect");
+    return {
+      props: {
+        value: {
+          type: Array,
+          default: false,
+        },
+        style: {
+          type: Object,
+          default: { width: text("Width of input field", "600px") },
+        },
+        bindProps: {
+          type: Object,
+          default: {
+            options: [{ value: false, label: "Нет" }, { value: true, label: "Да" }],
+            height:  number("Height (as passed in field options)", 0),
+            single: true,
+            disabled:  boolean("Disable", false),
+            required:  boolean("Required", false),
           },
-          components: { FormField },
-          template: "<div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div>",
-      };
+        },
+      },
+      components: { FormField },
+      template: "<div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div>",
+    };
   })
   .add("Empty Option", () => {
-      const FormField = makeFormControl(MultiSelect, "MultiSelect");
-      const noValueOptions = [{ value: "raw_value", label: "" }, { value: 6 }, { value: "has_label", label: "This one has label" }];
-      return {
-          props: {
-              value: {
-                  type: Array,
-                  default: null,
-              },
-              style: {
-                  type: Object,
-                  default: { width: text("Width of input field", "600px") },
-              },
-              noValueOptions: {
-                  type: Object,
-                  default: JSON.stringify(noValueOptions),
-              },
-              bindProps: {
-                  type: Object,
-                  default: {
-                      options: noValueOptions,
-                      height:  number("Height (as passed in field options)", 0),
-                      single: true,
-                      disabled:  boolean("Disable", false),
-                      required:  boolean("Required", false),
-                  },
-              },
+    const FormField = makeFormControl(MultiSelect, "MultiSelect");
+    const noValueOptions = [{ value: "raw_value", label: "" }, { value: 6 }, { value: "has_label", label: "This one has label" }];
+    return {
+      props: {
+        value: {
+          type: Array,
+          default: null,
+        },
+        style: {
+          type: Object,
+          default: { width: text("Width of input field", "600px") },
+        },
+        noValueOptions: {
+          type: Object,
+          default: JSON.stringify(noValueOptions),
+        },
+        bindProps: {
+          type: Object,
+          default: {
+            options: noValueOptions,
+            height:  number("Height (as passed in field options)", 0),
+            single: true,
+            disabled:  boolean("Disable", false),
+            required:  boolean("Required", false),
           },
-          components: { FormField },
-        template: "<div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div>",
-      };
+        },
+      },
+      components: { FormField },
+      template: "<div :style=\"style\"><FormField :bindProps=\"bindProps\" :value=\"value\" /></div>",
+    };
   });

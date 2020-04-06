@@ -12,25 +12,37 @@
 </i18n>
 
 <template>
-    <ModalPortal to="tabbed-modal" :tabName="title" @close="$emit('close')">
-        <section class="section-modal">
-            <UserView
-                :args="currentView.args"
-                :defaultValues="currentView.defaultValues"
-                :selectionMode="selectEntity !== undefined"
-                indirectLinks
-                :scope="uid"
-                @update:actions="extraActions = $event"
-                @update:title="title = $event"
-                @goto="goto"
-                @select="selectFromView" />
-            <div v-if="!changes.isScopeEmpty(uid)" class="selection_view_save__container">
-                <button type="button" class="selection_view_save__button" @click="this.saveView">
-                    {{ $t(saveAndSelect ? 'save_and_select_scoped' : 'save_scoped') }}
-                </button>
-            </div>
-        </section>
-    </ModalPortal>
+  <ModalPortal
+    to="tabbed-modal"
+    :tab-name="title"
+    @close="$emit('close')"
+  >
+    <section class="section-modal">
+      <UserView
+        :args="currentView.args"
+        :default-values="currentView.defaultValues"
+        :selection-mode="selectEntity !== undefined"
+        indirect-links
+        :scope="uid"
+        @update:actions="extraActions = $event"
+        @update:title="title = $event"
+        @goto="goto"
+        @select="selectFromView"
+      />
+      <div
+        v-if="!changes.isScopeEmpty(uid)"
+        class="selection_view_save__container"
+      >
+        <button
+          type="button"
+          class="selection_view_save__button"
+          @click="saveView"
+        >
+          {{ $t(saveAndSelect ? 'save_and_select_scoped' : 'save_scoped') }}
+        </button>
+      </div>
+    </section>
+  </ModalPortal>
 </template>
 
 <script lang="ts">
@@ -54,88 +66,91 @@ const errorKey = "modal_user_view";
 
 @Component({ components: { ModalPortal }})
 export default class ModalUserView extends Vue {
-    @staging.State("current") changes!: CurrentChanges;
-    @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
-    @staging.Action("removeScope") removeScope!: (scope: ScopeName) => Promise<void>;
-    @userView.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
-    @errors.Mutation("setError") setError!: (args: { key: ErrorKey, error: string }) => void;
-    @errors.Mutation("resetErrors") resetErrors!: (key: ErrorKey) => void;
-    @Prop({ type: Object }) selectEntity!: IEntityRef | undefined;
-    @Prop({ type: Object, required: true }) initialView!: IQuery;
+  @staging.State("current") changes!: CurrentChanges;
+  @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
+  @staging.Action("removeScope") removeScope!: (scope: ScopeName) => Promise<void>;
+  @userView.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
+  @errors.Mutation("setError") setError!: (args: { key: ErrorKey; error: string }) => void;
+  @errors.Mutation("resetErrors") resetErrors!: (key: ErrorKey) => void;
+  @Prop({ type: Object }) selectEntity!: IEntityRef | undefined;
+  @Prop({ type: Object, required: true }) initialView!: IQuery;
 
-    private extraActions: IAction[] = [];
-    private currentView: IQuery = this.initialView;
-    private title: string = "";
+  private extraActions: IAction[] = [];
+  private currentView: IQuery = this.initialView;
+  private title = "";
 
-    get actions() {
-        return this.extraActions.map(action => {
-            if ("query" in action) {
-                return { name: action.name, callback: () => this.goto(action.query) };
-            } else {
-                return action;
-            }
-        });
+  get actions() {
+    return this.extraActions.map(action => {
+      if ("query" in action) {
+        return { name: action.name, callback: () => this.goto(action.query) };
+      } else {
+        return action;
+      }
+    });
+  }
+
+  get saveAndSelect() {
+    return this.currentView.args.args === null;
+  }
+
+  private saveView() {
+    this.submitChanges(this.uid);
+  }
+
+  private async selectFromView(selection: ISelectionRef) {
+    if (this.selectEntity === undefined) {
+      throw new Error("Impossible");
     }
 
-    get saveAndSelect() {
-        return this.currentView.args.args === null;
+    const entityInfo = await this.getEntity(this.selectEntity);
+    if (!(equalEntityRef(this.selectEntity, selection.entity) || entityInfo.children.some(x => equalEntityRef(x.ref, selection.entity)))) {
+      const message = "Entry from invalid entity selected";
+      this.setError({ key: errorKey, error: message });
+      throw new Error(message);
+    } else {
+      this.resetErrors(errorKey);
     }
 
-    private saveView() {
-        this.submitChanges(this.uid);
-    }
+    this.$emit("select", selection.id);
+  }
 
-    private async selectFromView(selection: ISelectionRef) {
-        if (this.selectEntity === undefined) {
-            throw new Error("Impossible");
-        }
+  @Watch("actions", { deep: true, immediate: true })
+  private pushActions() {
+    this.$emit("update:actions", this.actions);
+  }
 
-        const entityInfo = await this.getEntity(this.selectEntity);
-        if (!(equalEntityRef(this.selectEntity, selection.entity) || entityInfo.children.some(x => equalEntityRef(x.ref, selection.entity)))) {
-            const message = "Entry from invalid entity selected";
-            this.setError({ key: errorKey, error: message });
-            throw new Error(message);
-        } else {
-            this.resetErrors(errorKey);
-        }
+  private destroyed() {
+    this.resetErrors(errorKey);
+    this.removeScope(this.uid);
+  }
 
-        this.$emit("select", selection.id);
-    }
-
-    @Watch("actions", { deep: true, immediate: true })
-    private pushActions() {
-        this.$emit("update:actions", this.actions);
-    }
-
-    private destroyed() {
-        this.resetErrors(errorKey);
-        this.removeScope(this.uid);
-    }
-
-    private goto(query: IQuery) {
-        this.currentView = query;
-    }
+  private goto(query: IQuery) {
+    this.currentView = query;
+  }
 }
 </script>
 
-<style>
- .selection_view_save__container {
-     width: 100%;
-     display: flex;
-     justify-content: flex-end;
-     position: sticky;
- }
- .section-modal {
-     height: 100%;
- }
- .selection_view_save__button {
-     border: var(--MainBorderColor) 1px solid !important;
-     color: var(--MainTextColor);
-     background-color: var(--MainBackgroundColor);
- }
- @media screen and (min-width: 480px) {
-     .selection_view_save__container {
-         bottom: 25px;
-     }
- }
+<style>  
+  .selection_view_save__container {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    position: sticky;
+  }
+
+  .section-modal {
+    height: 100%;
+  }
+
+  .selection_view_save__button {
+    border: var(--MainBorderColor) 1px solid !important;
+    color: var(--MainTextColor);
+    background-color: var(--MainBackgroundColor);
+  }
+
+  @media screen and (min-width: 480px) {
+    .selection_view_save__container {
+      bottom: 25px;
+    }
+  }
 </style>

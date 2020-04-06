@@ -10,9 +10,9 @@
 </i18n>
 
 <template>
-    <p>
-        {{ $t('in_progress') }}
-    </p>
+  <p>
+    {{ $t('in_progress') }}
+  </p>
 </template>
 
 <script lang="ts">
