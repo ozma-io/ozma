@@ -115,9 +115,11 @@
               </span>
             </th>
             <th
-              v-for="i in columnIndexes"
+              v-for="(i, index) in columnIndexes"
               :key="i"
-              :class="['sorting', 'table-th', { 'fixed-column' : local.extra.columns[i].fixed, 'td-moz': isFirefoxBrowser }]"
+              :class="['sorting', 'table-th', { 'fixed-column' : local.extra.columns[i].fixed,
+              'th_after-last-fixed': fixedRowColumnIndexes.length === index,
+              'td-moz': isFirefoxBrowser }]"
               :style="local.extra.columns[i].style"
               :title="local.extra.columns[i].caption"
               @click="updateSort(i)"
@@ -1334,16 +1336,17 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   .table-head {
-    height: 50px;
+    height: 35px;
   }
 
   .table-th {
+    height: 35px;
     border: 0;
     font-weight: normal;
     max-width: 50px !important;
     overflow: hidden;
     white-space: nowrap;
-    padding: 8px !important;
+    padding: 0 5px;
     box-shadow: 0 2px 0 var(--MainBorderColor);
     text-overflow: ellipsis;
     position: sticky; /* фиксация шапки при скроле */
@@ -1370,6 +1373,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   th.fixed-column {
     z-index: 25; /* поверх обычных столбцов */
     box-shadow: 2px 2px 0 var(--MainBorderColor);
+  }
+
+  th.th_after-last-fixed {
+    padding-left: 7px;
   }
 
   th.tabl_heading {
