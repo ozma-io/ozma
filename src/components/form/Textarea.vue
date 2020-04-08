@@ -88,6 +88,10 @@ export default class Textarea extends Vue {
   }
 
   private onFocus(evt: HTMLInputElement) {
+    const controlElement = this.$refs.control as HTMLTextAreaElement | undefined;
+    if (controlElement) {
+      controlElement.selectionStart = this.value.length;
+    } 
     if (!this.isMobile) {
       this.positionField();
       this.focused = true;
