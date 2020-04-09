@@ -13,6 +13,7 @@
       <span class="column_controls">
         <i
           class="material-icons card_open_icon"
+          style="font-size: 20px;"
           @click="openModal"
         >add</i>
         <!-- i class="material-icons card_open_icon">more_vert</i -->
@@ -161,7 +162,7 @@ export default class Column extends Vue {
 }
 </script>
 
-<style scoped>  
+<style scoped>
   .column_container {
     color: var(--MainTextColor);
     border: 1px solid var(--MainBorderColor);

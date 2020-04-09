@@ -192,7 +192,7 @@ export default class ActionsMenu extends Vue {
     text-align: left;
     padding: 0;
     line-height: normal;
-    font-size: 24px;
+    font-size: 20px;
     margin-right: 10px;
     vertical-align: bottom;
     height: 1.25em;
