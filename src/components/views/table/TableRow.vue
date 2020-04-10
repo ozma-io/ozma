@@ -139,6 +139,7 @@ export default class TableRow extends Vue {
     border-right: 1px solid var(--MainBorderColor);
     padding: 5px !important;
     vertical-align: top;
+    height: 35px;
   }
 
   .table-tr-new > td {
