@@ -59,11 +59,9 @@ const convertArray = (entryType: FieldType, value: any[]): any[] | undefined => 
 export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, value: any): any => {
   if (valueIsNull(value)) {
     return isNullable ? null : undefined;
-  } else if (fieldType.type === "string") {
+  } else if (fieldType.type === "string" || fieldType.type === "enum" || fieldType.type === "interval") {
     // Remove whitespaces
     return typeof value === "string" ? value.trim() : undefined;
-  } else if (fieldType.type === "enum") {
-    return typeof value === "string" ? value : undefined;
   } else if (fieldType.type === "bool") {
     if (typeof value === "boolean") {
       return value;

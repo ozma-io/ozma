@@ -60,7 +60,7 @@ export interface IUserViewRef {
   name: UserViewName;
 }
 
-export type SimpleType = "int" | "decimal" | "string" | "bool" | "datetime" | "date" | "regclass" | "json";
+export type SimpleType = "int" | "decimal" | "string" | "bool" | "datetime" | "date" | "interval" | "regclass" | "json";
 
 export interface IScalarSimpleType {
   type: SimpleType;
@@ -73,7 +73,7 @@ export interface IArraySimpleType {
 
 export type ValueType = IScalarSimpleType | IArraySimpleType;
 
-export type FieldValueType = "int" | "decimal" | "string" | "bool" | "datetime" | "date" | "json";
+export type FieldValueType = "int" | "decimal" | "string" | "bool" | "datetime" | "date" | "interval" | "json";
 
 export type AttributesMap = Record<AttributeName, any>;
 export type AttributeTypesMap = Record<AttributeName, ValueType>;

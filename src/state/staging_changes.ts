@@ -258,17 +258,18 @@ const checkCounters = async (context: ActionContext<IStagingState, {}>) => {
   }
 };
 
-const changeToParam = (name: FieldName, change: IUpdatedValue): any => {
+const changeToParam = (fieldInfo: Api.IColumnField, name: FieldName, change: IUpdatedValue): any => {
   if (change.value === undefined) {
     throw new Error(`Value for ${name} didn't pass validation`);
   }
-  let arg;
-  if (change.value instanceof moment) {
-    arg = (change.value as Moment).toISOString();
+
+  if (fieldInfo.valueType.type === "date") {
+    return (change.value as Moment).format("YYYY-MM-DD");
+  } else if (fieldInfo.valueType.type === "datetime") {
+    return (change.value as Moment).format(); // ISO 8601
   } else {
-    arg = change.value;
+    return change.value;
   }
-  return arg;
 };
 
 const validateValue = (info: IFieldInfo, value: any): IUpdatedValue => {
@@ -651,62 +652,65 @@ const stagingModule: Module<IStagingState, {}> = {
 
       commit("errors/resetErrors", errorKey, { root: true });
       commit("validate");
-      const ops = Object.entries(state.current.changes).flatMap(([schemaName, entities]) => {
-        return Object.entries(entities).flatMap(([entityName, entityChanges]) => {
+      const nestedOps = await Promise.all(Object.entries(state.current.changes).map(async ([schemaName, entities]) => {
+        const ret = await Promise.all(Object.entries(entities).map(async ([entityName, entityChanges]) => {
           try {
             const entity = {
               schema: schemaName,
               name: entityName,
             };
+            const entityInfo = await getEntityInfo(context, entity);
             const updated =
-                            mapMaybe(([updatedIdStr, updatedFields]) => {
-                              const entries =
-                                    mapMaybe(([name, change]) => (scope && !(scope in change.scopes)) ? undefined : [name, changeToParam(name, change)],
-                                      Object.entries(updatedFields));
-                              if (entries.length === 0) {
-                                return undefined;
-                              } else {
-                                return {
-                                  type: "update",
-                                  entity,
-                                  id: Number(updatedIdStr),
-                                  entries: Object.fromEntries(entries),
-                                } as Api.TransactionOp;
-                              }
-                            }, Object.entries(entityChanges.updated));
+              mapMaybe(([updatedIdStr, updatedFields]) => {
+                const entries =
+                      mapMaybe(([name, change]) => (scope && !(scope in change.scopes)) ? undefined : [name, changeToParam(entityInfo.columnFields[name], name, change)],
+                        Object.entries(updatedFields));
+                if (entries.length === 0) {
+                  return undefined;
+                } else {
+                  return {
+                    type: "update",
+                    entity,
+                    id: Number(updatedIdStr),
+                    entries: Object.fromEntries(entries),
+                  } as Api.TransactionOp;
+                }
+              }, Object.entries(entityChanges.updated));
             const added =
-                            Object.values(entityChanges.added).flatMap(uvAdded => mapMaybe(addedFields => {
-                              if (scope && !(scope in addedFields.scopes)) {
-                                return undefined;
-                              } else {
-                                const entries = Object.entries(addedFields.values).map(([name, value]) => [name, changeToParam(name, value)]);
-                                return {
-                                  type: "insert",
-                                  entity,
-                                  entries: Object.fromEntries(entries),
-                                } as Api.TransactionOp;
-                              }
-                            }, Object.values(uvAdded.entries)));
+              Object.values(entityChanges.added).flatMap(uvAdded => mapMaybe(addedFields => {
+                if (scope && !(scope in addedFields.scopes)) {
+                  return undefined;
+                } else {
+                  const entries = Object.entries(addedFields.values).map(([name, value]) => [name, changeToParam(entityInfo.columnFields[name], name, value)]);
+                  return {
+                    type: "insert",
+                    entity,
+                    entries: Object.fromEntries(entries),
+                  } as Api.TransactionOp;
+                }
+              }, Object.values(uvAdded.entries)));
             const deleted =
-                            mapMaybe(([deletedIdStr, deletedEntry]) => {
-                              if (scope && !(scope in deletedEntry.scopes)) {
-                                return undefined;
-                              } else {
-                                return {
-                                  type: "delete",
-                                  entity,
-                                  id: Number(deletedIdStr),
-                                } as Api.TransactionOp;
-                              }
-                            }, Object.entries(entityChanges.deleted));
+              mapMaybe(([deletedIdStr, deletedEntry]) => {
+                if (scope && !(scope in deletedEntry.scopes)) {
+                  return undefined;
+                } else {
+                  return {
+                    type: "delete",
+                    entity,
+                    id: Number(deletedIdStr),
+                  } as Api.TransactionOp;
+                }
+              }, Object.entries(entityChanges.deleted));
             return [...updated, ...added, ...deleted];
           } catch (e) {
             commit("errors/pushError", { key: errorKey, error: `Invalid value for ${schemaName}.${entityName}: ${e.message}` }, { root: true });
             dispatch("userView/updateErroredOnce", undefined, { root: true });
             throw e;
           }
-        });
-      });
+        }));
+        return ret.flat(1);
+      }));
+      const ops = nestedOps.flat(1);
       if (ops.length === 0) {
         return [];
       }
