@@ -92,11 +92,11 @@
           >
             <i
               v-if="!isShownSearchField"
-              class="material-icons"
+              class="material-icons search-button__icon"
             >search</i>
             <i
               v-else
-              class="material-icons"
+              class="material-icons search-button__icon"
             >close</i>
           </button>
         </div>
@@ -497,6 +497,7 @@ export default class RootUserView extends Vue {
     line-height: normal;
     border: none;
     text-decoration: none;
+    font-size: 20px;
     padding: 0;
     margin-right: 10px;
     z-index: 1000;
@@ -616,8 +617,12 @@ export default class RootUserView extends Vue {
   .search-button {
     padding: 0;
     background: transparent;
-    height: 24px;
+    height: 20px;
     outline: none;
+  }
+
+  .search-button__icon {
+    font-size: 20px;
   }
 
   .save_button > input {

@@ -104,10 +104,12 @@
               >
                 <i
                   v-if="showEmptyRow"
+                  style="font-size: 20px;"
                   class="material-icons md-24"
                 >remove</i>
                 <i
                   v-else
+                  style="font-size: 20px;"
                   class="material-icons md-24"
                 >add</i>
               </span>
@@ -1538,8 +1540,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   .checkbox-cells,
   .openform-cells {
-    height: 50px;
-    width: 50px;
+    height: 35px;
+    width: 35px;
+    max-width: 35px !important;
     padding: 0 !important;
   }
 

@@ -31,7 +31,7 @@
         class="icon-link"
         @[indirectLinks?`click`:null]="$emit('goto', $event)"
       >
-        <i class="material-icons md-24">open_in_new</i>
+        <i class="material-icons opemform-cells__icon">open_in_new</i>
       </UserViewLink>
     </td>
     <TableCell
@@ -99,8 +99,8 @@ export default class TableRow extends Vue {
 
   .icon-link {
     display: block;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     margin: 0 auto;
     overflow-y: visible;
   }
@@ -128,6 +128,10 @@ export default class TableRow extends Vue {
   .editing_style {
     z-index: 200 !important; /* чтобы FormControl(расположен в ячейке) отображался поверх таблицы */
     overflow: visible !important;
+  }
+
+  .opemform-cells__icon {
+    font-size: 20px;
   }
 
   td {
