@@ -91,7 +91,7 @@ export default class Textarea extends Vue {
     const controlElement = this.$refs.control as HTMLTextAreaElement | undefined;
     if (controlElement) {
       controlElement.selectionStart = this.value.length;
-    } 
+    }
     if (!this.isMobile) {
       this.positionField();
       this.focused = true;
@@ -144,11 +144,13 @@ export default class Textarea extends Vue {
 
   .input_label {
     color: var(--MainTextColorLight);
+    opacity: 0.7;
   }
 
   .textarea_label {
     align-self: flex-start;
     margin-right: 15px;
+    opacity: 0.7;
   }
 
   .textarea_field {
