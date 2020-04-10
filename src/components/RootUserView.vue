@@ -363,7 +363,7 @@ export default class RootUserView extends Vue {
 
   private goto(newQuery: IQuery) {
     const location = queryLocation(newQuery);
-    this.$router.push(location);
+    this.$router.replace(location);
   }
 
   get uv() {
