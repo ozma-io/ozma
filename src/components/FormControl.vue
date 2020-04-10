@@ -518,6 +518,7 @@ export default class FormControl extends Vue {
     white-space: pre;
     cursor: question;
     width: 100%;
+    opacity: 0.7;
     color: var(--MainTextColorLight);
   }
 

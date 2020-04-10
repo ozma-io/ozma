@@ -171,6 +171,7 @@ export default class Input extends Vue {
     flex-direction: column;
     color: var(--MainTextColor);
     width: 100%;
+    opacity: 0.7;
     padding-left: 15px;
   }
 
@@ -189,6 +190,7 @@ export default class Input extends Vue {
     margin-bottom: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    opacity: 0.7;
     white-space: pre;
     cursor: question;
     color: var(--MainTextColorLight);

@@ -1337,7 +1337,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   .table-th {
     border: 0;
-    font-weight: bold;
+    font-weight: normal;
     max-width: 50px !important;
     overflow: hidden;
     white-space: nowrap;
