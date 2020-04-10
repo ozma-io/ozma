@@ -117,9 +117,11 @@
             <th
               v-for="(i, index) in columnIndexes"
               :key="i"
-              :class="['sorting', 'table-th', { 'fixed-column' : local.extra.columns[i].fixed,
-              'th_after-last-fixed': fixedRowColumnIndexes.length === index,
-              'td-moz': isFirefoxBrowser }]"
+              :class="['sorting', 'table-th', {
+                'fixed-column' : local.extra.columns[i].fixed,
+                'th_after-last-fixed': fixedRowColumnIndexes.length === index,
+                'td-moz': isFirefoxBrowser
+              }]"
               :style="local.extra.columns[i].style"
               :title="local.extra.columns[i].caption"
               @click="updateSort(i)"
