@@ -339,8 +339,9 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
     const fixedColumnAttr = getColumnAttr("Fixed");
     const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr);
 
-    const fixedFieldAttr = getColumnAttr("MobileFixed");
-    const fixedField = fixedFieldAttr === undefined ? false : Boolean(fixedFieldAttr);
+    // FIXME: we stopped supporting it for now.
+    //const fixedFieldAttr = getColumnAttr("MobileFixed");
+    //const fixedField = fixedFieldAttr === undefined ? false : Boolean(fixedFieldAttr);
 
     const visibleColumnAttr = getColumnAttr("Visible");
     const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
@@ -349,7 +350,8 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
       caption, style,
       visible: visibleColumn,
       fixed: fixedColumn,
-      mobileFixed: fixedField,
+      //mobileFixed: fixedField,
+      mobileFixed: false,
       columnInfo,
       attrs: columnAttrs,
       width: columnWidth,
