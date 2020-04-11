@@ -131,7 +131,7 @@
         </thead>
         <tbody class="table-body">
           <template v-if="showEmptyRow">
-            <TableFixedRow
+            <!--<TableFixedRow
               v-if="showFixedRow"
               :row="local.emptyRow.row"
               :local-row="local.emptyRow.local"
@@ -141,7 +141,8 @@
               :indirect-links="indirectLinks"
               @cellClick="clickCell({ type: 'new', column: arguments[0] }, arguments[1])"
               @goto="$emit('goto', $event)"
-            />        <TableRow
+            />-->
+            <TableRow
               :row="local.emptyRow.row"
               :local-row="local.emptyRow.local"
               :column-indexes="columnIndexes"
@@ -154,7 +155,7 @@
             />
           </template>
           <template v-for="(rowId, rowIndex) in uv.newRowsPositions">
-            <TableFixedRow
+            <!--<TableFixedRow
               v-if="showFixedRow"
               :key="`fixed-new-${rowId}`"
               :row="uv.newRows[rowId]"
@@ -166,7 +167,8 @@
               @select="selectRow({ type: 'added', position: rowIndex }, $event)"
               @cellClick="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
               @goto="$emit('goto', $event)"
-            />        <TableRow
+            />-->
+            <TableRow
               :key="`new-${rowId}`"
               :row="uv.newRows[rowId]"
               :local-row="local.newRows[rowId]"
@@ -181,7 +183,7 @@
             />
           </template>
           <template v-for="(rowI, rowIndex) in shownRowPositions">
-            <TableFixedRow
+            <!--<TableFixedRow
               v-if="showFixedRow"
               :key="`fixed-${rowI}`"
               :row="uv.rows[rowI]"
@@ -192,7 +194,7 @@
               @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
               @cellClick="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
               @goto="$emit('goto', $event)"
-            />
+            />-->
             <TableRow
               :key="rowI"
               :row="uv.rows[rowI]"
@@ -470,6 +472,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
   }
 
   updateCommonValue(row: IRowCommon, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, extra: ITableValueExtra) {
+    console.log(`Updating column ${columnIndex}`);
     const columnInfo = this.uv.info.columns[columnIndex];
 
     extra.valueText = valueToPunnedText(columnInfo.valueType, value);
@@ -839,6 +842,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   protected created() {
+    this.currentFilter = this.filter;
     this.init();
 
     if (this.isRoot) {
@@ -857,10 +861,15 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
   }
 
-  @Watch("uv", {deep: true})
+  @Watch("uv")
   protected uvChanged() {
     this.init();
     this.updateShowLength();
+  }
+
+  @Watch("uv")
+  protected uvInsidesChanged() {
+    this.updateRows();
   }
 
   protected mounted() {
@@ -883,17 +892,16 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   @Watch("filter")
   protected updateFilter() {
     const oldFilter = this.currentFilter;
-    const currentFilter = this.filter;
-    this.currentFilter = currentFilter;
+    this.currentFilter = this.filter;
 
     // Check if current filter contained this one
-    const contained = oldFilter.every(oldWord => currentFilter.some(newWord => newWord.startsWith(oldWord)));
+    const contained = oldFilter.every(oldWord => this.currentFilter.some(newWord => newWord.startsWith(oldWord)));
 
     if (!contained) {
       this.buildRowPositions();
     } else {
       // Filter existing rows when we filter a subset of already filtered ones.
-      const newWords = currentFilter.filter(newWord => !oldFilter.some(oldWord => oldWord.startsWith(newWord)));
+      const newWords = this.currentFilter.filter(newWord => !oldFilter.some(oldWord => oldWord.startsWith(newWord)));
       this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], newWords));
     }
   }
@@ -1209,8 +1217,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     this.$emit("update:actions", actions);
     this.$emit("update:enableFilter", this.uv.rows !== null);
 
+    this.updateRows();
+  }
+
+  private updateRows() {
     this.buildRowPositions();
-    this.updateFilter();
     this.setShowEmptyRow(this.uv.rows === null || this.uv.rows.length === 0);
   }
 
@@ -1310,11 +1321,12 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   get showFixedRow() {
-    let tableWidth = this.technicalWidth;
+    /*let tableWidth = this.technicalWidth;
     for (const column of this.local.extra.columns) {
       tableWidth += column.width;
     }
-    return tableWidth > screen.width && this.fixedRowColumnIndexes.length > 0;
+    return tableWidth > screen.width && this.fixedRowColumnIndexes.length > 0;*/
+    return false;
   }
 
   private async updateCurrentValue(rawValue: any) {
