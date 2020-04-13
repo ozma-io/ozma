@@ -263,6 +263,10 @@ const changeToParam = (fieldInfo: Api.IColumnField, name: FieldName, change: IUp
     throw new Error(`Value for ${name} didn't pass validation`);
   }
 
+  if (change.value === null) {
+    return null;
+  }
+
   if (fieldInfo.valueType.type === "date") {
     return (change.value as Moment).format("YYYY-MM-DD");
   } else if (fieldInfo.valueType.type === "datetime") {
