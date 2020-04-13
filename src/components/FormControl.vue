@@ -27,7 +27,6 @@
   <fragment>
     <InputSlot
       v-if="inputType.name !== 'userview' && inputType.name !== 'reference'"
-      :is-cell-edit="isCellEdit"
       :label="caption"
       :inline="!isInline"
       :value="currentValue"
@@ -39,22 +38,18 @@
         <Input
           v-if="inputType.name === 'text'"
           :value="iSlot.value"
-          :is-cell-edit="isCellEdit"
           :dont-focus="dontFocus"
           :disabled="isDisabled"
           :autofocus="autofocus"
           focus
-          @setInputHeight="setInputHeight"
           @input="iSlot.onChange($event.target.value)"
         />
         <Textarea
           v-else-if="inputType.name === 'textarea'"
           :value="iSlot.value"
-          :is-cell-edit="isCellEdit"
           :autofocus="autofocus"
           :dont-focus="dontFocus"
           :disabled="isDisabled"
-          @setInputHeight="setInputHeight"
           @update:value="iSlot.onChange($event)"
         />
         <Calendar
@@ -62,7 +57,6 @@
           ref="control"
           :value="iSlot.value"
           :text-value="textValue"
-          :is-cell-edit="isCellEdit"
           :autofocus="autofocus"
           :show-time="inputType.showTime"
           @update:value="iSlot.onChange"
@@ -77,7 +71,6 @@
           single
           :required="!isNullable"
           :disabled="isDisabled"
-          :is-cell-edit="isCellEdit"
           @update:value="updateValue($event)"
         />
       </template>
@@ -89,11 +82,9 @@
           v-else-if="inputType.name === 'text'"
           :value="currentValue"
           :autofocus="autofocus"
-          :is-cell-edit="isCellEdit"
           :dont-focus="dontFocus"
           :disabled="isDisabled"
-          @input="updateValue($event)"
-          @setInputHeight="setInputHeight"
+          @input="updateValue($event.target.value)"
           @focus="iSlot.onFocus"
         />
         <Textarea
@@ -101,9 +92,7 @@
           :value="currentValue"
           :autofocus="autofocus"
           :dont-focus="dontFocus"
-          :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
-          @setInputHeight="setInputHeight"
           @update:value="updateValue($event)"
           @focus="iSlot.onFocus"
         />
@@ -113,7 +102,6 @@
           :value="value.value"
           :text-value="textValue"
           :autofocus="autofocus"
-          :is-cell-edit="isCellEdit"
           :show-time="inputType.showTime"
           @focus="iSlot.onFocus"
           @update:value="updateValue($event)"
@@ -127,7 +115,6 @@
           single
           :autofocus="autofocus"
           :dont-open="isMobile"
-          :is-cell-edit="isCellEdit"
           :required="!isNullable"
           :disabled="isDisabled"
           @update:value="updateValue($event)"
@@ -139,7 +126,6 @@
           :style="inputType.style"
           :content="textValue"
           :read-only="isDisabled"
-          :is-cell-edit="isCellEdit"
           :autofocus="autofocus"
           @update:content="updateValue($event)"
         />
@@ -186,7 +172,6 @@
             style="padding-left: 0;"
             :value="value"
             :auto-open="autoOpen"
-            :is-cell-edit="isCellEdit"
             @update:value="updateValue($event)"
           >
             <template #input-modal="iSlot">
@@ -201,7 +186,6 @@
                 :autofocus="autofocus"
                 :control-style="inputType.style"
                 :uv-args="uvArgs"
-                :is-cell-edit="isCellEdit"
                 :is-nullable="isNullable"
                 :is-disabled="isDisabled"
                 @update:actions="actions = $event"
@@ -223,7 +207,6 @@
                 :dont-open="isMobile"
                 :is-nullable="isNullable"
                 :is-disabled="isDisabled"
-                :is-cell-edit="isCellEdit"
                 @update:actions="actions = $event"
                 @focus="iSlot.onFocus"
                 @update="updateValue($event)"
@@ -340,7 +323,6 @@ export default class FormControl extends Vue {
   @Prop({ type: String, required: true }) scope!: string;
   @Prop({ type: Number, required: true }) level!: number;
   @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
-  @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
 
   private actions: IAction[] = [];
 
@@ -379,10 +361,6 @@ export default class FormControl extends Vue {
     const isHeightOnPanel = !multilineTypes.includes(this.inputType.name);
     const height = isHeightOnPanel ? { height: `${heightAttr}px` } : {};
     return heightAttr && !excludeHeight ? { ...height, maxHeight: "initial" } : {};
-  }
-
-  private setInputHeight(value: number) {
-    this.$emit("setInputHeight", value);
   }
 
   private controlStyle(height?: string): Record<string, any> {

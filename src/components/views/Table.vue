@@ -1,53 +1,62 @@
 <i18n>
     {
-      "en": {
-        "clear": "Clear",
-        "yes": "Yes",
-        "no": "No",
-        "export_to_csv": "Export to .csv",
-        "remove_selected_rows": "Remove selected rows",
-        "show_new_row": "Add/remove new row"
-      },
-      "ru": {
-        "clear": "Очистить",
-        "yes": "Да",
-        "no": "Нет",
-        "export_to_csv": "Экспорт в .csv",
-        "remove_selected_rows": "Удалить выбранные записи",
-        "show_new_row": "Добавить/убрать новую строку"
-      }
+        "en": {
+            "clear": "Clear",
+            "yes": "Yes",
+            "no": "No",
+            "export_to_csv": "Export to .csv",
+            "remove_selected_rows": "Remove selected rows",
+            "show_new_row": "Add/remove new row"
+        },
+        "ru": {
+            "clear": "Очистить",
+            "yes": "Да",
+            "no": "Нет",
+            "export_to_csv": "Экспорт в .csv",
+            "remove_selected_rows": "Удалить выбранные записи",
+            "show_new_row": "Добавить/убрать новую строку"
+        }
     }
 </i18n>
 
 <template>
   <div
     fluid
-    :class="['table-block', {'nested-table-block': !isRoot}]"
+    :class="['table-block',
+             {'nested-table-block': !isRoot,
+              'active_editing': editingValue !== null}]"
   >
-    <table-cell-edit
-      v-if="editingValue"
-      v-click-outside="clickOutsideEdit"
-      :width="editParams.width"
-      :is-last-fixed-cell="isSelectedLastFixedCell"
-      :coords="editCoords"
+    <div
+      v-if="editingValue !== null"
+      class="edit_container"
+      :v-show="false"
     >
-      <FormControl
-        :value="editingValue.value"
-        :attributes="editingValue.attributes"
-        :type="editingValue.type"
-        :locked="editingLocked"
-        :disable-color="editing.ref.type === 'new'"
-        :uv-args="uv.args"
-        :indirect-links="indirectLinks"
-        :scope="scope"
-        :level="level"
-        is-cell-edit
-        autofocus
-        dont-focus
-        @setInputHeight="setInputHeight"
-        @update="updateCurrentValue"
+      <div
+        id="disable_edit"
+        :class="{'edit_active': editingValue !== null}"
+        @click="removeCellEditing()"
       />
-    </table-cell-edit>
+      <div class="form_background">
+        <b-row>
+          <b-col cols="12">
+            <FormControl
+              :value="editingValue.value"
+              :attributes="editingValue.attributes"
+              :type="editingValue.type"
+              :locked="editingLocked"
+              :disable-color="editing.ref.type === 'new'"
+              :uv-args="uv.args"
+              :indirect-links="indirectLinks"
+              :scope="scope"
+              :level="level"
+              autofocus
+              dont-focus
+              @update="updateCurrentValue"
+            />
+          </b-col>
+        </b-row>
+      </div>
+    </div>
 
     <div
       ref="tableContainer"
@@ -64,8 +73,7 @@
           <col
             v-if="local.extra.hasRowLinks"
             :class="['open-form-col', {'openform-cells': showFixedRow}]"
-          >
-          <!-- Row link column -->
+          > <!-- Row link column -->
           <col
             v-for="i in columnIndexes"
             :key="i"
@@ -73,10 +81,7 @@
             :style="local.extra.columns[i].style"
           >
         </colgroup>
-        <thead
-          ref="tableHead"
-          class="table-head"
-        >
+        <thead class="table-head">
           <tr>
             <th
               class="fixed-column checkbox-cells table-th"
@@ -94,7 +99,6 @@
             >
               <span
                 class="table-th_span"
-
                 :title="this.$t('show_new_row')"
                 @click="setShowEmptyRow(!showEmptyRow)"
               >
@@ -215,67 +219,32 @@
 </template>
 
 <script lang="ts">
-import {Component, Vue, Watch} from "vue-property-decorator";
-import {mixins} from "vue-class-component";
-import {namespace} from "vuex-class";
-import {Store} from "vuex";
+import { Component, Prop, Watch, Vue } from "vue-property-decorator";
+import { mixins } from "vue-class-component";
+import { Location } from "vue-router";
+import { namespace } from "vuex-class";
+import { Store } from "vuex";
 
-import {deepEquals, isFirefox, isIOS, mapMaybe, nextRender, ObjectSet, tryDicts} from "@/utils";
-import {valueIsNull} from "@/values";
-import {IResultColumnInfo} from "@/api";
+import { RecordSet, ObjectSet, tryDicts, mapMaybe, deepEquals, isIOS, isFirefox } from "@/utils";
+import { valueIsNull } from "@/values";
+import { IResultColumnInfo } from "@/api";
 import {
-  CombinedUserView,
-  currentValue,
-  homeSchema,
-  IAddedRow,
-  ICombinedRow,
-  ICombinedValue,
-  IRowCommon,
-  valueToPunnedText,
+  ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, CombinedUserView, homeSchema, valueToPunnedText, currentValue,
 } from "@/state/user_view";
-import {UserView} from "@/components";
-import {AddedRowId, AutoSaveLock} from "@/state/staging_changes";
-import {attrToQueryRef, attrToQuerySelf, IAttrToQueryOpts, IQuery} from "@/state/query";
-import {
-  equalRowPositionRef,
-  ILocalRow,
-  ILocalRowInfo,
-  LocalUserView,
-  RowPositionRef,
-  RowRef,
-  ValueRef,
-} from "@/local_user_view";
-import BaseUserView, {ISelectionRef} from "@/components/BaseUserView";
-import {IAction} from "@/components/ActionsMenu.vue";
+import { UserView } from "@/components";
+import { AutoSaveLock, AddedRowId } from "@/state/staging_changes";
+import { IQuery, attrToQuerySelf, attrToQueryRef, IAttrToQueryOpts } from "@/state/query";
+import { LocalUserView, ILocalRowInfo, ILocalRow, ValueRef, RowRef, RowPositionRef, equalRowPositionRef } from "@/local_user_view";
+import { ISelectionRef } from "@/components/BaseUserView";
+import BaseUserView from "@/components/BaseUserView";
+import { IAction } from "@/components/ActionsMenu.vue";
 import TableRow from "@/components/views/table/TableRow.vue";
 import TableFixedRow from "@/components/views/table/TableFixedRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
-import TableCellEdit, {ICellCoords, IEditParams} from "@/components/views/table/TableCellEdit.vue";
 
 interface ITableEditing {
   lock: AutoSaveLock;
   ref: ValueRef;
-}
-
-/**
-     * Coordinates of table for setting position of in-place edit component
-     * lt - left top
-     * rt - right top
-     * lb - left bottom
-     * rb - right bottom
-     * center - center of table
-     */
-
-export interface ICoords {
-  x: number;
-  y: number;
-}
-
-export interface ITableCoords {
-  lt: ICoords;
-  rt: ICoords;
-  lb: ICoords;
-  center: ICoords;
 }
 
 interface IColumn {
@@ -314,8 +283,8 @@ interface ITableUserViewExtra {
   linkOpts?: IAttrToQueryOpts;
 }
 
-    type ITableLocalRowInfo = ILocalRowInfo<ITableRowExtra>;
-    type ITableLocalRow = ILocalRow<ITableValueExtra, ITableRowExtra>;
+type ITableLocalRowInfo = ILocalRowInfo<ITableRowExtra>;
+type ITableLocalRow = ILocalRow<ITableValueExtra, ITableRowExtra>;
 
 const showStep = 20;
 const doubleClickTime = 700;
@@ -598,7 +567,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     };
     const home = homeSchema(this.uv.args);
     if (home !== null) {
-      extra.linkOpts = {homeSchema: home};
+      extra.linkOpts = { homeSchema: home };
     }
     return extra;
   }
@@ -759,7 +728,7 @@ const staging = namespace("staging");
 })
 @Component({
   components: {
-    TableRow, TableFixedRow, Checkbox, TableCellEdit,
+    TableRow, TableFixedRow, Checkbox,
   },
 })
 export default class UserViewTable extends mixins<BaseUserView<LocalTableUserView, ITableValueExtra, ITableRowExtra, ITableUserViewExtra>>(BaseUserView) {
@@ -781,24 +750,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   private showEmptyRow = false;
   private emptyLocalRow: ITableLocalRow | null = null;
   private isFirefoxBrowser: boolean = isFirefox();
-  private isSelectedLastFixedCell = false;
-  private editCoords: ICellCoords = {
-    x: 0,
-    y: 0,
-  };
-  private editParams: IEditParams = {
-    height: 0,
-    width: 0,
-  };
-
-  private cellEditHeight = 0;
 
   get columnIndexes() {
-    const columns = this.local.extra.columns.map((column, index) => ({
-      index,
-      fixed: column.fixed,
-      visible: column.visible,
-    })).filter(c => c.visible);
+    const columns = this.local.extra.columns.map((column, index) => ({ index, fixed: column.fixed, visible: column.visible })).filter(c => c.visible);
     const fixed = columns.filter(c => c.fixed);
     const nonFixed = columns.filter(c => !c.fixed);
     return fixed.concat(nonFixed).map(c => c.index);
@@ -831,7 +785,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         const columnInfo = this.uv.info.columns[this.editing.ref.column];
         const columnAttrs = this.uv.columnAttributes[this.editing.ref.column];
         const type = columnInfo.valueType;
-        const attributes = {...this.uv.attributes, ...columnAttrs, ...value.row.row.attributes, ...value.value.attributes};
+        const attributes = { ...this.uv.attributes, ...columnAttrs, ...value.row.row.attributes, ...value.value.attributes };
         return {
           value: value.value,
           attributes,
@@ -857,7 +811,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         this.showLength = this.local.rows.length;
       };
       window.addEventListener("beforeprint", printCallback);
-      this.printListener = {query, queryCallback, printCallback};
+      this.printListener = { query, queryCallback, printCallback };
     }
   }
 
@@ -867,16 +821,13 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     this.updateShowLength();
   }
 
-  @Watch("uv")
+  @Watch("uv", { deep: true })
   protected uvInsidesChanged() {
     this.updateRows();
   }
 
   protected mounted() {
     this.updateShowLength();
-    (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", () => {
-      this.removeCellEditing();
-    });
   }
 
   protected destroyed() {
@@ -918,9 +869,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (emptyRow !== null) {
       this.showEmptyRow = newValue;
       if (!newValue) {
-        this.local.selectRow({type: "new"}, false);
+        this.local.selectRow({ type: "new" }, false);
         emptyRow.local.values.forEach((_, colI) => {
-          this.local.selectCell({type: "new", column: colI}, false);
+          this.local.selectCell({ type: "new", column: colI }, false);
         });
       }
     }
@@ -973,11 +924,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     document.body.removeChild(element);
   }
 
-  private clickOutsideEdit() {
-    this.editing = null;
-    this.cellEditHeight = 0;
-  }
-
   private removeCellEditing() {
     if (this.editing === null) {
       return;
@@ -1001,35 +947,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         return;
       }
 
-      this.editing = {ref, lock};
+      this.editing = { ref, lock };
     });
   }
 
-  private setInputHeight(value: number) {
-    this.cellEditHeight = value;
-  }
-
-  /**
-   * Fix height of edit-component, it must be dynamic - not static value (154)
-   *
-   */
-
-  private setCoordsForEditCell(event: MouseEvent | any) {
-    const tableHeight: number = (this.$refs.tableContainer as HTMLDivElement).clientHeight;
-    const tableHeadHeight: number = (this.$refs.tableHead as HTMLDivElement).clientHeight;
-    this.isSelectedLastFixedCell = event.target.classList.value.includes('next-after-last-fixed');
-    this.editCoords.x = event.clientX - event.offsetX;
-    if (event.clientY - tableHeadHeight - 54 >= Math.round(tableHeight/2)) {
-      this.editCoords.y = (event.clientY - 154 + event.target.offsetHeight) - event.offsetY;
-    } else {
-      this.editCoords.y = event.clientY - event.offsetY;
-    }
-  }
-
-  private clickCell(ref: ValueRef, event: MouseEvent | any) {
-    this.setCoordsForEditCell(event);
-    this.editParams.width = event.target.offsetWidth;
-    this.editParams.height = event.target.offsetHeight;
+  private clickCell(ref: ValueRef, event: MouseEvent) {
     this.selectCell(ref);
     if (this.lastSelectedValue !== null &&
                 !deepEquals(this.lastSelectedValue, ref) &&
@@ -1126,7 +1048,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   private getRowByLocalPosition(rowRef: RowPositionRef): RowRef | null {
     if (rowRef.type === "existing") {
-      return this.local.getRowByPosition({type: "existing", position: this.rowPositions[rowRef.position]});
+      return this.local.getRowByPosition({ type: "existing", position: this.rowPositions[rowRef.position] });
     } else {
       return this.local.getRowByPosition(rowRef);
     }
@@ -1205,12 +1127,12 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
 
     const actions: IAction[] = [
-      {name: this.$t("export_to_csv").toString(), callback: () => this.export2csv()},
+      { name: this.$t("export_to_csv").toString(), callback: () => this.export2csv() },
     ];
     if (this.uv.info.mainEntity !== null) {
       actions.push(
-        {name: this.$t("remove_selected_rows").toString(), callback: () => this.removeSelectedRows()},
-        {name: this.$t("show_new_row").toString(), callback: () => this.setShowEmptyRow(true)},
+        { name: this.$t("remove_selected_rows").toString(), callback: () => this.removeSelectedRows() },
+        { name: this.$t("show_new_row").toString(), callback: () => this.setShowEmptyRow(true) },
       );
     }
 
@@ -1226,11 +1148,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   /*
-            first sort
-            bool:   descending
-            number: descending
-            string: ascending
-        */
+        first sort
+        bool:   descending
+        number: descending
+        string: ascending
+    */
   private updateSort(sortColumn: number) {
     if (this.sortColumn !== sortColumn) {
       const type = this.local.extra.columns[sortColumn].columnInfo.valueType.type;
@@ -1238,7 +1160,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
       switch (type) {
       case "int":
-        this.sortOptions = {numeric: true};
+        this.sortOptions = { numeric: true };
         this.sortAsc = false;
         break;
       case "bool":
@@ -1247,7 +1169,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         break;
       case "string":
         this.sortAsc = true;
-        this.sortOptions = {sensitivity: "accent"};
+        this.sortOptions = { sensitivity: "accent" };
         break;
       default:
         this.sortAsc = true;
@@ -1267,9 +1189,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       const sortColumn = this.sortColumn;
       const collator = new Intl.Collator(["en", "ru"], options);
       const sortFunction: (a: number, b: number) => number =
-                    this.sortAsc ?
-                      (a, b) => rowIndicesCompare(a, b, rows, sortColumn, collator) :
-                      (a, b) => rowIndicesCompare(b, a, rows, sortColumn, collator);
+                this.sortAsc ?
+                  (a, b) => rowIndicesCompare(a, b, rows, sortColumn, collator) :
+                  (a, b) => rowIndicesCompare(b, a, rows, sortColumn, collator);
       this.rowPositions.sort(sortFunction);
     }
   }
@@ -1344,12 +1266,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 <style scoped>
   /* Current Z layout:
 
-    * Form control          (2000)
-    * Disable-edit block    (500)
-    * Table head            (20)
-    * FixedColumn           (25)
-*/
-
+   * Form control          (2000)
+   * Disable-edit block    (500)
+   * Table head            (20)
+   * FixedColumn           (25)
+  */
   table,
   th,
   td {
@@ -1669,19 +1590,5 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   .table_header__content {
     display: inline-flex;
     justify-items: center;
-  }
-
-  *::selection {
-    background: transparent;
-  }
-
-  * {
-    -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-    -khtml-user-select: none; /* Konqueror HTML */
-    -moz-user-select: none; /* Old versions of Firefox */
-    -ms-user-select: none; /* Internet Explorer/Edge */
-    user-select: none; /* Non-prefixed version, currently
-                                  supported by Chrome, Opera and Firefox */
   }
 </style>
