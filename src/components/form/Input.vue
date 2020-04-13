@@ -14,6 +14,7 @@
       {{ value || $t('input_placeholder') }}
     </span>
     <input
+      v-show="!isCellEdit"
       :id="id"
       ref="control"
       :class="['input_field',
@@ -21,6 +22,7 @@
                  'input_field__disabled': disabled,
                  'input_field__focused': focused,
                  'input_field__unfocused': !focused,
+                 'input-field_cell-edit': isCellEdit,
                }
       ]"
       autocomplete="off"
@@ -33,14 +35,29 @@
       @focus="onFocus"
       @blur="onBlur"
     >
+    <textarea-autosize
+      v-show="isCellEdit"
+      ref="controlTextarea"
+      :placeholder="$t('input_placeholder')"
+      :value="value"
+      rows="1"
+      :min-height="144"
+      :max-height="144"
+      class="input-textarea"
+      @keydown.enter.prevent
+      @input="updateInput"
+      @focus="onFocus"
+    />
   </fragment>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import { isMobile } from "@/utils";
-
-@Component
+import {isMobile, nextRender} from "@/utils";
+import Textarea from "@/components/form/Textarea.vue";
+@Component({
+  components: {Textarea}
+})
 export default class Input extends Vue {
   @Prop({ type: String }) label!: string;
   @Prop() value!: any;
@@ -54,16 +71,24 @@ export default class Input extends Vue {
   @Prop({ type: String, default: "text" }) type!: string;
   @Prop({ type: Boolean, default: false }) focus!: boolean;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
+  @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
 
   private focused = false;
+  private inputHeight = 24;
 
   private mounted() {
     const controlElement = this.$refs.control as HTMLInputElement;
+    const controlTextareaElement = this.$refs.controlTextarea as any;
     const autosizeMeter = this.$refs.autosizeMeter as HTMLSpanElement;
     const styles = window.getComputedStyle(controlElement);
     if (this.autofocus) {
       Vue.nextTick().then(() => {
-        controlElement.focus();
+        if (this.isCellEdit) {
+          controlTextareaElement.$el.focus();
+          this.setInputHeight();
+        } else {
+          controlElement.focus();
+        }
       });
     }
 
@@ -144,6 +169,14 @@ export default class Input extends Vue {
 
   private updateInput(value: string) {
     this.$emit("input", value);
+    this.setInputHeight();
+  }
+
+  private setInputHeight() {
+    nextRender().then(() => {
+      const controlTextareaElement = this.$refs.controlTextarea as any;
+      this.$emit("setInputHeight", controlTextareaElement.$el.clientHeight);
+    });
   }
 
   private updateWidth(text: string) {
@@ -165,12 +198,36 @@ export default class Input extends Vue {
 </script>
 
 <style lang="scss" scoped>
+  .input-textarea {
+    padding: 0;
+    border: none;
+    resize: none;
+    width: 100%;
+    display: block;
+    overflow: hidden;
+    height: 24px;
+  }
+
+  .input-textarea-fake {
+    opacity: 0;
+    position: absolute;
+    pointer-events: none;
+    width: inherit;
+    min-height: 24px;
+    word-break: break-all;
+  }
+
+  .input-textarea:focus {
+    outline: none;
+  }
+
   .input_container {
     position: relative;
     display: inline-flex;
     flex-direction: column;
     color: var(--MainTextColor);
     width: 100%;
+    opacity: 0.7;
     padding-left: 15px;
   }
 
@@ -189,6 +246,7 @@ export default class Input extends Vue {
     margin-bottom: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    opacity: 0.7;
     white-space: pre;
     cursor: question;
     color: var(--MainTextColorLight);
@@ -227,10 +285,19 @@ export default class Input extends Vue {
   .input_field:focus {
     outline: none;
     color: var(--MainTextColor);
-    border-bottom: 1px solid var(--MainBorderColor) !important;
+    border-bottom: 1px solid var(--MainBorderColor);
     cursor: text;
     background-color: var(--MainBackgroundColor);
     z-index: 2000;
+  }
+
+  .input-field_cell-edit {
+    width: auto;
+  }
+
+  .input-field_cell-edit:focus,
+  .input-field_cell-edit:hover {
+    border-bottom: 1px solid transparent;
   }
 
   .input_field__disabled {

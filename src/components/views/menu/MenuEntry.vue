@@ -8,7 +8,7 @@
           class="menu_category_title"
           :style="titleStyle"
         >
-          {{ entry.title }}
+          {{ entry.name }}
         </div>
         <b-row :class="['menu_entries', { 'first_level_entries': level === 0 }]">
           <MenuEntry
@@ -28,7 +28,7 @@
           :uv="link"
           @[indirectLinks?`click`:null]="$emit('goto', $event)"
         >
-          {{ entry.title }}
+          {{ entry.name }}
         </UserViewLink>
       </div>
     </template>
@@ -42,8 +42,9 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { IQuery, attrToQuery } from '@/state/query';
 
 export interface IMenu {
-  title: string;
-  content: IMenu[] | IQuery;
+  name: string;
+  children?: IMenu[];
+  ref?: IQuery;
   size?: number;
 }
 
@@ -57,7 +58,7 @@ export default class MenuEntries extends Vue {
   @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 
   get link(): IQuery | null {
-    return attrToQuery(this.entry.content)
+    return attrToQuery(this.entry.ref)
   }
 
   get titleStyle(): { fontSize: string } {
@@ -68,7 +69,6 @@ export default class MenuEntries extends Vue {
     } 
     const fontSize = initialSize;
     return { fontSize: `${fontSize}px` };
-
   }
 }
 </script>
@@ -79,7 +79,7 @@ export default class MenuEntries extends Vue {
     padding-left: 0;
   }
 
-  /deep/ .menu_entry > a {
+  .menu_entry > a {
     color: var(--MainTextColor);
     text-decoration: underline;
     text-decoration-color: var(--MainBorderColor);
@@ -87,10 +87,6 @@ export default class MenuEntries extends Vue {
 
   .first_level_entries {
     padding-left: 0 !important;
-  }
-
-  .menu_entries {
-    padding-left: 20px;
   }
 
   .menu_entry {

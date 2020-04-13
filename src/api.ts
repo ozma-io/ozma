@@ -60,7 +60,7 @@ export interface IUserViewRef {
   name: UserViewName;
 }
 
-export type SimpleType = "int" | "decimal" | "string" | "bool" | "datetime" | "date" | "regclass" | "json";
+export type SimpleType = "int" | "decimal" | "string" | "bool" | "datetime" | "date" | "interval" | "regclass" | "json";
 
 export interface IScalarSimpleType {
   type: SimpleType;
@@ -73,7 +73,7 @@ export interface IArraySimpleType {
 
 export type ValueType = IScalarSimpleType | IArraySimpleType;
 
-export type FieldValueType = "int" | "decimal" | "string" | "bool" | "datetime" | "date" | "json";
+export type FieldValueType = "int" | "decimal" | "string" | "bool" | "datetime" | "date" | "interval" | "json";
 
 export type AttributesMap = Record<AttributeName, any>;
 export type AttributeTypesMap = Record<AttributeName, ValueType>;
@@ -250,15 +250,17 @@ export interface IDeleteEntityResult {
 
 export type TransactionResult = IInsertEntityResult | IUpdateEntityResult | IDeleteEntityResult;
 
-const fetchGetApi = async (subUrl: string, token: string | null): Promise<any> => {
+const fetchGetFileApi = async (subUrl: string, token: string | null, accept: string): Promise<Blob> => {
   const headers: Record<string, string> = {};
   if (token !== null) {
     headers["Authorization"] = `Bearer ${token}`;
   }
-  return await Utils.fetchJson(`${apiUrl}/${subUrl}`, {
+  headers["Accept"] = accept;
+  const response = await Utils.fetchSuccess(`${apiUrl}/${subUrl}`, {
     method: "GET",
     headers,
   });
+  return await response.blob();
 };
 
 const fetchFormApi = async (subUrl: string, token: string | null, method: string, body?: string): Promise<any> => {
@@ -286,6 +288,20 @@ const fetchJsonApi = async (subUrl: string, token: string | null, method: string
     method,
     headers,
     body: JSON.stringify(body),
+  });
+};
+
+const fetchSendFileApi = async (subUrl: string, token: string | null, method: string, contentType: string, body: Blob): Promise<any> => {
+  const headers: Record<string, string> = {
+    "Content-Type": contentType,
+  };
+  if (token !== null) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return await Utils.fetchJson(`${apiUrl}/${subUrl}`, {
+    method,
+    headers,
+    body,
   });
 };
 
@@ -347,10 +363,10 @@ export const runTransaction = async (token: string | null, ops: TransactionOp[])
   return await fetchJsonApi("transaction", token, "POST", { operations: ops });
 };
 
-export const saveSchema = async (token: string | null, schema: string): Promise<object> => {
-  return await fetchGetApi(`layouts/${schema}`, token);
+export const saveSchema = async (token: string | null, schema: string): Promise<Blob> => {
+  return await fetchGetFileApi(`layouts/${schema}`, token, "application/zip");
 };
 
-export const restoreSchema = async (token: string | null, schema: string, data: object): Promise<void> => {
-  await fetchJsonApi(`layouts/${schema}`, token, "PUT", data);
+export const restoreSchema = async (token: string | null, schema: string, data: Blob): Promise<void> => {
+  await fetchSendFileApi(`layouts/${schema}`, token, "PUT", "application/zip", data);
 };

@@ -25,6 +25,12 @@
     "@typescript-eslint/indent": ["error", 2],
     "vue/html-indent": ["error", 2],
     "vue/this-in-template": "error",
+    "vue/component-tags-order": ["error", {
+      "order": ["template", "script", "style"]
+    }],
+    "vue/max-attributes-per-line": ["error", {
+      "singleline": 2
+    }],
     "@typescript-eslint/interface-name-prefix": ["error", {
       "prefixWithI": "always"
     }],
@@ -36,9 +42,6 @@
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/no-use-before-define": "off",
-    "vue/component-tags-order": ["error", {
-      "order": ["template", "script", "style"]
-    }],
     "@typescript-eslint/no-unused-vars": "off"
   },
   "overrides": [

@@ -23,7 +23,7 @@
 
 <template>
   <b-container class="menu_container">
-    <b-row v-if="entries.length === 0">
+    <b-row v-if="!isNewMenu">
       <b-col cols="12">
         <span v-if="typeof categoriesOrError === 'string'">
           {{ error }}
@@ -31,7 +31,7 @@
       </b-col>
     </b-row>
     <b-row
-      v-if="entries.length > 0"
+      v-if="isNewMenu"
     >
       <MenuEntry 
         v-for="(entry, index) in entries"
@@ -78,12 +78,16 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
 
 
   get entries(): IMenu[] {
-    return R.pathOr([], ["attributes", "menu"], this.uv);
+    return R.pathOr([], ["rows", 0, "values", 0, "value"], this.uv);
   }
 
   /* Legacy: To delete when there is no old-style menus left */
   get isNewMenu(): boolean {
-    return this.entries.length > 0;
+    const values = R.path<any[]>(["rows", 0, "values"], this.uv);
+    if (values) {
+      return values.length === 1;
+    }
+    return true;
   }
 
   get blockSizes() {

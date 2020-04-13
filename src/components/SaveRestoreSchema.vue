@@ -62,19 +62,27 @@ export default class SaveRestoreSchema extends Vue {
 
   async saveSchema() {
     try {
-      const res: object = await this.callProtectedApi({
+      const res: Blob = await this.callProtectedApi({
         func: Api.saveSchema,
         args: [this.schema],
       });
 
-      const element = document.createElement("a");
-      element.setAttribute("href", "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(res)));
-      element.setAttribute("download", `${this.schema}.json`);
-      element.style.display = "none";
+      const url = URL.createObjectURL(res);
+      try {
+        const element = document.createElement("a");
+        try {
+          element.setAttribute("href", url);
+          element.setAttribute("download", `${this.schema}.zip`);
+          element.style.display = "none";
 
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
+          document.body.appendChild(element);
+          element.click();
+        } finally {
+          document.body.removeChild(element);
+        }
+      } finally {
+        URL.revokeObjectURL(url);
+      }
 
       this.lastError = this.$t("success").toString();
     } catch (e) {
@@ -83,25 +91,20 @@ export default class SaveRestoreSchema extends Vue {
     }
   }
 
-  restoreSchema() {
-    const reader = new FileReader();
-    reader.onload = async (ev: ProgressEvent) => {
-      try {
-        const content = JSON.parse(reader.result as string);
-
-        await this.callProtectedApi({
-          func: Api.restoreSchema,
-          args: [this.schema, content],
-        });
-
-        this.lastError = this.$t("success").toString();
-      } catch (e) {
-        this.lastError = e.message;
-        throw e;
-      }
-    };
+  async restoreSchema() {
     const files = (this.$refs.restoreData as HTMLInputElement).files as FileList;
-    reader.readAsText(files[0]);
+    const content = files[0];
+    try {
+      await this.callProtectedApi({
+        func: Api.restoreSchema,
+        args: [this.schema, content],
+      });
+
+      this.lastError = this.$t("success").toString();
+    } catch (e) {
+      this.lastError = e.message;
+      throw e;
+    }
   }
 }
 </script>
