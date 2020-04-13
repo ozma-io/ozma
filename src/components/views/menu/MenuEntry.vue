@@ -1,6 +1,6 @@
 <template>
   <b-col
-    :cols="entry.size || 12"
+    :sm="entry.size || 12"
   >
     <template v-if="Array.isArray(entry.content)">
       <div class="menu_category_block">
