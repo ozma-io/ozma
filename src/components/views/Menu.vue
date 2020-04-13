@@ -22,40 +22,31 @@
 </i18n>
 
 <template>
-  <b-container>
-    <b-row>
+  <b-container class="menu_container">
+    <b-row v-if="!isNewMenu">
       <b-col cols="12">
         <span v-if="typeof categoriesOrError === 'string'">
           {{ error }}
         </span>
       </b-col>
     </b-row>
-    <b-row>
-      <b-col
-        v-for="(category, index) in categoriesOrError"
+    <b-row
+      v-if="isNewMenu"
+    >
+      <MenuEntry 
+        v-for="(entry, index) in entries"
         :key="index"
-        cols="12"
-        :lg="getBlockSize(index)"
-        class="menu_category_block"
-      >
-        <div class="menu_category_title">
-          {{ category.name }}
-        </div>
-        <div
-          v-for="(button, buttonI) in category.buttons"
-          :key="buttonI"
-          class="menu_entry"
-        >
-          <UserViewLink
-            class="navigation-entry"
-            :uv="button.uv"
-            @[indirectLinks?`click`:null]="$emit('goto', $event)"
-          >
-            {{ button.name }}
-          </UserViewLink>
-        </div>
-      </b-col>
+        :entry="entry"
+        :indirect-links="indirectLinks"
+      />
     </b-row>
+    <!-- Legacy: To delete when there is no old-style menus left -->
+    <OldMenu
+      v-else
+      :categories="categoriesOrError"
+      :get-block-size="getBlockSize"
+      :indirect-links="indirectLinks"
+    />
   </b-container>
 </template>
 
@@ -74,26 +65,30 @@ import { UserView } from "@/components";
 import BaseUserView from "@/components/BaseUserView";
 import * as R from "ramda";
 
-interface IMainMenuButton {
-  index: number;
-  name: string;
-  categoryName: string;
-  uv: IQuery;
-}
-
-interface IMainMenuCategory {
-  index: number;
-  name: string;
-  buttons: IMainMenuButton[];
-}
+import OldMenu, { IMainMenuCategory } from '@/components/views/menu/OldMenu.vue';
+import MenuEntry, { IMenu } from '@/components/views/menu/MenuEntry.vue';
 
 @UserView({
   localConstructor: LocalEmptyUserView,
 })
-@Component
+@Component({ components: { OldMenu, MenuEntry } })
 export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>>(BaseUserView) {
   @Prop() uv!: CombinedUserView;
   @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
+
+
+  get entries(): IMenu[] {
+    return R.pathOr([], ["rows", 0, "values", 0, "value"], this.uv);
+  }
+
+  /* Legacy: To delete when there is no old-style menus left */
+  get isNewMenu(): boolean {
+    const values = R.path<any[]>(["rows", 0, "values"], this.uv);
+    if (values) {
+      return values.length === 1;
+    }
+    return true;
+  }
 
   get blockSizes() {
     return this.uv.attributes["BlockSizes"];
@@ -102,7 +97,7 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
   getBlockSize(index: number): number {
     return R.pathOr(6, [index], this.blockSizes);
   }
-
+  
   get categoriesOrError() {
     // .rows === null means that we are in "create new" mode -- there are no selected existing values.
     if (this.uv.rows === null) {
@@ -162,10 +157,16 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
       return Array.from(categories.values());
     }
   }
+  /* Legacy End */
 }
 </script>
 
 <style scoped>
+
+  .menu_container {
+    margin-top: 120px;
+  }
+
   .main-menu-block {
     width: 100%;
     height: 100%;
@@ -317,60 +318,6 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
       .navigation-entry:last-child {
         margin-bottom: 0;
       }
-    }
-  }
-
-  .menu_list {
-    list-style: none;
-    padding-left: 0;
-  }
-
-  /deep/ .menu_entry > a {
-    color: var(--MainTextColor);
-    text-decoration: underline;
-    line-height: 2;
-    text-decoration-color: var(--MainBorderColor);
-    font-size: 24px !important;
-  }
-
-  .menu_entry {
-    display: flex;
-    align-items: center;
-    color: var(--MainTextColor);
-    padding-bottom: 5px;
-    padding-left: 20px;
-  }
-
-  .menu_entry:first-child {
-    padding-left: 0;
-  }
-
-  .menu_entry:last-child {
-    border-right: 0;
-  }
-
-  .menu_category_block {
-    margin-top: 75px;
-  }
-
-  .menu_category_title {
-    line-height: 2;
-    font-size: 60px !important;
-    color: #000;
-    font-weight: bold;
-  }
-
-  @media (max-width: 600px) {
-    .menu_category_title {
-      font-size: 30px !important;
-    }
-
-    .menu_entry > a {
-      font-size: 20px !important;
-    }
-
-    .menu_category_block {
-      margin-top: 30px;
     }
   }
 </style>
