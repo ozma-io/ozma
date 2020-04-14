@@ -249,6 +249,12 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
   }
 
   @media screen and (orientation: portrait) {
+    @media screen and (max-width: 575px) {
+      .menu_container {
+        margin-top: 0;
+      }
+    }
+
     @media screen and (max-device-width: 480px) {
       .main-menu-block {
         position: relative !important;
