@@ -21,6 +21,8 @@ html {
   margin: 0;
   font-size: var(--FontSize);
   min-width: none !important;
+  -webkit-overflow-scrolling: touch;
+  -webkit-appearance: none;
 }
 
 /*
@@ -39,6 +41,7 @@ body {
   overflow: hidden;
   bottom: 0;
   background-color: var(--MainBackgroundColor);
+  -webkit-text-size-adjust: none;
 
   div#app {
     height: 100%;

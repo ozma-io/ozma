@@ -20,6 +20,9 @@ export const resultMap = <A, B>(func: ((_: A) => B), res: Result<A>): Result<B> 
   }
 };
 
+export const nextRender = (): Promise<any> => new Promise((resolve) =>
+  Vue.nextTick(() => window.requestAnimationFrame(() => requestAnimationFrame(resolve))));
+
 export declare let process: {
   env: Record<string, string>;
 };

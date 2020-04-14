@@ -164,7 +164,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 }
 </script>
 
-<style scoped>  
+<style scoped>
   .reference_backup_input {
     width: 100%;
   }

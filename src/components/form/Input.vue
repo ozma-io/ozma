@@ -10,10 +10,11 @@
 </i18n>
 <template>
   <fragment>
-    <span ref="autosizeMeter">
+    <span  v-if="!isCellEdit" ref="autosizeMeter">
       {{ value || $t('input_placeholder') }}
     </span>
     <input
+      v-if="!isCellEdit"
       :id="id"
       ref="control"
       :class="['input_field',
@@ -21,6 +22,7 @@
                  'input_field__disabled': disabled,
                  'input_field__focused': focused,
                  'input_field__unfocused': !focused,
+                 'input-field_cell-edit': isCellEdit,
                }
       ]"
       autocomplete="off"
@@ -33,14 +35,29 @@
       @focus="onFocus"
       @blur="onBlur"
     >
+    <textarea-autosize
+      v-if="isCellEdit"
+      ref="controlTextarea"
+      :placeholder="$t('input_placeholder')"
+      :value="value"
+      rows="1"
+      :min-height="144"
+      :max-height="144"
+      class="input-textarea"
+      @keydown.enter.prevent
+      @input="updateInputCellEdit"
+      @focus="onFocus"
+    />
   </fragment>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import { isMobile } from "@/utils";
-
-@Component
+import {isMobile, nextRender} from "@/utils";
+import Textarea from "@/components/form/Textarea.vue";
+@Component({
+  components: {Textarea}
+})
 export default class Input extends Vue {
   @Prop({ type: String }) label!: string;
   @Prop() value!: any;
@@ -54,39 +71,49 @@ export default class Input extends Vue {
   @Prop({ type: String, default: "text" }) type!: string;
   @Prop({ type: Boolean, default: false }) focus!: boolean;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
+  @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
 
   private focused = false;
+  private inputHeight = 24;
 
   private mounted() {
     const controlElement = this.$refs.control as HTMLInputElement;
-    const autosizeMeter = this.$refs.autosizeMeter as HTMLSpanElement;
-    const styles = window.getComputedStyle(controlElement);
     if (this.autofocus) {
       Vue.nextTick().then(() => {
-        controlElement.focus();
+        if (this.isCellEdit) {
+          const controlTextareaElement = this.$refs.controlTextarea as any;
+          controlTextareaElement.$el.focus();
+          this.setInputHeight();
+        } else {
+          controlElement.focus();
+        }
       });
     }
 
-    Object.assign(autosizeMeter.style, {
-      position: "absolute",
-      top: "0",
-      left: "0",
-      visibility: "hidden",
-      height: "0",
-      overflow: "hidden",
-      whiteSpace: "pre",
-      fontSize: styles.fontSize,
-      fontFamily: styles.fontFamily,
-      fontWeight: styles.fontWeight,
-      fontStyle: styles.fontStyle,
-      letterSpacing: styles.letterSpacing,
-      textTransform: styles.textTransform,
-    });
+    if (!this.isCellEdit) {
+      const autosizeMeter = this.$refs.autosizeMeter as HTMLSpanElement;
+      const styles = window.getComputedStyle(controlElement);
+      Object.assign(autosizeMeter.style, {
+        position: "absolute",
+        top: "0",
+        left: "0",
+        visibility: "hidden",
+        height: "0",
+        overflow: "hidden",
+        whiteSpace: "pre",
+        fontSize: styles.fontSize,
+        fontFamily: styles.fontFamily,
+        fontWeight: styles.fontWeight,
+        fontStyle: styles.fontStyle,
+        letterSpacing: styles.letterSpacing,
+        textTransform: styles.textTransform,
+      });
+    }
   }
 
   @Watch("value")
   private onValueUpdate(value: string) {
-    if (!this.isMobile) {
+    if (!this.isMobile && !this.isCellEdit) {
       this.updateWidth(value);
     }
   }
@@ -142,8 +169,18 @@ export default class Input extends Vue {
     }
   }
 
-  private updateInput(value: string) {
+  private updateInput(value: MouseEvent | any) {
+    this.$emit("input", value.target.value);
+  }
+
+  private updateInputCellEdit(value: string) {
     this.$emit("input", value);
+    this.setInputHeight();
+  }
+
+  private setInputHeight() {
+    const controlTextareaElement = this.$refs.controlTextarea as any;
+    this.$emit("setInputHeight", controlTextareaElement.$el.clientHeight);
   }
 
   private updateWidth(text: string) {
@@ -165,6 +202,29 @@ export default class Input extends Vue {
 </script>
 
 <style lang="scss" scoped>
+  .input-textarea {
+    padding: 0;
+    border: none;
+    resize: none;
+    width: 100%;
+    display: block;
+    overflow: hidden;
+    height: 24px;
+  }
+
+  .input-textarea-fake {
+    opacity: 0;
+    position: absolute;
+    pointer-events: none;
+    width: inherit;
+    min-height: 24px;
+    word-break: break-all;
+  }
+
+  .input-textarea:focus {
+    outline: none;
+  }
+
   .input_container {
     position: relative;
     display: inline-flex;
@@ -229,10 +289,19 @@ export default class Input extends Vue {
   .input_field:focus {
     outline: none;
     color: var(--MainTextColor);
-    border-bottom: 1px solid var(--MainBorderColor) !important;
+    border-bottom: 1px solid var(--MainBorderColor);
     cursor: text;
     background-color: var(--MainBackgroundColor);
     z-index: 2000;
+  }
+
+  .input-field_cell-edit {
+    width: auto;
+  }
+
+  .input-field_cell-edit:focus,
+  .input-field_cell-edit:hover {
+    border-bottom: 1px solid transparent;
   }
 
   .input_field__disabled {

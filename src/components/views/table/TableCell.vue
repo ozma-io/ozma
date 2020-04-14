@@ -13,35 +13,33 @@
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click="$emit('cellClick', columnPosition, $event)"
   >
-    <p>
-      <UserViewLink
-        v-if="localValue.link !== undefined"
-        :uv="localValue.link"
-        @[indirectLinks?`click`:null]="$emit('goto', $event)"
-      >
-        <checkbox
-          v-if="typeof value.value === 'boolean'"
-          :checked="value.value"
-          class="div_checkbox"
-          disabled
-        />
-        <template v-else>
-          {{ localValue.valueText || '&nbsp;' }}
-        </template>
-      </UserViewLink>
+    <UserViewLink
+      v-if="localValue.link !== undefined"
+      :uv="localValue.link"
+      @[indirectLinks?`click`:null]="$emit('goto', $event)"
+    >
+      <checkbox
+        v-if="typeof value.value === 'boolean'"
+        :checked="value.value"
+        class="div_checkbox"
+        disabled
+      />
       <template v-else>
-        <input
-          v-if="typeof value.value === 'boolean'"
-          type="checkbox"
-          :checked="value.value"
-          class="div_checkbox"
-          disabled
-        >
-        <template v-else>
-          {{ localValue.valueText || '&nbsp;' }}
-        </template>
+        {{ localValue.valueText || '&nbsp;' }}
       </template>
-    </p>
+    </UserViewLink>
+    <template v-else>
+      <input
+        v-if="typeof value.value === 'boolean'"
+        type="checkbox"
+        :checked="value.value"
+        class="div_checkbox"
+        disabled
+      >
+      <p v-else>
+        {{ localValue.valueText || "" }}
+      </p>
+    </template>
   </td>
 </template>
 
@@ -71,7 +69,7 @@ export default class TableCell extends Vue {
 }
 </script>
 
-<style scoped>  
+<style scoped>
   .next-after-last-fixed {
     padding-left: 7px !important;
   }
