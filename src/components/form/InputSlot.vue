@@ -1,8 +1,20 @@
+<i18n>
+    {
+    "en": {
+        "ok": "OK",
+        "cancel": "Cancel"
+        },
+    "ru": {
+        "ok": "ОК",
+        "cancel": "Отмена"
+        }
+    }
+</i18n>
 <template>
   <b-row
     :class="[
       'input_slot',
-      {'input_slot__row': inline}
+      {'input_slot__row': inline, 'input-slot_cell-edit': isCellEdit}
     ]"
   >
     <Modal
@@ -55,7 +67,7 @@
     </b-col>
     <b-col
       :cols="(!!label && inline) ? 8 : 12"
-      class="input_container"
+      :class="['input_container', {'input_container_cell-edit': isCellEdit}]"
     >
       <slot
         name="input"
@@ -73,8 +85,9 @@ import { mixins } from "vue-class-component";
 import { isMobile, getTextWidth } from "@/utils";
 
 import Modal from "@/components/modal/Modal.vue";
+import Input from "@/components/form/Input.vue";
 
-@Component({ components: { Modal } })
+@Component({ components: { Modal, Input } })
 export default class InputSlot extends Vue {
   @Prop({ type: String }) label!: string;
   @Prop() value!: any;
@@ -86,6 +99,7 @@ export default class InputSlot extends Vue {
   @Prop({ type: Boolean, default: true }) inline!: boolean;
   @Prop({ type: String, default: "text" }) type!: string;
   @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
+  @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
 
   private focused = false;
   private modalValue: any = this.value;
@@ -127,6 +141,8 @@ export default class InputSlot extends Vue {
 
   private onModalClose() {
     this.modalValue = this.value;
+    this.isModalOpen = false;
+    this.$emit("closeModalInput");
   }
 
   private onFocus() {
@@ -197,6 +213,10 @@ export default class InputSlot extends Vue {
     padding-left: 0;
   }
 
+  .input_container_cell-edit {
+    padding-right: 0;
+  }
+
   .input_field__focused {
     position: absolute;
   }
@@ -206,9 +226,15 @@ export default class InputSlot extends Vue {
     margin: 5px;
   }
 
+  .input-slot_cell-edit {
+    padding: 0;
+    margin: 0;
+  }
+
   .input_modal__input_group {
     display: flex;
     flex-direction: column;
+    padding-bottom: 50px;
     height: 100%;
     justify-content: space-between;
     background-color: var(--MainBackgroundColor);

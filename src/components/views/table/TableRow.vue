@@ -112,7 +112,6 @@ export default class TableRow extends Vue {
   .checkbox-cells > .table-th_span {
     display: flex;
     width: 100%;
-    height: 100%;
     justify-content: center;
   }
 
@@ -138,8 +137,13 @@ export default class TableRow extends Vue {
     border-top: 1px solid var(--MainBorderColor);
     border-right: 1px solid var(--MainBorderColor);
     padding: 5px !important;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    color: var(--TableTextColor) !important;
     vertical-align: top;
-    height: 35px;
+    text-overflow: ellipsis;
+    line-height: normal;
+    white-space: nowrap;
   }
 
   .table-tr-new > td {
@@ -157,7 +161,7 @@ export default class TableRow extends Vue {
   td >>> p,
   td >>> a {
     color: var(--TableTextColor) !important;
-    max-height: 100px;
+    max-height: 154px;
     overflow-y: auto;
   }
 
@@ -167,8 +171,6 @@ export default class TableRow extends Vue {
     width: 100%;
     text-overflow: ellipsis;
     line-height: normal;
-    padding-right: 4px;
-    padding-left: 1px;
     margin-bottom: 0;
     white-space: initial;
   }

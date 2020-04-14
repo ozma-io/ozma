@@ -33,6 +33,8 @@ declare module "vue-input-autowidth" {
   export default VueInputAutowidth;
 }
 
+declare module "vue-textarea-autosize";
+
 declare module "vuedraggable" {
   const VueDragable: any;
   export default VueDragable;

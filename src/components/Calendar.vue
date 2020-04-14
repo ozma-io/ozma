@@ -23,7 +23,7 @@
       <input
         ref="control"
         type="text"
-        class="calendar_input"
+        :class="['calendar_input', {'calendar-input_cell-edit': isCellEdit}]"
         :placeholder="$t('input_placeholder')"
         :value="textValue"
         @input="$emit('update:value', $event.target.value)"
@@ -37,10 +37,11 @@
         @click="clearValue"
       >
     </div>
-    <div :class="['main_cal', {'main_cal__open': isCalendarOpen }]">
+    <div :class="['main_cal', {'main_cal__open': isCalendarOpen, 'main-cal_cell-edit': isCellEdit }]">
       <div class="days">
         <DatePicker
           :value="dateValue"
+          _in
           @update:value="updateDate"
         />
       </div>
@@ -73,6 +74,7 @@ export default class Calendar extends Vue {
   @Prop({ type: String }) textValue!: string;
   @Prop({ default: true, type: Boolean }) showTime!: boolean;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
+  @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
 
   private isCalendarOpen = false;
 
@@ -126,7 +128,7 @@ export default class Calendar extends Vue {
 }
 </script>
 
-<style scoped>  
+<style scoped>
   .calendar_container {
     position: relative;
     display: block;

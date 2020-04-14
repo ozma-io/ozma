@@ -14,6 +14,8 @@ import ActionsMenu from "@/components/ActionsMenu.vue";
 import FormControl from "@/components/FormControl.vue";
 import App from "@/App.vue";
 
+import TextareaAutosize from "vue-textarea-autosize";
+
 import authModule from "@/state/auth";
 import settingsModule from "@/state/settings";
 import userViewModule from "@/state/user_view";
@@ -35,6 +37,8 @@ export const store = new Vuex.Store({
     errors: errorsModule,
   },
 });
+
+Vue.use(TextareaAutosize);
 
 Vue.component("UserView", UserView);
 Vue.component("ActionsMenu", ActionsMenu);

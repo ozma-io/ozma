@@ -137,7 +137,7 @@ export default class Modal extends Vue {
 }
 </script>
 
-<style scoped>  
+<style scoped>
   /deep/ .view-form {
     overflow-y: hidden;
   }
@@ -151,7 +151,7 @@ export default class Modal extends Vue {
   .modal__close_button {
     background: none;
     border: none;
-    padding: 10px 10px 0 0;
+    padding: 10px;
     cursor: pointer;
   }
 
