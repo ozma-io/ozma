@@ -21,7 +21,6 @@
       <checkbox
         v-if="typeof value.value === 'boolean'"
         :checked="value.value"
-        class="div_checkbox"
         disabled
       />
       <template v-else>
@@ -29,13 +28,11 @@
       </template>
     </UserViewLink>
     <template v-else>
-      <input
+      <checkbox
         v-if="typeof value.value === 'boolean'"
-        type="checkbox"
         :checked="value.value"
-        class="div_checkbox"
         disabled
-      >
+      />
       <p v-else>
         {{ localValue.valueText || "" }}
       </p>
@@ -48,7 +45,11 @@ import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
 import { valueIsNull } from "@/values";
 
-@Component
+@Component({
+  components: {
+    Checkbox: () => import("@/components/checkbox/Checkbox.vue"),
+  },
+})
 export default class TableCell extends Vue {
   // We don't bother to set types here properly, they matter no more than for TableRow.
   // The reason this is not a functional component is because of performance.
