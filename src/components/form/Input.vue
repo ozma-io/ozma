@@ -13,6 +13,10 @@
     <span  v-if="!isCellEdit" ref="autosizeMeter">
       {{ value || $t('input_placeholder') }}
     </span>
+    <div
+      ref="inputMaxWidthSizeMeter"
+      v-if="!isCellEdit"
+      class="input__max-width-size-meter"/>
     <input
       v-if="!isCellEdit"
       :id="id"
@@ -53,7 +57,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import {isMobile, nextRender} from "@/utils";
+import { isMobile } from "@/utils";
 import Textarea from "@/components/form/Textarea.vue";
 @Component({
   components: {Textarea}
@@ -74,7 +78,7 @@ export default class Input extends Vue {
   @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
 
   private focused = false;
-  private inputHeight = 24;
+  private maxInputWidth = 0;
 
   private mounted() {
     const controlElement = this.$refs.control as HTMLInputElement;
@@ -184,18 +188,19 @@ export default class Input extends Vue {
   }
 
   private updateWidth(text: string) {
+    this.maxInputWidth = (this.$refs.inputMaxWidthSizeMeter as HTMLDivElement).offsetWidth;
     const value = text !== "" ? text : String(this.$t("input_placeholder"));
     const controlElement = this.$refs.control as HTMLInputElement;
     const autosizeMeter = this.$refs.autosizeMeter as HTMLSpanElement;
     const leftPos = controlElement.getBoundingClientRect().left;
-    const newWidth = autosizeMeter.scrollWidth;
+    const newWidth = autosizeMeter.scrollWidth >= this.maxInputWidth ? autosizeMeter.scrollWidth : this.maxInputWidth;
     const rightPos = leftPos + newWidth;
     const viewportWidth = document.documentElement.clientWidth - 10;
 
     if (rightPos < (viewportWidth - 15)) {
-      controlElement.style.width = `${newWidth}px`;
+      controlElement.style.width = `${newWidth + 10}px`;
     } else {
-      controlElement.style.width = `${viewportWidth - leftPos}px`;
+      controlElement.style.width = `${viewportWidth - leftPos + 10}px`;
     }
   }
 }
@@ -233,6 +238,10 @@ export default class Input extends Vue {
     width: 100%;
     opacity: 0.7;
     padding-left: 15px;
+  }
+
+  .input_field__focused {
+    position: absolute;
   }
 
   .input_container__row {
@@ -312,10 +321,6 @@ export default class Input extends Vue {
     width: 100% !important;
   }
 
-  .input_field__focused {
-    position: absolute;
-  }
-
   .input_modal_field {
     color: var(--MainTextColor);
     background-color: var(--MainBackgroundColor);
@@ -357,5 +362,9 @@ export default class Input extends Vue {
 
   .input_modal__button__cancel {
     background-color: var(--FailColor);
+  }
+
+  .input__max-width-size-meter {
+    visibility: hidden;
   }
 </style>
