@@ -46,7 +46,7 @@
           :autofocus="autofocus"
           focus
           @setInputHeight="setInputHeight"
-          @input="iSlot.onChange($event.target.value)"
+          @input="iSlot.onChange($event)"
         />
         <Textarea
           v-else-if="inputType.name === 'textarea'"
@@ -80,6 +80,17 @@
           :disabled="isDisabled"
           :is-cell-edit="isCellEdit"
           @update:value="updateValue($event)"
+        />
+        <CodeEditor
+          v-else-if="inputType.name === 'codeeditor'"
+          :key="codeEditorKey"
+          ref="control"
+          :isModal="true"
+          :content="textValue"
+          :read-only="isDisabled"
+          :is-cell-edit="isCellEdit"
+          :autofocus="autofocus"
+          @update:content="updateValue($event)"
         />
       </template>
       <template #input="iSlot">
@@ -136,6 +147,7 @@
         />
         <CodeEditor
           v-else-if="inputType.name === 'codeeditor'"
+          :key="codeEditorKey"
           ref="control"
           :style="inputType.style"
           :content="textValue"
@@ -344,6 +356,7 @@ export default class FormControl extends Vue {
   @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
 
   private actions: IAction[] = [];
+  private codeEditorKey = 0;
 
   get isInline(): boolean {
     return inlineTypes.includes(this.inputType.name);
@@ -384,6 +397,10 @@ export default class FormControl extends Vue {
 
   private setInputHeight(value: number) {
     this.$emit("setInputHeight", value);
+  }
+
+  private forceRerender() {
+    this.codeEditorKey += 1;
   }
 
   private controlStyle(height?: string): Record<string, any> {
@@ -499,6 +516,7 @@ export default class FormControl extends Vue {
   }
 
   private mounted() {
+    this.forceRerender();
     if (this.autofocus) {
       const type = this.inputType;
       const control: any = this.$refs["control"];

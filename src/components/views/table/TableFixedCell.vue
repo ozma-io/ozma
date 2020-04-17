@@ -11,10 +11,9 @@
         :uv="localValue.link"
         @[indirectLinks?`click`:null]="$emit('goto', $event)"
       >
-        <b-checkbox
+        <checkbox
           v-if="typeof value.value === 'boolean'"
           :checked="value.value"
-          class="div_checkbox"
           disabled
         />
         <template v-else>
@@ -22,10 +21,9 @@
         </template>
       </UserViewLink>
       <template v-else>
-        <b-checkbox
+        <checkbox
           v-if="typeof value.value === 'boolean'"
           :checked="value.value"
-          class="div_checkbox"
           disabled
         />
         <template v-else>
@@ -39,7 +37,11 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
-@Component
+@Component({
+  components: {
+    Checkbox: () => import("@/components/checkbox/Checkbox.vue"),
+  },
+})
 export default class TableFixedCell extends Vue {
   // We don't bother to set types here properly, they matter no more than for TableRow.
   // The reason this is not a functional component is because of performance.

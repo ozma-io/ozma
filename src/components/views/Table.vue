@@ -1020,11 +1020,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
    */
 
   private setCoordsForEditCell(event: MouseEvent | any) {
-    const tableHeight: number = (this.$refs.tableContainer as HTMLDivElement).clientHeight;
-    const tableHeadHeight: number = (this.$refs.tableHead as HTMLDivElement).clientHeight;
+    const windowHeight: number = window.innerHeight;
     this.isSelectedLastFixedCell = event.target.classList.value.includes('next-after-last-fixed');
     this.editCoords.x = event.clientX - event.offsetX;
-    if (event.clientY - tableHeadHeight - 54 >= Math.round(tableHeight/2)) {
+    if (event.clientY - 54 >= Math.round(windowHeight/2)) {
       this.editCoords.y = (event.clientY - 154 + event.target.offsetHeight) - event.offsetY;
     } else {
       this.editCoords.y = event.clientY - event.offsetY;

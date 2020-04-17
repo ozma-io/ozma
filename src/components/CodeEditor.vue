@@ -1,5 +1,6 @@
 <template>
   <MonacoEditor
+    :class="{'monaco-editor_modal': isModal}"
     :value="content"
     :options="options"
     @change="onChange"
@@ -24,6 +25,7 @@ export default class CodeEditor extends Vue {
   @Prop({ default: "" }) theme!: string;
   @Prop({ default: false }) readOnly!: boolean;
   @Prop({ default: false }) autofocus!: boolean;
+  @Prop({ default: false }) isModal!: boolean;
 
   get options() {
     return {
@@ -43,3 +45,9 @@ export default class CodeEditor extends Vue {
   }
 }
 </script>
+
+<style>
+  .monaco-editor_modal {
+    height: 350px;
+  }
+</style>
