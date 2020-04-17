@@ -473,7 +473,6 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
   }
 
   updateCommonValue(row: IRowCommon, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, extra: ITableValueExtra) {
-    console.log(`Updating column ${columnIndex}`);
     const columnInfo = this.uv.info.columns[columnIndex];
 
     extra.valueText = valueToPunnedText(columnInfo.valueType, value);
@@ -979,7 +978,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   private clickOutsideEdit() {
-    this.editing = null;
+    this.removeCellEditing();
     this.cellEditHeight = 0;
   }
 
@@ -1000,7 +999,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       const value = this.local.getValueByRef(ref);
 
       if (this.editing !== null // Lock already taken (somehow)
-                    || value === null // value not found
+          || value === null // value not found
       ) {
         this.removeAutoSaveLock(lock);
         return;
