@@ -1,5 +1,5 @@
 import { Module, ActionContext } from "vuex";
-import uuid from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import jwtDecode from "jwt-decode";
 
 import { IRef } from "@/utils";
@@ -210,7 +210,7 @@ const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
 };
 
 const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExisting: boolean) => {
-  const nonce = uuid.v4();
+  const nonce = uuidv4();
   localStorage.setItem(authNonceKey, nonce);
   const path =
         router.currentRoute.name === "auth_response" ?
