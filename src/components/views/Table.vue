@@ -977,8 +977,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     document.body.removeChild(element);
   }
 
-  private clickOutsideEdit() {
-    this.removeCellEditing();
+  private clickOutsideEdit(event: any) {
+    if (!event.path.find((item: any) => item.className === "modal__content")) {
+      this.removeCellEditing();
+    }
     this.cellEditHeight = 0;
   }
 
