@@ -217,10 +217,6 @@ export default class InputSlot extends Vue {
     padding-right: 0;
   }
 
-  .input_field__focused {
-    position: absolute;
-  }
-
   .input_modal_label {
     color: var(--MainTextColor);
     margin: 5px;
