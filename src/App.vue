@@ -75,7 +75,7 @@ export default class App extends Vue {
     const values = {
       // "NavigationBackColor": this.settings.getEntry("NavigationBackColor", String, "white"),
       "Font": this.settings.getEntry("Font", String, "Courier New, monospace"),
-      "FontSize": `${this.settings.getEntry("FontSize", Number, 16)}px`,
+      "FontSize": `${this.settings.getEntry("FontSize", Number, 14)}px`,
       "MenuColor": this.settings.getEntry("MenuColor", String, "#F5C700"),
       "TableBackColor": this.settings.getEntry("TableBackColor", String, "white"),
       "TableSelectColor": this.settings.getEntry("TableSelectColor", String, "#CCCCCC"),
