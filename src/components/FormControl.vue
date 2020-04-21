@@ -74,7 +74,7 @@
           :value="currentValue"
           :options="inputType.options"
           :autofocus="autofocus"
-          :height="attributes['ControlHeight']"
+          :height="customHeight"
           single
           :required="!isNullable"
           :disabled="isDisabled"
@@ -85,7 +85,7 @@
           v-else-if="inputType.name === 'codeeditor'"
           :key="codeEditorKey"
           ref="control"
-          :isModal="true"
+          is-modal
           :content="textValue"
           :read-only="isDisabled"
           :is-cell-edit="isCellEdit"
@@ -135,7 +135,7 @@
           ref="control"
           :value="currentValue"
           :options="inputType.options"
-          :height="attributes['ControlHeight']"
+          :height="customHeight"
           single
           :autofocus="autofocus"
           :dont-open="isMobile"
@@ -207,7 +207,7 @@
                 ref="control"
                 :value="value"
                 :actions="inputType.actions"
-                :height="attributes['ControlHeight']"
+                :height="customHeight"
                 :entry="inputType.ref"
                 :linked-attr="inputType.linkedAttr"
                 :select-view="inputType.selectView"
@@ -226,7 +226,7 @@
                 ref="control"
                 :value="value"
                 :actions="inputType.actions"
-                :height="attributes['ControlHeight']"
+                :height="customHeight"
                 :entry="inputType.ref"
                 :linked-attr="inputType.linkedAttr"
                 :select-view="inputType.selectView"
@@ -271,7 +271,7 @@ import { IValueInfo, IUserViewArguments, CombinedUserView, CurrentUserViews, hom
 import { IQuery, attrToQuerySelf, IAttrToQueryOpts } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { ISelectionRef } from "@/components/BaseUserView";
-import { isMobile } from "@/utils";
+import { isMobile, pascalToSnake } from "@/utils";
 
 interface ITextType {
   name: "text";
@@ -388,11 +388,10 @@ export default class FormControl extends Vue {
   }
 
   private get controlPanelStyle() {
-    const heightAttr = this.attributes["ControlHeight"];
     const excludeHeight = heightExclusions.includes(this.inputType.name);
     const isHeightOnPanel = !multilineTypes.includes(this.inputType.name);
-    const height = isHeightOnPanel ? { height: `${heightAttr}px` } : {};
-    return heightAttr && !excludeHeight ? { ...height, maxHeight: "initial" } : {};
+    const height = isHeightOnPanel ? { height: `${this.customHeight}px` } : {};
+    return this.customHeight !== null && !excludeHeight ? { ...height, maxHeight: "initial" } : {};
   }
 
   private setInputHeight(value: number) {
@@ -403,11 +402,19 @@ export default class FormControl extends Vue {
     this.codeEditorKey += 1;
   }
 
+  get customHeight() {
+    const heightAttr = Number(this.attributes["control_height"]);
+    return Number.isNaN(heightAttr) ? null : heightAttr;
+  }
+
+  get textType() {
+    return String(this.attributes["text_type"]);
+  }
+
   private controlStyle(height?: string): Record<string, any> {
-    const heightAttr = this.attributes["ControlHeight"];
     const systemHeight = height ? { height } : {};
-    const userHeight = !isNaN(heightAttr) ? { height: `${heightAttr}px` } : {};
-    const editorStyle = this.attributes["TextType"] === "codeeditor" ? { minHeight: "200px" } : {};
+    const userHeight = this.customHeight !== null ? { height: `${this.customHeight}px` } : {};
+    const editorStyle = this.textType === "codeeditor" ? { minHeight: "200px" } : {};
     return { ...systemHeight, ...userHeight, ...editorStyle };
   }
 
@@ -423,8 +430,12 @@ export default class FormControl extends Vue {
     const home = homeSchema(this.uvArgs);
     const linkOpts = home !== null ? { homeSchema: home } : undefined;
 
-    const controlAttr = this.attributes["Control"];
-    if (controlAttr === "UserView") {
+    const rawControlAttr = String(this.attributes["control"]);
+    const controlAttr = pascalToSnake(rawControlAttr);
+    if (rawControlAttr !== controlAttr) {
+      console.error(`"control" attribute value ${rawControlAttr} uses pascal case`);
+    }
+    if (controlAttr === "user_view") {
       if (this.currentValue === null || this.currentValue === undefined) {
         return { name: "error", text: this.$t("empty").toString() };
       }
@@ -449,17 +460,17 @@ export default class FormControl extends Vue {
           ref: this.fieldType,
           actions: [],
         };
-        refEntry.linkedAttr = this.attributes["LinkedView"];
+        refEntry.linkedAttr = this.attributes["linked_view"];
         refEntry.style = this.controlStyle();
 
-        const selectView = attrToQuerySelf(this.attributes["SelectView"], this.value.info, linkOpts);
+        const selectView = attrToQuerySelf(this.attributes["select_view"], this.value.info, linkOpts);
         if (selectView !== null) {
           refEntry.actions.push({
             name: this.$t("select_view").toString(),
             query: selectView,
           });
         }
-        const extraActions = this.attributes["ExtraSelectActions"];
+        const extraActions = this.attributes["extra_select_actions"];
         if (Array.isArray(extraActions)) {
           extraActions.forEach(action => {
             if (typeof action === "object" && action.name) {
@@ -505,7 +516,7 @@ export default class FormControl extends Vue {
     }
 
     // Plain text
-    switch (this.attributes["TextType"]) {
+    switch (this.textType) {
     case "multiline":
       return { name: "textarea", style: this.controlStyle(heightMultilineText) };
     case "codeeditor":

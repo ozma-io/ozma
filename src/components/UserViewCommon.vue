@@ -60,12 +60,12 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
     if (home !== null) {
       opts.homeSchema = home;
     }
-    return attrToQuery(this.uv.attributes["CreateView"], opts);
+    return attrToQuery(this.uv.attributes["create_view"], opts);
   }
 
   get actions() {
     const actions: IAction[] = [];
-    const extraActions = this.uv.attributes["ExtraActions"];
+    const extraActions = this.uv.attributes["extra_actions"];
     if (Array.isArray(extraActions)) {
       const opts: IAttrToQueryOpts = {};
       const home = homeSchema(this.uv.args);
@@ -121,8 +121,8 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
   // Used to create referenced entries and automatically insert them into current table.
   get modalReferenceField(): IModalReferenceField | null {
     const modalReferenceField = R.head(mapMaybe((column, columnIndex): IModalReferenceField | undefined => {
-      const referenceViewAttr: boolean = R.pathOr(false, ["columnAttributes", String(columnIndex), "MainReferenceField"], this.uv);
-      const selectViewAttr = R.pathOr(false, ["columnAttributes", String(columnIndex), "SelectView"], this.uv);
+      const referenceViewAttr = Boolean(R.pathOr(false, ["columnAttributes", String(columnIndex), "main_reference_field"], this.uv));
+      const selectViewAttr = R.pathOr(false, ["columnAttributes", String(columnIndex), "select_view"], this.uv);
       const referenceUV = attrToQuery(selectViewAttr);
       const entity = R.path<IEntityRef>(["info", "columns", String(columnIndex), "mainField", "field", "fieldType", "entity"], this.uv);
       if (referenceUV && entity && referenceViewAttr) {

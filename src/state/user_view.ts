@@ -2,7 +2,7 @@ import Vue from "vue";
 import { Store, Dispatch, Module, ActionContext } from "vuex";
 import moment from "moment";
 
-import { IRef, FetchError, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, mapMaybe } from "@/utils";
+import { IRef, FetchError, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, pascalToSnake } from "@/utils";
 import * as Api from "@/api";
 import {
   IColumnField, IUserViewRef, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
@@ -251,6 +251,16 @@ interface ICombinedUserViewParams {
   changes: CurrentChanges;
 }
 
+const renameAttributes = (attrs: Record<AttributeName, any>): Record<AttributeName, any> => {
+  return Object.fromEntries(Object.entries(attrs).map(([attrName, attr]) => {
+    const realName = pascalToSnake(attrName);
+    if (realName !== attrName) {
+      console.error(`Received attribute key ${attrName} is not in snake_case`);
+    };
+    return [realName, attr];
+  }));
+};
+
 // Combine initial user view response with current staging data, entry summaries map and extra data needed by a user view representation.
 export class CombinedUserView {
   args: IUserViewArguments;
@@ -272,8 +282,8 @@ export class CombinedUserView {
     const { args, info, attributes, columnAttributes, rows, changes } = params;
     this.args = args;
     this.info = info;
-    this.attributes = attributes;
-    this.columnAttributes = columnAttributes;
+    this.attributes = renameAttributes(attributes);
+    this.columnAttributes = columnAttributes.map(renameAttributes);
     this.homeSchema = homeSchema(args);
     this.userViewKey = valueSignature(args);
 
@@ -368,6 +378,16 @@ export class CombinedUserView {
         } else {
           row.deleted = false;
         }
+
+        if (row.attributes) {
+          row.attributes = renameAttributes(row.attributes);
+        }
+
+        row.values.forEach(value => {
+          if (value.attributes) {
+            value.attributes = renameAttributes(value.attributes);
+          }
+        });
 
         const entityIds = row.entityIds;
         if (entityIds === undefined) {

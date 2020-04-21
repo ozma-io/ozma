@@ -19,8 +19,8 @@
       @[indirectLinks?`click`:null]="$emit('goto', $event)"
     >
       <checkbox
-        class="checkbox_click-none"
         v-if="typeof value.value === 'boolean'"
+        class="checkbox_click-none"
         :checked="value.value"
         disabled
       />
@@ -30,8 +30,8 @@
     </UserViewLink>
     <template v-else>
       <checkbox
-        class="checkbox_click-none"
         v-if="typeof value.value === 'boolean'"
+        class="checkbox_click-none"
         :checked="value.value"
         disabled
       />

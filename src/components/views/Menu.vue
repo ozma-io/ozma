@@ -1,52 +1,34 @@
 <i18n>
-    {
-        "en-US": {
-            "filter": "Filter",
-            "search_placeholder": "Type to search",
-            "filtered_count": "Rows count: {count}",
-            "clear": "Clear",
-            "yes": "Yes",
-            "no": "No",
-            "invalid_menu": "Menu user view should have two columns"
-        },
-        "ru": {
-            "filter": "Поиск",
-            "search_placeholder": "Введите фразу",
-            "filtered_count": "Кол-во записей: {count}",
-            "clear": "Очистить",
-            "yes": "Да",
-            "no": "Нет",
-            "invalid_menu": "Представление меню должно иметь две колонки"
-        }
+  {
+    "en": {
+      "invalid_create_mode": "Menu doesn't support create mode",
+      "invalid_new_menu_value": "Invalid array-style menu value",
+      "invalid_menu": "Invalid data format for menu"
+    },
+    "ru": {
+      "invalid_create_mode": "Меню не поддерживает режим создания",
+      "invalid_new_menu_value": "Неверное значение меню-массива",
+      "invalid_menu": "Неверный формат данных для меню"
     }
+  }
 </i18n>
 
 <template>
   <b-container class="menu_container">
-    <b-row v-if="!isNewMenu">
-      <b-col cols="12">
-        <span v-if="typeof categoriesOrError === 'string'">
+    <b-row>
+      <b-col v-if="typeof entriesOrError === 'string'" cols="12">
+        <span>
           {{ error }}
         </span>
       </b-col>
-    </b-row>
-    <b-row
-      v-if="isNewMenu"
-    >
       <MenuEntry 
-        v-for="(entry, index) in entries"
+        v-for="(entry, index) in entriesOrError"
+        v-else
         :key="index"
         :entry="entry"
         :indirect-links="indirectLinks"
       />
     </b-row>
-    <!-- Legacy: To delete when there is no old-style menus left -->
-    <OldMenu
-      v-else
-      :categories="categoriesOrError"
-      :get-block-size="getBlockSize"
-      :indirect-links="indirectLinks"
-    />
   </b-container>
 </template>
 
@@ -56,108 +38,151 @@ import { Location } from "vue-router";
 import { namespace } from "vuex-class";
 import { mixins } from "vue-class-component";
 
-import { tryDicts } from "@/utils";
-import { CombinedUserView, valueToPunnedText, homeSchema } from "@/state/user_view";
-import { IQuery, attrToQuery } from "@/state/query";
+import { tryDicts, mapMaybe } from "@/utils";
+import { CombinedUserView, valueToPunnedText, homeSchema, currentValue, ICombinedValue } from "@/state/user_view";
+import { IQuery, attrToQuery, IAttrToQueryOpts } from "@/state/query";
 import { CurrentChanges, IEntityChanges } from "@/state/staging_changes";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
 import { UserView } from "@/components";
 import BaseUserView from "@/components/BaseUserView";
 import * as R from "ramda";
 
-import OldMenu, { IMainMenuCategory } from '@/components/views/menu/OldMenu.vue';
-import MenuEntry, { IMenu } from '@/components/views/menu/MenuEntry.vue';
+import MenuEntry, { MenuValue, IMenuLink } from '@/components/views/menu/MenuEntry.vue';
 
 @UserView({
   localConstructor: LocalEmptyUserView,
 })
-@Component({ components: { OldMenu, MenuEntry } })
+@Component({ components: { MenuEntry } })
 export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>>(BaseUserView) {
   @Prop() uv!: CombinedUserView;
   @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 
-
-  get entries(): IMenu[] {
-    return R.pathOr([], ["rows", 0, "values", 0, "value"], this.uv);
+  get linkOpts(): IAttrToQueryOpts {
+    const home = homeSchema(this.uv.args);
+    return home !== null ? { homeSchema: home } : {};
   }
 
-  /* Legacy: To delete when there is no old-style menus left */
-  get isNewMenu(): boolean {
-    const values = R.path<any[]>(["rows", 0, "values"], this.uv);
-    if (values) {
-      return values.length === 1;
+  private convertNewMenuEntries(entries: any[]): MenuValue[] {
+    return mapMaybe(entry => {
+      const ret = this.convertNewMenuEntry(entry);
+      if (ret === null) {
+        return undefined;
+      } else {
+        return ret;
+      }
+    }, entries);
+  }
+
+  private convertNewMenuEntry(entry: any): MenuValue | null {
+    if (!("name" in entry)) {
+      return null;
     }
-    return true;
-  }
-
-  get blockSizes() {
-    return this.uv.attributes["BlockSizes"];
-  }
-
-  getBlockSize(index: number): number {
-    return R.pathOr(6, [index], this.blockSizes);
-  }
-  
-  get categoriesOrError() {
-    // .rows === null means that we are in "create new" mode -- there are no selected existing values.
-    if (this.uv.rows === null) {
-      // Not supported in menu yet.
-      return [];
-    } else if (this.uv.info.columns.length !== 2) {
-      return this.$t("invalid_menu").toString();
+    const base: { name: string; size?: number } = { name: String(entry.name) };
+    if ("size" in entry) {
+      const size = Number(entry.size);
+      if (!Number.isNaN(size)) {
+        base.size = size;
+      }
+    }
+    
+    if ("content" in entry) {
+      if (!(entry.content instanceof Array)) {
+        return null;
+      }
+      const content = this.convertNewMenuEntries(entry.content);
+      return { ...base, content };
     } else {
-      const viewAttrs = this.uv.attributes;
+      const ref = attrToQuery(entry, this.linkOpts);
+      if (ref === null) {
+        return null;
+      }
 
-      const categoryColumnInfo = this.uv.info.columns[0];
-      const categoriesAttrs = this.uv.columnAttributes[0];
-      const buttonColumnInfo = this.uv.info.columns[1];
-      const buttonsAttrs = this.uv.columnAttributes[1];
+      return { ...base, ...ref };
+    }
+  };
 
-      const categories = new Map<string, IMainMenuCategory>();
-      const home = homeSchema(this.uv.args);
-      const linkOpts = home !== null ? { homeSchema: home } : undefined;
-      this.uv.rows.forEach((row, rowI) => {
-        if (row.deleted) {
-          return;
+  private buildNewMenu(): MenuValue[] | string {
+    if (this.uv.info.columns[0].valueType.type !== "json") {
+      return this.$t("invalid_new_menu_value").toString();
+    }
+    return this.uv.rows!.flatMap(row => {
+      if (row.deleted) {
+        return [];
+      }
+      const rawMenu = currentValue(row.values[0]);
+      if (rawMenu instanceof Array) {
+        return this.convertNewMenuEntries(rawMenu);
+      } else if (typeof rawMenu === "object") {
+        const ret = this.convertNewMenuEntry(rawMenu);
+        if (ret === null) {
+          return [];
+        } else {
+          return [ret];
         }
+      } else {
+        return [];
+      }
+    });
+  };
 
-        const rowAttrs = row.attributes === undefined ? {} : row.attributes;
-        const getRowAttr = (name: string) => tryDicts(name, rowAttrs, viewAttrs);
+  private buildOldMenu(): MenuValue[] | string {
+    const viewAttrs = this.uv.attributes;
 
-        const categoryCell = row.values[0];
-        const categoryName = valueToPunnedText(categoryColumnInfo.valueType, categoryCell);
-        let category: IMainMenuCategory | undefined = categories.get(categoryName);
-        if (category === undefined) {
-          category = {
-            index: rowI,
-            name: categoryName,
-            buttons: [],
-          };
-          categories.set(categoryName, category);
-        }
+    const categoryColumnInfo = this.uv.info.columns[0];
+    const categoriesAttrs = this.uv.columnAttributes[0];
+    const buttonColumnInfo = this.uv.info.columns[1];
+    const buttonsAttrs = this.uv.columnAttributes[1];
 
-        const buttonCell = row.values[1];
-        const buttonName = valueToPunnedText(buttonColumnInfo.valueType, buttonCell);
-        const buttonAttrs = buttonCell.attributes || {};
-        const getButtonAttr = (name: string) => tryDicts(name, buttonAttrs, rowAttrs, buttonsAttrs, viewAttrs);
+    const categories = new Map<string, { index: number; content: IMenuLink[] }>();
+    this.uv.rows!.forEach((row, rowI) => {
+      if (row.deleted) {
+        return;
+      }
 
-        const toQuery = attrToQuery(getButtonAttr("LinkedView"), linkOpts);
-        if (toQuery === null) {
-          return;
-        }
+      const rowAttrs = row.attributes === undefined ? {} : row.attributes;
+      const getRowAttr = (name: string) => tryDicts(name, rowAttrs, viewAttrs);
 
-        const button = {
+      const categoryCell = row.values[0];
+      const categoryName = valueToPunnedText(categoryColumnInfo.valueType, categoryCell);
+      let category = categories.get(categoryName);
+      if (category === undefined) {
+        category = {
           index: rowI,
-          name: buttonName,
-          categoryName,
-          uv: toQuery,
+          content: [],
         };
-        category.buttons.push(button);
-      });
-      return Array.from(categories.values());
+        categories.set(categoryName, category);
+      }
+
+      const buttonCell = row.values[1];
+      const buttonName = valueToPunnedText(buttonColumnInfo.valueType, buttonCell);
+      const buttonAttrs = buttonCell.attributes || {};
+      const getButtonAttr = (name: string) => tryDicts(name, buttonAttrs, rowAttrs, buttonsAttrs, viewAttrs);
+
+      const toQuery = attrToQuery(getButtonAttr("linked_view"), this.linkOpts);
+      if (toQuery === null) {
+        return;
+      }
+
+      const button: IMenuLink = {
+        name: buttonName,
+        ...toQuery,
+      };
+      category.content.push(button);
+    });
+    return Array.from(categories.entries()).sort(([nameA,a], [nameB, b]) => a.index - b.index).map(([name, x]) => ({ name, content: x.content }));
+  }
+
+  get entriesOrError(): MenuValue[] | string {
+    if (this.uv.rows === null) {
+      return this.$t("invalid_create_mode").toString();
+    } else if (this.uv.info.columns.length === 1) {
+      return this.buildNewMenu();
+    } else if (this.uv.info.columns.length === 2) {
+      return this.buildOldMenu();
+    } else {
+      return this.$t("invalid_menu").toString();
     }
   }
-  /* Legacy End */
 }
 </script>
 

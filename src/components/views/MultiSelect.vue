@@ -1,12 +1,12 @@
 <i18n>
-    {
-        "en": {
-            "no_select_column": "Please identify selectable column using \"Select\" = True attribute on desired column."
-        },
-        "ru": {
-            "no_select_column": "Пожалуйста, обозначьте колонку для выбора через аттрибут \"Select\" = True на желаемой колонке."
-        }
+  {
+    "en": {
+      "no_select_column": "Please identify selectable column using \"Select\" = True attribute on desired column."
+    },
+    "ru": {
+      "no_select_column": "Пожалуйста, обозначьте колонку для выбора через аттрибут \"Select\" = True на желаемой колонке."
     }
+  }
 </i18n>
 
 <template>
@@ -112,7 +112,7 @@ import MultiSelect from "@/components/multiselect/MultiSelect.vue";
 import { IAction } from "@/components/ActionsMenu.vue";
 
 const findSelectColumnIndex = (attrs: { [key: string]: any}) =>
-  Number(Object.keys(attrs).filter(key => R.pathOr(false, [key, "Select"], attrs))[0]);
+  Number(Object.keys(attrs).filter(key => R.pathOr(false, [key, "select"], attrs))[0]);
 
 interface IValueDelta {
   rowsToRemove: RowRef[];
@@ -198,7 +198,7 @@ export default class UserViewMultiselect extends mixins<BaseUserView<LocalEmptyU
   private get options() {
     const entity = this.entriesEntity;
     const linkedView = R.pathOr(
-      null, [this.selectedValueIndex, "RowLinkedView"], this.uv.columnAttributes,
+      null, [this.selectedValueIndex, "row_linked_view"], this.uv.columnAttributes,
     );
     if (entity) {
       const entries = this.entriesMap.getEntries(entity);

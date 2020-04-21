@@ -43,7 +43,7 @@
         :level="level"
         is-cell-edit
         autofocus
-        autoOpen
+        auto-open
         @setInputHeight="setInputHeight"
         @update="updateCurrentValue"
         @closeModalInput="clickOutsideEdit"
@@ -330,23 +330,23 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
     const columnAttrs = uv.columnAttributes[i];
     const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
 
-    const captionAttr = getColumnAttr("Caption");
+    const captionAttr = getColumnAttr("caption");
     const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name;
 
     const style: Record<string, any> = {};
 
-    const columnWidthAttr = Number(getColumnAttr("ColumnWidth"));
+    const columnWidthAttr = Number(getColumnAttr("column_width"));
     const columnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr;
     style["width"] = `${columnWidth}px`;
 
-    const fixedColumnAttr = getColumnAttr("Fixed");
+    const fixedColumnAttr = getColumnAttr("fixed");
     const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr);
 
     // FIXME: we stopped supporting it for now.
-    //const fixedFieldAttr = getColumnAttr("MobileFixed");
+    //const fixedFieldAttr = getColumnAttr("mobile_fixed");
     //const fixedField = fixedFieldAttr === undefined ? false : Boolean(fixedFieldAttr);
 
-    const visibleColumnAttr = getColumnAttr("Visible");
+    const visibleColumnAttr = getColumnAttr("visible");
     const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
 
     return {
@@ -377,7 +377,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     const style: Record<string, any> = {};
     let touchedStyle = false;
 
-    const cellColor = getCellAttr("CellColor");
+    const cellColor = getCellAttr("cell_color");
     if (cellColor !== undefined) {
       style["background-color"] = String(cellColor);
       touchedStyle = true;
@@ -415,19 +415,19 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
 
     if (value.info !== undefined) {
       if (value.info.field !== null && value.info.field.fieldType.type === "reference") {
-        const link = attrToQueryRef(getCellAttr("LinkedView"), currentValue(value), this.extra.linkOpts);
+        const link = attrToQueryRef(getCellAttr("linked_view"), currentValue(value), this.extra.linkOpts);
         if (link !== null) {
           extra.link = link;
         }
       }
-      const currLinkForRow = attrToQuerySelf(getCellAttr("RowLinkedView"), value.info, this.extra.linkOpts);
+      const currLinkForRow = attrToQuerySelf(getCellAttr("row_linked_view"), value.info, this.extra.linkOpts);
       if (currLinkForRow !== null) {
         localRow.extra.link = currLinkForRow;
         this.extra.hasRowLinks = true;
       }
     }
 
-    if (getCellAttr("Selectable") && value.info !== undefined) {
+    if (getCellAttr("selectable") && value.info !== undefined) {
       localRow.extra.selectionEntry = {
         entity: value.info.fieldRef.entity,
         id: value.info.id,
@@ -501,7 +501,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     const style: Record<string, any> = {};
     let touchedStyle = false;
 
-    const height = Number(getRowAttr("RowHeight"));
+    const height = Number(getRowAttr("row_height"));
     if (!Number.isNaN(height)) {
       style["white-space"] = "nowrap";
       extra.height = height;

@@ -66,48 +66,48 @@ export default class App extends Vue {
 
   @Watch("settings")
   private updateSettings() {
-    const rawAutoSaveTimeout = Number(this.settings.getEntry("AutoSaveTimeout", String, "3"));
+    const rawAutoSaveTimeout = Number(this.settings.getEntry("auto_save_timeout", String, "3"));
     const autoSaveTimeout = Number.isNaN(rawAutoSaveTimeout) ? null : rawAutoSaveTimeout * 1000;
     this.setAutoSaveTimeout(autoSaveTimeout);
   }
 
   get styleSettings() {
     const values = {
-      // "NavigationBackColor": this.settings.getEntry("NavigationBackColor", String, "white"),
-      "Font": this.settings.getEntry("Font", String, "Courier New, monospace"),
-      "FontSize": `${this.settings.getEntry("FontSize", Number, 14)}px`,
-      "MenuColor": this.settings.getEntry("MenuColor", String, "#F5C700"),
-      "TableBackColor": this.settings.getEntry("TableBackColor", String, "white"),
-      "TableSelectColor": this.settings.getEntry("TableSelectColor", String, "#CCCCCC"),
-      "WarningBackColor": this.settings.getEntry("WarningBackColor", String, "#fff3cd"),
-      "DangerBackColor": this.settings.getEntry("DangerBackColor", String, "#f8d7da"),
-      "SuccessBackColor": this.settings.getEntry("SuccessBackColor", String, "#d4edda"),
-      "SelectBorderColor": this.settings.getEntry("SelectBorderColor", String, "blue"),
-      "ErrorBackColor": this.settings.getEntry("ErrorBackColor", String, "red"),
-      "RequiredBackColor": this.settings.getEntry("RequiredBackColor", String, "yellow"),
-      "ButtonTextColor": this.settings.getEntry("ButtonTextColor", String, "white"),
-      "TableTextColor": this.settings.getEntry("TableTextColor", String, "#383838"),
-      "SaveBackColor": this.settings.getEntry("SaveBackColor", String, "blue"),
-      "NavigationTextColor": this.settings.getEntry("NavigationTextColor", String, "white"),
-      "ControlDisableColor": this.settings.getEntry("ControlDisableColor", String, "#999999"),
+      // "NavigationBackColor": this.settings.getEntry("navigation_back_color", String, "white"),
+      "Font": this.settings.getEntry("font", String, "Courier New, monospace"),
+      "FontSize": `${this.settings.getEntry("font_size", Number, 16)}px`,
+      "MenuColor": this.settings.getEntry("menu_color", String, "#F5C700"),
+      "TableBackColor": this.settings.getEntry("table_back_color", String, "white"),
+      "TableSelectColor": this.settings.getEntry("table_select_color", String, "#CCCCCC"),
+      "WarningBackColor": this.settings.getEntry("warning_back_color", String, "#fff3cd"),
+      "DangerBackColor": this.settings.getEntry("danger_back_color", String, "#f8d7da"),
+      "SuccessBackColor": this.settings.getEntry("success_back_color", String, "#d4edda"),
+      "SelectBorderColor": this.settings.getEntry("select_border_color", String, "blue"),
+      "ErrorBackColor": this.settings.getEntry("error_back_color", String, "red"),
+      "RequiredBackColor": this.settings.getEntry("required_back_color", String, "yellow"),
+      "ButtonTextColor": this.settings.getEntry("button_text_color", String, "white"),
+      "TableTextColor": this.settings.getEntry("table_text_color", String, "#383838"),
+      "SaveBackColor": this.settings.getEntry("save_back_color", String, "blue"),
+      "NavigationTextColor": this.settings.getEntry("navigation_text_color", String, "white"),
+      "ControlDisableColor": this.settings.getEntry("control_disable_color", String, "#999999"),
 
       // Light Theme, do not remove
-      "MainTextColor": this.settings.getEntry("MainTextColor", String, "black"),
-      "MainBackgroundColor": this.settings.getEntry("MainBackgroundColor", String, "white"),
-      "MainTextColorLight": this.settings.getEntry("MainTextColorLight", String, "#68766d"),
-      "MainBorderColor": this.settings.getEntry("MainBorderColor", String, "#dee2e6"),
-      "MainBorderTextColor": this.settings.getEntry("MainBorderTextColor", String, "white"),
+      "MainTextColor": this.settings.getEntry("main_text_color", String, "black"),
+      "MainBackgroundColor": this.settings.getEntry("main_background_color", String, "white"),
+      "MainTextColorLight": this.settings.getEntry("main_text_color_light", String, "#68766d"),
+      "MainBorderColor": this.settings.getEntry("main_border_color", String, "#dee2e6"),
+      "MainBorderTextColor": this.settings.getEntry("main_border_text_color", String, "white"),
 
       // Dark Theme, do not remove
-      // "MainTextColor": this.settings.getEntry("MainTextColor", String, "#b2b2b2"),
-      // "MainBackgroundColor": this.settings.getEntry("MainBackgroundColor", String, "#292b2e"),
-      // "MainTextColorLight": this.settings.getEntry("MainTextColorLight", String, "#8a8a8a"),
-      // "MainBorderColor": this.settings.getEntry("MainBorderColor", String, "#2c936f"),
+      // "MainTextColor": this.settings.getEntry("main_text_color", String, "#b2b2b2"),
+      // "MainBackgroundColor": this.settings.getEntry("main_background_color", String, "#292b2e"),
+      // "MainTextColorLight": this.settings.getEntry("main_text_color_light", String, "#8a8a8a"),
+      // "MainBorderColor": this.settings.getEntry("main_border_color", String, "#2c936f"),
 
-      "SuccessColor": this.settings.getEntry("SuccessColor", String, "#28a745"),
-      "FailColor": this.settings.getEntry("FailColor", String, "#dc3545"),
-      "WarningColor": this.settings.getEntry("FailColor", String, "#ffc107"),
-      "StateTextColor": this.settings.getEntry("StateTextColor", String, "white"),
+      "SuccessColor": this.settings.getEntry("success_color", String, "#28a745"),
+      "FailColor": this.settings.getEntry("fail_color", String, "#dc3545"),
+      "WarningColor": this.settings.getEntry("fail_color", String, "#ffc107"),
+      "StateTextColor": this.settings.getEntry("state_text_color", String, "white"),
     };
     return Object.entries(values).reduce((currSettings, [name, value]) => {
       currSettings[`--${name}`] = value;

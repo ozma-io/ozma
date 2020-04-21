@@ -27,19 +27,19 @@ export class CurrentAuth {
   }
 
   get username() {
-    return this.decodedIdToken.preferred_username;
+    return this.decodedIdToken["preferred_username"];
   }
 
   get refreshValidFor(): number {
-    return this.decodedRefreshToken.exp - this.decodedRefreshToken.iat;
+    return this.decodedRefreshToken["exp"] - this.decodedRefreshToken["iat"];
   }
 
   get validFor(): number {
-    return this.decodedToken.exp - this.decodedToken.iat;
+    return this.decodedToken["exp"] - this.decodedToken["iat"];
   }
 
   get session(): string {
-    return this.decodedToken.session_state;
+    return this.decodedToken["session_state"];
   }
 }
 
@@ -109,7 +109,7 @@ const getToken = (context: ActionContext<IAuthState, {}>, params: Record<string,
         "Content-Type": "application/x-www-form-urlencoded",
       };
 
-      params.client_id = Api.authClientId;
+      params["client_id"] = Api.authClientId;
       const paramsString = new URLSearchParams(params).toString();
 
       const ret = await Utils.fetchJson(`${Api.authUrl}/token`, {
@@ -177,8 +177,8 @@ const renewAuth = async (context: ActionContext<IAuthState, {}>) => {
   }
 
   const params: Record<string, string> = {
-    grant_type: "refresh_token",
-    refresh_token: state.current.refreshToken,
+    ["grant_type"]: "refresh_token",
+    ["refresh_token"]: state.current.refreshToken,
   };
   return getToken(context, params);
 };
@@ -221,13 +221,13 @@ const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExist
     path,
   };
   const params = {
-    client_id: Api.authClientId,
-    redirect_uri: redirectUri(),
-    state: btoa(JSON.stringify(savedState)),
-    scope: "openid",
-    response_mode: "query",
-    response_type: "code",
-    prompt: tryExisting ? "none" : "login",
+    ["client_id"]: Api.authClientId,
+    ["redirect_uri"]: redirectUri(),
+    ["state"]: btoa(JSON.stringify(savedState)),
+    ["scope"]: "openid",
+    ["response_mode"]: "query",
+    ["response_type"]: "code",
+    ["prompt"]: tryExisting ? "none" : "login",
   };
   const paramsString = new URLSearchParams(params).toString();
 
@@ -314,9 +314,9 @@ export const authModule: Module<IAuthState, {}> = {
             const code = getQueryValue("code");
             if (code !== null) {
               const params: Record<string, string> = {
-                grant_type: "authorization_code",
-                code,
-                redirect_uri: redirectUri(),
+                ["grant_type"]: "authorization_code",
+                ["code"]: code,
+                ["redirect_uri"]: redirectUri(),
               };
               getToken(context, params);
             } else {
@@ -404,7 +404,7 @@ export const authModule: Module<IAuthState, {}> = {
       }
 
       const params = {
-        redirect_uri: redirectUri(),
+        ["redirect_uri"]: redirectUri(),
       };
       const paramsString = new URLSearchParams(params).toString();
       dropCurrentAuth();

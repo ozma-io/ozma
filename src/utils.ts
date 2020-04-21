@@ -482,3 +482,14 @@ export const getTextWidth = (text: string, font: string): number => {
   }
   return 0;
 };
+
+export const pascalToSnake = (str: string) => {
+  return str.split(/(?=[A-Z])/).join("_").toLowerCase();
+};
+
+export const snakeToPascal = (str: string) => {
+  return str.split("_").map(x => {
+    const c = x.charAt(0);
+    return c.toUpperCase() + x.slice(c.length);
+  }).join("");
+};

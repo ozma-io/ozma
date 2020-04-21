@@ -31,11 +31,11 @@
     "vue/max-attributes-per-line": ["error", {
       "singleline": 2
     }],
+    "no-console": ["warn", {
+      "allow": ["warn", "error", "trace", "assert"]
+    }],
     "@typescript-eslint/interface-name-prefix": ["error", {
       "prefixWithI": "always"
-    }],
-    "@typescript-eslint/camelcase": ["error", {
-      "properties": "never"
     }],
     "@typescript-eslint/ban-ts-ignore": "off",
     "@typescript-eslint/no-explicit-any": "off",

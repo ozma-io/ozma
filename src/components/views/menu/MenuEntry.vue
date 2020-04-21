@@ -2,7 +2,7 @@
   <b-col
     :sm="entry.size || 12"
   >
-    <template v-if="Array.isArray(entry.content)">
+    <template v-if="entry.content">
       <div class="menu_category_block">
         <div
           class="menu_category_title"
@@ -25,7 +25,7 @@
         <UserViewLink
           class="navigation-entry"
           :style="titleStyle"
-          :uv="link"
+          :uv="entry"
           @[indirectLinks?`click`:null]="$emit('goto', $event)"
         >
           {{ entry.name }}
@@ -41,25 +41,27 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { IQuery, attrToQuery } from '@/state/query';
 
-export interface IMenu {
+interface IMenuBase {
   name: string;
-  children?: IMenu[];
-  ref?: IQuery;
   size?: number;
 }
+
+export interface IMenuLink extends IMenuBase, IQuery { }
+
+export interface IMenuCategory extends IMenuBase {
+  content: MenuValue[];
+}
+
+export type MenuValue = IMenuLink | IMenuCategory;
 
 const initialSize = 50;
 const scaleFactor = 0.85;
 
 @Component({ name: 'MenuEntry' })
-export default class MenuEntries extends Vue {
+export default class MenuEntry extends Vue {
   @Prop({ type: Number, required: false, default: 0 }) level!: number;
-  @Prop({ type: Object, required: true }) entry!: IMenu;
+  @Prop({ type: Object, required: true }) entry!: MenuValue;
   @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
-
-  get link(): IQuery | null {
-    return attrToQuery(this.entry.ref)
-  }
 
   get titleStyle(): { fontSize: string } {
     if (this.level) {

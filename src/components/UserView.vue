@@ -75,7 +75,7 @@ import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { Store } from "vuex";
 
-import { RecordSet, ReferenceName, deepEquals } from "@/utils";
+import { RecordSet, ReferenceName, deepEquals, snakeToPascal, pascalToSnake } from "@/utils";
 import { funappSchema } from "@/api";
 import { equalEntityRef } from "@/values";
 import { CombinedUserView, UserViewError, IUserViewArguments, IUserViewEventHandler, CurrentUserViews, IUserViewState, homeSchema } from "@/state/user_view";
@@ -89,15 +89,16 @@ import { ISelectionRef } from "@/components/BaseUserView";
 import UserViewCommon from "@/components/UserViewCommon.vue";
 
 const types: RecordSet<string> = {
-  "Form": null,
-  "Menu": null,
-  "Table": null,
-  "MultiSelect": null,
-  "Board": null,
+  "form": null,
+  "menu": null,
+  "table": null,
+  "multi_select": null,
+  "board": null,
 };
 
 const components = Object.fromEntries(Object.keys(types).map(name => {
-  return [`UserView${name}`, () => import(`@/components/views/${name}.vue`)];
+  const pascalName = snakeToPascal(name);
+  return [`UserView${pascalName}`, () => import(`@/components/views/${pascalName}.vue`)];
 }));
 
 const userView = namespace("userView");
@@ -105,9 +106,18 @@ const staging = namespace("staging");
 const query = namespace("query");
 
 const userViewType = (uv: CombinedUserView) => {
-  const typeAttr = uv.attributes["Type"];
+  if (!("type" in uv.attributes)) {
+    return "Table";
+  }
+
+  const rawTypeAttr = String(uv.attributes["type"]);
+  const typeAttr = pascalToSnake(rawTypeAttr);
+  if (typeAttr !== rawTypeAttr) {
+    console.error(`User view type attribute ${rawTypeAttr} uses pascal case`);
+  }
+
   if (typeAttr in types) {
-    return String(typeAttr);
+    return snakeToPascal(typeAttr);
   } else {
     return "Table";
   }

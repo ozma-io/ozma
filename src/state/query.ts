@@ -54,8 +54,8 @@ export interface IAttrToQueryOpts {
 export const attrToQuery = (linkedAttr: any, opts?: IAttrToQueryOpts): IQuery | null => {
   if (typeof linkedAttr === "object" && linkedAttr !== null) {
     let ref: IUserViewRef;
-    if (typeof linkedAttr.ref === "object" && linkedAttr.ref !== null) {
-      ref = linkedAttr.ref;
+    if (typeof linkedAttr["ref"] === "object" && linkedAttr["ref"] !== null) {
+      ref = linkedAttr["ref"];
     } else {
       ref = linkedAttr;
     }
@@ -71,17 +71,17 @@ export const attrToQuery = (linkedAttr: any, opts?: IAttrToQueryOpts): IQuery | 
     }
 
     let args: Record<string, any> | null;
-    if (linkedAttr.new || (opts && opts.infoByDefault)) {
+    if (linkedAttr["new"] || (opts && opts.infoByDefault)) {
       args = null;
-    } else if (typeof linkedAttr.args === "object" && linkedAttr.args !== null) {
-      args = linkedAttr.args;
+    } else if (typeof linkedAttr["args"] === "object" && linkedAttr["args"] !== null) {
+      args = linkedAttr["args"];
     } else {
       args = {};
     }
 
     let defaultValues: Record<string, any>;
-    if (typeof linkedAttr.defaultValues === "object" && linkedAttr.defaultValues !== null) {
-      defaultValues = linkedAttr.defaultValues;
+    if (typeof linkedAttr["default_values"] === "object" && linkedAttr["default_values"] !== null) {
+      defaultValues = linkedAttr["default_values"];
     } else if (opts && opts.makeDefaultValues !== undefined) {
       defaultValues = opts.makeDefaultValues();
     } else {

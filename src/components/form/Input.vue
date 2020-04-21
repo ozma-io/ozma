@@ -10,13 +10,14 @@
 </i18n>
 <template>
   <fragment>
-    <span  v-if="!isCellEdit" ref="autosizeMeter">
+    <span v-if="!isCellEdit" ref="autosizeMeter">
       {{ value || $t('input_placeholder') }}
     </span>
     <div
-      ref="inputMaxWidthSizeMeter"
       v-if="!isCellEdit"
-      class="input__max-width-size-meter"/>
+      ref="inputMaxWidthSizeMeter"
+      class="input__max-width-size-meter"
+    />
     <input
       v-if="!isCellEdit"
       :id="id"

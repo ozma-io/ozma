@@ -125,7 +125,7 @@ class LocalFormUserView extends LocalUserView<IFormValueExtra, IFormRowExtra, IF
 
   createLocalValue(rowIndex: number, row: ICombinedRow, localRow: IFormLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: IFormValueExtra | null) {
     const extra = this.createCommonLocalValue(row, localRow, columnIndex, value);
-    if (extra.attributes["Selectable"] && value.info !== undefined) {
+    if (extra.attributes["selectable"] && value.info !== undefined) {
       localRow.extra.selectionEntry = {
         entity: value.info.fieldRef.entity,
         id: value.info.id,
@@ -228,10 +228,10 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
       const columnAttrs = this.uv.columnAttributes[i];
       const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
 
-      const captionAttr = getColumnAttr("Caption");
+      const captionAttr = getColumnAttr("caption");
       const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name;
 
-      const visibleColumnAttr = getColumnAttr("Visible");
+      const visibleColumnAttr = getColumnAttr("visible");
       const visible = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
 
       return {
@@ -245,7 +245,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
 
   get gridBlocks(): IGridInputInfoTopLevel[] {
     const viewAttrs = this.uv.attributes;
-    const blockWidths: number[] = R.pathOr<number[]>([12], ["BlockSizes"], viewAttrs);
+    const blockWidths: number[] = R.pathOr<number[]>([12], ["block_sizes"], viewAttrs);
     const inputWidth: number = R.equals(blockWidths, [12]) ? 6 : 12;
     const gridBlocks: IGridInputInfoTopLevel[] = this.blocks.map((block, index) => ({
       type: "section",
@@ -263,7 +263,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
   get blocks(): IBlockInfo[] {
     const viewAttrs = this.uv.attributes;
     // Relative block widths. [0..1]. Each block contains zero or more inputs.
-    const blockWidths: number[] = viewAttrs["BlockSizes"] || [1];
+    const blockWidths: number[] = viewAttrs["block_sizes"] || [1];
     const blocks: IBlockInfo[] = blockWidths.map(width => ({ width, fields: [] }));
 
     this.uv.info.columns.forEach((columnInfo, i) => {
@@ -271,7 +271,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
       const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
       const field = this.fields[i];
 
-      const blockAttr = Number(getColumnAttr("FormBlock"));
+      const blockAttr = Number(getColumnAttr("form_block"));
       const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr;
       const block = Math.max(0, Math.min(blockNumber, blocks.length - 1));
 
