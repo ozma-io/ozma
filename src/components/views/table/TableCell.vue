@@ -19,6 +19,7 @@
       @[indirectLinks?`click`:null]="$emit('goto', $event)"
     >
       <checkbox
+        class="checkbox_click-none"
         v-if="typeof value.value === 'boolean'"
         :checked="value.value"
         disabled
@@ -29,6 +30,7 @@
     </UserViewLink>
     <template v-else>
       <checkbox
+        class="checkbox_click-none"
         v-if="typeof value.value === 'boolean'"
         :checked="value.value"
         disabled
@@ -73,5 +75,9 @@ export default class TableCell extends Vue {
 <style scoped>
   .next-after-last-fixed {
     padding-left: 7px !important;
+  }
+
+  .checkbox_click-none {
+    pointer-events: none;
   }
 </style>
