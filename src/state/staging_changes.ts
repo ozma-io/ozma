@@ -423,7 +423,7 @@ const stagingModule: Module<IStagingState, {}> = {
 
       // During submit new entries aren't allowed to be added because this can result in duplicates.
       if (state.currentSubmit !== null) {
-        throw new Error("Adding entries are forbidden while submitting");
+        throw new Error("Adding entries is forbidden while submitting");
       }
 
       const entityChanges = state.current.getOrCreateChanges(entityRef);
@@ -453,7 +453,7 @@ const stagingModule: Module<IStagingState, {}> = {
       const { scope, fieldRef, userView, id, value, fieldInfo } = params;
       // During submit new entries aren't allowed to be added because this can result in duplicates.
       if (state.currentSubmit !== null) {
-        throw new Error("Adding entries are forbidden while submitting");
+        throw new Error("Adding entries is forbidden while submitting");
       }
 
       const entityChanges = state.current.getOrCreateChanges(fieldRef.entity);
@@ -521,10 +521,6 @@ const stagingModule: Module<IStagingState, {}> = {
     resetAddedEntry: (state, params: { entityRef: IEntityRef; userView: UserViewKey; id: AddedRowId }) => {
       const { entityRef, userView, id } = params;
       const entityChanges = state.current.getOrCreateChanges(entityRef);
-      // During submit new entries aren't allowed to be added because this can result in duplicates.
-      if (state.currentSubmit !== null) {
-        throw new Error("Adding entries are forbidden while submitting");
-      }
       const uvAdded = entityChanges.added[userView];
       if (uvAdded === undefined) {
         return;
