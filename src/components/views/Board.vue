@@ -93,7 +93,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
   }
 
   get columnNames(): string[] | null {
-    const oldRawColumns = R.path(["board", "columns"], this.uv.attributes);
+    const oldRawColumns = R.path(["board", "columns"], this.uv.attributes) || R.path(["board", "Columns"], this.uv.attributes);
     if (oldRawColumns) {
       console.error("Using deprecated attribute `board.columns`. Use `board_columns` instead.")
     }
@@ -111,19 +111,19 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
   }
 
   private get columns(): IColumn[] | null {
-    if (!this.uv.rows) {
+    if (!this.uv.rows || !this.columnNames) {
       return null;
     }
     const cards = this.uv.rows.map((x, i) => this.makeCardObject(x, i));
     const fieldName = this.uv.info.columns[this.groupIndex].name;
     const createView = attrToQuery(
-      this.uv.attributes.CreateView,
+      this.uv.attributes["create_view"],
       { infoByDefault: true },
     ) || undefined;
     const groupedColumns = R.groupBy(card => String(R.path(["groupValue"], card)),
       cards,
     );
-    const filteredColumns = this.columnNames!
+    const filteredColumns = this.columnNames
       .reduce((acc: object, columTitle: string) => {
         const column: IColumn[] = R.pathOr([], [columTitle], groupedColumns);
         return { ...acc, [columTitle]: column };
@@ -156,7 +156,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
     return hasErrors ? errorString : null;
   }
 
-  private get boardTitles(): IColumnTitleMap  {
+  private get boardTitles(): IColumnTitleMap {
     if (!(this.currentEntries instanceof Error) && this.currentEntries) {
       return this.currentEntries;
     }
@@ -215,7 +215,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
     const color = R.path<string>(["attributes", "cell_color"], groupValue);
     const groupField = R.path<string>(["info", "fieldRef", "name"], groupValue);
 
-    const cardView = attrToQueryRef(this.uv.attributes.CreateView, row.mainId);
+    const cardView = attrToQueryRef(this.uv.attributes["create_view"], row.mainId);
 
     return {
       groupRef,
