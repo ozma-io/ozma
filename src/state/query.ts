@@ -82,6 +82,9 @@ export const attrToQuery = (linkedAttr: any, opts?: IAttrToQueryOpts): IQuery | 
     let defaultValues: Record<string, any>;
     if (typeof linkedAttr["default_values"] === "object" && linkedAttr["default_values"] !== null) {
       defaultValues = linkedAttr["default_values"];
+    } else if (typeof linkedAttr["defaultValues"] === "object" && linkedAttr["defaultValues"] !== null) {
+      console.error("`defaultValues` is deprecated, use `default_values`");
+      defaultValues = linkedAttr["defaultValues"];
     } else if (opts && opts.makeDefaultValues !== undefined) {
       defaultValues = opts.makeDefaultValues();
     } else {
