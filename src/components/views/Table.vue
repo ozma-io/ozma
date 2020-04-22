@@ -686,8 +686,8 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     return this.extra.selectedRows.length;
   }
 
-  get selectedAll() {
-    return this.selectedCount === this.extra.rowCount;
+  get selectedAll(): boolean {
+    return this.selectedCount === this.extra.rowCount && this.selectedCount > 0;
   }
 
   get technicalWidth() {
