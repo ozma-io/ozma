@@ -383,7 +383,7 @@ export default class RootUserView extends Vue {
   }
 
   get isMainView() {
-    return this.$route.params.schema === "user" && this.$route.params.name === "Main";
+    return this.$route.params.schema === "user" && this.$route.params.name === "main";
   }
 
   get bottomBarNeeded() {

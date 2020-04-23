@@ -32,7 +32,7 @@ Vue.use(FragmentPlugin);
 Vue.use(VueJSModal, { componentName: "VueModal" });
 
 const routes = [
-  { path: "/", name: "main", redirect: { name: "view", params: { schema: "user", name: "Main" } } },
+  { path: "/", name: "main", redirect: { name: "view", params: { schema: "user", name: "main" } } },
   { path: "/views/:schema/:name", name: "view", component: RootUserView },
   { path: "/views/:schema/:name/new", name: "view_create", component: RootUserView },
   { path: "/auth_response", name: "auth_response", component: AuthResponse },
