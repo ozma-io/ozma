@@ -38,7 +38,6 @@ export default class ModalTabHeader extends Vue {
   }
 
   .modal__tab_close_button {
-    display: none;
     background: none;
     border: none;
     height: 100%;
