@@ -186,7 +186,7 @@ export default class Calendar extends Vue {
     padding: 10px;
     border: 1px solid var(--MainBorderColor);
     top: calc(100% + 10px);
-    z-index: 250;
+    z-index: 1001;
   }
 
   .main_input {
