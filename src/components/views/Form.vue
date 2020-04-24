@@ -125,12 +125,12 @@ class LocalFormUserView extends LocalUserView<IFormValueExtra, IFormRowExtra, IF
 
   createLocalValue(rowIndex: number, row: ICombinedRow, localRow: IFormLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: IFormValueExtra | null) {
     const extra = this.createCommonLocalValue(row, localRow, columnIndex, value);
-    if (extra.attributes["selectable"] && value.info !== undefined) {
+    if (extra.attributes["selectable"] && value.info) {
       localRow.extra.selectionEntry = {
         entity: value.info.fieldRef.entity,
         id: value.info.id,
       };
-    } else if (this.uv.info.mainEntity !== null) {
+    } else if (this.uv.info.mainEntity) {
       localRow.extra.selectionEntry = {
         entity: this.uv.info.mainEntity,
         id: row.mainId!,

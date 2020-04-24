@@ -114,7 +114,7 @@ export abstract class LocalUserView<ValueT, RowT, ViewT> implements IHandlerProv
       return [rowId, newRow];
     }));
 
-    if (uv.info.mainEntity !== null) {
+    if (uv.info.mainEntity) {
       const row = newEmptyRow(store, uv, defaultRawValues);
       const oldLocalRow = oldLocal !== null ? oldLocal.emptyRow : null;
       const localRow: ILocalRowInfo<RowT> = {

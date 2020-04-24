@@ -178,8 +178,8 @@ const clearUpdatedValue = (value: ICombinedValue) => {
 
 export const newEmptyRow = (store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>): IRowCommon => {
   const eref = uv.info.mainEntity;
-  if (eref === null) {
-    throw new Error("Main entity cannot be null");
+  if (!eref) {
+    throw new Error("Main entity must be specified");
   }
 
   const context = {
@@ -192,7 +192,7 @@ export const newEmptyRow = (store: Store<any>, uv: CombinedUserView, defaultRawV
     const viewAttrs = uv.attributes;
     const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
 
-    if (info.mainField !== null) {
+    if (info.mainField) {
       let rawDefaultValue: any;
       if (info.mainField.name in defaultRawValues) {
         rawDefaultValue = defaultRawValues[info.mainField.name];
@@ -288,14 +288,14 @@ export class CombinedUserView {
     this.userViewKey = valueSignature(args);
 
     let mainChanges: IEntityChanges | null = null;
-    if (info.mainEntity !== null) {
+    if (info.mainEntity) {
       const eref = info.mainEntity;
       mainChanges = changes.changesForEntity(eref);
 
       const mainColumnMapping: IMainColumnMapping = {};
       info.columns.forEach((columnInfo, colI) => {
         const mainField = columnInfo.mainField;
-        if (mainField !== null) {
+        if (mainField) {
           insertMainColumnMapping(mainColumnMapping, mainField.name, colI);
         }
       });
@@ -309,7 +309,7 @@ export class CombinedUserView {
           const values = info.columns.map(columnInfo => {
             const mainField = columnInfo.mainField;
 
-            if (mainField !== null) {
+            if (mainField) {
               const updateInfo = {
                 field: mainField.field,
                 fieldRef: {
@@ -406,7 +406,7 @@ export class CombinedUserView {
           const id = entityIds[field.idColumn];
           const fieldRef = id.subEntity ? { entity: id.subEntity, name: field.ref.name } : field.ref;
           const updateInfo = {
-            field: field.field,
+            field: field.field || null,
             fieldRef,
             id: id.id,
           };
@@ -471,7 +471,7 @@ export class CombinedUserView {
     if (this.rows !== null) {
       Object.values(this.info.domains).forEach(domain => {
         Object.values(domain).forEach(field => {
-          if (field.field === null || !fieldPredicate(field.field)) {
+          if (!field.field || !fieldPredicate(field.field)) {
             return;
           }
 
@@ -514,8 +514,8 @@ export class CombinedUserView {
   }
 
   forEachDeletedRow(rowFunc: (row: ICombinedRow, rowI: number) => void, entityRef: IEntityRef, id: RowId) {
-    if (this.rows === null ||
-                this.info.mainEntity === null ||
+    if (!this.rows ||
+                !this.info.mainEntity ||
                 !equalEntityRef(this.info.mainEntity, entityRef)) {
       return;
     }
@@ -552,7 +552,7 @@ export type EntriesResult = Entries | Promise<Entries> | Error;
 
 export interface IEntriesRef {
   entity: IEntityRef;
-  where: string | null;
+  where?: string;
 }
 
 export const equalEntriesRef = (a: IEntriesRef, b: IEntriesRef): boolean => {
@@ -707,7 +707,7 @@ const getUserView = async (context: ActionContext<IUserViewState, {}>, args: IUs
 
 const prefetchUserView = ({ dispatch }: ActionContext<IUserViewState, {}>, uv: CombinedUserView) => {
   // Preload entities information.
-  if (uv.info.mainEntity !== null) {
+  if (uv.info.mainEntity) {
     dispatch("getEntity", uv.info.mainEntity);
   }
   if (uv.rows !== null) {
@@ -792,7 +792,7 @@ const userViewModule: Module<IUserViewState, {}> = {
 
         // Update new rows
         uv.info.columns.forEach((columnInfo, colI) => {
-          if (columnInfo.mainField === null) {
+          if (!columnInfo.mainField) {
             return;
           }
 
@@ -801,7 +801,7 @@ const userViewModule: Module<IUserViewState, {}> = {
             return;
           }
 
-          uv.newRowsPositions.forEach((rowId, rowI) => {
+          uv.newRowsPositions.forEach(rowId => {
             const row = uv.newRows[rowId];
             const value = row.values[colI];
             setUpdatedPun(entries, value);
@@ -865,17 +865,17 @@ const userViewModule: Module<IUserViewState, {}> = {
     // Expects all values to be empty, therefore doesn't set updated puns!
     addEntry: (state, params: { entityRef: IEntityRef; userView: UserViewKey; id: AddedRowId; positions: number[]; newValues: UpdatedValues }) => {
       const uv = state.current.userViews.getBySignature(params.userView);
-      if (uv === undefined ||
-                    !(uv instanceof CombinedUserView) ||
-                    uv.info.mainEntity === null ||
-                    !equalEntityRef(uv.info.mainEntity, params.entityRef)) {
+      if (!uv ||
+          !(uv instanceof CombinedUserView) ||
+          !uv.info.mainEntity ||
+          !equalEntityRef(uv.info.mainEntity, params.entityRef)) {
         return;
       }
 
       const eref = uv.info.mainEntity;
 
       const values = uv.info.columns.map((column, colI): ICombinedValue => {
-        if (column.mainField !== null) {
+        if (column.mainField) {
           const updateInfo = {
             id: params.id,
             field: column.mainField.field,
@@ -919,11 +919,11 @@ const userViewModule: Module<IUserViewState, {}> = {
     },
     setAddedField: (state, params: { fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; addedEntry: IAddedEntry; fieldType?: FieldType }) => {
       const uv = state.current.userViews.getBySignature(params.userView);
-      if (uv === undefined ||
-                    !(uv instanceof CombinedUserView) ||
-                    uv.info.mainEntity === null ||
-                    !equalEntityRef(uv.info.mainEntity, params.fieldRef.entity) ||
-                    uv.userViewKey !== params.userView) {
+      if (!uv ||
+          !(uv instanceof CombinedUserView) ||
+          !uv.info.mainEntity ||
+          !equalEntityRef(uv.info.mainEntity, params.fieldRef.entity) ||
+          uv.userViewKey !== params.userView) {
         return;
       }
 
@@ -988,8 +988,7 @@ const userViewModule: Module<IUserViewState, {}> = {
           });
         });
 
-        if (uv.rows !== null &&
-                        uv.info.mainEntity !== null) {
+        if (uv.rows && uv.info.mainEntity) {
           const changedSchema = current.changes[uv.info.mainEntity.schema];
           if (changedSchema !== undefined) {
             const changedEntity = changedSchema[uv.info.mainEntity.name];
@@ -1053,10 +1052,10 @@ const userViewModule: Module<IUserViewState, {}> = {
     },
     resetAddedEntry: (state, params: { entityRef: IEntityRef; userView: UserViewKey; id: AddedRowId; positions: number[] }) => {
       const uv = state.current.userViews.getBySignature(params.userView);
-      if (uv === undefined ||
-                    !(uv instanceof CombinedUserView) ||
-                    uv.info.mainEntity === null ||
-                    !equalEntityRef(uv.info.mainEntity, params.entityRef)) {
+      if (!uv ||
+          !(uv instanceof CombinedUserView) ||
+          !uv.info.mainEntity ||
+          !equalEntityRef(uv.info.mainEntity, params.entityRef)) {
         return;
       }
 
@@ -1094,13 +1093,13 @@ const userViewModule: Module<IUserViewState, {}> = {
         }
 
         const mainEntity = uv.info.mainEntity;
-        if (mainEntity !== null) {
+        if (mainEntity) {
           const schemaChanges = changes.changes[mainEntity.schema];
-          if (schemaChanges !== undefined) {
+          if (schemaChanges) {
             const entityChanges = schemaChanges[mainEntity.name];
-            if (entityChanges !== undefined) {
+            if (entityChanges) {
               const uvAdded = entityChanges.added[uv.userViewKey];
-              if (uvAdded !== undefined) {
+              if (uvAdded) {
                 Object.entries(uvAdded.entries).forEach(([addedIdStr, rowValues]) => {
                   const addedId = Number(addedIdStr);
                   const newRow = uv.newRows[addedId];

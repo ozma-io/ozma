@@ -44,7 +44,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
   }
 
   protected deleteRow(ref: RowRef) {
-    if (this.uv.info.mainEntity === null) {
+    if (!this.uv.info.mainEntity) {
       throw new Error("View doesn't have a main entity");
     }
     const entity = this.uv.info.mainEntity;
@@ -101,7 +101,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
       return ref;
     } else if (ref.type === "new") {
       const entity = this.uv.info.mainEntity;
-      if (entity === null) {
+      if (!entity) {
         throw new Error("View doesn't have a main entity");
       }
       if (this.uv.info.columns[ref.column].mainField === null) {
@@ -121,7 +121,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
       await Promise.all(this.local.emptyRow!.row.values.map((cell, colI) => {
         const columnInfo = this.uv.info.columns[colI];
         const currValue = colI === ref.column ? rawValue : currentValue(cell);
-        if (columnInfo.mainField !== null && currValue !== undefined) {
+        if (columnInfo.mainField && currValue) {
           return this.setAddedField({
             scope: this.scope,
             fieldRef: {
