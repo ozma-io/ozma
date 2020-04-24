@@ -102,7 +102,7 @@ export default class InputSlot extends Vue {
   @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
 
   private focused = false;
-  private modalValue: any = this.value;
+  private modalValue: any = this.value || null;
   private isModalOpen = false;
 
   private mounted() {
