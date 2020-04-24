@@ -22,7 +22,7 @@
 <template>
   <div
     fluid
-    :class="['table-block', {'nested-table-block': !isRoot}]"
+    :class="['table-block', {'nested-table-block': !isRoot, 'active_editing': editingValue !== null}]"
   >
     <table-cell-edit
       v-if="editingValue"
@@ -1507,7 +1507,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
       /* This is a potential hack. Here's to hoping it would go away soon. */
       .nested-table-block > .tabl {
-        width: 90vw !important;
+        width: 85vw !important;
       }
     }
   }
