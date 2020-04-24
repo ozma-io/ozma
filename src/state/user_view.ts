@@ -120,12 +120,12 @@ const insertMainRowMapping = (mainRowMapping: IMainRowMapping, id: RowId, index:
   rowsMapping.push(index);
 };
 
-export const setUpdatedPun = (entitySummaries: Entries, value: ICombinedValue) => {
+export const setUpdatedPun = (entitySummaries: Entries | null, value: ICombinedValue) => {
   const ref = currentValue(value);
   if (valueIsNull(ref)) {
     value.pun = "";
   } else {
-    const pun = entitySummaries[ref];
+    const pun = entitySummaries ? entitySummaries[ref] : undefined;
     if (pun === undefined) {
       value.pun = String(ref);
     } else {
@@ -852,8 +852,8 @@ const userViewModule: Module<IUserViewState, {}> = {
           // New object because otherwise Vue won't detect changes.
           const value = { ...row.values[valueRef.column], ...params.updatedValue };
           Vue.set(row.values, valueRef.column, value);
-          if (entitySummaries !== undefined && "pun" in value) {
-            setUpdatedPun(entitySummaries, value);
+          if ("pun" in value) {
+            setUpdatedPun(entitySummaries || null, value);
           }
 
           uv.handlers.forEach(handler => {
@@ -1220,7 +1220,7 @@ const userViewModule: Module<IUserViewState, {}> = {
           const res: Api.IViewExprResult = await resPromise;
           const currPending = state.entries.entries.get(ref);
           if (currPending !== pending.ref) {
-            throw new Error("Pending operation cancelled");
+            throw new Error(`Pending entries get cancelled, ref ${JSON.stringify(ref)}`);
           }
           const mainType = res.info.columns[1].valueType;
           const entries = Object.fromEntries(res.result.rows.map<[number, string]>(row => {
@@ -1230,7 +1230,7 @@ const userViewModule: Module<IUserViewState, {}> = {
           }));
           const changes: CurrentChanges = (rootState as any).staging.current;
           commit("updateEntries", { ref, entries });
-          commit("updateUserViewSummaries", { ref, entries, changes });
+          commit("updateUserViewSummaries", { ref: ref.entity, entries, changes });
           return entries;
         } catch (e) {
           const currPending = state.entries.entries.get(ref);
@@ -1267,7 +1267,7 @@ const userViewModule: Module<IUserViewState, {}> = {
           }, { root: true });
           const currPending = state.entities.entities.get(ref);
           if (currPending !== pending.ref) {
-            throw new Error("Pending operation cancelled");
+            throw new Error(`Pending entity get cancelled, ref ${JSON.stringify(ref)}`);
           }
           commit("updateEntity", { ref, entity });
           return entity;
@@ -1290,7 +1290,7 @@ const userViewModule: Module<IUserViewState, {}> = {
         try {
           current = await getUserView(store, args);
           if (state.pending !== pending.ref) {
-            throw new Error("Pending operation cancelled");
+            throw new Error(`Pending root view get cancelled, args ${JSON.stringify(args)}`);
           }
           commit("clear");
           commit("errors/resetErrors", errorKey, { root: true });
@@ -1341,7 +1341,7 @@ const userViewModule: Module<IUserViewState, {}> = {
           current = await getUserView(store, args);
           const currContainer = state.current.userViews.get(args);
           if (currContainer !== pending.ref) {
-            throw new Error(`Pending operation cancelled for scope ${reference}, args ${JSON.stringify(args)}`);
+            throw new Error(`Pending nested view get cancelled for scope ${reference}, args ${JSON.stringify(args)}`);
           }
           commit("updateUserView", { args, userView: current });
           if (current instanceof CombinedUserView) {
@@ -1378,7 +1378,7 @@ const userViewModule: Module<IUserViewState, {}> = {
       const entity = state.entities.getEntity(args.fieldRef.entity);
       const fieldType = entity !== undefined ? entity.columnFields[args.fieldRef.name].fieldType : undefined;
       if (fieldType && fieldType.type === "reference") {
-        dispatch("getEntries", { ref: fieldType, reference: "update" });
+        dispatch("getEntries", { ref: fieldType as IEntriesRef, reference: "update" });
       }
       commit("updateField", { ...args, updatedValue, fieldType });
     },
@@ -1396,7 +1396,7 @@ const userViewModule: Module<IUserViewState, {}> = {
       const entity = state.entities.getEntity(args.fieldRef.entity);
       const fieldType = entity !== undefined ? entity.columnFields[args.fieldRef.name].fieldType : undefined;
       if (fieldType && fieldType.type === "reference") {
-        dispatch("getEntries", { ref: fieldType, reference: "update" });
+        dispatch("getEntries", { ref: fieldType as IEntriesRef, reference: "update" });
       }
       commit("setAddedField", { ...args, addedEntry, fieldType });
     },
