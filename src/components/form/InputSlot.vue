@@ -102,6 +102,7 @@ export default class InputSlot extends Vue {
   @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
 
   private focused = false;
+  // Vue.js doesn't support state values initialized to `undefined`. Thankfully, `null` is enough here.
   private modalValue: any = this.value || null;
   private isModalOpen = false;
 
