@@ -413,26 +413,26 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     const columnAttrs = this.uv.columnAttributes[columnIndex];
     const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, this.uv.attributes);
 
-    if (value.info !== undefined) {
-      if (value.info.field !== null && value.info.field.fieldType.type === "reference") {
+    if (value.info) {
+      if (value.info.field && value.info.field.fieldType.type === "reference") {
         const link = attrToQueryRef(getCellAttr("linked_view"), currentValue(value), this.extra.linkOpts);
-        if (link !== null) {
+        if (link) {
           extra.link = link;
         }
       }
       const currLinkForRow = attrToQuerySelf(getCellAttr("row_linked_view"), value.info, this.extra.linkOpts);
-      if (currLinkForRow !== null) {
+      if (currLinkForRow) {
         localRow.extra.link = currLinkForRow;
         this.extra.hasRowLinks = true;
       }
     }
 
-    if (getCellAttr("selectable") && value.info !== undefined) {
+    if (getCellAttr("selectable") && value.info) {
       localRow.extra.selectionEntry = {
         entity: value.info.fieldRef.entity,
         id: value.info.id,
       };
-    } else if (this.uv.info.mainEntity !== null) {
+    } else if (this.uv.info.mainEntity) {
       localRow.extra.selectionEntry = {
         entity: this.uv.info.mainEntity,
         id: row.mainId!,
@@ -1038,15 +1038,15 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     this.editParams.width = event.target.offsetWidth;
     this.editParams.height = event.target.offsetHeight;
     this.selectCell(ref);
-    if (this.lastSelectedValue !== null &&
+    if (this.lastSelectedValue &&
                 !deepEquals(this.lastSelectedValue, ref) &&
                 this.lastSelectedValue.type === "added") {
       const row = this.uv.newRows[this.lastSelectedValue.id];
-      if (row === undefined) {
+      if (!row) {
         this.lastSelectedValue = null;
       } else if (isEmptyRow(row)) {
         const entity = this.uv.info.mainEntity;
-        if (entity === null) {
+        if (!entity) {
           throw new Error("View doesn't have a main entity");
         }
 

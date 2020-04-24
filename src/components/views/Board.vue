@@ -79,7 +79,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
     const fieldTypePath = ["info", "columns", this.groupIndex, "mainField", "field", "fieldType"];
     const fieldType = R.path<IReferenceFieldType>(fieldTypePath, this.uv);
     if (fieldType && fieldType.type === "reference") {
-      return { entity: fieldType.entity, where: null };
+      return { entity: fieldType.entity };
     }
     return null;
   }

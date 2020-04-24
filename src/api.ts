@@ -90,7 +90,7 @@ export interface IArrayFieldType {
 export interface IReferenceFieldType {
   type: "reference";
   entity: IEntityRef;
-  where: string | null;
+  where?: string;
 }
 
 export interface IEnumFieldType {
@@ -106,7 +106,7 @@ export interface IColumnField {
   defaultValue: any;
   isNullable: boolean;
   isImmutable: boolean;
-  inheritedFrom: IEntityRef | null;
+  inheritedFrom?: IEntityRef;
 }
 
 export type UsedFields = FieldName[];
@@ -118,7 +118,7 @@ export interface IComputedField {
   isLocal: boolean;
   hasId: boolean;
   usedSchemas: UsedSchemas;
-  inheritedFrom: IEntityRef | null;
+  inheritedFrom?: IEntityRef;
   isVirtual: boolean;
 }
 
@@ -143,7 +143,7 @@ export interface IEntity {
   mainField: FieldName;
   forbidExternalReferences: boolean;
   isHidden: boolean;
-  parent: IEntityRef | null;
+  parent?: IEntityRef;
   children: IChildEntity[];
   isAbstract: boolean;
   root: IEntityRef;
@@ -159,13 +159,13 @@ export interface IResultColumnInfo {
   attributeTypes: AttributeTypesMap;
   cellAttributeTypes: AttributeTypesMap;
   valueType: ValueType;
-  punType: ValueType | null;
-  mainField: IMainFieldInfo | null;
+  punType?: ValueType;
+  mainField?: IMainFieldInfo;
 }
 
 export interface IDomainField {
   ref: IFieldRef;
-  field: IColumnField | null;
+  field?: IColumnField;
   idColumn: ColumnName;
 }
 
@@ -173,7 +173,7 @@ export interface IResultViewInfo {
   attributeTypes: AttributeTypesMap;
   rowAttributeTypes: AttributeTypesMap;
   domains: Record<DomainId, Record<ColumnName, IDomainField>>;
-  mainEntity: IEntityRef | null;
+  mainEntity?: IEntityRef;
   columns: IResultColumnInfo[];
 }
 
