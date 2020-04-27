@@ -1370,12 +1370,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     height: 100%;
   }
 
-  .active_editing {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
   .data-col {
     max-width: 100vw !important;
   }

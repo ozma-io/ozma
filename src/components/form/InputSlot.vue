@@ -180,7 +180,6 @@ export default class InputSlot extends Vue {
 
   .input_slot__row {
     flex-direction: row;
-    margin-bottom: 10px;
   }
 
   .input_label__container {
