@@ -14,22 +14,24 @@
 </i18n>
 
 <template>
-  <b-container class="menu_container">
-    <b-row>
-      <b-col v-if="typeof entriesOrError === 'string'" cols="12">
-        <span>
-          {{ error }}
-        </span>
-      </b-col>
-      <MenuEntry 
-        v-for="(entry, index) in entriesOrError"
-        v-else
-        :key="index"
-        :entry="entry"
-        :indirect-links="indirectLinks"
-      />
-    </b-row>
-  </b-container>
+  <div class="menu_container">
+    <b-container>
+      <b-row>
+        <b-col v-if="typeof entriesOrError === 'string'" cols="12">
+          <span>
+            {{ error }}
+          </span>
+        </b-col>
+        <MenuEntry 
+          v-for="(entry, index) in entriesOrError"
+          v-else
+          :key="index"
+          :entry="entry"
+          :indirect-links="indirectLinks"
+        />
+      </b-row>
+    </b-container>
+  </div>
 </template>
 
 <script lang="ts">
@@ -189,7 +191,9 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
 <style scoped>
 
   .menu_container {
-    margin-top: 120px;
+    /* margin-top: 120px; */
+    max-height: 100%;
+    overflow-y: auto;
   }
 
   .main-menu-block {
