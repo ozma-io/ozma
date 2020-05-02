@@ -18,7 +18,7 @@
       @goto="gridProps.onGoto"
       @update="gridProps.onUpdate($event, blockContent.field.index)"
     />
-    <b-row v-if="blockContent.type === 'section'">
+    <b-row v-else-if="blockContent.type === 'section'">
       <FormGridBlock
         v-for="(subBlock, subBlockI) in blockContent.content"
         :key="subBlockI"
@@ -33,14 +33,14 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 
 import FormControl from "@/components/FormControl.vue";
-import { IGridInputInfoTopLevel, IGridProps } from "@/components/form/types";
+import { GridElement, IGridProps } from "@/components/form/types";
 
 @Component({
   name: "FormGridBlock",
   components: { FormControl },
 })
 export default class FormGridBlock extends Vue {
-  @Prop({ type: Object }) blockContent!: IGridInputInfoTopLevel;
+  @Prop({ type: Object }) blockContent!: GridElement;
   @Prop({ type: Object }) gridProps!: IGridProps;
 }
 </script>

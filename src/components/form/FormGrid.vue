@@ -20,11 +20,11 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 
 import FormGridBlock from "@/components/form/FormGridBlock.vue";
-import { IGridInputInfoTopLevel, IGridProps } from "@/components/form/types";
+import { IGridProps, GridElement } from "@/components/form/types";
 
 @Component({ components: { FormGridBlock } })
 export default class FormGrid extends Vue {
-  @Prop({ type: Array }) gridContent!: IGridInputInfoTopLevel[];
+  @Prop({ type: Array }) gridContent!: GridElement[];
   @Prop({ type: Object }) gridProps!: IGridProps;
 }
 </script>

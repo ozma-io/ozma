@@ -1244,21 +1244,21 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.sortColumn = sortColumn;
 
       switch (type) {
-      case "int":
-        this.sortOptions = {numeric: true};
-        this.sortAsc = false;
-        break;
-      case "bool":
-        this.sortAsc = false;
-        this.sortOptions = {};
-        break;
-      case "string":
-        this.sortAsc = true;
-        this.sortOptions = {sensitivity: "accent"};
-        break;
-      default:
-        this.sortAsc = true;
-        this.sortOptions = {};
+        case "int":
+          this.sortOptions = {numeric: true};
+          this.sortAsc = false;
+          break;
+        case "bool":
+          this.sortAsc = false;
+          this.sortOptions = {};
+          break;
+        case "string":
+          this.sortAsc = true;
+          this.sortOptions = {sensitivity: "accent"};
+          break;
+        default:
+          this.sortAsc = true;
+          this.sortOptions = {};
       }
     } else {
       this.sortAsc = !this.sortAsc;

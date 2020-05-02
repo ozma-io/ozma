@@ -1,11 +1,21 @@
 import { AttributesMap, IResultColumnInfo } from "@/api";
 import { ISelectionRef } from "@/components/BaseUserView";
 
-export interface IGridInputInfo {
+export interface IGridBase {
   size: number;
-  type: "section" | "input";
-  field?: IFieldInfo;
 }
+
+export interface IGridInput extends IGridBase {
+  type: "input";
+  field: IFieldInfo;
+}
+
+export interface IGridSection extends IGridBase {
+  type: "section";
+  content: GridElement[];
+}
+
+export type GridElement = IGridInput | IGridSection;
 
 export interface IGridProps {
   uv: any;
@@ -20,19 +30,10 @@ export interface IGridProps {
   onGoto: (event: any) => void;
 }
 
-export interface IGridInputInfoTopLevel extends IGridInputInfo {
-  content?: IGridInputInfo[];
-}
-
-export interface IGridInputInfoTopLevel extends IGridInputInfo {
-  content?: IGridInputInfo[];
-}
-
 export interface IFieldInfo {
   index: number;
   columnInfo: IResultColumnInfo;
   caption: string;
-  visible: boolean;
 }
 
 export interface IBlockInfo {

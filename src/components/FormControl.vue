@@ -28,7 +28,7 @@
     <InputSlot
       v-if="inputType.name !== 'userview' && inputType.name !== 'reference'"
       :is-cell-edit="isCellEdit"
-      :label="caption"
+      :label="(inputType.name !== 'static_text' && inputType.name !== 'static_image') ? caption : ''"
       :inline="!isInline"
       :value="currentValue"
       :actions="actions"
@@ -169,6 +169,10 @@
           @input="updateValue($event.target.value)"
           @focus="iSlot.onFocus"
         >
+        <div v-else-if="inputType.name === 'static_text'">
+          {{ textValue }}
+        </div>
+        <img v-else-if="inputType.name === 'static_image'" :src="textValue">
       </template>
     </InputSlot>
     <template v-if="inputType.name === 'reference' || inputType.name === 'userview'">
@@ -315,12 +319,31 @@ interface IErrorType {
   text: string;
 }
 
-interface ICalendar {
+interface ICalendarType {
   name: "calendar";
   showTime: boolean;
 }
 
-type IType = ITextType | ITextAreaType | ICodeEditorType | ISelectType | IReferenceType | ICheckType | IUserViewType | IErrorType | ICalendar;
+interface IStaticTextType {
+  name: "static_text";
+}
+
+interface IStaticImageType {
+  name: "static_image";
+}
+
+type IType =
+  ITextType
+  | ITextAreaType
+  | ICodeEditorType
+  | ISelectType
+  | IReferenceType
+  | ICheckType
+  | IUserViewType
+  | IErrorType
+  | ICalendarType
+  | IStaticTextType
+  | IStaticImageType;
 
 const userView = namespace("userView");
 
@@ -447,6 +470,10 @@ export default class FormControl extends Vue {
       } else {
         return { name: "userview", ...nestedRef };
       }
+    } else if (controlAttr === "static_text") {
+      return { name: "static_text" }
+    } else if (controlAttr === "static_image") {
+      return { name: "static_image" }
     }
     // `calc` is needed because sizes should be relative to base font size.
     const heightSinglelineText = "calc(2em + 6px)";
@@ -454,75 +481,75 @@ export default class FormControl extends Vue {
     const heightCodeEditor = "calc(100% - 1.5rem)";
     if (this.fieldType !== null) {
       switch (this.fieldType.type) {
-      case "reference":
-        const refEntry: IReferenceType = {
-          name: "reference",
-          ref: this.fieldType,
-          actions: [],
-        };
-        refEntry.linkedAttr = this.attributes["linked_view"];
-        refEntry.style = this.controlStyle();
+        case "reference":
+          const refEntry: IReferenceType = {
+            name: "reference",
+            ref: this.fieldType,
+            actions: [],
+          };
+          refEntry.linkedAttr = this.attributes["linked_view"];
+          refEntry.style = this.controlStyle();
 
-        const selectView = attrToQuerySelf(this.attributes["select_view"], this.value.info, linkOpts);
-        if (selectView !== null) {
-          refEntry.actions.push({
-            name: this.$t("select_view").toString(),
-            query: selectView,
-          });
-        }
-        const extraActions = this.attributes["extra_select_actions"];
-        if (Array.isArray(extraActions)) {
-          extraActions.forEach(action => {
-            if (typeof action === "object" && action.name) {
-              const querySelf = attrToQuerySelf(action, this.value.info, linkOpts);
-              if (querySelf) {
-                refEntry.actions.push({
-                  name: String(action.name),
-                  query: querySelf,
-                });
+          const selectView = attrToQuerySelf(this.attributes["select_view"], this.value.info, linkOpts);
+          if (selectView !== null) {
+            refEntry.actions.push({
+              name: this.$t("select_view").toString(),
+              query: selectView,
+            });
+          }
+          const extraActions = this.attributes["extra_select_actions"];
+          if (Array.isArray(extraActions)) {
+            extraActions.forEach(action => {
+              if (typeof action === "object" && action.name) {
+                const querySelf = attrToQuerySelf(action, this.value.info, linkOpts);
+                if (querySelf) {
+                  refEntry.actions.push({
+                    name: String(action.name),
+                    query: querySelf,
+                  });
+                }
               }
-            }
-          });
-        }
-        return refEntry;
-      case "enum":
-        return {
-          name: "select",
-          options: this.fieldType.values.map(x => ({ label: x, value: x })),
-        };
-      case "bool":
-        return {
-          name: "select",
-          options: [{ label: this.$t("yes").toString(), value: true }, { label: this.$t("no").toString(), value: false }],
-        };
-      case "int":
-        return { name: "text", type: "number", style: this.controlStyle() };
+            });
+          }
+          return refEntry;
+        case "enum":
+          return {
+            name: "select",
+            options: this.fieldType.values.map(x => ({ label: x, value: x })),
+          };
+        case "bool":
+          return {
+            name: "select",
+            options: [{ label: this.$t("yes").toString(), value: true }, { label: this.$t("no").toString(), value: false }],
+          };
+        case "int":
+          return { name: "text", type: "number", style: this.controlStyle() };
         // FIXME: Fix calendar field.
-      case "date":
-        return { name: "calendar", showTime: false };
-      case "datetime":
-        return { name: "calendar", showTime: true };
+        case "date":
+          return { name: "calendar", showTime: false };
+        case "datetime":
+          return { name: "calendar", showTime: true };
       }
     } else {
       switch (this.type.type) {
-      case "bool":
-        return {
-          name: "select",
-          options: [{ label: this.$t("yes").toString(), value: true }, { label: this.$t("no").toString(), value: false }],
-        };
-      case "int":
-        return { name: "text", type: "number", style: this.controlStyle() };
+        case "bool":
+          return {
+            name: "select",
+            options: [{ label: this.$t("yes").toString(), value: true }, { label: this.$t("no").toString(), value: false }],
+          };
+        case "int":
+          return { name: "text", type: "number", style: this.controlStyle() };
       }
     }
 
     // Plain text
     switch (this.textType) {
-    case "multiline":
-      return { name: "textarea", style: this.controlStyle(heightMultilineText) };
-    case "codeeditor":
-      return { name: "codeeditor", style: this.controlStyle(heightCodeEditor) };
-    default:
-      return { name: "text", type: "text", style: this.controlStyle() };
+      case "multiline":
+        return { name: "textarea", style: this.controlStyle(heightMultilineText) };
+      case "codeeditor":
+        return { name: "codeeditor", style: this.controlStyle(heightCodeEditor) };
+      default:
+        return { name: "text", type: "text", style: this.controlStyle() };
     }
   }
 

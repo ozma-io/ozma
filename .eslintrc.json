@@ -49,7 +49,12 @@
       "files": ["*.vue"],
       "rules": {
         "@typescript-eslint/indent": ["error", 2, {
-          // Waiting for https://github.com/typescript-eslint/typescript-eslint/issues/1325
+          // FIXME: Waiting for https://github.com/typescript-eslint/typescript-eslint/issues/1325
+          // These are default TypeScript options, for some reason they are reset for Vue files.
+          // https://github.com/typescript-eslint/typescript-eslint/blob/61e6385c65b147a5a8b4caa2f3241e5a92c9b1bf/packages/eslint-plugin/src/rules/indent.ts#L98-L108
+          "SwitchCase": 1,
+          "flatTernaryExpressions": false,
+          "ignoredNodes": []
         }]
       }
     }

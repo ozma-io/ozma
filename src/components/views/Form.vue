@@ -102,8 +102,7 @@ import FormEntry from "@/components/views/form/FormEntry.vue";
 import { IAction } from "@/components/ActionsMenu.vue";
 
 import {
-  IFieldInfo, IBlockInfo, IFormValueExtra, IFormRowExtra, IFormUserViewExtra,
-  IGridInputInfo, IGridInputInfoTopLevel,
+  IFieldInfo, IBlockInfo, IFormValueExtra, IFormRowExtra, IFormUserViewExtra, GridElement, IGridSection, IGridInput
 } from "@/components/form/types";
 
 type IFormLocalRowInfo = ILocalRowInfo<IFormRowExtra>;
@@ -222,60 +221,63 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
     return this.uv.newRowsPositions.slice(1);
   }
 
-  get fields(): IFieldInfo[] {
-    const viewAttrs = this.uv.attributes;
-    return this.uv.info.columns.map((columnInfo, i) => {
-      const columnAttrs = this.uv.columnAttributes[i];
-      const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
-
-      const captionAttr = getColumnAttr("caption");
-      const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name;
-
-      const visibleColumnAttr = getColumnAttr("visible");
-      const visible = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
-
-      return {
-        index: i,
-        columnInfo,
-        caption,
-        visible,
-      };
+  get blockSizes(): number[] {
+    const rawBlockSizes = this.uv.attributes["block_sizes"];
+    if (!(rawBlockSizes instanceof Array)) {
+      return [12];
+    }
+    const blockSizes = rawBlockSizes.map(x => {
+      const n = Math.round(Number(x));
+      if (Number.isInteger(n)) {
+        return Math.max(0, Math.min(12, n));
+      } else {
+        return undefined;
+      }
     });
+    if (blockSizes.some(x => x === undefined)) {
+      return [12];
+    } else {
+      return blockSizes as number[];
+    }
   }
 
-  get gridBlocks(): IGridInputInfoTopLevel[] {
+  get gridBlocks(): GridElement[] {
     const viewAttrs = this.uv.attributes;
-    const blockWidths: number[] = R.pathOr<number[]>([12], ["block_sizes"], viewAttrs);
-    const inputWidth: number = R.equals(blockWidths, [12]) ? 6 : 12;
-    const gridBlocks: IGridInputInfoTopLevel[] = this.blocks.map((block, index) => ({
-      type: "section",
-      size: R.pathOr(12, [index], blockWidths),
-      content: block.fields.map(field => ({
-        type: "input",
-        size: inputWidth,
-        field,
-      })),
-    }));
-
-    return gridBlocks;
-  }
-
-  get blocks(): IBlockInfo[] {
-    const viewAttrs = this.uv.attributes;
-    // Relative block widths. [0..1]. Each block contains zero or more inputs.
-    const blockWidths: number[] = viewAttrs["block_sizes"] || [1];
-    const blocks: IBlockInfo[] = blockWidths.map(width => ({ width, fields: [] }));
+    const blocks: IGridSection[] = this.blockSizes.map(size => ({ type: "section", size, content: [] }));
+    const inputWidth = R.equals(this.blockSizes, [12]) ? 6 : 12;
 
     this.uv.info.columns.forEach((columnInfo, i) => {
       const columnAttrs = this.uv.columnAttributes[i];
       const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
-      const field = this.fields[i];
+
+      const visibleColumnAttr = getColumnAttr("visible");
+      const visible = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
+
+      if (!visible) {
+        return;
+      }
 
       const blockAttr = Number(getColumnAttr("form_block"));
       const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr;
       const block = Math.max(0, Math.min(blockNumber, blocks.length - 1));
 
-      blocks[block].fields.push(field);
+      const formElementAttr = String(getColumnAttr("form_element"));
+
+      const captionAttr = getColumnAttr("caption");
+      const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name;
+
+      const field = {
+        index: i,
+        columnInfo,
+        caption,
+      };
+
+      const element: IGridInput = {
+        type: "input",
+        size: inputWidth,
+        field,
+      };
+      blocks[block].content.push(element);
     });
 
     return blocks;
@@ -284,12 +286,12 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
   private init() {
     if (this.isRoot) {
       this.$emit("update:bodyStyle", `
-                @media print {
-                    @page {
-                        size: portrait;
-                    }
-                }
-            `);
+        @media print {
+            @page {
+                size: portrait;
+            }
+        }
+      `);
     }
   }
 
