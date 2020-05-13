@@ -38,7 +38,7 @@
         >
           <span
             :style="listValueStyle"
-            :class="[ 'single_value', { 'single_value_open': isOpen } ]"
+            :class="[ 'single_value' ]"
           >{{ valueOption.label }}</span>
         </slot>
       </span>
@@ -419,13 +419,7 @@ export default class MultiSelect extends Vue {
     cursor: pointer;
     display: flex;
     flex-wrap: wrap;
-    min-height: 40px;
-    align-content: flex-start;
-  }
-
-  .select_container__content__single {
-    position: absolute;
-    left: 0;
+    align-content: center;
   }
 
   .select_container__content_fixed_height {
@@ -440,10 +434,7 @@ export default class MultiSelect extends Vue {
 
   .select_container__input {
     border: 0;
-    height: 30px;
     padding: 5px;
-    margin: 0 0 5px 0;
-    flex: 1;
     box-sizing: border-box;
     color: var(--MainTextColor);
     background-color: var(--MainBackgroundColor);
@@ -544,7 +535,7 @@ export default class MultiSelect extends Vue {
 
   .single_value_button {
     cursor: pointer;
-    width: 100%;
+    display: flex;
   }
 
   .values_list__value > input.values_list__value__close {

@@ -18,6 +18,13 @@
         }
     }
 </i18n>
+<!-- 
+  UserView SHOULD NOT contain any additional scaffolding
+  Such as <InputSlot /> (We had precedents before)
+  Any attempt to delegate any scaffolding logic to UserView,
+  either via InputSlot or otherwise is subject to a
+  thorough discussion with the team
+-->
 
 <template>
   <span>
@@ -34,7 +41,6 @@
         :default-values="defaultValues"
         @update:actions="extraCommonActions = $event"
       />
-
       <component
         :is="`UserView${userViewType}`"
         :uv="currentUv"
