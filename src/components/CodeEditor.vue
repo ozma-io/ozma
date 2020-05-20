@@ -46,18 +46,13 @@ export default class CodeEditor extends Vue {
 }
 </script>
 
-<style scoped>
+<style>
   .monaco-editor_modal {
     height: 350px;
   }
-</style>
 
-<!-- Don't use scoped here -- we need to overwrite styles for the editor. -->
-<style>
   /* https://stackoverflow.com/questions/58271107/offset-between-text-and-cursor-with-the-monaco-editor-angular-under-chrome-m */
-  #monacodiv div,
-  #monacoDiffEditor div {
-    font-family: monospace;
+  .monaco-editor {
     font-size: unset;
   }
 </style>
