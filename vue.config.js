@@ -1,4 +1,4 @@
-const { IgnorePlugin, DefinePlugin } = require("webpack");
+const { IgnorePlugin } = require("webpack");
 const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 
@@ -42,7 +42,7 @@ module.exports = {
   configureWebpack: {
     plugins: [
       new MonacoWebpackPlugin({
-        languages: ['sql'],
+        languages: ["sql"],
       }),
       new IgnorePlugin(/^\.\/locale$/, /moment$/),
       ...(analyzeBundle ? [new BundleAnalyzerPlugin()] : []),

@@ -10,16 +10,20 @@
 </template>
 
 <script lang="ts">
-// Breaks often with new TypeScript versions
-// import * as Ace from "ace-builds"
-// @ts-ignore
-import * as Ace from "ace-builds/src-noconflict/ace.js";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { namespace } from "vuex-class";
 
+import Monaco from "monaco-editor";
 import MonacoEditor from "vue-monaco";
+
+import { CurrentSettings } from "@/state/settings";
+
+const settings = namespace("settings");
 
 @Component({ components: { MonacoEditor } })
 export default class CodeEditor extends Vue {
+  @settings.State("current") settings!: CurrentSettings;
+
   @Prop({ default: "" }) content!: string;
   @Prop({ default: "sql", type: String }) mode!: string;
   @Prop({ default: "" }) theme!: string;
@@ -27,14 +31,17 @@ export default class CodeEditor extends Vue {
   @Prop({ default: false }) autofocus!: boolean;
   @Prop({ default: false }) isModal!: boolean;
 
-  get options() {
+  get options(): Monaco.editor.IStandaloneEditorConstructionOptions {
+    const fontSize = this.settings.getEntry("font_size", Number, 16);
+
     return {
       language: this.mode,
       readOnly: this.readOnly,
+      fontSize,
     };
   }
 
-  private onEditorMounted(editor: any) {
+  private onEditorMounted(editor: Monaco.editor.IStandaloneCodeEditor) {
     if (this.autofocus) {
       editor.focus();
     }
@@ -49,10 +56,5 @@ export default class CodeEditor extends Vue {
 <style>
   .monaco-editor_modal {
     height: 350px;
-  }
-
-  /* https://stackoverflow.com/questions/58271107/offset-between-text-and-cursor-with-the-monaco-editor-angular-under-chrome-m */
-  .monaco-editor {
-    font-size: unset;
   }
 </style>
