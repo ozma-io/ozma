@@ -309,7 +309,7 @@ export const authModule: Module<IAuthState, {}> = {
           if (nonce === null || savedState.nonce !== nonce) {
             // Invalid nonce; silently redirect.
             console.error("Invalid client nonce");
-            router.push({ name: "main" });
+            router.replace({ name: "main" });
           } else {
             const code = getQueryValue("code");
             if (code !== null) {
@@ -326,11 +326,11 @@ export const authModule: Module<IAuthState, {}> = {
                 dispatch("setError", `Invalid auth response query parameters, error ${error} ${errorDescription}`);
               }
             }
-            router.push(savedState.path);
+            router.replace(savedState.path);
           }
         } else {
           // We got here after logout, redirect.
-          router.push({ name: "main" });
+          router.replace({ name: "main" });
         }
       } else {
         const oldAuth = loadCurrentAuth();
