@@ -19,7 +19,7 @@
       @[indirectLinks?`click`:null]="$emit('goto', $event)"
     >
       <checkbox
-        v-if="valueType === 'bool'"
+        v-if="typeof value.value === 'boolean'"
         class="checkbox_click-none"
         :checked="value.value"
         disabled
@@ -30,7 +30,7 @@
     </UserViewLink>
     <template v-else>
       <checkbox
-        v-if="valueType === 'bool'"
+        v-if="typeof value.value === 'boolean'"
         class="checkbox_click-none"
         :checked="value.value"
         disabled
@@ -64,10 +64,6 @@ export default class TableCell extends Vue {
   @Prop({ type: String, default: "existing" }) from!: string;
   @Prop({ type: Number, default: null }) lastFixedColumnIndex!: number;
   @Prop({ type: Number, default: null }) index!: number;
-
-  get valueType(): string {
-    return this.value.info.field.valueType.type;
-  }
 
   get isNull() {
     // We use `value.value` here to highlight unvalidated values.
