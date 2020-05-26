@@ -6,7 +6,7 @@
       },
       "ru": {
         "empty_message": "Пусто",
-        "clear_all": "Удалить всё"
+        "clear_all": "Очистить"
       }
     }
 </i18n>
