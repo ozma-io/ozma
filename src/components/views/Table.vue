@@ -1214,7 +1214,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
 
     const actions: IAction[] = [
-      {name: this.$t("export_to_csv").toString(), callback: () => this.export2csv()},
+      // {name: this.$t("export_to_csv").toString(), callback: () => this.export2csv()},
     ];
     if (this.uv.info.mainEntity !== null) {
       actions.push(
