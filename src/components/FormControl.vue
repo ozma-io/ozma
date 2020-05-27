@@ -115,6 +115,7 @@
           :dont-focus="dontFocus"
           :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
+          :height="customHeight"
           @setInputHeight="setInputHeight"
           @update:value="updateValue($event)"
           @focus="iSlot.onFocus"

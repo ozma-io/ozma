@@ -35,10 +35,11 @@
         'textarea_field__desktop': !isMobile,
       }]"
       :type="type"
+      :style="style"
       :value="value"
       :placeholder="$t('input_placeholder')"
       :disabled="disabled"
-      :rows="rows"
+      :rows="textareaRows"
       @focus="onFocus"
       @blur="onBlur"
       @input="$emit('update:value', $event.target.value)"
@@ -63,7 +64,7 @@ export default class Textarea extends Vue {
   @Prop({ type: Boolean, default: true }) inline!: boolean;
   @Prop({ type: String, default: "text" }) type!: string;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
+  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
 
   private focused = false;
   private modalValue: string = this.value;
@@ -113,11 +114,21 @@ export default class Textarea extends Vue {
     return this.value.length > 0;
   }
 
+  private get textareaRows(): number | null {
+    if (this.height) {
+      return null
+    }
+
+    return this.rows;
+  }
+
   private get style() {
-    return {
-      height: `${this.dummyHeight}px`,
-      width: `${this.dummyWidth}px`,
-    };
+    if (this.height) {
+      return {
+        height: `${this.height}px`,
+      };
+    }
+    return {};
   }
 
   private onFocus(evt: HTMLInputElement) {
