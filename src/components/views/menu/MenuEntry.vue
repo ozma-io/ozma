@@ -22,6 +22,11 @@
     </template>
     <template v-else>
       <div class="menu_entry">
+        <input
+          type="button"
+          class="material-icons menu_entry_icon"
+          value="chevron_right"
+        >
         <UserViewLink
           class="navigation-entry"
           :style="titleStyle"
@@ -101,6 +106,13 @@ export default class MenuEntry extends Vue {
   .menu_category_title {
     color: #000;
     font-weight: bold;
+  }
+
+  .menu_entry_icon {
+    background: none;
+    color: var(--MainBorderColor);
+    border: none;
+    padding: 0;
   }
 
   @media (max-width: 600px) {
