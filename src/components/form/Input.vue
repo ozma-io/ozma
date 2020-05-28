@@ -45,6 +45,7 @@
       ref="controlTextarea"
       :placeholder="$t('input_placeholder')"
       :value="value"
+      :readonly="disabled"
       rows="1"
       :min-height="144"
       :max-height="144"
