@@ -259,27 +259,6 @@ interface ITableEditing {
   ref: ValueRef;
 }
 
-/**
-     * Coordinates of table for setting position of in-place edit component
-     * lt - left top
-     * rt - right top
-     * lb - left bottom
-     * rb - right bottom
-     * center - center of table
-     */
-
-export interface ICoords {
-  x: number;
-  y: number;
-}
-
-export interface ITableCoords {
-  lt: ICoords;
-  rt: ICoords;
-  lb: ICoords;
-  center: ICoords;
-}
-
 interface IColumn {
   caption: string;
   style: Record<string, any>;
@@ -1068,25 +1047,16 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
     // this.selectCell() breaks the timer for double click in iOS,
     // so when we're running iOS we don't check for double click
-    if (!isIOS()) {
-      if (this.clickTimeoutId === null) {
-        this.clickTimeoutId = setTimeout(() => {
-          this.clickTimeoutId = null;
-        }, doubleClickTime);
-        if (this.lastSelectedValue !== null && !deepEquals(this.lastSelectedValue, ref)) {
-          this.removeCellEditing();
-        }
-      } else {
-        clearTimeout(this.clickTimeoutId);
+    if (this.clickTimeoutId === null) {
+      this.clickTimeoutId = setTimeout(() => {
         this.clickTimeoutId = null;
-        if (this.lastSelectedValue !== null && deepEquals(this.lastSelectedValue, ref)) {
-          this.setCellEditing(ref);
-        }
-      }
-    } else {
+      }, doubleClickTime);
       if (this.lastSelectedValue !== null && !deepEquals(this.lastSelectedValue, ref)) {
         this.removeCellEditing();
       }
+    } else {
+      clearTimeout(this.clickTimeoutId);
+      this.clickTimeoutId = null;
       if (this.lastSelectedValue !== null && deepEquals(this.lastSelectedValue, ref)) {
         this.setCellEditing(ref);
       }

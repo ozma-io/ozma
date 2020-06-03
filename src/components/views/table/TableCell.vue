@@ -7,6 +7,7 @@
                           'select_fixed': localValue.selected && column.fixed,
                           'next-after-last-fixed': index === lastFixedColumnIndex,
                           'select': localValue.selected && !column.fixed,
+                          'table-td_selected': localValue.selected,
                           'error_style': value.erroredOnce,
                           'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable && from !== 'new',
                           'editing_style': localValue.editing !== undefined,
@@ -80,6 +81,14 @@ export default class TableCell extends Vue {
 <style scoped>
   .next-after-last-fixed {
     padding-left: 7px !important;
+  }
+
+  .table-td {
+    touch-action: manipulation;
+  }
+
+  .table-td_selected {
+    background: #d4d4d4 !important;
   }
 
   .checkbox_click-none {
