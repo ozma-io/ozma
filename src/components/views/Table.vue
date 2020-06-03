@@ -252,6 +252,7 @@ import TableRow from "@/components/views/table/TableRow.vue";
 import TableFixedRow from "@/components/views/table/TableFixedRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
 import TableCellEdit, {ICellCoords, IEditParams} from "@/components/views/table/TableCellEdit.vue";
+import {Moment} from "moment";
 
 interface ITableEditing {
   lock: AutoSaveLock;
@@ -732,11 +733,16 @@ const rowContains = (row: ITableLocalRow, searchWords: string[]) => {
   return searchWords.every(word => row.extra.searchText.includes(word));
 };
 
-const rowIndicesCompare = (aIndex: number, bIndex: number, entries: IRowCommon[], sortColumn: number, collator: Intl.Collator) => {
+const rowIndicesCompare = (aIndex: number, bIndex: number, entries: IRowCommon[], sortColumn: number, collator: Intl.Collator, isDate?: boolean) => {
   const a = entries[aIndex];
   const b = entries[bIndex];
-  return collator.compare(a.values[sortColumn].value,
-    b.values[sortColumn].value);
+  if (!isDate) {
+    return collator.compare(a.values[sortColumn].value,
+      b.values[sortColumn].value);
+  } else {
+    return Number((a.values[sortColumn].value as Moment).toDate())
+      - Number((b.values[sortColumn].value as Moment).toDate());
+  }
 };
 
 const getCsvString = (str: string): string => {
@@ -1241,10 +1247,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
             string: ascending
         */
   private updateSort(sortColumn: number) {
+    const type = this.local.extra.columns[sortColumn].columnInfo.valueType.type;
     if (this.sortColumn !== sortColumn) {
-      const type = this.local.extra.columns[sortColumn].columnInfo.valueType.type;
       this.sortColumn = sortColumn;
-
       switch (type) {
         case "int":
           this.sortOptions = {numeric: true};
@@ -1266,19 +1271,19 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.sortAsc = !this.sortAsc;
     }
 
-    this.sortRows(this.sortOptions);
+    this.sortRows(this.sortOptions, type === "datetime");
   }
 
-  private sortRows(options?: Intl.CollatorOptions) {
+  private sortRows(options?: Intl.CollatorOptions, isDateCompare?: boolean) {
     const rows = this.uv.rows!;
 
     if (this.sortColumn !== null) {
       const sortColumn = this.sortColumn;
       const collator = new Intl.Collator(["en", "ru"], options);
       const sortFunction: (a: number, b: number) => number =
-                    this.sortAsc ?
-                      (a, b) => rowIndicesCompare(a, b, rows, sortColumn, collator) :
-                      (a, b) => rowIndicesCompare(b, a, rows, sortColumn, collator);
+        this.sortAsc ?
+          (a, b) => rowIndicesCompare(a, b, rows, sortColumn, collator, isDateCompare) :
+          (a, b) => rowIndicesCompare(b, a, rows, sortColumn, collator, isDateCompare);
       this.rowPositions.sort(sortFunction);
     }
   }
