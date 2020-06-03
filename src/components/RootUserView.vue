@@ -119,12 +119,6 @@
           @update:title="updateTitle"
         />
       </div>
-      <div
-        v-else
-        class="loading"
-      >
-        {{ $t('loading') }}
-      </div>
     </div>
     <nav
       v-if="!uvIsError && bottomBarNeeded"
@@ -178,19 +172,17 @@
 </template>
 
 <script lang="ts">
-import { Route } from "vue-router";
-import { Component, Watch, Vue } from "vue-property-decorator";
-import { Action, namespace } from "vuex-class";
-
-import { mapMaybe } from "@/utils";
+import {Route} from "vue-router";
+import {Component, Vue, Watch} from "vue-property-decorator";
+import {namespace} from "vuex-class";
 import * as Api from "@/api";
-import { setHeadTitle } from "@/elements";
-import { IUserViewArguments, CombinedUserView, UserViewError, CurrentUserViews } from "@/state/user_view";
-import { ErrorKey } from "@/state/errors";
-import { CurrentChanges, ScopeName } from "@/state/staging_changes";
-import { IAction } from "@/components/ActionsMenu.vue";
-import { CurrentAuth } from "@/state/auth";
-import { CurrentQuery, IQuery, queryLocation, replaceSearch, getDefaultValues } from "@/state/query";
+import {setHeadTitle} from "@/elements";
+import {CombinedUserView, CurrentUserViews, IUserViewArguments, UserViewError} from "@/state/user_view";
+import {ErrorKey} from "@/state/errors";
+import {CurrentChanges, ScopeName} from "@/state/staging_changes";
+import {IAction} from "@/components/ActionsMenu.vue";
+import {CurrentAuth} from "@/state/auth";
+import {CurrentQuery, getDefaultValues, IQuery, queryLocation, replaceSearch} from "@/state/query";
 import {Debounce} from "vue-debounce-decorator";
 
 const auth = namespace("auth");
@@ -237,7 +229,6 @@ const convertToWords = (str: string) => {
 };
 
 const searchParam = "__q";
-
 @Component
 export default class RootUserView extends Vue {
   @auth.State("current") currentAuth!: CurrentAuth | null;
@@ -269,7 +260,7 @@ export default class RootUserView extends Vue {
 
   get errors() {
     return Object.entries(this.rawErrors).flatMap(([key, keyErrors]) => keyErrors.map(error => {
-      return this.$t(`${key}_error`, { msg: error });
+      return this.$t(`${key}_error`, {msg: error});
     }));
   }
 
@@ -282,7 +273,7 @@ export default class RootUserView extends Vue {
   }
 
   // FIXME update when change not query.search
-  @Watch("$route", { deep: true, immediate: true })
+  @Watch("$route", {deep: true, immediate: true})
   private onRouteChanged() {
     this.setRoute(this.$route);
   }
@@ -292,7 +283,7 @@ export default class RootUserView extends Vue {
     this.isShownSearchField = false;
   }
 
-  @Watch("query.rootViewArgs", { deep: true, immediate: true })
+  @Watch("query.rootViewArgs", {deep: true, immediate: true})
   private onViewArgsChanged() {
     this.updateView();
   }
@@ -303,7 +294,7 @@ export default class RootUserView extends Vue {
     replaceSearch("q", this.filterString);
   }
 
-  @Watch("query.search.root", { deep: true, immediate: true })
+  @Watch("query.search.root", {deep: true, immediate: true})
   private updateRootParams() {
     this.filterString = this.query.getSearch("q", String, "");
   }
@@ -324,10 +315,10 @@ export default class RootUserView extends Vue {
     const actions: IAction[] = [];
     actions.push(...this.extraActions);
     if (this.currentAuth !== null) {
-      actions.push({ name: this.$t("account").toString(), href: Api.accountUrl });
-      actions.push({ name: this.$t("logout").toString(), callback: this.logout });
+      actions.push({name: this.$t("account").toString(), href: Api.accountUrl});
+      actions.push({name: this.$t("logout").toString(), callback: this.logout});
     } else {
-      actions.push({ name: this.$t("login").toString(), callback: this.login });
+      actions.push({name: this.$t("login").toString(), callback: this.login});
     }
     return actions;
   }
@@ -347,7 +338,6 @@ export default class RootUserView extends Vue {
       this.filterString = "";
     }
   }
-
 
   private updateView() {
     this.clearView();
@@ -388,8 +378,8 @@ export default class RootUserView extends Vue {
 
   get bottomBarNeeded() {
     return this.errors.length > 0 ||
-            !this.changes.isEmpty ||
-            this.statusLine !== "";
+        !this.changes.isEmpty ||
+        this.statusLine !== "";
   }
 
   get defaultValues() {
@@ -454,7 +444,7 @@ export default class RootUserView extends Vue {
     height: inherit;
     display: flex;
     flex-direction: column;
-    z-index: 0;  /* вся страница, кроме низа */
+    z-index: 0; /* вся страница, кроме низа */
   }
 
   @media print {

@@ -18,7 +18,7 @@
         }
     }
 </i18n>
-<!-- 
+<!--
   UserView SHOULD NOT contain any additional scaffolding
   Such as <InputSlot /> (We had precedents before)
   Any attempt to delegate any scaffolding logic to UserView,
@@ -66,12 +66,7 @@
     >
       {{ errorMessage }}
     </div>
-    <div
-      v-else
-      class="loading"
-    >
-      {{ $t('loading') }}
-    </div>
+    <ProgressBar v-if="isLoadingUv" />
   </span>
 </template>
 
@@ -80,6 +75,7 @@ import { VueConstructor } from "vue";
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { Store } from "vuex";
+import ProgressBar from "@/components/ProgressBar.vue"
 
 import { RecordSet, ReferenceName, deepEquals, snakeToPascal, pascalToSnake } from "@/utils";
 import { funappSchema } from "@/api";
@@ -131,7 +127,7 @@ const userViewType = (uv: CombinedUserView) => {
 
 const maxLevel = 4;
 
-@Component({ components: { UserViewCommon, ...components } })
+@Component({ components: { UserViewCommon, ProgressBar, ...components } })
 export default class UserView extends Vue {
   @userView.State("current") currentUvs!: CurrentUserViews;
   @userView.Mutation("removeUserViewConsumer") removeUserViewConsumer!: (args: { args: IUserViewArguments; reference: ReferenceName }) => void;
@@ -207,6 +203,10 @@ export default class UserView extends Vue {
         return this.$t("unknown_error", { msg: this.currentUv.message });
       }
     }
+  }
+
+  get isLoadingUv(): boolean {
+    return this.newUv === null || this.currentUv === null || !deepEquals(this.newUv.args, this.currentUv.args);
   }
 
   // Should clear all user view-specific values.
