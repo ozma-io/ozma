@@ -4,12 +4,9 @@
   >
     <template v-if="entry.content">
       <div class="menu_category_block">
-        <div
-          class="menu_category_title"
-          :style="titleStyle"
-        >
+        <MenuHeading :level="level + 1">
           {{ entry.name }}
-        </div>
+        </MenuHeading>
         <b-row :class="['menu_entries', { 'first_level_entries': level === 0 }]">
           <MenuEntry
             v-for="(subEntry, index) in entry.content"
@@ -23,13 +20,19 @@
     <template v-else>
       <div class="menu_entry">
         <input
+          v-if="!entry.icon"
           type="button"
           class="material-icons menu_entry_icon"
           value="chevron_right"
         >
+        <div
+          v-else
+          class="menu_entry_icon menu_entry_icon__text"
+        >
+          {{ entry.icon }}
+        </div>
         <UserViewLink
           class="navigation-entry"
-          :style="titleStyle"
           :uv="entry"
           @[indirectLinks?`click`:null]="$emit('goto', $event)"
         >
@@ -46,12 +49,16 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { IQuery, attrToQuery } from '@/state/query';
 
+import MenuHeading from '@/components/menu/MenuHeading.vue';
+
 interface IMenuBase {
   name: string;
   size?: number;
 }
 
-export interface IMenuLink extends IMenuBase, IQuery { }
+export interface IMenuLink extends IMenuBase, IQuery { 
+  icon?: string;
+}
 
 export interface IMenuCategory extends IMenuBase {
   content: MenuValue[];
@@ -62,7 +69,7 @@ export type MenuValue = IMenuLink | IMenuCategory;
 const initialSize = 50;
 const scaleFactor = 0.85;
 
-@Component({ name: 'MenuEntry' })
+@Component({ name: 'MenuEntry', components: { MenuHeading } })
 export default class MenuEntry extends Vue {
   @Prop({ type: Number, required: false, default: 0 }) level!: number;
   @Prop({ type: Object, required: true }) entry!: MenuValue;
@@ -113,6 +120,13 @@ export default class MenuEntry extends Vue {
     color: var(--MainBorderColor);
     border: none;
     padding: 0;
+  }
+
+  .menu_entry_icon__text {
+    color: var(--MainTextColor);
+    width: 24px;
+    font-size: 20px;
+    line-height: 24px;
   }
 
   @media (max-width: 600px) {

@@ -14,7 +14,7 @@
 </i18n>
 
 <template>
-  <div class="menu_container">
+  <div :class="['menu_container', { 'menu_container__centered': isCentered }]">
     <b-container>
       <b-row>
         <b-col v-if="typeof entriesOrError === 'string'" cols="12">
@@ -64,6 +64,14 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
     return home !== null ? { homeSchema: home } : {};
   }
 
+  private get isCentered(): boolean {
+    const isCentered = R.pathOr(false, ['attributes', 'menu_centered'], this.uv);
+    if (typeof isCentered === "boolean") {
+      return isCentered;
+    }
+    return false;
+  }
+
   private convertNewMenuEntries(entries: any[]): MenuValue[] {
     return mapMaybe(entry => {
       const ret = this.convertNewMenuEntry(entry);
@@ -79,7 +87,10 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
     if (!("name" in entry)) {
       return null;
     }
-    const base: { name: string; size?: number } = { name: String(entry.name) };
+    const base: { name: string; size?: number; icon?: string } = { name: String(entry.name) };
+    if ("icon" in entry) {
+      base.icon = entry.icon;
+    }
     if ("size" in entry) {
       const size = Number(entry.size);
       if (!Number.isNaN(size)) {
@@ -194,6 +205,14 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
     /* margin-top: 120px; */
     max-height: 100%;
     overflow-y: auto;
+  }
+
+  .menu_container__centered {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .main-menu-block {
