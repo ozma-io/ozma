@@ -1319,6 +1319,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   @Watch("statusLine")
   private updateStatusLine() {
+    this.setShowEmptyRow(false);
     this.$emit("update:statusLine", this.statusLine);
   }
 
