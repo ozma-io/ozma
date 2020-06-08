@@ -57,6 +57,7 @@ import { valueIsNull } from "@/values";
 import ModalContent from "@/components/modal/ModalContent";
 import ModalTabHeader from "@/components/modal/ModalTabHeader.vue";
 import { IModalTab } from "@/components/modal/types";
+import { isMobile } from "../../utils";
 
 @Component({ components: { ModalContent, ModalTabHeader } })
 export default class Modal extends Vue {
@@ -118,7 +119,7 @@ export default class Modal extends Vue {
   }
 
   private get modalWidth(): string {
-    if (this.fullscreen) {
+    if (this.fullscreen || isMobile()) {
       return "100%";
     }
     return this.width;
@@ -127,6 +128,9 @@ export default class Modal extends Vue {
   private get modalHeight(): string {
     if (this.fullscreen) {
       return "100%";
+    }
+    if (isMobile()) {
+      return "90vh";
     }
     return this.height;
   }
@@ -186,6 +190,17 @@ export default class Modal extends Vue {
     display: flex;
     flex-flow: column nowrap;
     flex-grow: 1;
+  }
+
+  @media screen and (max-width: 768px) {
+    .v--modal-box.v--modal {
+      height: 90vh;
+    }
+
+    .v--modal-background-click {
+      display: flex;
+      align-items: flex-end;
+    }
   }
 
   .modal__tab-content {
