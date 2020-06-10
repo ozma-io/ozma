@@ -164,7 +164,7 @@ const findValueDelta = (rows: ICombinedRow[], newRows: Record<number, IRowCommon
 @Component({
   components: { MultiSelect, ModalUserView },
 })
-export default class UserViewMultiselect extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>, BaseEntriesView>(BaseUserView, BaseEntriesView) {
+export default class UserViewMultiSelect extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>, BaseEntriesView>(BaseUserView, BaseEntriesView) {
   private nestedView: IQuery | null = null;
 
   get entriesEntity() {

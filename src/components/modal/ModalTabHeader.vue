@@ -1,14 +1,14 @@
 <template>
   <div
     :class="['modal__tab_header', {'selected': isActive}]"
-    @click="$emit('tab:click')"
+    @click="$emit('tab-click')"
   >
     {{ title }}
     <input
       type="button"
       value="close"
       class="material-icons modal__tab_close_button"
-      @click.stop="$emit('tab:close')"
+      @click.stop="$emit('tab-close')"
     >
   </div>
 </template>

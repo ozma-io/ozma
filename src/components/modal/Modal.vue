@@ -23,8 +23,8 @@
         :key="index"
         :is-active="index === selectedTab"
         :title="tab.title"
-        @tab:click="switchTab(index)"
-        @tab:close="$emit('tab:close', index)"
+        @tab-click="switchTab(index)"
+        @tab-close="$emit('tab-close', index)"
       />
     </div>
     <div
@@ -130,7 +130,7 @@ export default class Modal extends Vue {
       return "100%";
     }
     if (isMobile()) {
-      return "90vh";
+      return "95%";
     }
     return this.height;
   }

@@ -44,7 +44,7 @@
         is-cell-edit
         autofocus
         auto-open
-        @setInputHeight="setInputHeight"
+        @set-input-height="setInputHeight"
         @update="updateCurrentValue"
         @closeModalInput="clickOutsideEdit"
       />
@@ -140,7 +140,7 @@
               :local-uv="local.extra"
               from="new"
               :indirect-links="indirectLinks"
-              @cellClick="clickCell({ type: 'new', column: arguments[0] }, arguments[1])"
+              @cell-click="clickCell({ type: 'new', column: arguments[0] }, arguments[1])"
               @goto="$emit('goto', $event)"
             />-->
             <TableRow
@@ -151,7 +151,7 @@
               :show-fixed-row="showFixedRow"
               from="new"
               :indirect-links="indirectLinks"
-              @cellClick="clickCell({ type: 'new', column: arguments[0] }, arguments[1])"
+              @cell-click="clickCell({ type: 'new', column: arguments[0] }, arguments[1])"
               @goto="$emit('goto', $event)"
             />
           </template>
@@ -166,7 +166,7 @@
               from="added"
               :indirect-links="indirectLinks"
               @select="selectRow({ type: 'added', position: rowIndex }, $event)"
-              @cellClick="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
+              @cell-click="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
               @goto="$emit('goto', $event)"
             />-->
             <TableRow
@@ -179,7 +179,7 @@
               from="added"
               :indirect-links="indirectLinks"
               @select="selectRow({ type: 'added', position: rowIndex }, $event)"
-              @cellClick="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
+              @cell-click="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
               @goto="$emit('goto', $event)"
             />
           </template>
@@ -193,7 +193,7 @@
               :local-uv="local.extra"
               :indirect-links="indirectLinks"
               @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
-              @cellClick="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
+              @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
               @goto="$emit('goto', $event)"
             />-->
             <TableRow
@@ -205,7 +205,7 @@
               :show-fixed-row="showFixedRow"
               :indirect-links="indirectLinks"
               @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
-              @cellClick="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
+              @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
               @goto="$emit('goto', $event)"
             />
           </template>
@@ -984,7 +984,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   private clickOutsideEdit(event: MouseEvent) {
-    const element = document.elementFromPoint(event.x, event.y);
+    const element = event ? document.elementFromPoint(event.x, event.y) : null;
     if (element) {
       if (element.closest(".v--modal-box")) {
         return;
