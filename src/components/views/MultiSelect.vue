@@ -14,6 +14,11 @@
     fluid
     class="view-form"
   >
+    <ModalUserView
+      v-if="nestedView !== null"
+      :initial-view="nestedView"
+      @close="nestedView = null"
+    />
     <MultiSelect
       v-if="selectedValueIndex"
       :options="options || []"
@@ -30,6 +35,12 @@
           :style="select.listValueStyle"
           @click.stop
         >
+          <input
+            type="button"
+            class="material-icons reference__open_modal"
+            value="flip_to_front"
+            @click.stop="nestedView = option.meta.link"
+          >
           <UserViewLink
             v-if="option.meta && option.meta.link"
             :uv="option.meta.link"
@@ -105,6 +116,7 @@ import BaseEntriesView from "@/components/BaseEntriesView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
 import MultiSelect from "@/components/multiselect/MultiSelect.vue";
 import { IAction } from "@/components/ActionsMenu.vue";
+import ModalUserView from "@/components/ModalUserView.vue";
 
 const findSelectColumnIndex = (attrs: { [key: string]: any}) =>
   Number(Object.keys(attrs).filter(key => R.pathOr(false, [key, "select"], attrs))[0]);
@@ -150,9 +162,11 @@ const findValueDelta = (rows: ICombinedRow[], newRows: Record<number, IRowCommon
   localConstructor: LocalEmptyUserView,
 })
 @Component({
-  components: { MultiSelect },
+  components: { MultiSelect, ModalUserView },
 })
 export default class UserViewMultiselect extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>, BaseEntriesView>(BaseUserView, BaseEntriesView) {
+  private nestedView: IQuery | null = null;
+
   get entriesEntity() {
     const mainField = this.uv.info.columns[this.selectedValueIndex].mainField;
     if (mainField) {
@@ -219,5 +233,13 @@ export default class UserViewMultiselect extends mixins<BaseUserView<LocalEmptyU
   .select_container__options_list__option > a {
     color: var(--MainTextColor);
     text-decoration: underline;
+  }
+
+  .reference__open_modal {
+    border: none;
+    background: none;
+    padding: 0;
+    margin: 0 10px 0 0;
+    color: var(--MainTextColor);
   }
 </style>
