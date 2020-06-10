@@ -27,7 +27,7 @@
         :placeholder="$t('input_placeholder')"
         :value="textValue"
         @input="$emit('update:value', $event.target.value)"
-        @focus="isCalendarOpen = true"
+        @focus="onInputFocus"
       >
       <input
         v-if="!!value"
@@ -74,7 +74,8 @@ export default class Calendar extends Vue {
   @Prop({ type: String }) textValue!: string;
   @Prop({ default: true, type: Boolean }) showTime!: boolean;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
+  @Prop({ type: Boolean, default: false }) noOpenOnFocus!: boolean;
+  @Prop({ type: Boolean, default: false}) isCellEdit!: boolean;
 
   private isCalendarOpen = false;
 
@@ -84,6 +85,13 @@ export default class Calendar extends Vue {
       Vue.nextTick().then(() => {
         controlElement.focus();
       });
+    }
+  }
+
+  private onInputFocus() {
+    this.$emit("focus");
+    if (!this.noOpenOnFocus) {
+      this.isCalendarOpen = true;
     }
   }
 

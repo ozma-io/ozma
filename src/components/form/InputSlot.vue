@@ -32,6 +32,7 @@
               name="input-modal"
               :onChange="onChange"
               :value="modalValue"
+              :text-value="textValue"
             />
           </div>
           <div class="input_modal__button_container">
@@ -83,9 +84,11 @@ import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
 import { isMobile, getTextWidth } from "@/utils";
+import { ValueType } from '@/api';
 
 import Modal from "@/components/modal/Modal.vue";
 import Input from "@/components/form/Input.vue";
+import { valueToText } from "../../values";
 
 @Component({ components: { Modal, Input } })
 export default class InputSlot extends Vue {
@@ -97,7 +100,7 @@ export default class InputSlot extends Vue {
   @Prop({ type: Array }) actions!: IAction[];
   @Prop({ type: Boolean }) disabled!: boolean;
   @Prop({ type: Boolean, default: true }) inline!: boolean;
-  @Prop({ type: String, default: "text" }) type!: string;
+  @Prop({ type: Object, required: true }) type!: ValueType;
   @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
   @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
 
@@ -129,6 +132,10 @@ export default class InputSlot extends Vue {
 
   private get isMobile(): boolean {
     return isMobile();
+  }
+
+  private get textValue(): string {
+    return valueToText(this.type, this.modalValue);
   }
 
   private onModalOpen() {
