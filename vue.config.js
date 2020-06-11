@@ -1,3 +1,5 @@
+"use strict";
+
 const { IgnorePlugin } = require("webpack");
 const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
