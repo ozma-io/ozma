@@ -22,7 +22,7 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
       on: {
         /* eslint-disable @typescript-eslint/unbound-method */
         close: this.closeAll,
-        "tab:close": this.close,
+        "tab-close": this.close,
         /* eslint-enable @typescript-eslint/unbound-method */
       },
     });

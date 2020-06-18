@@ -47,7 +47,7 @@
           :column-position="i"
           :column="localUv.columns[i]"
           :indirect-links="indirectLinks"
-          @cellClick="$emit('cellClick', ...arguments)"
+          @cell-click="$emit('cell-click', ...arguments)"
           @goto="$emit('goto', $event)"
         />
       </div>

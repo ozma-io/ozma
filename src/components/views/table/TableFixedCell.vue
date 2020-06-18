@@ -3,7 +3,7 @@
   <!-- When you change anything here, also make corresponding changes in TableFixedCell! -->
   <div
     :style="Object.assign({}, localValue.style, column.style)"
-    @click="$emit('cellClick', columnPosition, $event)"
+    @click="$emit('cell-click', columnPosition, $event)"
   >
     <p>
       <UserViewLink

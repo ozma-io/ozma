@@ -45,7 +45,7 @@
       :from="from"
       :last-fixed-column-index="lastFixedColumnIndex"
       :indirect-links="indirectLinks"
-      @cellClick="$emit('cellClick', arguments[0], arguments[1])"
+      @cell-click="$emit('cell-click', arguments[0], arguments[1])"
       @goto="$emit('goto', $event)"
     />
   </tr>

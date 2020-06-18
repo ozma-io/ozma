@@ -11,7 +11,7 @@
                           'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable && from !== 'new',
                           'editing_style': localValue.editing !== undefined,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
-    @click="$emit('cellClick', columnPosition, $event)"
+    @click="$emit('cell-click', columnPosition, $event)"
   >
     <UserViewLink
       v-if="localValue.link !== undefined"

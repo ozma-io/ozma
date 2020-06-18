@@ -33,41 +33,38 @@
       :value="currentValue"
       :actions="actions"
       :auto-open="autoOpen"
-      :type="type"
-      @update:value="updateValue"
       @closeModalInput="$emit('closeModalInput')"
     >
-      <template #input-modal="iSlot">
+      <template #input-modal>
         <Input
           v-if="inputType.name === 'text'"
-          :value="iSlot.value"
+          :value="currentValue"
           :is-cell-edit="isCellEdit"
           :dont-focus="dontFocus"
           :disabled="isDisabled"
           :autofocus="autofocus"
           focus
-          @setInputHeight="setInputHeight"
-          @input="iSlot.onChange($event)"
+          @set-input-height="setInputHeight"
+          @input="updateValue($event)"
         />
         <Textarea
           v-else-if="inputType.name === 'textarea'"
-          :value="iSlot.value"
+          :value="currentValue"
           :is-cell-edit="isCellEdit"
           :autofocus="autofocus"
           :dont-focus="dontFocus"
           :disabled="isDisabled"
-          @setInputHeight="setInputHeight"
-          @update:value="iSlot.onChange($event)"
+          @set-input-height="setInputHeight"
+          @update:value="updateValue"
         />
         <Calendar
           v-else-if="inputType.name === 'calendar'"
           ref="control"
-          :value="iSlot.value"
-          :text-value="iSlot.textValue"
+          :value="currentValue"
           :is-cell-edit="isCellEdit"
           :autofocus="autofocus"
           :show-time="inputType.showTime"
-          @update:value="iSlot.onChange"
+          @update:value="updateValue"
         />
         <MultiSelect
           v-else-if="inputType.name === 'select'"
@@ -80,7 +77,7 @@
           :required="!isNullable"
           :disabled="isDisabled"
           :is-cell-edit="isCellEdit"
-          @update:value="updateValue($event)"
+          @update:value="updateValue"
         />
         <CodeEditor
           v-else-if="inputType.name === 'codeeditor'"
@@ -91,7 +88,7 @@
           :read-only="isDisabled"
           :is-cell-edit="isCellEdit"
           :autofocus="autofocus"
-          @update:content="updateValue($event)"
+          @update:content="updateValue"
         />
       </template>
       <template #input="iSlot">
@@ -105,8 +102,8 @@
           :is-cell-edit="isCellEdit"
           :dont-focus="dontFocus"
           :disabled="isDisabled"
-          @input="updateValue($event)"
-          @setInputHeight="setInputHeight"
+          @input="updateValue"
+          @set-input-height="setInputHeight"
           @focus="iSlot.onFocus"
         />
         <Textarea
@@ -117,8 +114,8 @@
           :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
           :height="customHeight"
-          @setInputHeight="setInputHeight"
-          @update:value="updateValue($event)"
+          @set-input-height="setInputHeight"
+          @update:value="updateValue"
           @focus="iSlot.onFocus"
         />
         <Calendar
@@ -131,7 +128,7 @@
           :is-cell-edit="isCellEdit"
           :show-time="inputType.showTime"
           @focus="iSlot.onFocus"
-          @update:value="updateValue($event)"
+          @update:value="updateValue"
         />
         <MultiSelect
           v-else-if="inputType.name === 'select'"
@@ -145,7 +142,7 @@
           :is-cell-edit="isCellEdit"
           :required="!isNullable"
           :disabled="isDisabled"
-          @update:value="updateValue($event)"
+          @update:value="updateValue"
           @focus="iSlot.onFocus"
         />
         <CodeEditor
@@ -157,7 +154,7 @@
           :read-only="isDisabled"
           :is-cell-edit="isCellEdit"
           :autofocus="autofocus"
-          @update:content="updateValue($event)"
+          @update:content="updateValue"
         />
         <input
           v-else-if="inputType.name === 'check'"
@@ -204,13 +201,14 @@
           <InputSlot
             v-if="inputType.name === 'reference'"
             style="padding-left: 0;"
-            :value="value"
+            :value="currentValue"
             :type="type"
             :auto-open="autoOpen"
             :is-cell-edit="isCellEdit"
+            @closeModalInput="$emit('closeModalInput')"
             @update:value="updateValue($event)"
           >
-            <template #input-modal="iSlot">
+            <template #input-modal>
               <ReferenceField
                 ref="control"
                 :value="value"
@@ -226,7 +224,7 @@
                 :is-nullable="isNullable"
                 :is-disabled="isDisabled"
                 @update:actions="actions = $event"
-                @update="iSlot.onChange($event)"
+                @update="updateValue"
               />
             </template>
             <template #input="iSlot">
@@ -422,7 +420,7 @@ export default class FormControl extends Vue {
   }
 
   private setInputHeight(value: number) {
-    this.$emit("setInputHeight", value);
+    this.$emit("set-input-height", value);
   }
 
   private forceRerender() {

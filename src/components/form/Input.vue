@@ -186,7 +186,7 @@ export default class Input extends Vue {
 
   private setInputHeight() {
     const controlTextareaElement = this.$refs.controlTextarea as any;
-    this.$emit("setInputHeight", controlTextareaElement.$el.clientHeight);
+    this.$emit("set-input-height", controlTextareaElement.$el.clientHeight);
   }
 
   private updateWidth(text: string) {

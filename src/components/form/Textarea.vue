@@ -107,7 +107,7 @@ export default class Textarea extends Vue {
   private setInputHeight() {
     const controlTextareaElement = this.$refs.controlTextarea as any;
     setTimeout(() => {
-      this.$emit("setInputHeight", controlTextareaElement.$el.clientHeight);
+      this.$emit("set-input-height", controlTextareaElement.$el.clientHeight);
     }, 0);
   }
 

@@ -20,7 +20,6 @@
     <Modal
       v-if="isMobile"
       :show="isModalOpen"
-      :name="`${uid}-field-modal`"
       fullscreen
       @opened="onModalOpen"
       @close="onModalClose"
@@ -30,25 +29,15 @@
           <div>
             <slot
               name="input-modal"
-              :onChange="onChange"
-              :value="modalValue"
-              :text-value="textValue"
             />
           </div>
           <div class="input_modal__button_container">
             <button
               type="button"
               class="input_modal__button__ok"
-              @click="updateValueFromModal"
-            >
-              {{ $t('ok') }}
-            </button>
-            <button
-              type="button"
-              class="input_modal__button__cancel"
               @click="closeModal"
             >
-              {{ $t('cancel') }}
+              {{ $t('ok') }}
             </button>
           </div>
         </div>
@@ -84,29 +73,24 @@ import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
 import { isMobile, getTextWidth } from "@/utils";
-import { ValueType } from '@/api';
 
 import Modal from "@/components/modal/Modal.vue";
 import Input from "@/components/form/Input.vue";
-import { valueToText } from "../../values";
+import {ICombinedValue} from "@/state/user_view";
 
 @Component({ components: { Modal, Input } })
 export default class InputSlot extends Vue {
   @Prop({ type: String }) label!: string;
-  @Prop() value!: any;
   @Prop({ type: String }) error!: string;
   @Prop({ type: String }) warning!: string;
   @Prop({ type: Number }) height!: number;
   @Prop({ type: Array }) actions!: IAction[];
   @Prop({ type: Boolean }) disabled!: boolean;
   @Prop({ type: Boolean, default: true }) inline!: boolean;
-  @Prop({ type: Object, required: true }) type!: ValueType;
   @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
   @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
 
   private focused = false;
-  // Vue.js doesn't support state values initialized to `undefined`. Thankfully, `null` is enough here.
-  private modalValue: any = this.value || null;
   private isModalOpen = false;
 
   private mounted() {
@@ -115,27 +99,12 @@ export default class InputSlot extends Vue {
     }
   }
 
-  @Watch("value")
-  private onValueUpdate(value: string) {
-    this.modalValue = value;
-  }
-
   private get inputName(): string {
     return `${this.uid}-input`;
   }
 
-  private get hasContent(): boolean {
-    if (typeof this.value === "string") {
-      return this.value.length > 0;
-    } else { return !!this.value; }
-  }
-
   private get isMobile(): boolean {
     return isMobile();
-  }
-
-  private get textValue(): string {
-    return valueToText(this.type, this.modalValue);
   }
 
   private onModalOpen() {
@@ -148,7 +117,6 @@ export default class InputSlot extends Vue {
   }
 
   private onModalClose() {
-    this.modalValue = this.value;
     this.isModalOpen = false;
     this.$emit("closeModalInput");
   }
@@ -157,15 +125,6 @@ export default class InputSlot extends Vue {
     if (this.isMobile) {
       this.isModalOpen = true;
     }
-  }
-
-  private onChange(value: string) {
-    this.modalValue = value;
-  }
-
-  private updateValueFromModal() {
-    this.$emit("update:value", this.modalValue);
-    this.closeModal();
   }
 
   private closeModal() {
