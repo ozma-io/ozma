@@ -31,9 +31,18 @@ export class FetchError extends Error {
   body: any;
   response: Response;
 
-  constructor(rawBody: string, body: any, response: Response) {
-    const message = rawBody === "" ? response.statusText : rawBody;
-    super(message);
+  constructor(rawBody: string, response: Response) {
+    let body: any = rawBody;
+    const contentType = response.headers.get("Content-Type");
+    if (contentType && contentType.startsWith("application/json")) {
+      try {
+        body = JSON.parse(rawBody);
+      } catch (e) {
+        // Leave it raw.
+      }
+    }
+    const message = typeof body === "object" && "message" in body ? body.message : (rawBody !== "" ? rawBody : response.statusText);
+    super(String(message));
     this.body = body;
     this.response = response;
   }
@@ -47,15 +56,7 @@ export const fetchSuccess = async (input: RequestInfo, init?: RequestInit): Prom
   const response = await fetch(input, init);
   if (!response.ok) {
     const rawBody = await response.text();
-    let body: any = rawBody;
-    if (response.headers.get("Content-Type") === "application/json") {
-      try {
-        body = JSON.parse(rawBody);
-      } catch (e) {
-        // Leave it raw.
-      }
-    }
-    throw new FetchError(rawBody, body, response);
+    throw new FetchError(rawBody, response);
   }
   return response;
 };
