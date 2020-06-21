@@ -1,10 +1,9 @@
 import Vue from "vue";
 import { Module, ActionContext } from "vuex";
 import { Moment } from "moment";
-import moment from "moment";
 
 import { RecordSet, deepClone, mapMaybe, map2 } from "@/utils";
-import { IEntityRef, IFieldRef, IEntity, TransactionResult, RowId, SchemaName, FieldName, EntityName } from "@/api";
+import { ITransaction, ITransactionResult, IEntityRef, IFieldRef, IEntity, RowId, SchemaName, FieldName, EntityName } from "@/api";
 import { IUpdatedValue, IFieldInfo, valueFromRaw } from "@/values";
 import * as Api from "@/api";
 import { i18n } from "@/modules";
@@ -203,7 +202,7 @@ export interface IChangesCount {
 export interface IStagingState {
   current: CurrentChanges;
   // Current submit promise
-  currentSubmit: Promise<TransactionResult[]> | null;
+  currentSubmit: Promise<CombinedTransactionResult[]> | null;
   // Set if changes were made during the submit to decide how to clear.
   // We allow updating and removing entries while submit is ongoing, but not adding new ones to prevent duplicate inserts.
   touched: boolean;
@@ -389,7 +388,7 @@ const stagingModule: Module<IStagingState, {}> = {
     removeAutoSaveLock: (state, lock: AutoSaveLock) => {
       delete state.autoSaveLocks[lock];
     },
-    startSubmit: (state, submit: Promise<TransactionResult[]>) => {
+    startSubmit: (state, submit: Promise<CombinedTransactionResult[]>) => {
       state.touched = false;
       state.currentSubmit = submit;
     },
@@ -644,7 +643,7 @@ const stagingModule: Module<IStagingState, {}> = {
       context.commit("removeAutoSaveLock", id);
       checkAutoSave(context);
     },
-    submit: async (context, scope?: ScopeName): Promise<TransactionResult[]> => {
+    submit: async (context, scope?: ScopeName): Promise<CombinedTransactionResult[]> => {
       const { state, commit, dispatch } = context;
       if (state.currentSubmit !== null) {
         await state.currentSubmit;
@@ -714,18 +713,19 @@ const stagingModule: Module<IStagingState, {}> = {
       if (ops.length === 0) {
         return [];
       }
+      const action: ITransaction = { operations: ops };
 
       const submit = (async (): Promise<CombinedTransactionResult[]> => {
-        let result: TransactionResult[] | Error;
+        let result: ITransactionResult | Error;
         try {
           result = await dispatch("callProtectedApi", {
             func: Api.runTransaction,
-            args: [ops],
+            args: [action],
           }, { root: true });
         } catch (e) {
           result = e;
         }
-        if (result instanceof Array) {
+        if (!(result instanceof Error)) {
           try {
             await dispatch("userView/reload", undefined, { root: true });
           } catch (e) {
@@ -735,7 +735,7 @@ const stagingModule: Module<IStagingState, {}> = {
         }
 
         commit("finishSubmit");
-        if (result instanceof Array) {
+        if (!(result instanceof Error)) {
           commit("errors/resetErrors", errorKey, { root: true });
           if (state.touched) {
             await dispatch("clearAdded", scope);
@@ -747,7 +747,7 @@ const stagingModule: Module<IStagingState, {}> = {
               await dispatch("reset");
             }
           }
-          return map2((op, res) => ({ ...op, ...res } as CombinedTransactionResult), ops, result);
+          return map2((op, res) => ({ ...op, ...res } as CombinedTransactionResult), ops, result.results);
         } else {
           commit("errors/setError", { key: errorKey, error: result.message }, { root: true });
           throw result;

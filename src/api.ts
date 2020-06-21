@@ -235,6 +235,10 @@ export interface IDeleteEntityOp {
 
 export type TransactionOp = IInsertEntityOp | IUpdateEntityOp | IDeleteEntityOp;
 
+export interface ITransaction {
+  operations: TransactionOp[];
+}
+
 export interface IInsertEntityResult {
   type: "insert";
   id: number;
@@ -248,7 +252,11 @@ export interface IDeleteEntityResult {
   type: "delete";
 }
 
-export type TransactionResult = IInsertEntityResult | IUpdateEntityResult | IDeleteEntityResult;
+export type TransactionOpResult = IInsertEntityResult | IUpdateEntityResult | IDeleteEntityResult;
+
+export interface ITransactionResult {
+  results: TransactionOpResult[];
+}
 
 const fetchGetFileApi = async (subUrl: string, token: string | null, accept: string): Promise<Blob> => {
   const headers: Record<string, string> = {};
@@ -359,8 +367,8 @@ export const deleteEntry = async (token: string | null, ref: IEntityRef, id: num
   await changeEntity(`/${id}`, "DELETE", token, ref);
 };
 
-export const runTransaction = async (token: string | null, ops: TransactionOp[]): Promise<TransactionResult[]> => {
-  return await fetchJsonApi("transaction", token, "POST", { operations: ops });
+export const runTransaction = async (token: string | null, action: ITransaction): Promise<ITransactionResult> => {
+  return await fetchJsonApi("transaction", token, "POST", action);
 };
 
 export const saveSchema = async (token: string | null, schema: string): Promise<Blob> => {

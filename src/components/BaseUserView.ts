@@ -1,10 +1,10 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import { SchemaName, EntityName, FieldName, RowId, IEntityRef, IFieldRef, TransactionResult } from "@/api";
+import { RowId, IEntityRef, IFieldRef } from "@/api";
 import { CombinedUserView, currentValue } from "@/state/user_view";
 import { ErrorKey } from "@/state/errors";
-import { ScopeName, UserViewKey, AddedRowId, IAddedResult } from "@/state/staging_changes";
+import { ScopeName, UserViewKey, AddedRowId, CombinedTransactionResult, IAddedResult } from "@/state/staging_changes";
 import { LocalUserView, RowRef, ValueRef } from "@/local_user_view";
 import { equalEntityRef } from "@/values";
 
@@ -20,7 +20,7 @@ const errorKey = "base_user_view";
 
 @Component
 export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, ValueT, RowT, ViewT> extends Vue {
-  @staging.State("currentSubmit") currentSubmit!: Promise<TransactionResult[]> | null;
+  @staging.State("currentSubmit") currentSubmit!: Promise<CombinedTransactionResult[]> | null;
   @staging.Action("deleteEntry") deleteEntry!: (args: { scope: ScopeName; entityRef: IEntityRef; id: RowId }) => Promise<void>;
   @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { entityRef: IEntityRef; userView: UserViewKey; id: AddedRowId }) => Promise<void>;
   @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName; entityRef: IEntityRef; userView: UserViewKey; position?: number }) => Promise<IAddedResult>;
