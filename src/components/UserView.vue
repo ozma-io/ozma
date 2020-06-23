@@ -6,7 +6,9 @@
             "not_found": "User view not found",
             "bad_request": "User view request error: {msg}",
             "unknown_error": "Unknown user view fetch error: {msg}",
-            "anonymous_query": "(anonymous query)"
+            "anonymous_query": "(anonymous query)",
+            "edit_view": "Edit user view",
+            "open_as_root": "Open in full screen"
         },
         "ru": {
             "loading": "Загрузка данных",
@@ -14,7 +16,9 @@
             "not_found": "Представление не найдено",
             "bad_request": "Неверный запрос для этого представления: {msg}",
             "unknown_error": "Неизвестная ошибка загрузки представления: {msg}",
-            "anonymous_query": "(анонимный запрос)"
+            "anonymous_query": "(анонимный запрос)",
+            "edit_view": "Редактировать представление",
+            "open_as_root": "Открыть на полный экран"
         }
     }
 </i18n>
@@ -178,7 +182,37 @@ export default class UserView extends Vue {
   }
 
   get actions() {
-    return [...this.extraCommonActions, ...this.extraActions];
+    const actions = [...this.extraCommonActions, ...this.extraActions];
+    if (this.currentUv === null) {
+      return actions;
+    }
+    if (this.currentUv.args.source.type === "named") {
+      const editQuery: IQuery = {
+        defaultValues: {},
+        args: {
+          source: {
+            type: "named",
+            ref: {
+              schema: funappSchema,
+              name: "user_view_by_name",
+            },
+          },
+          args: {
+            schema: this.currentUv.args.source.ref.schema,
+            name: this.currentUv.args.source.ref.name,
+          },
+        },
+      };
+      actions.push({ name: this.$t("edit_view").toString(), query: editQuery });
+    }
+    if (!this.isRoot) {
+      const gotoQuery: IQuery = {
+        defaultValues: this.defaultValues,
+        args: this.currentUv.args,
+      };
+      actions.push({ name: this.$t("open_as_root").toString(), query: gotoQuery });
+    }
+    return actions;
   }
 
   get userViewType() {

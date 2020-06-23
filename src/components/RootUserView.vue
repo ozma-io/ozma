@@ -53,7 +53,6 @@
           home
         </router-link>
         <ActionsMenu
-          v-if="uvIsReady"
           title="view_headline"
           :actions="actions"
         />
