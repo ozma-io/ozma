@@ -25,7 +25,7 @@ export default class CodeEditor extends Vue {
   @settings.State("current") settings!: CurrentSettings;
 
   @Prop({ default: "" }) content!: string;
-  @Prop({ default: "sql", type: String }) mode!: string;
+  @Prop({ default: "sql", type: String }) language!: string;
   @Prop({ default: "" }) theme!: string;
   @Prop({ default: false }) readOnly!: boolean;
   @Prop({ default: false }) autofocus!: boolean;
@@ -35,7 +35,7 @@ export default class CodeEditor extends Vue {
     const fontSize = this.settings.getEntry("font_size", Number, 16);
 
     return {
-      language: this.mode,
+      language: this.language,
       readOnly: this.readOnly,
       fontSize,
     };

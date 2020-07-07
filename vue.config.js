@@ -44,7 +44,7 @@ module.exports = {
   configureWebpack: {
     plugins: [
       new MonacoWebpackPlugin({
-        languages: ["sql"],
+        languages: ["sql", "javascript"],
       }),
       new IgnorePlugin(/^\.\/locale$/, /moment$/),
       ...(analyzeBundle ? [new BundleAnalyzerPlugin()] : []),

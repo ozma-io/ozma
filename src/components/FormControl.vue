@@ -83,6 +83,7 @@
           v-else-if="inputType.name === 'codeeditor'"
           :key="codeEditorKey"
           ref="control"
+          :language="inputType.language"
           is-modal
           :content="textValue"
           :read-only="isDisabled"
@@ -149,6 +150,7 @@
           v-else-if="inputType.name === 'codeeditor'"
           :key="codeEditorKey"
           ref="control"
+          :language="inputType.language"
           :style="inputType.style"
           :content="textValue"
           :read-only="isDisabled"
@@ -292,6 +294,7 @@ interface ITextAreaType {
 
 interface ICodeEditorType {
   name: "codeeditor";
+  language: string;
   style: Record<string, any>;
 }
 
@@ -549,7 +552,11 @@ export default class FormControl extends Vue {
       case "multiline":
         return { name: "textarea", style: this.controlStyle(heightMultilineText) };
       case "codeeditor":
-        return { name: "codeeditor", style: this.controlStyle(heightCodeEditor) };
+        return {
+          name: "codeeditor",
+          language: String(this.attributes["language"] || "sql"),
+          style: this.controlStyle(heightCodeEditor),
+        };
       default:
         return { name: "text", type: "text", style: this.controlStyle() };
     }
