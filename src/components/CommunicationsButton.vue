@@ -1,8 +1,11 @@
 <template>
-  <div class="comm_icon__container">
+  <div
+    v-if="hasLinks"
+    class="comm_icon__container"
+  >
     <div
-      @click="onClick"
       :class="['comm_icon__trigger', {'comm_icon__trigger_opened': isOpen}]"
+      @click="onClick"
     >
       <div class="comm_icon__open">
         <svg
@@ -46,17 +49,26 @@
       :class="['comm_icon__menu', { 'comm_icon__menu_opened': isOpen }]"
     >
       <li>
-        <a href="mailto:sales@ozma.io" target="_blank">
+        <a
+          href="mailto:sales@ozma.io"
+          target="_blank"
+        >
           <EmailIcon />
         </a>
       </li>
       <li>
-        <a href="https://api.whatsapp.com/send?phone=74953748820" target="_blank">
+        <a
+          href="mailto:sales@ozma.io"
+          target="_blank"
+        >
           <WhatsAppIcon />
         </a>
       </li>
       <li>
-        <a href="https://t.me/kirmark" target="_blank">
+        <a
+          href="mailto:sales@ozma.io"
+          target="_blank"
+        >
           <TelegramIcon />
         </a>
       </li>
@@ -67,9 +79,24 @@
 <script lang="ts">
 
 import { Vue, Component } from "vue-property-decorator";
+import { namespace } from "vuex-class";
+
 import TelegramIcon from "@/components/SocialIcons/Telegram.vue";
 import WhatsAppIcon from "@/components/SocialIcons/WhatsApp.vue";
 import EmailIcon from "@/components/SocialIcons/Email.vue";
+
+import { CurrentSettings } from "@/state/settings";
+
+const buttonOrder = ["email", "whatsapp", "telegram"];
+
+interface ISocialLinks {
+  telegram?: string;
+  whatsapp?: string;
+  email?: string;
+  [index: string]: string | undefined;
+}
+
+const settings = namespace("settings");
 
 @Component({components: {
   TelegramIcon,
@@ -77,7 +104,20 @@ import EmailIcon from "@/components/SocialIcons/Email.vue";
   WhatsAppIcon,
 }})
 export default class CommunicationsButton extends Vue {
+  @settings.State("current") settings!: CurrentSettings;
   private isOpen = false;
+
+  private get links(): ISocialLinks {
+    return {
+      telegram: this.settings.getEntry("instance_help_telegram", String, undefined),
+      whatsapp: this.settings.getEntry("instance_help_whatsapp", String, undefined),
+      email: this.settings.getEntry("instance_help_email", String, undefined),
+    }
+  } 
+
+  private get hasLinks(): boolean {
+    return Object.keys(this.links).filter(link => this.links[link] != undefined).length > 0;
+  }
 
   private onClick() {
     this.isOpen = !this.isOpen;
