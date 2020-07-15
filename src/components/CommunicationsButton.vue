@@ -48,25 +48,25 @@
     <ul
       :class="['comm_icon__menu', { 'comm_icon__menu_opened': isOpen }]"
     >
-      <li>
+      <li v-if="links.email">
         <a
-          href="mailto:sales@ozma.io"
+          :href="`mailto:${links.email}`"
           target="_blank"
         >
           <EmailIcon />
         </a>
       </li>
-      <li>
+      <li v-if="links.whatsapp">
         <a
-          href="mailto:sales@ozma.io"
+          :href="links.whatsapp"
           target="_blank"
         >
           <WhatsAppIcon />
         </a>
       </li>
-      <li>
+      <li v-if="links.telegram">
         <a
-          href="mailto:sales@ozma.io"
+          :href="links.telegram"
           target="_blank"
         >
           <TelegramIcon />
