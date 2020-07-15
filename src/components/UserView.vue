@@ -131,7 +131,11 @@ const userViewType = (uv: CombinedUserView) => {
 
 const maxLevel = 4;
 
-@Component({ components: { UserViewCommon, ProgressBar, ...components } })
+@Component({components: {
+  UserViewCommon,
+  ProgressBar,
+  ...components
+}})
 export default class UserView extends Vue {
   @userView.State("current") currentUvs!: CurrentUserViews;
   @userView.Mutation("removeUserViewConsumer") removeUserViewConsumer!: (args: { args: IUserViewArguments; reference: ReferenceName }) => void;

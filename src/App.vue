@@ -27,6 +27,7 @@
       </span>
     </template>
     <router-view v-else />
+    <FabCluster />
   </div>
 </template>
 
@@ -36,6 +37,7 @@ import { namespace } from "vuex-class";
 import { CurrentSettings } from "@/state/settings";
 import { CurrentAuth } from "@/state/auth";
 import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
+import FabCluster from "@/components/FabCluster/FabCluster.vue";
 import { ErrorKey } from "@/state/errors";
 
 const settings = namespace("settings");
@@ -43,7 +45,7 @@ const auth = namespace("auth");
 const errors = namespace("errors");
 const staging = namespace("staging");
 
-@Component({ components: { ModalPortalTarget } })
+@Component({ components: { ModalPortalTarget, FabCluster } })
 export default class App extends Vue {
   @settings.State("current") settings!: CurrentSettings;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
