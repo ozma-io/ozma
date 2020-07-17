@@ -4,7 +4,6 @@
         "clear": "Clear",
         "yes": "Yes",
         "no": "No",
-        "export_to_csv": "Export to .csv",
         "remove_selected_rows": "Remove selected rows",
         "show_new_row": "Add/remove new row"
       },
@@ -12,7 +11,6 @@
         "clear": "Очистить",
         "yes": "Да",
         "no": "Нет",
-        "export_to_csv": "Экспорт в .csv",
         "remove_selected_rows": "Удалить выбранные записи",
         "show_new_row": "Добавить/убрать новую строку"
       }
@@ -247,7 +245,7 @@ import {
   ValueRef,
 } from "@/local_user_view";
 import BaseUserView, {ISelectionRef} from "@/components/BaseUserView";
-import {IAction} from "@/components/ActionsMenu.vue";
+import {Action} from "@/components/ActionsMenu.vue";
 import TableRow from "@/components/views/table/TableRow.vue";
 import TableFixedRow from "@/components/views/table/TableFixedRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
@@ -724,15 +722,6 @@ const rowIndicesCompare = (aIndex: number, bIndex: number, entries: IRowCommon[]
   }
 };
 
-const getCsvString = (str: string): string => {
-  let csvstr = str.replace(/"/g, '""');
-  if (csvstr.search(/("|;|\n)/g) > 0) {
-    csvstr = "\"" + csvstr + "\"";
-  }
-  csvstr += ";";
-  return csvstr;
-};
-
 const isEmptyRow = (row: IRowCommon) => {
   return row.values.every(cell => valueIsNull(cell.rawValue) || cell.info === null);
 };
@@ -930,36 +919,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.sortRows();
       this.updateShowLength();
     }
-  }
-
-  private export2csv() {
-    let data = "";
-    for (const col of this.local.extra.columns) {
-      data += getCsvString(col.caption);
-    }
-    data += "\n";
-    for (const rowId of this.uv.newRowsPositions) {
-      const row = this.local.newRows[rowId];
-      for (const extra of row.values) {
-        data += getCsvString(extra.valueText);
-      }
-      data += "\n";
-    }
-    for (const row of this.local.rows) {
-      for (const extra of row.values) {
-        data += getCsvString(extra.valueText);
-      }
-      data += "\n";
-    }
-
-    const element = document.createElement("a");
-    element.setAttribute("href", "data:text/csv;charset=utf-8," + encodeURIComponent("\uFEFF" + data));
-    element.setAttribute("download", `${this.uv.name}.csv`);
-    element.style.display = "none";
-
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
   }
 
   private clickOutsideEdit(event: MouseEvent) {
@@ -1189,9 +1148,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
             `);
     }
 
-    const actions: IAction[] = [
-      // {name: this.$t("export_to_csv").toString(), callback: () => this.export2csv()},
-    ];
+    const actions: Action[] = [];
     if (this.uv.info.mainEntity !== null) {
       actions.push(
         {name: this.$t("remove_selected_rows").toString(), callback: () => this.removeSelectedRows()},

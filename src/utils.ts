@@ -494,3 +494,14 @@ export const snakeToPascal = (str: string) => {
     return c.toUpperCase() + x.slice(c.length);
   }).join("");
 };
+
+export const saveToFile = (name: string, mime: string, data: string) => {
+  const element = document.createElement("a");
+  element.setAttribute("href", `data:${mime};charset=utf-8,` + encodeURIComponent("\uFEFF" + data));
+  element.setAttribute("download", name);
+  element.style.display = "none";
+
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+};

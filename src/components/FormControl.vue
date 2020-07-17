@@ -274,7 +274,7 @@ import { namespace } from "vuex-class";
 
 import { valueToText, valueIsNull, equalEntityRef } from "@/values";
 import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef, IEntityRef } from "@/api";
-import { IAction, IQueryAction } from "@/components/ActionsMenu.vue";
+import { Action } from "@/components/ActionsMenu.vue";
 import { IValueInfo, IUserViewArguments, CombinedUserView, CurrentUserViews, homeSchema, ICombinedValue, currentValue, IEntriesRef } from "@/state/user_view";
 import { IQuery, attrToQuerySelf, IAttrToQueryOpts } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
@@ -307,7 +307,7 @@ interface IReferenceType {
   name: "reference";
   ref: IEntriesRef;
   linkedAttr?: any;
-  actions: IQueryAction[];
+  actions: Action[];
   style?: Record<string, any>;
 }
 
@@ -383,7 +383,7 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
   @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
 
-  private actions: IAction[] = [];
+  private actions: Action[] = [];
   private codeEditorKey = 0;
 
   get isInline(): boolean {

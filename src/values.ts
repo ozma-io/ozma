@@ -28,7 +28,7 @@ export interface IUpdatedValue {
 }
 
 // Should be in sync with `valueFromRaw` and be idempotent.
-export const valueToText = (valueType: ValueType, value: any): any => {
+export const valueToText = (valueType: ValueType, value: any): string => {
   if (typeof value === "string") {
     return value;
   } else if (value === undefined || value === null) {

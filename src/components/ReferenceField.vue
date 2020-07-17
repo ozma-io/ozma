@@ -111,7 +111,7 @@ import { IQuery, attrToQueryRef } from "@/state/query";
 import ModalUserView from "@/components/ModalUserView.vue";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import MultiSelect from "@/components/multiselect/MultiSelect.vue";
-import { IAction, IQueryAction } from "@/components/ActionsMenu.vue";
+import { Action } from "@/components/ActionsMenu.vue";
 import BaseEntriesView from "@/components/BaseEntriesView";
 
 @Component({
@@ -121,7 +121,7 @@ import BaseEntriesView from "@/components/BaseEntriesView";
   },
 })
 export default class ReferenceField extends mixins(BaseEntriesView) {
-  @Prop({ type: Array, required: true }) actions!: IQueryAction[];
+  @Prop({ type: Array, required: true }) actions!: Action[];
   @Prop({ type: Object, required: true }) value!: ICombinedValue;
   @Prop({ type: Object, required: true }) entry!: IEntriesRef;
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;

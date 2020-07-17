@@ -55,8 +55,19 @@
           type="button"
           :value="action.name"
           class="div-with-actions_button"
-          @click="action.callback(); showActions = false"
+          @click="showActions = false; action.callback()"
         >
+        <label
+          v-else-if="'uploadFile' in action"
+          :key="action.name"
+          class="div-with-actions_button"
+        >
+          {{ action.name }}
+          <input
+            type="file"
+            @change="uploadFile($event.target, action.uploadFile)"
+          >
+        </label>
       </template>
     </div>
   </div>
@@ -69,27 +80,31 @@ import { RawLocation } from "vue-router";
 import { IQuery } from "@/state/query";
 import UserViewLink from "@/components/UserViewLink";
 
-export interface ILocationAction {
+export interface IAction {
   name: string;
+};
+
+export interface ILocationAction extends IAction {
   location: RawLocation;
 }
 
-export interface IHrefAction {
-  name: string;
+export interface IHrefAction extends IAction {
   href: string;
 }
 
-export interface IQueryAction {
-  name: string;
+export interface IQueryAction extends IAction {
   query: IQuery;
 }
 
-export interface ICallbackAction {
-  name: string;
+export interface ICallbackAction extends IAction {
   callback: () => void;
 }
 
-export type IAction = ILocationAction | IHrefAction | IQueryAction | ICallbackAction;
+export interface IUploadFileAction extends IAction {
+  uploadFile: (file: File) => void;
+}
+
+export type Action = ILocationAction | IHrefAction | IQueryAction | ICallbackAction | IUploadFileAction;
 
 @Component({
   components: {
@@ -97,14 +112,16 @@ export type IAction = ILocationAction | IHrefAction | IQueryAction | ICallbackAc
   },
 })
 export default class ActionsMenu extends Vue {
-  @Prop({ type: Array, required: true }) actions!: IAction[];
+  @Prop({ type: Array, required: true }) actions!: Action[];
   @Prop({ type: String, required: true }) title!: string;
   @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 
   private showActions = false;
 
-  private actionsHidden() {
+  private uploadFile(input: HTMLInputElement, next: (file: File) => void) {
     this.showActions = false;
+    const files = input.files as FileList;
+    next(files[0]);
   }
 }
 </script>
@@ -163,6 +180,10 @@ export default class ActionsMenu extends Vue {
     width: 100%;
     text-align: left;
     border: 0;
+  }
+
+  .div-with-actions_button input[type="file"] {
+    display: none;
   }
 
   .div-with-actions_button:hover {

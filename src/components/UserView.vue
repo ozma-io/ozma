@@ -90,7 +90,7 @@ import { CombinedTransactionResult, ICombinedInsertEntityResult, ScopeName } fro
 import { CurrentQuery, attrToQuery, queryLocation, IQuery, IAttrToQueryOpts } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
 import { IHandlerProvider } from "@/local_user_view";
-import { IAction } from "@/components/ActionsMenu.vue";
+import { Action } from "@/components/ActionsMenu.vue";
 import { ISelectionRef } from "@/components/BaseUserView";
 import UserViewCommon from "@/components/UserViewCommon.vue";
 
@@ -156,8 +156,8 @@ export default class UserView extends Vue {
   // Emit events to jump to other user views. If `false` insert simple <href>s instead.
   @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 
-  private extraActions: IAction[] = [];
-  private extraCommonActions: IAction[] = [];
+  private extraActions: Action[] = [];
+  private extraCommonActions: Action[] = [];
   private component: IUserViewConstructor<Vue> | null = null;
   private local: IHandlerProvider | null = null;
   // currentUv is shown while new component for uv is loaded.

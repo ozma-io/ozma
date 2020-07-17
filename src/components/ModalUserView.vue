@@ -51,7 +51,7 @@ import { namespace } from "vuex-class";
 
 import { IEntityRef, IEntity } from "@/api";
 import { equalEntityRef } from "@/values";
-import { IAction } from "@/components/ActionsMenu.vue";
+import { Action } from "@/components/ActionsMenu.vue";
 import { IQuery } from "@/state/query";
 import { ErrorKey } from "@/state/errors";
 import { CurrentChanges, ScopeName } from "@/state/staging_changes";
@@ -75,7 +75,7 @@ export default class ModalUserView extends Vue {
   @Prop({ type: Object }) selectEntity!: IEntityRef | undefined;
   @Prop({ type: Object, required: true }) initialView!: IQuery;
 
-  private extraActions: IAction[] = [];
+  private extraActions: Action[] = [];
   private currentView: IQuery = this.initialView;
   private title = "";
 

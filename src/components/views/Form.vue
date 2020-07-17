@@ -99,7 +99,6 @@ import { UserView } from "@/components";
 import { ISelectionRef } from "@/components/BaseUserView";
 import BaseUserView from "@/components/BaseUserView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
-import { IAction } from "@/components/ActionsMenu.vue";
 
 import {
   IFieldInfo, IBlockInfo, IFormValueExtra, IFormRowExtra, IFormUserViewExtra, GridElement, IGridSection, IGridInput

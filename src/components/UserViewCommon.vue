@@ -2,11 +2,15 @@
     {
         "en": {
             "create": "Create new",
-            "create_in_modal": "Create referenced in modal window"
+            "create_in_modal": "Create referenced in modal window",
+            "export_to_csv": "Export to .csv",
+            "import_from_csv": "Import from .csv"
         },
         "ru": {
             "create": "Создать новую",
-            "create_in_modal": "Создать связанную запись в окне"
+            "create_in_modal": "Создать связанную запись в окне",
+            "export_to_csv": "Экспорт в .csv",
+            "import_from_csv": "Испорт из .csv"
         }
     }
 </i18n>
@@ -26,17 +30,19 @@
 <script lang="ts">
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
+import { namespace } from "vuex-class";
 import * as R from "ramda";
 
 import BaseUserView from "@/components/BaseUserView";
 import { LocalUserView } from "@/local_user_view";
 import { IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
 import { ValueRef } from "@/local_user_view";
-import { homeSchema } from "@/state/user_view";
-import { funappSchema, IEntityRef } from "@/api";
+import { homeSchema, valueToPunnedText, currentValue } from "@/state/user_view";
+import { funappSchema, IEntityRef, IFieldRef } from "@/api";
 import ModalUserView from "@/components/ModalUserView.vue";
-import { mapMaybe } from "@/utils";
-import { IAction } from "@/components/ActionsMenu.vue";
+import { mapMaybe, saveToFile, debugLog } from "@/utils";
+import { Action } from "@/components/ActionsMenu.vue";
+import { ScopeName, UserViewKey, IAddedResult, AddedRowId } from "@/state/staging_changes";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -44,8 +50,22 @@ interface IModalReferenceField {
   entity: IEntityRef;
 }
 
+const csvCell = (str: string): string => {
+  let csvstr = str.replace(/"/g, '""');
+  if (csvstr.search(/("|;|\n)/g) > 0) {
+    csvstr = "\"" + csvstr + "\"";
+  }
+  csvstr += ";";
+  return csvstr;
+};
+
+const staging = namespace("staging");
+
 @Component({ components: { ModalUserView } })
 export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<null, null, null>, null, null, null>>(BaseUserView) {
+  @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName; entityRef: IEntityRef; userView: UserViewKey; position?: number }) => Promise<IAddedResult>;
+  @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName; fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; value: any }) => Promise<void>;
+
   modalView: IQuery | null = null;
 
   get createView() {
@@ -59,8 +79,78 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
     return attrToQuery(this.uv.attributes["create_view"], opts);
   }
 
+  private exportToCsv() {
+    let data = "";
+    this.uv.info.columns.forEach(col => {
+      data += csvCell(col.name);
+    });
+    data += "\n";
+    this.uv.newRowsPositions.forEach(rowId => {
+      const row = this.uv.newRows[rowId];
+      row.values.forEach((cell, colI) => {
+        const info = this.uv.info.columns[colI];
+        data +- csvCell(valueToPunnedText(info.valueType, cell));
+      });
+      data += "\n";
+    });
+    if (this.uv.rows != null) {
+      this.uv.rows.forEach(row => {
+        row.values.forEach((cell, colI) => {
+          const info = this.uv.info.columns[colI];
+          data += csvCell(valueToPunnedText(info.valueType, cell));
+        });
+        data += "\n";
+      });
+    }
+    
+    saveToFile(`${this.uv.name}.csv`, "text/csv", data);
+  }
+
+  private async importFromCsv(file: File) {
+    // @ts-ignore
+    const Papa = await import("papaparse");
+
+    const info = this.uv.info;
+    const entityRef = info.mainEntity!;
+    const userView = this.uv.userViewKey;
+    Papa.parse(file, {
+      worker: true,
+      header: true,
+      skipEmptyLines: true,
+      step: async (rawRow: any) => {
+        const row = rawRow.data as Record<string, string>;
+        const added = await this.addEntry({
+          scope: this.scope,
+          entityRef,
+          userView,
+        });
+
+        await Promise.all(this.uv.info.columns.map(columnInfo => {
+          const currValue = row[columnInfo.name];
+          if (columnInfo.mainField && currValue) {
+            return this.setAddedField({
+              scope: this.scope,
+              fieldRef: {
+                entity: entityRef,
+                name: columnInfo.mainField.name,
+              },
+              userView,
+              id: added.id,
+              value: currValue,
+            });
+          } else {
+            return Promise.resolve();
+          }
+        }));
+      }
+    });
+  }
+
   get actions() {
-    const actions: IAction[] = [];
+    const actions: Action[] = [
+      //{name: this.$t("export_to_csv").toString(), callback: () => this.exportToCsv()},
+    ];
+
     const extraActions = this.uv.attributes["extra_actions"];
     if (Array.isArray(extraActions)) {
       const opts: IAttrToQueryOpts = {};
@@ -78,13 +168,20 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
         }
       });
     }
+
     if (this.createView !== null) {
       actions.push({ name: this.$t("create").toString(), query: this.createView });
     }
+
     const modalReferenceField = this.modalReferenceField;
     if (modalReferenceField) {
       actions.push({ name: this.$t("create_in_modal").toString(), callback: () => this.modalView = modalReferenceField.uv });
     }
+
+    if (this.uv.info.mainEntity != null) {
+      actions.push({ name: this.$t("import_from_csv").toString(), uploadFile: (file) => this.importFromCsv(file) });
+    }
+
     return actions;
   }
 

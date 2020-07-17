@@ -179,7 +179,7 @@ import {setHeadTitle} from "@/elements";
 import {CombinedUserView, CurrentUserViews, IUserViewArguments, UserViewError} from "@/state/user_view";
 import {ErrorKey} from "@/state/errors";
 import {CurrentChanges, ScopeName} from "@/state/staging_changes";
-import {IAction} from "@/components/ActionsMenu.vue";
+import {Action} from "@/components/ActionsMenu.vue";
 import {CurrentAuth} from "@/state/auth";
 import {CurrentQuery, getDefaultValues, IQuery, queryLocation, replaceSearch} from "@/state/query";
 import {Debounce} from "vue-debounce-decorator";
@@ -244,7 +244,7 @@ export default class RootUserView extends Vue {
   @errors.Mutation("removeError") removeError!: (params: { key: ErrorKey; index: number }) => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
 
-  private extraActions: IAction[] = [];
+  private extraActions: Action[] = [];
   private statusLine = "";
   private filterString = "";
   private enableFilter = false;
@@ -311,7 +311,7 @@ export default class RootUserView extends Vue {
   }
 
   get actions() {
-    const actions: IAction[] = [];
+    const actions: Action[] = [];
     actions.push(...this.extraActions);
     if (this.currentAuth !== null) {
       actions.push({name: this.$t("account").toString(), href: Api.accountUrl});

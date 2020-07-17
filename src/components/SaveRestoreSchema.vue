@@ -35,7 +35,6 @@
       <label>
         {{ $t('restore') }}
         <input
-          ref="restoreData"
           type="file"
           @change="restoreSchema"
         >
@@ -91,8 +90,8 @@ export default class SaveRestoreSchema extends Vue {
     }
   }
 
-  async restoreSchema() {
-    const files = (this.$refs.restoreData as HTMLInputElement).files as FileList;
+  async restoreSchema(event: Event) {
+    const files = (event.target as HTMLInputElement).files as FileList;
     const content = files[0];
     try {
       await this.callProtectedApi({

@@ -68,7 +68,7 @@
 </template>
 
 <script lang="ts">
-import { IAction } from "@/components/ActionsMenu.vue";
+import { Action } from "@/components/ActionsMenu.vue";
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
@@ -84,7 +84,7 @@ export default class InputSlot extends Vue {
   @Prop({ type: String }) error!: string;
   @Prop({ type: String }) warning!: string;
   @Prop({ type: Number }) height!: number;
-  @Prop({ type: Array }) actions!: IAction[];
+  @Prop({ type: Array }) actions!: Action[];
   @Prop({ type: Boolean }) disabled!: boolean;
   @Prop({ type: Boolean, default: true }) inline!: boolean;
   @Prop({ type: Boolean, default: false }) autoOpen!: boolean;

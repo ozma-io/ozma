@@ -115,7 +115,6 @@ import BaseUserView, { ISelectionRef } from "@/components/BaseUserView";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
 import MultiSelect from "@/components/multiselect/MultiSelect.vue";
-import { IAction } from "@/components/ActionsMenu.vue";
 import ModalUserView from "@/components/ModalUserView.vue";
 
 const findSelectColumnIndex = (attrs: { [key: string]: any}) =>
