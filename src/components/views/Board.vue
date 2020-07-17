@@ -28,6 +28,7 @@
     />
     <Board
       v-else
+      :column-width="columnWidth"
       :columns="columns"
       :titles="boardTitles"
       :add="changeGroup"
@@ -82,6 +83,14 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
       return { entity: fieldType.entity };
     }
     return null;
+  }
+
+  get columnWidth(): number | undefined {
+    const width = Number(this.uv.attributes.board_column_width);
+    if (!isNaN(width)) {
+      return width;
+    }
+    return undefined;
   }
 
   get groupIndex() {
