@@ -81,10 +81,16 @@ export interface ICard {
   };
 }
 
+interface ICardStyle {
+  width?: string;
+  backgrondColor?: string;
+}
+
 @Component({ components: { ModalUserView }})
 class Card extends Vue {
   @Prop({ type: Object, required: true }) data!: ICard;
   @Prop({ type: Boolean, required: false, default: false }) selected!: boolean;
+  @Prop({ type: Number, required: true }) width!: number;
 
   modalView: IQuery | null = null;
 
@@ -95,9 +101,10 @@ class Card extends Vue {
   }
 
   private get cardStyle() {
-    const color = R.path(["style", "color"], this.data);
+    const color: string | undefined = R.path(["style", "color"], this.data);
     return {
       backgroundColor: color,
+      width: `${this.width - 20}px`,
     };
   }
 }
@@ -111,7 +118,6 @@ export default Card;
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
-    max-width: 300px;
     padding: 10px;
     margin-bottom: 15px;
   }

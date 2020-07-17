@@ -1,5 +1,5 @@
 <template>
-  <div class="column_container">
+  <div class="column_container" :style="style">
     <div class="column_header">
       <ModalUserView
         v-if="modalView !== null"
@@ -9,15 +9,25 @@
       <!-- input type="checkbox"
                 v-model="isAllSelected"
                 class="column_select_checkbox" -->
-      {{ title }}
-      <span class="column_controls">
-        <i
-          class="material-icons card_open_icon"
-          style="font-size: 20px;"
-          @click="openModal"
-        >add</i>
-        <!-- i class="material-icons card_open_icon">more_vert</i -->
-      </span>
+      <div
+        class="column_header__title_block"
+        :style="titleStyle"
+      >
+        <span
+          class="column_header__title"
+          :title="title"
+        >
+          {{ title }}
+        </span>
+        <span class="column_controls">
+          <i
+            class="material-icons card_open_icon"
+            style="font-size: 20px;"
+            @click="openModal"
+          >add</i>
+          <!-- i class="material-icons card_open_icon">more_vert</i -->
+        </span>
+      </div>
     </div>
     <draggable
       class="column_body"
@@ -32,6 +42,7 @@
         v-for="(card, index) in cards"
         :key="index"
         :data="card"
+        :width="width"
         :selected="isCardSelected(card.groupRef.position)"
       />
     </draggable>
@@ -70,6 +81,13 @@ export interface IVueDraggableEvent {
   newDraggableIndex: number;
 }
 
+export interface IColumnStyle {
+  width?: string;
+  minWidth?: string;
+  maxWidth?: string;
+  flex?: number;
+}
+
 @Component({ components: { Card, draggable, ModalUserView } })
 export default class Column extends Vue {
   @Prop() id!: any;
@@ -79,6 +97,8 @@ export default class Column extends Vue {
   @Prop({ type: Object, required: true }) createView!: IQuery;
   @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Function, required: false }) move!: (ref: ValueRef, value: any) => void;
+  @Prop({ type: Number, required: false, default: 300 }) width!: number;
+  @Prop({ type: Boolean, default: false }) lastColumn!: boolean;
 
   modalView: IQuery | null = null;
 
@@ -99,6 +119,24 @@ export default class Column extends Vue {
 
   private isCardSelected(rowIndex: number) {
     return this.selected.includes(rowIndex);
+  }
+
+  private get style(): IColumnStyle {
+    const strWidth = `${this.width}px`;
+    const finalWidth = this.lastColumn ? undefined : strWidth;
+    return {
+      width: finalWidth,
+      minWidth: strWidth,
+      maxWidth: finalWidth,
+      flex: this.lastColumn ? 1 : undefined,
+    }
+  }
+
+  private get titleStyle(): IColumnStyle {
+    const strWidth = `${this.width}px`;
+    return {
+      maxWidth: strWidth,
+    }
   }
 
   private get isAllSelected() {
@@ -166,7 +204,6 @@ export default class Column extends Vue {
   .column_container {
     color: var(--MainTextColor);
     border: 1px solid var(--MainBorderColor);
-    width: 300px;
     box-sizing: content-box;
     display: flex;
     flex-direction: column;
@@ -175,6 +212,18 @@ export default class Column extends Vue {
   .column_header {
     border-bottom: 1px solid var(--MainBorderColor);
     padding: 10px;
+    display: flex;
+  }
+
+  .column_header__title_block {
+    display: flex;
+    width: 100%;
+  }
+
+  .column_header__title {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
   }
 
   .column_select_checkbox {
@@ -188,7 +237,7 @@ export default class Column extends Vue {
   }
 
   .column_controls {
-    float: right;
+    margin-left: auto;
   }
 
   .column_controls > i {

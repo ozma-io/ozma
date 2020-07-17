@@ -9,8 +9,10 @@
       :field-name="column.fieldName"
       :create-view="column.createView"
       :cards="column.cards"
+      :width="columnWidth"
       :add="add"
       :move="move"
+      :last-column="columnIndex === (columns.length - 1)"
     />
   </div>
   <!-- </draggable> -->
@@ -30,6 +32,7 @@ export default class Board extends Vue {
   @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Function, required: false }) move!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Object }) titles!: { [key: number]: string } | null;
+  @Prop({ type: Number }) columnWidth!: number | null;
 
   private getColumnTitle(id: number, title: string) {
     if (this.titles) {

@@ -18,15 +18,13 @@ export default class FabCluster extends Vue {
 <style scoped>
   .fab_zone__container {
     position: sticky;
-    display: flex;
+    display: inline-flex;
     flex-direction: row-reverse;
     align-items: flex-end;
-    bottom: 0;
-    right: 0;
-    height: 120px;
-    padding-right: 50px;
-    padding-bottom: 50px;
-    margin-top: 25px;
+    bottom: 50px;
+    right: 50px;
+    float: right;
+    width: auto;
   }
 
   .fab_zone__cluster {
