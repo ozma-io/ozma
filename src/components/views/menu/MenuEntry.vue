@@ -97,6 +97,7 @@ export default class MenuEntry extends Vue {
     color: var(--MainTextColor);
     text-decoration: underline;
     text-decoration-color: var(--MainBorderColor);
+    margin-left: 5px;
   }
 
   .first_level_entries {
