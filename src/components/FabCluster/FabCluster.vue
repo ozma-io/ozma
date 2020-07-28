@@ -21,8 +21,8 @@ export default class FabCluster extends Vue {
     display: inline-flex;
     flex-direction: row-reverse;
     align-items: flex-end;
-    bottom: 50px;
-    right: 50px;
+    bottom: 15px;
+    right: 15px;
     float: right;
     width: auto;
   }
