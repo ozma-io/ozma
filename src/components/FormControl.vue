@@ -187,16 +187,16 @@
             v-if="actions.length > 0"
             class="nested-menu"
           >
+            <label class="input_label">{{ caption }}</label>
             <ActionsMenu
               title="view_headline"
               :actions="actions"
               :indirect-links="indirectLinks"
               @goto="$emit('goto', $event)"
             />
-            <label class="input_label">{{ caption }}</label>
           </div>
           <div v-else>
-            <label class="input_label">{{ caption }}</label>
+            <label class="input_label_single">{{ caption }}</label>
           </div>
         </b-col>
         <b-col :cols="isInline && caption ? 8 : 12">
@@ -599,6 +599,19 @@ export default class FormControl extends Vue {
   }
 
   .input_label {
+    align-self: center;
+    margin-bottom: 3px;
+    margin-right: 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: pre;
+    cursor: question;
+    color: var(--MainTextColor);
+    font-weight: 600;
+    font-size: 1.25em;
+  }
+
+  .input_label_single {
     align-self: center;
     margin-bottom: 0;
     overflow: hidden;
