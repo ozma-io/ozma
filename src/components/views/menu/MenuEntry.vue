@@ -88,6 +88,11 @@ export default class MenuEntry extends Vue {
 </script>
 
 <style scoped>
+
+  .menu_category_block {
+    margin-top: 10px;
+  }
+
   .menu_list {
     list-style: none;
     padding-left: 0;
