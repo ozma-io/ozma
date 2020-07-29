@@ -33,7 +33,7 @@
       class="column_body"
       group="cards"
       ghost-class="card_dragging"
-      :options="{delayOnTouchOnly: true, delay: 400}"
+      :options="{delayOnTouchOnly: true, delay: 400, forceFallback: true}"
       :list="cards"
       @add="onAdd"
       @end="onMove"
@@ -184,9 +184,6 @@ export default class Column extends Vue {
       const prevCardOrder = R.pathOr<number>(0, [event.newIndex - 1, "order"], this.cards);
       const nextCardOrder = R.pathOr<number>(prevCardOrder + 1, [event.newIndex + 1, "order"], this.cards);
       const mean = (prevCardOrder + nextCardOrder) / 2;
-      if (this.move && newCard.orderRef) {
-        this.move(newCard.orderRef, mean);
-      }
     }
   }
 
