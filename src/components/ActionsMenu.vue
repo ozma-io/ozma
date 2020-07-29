@@ -74,7 +74,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { RawLocation } from "vue-router";
 
 import { IQuery } from "@/state/query";
@@ -123,6 +123,12 @@ export default class ActionsMenu extends Vue {
     const files = input.files as FileList;
     next(files[0]);
   }
+
+  @Watch('$route', { immediate: true, deep: true })
+  onUrlChange(newVal: any) {
+    this.showActions = false;
+  }
+
 }
 </script>
 
