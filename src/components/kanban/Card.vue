@@ -120,6 +120,7 @@ export default Card;
     color: var(--MainTextColor);
     padding: 10px;
     margin-bottom: 15px;
+    user-select: none;
   }
 
   .card_row {
