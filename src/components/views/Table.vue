@@ -980,6 +980,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   private clickCell(ref: ValueRef, event: MouseEvent | any) {
+    this.removeCellEditing();
+    
     this.setCoordsForEditCell(event);
     this.editParams.width = event.target.offsetWidth;
     this.editParams.height = event.target.offsetHeight;
