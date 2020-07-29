@@ -981,7 +981,24 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   private clickCell(ref: ValueRef, event: MouseEvent | any) {
     this.removeCellEditing();
-    
+
+    // this.selectCell() breaks the timer for double click in iOS,
+    // so when we're running iOS we don't check for double click
+    if (this.clickTimeoutId === null) {
+      this.clickTimeoutId = setTimeout(() => {
+        this.clickTimeoutId = null;
+      }, doubleClickTime);
+      if (this.lastSelectedValue !== null && !deepEquals(this.lastSelectedValue, ref)) {
+        this.removeCellEditing();
+      }
+    } else {
+      clearTimeout(this.clickTimeoutId);
+      this.clickTimeoutId = null;
+      if (this.lastSelectedValue !== null && deepEquals(this.lastSelectedValue, ref)) {
+        this.setCellEditing(ref);
+      }
+    }
+
     this.setCoordsForEditCell(event);
     this.editParams.width = event.target.offsetWidth;
     this.editParams.height = event.target.offsetHeight;
@@ -1006,22 +1023,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       }
     }
 
-    // this.selectCell() breaks the timer for double click in iOS,
-    // so when we're running iOS we don't check for double click
-    if (this.clickTimeoutId === null) {
-      this.clickTimeoutId = setTimeout(() => {
-        this.clickTimeoutId = null;
-      }, doubleClickTime);
-      if (this.lastSelectedValue !== null && !deepEquals(this.lastSelectedValue, ref)) {
-        this.removeCellEditing();
-      }
-    } else {
-      clearTimeout(this.clickTimeoutId);
-      this.clickTimeoutId = null;
-      if (this.lastSelectedValue !== null && deepEquals(this.lastSelectedValue, ref)) {
-        this.setCellEditing(ref);
-      }
-    }
+    
   }
 
   private selectCell(ref: ValueRef) {
