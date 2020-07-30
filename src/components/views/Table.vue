@@ -1602,11 +1602,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     line-height: 30px;
   }
 
-  .table_header__content {
-    display: inline-flex;
-    justify-items: center;
-  }
-
   *::selection {
     background: transparent;
   }
