@@ -209,10 +209,9 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
 
   .menu_container__centered {
     width: 100%;
-    height: 100%;
+    padding: 1% 0;
     display: flex;
     justify-content: center;
-    align-items: center;
   }
 
   .main-menu-block {
