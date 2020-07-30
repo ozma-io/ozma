@@ -513,17 +513,17 @@ export default class MultiSelect extends Vue {
     display: inline-flex;
     align-items: center;
     color: var(--MainTextColor);
-    border-radius: 15px;
+    border-radius: 5px;
 
     /* background-color: white; */
-    padding: 10px;
+    padding: 0 5px;
     box-sizing: border-box;
   }
 
   .single_value {
     align-self: center;
-    border-radius: 15px;
-    padding: 2px 10px 2px 10px;
+    border-radius: 5px;
+    padding: 0 5px;
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
