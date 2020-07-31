@@ -42,6 +42,7 @@
         v-for="(card, index) in cards"
         :key="index"
         :data="card"
+        :target="cardTarget"
         :width="width"
         :selected="isCardSelected(card.groupRef.position)"
       />
@@ -56,7 +57,7 @@ import * as R from "ramda";
 
 import ModalUserView from "@/components/ModalUserView.vue";
 
-import Card, { ICard } from "@/components/kanban/Card.vue";
+import Card, { ICard, CardTarget } from "@/components/kanban/Card.vue";
 import { ValueRef } from "../../local_user_view";
 import { IQuery } from "../../state/query";
 
@@ -99,6 +100,7 @@ export default class Column extends Vue {
   @Prop({ type: Function, required: false }) move!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Number, required: false, default: 300 }) width!: number;
   @Prop({ type: Boolean, default: false }) lastColumn!: boolean;
+  @Prop({ type: String, required: false }) cardTarget!: CardTarget;
 
   modalView: IQuery | null = null;
 
@@ -181,15 +183,22 @@ export default class Column extends Vue {
     const newCard = this.cards[event.newIndex];
     // Avoid calling onMove after onAdd event: It should do it on it's own.
     if (newCard) {
-      const prevCardOrder = R.pathOr<number>(0, [event.newIndex - 1, "order"], this.cards);
+      const prevCardIndex = event.newIndex - 1;
+      const prevCardOrder = (
+        prevCardIndex > -1
+          ? R.pathOr<number>(0, [event.newIndex - 1, "order"], this.cards)
+          : 0
+      );
       const nextCardOrder = R.pathOr<number>(prevCardOrder + 1, [event.newIndex + 1, "order"], this.cards);
       const mean = (prevCardOrder + nextCardOrder) / 2;
+      // if (this.move && newCard.orderRef) {
+      //  this.move(newCard.orderRef, mean);
+      // }
     }
   }
 
   private onAdd(event: IVueDraggableEvent) {
     const newCard = this.cards[event.newIndex];
-    this.onMove(event);
     if (this.add && newCard.groupRef) {
       this.add(newCard.groupRef, this.id);
     }
@@ -229,8 +238,12 @@ export default class Column extends Vue {
 
   .column_body {
     padding: 15px 10px 0 10px;
-    overflow-y: auto;
+    overflow-y: none;
     height: 100%;
+  }
+
+  .column_body:hover {
+    overflow-y: auto;
   }
 
   .column_controls {

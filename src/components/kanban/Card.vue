@@ -2,7 +2,15 @@
   <div
     class="card_container"
     :style="cardStyle"
+    @click="openModal"
   >
+    <template v-if="data.cardView">
+      <ModalUserView
+        v-if="modalView !== null"
+        :initial-view="modalView"
+        @close="modalView = null"
+      />
+    </template>
     <b-row
       v-for="(row, rowIndex) in data.rows"
       :key="rowIndex"
@@ -14,20 +22,6 @@
         :cols="col.size"
         class="card_col"
       >
-        <template v-if="rowIndex === 0 && colIndex === 0">
-          <!-- input type="checkbox" class="card_select_checkbox" :selected="selected" -->
-          <template v-if="data.cardView">
-            <i
-              class="material-icons card_open_icon"
-              @click="openModal"
-            >flip_to_front</i>
-            <ModalUserView
-              v-if="modalView !== null"
-              :initial-view="modalView"
-              @close="modalView = null"
-            />
-          </template>
-        </template>
         <div
           v-if="col.type === 'image'"
           class="card_avatar"
@@ -38,6 +32,12 @@
           class="card_text"
           :title="col.value"
         >
+          <span
+            v-if="col.icon && col.value"
+            class="card_icon"
+          >
+            {{ col.icon }}
+          </span>
           {{ col.value }}
         </span>
       </b-col>
@@ -50,17 +50,20 @@ import * as R from "ramda";
 import { Vue, Component, Prop } from "vue-property-decorator";
 import { IExistingValueRef, ValueRef } from "../../local_user_view";
 import { IFieldRef } from "../../api";
-import { IQuery } from "../../state/query";
+import { IQuery, queryLocation } from "../../state/query";
 
 import ModalUserView from "@/components/ModalUserView.vue";
 import { Moment } from "moment";
 import { dateTimeFormat, dateFormat } from "../../values";
 
 export type CardColType = "text" | "image";
+export type CardTarget = "_modal" | "_top" | "_blank";
+export const allowedTargets: CardTarget[] = ["_modal", "_top", "_blank"];
 
 export interface ICardCol {
   fieldName?: string;
   fieldRef?: IFieldRef;
+  icon?: string;
   type: CardColType;
   value: any;
   size: number;
@@ -86,17 +89,33 @@ interface ICardStyle {
   backgrondColor?: string;
 }
 
+
 @Component({ components: { ModalUserView }})
 class Card extends Vue {
   @Prop({ type: Object, required: true }) data!: ICard;
   @Prop({ type: Boolean, required: false, default: false }) selected!: boolean;
   @Prop({ type: Number, required: true }) width!: number;
+  @Prop({ type: String, required: false, default: () => '_top' }) target!: CardTarget;
 
   modalView: IQuery | null = null;
 
+  private test(val: any) {
+    return;
+  }
+
   private openModal() {
     if (this.data.cardView) {
-      this.modalView = this.data.cardView;
+      if (this.target === '_top') {
+        const url = queryLocation(this.data.cardView);
+        this.$router.push(url);
+      } else if (this.target === '_blank') {
+        const url = this.$router.resolve(
+          queryLocation(this.data.cardView),
+        );
+        window.open(url.href, this.target);
+      } else if (this.target === '_modal') {
+        this.modalView = this.data.cardView;
+      }
     }
   }
 
