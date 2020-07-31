@@ -9,6 +9,7 @@
       :field-name="column.fieldName"
       :create-view="column.createView"
       :cards="column.cards"
+      :card-target="cardTarget"
       :width="columnWidth"
       :add="add"
       :move="move"
@@ -22,7 +23,7 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 import draggable from "vuedraggable";
 
-import { ICard } from "@/components/kanban/Card.vue";
+import { ICard, CardTarget } from "@/components/kanban/Card.vue";
 import Column, { IColumn } from "@/components/kanban/Column.vue";
 import { ValueRef } from "../../local_user_view";
 
@@ -33,6 +34,7 @@ export default class Board extends Vue {
   @Prop({ type: Function, required: false }) move!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Object }) titles!: { [key: number]: string } | null;
   @Prop({ type: Number }) columnWidth!: number | null;
+  @Prop({ type: String, required: false }) cardTarget!: CardTarget;
 
   private getColumnTitle(id: number, title: string) {
     if (this.titles) {

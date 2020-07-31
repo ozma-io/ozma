@@ -33,6 +33,7 @@
       :titles="boardTitles"
       :add="changeGroup"
       :move="changeOrder"
+      :card-target="cardTarget"
     />
   </div>
 </template>
@@ -51,9 +52,9 @@ import { LocalUserView, IExistingValueRef, ValueRef } from "@/local_user_view";
 import { CombinedUserView, IValueInfo, IUserViewValueRef, ICombinedValue, IRowCommon, ICombinedRow, valueToPunnedText } from "@/state/user_view";
 
 import Board from "@/components/kanban/Board.vue";
-import { ICard, ICardCol, ICardRow, CardColType } from "@/components/kanban/Card.vue";
+import { ICard, ICardCol, ICardRow, CardColType, allowedTargets } from "@/components/kanban/Card.vue";
 import { IColumn } from "@/components/kanban/Column.vue";
-import { IFieldRef, IReferenceFieldType, ValueType } from "../../api";
+import { IFieldRef, IReferenceFieldType, ValueType, IEntityRef } from "../../api";
 import { attrToQuery, attrToQueryRef } from "../../state/query";
 import BaseEntriesView from "../BaseEntriesView";
 import { IFieldInfo } from "../../values";
@@ -79,10 +80,22 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
   get entriesEntity() {
     const fieldTypePath = ["info", "columns", this.groupIndex, "mainField", "field", "fieldType"];
     const fieldType = R.path<IReferenceFieldType>(fieldTypePath, this.uv);
-    if (fieldType && fieldType.type === "reference") {
-      return { entity: fieldType.entity };
+    const entity = R.path<IEntityRef>(['entity'], fieldType);
+    if (fieldType && fieldType.type === "reference" && entity) {
+      return { entity };
     }
     return null;
+  }
+
+  get cardTarget(): string | undefined {
+    const cardTarget = this.uv.attributes.card_target;
+    if (
+      typeof cardTarget === 'string'
+      || cardTarget instanceof String
+      || allowedTargets.indexOf(cardTarget) !== -1) {
+      return cardTarget
+    }
+    return undefined;
   }
 
   get columnWidth(): number | undefined {
@@ -190,12 +203,17 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
         ["columnAttributes", index, "visible"],
         this.uv,
       );
+      const icon = R.path<string>(
+        ["columnAttributes", index, "icon"],
+        this.uv,
+      );
       return isVisible ? {
         fieldName: R.path<string>(["name"], fieldRef),
         fieldRef,
         type: "text",
         value: punnedValue,
         size: 12,
+        icon,
       } : undefined;
     }, values);
   }
