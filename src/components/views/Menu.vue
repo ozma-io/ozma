@@ -19,7 +19,7 @@
       <b-row>
         <b-col v-if="typeof entriesOrError === 'string'" cols="12">
           <span>
-            {{ error }}
+            {{ entriesOrError }}
           </span>
         </b-col>
         <MenuEntry 
