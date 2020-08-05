@@ -56,49 +56,9 @@
           title="view_headline"
           :actions="actions"
         />
-        <div
+        <SearchPanel
           v-if="enableFilter"
-          class="search-wrapper"
-        >
-          <b-form
-            v-if="enableFilter"
-            inline
-            :class="['find', {
-              'search-field_hidden': !isShownSearchField,
-            }]"
-            @submit.prevent="submitFilter()"
-          >
-            <b-input-group>
-              <b-form-input
-                ref="searchInput"
-                v-model="filterString"
-                class="find_in form-control"
-                :placeholder="$t('search_placeholder')"
-              />
-              <b-input-group-append v-if="filterString.length > 0">
-                <span
-                  id="searchclear"
-                  class="material-icons clear-search"
-                  @click="filterString = ''"
-                >backspace</span>
-              </b-input-group-append>
-            </b-input-group>
-          </b-form>
-          <button
-            v-if="enableFilter"
-            class="search-button"
-            @click="toggleSearchFieldVisibility(null)"
-          >
-            <i
-              v-if="!isShownSearchField"
-              class="material-icons search-button__icon"
-            >search</i>
-            <i
-              v-else
-              class="material-icons search-button__icon"
-            >close</i>
-          </button>
-        </div>
+        ></SearchPanel>
       </div>
       <div
         v-if="uv !== null"
@@ -180,9 +140,10 @@ import {CombinedUserView, CurrentUserViews, IUserViewArguments, UserViewError} f
 import {ErrorKey} from "@/state/errors";
 import {CurrentChanges, ScopeName} from "@/state/staging_changes";
 import {Action} from "@/components/ActionsMenu.vue";
+import SearchPanel from "@/components/SearchPanel.vue";
 import {CurrentAuth} from "@/state/auth";
-import {CurrentQuery, getDefaultValues, IQuery, queryLocation, replaceSearch} from "@/state/query";
-import {Debounce} from "vue-debounce-decorator";
+import {CurrentQuery, getDefaultValues, IQuery, queryLocation} from "@/state/query";
+import {convertToWords} from "@/utils";
 
 const auth = namespace("auth");
 const userView = namespace("userView");
@@ -191,45 +152,11 @@ const settings = namespace("settings");
 const query = namespace("query");
 const errors = namespace("errors");
 
-const makeWordsRegex = () => {
-  // Match words that doesn't start with quotes
-  const wordRegex = `([^"'«„”\\s][^\\s]*)`;
-  const quotes = [
-    [`"`, `"`],
-    [`'`, `'`],
-    [`«`, `»`],
-    [`„`, `“`],
-    [`”`, `”`],
-  ];
-    // Match fully-quoted words: e.g. `"foo bar"` will match but `"foo"b` or `"foo ` will not
-  const quoteRegexes = quotes.map(([start, end]) => `${start}([^${end}]+)${end}(?:\\s|$)`);
-  // Match any word
-  const fallbackRegex = `([^\\s]+)`;
-  const regexes = [wordRegex].concat(quoteRegexes).concat([fallbackRegex]);
-  const regexesStr = regexes.map(reg => `(?:${reg})`).join("|");
-  const fullRegex = `^\\s*(?:${regexesStr})`;
-  return fullRegex;
-};
-const wordsRegexString = makeWordsRegex();
-
-const convertToWords = (str: string) => {
-  const regex = new RegExp(wordsRegexString, "g");
-  const words: string[] = [];
-  while (true) {
-    const ret = regex.exec(str);
-    if (ret === null) {
-      break;
-    } else {
-      const word = ret.slice(1).find(x => x !== undefined) as string;
-      words.push(word.toLowerCase());
-    }
-  }
-  return words;
-};
-
-const searchParam = "__q";
-@Component
+@Component({components: {
+  SearchPanel
+}})
 export default class RootUserView extends Vue {
+
   @auth.State("current") currentAuth!: CurrentAuth | null;
   @auth.Action("login") login!: () => Promise<void>;
   @auth.Action("logout") logout!: () => Promise<void>;
@@ -249,7 +176,6 @@ export default class RootUserView extends Vue {
   private filterString = "";
   private enableFilter = false;
   private styleNode: HTMLStyleElement;
-  private isShownSearchField = false;
 
   constructor() {
     super();
@@ -263,39 +189,23 @@ export default class RootUserView extends Vue {
     }));
   }
 
-  get filterWords() {
+  get filterWords(){
     const value = this.query.getSearch("q", String, "");
     if (value !== undefined) {
       return Array.from(new Set(convertToWords(value.toString())));
     }
     return [];
   }
-
+  
   // FIXME update when change not query.search
   @Watch("$route", {deep: true, immediate: true})
   private onRouteChanged() {
     this.setRoute(this.$route);
   }
 
-  @Watch("$route.path")
-  private closeSearchField() {
-    this.isShownSearchField = false;
-  }
-
   @Watch("query.rootViewArgs", {deep: true, immediate: true})
   private onViewArgsChanged() {
     this.updateView();
-  }
-
-  @Watch("filterString")
-  @Debounce(500)
-  private submitFilter() {
-    replaceSearch("q", this.filterString);
-  }
-
-  @Watch("query.search.root", {deep: true, immediate: true})
-  private updateRootParams() {
-    this.filterString = this.query.getSearch("q", String, "");
   }
 
   private updateTitle(title: string) {
@@ -320,22 +230,6 @@ export default class RootUserView extends Vue {
       actions.push({name: this.$t("login").toString(), callback: this.login});
     }
     return actions;
-  }
-
-  private toggleSearchFieldVisibility(flag?: boolean | null) {
-    if (flag !== null) {
-      this.isShownSearchField = flag as boolean;
-    } else {
-      this.isShownSearchField = !this.isShownSearchField;
-    }
-  }
-
-  @Watch("isShownSearchField") setFocusOnField() {
-    if (this.isShownSearchField) {
-      (this.$refs.searchInput as HTMLElement).focus();
-    } else {
-      this.filterString = "";
-    }
   }
 
   private updateView() {
