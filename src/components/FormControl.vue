@@ -194,6 +194,9 @@
               :indirect-links="indirectLinks"
               @goto="$emit('goto', $event)"
             />
+            <SearchPanel
+              v-if="enableFilter"
+            ></SearchPanel>
           </div>
           <div v-else>
             <label class="input_label_single">{{ caption }}</label>
@@ -261,6 +264,7 @@
             :level="level + 1"
             @update:actions="actions = $event"
             @goto="$emit('goto', $event)"
+            @update:enableFilter="enableFilter = $event"
           />
         </b-col>
       </b-row>
@@ -365,6 +369,7 @@ const inlineTypes = ["codeeditor", "textarea", "reference"];
     InputSlot: () => import("@/components/form/InputSlot.vue"),
     Input: () => import("@/components/form/Input.vue"),
     Textarea: () => import("@/components/form/Textarea.vue"),
+    SearchPanel: () => import("@/components/SearchPanel.vue")
   },
 })
 export default class FormControl extends Vue {
@@ -385,6 +390,7 @@ export default class FormControl extends Vue {
 
   private actions: Action[] = [];
   private codeEditorKey = 0;
+  private enableFilter = false;
 
   get isInline(): boolean {
     return inlineTypes.includes(this.inputType.name);
