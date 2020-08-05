@@ -58,6 +58,7 @@
         />
         <SearchPanel
           v-if="enableFilter"
+          :uvName = "query.rootViewArgs.source.ref.name" 
         ></SearchPanel>
       </div>
       <div
@@ -66,7 +67,6 @@
       >
         <UserView
           :args="query.rootViewArgs"
-          :filter="filterWords"
           is-root
           :default-values="defaultValues"
           scope="root"
@@ -143,7 +143,6 @@ import {Action} from "@/components/ActionsMenu.vue";
 import SearchPanel from "@/components/SearchPanel.vue";
 import {CurrentAuth} from "@/state/auth";
 import {CurrentQuery, getDefaultValues, IQuery, queryLocation} from "@/state/query";
-import {convertToWords} from "@/utils";
 
 const auth = namespace("auth");
 const userView = namespace("userView");
@@ -187,14 +186,6 @@ export default class RootUserView extends Vue {
     return Object.entries(this.rawErrors).flatMap(([key, keyErrors]) => keyErrors.map(error => {
       return this.$t(`${key}_error`, {msg: error});
     }));
-  }
-
-  get filterWords(){
-    const value = this.query.getSearch("q", String, "");
-    if (value !== undefined) {
-      return Array.from(new Set(convertToWords(value.toString())));
-    }
-    return [];
   }
   
   // FIXME update when change not query.search
@@ -309,23 +300,6 @@ export default class RootUserView extends Vue {
     flex: 1;
   }
 
-  .search-wrapper {
-    display: flex;
-    align-items: center;
-    width: auto;
-    flex: 1;
-  }
-
-  .clear-search {
-    height: 20px;
-    font-size: 20px;
-    margin: 0;
-    position: absolute;
-    top: 50%;
-    right: 0;
-    transform: translateY(-50%);
-  }
-
   .menu_scrol {
     display: block;
     overflow: auto;
@@ -388,21 +362,6 @@ export default class RootUserView extends Vue {
 
   .head-menu_back-button:focus {
     outline: none;
-  }
-
-  .find_in {
-    border-radius: 0;
-    border-top: 0;
-    border-left: 0;
-    border-right: 0;
-    padding-left: 0 !important;
-    padding-right: 20px !important;
-    font-size: 14px !important;
-  }
-
-  .find_in::placeholder {
-    color: var(--MainTextColorLight) !important;
-    font-size: 14px;
   }
 
   .fix-bot {
@@ -497,30 +456,10 @@ export default class RootUserView extends Vue {
     animation: color-change-2x 2s linear infinite alternate both;
   }
 
-  .search-button {
-    padding: 0;
-    background: transparent;
-    height: 20px;
-    outline: none;
-  }
-
-  .search-button__icon {
-    font-size: 20px;
-  }
-
   .save_button > input {
     background: none;
     border: none;
     padding: 0 0 0 5px;
-  }
-
-  .find {
-    margin-right: 10px;
-  }
-
-  .search-field_hidden {
-    opacity: 0;
-    pointer-events: none;
   }
 
   .error_button {

@@ -196,6 +196,7 @@
             />
             <SearchPanel
               v-if="enableFilter"
+              :uvName = "uvName" 
             ></SearchPanel>
           </div>
           <div v-else>
@@ -381,6 +382,7 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) dontFocus!: boolean;
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
   @Prop({ type: String, default: "" }) caption!: string;
+  @Prop({ type: String, default: "" }) uvName!: string;
   @Prop({ type: Boolean, default: false }) disableColor!: boolean;
   @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
   @Prop({ type: String, required: true }) scope!: string;
@@ -466,6 +468,7 @@ export default class FormControl extends Vue {
 
     const rawControlAttr = String(this.attributes["control"]);
     const controlAttr = pascalToSnake(rawControlAttr);
+
     if (rawControlAttr !== controlAttr) {
       console.error(`"control" attribute value ${rawControlAttr} uses pascal case`);
     }
