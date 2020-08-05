@@ -15,7 +15,8 @@ import { CurrentQuery } from "@/state/query";
 
 export interface IAnonymousUserView {
   type: "anonymous";
-  query: string;
+  query: string;,
+  ref: IUserViewRef;
 }
 
 export interface INamedUserView {
