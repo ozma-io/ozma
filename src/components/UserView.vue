@@ -165,9 +165,11 @@ export default class UserView extends Vue {
   private waitReload = false;
 
   get filterWords(){
-    const value = this.query.getSearch(this.currentUv.args.source.ref.name, String, "");
-    if (value !== undefined) {
-      return Array.from(new Set(convertToWords(value.toString())));
+    if(this.currentUv != null){
+      const value = this.query.getSearch(this.currentUv.args.source.ref.name, String, "");
+      if (value !== undefined) {
+        return Array.from(new Set(convertToWords(value.toString())));
+      }
     }
     return [];
   }

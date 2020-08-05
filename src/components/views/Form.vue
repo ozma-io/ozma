@@ -242,7 +242,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
 
   get gridBlocks(): GridElement[] {
     const viewAttrs = this.uv.attributes;
-    const blocks: IGridSection[] = this.blockSizes.map(size => ({ type: "section", size, content: [] }));
+    const blocks: IGridSection[] = this.blockSizes.map(size => ({ type: "section", size, content: [], field: null }));
     const inputWidth = R.equals(this.blockSizes, [12]) ? 6 : 12;
 
     this.uv.info.columns.forEach((columnInfo, i) => {

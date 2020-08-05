@@ -68,7 +68,7 @@ export default class SearchPanel extends Vue {
   private filterString = "";
   private isShownSearchField = false;
 
-  @Prop({ type: String, required: true }) uvName: string;
+  @Prop({ type: String, default: "" }) uvName!: string;
   @query.State("current") query!: CurrentQuery;
 
   private toggleSearchFieldVisibility(flag?: boolean | null) {
@@ -89,6 +89,8 @@ export default class SearchPanel extends Vue {
   @Watch("query.search.root", {deep: true, immediate: true})
   private updateRootParams() {
     this.filterString = this.query.getSearch(this.uvName, String, "");
+    if(this.filterString.length > 0)
+      this.isShownSearchField = true;
   }
 
   @Watch("isShownSearchField") 
@@ -104,6 +106,8 @@ export default class SearchPanel extends Vue {
   private closeSearchField() {
     this.isShownSearchField = false;
   }
+
+
 
 }
 
