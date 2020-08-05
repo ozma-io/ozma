@@ -7,6 +7,7 @@
     <FormControl
       v-if="blockContent.type === 'input'"
       :caption="blockContent.field.caption"
+      :uv-name="uvName"
       :value="gridProps.row.values[blockContent.field.index]"
       :attributes="gridProps.localRow.values[blockContent.field.index].attributes"
       :type="blockContent.field.columnInfo.valueType"
@@ -37,11 +38,19 @@ import { GridElement, IGridProps } from "@/components/form/types";
 
 @Component({
   name: "FormGridBlock",
-  components: { FormControl },
+  components: { FormControl }
 })
 export default class FormGridBlock extends Vue {
   @Prop({ type: Object }) blockContent!: GridElement;
   @Prop({ type: Object }) gridProps!: IGridProps;
+  
+  get uvName(){
+    const value = this.gridProps.row.values[this.blockContent.field.index].value;
+    if (value !== null && value.ref !== undefined) {
+      return this.gridProps.row.values[this.blockContent.field.index].value.ref.name;
+    }
+    return "";
+  }
 }
 </script>
 
