@@ -13,6 +13,7 @@ export interface IGridInput extends IGridBase {
 export interface IGridSection extends IGridBase {
   type: "section";
   content: GridElement[];
+  field: any;
 }
 
 export type GridElement = IGridInput | IGridSection;
