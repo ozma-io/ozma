@@ -255,7 +255,7 @@
               />
             </template>
           </InputSlot>
-          <UserView
+          <NestedUserView
             v-else-if="inputType.name === 'userview'"
             ref="control"
             :args="inputType.args"
@@ -263,11 +263,12 @@
             :indirect-links="indirectLinks"
             :scope="scope"
             :level="level + 1"
-            :filter="filterWords"
+            :filterString="filterString"
             @update:actions="actions = $event"
             @goto="$emit('goto', $event)"
             @update:enableFilter="enableFilter = $event"
-          />
+          >
+          </NestedUserView>
         </b-col>
       </b-row>
     </template>
@@ -284,7 +285,7 @@ import { Action } from "@/components/ActionsMenu.vue";
 import { IUserViewArguments, homeSchema, ICombinedValue, currentValue, IEntriesRef } from "@/state/user_view";
 import { IQuery, attrToQuerySelf } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
-import { isMobile, pascalToSnake, convertToWords } from "@/utils";
+import { isMobile, pascalToSnake } from "@/utils";
 
 interface ITextType {
   name: "text";
@@ -370,7 +371,8 @@ const inlineTypes = ["codeeditor", "textarea", "reference"];
     InputSlot: () => import("@/components/form/InputSlot.vue"),
     Input: () => import("@/components/form/Input.vue"),
     Textarea: () => import("@/components/form/Textarea.vue"),
-    SearchPanel: () => import("@/components/SearchPanel.vue")
+    SearchPanel: () => import("@/components/SearchPanel.vue"),
+    NestedUserView: () => import("@/components/NestedUserView.vue")
   },
 })
 export default class FormControl extends Vue {
@@ -394,13 +396,6 @@ export default class FormControl extends Vue {
   private enableFilter = false;
   private filterString = "";
 
-  get filterWords(){
-    const value = this.filterString;
-    if (value !== "") {
-      return Array.from(new Set(convertToWords(value.toString())));
-    }
-    return [];
-  }
 
   get isInline(): boolean {
     return inlineTypes.includes(this.inputType.name);
