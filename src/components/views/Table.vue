@@ -1365,7 +1365,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     width: 0;
     border: 0;
     background-color: var(--TableBackColor);
-    margin-bottom: 0 !important;
+    margin-bottom: -1px !important;
   }
 
   .table-th {
