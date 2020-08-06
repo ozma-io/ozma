@@ -382,7 +382,6 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) dontFocus!: boolean;
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
   @Prop({ type: String, default: "" }) caption!: string;
-  @Prop({ type: String, default: "" }) uvName!: string;
   @Prop({ type: Boolean, default: false }) disableColor!: boolean;
   @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
   @Prop({ type: String, required: true }) scope!: string;
