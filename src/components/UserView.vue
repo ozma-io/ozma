@@ -36,7 +36,7 @@
       <UserViewCommon
         :uv="currentUv"
         :is-root="isRoot"
-        :filter="filterWords"
+        :filter="filter"
         :local="local"
         :scope="scope"
         :level="level"
@@ -49,7 +49,7 @@
         :is="`UserView${userViewType}`"
         :uv="currentUv"
         :is-root="isRoot"
-        :filter="filterWords"
+        :filter="filter"
         :local="local"
         :scope="scope"
         :level="level"
@@ -81,7 +81,7 @@ import { namespace } from "vuex-class";
 import { Store } from "vuex";
 import ProgressBar from "@/components/ProgressBar.vue"
 
-import { RecordSet, ReferenceName, deepEquals, snakeToPascal, pascalToSnake, convertToWords } from "@/utils";
+import { RecordSet, ReferenceName, deepEquals, snakeToPascal, pascalToSnake } from "@/utils";
 import { funappSchema } from "@/api";
 import { equalEntityRef } from "@/values";
 import { CombinedUserView, UserViewError, IUserViewArguments, IUserViewEventHandler, CurrentUserViews, IUserViewState, homeSchema } from "@/state/user_view";
@@ -163,16 +163,6 @@ export default class UserView extends Vue {
   // currentUv is shown while new component for uv is loaded.
   private currentUv: CombinedUserView | UserViewError | null = null;
   private waitReload = false;
-
-  get filterWords(){
-    if(this.currentUv != null){
-      const value = this.query.getSearch(this.currentUv.args.source.ref.name, String, "");
-      if (value !== undefined) {
-        return Array.from(new Set(convertToWords(value.toString())));
-      }
-    }
-    return [];
-  }
 
   get title() {
     if (this.args.source.type === "named") {

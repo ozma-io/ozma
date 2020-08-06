@@ -196,7 +196,7 @@
             />
             <SearchPanel
               v-if="enableFilter"
-              :uvName = "uvName" 
+              @update:filterString="filterString = $event"
             ></SearchPanel>
           </div>
           <div v-else>
@@ -263,6 +263,7 @@
             :indirect-links="indirectLinks"
             :scope="scope"
             :level="level + 1"
+            :filter="filterWords"
             @update:actions="actions = $event"
             @goto="$emit('goto', $event)"
             @update:enableFilter="enableFilter = $event"
@@ -277,14 +278,13 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import { valueToText, valueIsNull, equalEntityRef } from "@/values";
-import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef, IEntityRef } from "@/api";
+import { valueToText, valueIsNull } from "@/values";
+import { AttributesMap, ValueType } from "@/api";
 import { Action } from "@/components/ActionsMenu.vue";
-import { IValueInfo, IUserViewArguments, CombinedUserView, CurrentUserViews, homeSchema, ICombinedValue, currentValue, IEntriesRef } from "@/state/user_view";
-import { IQuery, attrToQuerySelf, IAttrToQueryOpts } from "@/state/query";
+import { IUserViewArguments, homeSchema, ICombinedValue, currentValue, IEntriesRef } from "@/state/user_view";
+import { IQuery, attrToQuerySelf } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
-import { ISelectionRef } from "@/components/BaseUserView";
-import { isMobile, pascalToSnake } from "@/utils";
+import { isMobile, pascalToSnake, convertToWords } from "@/utils";
 
 interface ITextType {
   name: "text";
@@ -393,6 +393,15 @@ export default class FormControl extends Vue {
   private actions: Action[] = [];
   private codeEditorKey = 0;
   private enableFilter = false;
+  private filterString = "";
+
+  get filterWords(){
+    const value = this.filterString;
+    if (value !== "") {
+      return Array.from(new Set(convertToWords(value.toString())));
+    }
+    return [];
+  }
 
   get isInline(): boolean {
     return inlineTypes.includes(this.inputType.name);

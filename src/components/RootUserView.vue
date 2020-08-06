@@ -58,7 +58,8 @@
         />
         <SearchPanel
           v-if="enableFilter"
-          :uvName = "query.rootViewArgs.source.ref.name" 
+          :isGetFromRoute="true"
+          @update:filterString="filterString = $event"
         ></SearchPanel>
       </div>
       <div
@@ -69,6 +70,7 @@
           :args="query.rootViewArgs"
           is-root
           :default-values="defaultValues"
+          :filter="filterWords"
           scope="root"
           @goto="goto"
           @update:actions="extraActions = $event"
@@ -142,7 +144,9 @@ import {CurrentChanges, ScopeName} from "@/state/staging_changes";
 import {Action} from "@/components/ActionsMenu.vue";
 import SearchPanel from "@/components/SearchPanel.vue";
 import {CurrentAuth} from "@/state/auth";
-import {CurrentQuery, getDefaultValues, IQuery, queryLocation} from "@/state/query";
+import {replaceSearch, CurrentQuery, getDefaultValues, IQuery, queryLocation} from "@/state/query";
+import {convertToWords} from "@/utils";
+import {Debounce} from "vue-debounce-decorator";
 
 const auth = namespace("auth");
 const userView = namespace("userView");
@@ -182,12 +186,31 @@ export default class RootUserView extends Vue {
     this.styleNode.type = "text/css";
   }
 
+  get filterWords(){
+    const value = this.query.getSearch("q", String, "");
+    if (value !== undefined) {
+      return Array.from(new Set(convertToWords(value.toString())));
+    }
+    return [];
+  }
+
+  @Watch("filterString")
+  @Debounce(500)
+  private submitFilter() {
+    replaceSearch("q", this.filterString);
+  }
+
+  @Watch("query.search.root", {deep: true, immediate: true})
+  private updateRootParams() {
+    this.filterString = this.query.getSearch("q", String, "");
+  }
+
   get errors() {
     return Object.entries(this.rawErrors).flatMap(([key, keyErrors]) => keyErrors.map(error => {
       return this.$t(`${key}_error`, {msg: error});
     }));
   }
-  
+
   // FIXME update when change not query.search
   @Watch("$route", {deep: true, immediate: true})
   private onRouteChanged() {

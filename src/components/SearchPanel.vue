@@ -38,7 +38,7 @@
     </b-form>
     <button
       class="search-button"
-      @click.prevent="toggleSearchFieldVisibility(null)"
+      @click.prevent="toggleSearchFieldVisibility()"
     >
       <i
         v-if="!isShownSearchField"
@@ -55,8 +55,6 @@
 <script lang="ts">
 
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
-import {Debounce} from "vue-debounce-decorator";
-import {replaceSearch} from "@/state/query";
 import {namespace} from "vuex-class";
 import {CurrentQuery} from "@/state/query";
 
@@ -65,32 +63,32 @@ const query = namespace("query");
 @Component
 export default class SearchPanel extends Vue {
 
+  @Prop({ type: Boolean, default: false }) isGetFromRoute!: boolean;
+  @query.State("current") query!: CurrentQuery;
+
   private filterString = "";
   private isShownSearchField = false;
 
-  @Prop({ type: String, default: "" }) uvName!: string;
-  @query.State("current") query!: CurrentQuery;
+  private mounted() {
+    if (this.isGetFromRoute) {
+      this.filterString = this.query.getSearch("q", String, "");
+      if(this.filterString.length > 0)
+        this.isShownSearchField = true;
+    }
+  }
 
-  private toggleSearchFieldVisibility(flag?: boolean | null) {
+  private toggleSearchFieldVisibility(flag?: boolean) {
 
-    if (flag !== null) {
-      this.isShownSearchField = flag as boolean;
+    if (flag !== undefined) {
+      this.isShownSearchField = flag;
     } else {
       this.isShownSearchField = !this.isShownSearchField;
     }
   }
 
   @Watch("filterString")
-  @Debounce(500)
   private submitFilter() {
-    replaceSearch(this.uvName, this.filterString);
-  }
-
-  @Watch("query.search.root", {deep: true, immediate: true})
-  private updateRootParams() {
-    this.filterString = this.query.getSearch(this.uvName, String, "");
-    if(this.filterString.length > 0)
-      this.isShownSearchField = true;
+    this.$emit("update:filterString", this.filterString);
   }
 
   @Watch("isShownSearchField") 
@@ -106,8 +104,6 @@ export default class SearchPanel extends Vue {
   private closeSearchField() {
     this.isShownSearchField = false;
   }
-
-
 
 }
 
