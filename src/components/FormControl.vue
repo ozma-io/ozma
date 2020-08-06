@@ -393,7 +393,6 @@ export default class FormControl extends Vue {
 
   private actions: Action[] = [];
   private codeEditorKey = 0;
-  private enableFilter = false;
   private filterString = "";
 
 
