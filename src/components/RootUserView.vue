@@ -159,7 +159,6 @@ const errors = namespace("errors");
   SearchPanel
 }})
 export default class RootUserView extends Vue {
-
   @auth.State("current") currentAuth!: CurrentAuth | null;
   @auth.Action("login") login!: () => Promise<void>;
   @auth.Action("logout") logout!: () => Promise<void>;
@@ -186,7 +185,7 @@ export default class RootUserView extends Vue {
     this.styleNode.type = "text/css";
   }
 
-  get filterWords(){
+  get filterWords() {
     const value = this.query.getSearch("q", String, "");
     if (value !== undefined) {
       return Array.from(new Set(convertToWords(value.toString())));
