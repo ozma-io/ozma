@@ -47,8 +47,6 @@
       :value="value"
       :readonly="disabled"
       rows="1"
-      :min-height="144"
-      :max-height="144"
       class="input-textarea"
       @keydown.enter.prevent
       @input="updateInputCellEdit"

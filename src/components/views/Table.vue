@@ -26,6 +26,7 @@
       v-if="editingValue"
       v-click-outside="clickOutsideEdit"
       :width="editParams.width"
+      :height="editParams.height"
       :is-last-fixed-cell="isSelectedLastFixedCell"
       :coords="editCoords"
     >
@@ -972,11 +973,16 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     const windowHeight: number = window.innerHeight;
     this.isSelectedLastFixedCell = event.target.classList.value.includes('next-after-last-fixed');
     this.editCoords.x = event.clientX - event.offsetX;
+
     if (event.clientY - 54 >= Math.round(windowHeight/2)) {
       this.editCoords.y = (event.clientY - 154 + event.target.offsetHeight) - event.offsetY;
     } else {
       this.editCoords.y = event.clientY - event.offsetY;
     }
+
+    console.log("x->", this.editCoords.x, event.clientX, event.offsetX);
+    console.log("y->", this.editCoords.y, event.clientY, event.offsetY);
+
   }
 
   private clickCell(ref: ValueRef, event: MouseEvent | any) {
