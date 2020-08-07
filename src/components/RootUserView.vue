@@ -194,17 +194,6 @@ export default class RootUserView extends Vue {
     return [];
   }
 
-  @Watch("filterString")
-  @Debounce(500)
-  private submitFilter() {
-    replaceSearch("q", this.filterString);
-  }
-
-  @Watch("query.search.root", {deep: true, immediate: true})
-  private updateRootParams() {
-    this.filterString = this.query.getSearch("q", String, "");
-  }
-
   get errors() {
     return Object.entries(this.rawErrors).flatMap(([key, keyErrors]) => keyErrors.map(error => {
       return this.$t(`${key}_error`, {msg: error});
@@ -220,6 +209,17 @@ export default class RootUserView extends Vue {
   @Watch("query.rootViewArgs", {deep: true, immediate: true})
   private onViewArgsChanged() {
     this.updateView();
+  }
+
+  @Watch("filterString")
+  @Debounce(500)
+  private submitFilter() {
+    replaceSearch("q", this.filterString);
+  }
+
+  @Watch("query.search.root", {deep: true, immediate: true})
+  private updateRootParams() {
+    this.filterString = this.query.getSearch("q", String, "");
   }
 
   private updateTitle(title: string) {
