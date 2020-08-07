@@ -70,6 +70,7 @@
             v-for="(option, index) in select.selectedOptions"
             :key="option.value"
             :class="[
+              'single_value',
               'select_container__options_list__option',
               {'select_container__options_list__option_active': select.selectedOption === index }
             ]"
