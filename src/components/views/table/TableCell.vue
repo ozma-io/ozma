@@ -87,8 +87,12 @@ export default class TableCell extends Vue {
     touch-action: manipulation;
   }
 
+  .table-td > p {
+    pointer-events: none;
+  }
+
   .table-td_selected {
-    background: #e6effd !important;
+    background: rgba(14, 101, 235, 0.1) !important;
     border: 2px solid rgb(14, 101, 235);
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   }

@@ -2,8 +2,8 @@
   <div
     :class="['table-cell-edit', {'table-cell-edit_last-fixed': isLastFixedCell}]"
     :style="{
-      top: `${coords.y}px`,
-      left: `${coords.x}px`,
+      top: `${coords.y-1}px`,
+      left: `${coords.x-1}px`,
       height: height ? `${height}px` : 'auto',
       width: width ? `${width}px` : '200px'
     }"
@@ -38,10 +38,8 @@ export default class TableCellEdit extends Vue {
   .table-cell-edit {
     box-shadow: 0 0 10px 5px var(--MainBorderColor);
     background: #fff;
-    display: flex;
     box-sizing: border-box;
     padding: 5px;
-    align-items: center;
     position: fixed;
     top: 0;
     z-index: 9999;
