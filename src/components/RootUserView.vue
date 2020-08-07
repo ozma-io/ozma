@@ -68,9 +68,9 @@
       >
         <UserView
           :args="query.rootViewArgs"
+          :filter="filterWords"
           is-root
           :default-values="defaultValues"
-          :filter="filterWords"
           scope="root"
           @goto="goto"
           @update:actions="extraActions = $event"
@@ -185,18 +185,18 @@ export default class RootUserView extends Vue {
     this.styleNode.type = "text/css";
   }
 
+  get errors() {
+    return Object.entries(this.rawErrors).flatMap(([key, keyErrors]) => keyErrors.map(error => {
+      return this.$t(`${key}_error`, {msg: error});
+    }));
+  }
+  
   get filterWords() {
     const value = this.query.getSearch("q", String, "");
     if (value !== undefined) {
       return Array.from(new Set(convertToWords(value.toString())));
     }
     return [];
-  }
-
-  get errors() {
-    return Object.entries(this.rawErrors).flatMap(([key, keyErrors]) => keyErrors.map(error => {
-      return this.$t(`${key}_error`, {msg: error});
-    }));
   }
 
   // FIXME update when change not query.search
