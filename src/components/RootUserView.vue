@@ -56,49 +56,11 @@
           title="view_headline"
           :actions="actions"
         />
-        <div
+        <SearchPanel
           v-if="enableFilter"
-          class="search-wrapper"
-        >
-          <b-form
-            v-if="enableFilter"
-            inline
-            :class="['find', {
-              'search-field_hidden': !isShownSearchField,
-            }]"
-            @submit.prevent="submitFilter()"
-          >
-            <b-input-group>
-              <b-form-input
-                ref="searchInput"
-                v-model="filterString"
-                class="find_in form-control"
-                :placeholder="$t('search_placeholder')"
-              />
-              <b-input-group-append v-if="filterString.length > 0">
-                <span
-                  id="searchclear"
-                  class="material-icons clear-search"
-                  @click="filterString = ''"
-                >backspace</span>
-              </b-input-group-append>
-            </b-input-group>
-          </b-form>
-          <button
-            v-if="enableFilter"
-            class="search-button"
-            @click="toggleSearchFieldVisibility(null)"
-          >
-            <i
-              v-if="!isShownSearchField"
-              class="material-icons search-button__icon"
-            >search</i>
-            <i
-              v-else
-              class="material-icons search-button__icon"
-            >close</i>
-          </button>
-        </div>
+          :filterString="filterString"
+          @update:filterString="filterString = $event"
+        ></SearchPanel>
       </div>
       <div
         v-if="uv !== null"
@@ -180,8 +142,10 @@ import {CombinedUserView, CurrentUserViews, IUserViewArguments, UserViewError} f
 import {ErrorKey} from "@/state/errors";
 import {CurrentChanges, ScopeName} from "@/state/staging_changes";
 import {Action} from "@/components/ActionsMenu.vue";
+import SearchPanel from "@/components/SearchPanel.vue";
 import {CurrentAuth} from "@/state/auth";
-import {CurrentQuery, getDefaultValues, IQuery, queryLocation, replaceSearch} from "@/state/query";
+import {replaceSearch, CurrentQuery, getDefaultValues, IQuery, queryLocation} from "@/state/query";
+import {convertToWords} from "@/utils";
 import {Debounce} from "vue-debounce-decorator";
 
 const auth = namespace("auth");
@@ -191,44 +155,9 @@ const settings = namespace("settings");
 const query = namespace("query");
 const errors = namespace("errors");
 
-const makeWordsRegex = () => {
-  // Match words that doesn't start with quotes
-  const wordRegex = `([^"'«„”\\s][^\\s]*)`;
-  const quotes = [
-    [`"`, `"`],
-    [`'`, `'`],
-    [`«`, `»`],
-    [`„`, `“`],
-    [`”`, `”`],
-  ];
-    // Match fully-quoted words: e.g. `"foo bar"` will match but `"foo"b` or `"foo ` will not
-  const quoteRegexes = quotes.map(([start, end]) => `${start}([^${end}]+)${end}(?:\\s|$)`);
-  // Match any word
-  const fallbackRegex = `([^\\s]+)`;
-  const regexes = [wordRegex].concat(quoteRegexes).concat([fallbackRegex]);
-  const regexesStr = regexes.map(reg => `(?:${reg})`).join("|");
-  const fullRegex = `^\\s*(?:${regexesStr})`;
-  return fullRegex;
-};
-const wordsRegexString = makeWordsRegex();
-
-const convertToWords = (str: string) => {
-  const regex = new RegExp(wordsRegexString, "g");
-  const words: string[] = [];
-  while (true) {
-    const ret = regex.exec(str);
-    if (ret === null) {
-      break;
-    } else {
-      const word = ret.slice(1).find(x => x !== undefined) as string;
-      words.push(word.toLowerCase());
-    }
-  }
-  return words;
-};
-
-const searchParam = "__q";
-@Component
+@Component({components: {
+  SearchPanel
+}})
 export default class RootUserView extends Vue {
   @auth.State("current") currentAuth!: CurrentAuth | null;
   @auth.Action("login") login!: () => Promise<void>;
@@ -249,7 +178,6 @@ export default class RootUserView extends Vue {
   private filterString = "";
   private enableFilter = false;
   private styleNode: HTMLStyleElement;
-  private isShownSearchField = false;
 
   constructor() {
     super();
@@ -262,7 +190,7 @@ export default class RootUserView extends Vue {
       return this.$t(`${key}_error`, {msg: error});
     }));
   }
-
+  
   get filterWords() {
     const value = this.query.getSearch("q", String, "");
     if (value !== undefined) {
@@ -275,11 +203,6 @@ export default class RootUserView extends Vue {
   @Watch("$route", {deep: true, immediate: true})
   private onRouteChanged() {
     this.setRoute(this.$route);
-  }
-
-  @Watch("$route.path")
-  private closeSearchField() {
-    this.isShownSearchField = false;
   }
 
   @Watch("query.rootViewArgs", {deep: true, immediate: true})
@@ -320,22 +243,6 @@ export default class RootUserView extends Vue {
       actions.push({name: this.$t("login").toString(), callback: this.login});
     }
     return actions;
-  }
-
-  private toggleSearchFieldVisibility(flag?: boolean | null) {
-    if (flag !== null) {
-      this.isShownSearchField = flag as boolean;
-    } else {
-      this.isShownSearchField = !this.isShownSearchField;
-    }
-  }
-
-  @Watch("isShownSearchField") setFocusOnField() {
-    if (this.isShownSearchField) {
-      (this.$refs.searchInput as HTMLElement).focus();
-    } else {
-      this.filterString = "";
-    }
   }
 
   private updateView() {
@@ -415,23 +322,6 @@ export default class RootUserView extends Vue {
     flex: 1;
   }
 
-  .search-wrapper {
-    display: flex;
-    align-items: center;
-    width: auto;
-    flex: 1;
-  }
-
-  .clear-search {
-    height: 20px;
-    font-size: 20px;
-    margin: 0;
-    position: absolute;
-    top: 50%;
-    right: 0;
-    transform: translateY(-50%);
-  }
-
   .menu_scrol {
     display: block;
     overflow: auto;
@@ -494,21 +384,6 @@ export default class RootUserView extends Vue {
 
   .head-menu_back-button:focus {
     outline: none;
-  }
-
-  .find_in {
-    border-radius: 0;
-    border-top: 0;
-    border-left: 0;
-    border-right: 0;
-    padding-left: 0 !important;
-    padding-right: 20px !important;
-    font-size: 14px !important;
-  }
-
-  .find_in::placeholder {
-    color: var(--MainTextColorLight) !important;
-    font-size: 14px;
   }
 
   .fix-bot {
@@ -603,30 +478,10 @@ export default class RootUserView extends Vue {
     animation: color-change-2x 2s linear infinite alternate both;
   }
 
-  .search-button {
-    padding: 0;
-    background: transparent;
-    height: 20px;
-    outline: none;
-  }
-
-  .search-button__icon {
-    font-size: 20px;
-  }
-
   .save_button > input {
     background: none;
     border: none;
     padding: 0 0 0 5px;
-  }
-
-  .find {
-    margin-right: 10px;
-  }
-
-  .search-field_hidden {
-    opacity: 0;
-    pointer-events: none;
   }
 
   .error_button {

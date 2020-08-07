@@ -194,6 +194,10 @@
               :indirect-links="indirectLinks"
               @goto="$emit('goto', $event)"
             />
+            <SearchPanel
+              v-if="enableFilter"
+              @update:filterString="filterString = $event"
+            ></SearchPanel>
           </div>
           <div v-else>
             <label class="input_label_single">{{ caption }}</label>
@@ -251,7 +255,7 @@
               />
             </template>
           </InputSlot>
-          <UserView
+          <NestedUserView
             v-else-if="inputType.name === 'userview'"
             ref="control"
             :args="inputType.args"
@@ -259,9 +263,11 @@
             :indirect-links="indirectLinks"
             :scope="scope"
             :level="level + 1"
+            :filterString="filterString"
             @update:actions="actions = $event"
             @goto="$emit('goto', $event)"
-          />
+            @update:enableFilter="enableFilter = $event"
+          ></NestedUserView>
         </b-col>
       </b-row>
     </template>
@@ -272,13 +278,12 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import { valueToText, valueIsNull, equalEntityRef } from "@/values";
-import { AttributesMap, SchemaName, EntityName, FieldName, ValueType, FieldType, IResultColumnInfo, IColumnField, IUserViewRef, IEntityRef } from "@/api";
+import { valueToText, valueIsNull } from "@/values";
+import { AttributesMap, ValueType } from "@/api";
 import { Action } from "@/components/ActionsMenu.vue";
-import { IValueInfo, IUserViewArguments, CombinedUserView, CurrentUserViews, homeSchema, ICombinedValue, currentValue, IEntriesRef } from "@/state/user_view";
-import { IQuery, attrToQuerySelf, IAttrToQueryOpts } from "@/state/query";
+import { IUserViewArguments, homeSchema, ICombinedValue, currentValue, IEntriesRef } from "@/state/user_view";
+import { IQuery, attrToQuerySelf } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
-import { ISelectionRef } from "@/components/BaseUserView";
 import { isMobile, pascalToSnake } from "@/utils";
 
 interface ITextType {
@@ -365,6 +370,15 @@ const inlineTypes = ["codeeditor", "textarea", "reference"];
     InputSlot: () => import("@/components/form/InputSlot.vue"),
     Input: () => import("@/components/form/Input.vue"),
     Textarea: () => import("@/components/form/Textarea.vue"),
+
+    /* FIXME SearchPanel doesn't have to be in FormControl.
+       SearchPanel needs to be moved to NestedUserView when ActionsMenu and
+       other components will free the FormControl.
+       FormControl needs to be cleaned into small components.
+    */    
+
+    SearchPanel: () => import("@/components/SearchPanel.vue"),
+    NestedUserView: () => import("@/components/NestedUserView.vue")
   },
 })
 export default class FormControl extends Vue {
@@ -385,6 +399,7 @@ export default class FormControl extends Vue {
 
   private actions: Action[] = [];
   private codeEditorKey = 0;
+  private filterString = "";
 
   get isInline(): boolean {
     return inlineTypes.includes(this.inputType.name);
