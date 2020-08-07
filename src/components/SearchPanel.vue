@@ -23,15 +23,15 @@
       <b-input-group>
         <b-form-input
           ref="searchInput" 
-          v-model="filterString"
+          v-model="localFilterString"
           class="find_in form-control"
           :placeholder="$t('search_placeholder')"
         />
-        <b-input-group-append v-if="filterString.length > 0">
+        <b-input-group-append v-if="localFilterString.length > 0">
           <span
             id="searchclear"
             class="material-icons clear-search"
-            @click="filterString = ''"
+            @click="localFilterString = ''"
           >backspace</span>
         </b-input-group-append>
       </b-input-group>
@@ -55,25 +55,19 @@
 <script lang="ts">
 
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
-import {namespace} from "vuex-class";
-import {CurrentQuery} from "@/state/query";
-
-const query = namespace("query");
 
 @Component
 export default class SearchPanel extends Vue {
 
-  @Prop({ type: Boolean, default: false }) isGetFromRoute!: boolean;
-  @query.State("current") query!: CurrentQuery;
+  @Prop({ type: String, required: false, default: "" }) filterString!: string;
 
-  private filterString = "";
+  private localFilterString = "";
   private isShownSearchField = false;
 
   private mounted() {
-    if (this.isGetFromRoute) {
-      this.filterString = this.query.getSearch("q", String, "");
-      if(this.filterString.length > 0)
-        this.isShownSearchField = true;
+    if (this.filterString.length > 0){
+      this.localFilterString = this.filterString;
+      this.isShownSearchField = true;
     }
   }
 
@@ -86,9 +80,9 @@ export default class SearchPanel extends Vue {
     }
   }
 
-  @Watch("filterString")
+  @Watch("localFilterString")
   private submitFilter() {
-    this.$emit("update:filterString", this.filterString);
+    this.$emit("update:filterString", this.localFilterString);
   }
 
   @Watch("isShownSearchField") 
@@ -96,13 +90,8 @@ export default class SearchPanel extends Vue {
     if (this.isShownSearchField) {
       (this.$refs.searchInput as HTMLElement).focus();
     } else {
-      this.filterString = "";
+      this.localFilterString = "";
     }
-  }
-
-  @Watch("$route.path")
-  private closeSearchField() {
-    this.isShownSearchField = false;
   }
 
 }
