@@ -395,7 +395,6 @@ export default class FormControl extends Vue {
   private codeEditorKey = 0;
   private filterString = "";
 
-
   get isInline(): boolean {
     return inlineTypes.includes(this.inputType.name);
   }
@@ -470,7 +469,6 @@ export default class FormControl extends Vue {
 
     const rawControlAttr = String(this.attributes["control"]);
     const controlAttr = pascalToSnake(rawControlAttr);
-
     if (rawControlAttr !== controlAttr) {
       console.error(`"control" attribute value ${rawControlAttr} uses pascal case`);
     }

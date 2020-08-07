@@ -37,7 +37,7 @@ import { GridElement, IGridProps } from "@/components/form/types";
 
 @Component({
   name: "FormGridBlock",
-  components: { FormControl }
+  components: { FormControl },
 })
 export default class FormGridBlock extends Vue {
   @Prop({ type: Object }) blockContent!: GridElement;
