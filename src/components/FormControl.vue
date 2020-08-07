@@ -267,8 +267,7 @@
             @update:actions="actions = $event"
             @goto="$emit('goto', $event)"
             @update:enableFilter="enableFilter = $event"
-          >
-          </NestedUserView>
+          ></NestedUserView>
         </b-col>
       </b-row>
     </template>
