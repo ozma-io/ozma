@@ -371,11 +371,11 @@ const inlineTypes = ["codeeditor", "textarea", "reference"];
     Input: () => import("@/components/form/Input.vue"),
     Textarea: () => import("@/components/form/Textarea.vue"),
 
-    /* FIXME  SearchPanel не должен быть в FormControl.
-       SearchPanel нужно перенести в NestedUserView когда ActionsMenu и
-       другие компоненты будут освобождать FormControl.
-       Нужно FormControl очищать в мелкие компоненты.
-    */
+    /* FIXME SearchPanel doesn't have to be in FormControl.
+       SearchPanel needs to be moved to NestedUserView when ActionsMenu and
+       other components will free the FormControl.
+       FormControl needs to be cleaned into small components.
+    */    
 
     SearchPanel: () => import("@/components/SearchPanel.vue"),
     NestedUserView: () => import("@/components/NestedUserView.vue")
