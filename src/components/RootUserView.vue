@@ -58,7 +58,7 @@
         />
         <SearchPanel
           v-if="enableFilter"
-          :isGetFromRoute="true"
+          :filterString="filterString"
           @update:filterString="filterString = $event"
         ></SearchPanel>
       </div>
