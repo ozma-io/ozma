@@ -181,11 +181,11 @@ export default class TableRow extends Vue {
   }
 
   td.required_cell_style {
-    background-color: var(--RequiredBackColor);
+    background-color: var(--WarningColor);
   }
 
   td.error_style {
-    background-color: var(--ErrorBackColor);
+    background-color: var(--ErrorColor);
   }
 
   td.select {
