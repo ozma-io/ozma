@@ -754,13 +754,13 @@ export default class FormControl extends Vue {
   .form-control-panel_select_req,
   .form-control-panel_checkbox_req,
   .form-control-panel_textarea_req {
-    background-color: var(--RequiredBackColor);
+    background-color: var(--WarningColor);
   }
 
   .form-control-panel_select_error,
   .form-control-panel_checkbox_error,
   .form-control-panel_textarea_error {
-    background-color: var(--ErrorBackColor);
+    background-color: var(--ErrorColor);
   }
 
   .form-control-panel_select:focus,
