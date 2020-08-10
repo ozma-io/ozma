@@ -85,8 +85,6 @@ export default class App extends Vue {
       "DangerBackColor": this.settings.getEntry("danger_back_color", String, "#f8d7da"),
       "SuccessBackColor": this.settings.getEntry("success_back_color", String, "#d4edda"),
       "SelectBorderColor": this.settings.getEntry("select_border_color", String, "blue"),
-      "ErrorBackColor": this.settings.getEntry("error_back_color", String, "red"),
-      "RequiredBackColor": this.settings.getEntry("required_back_color", String, "yellow"),
       "ButtonTextColor": this.settings.getEntry("button_text_color", String, "white"),
       "TableTextColor": this.settings.getEntry("table_text_color", String, "#383838"),
       "SaveBackColor": this.settings.getEntry("save_back_color", String, "blue"),
