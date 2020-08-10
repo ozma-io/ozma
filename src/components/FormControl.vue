@@ -199,7 +199,7 @@
               @update:filterString="filterString = $event"
             ></SearchPanel>
           </div>
-          <div v-else>
+          <div v-else class="input_label__container">
             <label class="input_label_single">{{ caption }}</label>
           </div>
         </b-col>
@@ -611,6 +611,12 @@ export default class FormControl extends Vue {
 */
   /deep/ .tabl {
     height: initial !important;
+  }
+
+  .input_label__container {
+    padding: 0;
+    display: flex;
+    height: 2em;
   }
 
   .input_label {

@@ -21,6 +21,7 @@
       :class="[
         'select_container',
         {
+          'select_container_hover': !isOpen,
           'select_container_fixed_height': hasHeight && !isOpen && !single,
           'select_container__error': required && isEmpty,
         },
@@ -72,7 +73,7 @@
           <span
             v-for="(option, index) in valueOptions"
             :key="option.value"
-            class="values_list__value"
+            class="values_list__value single_value"
             :style="listValueStyle"
             @click.stop
           >
@@ -119,6 +120,7 @@
               :key="option.value"
               :class="[
                 'select_container__options_list__option',
+                'single_value',
                 {'select_container__options_list__option_active': selectedOption === index }
               ]"
               @click="addOptionToValue(option, $event)"
@@ -404,6 +406,15 @@ export default class MultiSelect extends Vue {
     display: flex;
     flex-direction: row;
     position: relative;
+    padding: 5px 2px 5px 0;
+    box-sizing: border-box;
+    border-color: var(--MainBorderColor);
+    border: none;
+    transition: border 0.5s linear;
+  }
+
+  .select_container_hover:hover {
+    border-bottom: 1px solid var(--MainBorderColor);
   }
 
   .select_container__error {
@@ -434,7 +445,7 @@ export default class MultiSelect extends Vue {
 
   .select_container__input {
     border: 0;
-    padding: 5px;
+    padding: 0 0 0 5px;
     box-sizing: border-box;
     color: var(--MainTextColor);
     background-color: var(--MainBackgroundColor);
@@ -468,7 +479,7 @@ export default class MultiSelect extends Vue {
   }
 
   .select_container__options_list {
-    padding: 0;
+    padding: 0 0 5px 0;
     margin: 0;
     box-sizing: border-box;
     max-height: 250px;
@@ -481,7 +492,10 @@ export default class MultiSelect extends Vue {
 
   .select_container__options_list > li.select_container__options_list__option {
     color: var(--MainTextColor);
-    padding: 10px;
+    padding-left: 10px;
+    margin-right: 10px;
+    margin-top: 5px;
+    padding-right: 10px;
     box-sizing: border-box;
     cursor: pointer;
   }
@@ -536,6 +550,7 @@ export default class MultiSelect extends Vue {
   .single_value_button {
     cursor: pointer;
     display: flex;
+    width: 100%;
   }
 
   .values_list__value > input.values_list__value__close {
