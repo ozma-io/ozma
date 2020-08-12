@@ -232,7 +232,6 @@ export default class TableRow extends Vue {
       z-index: 20;
       background-color: inherit;
       box-shadow: 2px 0 0 var(--MainBorderColor);
-      border-left: 0;
     }
 
     .table-tr.selected .fixed-column {
