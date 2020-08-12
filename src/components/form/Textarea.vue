@@ -17,8 +17,6 @@
       :value="value"
       :readonly="disabled"
       rows="1"
-      :min-height="144"
-      :max-height="144"
       :class="['textarea_field', {
         'textarea_field__disabled': disabled,
         'textarea-field_cell-edit': isCellEdit,
@@ -206,11 +204,11 @@ export default class Textarea extends Vue {
     flex: 2;
     width: 100%;
     resize: none;
-    height: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    max-height: 165px;
+    overflow: auto !important;
     white-space: pre-wrap;
-    border: 1px solid transparent;
+    border: none;
+    display: block;
     color: var(--MainTextColor);
     transition: all 300ms ease-in-out, height 300ms ease-in-out;
   }
@@ -229,7 +227,7 @@ export default class Textarea extends Vue {
   }
 
   .textarea_field__desktop {
-    padding: 5px;
+    padding: 3px;
   }
 
   .textarea_field__desktop:focus {

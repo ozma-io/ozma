@@ -117,6 +117,7 @@ export default class Input extends Vue {
 
   @Watch("value")
   private onValueUpdate(value: string) {
+    this.setInputHeight();
     if (!this.isMobile && !this.isCellEdit) {
       this.updateWidth(value);
     }
@@ -175,11 +176,11 @@ export default class Input extends Vue {
 
   private updateInput(value: MouseEvent | any) {
     this.$emit("input", value.target.value);
+    this.setInputHeight();
   }
 
   private updateInputCellEdit(value: string) {
     this.$emit("input", value);
-    this.setInputHeight();
   }
 
   private setInputHeight() {
@@ -208,13 +209,14 @@ export default class Input extends Vue {
 
 <style lang="scss" scoped>
   .input-textarea {
-    padding: 0;
+    padding: 3px;
     border: none;
     resize: none;
     width: 100%;
     display: block;
-    overflow: hidden;
-    height: 24px;
+    overflow: auto !important;
+    max-height: 165px;
+    background: white;
   }
 
   .input-textarea-fake {

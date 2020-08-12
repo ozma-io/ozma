@@ -2,9 +2,10 @@
   <div
     :class="['table-cell-edit', {'table-cell-edit_last-fixed': isLastFixedCell}]"
     :style="{
-      top: `${coords.y-1}px`,
-      left: `${coords.x-1}px`,
+      top: `${coords.y}px`,
+      left: `${coords.x}px`,
       height: height ? `${height}px` : 'auto',
+      minHeight: minHeight ? `${minHeight}px` : 'auto',
       width: width ? `${width}px` : '200px'
     }"
   >
@@ -21,6 +22,7 @@ export interface ICellCoords {
 export interface IEditParams {
   width: number;
   height: number;
+  minHeight: number;
 }
 
 import {Component, Prop, Vue} from "vue-property-decorator";
@@ -30,6 +32,7 @@ export default class TableCellEdit extends Vue {
   @Prop({default: () => ({x: 0, y: 0}) }) coords!: ICellCoords;
   @Prop() width!: number;
   @Prop() height!: number;
+  @Prop() minHeight!: number;
   @Prop({type: Boolean, default: false}) isLastFixedCell!: boolean;
 }
 </script>
@@ -39,7 +42,6 @@ export default class TableCellEdit extends Vue {
     box-shadow: 0 0 10px 5px var(--MainBorderColor);
     background: #fff;
     box-sizing: border-box;
-    padding: 5px;
     position: fixed;
     top: 0;
     z-index: 9999;
