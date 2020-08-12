@@ -1361,6 +1361,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   .custom-table {
+    border-collapse: separate !important;
+    border-spacing: 0;
     table-layout: fixed;
     width: 0;
     border: 0;
