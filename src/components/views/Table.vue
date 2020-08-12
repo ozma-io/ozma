@@ -26,6 +26,7 @@
       v-if="editingValue"
       v-click-outside="clickOutsideEdit"
       :width="editParams.width"
+      :min-height="editParams.minHeight"
       :is-last-fixed-cell="isSelectedLastFixedCell"
       :coords="editCoords"
     >
@@ -760,9 +761,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     x: 0,
     y: 0,
   };
-  private editParams: IEditParams = {
+  private editParams: IEditParams = {    
     height: 0,
     width: 0,
+    minHeight: 0
   };
 
   private cellEditHeight = 0;
@@ -963,19 +965,21 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     this.cellEditHeight = value;
   }
 
-  /**
-   * Fix height of edit-component, it must be dynamic - not static value (154)
-   *
-   */
-
   private setCoordsForEditCell(event: MouseEvent | any) {
-    const windowHeight: number = window.innerHeight;
     this.isSelectedLastFixedCell = event.target.classList.value.includes('next-after-last-fixed');
-    this.editCoords.x = event.clientX - event.offsetX;
-    if (event.clientY - 54 >= Math.round(windowHeight/2)) {
-      this.editCoords.y = (event.clientY - 154 + event.target.offsetHeight) - event.offsetY;
+
+    const bodyRect = document.body.getBoundingClientRect();
+    const rect = event.target.getBoundingClientRect();
+
+    this.editCoords.x = rect.x;
+
+    // If edit window lower than screen, raise the window up. 
+    // +54px for bottom panel.
+    if (0 > bodyRect.bottom - rect.bottom - 54) {
+      this.editCoords.y = bodyRect.bottom - this.editParams.height - 54;
+      this.editParams.height += 54; 
     } else {
-      this.editCoords.y = event.clientY - event.offsetY;
+      this.editCoords.y = rect.y;
     }
   }
 
@@ -1002,6 +1006,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     this.setCoordsForEditCell(event);
     this.editParams.width = event.target.offsetWidth;
     this.editParams.height = event.target.offsetHeight;
+    this.editParams.minHeight = event.target.offsetHeight;
+
     this.selectCell(ref);
     if (this.lastSelectedValue &&
                 !deepEquals(this.lastSelectedValue, ref) &&
