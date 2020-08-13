@@ -505,3 +505,39 @@ export const saveToFile = (name: string, mime: string, data: string) => {
   element.click();
   document.body.removeChild(element);
 };
+
+const makeWordsRegex = () => {
+  // Match words that doesn't start with quotes
+  const wordRegex = `([^"'«„”\\s][^\\s]*)`;
+  const quotes = [
+    [`"`, `"`],
+    [`'`, `'`],
+    [`«`, `»`],
+    [`„`, `“`],
+    [`”`, `”`],
+  ];
+    // Match fully-quoted words: e.g. `"foo bar"` will match but `"foo"b` or `"foo ` will not
+  const quoteRegexes = quotes.map(([start, end]) => `${start}([^${end}]+)${end}(?:\\s|$)`);
+  // Match any word
+  const fallbackRegex = `([^\\s]+)`;
+  const regexes = [wordRegex].concat(quoteRegexes).concat([fallbackRegex]);
+  const regexesStr = regexes.map(reg => `(?:${reg})`).join("|");
+  const fullRegex = `^\\s*(?:${regexesStr})`;
+  return fullRegex;
+};
+const wordsRegexString = makeWordsRegex();
+
+export const convertToWords = (str: string) => {
+  const regex = new RegExp(wordsRegexString, "g");
+  const words: string[] = [];
+  while (true) {
+    const ret = regex.exec(str);
+    if (ret === null) {
+      break;
+    } else {
+      const word = ret.slice(1).find(x => x !== undefined) as string;
+      words.push(word.toLowerCase());
+    }
+  }
+  return words;
+};

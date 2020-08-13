@@ -93,6 +93,15 @@ export default class MenuEntry extends Vue {
     margin-top: 10px;
   }
 
+  .menu_category_block h1,
+  .menu_category_block h2,
+  .menu_category_block h3,
+  .menu_category_block h4,
+  .menu_category_block h5,
+  .menu_category_block h6 {
+    font-weight: 600;
+  }
+
   .menu_list {
     list-style: none;
     padding-left: 0;
