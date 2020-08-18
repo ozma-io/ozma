@@ -164,7 +164,10 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
         opts.homeSchema = home;
       }
       extraActions.forEach((action: any) => {
-        if (action.name && action.call_process) {
+        if (typeof action.name !== "string") {
+          return;
+        }
+        if (action.call_process && typeof action.call_process === "object" && action.call_process !== null) {
           actions.push({ name: String(action.name), callback: () => this.callProcess(action.call_process) });
           return;
         }
