@@ -146,6 +146,11 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
     });
   }
 
+  private callProcess(querySelf){
+    console.log("callBuisnessProcess");
+    console.log(querySelf);
+  }
+
   get actions() {
     const actions: Action[] = [
       //{name: this.$t("export_to_csv").toString(), callback: () => this.exportToCsv()},
@@ -159,8 +164,12 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
         opts.homeSchema = home;
       }
       extraActions.forEach((action: any) => {
+        if (action.name && action.call_process) {
+          actions.push({ name: String(action.name), callback: () => this.callProcess(action.call_process) });
+          return;
+        }
         const querySelf = attrToQuery(action, opts);
-        if (action.name && querySelf) {
+        if (action.name && action.ref && querySelf) {
           actions.push({
             name: String(action.name),
             query: querySelf,
