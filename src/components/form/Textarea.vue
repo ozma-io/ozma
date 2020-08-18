@@ -32,6 +32,8 @@
       :class="['textarea_field', {
         'textarea_field__disabled': disabled,
         'textarea_field__desktop': !isMobile,
+        'textarea_field__required': required && isEmpty,
+        'textarea_field__error': error,
       }]"
       :type="type"
       :style="style"
@@ -50,12 +52,14 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 
 import { isMobile } from "@/utils";
+import { valueIsNull } from "@/values";
 
 @Component
 export default class Textarea extends Vue {
   @Prop({ type: String }) label!: string;
   @Prop({ type: String }) value!: string;
   @Prop({ type: String }) error!: string;
+  @Prop({ type: Boolean }) required!: boolean;
   @Prop({ type: String }) warning!: string;
   @Prop({ type: Number }) height!: number;
   @Prop({ type: Boolean }) disabled!: boolean;
@@ -87,6 +91,10 @@ export default class Textarea extends Vue {
         }
       });
     }
+  }
+
+  private get isEmpty(): boolean {
+    return valueIsNull(this.value);
   }
 
   private get isMobile(): boolean {

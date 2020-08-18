@@ -23,7 +23,7 @@
         {
           'select_container_hover': !isOpen,
           'select_container_fixed_height': hasHeight && !isOpen && !single,
-          'select_container__error': required && isEmpty,
+          'select_container__required': required && isEmpty,
         },
       ]"
     >
@@ -419,6 +419,10 @@ export default class MultiSelect extends Vue {
 
   .select_container__error {
     border-bottom: 1px solid var(--FailColor);
+  }
+
+  .select_container__required {
+    border-bottom: 1px solid var(--WarningColor);
   }
 
   .select_container_fixed_height {
