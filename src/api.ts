@@ -241,7 +241,7 @@ export interface ITransaction {
 
 export interface IInsertEntityResult {
   type: "insert";
-  id: number;
+  id: number | null;
 }
 
 export interface IUpdateEntityResult {

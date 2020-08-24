@@ -391,7 +391,7 @@ export default class UserView extends Vue {
           return;
         }
         const id = (createOp as ICombinedInsertEntityResult).id;
-        if (this.selectionMode) {
+        if (id != null && this.selectionMode) {
           const ref: ISelectionRef = {
             entity: currentUv.info.mainEntity!,
             id,
