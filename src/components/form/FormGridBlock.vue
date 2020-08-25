@@ -47,7 +47,7 @@ export default class FormGridBlock extends Vue {
 
 <style scoped>
   .form_grid_block__column {
-    margin-bottom: 15px;
+    margin-bottom: 5px;
   }
 
   .form_grid_block__sub_column {
