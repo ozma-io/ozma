@@ -232,6 +232,7 @@ export const newEmptyRow = (store: Store<any>, uv: CombinedUserView, defaultRawV
 
 export const currentValue = (value: ICombinedValue) => "rawValue" in value ? value.rawValue : value.value;
 
+// Event handler which is notified about user view changes.
 export interface IUserViewEventHandler {
   updateValue: (rowIndex: number, row: ICombinedRow, columnIndex: number, value: ICombinedValue) => void;
   updateAddedValue: (rowId: AddedRowId, row: IAddedRow, columnIndex: number, value: ICombinedValue) => void;
@@ -268,9 +269,10 @@ export class CombinedUserView {
   info: IResultViewInfo;
   attributes: Record<AttributeName, any>;
   columnAttributes: Record<AttributeName, any>[];
+  rows: ICombinedRow[] | null;
+  // Rows added by user, not yet commited to the database.
   newRows: Record<AddedRowId, IAddedRow>;
   newRowsPositions: AddedRowId[];
-  rows: ICombinedRow[] | null;
   updateMapping: IUpdateMapping;
   mainColumnMapping: IMainColumnMapping;
   mainRowMapping: IMainRowMapping;
