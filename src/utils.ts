@@ -3,6 +3,7 @@ import Vue, { RenderContext } from "vue";
 import { RSA_NO_PADDING } from "constants";
 import { isObject } from "util";
 import * as Ramda from "ramda";
+import { CombinedUserView } from "@/state/user_view";
 
 export type Result<A> = A | Error;
 
@@ -540,4 +541,22 @@ export const convertToWords = (str: string) => {
     }
   }
   return words;
+};
+
+export const userViewType = (uv: CombinedUserView) => {
+  if (!("type" in uv.attributes)) {
+    return "Table";
+  }
+
+  const rawTypeAttr = String(uv.attributes["type"]);
+  const typeAttr = pascalToSnake(rawTypeAttr);
+  if (typeAttr !== rawTypeAttr) {
+    console.error(`User view type attribute ${rawTypeAttr} uses pascal case`);
+  }
+
+  if (typeAttr in types) {
+    return snakeToPascal(typeAttr);
+  } else {
+    return "Table";
+  }
 };

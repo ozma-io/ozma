@@ -2,11 +2,15 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { RowId, IEntityRef, IFieldRef } from "@/api";
-import { CombinedUserView, currentValue } from "@/state/user_view";
+import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, homeSchema, valueToPunnedText, IUserViewArguments, IUserViewEventHandler } from "@/state/user_view";
 import { ErrorKey } from "@/state/errors";
 import { ScopeName, UserViewKey, AddedRowId, CombinedTransactionResult, IAddedResult } from "@/state/staging_changes";
-import { LocalUserView, RowRef, ValueRef } from "@/local_user_view";
+import { LocalUserView, RowRef, ValueRef, SimpleLocalUserView, ILocalRowInfo } from "@/local_user_view";
 import { equalEntityRef } from "@/values";
+import { IUserViewConstructor } from "@/components";
+import { userViewType } from "@/utils";
+import { IHandlerProvider } from "@/local_user_view";
+import { UserView } from "@/components";
 
 export interface ISelectionRef {
   entity: IEntityRef;
@@ -15,9 +19,69 @@ export interface ISelectionRef {
 
 const staging = namespace("staging");
 const errors = namespace("errors");
+const userView = namespace("userView");
 
 const errorKey = "base_user_view";
 
+// Interface for cell value save to storage vuex
+interface IBaseValueExtra {
+  valueText: string;
+  selected: boolean;
+}
+
+// Interface for row save to storage vuex
+interface IBaseRowExtra {
+  selected: boolean;
+  selectionEntry?: ISelectionRef;
+}
+
+// Interface for user_view save to storage vuex
+interface IBaseUserViewExtra {
+  homeSchema: string | null;
+}
+
+type IBaseLocalRowInfo = ILocalRowInfo<IBaseRowExtra>;
+
+// Class for BaseUserView for save values to vuex
+class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBaseRowExtra, IBaseUserViewExtra> {
+
+  createCommonLocalValue(row: IRowCommon, localRow: IBaseLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: IBaseValueExtra | null): IBaseValueExtra {
+    const columnInfo = this.uv.info.columns[columnIndex];
+    const columnAttrs = this.uv.columnAttributes[columnIndex];
+
+    const valueText = valueToPunnedText(columnInfo.valueType, value);
+
+    const selected = oldLocal !== null ? oldLocal.selected;
+
+    const extra: IBaseValueExtra = {
+      selected,
+      valueText,
+    };
+
+    return extra;
+  }
+
+  createCommonLocalRow(row: IRowCommon): IBaseRowExtra {
+    
+    const extra: IBaseRowExtra = {
+      selected: false
+    };
+
+    return extra;
+  }
+
+  createLocalUserView(){
+    const extra = {
+      homeSchema: homeSchema(this.uv.args),
+    };
+    return extra;
+  }
+
+}
+
+// @UserView({
+//   localConstructor: LocalBaseUserView,
+// })
 @Component
 export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, ValueT, RowT, ViewT> extends Vue {
   @staging.State("currentSubmit") currentSubmit!: Promise<CombinedTransactionResult[]> | null;
@@ -28,6 +92,8 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
   @staging.Action("updateField") updateField!: (args: { scope: ScopeName; fieldRef: IFieldRef; id: RowId; value: any }) => Promise<void>;
   @errors.Mutation("setError") setError!: (args: { key: ErrorKey; error: string }) => void;
   @errors.Mutation("resetErrors") resetErrors!: (key: ErrorKey) => void;
+  @userView.Mutation("registerHandler") registerHandler!: (args: { args: IUserViewArguments; handler: IUserViewEventHandler }) => void;
+  @userView.Mutation("unregisterHandler") unregisterHandler!: (args: { args: IUserViewArguments; handler: IUserViewEventHandler }) => void;
 
   @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView;
   @Prop({ type: Object, required: true }) local!: T;
@@ -38,6 +104,24 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
   @Prop({ type: String, required: true }) scope!: ScopeName;
   @Prop({ type: Number, required: true }) level!: number;
   @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, any>;
+
+  // public baseLocal: LocalBaseUserView | null = null;
+
+  private async created(){
+    const newType = userViewType(this.uv);
+    const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType}.vue`)).default;
+
+    let baseLocal: IHandlerProvider | null;
+    if(component.localConstructor !== undefined){
+      baseLocal = component.localConstructor(this.$store, this.uv, this.defaultValues, this.local);
+      // baseLocal = new LocalBaseUserView(this.$store, this.uv, this.defaultValues, this.local instanceof IHandlerProvider ? this.local : null)
+      this.registerHandler({ args: this.uv.args, handler: baseLocal.handler });  
+    }else{
+      baseLocal = null;
+    }
+    
+    // this.baseLocal = baseLocal;
+  }
 
   get addedLocked() {
     return this.currentSubmit !== null;

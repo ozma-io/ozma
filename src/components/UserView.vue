@@ -81,7 +81,7 @@ import { namespace } from "vuex-class";
 import { Store } from "vuex";
 import ProgressBar from "@/components/ProgressBar.vue"
 
-import { RecordSet, ReferenceName, deepEquals, snakeToPascal, pascalToSnake } from "@/utils";
+import { RecordSet, ReferenceName, deepEquals, snakeToPascal, pascalToSnake, userViewType } from "@/utils";
 import { funappSchema } from "@/api";
 import { equalEntityRef } from "@/values";
 import { CombinedUserView, UserViewError, IUserViewArguments, IUserViewEventHandler, CurrentUserViews, IUserViewState, homeSchema } from "@/state/user_view";
@@ -110,24 +110,6 @@ const components = Object.fromEntries(Object.keys(types).map(name => {
 const userView = namespace("userView");
 const staging = namespace("staging");
 const query = namespace("query");
-
-const userViewType = (uv: CombinedUserView) => {
-  if (!("type" in uv.attributes)) {
-    return "Table";
-  }
-
-  const rawTypeAttr = String(uv.attributes["type"]);
-  const typeAttr = pascalToSnake(rawTypeAttr);
-  if (typeAttr !== rawTypeAttr) {
-    console.error(`User view type attribute ${rawTypeAttr} uses pascal case`);
-  }
-
-  if (typeAttr in types) {
-    return snakeToPascal(typeAttr);
-  } else {
-    return "Table";
-  }
-};
 
 const maxLevel = 4;
 
