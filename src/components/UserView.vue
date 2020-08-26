@@ -131,6 +131,20 @@ const userViewType = (uv: CombinedUserView) => {
 
 const maxLevel = 4;
 
+/* This is enclosing component, which runs Vuex actions to load actual user view data, manages lifetime of
+ * user views themselves etc. For instance, it ensures smooth reloading of components when user view data is
+ * reloaded.
+ *
+ * Current user view component lifetime can be summarized as:
+ *   1. UserView component is created, `updateUserView()` is called.
+ *   2. `updateUserView()` ensures that the data is loaded, then loads needed user view component based on `type` uv attribute.
+ *   3. If local user view data (`LocalUserView` objects) is used for this user view type, we construct it and subscribe
+ *      for data changes.
+ *   4. We swap old user view and local user view with the old one.
+ *   5. When user view is deconstructed, we unsubscribe LocalUserView. We may also keep it and pass along when current
+ *      user view is reloaded. In this case, old data is used to restore as much old state as possible (for example, keep
+ *      selected table rows selected when the table is reloaded, even when new rows were added).
+ */
 @Component({components: {
   UserViewCommon,
   ProgressBar,
@@ -247,7 +261,7 @@ export default class UserView extends Vue {
     return this.newUv === null || this.currentUv === null || !deepEquals(this.newUv.args, this.currentUv.args);
   }
 
-  // Should clear all user view-specific values.
+  // Load new user view and replace old data. We keep old user view loaded as long as possible, to avoid "loading" placeholders.
   @Watch("newUv", { immediate: true })
   private async updateUserView() {
     const newUv = this.newUv;
