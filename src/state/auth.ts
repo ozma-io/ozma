@@ -368,7 +368,7 @@ export const authModule: Module<IAuthState, {}> = {
     },
     callProtectedApi: {
       root: true,
-      handler: async ({ state, commit, dispatch }, { func, args }: { func: ((_1: string | null, ..._2: any[]) => Promise<any>); args?: any[] }): Promise<any> => {
+      handler: async ({ state, dispatch }, { func, args }: { func: ((_1: string | null, ..._2: any[]) => Promise<any>); args?: any[] }): Promise<any> => {
         if (state.current === null) {
           if (state.pending !== null) {
             await state.pending;
@@ -394,7 +394,7 @@ export const authModule: Module<IAuthState, {}> = {
         }
       },
     },
-    logout: async ({ state, dispatch, commit }) => {
+    logout: async ({ state, commit }) => {
       if (state.current === null) {
         throw new Error("Cannot logout without an existing token");
       }

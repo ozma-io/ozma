@@ -3,28 +3,17 @@ import { Store, Dispatch, Module, ActionContext } from "vuex";
 import moment from "moment";
 
 import { IRef, FetchError, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, pascalToSnake } from "@/utils";
-import { IViewInfoResult, IViewExprResult, default as Api } from "@/api";
 import {
-  IColumnField, IUserViewRef, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
-  SchemaName, EntityName, RowId, FieldName, AttributeName,
-  ValueType, FieldType, AttributesMap, IEntity,
+  IColumnField, UserViewSource, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
+  SchemaName, EntityName, RowId, FieldName, AttributeName, IViewInfoResult, IViewExprResult,
+  ValueType, FieldType, AttributesMap, IEntity, default as Api
 } from "@/api";
 import { IUpdatedValue, valueToText, equalEntityRef, valueFromRaw, valueIsNull } from "@/values";
 import { CurrentChanges, UpdatedValues, IEntityChanges, IAddedEntry, AddedRowId, UserViewKey } from "@/state/staging_changes";
 import { CurrentQuery } from "@/state/query";
 
-export interface IAnonymousUserView {
-  type: "anonymous";
-  query: string;
-}
-
-export interface INamedUserView {
-  type: "named";
-  ref: IUserViewRef;
-}
-
 export interface IUserViewArguments {
-  source: IAnonymousUserView | INamedUserView;
+  source: UserViewSource;
   args: Record<string, any> | null;
 }
 
@@ -640,7 +629,7 @@ const getUserView = async (context: ActionContext<IUserViewState, {}>, args: IUs
     if (args.source.type === "named") {
       if (args.args === null) {
         const res: IViewInfoResult = await dispatch("callProtectedApi", {
-          func: Api.getNamedUserViewInfo,
+          func: Api.getNamedUserViewInfo.bind(Api),
           args: [args.source.ref],
         }, { root: true });
         await momentLocale;
@@ -654,7 +643,7 @@ const getUserView = async (context: ActionContext<IUserViewState, {}>, args: IUs
         });
       } else {
         const res: IViewExprResult = await dispatch("callProtectedApi", {
-          func: Api.getNamedUserView,
+          func: Api.getNamedUserView.bind(Api),
           args: [args.source.ref, args.args],
         }, { root: true });
         await momentLocale;
@@ -672,7 +661,7 @@ const getUserView = async (context: ActionContext<IUserViewState, {}>, args: IUs
         throw new Error("Getting information about anonymous views is not supported");
       } else {
         const res: IViewExprResult = await dispatch("callProtectedApi", {
-          func: Api.getAnonymousUserView,
+          func: Api.getAnonymousUserView.bind(Api),
           args: [args.source.query, args.args],
         }, { root: true });
         await momentLocale;
@@ -1215,7 +1204,7 @@ const userViewModule: Module<IUserViewState, {}> = {
           const entityPromise = dispatch("getEntity", ref.entity);
           const query = `SELECT id, __main AS name FROM "${ref.entity.schema}"."${ref.entity.name}" ORDER BY __main`;
           const resPromise = dispatch("callProtectedApi", {
-            func: Api.getAnonymousUserView,
+            func: Api.getAnonymousUserView.bind(Api),
             args: [query, {}],
           }, { root: true });
           await entityPromise;
@@ -1264,7 +1253,7 @@ const userViewModule: Module<IUserViewState, {}> = {
       pending.ref = (async () => {
         try {
           const entity: IEntity = await dispatch("callProtectedApi", {
-            func: Api.getEntityInfo,
+            func: Api.getEntityInfo.bind(Api),
             args: [ref],
           }, { root: true });
           const currPending = state.entities.entities.get(ref);
