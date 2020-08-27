@@ -68,7 +68,7 @@ import Textarea from "@/components/form/Textarea.vue";
 export default class Input extends Vue {
   @Prop({ type: String }) label!: string;
   @Prop() value!: any;
-  @Prop({ type: String }) error!: string;
+  @Prop({ type: Boolean }) error!: boolean;
   @Prop({ type: Boolean }) required!: boolean;
   @Prop({ type: String }) warning!: string;
   @Prop({ type: Number }) height!: number;
@@ -192,8 +192,10 @@ export default class Input extends Vue {
   }
 
   private setInputHeight() {
-    const controlTextareaElement = this.$refs.controlTextarea as any;
-    this.$emit("set-input-height", controlTextareaElement.$el.clientHeight);
+    if (this.$refs.controlTextarea) {
+      const controlTextareaElement = this.$refs.controlTextarea as any;
+      this.$emit("set-input-height", controlTextareaElement.$el.clientHeight);
+    }
   }
 
   private updateWidth(text: string) {
