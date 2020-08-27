@@ -2,11 +2,11 @@ import Vue from "vue";
 import { Store, Dispatch, Module, ActionContext } from "vuex";
 import moment from "moment";
 
-import { IRef, FetchError, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, pascalToSnake } from "@/utils";
+import { IRef, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, pascalToSnake } from "@/utils";
 import {
   IColumnField, UserViewSource, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
   SchemaName, EntityName, RowId, FieldName, AttributeName, IViewInfoResult, IViewExprResult,
-  ValueType, FieldType, AttributesMap, IEntity, default as Api
+  ValueType, FieldType, AttributesMap, IEntity, FunDBError, UserViewErrorType, default as Api
 } from "@/api";
 import { IUpdatedValue, valueToText, equalEntityRef, valueFromRaw, valueIsNull } from "@/values";
 import { CurrentChanges, UpdatedValues, IEntityChanges, IAddedEntry, AddedRowId, UserViewKey } from "@/state/staging_changes";
@@ -522,8 +522,6 @@ export class CombinedUserView {
   }
 }
 
-export type UserViewErrorType = "forbidden" | "not_found" | "bad_request" | "unknown";
-
 export class UserViewError extends Error {
   type: UserViewErrorType;
   description: string;
@@ -680,16 +678,8 @@ const getUserView = async (context: ActionContext<IUserViewState, {}>, args: IUs
 
     return current;
   } catch (e) {
-    if (e instanceof FetchError) {
-      if (e.response.status === 403) {
-        return new UserViewError("forbidden", "", args);
-      } else if (e.response.status === 404) {
-        return new UserViewError("not_found", "", args);
-      } else if (e.response.status === 400) {
-        return new UserViewError("bad_request", e.message, args);
-      } else {
-        return new UserViewError("unknown", e.message, args);
-      }
+    if (e instanceof FunDBError) {
+      return new UserViewError(e.body.error as UserViewErrorType, e.message, args);
     }
 
     throw e;

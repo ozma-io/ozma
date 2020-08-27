@@ -188,7 +188,7 @@ export default class UserView extends Vue {
 
   get newUv() {
     if (this.level >= maxLevel) {
-      return new UserViewError("bad_request", "Too many levels of nested user views", this.args);
+      return new UserViewError("execution", "Too many levels of nested user views", this.args);
     } else {
       const ret = this.currentUvs.getUserView(this.args);
       return ret === undefined ? null : ret;
@@ -245,11 +245,11 @@ export default class UserView extends Vue {
     if (!(this.currentUv instanceof UserViewError)) {
       return null;
     } else {
-      if (this.currentUv.type === "forbidden") {
+      if (this.currentUv.type === "access_denied") {
         return this.$t("forbidden");
       } else if (this.currentUv.type === "not_found") {
         return this.$t("not_found");
-      } else if (this.currentUv.type === "bad_request") {
+      } else if (this.currentUv.type === "arguments") {
         return this.$t("bad_request", { msg: this.currentUv.message });
       } else {
         return this.$t("unknown_error", { msg: this.currentUv.message });
@@ -271,7 +271,7 @@ export default class UserView extends Vue {
 
     if (newUv instanceof CombinedUserView) {
       if (newUv.rows === null && newUv.info.mainEntity === null) {
-        this.setUvError(new UserViewError("bad_request", "Creation mode requires main entity to be specified", newUv.args));
+        this.setUvError(new UserViewError("execution", "Creation mode requires main entity to be specified", newUv.args));
         return;
       }
       const newType = userViewType(newUv);

@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import jwtDecode from "jwt-decode";
 
 import { IRef } from "@/utils";
-import { disableAuth, authClientId, authUrl, default as Api } from "@/api";
+import { FunDBError, disableAuth, authClientId, authUrl, default as Api } from "@/api";
 import * as Utils from "@/utils";
 import { router, getQueryValue } from "@/modules";
 
@@ -380,8 +380,8 @@ export const authModule: Module<IAuthState, {}> = {
           const token = state.current === null ? null : state.current.token;
           return await func(token, ...argsArray);
         } catch (e) {
-          if (e instanceof Utils.FetchError) {
-            if (e.response.status === 401) {
+          if (e instanceof FunDBError) {
+            if (e.body.error === "unauthorized") {
               if (state.current === null) {
                 await dispatch("login", undefined);
               } else {
