@@ -2,15 +2,11 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { RowId, IEntityRef, IFieldRef } from "@/api";
-import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, homeSchema, valueToPunnedText, IUserViewArguments, IUserViewEventHandler } from "@/state/user_view";
+import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, homeSchema, valueToPunnedText } from "@/state/user_view";
 import { ErrorKey } from "@/state/errors";
 import { ScopeName, UserViewKey, AddedRowId, CombinedTransactionResult, IAddedResult } from "@/state/staging_changes";
 import { LocalUserView, RowRef, ValueRef, SimpleLocalUserView, ILocalRowInfo } from "@/local_user_view";
 import { equalEntityRef } from "@/values";
-import { IUserViewConstructor } from "@/components";
-import { userViewType } from "@/utils";
-import { IHandlerProvider } from "@/local_user_view";
-import { UserView } from "@/components";
 
 export interface ISelectionRef {
   entity: IEntityRef;
@@ -79,9 +75,6 @@ class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBaseRowExt
 
 }
 
-// @UserView({
-//   localConstructor: LocalBaseUserView,
-// })
 @Component
 export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, ValueT, RowT, ViewT> extends Vue {
   @staging.State("currentSubmit") currentSubmit!: Promise<CombinedTransactionResult[]> | null;
@@ -92,11 +85,10 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
   @staging.Action("updateField") updateField!: (args: { scope: ScopeName; fieldRef: IFieldRef; id: RowId; value: any }) => Promise<void>;
   @errors.Mutation("setError") setError!: (args: { key: ErrorKey; error: string }) => void;
   @errors.Mutation("resetErrors") resetErrors!: (key: ErrorKey) => void;
-  @userView.Mutation("registerHandler") registerHandler!: (args: { args: IUserViewArguments; handler: IUserViewEventHandler }) => void;
-  @userView.Mutation("unregisterHandler") unregisterHandler!: (args: { args: IUserViewArguments; handler: IUserViewEventHandler }) => void;
 
   @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView;
   @Prop({ type: Object, required: true }) local!: T;
+  @Prop({ type: Object, required: true }) baseLocal!: LocalBaseUserView;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
   @Prop({ type: Array, required: true }) filter!: string[];
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
@@ -104,24 +96,6 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
   @Prop({ type: String, required: true }) scope!: ScopeName;
   @Prop({ type: Number, required: true }) level!: number;
   @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, any>;
-
-  // public baseLocal: LocalBaseUserView | null = null;
-
-  private async created(){
-    const newType = userViewType(this.uv);
-    const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType}.vue`)).default;
-
-    let baseLocal: IHandlerProvider | null;
-    if(component.localConstructor !== undefined){
-      baseLocal = component.localConstructor(this.$store, this.uv, this.defaultValues, this.local);
-      // baseLocal = new LocalBaseUserView(this.$store, this.uv, this.defaultValues, this.local instanceof IHandlerProvider ? this.local : null)
-      this.registerHandler({ args: this.uv.args, handler: baseLocal.handler });  
-    }else{
-      baseLocal = null;
-    }
-    
-    // this.baseLocal = baseLocal;
-  }
 
   get addedLocked() {
     return this.currentSubmit !== null;

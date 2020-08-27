@@ -82,7 +82,7 @@ import { namespace } from "vuex-class";
 import { Store } from "vuex";
 import ProgressBar from "@/components/ProgressBar.vue"
 
-import { RecordSet, ReferenceName, deepEquals, snakeToPascal, pascalToSnake} from "@/utils";
+import { RecordSet, ReferenceName, deepEquals, snakeToPascal, pascalToSnake } from "@/utils";
 import { funappSchema } from "@/api";
 import { equalEntityRef } from "@/values";
 import { CombinedUserView, UserViewError, IUserViewArguments, IUserViewEventHandler, CurrentUserViews, IUserViewState, homeSchema } from "@/state/user_view";
@@ -129,7 +129,6 @@ const userViewType = (uv: CombinedUserView) => {
     return "Table";
   }
 };
-
 
 const maxLevel = 4;
 
