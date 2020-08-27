@@ -597,6 +597,11 @@ export default class FormControl extends Vue {
     }
   }
 
+  @Watch("inputType", { deep: true })
+  private watchInputType() {
+    this.actions = [];
+  }
+
   private mounted() {
     this.forceRerender();
     if (this.autofocus) {
