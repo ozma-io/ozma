@@ -2,11 +2,12 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { RowId, IEntityRef, IFieldRef } from "@/api";
-import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, homeSchema, valueToPunnedText } from "@/state/user_view";
+import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, homeSchema, valueToPunnedText, ICombinedRow } from "@/state/user_view";
 import { ErrorKey } from "@/state/errors";
 import { ScopeName, UserViewKey, AddedRowId, CombinedTransactionResult, IAddedResult } from "@/state/staging_changes";
 import { LocalUserView, RowRef, ValueRef, SimpleLocalUserView, ILocalRowInfo } from "@/local_user_view";
 import { equalEntityRef } from "@/values";
+import { ObjectSet } from "@/utils";
 
 export interface ISelectionRef {
   entity: IEntityRef;
@@ -33,13 +34,14 @@ interface IBaseRowExtra {
 
 // Interface for user_view save to storage vuex
 interface IBaseUserViewExtra {
-  homeSchema: string | null;
+  rowCount: number;
+  selectedRows: ObjectSet<RowRef>;
 }
 
 type IBaseLocalRowInfo = ILocalRowInfo<IBaseRowExtra>;
 
 // Class for BaseUserView for save values to vuex
-class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBaseRowExtra, IBaseUserViewExtra> {
+export class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBaseRowExtra, IBaseUserViewExtra> {
 
   createCommonLocalValue(row: IRowCommon, localRow: IBaseLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: IBaseValueExtra | null): IBaseValueExtra {
     const columnInfo = this.uv.info.columns[columnIndex];
@@ -47,7 +49,7 @@ class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBaseRowExt
 
     const valueText = valueToPunnedText(columnInfo.valueType, value);
 
-    const selected = oldLocal !== null ? oldLocal.selected;
+    const selected = oldLocal !== null ? oldLocal.selected : false;
 
     const extra: IBaseValueExtra = {
       selected,
@@ -66,13 +68,68 @@ class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBaseRowExt
     return extra;
   }
 
-  createLocalUserView(){
+  createLocalUserView(): IBaseUserViewExtra{
     const extra = {
-      homeSchema: homeSchema(this.uv.args),
+      rowCount: 0,
+      selectedRows: new ObjectSet<RowRef>()
     };
     return extra;
   }
 
+  selectRow(ref: RowRef, selectedStatus: boolean) {
+    const row = this.getRowByRef(ref);
+    if (row === null) {
+      return;
+    }
+    if (row.local.extra.selected !== selectedStatus) {
+      row.local.extra.selected = selectedStatus;
+      if (selectedStatus) {
+        this.extra.selectedRows.insert(ref);
+      } else {
+        this.extra.selectedRows.delete(ref);
+      }
+    }
+  }
+
+
+  selectAll(selectedStatus: boolean) {
+    Object.entries(this.newRows).forEach(([rowIdRaw, row]) => {
+      const rowId = Number(rowIdRaw);
+      row.extra.selected = selectedStatus;
+      if (selectedStatus) {
+        this.extra.selectedRows.insert({
+          type: "added",
+          id: rowId,
+        });
+      }
+    });
+    if (this.uv.rows !== null) {
+      this.rows.forEach((localRow, rowI) => {
+        const row = (this.uv.rows as ICombinedRow[])[rowI];
+        if (!row.deleted) {
+          localRow.extra.selected = selectedStatus;
+          if (selectedStatus) {
+            this.extra.selectedRows.insert({
+              type: "existing",
+              position: rowI,
+            });
+          }
+        }
+      });
+    }
+
+    if (!selectedStatus) {
+      this.extra.selectedRows = new ObjectSet<RowRef>();
+    }
+  }
+
+  get selectedCount() {
+    return this.extra.selectedRows.length;
+  }
+
+  get selectedAll(): boolean {
+    return this.selectedCount === this.extra.rowCount && this.selectedCount > 0;
+  }
 }
 
 @Component

@@ -38,6 +38,7 @@
         :is-root="isRoot"
         :filter="filter"
         :local="local"
+        :base-local="baseLocal"
         :scope="scope"
         :level="level"
         :selection-mode="selectionMode"
@@ -92,7 +93,7 @@ import { CurrentQuery, attrToQuery, queryLocation, IQuery, IAttrToQueryOpts } fr
 import { IUserViewConstructor } from "@/components";
 import { IHandlerProvider } from "@/local_user_view";
 import { Action } from "@/components/ActionsMenu.vue";
-import { ISelectionRef } from "@/components/BaseUserView";
+import { ISelectionRef, LocalBaseUserView } from "@/components/BaseUserView";
 import UserViewCommon from "@/components/UserViewCommon.vue";
 
 const types: RecordSet<string> = {
@@ -161,7 +162,7 @@ export default class UserView extends Vue {
   private extraCommonActions: Action[] = [];
   private component: IUserViewConstructor<Vue> | null = null;
   private local: IHandlerProvider | null = null;
-  private baseLocal: LocalBaseUserVeiw | null = null;
+  private baseLocal: LocalBaseUserView | null = null;
   // currentUv is shown while new component for uv is loaded.
   private currentUv: CombinedUserView | UserViewError | null = null;
   private waitReload = false;
@@ -282,8 +283,10 @@ export default class UserView extends Vue {
       this.clearState();
       this.currentUv = newUv;
       this.local = local;
-      this.baseLocal = new LocalBaseUserVeiw(this.$store, this.uv, this.defaultValues, this.baseLocal);
-      this.registerHandler({ args: newUv.args, handler: baseLocal.handler });
+      this.baseLocal = new LocalBaseUserView(this.$store, newUv, this.defaultValues, this.baseLocal);
+      if(this.baseLocal !== null) {
+        this.registerHandler({ args: newUv.args, handler: this.baseLocal.handler });
+      }
       this.component = component;
     } else if (newUv instanceof UserViewError) {
       this.clearState();

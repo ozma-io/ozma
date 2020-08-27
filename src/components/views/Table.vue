@@ -1091,7 +1091,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (ref === null) {
       return;
     }
-    const row = this.local.getRowByRef(ref);
+    const row = this.baseLocal.getRowByRef(ref);
     if (row === null) {
       return;
     }
@@ -1109,7 +1109,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       if (prevRef === null) {
         return false;
       }
-      const prevRow = this.local.getRowByRef(prevRef);
+      const prevRow = this.baseLocal.getRowByRef(prevRef);
       if (prevRow === null) {
         return false;
       }
@@ -1120,22 +1120,22 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         if (currRef === null) {
           throw new Error("impossible");
         }
-        this.local.selectRow(currRef, prevRow.local.extra.selected);
+        this.baseLocal.selectRow(currRef, prevRow.local.extra.selected);
         i = this.nextLocalRowPosition(i);
       }
-      this.local.selectRow(this.getRowByLocalPosition(to)!, prevRow.local.extra.selected);
+      this.baseLocal.selectRow(this.getRowByLocalPosition(to)!, prevRow.local.extra.selected);
       return true;
     };
 
     if (!(this.lastSelectedRow !== null && event.shiftKey && proc())) {
-      this.local.selectRow(ref, !row.local.extra.selected);
+      this.baseLocal.selectRow(ref, !row.local.extra.selected);
     }
 
     this.lastSelectedRow = posRef;
   }
 
   private selectAllRows() {
-    this.local.selectAll(!this.local.selectedAll);
+    this.baseLocal.selectAll(!this.baseLocal.selectedAll);
   }
 
   private removeSelectedRows() {
@@ -1144,7 +1144,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       throw new Error("View doesn't have a main entity");
     }
 
-    this.local.extra.selectedRows.keys().forEach(rowRef => this.deleteRow(rowRef));
+    this.baseLocal.extra.selectedRows.keys().forEach(rowRef => this.deleteRow(rowRef));
   }
 
   private init() {
@@ -1249,7 +1249,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   get statusLine() {
-    const selectedCount = this.local.selectedCount;
+    const selectedCount = this.baseLocal.selectedCount;
     const selected = (selectedCount > 0) ? `${selectedCount}/` : "";
     return `${selected}${this.uv.newRowsPositions.length + this.nonDeletedRowPositions.length}`;
   }
