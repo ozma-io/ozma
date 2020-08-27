@@ -20,19 +20,19 @@ const userView = namespace("userView");
 
 const errorKey = "base_user_view";
 
-// Interface for cell value save to storage vuex
+// Interface for save cell value to storage vuex
 interface IBaseValueExtra {
   valueText: string;
   selected: boolean;
 }
 
-// Interface for row save to storage vuex
+// Interface for save row to storage vuex
 interface IBaseRowExtra {
   selected: boolean;
   selectionEntry?: ISelectionRef;
 }
 
-// Interface for user_view save to storage vuex
+// Interface for save user_view to storage vuex
 interface IBaseUserViewExtra {
   rowCount: number;
   selectedRows: ObjectSet<RowRef>;
@@ -40,7 +40,7 @@ interface IBaseUserViewExtra {
 
 type IBaseLocalRowInfo = ILocalRowInfo<IBaseRowExtra>;
 
-// Class for BaseUserView for save values to vuex
+// BaseUserView class for save local data to vuex
 export class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBaseRowExtra, IBaseUserViewExtra> {
 
   createCommonLocalValue(row: IRowCommon, localRow: IBaseLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: IBaseValueExtra | null): IBaseValueExtra {
