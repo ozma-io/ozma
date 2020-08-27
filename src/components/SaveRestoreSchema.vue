@@ -50,7 +50,7 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { Action, namespace } from "vuex-class";
 
-import * as Api from "@/api";
+import Api from "@/api";
 
 @Component
 export default class SaveRestoreSchema extends Vue {

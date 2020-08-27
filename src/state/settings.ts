@@ -1,7 +1,7 @@
 import { Module } from "vuex";
 
 import { IRef, convertString, pascalToSnake } from "@/utils";
-import * as Api from "@/api";
+import { IViewExprResult, funappSchema, default as Api } from "@/api";
 
 const errorKey = "settings";
 
@@ -72,11 +72,11 @@ const settingsModule: Module<ISettingsState, {}> = {
       pending.ref = (async () => {
         try {
           const ref = {
-            schema: Api.funappSchema,
+            schema: funappSchema,
             name: "settings",
           };
-          const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
-            func: Api.fetchNamedView,
+          const res: IViewExprResult = await dispatch("callProtectedApi", {
+            func: Api.getNamedUserView,
             args: [ref, {}],
           }, { root: true });
           if (state.pending !== pending.ref) {

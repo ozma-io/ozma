@@ -3,9 +3,12 @@ import { Module, ActionContext } from "vuex";
 import { Moment } from "moment";
 
 import { RecordSet, deepClone, mapMaybe, map2 } from "@/utils";
-import { ITransaction, ITransactionResult, IEntityRef, IFieldRef, IEntity, RowId, SchemaName, FieldName, EntityName } from "@/api";
 import { IUpdatedValue, IFieldInfo, valueFromRaw } from "@/values";
-import * as Api from "@/api";
+import {
+  ITransaction, ITransactionResult, IEntityRef, IFieldRef, IEntity, RowId, SchemaName, FieldName, EntityName,
+  IInsertEntityOp, IUpdateEntityOp, IDeleteEntityOp, IInsertEntityResult, IUpdateEntityResult, IDeleteEntityResult,
+  IColumnField, TransactionOp, default as Api
+} from "@/api";
 import { i18n } from "@/modules";
 
 export type ScopeName = string;
@@ -72,13 +75,13 @@ const emptyUpdates: IEntityChanges = {
   deleted: {},
 };
 
-export interface ICombinedInsertEntityResult extends Api.IInsertEntityOp, Api.IInsertEntityResult {
+export interface ICombinedInsertEntityResult extends IInsertEntityOp, IInsertEntityResult {
 }
 
-export interface ICombinedUpdateEntityResult extends Api.IUpdateEntityOp, Api.IUpdateEntityResult {
+export interface ICombinedUpdateEntityResult extends IUpdateEntityOp, IUpdateEntityResult {
 }
 
-export interface ICombinedDeleteEntityResult extends Api.IDeleteEntityOp, Api.IDeleteEntityResult {
+export interface ICombinedDeleteEntityResult extends IDeleteEntityOp, IDeleteEntityResult {
 }
 
 export type CombinedTransactionResult = ICombinedInsertEntityResult | ICombinedUpdateEntityResult | ICombinedDeleteEntityResult;
@@ -257,7 +260,7 @@ const checkCounters = async (context: ActionContext<IStagingState, {}>) => {
   }
 };
 
-const changeToParam = (fieldInfo: Api.IColumnField, name: FieldName, change: IUpdatedValue): any => {
+const changeToParam = (fieldInfo: IColumnField, name: FieldName, change: IUpdatedValue): any => {
   if (change.value === undefined) {
     throw new Error(`Value for ${name} didn't pass validation`);
   }
@@ -672,7 +675,7 @@ const stagingModule: Module<IStagingState, {}> = {
                     entity,
                     id: Number(updatedIdStr),
                     entries: Object.fromEntries(entries),
-                  } as Api.TransactionOp;
+                  } as TransactionOp;
                 }
               }, Object.entries(entityChanges.updated));
             const added =
@@ -685,7 +688,7 @@ const stagingModule: Module<IStagingState, {}> = {
                     type: "insert",
                     entity,
                     entries: Object.fromEntries(entries),
-                  } as Api.TransactionOp;
+                  } as TransactionOp;
                 }
               }, Object.values(uvAdded.entries)));
             const deleted =
@@ -697,7 +700,7 @@ const stagingModule: Module<IStagingState, {}> = {
                     type: "delete",
                     entity,
                     id: Number(deletedIdStr),
-                  } as Api.TransactionOp;
+                  } as TransactionOp;
                 }
               }, Object.entries(entityChanges.deleted));
             return [...updated, ...added, ...deleted];
