@@ -51,6 +51,7 @@
         :is-root="isRoot"
         :filter="filter"
         :local="local"
+        :base-local="baseLocal"
         :scope="scope"
         :level="level"
         :selection-mode="selectionMode"
@@ -142,6 +143,7 @@ export default class UserView extends Vue {
   private extraCommonActions: Action[] = [];
   private component: IUserViewConstructor<Vue> | null = null;
   private local: IHandlerProvider | null = null;
+  private baseLocal: LocalBaseUserVeiw | null = null;
   // currentUv is shown while new component for uv is loaded.
   private currentUv: CombinedUserView | UserViewError | null = null;
   private waitReload = false;
@@ -262,11 +264,14 @@ export default class UserView extends Vue {
       this.clearState();
       this.currentUv = newUv;
       this.local = local;
+      this.baseLocal = new LocalBaseUserVeiw(this.$store, this.uv, this.defaultValues, this.baseLocal);
+      this.registerHandler({ args: newUv.args, handler: baseLocal.handler });
       this.component = component;
     } else if (newUv instanceof UserViewError) {
       this.clearState();
       this.currentUv = newUv;
       this.local = null;
+      this.baseLocal = null;
       this.component = null;
     } else if (newUv === null) {
       this.requestView();
@@ -301,6 +306,9 @@ export default class UserView extends Vue {
     if (this.local !== null) {
       this.unregisterHandler({ args, handler: this.local.handler });
     }
+    if (this.baseLocal !== null) {
+      this.unregisterHandler({ args, handler: this.baseLocal.handler });
+    }
     this.removeUserViewConsumer({ args, reference: this.uid });
   }
 
@@ -308,6 +316,7 @@ export default class UserView extends Vue {
     this.destroyUserView(this.args);
     this.currentUv = error;
     this.local = null;
+    this.baseLocal = null;
     this.component = null;
   }
 
