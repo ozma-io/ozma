@@ -58,7 +58,7 @@ import { valueIsNull } from "@/values";
 export default class Textarea extends Vue {
   @Prop({ type: String }) label!: string;
   @Prop({ type: String }) value!: string;
-  @Prop({ type: String }) error!: string;
+  @Prop({ type: Boolean }) error!: boolean;
   @Prop({ type: Boolean }) required!: boolean;
   @Prop({ type: String }) warning!: string;
   @Prop({ type: Number }) height!: number;
