@@ -147,9 +147,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
   }
 
   get actions() {
-    const actions: Action[] = [
-      //{name: this.$t("export_to_csv").toString(), callback: () => this.exportToCsv()},
-    ];
+    const actions: Action[] = [];
 
     const extraActions = this.uv.attributes["extra_actions"];
     if (Array.isArray(extraActions)) {
@@ -180,6 +178,11 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
 
     if (this.uv.info.mainEntity != null) {
       actions.push({ name: this.$t("import_from_csv").toString(), uploadFile: (file) => this.importFromCsv(file) });
+    }
+
+    // FIXME: workaround until we have proper role-based permissions for this.
+    if ("__export_to_csv" in this.$route.query) {
+      actions.push({name: this.$t("export_to_csv").toString(), callback: () => this.exportToCsv()});
     }
 
     return actions;
