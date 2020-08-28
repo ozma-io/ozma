@@ -2,10 +2,10 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { RowId, IEntityRef, IFieldRef } from "@/api";
-import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, homeSchema, valueToPunnedText, ICombinedRow } from "@/state/user_view";
+import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, homeSchema, valueToPunnedText, ICombinedRow, IAddedRow } from "@/state/user_view";
 import { ErrorKey } from "@/state/errors";
 import { ScopeName, UserViewKey, AddedRowId, CombinedTransactionResult, IAddedResult } from "@/state/staging_changes";
-import { LocalUserView, RowRef, ValueRef, SimpleLocalUserView, ILocalRowInfo } from "@/local_user_view";
+import { LocalUserView, RowRef, ValueRef, SimpleLocalUserView, ILocalRow, ILocalRowInfo } from "@/local_user_view";
 import { equalEntityRef } from "@/values";
 import { ObjectSet } from "@/utils";
 
@@ -39,6 +39,7 @@ interface IBaseUserViewExtra {
 }
 
 type IBaseLocalRowInfo = ILocalRowInfo<IBaseRowExtra>;
+type IBaseLocalRow = ILocalRow<IBaseValueExtra, IBaseRowExtra>;
 
 // BaseUserView class for save local data to vuex
 export class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBaseRowExtra, IBaseUserViewExtra> {
@@ -65,12 +66,19 @@ export class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBas
       selected: false
     };
 
+    this.extra.rowCount++;
     return extra;
+  }
+
+  createAddedLocalRow(rowId: AddedRowId, row: IAddedRow) {
+    this.extra.rowCount++;
+
+    return this.createCommonLocalRow(row);
   }
 
   createLocalUserView(): IBaseUserViewExtra{
     const extra = {
-      rowCount: 0,
+      rowCount: -1, //FIXME why not 0?
       selectedRows: new ObjectSet<RowRef>()
     };
     return extra;
@@ -121,6 +129,21 @@ export class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBas
     if (!selectedStatus) {
       this.extra.selectedRows = new ObjectSet<RowRef>();
     }
+  }
+  
+  postInitRow(rowIndex: number, row: ICombinedRow, localRow: IBaseLocalRow) {
+    this.postInitCommonRow(row, localRow);
+    if (row.deleted) {
+      this.extra.rowCount--;
+    }
+  }
+
+  deleteCommonRow(row: ICombinedRow, localRow: IBaseLocalRowInfo) {
+    this.extra.rowCount--;
+  }
+
+  undeleteRow(rowIndex: number, row: ICombinedRow, localRow: IBaseLocalRowInfo) {
+    this.extra.rowCount++;
   }
 
   get selectedCount() {

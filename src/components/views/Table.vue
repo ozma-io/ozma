@@ -84,7 +84,7 @@
               @click="selectAllRows"
             >
               <span class="table-th_span">
-                <checkbox :checked="local.selectedAll" />
+                <checkbox :checked="baseLocal.selectedAll" />
               </span>
             </th>
             <th
@@ -289,7 +289,6 @@ interface ITableRowExtra {
 
 interface ITableUserViewExtra {
   hasRowLinks: boolean;
-  rowCount: number;
   selectedRows: ObjectSet<RowRef>;
   selectedValues: ObjectSet<ValueRef>;
   columns: IColumn[];
@@ -505,15 +504,10 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
         id: row.mainId,
       };
     }
-
-    this.extra.rowCount++;
-
     return extra;
   }
 
   createAddedLocalRow(rowId: AddedRowId, row: IAddedRow) {
-    this.extra.rowCount++;
-
     return this.createCommonLocalRow(row);
   }
 
@@ -528,23 +522,11 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     localRow.extra.searchText = "\0".concat(...searchStrings);
   }
 
-  postInitRow(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRow) {
-    this.postInitCommonRow(row, localRow);
-    if (row.deleted) {
-      this.extra.rowCount--;
-    }
-  }
-
   postInitAddedRow(rowId: AddedRowId, row: IAddedRow, localRow: ITableLocalRow) {
     this.postInitCommonRow(row, localRow);
   }
 
-  deleteCommonRow(row: ICombinedRow, localRow: ITableLocalRowInfo) {
-    this.extra.rowCount--;
-  }
-
   deleteRow(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRowInfo) {
-    this.deleteCommonRow(row, localRow);
     if (localRow.extra.selected) {
       localRow.extra.selected = false;
       this.extra.selectedRows.delete({
@@ -555,7 +537,6 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
   }
 
   deleteAddedRow(rowId: AddedRowId, row: ICombinedRow, localRow: ITableLocalRowInfo) {
-    this.deleteCommonRow(row, localRow);
     if (localRow.extra.selected) {
       this.extra.selectedRows.delete({
         type: "added",
@@ -564,15 +545,10 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     }
   }
 
-  undeleteRow(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRowInfo) {
-    this.extra.rowCount++;
-  }
-
   createLocalUserView(): ITableUserViewExtra {
     const columns = createColumns(this.uv);
     const extra: ITableUserViewExtra = {
       hasRowLinks: false,
-      rowCount: 0,
       selectedRows: new ObjectSet<RowRef>(),
       selectedValues: new ObjectSet<ValueRef>(),
       columns,
@@ -616,60 +592,6 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
         this.extra.selectedValues.delete(ref);
       }
     }
-  }
-
-  selectRow(ref: RowRef, selectedStatus: boolean) {
-    const row = this.getRowByRef(ref);
-    if (row === null) {
-      return;
-    }
-    if (row.local.extra.selected !== selectedStatus) {
-      row.local.extra.selected = selectedStatus;
-      if (selectedStatus) {
-        this.extra.selectedRows.insert(ref);
-      } else {
-        this.extra.selectedRows.delete(ref);
-      }
-    }
-  }
-
-  selectAll(selectedStatus: boolean) {
-    Object.entries(this.newRows).forEach(([rowIdRaw, row]) => {
-      const rowId = Number(rowIdRaw);
-      row.extra.selected = selectedStatus;
-      if (selectedStatus) {
-        this.extra.selectedRows.insert({
-          type: "added",
-          id: rowId,
-        });
-      }
-    });
-    if (this.uv.rows !== null) {
-      this.rows.forEach((localRow, rowI) => {
-        const row = (this.uv.rows as ICombinedRow[])[rowI];
-        if (!row.deleted) {
-          localRow.extra.selected = selectedStatus;
-          if (selectedStatus) {
-            this.extra.selectedRows.insert({
-              type: "existing",
-              position: rowI,
-            });
-          }
-        }
-      });
-    }
-
-    if (!selectedStatus) {
-      this.extra.selectedRows = new ObjectSet<RowRef>();
-    }
-  }
-
-  get selectedCount() {
-    return this.extra.selectedRows.length;
-  }
-
-  get selectedAll(): boolean {
-    return this.selectedCount === this.extra.rowCount && this.selectedCount > 0;
   }
 
   get technicalWidth() {
@@ -901,7 +823,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (emptyRow !== null) {
       this.showEmptyRow = newValue;
       if (!newValue) {
-        this.local.selectRow({type: "new"}, false);
+        this.baseLocal.selectRow({type: "new"}, false);
         emptyRow.local.values.forEach((_, colI) => {
           this.local.selectCell({type: "new", column: colI}, false);
         });
