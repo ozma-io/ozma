@@ -145,6 +145,7 @@
             <TableRow
               :row="local.emptyRow.row"
               :local-row="local.emptyRow.local"
+              :base-local-row="baseLocal.emptyRow.local"
               :column-indexes="columnIndexes"
               :local-uv="local.extra"
               :show-fixed-row="showFixedRow"
@@ -172,6 +173,7 @@
               :key="`new-${rowId}`"
               :row="uv.newRows[rowId]"
               :local-row="local.newRows[rowId]"
+              :base-local-row="baseLocal.newRows[rowId]"
               :column-indexes="columnIndexes"
               :local-uv="local.extra"
               :show-fixed-row="showFixedRow"
@@ -199,6 +201,7 @@
               :key="rowI"
               :row="uv.rows[rowI]"
               :local-row="local.rows[rowI]"
+              :base-local-row="baseLocal.rows[rowI]"
               :column-indexes="columnIndexes"
               :local-uv="local.extra"
               :show-fixed-row="showFixedRow"
