@@ -15,7 +15,23 @@ export interface IGridSection extends IGridBase {
   content: GridElement[];
 }
 
-export type GridElement = IGridInput | IGridSection;
+export interface IGridButtons {
+  type: "buttons";
+  actions: IButton[];
+}
+
+export interface IButtons {
+  form_block: number;
+  actions: IButton[];
+}
+
+export interface IButton {
+  name: string;
+  variant: string;
+  call_process: any;
+}
+
+export type GridElement = IGridInput | IGridSection | IGridButtons;
 
 export interface IGridProps {
   uv: any;

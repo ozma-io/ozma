@@ -26,6 +26,14 @@
         :grid-props="gridProps"
       />
     </b-row>
+    <b-row v-else-if="blockContent.type === 'buttons'">
+      <b-button 
+        block
+        v-for="(subBlock, subBlockI) in blockContent.actions"
+        :key="subBlockI"
+        :variant="subBlock.variant"
+        @click="callProcess(subBlock.call_process)">{{subBlock.name}}</b-button>
+    </b-row>
   </b-col>
 </template>
 
@@ -42,6 +50,12 @@ import { GridElement, IGridProps } from "@/components/form/types";
 export default class FormGridBlock extends Vue {
   @Prop({ type: Object }) blockContent!: GridElement;
   @Prop({ type: Object }) gridProps!: IGridProps;
+
+  private callProcess(querySelf: string){
+    console.log("callBuisnessProcess");
+    console.log(querySelf);
+  }
+
 }
 </script>
 

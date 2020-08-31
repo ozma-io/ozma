@@ -101,7 +101,7 @@ import BaseUserView from "@/components/BaseUserView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
 
 import {
-  IFieldInfo, IBlockInfo, IFormValueExtra, IFormRowExtra, IFormUserViewExtra, GridElement, IGridSection, IGridInput
+  IFieldInfo, IBlockInfo, IFormValueExtra, IFormRowExtra, IFormUserViewExtra, GridElement, IGridSection, IGridInput, IButtons, IGridButtons
 } from "@/components/form/types";
 
 type IFormLocalRowInfo = ILocalRowInfo<IFormRowExtra>;
@@ -245,6 +245,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
     const blocks: IGridSection[] = this.blockSizes.map(size => ({ type: "section", size, content: [] }));
     const inputWidth = R.equals(this.blockSizes, [12]) ? 6 : 12;
 
+    //Add columns to blocks
     this.uv.info.columns.forEach((columnInfo, i) => {
       const columnAttrs = this.uv.columnAttributes[i];
       const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
@@ -279,6 +280,65 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
       blocks[block].content.push(element);
     });
 
+    // Add buttons from @form_buttons attributes to blocks
+    /* 
+     * EXAMPLE  
+     * @"form_buttons" = [{
+     *     form_block : 3,
+     *     actions : [
+     *         {   
+     *             name: 'Удалить записи',
+     *             variant: 'danger',
+     *             call_process: [{ schema: 'foo', call: 'delete' }],
+     *         },
+     *         {   
+     *             name: 'Добавить записи',
+     *             variant: 'success',
+     *             call_process: [{ schema: 'foo', call: 'add' }],
+     *         },
+     *         {   
+     *             name: 'Обновить записи',
+     *             variant: 'warning',
+     *             call_process: [{ schema: 'foo', call: 'update' }],
+     *         }
+     *     ]
+     * },
+     * {
+     *     form_block : 4,
+     *     actions : [
+     *         {   
+     *             name: 'Удалить записи 1',
+     *             variant: 'danger',
+     *             call_process: [{ schema: 'foo', call: 'delete' }],
+     *         },
+     *         {   
+     *             name: 'Добавить записи 1',
+     *             variant: 'success',
+     *             call_process: [{ schema: 'foo', call: 'add' }],
+     *         },
+     *         {   
+     *             name: 'Обновить записи 1',
+     *             variant: 'warning',
+     *             call_process: [{ schema: 'foo', call: 'update' }],
+     *         }
+     *     ]
+     * }]
+     */
+    const formButtons = this.uv.attributes['form_buttons'];
+    if(formButtons !== undefined){
+      formButtons.forEach((buttons: IButtons, i: number) => {
+
+        const blockAttr = Number(buttons["form_block"]);
+        const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr;
+        const block = Math.max(0, Math.min(blockNumber, blocks.length - 1));
+
+        const element: IGridButtons = {
+          type: "buttons",
+          actions: buttons.actions,
+        };
+        blocks[block].content.push(element);
+      })
+    }
     return blocks;
   }
 
