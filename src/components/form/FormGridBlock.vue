@@ -32,7 +32,7 @@
         v-for="(subBlock, subBlockI) in blockContent.actions"
         :key="subBlockI"
         :variant="subBlock.variant"
-        @click="action.callback()">{{subBlock.name}}</b-button>
+        @click="subBlock.callback()">{{subBlock.name}}</b-button>
     </b-row>
   </b-col>
 </template>

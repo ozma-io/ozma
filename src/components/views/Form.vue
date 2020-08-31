@@ -340,10 +340,8 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
             if (typeof action.variant !== "string")
               return;
             if (action.call_process && typeof action.call_process === "object" && action.call_process !== null) {
-              action.callback
-              return;
+              actions.push({ name: String(action.name), variant: String(action.variant), callback: () => this.callProcess(action.call_process) });
             }
-            actions.push({ name: String(action.name), variant: String(action.variant), callback: () => this.callProcess(action.call_process) });
           })
         }
 
