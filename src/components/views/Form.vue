@@ -101,7 +101,7 @@ import BaseUserView from "@/components/BaseUserView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
 
 import {
-  IFieldInfo, IBlockInfo, IFormValueExtra, IFormRowExtra, IFormUserViewExtra, GridElement, IGridSection, IGridInput, IButtons, IGridButtons
+  IFieldInfo, IBlockInfo, IFormValueExtra, IFormRowExtra, IFormUserViewExtra, GridElement, IGridSection, IGridInput, IButtons, IGridButtons, IButtonAction
 } from "@/components/form/types";
 
 type IFormLocalRowInfo = ILocalRowInfo<IFormRowExtra>;
@@ -325,21 +325,43 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
      * }]
      */
     const formButtons = this.uv.attributes['form_buttons'];
-    if(formButtons !== undefined){
+    if(formButtons !== undefined && Array.isArray(formButtons)){
       formButtons.forEach((buttons: IButtons, i: number) => {
 
         const blockAttr = Number(buttons["form_block"]);
         const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr;
         const block = Math.max(0, Math.min(blockNumber, blocks.length - 1));
 
-        const element: IGridButtons = {
-          type: "buttons",
-          actions: buttons.actions,
-        };
-        blocks[block].content.push(element);
+        const actions: IButtonAction[] = [];
+        if(buttons.actions !== undefined && Array.isArray(buttons.actions)){
+          buttons.actions.forEach((action: any) => {
+            if (typeof action.name !== "string")
+              return;
+            if (typeof action.variant !== "string")
+              return;
+            if (action.call_process && typeof action.call_process === "object" && action.call_process !== null) {
+              action.callback
+              return;
+            }
+            actions.push({ name: String(action.name), variant: String(action.variant), callback: () => this.callProcess(action.call_process) });
+          })
+        }
+
+        if( actions.length > 0){
+          const element: IGridButtons = {
+            type: "buttons",
+            actions
+          };
+          blocks[block].content.push(element);
+        }
       })
     }
     return blocks;
+  }
+  
+  private callProcess(querySelf: string){
+    console.log("callBuisnessProcess");
+    console.log(querySelf);
   }
 
   private init() {
