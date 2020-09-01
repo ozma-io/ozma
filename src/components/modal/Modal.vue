@@ -6,14 +6,14 @@
     @before-close="beforeClose"
     @opened="$emit('opened')"
   >
-    <div>
+    <template v-slot:top-right>
       <input
         type="button"
         value="close"
         class="material-icons modal__close_button"
         @click="$emit('close')"
       >
-    </div>
+    </template>
     <div
       v-if="hasTabs"
       class="modal__tab_headers"
@@ -23,6 +23,7 @@
         :key="index"
         :is-active="index === selectedTab"
         :title="tab.title"
+        :onlyTab="modalTabs.length === 1"
         @tab-click="switchTab(index)"
         @tab-close="$emit('tab-close', index)"
       />
@@ -149,14 +150,17 @@ export default class Modal extends Vue {
   .modal__tab_headers {
     display: flex;
     flex-direction: row;
-    padding: 10px;
+    padding: 5px 10px 0 10px;
   }
 
   .modal__close_button {
-    background: none;
     border: none;
-    padding: 10px;
-    cursor: pointer;
+    right: 20px;
+    top: 20px;
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    padding: 5px;
   }
 
   .modal__content {
