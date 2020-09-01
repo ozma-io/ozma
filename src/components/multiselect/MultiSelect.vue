@@ -190,6 +190,7 @@
 import * as R from "ramda";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { valueIsNull } from "@/values";
+import { nextRender } from "@/utils";
 
 export interface ISelectOption {
   value: any;
@@ -226,11 +227,13 @@ export default class MultiSelect extends Vue {
     if (this.selectedOptions.length < 3)
       this.isNeedFilter = false;
 
-    setTimeout(() => {
+    //nextRender need for set coordinates selectedContainer after load cell data. 
+    nextRender().then(() => {
       const bodyRect = document.body.getBoundingClientRect();
       const selectContainerElement = this.$refs.selectContainer as HTMLInputElement;
       const selectContainerRect = selectContainerElement.getBoundingClientRect();
 
+      //There we check cell position for open selectContainer up or down.
       if (selectContainerRect.top > (bodyRect.bottom - selectContainerRect.bottom)){
         this.isTopFilter = !this.isTopFilter;
         this.optionsContainerCoords.bottom = selectContainerRect.height;
@@ -238,8 +241,7 @@ export default class MultiSelect extends Vue {
       } else {
         this.optionsContainerCoords.top = selectContainerRect.height;
       }
-
-    }, 1);
+    });
 
     if (this.autofocus) {
       Vue.nextTick().then(() => {
