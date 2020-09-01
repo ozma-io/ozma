@@ -2,22 +2,24 @@
     {
       "en": {
         "empty_message": "Empty",
-        "clear_all": "Clear all"
+        "clear_all": "Clear all",
+        "enter_value": "Enter value"
       },
       "ru": {
         "empty_message": "Пусто",
-        "clear_all": "Очистить"
+        "clear_all": "Очистить",
+        "enter_value": "Введите значение"
       }
     }
 </i18n>
 
 <template>
   <div
-    style="width: 100%;"
     @keydown.tab="() => setIsOpen(false)"
   >
     <div
       v-click-outside="() => setIsOpen(false)"
+      ref="selectContainer"
       :class="[
         'select_container',
         {
@@ -27,8 +29,7 @@
         },
       ]"
     >
-      <span
-        v-if="showSingleValue"
+      <div
         class="single_value_button"
         @click="setIsOpen(true)"
       >
@@ -37,12 +38,12 @@
           :listValueStyle="listValueStyle"
           :valueOption="valueOption"
         >
-          <span
+          <div
             :style="listValueStyle"
             :class="[ 'single_value' ]"
-          >{{ valueOption.label }}</span>
+          >{{ valueOption.label }}</div>
         </slot>
-      </span>
+      </div>
       <span
         v-if="isEmpty && !isOpen"
         :style="listValueStyle"
@@ -70,7 +71,7 @@
           :removeValue="removeValue"
           :showValueRemove="showValueRemove"
         >
-          <span
+          <div
             v-for="(option, index) in valueOptions"
             :key="option.value"
             class="values_list__value single_value"
@@ -86,22 +87,29 @@
               @click="removeValue(index)"
               @blur="() => setIsOpen(false)"
             >
-          </span>
+          </div>
         </slot>
+      </div>
+      <div 
+        class="select_container__options_container"
+        :style="{
+          top: optionsContainerCoords.top ?`${optionsContainerCoords.top}px` : 'auto',
+          bottom: optionsContainerCoords.bottom ? `${optionsContainerCoords.bottom}px` : 'auto'
+        }"
+      >        
         <input
-          v-if="isOpen"
+          v-if="isOpen && isNeedFilter && isTopFilter"
           ref="controlInput"
           v-model="inputValue"
           type="text"
           :style="listValueStyle"
           class="select_container__input"
+          :placeholder="$t('enter_value')"
           @keydown.backspace="onBackspace"
           @keydown.up="offsetSelectedOption(-1)"
           @keydown.down="offsetSelectedOption(1)"
           @keydown.enter="addSelectedOptionToValue"
         >
-      </div>
-      <div class="select_container__options_container">
         <slot
           v-if="isOpen"
           name="option"
@@ -138,6 +146,20 @@
             />
           </div>
         </slot>
+        
+        <input
+          v-if="isOpen && isNeedFilter && !isTopFilter"
+          ref="controlInput"
+          v-model="inputValue"
+          type="text"
+          :style="listValueStyle"
+          class="select_container__input"
+          :placeholder="$t('enter_value')"
+          @keydown.backspace="onBackspace"
+          @keydown.up="offsetSelectedOption(-1)"
+          @keydown.down="offsetSelectedOption(1)"
+          @keydown.enter="addSelectedOptionToValue"
+        >
       </div>
       <input
         v-if="!disabled && ((single && required) || (single && isEmpty) || !single)"
@@ -195,8 +217,30 @@ export default class MultiSelect extends Vue {
   private isOpen = false;
   private selectedOption = -1;
   private inputValue = "";
+  private isNeedFilter = true;
+  private isTopFilter = true;
+  private optionsContainerCoords = {top: 0, bottom: 0};
 
   private mounted() {
+
+    if (this.selectedOptions.length < 3)
+      this.isNeedFilter = false;
+
+    setTimeout(() => {
+      const bodyRect = document.body.getBoundingClientRect();
+      const selectContainerElement = this.$refs.selectContainer as HTMLInputElement;
+      const selectContainerRect = selectContainerElement.getBoundingClientRect();
+
+      if (selectContainerRect.top > (bodyRect.bottom - selectContainerRect.bottom)){
+        this.isTopFilter = !this.isTopFilter;
+        this.optionsContainerCoords.bottom = selectContainerRect.height;
+        this.setIsOpen(true);
+      } else {
+        this.optionsContainerCoords.top = selectContainerRect.height;
+      }
+
+    }, 1);
+
     if (this.autofocus) {
       Vue.nextTick().then(() => {
         this.setIsOpen(true);
@@ -406,15 +450,8 @@ export default class MultiSelect extends Vue {
     display: flex;
     flex-direction: row;
     position: relative;
-    padding: 5px 2px 5px 0;
+    padding: 5px 2px 5px 2px;
     box-sizing: border-box;
-    border-color: var(--MainBorderColor);
-    border: none;
-    transition: border 0.5s linear;
-  }
-
-  .select_container_hover:hover {
-    border-bottom: 1px solid var(--MainBorderColor);
   }
 
   .select_container__error {
@@ -432,8 +469,6 @@ export default class MultiSelect extends Vue {
   .select_container__content {
     width: 100%;
     cursor: pointer;
-    display: flex;
-    flex-wrap: wrap;
     align-content: center;
   }
 
@@ -448,8 +483,9 @@ export default class MultiSelect extends Vue {
   }
 
   .select_container__input {
+    width: 100%;
     border: 0;
-    padding: 0 0 0 5px;
+    padding: 5px;
     box-sizing: border-box;
     color: var(--MainTextColor);
     background-color: var(--MainBackgroundColor);
@@ -478,12 +514,14 @@ export default class MultiSelect extends Vue {
     position: absolute;
     top: calc(100% + 2px);
     left: 0;
-    padding: 0;
     margin: 0;
+    background: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    border-radius: 1px;
   }
 
   .select_container__options_list {
-    padding: 0 0 5px 0;
+    padding: 0 0 5px 2px;
     margin: 0;
     box-sizing: border-box;
     max-height: 250px;
@@ -492,6 +530,7 @@ export default class MultiSelect extends Vue {
     height: 100%;
     border-bottom: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
+    border-top: 1px solid #ccc;
   }
 
   .select_container__options_list > li.select_container__options_list__option {
