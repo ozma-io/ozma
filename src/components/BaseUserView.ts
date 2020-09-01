@@ -2,7 +2,7 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { RowId, IEntityRef, IFieldRef } from "@/api";
-import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, homeSchema, valueToPunnedText, ICombinedRow, IAddedRow } from "@/state/user_view";
+import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, homeSchema, ICombinedRow, IAddedRow } from "@/state/user_view";
 import { ErrorKey } from "@/state/errors";
 import { ScopeName, UserViewKey, AddedRowId, CombinedTransactionResult, IAddedResult } from "@/state/staging_changes";
 import { LocalUserView, RowRef, ValueRef, SimpleLocalUserView, ILocalRow, ILocalRowInfo } from "@/local_user_view";
@@ -22,7 +22,6 @@ const errorKey = "base_user_view";
 
 // Interface for save cell value to storage vuex
 interface IBaseValueExtra {
-  valueText: string;
   selected: boolean;
 }
 
@@ -48,13 +47,10 @@ export class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBas
     const columnInfo = this.uv.info.columns[columnIndex];
     const columnAttrs = this.uv.columnAttributes[columnIndex];
 
-    const valueText = valueToPunnedText(columnInfo.valueType, value);
-
     const selected = oldLocal !== null ? oldLocal.selected : false;
 
     const extra: IBaseValueExtra = {
       selected,
-      valueText,
     };
 
     return extra;
