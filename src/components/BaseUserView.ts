@@ -44,9 +44,6 @@ type IBaseLocalRow = ILocalRow<IBaseValueExtra, IBaseRowExtra>;
 export class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBaseRowExtra, IBaseUserViewExtra> {
 
   createCommonLocalValue(row: IRowCommon, localRow: IBaseLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: IBaseValueExtra | null): IBaseValueExtra {
-    const columnInfo = this.uv.info.columns[columnIndex];
-    const columnAttrs = this.uv.columnAttributes[columnIndex];
-
     const selected = oldLocal !== null ? oldLocal.selected : false;
 
     const extra: IBaseValueExtra = {
