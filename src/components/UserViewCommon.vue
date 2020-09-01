@@ -10,7 +10,7 @@
             "create": "Создать новую",
             "create_in_modal": "Создать связанную запись в окне",
             "export_to_csv": "Экспорт в .csv",
-            "import_from_csv": "Испорт из .csv"
+            "import_from_csv": "Импорт из .csv"
         }
     }
 </i18n>
