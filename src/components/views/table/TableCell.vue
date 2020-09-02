@@ -36,7 +36,13 @@
         :checked="value.value"
         disabled
       />
-      <p v-else>
+      <p
+        v-else-if="valueType === 'int'"
+        class="reference_item"
+      >
+        {{ localValue.valueText || "" }}
+      </p>
+      <p v-else-if="valueType !== 'int' && valueType !== 'bool'">
         {{ localValue.valueText || "" }}
       </p>
     </template>
@@ -79,6 +85,17 @@ export default class TableCell extends Vue {
 </script>
 
 <style scoped>
+
+  .reference_item {
+    display: inline;
+    margin-top: 3px;
+    border-radius: 5px;
+    padding: 0 5px;
+    border: 1px solid var(--MainBorderColor);
+    background-color: var(--MainBackgroundColor);
+    color: var(--MainTextColor);
+  }
+
   .next-after-last-fixed {
     padding-left: 7px !important;
   }
