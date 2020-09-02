@@ -2,11 +2,13 @@
     {
         "en": {
             "select_view": "Add in modal window",
-            "follow_reference": "Open in modal window"
+            "follow_reference": "Open in modal window",
+            "loading": "Loading"
         },
         "ru": {
             "select_view": "Создать во вложенном окне",
-            "follow_reference": "Открыть во вложенном окне"
+            "follow_reference": "Открыть во вложенном окне",
+            "loading": "Загрузка"
         }
     }
 </i18n>
@@ -88,7 +90,8 @@
         </button>
       </template>
     </MultiSelect>
-    <input
+    <center v-else style="margin-top: 5px; color:#777;"> {{$t('loading')}}... </center>
+    <!-- <input
       v-else
       ref="control"
       type="text"
@@ -99,7 +102,7 @@
       :required="!isNullable"
       :style="controlStyle"
       @input="$emit('update', $event.target.value)"
-    >
+    > -->
   </div>
 </template>
 
