@@ -199,7 +199,7 @@ export interface ISelectOption {
 }
 
 const defaultOptionFilter = (query: string) => (option: ISelectOption) =>
-  R.contains(query.toLowerCase(), R.pathOr("", ["label"], option).toLowerCase());
+  R.contains(query.toLowerCase().trim(), R.pathOr("", ["label"], option).toLowerCase());
 
 @Component({})
 export default class MultiSelect extends Vue {
