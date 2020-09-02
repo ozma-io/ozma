@@ -26,6 +26,14 @@
         :grid-props="gridProps"
       />
     </b-row>
+    <b-row v-else-if="blockContent.type === 'buttons'">
+      <b-button 
+        block
+        v-for="(subBlock, subBlockI) in blockContent.actions"
+        :key="subBlockI"
+        :variant="subBlock.variant"
+        @click="subBlock.callback()">{{subBlock.name}}</b-button>
+    </b-row>
   </b-col>
 </template>
 

@@ -1,5 +1,6 @@
 import { AttributesMap, IResultColumnInfo } from "@/api";
 import { ISelectionRef } from "@/components/BaseUserView";
+import { IAction } from "@/components/ActionsMenu.vue";
 
 export interface IGridBase {
   size: number;
@@ -15,7 +16,22 @@ export interface IGridSection extends IGridBase {
   content: GridElement[];
 }
 
-export type GridElement = IGridInput | IGridSection;
+export interface IGridButtons {
+  type: "buttons";
+  actions: IButtonAction[];
+}
+
+export interface IButtons {
+  form_block: number;
+  actions: IButtonAction[];
+}
+
+export interface IButtonAction extends IAction{
+  variant: string;
+  callback: () => void;
+}
+
+export type GridElement = IGridInput | IGridSection | IGridButtons;
 
 export interface IGridProps {
   uv: any;
