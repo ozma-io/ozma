@@ -34,6 +34,7 @@
   <span>
     <template v-if="uvIsReady">
       <UserViewCommon
+
         :uv="currentUv"
         :is-root="isRoot"
         :filter="filter"
@@ -178,8 +179,18 @@ export default class UserView extends Vue {
   private currentUv: CombinedUserView | UserViewError | null = null;
   private waitReload = false;
 
+  get caption() {
+    if (this.currentUv instanceof CombinedUserView && this.currentUv.attributes.hasOwnProperty('title')) {
+      return this.currentUv.attributes.title;
+    } else {
+      return null;
+    }
+  }
+
   get title() {
-    if (this.args.source.type === "named") {
+    if (!!this.caption) {
+      return this.caption;
+    } else if (this.args.source.type === "named") {
       return this.args.source.ref.name;
     } else {
       return this.$t("anonymous_query").toString();
@@ -363,6 +374,11 @@ export default class UserView extends Vue {
   @Watch("title", { immediate: true })
   private updateTitle() {
     this.$emit("update:title", this.title);
+  }
+
+  @Watch("caption", { immediate: true })
+  private updateCaption() {
+    this.$emit("update:caption", this.caption);
   }
 
   @Watch("submitPromise", { immediate: true })
