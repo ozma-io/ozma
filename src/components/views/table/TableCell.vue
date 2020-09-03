@@ -38,7 +38,7 @@
       />
       <p 
         v-else
-        :class="{selectable : fieldType == 'enum' || fieldType == 'reference'}"
+        :class="{selectable : (fieldType == 'enum' || fieldType == 'reference') && localValue.valueText.length > 0}"
       >
         {{ localValue.valueText || "" }}
       </p>
