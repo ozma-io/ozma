@@ -146,11 +146,6 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
     });
   }
 
-  private callProcess(querySelf: string){
-    console.log("callBuisnessProcess");
-    console.log(querySelf);
-  }
-
   get actions() {
     const actions: Action[] = [];
 
@@ -162,15 +157,8 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
         opts.homeSchema = home;
       }
       extraActions.forEach((action: any) => {
-        if (typeof action.name !== "string") {
-          return;
-        }
-        if (action.call_process && typeof action.call_process === "object" && action.call_process !== null) {
-          actions.push({ name: String(action.name), callback: () => this.callProcess(action.call_process) });
-          return;
-        }
         const querySelf = attrToQuery(action, opts);
-        if (action.name && action.ref && querySelf) {
+        if (action.name && querySelf) {
           actions.push({
             name: String(action.name),
             query: querySelf,
