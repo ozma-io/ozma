@@ -51,7 +51,7 @@
         @click="setIsOpen(true)"
       >{{ $t('empty_message') }}</span>
       <div
-        v-if="(!single && !isEmpty) || isOpen"
+        v-if="(!single && !isEmpty)"
         ref="valuesList"
         :class="[
           'select_container__content',
