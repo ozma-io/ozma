@@ -56,7 +56,7 @@
           title="view_headline"
           :actions="actions"
         />
-        <span v-if="!!caption" class="head-menu_title">{{ caption }}</span>
+        <span v-if="!!title" class="head-menu_title">{{ title }}</span>
         <SearchPanel
           v-if="enableFilter"
           :filterString="filterString"
@@ -78,8 +78,8 @@
           @update:statusLine="statusLine = $event"
           @update:enableFilter="enableFilter = $event"
           @update:bodyStyle="styleNode.innerHTML = $event"
+          @update:titleHead="updateTitleHead"
           @update:title="updateTitle"
-          @update:caption="updateCaption"
         />
       </div>
     </div>
@@ -180,7 +180,7 @@ export default class RootUserView extends Vue {
   private filterString = "";
   private enableFilter = false;
   private styleNode: HTMLStyleElement;
-  private caption = "";
+  private title = "";
 
   constructor() {
     super();
@@ -224,12 +224,12 @@ export default class RootUserView extends Vue {
     this.filterString = this.query.getSearch("q", String, "");
   }
 
-  private updateTitle(title: string) {
-    setHeadTitle(`${title} - Ozma`);
+  private updateTitleHead(titleHead: string) {
+    setHeadTitle(`${titleHead} - Ozma`);
   }
 
-  private updateCaption(caption: string) {
-    this.caption = caption;
+  private updateTitle(title: string) {
+    this.title = title;
   }
 
   private created() {

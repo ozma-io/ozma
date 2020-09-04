@@ -7,6 +7,7 @@
     <FormControl
       v-if="blockContent.type === 'input'"
       :caption="blockContent.field.caption"
+      :columnInfoName="blockContent.field.columnInfo.name"
       :value="gridProps.row.values[blockContent.field.index]"
       :attributes="gridProps.localRow.values[blockContent.field.index].attributes"
       :type="blockContent.field.columnInfo.valueType"

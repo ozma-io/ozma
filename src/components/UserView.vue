@@ -179,7 +179,7 @@ export default class UserView extends Vue {
   private currentUv: CombinedUserView | UserViewError | null = null;
   private waitReload = false;
 
-  get caption() {
+  get title() {
     if (this.currentUv instanceof CombinedUserView && this.currentUv.attributes.hasOwnProperty('title')) {
       return this.currentUv.attributes.title;
     } else {
@@ -187,9 +187,9 @@ export default class UserView extends Vue {
     }
   }
 
-  get title() {
-    if (!!this.caption) {
-      return this.caption;
+  get titleHead() {
+    if (!!this.title) {
+      return this.title;
     } else if (this.args.source.type === "named") {
       return this.args.source.ref.name;
     } else {
@@ -371,14 +371,14 @@ export default class UserView extends Vue {
     }
   }
 
+  @Watch("titleHead", { immediate: true })
+  private updateTitleHead() {
+    this.$emit("update:titleHead", this.titleHead);
+  }
+
   @Watch("title", { immediate: true })
   private updateTitle() {
     this.$emit("update:title", this.title);
-  }
-
-  @Watch("caption", { immediate: true })
-  private updateCaption() {
-    this.$emit("update:caption", this.caption);
   }
 
   @Watch("submitPromise", { immediate: true })
