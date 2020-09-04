@@ -9,6 +9,7 @@
     @update:actions="$emit('update:actions', $event)"
     @goto="$emit('goto', $event)"
     @update:enableFilter="$emit('update:enableFilter', $event)"
+    @update:title="updateTitle"
   />
 </template>
 
@@ -32,6 +33,10 @@ export default class FormControl extends Vue {
       return Array.from(new Set(convertToWords(value.toString())));
     }
     return [];
+  }
+
+  updateTitle(title: string | null) {
+    this.$emit("update:title", title);
   }
 
 }
