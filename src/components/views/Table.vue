@@ -536,10 +536,6 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     this.postInitCommonRow(row, localRow);
   }
 
-  postInitRow(rowIndex: number, row: ICombinedRow, localRow: IBaseLocalRow) {
-    this.postInitCommonRow(row, localRow);
-  }
-
   deleteCommonRow(row: ICombinedRow, localRow: ITableLocalRowInfo) {
     this.extra.rowCount--;
   }
