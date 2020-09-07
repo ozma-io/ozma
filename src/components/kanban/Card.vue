@@ -14,26 +14,31 @@
     <b-row
       v-for="(row, rowIndex) in data.rows"
       :key="rowIndex"
+      data-no-dragscroll
       class="card_row"
     >
       <b-col
         v-for="(col, colIndex) in row"
         :key="colIndex"
         :cols="col.size"
+        data-no-dragscroll
         class="card_col"
       >
         <div
           v-if="col.type === 'image'"
           class="card_avatar"
+          data-no-dragscroll
           :style="{ backgroundImage: `url('${col.value}')` }"
         />
         <span
           v-else
+          data-no-dragscroll
           class="card_text"
           :title="col.value"
         >
           <span
             v-if="col.icon && col.value"
+            data-no-dragscroll
             class="card_icon"
           >
             {{ col.icon }}
@@ -55,6 +60,7 @@ import { IQuery, queryLocation } from "../../state/query";
 import ModalUserView from "@/components/ModalUserView.vue";
 import { Moment } from "moment";
 import { dateTimeFormat, dateFormat } from "../../values";
+import { dragscroll } from 'vue-dragscroll';
 
 export type CardColType = "text" | "image";
 export type CardTarget = "modal" | "top" | "blank";
@@ -90,7 +96,7 @@ interface ICardStyle {
 }
 
 
-@Component({ components: { ModalUserView }})
+@Component({ components: { ModalUserView }, directives: { dragscroll }})
 export class Card extends Vue {
   @Prop({ type: Object, required: true }) data!: ICard;
   @Prop({ type: Boolean, required: false, default: false }) selected!: boolean;

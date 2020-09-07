@@ -1,6 +1,6 @@
 <template>
   <!-- <draggable tag="v-layout" v-model="columns" group="column"> -->
-  <div class="board_container">
+  <div class="board_container" v-dragscroll.x>
     <Column
       v-for="(column, columnIndex) in columns"
       :id="column.id"
@@ -13,7 +13,6 @@
       :width="columnWidth"
       :add="add"
       :move="move"
-      :last-column="columnIndex === (columns.length - 1)"
     />
   </div>
   <!-- </draggable> -->
@@ -50,6 +49,7 @@ export default class Board extends Vue {
   .board_container {
     width: 100%;
     height: 100%;
+    overflow-y: hidden;
     overflow-x: auto;
     display: flex;
     flex-direction: row;
