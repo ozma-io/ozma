@@ -34,3 +34,5 @@ declare module "vue-input-autowidth" {
 }
 
 declare module "vue-textarea-autosize";
+
+declare module "vue-dragscroll";

@@ -30,6 +30,7 @@
       </div>
     </div>
     <draggable
+      v-dragscroll.y
       class="column_body"
       group="cards"
       ghost-class="card_dragging"
@@ -43,6 +44,7 @@
         :key="index"
         :data="card"
         :target="cardTarget"
+        data-no-dragscroll
         :width="width"
         :selected="isCardSelected(card.groupRef.position)"
       />
@@ -60,6 +62,7 @@ import ModalUserView from "@/components/ModalUserView.vue";
 import Card, { ICard, CardTarget } from "@/components/kanban/Card.vue";
 import { ValueRef } from "../../local_user_view";
 import { IQuery } from "../../state/query";
+import { dragscroll } from 'vue-dragscroll';
 
 export interface IColumn {
   id?: any;
@@ -89,7 +92,7 @@ export interface IColumnStyle {
   flex?: number;
 }
 
-@Component({ components: { Card, draggable, ModalUserView } })
+@Component({ components: { Card, draggable, ModalUserView }, directives: { dragscroll } })
 export default class Column extends Vue {
   @Prop() id!: any;
   @Prop({ type: Array, required: true }) cards!: ICard[];
@@ -99,7 +102,6 @@ export default class Column extends Vue {
   @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Function, required: false }) move!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Number, required: false, default: 300 }) width!: number;
-  @Prop({ type: Boolean, default: false }) lastColumn!: boolean;
   @Prop({ type: String, required: false }) cardTarget!: CardTarget;
 
   modalView: IQuery | null = null;
@@ -124,13 +126,8 @@ export default class Column extends Vue {
   }
 
   private get style(): IColumnStyle {
-    const strWidth = `${this.width}px`;
-    const finalWidth = this.lastColumn ? undefined : strWidth;
     return {
-      width: finalWidth,
-      minWidth: strWidth,
-      maxWidth: finalWidth,
-      flex: this.lastColumn ? 1 : undefined,
+      width: `${this.width}px`
     }
   }
 
@@ -238,12 +235,8 @@ export default class Column extends Vue {
 
   .column_body {
     padding: 15px 10px 0 10px;
-    overflow-y: none;
+    overflow-x: hidden;
     height: 100%;
-  }
-
-  .column_body:hover {
-    overflow-y: auto;
   }
 
   .column_controls {
