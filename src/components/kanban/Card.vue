@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="cardContainer"
     data-no-dragscroll
     class="card_container"
     :style="cardStyle"
@@ -92,6 +93,7 @@ export interface ICard {
 }
 
 interface ICardStyle {
+  height?: string;
   width?: string;
   backgrondColor?: string;
 }
@@ -105,6 +107,12 @@ export class Card extends Vue {
   @Prop({ type: String, required: false, default: () => 'top' }) target!: CardTarget;
 
   modalView: IQuery | null = null;
+  private height = 0;
+
+  private mounted(){
+    const cardContainerElement =  this.$refs.cardContainer as HTMLElement;
+    this.height = cardContainerElement.clientHeight;
+  }
 
   private openModal() {
     if (this.data.cardView) {
@@ -127,6 +135,7 @@ export class Card extends Vue {
     return {
       backgroundColor: color,
       width: `${this.width - 20}px`,
+      height: this.height ? `${this.height}px` : 'auto',
     };
   }
 }
@@ -138,6 +147,7 @@ export default Card;
   .card_container {
     cursor: grab;
     border: 1px solid var(--MainBorderColor);
+    border-radius: 3px;
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
     padding: 10px;

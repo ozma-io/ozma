@@ -35,6 +35,7 @@
       group="cards"
       ghost-class="card_dragging"
       :options="{delayOnTouchOnly: true, delay: 400, forceFallback: true}"
+      :animation= "300"
       :list="cards"
       @add="onAdd"
       @end="onMove"
@@ -213,9 +214,12 @@ export default class Column extends Vue {
   }
 
   .column_header {
+    background-color: #fff0f5;
     border-bottom: 1px solid var(--MainBorderColor);
-    padding: 10px;
+    border-top: 1px solid var(--MainBorderColor);
+    padding: 10px 10px 10px 12px;
     display: flex;
+    opacity: 0.5;
   }
 
   .column_header__title_block {
@@ -227,6 +231,7 @@ export default class Column extends Vue {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+    font-weight: bold;
   }
 
   .column_select_checkbox {
@@ -237,6 +242,7 @@ export default class Column extends Vue {
     padding: 15px 10px 0 10px;
     overflow-x: hidden;
     height: 100%;
+    background-color: rgba(255, 250, 250, 0.6);
   }
 
   .column_controls {
@@ -263,7 +269,7 @@ export default class Column extends Vue {
   .card_dragging {
     background-color: var(--MainBorderColor);
     width: 100%;
-    height: 15px;
+    opacity: 1;
   }
 
   .card_open_icon {
