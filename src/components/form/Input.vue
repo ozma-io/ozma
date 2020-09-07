@@ -170,6 +170,11 @@ export default class Input extends Vue {
     if (!this.isMobile) {
       this.updateWidth(this.value);
     }
+
+    // For close opened Multiselect, Calendar etc...
+    const control = this.$refs.control as HTMLInputElement;
+    if (control.parentElement !== null)
+      control.parentElement.click();
   }
 
   private onBlur(evt: Event) {

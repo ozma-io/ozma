@@ -238,7 +238,9 @@ export default class MultiSelect extends Vue {
       if (selectContainerRect.top > (bodyRect.bottom - selectContainerRect.bottom)){
         this.isTopFilter = !this.isTopFilter;
         this.optionsContainerCoords.bottom = selectContainerRect.height;
-        this.setIsOpen(true);
+        // It is need for set focus to search input if options opened. 
+        if(this.isOpen)
+          this.setIsOpen(true);
       } else {
         this.optionsContainerCoords.top = selectContainerRect.height;
       }
