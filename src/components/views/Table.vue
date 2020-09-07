@@ -526,6 +526,10 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     this.postInitCommonRow(row, localRow);
   }
 
+  postInitRow(rowIndex: number, row: ICombinedRow, localRow: IBaseLocalRow) {
+    this.postInitCommonRow(row, localRow);
+  }
+
   deleteRow(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRowInfo) {
     if (localRow.extra.selected) {
       localRow.extra.selected = false;
