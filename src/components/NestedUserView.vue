@@ -18,7 +18,7 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import { convertToWords } from "@/utils";
 
 @Component
-export default class FormControl extends Vue {
+export default class NestedUserView extends Vue {
   
   @Prop({ type: Object, required: true }) args!: Record<string, any>;
   @Prop({ type: String, required: true }) scope!: string;
