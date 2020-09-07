@@ -1,5 +1,6 @@
 <template>
   <div
+    data-no-dragscroll
     class="card_container"
     :style="cardStyle"
     @click="openModal"
@@ -26,8 +27,8 @@
       >
         <div
           v-if="col.type === 'image'"
-          class="card_avatar"
           data-no-dragscroll
+          class="card_avatar"
           :style="{ backgroundImage: `url('${col.value}')` }"
         />
         <span
@@ -60,7 +61,7 @@ import { IQuery, queryLocation } from "../../state/query";
 import ModalUserView from "@/components/ModalUserView.vue";
 import { Moment } from "moment";
 import { dateTimeFormat, dateFormat } from "../../values";
-import { dragscroll } from 'vue-dragscroll';
+import { dragscroll } from "vue-dragscroll";
 
 export type CardColType = "text" | "image";
 export type CardTarget = "modal" | "top" | "blank";

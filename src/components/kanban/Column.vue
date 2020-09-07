@@ -30,12 +30,12 @@
       </div>
     </div>
     <draggable
+      v-dragscroll.y
       class="column_body"
       group="cards"
       ghost-class="card_dragging"
       :options="{delayOnTouchOnly: true, delay: 400, forceFallback: true}"
       :list="cards"
-      v-dragscroll.y
       @add="onAdd"
       @end="onMove"
     >

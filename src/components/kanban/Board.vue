@@ -1,6 +1,6 @@
 <template>
   <!-- <draggable tag="v-layout" v-model="columns" group="column"> -->
-  <div class="board_container" v-dragscroll.x>
+  <div v-dragscroll.x class="board_container">
     <Column
       v-for="(column, columnIndex) in columns"
       :id="column.id"
@@ -25,7 +25,7 @@ import draggable from "vuedraggable";
 import { ICard, CardTarget } from "@/components/kanban/Card.vue";
 import Column, { IColumn } from "@/components/kanban/Column.vue";
 import { ValueRef } from "../../local_user_view";
-import { dragscroll } from 'vue-dragscroll';
+import { dragscroll } from "vue-dragscroll";
 
 @Component({ components: { Column, draggable }, directives: { dragscroll } })
 export default class Board extends Vue {
