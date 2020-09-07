@@ -207,7 +207,7 @@
             v-if="actions.length > 0"
             class="nested-menu"
           >
-            <label class="input_label">{{ caption }}</label>
+            <label class="input_label">{{ title }}</label>
             <ActionsMenu
               title="view_headline"
               :actions="actions"
@@ -287,6 +287,7 @@
             @update:actions="actions = $event"
             @goto="$emit('goto', $event)"
             @update:enableFilter="enableFilter = $event"
+            @update:title="updateTitle"
           ></NestedUserView>
         </b-col>
       </b-row>
@@ -410,6 +411,7 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) dontFocus!: boolean;
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
   @Prop({ type: String, default: "" }) caption!: string;
+  @Prop({ type: String, default: "" }) columnInfoName!: string;
   @Prop({ type: Boolean, default: false }) disableColor!: boolean;
   @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
   @Prop({ type: String, required: true }) scope!: string;
@@ -420,6 +422,7 @@ export default class FormControl extends Vue {
   private actions: Action[] = [];
   private codeEditorKey = 0;
   private filterString = "";
+  private title = "";
 
   get isInline(): boolean {
     return inlineTypes.includes(this.inputType.name);
@@ -455,6 +458,12 @@ export default class FormControl extends Vue {
     const isHeightOnPanel = !multilineTypes.includes(this.inputType.name);
     const height = isHeightOnPanel ? { height: `${this.customHeight}px` } : {};
     return this.customHeight !== null && !excludeHeight ? { ...height, maxHeight: "initial" } : {};
+  }
+
+  private updateTitle(title: string | null) {
+    this.title = (!!title && this.columnInfoName === this.caption)
+      ? title
+      : this.caption
   }
 
   private setInputHeight(value: number) {

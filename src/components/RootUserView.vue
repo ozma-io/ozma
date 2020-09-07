@@ -56,6 +56,7 @@
           title="view_headline"
           :actions="actions"
         />
+        <span v-if="!!title" class="head-menu_title">{{ title }}</span>
         <SearchPanel
           v-if="enableFilter"
           :filterString="filterString"
@@ -77,6 +78,7 @@
           @update:statusLine="statusLine = $event"
           @update:enableFilter="enableFilter = $event"
           @update:bodyStyle="styleNode.innerHTML = $event"
+          @update:titleHead="updateTitleHead"
           @update:title="updateTitle"
         />
       </div>
@@ -178,6 +180,7 @@ export default class RootUserView extends Vue {
   private filterString = "";
   private enableFilter = false;
   private styleNode: HTMLStyleElement;
+  private title = "";
 
   constructor() {
     super();
@@ -190,7 +193,7 @@ export default class RootUserView extends Vue {
       return this.$t(`${key}_error`, {msg: error});
     }));
   }
-  
+
   get filterWords() {
     const value = this.query.getSearch("q", String, "");
     if (value !== undefined) {
@@ -221,8 +224,12 @@ export default class RootUserView extends Vue {
     this.filterString = this.query.getSearch("q", String, "");
   }
 
+  private updateTitleHead(titleHead: string) {
+    setHeadTitle(`${titleHead} - Ozma`);
+  }
+
   private updateTitle(title: string) {
-    setHeadTitle(`${title} - FunApp`);
+    this.title = title;
   }
 
   private created() {
@@ -386,6 +393,11 @@ export default class RootUserView extends Vue {
     outline: none;
   }
 
+  .head-menu_title {
+    margin: 1px 20px 0;
+    font-weight: bold;
+  }
+
   .fix-bot {
     padding: 0.4rem;
     padding-left: 0.75rem;
@@ -511,6 +523,10 @@ export default class RootUserView extends Vue {
         display: inline-block;
         height: 1em;
         vertical-align: bottom;
+      }
+
+      .head-menu_title {
+        display: none;
       }
     }
   }
