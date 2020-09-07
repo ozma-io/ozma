@@ -9,6 +9,7 @@
     @update:actions="$emit('update:actions', $event)"
     @goto="$emit('goto', $event)"
     @update:enableFilter="$emit('update:enableFilter', $event)"
+    @update:title="updateTitle"
   />
 </template>
 
@@ -17,7 +18,7 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import { convertToWords } from "@/utils";
 
 @Component
-export default class NestedUserView extends Vue {
+export default class FormControl extends Vue {
   
   @Prop({ type: Object, required: true }) args!: Record<string, any>;
   @Prop({ type: String, required: true }) scope!: string;
@@ -32,6 +33,10 @@ export default class NestedUserView extends Vue {
       return Array.from(new Set(convertToWords(value.toString())));
     }
     return [];
+  }
+
+  updateTitle(title: string | null) {
+    this.$emit("update:title", title);
   }
 
 }

@@ -3,7 +3,7 @@
   <tr
     :style="localRow.extra.style"
     :class="['table-tr',
-             baseLocalRow.extra.selected ? 'selected' : 'none_selected',
+             localRow.extra.selected ? 'selected' : 'none_selected',
              {'table-tr-new': from==='new' },
     ]"
   >
@@ -14,7 +14,7 @@
     >
       <!-- Key is needed to force checkbox re-render when `selected` changes. Not sure why. -->
       <span class="table-th_span">
-        <checkbox :checked="baseLocalRow.extra.selected" />
+        <checkbox :checked="localRow.extra.selected" />
       </span>
     </td>
     <td
@@ -68,7 +68,6 @@ export default class TableRow extends Vue {
   // See https://forum.vuejs.org/t/performance-for-large-numbers-of-components/13545/10
   @Prop({ type: Object, required: true }) row!: any;
   @Prop({ type: Object, required: true }) localRow!: any;
-  @Prop({ type: Object, required: true }) baseLocalRow!: any;
   @Prop({ type: Array, required: true }) columnIndexes!: any[];
   @Prop({ type: Object, required: true }) localUv!: any;
   @Prop({ type: String, default: "existing" }) from!: string;

@@ -2,12 +2,11 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { RowId, IEntityRef, IFieldRef } from "@/api";
-import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, homeSchema, ICombinedRow, IAddedRow } from "@/state/user_view";
+import { CombinedUserView, currentValue } from "@/state/user_view";
 import { ErrorKey } from "@/state/errors";
 import { ScopeName, UserViewKey, AddedRowId, CombinedTransactionResult, IAddedResult } from "@/state/staging_changes";
-import { LocalUserView, RowRef, ValueRef, SimpleLocalUserView, ILocalRow, ILocalRowInfo } from "@/local_user_view";
+import { LocalUserView, RowRef, ValueRef } from "@/local_user_view";
 import { equalEntityRef } from "@/values";
-import { ObjectSet } from "@/utils";
 
 export interface ISelectionRef {
   entity: IEntityRef;
@@ -16,137 +15,8 @@ export interface ISelectionRef {
 
 const staging = namespace("staging");
 const errors = namespace("errors");
-const userView = namespace("userView");
 
 const errorKey = "base_user_view";
-
-// Interface for save cell value to storage vuex
-interface IBaseValueExtra {
-  selected: boolean;
-}
-
-// Interface for save row to storage vuex
-interface IBaseRowExtra {
-  selected: boolean;
-  selectionEntry?: ISelectionRef;
-}
-
-// Interface for save user_view to storage vuex
-interface IBaseUserViewExtra {
-  rowCount: number;
-  selectedRows: ObjectSet<RowRef>;
-}
-
-type IBaseLocalRowInfo = ILocalRowInfo<IBaseRowExtra>;
-type IBaseLocalRow = ILocalRow<IBaseValueExtra, IBaseRowExtra>;
-
-// BaseUserView class for save local data to vuex
-export class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBaseRowExtra, IBaseUserViewExtra> {
-
-  createCommonLocalValue(row: IRowCommon, localRow: IBaseLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: IBaseValueExtra | null): IBaseValueExtra {
-    const selected = oldLocal !== null ? oldLocal.selected : false;
-
-    const extra: IBaseValueExtra = {
-      selected,
-    };
-
-    return extra;
-  }
-
-  createCommonLocalRow(row: IRowCommon): IBaseRowExtra {
-    
-    const extra: IBaseRowExtra = {
-      selected: false
-    };
-
-    this.extra.rowCount++;
-    return extra;
-  }
-
-  createAddedLocalRow(rowId: AddedRowId, row: IAddedRow) {
-    this.extra.rowCount++;
-
-    return this.createCommonLocalRow(row);
-  }
-
-  createLocalUserView(): IBaseUserViewExtra{
-    const extra = {
-      rowCount: -1, //FIXME why not 0?
-      selectedRows: new ObjectSet<RowRef>()
-    };
-    return extra;
-  }
-
-  selectRow(ref: RowRef, selectedStatus: boolean) {
-    const row = this.getRowByRef(ref);
-    if (row === null) {
-      return;
-    }
-    if (row.local.extra.selected !== selectedStatus) {
-      row.local.extra.selected = selectedStatus;
-      if (selectedStatus) {
-        this.extra.selectedRows.insert(ref);
-      } else {
-        this.extra.selectedRows.delete(ref);
-      }
-    }
-  }
-
-
-  selectAll(selectedStatus: boolean) {
-    Object.entries(this.newRows).forEach(([rowIdRaw, row]) => {
-      const rowId = Number(rowIdRaw);
-      row.extra.selected = selectedStatus;
-      if (selectedStatus) {
-        this.extra.selectedRows.insert({
-          type: "added",
-          id: rowId,
-        });
-      }
-    });
-    if (this.uv.rows !== null) {
-      this.rows.forEach((localRow, rowI) => {
-        const row = (this.uv.rows as ICombinedRow[])[rowI];
-        if (!row.deleted) {
-          localRow.extra.selected = selectedStatus;
-          if (selectedStatus) {
-            this.extra.selectedRows.insert({
-              type: "existing",
-              position: rowI,
-            });
-          }
-        }
-      });
-    }
-
-    if (!selectedStatus) {
-      this.extra.selectedRows = new ObjectSet<RowRef>();
-    }
-  }
-  
-  postInitRow(rowIndex: number, row: ICombinedRow, localRow: IBaseLocalRow) {
-    this.postInitCommonRow(row, localRow);
-    if (row.deleted) {
-      this.extra.rowCount--;
-    }
-  }
-
-  deleteCommonRow(row: ICombinedRow, localRow: IBaseLocalRowInfo) {
-    this.extra.rowCount--;
-  }
-
-  undeleteRow(rowIndex: number, row: ICombinedRow, localRow: IBaseLocalRowInfo) {
-    this.extra.rowCount++;
-  }
-
-  get selectedCount() {
-    return this.extra.selectedRows.length;
-  }
-
-  get selectedAll(): boolean {
-    return this.selectedCount === this.extra.rowCount && this.selectedCount > 0;
-  }
-}
 
 @Component
 export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, ValueT, RowT, ViewT> extends Vue {
@@ -161,7 +31,6 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
 
   @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView;
   @Prop({ type: Object, required: true }) local!: T;
-  @Prop({ type: Object, required: true }) baseLocal!: LocalBaseUserView;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
   @Prop({ type: Array, required: true }) filter!: string[];
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;

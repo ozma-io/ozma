@@ -30,6 +30,7 @@
       ]"
     >
       <div
+        v-if="single"
         class="single_value_button"
         @click="setIsOpen(true)"
       >
@@ -224,7 +225,7 @@ export default class MultiSelect extends Vue {
 
   private mounted() {
 
-    if (this.selectedOptions.length < 3)
+    if (this.selectedOptions.length < 3 && this.single)
       this.isNeedFilter = false;
 
     //nextRender need for set coordinates selectedContainer after load cell data. 
