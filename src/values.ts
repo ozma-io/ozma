@@ -86,7 +86,8 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, value: any):
       return undefined;
     }
   } else if (fieldType.type === "date") {
-    const date = moment.utc(value, dateFormat);
+    // We use local time for dates.
+    const date = moment(value, dateFormat);
     if (!date.isValid()) {
       return undefined;
     } else {
