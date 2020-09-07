@@ -27,6 +27,8 @@
                  'input_field__disabled': disabled,
                  'input_field__focused': focused,
                  'input_field__unfocused': !focused,
+                 'input-field__error': error,
+                 'input-field__required': required && isEmpty,
                  'input-field_cell-edit': isCellEdit,
                }
       ]"
@@ -58,6 +60,7 @@
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { isMobile } from "@/utils";
+import { valueIsNull } from "@/values";
 import Textarea from "@/components/form/Textarea.vue";
 @Component({
   components: {Textarea}
@@ -65,7 +68,8 @@ import Textarea from "@/components/form/Textarea.vue";
 export default class Input extends Vue {
   @Prop({ type: String }) label!: string;
   @Prop() value!: any;
-  @Prop({ type: String }) error!: string;
+  @Prop({ type: Boolean }) error!: boolean;
+  @Prop({ type: Boolean }) required!: boolean;
   @Prop({ type: String }) warning!: string;
   @Prop({ type: Number }) height!: number;
   @Prop({ type: Boolean }) disabled!: boolean;
@@ -79,6 +83,10 @@ export default class Input extends Vue {
 
   private focused = false;
   private maxInputWidth = 0;
+
+  private get isEmpty(): boolean {
+    return valueIsNull(this.value);
+  }
 
   private mounted() {
     const controlElement = this.$refs.control as HTMLInputElement;
@@ -184,8 +192,10 @@ export default class Input extends Vue {
   }
 
   private setInputHeight() {
-    const controlTextareaElement = this.$refs.controlTextarea as any;
-    this.$emit("set-input-height", controlTextareaElement.$el.clientHeight);
+    if (this.$refs.controlTextarea) {
+      const controlTextareaElement = this.$refs.controlTextarea as any;
+      this.$emit("set-input-height", controlTextareaElement.$el.clientHeight);
+    }
   }
 
   private updateWidth(text: string) {
@@ -242,6 +252,14 @@ export default class Input extends Vue {
     padding-left: 15px;
   }
 
+  .input-field__required {
+    border-bottom: 1px solid var(--WarningColor) !important;
+  }
+
+  .input-field__error {
+    border-bottom: 1px solid var(--FailColor) !important;
+  }
+
   .input_field__focused {
     position: absolute;
   }
@@ -290,6 +308,7 @@ export default class Input extends Vue {
     border-bottom: 1px solid transparent;
     width: 100%;
     text-overflow: ellipsis;
+    transition: border-color 0.2s ease-in;
   }
 
   .input_field::placeholder {

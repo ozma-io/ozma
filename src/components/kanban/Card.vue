@@ -57,8 +57,8 @@ import { Moment } from "moment";
 import { dateTimeFormat, dateFormat } from "../../values";
 
 export type CardColType = "text" | "image";
-export type CardTarget = "_modal" | "_top" | "_blank";
-export const allowedTargets: CardTarget[] = ["_modal", "_top", "_blank"];
+export type CardTarget = "modal" | "top" | "blank";
+export const allowedTargets: CardTarget[] = ["modal", "top", "blank"];
 
 export interface ICardCol {
   fieldName?: string;
@@ -91,29 +91,25 @@ interface ICardStyle {
 
 
 @Component({ components: { ModalUserView }})
-class Card extends Vue {
+export class Card extends Vue {
   @Prop({ type: Object, required: true }) data!: ICard;
   @Prop({ type: Boolean, required: false, default: false }) selected!: boolean;
   @Prop({ type: Number, required: true }) width!: number;
-  @Prop({ type: String, required: false, default: () => '_top' }) target!: CardTarget;
+  @Prop({ type: String, required: false, default: () => 'top' }) target!: CardTarget;
 
   modalView: IQuery | null = null;
 
-  private test(val: any) {
-    return;
-  }
-
   private openModal() {
     if (this.data.cardView) {
-      if (this.target === '_top') {
+      if (this.target === 'top') {
         const url = queryLocation(this.data.cardView);
         this.$router.push(url);
-      } else if (this.target === '_blank') {
+      } else if (this.target === 'blank') {
         const url = this.$router.resolve(
           queryLocation(this.data.cardView),
         );
-        window.open(url.href, this.target);
-      } else if (this.target === '_modal') {
+        window.open(url.href, '_blank');
+      } else if (this.target === 'modal') {
         this.modalView = this.data.cardView;
       }
     }

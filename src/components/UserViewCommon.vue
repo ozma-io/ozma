@@ -10,7 +10,7 @@
             "create": "Создать новую",
             "create_in_modal": "Создать связанную запись в окне",
             "export_to_csv": "Экспорт в .csv",
-            "import_from_csv": "Испорт из .csv"
+            "import_from_csv": "Импорт из .csv"
         }
     }
 </i18n>
@@ -146,15 +146,8 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
     });
   }
 
-  private callProcess(querySelf: string){
-    console.log("callBuisnessProcess");
-    console.log(querySelf);
-  }
-
   get actions() {
-    const actions: Action[] = [
-      //{name: this.$t("export_to_csv").toString(), callback: () => this.exportToCsv()},
-    ];
+    const actions: Action[] = [];
 
     const extraActions = this.uv.attributes["extra_actions"];
     if (Array.isArray(extraActions)) {
@@ -164,15 +157,8 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
         opts.homeSchema = home;
       }
       extraActions.forEach((action: any) => {
-        if (typeof action.name !== "string") {
-          return;
-        }
-        if (action.call_process && typeof action.call_process === "object" && action.call_process !== null) {
-          actions.push({ name: String(action.name), callback: () => this.callProcess(action.call_process) });
-          return;
-        }
         const querySelf = attrToQuery(action, opts);
-        if (action.name && action.ref && querySelf) {
+        if (action.name && querySelf) {
           actions.push({
             name: String(action.name),
             query: querySelf,
@@ -192,6 +178,11 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
 
     if (this.uv.info.mainEntity != null) {
       actions.push({ name: this.$t("import_from_csv").toString(), uploadFile: (file) => this.importFromCsv(file) });
+    }
+
+    // FIXME: workaround until we have proper role-based permissions for this.
+    if ("__export_to_csv" in this.$route.query) {
+      actions.push({name: this.$t("export_to_csv").toString(), callback: () => this.exportToCsv()});
     }
 
     return actions;

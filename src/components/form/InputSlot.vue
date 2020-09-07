@@ -81,7 +81,7 @@ import {ICombinedValue} from "@/state/user_view";
 @Component({ components: { Modal, Input } })
 export default class InputSlot extends Vue {
   @Prop({ type: String }) label!: string;
-  @Prop({ type: String }) error!: string;
+  @Prop({ type: Boolean }) error!: boolean;
   @Prop({ type: String }) warning!: string;
   @Prop({ type: Number }) height!: number;
   @Prop({ type: Array }) actions!: Action[];

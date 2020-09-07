@@ -84,7 +84,7 @@
               @click="selectAllRows"
             >
               <span class="table-th_span">
-                <checkbox :checked="baseLocal.selectedAll" />
+                <checkbox :checked="local.selectedAll" />
               </span>
             </th>
             <th
@@ -145,7 +145,6 @@
             <TableRow
               :row="local.emptyRow.row"
               :local-row="local.emptyRow.local"
-              :base-local-row="baseLocal.emptyRow.local"
               :column-indexes="columnIndexes"
               :local-uv="local.extra"
               :show-fixed-row="showFixedRow"
@@ -173,7 +172,6 @@
               :key="`new-${rowId}`"
               :row="uv.newRows[rowId]"
               :local-row="local.newRows[rowId]"
-              :base-local-row="baseLocal.newRows[rowId]"
               :column-indexes="columnIndexes"
               :local-uv="local.extra"
               :show-fixed-row="showFixedRow"
@@ -201,7 +199,6 @@
               :key="rowI"
               :row="uv.rows[rowI]"
               :local-row="local.rows[rowI]"
-              :base-local-row="baseLocal.rows[rowI]"
               :column-indexes="columnIndexes"
               :local-uv="local.extra"
               :show-fixed-row="showFixedRow"
@@ -289,6 +286,7 @@ interface ITableRowExtra {
 
 interface ITableUserViewExtra {
   hasRowLinks: boolean;
+  rowCount: number;
   selectedRows: ObjectSet<RowRef>;
   selectedValues: ObjectSet<ValueRef>;
   columns: IColumn[];
@@ -504,10 +502,15 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
         id: row.mainId,
       };
     }
+
+    this.extra.rowCount++;
+
     return extra;
   }
 
   createAddedLocalRow(rowId: AddedRowId, row: IAddedRow) {
+    this.extra.rowCount++;
+
     return this.createCommonLocalRow(row);
   }
 
@@ -522,6 +525,13 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     localRow.extra.searchText = "\0".concat(...searchStrings);
   }
 
+  postInitRow(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRow) {
+    this.postInitCommonRow(row, localRow);
+    if (row.deleted) {
+      this.extra.rowCount--;
+    }
+  }
+
   postInitAddedRow(rowId: AddedRowId, row: IAddedRow, localRow: ITableLocalRow) {
     this.postInitCommonRow(row, localRow);
   }
@@ -530,7 +540,12 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     this.postInitCommonRow(row, localRow);
   }
 
+  deleteCommonRow(row: ICombinedRow, localRow: ITableLocalRowInfo) {
+    this.extra.rowCount--;
+  }
+
   deleteRow(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRowInfo) {
+    this.deleteCommonRow(row, localRow);
     if (localRow.extra.selected) {
       localRow.extra.selected = false;
       this.extra.selectedRows.delete({
@@ -541,6 +556,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
   }
 
   deleteAddedRow(rowId: AddedRowId, row: ICombinedRow, localRow: ITableLocalRowInfo) {
+    this.deleteCommonRow(row, localRow);
     if (localRow.extra.selected) {
       this.extra.selectedRows.delete({
         type: "added",
@@ -549,10 +565,15 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     }
   }
 
+  undeleteRow(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRowInfo) {
+    this.extra.rowCount++;
+  }
+
   createLocalUserView(): ITableUserViewExtra {
     const columns = createColumns(this.uv);
     const extra: ITableUserViewExtra = {
       hasRowLinks: false,
+      rowCount: 0,
       selectedRows: new ObjectSet<RowRef>(),
       selectedValues: new ObjectSet<ValueRef>(),
       columns,
@@ -596,6 +617,60 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
         this.extra.selectedValues.delete(ref);
       }
     }
+  }
+
+  selectRow(ref: RowRef, selectedStatus: boolean) {
+    const row = this.getRowByRef(ref);
+    if (row === null) {
+      return;
+    }
+    if (row.local.extra.selected !== selectedStatus) {
+      row.local.extra.selected = selectedStatus;
+      if (selectedStatus) {
+        this.extra.selectedRows.insert(ref);
+      } else {
+        this.extra.selectedRows.delete(ref);
+      }
+    }
+  }
+
+  selectAll(selectedStatus: boolean) {
+    Object.entries(this.newRows).forEach(([rowIdRaw, row]) => {
+      const rowId = Number(rowIdRaw);
+      row.extra.selected = selectedStatus;
+      if (selectedStatus) {
+        this.extra.selectedRows.insert({
+          type: "added",
+          id: rowId,
+        });
+      }
+    });
+    if (this.uv.rows !== null) {
+      this.rows.forEach((localRow, rowI) => {
+        const row = (this.uv.rows as ICombinedRow[])[rowI];
+        if (!row.deleted) {
+          localRow.extra.selected = selectedStatus;
+          if (selectedStatus) {
+            this.extra.selectedRows.insert({
+              type: "existing",
+              position: rowI,
+            });
+          }
+        }
+      });
+    }
+
+    if (!selectedStatus) {
+      this.extra.selectedRows = new ObjectSet<RowRef>();
+    }
+  }
+
+  get selectedCount() {
+    return this.extra.selectedRows.length;
+  }
+
+  get selectedAll(): boolean {
+    return this.selectedCount === this.extra.rowCount && this.selectedCount > 0;
   }
 
   get technicalWidth() {
@@ -827,7 +902,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (emptyRow !== null) {
       this.showEmptyRow = newValue;
       if (!newValue) {
-        this.baseLocal.selectRow({type: "new"}, false);
+        this.local.selectRow({type: "new"}, false);
         emptyRow.local.values.forEach((_, colI) => {
           this.local.selectCell({type: "new", column: colI}, false);
         });
@@ -1020,7 +1095,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (ref === null) {
       return;
     }
-    const row = this.baseLocal.getRowByRef(ref);
+    const row = this.local.getRowByRef(ref);
     if (row === null) {
       return;
     }
@@ -1038,7 +1113,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       if (prevRef === null) {
         return false;
       }
-      const prevRow = this.baseLocal.getRowByRef(prevRef);
+      const prevRow = this.local.getRowByRef(prevRef);
       if (prevRow === null) {
         return false;
       }
@@ -1049,22 +1124,22 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         if (currRef === null) {
           throw new Error("impossible");
         }
-        this.baseLocal.selectRow(currRef, prevRow.local.extra.selected);
+        this.local.selectRow(currRef, prevRow.local.extra.selected);
         i = this.nextLocalRowPosition(i);
       }
-      this.baseLocal.selectRow(this.getRowByLocalPosition(to)!, prevRow.local.extra.selected);
+      this.local.selectRow(this.getRowByLocalPosition(to)!, prevRow.local.extra.selected);
       return true;
     };
 
     if (!(this.lastSelectedRow !== null && event.shiftKey && proc())) {
-      this.baseLocal.selectRow(ref, !row.local.extra.selected);
+      this.local.selectRow(ref, !row.local.extra.selected);
     }
 
     this.lastSelectedRow = posRef;
   }
 
   private selectAllRows() {
-    this.baseLocal.selectAll(!this.baseLocal.selectedAll);
+    this.local.selectAll(!this.local.selectedAll);
   }
 
   private removeSelectedRows() {
@@ -1073,7 +1148,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       throw new Error("View doesn't have a main entity");
     }
 
-    this.baseLocal.extra.selectedRows.keys().forEach(rowRef => this.deleteRow(rowRef));
+    this.local.extra.selectedRows.keys().forEach(rowRef => this.deleteRow(rowRef));
   }
 
   private init() {
@@ -1178,7 +1253,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   get statusLine() {
-    const selectedCount = this.baseLocal.selectedCount;
+    const selectedCount = this.local.selectedCount;
     const selected = (selectedCount > 0) ? `${selectedCount}/` : "";
     return `${selected}${this.uv.newRowsPositions.length + this.nonDeletedRowPositions.length}`;
   }

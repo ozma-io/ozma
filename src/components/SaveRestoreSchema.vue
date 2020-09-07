@@ -36,7 +36,7 @@
         {{ $t('restore') }}
         <input
           type="file"
-          @change="restoreSchema"
+          @change="restoreSchemas"
         >
       </label>
     </p>
@@ -50,7 +50,7 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { Action, namespace } from "vuex-class";
 
-import * as Api from "@/api";
+import Api from "@/api";
 
 @Component
 export default class SaveRestoreSchema extends Vue {
@@ -90,13 +90,13 @@ export default class SaveRestoreSchema extends Vue {
     }
   }
 
-  async restoreSchema(event: Event) {
+  async restoreSchemas(event: Event) {
     const files = (event.target as HTMLInputElement).files as FileList;
     const content = files[0];
     try {
       await this.callProtectedApi({
-        func: Api.restoreSchema,
-        args: [this.schema, content],
+        func: Api.restoreSchemas,
+        args: [content],
       });
 
       this.lastError = this.$t("success").toString();

@@ -79,6 +79,7 @@ export abstract class LocalUserView<ValueT, RowT, ViewT> implements IHandlerProv
   newRows: Record<AddedRowId, ILocalRow<ValueT, RowT>>;
   extra: ViewT;
   handler: IUserViewEventHandler;
+  // Empty (template) row with default values. Used for displaying new empty rows in table, form etc.
   emptyRow: IEmptyRow<ValueT, RowT> | null;
 
   constructor(store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>, oldLocal: LocalUserView<ValueT, RowT, ViewT> | null) {
@@ -175,11 +176,17 @@ export abstract class LocalUserView<ValueT, RowT, ViewT> implements IHandlerProv
     this.postInitUserView();
   }
 
+  // Local data for existing values from database.
   abstract createLocalValue(rowIndex: number, row: ICombinedRow, localRow: ILocalRowInfo<RowT>, columnIndex: number, value: ICombinedValue, oldLocal: ValueT | null): ValueT;
 
+  // Local data for added, but not yet commited, values.
   abstract createAddedLocalValue(rowId: AddedRowId, row: IAddedRow, localRow: ILocalRowInfo<RowT>, columnIndex: number, value: ICombinedValue, oldLocal: ValueT | null): ValueT;
 
+  // Local data for template values.
   abstract createEmptyLocalValue(row: IRowCommon, localRow: ILocalRowInfo<RowT>, columnIndex: number, value: ICombinedValue, oldLocal: ValueT | null): ValueT;
+
+  // Local data for the user view itself.
+  abstract createLocalUserView(oldLocal: ViewT | null): ViewT;
 
   abstract createLocalRow(rowIndex: number, row: ICombinedRow, oldLocal: RowT | null): RowT;
 
@@ -214,8 +221,6 @@ export abstract class LocalUserView<ValueT, RowT, ViewT> implements IHandlerProv
   insertAddedRow(rowId: AddedRowId, row: IAddedRow, localRow: ILocalRow<ValueT, RowT>) {
     return;
   }
-
-  abstract createLocalUserView(oldLocal: ViewT | null): ViewT;
 
   postInitUserView() {
     return;

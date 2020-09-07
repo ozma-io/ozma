@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import jwtDecode from "jwt-decode";
 
 import { IRef } from "@/utils";
-import * as Api from "@/api";
+import { FunDBError, disableAuth, authClientId, authUrl, default as Api } from "@/api";
 import * as Utils from "@/utils";
 import { router, getQueryValue } from "@/modules";
 
@@ -109,10 +109,10 @@ const getToken = (context: ActionContext<IAuthState, {}>, params: Record<string,
         "Content-Type": "application/x-www-form-urlencoded",
       };
 
-      params["client_id"] = Api.authClientId;
+      params["client_id"] = authClientId;
       const paramsString = new URLSearchParams(params).toString();
 
-      const ret = await Utils.fetchJson(`${Api.authUrl}/token`, {
+      const ret = await Utils.fetchJson(`${authUrl}/token`, {
         method: "POST",
         headers,
         body: paramsString,
@@ -221,7 +221,7 @@ const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExist
     path,
   };
   const params = {
-    ["client_id"]: Api.authClientId,
+    ["client_id"]: authClientId,
     ["redirect_uri"]: redirectUri(),
     ["state"]: btoa(JSON.stringify(savedState)),
     ["scope"]: "openid",
@@ -231,7 +231,7 @@ const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExist
   };
   const paramsString = new URLSearchParams(params).toString();
 
-  window.location.href = `${Api.authUrl}/auth?${paramsString}`;
+  window.location.href = `${authUrl}/auth?${paramsString}`;
   const waitForLoad = new Promise<void>((resolve, reject) => {
     addEventListener("load", () => {
       reject();
@@ -293,7 +293,7 @@ export const authModule: Module<IAuthState, {}> = {
     startAuth: async context => {
       const { state, commit, dispatch } = context;
 
-      if (Api.disableAuth) {
+      if (disableAuth) {
         return;
       }
 
@@ -368,7 +368,7 @@ export const authModule: Module<IAuthState, {}> = {
     },
     callProtectedApi: {
       root: true,
-      handler: async ({ state, commit, dispatch }, { func, args }: { func: ((_1: string | null, ..._2: any[]) => Promise<any>); args?: any[] }): Promise<any> => {
+      handler: async ({ state, dispatch }, { func, args }: { func: ((_1: string | null, ..._2: any[]) => Promise<any>); args?: any[] }): Promise<any> => {
         if (state.current === null) {
           if (state.pending !== null) {
             await state.pending;
@@ -380,8 +380,8 @@ export const authModule: Module<IAuthState, {}> = {
           const token = state.current === null ? null : state.current.token;
           return await func(token, ...argsArray);
         } catch (e) {
-          if (e instanceof Utils.FetchError) {
-            if (e.response.status === 401) {
+          if (e instanceof FunDBError) {
+            if (e.body.error === "unauthorized") {
               if (state.current === null) {
                 await dispatch("login", undefined);
               } else {
@@ -394,12 +394,12 @@ export const authModule: Module<IAuthState, {}> = {
         }
       },
     },
-    logout: async ({ state, dispatch, commit }) => {
+    logout: async ({ state, commit }) => {
       if (state.current === null) {
         throw new Error("Cannot logout without an existing token");
       }
 
-      if (Api.disableAuth) {
+      if (disableAuth) {
         return;
       }
 
@@ -408,7 +408,7 @@ export const authModule: Module<IAuthState, {}> = {
       };
       const paramsString = new URLSearchParams(params).toString();
       dropCurrentAuth();
-      window.location.href = `${Api.authUrl}/logout?${paramsString}`;
+      window.location.href = `${authUrl}/logout?${paramsString}`;
       const waitForLoad = new Promise((resolve, reject) => {
         addEventListener("load", () => {
           reject();

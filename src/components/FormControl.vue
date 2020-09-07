@@ -43,6 +43,8 @@
           :dont-focus="dontFocus"
           :disabled="isDisabled"
           :autofocus="autofocus"
+          :error="value.erroredOnce"
+          :required="!isNullable"
           focus
           @set-input-height="setInputHeight"
           @input="updateValue($event)"
@@ -54,6 +56,8 @@
           :autofocus="autofocus"
           :dont-focus="dontFocus"
           :disabled="isDisabled"
+          :error="value.erroredOnce"
+          :required="!isNullable"
           @set-input-height="setInputHeight"
           @update:value="updateValue"
         />
@@ -64,6 +68,8 @@
           :is-cell-edit="isCellEdit"
           :autofocus="autofocus"
           :show-time="inputType.showTime"
+          :error="value.erroredOnce"
+          :required="!isNullable"
           @update:value="updateValue"
         />
         <MultiSelect
@@ -74,6 +80,7 @@
           :autofocus="autofocus"
           :height="customHeight"
           single
+          :error="value.erroredOnce"
           :required="!isNullable"
           :disabled="isDisabled"
           :is-cell-edit="isCellEdit"
@@ -89,6 +96,8 @@
           :read-only="isDisabled"
           :is-cell-edit="isCellEdit"
           :autofocus="autofocus"
+          :error="value.erroredOnce"
+          :required="!isNullable"
           @update:content="updateValue"
         />
       </template>
@@ -103,6 +112,8 @@
           :is-cell-edit="isCellEdit"
           :dont-focus="dontFocus"
           :disabled="isDisabled"
+          :error="value.erroredOnce"
+          :required="!isNullable"
           @input="updateValue"
           @set-input-height="setInputHeight"
           @focus="iSlot.onFocus"
@@ -115,6 +126,8 @@
           :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
           :height="customHeight"
+          :error="value.erroredOnce"
+          :required="!isNullable"
           @set-input-height="setInputHeight"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
@@ -128,6 +141,8 @@
           :no-open-on-focus="isMobile"
           :is-cell-edit="isCellEdit"
           :show-time="inputType.showTime"
+          :error="value.erroredOnce"
+          :required="!isNullable"
           @focus="iSlot.onFocus"
           @update:value="updateValue"
         />
@@ -141,6 +156,7 @@
           :autofocus="autofocus"
           :dont-open="isMobile"
           :is-cell-edit="isCellEdit"
+          :error="value.erroredOnce"
           :required="!isNullable"
           :disabled="isDisabled"
           @update:value="updateValue"
@@ -156,6 +172,8 @@
           :read-only="isDisabled"
           :is-cell-edit="isCellEdit"
           :autofocus="autofocus"
+          :error="value.erroredOnce"
+          :required="!isNullable"
           @update:content="updateValue"
         />
         <input
@@ -168,6 +186,8 @@
                    {'form-control-panel_checkbox_error': value.erroredOnce,
                     'form-control-panel_checkbox_req': isAwaited && !disableColor}]"
           :disabled="isDisabled"
+          :error="value.erroredOnce"
+          :required="!isNullable"
           @input="updateValue($event.target.value)"
           @focus="iSlot.onFocus"
         >
@@ -187,7 +207,7 @@
             v-if="actions.length > 0"
             class="nested-menu"
           >
-            <label class="input_label">{{ caption }}</label>
+            <label class="input_label">{{ title }}</label>
             <ActionsMenu
               title="view_headline"
               :actions="actions"
@@ -267,6 +287,7 @@
             @update:actions="actions = $event"
             @goto="$emit('goto', $event)"
             @update:enableFilter="enableFilter = $event"
+            @update:title="updateTitle"
           ></NestedUserView>
         </b-col>
       </b-row>
@@ -390,6 +411,7 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) dontFocus!: boolean;
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
   @Prop({ type: String, default: "" }) caption!: string;
+  @Prop({ type: String, default: "" }) columnInfoName!: string;
   @Prop({ type: Boolean, default: false }) disableColor!: boolean;
   @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
   @Prop({ type: String, required: true }) scope!: string;
@@ -400,6 +422,7 @@ export default class FormControl extends Vue {
   private actions: Action[] = [];
   private codeEditorKey = 0;
   private filterString = "";
+  private title = "";
 
   get isInline(): boolean {
     return inlineTypes.includes(this.inputType.name);
@@ -435,6 +458,12 @@ export default class FormControl extends Vue {
     const isHeightOnPanel = !multilineTypes.includes(this.inputType.name);
     const height = isHeightOnPanel ? { height: `${this.customHeight}px` } : {};
     return this.customHeight !== null && !excludeHeight ? { ...height, maxHeight: "initial" } : {};
+  }
+
+  private updateTitle(title: string | null) {
+    this.title = (!!title && this.columnInfoName === this.caption)
+      ? title
+      : this.caption
   }
 
   private setInputHeight(value: number) {
@@ -575,6 +604,11 @@ export default class FormControl extends Vue {
       default:
         return { name: "text", type: "text", style: this.controlStyle() };
     }
+  }
+
+  @Watch("inputType", { deep: true })
+  private watchInputType() {
+    this.actions = [];
   }
 
   private mounted() {

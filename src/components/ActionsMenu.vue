@@ -142,7 +142,7 @@ export default class ActionsMenu extends Vue {
    */
   .actions-menu {
     margin: 0;
-    z-index: 1000;
+    z-index: 995;
     display: flex;
     align-items: center;
   }
@@ -172,6 +172,8 @@ export default class ActionsMenu extends Vue {
     border: 1px solid var(--MainBorderColor);
     margin-top: 0;
     top: calc(100% + 5px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
   }
 
   .div-with-actions_button {
@@ -179,13 +181,14 @@ export default class ActionsMenu extends Vue {
     background: hsla(0, 0%, 100%, 0.3) !important;
     padding: 5px;
     line-height: normal;
-    padding-left: 7px;
-    padding-right: 7px;
+    padding-left: 20px;
+    padding-right: 15px;
     color: var(--MainTextColor) !important;
     text-decoration: none;
     width: 100%;
     text-align: left;
     border: 0;
+    font-size: 14px;
   }
 
   .div-with-actions_button input[type="file"] {

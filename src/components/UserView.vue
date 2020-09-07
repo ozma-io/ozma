@@ -34,11 +34,11 @@
   <span>
     <template v-if="uvIsReady">
       <UserViewCommon
+
         :uv="currentUv"
         :is-root="isRoot"
         :filter="filter"
         :local="local"
-        :base-local="baseLocal"
         :scope="scope"
         :level="level"
         :selection-mode="selectionMode"
@@ -52,7 +52,6 @@
         :is-root="isRoot"
         :filter="filter"
         :local="local"
-        :base-local="baseLocal"
         :scope="scope"
         :level="level"
         :selection-mode="selectionMode"
@@ -93,7 +92,7 @@ import { CurrentQuery, attrToQuery, queryLocation, IQuery, IAttrToQueryOpts } fr
 import { IUserViewConstructor } from "@/components";
 import { IHandlerProvider } from "@/local_user_view";
 import { Action } from "@/components/ActionsMenu.vue";
-import { ISelectionRef, LocalBaseUserView } from "@/components/BaseUserView";
+import { ISelectionRef } from "@/components/BaseUserView";
 import UserViewCommon from "@/components/UserViewCommon.vue";
 
 const types: RecordSet<string> = {
@@ -133,6 +132,20 @@ const userViewType = (uv: CombinedUserView) => {
 
 const maxLevel = 4;
 
+/* This is enclosing component, which runs Vuex actions to load actual user view data, manages lifetime of
+ * user views themselves etc. For instance, it ensures smooth reloading of components when user view data is
+ * reloaded.
+ *
+ * Current user view component lifetime can be summarized as:
+ *   1. UserView component is created, `updateUserView()` is called.
+ *   2. `updateUserView()` ensures that the data is loaded, then loads needed user view component based on `type` uv attribute.
+ *   3. If local user view data (`LocalUserView` objects) is used for this user view type, we construct it and subscribe
+ *      for data changes.
+ *   4. We swap old user view and local user view with the old one.
+ *   5. When user view is deconstructed, we unsubscribe LocalUserView. We may also keep it and pass along when current
+ *      user view is reloaded. In this case, old data is used to restore as much old state as possible (for example, keep
+ *      selected table rows selected when the table is reloaded, even when new rows were added).
+ */
 @Component({components: {
   UserViewCommon,
   ProgressBar,
@@ -162,13 +175,22 @@ export default class UserView extends Vue {
   private extraCommonActions: Action[] = [];
   private component: IUserViewConstructor<Vue> | null = null;
   private local: IHandlerProvider | null = null;
-  private baseLocal: LocalBaseUserView | null = null;
   // currentUv is shown while new component for uv is loaded.
   private currentUv: CombinedUserView | UserViewError | null = null;
   private waitReload = false;
 
   get title() {
-    if (this.args.source.type === "named") {
+    if (this.currentUv instanceof CombinedUserView && this.currentUv.attributes.hasOwnProperty('title')) {
+      return this.currentUv.attributes.title;
+    } else {
+      return null;
+    }
+  }
+
+  get titleHead() {
+    if (!!this.title) {
+      return this.title;
+    } else if (this.args.source.type === "named") {
       return this.args.source.ref.name;
     } else {
       return this.$t("anonymous_query").toString();
@@ -177,7 +199,7 @@ export default class UserView extends Vue {
 
   get newUv() {
     if (this.level >= maxLevel) {
-      return new UserViewError("bad_request", "Too many levels of nested user views", this.args);
+      return new UserViewError("execution", "Too many levels of nested user views", this.args);
     } else {
       const ret = this.currentUvs.getUserView(this.args);
       return ret === undefined ? null : ret;
@@ -234,11 +256,11 @@ export default class UserView extends Vue {
     if (!(this.currentUv instanceof UserViewError)) {
       return null;
     } else {
-      if (this.currentUv.type === "forbidden") {
+      if (this.currentUv.type === "access_denied") {
         return this.$t("forbidden");
       } else if (this.currentUv.type === "not_found") {
         return this.$t("not_found");
-      } else if (this.currentUv.type === "bad_request") {
+      } else if (this.currentUv.type === "arguments") {
         return this.$t("bad_request", { msg: this.currentUv.message });
       } else {
         return this.$t("unknown_error", { msg: this.currentUv.message });
@@ -250,7 +272,7 @@ export default class UserView extends Vue {
     return this.newUv === null || this.currentUv === null || !deepEquals(this.newUv.args, this.currentUv.args);
   }
 
-  // Should clear all user view-specific values.
+  // Load new user view and replace old data. We keep old user view loaded as long as possible, to avoid "loading" placeholders.
   @Watch("newUv", { immediate: true })
   private async updateUserView() {
     const newUv = this.newUv;
@@ -260,7 +282,7 @@ export default class UserView extends Vue {
 
     if (newUv instanceof CombinedUserView) {
       if (newUv.rows === null && newUv.info.mainEntity === null) {
-        this.setUvError(new UserViewError("bad_request", "Creation mode requires main entity to be specified", newUv.args));
+        this.setUvError(new UserViewError("execution", "Creation mode requires main entity to be specified", newUv.args));
         return;
       }
       const newType = userViewType(newUv);
@@ -283,16 +305,11 @@ export default class UserView extends Vue {
       this.clearState();
       this.currentUv = newUv;
       this.local = local;
-      this.baseLocal = new LocalBaseUserView(this.$store, newUv, this.defaultValues, this.baseLocal);
-      if(this.baseLocal !== null) {
-        this.registerHandler({ args: newUv.args, handler: this.baseLocal.handler });
-      }
       this.component = component;
     } else if (newUv instanceof UserViewError) {
       this.clearState();
       this.currentUv = newUv;
       this.local = null;
-      this.baseLocal = null;
       this.component = null;
     } else if (newUv === null) {
       this.requestView();
@@ -327,9 +344,6 @@ export default class UserView extends Vue {
     if (this.local !== null) {
       this.unregisterHandler({ args, handler: this.local.handler });
     }
-    if (this.baseLocal !== null) {
-      this.unregisterHandler({ args, handler: this.baseLocal.handler });
-    }
     this.removeUserViewConsumer({ args, reference: this.uid });
   }
 
@@ -337,7 +351,6 @@ export default class UserView extends Vue {
     this.destroyUserView(this.args);
     this.currentUv = error;
     this.local = null;
-    this.baseLocal = null;
     this.component = null;
   }
 
@@ -356,6 +369,11 @@ export default class UserView extends Vue {
       this.destroyUserView(oldArgs);
       this.requestView();
     }
+  }
+
+  @Watch("titleHead", { immediate: true })
+  private updateTitleHead() {
+    this.$emit("update:titleHead", this.titleHead);
   }
 
   @Watch("title", { immediate: true })
@@ -389,7 +407,7 @@ export default class UserView extends Vue {
           return;
         }
         const id = (createOp as ICombinedInsertEntityResult).id;
-        if (this.selectionMode) {
+        if (id != null && this.selectionMode) {
           const ref: ISelectionRef = {
             entity: currentUv.info.mainEntity!,
             id,

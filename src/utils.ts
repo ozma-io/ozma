@@ -1,8 +1,5 @@
 import moment from "moment";
 import Vue, { RenderContext } from "vue";
-import { RSA_NO_PADDING } from "constants";
-import { isObject } from "util";
-import * as Ramda from "ramda";
 
 export type Result<A> = A | Error;
 
@@ -48,10 +45,6 @@ export class FetchError extends Error {
   }
 }
 
-export function isFirefox(): boolean {
-  return navigator.userAgent.toLowerCase().includes("firefox");
-}
-
 export const fetchSuccess = async (input: RequestInfo, init?: RequestInit): Promise<Response> => {
   const response = await fetch(input, init);
   if (!response.ok) {
@@ -72,6 +65,10 @@ export const randomId = () => {
 
 export const language = navigator.languages[0];
 export const shortLanguage = language.split("-")[0];
+
+export function isFirefox(): boolean {
+  return navigator.userAgent.toLowerCase().includes("firefox");
+}
 
 export const momentLocale = (async () => {
   if (shortLanguage !== "en") {

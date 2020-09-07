@@ -7,6 +7,7 @@
     <FormControl
       v-if="blockContent.type === 'input'"
       :caption="blockContent.field.caption"
+      :columnInfoName="blockContent.field.columnInfo.name"
       :value="gridProps.row.values[blockContent.field.index]"
       :attributes="gridProps.localRow.values[blockContent.field.index].attributes"
       :type="blockContent.field.columnInfo.valueType"
@@ -25,6 +26,14 @@
         :block-content="subBlock"
         :grid-props="gridProps"
       />
+    </b-row>
+    <b-row v-else-if="blockContent.type === 'buttons'">
+      <b-button 
+        block
+        v-for="(subBlock, subBlockI) in blockContent.actions"
+        :key="subBlockI"
+        :variant="subBlock.variant"
+        @click="subBlock.callback()">{{subBlock.name}}</b-button>
     </b-row>
   </b-col>
 </template>
@@ -47,7 +56,7 @@ export default class FormGridBlock extends Vue {
 
 <style scoped>
   .form_grid_block__column {
-    margin-bottom: 15px;
+    margin-bottom: 5px;
   }
 
   .form_grid_block__sub_column {

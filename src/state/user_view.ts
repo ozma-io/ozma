@@ -2,29 +2,18 @@ import Vue from "vue";
 import { Store, Dispatch, Module, ActionContext } from "vuex";
 import moment from "moment";
 
-import { IRef, FetchError, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, pascalToSnake } from "@/utils";
-import * as Api from "@/api";
+import { IRef, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, pascalToSnake } from "@/utils";
 import {
-  IColumnField, IUserViewRef, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
-  SchemaName, EntityName, RowId, FieldName, AttributeName,
-  ValueType, FieldType, AttributesMap, IEntity,
+  IColumnField, UserViewSource, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
+  SchemaName, EntityName, RowId, FieldName, AttributeName, IViewInfoResult, IViewExprResult,
+  ValueType, FieldType, AttributesMap, IEntity, FunDBError, UserViewErrorType, default as Api
 } from "@/api";
 import { IUpdatedValue, valueToText, equalEntityRef, valueFromRaw, valueIsNull } from "@/values";
 import { CurrentChanges, UpdatedValues, IEntityChanges, IAddedEntry, AddedRowId, UserViewKey } from "@/state/staging_changes";
 import { CurrentQuery } from "@/state/query";
 
-export interface IAnonymousUserView {
-  type: "anonymous";
-  query: string;
-}
-
-export interface INamedUserView {
-  type: "named";
-  ref: IUserViewRef;
-}
-
 export interface IUserViewArguments {
-  source: IAnonymousUserView | INamedUserView;
+  source: UserViewSource;
   args: Record<string, any> | null;
 }
 
@@ -232,6 +221,7 @@ export const newEmptyRow = (store: Store<any>, uv: CombinedUserView, defaultRawV
 
 export const currentValue = (value: ICombinedValue) => "rawValue" in value ? value.rawValue : value.value;
 
+// Event handler which is notified about user view changes.
 export interface IUserViewEventHandler {
   updateValue: (rowIndex: number, row: ICombinedRow, columnIndex: number, value: ICombinedValue) => void;
   updateAddedValue: (rowId: AddedRowId, row: IAddedRow, columnIndex: number, value: ICombinedValue) => void;
@@ -268,9 +258,10 @@ export class CombinedUserView {
   info: IResultViewInfo;
   attributes: Record<AttributeName, any>;
   columnAttributes: Record<AttributeName, any>[];
+  rows: ICombinedRow[] | null;
+  // Rows added by user, not yet commited to the database.
   newRows: Record<AddedRowId, IAddedRow>;
   newRowsPositions: AddedRowId[];
-  rows: ICombinedRow[] | null;
   updateMapping: IUpdateMapping;
   mainColumnMapping: IMainColumnMapping;
   mainRowMapping: IMainRowMapping;
@@ -531,8 +522,6 @@ export class CombinedUserView {
   }
 }
 
-export type UserViewErrorType = "forbidden" | "not_found" | "bad_request" | "unknown";
-
 export class UserViewError extends Error {
   type: UserViewErrorType;
   description: string;
@@ -637,8 +626,8 @@ const getUserView = async (context: ActionContext<IUserViewState, {}>, args: IUs
     let current: CombinedUserView;
     if (args.source.type === "named") {
       if (args.args === null) {
-        const res: Api.IViewInfoResult = await dispatch("callProtectedApi", {
-          func: Api.fetchNamedViewInfo,
+        const res: IViewInfoResult = await dispatch("callProtectedApi", {
+          func: Api.getNamedUserViewInfo.bind(Api),
           args: [args.source.ref],
         }, { root: true });
         await momentLocale;
@@ -651,8 +640,8 @@ const getUserView = async (context: ActionContext<IUserViewState, {}>, args: IUs
           changes: (context.rootState as any).staging.current,
         });
       } else {
-        const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
-          func: Api.fetchNamedView,
+        const res: IViewExprResult = await dispatch("callProtectedApi", {
+          func: Api.getNamedUserView.bind(Api),
           args: [args.source.ref, args.args],
         }, { root: true });
         await momentLocale;
@@ -669,8 +658,8 @@ const getUserView = async (context: ActionContext<IUserViewState, {}>, args: IUs
       if (args.args === null) {
         throw new Error("Getting information about anonymous views is not supported");
       } else {
-        const res: Api.IViewExprResult = await dispatch("callProtectedApi", {
-          func: Api.fetchAnonymousView,
+        const res: IViewExprResult = await dispatch("callProtectedApi", {
+          func: Api.getAnonymousUserView.bind(Api),
           args: [args.source.query, args.args],
         }, { root: true });
         await momentLocale;
@@ -689,16 +678,8 @@ const getUserView = async (context: ActionContext<IUserViewState, {}>, args: IUs
 
     return current;
   } catch (e) {
-    if (e instanceof FetchError) {
-      if (e.response.status === 403) {
-        return new UserViewError("forbidden", "", args);
-      } else if (e.response.status === 404) {
-        return new UserViewError("not_found", "", args);
-      } else if (e.response.status === 400) {
-        return new UserViewError("bad_request", e.message, args);
-      } else {
-        return new UserViewError("unknown", e.message, args);
-      }
+    if (e instanceof FunDBError) {
+      return new UserViewError(e.body.error as UserViewErrorType, e.message, args);
     }
 
     throw e;
@@ -1213,11 +1194,11 @@ const userViewModule: Module<IUserViewState, {}> = {
           const entityPromise = dispatch("getEntity", ref.entity);
           const query = `SELECT id, __main AS name FROM "${ref.entity.schema}"."${ref.entity.name}" ORDER BY __main`;
           const resPromise = dispatch("callProtectedApi", {
-            func: Api.fetchAnonymousView,
+            func: Api.getAnonymousUserView.bind(Api),
             args: [query, {}],
           }, { root: true });
           await entityPromise;
-          const res: Api.IViewExprResult = await resPromise;
+          const res: IViewExprResult = await resPromise;
           const currPending = state.entries.entries.get(ref);
           if (currPending !== pending.ref) {
             throw new Error(`Pending entries get cancelled, ref ${JSON.stringify(ref)}`);
@@ -1262,7 +1243,7 @@ const userViewModule: Module<IUserViewState, {}> = {
       pending.ref = (async () => {
         try {
           const entity: IEntity = await dispatch("callProtectedApi", {
-            func: Api.getEntityInfo,
+            func: Api.getEntityInfo.bind(Api),
             args: [ref],
           }, { root: true });
           const currPending = state.entities.entities.get(ref);

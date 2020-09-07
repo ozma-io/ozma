@@ -36,7 +36,10 @@
         :checked="value.value"
         disabled
       />
-      <p v-else>
+      <p 
+        v-else
+        :class="{selectable : (fieldType == 'enum' || fieldType == 'reference') && localValue.valueText.length > 0}"
+      >
         {{ localValue.valueText || "" }}
       </p>
     </template>
@@ -71,6 +74,10 @@ export default class TableCell extends Vue {
     return R.path(['info', 'field', 'valueType', 'type'], this.value);
   }
 
+  private get fieldType(): string | undefined {
+    return R.path(['info', 'field', 'fieldType', 'type'], this.value);
+  }
+
   get isNull() {
     // We use `value.value` here to highlight unvalidated values.
     return valueIsNull(this.value.value);
@@ -79,6 +86,17 @@ export default class TableCell extends Vue {
 </script>
 
 <style scoped>
+
+  .selectable {
+    display: inline;
+    margin-top: 3px;
+    border-radius: 5px;
+    padding: 0 5px;
+    border: 1px solid var(--MainBorderColor);
+    background-color: var(--MainBackgroundColor);
+    color: var(--MainTextColor);
+  }
+
   .next-after-last-fixed {
     padding-left: 7px !important;
   }
