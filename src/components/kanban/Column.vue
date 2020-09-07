@@ -33,6 +33,7 @@
       class="column_body"
       group="cards"
       ghost-class="card_dragging"
+      v-dragscroll:nochilddrag
       :options="{delayOnTouchOnly: true, delay: 400, forceFallback: true}"
       :list="cards"
       @add="onAdd"
@@ -60,6 +61,7 @@ import ModalUserView from "@/components/ModalUserView.vue";
 import Card, { ICard, CardTarget } from "@/components/kanban/Card.vue";
 import { ValueRef } from "../../local_user_view";
 import { IQuery } from "../../state/query";
+import { dragscroll } from 'vue-dragscroll';
 
 export interface IColumn {
   id?: any;
@@ -89,7 +91,7 @@ export interface IColumnStyle {
   flex?: number;
 }
 
-@Component({ components: { Card, draggable, ModalUserView } })
+@Component({ components: { Card, draggable, ModalUserView }, directives: { dragscroll } })
 export default class Column extends Vue {
   @Prop() id!: any;
   @Prop({ type: Array, required: true }) cards!: ICard[];
