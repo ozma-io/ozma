@@ -172,7 +172,9 @@ export default class Input extends Vue {
     }
 
     // For close opened Multiselect, Calendar etc...
-    evt.target.parentElement.click();
+    const control = this.$refs.control as HTMLInputElement;
+    if (control.parentElement !== null)
+      control.parentElement.click();
   }
 
   private onBlur(evt: Event) {
