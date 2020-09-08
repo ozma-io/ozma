@@ -17,7 +17,7 @@
           class="column_header__title"
           :title="title"
         >
-          {{ title }}
+          {{ title }} {{ cardCount }}
         </span>
         <span class="column_controls">
           <i
@@ -137,6 +137,10 @@ export default class Column extends Vue {
     return {
       maxWidth: strWidth,
     }
+  }
+
+  private get cardCount() {
+    return (this.cards.length > 0) ? `(${this.cards.length})` : '';
   }
 
   private get isAllSelected() {
