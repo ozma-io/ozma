@@ -103,6 +103,7 @@ interface ICardStyle {
 export class Card extends Vue {
   @Prop({ type: Object, required: true }) data!: ICard;
   @Prop({ type: Boolean, required: false, default: false }) selected!: boolean;
+  @Prop({ type: Boolean, required: false, default: false }) dragging!: boolean;
   @Prop({ type: Number, required: true }) width!: number;
   @Prop({ type: String, required: false, default: () => 'top' }) target!: CardTarget;
 
@@ -115,7 +116,7 @@ export class Card extends Vue {
   }
 
   private openModal() {
-    if (this.data.cardView) {
+    if (!this.dragging && this.data.cardView) {
       if (this.target === 'top') {
         const url = queryLocation(this.data.cardView);
         this.$router.push(url);
