@@ -156,7 +156,8 @@ export default Card;
   }
 
   .card_row {
-    margin: 0 0 10px 0;
+    margin: 0 0 2px 0;
+    line-height: 1.1;
   }
 
   .card_col {
@@ -188,7 +189,10 @@ export default Card;
     text-overflow: ellipsis;
     width: 100%;
     display: inline-block;
+
+    /*
     white-space: nowrap;
+    */
     overflow: hidden;
   }
 
