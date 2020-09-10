@@ -34,7 +34,9 @@
       class="column_body"
       group="cards"
       ghost-class="card_dragging"
-      :options="{delayOnTouchOnly: true, delay: 400, forceFallback: true}"
+      delayOnTouchOnly="true"
+      delay="400"
+      forceFallback= "true"
       :animation= "300"
       :list="cards"
       @add="onAdd"
@@ -253,19 +255,6 @@ export default class Column extends Vue {
     vertical-align: middle;
   }
 
-  @media screen and (max-width: 700px) {
-    .column_container {
-      width: unset;
-      min-width: 50vw;
-    }
-  }
-
-  @media screen and (max-width: 490px) {
-    .column_container {
-      min-width: 80vw;
-    }
-  }
-
   .card_dragging {
     background-color: var(--MainBorderColor);
     width: 100%;
@@ -291,5 +280,27 @@ export default class Column extends Vue {
 
   /deep/ .card_dragging > .card_row {
     display: none;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(150, 150, 150, 0.2);
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(50, 50, 50, 0.1);
+  }
+
+  ::-webkit-scrollbar-thumb:vertical:hover {
+    background: #999;
+    width: 100px;
+  }
+
+  ::-webkit-scrollbar-thumb:vertical:active {
+    background: #777;
   }
 </style>
