@@ -40,6 +40,7 @@
       :animation= "300"
       :list="cards"
       @add="onAdd"
+      @start="onStart"
       @end="onMove"
     >
       <Card
@@ -49,6 +50,7 @@
         :target="cardTarget"
         data-no-dragscroll
         :width="width"
+        :dragging="dragging"
         :selected="isCardSelected(card.groupRef.position)"
       />
     </draggable>
@@ -66,6 +68,7 @@ import Card, { ICard, CardTarget } from "@/components/kanban/Card.vue";
 import { ValueRef } from "../../local_user_view";
 import { IQuery } from "../../state/query";
 import { dragscroll } from 'vue-dragscroll';
+import { nextRender } from "@/utils";
 
 export interface IColumn {
   id?: any;
@@ -110,6 +113,7 @@ export default class Column extends Vue {
   modalView: IQuery | null = null;
 
   selected: number[] = [];
+  dragging = false;
 
   private openModal() {
     const query: IQuery = {
@@ -183,7 +187,16 @@ export default class Column extends Vue {
     this.selected = this.selected.filter(val => val !== rowIndex);
   }
 
+  private onStart(event: IVueDraggableEvent){
+    this.dragging = true;
+  }
+
   private onMove(event: IVueDraggableEvent) {
+
+    nextRender().then(() => {
+      this.dragging = false;
+    });
+    
     const newCard = this.cards[event.newIndex];
     // Avoid calling onMove after onAdd event: It should do it on it's own.
     if (newCard) {
