@@ -102,6 +102,7 @@ export default class Column extends Vue {
   @Prop({ type: Array, required: true }) cards!: ICard[];
   @Prop({ type: String, required: true }) title!: string;
   @Prop({ type: String, required: true }) fieldName!: string;
+  @Prop({ type: String, required: true }) orderFieldName!: string;
   @Prop({ type: Object, required: true }) createView!: IQuery;
   @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Function, required: false }) move!: (ref: ValueRef, value: any) => void;
@@ -122,6 +123,10 @@ export default class Column extends Vue {
         [this.fieldName]: this.id,
       },
     };
+
+    if(this.orderFieldName.length > 0){
+      query.defaultValues[this.orderFieldName] = this.cards[0] && this.cards[0].order ? this.cards[0].order - 1 : 1;
+    }
 
     this.modalView = query;
   }
@@ -201,16 +206,24 @@ export default class Column extends Vue {
           : 0
       );
       const nextCardOrder = R.pathOr<number>(prevCardOrder + 1, [event.newIndex + 1, "order"], this.cards);
-      const mean = (prevCardOrder + nextCardOrder) / 2;
-      // if (this.move && newCard.orderRef) {
-      //  this.move(newCard.orderRef, mean);
-      // }
+      
+      let mean = 0;
+      if(prevCardOrder == 0 && nextCardOrder < 0){
+        mean = nextCardOrder * 2 ;
+      }else{
+        mean = (prevCardOrder + nextCardOrder) / 2;
+      }
+      
+      if (this.move && newCard.orderRef) {
+        this.move(newCard.orderRef, mean);
+      }
     }
   }
 
   private onAdd(event: IVueDraggableEvent) {
     const newCard = this.cards[event.newIndex];
     if (this.add && newCard.groupRef) {
+      this.onMove(event);
       this.add(newCard.groupRef, this.id);
     }
   }
