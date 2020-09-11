@@ -296,7 +296,7 @@ export default class Column extends Vue {
   }
 
   /deep/ .card_dragging > .card_row {
-    display: none;
+    visibility: hidden;
   }
 
   ::-webkit-scrollbar {
