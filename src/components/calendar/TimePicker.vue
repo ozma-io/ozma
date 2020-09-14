@@ -4,28 +4,33 @@
       v-show="hours !== null"
       class="hours"
     >
-      <div @click="prevVal(hours)">hours</div>
-      <div
-        v-for="(el, Iel) in hours.range"
-        :key="Iel"
-        class="time-cell"
-        @click="nextValH(Iel, $event)"
-      >
-        {{ el.text }}
+      <div>hours</div>
+      <div :class="['wrapper', {'with-margin': hours.range.length > 5}]">
+        <div
+          v-for="(el, Iel) in hours.range"
+          :key="Iel"
+          class="time-cell"
+          @click="nextValH(Iel, $event)"
+        >
+          {{ el.text }}
+        </div>
       </div>
     </span>
     <span
       v-show="mins !== null"
+
       class="mins"
     >
-      <div @click="prevVal(mins)">minutes</div>
-      <div
-        v-for="(el, Iel) in mins.range"
-        :key="Iel"
-        class="time-cell"
-        @click="nextValM(Iel, $event)"
-      >
-        {{ el.text }}
+      <div>minutes</div>
+      <div :class="['wrapper', {'with-margin': mins.range.length > 5}]">
+        <div
+          v-for="(el, Iel) in mins.range"
+          :key="Iel"
+          class="time-cell"
+          @click="nextValM(Iel, $event)"
+        >
+          {{ el.text }}
+        </div>
       </div>
     </span>
   </div>
@@ -48,37 +53,6 @@ interface ITimeRangeAll {
   currStep: number;
 }
 
-const nextRange = (el: ITimeRangeAll, rng: number) => {
-  const step = el.steps[el.currStep + 1];
-  if (step === undefined) {
-    return null;
-  }
-  const currEl = el.range[rng];
-  if (currEl.value !== null) {
-    return null;
-  }
-  const range = getRange(currEl.min, currEl.max + 1, step);
-  const firstEl = el.range[0];
-  const lastEl = el.range[el.range.length - 1];
-  el.history.push({min: firstEl.value === null ? firstEl.min : firstEl.value,
-    max: lastEl.value === null ? lastEl.max + 1 : lastEl.value + 1});
-  el.range = range;
-  el.currStep++;
-  return el;
-};
-
-const prevRange = (el: ITimeRangeAll) => {
-  if (el.currStep === 0) {
-    return null;
-  }
-  const hist = el.history.pop();
-  if (hist !== undefined) {
-    el.range = getRange(hist.min, hist.max, el.steps[--el.currStep]);
-  } else {
-    return null;
-  }
-};
-
 const numToText2 = (num: number) => {
   return  (num < 10) ? `0${num}` : `${num}`;
 };
@@ -86,17 +60,7 @@ const numToText2 = (num: number) => {
 const getRange = (min: number, max: number, step: number) => {
   const range: ITimeRange[] = [];
   for (let i = min; i < max; i += step ) {
-    let el: ITimeRange;
-    if (max - i > 2 && step > 1) {
-      el = {min: i, max: Math.min(i + step - 1, max - 1), value: null, text: ""};
-    } else {
-      el = {min: -1, max: -1, value: i, text: ""};
-    }
-    if (el.value === null) {
-      el.text = `${numToText2(el.min)} - ${numToText2(el.max + 1)}`;
-    } else {
-      el.text = `${numToText2(el.value)}`;
-    }
+    const el: ITimeRange = {min: -1, max: -1, value: i, text: `${numToText2(i)}`};
     range.push(el);
   }
   return range;
@@ -114,42 +78,48 @@ const DateRange = (min: number, max: number, steps: number[]): ITimeRangeAll => 
 
 @Component
 export default class TimePicker extends Vue {
-  private hours: ITimeRangeAll = DateRange(0, 24, [6, 1]);
-  private mins: ITimeRangeAll = DateRange(0, 60, [15, 5, 1]);
+  @Prop({ type: Number, default: null }) timeStep!: number | null;
+
+  private hours: ITimeRangeAll = DateRange(0, 24, [1]);
+  private mins: ITimeRangeAll = DateRange(0, 60, [this.step]);
+
+  get step() {
+    return (!!this.timeStep)
+      ? this.timeStep
+      : 15
+  }
 
   private nextValM(rng: number, event: Event) {
     event.preventDefault();
-    if (this.mins !== null && nextRange(this.mins, rng) === null) {
+    if (this.mins !== null) {
       this.$emit("update:mins", this.mins.range[rng].value);
     }
   }
 
   private nextValH(rng: number, event: Event) {
     event.preventDefault();
-    if (this.hours !== null && nextRange(this.hours, rng) === null) {
+    if (this.hours !== null) {
       this.$emit("update:hours", this.hours.range[rng].value);
     }
-  }
-
-  private prevVal(el: ITimeRangeAll) {
-    prevRange(el);
   }
 }
 </script>
 
-<style scoped>  
+<style scoped>
+  .time {
+    flex-direction: row !important;
+  }
+
   .hours {
     display: inline;
     min-width: 70px;
     margin-right: 10px;
-    cursor: pointer;
     text-align: center;
   }
 
   .mins {
     min-width: 70px;
     display: inline;
-    cursor: pointer;
     text-align: center;
   }
 
@@ -159,5 +129,33 @@ export default class TimePicker extends Vue {
     margin: 3px;
     color: black;
     border-radius: 3px;
+    cursor: pointer;
+  }
+
+  .wrapper {
+    max-height: 148px;
+    overflow-y: auto;
+  }
+
+  .with-margin .time-cell {
+    margin-left: 8px;
+  }
+
+  .wrapper::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    background-color: var(--MainBorderColor);
+  }
+
+  .wrapper::-webkit-scrollbar {
+    width: 8px;
+    background-color: var(--MainBorderColor);
+  }
+
+  .wrapper::-webkit-scrollbar-thumb {
+    width: 10px;
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
+    background-color: var(--MainTextColorLight);
   }
 </style>

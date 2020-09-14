@@ -35,8 +35,7 @@ export default class MonthsInYear extends Vue {
 
   .date-cell {
     cursor: pointer;
-    opacity: 0.5;
-    color: var(--MainBorderColor);
+    color: var(--MainTextColor);
     margin: 1px;
   }
 </style>
