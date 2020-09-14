@@ -32,12 +32,13 @@
     <draggable
       v-dragscroll.y
       class="column_body"
-      group="cards"
-      ghost-class="card_dragging"
-      delayOnTouchOnly="true"
-      delay="400"
-      forceFallback= "true"
-      :animation= "300"
+      :group="{ name: 'cards', put: true }"
+      ghost-class="card_dragging_ghost"
+      chosen-class="card_dragging_chosen"
+      drag-class="card_dragging_drag"
+      :delayOnTouchOnly= "true"
+      :delay="400"
+      :animation= "500"
       :list="cards"
       @add="onAdd"
       @start="onStart"
@@ -272,10 +273,15 @@ export default class Column extends Vue {
     vertical-align: middle;
   }
 
-  .card_dragging {
-    background-color: var(--MainBorderColor);
+  .card_dragging_ghost {
+    background-color: black;
     width: 100%;
-    opacity: 1;
+    height: 5px;
+    margin-top: -10px;
+    margin-bottom: 5px;
+    padding: 0;
+    border: solid 2px black;
+    opacity: 0.8 !important;
   }
 
   .card_open_icon {
@@ -295,7 +301,7 @@ export default class Column extends Vue {
     color: var(--MainBackgroundColor);
   }
 
-  /deep/ .card_dragging > .card_row {
+  /deep/ .card_dragging_chosen.card_dragging_ghost > .card_row {
     visibility: hidden;
   }
 

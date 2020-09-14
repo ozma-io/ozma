@@ -146,6 +146,7 @@ export default Card;
     padding: 10px;
     margin-bottom: 15px;
     user-select: none;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
 
   .card_row {
