@@ -24,7 +24,7 @@
 </i18n>
 
 <template>
-  <fragment>
+  <fragment v-if="isVisible">
     <InputSlot
       v-if="inputType.name !== 'userview' && inputType.name !== 'reference'"
       :is-cell-edit="isCellEdit"
@@ -423,6 +423,12 @@ export default class FormControl extends Vue {
   private codeEditorKey = 0;
   private filterString = "";
   private title = "";
+
+  get isVisible(): boolean {
+    if (this.value.attributes != undefined)
+      return this.value.attributes.visible;
+    return true;
+  }
 
   get isInline(): boolean {
     return inlineTypes.includes(this.inputType.name);
