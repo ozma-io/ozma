@@ -141,6 +141,7 @@
           :no-open-on-focus="isMobile"
           :is-cell-edit="isCellEdit"
           :show-time="inputType.showTime"
+          :time-step="inputType.timeStep"
           :error="value.erroredOnce"
           :required="!isNullable"
           @focus="iSlot.onFocus"
@@ -353,6 +354,7 @@ interface IErrorType {
 interface ICalendarType {
   name: "calendar";
   showTime: boolean;
+  timeStep: number | null;
 }
 
 interface IStaticTextType {
@@ -575,9 +577,9 @@ export default class FormControl extends Vue {
           return { name: "text", type: "number", style: this.controlStyle() };
         // FIXME: Fix calendar field.
         case "date":
-          return { name: "calendar", showTime: false };
+          return { name: "calendar", showTime: false, timeStep: null };
         case "datetime":
-          return { name: "calendar", showTime: true };
+          return { name: "calendar", showTime: true, timeStep: this.attributes["time_step"] };
       }
     } else {
       switch (this.type.type) {
