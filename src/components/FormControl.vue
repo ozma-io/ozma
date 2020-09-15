@@ -425,7 +425,7 @@ export default class FormControl extends Vue {
   private title = "";
 
   get isVisible(): boolean {
-    if (this.value.attributes != undefined)
+    if (this.value.attributes != undefined && this.value.attributes.visible != undefined)
       return this.value.attributes.visible;
     return true;
   }
