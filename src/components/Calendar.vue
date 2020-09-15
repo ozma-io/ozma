@@ -25,7 +25,7 @@
         type="text"
         :class="['calendar_input', {'calendar-input_cell-edit': isCellEdit}]"
         :placeholder="$t('input_placeholder')"
-        :value="visibleValue"
+        :value="textValue"
         @input="$emit('update:value', $event.target.value)"
         @focus="onInputFocus"
       >
@@ -107,10 +107,6 @@ export default class Calendar extends Vue {
     return this.value ? this.value : moment.invalid();
   }
 
-  get visibleValue() {
-    return this.textValue.substring(0, this.textValue.length - 3)
-  }
-
   private onClickOutside() {
     this.isCalendarOpen = false;
   }
@@ -152,7 +148,7 @@ export default class Calendar extends Vue {
     this.updatePart(newValue => {
       newValue.hour(time.hour());
       newValue.minute(time.minute());
-      newValue.second(0);
+      newValue.second(time.second());
     });
   }
 
