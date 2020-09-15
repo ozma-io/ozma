@@ -93,7 +93,6 @@ export interface ICard {
 }
 
 interface ICardStyle {
-  height?: string;
   width?: string;
   backgrondColor?: string;
 }
@@ -108,12 +107,6 @@ export class Card extends Vue {
   @Prop({ type: String, required: false, default: () => 'top' }) target!: CardTarget;
 
   modalView: IQuery | null = null;
-  private height = 0;
-
-  private mounted(){
-    const cardContainerElement =  this.$refs.cardContainer as HTMLElement;
-    this.height = cardContainerElement.clientHeight;
-  }
 
   private openModal() {
     if (!this.dragging && this.data.cardView) {
@@ -135,8 +128,7 @@ export class Card extends Vue {
     const color: string | undefined = R.path(["style", "color"], this.data);
     return {
       backgroundColor: color,
-      width: `${this.width - 20}px`,
-      height: this.height ? `${this.height}px` : 'auto',
+      width: `${this.width - 20}px`
     };
   }
 }
@@ -154,6 +146,7 @@ export default Card;
     padding: 10px;
     margin-bottom: 15px;
     user-select: none;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
 
   .card_row {
