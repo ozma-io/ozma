@@ -359,7 +359,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     let touchedStyle = false;
 
     const cellColor = getCellAttr("cell_color");
-    if (cellColor !== undefined) {
+    if (cellColor !== undefined && cellColor !== null) {
       style["background-color"] = String(cellColor);
       touchedStyle = true;
     }

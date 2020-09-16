@@ -405,7 +405,9 @@ export default class MultiSelect extends Vue {
         this.$emit("update:value", newValue);
       }
       this.inputValue = "";
-      (this.$refs.controlInput as HTMLInputElement).focus();
+      const controlInput = this.$refs.controlInput as HTMLInputElement;
+      if(controlInput !== undefined)
+        controlInput.focus();
       this.findNewSelected();
     }
   }
