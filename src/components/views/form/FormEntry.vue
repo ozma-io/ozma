@@ -106,8 +106,8 @@ export default class FormEntry extends Vue {
       selectionMode: this.selectionMode,
       scope: this.scope,
       level: this.level,
-      onUpdate: this.onUpdate,
-      onGoto: this.onGoto,
+      onUpdate: (event, fieldIndex) => this.onUpdate(event, fieldIndex),
+      onGoto: event => this.onGoto(event),
     };
   }
 }

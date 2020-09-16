@@ -18,8 +18,8 @@
     @keydown.tab="() => setIsOpen(false)"
   >
     <div
-      v-click-outside="() => setIsOpen(false)"
       ref="selectContainer"
+      v-click-outside="() => setIsOpen(false)"
       :class="[
         'select_container',
         {
@@ -42,7 +42,9 @@
           <div
             :style="listValueStyle"
             :class="[ 'single_value' ]"
-          >{{ valueOption.label }}</div>
+          >
+            {{ valueOption.label }}
+          </div>
         </slot>
       </div>
       <span

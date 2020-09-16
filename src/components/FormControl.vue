@@ -33,7 +33,7 @@
       :value="currentValue"
       :actions="actions"
       :auto-open="autoOpen"
-      @closeModalInput="$emit('closeModalInput')"
+      @close-modal-input="$emit('close-modal-input')"
     >
       <template #input-modal>
         <Input
@@ -218,7 +218,7 @@
             <SearchPanel
               v-if="enableFilter"
               @update:filterString="filterString = $event"
-            ></SearchPanel>
+            />
           </div>
           <div v-else class="input_label__container">
             <label class="input_label_single">{{ caption }}</label>
@@ -232,7 +232,7 @@
             :type="type"
             :auto-open="autoOpen"
             :is-cell-edit="isCellEdit"
-            @closeModalInput="$emit('closeModalInput')"
+            @close-modal-input="$emit('close-modal-input')"
             @update:value="updateValue($event)"
           >
             <template #input-modal>
@@ -284,12 +284,12 @@
             :indirect-links="indirectLinks"
             :scope="scope"
             :level="level + 1"
-            :filterString="filterString"
+            :filter-string="filterString"
             @update:actions="actions = $event"
             @goto="$emit('goto', $event)"
             @update:enableFilter="enableFilter = $event"
             @update:title="updateTitle"
-          ></NestedUserView>
+          />
         </b-col>
       </b-row>
     </template>

@@ -45,7 +45,7 @@
         auto-open
         @set-input-height="setInputHeight"
         @update="updateCurrentValue"
-        @closeModalInput="clickOutsideEdit"
+        @close-modal-input="clickOutsideEdit"
       />
     </table-cell-edit>
 

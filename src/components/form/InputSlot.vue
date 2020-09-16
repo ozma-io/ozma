@@ -118,7 +118,7 @@ export default class InputSlot extends Vue {
 
   private onModalClose() {
     this.isModalOpen = false;
-    this.$emit("closeModalInput");
+    this.$emit("close-modal-input");
   }
 
   private onFocus() {

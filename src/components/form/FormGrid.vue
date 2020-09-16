@@ -4,14 +4,12 @@
     class="form_container"
   >
     <b-row>
-      <template>
-        <FormGridBlock
-          v-for="(block, blockI) in gridContent"
-          :key="blockI"
-          :block-content="block"
-          :grid-props="gridProps"
-        />
-      </template>
+      <FormGridBlock
+        v-for="(block, blockI) in gridContent"
+        :key="blockI"
+        :block-content="block"
+        :grid-props="gridProps"
+      />
     </b-row>
   </b-container>
 </template>

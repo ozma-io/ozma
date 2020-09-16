@@ -90,7 +90,9 @@
         </button>
       </template>
     </MultiSelect>
-    <center v-else style="margin-top: 5px; color:#777;"> {{$t('loading')}}... </center>
+    <center v-else style="margin-top: 5px; color:#777;">
+      {{ $t('loading') }}...
+    </center>
     <!-- <input
       v-else
       ref="control"
