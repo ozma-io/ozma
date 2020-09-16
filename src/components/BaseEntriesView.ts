@@ -50,7 +50,7 @@ export default class BaseEntriesView extends Vue {
   }
 
   @Watch("entriesEntity", { deep: true })
-  private entityChanged(newEntity: IEntriesRef, oldEntity: IEntriesRef) {
+  private entityChanged(newEntity: IEntriesRef | null, oldEntity: IEntriesRef | null) {
     if(newEntity !== null && oldEntity !== null)
       if (!equalEntriesRef(newEntity, oldEntity)) {
         if (oldEntity !== undefined) {
