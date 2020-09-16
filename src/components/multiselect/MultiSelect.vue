@@ -30,7 +30,7 @@
       ]"
     >
       <div
-        v-if="single"
+        v-if="single && !isEmpty"
         class="single_value_button"
         @click="setIsOpen(true)"
       >
