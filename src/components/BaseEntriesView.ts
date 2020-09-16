@@ -50,12 +50,13 @@ export default class BaseEntriesView extends Vue {
   }
 
   @Watch("entriesEntity", { deep: true })
-  private entityChanged(newEntity: IEntriesRef, oldEntity: IEntriesRef) {
-    if (!equalEntriesRef(newEntity, oldEntity)) {
-      if (oldEntity !== undefined) {
-        this.destroyEntries(oldEntity);
+  private entityChanged(newEntity: IEntriesRef | null, oldEntity: IEntriesRef | null) {
+    if(newEntity !== null && oldEntity !== null)
+      if (!equalEntriesRef(newEntity, oldEntity)) {
+        if (oldEntity !== undefined) {
+          this.destroyEntries(oldEntity);
+        }
+        this.getEntries({ ref: newEntity, reference: this.uid });
       }
-      this.getEntries({ ref: newEntity, reference: this.uid });
-    }
   }
 }

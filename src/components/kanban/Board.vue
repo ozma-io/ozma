@@ -7,6 +7,7 @@
       :key="columnIndex"
       :title="getColumnTitle(column.id, column.title)"
       :field-name="column.fieldName"
+      :order-field-name="column.orderFieldName"
       :create-view="column.createView"
       :cards="column.cards"
       :card-target="cardTarget"
