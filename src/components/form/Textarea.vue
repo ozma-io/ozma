@@ -34,6 +34,7 @@
         'textarea_field__desktop': !isMobile,
         'textarea_field__required': required && isEmpty,
         'textarea_field__error': error,
+        'textarea_field__max_height': !height
       }]"
       :type="type"
       :style="style"
@@ -212,13 +213,16 @@ export default class Textarea extends Vue {
     flex: 2;
     width: 100%;
     resize: none;
-    max-height: 165px;
     overflow: auto !important;
     white-space: pre-wrap;
     border: none;
     display: block;
     color: var(--MainTextColor);
     transition: all 300ms ease-in-out, height 300ms ease-in-out;
+  }
+
+  .textarea_field__max_height {
+    max-height: 165px;
   }
 
   .textarea_field::placeholder {

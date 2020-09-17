@@ -93,7 +93,6 @@ export interface ICard {
 }
 
 interface ICardStyle {
-  height?: string;
   width?: string;
   backgrondColor?: string;
 }
@@ -103,19 +102,14 @@ interface ICardStyle {
 export class Card extends Vue {
   @Prop({ type: Object, required: true }) data!: ICard;
   @Prop({ type: Boolean, required: false, default: false }) selected!: boolean;
+  @Prop({ type: Boolean, required: false, default: false }) dragging!: boolean;
   @Prop({ type: Number, required: true }) width!: number;
   @Prop({ type: String, required: false, default: () => 'top' }) target!: CardTarget;
 
   modalView: IQuery | null = null;
-  private height = 0;
-
-  private mounted(){
-    const cardContainerElement =  this.$refs.cardContainer as HTMLElement;
-    this.height = cardContainerElement.clientHeight;
-  }
 
   private openModal() {
-    if (this.data.cardView) {
+    if (!this.dragging && this.data.cardView) {
       if (this.target === 'top') {
         const url = queryLocation(this.data.cardView);
         this.$router.push(url);
@@ -131,11 +125,12 @@ export class Card extends Vue {
   }
 
   private get cardStyle() {
-    const color: string | undefined = R.path(["style", "color"], this.data);
+    let color: string | undefined = R.path(["style", "color"], this.data);
+    if( color === undefined)
+      color = "white";
     return {
       backgroundColor: color,
-      width: `${this.width - 20}px`,
-      height: this.height ? `${this.height}px` : 'auto',
+      width: `${this.width - 20}px`
     };
   }
 }
@@ -153,10 +148,12 @@ export default Card;
     padding: 10px;
     margin-bottom: 15px;
     user-select: none;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
 
   .card_row {
-    margin: 0 0 10px 0;
+    margin: 0 0 2px 0;
+    line-height: 1.1;
   }
 
   .card_col {
@@ -188,7 +185,10 @@ export default Card;
     text-overflow: ellipsis;
     width: 100%;
     display: inline-block;
+
+    /*
     white-space: nowrap;
+    */
     overflow: hidden;
   }
 

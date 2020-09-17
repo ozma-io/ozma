@@ -18,8 +18,8 @@
     @keydown.tab="() => setIsOpen(false)"
   >
     <div
-      v-click-outside="() => setIsOpen(false)"
       ref="selectContainer"
+      v-click-outside="() => setIsOpen(false)"
       :class="[
         'select_container',
         {
@@ -30,7 +30,7 @@
       ]"
     >
       <div
-        v-if="single"
+        v-if="single && !isEmpty"
         class="single_value_button"
         @click="setIsOpen(true)"
       >
@@ -42,7 +42,9 @@
           <div
             :style="listValueStyle"
             :class="[ 'single_value' ]"
-          >{{ valueOption.label }}</div>
+          >
+            {{ valueOption.label }}
+          </div>
         </slot>
       </div>
       <span
@@ -405,7 +407,9 @@ export default class MultiSelect extends Vue {
         this.$emit("update:value", newValue);
       }
       this.inputValue = "";
-      (this.$refs.controlInput as HTMLInputElement).focus();
+      const controlInput = this.$refs.controlInput as HTMLInputElement;
+      if(controlInput !== undefined)
+        controlInput.focus();
       this.findNewSelected();
     }
   }

@@ -138,6 +138,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
     }
     const cards = this.uv.rows.map((x, i) => this.makeCardObject(x, i));
     const fieldName = this.uv.info.columns[this.groupIndex].name;
+    const orderFieldName = this.orderIndex > 0 ? this.uv.info.columns[this.orderIndex].name : "";
     const createView = attrToQuery(
       this.uv.attributes["create_view"],
       { infoByDefault: true },
@@ -150,13 +151,17 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
         const column: IColumn[] = R.pathOr([], [columTitle], groupedColumns);
         return { ...acc, [columTitle]: column };
       }, {});
+
+    const sortByOrder = R.sortBy(R.prop('order'));
+
     const allColumns: IColumn[] = Object.keys(filteredColumns)
       .map((column: string) => ({
         id: column,
         title: R.pathOr(column, [column], this.boardTitles),
         fieldName,
+        orderFieldName,
         createView,
-        cards: R.pathOr([], [column], groupedColumns),
+        cards: this.orderIndex > 0 ? sortByOrder(R.pathOr([], [column], groupedColumns)) : R.pathOr([], [column], groupedColumns),
       }));
     return R.sortBy(
       (column: IColumn) => this.columnNames!.indexOf(column.id),

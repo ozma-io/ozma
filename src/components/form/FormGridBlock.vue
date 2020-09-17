@@ -7,7 +7,7 @@
     <FormControl
       v-if="blockContent.type === 'input'"
       :caption="blockContent.field.caption"
-      :columnInfoName="blockContent.field.columnInfo.name"
+      :column-info-name="blockContent.field.columnInfo.name"
       :value="gridProps.row.values[blockContent.field.index]"
       :attributes="gridProps.localRow.values[blockContent.field.index].attributes"
       :type="blockContent.field.columnInfo.valueType"
@@ -29,11 +29,14 @@
     </b-row>
     <b-row v-else-if="blockContent.type === 'buttons'">
       <b-button 
-        block
         v-for="(subBlock, subBlockI) in blockContent.actions"
         :key="subBlockI"
+        block
         :variant="subBlock.variant"
-        @click="subBlock.callback()">{{subBlock.name}}</b-button>
+        @click="subBlock.callback()"
+      >
+        {{ subBlock.name }}
+      </b-button>
     </b-row>
   </b-col>
 </template>
