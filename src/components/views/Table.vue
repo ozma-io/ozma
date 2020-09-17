@@ -643,12 +643,12 @@ const rowContains = (row: ITableLocalRow, searchWords: string[]) => {
 const rowIndicesCompare = (aIndex: number, bIndex: number, entries: IRowCommon[], sortColumn: number, collator: Intl.Collator, isDate?: boolean) => {
   const a = entries[aIndex];
   const b = entries[bIndex];
-  if (!isDate) {
-    return collator.compare(a.values[sortColumn].value,
-      b.values[sortColumn].value);
-  } else {
+  if (isDate && a.values[sortColumn].value !== null && b.values[sortColumn].value !== null) {
     return Number((a.values[sortColumn].value as Moment).toDate())
       - Number((b.values[sortColumn].value as Moment).toDate());
+  } else {
+    return collator.compare(a.values[sortColumn].value,
+      b.values[sortColumn].value);
   }
 };
 
@@ -1136,8 +1136,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     } else {
       this.sortAsc = !this.sortAsc;
     }
-
-    this.sortRows(this.sortOptions, type === "datetime");
+    this.sortRows(this.sortOptions, type === "datetime" || type === "date");
   }
 
   private sortRows(options?: Intl.CollatorOptions, isDateCompare?: boolean) {
