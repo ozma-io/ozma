@@ -5,7 +5,7 @@
     class="form_grid_block__column"
   >
     <FormControl
-      v-if="blockContent.type === 'input'"
+      v-if="blockContent.type === 'input' && isVisible"
       :caption="blockContent.field.caption"
       :columnInfoName="blockContent.field.columnInfo.name"
       :value="gridProps.row.values[blockContent.field.index]"
@@ -51,6 +51,16 @@ import { GridElement, IGridProps } from "@/components/form/types";
 export default class FormGridBlock extends Vue {
   @Prop({ type: Object }) blockContent!: GridElement;
   @Prop({ type: Object }) gridProps!: IGridProps;
+
+  private isVisible = true;
+
+  mounted(){
+    if(this.blockContent.field !== undefined){
+      const value = this.gridProps.localRow.values[this.blockContent.field.index];
+      if(value.attributes !== undefined && value.attributes.visible !== undefined)
+        this.isVisible = value.attributes.visible;
+    }
+  }
 }
 </script>
 
