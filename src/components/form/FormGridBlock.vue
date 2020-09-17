@@ -5,9 +5,9 @@
     class="form_grid_block__column"
   >
     <FormControl
-      v-if="blockContent.type === 'input' && isVisible"
+      v-if="blockContent.type === 'input' && gridProps.localRow.values[blockContent.field.index].visible"
       :caption="blockContent.field.caption"
-      :columnInfoName="blockContent.field.columnInfo.name"
+      :column-info-name="blockContent.field.columnInfo.name"
       :value="gridProps.row.values[blockContent.field.index]"
       :attributes="gridProps.localRow.values[blockContent.field.index].attributes"
       :type="blockContent.field.columnInfo.valueType"
@@ -29,11 +29,14 @@
     </b-row>
     <b-row v-else-if="blockContent.type === 'buttons'">
       <b-button 
-        block
         v-for="(subBlock, subBlockI) in blockContent.actions"
         :key="subBlockI"
+        block
         :variant="subBlock.variant"
-        @click="subBlock.callback()">{{subBlock.name}}</b-button>
+        @click="subBlock.callback()"
+      >
+        {{ subBlock.name }}
+      </b-button>
     </b-row>
   </b-col>
 </template>
@@ -51,16 +54,6 @@ import { GridElement, IGridProps } from "@/components/form/types";
 export default class FormGridBlock extends Vue {
   @Prop({ type: Object }) blockContent!: GridElement;
   @Prop({ type: Object }) gridProps!: IGridProps;
-
-  private isVisible = true;
-
-  mounted(){
-    if(this.blockContent.field !== undefined){
-      const value = this.gridProps.localRow.values[this.blockContent.field.index];
-      if(value.attributes !== undefined && value.attributes.visible !== undefined)
-        this.isVisible = value.attributes.visible;
-    }
-  }
 }
 </script>
 
