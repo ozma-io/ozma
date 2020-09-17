@@ -29,9 +29,21 @@
         </span>
       </div>
     </div>
-      
-    <div class="column_body">
-
+    <draggable
+      v-dragscroll.y
+      class="column_body"
+      :group="{ name: 'cards', put: true }"
+      ghost-class="card_dragging_ghost"
+      chosen-class="card_dragging_chosen"
+      drag-class="card_dragging_drag"
+      :delayOnTouchOnly= "true"
+      :delay="400"
+      :animation= "500"
+      :list="cards"
+      @add="onAdd"
+      @start="onStart"
+      @end="onMove"
+    >
       <Card
         v-for="(card, index) in cards"
         :key="index"
@@ -42,7 +54,7 @@
         :dragging="dragging"
         :selected="isCardSelected(card.groupRef.position)"
       />
-    </div>
+    </draggable>
   </div>
 </template>
 
@@ -87,7 +99,7 @@ export interface IColumnStyle {
   flex?: number;
 }
 
-@Component({ components: { Card, draggable, ModalUserView}, directives: { dragscroll } })
+@Component({ components: { Card, draggable, ModalUserView }, directives: { dragscroll } })
 export default class Column extends Vue {
   @Prop() id!: any;
   @Prop({ type: Array, required: true }) cards!: ICard[];
@@ -100,7 +112,7 @@ export default class Column extends Vue {
   @Prop({ type: String, required: false }) cardTarget!: CardTarget;
 
   modalView: IQuery | null = null;
-  
+
   selected: number[] = [];
   dragging = false;
 
@@ -261,22 +273,15 @@ export default class Column extends Vue {
     vertical-align: middle;
   }
 
-  .card_dragging_chosen {
-    opacity: 0.9 !important;
-  }
-
-  .card_dragging_chosen.card_dragging_ghost {
+  .card_dragging_ghost {
     background-color: black;
     width: 100%;
+    height: 5px;
     margin-top: -10px;
     margin-bottom: 5px;
+    padding: 0;
     border: solid 2px black;
-    opacity: 0.9 !important;
-  }
-
-  .card_dragging_chosen.card_dragging_drag {
-    background-color: green;
-    opacity: 0.9 !important;
+    opacity: 0.8 !important;
   }
 
   .card_open_icon {

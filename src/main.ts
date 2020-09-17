@@ -12,7 +12,6 @@ import UserView from "@/components/UserView.vue";
 import UserViewLink from "@/components/UserViewLink";
 import ActionsMenu from "@/components/ActionsMenu.vue";
 import FormControl from "@/components/FormControl.vue";
-import VueDraggable from 'vue-draggable'
 import App from "@/App.vue";
 
 import TextareaAutosize from "vue-textarea-autosize";
@@ -40,13 +39,11 @@ export const store = new Vuex.Store({
 });
 
 Vue.use(TextareaAutosize);
-Vue.use(VueDraggable);
 
 Vue.component("UserView", UserView);
 Vue.component("ActionsMenu", ActionsMenu);
 Vue.component("FormControl", FormControl);
 Vue.component("UserViewLink", UserViewLink);
-
 
 Modules.router.beforeResolve((to, from, next) => {
   // Reset page title
