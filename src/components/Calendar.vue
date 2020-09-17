@@ -38,7 +38,9 @@
       >
     </div>
     <div :class="['main_cal', {'main_cal__open': isCalendarOpen, 'main-cal_cell-edit': isCellEdit }]">
-      <div class="days">
+      <div
+        :class="['days', {'mr-2': showTime}]"
+      >
         <DatePicker
           :value="dateValue"
           _in
@@ -55,7 +57,11 @@
           @update:mins="updateMins"
           @update:hours="updateHours"
         />
-        <button class="now" @click="setTimeNow($event)">
+        <button
+          class="now"
+          @click="setTimeNow($event)"
+          v-if="showTime"
+        >
           Now
         </button>
       </div>
@@ -249,9 +255,12 @@ export default class Calendar extends Vue {
 
   .days {
     display: inline-flex;
-    margin-right: 10px;
     flex-direction: column;
     justify-content: space-between;
+  }
+
+  .mr-1 {
+    margin-right: 10px;
   }
 
   .time {
