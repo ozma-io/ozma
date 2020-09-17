@@ -32,6 +32,7 @@
                  'input-field_cell-edit': isCellEdit,
                }
       ]"
+      :style = "{'background': backgroundColor}"
       autocomplete="off"
       :type="type"
       :value="value"
@@ -49,6 +50,7 @@
       :readonly="disabled"
       rows="1"
       class="input-textarea"
+      :style = "{'background': backgroundColor}"
       @keydown.enter.prevent
       @input="updateInputCellEdit"
       @focus="onFocus"
@@ -79,6 +81,8 @@ export default class Input extends Vue {
   @Prop({ type: Boolean, default: false }) focus!: boolean;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
+  @Prop({ type: String }) backgroundColor!: string;
+
 
   private focused = false;
   private maxInputWidth = 0;

@@ -20,6 +20,7 @@
     <div
       ref="selectContainer"
       v-click-outside="() => setIsOpen(false)"
+      :style = "{'background': backgroundColor}"
       :class="[
         'select_container',
         {
@@ -217,6 +218,7 @@ export default class MultiSelect extends Vue {
   @Prop({ type: String, default: null }) optionsListHeight!: string;
   @Prop({ type: Boolean, default: false }) dontOpen!: boolean;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
+  @Prop({ type: String }) backgroundColor!: string;
 
   private isOpen = false;
   private selectedOption = -1;

@@ -25,6 +25,7 @@
       :value="selectValues"
       :empty-value="[]"
       :disabled="disabled"
+      :background-color= "cellColor"
       @update:value="onSelectChange"
     >
       <template #label="select">
@@ -165,6 +166,8 @@ const findValueDelta = (rows: ICombinedRow[], newRows: Record<number, IRowCommon
   components: { MultiSelect, ModalUserView },
 })
 export default class UserViewMultiSelect extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>, BaseEntriesView>(BaseUserView, BaseEntriesView) {
+  @Prop({ type: String }) backgroundColor!: string;
+
   private nestedView: IQuery | null = null;
 
   get entriesEntity() {
