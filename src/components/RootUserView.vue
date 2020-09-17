@@ -59,9 +59,9 @@
         <span v-if="!!title" class="head-menu_title">{{ title }}</span>
         <SearchPanel
           v-if="enableFilter"
-          :filterString="filterString"
+          :filter-string="filterString"
           @update:filterString="filterString = $event"
-        ></SearchPanel>
+        />
       </div>
       <div
         v-if="uv !== null"

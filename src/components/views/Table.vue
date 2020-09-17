@@ -45,7 +45,7 @@
         auto-open
         @set-input-height="setInputHeight"
         @update="updateCurrentValue"
-        @closeModalInput="clickOutsideEdit"
+        @close-modal-input="clickOutsideEdit"
       />
     </table-cell-edit>
 
@@ -359,7 +359,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     let touchedStyle = false;
 
     const cellColor = getCellAttr("cell_color");
-    if (cellColor !== undefined) {
+    if (cellColor !== undefined && cellColor !== null) {
       style["background-color"] = String(cellColor);
       touchedStyle = true;
     }
