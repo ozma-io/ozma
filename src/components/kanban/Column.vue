@@ -36,9 +36,11 @@
       ghost-class="card_dragging_ghost"
       chosen-class="card_dragging_chosen"
       drag-class="card_dragging_drag"
-      :delayOnTouchOnly= "true"
+      :forceFallback="true"
+      :fallbackOnBody="true"
+      :delayOnTouchOnly="true"
       :delay="400"
-      :animation= "500"
+      :animation="300"
       :list="cards"
       @add="onAdd"
       @start="onStart"
@@ -274,14 +276,14 @@ export default class Column extends Vue {
   }
 
   .card_dragging_ghost {
-    background-color: black;
-    width: 100%;
-    height: 5px;
-    margin-top: -10px;
-    margin-bottom: 5px;
-    padding: 0;
-    border: solid 2px black;
-    opacity: 0.8 !important;
+    background-color: #eee !important;
+  }
+
+  .card_dragging_drag {
+    opacity: 1 !important;
+    transform: rotate(5deg);
+    box-shadow: 0 10px 10px -5px;
+    font-size: 14px;
   }
 
   .card_open_icon {
