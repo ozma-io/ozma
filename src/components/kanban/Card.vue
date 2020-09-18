@@ -125,7 +125,9 @@ export class Card extends Vue {
   }
 
   private get cardStyle() {
-    const color: string | undefined = R.path(["style", "color"], this.data);
+    let color: string | undefined = R.path(["style", "color"], this.data);
+    if( color === undefined)
+      color = "white";
     return {
       backgroundColor: color,
       width: `${this.width - 20}px`
