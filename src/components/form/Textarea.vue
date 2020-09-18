@@ -69,6 +69,7 @@ export default class Textarea extends Vue {
   @Prop({ type: String, default: "text" }) type!: string;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
+  @Prop({ type: String }) backgroundColor!: string;
 
   private focused = false;
   private modalValue: string = this.value;
@@ -134,9 +135,13 @@ export default class Textarea extends Vue {
     if (this.height) {
       return {
         height: `${this.height}px`,
+        background: this.backgroundColor
+      };
+    }else{
+      return {
+        background: this.backgroundColor
       };
     }
-    return {};
   }
 
   private onFocus(evt: HTMLInputElement) {

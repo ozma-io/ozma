@@ -45,6 +45,7 @@
           :autofocus="autofocus"
           :error="value.erroredOnce"
           :required="!isNullable"
+          :background-color= "cellColor"
           focus
           @set-input-height="setInputHeight"
           @input="updateValue($event)"
@@ -58,6 +59,7 @@
           :disabled="isDisabled"
           :error="value.erroredOnce"
           :required="!isNullable"
+          :background-color= "cellColor"
           @set-input-height="setInputHeight"
           @update:value="updateValue"
         />
@@ -70,6 +72,7 @@
           :show-time="inputType.showTime"
           :error="value.erroredOnce"
           :required="!isNullable"
+          :background-color= "cellColor"
           @update:value="updateValue"
         />
         <MultiSelect
@@ -84,6 +87,7 @@
           :required="!isNullable"
           :disabled="isDisabled"
           :is-cell-edit="isCellEdit"
+          :background-color= "cellColor"
           @update:value="updateValue"
         />
         <CodeEditor
@@ -114,6 +118,7 @@
           :disabled="isDisabled"
           :error="value.erroredOnce"
           :required="!isNullable"
+          :background-color= "cellColor"
           @input="updateValue"
           @set-input-height="setInputHeight"
           @focus="iSlot.onFocus"
@@ -128,6 +133,7 @@
           :height="customHeight"
           :error="value.erroredOnce"
           :required="!isNullable"
+          :background-color= "cellColor"
           @set-input-height="setInputHeight"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
@@ -144,6 +150,7 @@
           :time-step="inputType.timeStep"
           :error="value.erroredOnce"
           :required="!isNullable"
+          :background-color= "cellColor"
           @focus="iSlot.onFocus"
           @update:value="updateValue"
         />
@@ -160,6 +167,7 @@
           :error="value.erroredOnce"
           :required="!isNullable"
           :disabled="isDisabled"
+          :background-color= "cellColor"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
         />
@@ -189,6 +197,7 @@
           :disabled="isDisabled"
           :error="value.erroredOnce"
           :required="!isNullable"
+          :background-color= "cellColor"
           @input="updateValue($event.target.value)"
           @focus="iSlot.onFocus"
         >
@@ -250,6 +259,7 @@
                 :is-cell-edit="isCellEdit"
                 :is-nullable="isNullable"
                 :is-disabled="isDisabled"
+                :background-color= "cellColor"
                 @update:actions="actions = $event"
                 @update="updateValue"
               />
@@ -270,6 +280,7 @@
                 :is-nullable="isNullable"
                 :is-disabled="isDisabled"
                 :is-cell-edit="isCellEdit"
+                :background-color= "cellColor"
                 @update:actions="actions = $event"
                 @focus="iSlot.onFocus"
                 @update="updateValue($event)"
@@ -285,6 +296,7 @@
             :scope="scope"
             :level="level + 1"
             :filter-string="filterString"
+            :background-color= "cellColor"
             @update:actions="actions = $event"
             @goto="$emit('goto', $event)"
             @update:enableFilter="enableFilter = $event"
@@ -474,6 +486,10 @@ export default class FormControl extends Vue {
 
   private forceRerender() {
     this.codeEditorKey += 1;
+  }
+
+  get cellColor(){
+    return "cell_color" in this.attributes ? String(this.attributes["cell_color"]) : "none";
   }
 
   get customHeight() {

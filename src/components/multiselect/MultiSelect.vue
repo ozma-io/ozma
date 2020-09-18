@@ -20,6 +20,7 @@
     <div
       ref="selectContainer"
       v-click-outside="() => setIsOpen(false)"
+      :style = "{'background': backgroundColor}"
       :class="[
         'select_container',
         {
@@ -179,13 +180,13 @@
         @click.stop="removeValue()"
       >
     </div>
-    <div
+    <span
       v-if="!single && !required && showValueRemove"
       class="clear_all_button"
       @click="clearValues"
     >
       {{ $t('clear_all') }}
-    </div>
+    </span>
   </div>
 </template>
 
@@ -217,6 +218,7 @@ export default class MultiSelect extends Vue {
   @Prop({ type: String, default: null }) optionsListHeight!: string;
   @Prop({ type: Boolean, default: false }) dontOpen!: boolean;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
+  @Prop({ type: String }) backgroundColor!: string;
 
   private isOpen = false;
   private selectedOption = -1;
@@ -234,18 +236,19 @@ export default class MultiSelect extends Vue {
     nextRender().then(() => {
       const bodyRect = document.body.getBoundingClientRect();
       const selectContainerElement = this.$refs.selectContainer as HTMLInputElement;
-      const selectContainerRect = selectContainerElement.getBoundingClientRect();
+      const selectContainerRect = selectContainerElement !== undefined ? selectContainerElement.getBoundingClientRect() : null;
 
-      //There we check cell position for open selectContainer up or down.
-      if (selectContainerRect.top > (bodyRect.bottom - selectContainerRect.bottom)){
-        this.isTopFilter = !this.isTopFilter;
-        this.optionsContainerCoords.bottom = selectContainerRect.height;
-        // It is need for set focus to search input if options opened. 
-        if(this.isOpen)
-          this.setIsOpen(true);
-      } else {
-        this.optionsContainerCoords.top = selectContainerRect.height;
-      }
+      if (selectContainerRect !== null)
+        //There we check cell position for open selectContainer up or down.
+        if (selectContainerRect.top > (bodyRect.bottom - selectContainerRect.bottom)){
+          this.isTopFilter = !this.isTopFilter;
+          this.optionsContainerCoords.bottom = selectContainerRect.height;
+          // It is need for set focus to search input if options opened. 
+          if(this.isOpen)
+            this.setIsOpen(true);
+        } else {
+          this.optionsContainerCoords.top = selectContainerRect.height;
+        }
     });
 
     if (this.autofocus) {
@@ -572,6 +575,7 @@ export default class MultiSelect extends Vue {
   .values_list__value {
     margin: 5px;
     border: 1px solid var(--MainBorderColor);
+    background-color: var(--MainBackgroundColor);
   }
 
   .values_list__value,

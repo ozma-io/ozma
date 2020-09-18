@@ -6,6 +6,7 @@
     :scope="scope"
     :level="level"
     :filter="filterWords"
+    :background-color= "backgroundColor"
     @update:actions="$emit('update:actions', $event)"
     @goto="$emit('goto', $event)"
     @update:enableFilter="$emit('update:enableFilter', $event)"
@@ -26,6 +27,7 @@ export default class NestedUserView extends Vue {
   @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
   @Prop({ type: String, required: true }) filterString!: string;
   @Prop({ type: Object, required: true }) defaultValues!: Record<string, any>;
+  @Prop({ type: String }) backgroundColor!: string;
 
   get filterWords(){
     const value = this.filterString;

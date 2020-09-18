@@ -12,6 +12,7 @@
   <div
     v-click-outside="onClickOutside"
     class="calendar_container"
+    :style = "{'background': backgroundColor}"
   >
     <div class="main_input">
       <input
@@ -84,6 +85,7 @@ export default class Calendar extends Vue {
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: Boolean, default: false }) noOpenOnFocus!: boolean;
   @Prop({ type: Boolean, default: false}) isCellEdit!: boolean;
+  @Prop({ type: String }) backgroundColor!: string;
 
   private isCalendarOpen = false;
 
