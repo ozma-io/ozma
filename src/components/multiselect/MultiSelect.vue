@@ -236,18 +236,19 @@ export default class MultiSelect extends Vue {
     nextRender().then(() => {
       const bodyRect = document.body.getBoundingClientRect();
       const selectContainerElement = this.$refs.selectContainer as HTMLInputElement;
-      const selectContainerRect = selectContainerElement.getBoundingClientRect();
+      const selectContainerRect = selectContainerElement !== undefined ? selectContainerElement.getBoundingClientRect() : null;
 
-      //There we check cell position for open selectContainer up or down.
-      if (selectContainerRect.top > (bodyRect.bottom - selectContainerRect.bottom)){
-        this.isTopFilter = !this.isTopFilter;
-        this.optionsContainerCoords.bottom = selectContainerRect.height;
-        // It is need for set focus to search input if options opened. 
-        if(this.isOpen)
-          this.setIsOpen(true);
-      } else {
-        this.optionsContainerCoords.top = selectContainerRect.height;
-      }
+      if (selectContainerRect !== null)
+        //There we check cell position for open selectContainer up or down.
+        if (selectContainerRect.top > (bodyRect.bottom - selectContainerRect.bottom)){
+          this.isTopFilter = !this.isTopFilter;
+          this.optionsContainerCoords.bottom = selectContainerRect.height;
+          // It is need for set focus to search input if options opened. 
+          if(this.isOpen)
+            this.setIsOpen(true);
+        } else {
+          this.optionsContainerCoords.top = selectContainerRect.height;
+        }
     });
 
     if (this.autofocus) {

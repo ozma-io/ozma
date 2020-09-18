@@ -630,7 +630,6 @@ export default class FormControl extends Vue {
   }
 
   private mounted() {
-    console.log("cellColor", this.cellColor);
     this.forceRerender();
     if (this.autofocus) {
       const type = this.inputType;

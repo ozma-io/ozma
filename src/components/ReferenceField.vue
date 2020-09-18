@@ -144,9 +144,6 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
   private selectedView: IQuery | null = null;
   private nestedView: IQuery | null = null;
 
-  mounted(){
-    console.log("in ref", this.backgroundColor);
-  }
   get entriesEntity() {
     return this.entry;
   }
