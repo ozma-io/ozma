@@ -368,6 +368,7 @@ export default class RootUserView extends Vue {
     left: 0;
     top: 0;
     z-index: 999;
+    border-bottom: 1px solid var(--MainBorderColor);
   }
 
   .head-menu_back-button {
