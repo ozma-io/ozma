@@ -1,7 +1,7 @@
 <i18n>
     {
         "en": {
-            "schema_name": "Schema name:",
+            "schema_name": "Schema name",
             "save": "Save",
             "restore": "Restore",
             "success": "Success"
@@ -19,7 +19,7 @@
   <div>
     <p>
       <label>
-        {{ $t('schema_name') }}
+        {{ $t('schema_name') }}:
         <input
           v-model="schema"
           :placeholder="$t('schema_name')"
@@ -61,9 +61,10 @@ export default class SaveRestoreSchema extends Vue {
 
   async saveSchema() {
     try {
+      const schemas = this.schema == "" ? null : [this.schema];
       const res: Blob = await this.callProtectedApi({
-        func: Api.saveSchema,
-        args: [this.schema],
+        func: Api.saveSchemas,
+        args: [schemas],
       });
 
       const url = URL.createObjectURL(res);
@@ -71,7 +72,8 @@ export default class SaveRestoreSchema extends Vue {
         const element = document.createElement("a");
         try {
           element.setAttribute("href", url);
-          element.setAttribute("download", `${this.schema}.zip`);
+          const name = this.schema == "" ? "schemas" : this.schema;
+          element.setAttribute("download", `${name}.zip`);
           element.style.display = "none";
 
           document.body.appendChild(element);

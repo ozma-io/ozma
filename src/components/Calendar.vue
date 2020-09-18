@@ -25,7 +25,7 @@
         type="text"
         :class="['calendar_input', {'calendar-input_cell-edit': isCellEdit}]"
         :placeholder="$t('input_placeholder')"
-        :value="textValue"
+        :value="visibleValue"
         @input="$emit('update:value', $event.target.value)"
         @focus="onInputFocus"
       >
@@ -44,13 +44,20 @@
           _in
           @update:value="updateDate"
         />
+        <button class="today" @click="setDateToday($event)">
+          Today
+        </button>
       </div>
       <div class="time">
         <TimePicker
           v-if="showTime"
+          :time-step="timeStep"
           @update:mins="updateMins"
           @update:hours="updateHours"
         />
+        <button class="now" @click="setTimeNow($event)">
+          Now
+        </button>
       </div>
     </div>
   </div>
@@ -73,6 +80,7 @@ export default class Calendar extends Vue {
   @Prop() value!: Moment | undefined | null;
   @Prop({ type: String }) textValue!: string;
   @Prop({ default: true, type: Boolean }) showTime!: boolean;
+  @Prop({ type: Number, default: null }) timeStep!: number | null;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: Boolean, default: false }) noOpenOnFocus!: boolean;
   @Prop({ type: Boolean, default: false}) isCellEdit!: boolean;
@@ -97,6 +105,10 @@ export default class Calendar extends Vue {
 
   get dateValue() {
     return this.value ? this.value : moment.invalid();
+  }
+
+  get visibleValue() {
+    return this.textValue.substring(0, this.textValue.length - 3)
   }
 
   private onClickOutside() {
@@ -132,6 +144,22 @@ export default class Calendar extends Vue {
     this.updatePart(newValue => {
       newValue.hour(val);
     });
+  }
+
+  private setTimeNow(event: Event) {
+    event.preventDefault();
+    const time = moment();
+    this.updatePart(newValue => {
+      newValue.hour(time.hour());
+      newValue.minute(time.minute());
+      newValue.second(0);
+    });
+  }
+
+  private setDateToday(event: Event) {
+    event.preventDefault();
+    const time = moment();
+    this.updateDate(time);
   }
 }
 </script>
@@ -226,10 +254,19 @@ export default class Calendar extends Vue {
   .days {
     display: inline-flex;
     margin-right: 10px;
+    flex-direction: column;
+    justify-content: space-between;
   }
 
   .time {
     display: inline-flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .today,
+  .now {
+    margin-top: 10px;
   }
 
   @media screen and (max-device-width: 480px) {

@@ -19,7 +19,7 @@ storiesOf("Modal", module)
         },
         beforeClose: {
           type: Function,
-          default: (evt: any) => console.log(evt),
+          default: (evt: any) => console.log(evt), // eslint-disable-line
         },
       },
       components: { Modal },

@@ -32,12 +32,15 @@
     <draggable
       v-dragscroll.y
       class="column_body"
-      group="cards"
-      ghost-class="card_dragging"
-      delayOnTouchOnly="true"
-      delay="400"
-      forceFallback= "true"
-      :animation= "300"
+      :group="{ name: 'cards', put: true }"
+      ghost-class="card_dragging_ghost"
+      chosen-class="card_dragging_chosen"
+      drag-class="card_dragging_drag"
+      :force-fallback="true"
+      :fallback-on-body="true"
+      :delay-on-touch-only="true"
+      :delay="400"
+      :animation="300"
       :list="cards"
       @add="onAdd"
       @start="onStart"
@@ -104,6 +107,7 @@ export default class Column extends Vue {
   @Prop({ type: Array, required: true }) cards!: ICard[];
   @Prop({ type: String, required: true }) title!: string;
   @Prop({ type: String, required: true }) fieldName!: string;
+  @Prop({ type: String, required: true }) orderFieldName!: string;
   @Prop({ type: Object, required: true }) createView!: IQuery;
   @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Function, required: false }) move!: (ref: ValueRef, value: any) => void;
@@ -124,6 +128,10 @@ export default class Column extends Vue {
         [this.fieldName]: this.id,
       },
     };
+
+    if(this.orderFieldName.length > 0){
+      query.defaultValues[this.orderFieldName] = this.cards[0] && this.cards[0].order ? this.cards[0].order - 1 : 1;
+    }
 
     this.modalView = query;
   }
@@ -207,16 +215,24 @@ export default class Column extends Vue {
           : 0
       );
       const nextCardOrder = R.pathOr<number>(prevCardOrder + 1, [event.newIndex + 1, "order"], this.cards);
-      const mean = (prevCardOrder + nextCardOrder) / 2;
-      // if (this.move && newCard.orderRef) {
-      //  this.move(newCard.orderRef, mean);
-      // }
+      
+      let mean = 0;
+      if(prevCardOrder == 0 && nextCardOrder < 0){
+        mean = nextCardOrder * 2 ;
+      }else{
+        mean = (prevCardOrder + nextCardOrder) / 2;
+      }
+      
+      if (this.move && newCard.orderRef) {
+        this.move(newCard.orderRef, mean);
+      }
     }
   }
 
   private onAdd(event: IVueDraggableEvent) {
     const newCard = this.cards[event.newIndex];
     if (this.add && newCard.groupRef) {
+      this.onMove(event);
       this.add(newCard.groupRef, this.id);
     }
   }
@@ -272,10 +288,15 @@ export default class Column extends Vue {
     vertical-align: middle;
   }
 
-  .card_dragging {
-    background-color: var(--MainBorderColor);
-    width: 100%;
-    opacity: 1;
+  .card_dragging_ghost {
+    background-color: #eee !important;
+  }
+
+  .card_dragging_drag {
+    opacity: 1 !important;
+    transform: rotate(5deg);
+    box-shadow: 0 10px 10px -5px;
+    font-size: 14px;
   }
 
   .card_open_icon {
@@ -295,8 +316,8 @@ export default class Column extends Vue {
     color: var(--MainBackgroundColor);
   }
 
-  /deep/ .card_dragging > .card_row {
-    display: none;
+  /deep/ .card_dragging_chosen.card_dragging_ghost > .card_row {
+    visibility: hidden;
   }
 
   ::-webkit-scrollbar {

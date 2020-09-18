@@ -33,7 +33,7 @@
       :value="currentValue"
       :actions="actions"
       :auto-open="autoOpen"
-      @closeModalInput="$emit('closeModalInput')"
+      @close-modal-input="$emit('close-modal-input')"
     >
       <template #input-modal>
         <Input
@@ -141,6 +141,7 @@
           :no-open-on-focus="isMobile"
           :is-cell-edit="isCellEdit"
           :show-time="inputType.showTime"
+          :time-step="inputType.timeStep"
           :error="value.erroredOnce"
           :required="!isNullable"
           @focus="iSlot.onFocus"
@@ -217,7 +218,7 @@
             <SearchPanel
               v-if="enableFilter"
               @update:filterString="filterString = $event"
-            ></SearchPanel>
+            />
           </div>
           <div v-else class="input_label__container">
             <label class="input_label_single">{{ caption }}</label>
@@ -231,7 +232,7 @@
             :type="type"
             :auto-open="autoOpen"
             :is-cell-edit="isCellEdit"
-            @closeModalInput="$emit('closeModalInput')"
+            @close-modal-input="$emit('close-modal-input')"
             @update:value="updateValue($event)"
           >
             <template #input-modal>
@@ -283,12 +284,12 @@
             :indirect-links="indirectLinks"
             :scope="scope"
             :level="level + 1"
-            :filterString="filterString"
+            :filter-string="filterString"
             @update:actions="actions = $event"
             @goto="$emit('goto', $event)"
             @update:enableFilter="enableFilter = $event"
             @update:title="updateTitle"
-          ></NestedUserView>
+          />
         </b-col>
       </b-row>
     </template>
@@ -353,6 +354,7 @@ interface IErrorType {
 interface ICalendarType {
   name: "calendar";
   showTime: boolean;
+  timeStep: number | null;
 }
 
 interface IStaticTextType {
@@ -575,9 +577,9 @@ export default class FormControl extends Vue {
           return { name: "text", type: "number", style: this.controlStyle() };
         // FIXME: Fix calendar field.
         case "date":
-          return { name: "calendar", showTime: false };
+          return { name: "calendar", showTime: false, timeStep: null };
         case "datetime":
-          return { name: "calendar", showTime: true };
+          return { name: "calendar", showTime: true, timeStep: this.attributes["time_step"] };
       }
     } else {
       switch (this.type.type) {

@@ -11,7 +11,8 @@
       :key="day.valueOf()"
       :class="['date-cell',
                {'diff-month': !day.isSame(startValue, 'month')},
-               {'curr-day': day.isSame(selectedValue, 'day')}]"
+               {'curr-day': day.isSame(selectedValue, 'day')},
+               {'today': day.isSame(today, 'day')}]"
       :style="{ gridColumn: day.day() + 1 }"
       @click="$emit('update:selectedValue', day)"
     >
@@ -41,6 +42,10 @@ export default class DaysInMonth extends Vue {
 
   get weekdays() {
     return moment.weekdaysMin();
+  }
+
+  get today() {
+    return moment();
   }
 }
 </script>
@@ -72,5 +77,10 @@ export default class DaysInMonth extends Vue {
     background-color: var(--MainBorderColor);
     border-radius: 3px;
     color: var(--MainTextColor);
+  }
+
+  .today {
+    border: 1px solid var(--MainBorderColor);
+    border-radius: 3px;
   }
 </style>
