@@ -259,6 +259,7 @@
                 :is-cell-edit="isCellEdit"
                 :is-nullable="isNullable"
                 :is-disabled="isDisabled"
+                :background-color= "cellColor"
                 @update:actions="actions = $event"
                 @update="updateValue"
               />
@@ -279,6 +280,7 @@
                 :is-nullable="isNullable"
                 :is-disabled="isDisabled"
                 :is-cell-edit="isCellEdit"
+                :background-color= "cellColor"
                 @update:actions="actions = $event"
                 @focus="iSlot.onFocus"
                 @update="updateValue($event)"
@@ -294,6 +296,7 @@
             :scope="scope"
             :level="level + 1"
             :filter-string="filterString"
+            :background-color= "cellColor"
             @update:actions="actions = $event"
             @goto="$emit('goto', $event)"
             @update:enableFilter="enableFilter = $event"
@@ -486,7 +489,7 @@ export default class FormControl extends Vue {
   }
 
   get cellColor(){
-    return String(this.attributes["cell_color"]);
+    return "cell_color" in this.attributes ? String(this.attributes["cell_color"]) : "none";
   }
 
   get customHeight() {

@@ -25,7 +25,7 @@
       :value="selectValues"
       :empty-value="[]"
       :disabled="disabled"
-      :background-color= "cellColor"
+      :background-color= "backgroundColor"
       @update:value="onSelectChange"
     >
       <template #label="select">

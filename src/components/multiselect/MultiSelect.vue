@@ -180,13 +180,13 @@
         @click.stop="removeValue()"
       >
     </div>
-    <div
+    <span
       v-if="!single && !required && showValueRemove"
       class="clear_all_button"
       @click="clearValues"
     >
       {{ $t('clear_all') }}
-    </div>
+    </span>
   </div>
 </template>
 
@@ -574,6 +574,7 @@ export default class MultiSelect extends Vue {
   .values_list__value {
     margin: 5px;
     border: 1px solid var(--MainBorderColor);
+    background-color: var(--MainBackgroundColor);
   }
 
   .values_list__value,
