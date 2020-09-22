@@ -5,7 +5,7 @@
     class="form_grid_block__column"
   >
     <FormControl
-      v-if="blockContent.type === 'input'"
+      v-if="blockContent.type === 'input' && gridProps.localRow.values[blockContent.field.index].visible"
       :caption="blockContent.field.caption"
       :column-info-name="blockContent.field.columnInfo.name"
       :value="gridProps.row.values[blockContent.field.index]"

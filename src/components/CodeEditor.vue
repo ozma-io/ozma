@@ -32,7 +32,7 @@ export default class CodeEditor extends Vue {
   @Prop({ default: false }) isModal!: boolean;
 
   get options(): Monaco.editor.IStandaloneEditorConstructionOptions {
-    const fontSize = this.settings.getEntry("font_size", Number, 16);
+    const fontSize = this.settings.getEntry("font_size", Number, 14);
 
     return {
       language: this.language,

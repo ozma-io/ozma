@@ -146,7 +146,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
     });
   }
 
-  private callProcess(querySelf: string){
+  private callProcess(querySelf: string) {
     console.log("callBuisnessProcess");
     console.log(querySelf);
   }

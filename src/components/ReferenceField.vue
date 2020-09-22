@@ -42,6 +42,7 @@
       :dont-open="dontOpen"
       :required="!isNullable"
       :disabled="isDisabled"
+      :background-color= "backgroundColor"
       @update:value="$emit('update', $event)"
       @focus="$emit('focus', $event)"
     >
@@ -139,6 +140,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
   @Prop({ type: Number }) height!: number | undefined;
   @Prop({ type: Object }) controlStyle!: any;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
+  @Prop({ type: String }) backgroundColor!: string;
   private selectedView: IQuery | null = null;
   private nestedView: IQuery | null = null;
 

@@ -59,6 +59,7 @@
         :selection-mode="selectionMode"
         :indirect-links="indirectLinks"
         :default-values="defaultValues"
+        :background-color= "backgroundColor"
         @goto="$emit('goto', $event)"
         @select="$emit('select', $event)"
         @update:actions="extraActions = $event"
@@ -172,6 +173,7 @@ export default class UserView extends Vue {
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
   // Emit events to jump to other user views. If `false` insert simple <href>s instead.
   @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
+  @Prop({ type: String }) backgroundColor!: string;
 
   private extraActions: Action[] = [];
   private extraCommonActions: Action[] = [];

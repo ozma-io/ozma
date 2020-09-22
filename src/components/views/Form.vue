@@ -115,8 +115,10 @@ class LocalFormUserView extends LocalUserView<IFormValueExtra, IFormRowExtra, IF
   createCommonLocalValue(row: IRowCommon, localRow: IFormLocalRowInfo, columnIndex: number, value: ICombinedValue): IFormValueExtra {
     const columnAttrs = this.uv.columnAttributes[columnIndex];
     const attributes = { ...this.uv.attributes, ...columnAttrs, ...row.attributes, ...value.attributes };
+    const visible  =  "visible" in attributes ? Boolean(attributes["visible"]) : true;
     const extra = {
       attributes,
+      visible
     };
     return extra;
   }
