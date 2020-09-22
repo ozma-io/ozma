@@ -99,6 +99,7 @@ import { UserView } from "@/components";
 import { ISelectionRef } from "@/components/BaseUserView";
 import BaseUserView from "@/components/BaseUserView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
+import { IActionArguments } from "@/state/actions";
 
 import {
   IFieldInfo, IBlockInfo, IFormValueExtra, IFormRowExtra, IFormUserViewExtra, GridElement, IGridSection, IGridInput, IButtons, IGridButtons, IButtonAction
@@ -181,6 +182,7 @@ class LocalFormUserView extends LocalUserView<IFormValueExtra, IFormRowExtra, IF
 }
 
 const query = namespace("query");
+const actions = namespace("actions");
 
 @UserView({
   localConstructor: LocalFormUserView,
@@ -192,6 +194,7 @@ const query = namespace("query");
 })
 export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView, IFormValueExtra, IFormRowExtra, IFormUserViewExtra>>(BaseUserView) {
   @query.State("previous") previousQuery!: IQuery | null;
+  @actions.Action("getActionResult") getActionResult!: (args: IActionArguments) => Promise<void>;
 
   @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
@@ -360,8 +363,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
   }
   
   private callProcess(querySelf: string){
-    console.log("callBuisnessProcess");
-    console.log(querySelf);
+    this.getActionResult({ref: {schema: "user", name: "test_action"}, args: [{'hello': 'world'}]});
   }
 
   private init() {
