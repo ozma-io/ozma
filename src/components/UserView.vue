@@ -188,7 +188,7 @@ export default class UserView extends Vue {
     if (this.currentUv instanceof CombinedUserView && this.currentUv.attributes.hasOwnProperty('title')) {
       return this.currentUv.attributes.title;
     } else {
-      return null;
+      return this.args.source.ref.name;
     }
   }
 
