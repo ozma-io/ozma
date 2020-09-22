@@ -114,7 +114,7 @@ export default class Calendar extends Vue {
     }
   }
 
-  private onPressEnter(event) {
+  private onPressEnter(event: any) {
     event.preventDefault();
     this.$emit('update:value', moment(event.target.value, 'L LT'));
     event.target.blur();
