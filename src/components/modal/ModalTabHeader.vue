@@ -28,7 +28,6 @@ export default class ModalTabHeader extends Vue {
   .modal__tab_header {
     padding: 5px;
     flex: 1 1 auto;
-    text-align: center;
     cursor: pointer;
     border-top: 1px solid;
     border-left: 1px solid;
