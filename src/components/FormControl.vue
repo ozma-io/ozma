@@ -68,8 +68,9 @@
           ref="control"
           :value="currentValue"
           :is-cell-edit="isCellEdit"
-          :autofocus="autofocus"
+          :autofocus="autofocus || isMobile"
           :show-time="inputType.showTime"
+          :time-step="inputType.timeStep"
           :error="value.erroredOnce"
           :required="!isNullable"
           :background-color= "cellColor"
@@ -142,7 +143,7 @@
           v-else-if="inputType.name === 'calendar'"
           ref="control"
           :value="value.value"
-          :text-value="textValue"
+          :text-value="calendarValue"
           :autofocus="autofocus"
           :no-open-on-focus="isMobile"
           :is-cell-edit="isCellEdit"
@@ -312,7 +313,7 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import { valueToText, valueIsNull } from "@/values";
+import {valueToText, valueIsNull, dateTimeFormat} from "@/values";
 import { AttributesMap, ValueType } from "@/api";
 import { Action } from "@/components/ActionsMenu.vue";
 import { IUserViewArguments, homeSchema, ICombinedValue, currentValue, IEntriesRef } from "@/state/user_view";
@@ -461,6 +462,13 @@ export default class FormControl extends Vue {
 
   get isDisabled() {
     return this.locked || this.value.info === undefined || this.value.info.field === null;
+  }
+
+  get calendarValue() {
+    if (this.type.type === "datetime") {
+      return this.currentValue.local().format("L LT")
+    }
+    return this.textValue;
   }
 
   get textValue() {

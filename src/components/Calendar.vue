@@ -26,7 +26,7 @@
         type="text"
         :class="['calendar_input', {'calendar-input_cell-edit': isCellEdit}]"
         :placeholder="$t('input_placeholder')"
-        :value="visibleValue"
+        :value="textValue"
         @input="$emit('update:value', $event.target.value)"
         @focus="onInputFocus"
       >
@@ -38,8 +38,17 @@
         @click="clearValue"
       >
     </div>
-    <div :class="['main_cal', {'main_cal__open': isCalendarOpen, 'main-cal_cell-edit': isCellEdit }]">
-      <div class="days">
+    <div
+      :class="['main_cal', {
+        'main_cal__open': isCalendarOpen,
+        'main-cal_cell-edit': isCellEdit,
+        'main_cal__open-top': position
+      }]"
+      ref="popup"
+    >
+      <div
+        :class="['days', {'mr-2': showTime}]"
+      >
         <DatePicker
           :value="dateValue"
           _in
@@ -56,7 +65,11 @@
           @update:mins="updateMins"
           @update:hours="updateHours"
         />
-        <button class="now" @click="setTimeNow($event)">
+        <button
+          class="now"
+          @click="setTimeNow($event)"
+          v-if="showTime"
+        >
           Now
         </button>
       </div>
@@ -71,6 +84,7 @@ import moment, { Moment, months, Duration } from "moment";
 import { dateFormat, dateTimeFormat, valueToText } from "@/values";
 import DatePicker from "@/components/calendar/DatePicker.vue";
 import TimePicker from "@/components/calendar/TimePicker.vue";
+import {nextRender} from "@/utils";
 
 @Component({
   components: {
@@ -88,6 +102,7 @@ export default class Calendar extends Vue {
   @Prop({ type: String }) backgroundColor!: string;
 
   private isCalendarOpen = false;
+  private position = false;
 
   private mounted() {
     const controlElement = this.$refs.control as HTMLInputElement;
@@ -102,15 +117,17 @@ export default class Calendar extends Vue {
     this.$emit("focus");
     if (!this.noOpenOnFocus) {
       this.isCalendarOpen = true;
+      nextRender().then(() => {
+        const bodyRect = document.body.getBoundingClientRect();
+        const popup = this.$refs.popup as HTMLInputElement;
+        const popupRect = popup.getBoundingClientRect();
+        this.position = !((bodyRect.bottom - popupRect.bottom) > 0);
+      });
     }
   }
 
   get dateValue() {
     return this.value ? this.value : moment.invalid();
-  }
-
-  get visibleValue() {
-    return this.textValue.substring(0, this.textValue.length - 3)
   }
 
   private onClickOutside() {
@@ -154,7 +171,7 @@ export default class Calendar extends Vue {
     this.updatePart(newValue => {
       newValue.hour(time.hour());
       newValue.minute(time.minute());
-      newValue.second(0);
+      newValue.second(time.second());
     });
   }
 
@@ -227,6 +244,11 @@ export default class Calendar extends Vue {
     z-index: 1001;
   }
 
+  .main_cal__open-top {
+    top: auto;
+    bottom: calc(100% + 10px);
+  }
+
   .main_input {
     display: flex;
     flex-direction: row;
@@ -255,9 +277,12 @@ export default class Calendar extends Vue {
 
   .days {
     display: inline-flex;
-    margin-right: 10px;
     flex-direction: column;
     justify-content: space-between;
+  }
+
+  .mr-1 {
+    margin-right: 10px;
   }
 
   .time {
