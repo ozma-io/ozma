@@ -466,7 +466,8 @@ export default class FormControl extends Vue {
 
   get calendarValue() {
     if (this.type.type === "datetime") {
-      return this.currentValue.local().format("L LT")
+      if (typeof this.currentValue === 'string') return this.currentValue;
+      return this.currentValue.local().format("L LT");
     }
     return this.textValue;
   }

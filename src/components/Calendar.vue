@@ -28,6 +28,7 @@
         :placeholder="$t('input_placeholder')"
         :value="textValue"
         @input="$emit('update:value', $event.target.value)"
+        @keypress.enter="onPressEnter"
         @focus="onInputFocus"
       >
       <input
@@ -111,6 +112,13 @@ export default class Calendar extends Vue {
         controlElement.focus();
       });
     }
+  }
+
+  private onPressEnter(event) {
+    event.preventDefault();
+    this.$emit('update:value', moment(event.target.value, 'L LT'));
+    event.target.blur();
+    this.isCalendarOpen = false;
   }
 
   private onInputFocus() {
