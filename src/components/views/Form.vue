@@ -99,6 +99,7 @@ import { UserView } from "@/components";
 import { ISelectionRef } from "@/components/BaseUserView";
 import BaseUserView from "@/components/BaseUserView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
+import { IActionArguments } from "@/state/actions";
 
 import {
   IFieldInfo, IBlockInfo, IFormValueExtra, IFormRowExtra, IFormUserViewExtra, GridElement, IGridSection, IGridInput, IButtons, IGridButtons, IButtonAction
@@ -181,6 +182,7 @@ class LocalFormUserView extends LocalUserView<IFormValueExtra, IFormRowExtra, IF
 }
 
 const query = namespace("query");
+const actions = namespace("actions");
 
 @UserView({
   localConstructor: LocalFormUserView,
@@ -192,6 +194,7 @@ const query = namespace("query");
 })
 export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView, IFormValueExtra, IFormRowExtra, IFormUserViewExtra>>(BaseUserView) {
   @query.State("previous") previousQuery!: IQuery | null;
+  @actions.Action("getActionResult") getActionResult!: (args: IActionArguments) => Promise<void>;
 
   @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
@@ -291,17 +294,17 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
      *         {   
      *             name: 'Удалить записи',
      *             variant: 'danger',
-     *             call_process: [{ schema: 'foo', call: 'delete' }],
+     *             call_process: { schema: 'foo', name: 'delete', args: {'hello':'world'}},
      *         },
      *         {   
      *             name: 'Добавить записи',
      *             variant: 'success',
-     *             call_process: [{ schema: 'foo', call: 'add' }],
+     *             call_process: { schema: 'foo', name: 'add' },
      *         },
      *         {   
      *             name: 'Обновить записи',
      *             variant: 'warning',
-     *             call_process: [{ schema: 'foo', call: 'update' }],
+     *             call_process: { schema: 'foo', name: 'update' },
      *         }
      *     ]
      * },
@@ -311,17 +314,17 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
      *         {   
      *             name: 'Удалить записи 1',
      *             variant: 'danger',
-     *             call_process: [{ schema: 'foo', call: 'delete' }],
+     *             call_process: { schema: 'foo', name: 'delete' },
      *         },
      *         {   
      *             name: 'Добавить записи 1',
      *             variant: 'success',
-     *             call_process: [{ schema: 'foo', call: 'add' }],
+     *             call_process: { schema: 'foo', name: 'add' },
      *         },
      *         {   
      *             name: 'Обновить записи 1',
      *             variant: 'warning',
-     *             call_process: [{ schema: 'foo', call: 'update' }],
+     *             call_process: { schema: 'foo', name: 'update' },
      *         }
      *     ]
      * }]
@@ -359,9 +362,9 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
     return blocks;
   }
   
-  private callProcess(querySelf: string){
-    console.log("callBuisnessProcess");
-    console.log(querySelf);
+  private callProcess(querySelf: any){
+    const args = 'args' in querySelf && querySelf.args !== null ?  querySelf.args : {};
+    this.getActionResult({ref: {schema: String(querySelf.schema), name: String(querySelf.name)}, args});
   }
 
   private init() {
