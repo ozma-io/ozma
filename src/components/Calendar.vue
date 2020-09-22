@@ -37,7 +37,14 @@
         @click="clearValue"
       >
     </div>
-    <div :class="['main_cal', {'main_cal__open': isCalendarOpen, 'main-cal_cell-edit': isCellEdit }]">
+    <div
+      :class="['main_cal', {
+        'main_cal__open': isCalendarOpen,
+        'main-cal_cell-edit': isCellEdit,
+        'main_cal__open-top': position
+      }]"
+      ref="popup"
+    >
       <div
         :class="['days', {'mr-2': showTime}]"
       >
@@ -76,6 +83,7 @@ import moment, { Moment, months, Duration } from "moment";
 import { dateFormat, dateTimeFormat, valueToText } from "@/values";
 import DatePicker from "@/components/calendar/DatePicker.vue";
 import TimePicker from "@/components/calendar/TimePicker.vue";
+import {nextRender} from "@/utils";
 
 @Component({
   components: {
@@ -92,6 +100,7 @@ export default class Calendar extends Vue {
   @Prop({ type: Boolean, default: false}) isCellEdit!: boolean;
 
   private isCalendarOpen = false;
+  private position = false;
 
   private mounted() {
     const controlElement = this.$refs.control as HTMLInputElement;
@@ -106,6 +115,12 @@ export default class Calendar extends Vue {
     this.$emit("focus");
     if (!this.noOpenOnFocus) {
       this.isCalendarOpen = true;
+      nextRender().then(() => {
+        const bodyRect = document.body.getBoundingClientRect();
+        const popup = this.$refs.popup as HTMLInputElement;
+        const popupRect = popup.getBoundingClientRect();
+        this.position = !((bodyRect.bottom - popupRect.bottom) > 0);
+      });
     }
   }
 
@@ -225,6 +240,11 @@ export default class Calendar extends Vue {
     border: 1px solid var(--MainBorderColor);
     top: calc(100% + 10px);
     z-index: 1001;
+  }
+
+  .main_cal__open-top {
+    top: auto;
+    bottom: calc(100% + 10px);
   }
 
   .main_input {

@@ -66,8 +66,9 @@
           ref="control"
           :value="currentValue"
           :is-cell-edit="isCellEdit"
-          :autofocus="autofocus"
+          :autofocus="autofocus || isMobile"
           :show-time="inputType.showTime"
+          :time-step="inputType.timeStep"
           :error="value.erroredOnce"
           :required="!isNullable"
           @update:value="updateValue"
@@ -453,7 +454,6 @@ export default class FormControl extends Vue {
 
   get calendarValue() {
     if (this.type.type === "datetime") {
-      console.log(this.currentValue.local().format("L LT"))
       return this.currentValue.local().format("L LT")
     }
     return this.textValue;
