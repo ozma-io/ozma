@@ -53,6 +53,7 @@ const actionsModule: Module<IActionResultState, {}> = {
             args: [args.ref, args.args],
           }, { root: true});
           commit("setActionResult", await res);
+          await dispatch("reload");
           return res;
         } catch(e){
           if(state.pending === pending.ref) {
