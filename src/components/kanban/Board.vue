@@ -12,6 +12,7 @@
       :cards="column.cards"
       :card-target="cardTarget"
       :width="columnWidth"
+      :header-color="columnHeaderColor"
       :add="add"
       :move="move"
     />
@@ -35,6 +36,7 @@ export default class Board extends Vue {
   @Prop({ type: Function, required: false }) move!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Object }) titles!: { [key: number]: string } | null;
   @Prop({ type: Number }) columnWidth!: number | null;
+  @Prop({ type: String }) columnHeaderColor!: string;
   @Prop({ type: String, required: false }) cardTarget!: CardTarget;
 
   private getColumnTitle(id: number, title: string) {

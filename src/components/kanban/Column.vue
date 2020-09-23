@@ -1,6 +1,9 @@
 <template>
   <div class="column_container" :style="style">
-    <div class="column_header">
+    <div 
+      class="column_header"
+      :style="titleStyle"
+    >
       <ModalUserView
         v-if="modalView !== null"
         :initial-view="modalView"
@@ -11,7 +14,6 @@
                 class="column_select_checkbox" -->
       <div
         class="column_header__title_block"
-        :style="titleStyle"
       >
         <span
           class="column_header__title"
@@ -99,6 +101,7 @@ export interface IColumnStyle {
   minWidth?: string;
   maxWidth?: string;
   flex?: number;
+  backgroundColor?: string;
 }
 
 @Component({ components: { Card, draggable, ModalUserView }, directives: { dragscroll } })
@@ -112,6 +115,7 @@ export default class Column extends Vue {
   @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Function, required: false }) move!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Number, required: false, default: 300 }) width!: number;
+  @Prop({ type: String, required: true, default: 'none' }) headerColor!: string;
   @Prop({ type: String, required: false }) cardTarget!: CardTarget;
 
   modalView: IQuery | null = null;
@@ -150,6 +154,7 @@ export default class Column extends Vue {
     const strWidth = `${this.width}px`;
     return {
       maxWidth: strWidth,
+      backgroundColor: this.headerColor
     }
   }
 
@@ -249,7 +254,6 @@ export default class Column extends Vue {
   }
 
   .column_header {
-    background-color: #fff0f5;
     border-bottom: 1px solid var(--MainBorderColor);
     border-top: 1px solid var(--MainBorderColor);
     padding: 10px 10px 10px 12px;
