@@ -101,6 +101,7 @@ export interface IColumnStyle {
   minWidth?: string;
   maxWidth?: string;
   flex?: number;
+  backgroundColor?: string;
 }
 
 @Component({ components: { Card, draggable, ModalUserView }, directives: { dragscroll } })
