@@ -26,9 +26,7 @@
         :only-tab="modalTabs.length === 1"
         @tab-click="switchTab(index)"
         @tab-close="$emit('tab-close', index)"
-      >
-        <slot name="action"></slot>
-      </ModalTabHeader>
+      />
     </div>
     <div
       v-if="hasTabs"
