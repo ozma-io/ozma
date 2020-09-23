@@ -78,7 +78,6 @@
           @update:statusLine="statusLine = $event"
           @update:enableFilter="enableFilter = $event"
           @update:bodyStyle="styleNode.innerHTML = $event"
-          @update:titleHead="updateTitleHead"
           @update:title="updateTitle"
         />
       </div>
@@ -224,12 +223,9 @@ export default class RootUserView extends Vue {
     this.filterString = this.query.getSearch("q", String, "");
   }
 
-  private updateTitleHead(titleHead: string) {
-    setHeadTitle(`${titleHead} - Ozma`);
-  }
-
   private updateTitle(title: string) {
     this.title = title;
+    setHeadTitle(`${title} - Ozma`);
   }
 
   private created() {
