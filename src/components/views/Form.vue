@@ -365,7 +365,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
   }
   
   private callProcess(querySelf: any){
-    this.submitChanges("root");
+    this.submitChanges(this.scope);
     const args = 'args' in querySelf && querySelf.args !== null ?  querySelf.args : {};
     this.getActionResult({ref: {schema: String(querySelf.schema), name: String(querySelf.name)}, args});
   }
