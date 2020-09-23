@@ -12,7 +12,7 @@
   <div
     v-click-outside="onClickOutside"
     class="calendar_container"
-    :style = "{'background': backgroundColor}"
+    :style="{'background': backgroundColor}"
   >
     <div class="main_input">
       <input
@@ -40,12 +40,12 @@
       >
     </div>
     <div
+      ref="popup"
       :class="['main_cal', {
         'main_cal__open': isCalendarOpen,
         'main-cal_cell-edit': isCellEdit,
         'main_cal__open-top': position
       }]"
-      ref="popup"
     >
       <div
         :class="['days', {'mr-2': showTime}]"
@@ -67,9 +67,9 @@
           @update:hours="updateHours"
         />
         <button
+          v-if="showTime"
           class="now"
           @click="setTimeNow($event)"
-          v-if="showTime"
         >
           Now
         </button>

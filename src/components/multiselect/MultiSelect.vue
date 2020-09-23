@@ -20,7 +20,7 @@
     <div
       ref="selectContainer"
       v-click-outside="() => setIsOpen(false)"
-      :style = "{'background': backgroundColor}"
+      :style="{'background': backgroundColor}"
       :class="[
         'select_container',
         {

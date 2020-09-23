@@ -32,7 +32,7 @@
       </div>
     </div>
     <draggable
-      v-dragscroll.y = "!isMobile"
+      v-dragscroll.y="!isMobile"
       class="column_body"
       :group="{ name: 'cards', put: true }"
       ghost-class="card_dragging_ghost"

@@ -1,7 +1,7 @@
 <template>
   <!-- <draggable tag="v-layout" v-model="columns" group="column"> -->
   <div 
-    v-dragscroll.x = "!isMobile" 
+    v-dragscroll.x="!isMobile" 
     class="board_container"
   >
     <Column

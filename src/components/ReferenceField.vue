@@ -42,7 +42,7 @@
       :dont-open="dontOpen"
       :required="!isNullable"
       :disabled="isDisabled"
-      :background-color= "backgroundColor"
+      :background-color="backgroundColor"
       @update:value="$emit('update', $event)"
       @focus="$emit('focus', $event)"
     >

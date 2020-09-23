@@ -653,7 +653,7 @@ const rowIndicesCompare = (aIndex: number, bIndex: number, entries: IRowCommon[]
   } else if (aValue instanceof moment) {
     return (aValue as Moment).unix() - (bValue as Moment).unix();
   } else if (typeof aValue === "number") {
-      return aValue - bValue;
+    return aValue - bValue;
   } else {
     return collator.compare(aValue, bValue);
   }

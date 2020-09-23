@@ -6,7 +6,7 @@
     :scope="scope"
     :level="level"
     :filter="filterWords"
-    :background-color= "backgroundColor"
+    :background-color="backgroundColor"
     @update:actions="$emit('update:actions', $event)"
     @goto="$emit('goto', $event)"
     @update:enableFilter="$emit('update:enableFilter', $event)"

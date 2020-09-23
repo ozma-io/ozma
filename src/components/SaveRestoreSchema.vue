@@ -4,13 +4,15 @@
             "schema_name": "Schema name",
             "save": "Save",
             "restore": "Restore",
-            "success": "Success"
+            "success": "Success",
+            "drop_others": "Drop other schemas"
         },
         "ru": {
             "schema_name": "Название схемы",
             "save": "Сохранить",
             "restore": "Восстановить",
-            "success": "Успех"
+            "success": "Успех",
+            "drop_others": "Удалить другие схемы"
         }
     }
 </i18n>
@@ -41,6 +43,15 @@
       </label>
     </p>
     <p>
+      <input
+        v-model="dropOthers"
+        type="checkbox"
+      >
+      <label>
+        {{ $t('drop_others') }}
+      </label>
+    </p>
+    <p>
       {{ lastError }}
     </p>
   </div>
@@ -58,6 +69,7 @@ export default class SaveRestoreSchema extends Vue {
 
   schema = "";
   lastError = "";
+  dropOthers = false;
 
   async saveSchema() {
     try {
@@ -98,7 +110,7 @@ export default class SaveRestoreSchema extends Vue {
     try {
       await this.callProtectedApi({
         func: Api.restoreSchemas,
-        args: [content],
+        args: [this.dropOthers, content],
       });
 
       this.lastError = this.$t("success").toString();

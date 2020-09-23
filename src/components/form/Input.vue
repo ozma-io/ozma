@@ -32,7 +32,7 @@
                  'input-field_cell-edit': isCellEdit,
                }
       ]"
-      :style = "{'background': backgroundColor}"
+      :style="{'background': backgroundColor}"
       autocomplete="off"
       :type="type"
       :value="value"
@@ -50,7 +50,7 @@
       :readonly="disabled"
       rows="1"
       class="input-textarea"
-      :style = "{'background': backgroundColor}"
+      :style="{'background': backgroundColor}"
       @keydown.enter.prevent
       @input="updateInputCellEdit"
       @focus="onFocus"

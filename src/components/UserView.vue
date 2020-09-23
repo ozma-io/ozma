@@ -59,7 +59,7 @@
         :selection-mode="selectionMode"
         :indirect-links="indirectLinks"
         :default-values="defaultValues"
-        :background-color= "backgroundColor"
+        :background-color="backgroundColor"
         @goto="$emit('goto', $event)"
         @select="$emit('select', $event)"
         @update:actions="extraActions = $event"
