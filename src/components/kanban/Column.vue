@@ -30,7 +30,7 @@
       </div>
     </div>
     <draggable
-      v-dragscroll.y
+      v-dragscroll.y = "!isMobile"
       class="column_body"
       :group="{ name: 'cards', put: true }"
       ghost-class="card_dragging_ghost"
@@ -71,7 +71,7 @@ import Card, { ICard, CardTarget } from "@/components/kanban/Card.vue";
 import { ValueRef } from "../../local_user_view";
 import { IQuery } from "../../state/query";
 import { dragscroll } from 'vue-dragscroll';
-import { nextRender } from "@/utils";
+import { nextRender, isMobile } from "@/utils";
 
 export interface IColumn {
   id?: any;
@@ -138,6 +138,10 @@ export default class Column extends Vue {
 
   private isCardSelected(rowIndex: number) {
     return this.selected.includes(rowIndex);
+  }
+  
+  private get isMobile(): boolean {
+    return isMobile();
   }
 
   private get style(): IColumnStyle {

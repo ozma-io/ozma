@@ -1,6 +1,9 @@
 <template>
   <!-- <draggable tag="v-layout" v-model="columns" group="column"> -->
-  <div v-dragscroll.x class="board_container">
+  <div 
+    v-dragscroll.x = "!isMobile" 
+    class="board_container"
+  >
     <Column
       v-for="(column, columnIndex) in columns"
       :id="column.id"
@@ -27,6 +30,8 @@ import { ICard, CardTarget } from "@/components/kanban/Card.vue";
 import Column, { IColumn } from "@/components/kanban/Column.vue";
 import { ValueRef } from "../../local_user_view";
 import { dragscroll } from "vue-dragscroll";
+import { isMobile } from "@/utils";
+
 
 @Component({ components: { Column, draggable }, directives: { dragscroll } })
 export default class Board extends Vue {
@@ -36,6 +41,10 @@ export default class Board extends Vue {
   @Prop({ type: Object }) titles!: { [key: number]: string } | null;
   @Prop({ type: Number }) columnWidth!: number | null;
   @Prop({ type: String, required: false }) cardTarget!: CardTarget;
+
+  private get isMobile(): boolean {
+    return isMobile();
+  }
 
   private getColumnTitle(id: number, title: string) {
     if (this.titles) {
