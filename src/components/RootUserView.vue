@@ -395,8 +395,9 @@ export default class RootUserView extends Vue {
   }
 
   .head-menu_title {
-    margin: 1px 20px 0;
-    font-weight: bold;
+    margin: 1px 2px 0;
+    font-weight: 600;
+    font-size: 1.25em;
   }
 
   .fix-bot {
