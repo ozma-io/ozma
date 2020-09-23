@@ -222,6 +222,8 @@ import {Component, Vue, Watch} from "vue-property-decorator";
 import {mixins} from "vue-class-component";
 import {namespace} from "vuex-class";
 import {Store} from "vuex";
+import {Moment} from "moment";
+import * as moment from "moment";
 
 import {deepEquals, isFirefox, isIOS, mapMaybe, nextRender, ObjectSet, tryDicts} from "@/utils";
 import {valueIsNull} from "@/values";
@@ -254,7 +256,6 @@ import TableRow from "@/components/views/table/TableRow.vue";
 import TableFixedRow from "@/components/views/table/TableFixedRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
 import TableCellEdit, {ICellCoords, IEditParams} from "@/components/views/table/TableCellEdit.vue";
-import {Moment} from "moment";
 
 interface ITableEditing {
   lock: AutoSaveLock;
@@ -640,15 +641,21 @@ const rowContains = (row: ITableLocalRow, searchWords: string[]) => {
   return searchWords.every(word => row.extra.searchText.includes(word));
 };
 
-const rowIndicesCompare = (aIndex: number, bIndex: number, entries: IRowCommon[], sortColumn: number, collator: Intl.Collator, isDate?: boolean) => {
+const rowIndicesCompare = (aIndex: number, bIndex: number, entries: IRowCommon[], sortColumn: number, collator: Intl.Collator) => {
   const a = entries[aIndex];
   const b = entries[bIndex];
-  if (isDate && a.values[sortColumn].value !== null && b.values[sortColumn].value !== null) {
-    return Number((a.values[sortColumn].value as Moment).toDate())
-      - Number((b.values[sortColumn].value as Moment).toDate());
+  const aValue = a.values[sortColumn].value;
+  const bValue = b.values[sortColumn].value;
+  if (aValue === null) {
+    return 1;
+  } else if (bValue === null) {
+    return -1;
+  } else if (aValue instanceof moment) {
+    return (aValue as Moment).unix() - (bValue as Moment).unix();
+  } else if (typeof aValue === "number") {
+      return aValue - bValue;
   } else {
-    return collator.compare(a.values[sortColumn].value,
-      b.values[sortColumn].value);
+    return collator.compare(aValue, bValue);
   }
 };
 
@@ -1140,19 +1147,19 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     } else {
       this.sortAsc = !this.sortAsc;
     }
-    this.sortRows(this.sortOptions, type === "datetime" || type === "date");
+    this.sortRows();
   }
 
-  private sortRows(options?: Intl.CollatorOptions, isDateCompare?: boolean) {
+  private sortRows() {
     const rows = this.uv.rows!;
 
     if (this.sortColumn !== null) {
       const sortColumn = this.sortColumn;
-      const collator = new Intl.Collator(["en", "ru"], options);
+      const collator = new Intl.Collator(["en", "ru"], this.sortOptions);
       const sortFunction: (a: number, b: number) => number =
         this.sortAsc ?
-          (a, b) => rowIndicesCompare(a, b, rows, sortColumn, collator, isDateCompare) :
-          (a, b) => rowIndicesCompare(b, a, rows, sortColumn, collator, isDateCompare);
+          (a, b) => rowIndicesCompare(a, b, rows, sortColumn, collator) :
+          (a, b) => rowIndicesCompare(b, a, rows, sortColumn, collator);
       this.rowPositions.sort(sortFunction);
     }
   }
