@@ -92,7 +92,7 @@ import { namespace } from "vuex-class";
 import { tryDicts, mapMaybe } from "@/utils";
 import { AttributesMap, IResultColumnInfo } from "@/api";
 import { CombinedUserView, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, homeSchema } from "@/state/user_view";
-import { AddedRowId } from "@/state/staging_changes";
+import { ScopeName, AddedRowId } from "@/state/staging_changes";
 import { IQuery } from "@/state/query";
 import { LocalUserView, SimpleLocalUserView, ILocalRowInfo, ILocalRow, ValueRef, RowRef } from "@/local_user_view";
 import { UserView } from "@/components";
@@ -183,6 +183,7 @@ class LocalFormUserView extends LocalUserView<IFormValueExtra, IFormRowExtra, IF
 
 const query = namespace("query");
 const actions = namespace("actions");
+const staging = namespace("staging");
 
 @UserView({
   localConstructor: LocalFormUserView,
@@ -195,6 +196,7 @@ const actions = namespace("actions");
 export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView, IFormValueExtra, IFormRowExtra, IFormUserViewExtra>>(BaseUserView) {
   @query.State("previous") previousQuery!: IQuery | null;
   @actions.Action("getActionResult") getActionResult!: (args: IActionArguments) => Promise<void>;
+  @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
 
   @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
@@ -363,6 +365,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
   }
   
   private callProcess(querySelf: any){
+    this.submitChanges(this.scope);
     const args = 'args' in querySelf && querySelf.args !== null ?  querySelf.args : {};
     this.getActionResult({ref: {schema: String(querySelf.schema), name: String(querySelf.name)}, args});
   }
