@@ -48,6 +48,6 @@ export default class TableCellEdit extends Vue {
   }
 
   .table-cell-edit_last-fixed {
-    padding: 5px 5px 5px 7px;
+    padding: 2px 2px 0 2px;
   }
 </style>

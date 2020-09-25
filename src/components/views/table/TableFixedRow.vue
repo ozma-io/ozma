@@ -97,7 +97,7 @@ export default class TableFixedRow extends Vue {
   }
 
   .table-tr {
-    background-color: white; /* цвет таблицы возможно надо сменить на настраевоемый */
+    background-color: var(--MainBackgroundColor);
     border-right: solid 1px var(--NavigationBackColor);
     height: 100% @-moz-document url-prefix();
   }

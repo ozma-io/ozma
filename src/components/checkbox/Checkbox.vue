@@ -1,9 +1,9 @@
 <template>
-  <div
+  <span
     class="checkbox"
     @click="$emit('change', !checked)"
   >
-    <div class="checkbox__input">
+    <span class="checkbox__input">
       <i
         v-if="checked"
         style="font-size: 20px;"
@@ -14,14 +14,14 @@
         style="font-size: 20px;"
         class="material-icons md-20"
       >check_box_outline_blank</i>
-    </div>
-    <div
+    </span>
+    <span
       v-if="label"
       class="checkbox__label"
     >
       {{ label }}
-    </div>
-  </div>
+    </span>
+  </span>
 </template>
 
 <script lang="ts">
@@ -42,20 +42,14 @@ export default class Checkbox extends Vue {
 </script>
 
 <style scoped>
-  .checkbox {
-    display: inline-flex;
-    align-items: center;
-  }
-
-  .checkbox__input {
-    display: flex;
-    align-items: center;
-  }
-
   .checkbox__label {
-    margin: 0;
-    padding-left: 10px;
     cursor: pointer;
     color: var(--MainTextColorLight);
+  }
+
+  .checkbox-cells > span > span > i {
+    position: absolute;
+    top: 6px;
+    left: 9px;
   }
 </style>

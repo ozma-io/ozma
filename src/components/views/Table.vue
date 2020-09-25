@@ -80,33 +80,25 @@
           <tr>
             <th
               class="fixed-column checkbox-cells table-th"
-              :class="{'td-moz': isFirefoxBrowser}"
               @click="selectAllRows"
             >
-              <span class="table-th_span">
-                <checkbox :checked="baseLocal.selectedAll" />
-              </span>
+              <checkbox :checked="baseLocal.selectedAll" /> 
             </th>
             <th
               v-if="local.extra.hasRowLinks"
-              class="fixed-column openform-cells links-style table-th"
-              :class="{'td-moz': isFirefoxBrowser}"
+              class="fixed-column openform-cells table-th"
             >
               <span
-                class="table-th_span"
-
                 :title="this.$t('show_new_row')"
                 @click="setShowEmptyRow(!showEmptyRow)"
               >
                 <i
                   v-if="showEmptyRow"
-                  style="font-size: 20px;"
-                  class="material-icons md-24"
+                  class="material-icons md-20"
                 >remove</i>
                 <i
                   v-else
-                  style="font-size: 20px;"
-                  class="material-icons md-24"
+                  class="material-icons md-20"
                 >add</i>
               </span>
             </th>
@@ -303,7 +295,7 @@ interface ITableUserViewExtra {
 const showStep = 20;
 const doubleClickTime = 700;
 // FIXME: Use CSS variables to avoid this constant
-const technicalFieldsWidth = 50; // checkbox's and openform's td width
+const technicalFieldsWidth = 35; // checkbox's and openform's td width
 
 const createColumns = (uv: CombinedUserView): IColumn[] => {
   const viewAttrs = uv.attributes;
@@ -1313,16 +1305,16 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     border: 0;
     background-color: var(--TableBackColor);
     margin-bottom: -1px !important;
+    border-bottom: 1px solid var(--MainBorderColor);
   }
 
   .table-th {
-    height: 35px;
     border: 0;
     font-weight: normal;
     max-width: 50px !important;
     overflow: hidden;
     white-space: nowrap;
-    padding: 0 5px;
+    padding: 2px 10px 0 10px;
     box-shadow: 0 2px 0 var(--MainBorderColor);
     text-overflow: ellipsis;
     position: sticky; /* фиксация шапки при скроле */
@@ -1352,12 +1344,12 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   th.th_after-last-fixed {
-    padding-left: 7px;
+    padding-left: 10px;
   }
 
   th.tabl_heading {
     text-overflow: ellipsis;
-    vertical-align: top;
+    vertical-align: middle;
   }
 
   th.links-style {
@@ -1367,13 +1359,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   .table-th_span {
-    padding: 0;
-    height: 100%;
-    width: 100%;
-    white-space: nowrap;
-    display: inline-flex;
     justify-content: center;
-    align-items: center;
   }
 
   @media screen and (max-aspect-ratio: 13/9) {
@@ -1420,13 +1406,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     .fixed-column {
       left: auto !important;
     }
-  }
-
-  .openform-cells > span {
-    justify-content: center !important;
-    align-items: center;
-    display: inline-flex;
-    width: 100%;
   }
 
   @media screen and (min-device-width: 813px) and (orientation: landscape) {
@@ -1523,26 +1502,23 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   .checkbox-cells,
   .openform-cells {
-    height: 35px;
-    width: 35px;
-    max-width: 35px !important;
-    padding: 0 !important;
+    text-align: center;
   }
 
-  .openform-cells > .table-th_span,
-  .checkbox-cells > .table-th_span {
-    padding: 5px;
-    display: flex;
-    justify-content: center;
+  .openform-cells > span > i {
+    position: absolute;
+    top: 4px;
+    left: 5px;
   }
 
   .checkbox-col,
   .open-form-col {
-    width: 50px;
+    width: 35px;
   }
 
   /deep/ .openform-cells {
-    left: 50px;
+    left: 35px;
+    width: 35px;
   }
 
   thead {
