@@ -189,6 +189,7 @@ export default class ActionsMenu extends Vue {
     text-align: left;
     border: 0;
     font-size: 14px;
+    margin-bottom: 0; /* override defaults for label from Bootstrap */
   }
 
   .div-with-actions_button input[type="file"] {
