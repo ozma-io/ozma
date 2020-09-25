@@ -211,7 +211,7 @@ export default class Textarea extends Vue {
   }
 
   .textarea_field {
-    padding: 0;
+    padding: 2px;
     background-color: rgba(0, 0, 0, 0);
     z-index: 2;
     order: 2;
@@ -220,10 +220,9 @@ export default class Textarea extends Vue {
     resize: none;
     overflow: auto !important;
     white-space: pre-wrap;
-    border: none;
+    border: 1px solid var(--MainBackgroundColor);
     display: block;
     color: var(--MainTextColor);
-    transition: all 300ms ease-in-out, height 300ms ease-in-out;
   }
 
   .textarea_field__max_height {
