@@ -2,16 +2,10 @@
     {
         "en": {
             "delete": "Delete",
-            "delete_confirmation": "Are you sure want to delete this record?",
-            "ok": "OK",
-            "cancel": "Cancel",
             "select": "Select"
         },
         "ru": {
             "delete": "Удалить",
-            "delete_confirmation": "Вы действительно хотите удалить эту запись?",
-            "ok": "ОК",
-            "cancel": "Отмена",
             "select": "Выбрать"
         }
     }
@@ -28,26 +22,15 @@
           />
           <!-- FIXME FIXME FIXME look at permissions! -->
           <div
-            v-if="row.mainId !== undefined"
+            v-if="showDelete && row.mainId !== undefined"
             class="delete-block"
           >
             <input
-              v-b-modal="$id('deleteConfirm')"
               type="button"
               :value="$t('delete')"
               class="delete-block_delete-button"
+              @click="$emit('delete')"
             >
-
-            <b-modal
-              :id="$id('deleteConfirm')"
-              lazy
-              ok-variant="danger"
-              :ok-title="$t('ok')"
-              :cancel-title="$t('cancel')"
-              @ok="$emit('delete', $event)"
-            >
-              {{ $t('delete_confirmation') }}
-            </b-modal>
           </div>
 
           <div
@@ -87,6 +70,7 @@ export default class FormEntry extends Vue {
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
   @Prop({ type: String, required: true }) scope!: string;
   @Prop({ type: Number, required: true }) level!: number;
+  @Prop({ type: Boolean, default: true }) showDelete!: number;
 
   public onGoto(event: any) {
     this.$emit("goto", event);

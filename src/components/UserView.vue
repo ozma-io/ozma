@@ -34,7 +34,6 @@
   <span>
     <template v-if="uvIsReady">
       <UserViewCommon
-
         :uv="currentUv"
         :is-root="isRoot"
         :filter="filter"

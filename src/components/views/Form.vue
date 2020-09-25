@@ -32,6 +32,18 @@
       {{ $t('item_not_found') }}
     </div>
     <template v-else>
+      <b-modal
+        :id="$id('confirmDelete')"
+        lazy
+        ok-variant="danger"
+        :ok-title="$t('ok')"
+        :cancel-title="$t('cancel')"
+        @ok="deleteRowAndSignal"
+        @hidden="toBeDeletedRef = null"
+      >
+        {{ $t('delete_confirmation') }}
+      </b-modal>
+    
       <!-- The first form control is special, it points either to the empty row or to the first added row
                  _dynamically_. This is as to not lose focus when user starts editing empty row. -->
       <FormEntry
@@ -44,7 +56,9 @@
         :indirect-links="indirectLinks"
         :scope="scope"
         :level="level"
+        :show-delete="useDeleteAction === null"
         @update="updateValue({ ...firstRow.rowRef, column: arguments[0] }, arguments[1])"
+        @delete="confirmDelete(firstRow.rowRef)"
         @goto="$emit('goto', $event)"
       />
       <FormEntry
@@ -58,8 +72,9 @@
         :indirect-links="indirectLinks"
         :scope="scope"
         :level="level"
+        :show-delete="useDeleteAction === null"
         @update="updateValue({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
-        @delete="deleteRowAndSignal({ type: 'added', id: rowId })"
+        @delete="confirmDelete({ type: 'added', id: rowId })"
         @goto="$emit('goto', $event)"
       />
       <FormEntry
@@ -73,8 +88,9 @@
         :scope="scope"
         :level="level"
         :selection-mode="selectionMode"
+        :show-delete="useDeleteAction === null"
         @update="updateValue({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
-        @delete="deleteRowAndSignal({ type: 'existing', position: rowI })"
+        @delete="confirmDelete({ type: 'existing', position: rowI })"
         @goto="$emit('goto', $event)"
         @select="$emit('select', $event)"
       />
@@ -96,6 +112,7 @@ import { ScopeName, AddedRowId } from "@/state/staging_changes";
 import { IQuery } from "@/state/query";
 import { LocalUserView, SimpleLocalUserView, ILocalRowInfo, ILocalRow, ValueRef, RowRef } from "@/local_user_view";
 import { UserView } from "@/components";
+import { Action } from "@/components/ActionsMenu.vue";
 import { ISelectionRef } from "@/components/BaseUserView";
 import BaseUserView from "@/components/BaseUserView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
@@ -203,6 +220,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
   @Prop({ type: Object, required: true }) local!: LocalFormUserView;
 
   private deletedOne = false;
+  private toBeDeletedRef: RowRef | null = null;
 
   get firstRow() {
     if (this.uv.newRowsPositions.length === 0 && this.uv.rows === null && this.uv.info.mainEntity !== null) {
@@ -225,6 +243,17 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
   // Because we treat the first added row specially we use only second+ new rows here.
   get newRowsPositions() {
     return this.uv.newRowsPositions.slice(1);
+  }
+
+  // When we only have one record displayed, we hide "Delete" button and add is an an action to menu instead.
+  get useDeleteAction(): RowRef | null {
+    if (this.rowPositions.length === 0 && this.newRowsPositions.length === 1) {
+      return { type: "added", id: this.newRowsPositions[0] }
+    } else if (this.rowPositions.length === 1 && this.newRowsPositions.length === 0) {
+      return { type: "existing", position: this.rowPositions[0] }
+    } else {
+      return null;
+    }
   }
 
   get blockSizes(): number[] {
@@ -382,12 +411,33 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
     }
   }
 
+  get actions() {
+    const actions: Action[] = [];
+    const deleteRef = this.useDeleteAction;
+    if (deleteRef !== null) {
+      actions.push(
+        {name: this.$t("delete").toString(), callback: () => this.confirmDelete(deleteRef)},
+      );
+    }
+    return actions;
+  }
+
+  @Watch("actions", {deep: true, immediate: true})
+  private updateActions() {
+    this.$emit("update:actions", this.actions);
+  }
+
   private created() {
     this.init();
   }
 
-  private deleteRowAndSignal(ref: RowRef) {
-    this.deleteRow(ref);
+  private confirmDelete(ref: RowRef) {
+    this.toBeDeletedRef = ref;
+    this.$bvModal.show(this.$id("confirmDelete"));
+  }
+
+  private deleteRowAndSignal() {
+    this.deleteRow(this.toBeDeletedRef!);
     this.deletedOne = true;
   }
 
