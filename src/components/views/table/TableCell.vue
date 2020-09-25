@@ -9,38 +9,39 @@
                           'select': localValue.selected && !column.fixed,
                           'table-td_selected': localValue.selected,
                           'error_style': value.erroredOnce,
-                          'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable && from !== 'new',
+                          'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable,
                           'editing_style': localValue.editing !== undefined,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click="$emit('cell-click', columnPosition, $event)"
-  ><p>
-    <UserViewLink
-      v-if="localValue.link !== undefined"
-      :uv="localValue.link"
-      @[indirectLinks?`click`:null]="$emit('goto', $event)"
-    >
-      <checkbox
-        v-if="valueType === 'bool'"
-        class="checkbox_click-none"
-        :checked="value.value"
-        disabled
-      />
+  >
+    <p>
+      <UserViewLink
+        v-if="localValue.link !== undefined"
+        :uv="localValue.link"
+        @[indirectLinks?`click`:null]="$emit('goto', $event)"
+      >
+        <checkbox
+          v-if="valueType === 'bool'"
+          class="checkbox_click-none"
+          :checked="value.value"
+          disabled
+        />
+        <template v-else>
+          {{ localValue.valueText || '&nbsp;' }}
+        </template>
+      </UserViewLink>
       <template v-else>
-        {{ localValue.valueText || '&nbsp;' }}
+        <checkbox
+          v-if="valueType === 'bool'"
+          class="checkbox_click-none"
+          :checked="value.value"
+          disabled
+        />
+        <div v-else :class="{selectable : (fieldType == 'enum' || fieldType == 'reference') && localValue.valueText.length > 0}">
+          {{ localValue.valueText || "" }}
+        </div>
       </template>
-    </UserViewLink>
-    <template v-else>
-      <checkbox
-        v-if="valueType === 'bool'"
-        class="checkbox_click-none"
-        :checked="value.value"
-        disabled
-      />
-      <div v-else :class="{selectable : (fieldType == 'enum' || fieldType == 'reference') && localValue.valueText.length > 0}">
-        {{ localValue.valueText || "" }}
-      </div>
-    </template>
-  </p>
+    </p>
   </td>
 </template>
 
