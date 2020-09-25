@@ -98,6 +98,7 @@ export default class Input extends Vue {
         if (this.isCellEdit) {
           const controlTextareaElement = this.$refs.controlTextarea as any;
           controlTextareaElement.$el.focus();
+          this.setCursorPositionEnd(controlTextareaElement.$el);
           this.setInputHeight();
         } else {
           controlElement.focus();
@@ -184,6 +185,11 @@ export default class Input extends Vue {
       if (control !== undefined)
         control.style.width = "100%";
     }
+  }
+
+  private setCursorPositionEnd(controlElement: HTMLInputElement) {
+    if (controlElement)
+      controlElement.selectionStart = this.value ? this.value.length : 0;
   }
 
   private updateInput(value: MouseEvent | any) {

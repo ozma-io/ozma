@@ -88,6 +88,7 @@ export default class Textarea extends Vue {
       Vue.nextTick().then(() => {
         if (this.isCellEdit) {
           controlTextareaElement.$el.focus();
+          this.setCursorPositionEnd(controlTextareaElement.$el);
         } else {
           control.focus();
         }
@@ -145,10 +146,7 @@ export default class Textarea extends Vue {
   }
 
   private onFocus(evt: HTMLInputElement) {
-    const controlElement = this.$refs.control as HTMLTextAreaElement | undefined;
-    if (controlElement) {
-      controlElement.selectionStart = this.value ? this.value.length : 0;
-    }
+    this.setCursorPositionEnd(evt);
     if (!this.isMobile) {
       this.positionField();
       this.focused = true;
@@ -158,6 +156,11 @@ export default class Textarea extends Vue {
 
   private onBlur(evt: HTMLInputElement) {
     this.focused = false;
+  }
+
+  private setCursorPositionEnd(controlElement: HTMLInputElement) {
+    if (controlElement)
+      controlElement.selectionStart = this.value ? this.value.length : 0;
   }
 
   private positionField() {
