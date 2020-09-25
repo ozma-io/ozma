@@ -188,8 +188,13 @@ export const newEmptyRow = (store: Store<any>, uv: CombinedUserView, defaultRawV
       } else {
         rawDefaultValue = getColumnAttr("default_value");
       }
-      const defaultValue = valueFromRaw(info.mainField.field, rawDefaultValue);
-      const initialValue = defaultValue !== undefined ? defaultValue : info.mainField.field.defaultValue;
+      let initialValue;
+      if (rawDefaultValue === undefined) {
+        initialValue = info.mainField.field.defaultValue;
+      } else {
+        const defaultValue = valueFromRaw(info.mainField.field, rawDefaultValue);
+        initialValue = defaultValue !== undefined ? defaultValue : info.mainField.field.defaultValue;
+      }
       const updateInfo = {
         field: info.mainField.field,
         fieldRef: {
