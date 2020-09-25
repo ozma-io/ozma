@@ -176,11 +176,11 @@ export default class InputSlot extends Vue {
   }
 
   .input_container {
-    padding-left: 0;
+    padding-left: 5px;
   }
 
   .input_container_cell-edit {
-    padding-right: 0;
+    padding: 0;
   }
 
   .input_modal_label {

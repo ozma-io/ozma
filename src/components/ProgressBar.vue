@@ -10,7 +10,7 @@
     top: 0;
     z-index: 999;
     width: 100%;
-    height: 5px;
+    height: 2px;
     background: #dee2e6;
   }
 

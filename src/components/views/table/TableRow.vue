@@ -135,16 +135,13 @@ export default class TableRow extends Vue {
   }
 
   td {
-    border-top: 1px solid var(--MainBorderColor);
     border-right: 1px solid var(--MainBorderColor);
-    padding: 5px !important;
-    overflow-y: hidden;
-    overflow-x: hidden;
+    padding: 4px 0 0 3px;
+    overflow: hidden;
     color: var(--TableTextColor) !important;
-    vertical-align: top;
     text-overflow: ellipsis;
-    line-height: normal;
     white-space: nowrap;
+    vertical-align: top;
   }
 
   .table-tr-new > td {
@@ -167,12 +164,11 @@ export default class TableRow extends Vue {
   }
 
   td >>> p {
-    display: block;
     overflow: hidden;
     width: 100%;
     text-overflow: ellipsis;
     line-height: normal;
-    margin-bottom: 0;
+    margin: 0;
     white-space: initial;
   }
 
@@ -205,7 +201,7 @@ export default class TableRow extends Vue {
     }
 
     .opemform-cells {
-      left: 50px;
+      left: 35px;
     }
 
     td.select_fixed {
@@ -226,6 +222,7 @@ export default class TableRow extends Vue {
       background-color: inherit;
       box-shadow: 2px 2px 0 var(--MainBorderColor);
       border-left: 0;
+      padding: 0;
     }
 
     .table-tr .fixed-column {

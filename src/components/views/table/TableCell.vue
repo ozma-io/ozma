@@ -13,7 +13,7 @@
                           'editing_style': localValue.editing !== undefined,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click="$emit('cell-click', columnPosition, $event)"
-  >
+  ><p>
     <UserViewLink
       v-if="localValue.link !== undefined"
       :uv="localValue.link"
@@ -36,13 +36,11 @@
         :checked="value.value"
         disabled
       />
-      <p 
-        v-else
-        :class="{selectable : (fieldType == 'enum' || fieldType == 'reference') && localValue.valueText.length > 0}"
-      >
+      <div v-else :class="{selectable : (fieldType == 'enum' || fieldType == 'reference') && localValue.valueText.length > 0}">
         {{ localValue.valueText || "" }}
-      </p>
+      </div>
     </template>
+  </p>
   </td>
 </template>
 
@@ -88,17 +86,17 @@ export default class TableCell extends Vue {
 <style scoped>
 
   .selectable {
-    display: inline;
-    margin-top: 3px;
+    float: left;
+    margin-top: -2px;
     border-radius: 5px;
-    padding: 0 5px;
+    padding: 2px 7px;
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
   }
 
   .next-after-last-fixed {
-    padding-left: 7px !important;
+    padding: 4px 0 0 5px !important;
   }
 
   .table-td {
@@ -107,10 +105,16 @@ export default class TableCell extends Vue {
 
   .table-td > p {
     pointer-events: none;
+    padding: 3px 2px 2px 7px;
   }
 
   .table-td_selected {
     border: 2px solid rgb(14, 101, 235);
+    padding: 3px 0 0 1px !important;
+  }
+
+  .next-after-last-fixed.table-td_selected {
+    padding: 3px 0 0 3px !important;
   }
 
   .checkbox_click-none {
