@@ -3,7 +3,7 @@
     :class="['modal__tab_header', {'selected': isActive, 'only_tab': onlyTab}]"
     @click="$emit('tab-click')"
   >
-    {{ title }}
+    <span class="modal__tab_header_title">{{ title }}</span>
     <input
       type="button"
       value="close"
@@ -37,6 +37,11 @@ export default class ModalTabHeader extends Vue {
     border-top-right-radius: 8px;
     margin-left: 5px;
     margin-right: 5px;
+  }
+
+  .modal__tab_header_title {
+    font-weight: 600;
+    font-size: 1.25em;
   }
 
   .modal__tab_header.selected,
