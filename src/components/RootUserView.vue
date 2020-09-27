@@ -522,10 +522,6 @@ export default class RootUserView extends Vue {
         height: 1em;
         vertical-align: bottom;
       }
-
-      .head-menu_title {
-        display: none;
-      }
     }
   }
 </style>
