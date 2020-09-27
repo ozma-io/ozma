@@ -57,7 +57,7 @@ export default class ModalTabHeader extends Vue {
 
   .modal__tab_close_button {
     visibility: hidden;
-    line-height: 21px;
+    line-height: 1.25em;
     font-size: 20px;
     background: none;
     border: none;
