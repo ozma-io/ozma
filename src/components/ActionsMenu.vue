@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="actions.length > 0"
+    v-if="sortedActions.length > 0"
     :class="['actions-menu', {'actions-menu_active': showActions}]"
   >
     <input
@@ -22,10 +22,15 @@
       v-show="showActions"
       class="div-with-actions"
     >
-      <template v-for="action in actions">
+      <template v-for="(action, i) in sortedActions">
+        <hr
+          v-if="action === null"
+          class="div-with-actions_hr"
+          :key="i"
+        >
         <!-- Passing v-on:click to v-bind doesn't seem to work, hence this ugly solution -->
         <router-link
-          v-if="'location' in action"
+          v-else-if="'location' in action"
           :key="action.name"
           class="div-with-actions_button"
           :to="action.location"
@@ -82,6 +87,7 @@ import UserViewLink from "@/components/UserViewLink";
 
 export interface IAction {
   name: string;
+  order?: number;
 };
 
 export interface ILocationAction extends IAction {
@@ -124,11 +130,27 @@ export default class ActionsMenu extends Vue {
     next(files[0]);
   }
 
+  get sortedActions() {
+    const newActions = [...this.actions];
+    newActions.sort(a => a.order || 0);
+    let oldOrder: number | null = null;
+    for (let i = 0; i < newActions.length; i++) {
+      const actionOrder = newActions[i].order || 0;
+      if (oldOrder === null) {
+        oldOrder = actionOrder;
+      } else if (oldOrder !== actionOrder) {
+        newActions.splice(i, 0, null as any);
+        i++;
+        oldOrder = actionOrder;
+      }
+    }
+    return newActions as (Action | null)[];
+  }
+
   @Watch('$route', { immediate: true, deep: true })
   onUrlChange(newVal: any) {
     this.showActions = false;
   }
-
 }
 </script>
 
@@ -174,6 +196,11 @@ export default class ActionsMenu extends Vue {
     top: calc(100% + 5px);
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
     border-radius: 3px;
+  }
+
+  .div-with-actions_hr {
+    margin-top: 0;
+    margin-bottom: 0;
   }
 
   .div-with-actions_button {

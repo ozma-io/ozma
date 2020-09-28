@@ -178,6 +178,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
         if (action.name && action.ref && querySelf) {
           actions.push({
             name: String(action.name),
+            order: -10,
             query: querySelf,
           });
         }
