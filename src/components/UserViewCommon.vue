@@ -171,7 +171,11 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
           return;
         }
         if (action.call_process && typeof action.call_process === "object" && action.call_process !== null) {
-          actions.push({ name: String(action.name), callback: () => this.callProcess(action.call_process) });
+          actions.push({
+            name: String(action.name),
+            order: -10,
+            callback: () => this.callProcess(action.call_process),
+          });
           return;
         }
         const querySelf = attrToQuery(action, opts);
