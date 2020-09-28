@@ -125,8 +125,13 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
           userView,
         });
 
-        await Promise.all(this.uv.info.columns.map(columnInfo => {
-          const currValue = row[columnInfo.name];
+        await Promise.all(this.uv.info.columns.map((columnInfo, index) => {
+          const fallbackName: string | null = R.pathOr(
+            null, [index, 'csv_import_column'],
+            this.uv.columnAttributes
+          );
+          const columnName = fallbackName || columnInfo.name;
+          const currValue = row[columnName];
           if (columnInfo.mainField && currValue) {
             return this.setAddedField({
               scope: this.scope,
