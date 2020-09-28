@@ -32,7 +32,6 @@
                  'input-field_cell-edit': isCellEdit,
                }
       ]"
-      :style="{'background': backgroundColor}"
       autocomplete="off"
       :type="type"
       :value="value"
@@ -50,7 +49,6 @@
       :readonly="disabled"
       rows="1"
       class="input-textarea"
-      :style="{'background': backgroundColor}"
       @keydown.enter.prevent
       @input="updateInputCellEdit"
       @focus="onFocus"
@@ -81,8 +79,6 @@ export default class Input extends Vue {
   @Prop({ type: Boolean, default: false }) focus!: boolean;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
-  @Prop({ type: String }) backgroundColor!: string;
-
 
   private focused = false;
   private maxInputWidth = 0;
@@ -169,9 +165,6 @@ export default class Input extends Vue {
     this.$emit("focus", evt);
     if (!this.dontFocus) {
       this.focused = true;
-    }
-    if (!this.isMobile) {
-      this.updateWidth(this.value);
     }
   }
 
@@ -325,7 +318,6 @@ export default class Input extends Vue {
     color: var(--MainTextColor);
     border-bottom: 1px solid var(--MainBorderColor);
     cursor: text;
-    background-color: var(--MainBackgroundColor);
     z-index: 2000;
   }
 

@@ -1365,7 +1365,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   @media screen and (max-aspect-ratio: 13/9) {
     @media screen and (max-device-width: 480px) {
       .nested-table-block {
-        width: max-content !important;
         position: sticky;
         float: right;
         right: 0;
@@ -1373,7 +1372,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
       /* This is a potential hack. Here's to hoping it would go away soon. */
       .nested-table-block > .tabl {
-        width: 85vw !important;
+        width: 92vw !important;
       }
     }
   }
