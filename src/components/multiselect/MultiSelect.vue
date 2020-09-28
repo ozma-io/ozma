@@ -462,8 +462,20 @@ export default class MultiSelect extends Vue {
     display: flex;
     flex-direction: row;
     position: relative;
-    padding: 2px;
+    padding: 2px 0;
     box-sizing: border-box;
+  }
+
+  .input_modal__input_group .select_container {
+    padding: 2px;
+  }
+
+  .input_container > div > div > .select_container {
+    padding: 2px 5px;
+  }
+
+  .form_grid_block__column > div > div > span > div > div > .select_container {
+    padding: 2px 5px;
   }
 
   .select_container__error {
@@ -593,7 +605,7 @@ export default class MultiSelect extends Vue {
   .single_value {
     align-self: center;
     border-radius: 5px;
-    padding: 0 5px;
+    padding: 1px 5px;
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);

@@ -28,15 +28,17 @@
       />
     </b-row>
     <b-row v-else-if="blockContent.type === 'buttons'">
-      <b-button 
-        v-for="(subBlock, subBlockI) in blockContent.actions"
-        :key="subBlockI"
-        block
-        :variant="subBlock.variant"
-        @click="subBlock.callback()"
-      >
-        {{ subBlock.name }}
-      </b-button>
+      <b-col>
+        <b-button 
+          v-for="(subBlock, subBlockI) in blockContent.actions"
+          :key="subBlockI"
+          block
+          :variant="subBlock.variant"
+          @click="subBlock.callback()"
+        >
+          {{ subBlock.name }}
+        </b-button>
+      </b-col>
     </b-row>
   </b-col>
 </template>
