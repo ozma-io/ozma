@@ -263,6 +263,7 @@ export default class Column extends Vue {
     padding: 10px 10px 10px 12px;
     display: flex;
     opacity: 0.5;
+    min-height: 44px;
   }
 
   .column_header__title_block {
@@ -286,6 +287,7 @@ export default class Column extends Vue {
     overflow-x: hidden;
     height: 100%;
     background-color: rgba(255, 250, 250, 0.6);
+    min-height: 100px;
   }
 
   .column_controls {
