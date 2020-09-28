@@ -104,6 +104,8 @@ export default class SearchPanel extends Vue {
     align-items: center;
     width: auto;
     flex: 1;
+    max-width: 500px;
+    margin-left: auto;
   }
 
   .clear-search {
@@ -132,7 +134,7 @@ export default class SearchPanel extends Vue {
   }
 
   .find {
-    margin-right: 10px;
+    margin: 0 10px;
   }
 
   .search-field_hidden {
