@@ -209,7 +209,7 @@
         </tbody>
       </table>
       <input
-        v-if="baseLocal.extra.rowCount < 11"
+        v-if="baseLocal.extra.rowCount < 30"
         type="button" 
         :value="this.$t('add').toString()"
         class="button"
@@ -841,7 +841,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         });
       }
       nextRender().then(() => {
-        const emptyRowRefElement = this.$refs.emptyRowRef as Element | undefined;
+        const emptyRowRefElement = this.$refs.emptyRowRef as any | undefined;
         if (emptyRowRefElement !== undefined)
           this.clickCell({type:"new", column: 1}, null, emptyRowRefElement.$children[0].$el);
       });
@@ -907,7 +907,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     this.cellEditHeight = value;
   }
 
-  private setCoordsForEditCell(target: Element) {
+  private setCoordsForEditCell(target: HTMLElement) {
     this.isSelectedLastFixedCell = target.classList.value.includes('next-after-last-fixed');
 
     const bodyRect = document.body.getBoundingClientRect();
@@ -925,7 +925,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
   }
 
-  private clickCell(ref: ValueRef, event: MouseEvent | any, target: Element) {
+  private clickCell(ref: ValueRef, event: MouseEvent | any, target: HTMLElement) {
     this.removeCellEditing();
 
     if (event == null) {
