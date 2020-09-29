@@ -143,10 +143,6 @@ export default class Modal extends Vue {
 </script>
 
 <style scoped>
-  /deep/ .view-form {
-    overflow-y: hidden;
-  }
-
   .modal__tab_headers {
     display: flex;
     flex-direction: row;
