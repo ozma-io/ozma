@@ -33,7 +33,7 @@ export default Vue.component("FunLink", {
           handler = () => {
             vueEmit(context, "goto", link.query);
           };
-        } else if (link.target === "top-level") {
+        } else if (link.target === "top") {
           handler = () => {
             context.parent.$store.dispatch("query/pushRoot", link.query);
           };

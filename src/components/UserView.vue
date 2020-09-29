@@ -231,7 +231,7 @@ export default class UserView extends Vue {
         args: this.currentUv.args,
         search: "",
       };
-      actions.push({ name: this.$t("open_as_top_level").toString(), link: { query: gotoQuery, target: "top-level" } });
+      actions.push({ name: this.$t("open_as_top_level").toString(), link: { query: gotoQuery, target: "top" } });
     }
     return actions;
   }
