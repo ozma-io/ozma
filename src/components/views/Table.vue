@@ -893,7 +893,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       return;
     }
   
-    if ('loss_of_focus_save' in this.uv.attributes && this.uv.attributes['loss_of_focus_save'])
+    if ('loss_of_focus_save' in this.uv.attributes && Boolean(this.uv.attributes['loss_of_focus_save'])
       this.submitChanges(this.scope);
 
     this.removeAutoSaveLock(this.editing.lock);
