@@ -38,9 +38,14 @@
         <button
           type="button"
           class="selection_view_save__button"
+          :title="$t(selectionMode ? 'save_and_select_scoped' : 'save_scoped')"
           @click="saveView"
         >
-          {{ $t(selectionMode ? 'save_and_select_scoped' : 'save_scoped') }}
+          <input
+            type="button"
+            class="material-icons"
+            value="save"
+          >
         </button>
       </div>
     </section>
@@ -88,7 +93,8 @@ export default class ModalUserView extends Vue {
     width: 100%;
     display: flex;
     justify-content: flex-end;
-    position: sticky;
+    position: relative;
+    top: 10px;
   }
 
   .section-modal {
@@ -96,14 +102,18 @@ export default class ModalUserView extends Vue {
   }
 
   .selection_view_save__button {
-    border: var(--MainBorderColor) 1px solid !important;
-    color: var(--MainTextColor);
-    background-color: var(--MainBackgroundColor);
+    background-color: var(--WarningColor);
+    color: var(--StateTextColor);
+    padding: 5px;
+    border-radius: 3px;
+    animation: color-change-2x 2s linear infinite alternate both;
+    display: flex;
+    justify-content: center;
   }
 
-  @media screen and (min-width: 480px) {
-    .selection_view_save__container {
-      bottom: 25px;
-    }
+  .selection_view_save__button > input {
+    background: none;
+    border: none;
+    padding: 0 20px;
   }
 </style>
