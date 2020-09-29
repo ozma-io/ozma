@@ -45,17 +45,16 @@
           :style="select.listValueStyle"
           class="single_value"
         >
-          <input
-            type="button"
-            class="material-icons reference__open_modal"
-            value="flip_to_front"
-            @click.stop="addWindow(select.valueOption.meta.link)"
-          >
           <FunLink
             :link="select.valueOption.meta.link"
             @goto="$emit('goto', $event)"
           >
-            {{ select.valueOption.label }}
+            <input
+              type="button"
+              class="material-icons reference__open_modal"
+              value="flip_to_front"
+            >
+            <span>{{ select.valueOption.label }}</span>
           </FunLink>
         </span>
         <span
