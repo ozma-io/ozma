@@ -84,7 +84,7 @@ import { namespace } from "vuex-class";
 import { Store } from "vuex";
 import ProgressBar from "@/components/ProgressBar.vue"
 
-import { RecordSet, ReferenceName, deepEquals, snakeToPascal, debugLog, deepClone } from "@/utils";
+import { RecordSet, ReferenceName, deepEquals, snakeToPascal, deepClone } from "@/utils";
 import { funappSchema } from "@/api";
 import { equalEntityRef } from "@/values";
 import { CombinedUserView, UserViewError, IUserViewArguments, IUserViewEventHandler, CurrentUserViews, IUserViewState, homeSchema, UserViewResult } from "@/state/user_view";
@@ -271,7 +271,6 @@ export default class UserView extends Vue {
     if (newUv !== null && newUv === this.currentUv) {
       return;
     }
-    debugLog("call", this.uid, this.args, this.currentUvs);
 
     if (newUv instanceof CombinedUserView) {
       if (newUv.rows === null && newUv.info.mainEntity === null) {
@@ -281,7 +280,6 @@ export default class UserView extends Vue {
       const newType = userViewType(newUv);
       const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType}.vue`)).default;
       // Check we weren't restarted.
-      debugLog("diff", this.uid, newUv.args, this.args);
       if (!deepEquals(newUv.args, this.args) || newUv !== this.newUv) {
         return;
       }
@@ -336,7 +334,6 @@ export default class UserView extends Vue {
     }
 
     const args = this.currentUv.args;
-    debugLog("destroyUserView", this.uid, args);
     if (this.local !== null) {
       this.unregisterHandler({ args, handler: this.local.handler });
       this.local = null;
@@ -372,7 +369,6 @@ export default class UserView extends Vue {
       return;
     }
 
-    debugLog("argsChanged", this.uid, newArgs, this.pendingArgs);
     const oldPendingArgs = this.pendingArgs;
     this.pendingArgs = deepClone(newArgs);
     if (oldPendingArgs === null) {

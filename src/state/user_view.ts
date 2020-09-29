@@ -2,7 +2,7 @@ import Vue from "vue";
 import { Store, Dispatch, Module, ActionContext } from "vuex";
 import moment from "moment";
 
-import { IRef, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, mapMaybe, debugLog } from "@/utils";
+import { IRef, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, mapMaybe } from "@/utils";
 import {
   IColumnField, UserViewSource, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
   SchemaName, EntityName, RowId, FieldName, AttributeName, IViewInfoResult, IViewExprResult,
@@ -744,11 +744,9 @@ const userViewModule: Module<IUserViewState, {}> = {
   },
   mutations: {
     initUserView: (state, args: { args: IUserViewArguments; reference: ReferenceName; meta: IUserViewReferenceMeta; generation: number; userView: UserViewResult }) => {
-      debugLog("initUserView", args, args.userView);
       state.current.userViews.createResource(args.args, args.reference, args.meta, { generation: args.generation, data: args.userView });
     },
     updateUserView: (state, { args, generation, userView }: { args: IUserViewArguments; generation?: number; userView: UserViewResult }) => {
-      debugLog("updateUserView", args, userView);
       const uv = state.current.userViews.apply(uv => {
         uv.data = userView;
         if (generation !== undefined) {
@@ -757,11 +755,9 @@ const userViewModule: Module<IUserViewState, {}> = {
       }, args);
     },
     addUserViewConsumer: (state, { args, reference, meta }: { args: IUserViewArguments; reference: ReferenceName; meta: IUserViewReferenceMeta }) => {
-      debugLog("addUserViewConsumer", args);
       state.current.userViews.addReference(args, reference, meta);
     },
     removeUserViewConsumer: (state, { args, reference }: { args: IUserViewArguments; reference: ReferenceName }) => {
-      debugLog("removeUserViewConsumer", args);
       state.current.userViews.removeReference(args, reference);
     },
 
