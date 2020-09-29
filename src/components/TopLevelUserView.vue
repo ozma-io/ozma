@@ -118,9 +118,9 @@
             'save_button__warning': !changes.isScopeEmpty('root'),
             'save_button__error': errors.length > 0,
           }]"
+          :title="$t('save')"
           @click="submitChanges('root')"
         >
-          {{ $t('save') }}
           <input
             v-if="errors.length > 0"
             type="button"
@@ -447,7 +447,7 @@ export default class TopLevelUserView extends Vue {
   .save_button > input {
     background: none;
     border: none;
-    padding: 0 0 0 5px;
+    padding: 0 20px;
   }
 
   .error_button {
