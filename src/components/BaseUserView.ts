@@ -163,9 +163,9 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
   @Prop({ type: Object, required: true }) local!: T;
   @Prop({ type: Object, required: true }) baseLocal!: LocalBaseUserView;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
+  @Prop({ type: Boolean, default: false }) isTopLevel!: boolean;
   @Prop({ type: Array, required: true }) filter!: string[];
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
-  @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
   @Prop({ type: String, required: true }) scope!: ScopeName;
   @Prop({ type: Number, required: true }) level!: number;
   @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, any>;

@@ -49,7 +49,7 @@ Vue.component("UserViewLink", UserViewLink);
 
 Modules.router.beforeResolve((to, from, next) => {
   // Reset page title
-  setHeadTitle("FunApp");
+  setHeadTitle("ozma.io");
   next();
 });
 

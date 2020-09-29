@@ -214,7 +214,6 @@
             <ActionsMenu
               title="view_headline"
               :actions="actions"
-              :indirect-links="indirectLinks"
               @goto="$emit('goto', $event)"
             />
             <SearchPanel
@@ -285,7 +284,6 @@
             ref="control"
             :args="inputType.args"
             :default-values="inputType.defaultValues"
-            :indirect-links="indirectLinks"
             :scope="scope"
             :level="level + 1"
             :filter-string="filterString"
@@ -308,10 +306,10 @@ import { namespace } from "vuex-class";
 import {valueToText, valueIsNull, dateTimeFormat} from "@/values";
 import { AttributesMap, ValueType } from "@/api";
 import { Action } from "@/components/ActionsMenu.vue";
-import { IUserViewArguments, homeSchema, ICombinedValue, currentValue, IEntriesRef } from "@/state/user_view";
+import { IUserViewArguments, homeSchema, ICombinedValue, currentValue, IEntriesRef, referenceEntries } from "@/state/user_view";
 import { IQuery, attrToQuerySelf } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
-import { isMobile, pascalToSnake } from "@/utils";
+import { isMobile } from "@/utils";
 
 interface ITextType {
   name: "text";
@@ -420,7 +418,6 @@ export default class FormControl extends Vue {
   @Prop({ type: String, default: "" }) caption!: string;
   @Prop({ type: String, default: "" }) columnInfoName!: string;
   @Prop({ type: Boolean, default: false }) disableColor!: boolean;
-  @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
   @Prop({ type: String, required: true }) scope!: string;
   @Prop({ type: Number, required: true }) level!: number;
   @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
@@ -444,7 +441,7 @@ export default class FormControl extends Vue {
   }
 
   private get isMobile(): boolean {
-    return isMobile();
+    return isMobile;
   }
 
   get isAwaited() {
@@ -510,22 +507,14 @@ export default class FormControl extends Vue {
   }
 
   get fieldType() {
-    if (this.value.info !== undefined && this.value.info.field !== null) {
-      return this.value.info.field.fieldType;
-    } else {
-      return null;
-    }
+    return this.value.info?.field?.fieldType || null;
   }
 
   get inputType(): IType {
     const home = homeSchema(this.uvArgs);
     const linkOpts = home !== null ? { homeSchema: home } : undefined;
 
-    const rawControlAttr = String(this.attributes["control"]);
-    const controlAttr = pascalToSnake(rawControlAttr);
-    if (rawControlAttr !== controlAttr) {
-      console.error(`"control" attribute value ${rawControlAttr} uses pascal case`);
-    }
+    const controlAttr = String(this.attributes["control"]);
     if (controlAttr === "user_view") {
       if (this.currentValue === null || this.currentValue === undefined) {
         return { name: "error", text: this.$t("empty").toString() };
@@ -552,7 +541,7 @@ export default class FormControl extends Vue {
         case "reference":
           const refEntry: IReferenceType = {
             name: "reference",
-            ref: this.fieldType,
+            ref: referenceEntries(this.fieldType),
             actions: [],
           };
           refEntry.linkedAttr = this.attributes["linked_view"];

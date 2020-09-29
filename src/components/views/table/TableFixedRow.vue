@@ -33,8 +33,7 @@
           <UserViewLink
             v-if="localRow.extra.link !== undefined"
             :uv="localRow.extra.link"
-            :indirect-links="indirectLinks"
-            @[indirectLinks?`click`:null]="$emit('goto', $event)"
+            @click="$emit('goto', $event)"
           >
             <i class="material-icons md-24">open_in_new</i>
           </UserViewLink>
@@ -46,7 +45,6 @@
           :local-value="localRow.values[i]"
           :column-position="i"
           :column="localUv.columns[i]"
-          :indirect-links="indirectLinks"
           @cell-click="$emit('cell-click', ...arguments)"
           @goto="$emit('goto', $event)"
         />
@@ -74,7 +72,6 @@ export default class TableFixedRow extends Vue {
   @Prop({ type: Array, required: true }) columnIndexes!: any[];
   @Prop({ type: Object, required: true }) localUv!: any;
   @Prop({ type: String, default: "existing" }) from!: string;
-  @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 }
 </script>
 

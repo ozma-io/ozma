@@ -2,9 +2,13 @@ import { mixins } from "vue-class-component";
 import { Component, Watch } from "vue-property-decorator";
 import { PortalTarget } from "portal-vue";
 
-import { mapMaybe } from "@/utils";
 import { IModalTab } from "@/components/modal/types";
 import Modal from "@/components/modal/Modal.vue";
+
+interface IInternalModalTab extends IModalTab {
+  tab: any;
+  selectedOnStart: boolean;
+}
 
 @Component
 export default class ModalPortalTarget extends mixins(PortalTarget) {
@@ -28,22 +32,32 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
     });
   }
 
-  private get modalTabs(): IModalTab[] {
-    return mapMaybe((node, index) => {
+  private get modalTabs(): IInternalModalTab[] {
+    return this.passengers.map((node, index) => {
       const modalPortal: any = node.context!.$children[0];
       const title: string | undefined = modalPortal.tabName;
-      const order: number | undefined = modalPortal.order;
+      const order: number = modalPortal.order;
+      const selected: boolean = modalPortal.selected;
       return {
         title: title || String(index),
         content: node,
-        order: order || -1,
+        order,
+        tab: modalPortal,
+        selectedOnStart: selected,
       };
-    }, this.passengers).sort((a, b) => b.order - a.order);
+    }).sort((a, b) => a.order - b.order);
   }
 
   @Watch("modalTabs")
-  private modalTabsChanged(tabs: IModalTab[], prevTabs: IModalTab[]) {
-    if (prevTabs.length < tabs.length) {
+  private modalTabsChanged(tabs: IInternalModalTab[], prevTabs: IInternalModalTab[]) {
+    const existingTabs = new Set(prevTabs.map(t => t.tab));
+    this.startingTab = -1;
+    tabs.forEach((t, i) => {
+      if (!existingTabs.has(t.tab) && t.selectedOnStart) {
+        this.startingTab = i;
+      }
+    });
+    if (this.startingTab < 0) {
       this.startingTab = tabs.length - 1;
     }
   }

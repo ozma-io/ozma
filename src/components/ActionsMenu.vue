@@ -25,8 +25,8 @@
       <template v-for="(action, i) in sortedActions">
         <hr
           v-if="action === null"
-          class="div-with-actions_hr"
           :key="i"
+          class="div-with-actions_hr"
         >
         <!-- Passing v-on:click to v-bind doesn't seem to work, hence this ugly solution -->
         <router-link
@@ -50,7 +50,7 @@
           :key="action.name"
           :uv="action.query"
           class="div-with-actions_button"
-          @[indirectLinks?`click`:null]="$emit('goto', $event)"
+          @click="$emit('goto', $event)"
         >
           {{ action.name }}
         </UserViewLink>
@@ -120,7 +120,6 @@ export type Action = ILocationAction | IHrefAction | IQueryAction | ICallbackAct
 export default class ActionsMenu extends Vue {
   @Prop({ type: Array, required: true }) actions!: Action[];
   @Prop({ type: String, required: true }) title!: string;
-  @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 
   private showActions = false;
 
@@ -132,7 +131,7 @@ export default class ActionsMenu extends Vue {
 
   get sortedActions() {
     const newActions = [...this.actions];
-    newActions.sort(a => a.order || 0);
+    newActions.sort((a, b) => (a.order || 0) - (b.order || 0));
     let oldOrder: number | null = null;
     for (let i = 0; i < newActions.length; i++) {
       const actionOrder = newActions[i].order || 0;

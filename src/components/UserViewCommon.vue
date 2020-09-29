@@ -17,7 +17,7 @@
 
 <template>
   <span>
-    <ModalUserView
+    <SelectUserView
       v-if="modalView"
       :select-view="modalView"
       :entity="modalReferenceField.entity"
@@ -39,7 +39,7 @@ import { IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
 import { ValueRef } from "@/local_user_view";
 import { homeSchema, valueToPunnedText, currentValue } from "@/state/user_view";
 import { funappSchema, IEntityRef, IFieldRef } from "@/api";
-import ModalUserView from "@/components/ModalUserView.vue";
+import SelectUserView from "@/components/SelectUserView.vue";
 import { mapMaybe, saveToFile, debugLog } from "@/utils";
 import { Action } from "@/components/ActionsMenu.vue";
 import { ScopeName, UserViewKey, IAddedResult, AddedRowId } from "@/state/staging_changes";
@@ -61,7 +61,7 @@ const csvCell = (str: string): string => {
 
 const staging = namespace("staging");
 
-@Component({ components: { ModalUserView } })
+@Component({ components: { SelectUserView } })
 export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<null, null, null>, null, null, null>>(BaseUserView) {
   @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName; entityRef: IEntityRef; userView: UserViewKey; position?: number }) => Promise<IAddedResult>;
   @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName; fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; value: any }) => Promise<void>;

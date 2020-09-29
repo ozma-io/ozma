@@ -27,7 +27,7 @@
           v-else
           :key="index"
           :entry="entry"
-          :indirect-links="indirectLinks"
+          @goto="$emit('goto', $event)"
         />
       </b-row>
     </b-container>
@@ -57,7 +57,6 @@ import MenuEntry, { MenuValue, IMenuLink } from '@/components/views/menu/MenuEnt
 @Component({ components: { MenuEntry } })
 export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>>(BaseUserView) {
   @Prop() uv!: CombinedUserView;
-  @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 
   get linkOpts(): IAttrToQueryOpts {
     const home = homeSchema(this.uv.args);

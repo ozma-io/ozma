@@ -13,6 +13,7 @@
             :key="index"
             :entry="subEntry"
             :level="level + 1"
+            @goto="$emit('goto', $event)"
           />
         </b-row>
       </div>
@@ -34,7 +35,7 @@
         <UserViewLink
           class="navigation-entry"
           :uv="entry"
-          @[indirectLinks?`click`:null]="$emit('goto', $event)"
+          @click="$emit('goto', $event)"
         >
           {{ entry.name }}
         </UserViewLink>
@@ -73,7 +74,6 @@ const scaleFactor = 0.85;
 export default class MenuEntry extends Vue {
   @Prop({ type: Number, required: false, default: 0 }) level!: number;
   @Prop({ type: Object, required: true }) entry!: MenuValue;
-  @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 
   get titleStyle(): { fontSize: string } {
     if (this.level) {

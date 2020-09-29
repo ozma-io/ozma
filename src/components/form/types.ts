@@ -38,7 +38,6 @@ export interface IGridProps {
   row: any;
   localRow: any;
   locked: boolean;
-  indirectLinks: boolean;
   selectionMode: boolean;
   scope: string;
   level: number;

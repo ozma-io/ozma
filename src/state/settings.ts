@@ -1,6 +1,6 @@
 import { Module } from "vuex";
 
-import { IRef, convertString, pascalToSnake } from "@/utils";
+import { IRef, convertString } from "@/utils";
 import { IViewExprResult, funappSchema, default as Api } from "@/api";
 
 const errorKey = "settings";
@@ -85,11 +85,7 @@ const settingsModule: Module<ISettingsState, {}> = {
           const values = Object.fromEntries(res.result.rows.map(row => {
             const key = row.values[0].value;
             const value = row.values[1].value;
-            const realKey = pascalToSnake(key);
-            if (realKey !== key) {
-              console.error(`Setting ${key} is not in snake_case`);
-            }
-            return [realKey, value];
+            return [key, value];
           }));
           const settings = new CurrentSettings(values);
           commit("setSettings", settings);

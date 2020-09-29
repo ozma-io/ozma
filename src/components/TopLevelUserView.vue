@@ -35,8 +35,19 @@
 
 <template>
   <div class="main-div">
-    <!-- FIXME: This shouldn't depend on type! -->
-    <div :class="uvIsReady && uv.attributes.Type === 'Menu' ? 'menu_scrol' : 'menu_none-scrol'">
+    <template v-if="query !== null">
+      <ModalUserView
+        v-for="(window, i) in query.windows"
+        :key="window.key"
+        is-root
+        :view="window.query"
+        :selected="query.selectedWindow === i"
+        @close="closeWindow(i)"
+        @goto="replaceWindow({index: i, query: $event})"
+      />
+    </template>
+
+    <div :class="'userview-upper-div'">
       <div class="head-menu">
         <input
           v-if="!isMainView"
@@ -59,21 +70,21 @@
         <span v-if="!!title" class="head-menu_title">{{ title }}</span>
         <SearchPanel
           v-if="enableFilter"
-          :filter-string="filterString"
-          @update:filterString="filterString = $event"
+          :filter-string="query.root.search"
+          @update:filterString="replaceRootSearch($event)"
         />
       </div>
       <div
-        v-if="uv !== null"
         class="userview-div"
       >
         <UserView
-          :args="query.rootViewArgs"
+          :args="query.root.args"
           :filter="filterWords"
+          is-top-level
           is-root
-          :default-values="defaultValues"
+          :default-values="query.root.defaultValues"
           scope="root"
-          @goto="goto"
+          @goto="pushRoot"
           @update:actions="extraActions = $event"
           @update:statusLine="statusLine = $event"
           @update:enableFilter="enableFilter = $event"
@@ -83,7 +94,7 @@
       </div>
     </div>
     <nav
-      v-if="!uvIsError && bottomBarNeeded"
+      v-if="bottomBarNeeded"
       class="fix-bot"
     >
       <div class="count-row">
@@ -137,17 +148,19 @@
 import {Route} from "vue-router";
 import {Component, Vue, Watch} from "vue-property-decorator";
 import {namespace} from "vuex-class";
+import {Debounce} from "vue-debounce-decorator";
+
 import * as Api from "@/api";
 import {setHeadTitle} from "@/elements";
 import {CombinedUserView, CurrentUserViews, IUserViewArguments, UserViewError} from "@/state/user_view";
 import {ErrorKey} from "@/state/errors";
 import {CurrentChanges, ScopeName} from "@/state/staging_changes";
 import {Action} from "@/components/ActionsMenu.vue";
+import ModalUserView from "@/components/ModalUserView.vue";
 import SearchPanel from "@/components/SearchPanel.vue";
 import {CurrentAuth} from "@/state/auth";
-import {replaceSearch, CurrentQuery, getDefaultValues, IQuery, queryLocation} from "@/state/query";
+import {ICurrentQuery, IQuery, queryLocation, ICurrentQueryHistory} from "@/state/query";
 import {convertToWords} from "@/utils";
-import {Debounce} from "vue-debounce-decorator";
 
 const auth = namespace("auth");
 const userView = namespace("userView");
@@ -157,26 +170,28 @@ const query = namespace("query");
 const errors = namespace("errors");
 
 @Component({components: {
-  SearchPanel
+  SearchPanel, ModalUserView
 }})
-export default class RootUserView extends Vue {
+export default class TopLevelUserView extends Vue {
   @auth.State("current") currentAuth!: CurrentAuth | null;
   @auth.Action("login") login!: () => Promise<void>;
   @auth.Action("logout") logout!: () => Promise<void>;
   @userView.Mutation("clear") clearView!: () => void;
-  @userView.Action("getRootView") getRootView!: (_: IUserViewArguments) => Promise<void>;
   @userView.State("current") userViews!: CurrentUserViews;
   @staging.State("current") changes!: CurrentChanges;
   @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
   @staging.Action("reset") clearChanges!: () => Promise<void>;
-  @query.State("current") query!: CurrentQuery;
-  @query.Mutation("setRoute") setRoute!: (_: Route) => void;
+  @query.State("current") query!: ICurrentQueryHistory | null;
+  @query.Mutation("resetRoute") resetRoute!: (_: Route) => void;
+  @query.Action("pushRoot") pushRoot!: (_: IQuery) => Promise<void>;
+  @query.Action("replaceRootSearch") replaceRootSearch!: (_: string) => Promise<void>;
+  @query.Action("closeWindow") closeWindow!: (_: number) => Promise<void>;
+  @query.Action("replaceWindow") replaceWindow!: (_: { index: number; query: IQuery }) => Promise<void>;
   @errors.Mutation("removeError") removeError!: (params: { key: ErrorKey; index: number }) => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
 
   private extraActions: Action[] = [];
   private statusLine = "";
-  private filterString = "";
   private enableFilter = false;
   private styleNode: HTMLStyleElement;
   private title = "";
@@ -185,6 +200,7 @@ export default class RootUserView extends Vue {
     super();
     this.styleNode = document.createElement("style");
     this.styleNode.type = "text/css";
+    this.resetRoute(this.$route);
   }
 
   get errors() {
@@ -194,33 +210,16 @@ export default class RootUserView extends Vue {
   }
 
   get filterWords() {
-    const value = this.query.getSearch("q", String, "");
+    const value = this.query!.root.search;
     if (value !== undefined) {
       return Array.from(new Set(convertToWords(value.toString())));
     }
     return [];
   }
 
-  // FIXME update when change not query.search
   @Watch("$route", {deep: true, immediate: true})
   private onRouteChanged() {
-    this.setRoute(this.$route);
-  }
-
-  @Watch("query.rootViewArgs", {deep: true, immediate: true})
-  private onViewArgsChanged() {
-    this.updateView();
-  }
-
-  @Watch("filterString")
-  @Debounce(500)
-  private submitFilter() {
-    replaceSearch("q", this.filterString);
-  }
-
-  @Watch("query.search.root", {deep: true, immediate: true})
-  private updateRootParams() {
-    this.filterString = this.query.getSearch("q", String, "");
+    this.resetRoute(this.$route);
   }
 
   private updateTitle(title: string) {
@@ -248,39 +247,6 @@ export default class RootUserView extends Vue {
     return actions;
   }
 
-  private updateView() {
-    this.clearView();
-    const args = this.query.rootViewArgs;
-    if (args === null) {
-      throw new Error("Invalid root view arguments");
-    }
-    if (args.source.type !== "named") {
-      throw new Error("Anonymous user views are not supported");
-    }
-    this.getRootView(args);
-  }
-
-  private goto(newQuery: IQuery) {
-    const location = queryLocation(newQuery);
-    this.$router.replace(location);
-  }
-
-  get uv() {
-    if (this.query.rootViewArgs === null) {
-      return null;
-    } else {
-      return this.userViews.getUserView(this.query.rootViewArgs);
-    }
-  }
-
-  get uvIsReady() {
-    return this.uv instanceof CombinedUserView;
-  }
-
-  get uvIsError() {
-    return this.uv instanceof UserViewError;
-  }
-
   get isMainView() {
     return this.$route.params.schema === "user" && this.$route.params.name === "main";
   }
@@ -289,10 +255,6 @@ export default class RootUserView extends Vue {
     return this.errors.length > 0 ||
         !this.changes.isEmpty ||
         this.statusLine !== "";
-  }
-
-  get defaultValues() {
-    return getDefaultValues(this.query.search);
   }
 }
 </script>
@@ -325,13 +287,7 @@ export default class RootUserView extends Vue {
     flex: 1;
   }
 
-  .menu_scrol {
-    display: block;
-    overflow: auto;
-    height: inherit;
-  }
-
-  .menu_none-scrol {
+  .userview-upper-div {
     overflow: hidden;
     height: inherit;
     display: flex;

@@ -66,7 +66,6 @@ export default class FormEntry extends Vue {
   @Prop({ type: Object, required: true }) row!: any;
   @Prop({ type: Object, required: true }) localRow!: any;
   @Prop({ type: Boolean, default: false }) locked!: boolean;
-  @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
   @Prop({ type: String, required: true }) scope!: string;
   @Prop({ type: Number, required: true }) level!: number;
@@ -86,7 +85,6 @@ export default class FormEntry extends Vue {
       row: this.row,
       localRow: this.localRow,
       locked: this.locked,
-      indirectLinks: this.indirectLinks,
       selectionMode: this.selectionMode,
       scope: this.scope,
       level: this.level,

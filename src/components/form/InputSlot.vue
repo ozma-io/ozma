@@ -106,7 +106,7 @@ export default class InputSlot extends Vue {
   }
 
   private get isMobile(): boolean {
-    return isMobile();
+    return isMobile;
   }
 
   private onModalOpen() {

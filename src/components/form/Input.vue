@@ -159,7 +159,7 @@ export default class Input extends Vue {
   }
 
   private get isMobile(): boolean {
-    return isMobile();
+    return isMobile;
   }
 
   private onFocus(evt: Event) {

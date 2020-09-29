@@ -53,7 +53,6 @@
         :row="firstRow.row"
         :local-row="firstRow.local"
         :locked="addedLocked"
-        :indirect-links="indirectLinks"
         :scope="scope"
         :level="level"
         :show-delete="useDeleteAction === null"
@@ -69,7 +68,6 @@
         :row="uv.newRows[rowId]"
         :local-row="local.newRows[rowId]"
         :locked="addedLocked"
-        :indirect-links="indirectLinks"
         :scope="scope"
         :level="level"
         :show-delete="useDeleteAction === null"
@@ -84,7 +82,6 @@
         :blocks="gridBlocks"
         :row="uv.rows[rowI]"
         :local-row="local.rows[rowI]"
-        :indirect-links="indirectLinks"
         :scope="scope"
         :level="level"
         :selection-mode="selectionMode"
@@ -214,10 +211,6 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
   @query.State("previous") previousQuery!: IQuery | null;
   @actions.Action("getActionResult") getActionResult!: (args: IActionArguments) => Promise<void>;
   @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
-
-  @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView;
-  @Prop({ type: Boolean, default: false }) isRoot!: boolean;
-  @Prop({ type: Object, required: true }) local!: LocalFormUserView;
 
   private deletedOne = false;
   private toBeDeletedRef: RowRef | null = null;
@@ -400,7 +393,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
   }
 
   private init() {
-    if (this.isRoot) {
+    if (this.isTopLevel) {
       this.$emit("update:bodyStyle", `
         @media print {
             @page {

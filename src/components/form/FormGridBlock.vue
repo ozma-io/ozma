@@ -13,7 +13,6 @@
       :type="blockContent.field.columnInfo.valueType"
       :locked="gridProps.locked"
       :uv-args="gridProps.uv.args"
-      :indirect-links="gridProps.indirectLinks"
       :scope="gridProps.scope"
       :level="gridProps.level"
       @goto="gridProps.onGoto"

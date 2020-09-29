@@ -120,7 +120,7 @@ export default class Modal extends Vue {
   }
 
   private get modalWidth(): string {
-    if (this.fullscreen || isMobile()) {
+    if (this.fullscreen || isMobile) {
       return "100%";
     }
     return this.width;
@@ -130,7 +130,7 @@ export default class Modal extends Vue {
     if (this.fullscreen) {
       return "100%";
     }
-    if (isMobile()) {
+    if (isMobile) {
       return "95%";
     }
     return this.height;

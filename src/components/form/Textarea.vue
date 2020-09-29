@@ -100,7 +100,7 @@ export default class Textarea extends Vue {
   }
 
   private get isMobile(): boolean {
-    return isMobile();
+    return isMobile;
   }
 
   private get inputName(): string {

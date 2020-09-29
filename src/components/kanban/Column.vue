@@ -4,11 +4,6 @@
       class="column_header"
       :style="titleStyle"
     >
-      <ModalUserView
-        v-if="modalView !== null"
-        :initial-view="modalView"
-        @close="modalView = null"
-      />
       <!-- input type="checkbox"
                 v-model="isAllSelected"
                 class="column_select_checkbox" -->
@@ -57,6 +52,7 @@
         :width="width"
         :dragging="dragging"
         :selected="isCardSelected(card.groupRef.position)"
+        @goto="$emit('goto', $event)"
       />
     </draggable>
   </div>
@@ -65,14 +61,13 @@
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 import draggable from "vuedraggable";
+import { dragscroll } from 'vue-dragscroll';
+import { namespace } from "vuex-class";
 import * as R from "ramda";
-
-import ModalUserView from "@/components/ModalUserView.vue";
 
 import Card, { ICard, CardTarget } from "@/components/kanban/Card.vue";
 import { ValueRef } from "../../local_user_view";
 import { IQuery } from "../../state/query";
-import { dragscroll } from 'vue-dragscroll';
 import { nextRender, isMobile } from "@/utils";
 
 export interface IColumn {
@@ -104,8 +99,11 @@ export interface IColumnStyle {
   backgroundColor?: string;
 }
 
-@Component({ components: { Card, draggable, ModalUserView }, directives: { dragscroll } })
+const query = namespace("query");
+
+@Component({ components: { Card, draggable }, directives: { dragscroll } })
 export default class Column extends Vue {
+  @query.Action("addWindow") addWindow!: (query: IQuery) => Promise<void>;
   @Prop() id!: any;
   @Prop({ type: Array, required: true }) cards!: ICard[];
   @Prop({ type: String, required: true }) title!: string;
@@ -118,12 +116,10 @@ export default class Column extends Vue {
   @Prop({ type: String, required: true, default: 'none' }) headerColor!: string;
   @Prop({ type: String, required: false }) cardTarget!: CardTarget;
 
-  modalView: IQuery | null = null;
-
   selected: number[] = [];
   dragging = false;
 
-  private openModal() {
+  private async openModal() {
     const query: IQuery = {
       args: {
         ...this.createView.args,
@@ -131,13 +127,14 @@ export default class Column extends Vue {
       defaultValues: {
         [this.fieldName]: this.id,
       },
+      search: "",
     };
 
-    if(this.orderFieldName.length > 0){
+    if(this.orderFieldName.length > 0) {
       query.defaultValues[this.orderFieldName] = this.cards[0] && this.cards[0].order ? this.cards[0].order - 1 : 1;
     }
 
-    this.modalView = query;
+    await this.addWindow(query);
   }
 
   private isCardSelected(rowIndex: number) {
@@ -145,7 +142,7 @@ export default class Column extends Vue {
   }
   
   private get isMobile(): boolean {
-    return isMobile();
+    return isMobile;
   }
 
   private get style(): IColumnStyle {

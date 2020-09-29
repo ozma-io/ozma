@@ -8,7 +8,7 @@
             "unknown_error": "Unknown user view fetch error: {msg}",
             "anonymous_query": "(anonymous query)",
             "edit_view": "Edit user view",
-            "open_as_root": "Open in full screen"
+            "open_as_top_level": "Open in full screen"
         },
         "ru": {
             "loading": "Загрузка данных",
@@ -18,7 +18,7 @@
             "unknown_error": "Неизвестная ошибка загрузки представления: {msg}",
             "anonymous_query": "(анонимный запрос)",
             "edit_view": "Редактировать представление",
-            "open_as_root": "Открыть на полный экран"
+            "open_as_top_level": "Открыть на полный экран"
         }
     }
 </i18n>
@@ -36,13 +36,13 @@
       <UserViewCommon
         :uv="currentUv"
         :is-root="isRoot"
+        :is-top-level="isTopLevel"
         :filter="filter"
         :local="local"
         :base-local="baseLocal"
         :scope="scope"
         :level="level"
         :selection-mode="selectionMode"
-        :indirect-links="indirectLinks"
         :default-values="defaultValues"
         @update:actions="extraCommonActions = $event"
       />
@@ -50,13 +50,13 @@
         :is="`UserView${userViewType}`"
         :uv="currentUv"
         :is-root="isRoot"
+        :is-top-level="isTopLevel"
         :filter="filter"
         :local="local"
         :base-local="baseLocal"
         :scope="scope"
         :level="level"
         :selection-mode="selectionMode"
-        :indirect-links="indirectLinks"
         :default-values="defaultValues"
         :background-color="backgroundColor"
         @goto="$emit('goto', $event)"
@@ -84,13 +84,13 @@ import { namespace } from "vuex-class";
 import { Store } from "vuex";
 import ProgressBar from "@/components/ProgressBar.vue"
 
-import { RecordSet, ReferenceName, deepEquals, snakeToPascal, pascalToSnake } from "@/utils";
+import { RecordSet, ReferenceName, deepEquals, snakeToPascal } from "@/utils";
 import { funappSchema } from "@/api";
 import { equalEntityRef } from "@/values";
 import { CombinedUserView, UserViewError, IUserViewArguments, IUserViewEventHandler, CurrentUserViews, IUserViewState, homeSchema } from "@/state/user_view";
 import { CurrentAuth } from "@/state/auth";
 import { CombinedTransactionResult, ICombinedInsertEntityResult, ScopeName } from "@/state/staging_changes";
-import { CurrentQuery, attrToQuery, queryLocation, IQuery, IAttrToQueryOpts } from "@/state/query";
+import { ICurrentQuery, attrToQuery, queryLocation, IQuery, IAttrToQueryOpts } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
 import { IHandlerProvider } from "@/local_user_view";
 import { Action } from "@/components/ActionsMenu.vue";
@@ -119,11 +119,7 @@ const userViewType = (uv: CombinedUserView) => {
     return "Table";
   }
 
-  const rawTypeAttr = String(uv.attributes["type"]);
-  const typeAttr = pascalToSnake(rawTypeAttr);
-  if (typeAttr !== rawTypeAttr) {
-    console.error(`User view type attribute ${rawTypeAttr} uses pascal case`);
-  }
+  const typeAttr = String(uv.attributes["type"]);
 
   if (typeAttr in types) {
     return snakeToPascal(typeAttr);
@@ -158,20 +154,19 @@ export default class UserView extends Vue {
   @userView.Mutation("removeUserViewConsumer") removeUserViewConsumer!: (args: { args: IUserViewArguments; reference: ReferenceName }) => void;
   @userView.Mutation("registerHandler") registerHandler!: (args: { args: IUserViewArguments; handler: IUserViewEventHandler }) => void;
   @userView.Mutation("unregisterHandler") unregisterHandler!: (args: { args: IUserViewArguments; handler: IUserViewEventHandler }) => void;
-  @userView.Action("getNestedView") getNestedView!: (args: { args: IUserViewArguments; reference: ReferenceName }) => Promise<CombinedUserView>;
+  @userView.Action("getUserView") getUserView!: (args: { args: IUserViewArguments; root: boolean; reference: ReferenceName }) => Promise<CombinedUserView>;
   @staging.State("currentSubmit") submitPromise!: Promise<CombinedTransactionResult[]> | null;
-  @query.State("current") query!: CurrentQuery;
+  @query.State("current") query!: ICurrentQuery | null;
 
   @Prop({ type: Object, required: true }) args!: IUserViewArguments;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
+  @Prop({ type: Boolean, default: false }) isTopLevel!: boolean;
   @Prop({ type: String, required: true }) scope!: ScopeName;
   @Prop({ type: Number, default: 0 }) level!: number;
   @Prop({ type: Array, default: () => [] }) filter!: string[];
   @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, any>;
   // Use this user view to select and return an entry.
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
-  // Emit events to jump to other user views. If `false` insert simple <href>s instead.
-  @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
 
   private extraActions: Action[] = [];
@@ -196,7 +191,7 @@ export default class UserView extends Vue {
     if (this.level >= maxLevel) {
       return new UserViewError("execution", "Too many levels of nested user views", this.args);
     } else {
-      const ret = this.currentUvs.getUserView(this.args);
+      const ret = this.currentUvs.getUserViewOrError(this.args);
       return ret === undefined ? null : ret;
     }
   }
@@ -226,15 +221,17 @@ export default class UserView extends Vue {
             name: this.currentUv.args.source.ref.name,
           },
         },
+        search: "",
       };
       actions.push({ name: this.$t("edit_view").toString(), query: editQuery });
     }
-    if (!this.isRoot) {
+    if (!this.isTopLevel) {
       const gotoQuery: IQuery = {
         defaultValues: this.defaultValues,
         args: this.currentUv.args,
+        search: "",
       };
-      actions.push({ name: this.$t("open_as_root").toString(), query: gotoQuery });
+      actions.push({ name: this.$t("open_as_top_level").toString(), query: gotoQuery });
     }
     return actions;
   }
@@ -324,12 +321,12 @@ export default class UserView extends Vue {
     this.$emit("update:bodyStyle", "");
   }
 
-  // We should request nested view:
+  // We should request a view:
   // * when arguments change (different view selected);
   // * when current view is `null` (view is not yet requested).
   private requestView() {
-    if (this.query.rootViewArgs !== null && !deepEquals(this.args, this.query.rootViewArgs) && !this.waitReload) {
-      this.getNestedView({ args: this.args, reference: this.uid });
+    if (!this.waitReload) {
+      this.getUserView({ args: this.args, root: this.isRoot, reference: this.uid });
     }
   }
 
@@ -417,6 +414,7 @@ export default class UserView extends Vue {
           const newQuery: IQuery = {
             defaultValues: {},
             args,
+            search: "",
           };
           this.$emit("goto", newQuery);
         }

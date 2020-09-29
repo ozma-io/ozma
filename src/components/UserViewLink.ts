@@ -1,7 +1,7 @@
 import Vue from "vue";
 
 import { vueEmit } from "@/utils";
-import { queryLocation } from "@/state/query";
+import { queryLocation, IQuery } from "@/state/query";
 import { router } from "@/modules";
 
 export default Vue.component("UserViewLink", {
@@ -10,13 +10,15 @@ export default Vue.component("UserViewLink", {
     uv: { type: Object, required: true },
   },
   render: (createElement, context) => {
+    const uv = context.props.uv as IQuery;
+
     return createElement("a", {
       ...context.data,
       attrs: {
-        href: router.resolve(queryLocation(context.props.uv)).href,
+        href: router.resolve(queryLocation(uv)).href,
       },
       on: {
-        click: (e: MouseEvent) => {
+        click: async (e: MouseEvent) => {
           // Copied from router-link's guardEvent
           // don't redirect with control keys
           if (e.metaKey || e.altKey || e.ctrlKey || e.shiftKey) {
@@ -35,7 +37,7 @@ export default Vue.component("UserViewLink", {
           if ("click" in context.listeners) {
             vueEmit(context, "click", context.props.uv);
           } else {
-            router.push(queryLocation(context.props.uv));
+            await context.parent.$store.dispatch("query/replaceRoot", uv);
           }
         },
       },

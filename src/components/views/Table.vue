@@ -37,7 +37,6 @@
         :locked="editingLocked"
         :disable-color="editing.ref.type === 'new'"
         :uv-args="uv.args"
-        :indirect-links="indirectLinks"
         :scope="scope"
         :level="level"
         is-cell-edit
@@ -130,7 +129,6 @@
               :column-indexes="fixedRowColumnIndexes"
               :local-uv="local.extra"
               from="new"
-              :indirect-links="indirectLinks"
               @cell-click="clickCell({ type: 'new', column: arguments[0] }, arguments[1])"
               @goto="$emit('goto', $event)"
             />-->
@@ -142,7 +140,6 @@
               :local-uv="local.extra"
               :show-fixed-row="showFixedRow"
               from="new"
-              :indirect-links="indirectLinks"
               @cell-click="clickCell({ type: 'new', column: arguments[0] }, arguments[1])"
               @goto="$emit('goto', $event)"
             />
@@ -156,7 +153,6 @@
               :column-indexes="fixedRowColumnIndexes"
               :local-uv="local.extra"
               from="added"
-              :indirect-links="indirectLinks"
               @select="selectRow({ type: 'added', position: rowIndex }, $event)"
               @cell-click="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
               @goto="$emit('goto', $event)"
@@ -170,7 +166,6 @@
               :local-uv="local.extra"
               :show-fixed-row="showFixedRow"
               from="added"
-              :indirect-links="indirectLinks"
               @select="selectRow({ type: 'added', position: rowIndex }, $event)"
               @cell-click="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
               @goto="$emit('goto', $event)"
@@ -184,7 +179,6 @@
               :local-row="local.rows[rowI]"
               :column-indexes="fixedRowColumnIndexes"
               :local-uv="local.extra"
-              :indirect-links="indirectLinks"
               @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
               @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
               @goto="$emit('goto', $event)"
@@ -197,7 +191,6 @@
               :column-indexes="columnIndexes"
               :local-uv="local.extra"
               :show-fixed-row="showFixedRow"
-              :indirect-links="indirectLinks"
               @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
               @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
               @goto="$emit('goto', $event)"
@@ -217,7 +210,7 @@ import {Store} from "vuex";
 import {Moment} from "moment";
 import * as moment from "moment";
 
-import {deepEquals, isFirefox, isIOS, mapMaybe, nextRender, ObjectSet, tryDicts} from "@/utils";
+import {deepEquals, isFirefox, isIOS, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName} from "@/utils";
 import {valueIsNull} from "@/values";
 import {IResultColumnInfo} from "@/api";
 import {
@@ -229,6 +222,9 @@ import {
   ICombinedValue,
   IRowCommon,
   valueToPunnedText,
+  IEntriesRef,
+  Entries,
+  referenceEntries,
 } from "@/state/user_view";
 import {UserView} from "@/components";
 import {AddedRowId, AutoSaveLock} from "@/state/staging_changes";
@@ -655,6 +651,7 @@ const isEmptyRow = (row: IRowCommon) => {
   return row.values.every(cell => valueIsNull(cell.rawValue) || cell.info === null);
 };
 
+const userView = namespace("userView");
 const staging = namespace("staging");
 
 @UserView({
@@ -668,6 +665,8 @@ const staging = namespace("staging");
 export default class UserViewTable extends mixins<BaseUserView<LocalTableUserView, ITableValueExtra, ITableRowExtra, ITableUserViewExtra>>(BaseUserView) {
   @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
   @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
+  @userView.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IEntriesRef; reference: ReferenceName }) => void;
+  @userView.Action("getEntries") getEntries!: (args: { reference: ReferenceName; ref: IEntriesRef }) => Promise<Entries>;
 
   private currentFilter: string[] = [];
   private sortColumn: number | null = null;
@@ -694,6 +693,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     width: 0,
     minHeight: 0
   };
+  // Keep references to entries used for editing once, so we don't re-request them.
+  private keptEntries = new ObjectSet<IEntriesRef>();
 
   private cellEditHeight = 0;
 
@@ -753,7 +754,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     this.currentFilter = this.filter;
     this.init();
 
-    if (this.isRoot) {
+    if (this.isTopLevel) {
       const queryCallback = (mql: MediaQueryListEvent) => {
         if (mql.matches) {
           this.showLength = this.local.rows.length;
@@ -795,6 +796,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (this.clickTimeoutId !== null) {
       clearTimeout(this.clickTimeoutId);
     }
+    this.releaseEntries();
   }
 
   @Watch("filter")
@@ -815,9 +817,18 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   @Watch("editingValue")
-  protected removeEditingIfInvalid() {
+  protected updateEditingValue() {
     if (this.editingValue === null) {
       this.removeCellEditing();
+    } else {
+      const fieldType = this.editingValue.value.info?.field?.fieldType;
+      if (fieldType !== undefined && fieldType.type === "reference") {
+        const ref = referenceEntries(fieldType);
+        if (!this.keptEntries.exists(fieldType)) {
+          this.getEntries({ ref: referenceEntries(fieldType), reference: this.uid });
+          this.keptEntries.insert(ref);
+        }
+      }
     }
   }
 
@@ -1075,8 +1086,17 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     this.baseLocal.extra.selectedRows.keys().forEach(rowRef => this.deleteRow(rowRef));
   }
 
+  private releaseEntries() {
+    this.keptEntries.keys().forEach(ref => {
+      this.removeEntriesConsumer({ ref, reference: this.uid });
+    });
+    this.keptEntries = new ObjectSet();
+  }
+
   private init() {
-    if (this.isRoot) {
+    this.releaseEntries();
+
+    if (this.isTopLevel) {
       this.$emit("update:bodyStyle", `
                 @media print {
                     @page {

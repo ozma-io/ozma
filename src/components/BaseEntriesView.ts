@@ -37,7 +37,7 @@ export default class BaseEntriesView extends Vue {
   }
 
   @Watch("newEntries", { immediate: true })
-  private updateEntries() {
+  updateEntries() {
     if (this.entriesEntity) {
       if (this.newEntries instanceof Error) {
         this.currentEntries = null;
@@ -50,7 +50,7 @@ export default class BaseEntriesView extends Vue {
   }
 
   @Watch("entriesEntity", { deep: true })
-  private entityChanged(newEntity: IEntriesRef | null, oldEntity: IEntriesRef | null) {
+  entityChanged(newEntity: IEntriesRef | null, oldEntity: IEntriesRef | null) {
     if(newEntity !== null && oldEntity !== null)
       if (!equalEntriesRef(newEntity, oldEntity)) {
         if (oldEntity !== undefined) {

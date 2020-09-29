@@ -262,6 +262,24 @@ export class ObjectMap<K, V> {
     return value !== undefined ? value[1] : undefined;
   }
 
+  apply(f: (_: V) => void, k: K) {
+    const key = valueSignature(k);
+    const value = this.entriesMap[key];
+    if (value === undefined) {
+      throw new Error("Key is not in map");
+    }
+    f(value[1]);
+  }
+
+  update(f: (_: V) => V, k: K) {
+    const key = valueSignature(k);
+    const value = this.entriesMap[key];
+    if (value === undefined) {
+      throw new Error("Key is not in map");
+    }
+    value[1] = f(value[1]);
+  }
+
   entries() {
     return Object.values(this.entriesMap);
   }
@@ -335,27 +353,27 @@ export const vueEmit = (context: RenderContext, name: string, ...args: any[]) =>
 
 export type ReferenceName = string;
 
-export interface IResource<T> {
+export interface IResource<M, T> {
   value: T;
-  refs: RecordSet<ReferenceName>;
+  refs: Record<ReferenceName, M>;
 }
 
 // Implements a map with named references which supports removing unreferenced entries.
-export class ResourceMap<V> {
-  private resourcesMap: Record<string, IResource<V>> = {};
+export class ResourceMap<M, V> {
+  private resourcesMap: Record<string, IResource<M, V>> = {};
 
-  createResource(key: string, reference: ReferenceName, value: V) {
+  createResource(key: string, reference: ReferenceName, meta: M, value: V) {
     if (key in this.resourcesMap) {
       throw new Error("Resource is already allocated");
     }
-    const resource: IResource<V> = {
+    const resource: IResource<M, V> = {
       value,
-      refs: { [reference]: null },
+      refs: { [reference]: meta },
     };
     Vue.set(this.resourcesMap, key, resource);
   }
 
-  updateResource(key: string, value: V) {
+  refreshResource(key: string, value: V) {
     const resource = this.resourcesMap[key];
     if (resource === undefined) {
       throw new Error("Resource doesn't exist");
@@ -363,12 +381,12 @@ export class ResourceMap<V> {
     resource.value = value;
   }
 
-  addReference(key: string, name: ReferenceName) {
+  addReference(key: string, name: ReferenceName, meta: M) {
     const resource = this.resourcesMap[key];
     if (resource === undefined) {
       throw new Error("Resource doesn't exist");
     }
-    Vue.set(resource.refs, name, null);
+    Vue.set(resource.refs, name, meta);
   }
 
   removeReference(key: string, name: ReferenceName) {
@@ -386,13 +404,32 @@ export class ResourceMap<V> {
     }
   }
 
-  getResource(key: string): IResource<V> | undefined {
+  getResource(key: string): IResource<M, V> | undefined {
     return this.resourcesMap[key];
   }
 
   get(key: string) {
+    return this.resourcesMap[key]?.value;
+  }
+
+  apply(f: (_: V) => void, key: string) {
     const resource = this.resourcesMap[key];
-    return resource === undefined ? undefined : resource.value;
+    if (resource === undefined) {
+      throw new Error("Resource doesn't exist");
+    }
+    f(resource.value);
+  }
+
+  update(f: (_: V) => V, key: string) {
+    const resource = this.resourcesMap[key];
+    if (resource === undefined) {
+      throw new Error("Resource doesn't exist");
+    }
+    resource.value = f(resource.value);
+  }
+
+  forceRemove(key: string) {
+    Vue.delete(this.resourcesMap, key);
   }
 
   keys() {
@@ -412,27 +449,27 @@ export class ResourceMap<V> {
   }
 }
 
-export class ObjectResourceMap<K, V> {
-  private map = new ResourceMap<[K, V]>();
+export class ObjectResourceMap<M, K, V> {
+  private internal = new ResourceMap<M, [K, V]>();
 
-  createResource(key: K, reference: ReferenceName, value: V) {
-    this.map.createResource(valueSignature(key), reference, [key, value]);
+  createResource(key: K, reference: ReferenceName, meta: M, value: V) {
+    this.internal.createResource(valueSignature(key), reference, meta, [key, value]);
   }
 
   updateResource(key: K, value: V) {
-    this.map.updateResource(valueSignature(key), [key, value]);
+    this.internal.refreshResource(valueSignature(key), [key, value]);
   }
 
-  addReference(key: K, name: ReferenceName) {
-    this.map.addReference(valueSignature(key), name);
+  addReference(key: K, name: ReferenceName, meta: M) {
+    this.internal.addReference(valueSignature(key), name, meta);
   }
 
   removeReference(key: K, name: ReferenceName) {
-    return this.map.removeReference(valueSignature(key), name);
+    return this.internal.removeReference(valueSignature(key), name);
   }
 
-  getResource(key: K): IResource<V> | undefined {
-    const ret = this.map.getResource(valueSignature(key));
+  getResource(key: K): IResource<M, V> | undefined {
+    const ret = this.internal.getResource(valueSignature(key));
     return ret !== undefined ? { value: ret.value[1], refs: ret.refs } : undefined;
   }
 
@@ -440,30 +477,58 @@ export class ObjectResourceMap<K, V> {
     return this.getBySignature(valueSignature(key));
   }
 
+  update(f: (_: V) => V, key: K) {
+    this.updateBySignature(f, valueSignature(key));
+  }
+
+  apply(f: (_: V) => void, key: K) {
+    this.applyBySignature(f, valueSignature(key));
+  }
+
+  forceRemove(key: K) {
+    this.forceRemoveBySignature(valueSignature(key));
+  }
+
   getBySignature(signature: string): V | undefined {
-    const ret = this.map.get(signature);
+    const ret = this.internal.get(signature);
     return ret !== undefined ? ret[1] : undefined;
   }
 
+  updateBySignature(f: (_: V) => V, signature: string) {
+    this.internal.apply(ret => {
+      ret[1] = f(ret[1]);
+    }, signature);
+  }
+
+  applyBySignature(f: (_: V) => void, signature: string) {
+    this.internal.apply(ret => {
+      f(ret[1]);
+    }, signature);
+  }
+
+  forceRemoveBySignature(signature: string) {
+    this.internal.forceRemove(signature);
+  }
+
   resources() {
-    return this.map.resources();
+    return this.internal.resources();
   }
 
   keys(): K[] {
-    return this.map.values().map(x => x[0]);
+    return this.internal.values().map(x => x[0]);
   }
 
   values(): V[] {
-    return this.map.values().map(x => x[1]);
+    return this.internal.values().map(x => x[1]);
   }
 
   entries(): [K, V][] {
-    return this.map.values();
+    return this.internal.values();
   }
 }
 
-export const isIOS = () => !!navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform);
-export const isMobile = () => !!(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+export const isIOS = !!navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform);
+export const isMobile = !!(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
 
 export const capitalize = (value: string): string => {
   return value.substring(0, 1).toUpperCase() + value.substring(1);

@@ -14,11 +14,6 @@
     fluid
     class="view-form"
   >
-    <ModalUserView
-      v-if="nestedView !== null"
-      :initial-view="nestedView"
-      @close="nestedView = null"
-    />
     <MultiSelect
       v-if="selectedValueIndex"
       :options="options || []"
@@ -40,12 +35,12 @@
             type="button"
             class="material-icons reference__open_modal"
             value="flip_to_front"
-            @click.stop="nestedView = option.meta.link"
+            @click.stop="addWindow(option.meta.link)"
           >
           <UserViewLink
             v-if="option.meta && option.meta.link"
             :uv="option.meta.link"
-            @[indirectLinks?`click`:null]="$emit('goto', $event)"
+            @click="$emit('goto', $event)"
           >
             {{ option.label }}
           </UserViewLink>
@@ -80,7 +75,7 @@
             <UserViewLink
               v-if="option.meta && option.meta.link"
               :uv="option.meta.link"
-              @[indirectLinks?`click`:null]="$emit('goto', $event)"
+              @click="$emit('goto', $event)"
             >
               {{ option.label }}
             </UserViewLink>
@@ -104,10 +99,11 @@
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import * as R from "ramda";
 import { mixins } from "vue-class-component";
+import { namespace } from "vuex-class";
 
 import { RecordSet, tryDicts, mapMaybe } from "@/utils";
 import { AttributesMap, IResultColumnInfo, IReferenceFieldType, IMainFieldInfo, IEntityRef } from "@/api";
-import { CurrentEntries, CombinedUserView, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, homeSchema } from "@/state/user_view";
+import { CurrentEntries, CombinedUserView, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, homeSchema, referenceEntries } from "@/state/user_view";
 import { RowRef, ValueRef } from "@/local_user_view";
 import { AddedRowId } from "@/state/staging_changes";
 import { IQuery, attrToQueryRef } from "@/state/query";
@@ -117,7 +113,6 @@ import BaseUserView, { ISelectionRef } from "@/components/BaseUserView";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
 import MultiSelect from "@/components/multiselect/MultiSelect.vue";
-import ModalUserView from "@/components/ModalUserView.vue";
 
 const findSelectColumnIndex = (attrs: { [key: string]: any}) =>
   Number(Object.keys(attrs).filter(key => R.pathOr(false, [key, "select"], attrs))[0]);
@@ -159,24 +154,22 @@ const findValueDelta = (rows: ICombinedRow[], newRows: Record<number, IRowCommon
   };
 };
 
+const query = namespace("query");
+
 @UserView({
   localConstructor: LocalEmptyUserView,
 })
 @Component({
-  components: { MultiSelect, ModalUserView },
+  components: { MultiSelect },
 })
 export default class UserViewMultiSelect extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>, BaseEntriesView>(BaseUserView, BaseEntriesView) {
+  @query.Action("addWindow") addWindow!: (query: IQuery) => Promise<void>;
   @Prop({ type: String }) backgroundColor!: string;
 
-  private nestedView: IQuery | null = null;
-
   get entriesEntity() {
-    const mainField = this.uv.info.columns[this.selectedValueIndex].mainField;
-    if (mainField) {
-      const fieldType = mainField.field.fieldType;
-      if (fieldType.type === "reference") {
-        return fieldType;
-      }
+    const fieldType = this.uv.info.columns[this.selectedValueIndex].mainField?.field.fieldType;
+    if (fieldType && fieldType.type === "reference") {
+      return referenceEntries(fieldType);
     }
     return null;
   }

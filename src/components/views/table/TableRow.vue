@@ -29,7 +29,7 @@
         v-if="localRow.extra.link !== undefined"
         :uv="localRow.extra.link"
         class="icon-link"
-        @[indirectLinks?`click`:null]="$emit('goto', $event)"
+        @click="$emit('goto', $event)"
       >
         <i class="material-icons opemform-cells__icon">open_in_new</i>
       </UserViewLink>
@@ -44,7 +44,6 @@
       :column="localUv.columns[i]"
       :from="from"
       :last-fixed-column-index="lastFixedColumnIndex"
-      :indirect-links="indirectLinks"
       @cell-click="$emit('cell-click', arguments[0], arguments[1])"
       @goto="$emit('goto', $event)"
     />
@@ -73,7 +72,6 @@ export default class TableRow extends Vue {
   @Prop({ type: Object, required: true }) localUv!: any;
   @Prop({ type: String, default: "existing" }) from!: string;
   @Prop({ type: Boolean, default: false }) showFixedRow!: boolean;
-  @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
 
   get lastFixedColumnIndex(): number {
     return this.localUv.columns.filter((item: any) => item.fixed).length;

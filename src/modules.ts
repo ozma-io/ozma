@@ -1,5 +1,5 @@
 import Vue from "vue";
-import VueRouter, {Route} from "vue-router";
+import VueRouter from "vue-router";
 import VueI18n from "vue-i18n";
 import Vuex from "vuex";
 import BootstrapVue from "bootstrap-vue";
@@ -15,7 +15,7 @@ import * as Utils from "@/utils";
 import NotFound from "@/components/NotFound.vue";
 import AuthResponse from "@/components/AuthResponse.vue";
 import SaveRestoreSchema from "@/components/SaveRestoreSchema.vue";
-import RootUserView from "@/components/RootUserView.vue";
+import TopLevelUserView from "@/components/TopLevelUserView.vue";
 
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
@@ -33,8 +33,8 @@ Vue.use(VueJSModal, { componentName: "VueModal" });
 
 const routes = [
   { path: "/", name: "main", redirect: { name: "view", params: { schema: "user", name: "main" } } },
-  { path: "/views/:schema/:name", name: "view", component: RootUserView },
-  { path: "/views/:schema/:name/new", name: "view_create", component: RootUserView },
+  { path: "/views/:schema/:name", name: "view", component: TopLevelUserView },
+  { path: "/views/:schema/:name/new", name: "view_create", component: TopLevelUserView },
   { path: "/auth_response", name: "auth_response", component: AuthResponse },
   { path: "/save_restore", name: "save_restore", component: SaveRestoreSchema },
   { path: "*", component: NotFound },

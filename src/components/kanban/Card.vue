@@ -6,13 +6,6 @@
     :style="cardStyle"
     @click="openModal"
   >
-    <template v-if="data.cardView">
-      <ModalUserView
-        v-if="modalView !== null"
-        :initial-view="modalView"
-        @close="modalView = null"
-      />
-    </template>
     <b-row
       v-for="(row, rowIndex) in data.rows"
       :key="rowIndex"
@@ -55,14 +48,14 @@
 <script lang="ts">
 import * as R from "ramda";
 import { Vue, Component, Prop } from "vue-property-decorator";
-import { IExistingValueRef, ValueRef } from "../../local_user_view";
-import { IFieldRef } from "../../api";
-import { IQuery, queryLocation } from "../../state/query";
-
-import ModalUserView from "@/components/ModalUserView.vue";
+import { namespace } from "vuex-class";
 import { Moment } from "moment";
-import { dateTimeFormat, dateFormat } from "../../values";
 import { dragscroll } from "vue-dragscroll";
+
+import { IExistingValueRef, ValueRef } from "@/local_user_view";
+import { IFieldRef } from "@/api";
+import { IQuery, queryLocation } from "@/state/query";
+import { dateTimeFormat, dateFormat } from "@/values";
 
 export type CardColType = "text" | "image";
 export type CardTarget = "modal" | "top" | "blank";
@@ -97,29 +90,28 @@ interface ICardStyle {
   backgrondColor?: string;
 }
 
+const query = namespace("query");
 
-@Component({ components: { ModalUserView }, directives: { dragscroll }})
+@Component({ directives: { dragscroll }})
 export class Card extends Vue {
+  @query.Action("addWindow") addWindow!: (query: IQuery) => Promise<void>;
   @Prop({ type: Object, required: true }) data!: ICard;
   @Prop({ type: Boolean, required: false, default: false }) selected!: boolean;
   @Prop({ type: Boolean, required: false, default: false }) dragging!: boolean;
   @Prop({ type: Number, required: true }) width!: number;
   @Prop({ type: String, required: false, default: () => 'top' }) target!: CardTarget;
 
-  modalView: IQuery | null = null;
-
   private openModal() {
     if (!this.dragging && this.data.cardView) {
       if (this.target === 'top') {
-        const url = queryLocation(this.data.cardView);
-        this.$router.push(url);
+        this.$emit("goto", this.data.cardView);
       } else if (this.target === 'blank') {
         const url = this.$router.resolve(
           queryLocation(this.data.cardView),
         );
         window.open(url.href, '_blank');
       } else if (this.target === 'modal') {
-        this.modalView = this.data.cardView;
+        this.addWindow(this.data.cardView);
       }
     }
   }

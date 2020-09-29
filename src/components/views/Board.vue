@@ -35,6 +35,7 @@
       :add="changeGroup"
       :move="changeOrder"
       :card-target="cardTarget"
+      @goto="$emit('goto', $event)"
     />
   </div>
 </template>
@@ -50,7 +51,7 @@ import { UserView } from "@/components";
 import BaseUserView from "@/components/BaseUserView";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
 import { LocalUserView, IExistingValueRef, ValueRef } from "@/local_user_view";
-import { CombinedUserView, IValueInfo, IUserViewValueRef, ICombinedValue, IRowCommon, ICombinedRow, valueToPunnedText } from "@/state/user_view";
+import { CombinedUserView, IValueInfo, IUserViewValueRef, ICombinedValue, IRowCommon, ICombinedRow, valueToPunnedText, referenceEntries } from "@/state/user_view";
 
 import Board from "@/components/kanban/Board.vue";
 import { ICard, ICardCol, ICardRow, CardColType, allowedTargets } from "@/components/kanban/Card.vue";
@@ -61,6 +62,7 @@ import BaseEntriesView from "../BaseEntriesView";
 import { IFieldInfo } from "../../values";
 
 import Errorbox from "@/components/Errorbox.vue";
+import { FieldType } from "ozma-api/src";
 
 interface ICardExtra {
   groupRef: IExistingValueRef;
@@ -79,11 +81,9 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
   selectedCards: any[] = [];
 
   get entriesEntity() {
-    const fieldTypePath = ["info", "columns", this.groupIndex, "mainField", "field", "fieldType"];
-    const fieldType = R.path<IReferenceFieldType>(fieldTypePath, this.uv);
-    const entity = R.path<IEntityRef>(['entity'], fieldType);
-    if (fieldType && fieldType.type === "reference" && entity) {
-      return { entity };
+    const fieldType = this.uv.info.columns[this.groupIndex].mainField?.field.fieldType;
+    if (fieldType && fieldType.type === "reference") {
+      return referenceEntries(fieldType);
     }
     return null;
   }
@@ -123,17 +123,8 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
   }
 
   get columnNames(): string[] | null {
-    const oldRawColumns = R.path(["board", "columns"], this.uv.attributes) || R.path(["board", "Columns"], this.uv.attributes);
-    if (oldRawColumns) {
-      console.error("Using deprecated attribute `board.columns`. Use `board_columns` instead.")
-    }
-    const newRawColumns = this.uv.attributes["board_columns"];
-    if (!newRawColumns && !oldRawColumns) {
-      return null;
-    }
-    
-    const rawColumns = newRawColumns || oldRawColumns;
-    if (!(rawColumns instanceof Array)) {
+    const rawColumns = this.uv.attributes["board_columns"];
+    if (!rawColumns || !(rawColumns instanceof Array)) {
       return null;
     }
 

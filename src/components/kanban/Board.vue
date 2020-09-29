@@ -18,6 +18,7 @@
       :header-color="columnHeaderColor"
       :add="add"
       :move="move"
+      @goto="$emit('goto', $event)"
     />
   </div>
   <!-- </draggable> -->
@@ -45,7 +46,7 @@ export default class Board extends Vue {
   @Prop({ type: String, required: false }) cardTarget!: CardTarget;
 
   private get isMobile(): boolean {
-    return isMobile();
+    return isMobile;
   }
 
   private getColumnTitle(id: number, title: string) {

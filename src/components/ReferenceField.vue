@@ -16,19 +16,12 @@
 <template>
   <div>
     <!-- Used when user selects an entry -->
-    <ModalUserView
+    <SelectUserView
       v-if="selectedView"
       :initial-view="selectedView"
       :select-entity="entry.entity"
       @select="$emit('update', $event); selectedView = null"
       @close="selectedView = null"
-    />
-
-    <!-- Used when user opens a model window for an entry ("modal" button) -->
-    <ModalUserView
-      v-if="nestedView !== null"
-      :initial-view="nestedView"
-      @close="nestedView = null"
     />
 
     <MultiSelect
@@ -56,11 +49,11 @@
             type="button"
             class="material-icons reference__open_modal"
             value="flip_to_front"
-            @click.stop="nestedView = select.valueOption.meta.link"
+            @click.stop="addWindow(select.valueOption.meta.link)"
           >
           <UserViewLink
             :uv="select.valueOption.meta.link"
-            @[indirectLinks?`click`:null]="$emit('goto', $event)"
+            @click="$emit('goto', $event)"
           >
             {{ select.valueOption.label }}
           </UserViewLink>
@@ -112,21 +105,26 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
+import { namespace } from "vuex-class";
+
 import { IUserViewArguments, ICombinedValue, homeSchema, currentValue, IEntriesRef } from "@/state/user_view";
 import { IQuery, attrToQueryRef } from "@/state/query";
-import ModalUserView from "@/components/ModalUserView.vue";
+import SelectUserView from "@/components/SelectUserView.vue";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import MultiSelect from "@/components/multiselect/MultiSelect.vue";
 import { Action } from "@/components/ActionsMenu.vue";
 import BaseEntriesView from "@/components/BaseEntriesView";
 
+const query = namespace("query");
+
 @Component({
   components: {
-    ModalUserView,
+    SelectUserView,
     MultiSelect,
   },
 })
 export default class ReferenceField extends mixins(BaseEntriesView) {
+  @query.Action("addWindow") addWindow!: (query: IQuery) => Promise<void>;
   @Prop({ type: Array, required: true }) actions!: Action[];
   @Prop({ type: Object, required: true }) value!: ICombinedValue;
   @Prop({ type: Object, required: true }) entry!: IEntriesRef;
@@ -136,13 +134,12 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
   @Prop({ type: Boolean, default: false }) isDisabled!: boolean;
   @Prop({ type: Boolean, default: false }) isNullable!: boolean;
   @Prop({ type: Boolean, default: false }) dontOpen!: boolean;
-  @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
   @Prop({ type: Number }) height!: number | undefined;
   @Prop({ type: Object }) controlStyle!: any;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
+
   private selectedView: IQuery | null = null;
-  private nestedView: IQuery | null = null;
 
   get entriesEntity() {
     return this.entry;

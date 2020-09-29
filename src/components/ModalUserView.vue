@@ -16,18 +16,19 @@
     to="tabbed-modal"
     :tab-name="title"
     @close="$emit('close')"
+    :selected="selected"
   >
     <section class="section-modal">
       <UserView
-        :args="currentView.args"
-        :default-values="currentView.defaultValues"
-        :selection-mode="selectEntity !== undefined"
-        indirect-links
+        :is-root="isRoot"
+        :args="view.args"
+        :default-values="view.defaultValues"
+        :selection-mode="selectionMode"
         :scope="uid"
         @update:actions="extraActions = $event"
         @update:title="title = $event"
-        @goto="goto"
-        @select="selectFromView"
+        @goto="$emit('goto', $event)"
+        @select="$emit('select', $event)"
       />
       <div
         v-if="!changes.isScopeEmpty(uid)"
@@ -53,79 +54,34 @@ import { IEntityRef, IEntity } from "@/api";
 import { equalEntityRef } from "@/values";
 import { Action } from "@/components/ActionsMenu.vue";
 import { IQuery } from "@/state/query";
-import { ErrorKey } from "@/state/errors";
 import { CurrentChanges, ScopeName } from "@/state/staging_changes";
 import { ISelectionRef } from "@/components/BaseUserView";
 import ModalPortal from "@/components/modal/ModalPortal";
 
 const staging = namespace("staging");
-const userView = namespace("userView");
-const errors = namespace("errors");
-
-const errorKey = "modal_user_view";
 
 @Component({ components: { ModalPortal }})
 export default class ModalUserView extends Vue {
   @staging.State("current") changes!: CurrentChanges;
   @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
   @staging.Action("removeScope") removeScope!: (scope: ScopeName) => Promise<void>;
-  @userView.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
-  @errors.Mutation("setError") setError!: (args: { key: ErrorKey; error: string }) => void;
-  @errors.Mutation("resetErrors") resetErrors!: (key: ErrorKey) => void;
-  @Prop({ type: Object }) selectEntity!: IEntityRef | undefined;
-  @Prop({ type: Object, required: true }) initialView!: IQuery;
+  @Prop({ type: Boolean, default: false }) isRoot!: boolean;
+  @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
+  @Prop({ type: Object, required: true }) view!: IQuery;
+  @Prop({ type: Boolean, default: false }) selected!: boolean;
 
-  private extraActions: Action[] = [];
-  private currentView: IQuery = this.initialView;
   private title = "";
 
-  get actions() {
-    return this.extraActions.map(action => {
-      if ("query" in action) {
-        return { name: action.name, callback: () => this.goto(action.query) };
-      } else {
-        return action;
-      }
-    });
-  }
-
   get saveAndSelect() {
-    return this.currentView.args.args === null;
+    return this.view.args.args === null;
   }
 
   private saveView() {
     this.submitChanges(this.uid);
   }
 
-  private async selectFromView(selection: ISelectionRef) {
-    if (this.selectEntity === undefined) {
-      throw new Error("Impossible");
-    }
-
-    const entityInfo = await this.getEntity(this.selectEntity);
-    if (!(equalEntityRef(this.selectEntity, selection.entity) || entityInfo.children.some(x => equalEntityRef(x.ref, selection.entity)))) {
-      const message = "Entry from invalid entity selected";
-      this.setError({ key: errorKey, error: message });
-      throw new Error(message);
-    } else {
-      this.resetErrors(errorKey);
-    }
-
-    this.$emit("select", selection.id);
-  }
-
-  @Watch("actions", { deep: true, immediate: true })
-  private pushActions() {
-    this.$emit("update:actions", this.actions);
-  }
-
   private destroyed() {
-    this.resetErrors(errorKey);
     this.removeScope(this.uid);
-  }
-
-  private goto(query: IQuery) {
-    this.currentView = query;
   }
 }
 </script>

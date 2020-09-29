@@ -18,7 +18,7 @@
       <UserViewLink
         v-if="localValue.link !== undefined"
         :uv="localValue.link"
-        @[indirectLinks?`click`:null]="$emit('goto', $event)"
+        @click="$emit('goto', $event)"
       >
         <checkbox
           v-if="valueType === 'bool'"
@@ -64,7 +64,6 @@ export default class TableCell extends Vue {
   @Prop({ type: Object, required: true }) localValue!: any;
   @Prop({ type: Object, required: true }) column!: any;
   @Prop({ type: Number, required: true }) columnPosition!: number;
-  @Prop({ type: Boolean, default: false }) indirectLinks!: boolean;
   @Prop({ type: String, default: "existing" }) from!: string;
   @Prop({ type: Number, default: null }) lastFixedColumnIndex!: number;
   @Prop({ type: Number, default: null }) index!: number;
