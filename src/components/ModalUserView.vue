@@ -69,7 +69,7 @@ const staging = namespace("staging");
 @Component({ components: { ModalPortal }})
 export default class ModalUserView extends Vue {
   @staging.State("current") changes!: CurrentChanges;
-  @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
+  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void> }) => Promise<void>;
   @staging.Action("removeScope") removeScope!: (scope: ScopeName) => Promise<void>;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
@@ -78,8 +78,8 @@ export default class ModalUserView extends Vue {
 
   private title = "";
 
-  private saveView() {
-    this.submitChanges(this.uid);
+  private async saveView() {
+    await this.submitChanges({ scope: this.uid });
   }
 
   private destroyed() {

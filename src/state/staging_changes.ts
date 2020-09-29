@@ -235,7 +235,7 @@ const startAutoSave = (context: ActionContext<IStagingState, {}>) => {
 
   if (state.autoSaveTimeout !== null) {
     const timeoutId = setTimeout(() => {
-      dispatch("submit");
+      dispatch("submit", {});
     }, state.autoSaveTimeout);
     commit("setAutoSaveHandler", timeoutId);
   }

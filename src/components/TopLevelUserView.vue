@@ -119,7 +119,7 @@
             'save_button__error': errors.length > 0,
           }]"
           :title="$t('save')"
-          @click="submitChanges('root')"
+          @click="submitChanges({ scope: 'root' })"
         >
           <input
             v-if="errors.length > 0"
@@ -180,7 +180,7 @@ export default class TopLevelUserView extends Vue {
   @userView.Mutation("clear") clearView!: () => void;
   @userView.State("current") userViews!: CurrentUserViews;
   @staging.State("current") changes!: CurrentChanges;
-  @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
+  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void> }) => Promise<void>;
   @staging.Action("reset") clearChanges!: () => Promise<void>;
   @query.State("current") query!: ICurrentQueryHistory | null;
   @query.Action("resetRoute") resetRoute!: (_: Route) => void;

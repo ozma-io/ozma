@@ -675,7 +675,7 @@ const staging = namespace("staging");
 export default class UserViewTable extends mixins<BaseUserView<LocalTableUserView, ITableValueExtra, ITableRowExtra, ITableUserViewExtra>>(BaseUserView) {
   @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
   @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
-  @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
+  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void> }) => Promise<void>;
   @userView.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IEntriesRef; reference: ReferenceName }) => void;
   @userView.Action("getEntries") getEntries!: (args: { reference: ReferenceName; ref: IEntriesRef }) => Promise<Entries>;
 
@@ -895,7 +895,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
   
     if ('loss_of_focus_save' in this.uv.attributes && Boolean(this.uv.attributes['loss_of_focus_save']))
-      this.submitChanges(this.scope);
+      this.submitChanges({ scope: this.scope });
 
     this.removeAutoSaveLock(this.editing.lock);
     this.editing = null;

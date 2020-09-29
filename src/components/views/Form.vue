@@ -196,8 +196,6 @@ class LocalFormUserView extends LocalUserView<IFormValueExtra, IFormRowExtra, IF
 }
 
 const query = namespace("query");
-const actions = namespace("actions");
-const staging = namespace("staging");
 
 @UserView({
   localConstructor: LocalFormUserView,
@@ -209,7 +207,6 @@ const staging = namespace("staging");
 })
 export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView, IFormValueExtra, IFormRowExtra, IFormUserViewExtra>>(BaseUserView) {
   @query.State("previous") previousQuery!: IQuery | null;
-  @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
 
   private deletedOne = false;
   private toBeDeletedRef: RowRef | null = null;
