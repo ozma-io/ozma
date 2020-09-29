@@ -72,14 +72,7 @@
             ]"
             @click="select.addOptionToValue(option, $event)"
           >
-            <UserViewLink
-              v-if="option.meta && option.meta.link"
-              :uv="option.meta.link"
-              @click="$emit('goto', $event)"
-            >
-              {{ option.label }}
-            </UserViewLink>
-            <span v-else>
+            <span>
               {{ option.label }}
             </span>
           </li>
