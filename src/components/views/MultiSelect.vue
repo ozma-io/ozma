@@ -106,6 +106,7 @@ import BaseUserView, { ISelectionRef } from "@/components/BaseUserView";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
 import MultiSelect from "@/components/multiselect/MultiSelect.vue";
+import { attrToLinkRef } from "@/links";
 
 const findSelectColumnIndex = (attrs: { [key: string]: any}) =>
   Number(Object.keys(attrs).filter(key => R.pathOr(false, [key, "select"], attrs))[0]);
@@ -203,7 +204,7 @@ export default class UserViewMultiSelect extends mixins<BaseUserView<LocalEmptyU
           value: Number(key),
           label: value,
           meta: {
-            link: attrToQueryRef(linkedView, Number(key)),
+            link: attrToLinkRef(linkedView, Number(key)),
           },
         }));
         return options;
