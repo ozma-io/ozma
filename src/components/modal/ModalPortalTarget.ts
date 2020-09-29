@@ -71,8 +71,7 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
 
   private openFullscreen(index: number) {
     const modalPortal = this.passengers[index].context!.$children[0] as any;
-    const route = router.resolve(queryLocation(modalPortal.view));
-    window.open(route.href, '_blank');
+    router.push(queryLocation(modalPortal.view));
   }
 
   private close(index: number) {
