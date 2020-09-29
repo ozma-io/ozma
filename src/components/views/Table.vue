@@ -4,6 +4,7 @@
         "clear": "Clear",
         "yes": "Yes",
         "no": "No",
+        "add": "➕Add",
         "remove_selected_rows": "Remove selected rows",
         "show_new_row": "Add/remove new row"
       },
@@ -11,6 +12,7 @@
         "clear": "Очистить",
         "yes": "Да",
         "no": "Нет",
+        "add": "➕Добавить",
         "remove_selected_rows": "Удалить выбранные записи",
         "show_new_row": "Добавить/убрать новую строку"
       }
@@ -135,6 +137,7 @@
               @goto="$emit('goto', $event)"
             />-->
             <TableRow
+              ref="emptyRowRef"
               :row="local.emptyRow.row"
               :local-row="local.emptyRow.local"
               :base-local-row="baseLocal.emptyRow.local"
@@ -205,6 +208,12 @@
           </template>
         </tbody>
       </table>
+      <input
+        v-if="baseLocal.extra.rowCount < 11"
+        type="button" 
+        :value="this.$t('add').toString()"
+        class="button"
+        @click="setShowEmptyRow(true)"/>
     </div>
   </div>
 </template>
@@ -831,6 +840,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
           this.local.selectCell({type: "new", column: colI}, false);
         });
       }
+      nextRender().then(() => {
+        const emptyRowRefElement = this.$refs.emptyRowRef as Element | undefined;
+        if (emptyRowRefElement !== undefined)
+          this.clickCell({type:"new", column: 1}, null, emptyRowRefElement.$children[0].$el);
+      });
     }
   }
 
@@ -893,11 +907,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     this.cellEditHeight = value;
   }
 
-  private setCoordsForEditCell(event: MouseEvent | any) {
-    this.isSelectedLastFixedCell = event.target.classList.value.includes('next-after-last-fixed');
+  private setCoordsForEditCell(target: any) {
+    this.isSelectedLastFixedCell = target.classList.value.includes('next-after-last-fixed');
 
     const bodyRect = document.body.getBoundingClientRect();
-    const rect = event.target.getBoundingClientRect();
+    const rect = target.getBoundingClientRect();
 
     this.editCoords.x = rect.x;
 
@@ -911,11 +925,18 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
   }
 
-  private clickCell(ref: ValueRef, event: MouseEvent | any) {
+  private clickCell(ref: ValueRef, event: MouseEvent | any, target: any) {
     this.removeCellEditing();
+
+    if (event == null) {
+      this.setCellEditing(ref);
+    } else {
+      target = event.target;
+    };
 
     // this.selectCell() breaks the timer for double click in iOS,
     // so when we're running iOS we don't check for double click
+    if (event !== null)
     if (this.clickTimeoutId === null) {
       this.clickTimeoutId = setTimeout(() => {
         this.clickTimeoutId = null;
@@ -931,10 +952,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       }
     }
 
-    this.setCoordsForEditCell(event);
-    this.editParams.width = event.target.offsetWidth;
-    this.editParams.height = event.target.offsetHeight;
-    this.editParams.minHeight = event.target.offsetHeight;
+    this.setCoordsForEditCell(target);
+    this.editParams.width = target.offsetWidth;
+    this.editParams.height = target.offsetHeight;
+    this.editParams.minHeight = target.offsetHeight;
 
     this.selectCell(ref);
     if (this.lastSelectedValue &&
@@ -1102,7 +1123,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   private updateRows() {
     this.buildRowPositions();
-    this.setShowEmptyRow(this.uv.rows === null || this.uv.rows.length === 0);
+    // this.setShowEmptyRow(this.uv.rows === null || this.uv.rows.length === 0);
   }
 
   /*
@@ -1239,6 +1260,23 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     border: 1px solid var(--MainBackgroundColor);
   }
 
+  .button {
+    background-color: transparent;
+    border: 1px solid var(--MainBorderColor);
+    border-radius: 5px;
+    color: var(--MainTextColorLight);
+    padding: 2px 5px;
+    margin: 5px 0;
+  }
+
+  .button:hover {
+    color: var(--MainTextColor);
+  }
+
+  .button:focus {
+    outline: 0 !important;
+  }
+
   .table-block {
     width: 100%;
     margin: 0;
@@ -1302,10 +1340,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     border-spacing: 0;
     table-layout: fixed;
     width: 0;
-    border: 0;
+    border: 1px solid var(--MainBorderColor);
     background-color: var(--TableBackColor);
-    margin-bottom: -1px !important;
-    border-bottom: 1px solid var(--MainBorderColor);
+    margin: 0;
   }
 
   .table-th {
