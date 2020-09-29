@@ -46,6 +46,7 @@
           class="single_value"
         >
           <FunLink
+            class="single_value__link"
             :link="select.valueOption.meta.link"
             @goto="$emit('goto', $event)"
           >
@@ -181,6 +182,10 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
   .select_container__options_list__option > a {
     color: var(--MainTextColor);
     text-decoration: underline;
+  }
+
+  .single_value__link {
+    display: flex;
   }
 
   .reference__open_modal {
