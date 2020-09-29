@@ -1187,7 +1187,7 @@ const userViewModule: Module<IUserViewState, {}> = {
 
     registerHandler: (state, { args, handler }: { args: IUserViewArguments; handler: IUserViewEventHandler }) => {
       const uv = state.current.getUserView(args);
-      if (!(uv instanceof CombinedUserView)) {
+      if (uv === undefined) {
         throw new Error("User view does not exist");
       }
       if (uv.handlers.includes(handler)) {
@@ -1197,7 +1197,7 @@ const userViewModule: Module<IUserViewState, {}> = {
     },
     unregisterHandler: (state, { args, handler }: { args: IUserViewArguments; name: ReferenceName; handler: IUserViewEventHandler }) => {
       const uv = state.current.getUserView(args);
-      if (!(uv instanceof CombinedUserView)) {
+      if (uv === undefined) {
         return;
       }
       const pos = uv.handlers.indexOf(handler);
@@ -1317,12 +1317,13 @@ const userViewModule: Module<IUserViewState, {}> = {
         if (!(reference in oldResource.refs)) {
           commit("addUserViewConsumer", { args, reference });
         }
-        if (oldResource.value instanceof CombinedUserView) {
-          return Promise.resolve(oldResource.value);
-        } else if (oldResource.value instanceof Promise) {
-          return oldResource.value;
+        const data = oldResource.value.data;
+        if (data instanceof CombinedUserView) {
+          return Promise.resolve(data);
+        } else if (data instanceof Promise) {
+          return data;
         } else {
-          return Promise.reject(oldResource.value);
+          return Promise.reject(data);
         }
       }
 

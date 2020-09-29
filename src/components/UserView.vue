@@ -280,7 +280,7 @@ export default class UserView extends Vue {
       const newType = userViewType(newUv);
       const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType}.vue`)).default;
       // Check we weren't restarted.
-      if (newUv !== this.newUv) {
+      if (newUv !== this.currentUvs.getUserViewOrError(this.args)) {
         return;
       }
 
@@ -309,7 +309,7 @@ export default class UserView extends Vue {
       this.baseLocal = null;
       this.component = null;
     } else if (newUv === null) {
-      this.requestView();
+      await this.requestView();
     }
   }
 
@@ -324,16 +324,16 @@ export default class UserView extends Vue {
   // We should request a view:
   // * when arguments change (different view selected);
   // * when current view is `null` (view is not yet requested).
-  private requestView() {
+  private async requestView() {
     if (!this.waitReload) {
-      this.getUserView({ args: this.args, root: this.isRoot, reference: this.uid });
+      await this.getUserView({ args: this.args, root: this.isRoot, reference: this.uid });
     }
   }
 
   @Watch("waitReload")
-  private reloadWhenUnblocked(newValue: boolean, oldValue: boolean) {
+  private async reloadWhenUnblocked(newValue: boolean, oldValue: boolean) {
     if (oldValue && !newValue) {
-      this.requestView();
+      await this.requestView();
     }
   }
 
@@ -365,10 +365,10 @@ export default class UserView extends Vue {
   }
 
   @Watch("args", { deep: true })
-  private argsChanged(newArgs: IUserViewArguments, oldArgs: IUserViewArguments) {
+  private async argsChanged(newArgs: IUserViewArguments, oldArgs: IUserViewArguments) {
     if (!deepEquals(oldArgs, newArgs)) {
       this.destroyUserView(oldArgs);
-      this.requestView();
+      await this.requestView();
     }
   }
 

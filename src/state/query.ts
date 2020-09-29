@@ -464,7 +464,17 @@ const queryModule: Module<IQueryState, {}> = {
         throw new Error("No current query");
       }
       const window = state.current.windows[index];
-      replaceHistory(window.query, query);
+      const newQuery = replaceHistory(window.query, query);
+      deepUpdateObject(window.query, newQuery);
+      state.resetLocks += 1;
+    },
+    pushWindow: (state, { index, query }: { index: number; query: IQuery }) => {
+      if (state.current === null) {
+        throw new Error("No current query");
+      }
+      const window = state.current.windows[index];
+      const newQuery = pushHistory(window.query, query);
+      deepUpdateObject(window.query, newQuery);
       state.resetLocks += 1;
     },
     replaceWindowSearch: (state, { index, search }: { index: number; search: string }) => {
@@ -523,6 +533,14 @@ const queryModule: Module<IQueryState, {}> = {
       commit("selectWindow", windowIndex);
       try {
         await router.replace(currentQueryLocation(state.current!));
+      } finally {
+        commit("removeResetLock");
+      }
+    },
+    pushWindow: async ({ state, commit }, args: { index: number; query: IQuery }) => {
+      commit("pushWindow", args);
+      try {
+        await router.push(currentQueryLocation(state.current!));
       } finally {
         commit("removeResetLock");
       }

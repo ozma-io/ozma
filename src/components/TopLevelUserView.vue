@@ -43,7 +43,7 @@
         :view="window.query"
         :selected="query.selectedWindow === i"
         @close="closeWindow(i)"
-        @goto="replaceWindow({index: i, query: $event})"
+        @goto="pushWindow({index: i, query: $event})"
       />
     </template>
 
@@ -187,7 +187,7 @@ export default class TopLevelUserView extends Vue {
   @query.Action("pushRoot") pushRoot!: (_: IQuery) => Promise<void>;
   @query.Action("replaceRootSearch") replaceRootSearch!: (_: string) => Promise<void>;
   @query.Action("closeWindow") closeWindow!: (_: number) => Promise<void>;
-  @query.Action("replaceWindow") replaceWindow!: (_: { index: number; query: IQuery }) => Promise<void>;
+  @query.Action("pushWindow") pushWindow!: (_: { index: number; query: IQuery }) => Promise<void>;
   @errors.Mutation("removeError") removeError!: (params: { key: ErrorKey; index: number }) => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
 
@@ -201,7 +201,6 @@ export default class TopLevelUserView extends Vue {
     super();
     this.styleNode = document.createElement("style");
     this.styleNode.type = "text/css";
-    this.resetRoute(this.$route);
   }
 
   get errors() {

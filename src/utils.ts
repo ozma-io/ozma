@@ -159,10 +159,12 @@ export const deepUpdateObject = (to: object, from: object) => {
       Vue.set(to, name, newValue);
     } else {
       const oldValue = (to as any)[name];
-      if (typeof oldValue === "object" && oldValue !== null && typeof newValue === "object" && newValue !== null) {
-        deepUpdateObject(oldValue, newValue);
-      } else if (oldValue !== newValue) {
-        Vue.set(to, name, newValue);
+      if (oldValue !== newValue) {
+        if (typeof oldValue === "object" && oldValue !== null && typeof newValue === "object" && newValue !== null) {
+          deepUpdateObject(oldValue, newValue);
+        } else {
+          Vue.set(to, name, newValue);
+        }
       }
     }
   });

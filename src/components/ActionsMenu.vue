@@ -84,6 +84,7 @@ import { RawLocation } from "vue-router";
 
 import { IQuery } from "@/state/query";
 import UserViewLink from "@/components/UserViewLink";
+import { IActionRef } from "ozma-api/src";
 
 export interface IAction {
   name: string;
