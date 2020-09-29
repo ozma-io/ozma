@@ -167,6 +167,9 @@ export default class Input extends Vue {
     if (!this.dontFocus) {
       this.focused = true;
     }
+    if (!this.isMobile) {
+      this.updateWidth(this.value);
+    }
   }
 
   private onBlur(evt: Event) {
