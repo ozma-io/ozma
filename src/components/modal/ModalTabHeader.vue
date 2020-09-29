@@ -10,6 +10,12 @@
       class="material-icons modal__tab_close_button"
       @click.stop="$emit('tab-close')"
     >
+    <input
+      type="button"
+      value="fullscreen"
+      class="material-icons modal__tab_fullscreen_button"
+      @click.stop="$emit('tab-fullscreen')"
+    >
   </div>
 </template>
 
@@ -65,12 +71,28 @@ export default class ModalTabHeader extends Vue {
     float: right;
   }
 
+  .modal__tab_fullscreen_button {
+    visibility: hidden;
+    line-height: 1.25em;
+    font-size: 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    float: right;
+  }
+
   .modal__tab_header.selected > .modal__tab_close_button,
-  .modal__tab_header:hover > .modal__tab_close_button {
+  .modal__tab_header:hover > .modal__tab_close_button,
+  .modal__tab_header.selected > .modal__tab_fullscreen_button,
+  .modal__tab_header:hover > .modal__tab_fullscreen_button {
     visibility: visible;
   }
 
   .modal__tab_header.only_tab > .modal__tab_close_button {
-    visibility: hidden;
+    display: none;
+  }
+
+  .modal__tab_header.only_tab > .modal__tab_fullscreen_button {
+    visibility: visible;
   }
 </style>

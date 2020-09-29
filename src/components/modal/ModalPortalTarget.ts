@@ -4,6 +4,8 @@ import { PortalTarget } from "portal-vue";
 
 import { IModalTab } from "@/components/modal/types";
 import Modal from "@/components/modal/Modal.vue";
+import {router} from "@/modules";
+import {queryLocation} from "@/state/query";
 
 interface IInternalModalTab extends IModalTab {
   tab: any;
@@ -27,6 +29,7 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
         /* eslint-disable @typescript-eslint/unbound-method */
         close: this.closeAll,
         "tab-close": this.close,
+        "tab-fullscreen": this.openFullscreen,
         /* eslint-enable @typescript-eslint/unbound-method */
       },
     });
@@ -64,6 +67,12 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
 
   private get showModal(): boolean {
     return this.passengers.length > 0;
+  }
+
+  private openFullscreen(index: number) {
+    const modalPortal = this.passengers[index].context!.$children[0] as any;
+    const route = router.resolve(queryLocation(modalPortal.view));
+    window.open(route.href, '_blank');
   }
 
   private close(index: number) {

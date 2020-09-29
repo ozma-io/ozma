@@ -16,6 +16,7 @@
     to="tabbed-modal"
     :tab-name="title"
     :selected="selected"
+    :view="view"
     @close="$emit('close')"
   >
     <section class="section-modal">
