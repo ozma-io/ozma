@@ -29,6 +29,8 @@
     <b-row v-else-if="blockContent.type === 'buttons'">
       <b-col>
         <FunLink
+          v-for="(subBlock, subBlockI) in blockContent.actions"
+          :key="subBlockI"
           :link="subBlock.link"
           @goto="gridProps.goto"
         >
