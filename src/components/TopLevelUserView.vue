@@ -66,6 +66,7 @@
         <ActionsMenu
           title="view_headline"
           :actions="actions"
+          @goto="pushRoot"
         />
         <span v-if="!!title" class="head-menu_title">{{ title }}</span>
         <SearchPanel
