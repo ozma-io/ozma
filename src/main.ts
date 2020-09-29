@@ -9,7 +9,7 @@ import * as Modules from "@/modules";
 import { setHeadTitle } from "@/elements";
 
 import UserView from "@/components/UserView.vue";
-import UserViewLink from "@/components/UserViewLink";
+import FunLink from "@/components/FunLink";
 import ActionsMenu from "@/components/ActionsMenu.vue";
 import FormControl from "@/components/FormControl.vue";
 import App from "@/App.vue";
@@ -22,7 +22,6 @@ import userViewModule from "@/state/user_view";
 import stagingChangesModule from "@/state/staging_changes";
 import queryModule from "@/state/query";
 import errorsModule from "@/state/errors";
-import actionsModule from "@/state/actions";
 
 import "@/styles/style.scss";
 
@@ -36,7 +35,6 @@ export const store = new Vuex.Store({
     staging: stagingChangesModule,
     query: queryModule,
     errors: errorsModule,
-    actions: actionsModule,
   },
 });
 
@@ -45,7 +43,7 @@ Vue.use(TextareaAutosize);
 Vue.component("UserView", UserView);
 Vue.component("ActionsMenu", ActionsMenu);
 Vue.component("FormControl", FormControl);
-Vue.component("UserViewLink", UserViewLink);
+Vue.component("FunLink", FunLink);
 
 Modules.router.beforeResolve((to, from, next) => {
   // Reset page title

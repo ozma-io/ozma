@@ -1,16 +1,146 @@
 import { Module } from "vuex";
 import { RawLocation, Route } from "vue-router";
 
-import { UserViewSource, IUserViewRef, SchemaName } from "@/api";
+import { UserViewSource } from "@/api";
 import { deepUpdateObject, mapMaybe, deepClone } from "@/utils";
 import { router } from "@/modules";
 import { IUserViewArguments, IValueInfo } from "@/state/user_view";
+import { SchemaName, IUserViewRef } from "ozma-api/src";
 
 export interface IQuery {
   args: IUserViewArguments;
   defaultValues: Record<string, any>;
   search: string;
 }
+
+export interface IAttrToQueryOpts {
+  homeSchema?: SchemaName;
+  infoByDefault?: boolean; // Whether to create new entries by default
+  makeDefaultValues?: () => Record<string, any>;
+}
+
+export const attrToRef = (ref: any, opts?: IAttrToQueryOpts): { schema: string; name: string } | null => {
+  const name = ref["name"];
+  let schema = ref["schema"];
+  if (typeof name !== "string") {
+    return null;
+  }
+  if (schema === undefined) {
+    if (opts?.homeSchema !== undefined) {
+      schema = opts.homeSchema;
+    } else {
+      return null;
+    }
+  } else if (typeof schema !== "string") {
+    return null;
+  }
+  return { schema, name };
+};
+
+export const attrToRecord = (rawArgs: any): Record<string, any> | null => {
+  if (rawArgs === undefined) {
+    return {};
+  } else if (typeof rawArgs !== "object") {
+    return null;
+  } else {
+    return rawArgs;
+  }
+};
+
+export const attrObjectToQuery = (linkedAttr: any, opts?: IAttrToQueryOpts): IQuery | null => {
+  let ref: IUserViewRef | null;
+  if (typeof linkedAttr["ref"] === "object" && linkedAttr["ref"] !== null) {
+    ref = attrToRef(linkedAttr["ref"]);
+  } else {
+    ref = attrToRef(linkedAttr);
+  }
+  if (ref === null) {
+    return null;
+  }
+
+  let args: Record<string, any> | null;
+  const newAttr = linkedAttr["new"];
+  if (newAttr || (newAttr === undefined && opts?.infoByDefault)) {
+    args = null;
+  } else {
+    const retArgs = attrToRecord(linkedAttr["args"]);
+    if (retArgs === null) {
+      return null;
+    }
+    args = retArgs;
+  };
+
+  let defaultValues: Record<string, any>;
+  if (linkedAttr["default_values"]) {
+    const def = attrToRecord(linkedAttr["default_values"]);
+    if (def === null) {
+      return null;
+    }
+    defaultValues = def;
+  } else if (opts?.makeDefaultValues !== undefined) {
+    defaultValues = opts.makeDefaultValues();
+  } else {
+    defaultValues = {};
+  }
+
+  return {
+    defaultValues,
+    args: {
+      source: {
+        type: "named",
+        ref: {
+          schema: ref.schema,
+          name: ref.name,
+        },
+      },
+      args,
+    },
+    search: "",
+  };
+}
+
+export const attrToQuery = (linkedAttr: any, opts?: IAttrToQueryOpts): IQuery | null => {
+  if (typeof linkedAttr === "object") {
+    return attrObjectToQuery(linkedAttr, opts);
+  } else {
+    return null;
+  }
+};
+
+// Set 'id' argument to the value id.
+export const setIdSelf = (args: Record<string, any>, update: IValueInfo) => {
+  if (!("id" in args)) {
+    args.id = update.id;
+  }
+};
+
+// Set 'id' argument to the id of the referenced value.
+export const setIdRef = (args: Record<string, any>, value: any) => {
+  if (!("id" in args)) {
+    const id = Number(value);
+    if (!Number.isNaN(id)) {
+      args.id = id;
+    }
+  }
+};
+
+// Set 'id' argument to the value id.
+export const attrToQuerySelf = (linkedAttr: any, update?: IValueInfo, opts?: IAttrToQueryOpts): IQuery | null => {
+  const ret = attrToQuery(linkedAttr, opts);
+  if (ret?.args.args && update) {
+    setIdSelf(ret.args.args, update);
+  }
+  return ret;
+};
+
+// Set 'id' argument to the id of the referenced value.
+export const attrToQueryRef = (linkedAttr: any, value: any, opts?: IAttrToQueryOpts): IQuery | null => {
+  const ret = attrToQuery(linkedAttr, opts);
+  if (ret?.args.args && value !== null && value !== undefined) {
+    setIdRef(ret.args.args, value);
+  }
+  return ret;
+};
 
 export const queryLocation = (query: IQuery): RawLocation => {
   if (query.args.source.type !== "named") {
@@ -35,101 +165,6 @@ export const queryLocation = (query: IQuery): RawLocation => {
     params: query.args.source.ref as any,
     query: search,
   };
-};
-
-export interface IAttrToQueryOpts {
-  homeSchema?: SchemaName;
-  infoByDefault?: boolean;
-  makeDefaultValues?: () => Record<string, any>;
-}
-
-export const attrToQuery = (linkedAttr: any, opts?: IAttrToQueryOpts): IQuery | null => {
-  if (typeof linkedAttr === "object" && linkedAttr !== null) {
-    let ref: IUserViewRef;
-    if (typeof linkedAttr["ref"] === "object" && linkedAttr["ref"] !== null) {
-      ref = linkedAttr["ref"];
-    } else {
-      ref = linkedAttr;
-    }
-    if (typeof ref.name !== "string") {
-      return null;
-    }
-    if (typeof ref.schema !== "string") {
-      if (opts && opts.homeSchema !== undefined) {
-        ref.schema = opts.homeSchema;
-      } else {
-        return null;
-      }
-    }
-
-    let args: Record<string, any> | null;
-    if (linkedAttr["new"] || (opts && opts.infoByDefault)) {
-      args = null;
-    } else if (typeof linkedAttr["args"] === "object" && linkedAttr["args"] !== null) {
-      args = linkedAttr["args"];
-    } else {
-      args = {};
-    }
-
-    let defaultValues: Record<string, any>;
-    if (typeof linkedAttr["default_values"] === "object" && linkedAttr["default_values"] !== null) {
-      defaultValues = linkedAttr["default_values"];
-    } else if (typeof linkedAttr["defaultValues"] === "object" && linkedAttr["defaultValues"] !== null) {
-      defaultValues = linkedAttr["defaultValues"];
-    } else if (opts && opts.makeDefaultValues !== undefined) {
-      defaultValues = opts.makeDefaultValues();
-    } else {
-      defaultValues = {};
-    }
-
-    return {
-      defaultValues,
-      args: {
-        source: {
-          type: "named",
-          ref: {
-            schema: ref.schema,
-            name: ref.name,
-          },
-        },
-        args,
-      },
-      search: "",
-    };
-  } else {
-    return null;
-  }
-};
-
-// Set 'id' argument to the value id.
-export const attrToQuerySelf = (linkedAttr: any, update?: IValueInfo, opts?: IAttrToQueryOpts): IQuery | null => {
-  const ret = attrToQuery(linkedAttr, opts);
-  if (ret !== null) {
-    const args = ret.args.args;
-    if (args !== null) {
-      if (!("id" in args) && update) {
-        args.id = update.id;
-      }
-    }
-  }
-  return ret;
-};
-
-// Set 'id' argument to the id of the referenced value.
-export const attrToQueryRef = (linkedAttr: any, value: any, opts?: IAttrToQueryOpts): IQuery | null => {
-  const ret = attrToQuery(linkedAttr, opts);
-  if (ret !== null) {
-    const args = ret.args.args;
-    if (args !== null) {
-      if (!("id" in args) && value !== null && value !== undefined) {
-        const id = Number(value);
-        if (!Number.isNaN(id)) {
-          args.id = id;
-        }
-      }
-    }
-  }
-  return ret;
 };
 
 let windowKey = 0;

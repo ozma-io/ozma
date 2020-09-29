@@ -42,7 +42,7 @@ import { mixins } from "vue-class-component";
 
 import { tryDicts, mapMaybe } from "@/utils";
 import { CombinedUserView, valueToPunnedText, homeSchema, currentValue, ICombinedValue } from "@/state/user_view";
-import { IQuery, attrToQuery, IAttrToQueryOpts } from "@/state/query";
+import { IQuery } from "@/state/query";
 import { CurrentChanges, IEntityChanges } from "@/state/staging_changes";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
 import { UserView } from "@/components";
@@ -50,6 +50,7 @@ import BaseUserView from "@/components/BaseUserView";
 import * as R from "ramda";
 
 import MenuEntry, { MenuValue, IMenuLink } from '@/components/views/menu/MenuEntry.vue';
+import { attrToLink, IAttrToLinkOpts } from "@/links";
 
 @UserView({
   localConstructor: LocalEmptyUserView,
@@ -58,9 +59,9 @@ import MenuEntry, { MenuValue, IMenuLink } from '@/components/views/menu/MenuEnt
 export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>>(BaseUserView) {
   @Prop() uv!: CombinedUserView;
 
-  get linkOpts(): IAttrToQueryOpts {
-    const home = homeSchema(this.uv.args);
-    return home !== null ? { homeSchema: home } : {};
+  get linkOpts(): IAttrToLinkOpts {
+    const home = homeSchema(this.uv.args) || undefined;
+    return { homeSchema: home, queryTypeByDefault: "root" };
   }
 
   private get isCentered(): boolean {
@@ -83,13 +84,10 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
   }
 
   private convertNewMenuEntry(entry: any): MenuValue | null {
-    if (!("name" in entry)) {
+    if (typeof entry.name !== "string") {
       return null;
     }
-    const base: { name: string; size?: number; icon?: string } = { name: String(entry.name) };
-    if ("icon" in entry) {
-      base.icon = entry.icon;
-    }
+    const base: { name: string; size?: number } = { name: entry.name };
     if ("size" in entry) {
       const size = Number(entry.size);
       if (!Number.isNaN(size)) {
@@ -104,12 +102,16 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
       const content = this.convertNewMenuEntries(entry.content);
       return { ...base, content };
     } else {
-      const ref = attrToQuery(entry, this.linkOpts);
+      const ref = attrToLink(entry, this.linkOpts);
+      let icon = undefined;
+      if (typeof entry.icon === "string") {
+        icon = entry.icon;
+      }
       if (ref === null) {
         return null;
       }
 
-      return { ...base, ...ref };
+      return { ...base, icon, link: ref };
     }
   };
 
@@ -170,14 +172,14 @@ export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView
       const buttonAttrs = buttonCell.attributes || {};
       const getButtonAttr = (name: string) => tryDicts(name, buttonAttrs, rowAttrs, buttonsAttrs, viewAttrs);
 
-      const toQuery = attrToQuery(getButtonAttr("linked_view"), this.linkOpts);
+      const toQuery = attrToLink(getButtonAttr("linked_view"), this.linkOpts);
       if (toQuery === null) {
         return;
       }
 
       const button: IMenuLink = {
         name: buttonName,
-        ...toQuery,
+        link: toQuery,
       };
       category.content.push(button);
     });

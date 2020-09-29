@@ -34,7 +34,6 @@ import { ValueRef } from "../../local_user_view";
 import { dragscroll } from "vue-dragscroll";
 import { isMobile } from "@/utils";
 
-
 @Component({ components: { Column, draggable }, directives: { dragscroll } })
 export default class Board extends Vue {
   @Prop({ type: Array, required: true }) columns!: IColumn[];

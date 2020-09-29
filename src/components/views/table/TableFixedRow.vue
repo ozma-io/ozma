@@ -30,13 +30,13 @@
           v-if="localUv.hasRowLinks"
           class="fixed-column"
         >
-          <UserViewLink
+          <FunLink
             v-if="localRow.extra.link !== undefined"
-            :uv="localRow.extra.link"
-            @click="$emit('goto', $event)"
+            :link="localRow.extra.link"
+            @goto="$emit('goto', $event)"
           >
             <i class="material-icons md-24">open_in_new</i>
-          </UserViewLink>
+          </FunLink>
         </div>
         <TableFixedCell
           v-for="i in columnIndexes"

@@ -239,7 +239,7 @@ export default class TopLevelUserView extends Vue {
     const actions: Action[] = [];
     actions.push(...this.extraActions);
     if (this.currentAuth !== null) {
-      actions.push({name: this.$t("account").toString(), order: 1000, href: Api.accountUrl});
+      actions.push({name: this.$t("account").toString(), order: 1000, link: { href: Api.accountUrl }});
       actions.push({name: this.$t("logout").toString(), order: 1000, callback: this.logout});
     } else {
       actions.push({name: this.$t("login").toString(), order: 1000, callback: this.login});

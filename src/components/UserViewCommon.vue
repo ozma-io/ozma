@@ -40,9 +40,10 @@ import { ValueRef } from "@/local_user_view";
 import { homeSchema, valueToPunnedText, currentValue } from "@/state/user_view";
 import { funappSchema, IEntityRef, IFieldRef } from "@/api";
 import SelectUserView from "@/components/SelectUserView.vue";
-import { mapMaybe, saveToFile, debugLog } from "@/utils";
+import { mapMaybe, saveToFile } from "@/utils";
 import { Action } from "@/components/ActionsMenu.vue";
 import { ScopeName, UserViewKey, IAddedResult, AddedRowId } from "@/state/staging_changes";
+import { attrToLink } from "@/links";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -151,11 +152,6 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
     });
   }
 
-  private callProcess(querySelf: string) {
-    console.log("callBuisnessProcess");
-    console.log(querySelf);
-  }
-
   get actions() {
     const actions: Action[] = [];
 
@@ -170,27 +166,20 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
         if (typeof action.name !== "string") {
           return;
         }
-        if (action.call_process && typeof action.call_process === "object" && action.call_process !== null) {
-          actions.push({
-            name: String(action.name),
-            order: -10,
-            callback: () => this.callProcess(action.call_process),
-          });
+        const link = attrToLink(action, opts);
+        if (link === null) {
           return;
         }
-        const querySelf = attrToQuery(action, opts);
-        if (action.name && action.ref && querySelf) {
-          actions.push({
-            name: String(action.name),
-            order: -10,
-            query: querySelf,
-          });
-        }
+        actions.push({
+          name: action.name,
+          order: -10,
+          link,
+        });
       });
     }
 
     if (this.createView !== null) {
-      actions.push({ name: this.$t("create").toString(), query: this.createView });
+      actions.push({ name: this.$t("create").toString(), link: { query: this.createView, target: "modal" } });
     }
 
     const modalReferenceField = this.modalReferenceField;

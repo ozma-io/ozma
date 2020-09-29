@@ -25,14 +25,14 @@
       v-if="localUv.hasRowLinks"
       :class="[{ 'hide_content': showFixedRow },'fixed-column', 'opemform-cells']"
     >
-      <UserViewLink
+      <FunLink
         v-if="localRow.extra.link !== undefined"
-        :uv="localRow.extra.link"
+        :link="localRow.extra.link"
         class="icon-link"
-        @click="$emit('goto', $event)"
+        @goto="$emit('goto', $event)"
       >
         <i class="material-icons opemform-cells__icon">open_in_new</i>
-      </UserViewLink>
+      </FunLink>
     </td>
     <TableCell
       v-for="(i, index) in columnIndexes"

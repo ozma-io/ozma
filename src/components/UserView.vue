@@ -90,7 +90,7 @@ import { equalEntityRef } from "@/values";
 import { CombinedUserView, UserViewError, IUserViewArguments, IUserViewEventHandler, CurrentUserViews, IUserViewState, homeSchema } from "@/state/user_view";
 import { CurrentAuth } from "@/state/auth";
 import { CombinedTransactionResult, ICombinedInsertEntityResult, ScopeName } from "@/state/staging_changes";
-import { ICurrentQuery, attrToQuery, queryLocation, IQuery, IAttrToQueryOpts } from "@/state/query";
+import { ICurrentQuery, queryLocation, IQuery, IAttrToQueryOpts } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
 import { IHandlerProvider } from "@/local_user_view";
 import { Action } from "@/components/ActionsMenu.vue";
@@ -223,7 +223,7 @@ export default class UserView extends Vue {
         },
         search: "",
       };
-      actions.push({ name: this.$t("edit_view").toString(), query: editQuery });
+      actions.push({ name: this.$t("edit_view").toString(), link: { query: editQuery, target: "modal" } });
     }
     if (!this.isTopLevel) {
       const gotoQuery: IQuery = {
@@ -231,7 +231,7 @@ export default class UserView extends Vue {
         args: this.currentUv.args,
         search: "",
       };
-      actions.push({ name: this.$t("open_as_top_level").toString(), query: gotoQuery });
+      actions.push({ name: this.$t("open_as_top_level").toString(), link: { query: gotoQuery, target: "top-level" } });
     }
     return actions;
   }

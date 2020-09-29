@@ -37,23 +37,16 @@
         >
           {{ action.name }}
         </router-link>
-        <a
-          v-else-if="'href' in action"
+        <FunLink
+          v-else-if="'link' in action"
           :key="action.name"
+          :link="action.link"
           class="div-with-actions_button"
-          :href="action.href"
+          @click="showActions = false"
+          @goto="$emit('goto', $event)"
         >
           {{ action.name }}
-        </a>
-        <UserViewLink
-          v-else-if="'query' in action"
-          :key="action.name"
-          :uv="action.query"
-          class="div-with-actions_button"
-          @click="showActions = false; $emit('goto', $event)"
-        >
-          {{ action.name }}
-        </UserViewLink>
+        </FunLink>
         <input
           v-else-if="'callback' in action"
           :key="action.name"
@@ -82,8 +75,7 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { RawLocation } from "vue-router";
 
-import { IQuery } from "@/state/query";
-import UserViewLink from "@/components/UserViewLink";
+import { Link } from "@/links";
 import { IActionRef } from "ozma-api/src";
 
 export interface IAction {
@@ -95,12 +87,8 @@ export interface ILocationAction extends IAction {
   location: RawLocation;
 }
 
-export interface IHrefAction extends IAction {
-  href: string;
-}
-
-export interface IQueryAction extends IAction {
-  query: IQuery;
+export interface ILinkAction extends IAction {
+  link: Link;
 }
 
 export interface ICallbackAction extends IAction {
@@ -111,13 +99,9 @@ export interface IUploadFileAction extends IAction {
   uploadFile: (file: File) => void;
 }
 
-export type Action = ILocationAction | IHrefAction | IQueryAction | ICallbackAction | IUploadFileAction;
+export type Action = ILocationAction | ILinkAction | ICallbackAction | IUploadFileAction;
 
-@Component({
-  components: {
-    UserViewLink,
-  },
-})
+@Component
 export default class ActionsMenu extends Vue {
   @Prop({ type: Array, required: true }) actions!: Action[];
   @Prop({ type: String, required: true }) title!: string;

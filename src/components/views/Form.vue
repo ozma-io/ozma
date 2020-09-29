@@ -113,11 +113,11 @@ import { Action } from "@/components/ActionsMenu.vue";
 import { ISelectionRef } from "@/components/BaseUserView";
 import BaseUserView from "@/components/BaseUserView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
-import { IActionArguments } from "@/state/actions";
 
 import {
   IFieldInfo, IBlockInfo, IFormValueExtra, IFormRowExtra, IFormUserViewExtra, GridElement, IGridSection, IGridInput, IButtons, IGridButtons, IButtonAction
 } from "@/components/form/types";
+import { attrToLink, attrToLinkSelf } from "@/links";
 
 type IFormLocalRowInfo = ILocalRowInfo<IFormRowExtra>;
 type IFormLocalRow = ILocalRow<IFormValueExtra, IFormRowExtra>;
@@ -209,7 +209,6 @@ const staging = namespace("staging");
 })
 export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView, IFormValueExtra, IFormRowExtra, IFormUserViewExtra>>(BaseUserView) {
   @query.State("previous") previousQuery!: IQuery | null;
-  @actions.Action("getActionResult") getActionResult!: (args: IActionArguments) => Promise<void>;
   @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
 
   private deletedOne = false;
@@ -368,9 +367,10 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
               return;
             if (typeof action.variant !== "string")
               return;
-            if (action.call_process && typeof action.call_process === "object" && action.call_process !== null) {
-              actions.push({ name: String(action.name), variant: String(action.variant), callback: () => this.callProcess(action.call_process) });
-            }
+            const link = attrToLink(action);
+            if (link === null)
+              return;
+            actions.push({ name: action.name, variant: action.variant, link });
           })
         }
 
@@ -384,12 +384,6 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
       })
     }
     return blocks;
-  }
-  
-  private async callProcess(querySelf: any) {
-    await this.submitChanges(this.scope);
-    const args = 'args' in querySelf && querySelf.args !== null ?  querySelf.args : {};
-    await this.getActionResult({ref: {schema: String(querySelf.schema), name: String(querySelf.name)}, args});
   }
 
   private init() {

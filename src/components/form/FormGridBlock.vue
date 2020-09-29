@@ -28,15 +28,18 @@
     </b-row>
     <b-row v-else-if="blockContent.type === 'buttons'">
       <b-col>
-        <b-button 
-          v-for="(subBlock, subBlockI) in blockContent.actions"
-          :key="subBlockI"
-          block
-          :variant="subBlock.variant"
-          @click="subBlock.callback()"
+        <FunLink
+          :link="subBlock.link"
+          @goto="gridProps.goto"
         >
-          {{ subBlock.name }}
-        </b-button>
+          <b-button
+            :key="subBlockI"
+            block
+            :variant="subBlock.variant"
+          >
+            {{ subBlock.name }}
+          </b-button>
+        </FunLink>
       </b-col>
     </b-row>
   </b-col>

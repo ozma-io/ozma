@@ -646,7 +646,7 @@ const stagingModule: Module<IStagingState, {}> = {
       context.commit("removeAutoSaveLock", id);
       checkAutoSave(context);
     },
-    submit: async (context, scope?: ScopeName): Promise<CombinedTransactionResult[]> => {
+    submit: async (context, { scope, preReload }: { scope?: ScopeName; preReload?: () => Promise<void> }): Promise<CombinedTransactionResult[]> => {
       const { state, commit, dispatch } = context;
       if (state.currentSubmit !== null) {
         await state.currentSubmit;
@@ -714,6 +714,13 @@ const stagingModule: Module<IStagingState, {}> = {
       }));
       const ops = nestedOps.flat(1);
       if (ops.length === 0) {
+        if (preReload) {
+          try {
+            await preReload();
+          } catch (e) {
+            console.error("Error while commiting", e);
+          }
+        }
         return [];
       }
       const action: ITransaction = { operations: ops };
@@ -730,6 +737,9 @@ const stagingModule: Module<IStagingState, {}> = {
         }
         if (!(result instanceof Error)) {
           try {
+            if (preReload) {
+              await preReload();
+            }
             await dispatch("userView/reload", undefined, { root: true });
           } catch (e) {
             console.error("Error while commiting", e);

@@ -151,7 +151,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
         return { ...acc, [columTitle]: column };
       }, {});
 
-    const sortByOrder = R.sortBy(R.prop('order'));
+    const sortByOrder = R.sortBy(R.prop("order"));
 
     const allColumns: IColumn[] = Object.keys(filteredColumns)
       .map((column: string) => ({

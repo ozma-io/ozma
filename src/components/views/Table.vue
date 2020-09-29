@@ -253,6 +253,7 @@ import TableRow from "@/components/views/table/TableRow.vue";
 import TableFixedRow from "@/components/views/table/TableFixedRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
 import TableCellEdit, {ICellCoords, IEditParams} from "@/components/views/table/TableCellEdit.vue";
+import { Link, attrToLinkRef, attrToLinkSelf } from "@/links";
 
 interface ITableEditing {
   lock: AutoSaveLock;
@@ -271,7 +272,7 @@ interface IColumn {
 
 interface ITableValueExtra {
   valueText: string;
-  link?: IQuery;
+  link?: Link;
   style?: Record<string, any>;
   selected: boolean;
 }
@@ -281,7 +282,7 @@ interface ITableRowExtra {
   selected: boolean;
   style?: Record<string, any>;
   height?: number;
-  link?: IQuery;
+  link?: Link;
   selectionEntry?: ISelectionRef;
 }
 
@@ -394,12 +395,12 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
 
     if (value.info) {
       if (value.info.field && value.info.field.fieldType.type === "reference") {
-        const link = attrToQueryRef(getCellAttr("linked_view"), currentValue(value), this.extra.linkOpts);
+        const link = attrToLinkRef(getCellAttr("linked_view"), currentValue(value), this.extra.linkOpts);
         if (link) {
           extra.link = link;
         }
       }
-      const currLinkForRow = attrToQuerySelf(getCellAttr("row_linked_view"), value.info, this.extra.linkOpts);
+      const currLinkForRow = attrToLinkSelf(getCellAttr("row_linked_view"), value.info, this.extra.linkOpts);
       if (currLinkForRow) {
         localRow.extra.link = currLinkForRow;
         this.extra.hasRowLinks = true;

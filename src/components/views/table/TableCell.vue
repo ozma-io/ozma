@@ -15,10 +15,10 @@
     @click="$emit('cell-click', columnPosition, $event)"
   >
     <p>
-      <UserViewLink
+      <FunLink
         v-if="localValue.link !== undefined"
-        :uv="localValue.link"
-        @click="$emit('goto', $event)"
+        :link="localValue.link"
+        @goto="$emit('goto', $event)"
       >
         <checkbox
           v-if="valueType === 'bool'"
@@ -29,7 +29,7 @@
         <template v-else>
           {{ localValue.valueText || '&nbsp;' }}
         </template>
-      </UserViewLink>
+      </FunLink>
       <template v-else>
         <checkbox
           v-if="valueType === 'bool'"

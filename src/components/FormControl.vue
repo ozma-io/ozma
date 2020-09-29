@@ -4,21 +4,13 @@
             "yes": "Yes",
             "no": "No",
             "invalid_uv": "Nested user view rows should be JSON objects with 'ref' and 'args' defined",
-            "select_view": "Select in view",
-            "follow_reference": "Follow reference",
-            "empty": "(empty)",
-            "select_view": "Add in modal window",
-            "follow_reference": "Open in modal window"
+            "empty": "(empty)"
         },
         "ru": {
             "yes": "Да",
             "no": "Нет",
             "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'ref' и 'args'",
-            "select_view": "Выбрать из представления",
-            "follow_reference": "Перейти к сущности",
-            "empty": "(пусто)",
-            "select_view": "Создать во вложенном окне",
-            "follow_reference": "Открыть во вложенном окне"
+            "empty": "(пусто)"
         }
     }
 </i18n>
@@ -310,6 +302,7 @@ import { IUserViewArguments, homeSchema, ICombinedValue, currentValue, IEntriesR
 import { IQuery, attrToQuerySelf } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { isMobile } from "@/utils";
+import { attrToLinkSelf } from "@/links";
 
 interface ITextType {
   name: "text";
@@ -547,22 +540,15 @@ export default class FormControl extends Vue {
           refEntry.linkedAttr = this.attributes["linked_view"];
           refEntry.style = this.controlStyle();
 
-          const selectView = attrToQuerySelf(this.attributes["select_view"], this.value.info, linkOpts);
-          if (selectView !== null) {
-            refEntry.actions.push({
-              name: this.$t("select_view").toString(),
-              query: selectView,
-            });
-          }
           const extraActions = this.attributes["extra_select_actions"];
           if (Array.isArray(extraActions)) {
             extraActions.forEach(action => {
               if (typeof action === "object" && action.name) {
-                const querySelf = attrToQuerySelf(action, this.value.info, linkOpts);
-                if (querySelf) {
+                const linkSelf = attrToLinkSelf(action, this.value.info, linkOpts);
+                if (linkSelf) {
                   refEntry.actions.push({
                     name: String(action.name),
-                    query: querySelf,
+                    link: linkSelf,
                   });
                 }
               }

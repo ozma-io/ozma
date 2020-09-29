@@ -37,13 +37,13 @@
             value="flip_to_front"
             @click.stop="addWindow(option.meta.link)"
           >
-          <UserViewLink
+          <FunLink
             v-if="option.meta && option.meta.link"
-            :uv="option.meta.link"
-            @click="$emit('goto', $event)"
+            :link="option.meta.link"
+            @goto="$emit('goto', $event)"
           >
             {{ option.label }}
-          </UserViewLink>
+          </FunLink>
           <span v-else>
             {{ option.label }}
           </span>

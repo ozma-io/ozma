@@ -32,33 +32,33 @@
         >
           {{ entry.icon }}
         </div>
-        <UserViewLink
+        <FunLink
           class="navigation-entry"
-          :uv="entry"
-          @click="$emit('goto', $event)"
+          :link="entry.link"
+          @goto="$emit('goto', $event)"
         >
           {{ entry.name }}
-        </UserViewLink>
+        </FunLink>
       </div>
     </template>
   </b-col>
 </template>
 
-
-
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { IQuery, attrToQuery } from '@/state/query';
+import { IQuery } from '@/state/query';
 
 import MenuHeading from '@/components/menu/MenuHeading.vue';
+import { Link } from '@/links';
 
 interface IMenuBase {
   name: string;
   size?: number;
 }
 
-export interface IMenuLink extends IMenuBase, IQuery { 
+export interface IMenuLink extends IMenuBase { 
   icon?: string;
+  link: Link;
 }
 
 export interface IMenuCategory extends IMenuBase {

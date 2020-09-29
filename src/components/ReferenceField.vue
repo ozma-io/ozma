@@ -51,12 +51,12 @@
             value="flip_to_front"
             @click.stop="addWindow(select.valueOption.meta.link)"
           >
-          <UserViewLink
-            :uv="select.valueOption.meta.link"
-            @click="$emit('goto', $event)"
+          <FunLink
+            :link="select.valueOption.meta.link"
+            @goto="$emit('goto', $event)"
           >
             {{ select.valueOption.label }}
-          </UserViewLink>
+          </FunLink>
         </span>
         <span
           v-else
@@ -108,12 +108,13 @@ import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
 
 import { IUserViewArguments, ICombinedValue, homeSchema, currentValue, IEntriesRef } from "@/state/user_view";
-import { IQuery, attrToQueryRef } from "@/state/query";
+import { IQuery } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import MultiSelect from "@/components/multiselect/MultiSelect.vue";
 import { Action } from "@/components/ActionsMenu.vue";
 import BaseEntriesView from "@/components/BaseEntriesView";
+import { attrToLinkRef } from "@/links";
 
 const query = namespace("query");
 
@@ -160,7 +161,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
         label: name,
         value: Number(id),
         meta: {
-          link: attrToQueryRef(this.linkedAttr, id, linkOpts),
+          link: attrToLinkRef(this.linkedAttr, id, linkOpts),
         },
       }));
     }

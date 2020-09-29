@@ -15,8 +15,8 @@
   <ModalPortal
     to="tabbed-modal"
     :tab-name="title"
-    @close="$emit('close')"
     :selected="selected"
+    @close="$emit('close')"
   >
     <section class="section-modal">
       <UserView

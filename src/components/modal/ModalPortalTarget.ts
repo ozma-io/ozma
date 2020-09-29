@@ -72,7 +72,7 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
   }
 
   private closeAll() {
-    this.passengers.forEach(node => {
+    this.passengers.slice().reverse().forEach(node => {
       const modalPortal = node.context!.$children[0];
       modalPortal.$emit("close");
     });
