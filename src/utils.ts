@@ -410,6 +410,10 @@ export class ResourceMap<M, V> {
     return this.resourcesMap[key];
   }
 
+  exists(key: string) {
+    return key in this.resourcesMap;
+  }
+
   get(key: string) {
     return this.resourcesMap[key]?.value;
   }
@@ -475,6 +479,10 @@ export class ObjectResourceMap<M, K, V> {
     return ret !== undefined ? { value: ret.value[1], refs: ret.refs } : undefined;
   }
 
+  exists(key: K): boolean {
+    return this.existsBySignature(valueSignature(key));
+  }
+
   get(key: K): V | undefined {
     return this.getBySignature(valueSignature(key));
   }
@@ -489,6 +497,10 @@ export class ObjectResourceMap<M, K, V> {
 
   forceRemove(key: K) {
     this.forceRemoveBySignature(valueSignature(key));
+  }
+
+  existsBySignature(signature: string): boolean {
+    return this.internal.exists(signature);
   }
 
   getBySignature(signature: string): V | undefined {

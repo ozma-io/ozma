@@ -39,7 +39,7 @@
           class="selection_view_save__button"
           @click="saveView"
         >
-          {{ $t(saveAndSelect ? 'save_and_select_scoped' : 'save_scoped') }}
+          {{ $t(selectionMode ? 'save_and_select_scoped' : 'save_scoped') }}
         </button>
       </div>
     </section>
@@ -71,10 +71,6 @@ export default class ModalUserView extends Vue {
   @Prop({ type: Boolean, default: false }) selected!: boolean;
 
   private title = "";
-
-  get saveAndSelect() {
-    return this.view.args.args === null;
-  }
 
   private saveView() {
     this.submitChanges(this.uid);

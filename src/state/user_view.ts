@@ -895,7 +895,7 @@ const userViewModule: Module<IUserViewState, {}> = {
     },
     // Expects all values to be empty, therefore doesn't set updated puns!
     addEntry: (state, params: { entityRef: IEntityRef; userView: UserViewKey; id: AddedRowId; positions: number[]; newValues: UpdatedValues }) => {
-      const uv = state.current.userViews.getBySignature(params.userView);
+      const uv = state.current.userViews.getBySignature(params.userView)?.data;
       if (!uv ||
           !(uv instanceof CombinedUserView) ||
           !uv.info.mainEntity ||
@@ -949,7 +949,7 @@ const userViewModule: Module<IUserViewState, {}> = {
       uv.newRowsPositions = params.positions;
     },
     setAddedField: (state, params: { fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; addedEntry: IAddedEntry; fieldType?: FieldType }) => {
-      const uv = state.current.userViews.getBySignature(params.userView);
+      const uv = state.current.userViews.getBySignature(params.userView)?.data;
       if (!uv ||
           !(uv instanceof CombinedUserView) ||
           !uv.info.mainEntity ||
@@ -958,7 +958,7 @@ const userViewModule: Module<IUserViewState, {}> = {
         return;
       }
 
-      const entitySummaries = params.fieldType && params.fieldType.type === "reference" ? state.entries.getEntries(params.fieldType) : undefined;
+      const entitySummaries = params.fieldType?.type === "reference" ? state.entries.getEntries(params.fieldType) : undefined;
 
       const newRow = uv.newRows[params.id];
       uv.mainColumnMapping[params.fieldRef.name].forEach(colI => {
@@ -976,7 +976,7 @@ const userViewModule: Module<IUserViewState, {}> = {
       });
     },
     deleteEntry: (state, params: { entityRef: IEntityRef; id: RowId }) => {
-      state.current.userViews.values().forEach(uv => {
+      state.current.userViews.values().forEach(({ data: uv }) => {
         if (!(uv instanceof CombinedUserView)) {
           return;
         }
@@ -992,13 +992,13 @@ const userViewModule: Module<IUserViewState, {}> = {
       });
     },
     resetChanges: (state, current: CurrentChanges) => {
-      state.current.userViews.values().forEach(uv => {
+      state.current.userViews.values().forEach(({ data: uv }) => {
         if (!(uv instanceof CombinedUserView)) {
           return;
         }
 
         const clearValueUpdate = (field: IColumnField, valueRef: IUserViewValueRef) => {
-          const row = (uv.rows as ICombinedRow[])[valueRef.index];
+          const row = uv.rows![valueRef.index];
           const value = row.values[valueRef.column];
           clearUpdatedValue(value);
 
@@ -1043,7 +1043,7 @@ const userViewModule: Module<IUserViewState, {}> = {
       });
     },
     resetUpdatedField: (state, params: { fieldRef: IFieldRef; id: RowId }) => {
-      state.current.userViews.values().forEach(uv => {
+      state.current.userViews.values().forEach(({ data: uv }) => {
         if (!(uv instanceof CombinedUserView)) {
           return;
         }
@@ -1082,7 +1082,7 @@ const userViewModule: Module<IUserViewState, {}> = {
       });
     },
     resetAddedEntry: (state, params: { entityRef: IEntityRef; userView: UserViewKey; id: AddedRowId; positions: number[] }) => {
-      const uv = state.current.userViews.getBySignature(params.userView);
+      const uv = state.current.userViews.getBySignature(params.userView)?.data;
       if (!uv ||
           !(uv instanceof CombinedUserView) ||
           !uv.info.mainEntity ||
@@ -1102,7 +1102,7 @@ const userViewModule: Module<IUserViewState, {}> = {
       });
     },
     resetDeleteEntry: (state, params: { entityRef: IEntityRef; id: RowId }) => {
-      state.current.userViews.values().forEach(uv => {
+      state.current.userViews.values().forEach(({ data: uv }) => {
         if (!(uv instanceof CombinedUserView)) {
           return;
         }
@@ -1118,7 +1118,7 @@ const userViewModule: Module<IUserViewState, {}> = {
       });
     },
     updateErroredOnce: (state, changes: CurrentChanges) => {
-      state.current.userViews.values().forEach(uv => {
+      state.current.userViews.values().forEach(({ data: uv }) => {
         if (!(uv instanceof CombinedUserView)) {
           return;
         }
@@ -1378,8 +1378,7 @@ const userViewModule: Module<IUserViewState, {}> = {
         }, state.current.userViews.resources());
         const prefetches = await Promise.all(prefetchesPromises);
         prefetches.forEach(([args, ret]) => {
-          const existing = state.current.userViews.get(args);
-          if (existing !== undefined) {
+          if (state.current.userViews.exists(args)) {
             commit("updateUserView", { args, generation, userView: ret });
           }
         });
