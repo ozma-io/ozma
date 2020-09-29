@@ -2,7 +2,7 @@ import Vue from "vue";
 import { Store, Dispatch, Module, ActionContext } from "vuex";
 import moment from "moment";
 
-import { ObjectSet, IRef, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, mapMaybe } from "@/utils";
+import { IRef, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, mapMaybe } from "@/utils";
 import {
   IColumnField, UserViewSource, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
   SchemaName, EntityName, RowId, FieldName, AttributeName, IViewInfoResult, IViewExprResult,
@@ -788,6 +788,13 @@ const userViewModule: Module<IUserViewState, {}> = {
     bumpGeneration: state => {
       state.generation += 1;
     },
+    dropOldGenerations: state => {
+      state.current.userViews.entries().forEach(([args, gen]) => {
+        if (gen.generation !== state.generation) {
+          state.current.userViews.forceRemove(args);
+        }
+      });
+    },
     setPendingReload: (state, pendingReload: Promise<void>) => {
       state.pendingReload = pendingReload;
     },
@@ -1315,7 +1322,7 @@ const userViewModule: Module<IUserViewState, {}> = {
       const oldResource = state.current.userViews.getResource(args);
       if (oldResource !== undefined) {
         if (!(reference in oldResource.refs)) {
-          commit("addUserViewConsumer", { args, reference });
+          commit("addUserViewConsumer", { args, reference, meta: { root } });
         }
         const data = oldResource.value.data;
         if (data instanceof CombinedUserView) {
@@ -1364,29 +1371,28 @@ const userViewModule: Module<IUserViewState, {}> = {
       commit("bumpGeneration");
 
       const pendingReload = (async () => {
-        // Prefetch root user views.
-        const generation = state.generation;
-        const prefetchesPromises = mapMaybe(resource => {
-          if (Object.values(resource.refs).find(meta => meta.root) === undefined) return;
+        try {
+          // Prefetch root user views.
+          const prefetchesPromises = mapMaybe(resource => {
+            if (Object.values(resource.refs).find(meta => meta.root) === undefined) return;
 
-          const args = resource.value[0];
+            const args = resource.value[0];
 
-          return (async () => {
-            const ret = await fetchUserView(context, args);
-            return [args, ret] as [IUserViewArguments, CombinedUserView | UserViewError];
-          })();
-        }, state.current.userViews.resources());
-        const prefetches = await Promise.all(prefetchesPromises);
-        prefetches.forEach(([args, ret]) => {
-          if (state.current.userViews.exists(args)) {
-            commit("updateUserView", { args, generation, userView: ret });
-          }
-        });
-        state.current.userViews.entries().forEach(([args, gen]) => {
-          if (gen.generation !== generation) {
-            state.current.userViews.forceRemove(args);
-          }
-        });
+            return (async () => {
+              const ret = await fetchUserView(context, args);
+              return [args, ret] as [IUserViewArguments, CombinedUserView | UserViewError];
+            })();
+          }, state.current.userViews.resources());
+          const prefetches = await Promise.all(prefetchesPromises);
+          prefetches.forEach(([args, ret]) => {
+            if (state.current.userViews.exists(args)) {
+              commit("updateUserView", { args, generation: state.generation, userView: ret });
+            }
+          });
+          commit("dropOldGenerations");
+        } finally {
+          commit("setPendingReload", null);
+        }
       })();
 
       commit("setPendingReload", pendingReload);

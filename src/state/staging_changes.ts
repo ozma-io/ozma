@@ -389,7 +389,7 @@ const stagingModule: Module<IStagingState, {}> = {
       state.lastAutoSaveLock++;
     },
     removeAutoSaveLock: (state, lock: AutoSaveLock) => {
-      delete state.autoSaveLocks[lock];
+      Vue.delete(state.autoSaveLocks, lock);
     },
     startSubmit: (state, submit: Promise<CombinedTransactionResult[]>) => {
       state.touched = false;
