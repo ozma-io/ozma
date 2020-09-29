@@ -26,6 +26,7 @@
         :only-tab="modalTabs.length === 1"
         @tab-click="switchTab(index)"
         @tab-close="$emit('tab-close', index)"
+        @tab-fullscreen="$emit('tab-fullscreen', index)"
       />
     </div>
     <div
