@@ -1287,7 +1287,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   .button {
     background-color: transparent;
-    border: 1px solid var(--MainBorderColor);
+    border: none;
     border-radius: 5px;
     color: var(--MainTextColorLight);
     padding: 2px 5px;
