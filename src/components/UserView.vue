@@ -223,7 +223,7 @@ export default class UserView extends Vue {
         },
         search: "",
       };
-      actions.push({ name: this.$t("edit_view").toString(), link: { query: editQuery, target: "modal" } });
+      actions.push({ name: this.$t("edit_view").toString(), link: { query: editQuery, target: "modal-auto" } });
     }
     if (!this.isTopLevel) {
       const gotoQuery: IQuery = {

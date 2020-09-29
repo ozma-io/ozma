@@ -1,48 +1,52 @@
 <template>
-  <div
-    ref="cardContainer"
-    data-no-dragscroll
-    class="card_container"
-    :style="cardStyle"
-    @click="openModal"
+  <FunLink
+    :link="data.cardLink"
+    @goto="$emit('goto', $event)"
   >
-    <b-row
-      v-for="(row, rowIndex) in data.rows"
-      :key="rowIndex"
+    <div
+      ref="cardContainer"
       data-no-dragscroll
-      class="card_row"
+      class="card_container"
+      :style="cardStyle"
     >
-      <b-col
-        v-for="(col, colIndex) in row"
-        :key="colIndex"
-        :cols="col.size"
+      <b-row
+        v-for="(row, rowIndex) in data.rows"
+        :key="rowIndex"
         data-no-dragscroll
-        class="card_col"
+        class="card_row"
       >
-        <div
-          v-if="col.type === 'image'"
+        <b-col
+          v-for="(col, colIndex) in row"
+          :key="colIndex"
+          :cols="col.size"
           data-no-dragscroll
-          class="card_avatar"
-          :style="{ backgroundImage: `url('${col.value}')` }"
-        />
-        <span
-          v-else
-          data-no-dragscroll
-          class="card_text"
-          :title="col.value"
+          class="card_col"
         >
-          <span
-            v-if="col.icon && col.value"
+          <div
+            v-if="col.type === 'image'"
             data-no-dragscroll
-            class="card_icon"
+            class="card_avatar"
+            :style="{ backgroundImage: `url('${col.value}')` }"
+          />
+          <span
+            v-else
+            data-no-dragscroll
+            class="card_text"
+            :title="col.value"
           >
-            {{ col.icon }}
+            <span
+              v-if="col.icon && col.value"
+              data-no-dragscroll
+              class="card_icon"
+            >
+              {{ col.icon }}
+            </span>
+            {{ col.value }}
           </span>
-          {{ col.value }}
-        </span>
-      </b-col>
-    </b-row>
-  </div>
+        </b-col>
+      </b-row>
+    </div>
+  </FunLink>
 </template>
 
 <script lang="ts">
@@ -56,6 +60,7 @@ import { IExistingValueRef, ValueRef } from "@/local_user_view";
 import { IFieldRef } from "@/api";
 import { IQuery, queryLocation } from "@/state/query";
 import { dateTimeFormat, dateFormat } from "@/values";
+import { Link } from "@/links";
 
 export type CardColType = "text" | "image";
 export type CardTarget = "modal" | "top" | "blank";
@@ -76,7 +81,7 @@ export interface ICard {
   groupLabel?: any;
   groupValue?: any;
   groupField?: string;
-  cardView?: IQuery | null;
+  cardLink?: Link;
   orderRef?: ValueRef;
   order?: number;
   rows: ICardRow[];
@@ -99,22 +104,6 @@ export class Card extends Vue {
   @Prop({ type: Boolean, required: false, default: false }) selected!: boolean;
   @Prop({ type: Boolean, required: false, default: false }) dragging!: boolean;
   @Prop({ type: Number, required: true }) width!: number;
-  @Prop({ type: String, required: false, default: () => 'top' }) target!: CardTarget;
-
-  private openModal() {
-    if (!this.dragging && this.data.cardView) {
-      if (this.target === 'top') {
-        this.$emit("goto", this.data.cardView);
-      } else if (this.target === 'blank') {
-        const url = this.$router.resolve(
-          queryLocation(this.data.cardView),
-        );
-        window.open(url.href, '_blank');
-      } else if (this.target === 'modal') {
-        this.addWindow(this.data.cardView);
-      }
-    }
-  }
 
   private get cardStyle() {
     const color: string | undefined = R.pathOr("white", ["style", "color"], this.data);

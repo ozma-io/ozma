@@ -1,7 +1,7 @@
 import Vue from "vue";
 
 import { vueEmit } from "@/utils";
-import { queryLocation } from "@/state/query";
+import { queryLocation, IQueryState } from "@/state/query";
 import { Link } from "@/links";
 import { RawLocation } from "vue-router";
 import { saveAndRunAction } from "@/state/actions";
@@ -9,38 +9,53 @@ import { saveAndRunAction } from "@/state/actions";
 export default Vue.component("FunLink", {
   functional: true,
   props: {
-    link: { type: Object, required: true },
+    link: { type: Object },
   },
   render: (createElement, context) => {
-    const link = context.props.link as Link;
+    const link = context.props.link as Link | undefined;
 
-    let href: RawLocation | null = null;
+    let href: string | null = null;
     let handler: (() => void) | null = null;
 
-    if ("query" in link) {
-      href = context.parent.$router.resolve(queryLocation(link.query)).href;
-    } else if ("href" in link) {
-      href = link.href;
-    }
-
-    if ("query" in link) {
-      if (link.target === "modal") {
-        handler = () => {
-          context.parent.$store.dispatch("query/addWindow", link.query);
-        };
-      } else if (link.target === "root") {
-        handler = () => {
-          vueEmit(context, "goto", link.query);
-        };
-      } else {
-        handler = () => {
-          context.parent.$store.dispatch("query/pushRoot", link.query);
-        }
+    if (link) {
+      if ("query" in link) {
+        href = context.parent.$router.resolve(queryLocation(link.query)).href;
+      } else if ("href" in link) {
+        href = link.href;
       }
-    } else if ("action" in link) {
-      handler = () => {
-        saveAndRunAction(context.parent.$store, link.action, link.args);
-      };
+
+      if ("query" in link) {
+        if (link.target === "modal") {
+          handler = () => {
+            context.parent.$store.dispatch("query/addWindow", link.query);
+          };
+        } else if (link.target === "root") {
+          handler = () => {
+            vueEmit(context, "goto", link.query);
+          };
+        } else if (link.target === "top-level") {
+          handler = () => {
+            context.parent.$store.dispatch("query/pushRoot", link.query);
+          };
+        } else if (link.target === "blank") {
+          handler = () => {
+            window.open(href!, '_blank');
+          };
+        } else if (link.target === "modal-auto") {
+          handler = () => {
+            const queryState = context.parent.$store.state.query as IQueryState;
+            if (queryState.current?.windows.length === 0) {
+              context.parent.$store.dispatch("query/addWindow", link.query);
+            } else {
+              vueEmit(context, "goto", link.query);
+            }
+          }
+        }
+      } else if ("action" in link) {
+        handler = () => {
+          saveAndRunAction(context.parent.$store, link.action, link.args);
+        };
+      }
     }
 
     const onHandlers = handler === null ? {} : { click: (e: MouseEvent) => {
@@ -63,12 +78,7 @@ export default Vue.component("FunLink", {
       handler!();
     } };
 
-    if (href === null) {
-      return createElement("span", {
-        ...context.data,
-        on: onHandlers as any,
-      }, context.children);
-    } else {
+    if (href !== null) {
       return createElement("a", {
         ...context.data,
         attrs: {
@@ -76,6 +86,13 @@ export default Vue.component("FunLink", {
         },
         on: onHandlers as any,
       }, context.children);
+    } else if (handler !== null) {
+      return createElement("span", {
+        ...context.data,
+        on: onHandlers as any,
+      }, context.children);
+    } else {
+      return context.children;
     }
   },
 });

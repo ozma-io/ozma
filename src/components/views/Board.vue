@@ -63,6 +63,7 @@ import { IFieldInfo } from "../../values";
 
 import Errorbox from "@/components/Errorbox.vue";
 import { FieldType } from "ozma-api/src";
+import { attrToLinkRef, attrToLinkSelf } from "@/links";
 
 interface ICardExtra {
   groupRef: IExistingValueRef;
@@ -246,8 +247,8 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
     const color = R.path<string>(["attributes", "cell_color"], groupValue);
     const groupField = R.path<string>(["info", "fieldRef", "name"], groupValue);
 
-    const cardView = attrToQueryRef(this.uv.attributes["create_view"], row.mainId);
-
+    const cardLink = attrToLinkSelf(this.uv.attributes["create_view"], groupValue.info) || undefined;
+    
     return {
       groupRef,
       groupLabel: punnedValue,
@@ -255,7 +256,7 @@ export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserVie
       groupField,
       orderRef,
       order,
-      cardView,
+      cardLink,
       rows: cardColumns.map(col => [col]),
       style: {
         color,

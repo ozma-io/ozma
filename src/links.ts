@@ -6,7 +6,7 @@ export interface IHrefLink {
   href: string;
 }
 
-export type ITargetType = "top-level" | "root" | "modal";
+export type ITargetType = "top-level" | "root" | "modal" | "blank" | "modal-auto";
 
 interface IQueryLink {
   query: IQuery;
@@ -32,12 +32,12 @@ const attrToQueryLink = (linkedAttr: any, opts?: IAttrToLinkOpts): IQueryLink | 
 
   const targetAttr = linkedAttr["target"];
   let target: ITargetType;
-  if (targetAttr === "top-level" || targetAttr === "root" || targetAttr === "modal") {
+  if (targetAttr === "top-level" || targetAttr === "root" || targetAttr === "modal" || targetAttr === "blank" || targetAttr === "modal-auto") {
     target = targetAttr;
   } else if (opts?.queryTypeByDefault) {
     target = opts.queryTypeByDefault;
   } else {
-    target = "modal";
+    target = "modal-auto";
   }
 
   return { query, target };

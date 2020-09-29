@@ -179,7 +179,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<nu
     }
 
     if (this.createView !== null) {
-      actions.push({ name: this.$t("create").toString(), link: { query: this.createView, target: "modal" } });
+      actions.push({ name: this.$t("create").toString(), link: { query: this.createView, target: "modal-auto" } });
     }
 
     const modalReferenceField = this.modalReferenceField;
