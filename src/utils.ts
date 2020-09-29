@@ -331,15 +331,24 @@ export class ObjectSet<K> {
   }
 }
 
-// Useful for outputting Vue.js values - this trims all properties.
-export const debugLog = (message?: any, ...optionalParams: any[]) => {
-  const args = [message, ...optionalParams].map(arg => {
+const convertDebugArgs = (message?: any, ...optionalParams: any[]) => {
+  return [message, ...optionalParams].map(arg => {
     try {
       return JSON.parse(JSON.stringify(arg));
     } catch (e) {
       return arg;
     }
   });
+};
+
+// Useful for outputting Vue.js values - this trims all properties.
+export const debugLog = (message?: any, ...optionalParams: any[]) => {
+  const args = convertDebugArgs(message, ...optionalParams);
+  console.log(...args); // eslint-disable-line
+};
+
+export const debugLogTrace = (message?: any, ...optionalParams: any[]) => {
+  const args = convertDebugArgs(message, ...optionalParams);
   console.trace(...args);
 };
 

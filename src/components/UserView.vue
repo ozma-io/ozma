@@ -84,10 +84,10 @@ import { namespace } from "vuex-class";
 import { Store } from "vuex";
 import ProgressBar from "@/components/ProgressBar.vue"
 
-import { RecordSet, ReferenceName, deepEquals, snakeToPascal } from "@/utils";
+import { RecordSet, ReferenceName, deepEquals, snakeToPascal, debugLog, deepClone } from "@/utils";
 import { funappSchema } from "@/api";
 import { equalEntityRef } from "@/values";
-import { CombinedUserView, UserViewError, IUserViewArguments, IUserViewEventHandler, CurrentUserViews, IUserViewState, homeSchema } from "@/state/user_view";
+import { CombinedUserView, UserViewError, IUserViewArguments, IUserViewEventHandler, CurrentUserViews, IUserViewState, homeSchema, UserViewResult } from "@/state/user_view";
 import { CurrentAuth } from "@/state/auth";
 import { CombinedTransactionResult, ICombinedInsertEntityResult, ScopeName } from "@/state/staging_changes";
 import { ICurrentQuery, queryLocation, IQuery, IAttrToQueryOpts } from "@/state/query";
@@ -151,6 +151,7 @@ const maxLevel = 4;
 }})
 export default class UserView extends Vue {
   @userView.State("current") currentUvs!: CurrentUserViews;
+  @userView.Mutation("addUserViewConsumer") addUserViewConsumer!: (args: { args: IUserViewArguments; reference: ReferenceName }) => void;
   @userView.Mutation("removeUserViewConsumer") removeUserViewConsumer!: (args: { args: IUserViewArguments; reference: ReferenceName }) => void;
   @userView.Mutation("registerHandler") registerHandler!: (args: { args: IUserViewArguments; handler: IUserViewEventHandler }) => void;
   @userView.Mutation("unregisterHandler") unregisterHandler!: (args: { args: IUserViewArguments; handler: IUserViewEventHandler }) => void;
@@ -176,7 +177,7 @@ export default class UserView extends Vue {
   private baseLocal: LocalBaseUserView | null = null;
   // currentUv is shown while new component for uv is loaded.
   private currentUv: CombinedUserView | UserViewError | null = null;
-  private waitReload = false;
+  private pendingArgs: IUserViewArguments | null = null;
 
   get title() {
     if (this.currentUv instanceof CombinedUserView && this.currentUv.attributes.hasOwnProperty('title'))
@@ -261,16 +262,16 @@ export default class UserView extends Vue {
   }
 
   get isLoadingUv(): boolean {
-    return this.newUv === null || this.currentUv === null || !deepEquals(this.newUv.args, this.currentUv.args);
+    return this.currentUv === null || !deepEquals(this.args, this.currentUv.args);
   }
 
   // Load new user view and replace old data. We keep old user view loaded as long as possible, to avoid "loading" placeholders.
   @Watch("newUv", { immediate: true })
-  private async updateUserView() {
-    const newUv = this.newUv;
+  private async awaitUserView(newUv: CombinedUserView | UserViewError | null) {
     if (newUv !== null && newUv === this.currentUv) {
       return;
     }
+    debugLog("call", this.uid, this.args, this.currentUvs);
 
     if (newUv instanceof CombinedUserView) {
       if (newUv.rows === null && newUv.info.mainEntity === null) {
@@ -280,7 +281,8 @@ export default class UserView extends Vue {
       const newType = userViewType(newUv);
       const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType}.vue`)).default;
       // Check we weren't restarted.
-      if (newUv !== this.currentUvs.getUserViewOrError(this.args)) {
+      debugLog("diff", this.uid, newUv.args, this.args);
+      if (!deepEquals(newUv.args, this.args) || newUv !== this.newUv) {
         return;
       }
 
@@ -293,27 +295,25 @@ export default class UserView extends Vue {
       } else {
         local = null;
       }
+      const baseLocal = new LocalBaseUserView(this.$store, newUv, this.defaultValues, this.baseLocal);
+      this.registerHandler({ args: newUv.args, handler: baseLocal.handler });
 
-      this.clearState();
-      this.currentUv = newUv;
+      this.updateUserView(newUv);
       this.local = local;
-      this.baseLocal = new LocalBaseUserView(this.$store, newUv, this.defaultValues, this.baseLocal);
-      if(this.baseLocal !== null) {
-        this.registerHandler({ args: newUv.args, handler: this.baseLocal.handler });
-      }
+      this.baseLocal = baseLocal;
       this.component = component;
     } else if (newUv instanceof UserViewError) {
-      this.clearState();
-      this.currentUv = newUv;
+      this.updateUserView(newUv);
       this.local = null;
       this.baseLocal = null;
       this.component = null;
-    } else if (newUv === null) {
-      await this.requestView();
     }
   }
 
-  private clearState() {
+  private updateUserView(newUv: CombinedUserView | UserViewError) {
+    this.destroyCurrentUserView();
+    this.currentUv = newUv;
+    this.pendingArgs = null;
     this.extraActions = [];
     this.extraCommonActions = [];
     this.$emit("update:statusLine", "");
@@ -321,37 +321,36 @@ export default class UserView extends Vue {
     this.$emit("update:bodyStyle", "");
   }
 
-  // We should request a view:
-  // * when arguments change (different view selected);
-  // * when current view is `null` (view is not yet requested).
-  private async requestView() {
-    if (!this.waitReload) {
-      await this.getUserView({ args: this.args, root: this.isRoot, reference: this.uid });
+  private async requestView(args: IUserViewArguments) {
+    if (this.submitPromise !== null) {
+      try {
+        await this.submitPromise;
+      } catch (e) { }
     }
+    await this.getUserView({ args: args, root: this.isRoot, reference: this.uid });
   }
 
-  @Watch("waitReload")
-  private async reloadWhenUnblocked(newValue: boolean, oldValue: boolean) {
-    if (oldValue && !newValue) {
-      await this.requestView();
+  private destroyCurrentUserView() {
+    if (this.currentUv === null) {
+      return;
     }
-  }
 
-  private destroyUserView(args: IUserViewArguments) {
+    const args = this.currentUv.args;
+    debugLog("destroyUserView", this.uid, args);
     if (this.local !== null) {
       this.unregisterHandler({ args, handler: this.local.handler });
+      this.local = null;
     }
     if (this.baseLocal !== null) {
       this.unregisterHandler({ args, handler: this.baseLocal.handler });
+      this.baseLocal = null;
     }
     this.removeUserViewConsumer({ args, reference: this.uid });
   }
 
   private setUvError(error: UserViewError) {
-    this.destroyUserView(this.args);
+    this.destroyCurrentUserView();
     this.currentUv = error;
-    this.local = null;
-    this.baseLocal = null;
     this.component = null;
   }
 
@@ -361,14 +360,26 @@ export default class UserView extends Vue {
   }
 
   private destroyed() {
-    this.destroyUserView(this.args);
+    this.destroyCurrentUserView();
+    if (this.pendingArgs !== null) {
+      this.removeUserViewConsumer({ args: this.pendingArgs, reference: this.uid });
+    }
   }
 
-  @Watch("args", { deep: true })
-  private async argsChanged(newArgs: IUserViewArguments, oldArgs: IUserViewArguments) {
-    if (!deepEquals(oldArgs, newArgs)) {
-      this.destroyUserView(oldArgs);
-      await this.requestView();
+  @Watch("args", { deep: true, immediate: true })
+  private async argsChanged(newArgs: IUserViewArguments) {
+    if (this.currentUv !== null && deepEquals(newArgs, this.currentUv.args)) {
+      return;
+    }
+
+    debugLog("argsChanged", this.uid, newArgs, this.pendingArgs);
+    const oldPendingArgs = this.pendingArgs;
+    this.pendingArgs = deepClone(newArgs);
+    if (oldPendingArgs === null) {
+      await this.requestView(this.pendingArgs);
+    } else if (!deepEquals(oldPendingArgs, this.pendingArgs)) {
+      this.removeUserViewConsumer({ args: oldPendingArgs, reference: this.uid });
+      await this.requestView(this.pendingArgs);
     }
   }
 
@@ -383,23 +394,19 @@ export default class UserView extends Vue {
     if (currentUv instanceof CombinedUserView && currentUv.rows === null && submitPromise !== null) {
       (async () => {
         let ret: CombinedTransactionResult[];
-        this.waitReload = true;
         try {
           ret = await submitPromise;
         } catch (e) {
-          this.waitReload = false;
           return;
         }
 
         if (!deepEquals(this.args, currentUv.args)) {
           // We went somewhere else meanwhile.
-          this.waitReload = false;
           return;
         }
 
         const createOp = ret.find(x => x.type === "insert" && equalEntityRef(x.entity, currentUv.info.mainEntity!));
         if (createOp === undefined) {
-          this.waitReload = false;
           return;
         }
         const id = (createOp as ICombinedInsertEntityResult).id;
@@ -418,7 +425,6 @@ export default class UserView extends Vue {
           };
           this.$emit("goto", newQuery);
         }
-        this.waitReload = false;
       })();
     }
   }

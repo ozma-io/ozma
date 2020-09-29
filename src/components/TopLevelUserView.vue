@@ -183,7 +183,7 @@ export default class TopLevelUserView extends Vue {
   @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
   @staging.Action("reset") clearChanges!: () => Promise<void>;
   @query.State("current") query!: ICurrentQueryHistory | null;
-  @query.Mutation("resetRoute") resetRoute!: (_: Route) => void;
+  @query.Action("resetRoute") resetRoute!: (_: Route) => void;
   @query.Action("pushRoot") pushRoot!: (_: IQuery) => Promise<void>;
   @query.Action("replaceRootSearch") replaceRootSearch!: (_: string) => Promise<void>;
   @query.Action("closeWindow") closeWindow!: (_: number) => Promise<void>;

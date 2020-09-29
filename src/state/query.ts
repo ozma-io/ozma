@@ -409,10 +409,6 @@ const queryModule: Module<IQueryState, {}> = {
   },
   mutations: {
     resetRoute: (state, route: Route) => {
-      if (state.resetLocks > 0) {
-        return;
-      }
-
       let createNew = false;
       switch (route.name) {
         case "view":
@@ -519,6 +515,12 @@ const queryModule: Module<IQueryState, {}> = {
     },
   },
   actions: {
+    resetRoute: ({ state, commit }, route: Route) => {
+      if (state.resetLocks > 0) {
+        return;
+      }
+      commit("resetRoute", route);
+    },
     pushRoot: async ({ state, commit }, query: IQuery) => {
       commit("pushRoot", query);
       try {
