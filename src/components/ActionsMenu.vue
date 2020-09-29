@@ -50,7 +50,7 @@
           :key="action.name"
           :uv="action.query"
           class="div-with-actions_button"
-          @click="$emit('goto', $event)"
+          @click="showActions = false; $emit('goto', $event)"
         >
           {{ action.name }}
         </UserViewLink>
