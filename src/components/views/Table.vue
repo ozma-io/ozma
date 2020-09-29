@@ -907,7 +907,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     this.cellEditHeight = value;
   }
 
-  private setCoordsForEditCell(target: any) {
+  private setCoordsForEditCell(target: Element) {
     this.isSelectedLastFixedCell = target.classList.value.includes('next-after-last-fixed');
 
     const bodyRect = document.body.getBoundingClientRect();
@@ -925,7 +925,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
   }
 
-  private clickCell(ref: ValueRef, event: MouseEvent | any, target: any) {
+  private clickCell(ref: ValueRef, event: MouseEvent | any, target: Element) {
     this.removeCellEditing();
 
     if (event == null) {
@@ -937,20 +937,20 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     // this.selectCell() breaks the timer for double click in iOS,
     // so when we're running iOS we don't check for double click
     if (event !== null)
-    if (this.clickTimeoutId === null) {
-      this.clickTimeoutId = setTimeout(() => {
+      if (this.clickTimeoutId === null) {
+        this.clickTimeoutId = setTimeout(() => {
+          this.clickTimeoutId = null;
+        }, doubleClickTime);
+        if (this.lastSelectedValue !== null && !deepEquals(this.lastSelectedValue, ref)) {
+          this.removeCellEditing();
+        }
+      } else {
+        clearTimeout(this.clickTimeoutId);
         this.clickTimeoutId = null;
-      }, doubleClickTime);
-      if (this.lastSelectedValue !== null && !deepEquals(this.lastSelectedValue, ref)) {
-        this.removeCellEditing();
+        if (this.lastSelectedValue !== null && deepEquals(this.lastSelectedValue, ref)) {
+          this.setCellEditing(ref);
+        }
       }
-    } else {
-      clearTimeout(this.clickTimeoutId);
-      this.clickTimeoutId = null;
-      if (this.lastSelectedValue !== null && deepEquals(this.lastSelectedValue, ref)) {
-        this.setCellEditing(ref);
-      }
-    }
 
     this.setCoordsForEditCell(target);
     this.editParams.width = target.offsetWidth;
