@@ -236,7 +236,7 @@ import {
   referenceEntries,
 } from "@/state/user_view";
 import {UserView} from "@/components";
-import {AddedRowId, AutoSaveLock} from "@/state/staging_changes";
+import {ScopeName, AddedRowId, AutoSaveLock} from "@/state/staging_changes";
 import {attrToQueryRef, attrToQuerySelf, IAttrToQueryOpts, IQuery} from "@/state/query";
 import {
   equalRowPositionRef,
@@ -674,6 +674,7 @@ const staging = namespace("staging");
 export default class UserViewTable extends mixins<BaseUserView<LocalTableUserView, ITableValueExtra, ITableRowExtra, ITableUserViewExtra>>(BaseUserView) {
   @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
   @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
+  @staging.Action("submit") submitChanges!: (scope?: ScopeName) => Promise<void>;
   @userView.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IEntriesRef; reference: ReferenceName }) => void;
   @userView.Action("getEntries") getEntries!: (args: { reference: ReferenceName; ref: IEntriesRef }) => Promise<Entries>;
 
@@ -891,6 +892,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (this.editing === null) {
       return;
     }
+  
+    if ('loss_of_focus_save' in this.uv.attributes && Boolean(this.uv.attributes['loss_of_focus_save']))
+      this.submitChanges(this.scope);
 
     this.removeAutoSaveLock(this.editing.lock);
     this.editing = null;
