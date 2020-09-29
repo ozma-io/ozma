@@ -246,6 +246,7 @@
                 :background-color="cellColor"
                 @update:actions="actions = $event"
                 @update="updateValue"
+                @goto="$emit('goto', $event)"
               />
             </template>
             <template #input="iSlot">
@@ -268,6 +269,7 @@
                 @update:actions="actions = $event"
                 @focus="iSlot.onFocus"
                 @update="updateValue($event)"
+                @goto="$emit('goto', $event)"
               />
             </template>
           </InputSlot>

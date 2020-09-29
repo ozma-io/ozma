@@ -50,6 +50,8 @@ export default Vue.component("FunLink", {
               vueEmit(context, "goto", link.query);
             }
           }
+        } else {
+          throw new Error("Impossible");
         }
       } else if ("action" in link) {
         handler = () => {

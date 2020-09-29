@@ -111,8 +111,8 @@ export const attrToLinkRef = (linkedAttr: any, value: any, opts?: IAttrToLinkOpt
     let args: Record<string, any>
     if ("args" in ret) {
       args = ret.args;
-    } else if ("query" in ret) {
-      args = ret.query.args;
+    } else if ("query" in ret && ret.query.args.args) {
+      args = ret.query.args.args;
     } else {
       return ret;
     }

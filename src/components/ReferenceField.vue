@@ -55,8 +55,8 @@
               class="material-icons reference__open_modal"
               value="open_in_new"
             >
-            <span>{{ select.valueOption.label }}</span>
           </FunLink>
+          <span>{{ select.valueOption.label }}</span>
         </span>
         <span
           v-else

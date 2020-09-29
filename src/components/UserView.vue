@@ -280,7 +280,7 @@ export default class UserView extends Vue {
       const newType = userViewType(newUv);
       const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType}.vue`)).default;
       // Check we weren't restarted.
-      if (!deepEquals(newUv.args, this.args) || newUv !== this.newUv) {
+      if (!deepEquals(newUv.args, this.args) || newUv !== this.currentUvs.getUserViewOrError(newUv.args)) {
         return;
       }
 
