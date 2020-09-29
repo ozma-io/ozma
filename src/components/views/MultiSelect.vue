@@ -34,7 +34,7 @@
           <input
             type="button"
             class="material-icons reference__open_modal"
-            value="flip_to_front"
+            value="open_in_new"
             @click.stop="addWindow(option.meta.link)"
           >
           <FunLink
