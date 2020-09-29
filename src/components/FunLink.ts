@@ -3,7 +3,6 @@ import Vue from "vue";
 import { vueEmit } from "@/utils";
 import { queryLocation, IQueryState } from "@/state/query";
 import { Link } from "@/links";
-import { RawLocation } from "vue-router";
 import { saveAndRunAction } from "@/state/actions";
 
 export default Vue.component("FunLink", {

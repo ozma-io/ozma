@@ -31,20 +31,18 @@
           :style="select.listValueStyle"
           @click.stop
         >
-          <input
-            type="button"
-            class="material-icons reference__open_modal"
-            value="open_in_new"
-            @click.stop="addWindow(option.meta.link)"
-          >
           <FunLink
             v-if="option.meta && option.meta.link"
             :link="option.meta.link"
             @goto="$emit('goto', $event)"
           >
-            {{ option.label }}
+            <input
+              type="button"
+              class="material-icons reference__open_modal"
+              value="open_in_new"
+            >
           </FunLink>
-          <span v-else>
+          <span>
             {{ option.label }}
           </span>
           <input
@@ -204,7 +202,7 @@ export default class UserViewMultiSelect extends mixins<BaseUserView<LocalEmptyU
           value: Number(key),
           label: value,
           meta: {
-            link: attrToLinkRef(linkedView, Number(key)),
+            link: attrToLinkRef(linkedView, key),
           },
         }));
         return options;
