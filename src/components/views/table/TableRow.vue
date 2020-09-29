@@ -31,7 +31,7 @@
         class="icon-link"
         @goto="$emit('goto', $event)"
       >
-        <i class="material-icons">flip_to_front</i>
+        <i class="material-icons opemform-cells__icon">open_in_new</i>
       </FunLink>
     </td>
     <TableCell
@@ -126,6 +126,10 @@ export default class TableRow extends Vue {
   .editing_style {
     z-index: 200 !important; /* чтобы FormControl(расположен в ячейке) отображался поверх таблицы */
     overflow: visible !important;
+  }
+
+  .opemform-cells__icon {
+    font-size: 20px;
   }
 
   td {
