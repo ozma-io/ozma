@@ -9,6 +9,7 @@ export default Vue.component("FunLink", {
   functional: true,
   props: {
     link: { type: Object },
+    noHref: { type: Boolean, default: false },
   },
   render: (createElement, context) => {
     const link = context.props.link as Link | undefined;
@@ -79,7 +80,7 @@ export default Vue.component("FunLink", {
       handler!();
     } };
 
-    if (href !== null) {
+    if (!context.props.noHref && href !== null) {
       return createElement("a", {
         ...context.data,
         attrs: {

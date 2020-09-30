@@ -1,6 +1,8 @@
 <template>
+  <!-- <a> tags have special behaviour on Safari which breaks animation, hence no-href. -->
   <FunLink
     :link="data.cardLink"
+    no-href
     @goto="$emit('goto', $event)"
   >
     <div
