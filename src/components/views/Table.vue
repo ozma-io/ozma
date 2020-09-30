@@ -856,7 +856,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       nextRender().then(() => {
         const emptyRowRefElement = this.$refs.emptyRowRef as any | undefined;
         if (emptyRowRefElement !== undefined)
-          this.clickCell({type:"new", column: 1}, null, emptyRowRefElement.$children[0].$el);
+          this.clickCell({type:"new", column: emptyRowRefElement.columnIndexes[0]}, null, emptyRowRefElement.$children[0].$el);
       });
     }
   }
