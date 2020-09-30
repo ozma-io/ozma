@@ -85,15 +85,14 @@ export const roundUp = (a: number, b: number) => {
   return Math.ceil(a / b) * b;
 };
 
-export const deepFreeze = (o: any) => {
+export const deepFreeze = <T extends object>(o: T) => {
   Object.freeze(o);
 
   Object.getOwnPropertyNames(o).forEach(prop => {
-    if (o.hasOwnProperty(prop)
-                && o[prop] !== null
-                && (typeof o[prop] === "object" || typeof o[prop] === "function")
-                && !Object.isFrozen(o[prop])) {
-      deepFreeze(o[prop]);
+    const par = (o as any)[prop];
+    if (par !== null
+        && (typeof par === "object" || typeof par === "function")) {
+      deepFreeze(par);
     }
   });
 

@@ -296,39 +296,19 @@ export default class UserView extends Vue {
       const baseLocal = new LocalBaseUserView(this.$store, newUv, this.defaultValues, this.baseLocal);
       this.registerHandler({ args: newUv.args, handler: baseLocal.handler });
 
-      this.updateUserView(newUv);
+      this.setUv(newUv);
       this.local = local;
       this.baseLocal = baseLocal;
       this.component = component;
     } else if (newUv instanceof UserViewError) {
-      this.updateUserView(newUv);
-      this.local = null;
-      this.baseLocal = null;
-      this.component = null;
+      this.setUvError(newUv);
+    } else {
+      // We need deep clone here as args may change, and getUserView expects them freezed.
+      await this.getUserView({ args: deepClone(this.args), root: this.isRoot, reference: this.uid });
     }
   }
 
-  private updateUserView(newUv: CombinedUserView | UserViewError) {
-    this.destroyCurrentUserView();
-    this.currentUv = newUv;
-    this.pendingArgs = null;
-    this.extraActions = [];
-    this.extraCommonActions = [];
-    this.$emit("update:statusLine", "");
-    this.$emit("update:enableFilter", false);
-    this.$emit("update:bodyStyle", "");
-  }
-
-  private async requestView(args: IUserViewArguments) {
-    if (this.submitPromise !== null) {
-      try {
-        await this.submitPromise;
-      } catch (e) { }
-    }
-    await this.getUserView({ args: args, root: this.isRoot, reference: this.uid });
-  }
-
-  private destroyCurrentUserView() {
+  private destroyCurrentUserView(newArgs: IUserViewArguments | null) {
     if (this.currentUv === null) {
       return;
     }
@@ -342,11 +322,26 @@ export default class UserView extends Vue {
       this.unregisterHandler({ args, handler: this.baseLocal.handler });
       this.baseLocal = null;
     }
-    this.removeUserViewConsumer({ args, reference: this.uid });
+    if (!deepEquals(newArgs, args)) {
+      this.removeUserViewConsumer({ args, reference: this.uid });
+    }
+
+    this.currentUv = null;
+    this.pendingArgs = null;
+    this.extraActions = [];
+    this.extraCommonActions = [];
+    this.$emit("update:statusLine", "");
+    this.$emit("update:enableFilter", false);
+    this.$emit("update:bodyStyle", "");
+  }
+
+  private setUv(newUv: CombinedUserView) {
+    this.destroyCurrentUserView(newUv.args);
+    this.currentUv = newUv;
   }
 
   private setUvError(error: UserViewError) {
-    this.destroyCurrentUserView();
+    this.destroyCurrentUserView(error.args);
     this.currentUv = error;
     this.component = null;
   }
@@ -357,25 +352,23 @@ export default class UserView extends Vue {
   }
 
   private destroyed() {
-    this.destroyCurrentUserView();
+    this.destroyCurrentUserView(null);
     if (this.pendingArgs !== null) {
       this.removeUserViewConsumer({ args: this.pendingArgs, reference: this.uid });
     }
   }
 
   @Watch("args", { deep: true, immediate: true })
-  private async argsChanged(newArgs: IUserViewArguments) {
+  private argsChanged(newArgs: IUserViewArguments) {
     if (this.currentUv !== null && deepEquals(newArgs, this.currentUv.args)) {
       return;
     }
 
     const oldPendingArgs = this.pendingArgs;
     this.pendingArgs = deepClone(newArgs);
-    if (oldPendingArgs === null) {
-      await this.requestView(this.pendingArgs);
-    } else if (!deepEquals(oldPendingArgs, this.pendingArgs)) {
+    if ((oldPendingArgs !== null && !deepEquals(oldPendingArgs, this.pendingArgs)) // if we switched pending
+        && (this.currentUv === null || !deepEquals(oldPendingArgs, this.currentUv.args))) { // and if we don't use this view now
       this.removeUserViewConsumer({ args: oldPendingArgs, reference: this.uid });
-      await this.requestView(this.pendingArgs);
     }
   }
 

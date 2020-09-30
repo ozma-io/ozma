@@ -2,7 +2,7 @@ import { Module } from "vuex";
 import { RawLocation, Route } from "vue-router";
 
 import { UserViewSource } from "@/api";
-import { deepUpdateObject, mapMaybe, deepClone } from "@/utils";
+import { deepUpdateObject, mapMaybe, deepClone, deepFreeze } from "@/utils";
 import { router } from "@/modules";
 import { IUserViewArguments, IValueInfo } from "@/state/user_view";
 import { SchemaName, IUserViewRef } from "ozma-api/src";
