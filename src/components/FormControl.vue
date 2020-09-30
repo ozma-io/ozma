@@ -422,6 +422,7 @@ export default class FormControl extends Vue {
   private codeEditorKey = 0;
   private filterString = "";
   private title = "";
+  private enableFilter = false;
 
   get isInline(): boolean {
     return inlineTypes.includes(this.inputType.name);
@@ -605,6 +606,7 @@ export default class FormControl extends Vue {
   @Watch("inputType", { deep: true })
   private watchInputType() {
     this.actions = [];
+    this.enableFilter = false;
   }
 
   private mounted() {
