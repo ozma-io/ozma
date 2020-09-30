@@ -3,6 +3,7 @@
   <FunLink
     :link="data.cardLink"
     no-href
+    data-no-dragscroll
     @goto="$emit('goto', $event)"
   >
     <div

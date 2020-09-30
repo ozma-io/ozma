@@ -5,6 +5,25 @@ import { queryLocation, IQueryState } from "@/state/query";
 import { Link } from "@/links";
 import { saveAndRunAction } from "@/state/actions";
 
+export const redirectClick = (e: MouseEvent, allowControlKeys?: boolean): boolean => {
+  // Copied from router-link's guardEvent
+  // don't redirect with control keys
+  if (!allowControlKeys && (e.metaKey || e.altKey || e.ctrlKey || e.shiftKey)) {
+    return false;
+  }
+  // don't redirect when preventDefault called
+  if (e.defaultPrevented) {
+    return false;
+  }
+  // don't redirect on right click
+  if (e.button !== undefined && e.button !== 0) {
+    return false;
+  }
+
+  e.preventDefault();
+  return true;
+}
+
 export default Vue.component("FunLink", {
   functional: true,
   props: {
@@ -61,21 +80,8 @@ export default Vue.component("FunLink", {
     }
 
     const onHandlers = handler === null ? {} : { click: (e: MouseEvent) => {
-      // Copied from router-link's guardEvent
-      // don't redirect with control keys
-      if (href !== null && (e.metaKey || e.altKey || e.ctrlKey || e.shiftKey)) {
+      if (!redirectClick(e, href === null))
         return;
-      }
-      // don't redirect when preventDefault called
-      if (e.defaultPrevented) {
-        return;
-      }
-      // don't redirect on right click
-      if (e.button !== undefined && e.button !== 0) {
-        return;
-      }
-
-      e.preventDefault();
       vueEmit(context, "click");
       handler!();
     } };

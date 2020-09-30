@@ -8,12 +8,12 @@ export interface IHrefLink {
 
 export type ITargetType = "top" | "root" | "modal" | "blank" | "modal-auto";
 
-interface IQueryLink {
+export interface IQueryLink {
   query: IQuery;
   target: ITargetType;
 }
 
-interface IActionLink {
+export interface IActionLink {
   action: IActionRef;
   args: Record<string, any>;
 }
