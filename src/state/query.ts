@@ -462,7 +462,7 @@ const queryModule: Module<IQueryState, {}> = {
       if (state.current === null) {
         throw new Error("No current query");
       }
-      state.current.windows.push({ key: getWindowKey(), query });
+      state.current.windows.push({ key: getWindowKey(), query: deepClone(query) });
       state.current.selectedWindow = state.current.windows.length - 1;
       state.resetLocks += 1;
     },
