@@ -20,7 +20,7 @@
       v-if="selectedView"
       :initial-view="selectedView"
       :select-entity="entry.entity"
-      @select="$emit('update', $event); selectedView = null"
+      @select="selectedView = null; $emit('update', $event)"
       @close="selectedView = null"
     />
 
@@ -69,7 +69,7 @@
         #actions
       >
         <button
-          v-for="(action, index) in actions"
+          v-for="(action, index) in selectActions"
           :key="index"
           type="button"
           class="reference__new_modal__button"
@@ -118,6 +118,12 @@ import { attrToLinkRef } from "@/links";
 
 const query = namespace("query");
 
+
+export interface IReferenceSelectAction {
+  name: string;
+  query: IQuery;
+}
+
 @Component({
   components: {
     SelectUserView,
@@ -126,11 +132,10 @@ const query = namespace("query");
 })
 export default class ReferenceField extends mixins(BaseEntriesView) {
   @query.Action("addWindow") addWindow!: (query: IQuery) => Promise<void>;
-  @Prop({ type: Array, required: true }) actions!: Action[];
+  @Prop({ type: Array, default: () => [] }) selectActions!: IReferenceSelectAction[];
   @Prop({ type: Object, required: true }) value!: ICombinedValue;
   @Prop({ type: Object, required: true }) entry!: IEntriesRef;
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
-  @Prop({ type: Object }) selectView!: IQuery | undefined;
   @Prop({ type: Object }) linkedAttr!: any | undefined;
   @Prop({ type: Boolean, default: false }) isDisabled!: boolean;
   @Prop({ type: Boolean, default: false }) isNullable!: boolean;

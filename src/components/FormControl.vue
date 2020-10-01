@@ -4,13 +4,15 @@
             "yes": "Yes",
             "no": "No",
             "invalid_uv": "Nested user view rows should be JSON objects with 'ref' and 'args' defined",
-            "empty": "(empty)"
+            "empty": "(empty)",
+            "select_view": "Add in modal window"
         },
         "ru": {
             "yes": "Да",
             "no": "Нет",
             "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'ref' и 'args'",
-            "empty": "(пусто)"
+            "empty": "(пусто)",
+            "select_view": "Создать во вложенном окне"
         }
     }
 </i18n>
@@ -232,11 +234,10 @@
               <ReferenceField
                 ref="control"
                 :value="value"
-                :actions="inputType.actions"
+                :select-actions="inputType.selectActions"
                 :height="customHeight"
                 :entry="inputType.ref"
                 :linked-attr="inputType.linkedAttr"
-                :select-view="inputType.selectView"
                 :autofocus="autofocus || isMobile"
                 :control-style="inputType.style"
                 :uv-args="uvArgs"
@@ -253,11 +254,10 @@
               <ReferenceField
                 ref="control"
                 :value="value"
-                :actions="inputType.actions"
+                :select-actions="inputType.selectActions"
                 :height="customHeight"
                 :entry="inputType.ref"
                 :linked-attr="inputType.linkedAttr"
-                :select-view="inputType.selectView"
                 :control-style="inputType.style"
                 :uv-args="uvArgs"
                 :autofocus="autofocus"
@@ -305,6 +305,7 @@ import { IQuery, attrToQuerySelf } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { isMobile } from "@/utils";
 import { attrToLinkSelf } from "@/links";
+import { IReferenceSelectAction } from "./ReferenceField.vue";
 
 interface ITextType {
   name: "text";
@@ -332,7 +333,7 @@ interface IReferenceType {
   name: "reference";
   ref: IEntriesRef;
   linkedAttr?: any;
-  actions: Action[];
+  selectActions: IReferenceSelectAction[];
   style?: Record<string, any>;
 }
 
@@ -538,20 +539,27 @@ export default class FormControl extends Vue {
           const refEntry: IReferenceType = {
             name: "reference",
             ref: referenceEntries(this.fieldType),
-            actions: [],
+            selectActions: [],
           };
           refEntry.linkedAttr = this.attributes["linked_view"];
           refEntry.style = this.controlStyle();
 
+          const selectView = attrToQuerySelf(this.attributes["select_view"], this.value.info, linkOpts);
+          if (selectView !== null) {
+            refEntry.selectActions.push({
+              name: this.$t("select_view").toString(),
+              query: selectView,
+            });
+          }
           const extraActions = this.attributes["extra_select_actions"];
           if (Array.isArray(extraActions)) {
             extraActions.forEach(action => {
               if (typeof action === "object" && action.name) {
-                const linkSelf = attrToLinkSelf(action, this.value.info, linkOpts);
-                if (linkSelf) {
-                  refEntry.actions.push({
+                const querySelf = attrToQuerySelf(action, this.value.info, linkOpts);
+                if (querySelf) {
+                  refEntry.selectActions.push({
                     name: String(action.name),
-                    link: linkSelf,
+                    query: querySelf,
                   });
                 }
               }
