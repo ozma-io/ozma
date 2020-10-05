@@ -133,10 +133,6 @@ export default class SearchPanel extends Vue {
     font-size: 14px;
   }
 
-  .find {
-    margin: 0 10px;
-  }
-
   .search-field_hidden {
     opacity: 0;
     pointer-events: none;
