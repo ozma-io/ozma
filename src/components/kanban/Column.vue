@@ -301,8 +301,8 @@ export default class Column extends Vue {
 
   .card_dragging_drag {
     opacity: 1 !important;
-    transform: rotate(5deg);
-    box-shadow: 0 10px 10px -5px;
+    transform: rotate(3deg);
+    box-shadow: 0 10px 10px -10px;
     font-size: 14px;
   }
 

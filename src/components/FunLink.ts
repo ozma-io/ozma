@@ -95,7 +95,7 @@ export default Vue.component("FunLink", {
         on: onHandlers as any,
       }, context.children);
     } else if (handler !== null) {
-      return createElement("span", {
+      return createElement("div", {
         ...context.data,
         on: onHandlers as any,
       }, context.children);

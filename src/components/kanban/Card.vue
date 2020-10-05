@@ -4,51 +4,47 @@
     :link="data.cardLink"
     no-href
     data-no-dragscroll
+    ref="cardContainer"
+    class="card_container"
+    :style="cardStyle"
     @goto="$emit('goto', $event)"
   >
-    <div
-      ref="cardContainer"
+    <b-row
+      v-for="(row, rowIndex) in data.rows"
+      :key="rowIndex"
       data-no-dragscroll
-      class="card_container"
-      :style="cardStyle"
+      class="card_row"
     >
-      <b-row
-        v-for="(row, rowIndex) in data.rows"
-        :key="rowIndex"
+      <b-col
+        v-for="(col, colIndex) in row"
+        :key="colIndex"
+        :cols="col.size"
         data-no-dragscroll
-        class="card_row"
+        class="card_col"
       >
-        <b-col
-          v-for="(col, colIndex) in row"
-          :key="colIndex"
-          :cols="col.size"
+        <div
+          v-if="col.type === 'image'"
           data-no-dragscroll
-          class="card_col"
+          class="card_avatar"
+          :style="{ backgroundImage: `url('${col.value}')` }"
+        />
+        <span
+          v-else
+          data-no-dragscroll
+          class="card_text"
+          :title="col.value"
         >
-          <div
-            v-if="col.type === 'image'"
-            data-no-dragscroll
-            class="card_avatar"
-            :style="{ backgroundImage: `url('${col.value}')` }"
-          />
           <span
-            v-else
+            v-if="col.icon && col.value"
             data-no-dragscroll
-            class="card_text"
-            :title="col.value"
+            class="card_icon"
           >
-            <span
-              v-if="col.icon && col.value"
-              data-no-dragscroll
-              class="card_icon"
-            >
-              {{ col.icon }}
-            </span>
-            {{ col.value }}
+            {{ col.icon }}
           </span>
-        </b-col>
-      </b-row>
-    </div>
+          {{ col.value }}
+        </span>
+      </b-col>
+    </b-row>
   </FunLink>
 </template>
 
