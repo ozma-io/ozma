@@ -14,7 +14,7 @@
             "settings_error": "Failed to fetch settings: {msg}",
             "select_user_view_error": "Failed to select an entry: {msg}",
             "base_user_view_error": "Failed to perform an operation: {msg}",
-            "validation_error": "Validation error"
+            "error": "Error"
         },
         "ru": {
             "search_placeholder": "Поиск",
@@ -30,7 +30,7 @@
             "settings_error": "Ошибка получения настроек: {msg}",
             "select_user_view_error": "Ошибка выбора записи: {msg}",
             "base_user_view_error": "Ошибка выполнения операции: {msg}",
-            "validation_error": "Ошибка валидации"
+            "error": "Ошибка"
         }
     }
 </i18n>
@@ -221,7 +221,7 @@ export default class TopLevelUserView extends Vue {
 
   private makeErrorToast() {
     this.$bvToast.toast(this.errors, {
-      title: this.$t("validation_error").toString(),
+      title: this.$t("error").toString(),
       variant: 'danger',
       solid: true
     })
