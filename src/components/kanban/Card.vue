@@ -1,51 +1,55 @@
 <template>
   <!-- <a> tags have special behaviour on Safari which breaks animation, hence no-href. -->
-  <FunLink
-    :link="data.cardLink"
-    no-href
+  <div
     data-no-dragscroll
     ref="cardContainer"
     class="card_container"
     :style="cardStyle"
-    @goto="$emit('goto', $event)"
   >
-    <b-row
-      v-for="(row, rowIndex) in data.rows"
-      :key="rowIndex"
+    <FunLink
+      :link="data.cardLink"
+      no-href
       data-no-dragscroll
-      class="card_row"
+      @goto="$emit('goto', $event)"
     >
-      <b-col
-        v-for="(col, colIndex) in row"
-        :key="colIndex"
-        :cols="col.size"
+      <b-row
+        v-for="(row, rowIndex) in data.rows"
+        :key="rowIndex"
         data-no-dragscroll
-        class="card_col"
+        class="card_row"
       >
-        <div
-          v-if="col.type === 'image'"
+        <b-col
+          v-for="(col, colIndex) in row"
+          :key="colIndex"
+          :cols="col.size"
           data-no-dragscroll
-          class="card_avatar"
-          :style="{ backgroundImage: `url('${col.value}')` }"
-        />
-        <span
-          v-else
-          data-no-dragscroll
-          class="card_text"
-          :title="col.value"
+          class="card_col"
         >
-          <span
-            v-if="col.icon && col.value"
+          <div
+            v-if="col.type === 'image'"
             data-no-dragscroll
-            class="card_icon"
+            class="card_avatar"
+            :style="{ backgroundImage: `url('${col.value}')` }"
+          />
+          <span
+            v-else
+            data-no-dragscroll
+            class="card_text"
+            :title="col.value"
           >
-            {{ col.icon }}
+            <span
+              v-if="col.icon && col.value"
+              data-no-dragscroll
+              class="card_icon"
+            >
+              {{ col.icon }}
+            </span>
+            {{ col.value }}
           </span>
-          {{ col.value }}
-        </span>
-      </b-col>
-    </b-row>
-  </FunLink>
+        </b-col>
+      </b-row>
+    </FunLink>
+  </div>
 </template>
 
 <script lang="ts">

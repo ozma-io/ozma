@@ -323,7 +323,7 @@ export default class Column extends Vue {
     color: var(--MainBackgroundColor);
   }
 
-  /deep/ .card_dragging_chosen.card_dragging_ghost > .card_row {
+  /deep/ .card_dragging_chosen.card_dragging_ghost > span > .card_row {
     visibility: hidden;
   }
 
