@@ -13,7 +13,8 @@
             "staging_error": "Error while submitting changes: {msg}",
             "settings_error": "Failed to fetch settings: {msg}",
             "select_user_view_error": "Failed to select an entry: {msg}",
-            "base_user_view_error": "Failed to perform an operation: {msg}"
+            "base_user_view_error": "Failed to perform an operation: {msg}",
+            "validation_error": "Validation error"
         },
         "ru": {
             "search_placeholder": "Поиск",
@@ -28,7 +29,8 @@
             "staging_error": "Ошибка сохранения изменений: {msg}",
             "settings_error": "Ошибка получения настроек: {msg}",
             "select_user_view_error": "Ошибка выбора записи: {msg}",
-            "base_user_view_error": "Ошибка выполнения операции: {msg}"
+            "base_user_view_error": "Ошибка выполнения операции: {msg}",
+            "validation_error": "Ошибка валидации"
         }
     }
 </i18n>
@@ -101,14 +103,14 @@
       <div class="count-row">
         {{ statusLine }}
       </div>
-      <div
-        v-for="(error, errorI) in errors"
-        :key="errorI"
-        class="error custom-danger"
-        show
+      <i 
+        v-if="errors.length > 0" 
+        class="material-icons" 
+        :style="{cursor: 'pointer', color: 'red'}"
+        @click="makeErrorToast"
       >
-        {{ error }}
-      </div>
+        help_outline
+      </i>
       <div
         v-if="!changes.isScopeEmpty('root')"
         class="error custom-warning"
@@ -215,6 +217,14 @@ export default class TopLevelUserView extends Vue {
       return Array.from(new Set(convertToWords(value.toString())));
     }
     return [];
+  }
+
+  private makeErrorToast() {
+    this.$bvToast.toast(this.errors, {
+      title: this.$t("validation_error").toString(),
+      variant: 'danger',
+      solid: true
+    })
   }
 
   @Watch("$route", {deep: true, immediate: true})
@@ -389,6 +399,7 @@ export default class TopLevelUserView extends Vue {
     float: left;
     margin-left: 5px;
     color: var(--MainTextColor);
+    font-weight: 600;
   }
 
   .custom-warning {
