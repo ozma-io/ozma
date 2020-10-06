@@ -856,7 +856,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       nextRender().then(() => {
         const emptyRowRefElement = this.$refs.emptyRowRef as any | undefined;
         if (emptyRowRefElement !== undefined)
-          this.clickCell({type:"new", column: emptyRowRefElement.columnIndexes[0]}, null, emptyRowRefElement.$children[0].$el);
+          this.cellEditByTarget({type:"new", column: emptyRowRefElement.columnIndexes[0]}, emptyRowRefElement.$children[0].$el);
       });
     }
   }
@@ -941,32 +941,36 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
   }
 
-  private clickCell(ref: ValueRef, event: MouseEvent | any, target: HTMLElement) {
+  private clickCell(ref: ValueRef, event: MouseEvent | any) {
     this.removeCellEditing();
-
-    if (event == null) {
-      this.setCellEditing(ref);
-    } else {
-      target = event.target;
-    };
 
     // this.selectCell() breaks the timer for double click in iOS,
     // so when we're running iOS we don't check for double click
-    if (event !== null)
-      if (this.clickTimeoutId === null) {
-        this.clickTimeoutId = setTimeout(() => {
-          this.clickTimeoutId = null;
-        }, doubleClickTime);
-        if (this.lastSelectedValue !== null && !deepEquals(this.lastSelectedValue, ref)) {
-          this.removeCellEditing();
-        }
-      } else {
-        clearTimeout(this.clickTimeoutId);
+    if (this.clickTimeoutId === null) {
+      this.clickTimeoutId = setTimeout(() => {
         this.clickTimeoutId = null;
-        if (this.lastSelectedValue !== null && deepEquals(this.lastSelectedValue, ref)) {
-          this.setCellEditing(ref);
-        }
+      }, doubleClickTime);
+      if (this.lastSelectedValue !== null && !deepEquals(this.lastSelectedValue, ref)) {
+        this.removeCellEditing();
       }
+    } else {
+      clearTimeout(this.clickTimeoutId);
+      this.clickTimeoutId = null;
+      if (this.lastSelectedValue !== null && deepEquals(this.lastSelectedValue, ref)) {
+        this.setCellEditing(ref);
+      }
+    }
+
+    this.cellEditReactions(ref, event.target);
+  }
+  
+  private cellEditByTarget(ref: ValueRef, target: HTMLElement) {
+    this.removeCellEditing();
+    this.setCellEditing(ref);
+    this.cellEditReactions(ref, target);
+  }
+
+  private cellEditReactions(ref: ValueRef, target: HTMLElement) {
 
     this.setCoordsForEditCell(target);
     this.editParams.width = target.offsetWidth;
