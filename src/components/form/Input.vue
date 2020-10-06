@@ -259,11 +259,11 @@ export default class Input extends Vue {
   }
 
   .input-field__required {
-    border-bottom: 1px solid var(--WarningColor) !important;
+    background: var(--WarningColor) !important;
   }
 
   .input-field__error {
-    border-bottom: 1px solid var(--FailColor) !important;
+    background: var(--FailColor) !important;
   }
 
   .input_field__focused {
@@ -302,7 +302,9 @@ export default class Input extends Vue {
   }
 
   .input_field {
-    padding: 5px 2px 5px 0;
+    padding: 5px;
+    margin-left: -5px;
+    margin-right: 5px;
     background-color: rgba(0, 0, 0, 0);
     border: 0;
     z-index: 2;
