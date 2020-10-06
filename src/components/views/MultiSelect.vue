@@ -224,10 +224,12 @@ export default class UserViewMultiSelect extends mixins<BaseUserView<LocalEmptyU
   }
 
   .reference__open_modal {
+    font-size: 20px;
+    vertical-align: middle;
     border: none;
     background: none;
     padding: 0;
-    margin: 0 10px 0 0;
+    margin: 2px 10px 2px 0;
     color: var(--MainTextColor);
   }
 </style>

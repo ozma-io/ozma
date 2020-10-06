@@ -53,7 +53,7 @@
             <input
               type="button"
               class="material-icons reference__open_modal"
-              value="open_in_new"
+              :value="iconValue(select.valueOption.meta.link.target)"
             >
           </FunLink>
           <span>{{ select.valueOption.label }}</span>
@@ -116,6 +116,7 @@ import { Action } from "@/components/ActionsMenu.vue";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import { attrToLinkRef } from "@/links";
 
+
 const query = namespace("query");
 
 
@@ -170,6 +171,13 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
         },
       }));
     }
+  }
+
+  private iconValue(target: string) {
+    if (target === 'modal-auto' || target === 'modal')
+      return 'flip_to_front';
+    else
+      return 'open_in_new';
   }
 }
 </script>
