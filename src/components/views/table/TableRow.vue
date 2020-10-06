@@ -180,7 +180,7 @@ export default class TableRow extends Vue {
   }
 
   td.error_style {
-    background-color: var(--ErrorColor);
+    background-color: var(--DangerBackColor) !important;
   }
 
   td.select {
