@@ -800,7 +800,7 @@ export default class FormControl extends Vue {
   .form-control-panel_select_error,
   .form-control-panel_checkbox_error,
   .form-control-panel_textarea_error {
-    background-color: var(--ErrorColor);
+    background-color: var(--FailColor) !important;
   }
 
   .form-control-panel_select:focus,
