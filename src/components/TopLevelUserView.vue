@@ -220,7 +220,7 @@ export default class TopLevelUserView extends Vue {
   }
 
   private makeErrorToast() {
-    this.$bvToast.toast(this.errors, {
+    this.$bvToast.toast(this.errors.toString(), {
       title: this.$t("error").toString(),
       variant: 'danger',
       solid: true
