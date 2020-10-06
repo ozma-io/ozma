@@ -961,16 +961,16 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       }
     }
 
-    this.cellEditReactions(ref, event.target);
+    this.cellEditHandler(ref, event.target);
   }
   
   private cellEditByTarget(ref: ValueRef, target: HTMLElement) {
     this.removeCellEditing();
     this.setCellEditing(ref);
-    this.cellEditReactions(ref, target);
+    this.cellEditHandler(ref, target);
   }
 
-  private cellEditReactions(ref: ValueRef, target: HTMLElement) {
+  private cellEditHandler(ref: ValueRef, target: HTMLElement) {
 
     this.setCoordsForEditCell(target);
     this.editParams.width = target.offsetWidth;
