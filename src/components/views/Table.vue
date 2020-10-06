@@ -202,7 +202,7 @@
         </tbody>
       </table>
       <input
-        v-if="baseLocal.extra.rowCount < 30"
+        v-if="baseLocal.extra.rowCount < 30 && local.emptyRow !== null"
         type="button" 
         :value="this.$t('add').toString()"
         class="button"
