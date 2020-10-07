@@ -118,12 +118,11 @@ const requestToken = async (params: Record<string, string>): Promise<CurrentAuth
   return new CurrentAuth(ret.access_token, ret.refresh_token, ret.id_token);
 }
 
-const getToken = (context: ActionContext<IAuthState, {}>, params: Record<string, string>) => {
+const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<string, string>) => {
   const { state, commit, dispatch } = context;
   const oldPending = state.pending;
   const pending: IRef<Promise<void>> = {};
   pending.ref = (async () => {
-    Utils.debugLogTrace("getToken");
     await Utils.waitTimeout(); // Delay promise so that it gets saved to `pending` first.
     if (oldPending !== null) {
       try {
@@ -156,7 +155,7 @@ const getToken = (context: ActionContext<IAuthState, {}>, params: Record<string,
           }
         }
 
-        dispatch("removeAuth", undefined, { root: true });
+        await dispatch("removeAuth", undefined, { root: true });
         if (description !== null) {
           dispatch("setError", `Error when getting token: ${description}`);
         }
@@ -197,7 +196,7 @@ const renewAuth = async (context: ActionContext<IAuthState, {}>) => {
     ["grant_type"]: "refresh_token",
     ["refresh_token"]: state.current.refreshToken,
   };
-  await getToken(context, params);
+  await startGetToken(context, params);
 };
 
 const constantFactorStart = 0.8;
@@ -273,7 +272,7 @@ export const authModule: Module<IAuthState, {}> = {
   namespaced: true,
   state: {
     current: null,
-    pending: null,
+    pending: Promise.reject(new Error("Auth is not initialized yet")),
     renewalTimeoutId: null,
   },
   mutations: {
@@ -347,6 +346,7 @@ export const authModule: Module<IAuthState, {}> = {
                     ["redirect_uri"]: redirectUri(),
                   };
                   const auth = await requestToken(params);
+                  Utils.debugLogTrace("startAuth response", auth);
                   await updateAuth(context, auth);
                   startTimeouts(context);
                 } else {
@@ -389,22 +389,22 @@ export const authModule: Module<IAuthState, {}> = {
           }
           localStorage.removeItem(authNonceKey);
 
-          const authStorageHandler = (e: StorageEvent) => {
+          const authStorageHandler = async (e: StorageEvent) => {
             if (e.key !== authKey) {
               return;
             }
 
             if (e.newValue === null) {
-              dispatch("removeAuth", undefined, { root: true });
+              await dispatch("removeAuth", undefined, { root: true });
             } else {
               const newAuth = loadCurrentAuth();
               if (newAuth !== null && (state.current === null || newAuth.token !== state.current.token)) {
-                updateAuth(context, newAuth);
+                await updateAuth(context, newAuth);
                 startTimeouts(context);
               }
             }
           };
-          window.addEventListener("storage", authStorageHandler);
+          window.addEventListener("storage", e => { authStorageHandler(e); });
 
           if (state.current === null) {
             if (tryExisting) {
@@ -425,11 +425,13 @@ export const authModule: Module<IAuthState, {}> = {
       handler: async ({ state, dispatch }, { func, args }: { func: ((_1: string | null, ..._2: any[]) => Promise<any>); args?: any[] }): Promise<any> => {
         if (state.pending !== null) {
           try {
+            Utils.debugLogTrace("waiting for pending", state.current);
             await state.pending;
           } catch (e) { }
         }
 
         try {
+          Utils.debugLogTrace("running call", state.current);
           const argsArray = args === undefined ? [] : args;
           const token = state.current === null ? null : state.current.token;
           return await func(token, ...argsArray);
