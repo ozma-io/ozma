@@ -5,12 +5,16 @@
       class="hours"
     >
       <div>hours</div>
-      <div :class="['wrapper', {'with-margin': hours.range.length > 5}]">
+      <div
+        ref="wrapperHour"
+        :class="['wrapper', {'with-margin': hours.range.length > 5}]"
+      >
         <div
           v-for="(el, Iel) in hours.range"
           :key="Iel"
-          class="time-cell"
-          @click="nextValH(Iel, $event)"
+          :ref="(selectHour(el)) ? 'selectHour' : false"
+          :class="['time-cell', {'select-cell': selectHour(el)}]"
+          @click="setValH(Iel, $event)"
         >
           {{ el.text }}
         </div>
@@ -18,16 +22,19 @@
     </span>
     <span
       v-show="mins !== null"
-
       class="mins"
     >
       <div>minutes</div>
-      <div :class="['wrapper', {'with-margin': mins.range.length > 5}]">
+      <div
+        ref="wrapperMin"
+        :class="['wrapper', {'with-margin': mins.range.length > 5}]"
+      >
         <div
           v-for="(el, Iel) in mins.range"
           :key="Iel"
-          class="time-cell"
-          @click="nextValM(Iel, $event)"
+          :ref="(selectMin(el)) ? 'selectMin' : false"
+          :class="['time-cell', {'select-cell': selectMin(el)}]"
+          @click="setValM(Iel, $event)"
         >
           {{ el.text }}
         </div>
@@ -53,6 +60,11 @@ interface ITimeRangeAll {
   currStep: number;
 }
 
+interface ITime {
+  hour: number;
+  min: number;
+}
+
 const numToText2 = (num: number) => {
   return  (num < 10) ? `0${num}` : `${num}`;
 };
@@ -76,9 +88,23 @@ const DateRange = (min: number, max: number, steps: number[]): ITimeRangeAll => 
   };
 };
 
+const scrollTo = (wrapper: any, target: any) => {
+  if ("children" in wrapper)
+    if (wrapper.childElementCount > 6) {
+      if (!target)
+        wrapper.scroll(0, 240);
+      else {
+        for (const k in target)
+          wrapper.scroll(0, target[k].offsetTop - wrapper.offsetTop);
+      }
+    }
+}
+
 @Component
 export default class TimePicker extends Vue {
+  @Prop() time!: ITime;
   @Prop({ type: Number, default: null }) timeStep!: number | null;
+  @Prop({ default: true, type: Boolean }) isOpen!: boolean;
 
   private hours: ITimeRangeAll = DateRange(0, 24, [1]);
   private mins: ITimeRangeAll = DateRange(0, 60, [this.step]);
@@ -89,18 +115,35 @@ export default class TimePicker extends Vue {
       : 15
   }
 
-  private nextValM(rng: number, event: Event) {
+  @Watch('isOpen')
+  private selectedTime() {
+    if (this.isOpen) {
+      scrollTo(this.$refs.wrapperHour, this.$refs.selectHour);
+      if (!!this.$refs.selectMin)
+        scrollTo(this.$refs.wrapperMin, this.$refs.selectMin);
+    }
+  }
+
+  private setValM(rng: number, event: Event) {
     event.preventDefault();
     if (this.mins !== null) {
       this.$emit("update:mins", this.mins.range[rng].value);
     }
   }
 
-  private nextValH(rng: number, event: Event) {
+  private setValH(rng: number, event: Event) {
     event.preventDefault();
     if (this.hours !== null) {
       this.$emit("update:hours", this.hours.range[rng].value);
     }
+  }
+
+  private selectMin(min: ITimeRange) {
+    return (min.value === this.time.min);
+  }
+
+  private selectHour(hour: ITimeRange) {
+    return (hour.value === this.time.hour);
   }
 }
 </script>
@@ -130,6 +173,12 @@ export default class TimePicker extends Vue {
     color: black;
     border-radius: 3px;
     cursor: pointer;
+  }
+
+  .select-cell {
+    background-color: var(--MainBorderColor);
+    border-radius: 3px;
+    color: var(--MainTextColor);
   }
 
   .wrapper {

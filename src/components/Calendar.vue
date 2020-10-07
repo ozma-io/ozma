@@ -61,6 +61,8 @@
       <div class="time">
         <TimePicker
           v-if="showTime"
+          :time="timeForPicker"
+          :is-open="isCalendarOpen"
           :time-step="timeStep"
           @update:mins="updateMins"
           @update:hours="updateHours"
@@ -134,6 +136,18 @@ export default class Calendar extends Vue {
 
   get dateValue() {
     return this.value ? this.value : moment.invalid();
+  }
+
+  get timeForPicker() {
+    return (this.dateValue.isUTC())
+      ? {
+        hour: this.dateValue.utcOffset(moment().utcOffset()).hour(),
+        min: this.dateValue.utcOffset(moment().utcOffset()).minute()
+      }
+      : {
+        hour: this.dateValue.hour(),
+        min: this.dateValue.minute()
+      };
   }
 
   private onClickOutside() {
