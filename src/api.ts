@@ -1,12 +1,12 @@
 import FunDBAPI from "../node_modules/ozma-api/src/index";
 export * from "../node_modules/ozma-api/src/index";
 
-export const developmentMode = __DEVELOPMENT_MODE__;
-export const disableAuth = __DISABLE_AUTH__;
 const hostnameParts = location.hostname.split(".");
 const instanceName = hostnameParts[0];
 const instancesHost = hostnameParts.length >= 2 ? hostnameParts[hostnameParts.length - 2] + "." + hostnameParts[hostnameParts.length - 1] : null;
-const apiUrl = __API_URL__;
+const apiUrl = String(__API_URL__);
+export const developmentMode = Boolean(__DEVELOPMENT_MODE__);
+export const disableAuth = Boolean(__DISABLE_AUTH__);
 
 export const authOrigin = String(__API_AUTH_URL__);
 export const authUrlBase = `${authOrigin}${__API_AUTH_URL_BASE__}`;
