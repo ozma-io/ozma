@@ -14,7 +14,8 @@
             "settings_error": "Failed to fetch settings: {msg}",
             "select_user_view_error": "Failed to select an entry: {msg}",
             "base_user_view_error": "Failed to perform an operation: {msg}",
-            "error": "Error"
+            "error": "Error",
+            "authed_link": "Copy link with authorization"
         },
         "ru": {
             "search_placeholder": "Поиск",
@@ -30,7 +31,8 @@
             "settings_error": "Ошибка получения настроек: {msg}",
             "select_user_view_error": "Ошибка выбора записи: {msg}",
             "base_user_view_error": "Ошибка выполнения операции: {msg}",
-            "error": "Ошибка"
+            "error": "Ошибка",
+            "authed_link": "Скопировать ссылку с авторизацией"
         }
     }
 </i18n>
@@ -161,7 +163,7 @@ import {CurrentChanges, ScopeName} from "@/state/staging_changes";
 import {Action} from "@/components/ActionsMenu.vue";
 import ModalUserView from "@/components/ModalUserView.vue";
 import SearchPanel from "@/components/SearchPanel.vue";
-import {CurrentAuth} from "@/state/auth";
+import {CurrentAuth, getAuthedLink} from "@/state/auth";
 import {ICurrentQuery, IQuery, queryLocation, ICurrentQueryHistory} from "@/state/query";
 import {convertToWords} from "@/utils";
 
@@ -251,6 +253,12 @@ export default class TopLevelUserView extends Vue {
     const actions: Action[] = [];
     actions.push(...this.extraActions);
     if (this.currentAuth !== null) {
+      if (Api.developmentMode) {
+        actions.push({name: this.$t("authed_link").toString(), order: 1000, callback: () => {
+          const link = getAuthedLink(this.currentAuth!);
+          navigator.clipboard.writeText(link);
+        }});
+      }
       actions.push({name: this.$t("account").toString(), order: 1000, link: { href: Api.accountUrl }});
       actions.push({name: this.$t("logout").toString(), order: 1000, callback: this.logout});
     } else {
