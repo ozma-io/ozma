@@ -265,6 +265,7 @@ interface IColumn {
   style: Record<string, any>;
   visible: boolean;
   fixed: boolean;
+  textAlignRight: boolean;
   mobileFixed: boolean;
   columnInfo: IResultColumnInfo;
   width: number; // in px
@@ -322,6 +323,9 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
     const fixedColumnAttr = getColumnAttr("fixed");
     const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr);
 
+    const textAlignRightAttr = getColumnAttr("text_align_right");
+    const textAlignRight = textAlignRightAttr === undefined ? false : Boolean(textAlignRightAttr);
+
     // FIXME: we stopped supporting it for now.
     //const fixedFieldAttr = getColumnAttr("mobile_fixed");
     //const fixedField = fixedFieldAttr === undefined ? false : Boolean(fixedFieldAttr);
@@ -333,6 +337,7 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
       caption, style,
       visible: visibleColumn,
       fixed: fixedColumn,
+      textAlignRight,
       //mobileFixed: fixedField,
       mobileFixed: false,
       columnInfo,

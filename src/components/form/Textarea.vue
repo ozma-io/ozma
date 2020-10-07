@@ -256,6 +256,7 @@ export default class Textarea extends Vue {
 
   .textarea-field_cell-edit {
     border: none;
+    text-align: inherit;
   }
 
   .textarea-field_cell-edit:focus {

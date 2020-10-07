@@ -28,6 +28,7 @@
       :actions="actions"
       :auto-open="autoOpen"
       :background-color="cellColor"
+      :text-align-right="textAlignRight"
       @close-modal-input="$emit('close-modal-input')"
     >
       <template #input-modal>
@@ -481,6 +482,10 @@ export default class FormControl extends Vue {
 
   private forceRerender() {
     this.codeEditorKey += 1;
+  }
+
+  get textAlignRight(){
+    return "text_align_right" in this.attributes ? Boolean(this.attributes["text_align_right"]) : false;
   }
 
   get cellColor(){

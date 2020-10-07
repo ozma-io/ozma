@@ -57,7 +57,7 @@
     </b-col>
     <b-col
       :cols="(!!label && inline) ? 8 : 12"
-      :class="['input_container', {'input_container_cell-edit': isCellEdit}]"
+      :class="['input_container', {'input_container_cell-edit': isCellEdit, 'text_align_right': textAlignRight}]"
       :style="{'background': backgroundColor}"
     >
       <slot
@@ -90,12 +90,14 @@ export default class InputSlot extends Vue {
   @Prop({ type: Boolean, default: true }) inline!: boolean;
   @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
   @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
+  @Prop({type: Boolean, default: false}) textAlignRight!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
 
   private focused = false;
   private isModalOpen = false;
 
-  private mounted() {
+  private mounted() { 
+    console.log("textAlignRight", this.textAlignRight);
     if (this.autoOpen && this.isMobile) {
       this.isModalOpen = true;
     }
@@ -137,6 +139,11 @@ export default class InputSlot extends Vue {
 </script>
 
 <style lang="scss" scoped>
+
+  .text_align_right {
+    text-align: right;
+  }
+
   .input_slot {
     padding: 0 15px;
   }

@@ -233,6 +233,7 @@ export default class Input extends Vue {
     overflow: auto !important;
     max-height: 165px;
     background: white;
+    text-align: inherit;
   }
 
   .input-textarea-fake {
