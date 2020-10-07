@@ -272,7 +272,7 @@ export const authModule: Module<IAuthState, {}> = {
   namespaced: true,
   state: {
     current: null,
-    pending: Promise.reject(new Error("Auth is not initialized yet")),
+    pending: null,
     renewalTimeoutId: null,
   },
   mutations: {
@@ -324,6 +324,8 @@ export const authModule: Module<IAuthState, {}> = {
             return;
           }
 
+          await new Promise(resolve => router.onReady(resolve)); // Await till router is ready.
+
           let tryExisting = true;
           if (router.currentRoute.name === "auth_response") {
             tryExisting = false;
@@ -346,7 +348,6 @@ export const authModule: Module<IAuthState, {}> = {
                     ["redirect_uri"]: redirectUri(),
                   };
                   const auth = await requestToken(params);
-                  Utils.debugLogTrace("startAuth response", auth);
                   await updateAuth(context, auth);
                   startTimeouts(context);
                 } else {
@@ -425,13 +426,11 @@ export const authModule: Module<IAuthState, {}> = {
       handler: async ({ state, dispatch }, { func, args }: { func: ((_1: string | null, ..._2: any[]) => Promise<any>); args?: any[] }): Promise<any> => {
         if (state.pending !== null) {
           try {
-            Utils.debugLogTrace("waiting for pending", state.current);
             await state.pending;
           } catch (e) { }
         }
 
         try {
-          Utils.debugLogTrace("running call", state.current);
           const argsArray = args === undefined ? [] : args;
           const token = state.current === null ? null : state.current.token;
           return await func(token, ...argsArray);
