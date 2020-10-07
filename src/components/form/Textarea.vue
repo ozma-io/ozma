@@ -323,4 +323,13 @@ export default class Textarea extends Vue {
   .textarea_dummy_focus {
     padding: 5px 0 5px 0;
   }
+
+  .textarea_field__required {
+    background: var(--WarningColor) !important;
+  }
+
+  .textarea_field__error {
+    background: var(--FailColor) !important;
+  }
+
 </style>
