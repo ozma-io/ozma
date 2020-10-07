@@ -1336,9 +1336,7 @@ const userViewModule: Module<IUserViewState, {}> = {
         try {
           current = await fetchUserView(context, args);
           const currPending = state.current.userViews.get(args)?.data;
-          console.trace("pending", currPending);
           if (currPending !== pending.ref) {
-            console.trace("smehes");
             throw new Error(`Pending view get cancelled for scope ${reference}, args ${JSON.stringify(args)}`);
           }
           commit("updateUserView", { args, userView: current });
@@ -1347,9 +1345,7 @@ const userViewModule: Module<IUserViewState, {}> = {
           }
         } catch (e) {
           const currPending = state.current.userViews.get(args)?.data;
-          console.trace("pending error", currPending);
           if (currPending === pending.ref) {
-            console.trace("kekes");
             commit("updateUserView", { args, userView: e });
           }
           throw e;

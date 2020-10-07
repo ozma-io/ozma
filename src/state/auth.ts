@@ -315,6 +315,7 @@ export const authModule: Module<IAuthState, {}> = {
     startAuth: context => {
       const { state, commit, dispatch } = context;
 
+      console.assert(state.pending === null);
       const pending: IRef<Promise<void>> = {};
       const newPending = (async () => {
         await Utils.waitTimeout(); // Delay promise so that it gets saved to `pending` first.
@@ -375,7 +376,6 @@ export const authModule: Module<IAuthState, {}> = {
             };
             try {
               const currAuth = await requestToken(params);
-              console.trace(currAuth);
               await updateAuth(context, currAuth);
               startTimeouts(context);
             } catch (e) {
