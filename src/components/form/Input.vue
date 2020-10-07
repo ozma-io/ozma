@@ -304,7 +304,7 @@ export default class Input extends Vue {
   .input_field {
     padding: 5px;
     margin-left: -5px;
-    margin-right: 5px;
+    margin-right: 4px;
     background-color: rgba(0, 0, 0, 0);
     border: 0;
     z-index: 2;

@@ -465,7 +465,11 @@ export default class MultiSelect extends Vue {
     padding: 2px 5px;
     box-sizing: border-box;
     width: 100%;
-    margin: 0 0 0 -3px;
+    margin: 0 0 0 -5px;
+  }
+
+  .table-cell-edit .select_container {
+    margin: 0 0 0 -2px;
   }
 
   .input_modal__input_group .select_container {
