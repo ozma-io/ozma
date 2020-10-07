@@ -461,7 +461,7 @@ export default class MultiSelect extends Vue {
   .select_container {
     display: flex;
     flex-direction: row;
-    position: absolute;
+    position: relative;
     padding: 2px 5px;
     box-sizing: border-box;
     width: 100%;
