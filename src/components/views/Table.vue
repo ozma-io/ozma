@@ -880,8 +880,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   private clickOutsideEdit(event: MouseEvent) {
     const element = event ? document.elementFromPoint(event.x, event.y) : null;
+    // This need for don't close modal window by click on input field.
     if (element) {
-      if (element.closest(".v--modal-box")) {
+      if (element.closest(".v--modal-box") && element.closest(".input_container")) {
         return;
       }
     }
