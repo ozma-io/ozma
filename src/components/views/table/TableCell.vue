@@ -11,7 +11,6 @@
                           'error_style': value.erroredOnce,
                           'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable,
                           'editing_style': localValue.editing !== undefined,
-                          'text_align_right': column.textAlignRight,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click="$emit('cell-click', columnPosition, $event)"
   >
@@ -120,9 +119,5 @@ export default class TableCell extends Vue {
 
   .checkbox_click-none {
     pointer-events: none;
-  }
-
-  .text_align_right {
-    text-align: right;
   }
 </style>

@@ -240,18 +240,14 @@ export default class Textarea extends Vue {
   }
 
   .textarea_field__desktop {
-    padding: 3px;
+    padding: 5px;
+    border: 1px solid var(--MainBorderColor);
   }
 
   .textarea_field__desktop:focus {
     outline: none;
     overflow: auto;
     z-index: 10;
-    border: 1px solid var(--MainBorderColor);
-  }
-
-  .textarea_field__desktop:hover {
-    border: 1px solid var(--MainBorderColor);
   }
 
   .textarea-field_cell-edit {
