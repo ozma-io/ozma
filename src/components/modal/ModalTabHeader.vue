@@ -3,6 +3,7 @@
     :class="['modal__tab_header', {'selected': isActive, 'only_tab': onlyTab}]"
     @click="$emit('tab-click')"
   >
+    <slot name="actions-menu" />
     <span class="modal__tab_header_title">{{ title }}</span>
     <input
       type="button"
@@ -10,10 +11,7 @@
       class="material-icons modal__tab_close_button"
       @click.stop="$emit('tab-close')"
     >
-    <i
-      class="material-icons modal__tab_fullscreen_button"
-      @click.stop="$emit('tab-fullscreen')"
-    >fullscreen</i>
+    <slot name="actions-right" />
   </div>
 </template>
 
@@ -30,6 +28,7 @@ export default class ModalTabHeader extends Vue {
 
 <style scoped>
   .modal__tab_header {
+    display: flex;
     padding: 5px;
     flex: 1 1 auto;
     cursor: pointer;
@@ -41,11 +40,13 @@ export default class ModalTabHeader extends Vue {
     border-top-right-radius: 8px;
     margin-left: 5px;
     margin-right: 5px;
+    align-items: center;
   }
 
   .modal__tab_header_title {
     font-weight: 600;
     font-size: 1.25em;
+    margin-right: auto;
   }
 
   .modal__tab_header.selected,
@@ -61,17 +62,6 @@ export default class ModalTabHeader extends Vue {
 
   .modal__tab_close_button {
     visibility: hidden;
-    line-height: 1.25em;
-    font-size: 20px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    float: right;
-  }
-
-  .modal__tab_fullscreen_button {
-    visibility: hidden;
-    padding: 1px 5px 0;
     line-height: 1.25em;
     font-size: 20px;
     background: none;

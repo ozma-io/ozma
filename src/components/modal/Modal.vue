@@ -26,8 +26,14 @@
         :only-tab="modalTabs.length === 1"
         @tab-click="switchTab(index)"
         @tab-close="$emit('tab-close', index)"
-        @tab-fullscreen="$emit('tab-fullscreen', index)"
-      />
+      >
+        <template v-if="tab.actionsMenu" #actions-menu>
+          <ModalContent :nodes="tab.actionsMenu" />
+        </template>
+        <template v-if="tab.actionsRight" #actions-right>
+          <ModalContent :nodes="tab.actionsRight" />
+        </template>
+      </ModalTabHeader>
     </div>
     <div
       v-if="hasTabs"
@@ -54,7 +60,6 @@
 <script lang="ts">
 import * as R from "ramda";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { valueIsNull } from "@/values";
 
 import ModalContent from "@/components/modal/ModalContent";
 import ModalTabHeader from "@/components/modal/ModalTabHeader.vue";
@@ -63,7 +68,7 @@ import { isMobile } from "../../utils";
 
 @Component({ components: { ModalContent, ModalTabHeader } })
 export default class Modal extends Vue {
-  @Prop({ type: Array }) modalTabs!: IModalTab[] | undefined;
+  @Prop({ type: Array }) modalTabs!: IModalTab[];
   @Prop({ type: Boolean, default: true }) show!: boolean;
   @Prop({ type: Boolean, default: false }) fullscreen!: boolean;
   @Prop({ type: String }) width!: string;
@@ -111,7 +116,7 @@ export default class Modal extends Vue {
   }
 
   private switchTab(index: number) {
-    if (index < this.modalTabs!.length) {
+    if (index < this.modalTabs.length) {
       this.selectedTab = index;
     }
   }
@@ -176,6 +181,17 @@ export default class Modal extends Vue {
     height: 100%;
     padding: 0;
     overflow: hidden;
+  }
+
+  .modal__tab_fullscreen_button {
+    visibility: hidden;
+    padding: 1px 5px 0;
+    line-height: 1.25em;
+    font-size: 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    float: right;
   }
 </style>
 
