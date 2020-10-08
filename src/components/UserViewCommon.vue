@@ -63,7 +63,7 @@ const csvCell = (str: string): string => {
 const staging = namespace("staging");
 
 @Component({ components: { SelectUserView } })
-export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<null, null, null>, null, null, null>>(BaseUserView) {
+export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<undefined, undefined, undefined>, undefined, undefined, undefined>>(BaseUserView) {
   @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName; entityRef: IEntityRef; userView: UserViewKey; position?: number }) => Promise<IAddedResult>;
   @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName; fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; value: any }) => Promise<void>;
 

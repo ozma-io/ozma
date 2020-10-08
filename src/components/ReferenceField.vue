@@ -20,7 +20,7 @@
       v-if="selectedView"
       :initial-view="selectedView"
       :select-entity="entry.entity"
-      @select="selectedView = null; $emit('update', $event)"
+      @select="selectFromView"
       @close="selectedView = null"
     />
 
@@ -178,6 +178,11 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
       return 'flip_to_front';
     else
       return 'open_in_new';
+  }
+
+  private selectFromView(id: number) {
+    this.selectedView = null;
+    this.$emit('update', id);
   }
 }
 </script>

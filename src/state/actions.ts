@@ -1,11 +1,11 @@
-import { Dispatch } from "vuex";
+import { Dispatch, Commit } from "vuex";
 
 import {
   IActionRef, IActionResult, default as Api
 } from "@/api";
 import { CombinedTransactionResult } from "@/state/staging_changes";
 
-export const saveAndRunAction = async ({ dispatch }: { dispatch: Dispatch }, ref: IActionRef, args: Record<string, any>): Promise<IActionResult> => {
+export const saveAndRunAction = async ({ dispatch, commit }: { dispatch: Dispatch; commit: Commit }, ref: IActionRef, args: Record<string, any>): Promise<IActionResult> => {
   let ret: IActionResult | undefined;
   let reloaded = false;
   try {
@@ -23,10 +23,7 @@ export const saveAndRunAction = async ({ dispatch }: { dispatch: Dispatch }, ref
   }
 
   if (!reloaded) {
-    // We didn't reload; do it now.
-    try {
-      await dispatch("userView/reload", null, { root: true });
-    } catch (e) { }
+    commit("userView/clear", undefined, { root: true });
   }
   return ret as IActionResult;
 };

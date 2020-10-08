@@ -46,7 +46,7 @@ import { IQuery } from "@/state/query";
 import { CurrentChanges, IEntityChanges } from "@/state/staging_changes";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
 import { UserView } from "@/components";
-import BaseUserView from "@/components/BaseUserView";
+import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import * as R from "ramda";
 
 import MenuEntry, { MenuValue, IMenuLink } from '@/components/views/menu/MenuEntry.vue';
@@ -56,7 +56,7 @@ import { attrToLink, IAttrToLinkOpts } from "@/links";
   localConstructor: LocalEmptyUserView,
 })
 @Component({ components: { MenuEntry } })
-export default class UserViewMenu extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>>(BaseUserView) {
+export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView) {
   @Prop() uv!: CombinedUserView;
 
   get linkOpts(): IAttrToLinkOpts {

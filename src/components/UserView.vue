@@ -155,7 +155,7 @@ export default class UserView extends Vue {
   @userView.Mutation("removeUserViewConsumer") removeUserViewConsumer!: (args: { args: IUserViewArguments; reference: ReferenceName }) => void;
   @userView.Mutation("registerHandler") registerHandler!: (args: { args: IUserViewArguments; handler: IUserViewEventHandler }) => void;
   @userView.Mutation("unregisterHandler") unregisterHandler!: (args: { args: IUserViewArguments; handler: IUserViewEventHandler }) => void;
-  @userView.Action("getUserView") getUserView!: (args: { args: IUserViewArguments; root: boolean; reference: ReferenceName }) => Promise<CombinedUserView>;
+  @userView.Action("getUserView") getUserView!: (args: { args: IUserViewArguments; reference: ReferenceName }) => Promise<CombinedUserView>;
   @staging.State("currentSubmit") submitPromise!: Promise<CombinedTransactionResult[]> | null;
   @query.State("current") query!: ICurrentQuery | null;
 
@@ -304,7 +304,7 @@ export default class UserView extends Vue {
       this.setUvError(newUv);
     } else {
       // We need deep clone here as args may change, and getUserView expects them freezed.
-      await this.getUserView({ args: deepClone(this.args), root: this.isRoot, reference: this.uid });
+      await this.getUserView({ args: deepClone(this.args), reference: this.uid });
     }
   }
 

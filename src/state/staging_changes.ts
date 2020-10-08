@@ -741,7 +741,7 @@ const stagingModule: Module<IStagingState, {}> = {
             if (preReload) {
               await preReload();
             }
-            await dispatch("userView/reload", undefined, { root: true });
+            commit("userView/clear", undefined, { root: true });
           } catch (e) {
             console.error("Error while commiting", e);
             // Ignore errors; they've been already handled for userView
@@ -753,7 +753,6 @@ const stagingModule: Module<IStagingState, {}> = {
           commit("errors/resetErrors", errorKey, { root: true });
           if (state.touched) {
             await dispatch("clearAdded", scope);
-            await dispatch("userView/updateErroredOnce", undefined, { root: true });
           } else {
             if (scope) {
               await dispatch("resetScoped", scope);

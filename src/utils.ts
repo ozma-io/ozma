@@ -371,10 +371,10 @@ export interface IResource<M, T> {
 }
 
 // Implements a map with named references which supports removing unreferenced entries.
-export class ResourceMap<M, V> {
+export class ResourceMap<V, M=undefined> {
   private resourcesMap: Record<string, IResource<M, V>> = {};
 
-  createResource(key: string, reference: ReferenceName, meta: M, value: V) {
+  createResource(key: string, reference: ReferenceName, value: V, meta: M) {
     if (key in this.resourcesMap) {
       throw new Error("Resource is already allocated");
     }
@@ -444,7 +444,7 @@ export class ResourceMap<M, V> {
     resource.value = f(resource.value);
   }
 
-  forceRemove(key: string) {
+  forceDelete(key: string) {
     Vue.delete(this.resourcesMap, key);
   }
 
@@ -465,11 +465,11 @@ export class ResourceMap<M, V> {
   }
 }
 
-export class ObjectResourceMap<M, K, V> {
-  private internal = new ResourceMap<M, [K, V]>();
+export class ObjectResourceMap<K, V, M=undefined> {
+  private internal = new ResourceMap<[K, V], M>();
 
-  createResource(key: K, reference: ReferenceName, meta: M, value: V) {
-    this.internal.createResource(valueSignature(key), reference, meta, [key, value]);
+  createResource(key: K, reference: ReferenceName, value: V, meta: M) {
+    this.internal.createResource(valueSignature(key), reference, [key, value], meta);
   }
 
   updateResource(key: K, value: V) {
@@ -505,8 +505,8 @@ export class ObjectResourceMap<M, K, V> {
     this.applyBySignature(f, valueSignature(key));
   }
 
-  forceRemove(key: K) {
-    this.forceRemoveBySignature(valueSignature(key));
+  forceDelete(key: K) {
+    this.forceDeleteBySignature(valueSignature(key));
   }
 
   existsBySignature(signature: string): boolean {
@@ -530,8 +530,8 @@ export class ObjectResourceMap<M, K, V> {
     }, signature);
   }
 
-  forceRemoveBySignature(signature: string) {
-    this.internal.forceRemove(signature);
+  forceDeleteBySignature(signature: string) {
+    this.internal.forceDelete(signature);
   }
 
   resources() {

@@ -2,12 +2,13 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { RowId, IEntityRef, IFieldRef } from "@/api";
-import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, homeSchema, ICombinedRow, IAddedRow } from "@/state/user_view";
+import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow } from "@/state/user_view";
 import { ErrorKey } from "@/state/errors";
 import { ScopeName, UserViewKey, AddedRowId, CombinedTransactionResult, IAddedResult } from "@/state/staging_changes";
 import { LocalUserView, RowRef, ValueRef, SimpleLocalUserView, ILocalRow, ILocalRowInfo } from "@/local_user_view";
 import { equalEntityRef } from "@/values";
 import { ObjectSet } from "@/utils";
+import LocalEmptyUserView from "@/LocalEmptyUserView";
 
 export interface ISelectionRef {
   entity: IEntityRef;
@@ -273,3 +274,5 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
     }
   }
 }
+
+export type EmptyBaseUserView = BaseUserView<LocalEmptyUserView, undefined, undefined, undefined>;

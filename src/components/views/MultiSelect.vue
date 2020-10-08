@@ -100,7 +100,7 @@ import { AddedRowId } from "@/state/staging_changes";
 import { IQuery, attrToQueryRef } from "@/state/query";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
 import { UserView } from "@/components";
-import BaseUserView, { ISelectionRef } from "@/components/BaseUserView";
+import BaseUserView, { ISelectionRef, EmptyBaseUserView } from "@/components/BaseUserView";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
 import MultiSelect from "@/components/multiselect/MultiSelect.vue";
@@ -154,7 +154,7 @@ const query = namespace("query");
 @Component({
   components: { MultiSelect },
 })
-export default class UserViewMultiSelect extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>, BaseEntriesView>(BaseUserView, BaseEntriesView) {
+export default class UserViewMultiSelect extends mixins<EmptyBaseUserView, BaseEntriesView>(BaseUserView, BaseEntriesView) {
   @query.Action("addWindow") addWindow!: (query: IQuery) => Promise<void>;
   @Prop({ type: String }) backgroundColor!: string;
 

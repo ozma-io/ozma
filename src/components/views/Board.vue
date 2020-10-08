@@ -48,7 +48,7 @@ import { Value } from "Misc/JSON/_api";
 
 import { mapMaybe } from "@/utils";
 import { UserView } from "@/components";
-import BaseUserView from "@/components/BaseUserView";
+import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
 import { LocalUserView, IExistingValueRef, ValueRef } from "@/local_user_view";
 import { CombinedUserView, IValueInfo, IUserViewValueRef, ICombinedValue, IRowCommon, ICombinedRow, valueToPunnedText, referenceEntries } from "@/state/user_view";
@@ -76,7 +76,7 @@ type IColumnTitleMap = Record<number, string>;
   localConstructor: LocalEmptyUserView,
 })
 @Component({ components: { Board, Errorbox } })
-export default class UserViewBoard extends mixins<BaseUserView<LocalEmptyUserView, null, null, null>, BaseEntriesView>(BaseUserView, BaseEntriesView) {
+export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntriesView>(BaseUserView, BaseEntriesView) {
 
   @Prop() uv!: CombinedUserView;
   selectedCards: any[] = [];

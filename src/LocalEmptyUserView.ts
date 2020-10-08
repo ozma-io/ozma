@@ -1,25 +1,25 @@
 import { LocalUserView } from "@/local_user_view";
 
-export default class LocalEmptyUserView extends LocalUserView<null, null, null> {
+export default class LocalEmptyUserView extends LocalUserView<undefined, undefined, undefined> {
   createLocalUserView() {
-    return null;
+    return undefined;
   }
   createLocalRow() {
-    return null;
+    return undefined;
   }
   createLocalValue() {
-    return null;
+    return undefined;
   }
   createAddedLocalValue() {
-    return null;
+    return undefined;
   }
   createEmptyLocalRow() {
-    return null;
+    return undefined;
   }
   createAddedLocalRow() {
-    return null;
+    return undefined;
   }
   createEmptyLocalValue() {
-    return null;
+    return undefined;
   }
 }
