@@ -216,6 +216,8 @@ const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: 
     let val: string;
     if (typeof rawVal === "string") {
       val = rawVal;
+    } else if (rawVal === null) {
+      val = "";
     } else {
       const filtered = rawVal.filter(x => x !== null);
       if (filtered.length === 0) {

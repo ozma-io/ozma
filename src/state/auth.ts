@@ -3,9 +3,11 @@ import { v4 as uuidv4 } from "uuid";
 import jwtDecode from "jwt-decode";
 
 import { IRef } from "@/utils";
-import { FunDBError, disableAuth, authClientId, authUrl, default as Api } from "@/api";
+import { FunDBError, disableAuth, authClientId, authUrl, default as Api, developmentMode } from "@/api";
 import * as Utils from "@/utils";
 import { router, getQueryValue } from "@/modules";
+import { andThen } from "ramda";
+import { RawLocation } from "vue-router";
 
 export class CurrentAuth {
   createdTime: number;
@@ -46,7 +48,7 @@ export class CurrentAuth {
 export interface IAuthState {
   current: CurrentAuth | null;
   renewalTimeoutId: NodeJS.Timeout | null;
-  pending: Promise<CurrentAuth> | null;
+  pending: Promise<void> | null;
 }
 
 interface IOIDCState {
@@ -100,30 +102,40 @@ const loadCurrentAuth = () => {
   }
 };
 
-const getToken = (context: ActionContext<IAuthState, {}>, params: Record<string, string>) => {
+const requestToken = async (params: Record<string, string>): Promise<CurrentAuth> => {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/x-www-form-urlencoded",
+  };
+  const newParams = {...params, ["client_id"]: authClientId};
+  const paramsString = new URLSearchParams(newParams).toString();
+
+  const ret = await Utils.fetchJson(`${authUrl}/token`, {
+    method: "POST",
+    headers,
+    body: paramsString,
+  });
+
+  return new CurrentAuth(ret.access_token, ret.refresh_token, ret.id_token);
+}
+
+const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<string, string>) => {
   const { state, commit, dispatch } = context;
-  const pending: IRef<Promise<CurrentAuth>> = {};
+  const oldPending = state.pending;
+  const pending: IRef<Promise<void>> = {};
   pending.ref = (async () => {
+    await Utils.waitTimeout(); // Delay promise so that it gets saved to `pending` first.
+    if (oldPending !== null) {
+      try {
+        await oldPending;
+      } catch (e) { }
+    }
     try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/x-www-form-urlencoded",
-      };
-
-      params["client_id"] = authClientId;
-      const paramsString = new URLSearchParams(params).toString();
-
-      const ret = await Utils.fetchJson(`${authUrl}/token`, {
-        method: "POST",
-        headers,
-        body: paramsString,
-      });
+      const auth = await requestToken(params);
       if (state.pending !== pending.ref) {
         throw new Error("Pending operation cancelled");
       }
-      const auth = new CurrentAuth(ret.access_token, ret.refresh_token, ret.id_token);
-      updateAuth(context, auth);
+      await updateAuth(context, auth);
       startTimeouts(context);
-      return auth;
     } catch (e) {
       if (state.pending === pending.ref) {
         let description: string | null = e.message;
@@ -143,25 +155,29 @@ const getToken = (context: ActionContext<IAuthState, {}>, params: Record<string,
           }
         }
 
-        dispatch("removeAuth", undefined, { root: true });
+        await dispatch("removeAuth", undefined, { root: true });
         if (description !== null) {
           dispatch("setError", `Error when getting token: ${description}`);
         }
         requestLogin(context, false);
       }
       throw e;
+    } finally {
+      if (state.pending === pending.ref) {
+        commit("setPending", null);
+      }
     }
   })();
   commit("setPending", pending.ref);
   return pending.ref;
 };
 
-const updateAuth = ({ state, commit, dispatch }: ActionContext<IAuthState, {}>, auth: CurrentAuth) => {
+const updateAuth = async ({ state, commit, dispatch }: ActionContext<IAuthState, {}>, auth: CurrentAuth) => {
   const oldAuth = state.current;
   commit("setAuth", auth);
   persistCurrentAuth(auth);
   if (oldAuth === null) {
-    dispatch("setAuth", undefined, { root: true });
+    await dispatch("setAuth", undefined, { root: true });
   }
 };
 
@@ -180,7 +196,7 @@ const renewAuth = async (context: ActionContext<IAuthState, {}>) => {
     ["grant_type"]: "refresh_token",
     ["refresh_token"]: state.current.refreshToken,
   };
-  return getToken(context, params);
+  await startGetToken(context, params);
 };
 
 const constantFactorStart = 0.8;
@@ -241,6 +257,15 @@ const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExist
   return waitForLoad;
 };
 
+const authQueryKey = "__auth";
+
+export const getAuthedLink = (auth: CurrentAuth): string => {
+  const query = {...router.currentRoute.query};
+  query[authQueryKey] = auth.refreshToken;
+  const href = router.resolve({ path: router.currentRoute.path, query }).href;
+  return window.location.origin + href;
+};
+
 const errorKey = "auth";
 
 export const authModule: Module<IAuthState, {}> = {
@@ -253,7 +278,6 @@ export const authModule: Module<IAuthState, {}> = {
   mutations: {
     setAuth: (state, auth: CurrentAuth) => {
       state.current = auth;
-      state.pending = null;
     },
     setRenewalTimeout: (state, renewalTimeoutId: NodeJS.Timeout | null) => {
       state.renewalTimeoutId = renewalTimeoutId;
@@ -261,9 +285,8 @@ export const authModule: Module<IAuthState, {}> = {
     clearAuth: state => {
       state.current = null;
       state.renewalTimeoutId = null;
-      state.pending = null;
     },
-    setPending: (state, pending: Promise<CurrentAuth> | null) => {
+    setPending: (state, pending: Promise<void> | null) => {
       state.pending = pending;
     },
   },
@@ -288,91 +311,123 @@ export const authModule: Module<IAuthState, {}> = {
     },
     setError: ({ commit }, error: string) => {
       commit("errors/setError", { key: errorKey, error }, { root: true });
-      commit("setPending", null);
     },
-    startAuth: async context => {
+    startAuth: context => {
       const { state, commit, dispatch } = context;
 
-      if (disableAuth) {
-        return;
-      }
+      console.assert(state.pending === null);
+      const pending: IRef<Promise<void>> = {};
+      const newPending = (async () => {
+        await Utils.waitTimeout(); // Delay promise so that it gets saved to `pending` first.
 
-      let tryExisting = true;
-      if (router.currentRoute.name === "auth_response") {
-        dropCurrentAuth();
-        tryExisting = false;
+        try {
+          if (disableAuth) {
+            return;
+          }
 
-        const stateString = getQueryValue("state");
-        if (stateString !== null) {
-          const savedState: IOIDCState = JSON.parse(atob(stateString));
-          const nonce = localStorage.getItem(authNonceKey);
-          if (nonce === null || savedState.nonce !== nonce) {
-            // Invalid nonce; silently redirect.
-            console.error("Invalid client nonce");
-            router.replace({ name: "main" });
-          } else {
-            const code = getQueryValue("code");
-            if (code !== null) {
-              const params: Record<string, string> = {
-                ["grant_type"]: "authorization_code",
-                ["code"]: code,
-                ["redirect_uri"]: redirectUri(),
-              };
-              getToken(context, params);
+          await new Promise(resolve => router.onReady(resolve)); // Await till router is ready.
+
+          let tryExisting = true;
+          if (router.currentRoute.name === "auth_response") {
+            tryExisting = false;
+            dropCurrentAuth();
+
+            const stateString = getQueryValue("state");
+            if (stateString !== null) {
+              const savedState: IOIDCState = JSON.parse(atob(stateString));
+              const nonce = localStorage.getItem(authNonceKey);
+              if (nonce === null || savedState.nonce !== nonce) {
+                // Invalid nonce; silently redirect.
+                console.error("Invalid client nonce");
+                await router.replace({ name: "main" });
+              } else {
+                const code = getQueryValue("code");
+                if (code !== null) {
+                  const params: Record<string, string> = {
+                    ["grant_type"]: "authorization_code",
+                    ["code"]: code,
+                    ["redirect_uri"]: redirectUri(),
+                  };
+                  const auth = await requestToken(params);
+                  await updateAuth(context, auth);
+                  startTimeouts(context);
+                } else {
+                  const error = getQueryValue("error");
+                  if (error !== "login_required") {
+                    const errorDescription = getQueryValue("errorDescription");
+                    dispatch("setError", `Invalid auth response query parameters, error ${error} ${errorDescription}`);
+                  }
+                }
+                await router.replace(savedState.path);
+              }
             } else {
-              const error = getQueryValue("error");
-              if (error !== "login_required") {
-                const errorDescription = getQueryValue("errorDescription");
-                dispatch("setError", `Invalid auth response query parameters, error ${error} ${errorDescription}`);
+              // We got here after logout, redirect.
+              await router.replace({ name: "main" });
+            }
+          } else if (developmentMode && authQueryKey in router.currentRoute.query) {
+            dropCurrentAuth();
+            const refreshToken = String(router.currentRoute.query[authQueryKey]);
+            const newQuery = {...router.currentRoute.query};
+            delete newQuery[authQueryKey];
+            await router.replace({ query: newQuery });
+            const params: Record<string, string> = {
+              ["grant_type"]: "refresh_token",
+              ["refresh_token"]: refreshToken,
+            };
+            try {
+              const currAuth = await requestToken(params);
+              await updateAuth(context, currAuth);
+              startTimeouts(context);
+            } catch (e) {
+              console.error("Failed to use refresh token from URL", e);
+            }
+          } else {
+            const oldAuth = loadCurrentAuth();
+            if (oldAuth !== null) {
+              await updateAuth(context, oldAuth);
+              renewAuth(context);
+            }
+          }
+          localStorage.removeItem(authNonceKey);
+
+          const authStorageHandler = async (e: StorageEvent) => {
+            if (e.key !== authKey) {
+              return;
+            }
+
+            if (e.newValue === null) {
+              await dispatch("removeAuth", undefined, { root: true });
+            } else {
+              const newAuth = loadCurrentAuth();
+              if (newAuth !== null && (state.current === null || newAuth.token !== state.current.token)) {
+                await updateAuth(context, newAuth);
+                startTimeouts(context);
               }
             }
-            router.replace(savedState.path);
+          };
+          window.addEventListener("storage", e => { authStorageHandler(e); });
+
+          if (state.current === null) {
+            if (tryExisting) {
+              await requestLogin(context, tryExisting);
+            }
           }
-        } else {
-          // We got here after logout, redirect.
-          router.replace({ name: "main" });
-        }
-      } else {
-        const oldAuth = loadCurrentAuth();
-        if (oldAuth !== null) {
-          updateAuth(context, oldAuth);
-          renewAuth(context);
-        }
-      }
-      localStorage.removeItem(authNonceKey);
-
-      const authStorageHandler = (e: StorageEvent) => {
-        if (e.key !== authKey) {
-          return;
-        }
-
-        if (e.newValue === null) {
-          dispatch("removeAuth", undefined, { root: true });
-        } else {
-          const newAuth = loadCurrentAuth();
-          if (newAuth !== null && (state.current === null || newAuth.token !== state.current.token)) {
-            updateAuth(context, newAuth);
-            startTimeouts(context);
+        } finally {
+          if (state.pending === pending.ref) {
+            commit("setPending", null);
           }
         }
-      };
-      window.addEventListener("storage", authStorageHandler);
-
-      if (state.current === null && state.pending === null) {
-        if (tryExisting) {
-          await requestLogin(context, tryExisting);
-        }
-      } else if (state.pending !== null) {
-        await state.pending;
-      }
+      })();
+      commit("setPending", newPending);
+      return newPending;
     },
     callProtectedApi: {
       root: true,
       handler: async ({ state, dispatch }, { func, args }: { func: ((_1: string | null, ..._2: any[]) => Promise<any>); args?: any[] }): Promise<any> => {
-        if (state.current === null) {
-          if (state.pending !== null) {
+        if (state.pending !== null) {
+          try {
             await state.pending;
-          }
+          } catch (e) { }
         }
 
         try {

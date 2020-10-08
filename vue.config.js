@@ -17,6 +17,7 @@ const defaults = {
   "__API_AUTH_URL__": undefined,
   "__API_AUTH_URL_BASE__": undefined,
   "__AUTH_CLIENT_ID__": undefined,
+  "__DEVELOPMENT_MODE__": false
 };
 
 const analyzeBundle = process.env["ANALYZE"];

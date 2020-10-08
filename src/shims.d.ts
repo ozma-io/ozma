@@ -1,8 +1,9 @@
-declare let __API_URL__: string;
-declare let __API_AUTH_URL__: string | undefined;
-declare let __API_AUTH_URL_BASE__: string | undefined;
-declare let __AUTH_CLIENT_ID__: string | undefined;
-declare let __DISABLE_AUTH__: boolean;
+declare const __API_URL__: string;
+declare const __API_AUTH_URL__: string | undefined;
+declare const __API_AUTH_URL_BASE__: string | undefined;
+declare const __AUTH_CLIENT_ID__: string | undefined;
+declare const __DISABLE_AUTH__: boolean;
+declare const __DEVELOPMENT_MODE__: boolean;
 
 declare module "v-click-outside" {
   const vClickOutside: any;

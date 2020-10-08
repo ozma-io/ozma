@@ -2,7 +2,7 @@ import Vue from "vue";
 import { Store, Dispatch, Module, ActionContext } from "vuex";
 import moment from "moment";
 
-import { IRef, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, mapMaybe, deepClone, deepFreeze } from "@/utils";
+import { IRef, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, mapMaybe, deepClone, deepFreeze, waitTimeout } from "@/utils";
 import {
   IColumnField, UserViewSource, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
   SchemaName, EntityName, RowId, FieldName, AttributeName, IViewInfoResult, IViewExprResult,
@@ -1220,12 +1220,6 @@ const userViewModule: Module<IUserViewState, {}> = {
         dispatch("reload");
       },
     },
-    setAuth: {
-      root: true,
-      handler: ({ dispatch }) => {
-        dispatch("reload");
-      },
-    },
 
     getEntries: ({ state, rootState, commit, dispatch }, { reference, ref }: { reference: ReferenceName; ref: IEntriesRef }): Promise<Entries> => {
       const oldResource = state.entries.entries.getResource(ref);
@@ -1336,6 +1330,8 @@ const userViewModule: Module<IUserViewState, {}> = {
 
       const pending: IRef<Promise<CombinedUserView>> = {};
       pending.ref = (async () => {
+        await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
+
         let current: UserViewError | CombinedUserView;
         try {
           current = await fetchUserView(context, args);
@@ -1371,6 +1367,8 @@ const userViewModule: Module<IUserViewState, {}> = {
       commit("bumpGeneration");
 
       const pendingReload = (async () => {
+        await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
+
         try {
           // Prefetch root user views.
           const prefetchesPromises = mapMaybe(resource => {

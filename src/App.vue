@@ -56,10 +56,8 @@ export default class App extends Vue {
   @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
 
   created() {
-    this.$router.onReady(async () => {
-      await this.startAuth();
-      await this.getSettings();
-    });
+    this.startAuth();
+    this.getSettings();
   }
 
   get authErrors() {

@@ -1,6 +1,6 @@
 import { Module } from "vuex";
 
-import { IRef, convertString } from "@/utils";
+import { IRef, convertString, waitTimeout } from "@/utils";
 import { IViewExprResult, funappSchema, default as Api } from "@/api";
 
 const errorKey = "settings";
@@ -70,6 +70,7 @@ const settingsModule: Module<ISettingsState, {}> = {
       }
       const pending: IRef<Promise<CurrentSettings>> = {};
       pending.ref = (async () => {
+        await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
         try {
           const ref = {
             schema: funappSchema,

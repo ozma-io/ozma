@@ -2,7 +2,7 @@ import Vue from "vue";
 import { Module, ActionContext } from "vuex";
 import { Moment } from "moment";
 
-import { RecordSet, deepClone, mapMaybe, map2 } from "@/utils";
+import { RecordSet, deepClone, mapMaybe, map2, waitTimeout } from "@/utils";
 import { IUpdatedValue, IFieldInfo, valueFromRaw } from "@/values";
 import {
   ITransaction, ITransactionResult, IEntityRef, IFieldRef, IEntity, RowId, SchemaName, FieldName, EntityName,
@@ -726,6 +726,7 @@ const stagingModule: Module<IStagingState, {}> = {
       const action: ITransaction = { operations: ops };
 
       const submit = (async (): Promise<CombinedTransactionResult[]> => {
+        await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
         let result: ITransactionResult | Error;
         try {
           result = await dispatch("callProtectedApi", {

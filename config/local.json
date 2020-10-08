@@ -2,5 +2,6 @@
   "__API_URL__": "`http://${location.hostname}:5000`",
   "__API_AUTH_URL__": "'https://account-dev.ozma.io'",
   "__API_AUTH_URL_BASE__": "'/auth/realms/default'",
-  "__AUTH_CLIENT_ID__": "'funapp'"
+  "__AUTH_CLIENT_ID__": "'funapp'",
+  "__DEVELOPMENT_MODE__": true
  }

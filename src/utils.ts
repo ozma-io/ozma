@@ -17,8 +17,10 @@ export const resultMap = <A, B>(func: ((_: A) => B), res: Result<A>): Result<B> 
   }
 };
 
-export const nextRender = (): Promise<any> => new Promise((resolve) =>
-  Vue.nextTick(() => window.requestAnimationFrame(() => requestAnimationFrame(resolve))));
+export const waitTimeout = (timeout?: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, timeout));
+
+export const nextRender = (): Promise<void> => new Promise((resolve) =>
+  Vue.nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
 
 export declare let process: {
   env: Record<string, string>;
@@ -600,7 +602,7 @@ const makeWordsRegex = () => {
     [`„`, `“`],
     [`”`, `”`],
   ];
-    // Match fully-quoted words: e.g. `"foo bar"` will match but `"foo"b` or `"foo ` will not
+  // Match fully-quoted words: e.g. `"foo bar"` will match but `"foo"b` or `"foo ` will not.
   const quoteRegexes = quotes.map(([start, end]) => `${start}([^${end}]+)${end}(?:\\s|$)`);
   // Match any word
   const fallbackRegex = `([^\\s]+)`;

@@ -1,6 +1,7 @@
 {
   "__API_URL__": "`https://${instanceName}.api.${instancesHost}`",
-  "__API_AUTH_URL__": "instancesHost === 'ozma-dev.org' ? 'https://account-dev.ozma.io' : 'https://account.ozma.io'",
+  "__API_AUTH_URL__": "developmentMode ? 'https://account-dev.ozma.io' : 'https://account.ozma.io'",
   "__API_AUTH_URL_BASE__": "'/auth/realms/default'",
-  "__AUTH_CLIENT_ID__": "'funapp'"
+  "__AUTH_CLIENT_ID__": "'funapp'",
+  "__DEVELOPMENT_MODE__": "instancesHost === 'ozma-dev.org'"
  }

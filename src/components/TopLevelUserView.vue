@@ -13,7 +13,9 @@
             "staging_error": "Error while submitting changes: {msg}",
             "settings_error": "Failed to fetch settings: {msg}",
             "select_user_view_error": "Failed to select an entry: {msg}",
-            "base_user_view_error": "Failed to perform an operation: {msg}"
+            "base_user_view_error": "Failed to perform an operation: {msg}",
+            "error": "Error",
+            "authed_link": "Copy link with authorization"
         },
         "ru": {
             "search_placeholder": "Поиск",
@@ -28,7 +30,9 @@
             "staging_error": "Ошибка сохранения изменений: {msg}",
             "settings_error": "Ошибка получения настроек: {msg}",
             "select_user_view_error": "Ошибка выбора записи: {msg}",
-            "base_user_view_error": "Ошибка выполнения операции: {msg}"
+            "base_user_view_error": "Ошибка выполнения операции: {msg}",
+            "error": "Ошибка",
+            "authed_link": "Скопировать ссылку с авторизацией"
         }
     }
 </i18n>
@@ -101,14 +105,14 @@
       <div class="count-row">
         {{ statusLine }}
       </div>
-      <div
-        v-for="(error, errorI) in errors"
-        :key="errorI"
-        class="error custom-danger"
-        show
+      <i 
+        v-if="errors.length > 0" 
+        class="material-icons" 
+        :style="{cursor: 'pointer', color: 'red'}"
+        @click="makeErrorToast"
       >
-        {{ error }}
-      </div>
+        help_outline
+      </i>
       <div
         v-if="!changes.isScopeEmpty('root')"
         class="error custom-warning"
@@ -159,7 +163,7 @@ import {CurrentChanges, ScopeName} from "@/state/staging_changes";
 import {Action} from "@/components/ActionsMenu.vue";
 import ModalUserView from "@/components/ModalUserView.vue";
 import SearchPanel from "@/components/SearchPanel.vue";
-import {CurrentAuth} from "@/state/auth";
+import {CurrentAuth, getAuthedLink} from "@/state/auth";
 import {ICurrentQuery, IQuery, queryLocation, ICurrentQueryHistory} from "@/state/query";
 import {convertToWords} from "@/utils";
 
@@ -217,6 +221,16 @@ export default class TopLevelUserView extends Vue {
     return [];
   }
 
+  private makeErrorToast() {
+    this.errors.forEach(error => {
+      this.$bvToast.toast(error.toString(), {
+        title: this.$t("error").toString(),
+        variant: 'danger',
+        solid: true
+      })  
+    })
+  }
+
   @Watch("$route", {deep: true, immediate: true})
   private onRouteChanged() {
     this.resetRoute(this.$route);
@@ -239,6 +253,12 @@ export default class TopLevelUserView extends Vue {
     const actions: Action[] = [];
     actions.push(...this.extraActions);
     if (this.currentAuth !== null) {
+      if (Api.developmentMode) {
+        actions.push({name: this.$t("authed_link").toString(), order: 1000, callback: () => {
+          const link = getAuthedLink(this.currentAuth!);
+          navigator.clipboard.writeText(link);
+        }});
+      }
       actions.push({name: this.$t("account").toString(), order: 1000, link: { href: Api.accountUrl }});
       actions.push({name: this.$t("logout").toString(), order: 1000, callback: this.logout});
     } else {
@@ -389,6 +409,7 @@ export default class TopLevelUserView extends Vue {
     float: left;
     margin-left: 5px;
     color: var(--MainTextColor);
+    font-weight: 600;
   }
 
   .custom-warning {

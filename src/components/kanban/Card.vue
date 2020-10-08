@@ -1,16 +1,16 @@
 <template>
   <!-- <a> tags have special behaviour on Safari which breaks animation, hence no-href. -->
-  <FunLink
-    :link="data.cardLink"
-    no-href
+  <div
     data-no-dragscroll
-    @goto="$emit('goto', $event)"
+    ref="cardContainer"
+    class="card_container"
+    :style="cardStyle"
   >
-    <div
-      ref="cardContainer"
+    <FunLink
+      :link="data.cardLink"
+      no-href
       data-no-dragscroll
-      class="card_container"
-      :style="cardStyle"
+      @goto="$emit('goto', $event)"
     >
       <b-row
         v-for="(row, rowIndex) in data.rows"
@@ -48,8 +48,8 @@
           </span>
         </b-col>
       </b-row>
-    </div>
-  </FunLink>
+    </FunLink>
+  </div>
 </template>
 
 <script lang="ts">

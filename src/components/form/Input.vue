@@ -260,11 +260,11 @@ export default class Input extends Vue {
   }
 
   .input-field__required {
-    border-bottom: 1px solid var(--WarningColor) !important;
+    background: var(--WarningColor) !important;
   }
 
   .input-field__error {
-    border-bottom: 1px solid var(--FailColor) !important;
+    background: var(--FailColor) !important;
   }
 
   // .input_field__focused {
