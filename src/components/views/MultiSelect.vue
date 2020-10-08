@@ -94,7 +94,7 @@ import { namespace } from "vuex-class";
 
 import { RecordSet, tryDicts, mapMaybe } from "@/utils";
 import { AttributesMap, IResultColumnInfo, IReferenceFieldType, IMainFieldInfo, IEntityRef } from "@/api";
-import { CurrentEntries, CombinedUserView, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, homeSchema, referenceEntries } from "@/state/user_view";
+import { CurrentEntries, CombinedUserView, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, homeSchema, referenceEntriesRef } from "@/state/user_view";
 import { RowRef, ValueRef } from "@/local_user_view";
 import { AddedRowId } from "@/state/staging_changes";
 import { IQuery, attrToQueryRef } from "@/state/query";
@@ -160,8 +160,8 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView, BaseE
 
   get entriesEntity() {
     const fieldType = this.uv.info.columns[this.selectedValueIndex].mainField?.field.fieldType;
-    if (fieldType && fieldType.type === "reference") {
-      return referenceEntries(fieldType);
+    if (fieldType?.type === "reference") {
+      return referenceEntriesRef(fieldType);
     }
     return null;
   }

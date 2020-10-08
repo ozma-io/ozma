@@ -246,6 +246,7 @@ export const valueSignature = <T>(a: T): string => {
   }
 };
 
+// Object keys should be exactly typed, as per Flow exact object types. Otherwise signatures will be different.
 export class ObjectMap<K, V> {
   private entriesMap: Record<string, [K, V]> = {};
 
@@ -465,6 +466,7 @@ export class ResourceMap<V, M=undefined> {
   }
 }
 
+// Concerns described for ObjectMap apply.
 export class ObjectResourceMap<K, V, M=undefined> {
   private internal = new ResourceMap<[K, V], M>();
 

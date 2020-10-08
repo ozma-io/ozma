@@ -51,7 +51,7 @@ import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
 import { LocalUserView, IExistingValueRef, ValueRef } from "@/local_user_view";
-import { CombinedUserView, IValueInfo, IUserViewValueRef, ICombinedValue, IRowCommon, ICombinedRow, valueToPunnedText, referenceEntries } from "@/state/user_view";
+import { CombinedUserView, IValueInfo, IUserViewValueRef, ICombinedValue, IRowCommon, ICombinedRow, valueToPunnedText, referenceEntriesRef } from "@/state/user_view";
 
 import Board from "@/components/kanban/Board.vue";
 import { ICard, ICardCol, ICardRow, CardColType, allowedTargets } from "@/components/kanban/Card.vue";
@@ -84,7 +84,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
   get entriesEntity() {
     const fieldType = this.uv.info.columns[this.groupIndex].mainField?.field.fieldType;
     if (fieldType && fieldType.type === "reference") {
-      return referenceEntries(fieldType);
+      return referenceEntriesRef(fieldType);
     }
     return null;
   }

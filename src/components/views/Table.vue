@@ -233,7 +233,7 @@ import {
   valueToPunnedText,
   IEntriesRef,
   Entries,
-  referenceEntries,
+  referenceEntriesRef,
 } from "@/state/user_view";
 import {UserView} from "@/components";
 import {ScopeName, AddedRowId, AutoSaveLock} from "@/state/staging_changes";
@@ -834,9 +834,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     } else {
       const fieldType = this.editingValue.value.info?.field?.fieldType;
       if (fieldType !== undefined && fieldType.type === "reference") {
-        const ref = referenceEntries(fieldType);
         if (!this.keptEntries.exists(fieldType)) {
-          this.getEntries({ ref: referenceEntries(fieldType), reference: this.uid });
+          const ref = referenceEntriesRef(fieldType);
+          this.getEntries({ ref, reference: this.uid });
           this.keptEntries.insert(ref);
         }
       }

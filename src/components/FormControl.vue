@@ -300,7 +300,7 @@ import { namespace } from "vuex-class";
 import {valueToText, valueIsNull, dateTimeFormat} from "@/values";
 import { AttributesMap, ValueType } from "@/api";
 import { Action } from "@/components/ActionsMenu.vue";
-import { IUserViewArguments, homeSchema, ICombinedValue, currentValue, IEntriesRef, referenceEntries } from "@/state/user_view";
+import { IUserViewArguments, homeSchema, ICombinedValue, currentValue, IEntriesRef, referenceEntriesRef } from "@/state/user_view";
 import { IQuery, attrToQuerySelf } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { isMobile } from "@/utils";
@@ -538,7 +538,7 @@ export default class FormControl extends Vue {
         case "reference":
           const refEntry: IReferenceType = {
             name: "reference",
-            ref: referenceEntries(this.fieldType),
+            ref: referenceEntriesRef(this.fieldType),
             selectActions: [],
           };
           refEntry.linkedAttr = this.attributes["linked_view"];

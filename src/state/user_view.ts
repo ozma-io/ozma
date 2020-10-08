@@ -2,7 +2,7 @@ import Vue from "vue";
 import { Store, Dispatch, Module, ActionContext } from "vuex";
 import moment from "moment";
 
-import { IRef, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, mapMaybe, deepClone, deepFreeze, waitTimeout, debugLogTrace } from "@/utils";
+import { IRef, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, waitTimeout, debugLogTrace, debugLog } from "@/utils";
 import {
   IColumnField, UserViewSource, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
   SchemaName, EntityName, RowId, FieldName, AttributeName, IViewInfoResult, IViewExprResult,
@@ -123,10 +123,6 @@ export const setUpdatedPun = (entitySummaries: Entries | null, value: ICombinedV
   }
 };
 
-export const referenceEntries = (fieldType: IReferenceFieldType): IEntriesRef => {
-  return { entity: fieldType.entity, where: fieldType.where };
-}
-
 // Returns `null` when there's no pun. Returns `undefined` when pun cannot be resolved now.
 const setOrRequestUpdatedPun = (context: { dispatch: Dispatch; state: IUserViewState }, value: ICombinedValue, fieldType: FieldType) => {
   const { dispatch, state } = context;
@@ -138,7 +134,7 @@ const setOrRequestUpdatedPun = (context: { dispatch: Dispatch; state: IUserViewS
     } else {
       const summaries = state.entries.entries.get(fieldType);
       if (summaries === undefined) {
-        dispatch("userView/getEntries", { ref: fieldType, reference: "update" }, { root: true });
+        dispatch("userView/getEntries", { ref: referenceEntriesRef(fieldType), reference: "update" }, { root: true });
         value.pun = undefined;
       } else if (!(summaries instanceof Error) && !(summaries instanceof Promise)) {
         const pun = summaries[ref];
@@ -537,6 +533,10 @@ export const equalEntriesRef = (a: IEntriesRef, b: IEntriesRef): boolean => {
   return equalEntityRef(a.entity, b.entity) && a.where === b.where;
 };
 
+export const referenceEntriesRef = (r: IReferenceFieldType): IEntriesRef => {
+  return {entity: r.entity, where: r.where};
+};
+
 export class CurrentEntries {
   entries = new ObjectResourceMap<IEntriesRef, EntriesResult>();
 
@@ -766,20 +766,23 @@ const userViewModule: Module<IUserViewState, {}> = {
     updateUserViewSummaries: (state, params: { ref: IEntityRef; entries: Entries; changes: CurrentChanges }) => {
       const { ref, entries, changes } = params;
 
+      debugLog("updating summaries", ref, entries);
       const filterReference = (field: IColumnField) => {
         return field.fieldType.type === "reference" && equalEntityRef(field.fieldType.entity, ref);
       };
 
       state.current.userViews.values().forEach(uv => {
+        debugLog("summary uv", uv);
         if (!(uv instanceof CombinedUserView)) {
           return;
         }
 
         // Update old updated rows.
         uv.forEachUpdatedValues((_, valueRef) => {
-          const row = (uv.rows as ICombinedRow[])[valueRef.index];
+          const row = uv.rows![valueRef.index];
           const value = row.values[valueRef.column];
           setUpdatedPun(entries, value);
+          debugLog("new summary", value);
           uv.handlers.forEach(handler => {
             handler.updateValue(valueRef.index, row, valueRef.column, value);
           });
@@ -813,7 +816,8 @@ const userViewModule: Module<IUserViewState, {}> = {
     },
 
     updateField: (state, params: { fieldRef: IFieldRef; id: RowId; updatedValue: IUpdatedValue; fieldType?: FieldType }) => {
-      const entitySummaries = params.fieldType && params.fieldType.type === "reference" ? state.entries.getEntries(params.fieldType) : undefined;
+      const entitySummaries = (params.fieldType?.type === "reference" ? state.entries.getEntries(referenceEntriesRef(params.fieldType)) : undefined) || null;
+      debugLog("update field", params, state.entries, entitySummaries);
 
       state.current.userViews.values().forEach(uv => {
         if (!(uv instanceof CombinedUserView)) {
@@ -843,13 +847,14 @@ const userViewModule: Module<IUserViewState, {}> = {
         }
 
         updatedValues.forEach(valueRef => {
-          const row = (uv.rows as ICombinedRow[])[valueRef.index];
+          const row = uv.rows![valueRef.index];
           // New object because otherwise Vue won't detect changes.
           const value = { ...row.values[valueRef.column], ...params.updatedValue };
           Vue.set(row.values, valueRef.column, value);
           if ("pun" in value) {
-            setUpdatedPun(entitySummaries || null, value);
+            setUpdatedPun(entitySummaries, value);
           }
+          debugLog("update value in uv", uv.args, valueRef, value);
 
           uv.handlers.forEach(handler => {
             handler.updateValue(valueRef.index, row, valueRef.column, value);
@@ -922,7 +927,7 @@ const userViewModule: Module<IUserViewState, {}> = {
         return;
       }
 
-      const entitySummaries = params.fieldType?.type === "reference" ? state.entries.getEntries(params.fieldType) : undefined;
+      const entitySummaries = params.fieldType?.type === "reference" ? state.entries.getEntries(referenceEntriesRef(params.fieldType)) : undefined;
 
       const newRow = uv.newRows[params.id];
       uv.mainColumnMapping[params.fieldRef.name].forEach(colI => {
@@ -1112,7 +1117,6 @@ const userViewModule: Module<IUserViewState, {}> = {
     },
 
     getEntries: ({ state, rootState, commit, dispatch }, { reference, ref }: { reference: ReferenceName; ref: IEntriesRef }): Promise<Entries> => {
-      debugLogTrace("getEntries", reference, ref);
       const oldResource = state.entries.entries.getResource(ref);
       if (oldResource !== undefined) {
         if (!(reference in oldResource.refs)) {
@@ -1254,7 +1258,7 @@ const userViewModule: Module<IUserViewState, {}> = {
       const updatedValue = changes.changes[args.fieldRef.entity.schema][args.fieldRef.entity.name].updated[args.id][args.fieldRef.name];
       const fieldType = state.entities.getEntity(args.fieldRef.entity)?.columnFields[args.fieldRef.name].fieldType;
       if (fieldType && fieldType.type === "reference") {
-        dispatch("getEntries", { ref: {entity: fieldType.entity, where: fieldType.where}, reference: "update" });
+        dispatch("getEntries", { ref: referenceEntriesRef(fieldType), reference: "update" });
       }
       commit("updateField", { ...args, updatedValue, fieldType });
     },
@@ -1271,7 +1275,7 @@ const userViewModule: Module<IUserViewState, {}> = {
       const addedEntry = changes.changes[args.fieldRef.entity.schema][args.fieldRef.entity.name].added[args.userView].entries[args.id];
       const fieldType = state.entities.getEntity(args.fieldRef.entity)?.columnFields[args.fieldRef.name].fieldType;
       if (fieldType && fieldType.type === "reference") {
-        dispatch("getEntries", { ref: {entity: fieldType.entity, where: fieldType.where}, reference: "update" });
+        dispatch("getEntries", { ref: referenceEntriesRef(fieldType), reference: "update" });
       }
       commit("setAddedField", { ...args, addedEntry, fieldType });
     },
