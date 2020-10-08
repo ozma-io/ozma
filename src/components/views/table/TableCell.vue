@@ -89,7 +89,7 @@ export default class TableCell extends Vue {
     float: left;
     margin-top: -2px;
     border-radius: 5px;
-    padding: 2px 7px;
+    padding: 3px 8px;
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);

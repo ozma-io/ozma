@@ -488,7 +488,7 @@ export default class FormControl extends Vue {
     if ("text_align" in this.attributes)
       return  String(this.attributes["text_align"]);
 
-    if (this.inputType.type == 'number')
+    if (this.inputType.name == 'text' && this.inputType.type == 'number')
       return 'right';
   }
 
