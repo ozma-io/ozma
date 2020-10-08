@@ -21,8 +21,8 @@ export default class FabCluster extends Vue {
     display: inline-flex;
     flex-direction: row-reverse;
     align-items: flex-end;
-    bottom: 15px;
-    right: 15px;
+    bottom: 45px;
+    right: 20px;
     float: right;
     width: auto;
   }
@@ -32,5 +32,13 @@ export default class FabCluster extends Vue {
     display: inline-block;
     height: 60px;
     width: auto;
+  }
+
+  @media screen and (max-aspect-ratio: 13/9) {
+    @media screen and (max-device-width: 480px) {
+      .fab_zone__container {
+        bottom: 20px;
+      }
+    }
   }
 </style>
