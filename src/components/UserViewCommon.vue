@@ -77,7 +77,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
     if (home !== null) {
       opts.homeSchema = home;
     }
-    return attrToQuery(this.uv.attributes["create_view"], opts);
+    return attrToLink(this.uv.attributes["create_view"], opts);
   }
 
   private exportToCsv() {
@@ -179,7 +179,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
     }
 
     if (this.createView !== null) {
-      actions.push({ name: this.$t("create").toString(), link: { query: this.createView, target: "modal-auto" } });
+      actions.push({ name: this.$t("create").toString(), link: this.createView });
     }
 
     const modalReferenceField = this.modalReferenceField;
