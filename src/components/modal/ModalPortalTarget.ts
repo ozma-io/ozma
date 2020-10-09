@@ -4,12 +4,12 @@ import { PortalTarget } from "portal-vue";
 
 import { IModalTab } from "@/components/modal/types";
 import Modal from "@/components/modal/Modal.vue";
-import {router} from "@/modules";
-import {queryLocation} from "@/state/query";
 
 interface IInternalModalTab extends IModalTab {
   tab: any;
   selectedOnStart: boolean;
+  actionsMenu: any;
+  actionsRight: any;
 }
 
 @Component
@@ -29,7 +29,6 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
         /* eslint-disable @typescript-eslint/unbound-method */
         close: this.closeAll,
         "tab-close": this.close,
-        "tab-fullscreen": this.openFullscreen,
         /* eslint-enable @typescript-eslint/unbound-method */
       },
     });
@@ -38,6 +37,12 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
   private get modalTabs(): IInternalModalTab[] {
     return this.passengers.map((node, index) => {
       const modalPortal: any = node.context!.$children[0];
+      const modalMenuActions: any = ('actions-menu' in modalPortal.$slots)
+        ? modalPortal.$slots['actions-menu'][0]
+        : undefined;
+      const modalRightActions: any = ('actions-right' in modalPortal.$slots)
+        ? modalPortal.$slots['actions-right'][0]
+        : undefined;
       const title: string | undefined = modalPortal.tabName;
       const order: number = modalPortal.order;
       const selected: boolean = modalPortal.selected;
@@ -47,6 +52,8 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
         order,
         tab: modalPortal,
         selectedOnStart: selected,
+        actionsMenu: modalMenuActions,
+        actionsRight: modalRightActions
       };
     }).sort((a, b) => a.order - b.order);
   }
@@ -67,11 +74,6 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
 
   private get showModal(): boolean {
     return this.passengers.length > 0;
-  }
-
-  private openFullscreen(index: number) {
-    const modalPortal = this.passengers[index].context!.$children[0] as any;
-    router.push(queryLocation(modalPortal.view));
   }
 
   private close(index: number) {
