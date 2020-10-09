@@ -121,6 +121,7 @@ export default class Modal extends Vue {
     }
   }
 
+  // Used on mobile to display editing inputs
   private get hasTabs(): boolean {
     return this.modalTabs !== undefined;
   }

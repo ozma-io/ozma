@@ -2,7 +2,6 @@ import { mixins } from "vue-class-component";
 import { Component, Prop } from "vue-property-decorator";
 import { Portal } from "portal-vue";
 import { IQuery } from "@/state/query";
-import { Action } from "@/components/ActionsMenu.vue";
 
 @Component
 export default class ModalPortal extends mixins(Portal) {
