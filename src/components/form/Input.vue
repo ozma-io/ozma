@@ -233,6 +233,7 @@ export default class Input extends Vue {
     overflow: auto !important;
     max-height: 165px;
     background: white;
+    text-align: inherit;
   }
 
   .input-textarea-fake {
@@ -266,9 +267,9 @@ export default class Input extends Vue {
     background: var(--FailColor) !important;
   }
 
-  .input_field__focused {
-    position: absolute;
-  }
+  // .input_field__focused {
+  //   position: absolute;
+  // }
 
   .input_container__row {
     flex-direction: row;
@@ -302,9 +303,9 @@ export default class Input extends Vue {
   }
 
   .input_field {
-    padding: 5px;
-    margin-left: -5px;
-    margin-right: 4px;
+    width: 100% !important;
+    text-align: inherit;
+    padding: 0 5px;
     background-color: rgba(0, 0, 0, 0);
     border: 0;
     z-index: 2;
@@ -313,8 +314,7 @@ export default class Input extends Vue {
     height: 2em;
     color: var(--MainTextColor);
     cursor: pointer;
-    border-bottom: 1px solid transparent;
-    width: 100%;
+    border-bottom: 1px solid var(--MainBorderColor);
     text-overflow: ellipsis;
     transition: border-color 0.2s ease-in;
   }
@@ -327,7 +327,6 @@ export default class Input extends Vue {
   .input_field:focus {
     outline: none;
     color: var(--MainTextColor);
-    border-bottom: 1px solid var(--MainBorderColor);
     cursor: text;
     z-index: 2000;
   }
@@ -343,10 +342,6 @@ export default class Input extends Vue {
 
   .input_field__disabled {
     cursor: not-allowed;
-  }
-
-  .input_field__unfocused {
-    width: 100% !important;
   }
 
   .input_modal_field {

@@ -465,7 +465,7 @@ export default class MultiSelect extends Vue {
     padding: 2px 5px;
     box-sizing: border-box;
     width: 100%;
-    margin: 0 0 0 -5px;
+    border-bottom: 1px solid var(--MainBorderColor);
   }
 
   .table-cell-edit .select_container {
@@ -551,7 +551,7 @@ export default class MultiSelect extends Vue {
   }
 
   .select_container__options_list {
-    padding: 0 0 5px 2px;
+    padding: 0 0 5px 5px;
     margin: 0;
     box-sizing: border-box;
     max-height: 250px;
@@ -611,7 +611,7 @@ export default class MultiSelect extends Vue {
   .single_value {
     align-self: center;
     border-radius: 5px;
-    padding: 1px 5px;
+    padding: 1px 7px;
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);

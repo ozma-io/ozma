@@ -363,6 +363,18 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       touchedStyle = true;
     }
 
+    const textAlignRightTypes = ['int', 'decimal']; 
+    if(textAlignRightTypes.includes(columnInfo.valueType.type)) {
+      style["text-align"] = 'right';
+      touchedStyle = true;
+    }
+
+    const textAlignAttr = getCellAttr("text_align");
+    if (textAlignAttr !== undefined) {
+      style["text-align"] = String(textAlignAttr);
+      touchedStyle = true;
+    }
+
     if (localRow.extra.height !== undefined) {
       style["height"] = `${localRow.extra.height}px`;
       touchedStyle = true;

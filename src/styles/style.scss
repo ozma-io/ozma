@@ -70,6 +70,10 @@ button {
   border: 0 !important;
 }
 
+input:focus {
+  outline: none;
+}
+
 /* Фильтр в таблице */
 div {
   div {
