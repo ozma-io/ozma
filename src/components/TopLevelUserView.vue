@@ -39,6 +39,8 @@
 
 <template>
   <div class="main-div">
+    <ProgressBar v-show="isLoading" />
+
     <template v-if="query !== null">
       <ModalUserView
         v-for="(window, i) in query.windows"
@@ -163,6 +165,7 @@ import {CurrentChanges, ScopeName} from "@/state/staging_changes";
 import {Action} from "@/components/ActionsMenu.vue";
 import ModalUserView from "@/components/ModalUserView.vue";
 import SearchPanel from "@/components/SearchPanel.vue";
+import ProgressBar from "@/components/ProgressBar.vue";
 import {CurrentAuth, getAuthedLink} from "@/state/auth";
 import {ICurrentQuery, IQuery, queryLocation, ICurrentQueryHistory} from "@/state/query";
 import {convertToWords} from "@/utils";
@@ -175,10 +178,12 @@ const query = namespace("query");
 const errors = namespace("errors");
 
 @Component({components: {
-  SearchPanel, ModalUserView
+  SearchPanel, ModalUserView, ProgressBar,
 }})
 export default class TopLevelUserView extends Vue {
   @auth.State("current") currentAuth!: CurrentAuth | null;
+  @auth.State("pending") authPending!: Promise<void> | null;
+  @auth.State("protectedCalls") protectedCalls!: number;
   @auth.Action("login") login!: () => Promise<void>;
   @auth.Action("logout") logout!: () => Promise<void>;
   @userView.Mutation("clear") clearView!: () => void;
@@ -211,6 +216,10 @@ export default class TopLevelUserView extends Vue {
     return Object.entries(this.rawErrors).flatMap(([key, keyErrors]) => keyErrors.map(error => {
       return this.$t(`${key}_error`, {msg: error});
     }));
+  }
+
+  get isLoading(): boolean {
+    return this.authPending !== null || this.protectedCalls > 0;
   }
 
   get filterWords() {

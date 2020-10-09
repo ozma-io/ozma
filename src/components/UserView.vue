@@ -73,7 +73,6 @@
     >
       {{ errorMessage }}
     </div>
-    <ProgressBar v-if="isLoadingUv" />
   </span>
 </template>
 
@@ -82,7 +81,6 @@ import { VueConstructor } from "vue";
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { Store } from "vuex";
-import ProgressBar from "@/components/ProgressBar.vue"
 
 import { RecordSet, ReferenceName, deepEquals, snakeToPascal, deepClone } from "@/utils";
 import { funappSchema } from "@/api";
@@ -146,7 +144,6 @@ const maxLevel = 4;
  */
 @Component({components: {
   UserViewCommon,
-  ProgressBar,
   ...components
 }})
 export default class UserView extends Vue {
@@ -259,10 +256,6 @@ export default class UserView extends Vue {
         return this.$t("unknown_error", { msg: this.currentUv.message });
       }
     }
-  }
-
-  get isLoadingUv(): boolean {
-    return this.currentUv === null || !deepEquals(this.args, this.currentUv.args);
   }
 
   // Load new user view and replace old data. We keep old user view loaded as long as possible, to avoid "loading" placeholders.

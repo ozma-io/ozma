@@ -49,6 +49,7 @@ export interface IAuthState {
   current: CurrentAuth | null;
   renewalTimeoutId: NodeJS.Timeout | null;
   pending: Promise<void> | null;
+  protectedCalls: number; // Used for tracking fetch requests and displaying a progress bar.
 }
 
 interface IOIDCState {
@@ -274,6 +275,7 @@ export const authModule: Module<IAuthState, {}> = {
     current: null,
     pending: null,
     renewalTimeoutId: null,
+    protectedCalls: 0,
   },
   mutations: {
     setAuth: (state, auth: CurrentAuth) => {
@@ -288,6 +290,12 @@ export const authModule: Module<IAuthState, {}> = {
     },
     setPending: (state, pending: Promise<void> | null) => {
       state.pending = pending;
+    },
+    increaseProtectedCalls: state => {
+      state.protectedCalls += 1;
+    },
+    decreaseProtectedCalls: state => {
+      state.protectedCalls -= 1;
     },
   },
   actions: {
@@ -423,13 +431,14 @@ export const authModule: Module<IAuthState, {}> = {
     },
     callProtectedApi: {
       root: true,
-      handler: async ({ state, dispatch }, { func, args }: { func: ((_1: string | null, ..._2: any[]) => Promise<any>); args?: any[] }): Promise<any> => {
+      handler: async ({ state, commit, dispatch }, { func, args }: { func: ((_1: string | null, ..._2: any[]) => Promise<any>); args?: any[] }): Promise<any> => {
         if (state.pending !== null) {
           try {
             await state.pending;
           } catch (e) { }
         }
 
+        commit("increaseProtectedCalls");
         try {
           const argsArray = args === undefined ? [] : args;
           const token = state.current === null ? null : state.current.token;
@@ -446,6 +455,8 @@ export const authModule: Module<IAuthState, {}> = {
             }
           }
           throw e;
+        } finally {
+          commit("decreaseProtectedCalls");
         }
       },
     },
