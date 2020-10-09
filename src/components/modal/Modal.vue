@@ -68,7 +68,7 @@ import { isMobile } from "../../utils";
 
 @Component({ components: { ModalContent, ModalTabHeader } })
 export default class Modal extends Vue {
-  @Prop({ type: Array }) modalTabs!: IModalTab[];
+  @Prop({ type: Array }) modalTabs!: IModalTab[] | undefined;
   @Prop({ type: Boolean, default: true }) show!: boolean;
   @Prop({ type: Boolean, default: false }) fullscreen!: boolean;
   @Prop({ type: String }) width!: string;
