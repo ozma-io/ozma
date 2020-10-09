@@ -116,7 +116,7 @@ export default class Modal extends Vue {
   }
 
   private switchTab(index: number) {
-    if (index < this.modalTabs.length) {
+    if (index < this.modalTabs!.length) {
       this.selectedTab = index;
     }
   }
