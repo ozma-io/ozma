@@ -2,7 +2,7 @@ import Vue from "vue";
 import { Store, Dispatch, Module, ActionContext } from "vuex";
 import moment from "moment";
 
-import { IRef, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, waitTimeout, debugLogTrace, debugLog } from "@/utils";
+import { IRef, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, waitTimeout } from "@/utils";
 import {
   IColumnField, UserViewSource, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
   SchemaName, EntityName, RowId, FieldName, AttributeName, IViewInfoResult, IViewExprResult,
@@ -724,10 +724,10 @@ const userViewModule: Module<IUserViewState, {}> = {
     entities: new CurrentEntities(),
   },
   mutations: {
-    initUserView: (state, args: { args: IUserViewArguments; reference: ReferenceName; generation: number; userView: UserViewResult }) => {
+    initUserView: (state, args: { args: IUserViewArguments; reference: ReferenceName; userView: UserViewResult }) => {
       state.current.userViews.createResource(args.args, args.reference, args.userView, undefined);
     },
-    updateUserView: (state, { args, generation, userView }: { args: IUserViewArguments; generation?: number; userView: UserViewResult }) => {
+    updateUserView: (state, { args, userView }: { args: IUserViewArguments; userView: UserViewResult }) => {
       state.current.userViews.updateResource(args, userView);
     },
     addUserViewConsumer: (state, { args, reference }: { args: IUserViewArguments; reference: ReferenceName }) => {
@@ -737,14 +737,14 @@ const userViewModule: Module<IUserViewState, {}> = {
       state.current.userViews.removeReference(args, reference);
     },
 
-    initEntity: (state, args: { ref: IEntityRef; generation: number; entity: EntityResult }) => {
+    initEntity: (state, args: { ref: IEntityRef; entity: EntityResult }) => {
       state.entities.entities.insert(args.ref, args.entity);
     },
     updateEntity: (state, { ref, entity }: { ref: IEntityRef; entity: EntityResult }) => {
       state.entities.entities.insert(ref, entity);
     },
 
-    initEntries: (state, args: { ref: IEntriesRef; reference: ReferenceName; generation: number; entries: EntriesResult }) => {
+    initEntries: (state, args: { ref: IEntriesRef; reference: ReferenceName; entries: EntriesResult }) => {
       state.entries.entries.createResource(args.ref, args.reference, args.entries, undefined);
     },
     updateEntries: (state, { ref, entries }: { ref: IEntriesRef; entries: EntriesResult }) => {
@@ -766,13 +766,11 @@ const userViewModule: Module<IUserViewState, {}> = {
     updateUserViewSummaries: (state, params: { ref: IEntityRef; entries: Entries; changes: CurrentChanges }) => {
       const { ref, entries, changes } = params;
 
-      debugLog("updating summaries", ref, entries);
       const filterReference = (field: IColumnField) => {
         return field.fieldType.type === "reference" && equalEntityRef(field.fieldType.entity, ref);
       };
 
       state.current.userViews.values().forEach(uv => {
-        debugLog("summary uv", uv);
         if (!(uv instanceof CombinedUserView)) {
           return;
         }
@@ -782,7 +780,6 @@ const userViewModule: Module<IUserViewState, {}> = {
           const row = uv.rows![valueRef.index];
           const value = row.values[valueRef.column];
           setUpdatedPun(entries, value);
-          debugLog("new summary", value);
           uv.handlers.forEach(handler => {
             handler.updateValue(valueRef.index, row, valueRef.column, value);
           });
@@ -817,7 +814,6 @@ const userViewModule: Module<IUserViewState, {}> = {
 
     updateField: (state, params: { fieldRef: IFieldRef; id: RowId; updatedValue: IUpdatedValue; fieldType?: FieldType }) => {
       const entitySummaries = (params.fieldType?.type === "reference" ? state.entries.getEntries(referenceEntriesRef(params.fieldType)) : undefined) || null;
-      debugLog("update field", params, state.entries, entitySummaries);
 
       state.current.userViews.values().forEach(uv => {
         if (!(uv instanceof CombinedUserView)) {
@@ -854,7 +850,6 @@ const userViewModule: Module<IUserViewState, {}> = {
           if ("pun" in value) {
             setUpdatedPun(entitySummaries, value);
           }
-          debugLog("update value in uv", uv.args, valueRef, value);
 
           uv.handlers.forEach(handler => {
             handler.updateValue(valueRef.index, row, valueRef.column, value);
