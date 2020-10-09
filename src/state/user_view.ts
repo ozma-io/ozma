@@ -1081,6 +1081,73 @@ const userViewModule: Module<IUserViewState, {}> = {
         uv.forEachDeletedRow(undeleteOneRow, params.entityRef, params.id);
       });
     },
+    updateErroredOnce: (state, changes: CurrentChanges) => {
+      state.current.userViews.values().forEach(uv => {
+        if (!(uv instanceof CombinedUserView)) {
+          return;
+        }
+
+        const mainEntity = uv.info.mainEntity;
+        if (mainEntity) {
+          const schemaChanges = changes.changes[mainEntity.schema];
+          if (schemaChanges) {
+            const entityChanges = schemaChanges[mainEntity.name];
+            if (entityChanges) {
+              const uvAdded = entityChanges.added[uv.userViewKey];
+              if (uvAdded) {
+                Object.entries(uvAdded.entries).forEach(([addedIdStr, rowValues]) => {
+                  const addedId = Number(addedIdStr);
+                  const newRow = uv.newRows[addedId];
+                  Object.entries(rowValues.values).forEach(([fieldName, addedValue]) => {
+                    uv.mainColumnMapping[fieldName].forEach(colI => {
+                      const value = newRow.values[colI];
+                      Vue.set(value, "erroredOnce", addedValue.erroredOnce);
+                    });
+                  });
+                });
+              }
+            }
+          }
+        }
+
+        if (uv.rows !== null) {
+          Object.entries(changes.changes).forEach(([schemaName, schemaChanges]) => {
+            const updatedEntities = uv.updateMapping[schemaName];
+            if (updatedEntities === undefined) {
+              return;
+            }
+
+            Object.entries(schemaChanges).forEach(([entityName, entityChanges]) => {
+              const updatedIds = updatedEntities[entityName];
+              if (updatedIds === undefined) {
+                return;
+              }
+
+              Object.entries(entityChanges.updated).forEach(([rowIdStr, rowChanges]) => {
+                const rowId = Number(rowIdStr);
+                const updatedFields = updatedIds[rowId];
+                if (updatedFields === undefined) {
+                  return;
+                }
+
+                Object.entries(rowChanges).forEach(([fieldName, fieldChanges]) => {
+                  const updatedValues = updatedFields[fieldName];
+                  if (updatedValues === undefined) {
+                    return;
+                  }
+
+                  updatedValues.forEach(valueRef => {
+                    const row = (uv.rows as ICombinedRow[])[valueRef.index];
+                    const value = row.values[valueRef.column];
+                    Vue.set(value, "erroredOnce", fieldChanges.erroredOnce);
+                  });
+                });
+              });
+            });
+          });
+        }
+      });
+    },
 
     registerHandler: (state, { args, handler }: { args: IUserViewArguments; handler: IUserViewEventHandler }) => {
       const uv = state.current.getUserView(args);
@@ -1290,6 +1357,10 @@ const userViewModule: Module<IUserViewState, {}> = {
     },
     beforeResetDeleteEntry: ({ commit }, args: { entityRef: IEntityRef; id: RowId }) => {
       commit("resetDeleteEntry", args);
+    },
+    updateErroredOnce: ({ rootState, commit }) => {
+      const changes = ((rootState as any).staging as IStagingState).current;
+      commit("updateErroredOnce", changes);
     },
   },
 };
