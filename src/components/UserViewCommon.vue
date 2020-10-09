@@ -192,7 +192,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
     }
 
     // FIXME: workaround until we have proper role-based permissions for this.
-    if ("__export_to_csv" in this.$route.query) {
+    if (this.uv.attributes["export_to_csv"] || "__export_to_csv" in this.$route.query) {
       actions.push({name: this.$t("export_to_csv").toString(), callback: () => this.exportToCsv()});
     }
 
