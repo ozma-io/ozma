@@ -26,14 +26,18 @@
       @input="updateInput"
     />
     <editor
-      :initialValue="editorText"
+      v-if="!isCellEdit"
+      ref="editor"
+      :initialValue="value"
       :options="editorOptions"
-      :height="height"
+      :height="`${height}px`"
+      @change="onEditorChange"
       initialEditType="wysiwyg"
-      previewStyle="vertical"  
+      previewStyle="tab"  
+      :placeholder="$t('input_placeholder')"
     />
     <textarea
-      v-show="!isCellEdit && false"
+      v-show="!isCellEdit && !isMobile"
       :id="inputName"
       ref="control"
       :class="['textarea_field', {
@@ -44,7 +48,6 @@
         'textarea_field__max_height': !height
       }]"
       :type="type"
-      :style="style"
       :value="value"
       :placeholder="$t('input_placeholder')"
       :disabled="disabled"
@@ -58,7 +61,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
+import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 
 import 'codemirror/lib/codemirror.css';
 import '@toast-ui/editor/dist/toastui-editor.css';
@@ -66,6 +69,8 @@ import { Editor } from '@toast-ui/vue-editor';
 
 import { isMobile } from "@/utils";
 import { valueIsNull } from "@/values";
+
+export type EditorType = Vue & { invoke: (name: string) => any };
 
 @Component({components: { Editor }})
 export default class Textarea extends Vue {
@@ -91,7 +96,7 @@ export default class Textarea extends Vue {
 
   private editorOptions = {
     minHeight: '200px',
-    language: 'ru-RU',
+    language: 'en-US',
     useCommandShortcut: true,
     useDefaultHTMLSanitizer: true,
     usageStatistics: false,
@@ -148,6 +153,12 @@ export default class Textarea extends Vue {
 
   private get inputName(): string {
     return `${this.uid}-input`;
+  }
+  
+  private onEditorChange(value: any) {
+    const editor = this.$refs.editor as EditorType;
+    console.log("value", editor.invoke('getMarkdown'));
+    this.$emit('update:value', editor.invoke('getMarkdown'));
   }
 
   private updateInput(value: string) {
