@@ -25,19 +25,8 @@
       @keydown.enter.prevent
       @input="updateInput"
     />
-    <editor
-      v-if="!isCellEdit"
-      ref="editor"
-      :initialValue="value"
-      :options="editorOptions"
-      :height="`${height}px`"
-      @change="onEditorChange"
-      initialEditType="wysiwyg"
-      previewStyle="tab"  
-      :placeholder="$t('input_placeholder')"
-    />
     <textarea
-      v-show="!isCellEdit && !isMobile"
+      v-show="!isCellEdit && isMobile"
       :id="inputName"
       ref="control"
       :class="['textarea_field', {
@@ -57,6 +46,16 @@
       @input="$emit('update:value', $event.target.value)"
     >
     </textarea>
+    <editor
+      v-if="!isCellEdit && !isMobile"
+      ref="editor"
+      :initialValue="value"
+      :options="editorOptions"
+      :height="`${height}px`"
+      @change="onEditorChange"
+      previewStyle="tab"  
+      :placeholder="$t('input_placeholder')"
+    />
   </fragment>
 </template>
 
@@ -96,7 +95,7 @@ export default class Textarea extends Vue {
 
   private editorOptions = {
     minHeight: '200px',
-    language: 'en-US',
+    language: 'ru-RU',
     useCommandShortcut: true,
     useDefaultHTMLSanitizer: true,
     usageStatistics: false,
