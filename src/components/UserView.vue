@@ -189,7 +189,7 @@ export default class UserView extends Vue {
     if (this.level >= maxLevel) {
       return new UserViewError("execution", "Too many levels of nested user views", this.args);
     } else {
-      const ret = this.currentUvs.getUserViewOrError(this.args);
+      const ret = this.currentUvs.userViews.get(this.args);
       return ret === undefined ? null : ret;
     }
   }
@@ -260,7 +260,7 @@ export default class UserView extends Vue {
 
   // Load new user view and replace old data. We keep old user view loaded as long as possible, to avoid "loading" placeholders.
   @Watch("newUv", { immediate: true })
-  private async awaitUserView(newUv: CombinedUserView | UserViewError | null) {
+  private async awaitUserView(newUv: CombinedUserView | UserViewError | Promise<UserViewResult> | null) {
     if (newUv !== null && newUv === this.currentUv) {
       return;
     }
@@ -295,13 +295,13 @@ export default class UserView extends Vue {
       this.component = component;
     } else if (newUv instanceof UserViewError) {
       this.setUvError(newUv);
-    } else {
+    } else if (newUv === null) {
       // We need deep clone here as args may change, and getUserView expects them freezed.
-      await this.getUserView({ args: deepClone(this.args), reference: this.uid });
+      this.getUserView({ args: deepClone(this.args), reference: this.uid });
     }
   }
 
-  private destroyCurrentUserView(newArgs: IUserViewArguments | null) {
+  private destroyCurrentUserView() {
     if (this.currentUv === null) {
       return;
     }
@@ -315,12 +315,8 @@ export default class UserView extends Vue {
       this.unregisterHandler({ args, handler: this.baseLocal.handler });
       this.baseLocal = null;
     }
-    if (!deepEquals(newArgs, args)) {
-      this.removeUserViewConsumer({ args, reference: this.uid });
-    }
 
     this.currentUv = null;
-    this.pendingArgs = null;
     this.extraActions = [];
     this.extraCommonActions = [];
     this.$emit("update:statusLine", "");
@@ -329,12 +325,12 @@ export default class UserView extends Vue {
   }
 
   private setUv(newUv: CombinedUserView) {
-    this.destroyCurrentUserView(newUv.args);
+    this.destroyCurrentUserView();
     this.currentUv = newUv;
   }
 
   private setUvError(error: UserViewError) {
-    this.destroyCurrentUserView(error.args);
+    this.destroyCurrentUserView();
     this.currentUv = error;
     this.component = null;
   }
@@ -345,7 +341,7 @@ export default class UserView extends Vue {
   }
 
   private destroyed() {
-    this.destroyCurrentUserView(null);
+    this.destroyCurrentUserView();
     if (this.pendingArgs !== null) {
       this.removeUserViewConsumer({ args: this.pendingArgs, reference: this.uid });
     }
@@ -353,14 +349,15 @@ export default class UserView extends Vue {
 
   @Watch("args", { deep: true, immediate: true })
   private argsChanged(newArgs: IUserViewArguments) {
-    if (this.currentUv !== null && deepEquals(newArgs, this.currentUv.args)) {
-      return;
+    const newPendingArgs = deepClone(newArgs);
+    if (this.newUv === null) {
+      // We need deep clone here as args may change, and getUserView expects them freezed.
+      this.getUserView({ args: newPendingArgs, reference: this.uid });
     }
 
     const oldPendingArgs = this.pendingArgs;
-    this.pendingArgs = deepClone(newArgs);
-    if ((oldPendingArgs !== null && !deepEquals(oldPendingArgs, this.pendingArgs)) // if we switched pending
-        && (this.currentUv === null || !deepEquals(oldPendingArgs, this.currentUv.args))) { // and if we don't use this view now
+    this.pendingArgs = newPendingArgs;
+    if (oldPendingArgs !== null && !deepEquals(oldPendingArgs, newArgs)) {
       this.removeUserViewConsumer({ args: oldPendingArgs, reference: this.uid });
     }
   }

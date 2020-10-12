@@ -325,7 +325,7 @@ export const authModule: Module<IAuthState, {}> = {
 
       console.assert(state.pending === null);
       const pending: IRef<Promise<void>> = {};
-      const newPending = (async () => {
+      pending.ref = (async () => {
         await Utils.waitTimeout(); // Delay promise so that it gets saved to `pending` first.
 
         try {
@@ -426,8 +426,8 @@ export const authModule: Module<IAuthState, {}> = {
           }
         }
       })();
-      commit("setPending", newPending);
-      return newPending;
+      commit("setPending", pending.ref);
+      return pending.ref;
     },
     callProtectedApi: {
       root: true,

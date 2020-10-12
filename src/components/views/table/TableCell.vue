@@ -89,14 +89,14 @@ export default class TableCell extends Vue {
     float: left;
     margin-top: -2px;
     border-radius: 5px;
-    padding: 2px 7px;
+    padding: 3px 8px;
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
   }
 
   .next-after-last-fixed {
-    padding: 4px 0 0 5px !important;
+    padding: 4px 3px 0 5px !important;
   }
 
   .table-td {
@@ -105,7 +105,7 @@ export default class TableCell extends Vue {
 
   .table-td > p {
     pointer-events: none;
-    padding: 3px 2px 2px 7px;
+    padding: 3px 4px 2px 7px;
   }
 
   .table-td_selected {
@@ -114,7 +114,7 @@ export default class TableCell extends Vue {
   }
 
   .next-after-last-fixed.table-td_selected {
-    padding: 3px 0 0 3px !important;
+    padding: 3px 2px 0 3px !important;
   }
 
   .checkbox_click-none {

@@ -19,6 +19,21 @@
     :view="view"
     @close="$emit('close')"
   >
+    <template #actions-menu>
+      <ActionsMenu
+        title="view_headline"
+        :actions="actions"
+        @goto="$emit('goto', $event)"
+      />
+    </template>
+
+    <template #actions-right>
+      <i
+        class="material-icons modal__tab_fullscreen_button"
+        @click.stop="openFullscreen"
+      >fullscreen</i>
+    </template>
+
     <section class="section-modal">
       <UserView
         :is-root="isRoot"
@@ -53,16 +68,14 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { Component, Vue, Prop } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import { IEntityRef, IEntity } from "@/api";
-import { equalEntityRef } from "@/values";
 import { Action } from "@/components/ActionsMenu.vue";
-import { IQuery } from "@/state/query";
+import {IQuery, queryLocation} from "@/state/query";
 import { CurrentChanges, ScopeName } from "@/state/staging_changes";
-import { ISelectionRef } from "@/components/BaseUserView";
 import ModalPortal from "@/components/modal/ModalPortal";
+import { router } from "@/modules";
 
 const staging = namespace("staging");
 
@@ -77,6 +90,17 @@ export default class ModalUserView extends Vue {
   @Prop({ type: Boolean, default: false }) selected!: boolean;
 
   private title = "";
+  private extraActions: Action[] = [];
+
+  get actions() {
+    const actions: Action[] = [];
+    actions.push(...this.extraActions);
+    return actions;
+  }
+
+  private openFullscreen() {
+    router.push(queryLocation(this.view));
+  }
 
   private async saveView() {
     await this.submitChanges({ scope: this.uid });

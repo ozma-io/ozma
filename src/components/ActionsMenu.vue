@@ -153,6 +153,10 @@ export default class ActionsMenu extends Vue {
     align-items: center;
   }
 
+  .modal__tab_header .actions-menu {
+    display: inline-flex;
+  }
+
   .actions-menu_active {
     position: relative;
     z-index: 1300;
@@ -188,6 +192,7 @@ export default class ActionsMenu extends Vue {
   }
 
   .div-with-actions_button {
+    cursor: pointer;
     display: block;
     background: hsla(0, 0%, 100%, 0.3) !important;
     padding: 5px;
