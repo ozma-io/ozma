@@ -245,6 +245,12 @@ export default class TopLevelUserView extends Vue {
     this.resetRoute(this.$route);
   }
 
+  @Watch("errors")
+  private errorsChanged(){
+    if (this.errors.length > 0)
+      this.makeErrorToast();
+  }
+
   private updateTitle(title: string) {
     this.title = title;
     setHeadTitle(`${title} - Ozma`);
