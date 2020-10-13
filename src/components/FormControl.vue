@@ -484,7 +484,7 @@ export default class FormControl extends Vue {
     this.codeEditorKey += 1;
   }
 
-  get textAlign(){
+  get textAlign() {
     if ("text_align" in this.attributes)
       return  String(this.attributes["text_align"]);
 
@@ -492,7 +492,7 @@ export default class FormControl extends Vue {
       return 'right';
   }
 
-  get cellColor(){
+  get cellColor() {
     return "cell_color" in this.attributes ? String(this.attributes["cell_color"]) : "none";
   }
 

@@ -206,7 +206,8 @@
         type="button" 
         :value="this.$t('add').toString()"
         class="button"
-        @click="setShowEmptyRow(true)"/>
+        @click="setShowEmptyRow(true)"
+      >
     </div>
   </div>
 </template>

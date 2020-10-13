@@ -22,6 +22,7 @@
   ],
   "rules": {
     "indent": "off",
+    "space-before-blocks": "error",
     "vue/custom-event-name-casing": "warn",
     "vue/no-deprecated-functional-template": "off",
     "@typescript-eslint/indent": ["error", 2],

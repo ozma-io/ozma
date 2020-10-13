@@ -26,7 +26,7 @@ export default class NestedUserView extends Vue {
   @Prop({ type: Object, required: true }) defaultValues!: Record<string, any>;
   @Prop({ type: String }) backgroundColor!: string;
 
-  get filterWords(){
+  get filterWords() {
     const value = this.filterString;
     if (value !== "") {
       return Array.from(new Set(convertToWords(value.toString())));

@@ -65,7 +65,7 @@ export default class SearchPanel extends Vue {
   private isShownSearchField = false;
 
   private mounted() {
-    if (this.filterString.length > 0){
+    if (this.filterString.length > 0) {
       this.localFilterString = this.filterString;
       this.isShownSearchField = true;
     }

@@ -350,7 +350,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
      * }]
      */
     const formButtons = this.uv.attributes['form_buttons'];
-    if(formButtons !== undefined && Array.isArray(formButtons)){
+    if(formButtons !== undefined && Array.isArray(formButtons)) {
       formButtons.forEach((buttons: IButtons, i: number) => {
 
         const blockAttr = Number(buttons["form_block"]);
@@ -358,7 +358,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
         const block = Math.max(0, Math.min(blockNumber, blocks.length - 1));
 
         const actions: IButtonAction[] = [];
-        if(buttons.actions !== undefined && Array.isArray(buttons.actions)){
+        if(buttons.actions !== undefined && Array.isArray(buttons.actions)) {
           buttons.actions.forEach((action: any) => {
             if (typeof action.name !== "string")
               return;
@@ -371,7 +371,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
           })
         }
 
-        if( actions.length > 0){
+        if( actions.length > 0) {
           const element: IGridButtons = {
             type: "buttons",
             actions

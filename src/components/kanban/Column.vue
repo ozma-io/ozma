@@ -201,7 +201,7 @@ export default class Column extends Vue {
     this.selected = this.selected.filter(val => val !== rowIndex);
   }
 
-  private onStart(event: IVueDraggableEvent){
+  private onStart(event: IVueDraggableEvent) {
     this.dragging = true;
   }
 
@@ -223,7 +223,7 @@ export default class Column extends Vue {
       const nextCardOrder = R.pathOr<number>(prevCardOrder + 1, [event.newIndex + 1, "order"], this.cards);
       
       let mean = 0;
-      if(prevCardOrder == 0 && nextCardOrder < 0){
+      if(prevCardOrder == 0 && nextCardOrder < 0) {
         mean = nextCardOrder * 2 ;
       }else{
         mean = (prevCardOrder + nextCardOrder) / 2;

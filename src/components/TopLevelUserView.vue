@@ -246,7 +246,7 @@ export default class TopLevelUserView extends Vue {
   }
 
   @Watch("errors")
-  private errorsChanged(){
+  private errorsChanged() {
     if (this.errors.length > 0)
       this.makeErrorToast();
   }

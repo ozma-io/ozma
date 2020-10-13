@@ -1,8 +1,8 @@
 <template>
   <!-- <a> tags have special behaviour on Safari which breaks animation, hence no-href. -->
   <div
-    data-no-dragscroll
     ref="cardContainer"
+    data-no-dragscroll
     class="card_container"
     :style="cardStyle"
   >
