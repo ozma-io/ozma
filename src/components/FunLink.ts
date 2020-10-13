@@ -27,11 +27,11 @@ export const redirectClick = (e: MouseEvent, allowControlKeys?: boolean): boolea
 export default Vue.component("FunLink", {
   functional: true,
   props: {
-    link: { type: Object },
+    link: { type: Object, default: null },
     noHref: { type: Boolean, default: false },
   },
   render: (createElement, context) => {
-    const link = context.props.link as Link | undefined;
+    const link = context.props.link as Link | null;
 
     let href: string | null = null;
     let handler: (() => void) | null = null;

@@ -28,6 +28,7 @@
     "@typescript-eslint/indent": ["error", 2],
     "vue/html-indent": ["error", 2],
     "vue/this-in-template": "error",
+    "vue/require-default-prop": "error",
     "vue/component-tags-order": ["error", {
       "order": ["template", "script", "style"]
     }],
