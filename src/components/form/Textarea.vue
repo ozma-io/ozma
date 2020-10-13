@@ -52,9 +52,8 @@
       :initialValue="value"
       :options="editorOptions"
       :height="`${height}px`"
-      @change="onEditorChange"
       previewStyle="tab"  
-      :placeholder="$t('input_placeholder')"
+      @change="onEditorChange"
     />
   </fragment>
 </template>
@@ -65,6 +64,7 @@ import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import 'codemirror/lib/codemirror.css';
 import '@toast-ui/editor/dist/toastui-editor.css';
 import { Editor } from '@toast-ui/vue-editor';
+import '@toast-ui/editor/dist/i18n/ru-ru';
 
 import { isMobile } from "@/utils";
 import { valueIsNull } from "@/values";
@@ -95,11 +95,12 @@ export default class Textarea extends Vue {
 
   private editorOptions = {
     minHeight: '200px',
-    language: 'ru-RU',
     useCommandShortcut: true,
     useDefaultHTMLSanitizer: true,
     usageStatistics: false,
     hideModeSwitch: false,
+    language: this.$root.$i18n.locale,
+    placeholder: this.$t('input_placeholder'),
     toolbarItems: [
       'heading',
       'bold',
@@ -156,7 +157,6 @@ export default class Textarea extends Vue {
   
   private onEditorChange(value: any) {
     const editor = this.$refs.editor as EditorType;
-    console.log("value", editor.invoke('getMarkdown'));
     this.$emit('update:value', editor.invoke('getMarkdown'));
   }
 
