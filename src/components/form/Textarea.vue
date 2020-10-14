@@ -26,7 +26,7 @@
       @input="updateInput"
     />
     <textarea
-      v-show="!isCellEdit"
+      v-show="!isCellEdit && isMobile"
       :id="inputName"
       ref="control"
       :class="['textarea_field', {
@@ -37,7 +37,6 @@
         'textarea_field__max_height': !height
       }]"
       :type="type"
-      :style="style"
       :value="value"
       :placeholder="$t('input_placeholder')"
       :disabled="disabled"
@@ -45,17 +44,34 @@
       @focus="onFocus"
       @blur="onBlur"
       @input="$emit('update:value', $event.target.value)"
+    >
+    </textarea>
+    <editor
+      v-if="!isCellEdit && !isMobile"
+      ref="editor"
+      :initialValue="value"
+      :options="editorOptions"
+      :height="`${height}px`"
+      previewStyle="tab"  
+      @change="onEditorChange"
     />
   </fragment>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
+import { Vue, Component, Prop, Watch } from "vue-property-decorator";
+
+import 'codemirror/lib/codemirror.css';
+import '@toast-ui/editor/dist/toastui-editor.css';
+import { Editor } from '@toast-ui/vue-editor';
+import '@toast-ui/editor/dist/i18n/ru-ru';
 
 import { isMobile } from "@/utils";
 import { valueIsNull } from "@/values";
 
-@Component
+export type EditorType = Vue & { invoke: (name: string) => any };
+
+@Component({components: { Editor }})
 export default class Textarea extends Vue {
   @Prop({ type: String }) label!: string;
   @Prop({ type: String }) value!: string;
@@ -76,6 +92,38 @@ export default class Textarea extends Vue {
 
   private dummyHeight = 0;
   private dummyWidth = 0;
+
+  private editorOptions = {
+    minHeight: '200px',
+    useCommandShortcut: true,
+    useDefaultHTMLSanitizer: true,
+    usageStatistics: false,
+    hideModeSwitch: false,
+    language: this.$root.$i18n.locale,
+    placeholder: this.$t('input_placeholder'),
+    toolbarItems: [
+      'heading',
+      'bold',
+      'italic',
+      'strike',
+      'divider',
+      'hr',
+      'quote',
+      'divider',
+      'ul',
+      'ol',
+      'task',
+      'indent',
+      'outdent',
+      'divider',
+      'table',
+      'image',
+      'link',
+      'divider',
+      'code',
+      'codeblock'
+    ]
+  };
 
   private mounted() {
     const control = this.$refs.control as HTMLInputElement;
@@ -105,6 +153,11 @@ export default class Textarea extends Vue {
 
   private get inputName(): string {
     return `${this.uid}-input`;
+  }
+  
+  private onEditorChange(value: any) {
+    const editor = this.$refs.editor as EditorType;
+    this.$emit('update:value', editor.invoke('getMarkdown'));
   }
 
   private updateInput(value: string) {
