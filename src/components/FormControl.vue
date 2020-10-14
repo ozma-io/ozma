@@ -97,6 +97,17 @@
           :required="!isNullable"
           @update:content="updateValue"
         />
+        <MarkdownEditor
+          v-else-if="inputType.name === 'markdown'"
+          ref="control"
+          :height="customHeight"
+          :edit-type="inputType.editType"
+          :content="textValue"
+          :read-only="isDisabled"
+          :error="value.erroredOnce"
+          :required="!isNullable"
+          @update:content="updateValue"
+        />
       </template>
       <template #input="iSlot">
         <template v-if="inputType.name === 'error'">
@@ -170,6 +181,17 @@
           :read-only="isDisabled"
           :is-cell-edit="isCellEdit"
           :autofocus="autofocus"
+          :error="value.erroredOnce"
+          :required="!isNullable"
+          @update:content="updateValue"
+        />
+        <MarkdownEditor
+          v-else-if="inputType.name === 'markdown'"
+          ref="control"
+          :height="customHeight"
+          :edit-type="inputType.editType"
+          :content="textValue"
+          :read-only="isDisabled"
           :error="value.erroredOnce"
           :required="!isNullable"
           @update:content="updateValue"
@@ -325,6 +347,12 @@ interface ICodeEditorType {
   style: Record<string, any>;
 }
 
+interface IMarkdownEditorType {
+  name: "markdown";
+  editType: string;
+  style: Record<string, any>;
+}
+
 interface ISelectType {
   name: "select";
   options: ISelectOption[];
@@ -369,6 +397,7 @@ type IType =
   ITextType
   | ITextAreaType
   | ICodeEditorType
+  | IMarkdownEditorType
   | ISelectType
   | IReferenceType
   | ICheckType
@@ -381,12 +410,13 @@ type IType =
 const userView = namespace("userView");
 
 const heightExclusions = ["select", "reference"];
-const multilineTypes = [ "codeeditor", "textarea" ];
-const inlineTypes = ["codeeditor", "textarea", "reference"];
+const multilineTypes = [ "markdown","codeeditor", "textarea" ];
+const inlineTypes = ["markdown", "codeeditor", "textarea", "reference"];
 
 @Component({
   components: {
     CodeEditor: () => import("@/components/editors/CodeEditor.vue"),
+    MarkdownEditor: () => import("@/components/editors/MarkdownEditor.vue"),
     MultiSelect: () => import("@/components/multiselect/MultiSelect.vue"),
     Calendar: () => import("@/components/Calendar.vue"),
     ReferenceField: () => import("@/components/ReferenceField.vue"),
@@ -614,6 +644,18 @@ export default class FormControl extends Vue {
           name: "codeeditor",
           language: String(this.attributes["language"] || "sql"),
           style: this.controlStyle(heightCodeEditor),
+        };
+      case "markdown":
+        return {
+          name: "markdown",
+          editType: "markdown",
+          style: this.controlStyle(heightMultilineText),
+        };
+      case "wysiwyg":
+        return {
+          name: "markdown",
+          editType: "wysiwyg",
+          style: this.controlStyle(heightMultilineText),
         };
       default:
         return { name: "text", type: "text", style: this.controlStyle() };
