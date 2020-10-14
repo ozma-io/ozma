@@ -386,7 +386,7 @@ const inlineTypes = ["codeeditor", "textarea", "reference"];
 
 @Component({
   components: {
-    CodeEditor: () => import("@/components/CodeEditor.vue"),
+    CodeEditor: () => import("@/components/editors/CodeEditor.vue"),
     MultiSelect: () => import("@/components/multiselect/MultiSelect.vue"),
     Calendar: () => import("@/components/Calendar.vue"),
     ReferenceField: () => import("@/components/ReferenceField.vue"),
