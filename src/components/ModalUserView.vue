@@ -23,6 +23,7 @@
       <ActionsMenu
         title="view_headline"
         :actions="actions"
+        menu-align="right"
         @goto="$emit('goto', $event)"
       />
     </template>

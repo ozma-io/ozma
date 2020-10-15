@@ -3,8 +3,20 @@
     :class="['modal__tab_header', {'selected': isActive, 'only_tab': onlyTab}]"
     @click="$emit('tab-click')"
   >
-    <slot name="actions-menu" />
+    <input
+      type="button"
+      value="arrow_back"
+      class="head-menu_back-button material-icons md-14"
+      @click="$router.go(-1)"
+    >
+    <router-link
+      :to="{ name: 'main' }"
+      class="head-menu_main-menu-button material-icons"
+    >
+      home
+    </router-link>
     <span class="modal__tab_header_title">{{ title }}</span>
+    <slot name="actions-menu" />
     <input
       type="button"
       value="close"
@@ -27,6 +39,25 @@ export default class ModalTabHeader extends Vue {
 </script>
 
 <style scoped>
+  .head-menu_back-button {
+    padding-top: 3px;
+    padding-bottom: 3px;
+    margin-left: 0 !important;
+  }
+
+  .head-menu_back-button,
+  .head-menu_main-menu-button {
+    color: var(--MainTextColor) !important;
+    background: hsla(0, 0%, 100%, 0.3);
+    line-height: normal;
+    border: none;
+    text-decoration: none;
+    font-size: 20px;
+    padding: 0;
+    margin-right: 10px;
+    z-index: 1000;
+  }
+
   .modal__tab_header {
     display: flex;
     padding: 5px;
