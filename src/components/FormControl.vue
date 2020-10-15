@@ -5,14 +5,16 @@
             "no": "No",
             "invalid_uv": "Nested user view rows should be JSON objects with 'ref' and 'args' defined",
             "empty": "(empty)",
-            "select_view": "Add in modal window"
+            "select_view": "Add in modal window",
+            "data_will_load_after_save": "(Data will load after save)"
         },
         "ru": {
             "yes": "Да",
             "no": "Нет",
             "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'ref' и 'args'",
             "empty": "(пусто)",
-            "select_view": "Создать во вложенном окне"
+            "select_view": "Создать во вложенном окне",
+            "data_will_load_after_save": "(Данные загрузятся после сохранения)"
         }
     }
 </i18n>
@@ -20,7 +22,7 @@
 <template>
   <fragment>
     <InputSlot
-      v-if="inputType.name !== 'userview' && inputType.name !== 'reference'"
+      v-if="inputType.name !== 'userview' && inputType.name !== 'reference' && inputType.name !== 'empty_userview'"
       :is-cell-edit="isCellEdit"
       :label="(inputType.name !== 'static_text' && inputType.name !== 'static_image') ? caption : ''"
       :inline="!isInline"
@@ -217,7 +219,7 @@
         <img v-else-if="inputType.name === 'static_image'" :src="textValue">
       </template>
     </InputSlot>
-    <template v-if="inputType.name === 'reference' || inputType.name === 'userview'">
+    <template v-if="inputType.name === 'reference' || inputType.name === 'userview' || inputType.name == 'empty_userview'">
       <b-row>
         <b-col
           v-if="caption"
@@ -237,6 +239,18 @@
               v-if="enableFilter"
               @update:filterString="filterString = $event"
             />
+          </div>
+          <div v-else-if="inputType.name == 'empty_userview'">
+            <div class="nested-menu">
+              <label class="input_label">{{ caption }}</label>
+              <ActionsMenu
+                title="view_headline"
+                :actions="[]"
+              />
+            </div>
+            <div class="empty_userview_text">
+              {{ inputType.text }}
+            </div>
           </div>
           <div v-else class="input_label__container">
             <label class="input_label_single">{{ caption }}</label>
@@ -374,6 +388,11 @@ interface IUserViewType extends IQuery {
   name: "userview";
 }
 
+interface IEmptyUserViewType {
+  name: "empty_userview";
+  text: string;
+}
+
 interface IErrorType {
   name: "error";
   text: string;
@@ -402,6 +421,7 @@ type IType =
   | IReferenceType
   | ICheckType
   | IUserViewType
+  | IEmptyUserViewType
   | IErrorType
   | ICalendarType
   | IStaticTextType
@@ -553,7 +573,7 @@ export default class FormControl extends Vue {
     const controlAttr = String(this.attributes["control"]);
     if (controlAttr === "user_view") {
       if (this.currentValue === null || this.currentValue === undefined) {
-        return { name: "error", text: this.$t("empty").toString() };
+        return { name: "empty_userview", text: this.$t("data_will_load_after_save").toString() };
       }
 
       const nestedRef = attrToQuerySelf(this.currentValue, this.value.info, linkOpts);
@@ -731,6 +751,11 @@ export default class FormControl extends Vue {
     white-space: pre;
     cursor: question;
     width: 100%;
+    opacity: 0.7;
+    color: var(--MainTextColorLight);
+  }
+
+  .empty_userview_text {
     opacity: 0.7;
     color: var(--MainTextColorLight);
   }
