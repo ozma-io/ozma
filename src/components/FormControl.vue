@@ -455,18 +455,18 @@ const inlineTypes = ["markdown", "codeeditor", "textarea", "reference"];
   },
 })
 export default class FormControl extends Vue {
-  @Prop({ type: Object, required: true }) type!: ValueType;
-  @Prop({ type: Object, required: true }) value!: ICombinedValue;
-  @Prop({ type: Object, default: () => ({}) }) attributes!: AttributesMap;
+  @Prop({ type: Object, required: true }) type!: ValueType; // this.uv.info.columns[x].valueType
+  @Prop({ type: Object, required: true }) value!: ICombinedValue; // this.local.getValueByRef, or other value
+  @Prop({ type: Object, default: () => ({}) }) attributes!: AttributesMap; // {...this.uv.attributes, ...this.uv.columnAttributes[x], ...row.attributes, ...value.attributes}
   @Prop({ type: Boolean, default: false }) locked!: boolean;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: Boolean, default: false }) dontFocus!: boolean;
-  @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
+  @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments; // this.uv.args
   @Prop({ type: String, default: "" }) caption!: string;
   @Prop({ type: String, default: "" }) columnInfoName!: string;
   @Prop({ type: Boolean, default: false }) disableColor!: boolean;
-  @Prop({ type: String, required: true }) scope!: string;
-  @Prop({ type: Number, required: true }) level!: number;
+  @Prop({ type: String, required: true }) scope!: string; // this.scope
+  @Prop({ type: Number, required: true }) level!: number; // this.level
   @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
   @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
 
