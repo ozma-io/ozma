@@ -93,6 +93,7 @@ export default class TableCell extends Vue {
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
+    width: 100%;
   }
 
   .next-after-last-fixed {
@@ -105,7 +106,7 @@ export default class TableCell extends Vue {
 
   .table-td > p {
     pointer-events: none;
-    padding: 3px 4px 2px 7px;
+    padding: 3px 7px 2px 7px;
   }
 
   .table-td_selected {
