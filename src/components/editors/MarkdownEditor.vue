@@ -16,6 +16,7 @@
   />
   <editor
     v-else
+    :key="key"
     ref="editor"
     :initialValue="content"
     :initialEditType= "editType"  
@@ -27,7 +28,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 
 import 'codemirror/lib/codemirror.css';
 import '@toast-ui/editor/dist/toastui-editor.css';
@@ -45,6 +46,7 @@ export default class CodeEditor extends Vue {
   @Prop({ type: String, default: "markdown" }) editType!: string;
   @Prop({ default: false }) readOnly!: boolean;
 
+  private key = 0;
   private editorOptions = {
     minHeight: '200px',
     useCommandShortcut: true,
@@ -81,5 +83,11 @@ export default class CodeEditor extends Vue {
     const editor = this.$refs.editor as EditorType;
     this.$emit('update:content', editor.invoke('getMarkdown'));
   }
+
+  @Watch('editType')
+  private reloadComponent() {
+    this.key++;
+  }
+
 }
 </script>
