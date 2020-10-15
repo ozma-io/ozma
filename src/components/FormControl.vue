@@ -206,15 +206,20 @@
             class="nested-menu"
           >
             <label class="input_label">{{ title }}</label>
+            <SearchPanel
+              v-visible="enableFilter"
+              @update:filterString="filterString = $event"
+            />
             <ActionsMenu
               title="view_headline"
               :actions="actions"
+              menu-align="right"
               @goto="$emit('goto', $event)"
             />
-            <SearchPanel
-              v-if="enableFilter"
-              @update:filterString="filterString = $event"
-            />
+            <i
+              class="material-icons fullscreen_button"
+              @click.stop="openFullscreen(inputType)"
+            >fullscreen</i>
           </div>
           <div v-else class="input_label__container">
             <label class="input_label_single">{{ caption }}</label>
@@ -302,11 +307,12 @@ import {valueToText, valueIsNull, dateTimeFormat} from "@/values";
 import { AttributesMap, ValueType } from "@/api";
 import { Action } from "@/components/ActionsMenu.vue";
 import { IUserViewArguments, homeSchema, ICombinedValue, currentValue, IEntriesRef, referenceEntriesRef } from "@/state/user_view";
-import { IQuery, attrToQuerySelf } from "@/state/query";
+import { IQuery, attrToQuerySelf, queryLocation } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { isMobile } from "@/utils";
 import { attrToLinkSelf } from "@/links";
 import { IReferenceSelectAction } from "./ReferenceField.vue";
+import { router } from "@/modules";
 
 interface ITextType {
   name: "text";
@@ -468,6 +474,10 @@ export default class FormControl extends Vue {
     const isHeightOnPanel = !multilineTypes.includes(this.inputType.name);
     const height = isHeightOnPanel ? { height: `${this.customHeight}px` } : {};
     return this.customHeight !== null && !excludeHeight ? { ...height, maxHeight: "initial" } : {};
+  }
+
+  private openFullscreen(view: IUserViewType) {
+    router.push(queryLocation(view));
   }
 
   private updateTitle(title: string | null) {
@@ -654,10 +664,21 @@ export default class FormControl extends Vue {
 <style scoped>
   /* Current Z layout:
 
-* Drop-down menu    (1200)
-* FormControl       (1000)
+  * Drop-down menu    (1200)
+  * FormControl       (1000)
 
-*/
+  */
+
+  .fullscreen_button {
+    line-height: 1.25em;
+    font-size: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    float: right;
+    color: var(--MainTextColor);
+  }
+
   /deep/ .tabl {
     height: initial !important;
   }
@@ -722,7 +743,6 @@ export default class FormControl extends Vue {
   .nested-menu > .actions-menu {
     width: max-content;
     display: inline-block;
-    margin-right: 10px;
   }
 
   .nested-menu >>> .actions-menu_actions-button {

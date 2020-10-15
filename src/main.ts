@@ -45,6 +45,9 @@ Vue.component("ActionsMenu", ActionsMenu);
 Vue.component("FormControl", FormControl);
 Vue.component("FunLink", FunLink);
 
+Vue.directive('visible', (el, bind) => {
+  el.style.visibility=(!!bind.value) ? 'visible' : 'hidden';});
+
 Modules.router.beforeResolve((to, from, next) => {
   // Reset page title
   setHeadTitle("ozma.io");

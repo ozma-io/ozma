@@ -7,8 +7,7 @@
             "bad_request": "User view request error: {msg}",
             "unknown_error": "Unknown user view fetch error: {msg}",
             "anonymous_query": "(anonymous query)",
-            "edit_view": "Edit user view",
-            "open_as_top_level": "Open in full screen"
+            "edit_view": "Edit user view"
         },
         "ru": {
             "loading": "Загрузка данных",
@@ -17,8 +16,7 @@
             "bad_request": "Неверный запрос для этого представления: {msg}",
             "unknown_error": "Неизвестная ошибка загрузки представления: {msg}",
             "anonymous_query": "(анонимный запрос)",
-            "edit_view": "Редактировать представление",
-            "open_as_top_level": "Открыть на полный экран"
+            "edit_view": "Редактировать представление"
         }
     }
 </i18n>
@@ -222,14 +220,6 @@ export default class UserView extends Vue {
         search: "",
       };
       actions.push({ name: this.$t("edit_view").toString(), link: { query: editQuery, target: "modal-auto" } });
-    }
-    if (!this.isTopLevel) {
-      const gotoQuery: IQuery = {
-        defaultValues: this.defaultValues,
-        args: this.currentUv.args,
-        search: "",
-      };
-      actions.push({ name: this.$t("open_as_top_level").toString(), link: { query: gotoQuery, target: "top" } });
     }
     return actions;
   }

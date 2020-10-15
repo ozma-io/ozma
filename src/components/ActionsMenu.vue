@@ -4,11 +4,17 @@
     :class="['actions-menu', {'actions-menu_active': showActions}]"
   >
     <input
+      v-if="menuAlign == 'left'"
       type="button"
       class="actions-menu_actions-button material-icons"
       value="menu"
       @click="showActions = !showActions"
     >
+    <i
+      v-else
+      class="material-icons right-actions-menu-button"
+      @click="showActions = !showActions"
+    >more_vert</i>
     <div
       v-if="showActions"
       class="black-block"
@@ -20,7 +26,8 @@
     </div>
     <div
       v-show="showActions"
-      class="div-with-actions"
+      :class="['div-with-actions', menuAlign]"
+
     >
       <template v-for="(action, i) in sortedActions">
         <hr
@@ -105,6 +112,7 @@ export type Action = ILocationAction | ILinkAction | ICallbackAction | IUploadFi
 export default class ActionsMenu extends Vue {
   @Prop({ type: Array, required: true }) actions!: Action[];
   @Prop({ type: String, required: true }) title!: string;
+  @Prop({ type: String, default: "left" }) menuAlign!: string;
 
   private showActions = false;
 
@@ -170,6 +178,10 @@ export default class ActionsMenu extends Vue {
     outline: none;
     padding: 0;
     margin-right: 20px;
+  }
+
+  .right {
+    right: 0;
   }
 
   .div-with-actions {
@@ -294,4 +306,15 @@ export default class ActionsMenu extends Vue {
       display: none !important;
     }
   }
+
+  .right-actions-menu-button {
+    line-height: 1.25em;
+    font-size: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    float: right;
+    color: var(--MainTextColor);
+  }
+
 </style>
