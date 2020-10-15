@@ -42,6 +42,7 @@ import { funappSchema, IEntityRef, IFieldRef } from "@/api";
 import SelectUserView from "@/components/SelectUserView.vue";
 import { mapMaybe, saveToFile } from "@/utils";
 import { Action } from "@/components/ActionsMenu.vue";
+import { Group as ActionsGroup } from "@/components/ActionsGroups.vue";
 import { ScopeName, UserViewKey, IAddedResult, AddedRowId } from "@/state/staging_changes";
 import { attrToLink } from "@/links";
 
@@ -150,6 +151,16 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
         }));
       }
     });
+  }
+
+  get actionsGroups() {
+    const group: ActionsGroup[] = this.uv.attributes["actions_groups"];
+    return group;
+  }
+
+  @Watch("actionsGroups", { deep: true, immediate: true })
+  private pushActionsGropus() {
+    this.$emit("update:actionsGroups", this.actionsGroups);
   }
 
   get actions() {

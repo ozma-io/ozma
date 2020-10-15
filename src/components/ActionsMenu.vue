@@ -86,6 +86,7 @@ import { Link } from "@/links";
 import { IActionRef } from "ozma-api/src";
 
 export interface IAction {
+  icon?: string;
   name: string;
   order?: number;
 };
@@ -194,7 +195,7 @@ export default class ActionsMenu extends Vue {
     border: 1px solid var(--MainBorderColor);
     margin-top: 0;
     top: calc(100% + 5px);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.1);
     border-radius: 3px;
   }
 

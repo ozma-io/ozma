@@ -11,6 +11,7 @@ import { setHeadTitle } from "@/elements";
 import UserView from "@/components/UserView.vue";
 import FunLink from "@/components/FunLink";
 import ActionsMenu from "@/components/ActionsMenu.vue";
+import ActionsGroups from "@/components/ActionsGroups.vue";
 import FormControl from "@/components/FormControl.vue";
 import App from "@/App.vue";
 
@@ -42,6 +43,7 @@ Vue.use(TextareaAutosize);
 
 Vue.component("UserView", UserView);
 Vue.component("ActionsMenu", ActionsMenu);
+Vue.component("ActionsGroups", ActionsGroups);
 Vue.component("FormControl", FormControl);
 Vue.component("FunLink", FunLink);
 

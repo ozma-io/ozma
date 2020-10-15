@@ -75,6 +75,7 @@
           @goto="pushRoot"
         />
         <span v-if="!!title" class="head-menu_title">{{ title }}</span>
+        <ActionsGroups :groups="actionsGroups"/>
         <SearchPanel
           v-if="enableFilter"
           :filter-string="query.root.search"
@@ -92,6 +93,7 @@
           :default-values="query.root.defaultValues"
           scope="root"
           @goto="pushRoot"
+          @update:actionsGroups="actionsGroups = $event"
           @update:actions="extraActions = $event"
           @update:statusLine="statusLine = $event"
           @update:enableFilter="enableFilter = $event"
@@ -163,6 +165,7 @@ import {CombinedUserView, CurrentUserViews, IUserViewArguments, UserViewError} f
 import {ErrorKey} from "@/state/errors";
 import {CurrentChanges, ScopeName} from "@/state/staging_changes";
 import {Action} from "@/components/ActionsMenu.vue";
+import {Group as ActionsGroup} from "@/components/ActionsGroups.vue";
 import ModalUserView from "@/components/ModalUserView.vue";
 import SearchPanel from "@/components/SearchPanel.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
@@ -200,6 +203,7 @@ export default class TopLevelUserView extends Vue {
   @errors.Mutation("removeError") removeError!: (params: { key: ErrorKey; index: number }) => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
 
+  private actionsGroups: ActionsGroup[] = [];
   private extraActions: Action[] = [];
   private statusLine = "";
   private enableFilter = false;
