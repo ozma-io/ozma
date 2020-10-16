@@ -154,8 +154,43 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
   }
 
   get actionsGroups() {
-    const group: ActionsGroup[] = this.uv.attributes["actions_groups"];
-    return group;
+    const groups: ActionsGroup[] = []; 
+    const actionsGroups = this.uv.attributes["actions_groups"];
+    
+    if (Array.isArray(actionsGroups)) {
+      actionsGroups.forEach((group: any) => {
+
+        const actions: Action[] = [];
+        if (Array.isArray(group.actions)) {
+          const opts: IAttrToQueryOpts = {};
+          const home = homeSchema(this.uv.args);
+          if (home !== null) {
+            opts.homeSchema = home;
+          }
+          group.actions.forEach((action: any) => {
+            if (typeof action.name !== "string") {
+              return;
+            }
+            const link = attrToLink(action, opts);
+            if (link === null) {
+              return;
+            }
+            actions.push({
+              icon: action.icon,
+              name: action.name,
+              link,
+            });
+          });
+        };
+        groups.push({
+          icon: group.icon,
+          name: group.name,
+          actions
+        });
+      })
+    }    
+    
+    return groups;
   }
 
   @Watch("actionsGroups", { deep: true, immediate: true })

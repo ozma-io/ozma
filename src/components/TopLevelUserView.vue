@@ -75,12 +75,12 @@
           @goto="pushRoot"
         />
         <span v-if="!!title" class="head-menu_title">{{ title }}</span>
-        <ActionsGroups :groups="actionsGroups"/>
         <SearchPanel
           v-if="enableFilter"
           :filter-string="query.root.search"
           @update:filterString="replaceRootSearch($event)"
         />
+        <ActionsGroups :groups="actionsGroups"/>
       </div>
       <div
         class="userview-div"

@@ -5,8 +5,15 @@
       <span>{{ group.name }}</span>
       <ul class="actions">
         <li v-for="(action, j) in group.actions" :key="j">
-          <i v-if="group.icon" class="material-icons">{{ action.icon }}</i> 
-          <span>{{ action.name }}</span>
+          <FunLink
+            v-if="'link' in action"
+            :key="action.name"
+            :link="action.link"
+            @goto="$emit('goto', $event)"
+          >
+            <i v-if="group.icon" class="material-icons">{{ action.icon }}</i> 
+            <span>{{ action.name }}</span>
+          </FunLink>
         </li>
       </ul>
     </li>
@@ -16,7 +23,6 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { Action } from "@/components/ActionsMenu.vue";
-
 export interface IGroup {
   icon?: string;
   name: string;
@@ -28,7 +34,6 @@ export type Group = IGroup;
 @Component
 export default class ActionsGroups extends Vue {
   @Prop({ type: Array, required: true }) groups!: Group[];
-
 }
 </script>
 
@@ -44,9 +49,18 @@ export default class ActionsGroups extends Vue {
     padding: 0;
   }
 
+  ul.groups a {
+    color: inherit;
+    text-decoration: none;
+  }
+
   ul.groups {
     position: absolute;
     right: 55px;
+  }
+
+  .search-show + ul.groups {
+    display: none;
   }
 
   ul.groups .material-icons {
@@ -63,8 +77,8 @@ export default class ActionsGroups extends Vue {
     float: left;
     border: 1px solid var(--MainBackgroundColor);
     border-radius: 3px;
-    padding: 5px 5px 5px 20px;
-    margin-right: 5px;
+    padding: 5px 5px 5px 22px;
+    margin-right: 10px;
     cursor: pointer;
     transition: 0.2s background-color ease-in-out, 0.2s box-shadow ease-in-out, 0.2s border-color ease-in-out;
   }
@@ -107,5 +121,11 @@ export default class ActionsGroups extends Vue {
 
   ul.actions > li:hover {
     background-color: var(--MainBorderColor);
+  }
+
+  @media only screen and (max-width: 600px) {
+    ul.groups {
+      display: none;
+    }
   }
 </style>
