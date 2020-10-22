@@ -269,6 +269,7 @@ interface IColumn {
   mobileFixed: boolean;
   columnInfo: IResultColumnInfo;
   width: number; // in px
+  treeBranchesView: boolean;
 }
 
 interface ITableValueExtra {
@@ -276,11 +277,16 @@ interface ITableValueExtra {
   link?: Link;
   style?: Record<string, any>;
   selected: boolean;
+  parent?: number;
 }
 
 interface ITableRowExtra {
   searchText: string;
   selected: boolean;
+  visible: boolean;
+  parent?: number;
+  children: number[];
+  showChilds: boolean;
   style?: Record<string, any>;
   height?: number;
   link?: Link;
@@ -330,8 +336,12 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
     const visibleColumnAttr = getColumnAttr("visible");
     const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
 
+    const treeBranchesViewAttr = getColumnAttr("tree_branches_view");
+    const treeBranchesView = treeBranchesViewAttr === undefined ? false : Boolean(treeBranchesViewAttr);
+
     return {
-      caption, style,
+      caption,
+      style,
       visible: visibleColumn,
       fixed: fixedColumn,
       //mobileFixed: fixedField,
@@ -339,6 +349,7 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
       columnInfo,
       attrs: columnAttrs,
       width: columnWidth,
+      treeBranchesView,
     };
   });
 };
@@ -354,6 +365,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, this.uv.attributes);
 
     const valueText = valueToPunnedText(columnInfo.valueType, value);
+    const parent = getCellAttr("tree_branches") &&  value.value ? value.value : 0;
 
     const style: Record<string, any> = {};
     let touchedStyle = false;
@@ -392,6 +404,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     const extra: ITableValueExtra = {
       selected,
       valueText,
+      parent,
     };
     if (touchedStyle) {
       extra.style = style;
@@ -489,6 +502,10 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     const extra: ITableRowExtra = {
       selected: false,
       searchText: "",
+      visible: true,
+      parent: 0,
+      children: [],
+      showChilds: false,
     };
 
     const style: Record<string, any> = {};
@@ -532,6 +549,14 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       return extra.valueText.toLocaleLowerCase();
     });
     localRow.extra.searchText = "\0".concat(...searchStrings);
+
+    const parent = localRow.values.find(extra => {
+      return extra.parent !== undefined && extra.parent > 0;
+    });
+    if (parent !== undefined && Number(parent.parent) > 0) {
+      localRow.extra.parent = parent.parent;
+      localRow.extra.visible = false;
+    };
   }
 
   postInitAddedRow(rowId: AddedRowId, row: IAddedRow, localRow: ITableLocalRow) {
@@ -885,6 +910,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       if (this.filter.length !== 0) {
         this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], this.filter));
       }
+
+      if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree)
+        this.rowPositions = this.rowPositions.filter(rowI => this.local.rows[rowI].extra.visible);
 
       this.sortRows();
       this.updateShowLength();
