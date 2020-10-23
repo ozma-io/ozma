@@ -15,7 +15,7 @@
     @click="$emit('cell-click', columnPosition, $event)"
   >
     <p>
-      <template v-if="localValue.link !== undefined && fieldType == 'reference' && localValue.valueText.length > 0">
+      <template v-if="localValue.link !== undefined && localValue.valueText.length > 0">
         <div class="selectable">
           <FunLink
             :link="localValue.link"
@@ -24,27 +24,12 @@
             <input
               type="button"
               class="material-icons reference__open_modal"
-              :value="iconValue(localValue.link.target)"
+              :value="iconValue"
             >
           </FunLink>
           <span class="reference-text">{{ localValue.valueText || '&nbsp;' }}</span>
         </div>
       </template>
-      <FunLink
-        v-else-if="localValue.link !== undefined"
-        :link="localValue.link"
-        @goto="$emit('goto', $event)"
-      >
-        <checkbox
-          v-if="valueType === 'bool'"
-          class="checkbox_click-none"
-          :checked="value.value"
-          disabled
-        />
-        <template v-else>
-          {{ localValue.valueText || '&nbsp;' }}
-        </template>
-      </FunLink>
       <template v-else>
         <checkbox
           v-if="valueType === 'bool'"
@@ -65,6 +50,7 @@ import * as R from 'ramda';
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
 import { valueIsNull } from "@/values";
+import { iconValue } from "@/links";
 
 @Component({
   components: {
@@ -96,11 +82,8 @@ export default class TableCell extends Vue {
     return valueIsNull(this.value.value);
   }
   
-  private iconValue(target: string) {
-    if (target === 'modal-auto' || target === 'modal')
-      return 'flip_to_front';
-    else
-      return 'open_in_new';
+  get iconValue() {
+    return iconValue(this.localValue.link.target);
   }
 
 }
