@@ -1,17 +1,17 @@
 <template>
-  <ul class="groups">
-    <li v-for="(group, i) in groups" :key="i">
-      <i v-if="group.icon" class="material-icons">{{ group.icon }}</i> 
-      <span>{{ group.name }}</span>
+  <ul class="buttons">
+    <li v-for="(button, i) in buttons" :key="i">
+      <i v-if="button.icon" class="material-icons">{{ button.icon }}</i> 
+      <span>{{ button.name }}</span>
       <ul class="actions">
-        <li v-for="(action, j) in group.actions" :key="j">
+        <li v-for="(action, j) in button.actions" :key="j">
           <FunLink
             v-if="'link' in action"
             :key="action.name"
             :link="action.link"
             @goto="$emit('goto', $event)"
           >
-            <i v-if="group.icon" class="material-icons">{{ action.icon }}</i> 
+            <i v-if="button.icon" class="material-icons">{{ action.icon }}</i> 
             <span>{{ action.name }}</span>
           </FunLink>
         </li>
@@ -23,17 +23,15 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { Action } from "@/components/ActionsMenu.vue";
-export interface IGroup {
+export interface IPanelButton {
   icon?: string;
   name: string;
   actions: Action[]; 
 };
 
-export type Group = IGroup;
-
 @Component
-export default class ActionsGroups extends Vue {
-  @Prop({ type: Array, required: true }) groups!: Group[];
+export default class ButtonsPanel extends Vue {
+  @Prop({ type: Array, required: true }) buttons!: IPanelButton[];
 }
 </script>
 
@@ -49,21 +47,21 @@ export default class ActionsGroups extends Vue {
     padding: 0;
   }
 
-  ul.groups a {
+  ul.buttons a {
     color: inherit;
     text-decoration: none;
   }
 
-  ul.groups {
+  ul.buttons {
     position: absolute;
     right: 55px;
   }
 
-  .search-show + ul.groups {
+  .search-show + ul.buttons {
     display: none;
   }
 
-  ul.groups .material-icons {
+  ul.buttons .material-icons {
     position: absolute;
     font-size: 18px;
     left: 0;
@@ -71,7 +69,7 @@ export default class ActionsGroups extends Vue {
     padding: 0;
   }
 
-  ul.groups > li {
+  ul.buttons > li {
     position: relative;
     display: block;
     float: left;
@@ -94,7 +92,7 @@ export default class ActionsGroups extends Vue {
     padding: 5px 15px 5px 35px;
   }
 
-  ul.groups > li:hover {
+  ul.buttons > li:hover {
     border: 1px solid var(--MainBorderColor);
     background-color: #f9f9fb;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -114,7 +112,7 @@ export default class ActionsGroups extends Vue {
     transition: 0.2s visibility ease-in-out, 0.2s opacity ease-in-out;
   }
 
-  ul.groups > li:hover ul.actions {
+  ul.buttons > li:hover ul.actions {
     opacity: 1;
     visibility: visible;
   }
@@ -124,7 +122,7 @@ export default class ActionsGroups extends Vue {
   }
 
   @media only screen and (max-width: 600px) {
-    ul.groups {
+    ul.buttons {
       display: none;
     }
   }

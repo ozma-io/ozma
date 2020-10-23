@@ -42,7 +42,7 @@ import { funappSchema, IEntityRef, IFieldRef } from "@/api";
 import SelectUserView from "@/components/SelectUserView.vue";
 import { mapMaybe, saveToFile } from "@/utils";
 import { Action } from "@/components/ActionsMenu.vue";
-import { Group as ActionsGroup } from "@/components/ActionsGroups.vue";
+import { IPanelButton } from "@/components/ButtonsPanel.vue";
 import { ScopeName, UserViewKey, IAddedResult, AddedRowId } from "@/state/staging_changes";
 import { attrToLink } from "@/links";
 
@@ -153,21 +153,21 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
     });
   }
 
-  get actionsGroups() {
-    const groups: ActionsGroup[] = []; 
-    const actionsGroups = this.uv.attributes["actions_groups"];
+  get panelButtons() {
+    const buttons: IPanelButton[] = []; 
+    const panelButtons = this.uv.attributes["panel_buttons"];
     
-    if (Array.isArray(actionsGroups)) {
-      actionsGroups.forEach((group: any) => {
+    if (Array.isArray(panelButtons)) {
+      panelButtons.forEach((button: any) => {
 
         const actions: Action[] = [];
-        if (Array.isArray(group.actions)) {
+        if (Array.isArray(button.actions)) {
           const opts: IAttrToQueryOpts = {};
           const home = homeSchema(this.uv.args);
           if (home !== null) {
             opts.homeSchema = home;
           }
-          group.actions.forEach((action: any) => {
+          button.actions.forEach((action: any) => {
             if (typeof action.name !== "string") {
               return;
             }
@@ -182,20 +182,20 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
             });
           });
         };
-        groups.push({
-          icon: group.icon,
-          name: group.name,
+        buttons.push({
+          icon: button.icon,
+          name: button.name,
           actions
         });
       })
     }    
     
-    return groups;
+    return buttons;
   }
 
-  @Watch("actionsGroups", { deep: true, immediate: true })
-  private pushActionsGropus() {
-    this.$emit("update:actionsGroups", this.actionsGroups);
+  @Watch("panelButtons", { deep: true, immediate: true })
+  private pushPanelButtons() {
+    this.$emit("update:panelButtons", this.panelButtons);
   }
 
   get actions() {

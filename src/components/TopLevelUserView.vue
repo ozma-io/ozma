@@ -80,7 +80,7 @@
           :filter-string="query.root.search"
           @update:filterString="replaceRootSearch($event)"
         />
-        <ActionsGroups :groups="actionsGroups"/>
+        <ButtonsPanel :buttons="panelButtons"/>
       </div>
       <div
         class="userview-div"
@@ -93,7 +93,7 @@
           :default-values="query.root.defaultValues"
           scope="root"
           @goto="pushRoot"
-          @update:actionsGroups="actionsGroups = $event"
+          @update:panelButtons="panelButtons = $event"
           @update:actions="extraActions = $event"
           @update:statusLine="statusLine = $event"
           @update:enableFilter="enableFilter = $event"
@@ -165,7 +165,7 @@ import {CombinedUserView, CurrentUserViews, IUserViewArguments, UserViewError} f
 import {ErrorKey} from "@/state/errors";
 import {CurrentChanges, ScopeName} from "@/state/staging_changes";
 import {Action} from "@/components/ActionsMenu.vue";
-import {Group as ActionsGroup} from "@/components/ActionsGroups.vue";
+import {IPanelButton} from "@/components/ButtonsPanel.vue";
 import ModalUserView from "@/components/ModalUserView.vue";
 import SearchPanel from "@/components/SearchPanel.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
@@ -203,7 +203,7 @@ export default class TopLevelUserView extends Vue {
   @errors.Mutation("removeError") removeError!: (params: { key: ErrorKey; index: number }) => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
 
-  private actionsGroups: ActionsGroup[] = [];
+  private panelButtons: IPanelButton[] = [];
   private extraActions: Action[] = [];
   private statusLine = "";
   private enableFilter = false;

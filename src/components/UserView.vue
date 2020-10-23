@@ -43,7 +43,7 @@
         :selection-mode="selectionMode"
         :default-values="defaultValues"
         @update:actions="extraCommonActions = $event"
-        @update:actionsGroups="actionsGroups = $event"
+        @update:panelButtons="panelButtons = $event"
       />
       <component
         :is="`UserView${userViewType}`"
@@ -93,7 +93,7 @@ import { IHandlerProvider } from "@/local_user_view";
 import { Action } from "@/components/ActionsMenu.vue";
 import { ISelectionRef, LocalBaseUserView } from "@/components/BaseUserView";
 import UserViewCommon from "@/components/UserViewCommon.vue";
-import { Group as ActionsGroup } from "@/components/ActionsGroups.vue";
+import { IPanelButton } from "@/components/ButtonsPanel.vue";
 
 const types: RecordSet<string> = {
   "form": null,
@@ -167,7 +167,7 @@ export default class UserView extends Vue {
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
 
-  private actionsGroups: ActionsGroup[] = [];
+  private panelButtons: IPanelButton[] = [];
   private extraActions: Action[] = [];
   private extraCommonActions: Action[] = [];
   private component: IUserViewConstructor<Vue> | null = null;
@@ -227,9 +227,9 @@ export default class UserView extends Vue {
     return actions;
   }
 
-  @Watch("actionsGroups", { deep: true, immediate: true })
-  private pushActionsGropus() {
-    this.$emit("update:actionsGroups", this.actionsGroups);
+  @Watch("panelButtons", { deep: true, immediate: true })
+  private pushPanelButtons() {
+    this.$emit("update:panelButtons", this.panelButtons);
   }
 
   get userViewType() {
@@ -336,11 +336,6 @@ export default class UserView extends Vue {
   @Watch("actions", { deep: true, immediate: true })
   private pushActions() {
     this.$emit("update:actions", this.actions);
-  }
-
-  @Watch("actionsGroups", { deep: true, immediate: true })
-  private pushActionsGroups() {
-    this.$emit("update:actionsGroups", this.actionsGroups);
   }
 
   private destroyed() {
