@@ -15,21 +15,21 @@
     @click="$emit('cell-click', columnPosition, $event)"
   >
     <p>
-      <FunLink
-        v-if="localValue.link !== undefined"
-        :link="localValue.link"
-        @goto="$emit('goto', $event)"
-      >
-        <checkbox
-          v-if="valueType === 'bool'"
-          class="checkbox_click-none"
-          :checked="value.value"
-          disabled
-        />
-        <template v-else>
-          {{ localValue.valueText || '&nbsp;' }}
-        </template>
-      </FunLink>
+      <template v-if="localValue.link !== undefined && localValue.valueText.length > 0">
+        <div class="selectable">
+          <FunLink
+            :link="localValue.link"
+            @goto="$emit('goto', $event)"
+          >
+            <input
+              type="button"
+              class="material-icons reference__open_modal"
+              :value="iconValue"
+            >
+          </FunLink>
+          <span class="reference-text">{{ localValue.valueText || '&nbsp;' }}</span>
+        </div>
+      </template>
       <template v-else>
         <checkbox
           v-if="valueType === 'bool'"
@@ -50,6 +50,7 @@ import * as R from 'ramda';
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
 import { valueIsNull } from "@/values";
+import { iconValue } from "@/links";
 
 @Component({
   components: {
@@ -80,12 +81,18 @@ export default class TableCell extends Vue {
     // We use `value.value` here to highlight unvalidated values.
     return valueIsNull(this.value.value);
   }
+  
+  get iconValue() {
+    return iconValue(this.localValue.link.target);
+  }
+
 }
 </script>
 
 <style scoped>
 
   .selectable {
+    position: relative;
     float: left;
     margin-top: -2px;
     border-radius: 5px;
@@ -94,6 +101,7 @@ export default class TableCell extends Vue {
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
     width: 100%;
+    word-wrap: break-word;
   }
 
   .next-after-last-fixed {
@@ -120,5 +128,26 @@ export default class TableCell extends Vue {
 
   .checkbox_click-none {
     pointer-events: none;
+  }
+
+  .reference__open_modal {
+    pointer-events: auto !important;
+    left: 0;
+    top: 0;
+    position: absolute;
+    border: none;
+    background: none;
+    padding: 0;
+    color: var(--MainBorderTextColor);
+    cursor: pointer;
+  }
+
+  .reference__open_modal:hover {
+    opacity: 0.7;
+  }
+
+  a + span.reference-text {
+    padding-left: 20px;
+    display: block;
   }
 </style>

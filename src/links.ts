@@ -56,7 +56,6 @@ export const attrToActionLink = (linkedAttr: any, opts?: IAttrToLinkOpts): IActi
   if (args === null) {
     return null;
   }
-
   return { action, args };
 };
 
@@ -120,3 +119,10 @@ export const attrToLinkRef = (linkedAttr: any, value: any, opts?: IAttrToLinkOpt
   }
   return ret;
 };
+
+export const iconValue = (target: string) => {
+  if (target === 'modal-auto' || target === 'modal')
+    return 'flip_to_front';
+  else
+    return 'open_in_new';
+}
