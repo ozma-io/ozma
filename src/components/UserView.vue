@@ -43,6 +43,7 @@
         :selection-mode="selectionMode"
         :default-values="defaultValues"
         @update:actions="extraCommonActions = $event"
+        @update:panelButtons="panelButtons = $event"
       />
       <component
         :is="`UserView${userViewType}`"
@@ -92,6 +93,7 @@ import { IHandlerProvider } from "@/local_user_view";
 import { Action } from "@/components/ActionsMenu.vue";
 import { ISelectionRef, LocalBaseUserView } from "@/components/BaseUserView";
 import UserViewCommon from "@/components/UserViewCommon.vue";
+import { IPanelButton } from "@/components/ButtonsPanel.vue";
 
 const types: RecordSet<string> = {
   "form": null,
@@ -165,6 +167,7 @@ export default class UserView extends Vue {
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
 
+  private panelButtons: IPanelButton[] = [];
   private extraActions: Action[] = [];
   private extraCommonActions: Action[] = [];
   private component: IUserViewConstructor<Vue> | null = null;
@@ -222,6 +225,11 @@ export default class UserView extends Vue {
       actions.push({ name: this.$t("edit_view").toString(), link: { query: editQuery, target: "modal-auto" } });
     }
     return actions;
+  }
+
+  @Watch("panelButtons", { deep: true, immediate: true })
+  private pushPanelButtons() {
+    this.$emit("update:panelButtons", this.panelButtons);
   }
 
   get userViewType() {

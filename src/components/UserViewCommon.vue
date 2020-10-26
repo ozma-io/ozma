@@ -42,6 +42,7 @@ import { funappSchema, IEntityRef, IFieldRef } from "@/api";
 import SelectUserView from "@/components/SelectUserView.vue";
 import { mapMaybe, saveToFile } from "@/utils";
 import { Action } from "@/components/ActionsMenu.vue";
+import { IPanelButton } from "@/components/ButtonsPanel.vue";
 import { ScopeName, UserViewKey, IAddedResult, AddedRowId } from "@/state/staging_changes";
 import { attrToLink } from "@/links";
 
@@ -150,6 +151,51 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
         }));
       }
     });
+  }
+
+  get panelButtons() {
+    const buttons: IPanelButton[] = []; 
+    const panelButtons = this.uv.attributes["panel_buttons"];
+    
+    if (Array.isArray(panelButtons)) {
+      panelButtons.forEach((button: any) => {
+
+        const actions: Action[] = [];
+        if (Array.isArray(button.actions)) {
+          const opts: IAttrToQueryOpts = {};
+          const home = homeSchema(this.uv.args);
+          if (home !== null) {
+            opts.homeSchema = home;
+          }
+          button.actions.forEach((action: any) => {
+            if (typeof action.name !== "string") {
+              return;
+            }
+            const link = attrToLink(action, opts);
+            if (link === null) {
+              return;
+            }
+            actions.push({
+              icon: action.icon,
+              name: action.name,
+              link,
+            });
+          });
+        };
+        buttons.push({
+          icon: button.icon,
+          name: button.name,
+          actions
+        });
+      })
+    }    
+    
+    return buttons;
+  }
+
+  @Watch("panelButtons", { deep: true, immediate: true })
+  private pushPanelButtons() {
+    this.$emit("update:panelButtons", this.panelButtons);
   }
 
   get actions() {
