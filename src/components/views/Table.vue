@@ -196,6 +196,7 @@
               :show-fixed-row="showFixedRow"
               @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
               @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
+              @update:visibleChids="visibleChids(arguments[0], arguments[1])"
               @goto="$emit('goto', $event)"
             />
           </template>
@@ -255,6 +256,7 @@ import TableFixedRow from "@/components/views/table/TableFixedRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
 import TableCellEdit, {ICellCoords, IEditParams} from "@/components/views/table/TableCellEdit.vue";
 import { Link, attrToLinkRef, attrToLinkSelf } from "@/links";
+import * as R from "ramda";
 
 interface ITableEditing {
   lock: AutoSaveLock;
@@ -278,6 +280,7 @@ interface ITableValueExtra {
   style?: Record<string, any>;
   selected: boolean;
   parent?: number;
+  children: number[];
 }
 
 interface ITableRowExtra {
@@ -285,7 +288,6 @@ interface ITableRowExtra {
   selected: boolean;
   visible: boolean;
   parent?: number;
-  children: number[];
   showChilds: boolean;
   style?: Record<string, any>;
   height?: number;
@@ -405,6 +407,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       selected,
       valueText,
       parent,
+
     };
     if (touchedStyle) {
       extra.style = style;
@@ -747,6 +750,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   private cellEditHeight = 0;
 
+  private rowVisibles: Record<number, boolean> = {};
+
   get columnIndexes() {
     const columns = this.local.extra.columns.map((column, index) => ({
       index,
@@ -899,6 +904,56 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
   }
 
+  private visibleChids(parent: number, visible: boolean) {
+    // console.log(this.tableTree.changeRowsVisible(parent, visible));
+    this.local.rows.map(row => {
+      if (row.extra.parent == parent && visible) {
+        row.extra.visible=true;
+      }
+      if (row.extra.parent == parent && !visible) {
+        row.extra.visible=false;
+        const id = row.extra.selectionEntry.id;
+        this.visibleChids(id, false);
+      } 
+      return row; 
+    });
+    this.buildRowPositions();
+    this.updateRowVisibles();
+  }
+
+  private updateRowVisibles() {
+    this.local.rows.forEach(row => {
+      this.rowVisibles[row.extra.selectionEntry.id] = row.extra.visible; 
+    });
+  }
+
+  private initRowVisibles() {
+    if (!R.isEmpty(this.rowVisibles)) {
+      this.local.rows.map(row => {
+        row.extra.visible = this.rowVisibles[row.extra.selectionEntry.id];
+        return row; 
+      });
+    }
+  }
+
+  private initChildRowPositions() {
+    const childs = this.rowPositions.filter(rowI => this.local.rows[rowI].extra.parent > 0);
+    this.rowPositions = this.rowPositions.filter(rowI => this.local.rows[rowI].extra.parent == 0);
+    childs.forEach(child => {
+      const newRowPositions = [];
+      this.rowPositions.forEach((rowI, i) => {
+        newRowPositions.push(rowI);
+        if (i+1 < this.rowPositions.length && this.local.rows[this.rowPositions[i+1]].extra.parent == this.local.rows[child].extra.parent)
+          return;
+        if (this.local.rows[child].extra.parent == this.local.rows[rowI].extra.selectionEntry.id || this.local.rows[child].extra.parent == this.local.rows[rowI].extra.parent) {
+          newRowPositions.push(child);
+          this.local.rows[child].extra.children.push(child); 
+        }
+      })
+      this.rowPositions = newRowPositions;
+    })
+  }
+
   // Update this.rows from this.entries
   private buildRowPositions() {
     const rows = this.uv.rows;
@@ -911,11 +966,13 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], this.filter));
       }
 
-      if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree)
-        this.rowPositions = this.rowPositions.filter(rowI => this.local.rows[rowI].extra.visible);
-
       this.sortRows();
       this.updateShowLength();
+
+      if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree) {
+        this.rowPositions = this.rowPositions.filter(rowI => this.local.rows[rowI].extra.visible);
+        this.initChildRowPositions();
+      }
     }
   }
 
@@ -1192,6 +1249,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   private updateRows() {
+    this.initRowVisibles();
     this.buildRowPositions();
     // this.setShowEmptyRow(this.uv.rows === null || this.uv.rows.length === 0);
   }
@@ -1244,6 +1302,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
           (a, b) => rowIndicesCompare(a, b, rows, sortColumn, collator) :
           (a, b) => rowIndicesCompare(b, a, rows, sortColumn, collator);
       this.rowPositions.sort(sortFunction);
+
+      if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree)
+        this.initChildRowPositions();
     }
   }
 

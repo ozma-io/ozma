@@ -11,10 +11,11 @@
                           'error_style': value.erroredOnce,
                           'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable,
                           'editing_style': localValue.editing !== undefined,
+                          'tree-branches': column.treeBranchesView,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click="$emit('cell-click', columnPosition, $event)"
   >
-    <p>
+    <p>      
       <FunLink
         v-if="localValue.link !== undefined"
         :link="localValue.link"
@@ -38,7 +39,10 @@
           disabled
         />
         <div v-else :class="{selectable : (fieldType == 'enum' || fieldType == 'reference') && localValue.valueText.length > 0}">
-          {{ localValue.valueText || "" }}
+          <span :class="['display-arrow material-icons', {'down': visibleChids}]" @click="toggleChildren">
+            arrow_forward_ios
+          </span>
+          <span>{{ localValue.valueText || "" }}</span>
         </div>
       </template>
     </p>
@@ -68,6 +72,8 @@ export default class TableCell extends Vue {
   @Prop({ type: Number, default: null }) lastFixedColumnIndex!: number;
   @Prop({ type: Number, default: null }) index!: number;
 
+  private visibleChids = false;
+
   private get valueType(): string | undefined {
     return R.path(['info', 'field', 'valueType', 'type'], this.value);
   }
@@ -79,6 +85,11 @@ export default class TableCell extends Vue {
   get isNull() {
     // We use `value.value` here to highlight unvalidated values.
     return valueIsNull(this.value.value);
+  }
+
+  private toggleChildren() {
+    this.visibleChids = !this.visibleChids;
+    this.$emit("update:visibleChids", this.value.info.id, this.visibleChids);
   }
 }
 </script>
@@ -121,4 +132,31 @@ export default class TableCell extends Vue {
   .checkbox_click-none {
     pointer-events: none;
   }
+
+  .display-arrow {
+    display: none;
+  }
+
+  .tree-branches .display-arrow {
+    display: inline-block;
+  }
+
+  .display-arrow.material-icons {
+    cursor: pointer;
+    pointer-events: auto !important;
+    padding-right: 5px;
+    font-size: inherit;
+    transform-origin: 30% 50%;
+    transition: transform 0.2s;
+  }
+
+  .display-arrow.material-icons:hover {
+    opacity: 0.7;
+    overflow: hidden;
+  }
+
+  .display-arrow.material-icons.down {
+    transform: rotate(90deg);
+  }
+
 </style>
