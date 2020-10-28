@@ -15,22 +15,22 @@
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click="$emit('cell-click', columnPosition, $event)"
   >
-    <p>      
-      <FunLink
-        v-if="localValue.link !== undefined"
-        :link="localValue.link"
-        @goto="$emit('goto', $event)"
-      >
-        <checkbox
-          v-if="valueType === 'bool'"
-          class="checkbox_click-none"
-          :checked="value.value"
-          disabled
-        />
-        <template v-else>
-          {{ localValue.valueText || '&nbsp;' }}
-        </template>
-      </FunLink>
+    <p>
+      <template v-if="localValue.link !== undefined && localValue.valueText.length > 0">
+        <div class="selectable">
+          <FunLink
+            :link="localValue.link"
+            @goto="$emit('goto', $event)"
+          >
+            <input
+              type="button"
+              class="material-icons reference-open-modal"
+              :value="iconValue"
+            >
+          </FunLink>
+          <span class="reference-text">{{ localValue.valueText || '&nbsp;' }}</span>
+        </div>
+      </template>
       <template v-else>
         <checkbox
           v-if="valueType === 'bool'"
@@ -54,6 +54,7 @@ import * as R from 'ramda';
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
 import { valueIsNull } from "@/values";
+import { iconValue } from "@/links";
 
 @Component({
   components: {
@@ -91,12 +92,18 @@ export default class TableCell extends Vue {
     this.visibleChids = !this.visibleChids;
     this.$emit("update:visibleChids", this.value.info.id, this.visibleChids);
   }
+  
+  get iconValue() {
+    return iconValue(this.localValue.link.target);
+  }
+
 }
 </script>
 
 <style scoped>
 
   .selectable {
+    position: relative;
     float: left;
     margin-top: -2px;
     border-radius: 5px;
@@ -105,6 +112,7 @@ export default class TableCell extends Vue {
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
     width: 100%;
+    word-wrap: break-word;
   }
 
   .next-after-last-fixed {
@@ -157,6 +165,27 @@ export default class TableCell extends Vue {
 
   .display-arrow.material-icons.down {
     transform: rotate(90deg);
+  }
+
+  .reference-open-modal {
+    pointer-events: auto !important;
+    left: 0;
+    top: 0;
+    position: absolute;
+    border: none;
+    background: none;
+    padding: 0;
+    color: var(--MainBorderTextColor);
+    cursor: pointer;
+  }
+
+  .reference-open-modal:hover {
+    opacity: 0.7;
+  }
+
+  a + span.reference-text {
+    padding-left: 20px;
+    display: block;
   }
 
 </style>

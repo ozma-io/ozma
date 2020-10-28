@@ -11,7 +11,9 @@
 
 <template>
   <div
-    class="search-wrapper"
+    :class="['search-wrapper', {
+      'search-show': isShownSearchField,
+    }]"
   >
     <b-form
       inline
