@@ -280,7 +280,6 @@ interface ITableValueExtra {
   style?: Record<string, any>;
   selected: boolean;
   parent?: number;
-  children: number[];
 }
 
 interface ITableRowExtra {
@@ -288,6 +287,7 @@ interface ITableRowExtra {
   selected: boolean;
   visible: boolean;
   parent?: number;
+  children: number[];
   showChilds: boolean;
   style?: Record<string, any>;
   height?: number;
@@ -912,8 +912,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       }
       if (row.extra.parent == parent && !visible) {
         row.extra.visible=false;
-        const id = row.extra.selectionEntry.id;
-        this.visibleChids(id, false);
+        const id = row?.extra?.selectionEntry?.id ?? null;
+        if (id !== null)
+          this.visibleChids(id, false);
       } 
       return row; 
     });
@@ -923,29 +924,37 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   private updateRowVisibles() {
     this.local.rows.forEach(row => {
-      this.rowVisibles[row.extra.selectionEntry.id] = row.extra.visible; 
+      const id = row?.extra?.selectionEntry?.id ?? null;
+      if (id !== null)
+        this.rowVisibles[id] = row.extra.visible; 
     });
   }
 
   private initRowVisibles() {
     if (!R.isEmpty(this.rowVisibles)) {
       this.local.rows.map(row => {
-        row.extra.visible = this.rowVisibles[row.extra.selectionEntry.id];
+        const id = row?.extra?.selectionEntry?.id ?? null;
+        if (id !== null)
+          row.extra.visible = this.rowVisibles[id];
         return row; 
       });
     }
   }
 
   private initChildRowPositions() {
-    const childs = this.rowPositions.filter(rowI => this.local.rows[rowI].extra.parent > 0);
+    const childs = this.rowPositions.filter(rowI => {
+      const parent = this.local.rows[rowI].extra.parent ?? 0; 
+      return parent > 0
+    });
     this.rowPositions = this.rowPositions.filter(rowI => this.local.rows[rowI].extra.parent == 0);
     childs.forEach(child => {
-      const newRowPositions = [];
+      const newRowPositions:  number[] = [];
       this.rowPositions.forEach((rowI, i) => {
         newRowPositions.push(rowI);
         if (i+1 < this.rowPositions.length && this.local.rows[this.rowPositions[i+1]].extra.parent == this.local.rows[child].extra.parent)
           return;
-        if (this.local.rows[child].extra.parent == this.local.rows[rowI].extra.selectionEntry.id || this.local.rows[child].extra.parent == this.local.rows[rowI].extra.parent) {
+        const id = this?.local?.rows[rowI]?.extra?.selectionEntry?.id ?? 0;
+        if (this.local.rows[child].extra.parent == id || this.local.rows[child].extra.parent == this.local.rows[rowI].extra.parent) {
           newRowPositions.push(child);
           this.local.rows[child].extra.children.push(child); 
         }
