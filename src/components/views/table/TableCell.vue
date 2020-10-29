@@ -11,7 +11,7 @@
                           'error_style': value.erroredOnce,
                           'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable,
                           'editing_style': localValue.editing !== undefined,
-                          'tree-branches': column.treeBranchesView,
+                          'tree-branches': column.treeBranchesView && haveChilds,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click="$emit('cell-click', columnPosition, $event)"
   >
@@ -38,10 +38,19 @@
           :checked="value.value"
           disabled
         />
-        <div v-else :class="{selectable : (fieldType == 'enum' || fieldType == 'reference') && localValue.valueText.length > 0}">
-          <span :class="['display-arrow material-icons', {'down': visibleChids}]" @click="toggleChildren">
+        <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && localValue.valueText.length > 0}]">
+          <span 
+            :style="{'margin-left': level*25+'px'}"
+            :class="['display-arrow material-icons', {'click-stop': arrowClickStop}, {'down': visibleChids}]" 
+            @click="toggleChildren"
+            @dblclick.stop
+          >
             arrow_forward_ios
           </span>
+          <span
+            :style="{'margin-left': level*35+'px'}"
+            class="hidden-arrow-space"
+          ></span>
           <span>{{ localValue.valueText || "" }}</span>
         </div>
       </template>
@@ -72,8 +81,11 @@ export default class TableCell extends Vue {
   @Prop({ type: String, default: "existing" }) from!: string;
   @Prop({ type: Number, default: null }) lastFixedColumnIndex!: number;
   @Prop({ type: Number, default: null }) index!: number;
+  @Prop({ type: Boolean, default: false }) haveChilds!: boolean;
+  @Prop({ type: Number, default: 0 }) treeLevel!: number;
 
   private visibleChids = false;
+  private arrowClickStop = false;
 
   private get valueType(): string | undefined {
     return R.path(['info', 'field', 'valueType', 'type'], this.value);
@@ -81,6 +93,14 @@ export default class TableCell extends Vue {
 
   private get fieldType(): string | undefined {
     return R.path(['info', 'field', 'fieldType', 'type'], this.value);
+  }
+
+  private get level() {
+    if (this.column.treeBranchesView) {
+      return this.treeLevel;
+    } else {
+      return 0;
+    }
   }
 
   get isNull() {
@@ -91,6 +111,8 @@ export default class TableCell extends Vue {
   private toggleChildren() {
     this.visibleChids = !this.visibleChids;
     this.$emit("update:visibleChids", this.value.info.id, this.visibleChids);
+    this.arrowClickStop=true;
+    setTimeout(()=>{this.arrowClickStop=false}, 1000);
   }
   
   get iconValue() {
@@ -141,6 +163,14 @@ export default class TableCell extends Vue {
     pointer-events: none;
   }
 
+  .hidden-arrow-space {
+    display: inline-block;
+  }
+
+  .tree-branches .hidden-arrow-space {
+    display: none;
+  }
+
   .display-arrow {
     display: none;
   }
@@ -156,6 +186,10 @@ export default class TableCell extends Vue {
     font-size: inherit;
     transform-origin: 30% 50%;
     transition: transform 0.2s;
+  }
+
+  .display-arrow.material-icons.click-stop {
+    pointer-events: none !important;
   }
 
   .display-arrow.material-icons:hover {
@@ -188,4 +222,7 @@ export default class TableCell extends Vue {
     display: block;
   }
 
+  .cell-text {
+    overflow: hidden;
+  }
 </style>
