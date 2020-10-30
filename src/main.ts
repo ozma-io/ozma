@@ -16,6 +16,7 @@ import FormControl from "@/components/FormControl.vue";
 import App from "@/App.vue";
 
 import TextareaAutosize from "vue-textarea-autosize";
+import VueQrcodeReader from "vue-qrcode-reader";
 
 import authModule from "@/state/auth";
 import settingsModule from "@/state/settings";
@@ -40,6 +41,7 @@ export const store = new Vuex.Store({
 });
 
 Vue.use(TextareaAutosize);
+Vue.use(VueQrcodeReader);
 
 Vue.component("UserView", UserView);
 Vue.component("ActionsMenu", ActionsMenu);
