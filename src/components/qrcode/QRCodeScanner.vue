@@ -32,7 +32,7 @@
         {{ error }}
       </div>
     </qrcode-stream>
-    <div v-if="result !== null" class="decode-result">{{ $t('last_result') }}:<br/> <b>{{ result }}</b></div>
+    <div v-if="result.length > 0" class="decode-result">{{ $t('last_result') }}:<br/> <b>{{ result }}</b></div>
   </b-modal>
 </template>
 
@@ -45,7 +45,7 @@ export default class QRCodeScanner extends Vue {
 
   modalShow = false;
   camera ='auto';
-  result = null;
+  result = '';
   error = '';
   loading = false;
 
@@ -54,7 +54,7 @@ export default class QRCodeScanner extends Vue {
     this.modalShow = !this.modalShow;
   }
 
-  async onInit (promise) {
+  async onInit (promise: any) {
     this.loading = true;
     try {
       await promise
@@ -78,7 +78,7 @@ export default class QRCodeScanner extends Vue {
     }
   };
 
-  private async onDecode (content) {
+  private async onDecode (content: string) {
     this.result = content;
     this.turnCameraOff();
 
@@ -96,7 +96,7 @@ export default class QRCodeScanner extends Vue {
     this.camera = 'off';
   };
 
-  private timeout (ms) {
+  private timeout (ms: number) {
     return new Promise(resolve => {
       window.setTimeout(resolve, ms);
     })
