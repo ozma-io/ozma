@@ -296,8 +296,8 @@ interface ITableUserViewExtra {
   linkOpts?: IAttrToQueryOpts;
 }
 
-    type ITableLocalRowInfo = ILocalRowInfo<ITableRowExtra>;
-    type ITableLocalRow = ILocalRow<ITableValueExtra, ITableRowExtra>;
+type ITableLocalRowInfo = ILocalRowInfo<ITableRowExtra>;
+type ITableLocalRow = ILocalRow<ITableValueExtra, ITableRowExtra>;
 
 const showStep = 20;
 const doubleClickTime = 700;
@@ -406,14 +406,26 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     const columnAttrs = this.uv.columnAttributes[columnIndex];
     const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, this.uv.attributes);
 
+    const getDeprecatedAttr = (name: string, oldName: string) => {
+      const ret = getCellAttr(name);
+      if (ret !== undefined) {
+        return ret;
+      }
+      const oldRet = getCellAttr(oldName);
+      if (oldRet !== undefined) {
+        console.warn(`Old-style link attribute detected: "${oldName}"`);
+        return oldRet;
+      }
+    };
+
     if (value.info) {
       if (value.info.field && value.info.field.fieldType.type === "reference") {
-        const link = attrToLinkRef(getCellAttr("linked_view"), currentValue(value), this.extra.linkOpts);
+        const link = attrToLinkRef(getDeprecatedAttr("link", "linked_view"), currentValue(value), this.extra.linkOpts);
         if (link) {
           extra.link = link;
         }
       }
-      const currLinkForRow = attrToLinkSelf(getCellAttr("row_linked_view"), value.info, this.extra.linkOpts);
+      const currLinkForRow = attrToLinkSelf(getDeprecatedAttr("row_link", "row_linked_view"), value.info, this.extra.linkOpts);
       if (currLinkForRow) {
         localRow.extra.link = currLinkForRow;
         this.extra.hasRowLinks = true;

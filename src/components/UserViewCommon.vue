@@ -40,7 +40,7 @@ import { ValueRef } from "@/local_user_view";
 import { homeSchema, valueToPunnedText, currentValue } from "@/state/user_view";
 import { funappSchema, IEntityRef, IFieldRef } from "@/api";
 import SelectUserView from "@/components/SelectUserView.vue";
-import { mapMaybe, saveToFile } from "@/utils";
+import { mapMaybe, saveToFile, tryDicts } from "@/utils";
 import { Action } from "@/components/ActionsMenu.vue";
 import { IPanelButton } from "@/components/ButtonsPanel.vue";
 import { ScopeName, UserViewKey, IAddedResult, AddedRowId } from "@/state/staging_changes";
@@ -70,6 +70,8 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
   modalView: IQuery | null = null;
 
+
+
   get createView() {
     const opts: IAttrToQueryOpts = {
       infoByDefault: true,
@@ -78,7 +80,20 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
     if (home !== null) {
       opts.homeSchema = home;
     }
-    return attrToLink(this.uv.attributes["create_view"], opts);
+
+    const getDeprecatedAttr = (name: string, oldName: string) => {
+      const ret = this.uv.attributes[name];
+      if (ret !== undefined) {
+        return ret;
+      }
+      const oldRet = this.uv.attributes[oldName];
+      if (oldRet !== undefined) {
+        console.warn(`Old-style link attribute detected: "${oldName}"`);
+        return oldRet;
+      }
+    };
+
+    return attrToLink(getDeprecatedAttr("create_link", "create_view"), opts);
   }
 
   private exportToCsv() {
@@ -247,22 +262,21 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
   // Used to create referenced entries and automatically insert them into current table.
   get modalReferenceField(): IModalReferenceField | null {
-    const modalReferenceField = R.head(mapMaybe((column, columnIndex): IModalReferenceField | undefined => {
-      const referenceViewAttr = Boolean(R.pathOr(false, ["columnAttributes", String(columnIndex), "main_reference_field"], this.uv));
-      const selectViewAttr = R.pathOr(false, ["columnAttributes", String(columnIndex), "select_view"], this.uv);
-      const referenceUV = attrToQuery(selectViewAttr);
-      const entity = R.path<IEntityRef>(["info", "columns", String(columnIndex), "mainField", "field", "fieldType", "entity"], this.uv);
-      if (referenceUV && entity && referenceViewAttr) {
+    const modalReferenceField = mapMaybe((column, columnIndex): IModalReferenceField | undefined => {
+      const getColumnAttr = (name: string) => tryDicts(name, this.uv.columnAttributes[columnIndex], this.uv.attributes);
+      const referenceViewAttr = Boolean(getColumnAttr("main_reference_field"));
+      const referenceUV = attrToQuery(getColumnAttr("select_view"));
+      const fieldType = this.uv.info.columns[columnIndex].mainField?.field.fieldType;
+      if (referenceUV && referenceViewAttr && fieldType !== undefined && fieldType.type === "reference") {
         return {
           field: { type: "new", column: columnIndex },
           uv: referenceUV,
-          entity,
+          entity: fieldType.entity,
         };
       }
-      return undefined;
-    }, this.uv.columnAttributes));
+    }, this.uv.columnAttributes);
 
-    return modalReferenceField || null;
+    return modalReferenceField.pop() || null;
   }
 
   @Watch("actions", { deep: true, immediate: true })

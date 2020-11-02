@@ -276,7 +276,7 @@
               <ReferenceField
                 ref="control"
                 :value="value"
-                :select-actions="inputType.selectActions"
+                :select-views="inputType.selectViews"
                 :height="customHeight"
                 :entry="inputType.ref"
                 :linked-attr="inputType.linkedAttr"
@@ -296,7 +296,7 @@
               <ReferenceField
                 ref="control"
                 :value="value"
-                :select-actions="inputType.selectActions"
+                :select-views="inputType.selectViews"
                 :height="customHeight"
                 :entry="inputType.ref"
                 :linked-attr="inputType.linkedAttr"
@@ -382,7 +382,7 @@ interface IReferenceType {
   name: "reference";
   ref: IEntriesRef;
   linkedAttr?: any;
-  selectActions: IReferenceSelectAction[];
+  selectViews: IReferenceSelectAction[];
   style?: Record<string, any>;
 }
 
@@ -580,6 +580,18 @@ export default class FormControl extends Vue {
     const home = homeSchema(this.uvArgs);
     const linkOpts = home !== null ? { homeSchema: home } : undefined;
 
+    const getDeprecatedAttr = (name: string, oldName: string) => {
+      const ret = this.attributes[name];
+      if (ret !== undefined) {
+        return ret;
+      }
+      const oldRet = this.attributes[oldName];
+      if (oldRet !== undefined) {
+        console.warn(`Old-style link attribute detected: "${oldName}"`);
+        return oldRet;
+      }
+    };
+
     const controlAttr = String(this.attributes["control"]);
     if (controlAttr === "user_view") {
       if (this.currentValue === null || this.currentValue === undefined) {
@@ -608,25 +620,25 @@ export default class FormControl extends Vue {
           const refEntry: IReferenceType = {
             name: "reference",
             ref: referenceEntriesRef(this.fieldType),
-            selectActions: [],
+            selectViews: [],
           };
-          refEntry.linkedAttr = this.attributes["linked_view"];
+          refEntry.linkedAttr = getDeprecatedAttr("link", "linked_view");
           refEntry.style = this.controlStyle();
 
           const selectView = attrToQuerySelf(this.attributes["select_view"], this.value.info, linkOpts);
           if (selectView !== null) {
-            refEntry.selectActions.push({
+            refEntry.selectViews.push({
               name: this.$t("select_view").toString(),
               query: selectView,
             });
           }
-          const extraActions = this.attributes["extra_select_actions"];
+          const extraActions = getDeprecatedAttr("extra_select_views", "extra_select_actions");
           if (Array.isArray(extraActions)) {
             extraActions.forEach(action => {
               if (typeof action === "object" && action.name) {
                 const querySelf = attrToQuerySelf(action, this.value.info, linkOpts);
                 if (querySelf) {
-                  refEntry.selectActions.push({
+                  refEntry.selectViews.push({
                     name: String(action.name),
                     query: querySelf,
                   });

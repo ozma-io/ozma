@@ -69,7 +69,7 @@
         #actions
       >
         <button
-          v-for="(action, index) in selectActions"
+          v-for="(action, index) in selectViews"
           :key="index"
           type="button"
           class="reference__new_modal__button"
@@ -133,7 +133,7 @@ export interface IReferenceSelectAction {
 })
 export default class ReferenceField extends mixins(BaseEntriesView) {
   @query.Action("addWindow") addWindow!: (query: IQuery) => Promise<void>;
-  @Prop({ type: Array, default: () => [] }) selectActions!: IReferenceSelectAction[];
+  @Prop({ type: Array, default: () => [] }) selectViews!: IReferenceSelectAction[];
   @Prop({ type: Object, required: true }) value!: ICombinedValue;
   @Prop({ type: Object, required: true }) entry!: IEntriesRef;
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;

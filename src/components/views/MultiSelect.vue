@@ -106,9 +106,6 @@ import FormEntry from "@/components/views/form/FormEntry.vue";
 import MultiSelect from "@/components/multiselect/MultiSelect.vue";
 import { attrToLinkRef } from "@/links";
 
-const findSelectColumnIndex = (attrs: { [key: string]: any}) =>
-  Number(Object.keys(attrs).filter(key => R.pathOr(false, [key, "select"], attrs))[0]);
-
 interface IValueDelta {
   rowsToRemove: RowRef[];
   rowsToAdd: IValueDeltaNew[];
@@ -167,7 +164,7 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView, BaseE
   }
 
   private get selectedValueIndex() {
-    return findSelectColumnIndex(this.uv.columnAttributes);
+    return mapMaybe((attrs, i) => attrs["select"] && i, this.uv.columnAttributes).shift() || 0;
   }
 
   private onSelectChange(value: any[]) {
@@ -191,24 +188,36 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView, BaseE
   }
 
   private get options() {
-    const entity = this.entriesEntity;
-    const linkedView = R.pathOr(
-      null, [this.selectedValueIndex, "row_linked_view"], this.uv.columnAttributes,
-    );
-    if (entity) {
-      const entries = this.entriesMap.getEntries(entity);
-      if (entries) {
-        const options = Object.entries(entries).map(([key, value]) => ({
-          value: Number(key),
-          label: value,
-          meta: {
-            link: attrToLinkRef(linkedView, key),
-          },
-        }));
-        return options;
-      }
+    if (!this.entriesEntity) {
+      return null;
     }
-    return null;
+
+    const getColumnAttr = (name: string) => tryDicts(name, this.uv.columnAttributes[this.selectedValueIndex], this.uv.attributes);
+    const getDeprecatedAttr = (name: string, oldName: string) => {
+      const ret = getColumnAttr(name);
+      if (ret !== undefined) {
+        return ret;
+      }
+      const oldRet = getColumnAttr(oldName);
+      if (oldRet !== undefined) {
+        console.warn(`Old-style link attribute detected: "${oldName}"`);
+        return oldRet;
+      }
+    };
+    const linkedView = getDeprecatedAttr("row_link", "row_linked_view");
+    const entries = this.entriesMap.getEntries(this.entriesEntity);
+    if (entries) {
+      const options = Object.entries(entries).map(([key, value]) => ({
+        value: Number(key),
+        label: value,
+        meta: {
+          link: attrToLinkRef(linkedView, key),
+        },
+      }));
+      return options;
+    } else {
+      return null;
+    }
   }
 
   private get disabled() {
