@@ -110,6 +110,12 @@
           :required="!isNullable"
           @update:content="updateValue"
         />
+        <QRCode 
+          v-else-if="inputType.name === 'qrcode'"
+          ref="control"
+          :height="customHeight"
+          :content="textValue"
+        />
       </template>
       <template #input="iSlot">
         <template v-if="inputType.name === 'error'">
@@ -213,6 +219,12 @@
           @input="updateValue($event.target.value)"
           @focus="iSlot.onFocus"
         >
+        <QRCode 
+          v-else-if="inputType.name === 'qrcode'"
+          ref="control"
+          :height="customHeight"
+          :content="textValue"
+        />
         <div v-else-if="inputType.name === 'static_text'">
           {{ textValue }}
         </div>
@@ -367,6 +379,11 @@ interface ICodeEditorType {
   style: Record<string, any>;
 }
 
+
+interface IQRCodeType {
+  name: "qrcode";
+}
+
 interface IMarkdownEditorType {
   name: "markdown";
   editType: string;
@@ -431,7 +448,8 @@ type IType =
   | IErrorType
   | ICalendarType
   | IStaticTextType
-  | IStaticImageType;
+  | IStaticImageType
+  | IQRCodeType;
 
 const userView = namespace("userView");
 
@@ -457,7 +475,8 @@ const inlineTypes = ["markdown", "codeeditor", "textarea", "reference"];
     */    
 
     SearchPanel: () => import("@/components/SearchPanel.vue"),
-    NestedUserView: () => import("@/components/NestedUserView.vue")
+    NestedUserView: () => import("@/components/NestedUserView.vue"),
+    QRCode: () => import("@/components/qrcode/qrcode.vue"),
   },
 })
 export default class FormControl extends Vue {
@@ -687,6 +706,8 @@ export default class FormControl extends Vue {
           editType: "wysiwyg",
           style: this.controlStyle(heightMultilineText),
         };
+      case "qrcode":
+        return { name: "qrcode" };
       default:
         return { name: "text", type: "text", style: this.controlStyle() };
     }
