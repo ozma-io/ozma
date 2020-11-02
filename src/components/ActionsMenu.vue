@@ -1,3 +1,14 @@
+<i18n>
+  {
+    "en": {
+      "empty": "(empty)"
+    },
+    "ru": {
+      "empty": "(пусто)"
+    }
+  }
+</i18n>
+
 <template>
   <div
     :class="['actions-menu', {'actions-menu_active': showActions}]"
@@ -27,8 +38,13 @@
       v-show="showActions"
       :class="['div-with-actions', menuAlign]"
 
-    >
-      <template v-for="(action, i) in sortedActions">
+    > 
+      <template v-if="sortedActions.length == 0">
+        <label class="div-with-actions_button">
+          {{ $t('empty') }}
+        </label>
+      </template>
+      <template v-else v-for="(action, i) in sortedActions">
         <hr
           v-if="action === null"
           :key="i"
