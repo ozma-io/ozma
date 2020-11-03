@@ -81,10 +81,9 @@ export default class QRCodeScanner extends Vue {
   private async onDecode (content: string) {
     this.result = content;
     this.turnCameraOff();
-
+    window.navigator.vibrate(100); // vibrate for 200ms
     // some more delay, so users have time to read the message
-    await this.timeout(200);
-
+    await this.timeout(1);
     this.turnCameraOn();
   };
 
