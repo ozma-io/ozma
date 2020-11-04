@@ -920,9 +920,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   private initRowVisibles() {
     if (!R.isEmpty(this.rowVisibles)) {
       // Load visible data from rowVisibles to rows.
-      this.rowVisibles.forEach((visible, i) => {
-        this.local.rows[i].extra.visible = visible;
-      })
+      for (const key in this.rowVisibles) {
+        this.local.rows[key].extra.visible = this.rowVisibles[key];
+      }
     } else { 
       // Init have children in rows.
       this.local.rows.forEach((row, rowI) => {
