@@ -506,7 +506,6 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       selected: false,
       searchText: "",
       visible: true,
-      parent: 0,
       children: [],
       treeLevel: 0,
     };
@@ -553,13 +552,15 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     });
     localRow.extra.searchText = "\0".concat(...searchStrings);
 
-    const parent = localRow.values.find(extra => {
-      return extra.parent !== undefined && extra.parent > 0;
-    });
-    if (parent !== undefined && Number(parent.parent) > 0) {
-      localRow.extra.parent = parent.parent;
-      localRow.extra.visible = false;
-    };
+    const parent = localRow.values.find(extra => extra.parent !== undefined && extra.parent > 0);
+    const rows = this?.uv?.rows ?? null;
+    if (parent !== undefined && rows !== null) {
+      const parentIndex = rows.findIndex(row => row.mainId == parent.parent);
+      if (parentIndex > -1) {
+        localRow.extra.parent = parentIndex;
+        localRow.extra.visible = false;
+      }
+    }
   }
 
   postInitAddedRow(rowId: AddedRowId, row: IAddedRow, localRow: ITableLocalRow) {
@@ -905,88 +906,30 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   // Toggle children rows visibles.
-  private visibleChids(parent: number, visible: boolean) {
-    this.local.rows.map(row => {
-      if (row.extra.parent == parent && visible) {
-        row.extra.visible=true;
-      }
-      if (row.extra.parent == parent && !visible) {
-        row.extra.visible=false;
-        const id = row?.extra?.selectionEntry?.id ?? null;
-        if (id !== null)
-          this.visibleChids(id, false);
-      } 
-      return row; 
-    });
+  private visibleChids(children: number[], visible: boolean) {
+    for (let i = 0; i < children.length; i++) {
+      //Save row visibles data to rowVisibles.
+      this.rowVisibles[children[i]] = visible;
+      this.local.rows[children[i]].extra.visible = visible;
+      if (!visible)
+        this.visibleChids(this.local.rows[children[i]].extra.children, visible);
+    }  
     this.buildRowPositions();
-    this.updateRowVisibles();
-  }
-
-  private updateRowVisibles() {
-    // Save visible data to rowVisibles.
-    this.local.rows.forEach(row => {
-      const id = row?.extra?.selectionEntry?.id ?? null;
-      if (id !== null)
-        this.rowVisibles[id] = row.extra.visible; 
-    });
   }
 
   private initRowVisibles() {
     if (!R.isEmpty(this.rowVisibles)) {
       // Load visible data from rowVisibles to rows.
-      this.local.rows.map(row => {
-        const id = row?.extra?.selectionEntry?.id ?? null;
-        if (id !== null) {
-          row.extra.visible = this.rowVisibles[id];
-          const childs = this.local.rows.filter(row => row.extra.parent == id).map((row, i) => i);
-          row.extra.children = childs;
-        }
-        return row; 
-      });
+      this.rowVisibles.forEach((visible, i) => {
+        this.local.rows[i].extra.visible = visible;
+      })
     } else { 
-      // Init treeLevels and have children count in rows.
-      this.local.rows.map(rowM => {
-        
-        let level = 0;
-        let parent = rowM?.extra?.parent ?? 0;
-        while(parent>0) {
-          level++;
-          parent = this.local.rows.find(row => row?.extra?.selectionEntry?.id == parent)?.extra?.parent ?? 0;
-        }
-        rowM.extra.treeLevel = level;
-
-        const id = rowM?.extra?.selectionEntry?.id ?? null;
-        if (id == null ) return rowM;
-        const childs = this.local.rows.filter(row => row.extra.parent == id).map((row, i) => i);
-        rowM.extra.children = childs;
-      })
+      // Init have children in rows.
+      this.local.rows.forEach((row, rowI) => {
+        if (row.extra.parent !== undefined)
+          this.local.rows[row.extra.parent].extra.children.push(rowI);
+      });
     }
-  }
-
-  private initChildRowPositions() {
-    // Get visible childs rows index.
-    const childs = this.rowPositions.filter(rowI => {
-      const parent = this.local.rows[rowI].extra.parent ?? 0; 
-      return parent > 0
-    });
-
-    // Filter rows from childs.
-    this.rowPositions = this.rowPositions.filter(rowI => this.local.rows[rowI].extra.parent == 0);
-
-    // Add child rows under parents rows. 
-    childs.forEach(child => {
-      const newRowPositions:  number[] = [];
-      this.rowPositions.forEach((rowI, i) => {
-        newRowPositions.push(rowI);
-        if (i+1 < this.rowPositions.length && this.local.rows[this.rowPositions[i+1]].extra.parent == this.local.rows[child].extra.parent)
-          return;
-        const id = this?.local?.rows[rowI]?.extra?.selectionEntry?.id ?? 0;
-        if (this.local.rows[child].extra.parent == id || this.local.rows[child].extra.parent == this.local.rows[rowI].extra.parent) {
-          newRowPositions.push(child);
-        }
-      })
-      this.rowPositions = newRowPositions;
-    })
   }
 
   // Update this.rows from this.entries
@@ -1004,10 +947,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.sortRows();
       this.updateShowLength();
 
-      if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree) {
+      if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree)
         this.rowPositions = this.rowPositions.filter(rowI => this.local.rows[rowI].extra.visible);
-        this.initChildRowPositions();
-      }
     }
   }
 
@@ -1337,9 +1278,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
           (a, b) => rowIndicesCompare(a, b, rows, sortColumn, collator) :
           (a, b) => rowIndicesCompare(b, a, rows, sortColumn, collator);
       this.rowPositions.sort(sortFunction);
-
-      // if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree)
-      //   this.initChildRowPositions();
     }
   }
 

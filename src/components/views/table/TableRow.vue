@@ -39,7 +39,7 @@
       :key="i"
       :value="row.values[i]"
       :local-value="localRow.values[i]"
-      :have-childs="localRow.extra.children.length > 0"
+      :children="localRow.extra.children"
       :column-position="i"
       :index="index"
       :column="localUv.columns[i]"

@@ -11,7 +11,7 @@
                           'error_style': value.erroredOnce,
                           'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable,
                           'editing_style': localValue.editing !== undefined,
-                          'tree-branches': column.treeBranchesView && haveChilds,
+                          'tree-branches': column.treeBranchesView && children !== undefined && children.length > 0,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click="$emit('cell-click', columnPosition, $event)"
   >
@@ -81,7 +81,7 @@ export default class TableCell extends Vue {
   @Prop({ type: String, default: "existing" }) from!: string;
   @Prop({ type: Number, default: null }) lastFixedColumnIndex!: number;
   @Prop({ type: Number, default: null }) index!: number;
-  @Prop({ type: Boolean, default: false }) haveChilds!: boolean;
+  @Prop({ type: Array,  default: [] }) children!: any;
   @Prop({ type: Number, default: 0 }) treeLevel!: number;
 
   private visibleChids = false;
@@ -110,7 +110,7 @@ export default class TableCell extends Vue {
 
   private toggleChildren() {
     this.visibleChids = !this.visibleChids;
-    this.$emit("update:visibleChids", this.value.info.id, this.visibleChids);
+    this.$emit("update:visibleChids", this.children, this.visibleChids);
     this.arrowClickStop=true;
     setTimeout(()=>{this.arrowClickStop=false}, 1000);
   }
