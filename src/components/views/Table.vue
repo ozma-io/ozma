@@ -907,13 +907,13 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   // Toggle children rows visibles.
   private visibleChids(children: number[], visible: boolean) {
-    for (let i = 0; i < children.length; i++) {
+    children.forEach( child => {
       //Save row visibles data to rowVisibles.
-      this.rowVisibles[children[i]] = visible;
-      this.local.rows[children[i]].extra.visible = visible;
-      if (!visible)
-        this.visibleChids(this.local.rows[children[i]].extra.children, visible);
-    }  
+      this.rowVisibles[child] = visible;
+      if (!visible && this.local.rows[child].extra.visible)
+        this.visibleChids(this.local.rows[child].extra.children, visible);
+      this.local.rows[child].extra.visible = visible;
+    })
     this.buildRowPositions();
   }
 
@@ -926,7 +926,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     } else { 
       // Init have children in rows.
       this.local.rows.forEach((row, rowI) => {
-        if (row.extra.parent !== undefined)
+        if (row.extra.parent !== undefined && !this.local.rows[row.extra.parent].extra.children.includes(rowI))
           this.local.rows[row.extra.parent].extra.children.push(rowI);
       });
     }
