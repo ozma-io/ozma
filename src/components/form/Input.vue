@@ -30,6 +30,7 @@
                  'input-field__error': error,
                  'input-field__required': required && isEmpty,
                  'input-field_cell-edit': isCellEdit,
+                 'input_field_padding-right_25': qrcodeInput,
                }
       ]"
       autocomplete="off"
@@ -53,6 +54,18 @@
       @input="updateInputCellEdit"
       @focus="onFocus"
     />
+    <span 
+      v-if="qrcodeInput" 
+      class="material-icons qr_code" 
+      @click="openQRCodeScanner = !openQRCodeScanner"
+    >
+      qr_code_2
+    </span>
+    <QRCodeScanner
+      :closeAfterScan="true"
+      @update:scanResult="updateInputCellEdit"
+      :open-scanner="openQRCodeScanner"
+    />
   </fragment>
 </template>
 
@@ -61,8 +74,10 @@ import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { isMobile } from "@/utils";
 import { valueIsNull } from "@/values";
 import Textarea from "@/components/form/Textarea.vue";
+import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
+
 @Component({
-  components: {Textarea}
+  components: {Textarea, QRCodeScanner}
 })
 export default class Input extends Vue {
   @Prop({ type: String }) label!: string;
@@ -79,9 +94,11 @@ export default class Input extends Vue {
   @Prop({ type: Boolean, default: false }) focus!: boolean;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
+  @Prop({type: Boolean, default: false}) qrcodeInput!: boolean;
 
   private focused = false;
   private maxInputWidth = 0;
+  private openQRCodeScanner = false;
 
   private get isEmpty(): boolean {
     return valueIsNull(this.value);
@@ -389,5 +406,19 @@ export default class Input extends Vue {
 
   .input__max-width-size-meter {
     visibility: hidden;
+  }
+
+  .material-icons.qr_code {
+    position: absolute;
+    cursor: pointer;
+    right: 0;
+  }
+
+  .material-icons.qr_code:hover {
+    opacity: 0.7;
+  }
+
+  .input_field_padding-right_25 {
+    padding-right: 25px;
   }
 </style>

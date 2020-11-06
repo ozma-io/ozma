@@ -4,13 +4,15 @@
             "create": "Create new",
             "create_in_modal": "Create referenced in modal window",
             "export_to_csv": "Export to .csv",
-            "import_from_csv": "Import from .csv"
+            "import_from_csv": "Import from .csv",
+            "scan_qrcode": "Scan QR Code"
         },
         "ru": {
             "create": "Создать новую",
             "create_in_modal": "Создать связанную запись в окне",
             "export_to_csv": "Экспорт в .csv",
-            "import_from_csv": "Импорт из .csv"
+            "import_from_csv": "Импорт из .csv",
+            "scan_qrcode": "QR Code сканер"
         }
     }
 </i18n>
@@ -24,6 +26,7 @@
       @select="selectFromUserView($event)"
       @close="modalView = null"
     />
+    <QRCodeScanner :open-scanner="openQRCodeScanner"/>
   </span>
 </template>
 
@@ -45,6 +48,7 @@ import { Action } from "@/components/ActionsMenu.vue";
 import { IPanelButton } from "@/components/ButtonsPanel.vue";
 import { ScopeName, UserViewKey, IAddedResult, AddedRowId } from "@/state/staging_changes";
 import { attrToLink } from "@/links";
+import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -63,12 +67,13 @@ const csvCell = (str: string): string => {
 
 const staging = namespace("staging");
 
-@Component({ components: { SelectUserView } })
+@Component({ components: { SelectUserView, QRCodeScanner } })
 export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<undefined, undefined, undefined>, undefined, undefined, undefined>>(BaseUserView) {
   @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName; entityRef: IEntityRef; userView: UserViewKey; position?: number }) => Promise<IAddedResult>;
   @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName; fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; value: any }) => Promise<void>;
 
   modalView: IQuery | null = null;
+  openQRCodeScanner = false;
 
 
 
@@ -255,6 +260,10 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
     // FIXME: workaround until we have proper role-based permissions for this.
     if (this.uv.attributes["export_to_csv"] || "__export_to_csv" in this.$route.query) {
       actions.push({name: this.$t("export_to_csv").toString(), callback: () => this.exportToCsv()});
+    }
+
+    if (this.uv.attributes["scan_qrcode"]) {
+      actions.push({name: this.$t("scan_qrcode").toString(), callback: () => this.openQRCodeScanner = !this.openQRCodeScanner});
     }
 
     return actions;
