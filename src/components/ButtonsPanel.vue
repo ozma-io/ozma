@@ -4,17 +4,17 @@
       <i v-if="button.icon" class="material-icons">{{ button.icon }}</i> 
       <span>{{ button.name }}</span>
       <ul class="actions">
-        <li v-for="(action, j) in button.actions" :key="j">
-          <FunLink
-            v-if="'link' in action"
-            :key="action.name"
-            :link="action.link"
-            @goto="$emit('goto', $event)"
-          >
+        <FunLink
+          v-for="(action, j) in button.actions" 
+          :key="j"
+          :link="action.link"
+          @goto="$emit('goto', $event)"
+        >
+          <li v-if="'link' in action" :key="action.name">
             <i v-if="button.icon" class="material-icons">{{ action.icon }}</i> 
             <span>{{ action.name }}</span>
-          </FunLink>
-        </li>
+          </li>
+        </FunLink>
       </ul>
     </li>
   </ul>
@@ -88,7 +88,7 @@ export default class ButtonsPanel extends Vue {
     margin: 1px 0 0 10px;
   }
 
-  ul.actions > li {
+  ul.actions > a > li {
     padding: 5px 15px 5px 35px;
   }
 
@@ -117,7 +117,7 @@ export default class ButtonsPanel extends Vue {
     visibility: visible;
   }
 
-  ul.actions > li:hover {
+  ul.actions > a > li:hover {
     background-color: var(--MainBorderColor);
   }
 
