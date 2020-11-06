@@ -43,6 +43,7 @@
           :autofocus="autofocus || isMobile"
           :error="value.erroredOnce"
           :required="!isNullable"
+          :qrcode-input="isQRCodeInput"
           focus
           @set-input-height="setInputHeight"
           @input="updateValue($event)"
@@ -130,6 +131,7 @@
           :disabled="isDisabled"
           :error="value.erroredOnce"
           :required="!isNullable"
+          :qrcode-input="isQRCodeInput"
           @input="updateValue"
           @set-input-height="setInputHeight"
           @focus="iSlot.onFocus"
@@ -561,6 +563,10 @@ export default class FormControl extends Vue {
 
   private forceRerender() {
     this.codeEditorKey += 1;
+  }
+
+  get isQRCodeInput() {
+    return "qrcode_input" in this.attributes ? this.attributes["qrcode_input"] : false;
   }
 
   get textAlign() {

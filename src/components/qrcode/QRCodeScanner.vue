@@ -3,13 +3,13 @@
     "en": {
         "input_placeholder": "Empty",
         "qrcode_scanner": "QR Code scanner",
-        "new_scan": "New scan...",
+        "new_scan": "Connecting to camera...",
         "last_result": "Last result"
     },
     "ru": {
         "input_placeholder": "Пусто",
         "qrcode_scanner": "QR Code сканер",
-        "new_scan": "Новое сканирование...",
+        "new_scan": "Подключение к камере...",
         "last_result": "Последний результат"
     }
   }
@@ -42,6 +42,7 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 @Component
 export default class QRCodeScanner extends Vue {
   @Prop({ type: Boolean, default: false }) openScanner!: boolean;
+  @Prop({ type: Boolean, default: false }) closeAfterScan!: boolean;
 
   modalShow = false;
   camera ='auto';
@@ -83,6 +84,11 @@ export default class QRCodeScanner extends Vue {
     this.turnCameraOff();
     window.navigator.vibrate(100); // vibrate for 200ms
     // some more delay, so users have time to read the message
+    this.$emit('update:scanResult', content);
+    
+    if (this.closeAfterScan)
+      this.toggleOpenScanner();
+
     await this.timeout(1);
     this.turnCameraOn();
   };
