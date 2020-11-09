@@ -186,7 +186,7 @@
               @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
               @goto="$emit('goto', $event)"
             />-->
-            <TableRow
+            <!-- <TableRow
               v-if="local.rows[rowI].extra.parent === undefined"
               :key="rowI"
               :row="uv.rows[rowI]"
@@ -199,16 +199,16 @@
               @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
               @update:visibleChids="visibleChids(arguments[0], arguments[1])"
               @goto="$emit('goto', $event)"
-            />
+            /> -->
             <TableRowChilds
-              v-if="local.rows[rowI].extra.children.length > 0"
-              :key="rowI+'childs'"
+              :key="rowI"
               :parent-row-i="rowI"
               :local="local"
               :base-local="baseLocal"
               :uv="uv"
               :column-indexes="columnIndexes"
               :level="1"
+              @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
               @update:visibleChids="visibleChids(arguments[0], arguments[1])"
             />
           </template>
