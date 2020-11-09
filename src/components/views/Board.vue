@@ -46,7 +46,7 @@ import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { Value } from "Misc/JSON/_api";
 
-import { mapMaybe } from "@/utils";
+import { mapMaybe, tryDicts } from "@/utils";
 import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
@@ -63,7 +63,7 @@ import { IFieldInfo } from "../../values";
 
 import Errorbox from "@/components/Errorbox.vue";
 import { FieldType } from "ozma-api/src";
-import { attrToLinkRef, attrToLinkSelf } from "@/links";
+import { attrToLinkRef, attrToLinkSelf, Link } from "@/links";
 
 interface ICardExtra {
   groupRef: IExistingValueRef;
@@ -258,19 +258,15 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     const color = R.path<string>(["attributes", "cell_color"], groupValue);
     const groupField = R.path<string>(["info", "fieldRef", "name"], groupValue);
 
-    const getDeprecatedAttr = (name: string, oldName: string) => {
-      const ret = this.uv.attributes[name];
-      if (ret !== undefined) {
-        return ret;
+    let cardLink: Link | undefined;
+    row.values.forEach((value, colI) => {
+      const columnAttrs =  this.uv.columnAttributes[colI];
+      const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, this.uv.attributes);
+      const rowLink = attrToLinkSelf(getCellAttr("row_link"), value.info);
+      if (rowLink !== null) {
+        cardLink = rowLink;
       }
-      const oldRet = this.uv.attributes[oldName];
-      if (oldRet !== undefined) {
-        console.warn(`Old-style link attribute detected: "${oldName}"`);
-        return oldRet;
-      }
-    };
-
-    const cardLink = attrToLinkSelf(getDeprecatedAttr("row_link", "create_view"), groupValue.info) || undefined;
+    });
     
     return {
       groupRef,
