@@ -18,6 +18,7 @@
         </span>
         <span class="column_controls">
           <i
+            v-if="createView !== undefined"
             class="material-icons card_open_icon"
             style="font-size: 20px;"
             @click="openModal"
@@ -109,7 +110,7 @@ export default class Column extends Vue {
   @Prop({ type: String, required: true }) title!: string;
   @Prop({ type: String, required: true }) fieldName!: string;
   @Prop({ type: String, required: true }) orderFieldName!: string;
-  @Prop({ type: Object, required: true }) createView!: IQuery;
+  @Prop({ type: Object }) createView!: IQuery | undefined;
   @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Function, required: false }) move!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Number, required: false, default: 300 }) width!: number;
@@ -122,7 +123,7 @@ export default class Column extends Vue {
   private async openModal() {
     const query: IQuery = {
       args: {
-        ...this.createView.args,
+        ...this.createView!.args,
       },
       defaultValues: {
         [this.fieldName]: this.id,

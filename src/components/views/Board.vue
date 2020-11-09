@@ -140,7 +140,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     const fieldName = this.uv.info.columns[this.groupIndex].name;
     const orderFieldName = this.orderIndex > 0 ? this.uv.info.columns[this.orderIndex].name : "";
     const createView = attrToQuery(
-      this.uv.attributes["create_view"],
+      this.uv.attributes["card_create_view"],
       { infoByDefault: true },
     ) || undefined;
     const groupedColumns = R.groupBy(card => String(R.path(["groupValue"], card)),
