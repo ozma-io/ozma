@@ -258,7 +258,19 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     const color = R.path<string>(["attributes", "cell_color"], groupValue);
     const groupField = R.path<string>(["info", "fieldRef", "name"], groupValue);
 
-    const cardLink = attrToLinkSelf(this.uv.attributes["create_view"], groupValue.info) || undefined;
+    const getDeprecatedAttr = (name: string, oldName: string) => {
+      const ret = this.uv.attributes[name];
+      if (ret !== undefined) {
+        return ret;
+      }
+      const oldRet = this.uv.attributes[oldName];
+      if (oldRet !== undefined) {
+        console.warn(`Old-style link attribute detected: "${oldName}"`);
+        return oldRet;
+      }
+    };
+
+    const cardLink = attrToLinkSelf(getDeprecatedAttr("row_link", "create_view"), groupValue.info) || undefined;
     
     return {
       groupRef,
