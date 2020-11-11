@@ -40,7 +40,7 @@
         />
         <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && localValue.valueText.length > 0}]">
           <span 
-            :style="{'margin-left': level*25+'px'}"
+            :style="{'margin-left': treeLevel*25+'px'}"
             :class="['display-arrow material-icons', {'click-stop': arrowClickStop}, {'down': visibleChids}]" 
             @click="toggleChildren"
             @dblclick.stop
@@ -48,7 +48,7 @@
             arrow_forward_ios
           </span>
           <span
-            :style="{'margin-left': level*35+'px'}"
+            :style="{'margin-left': treeLevel*35+'px'}"
             class="hidden-arrow-space"
           ></span>
           <span>{{ localValue.valueText || "" }}</span>
@@ -82,7 +82,8 @@ export default class TableCell extends Vue {
   @Prop({ type: Number, default: null }) lastFixedColumnIndex!: number;
   @Prop({ type: Number, default: null }) index!: number;
   @Prop({ type: Array,  default: [] }) children!: any;
-  @Prop({ type: Number, default: 0 }) treeLevel!: number;
+  @Prop({ type: Number, required: true }) level!: number;
+
 
   private visibleChids = false;
   private arrowClickStop = false;
@@ -95,9 +96,9 @@ export default class TableCell extends Vue {
     return R.path(['info', 'field', 'fieldType', 'type'], this.value);
   }
 
-  private get level() {
+  private get treeLevel() {
     if (this.column.treeBranchesView) {
-      return this.treeLevel;
+      return this.level;
     } else {
       return 0;
     }
@@ -111,7 +112,7 @@ export default class TableCell extends Vue {
   private toggleChildren() {
     this.visibleChids = !this.visibleChids;
     this.$emit("update:visibleChids", this.children, this.visibleChids);
-    this.arrowClickStop=true;
+    this.arrowClickStop = true;
     setTimeout(()=>{this.arrowClickStop=false}, 1000);
   }
   

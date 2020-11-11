@@ -45,7 +45,7 @@
       :column="localUv.columns[i]"
       :from="from"
       :last-fixed-column-index="lastFixedColumnIndex"
-      :tree-level="localRow.extra.treeLevel"
+      :level="localRow.extra.level"
       @cell-click="$emit('cell-click', arguments[0], arguments[1])"
       @update:visibleChids="$emit('update:visibleChids', arguments[0], arguments[1])"
       @goto="$emit('goto', $event)"

@@ -186,8 +186,7 @@
               @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
               @goto="$emit('goto', $event)"
             />-->
-            <!-- <TableRow
-              v-if="local.rows[rowI].extra.parent === undefined"
+            <TableRow
               :key="rowI"
               :row="uv.rows[rowI]"
               :local-row="local.rows[rowI]"
@@ -199,17 +198,6 @@
               @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
               @update:visibleChids="visibleChids(arguments[0], arguments[1])"
               @goto="$emit('goto', $event)"
-            /> -->
-            <TableRowChilds
-              :key="rowI"
-              :parent-row-i="rowI"
-              :local="local"
-              :base-local="baseLocal"
-              :uv="uv"
-              :column-indexes="columnIndexes"
-              :level="1"
-              @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
-              @update:visibleChids="visibleChids(arguments[0], arguments[1])"
             />
           </template>
         </tbody>
@@ -264,7 +252,6 @@ import {
 import BaseUserView, {ISelectionRef} from "@/components/BaseUserView";
 import {Action} from "@/components/ActionsMenu.vue";
 import TableRow from "@/components/views/table/TableRow.vue";
-import TableRowChilds from "@/components/views/table/TableRowChilds.vue";
 import TableFixedRow from "@/components/views/table/TableFixedRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
 import TableCellEdit, {ICellCoords, IEditParams} from "@/components/views/table/TableCellEdit.vue";
@@ -299,9 +286,9 @@ interface ITableRowExtra {
   searchText: string;
   selected: boolean;
   visible: boolean;
+  level?: number;
   parent?: number;
   children: number[];
-  treeLevel: number;
   style?: Record<string, any>;
   height?: number;
   link?: Link;
@@ -520,7 +507,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       searchText: "",
       visible: true,
       children: [],
-      treeLevel: 0,
+      level: 0,
     };
 
     const style: Record<string, any> = {};
@@ -724,7 +711,7 @@ const staging = namespace("staging");
 })
 @Component({
   components: {
-    TableRow, TableFixedRow, Checkbox, TableCellEdit,TableRowChilds,
+    TableRow, TableFixedRow, Checkbox, TableCellEdit,
   },
 })
 export default class UserViewTable extends mixins<BaseUserView<LocalTableUserView, ITableValueExtra, ITableRowExtra, ITableUserViewExtra>>(BaseUserView) {
@@ -920,15 +907,34 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   // Toggle children rows visibles.
   private visibleChids(children: number[], visible: boolean) {
-    children.forEach( child => {
+
+    children.forEach( (child, i) => {
       //Save row visibles data to rowVisibles.
       this.rowVisibles[child] = visible;
-      if (!visible && this.local.rows[child].extra.visible)
+
+      if (!visible && this.local.rows[child].extra.visible) {
         this.visibleChids(this.local.rows[child].extra.children, visible);
+
+        // Hidden children.
+        const childPosition = this.rowPositions.indexOf(child);
+        this.rowPositions.splice(childPosition, 1);
+      }
+      
       this.local.rows[child].extra.visible = visible;
     })
+
+    if (visible)
+      this.showChildren(children);
   }
 
+  private showChildren(children: number[]) {
+    const parent = this.local.rows[children[0]].extra.parent;
+    const parentPosition = this.rowPositions.indexOf(parent); 
+    for (let i = children.length - 1; i >= 0; i--) {
+      this.rowPositions.splice(parentPosition + 1, 0, children[i]);
+    }
+  }
+  
   private initRowVisibles() {
     if (!R.isEmpty(this.rowVisibles)) {
       // Load visible data from rowVisibles to rows.
@@ -938,9 +944,18 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     } else { 
       // Init have children in rows.
       this.local.rows.forEach((row, rowI) => {
-        if (row.extra.parent !== undefined && !this.local.rows[row.extra.parent].extra.children.includes(rowI))
+        if (row.extra.parent !== undefined && !this.local.rows[row.extra.parent].extra.children.includes(rowI)) {
           this.local.rows[row.extra.parent].extra.children.push(rowI);
-      });
+          let level = 1;
+          let parent = this.local.rows[row.extra.parent].extra.parent;
+          while (parent !== undefined) {
+            parent = this.local.rows[parent].extra.parent;
+            console.log(parent);
+            level++;
+          }
+          this.local.rows[rowI].extra.level = level;
+        }
+      })
     }
   }
 
@@ -955,6 +970,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       if (this.filter.length !== 0) {
         this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], this.filter));
       }
+
+      if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree)
+        this.rowPositions = this.rowPositions.filter(rowI => this.local.rows[rowI].extra.visible);
 
       this.sortRows();
       this.updateShowLength();
