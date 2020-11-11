@@ -929,10 +929,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   private showChildren(children: number[]) {
     const parent = this.local.rows[children[0]].extra.parent;
-    const parentPosition = this.rowPositions.indexOf(parent); 
-    for (let i = children.length - 1; i >= 0; i--) {
-      this.rowPositions.splice(parentPosition + 1, 0, children[i]);
-    }
+    if (parent !== undefined)
+      for (let i = children.length - 1; i >= 0; i--)
+        this.rowPositions.splice(this.rowPositions.indexOf(parent) + 1, 0, children[i]);
   }
   
   private initRowVisibles() {
