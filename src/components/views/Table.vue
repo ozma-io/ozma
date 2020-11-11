@@ -950,7 +950,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
           let parent = this.local.rows[row.extra.parent].extra.parent;
           while (parent !== undefined) {
             parent = this.local.rows[parent].extra.parent;
-            console.log(parent);
             level++;
           }
           this.local.rows[rowI].extra.level = level;
