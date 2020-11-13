@@ -221,7 +221,7 @@ import {Store} from "vuex";
 import {Moment} from "moment";
 import * as moment from "moment";
 
-import {deepEquals, isFirefox, isIOS, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName} from "@/utils";
+import {deepEquals, isFirefox, isIOS, mapMaybe, nextRender, nextRenderOneJump, ObjectSet, tryDicts, ReferenceName} from "@/utils";
 import {valueIsNull} from "@/values";
 import {IResultColumnInfo} from "@/api";
 import {
@@ -286,8 +286,9 @@ interface ITableRowExtra {
   searchText: string;
   selected: boolean;
   visible: boolean;
-  level?: number;
+  position?: number;
   parent?: number;
+  level?: number;
   children: number[];
   style?: Record<string, any>;
   height?: number;
@@ -751,7 +752,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   private cellEditHeight = 0;
 
-  private rowVisibles: Record<number, boolean> = {};
+  private rowsState: Array<any> = [];
 
   get columnIndexes() {
     const columns = this.local.extra.columns.map((column, index) => ({
@@ -908,9 +909,25 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   // Toggle children rows visibles.
   private visibleChids(children: number[], visible: boolean) {
 
+    //Save state.
+    if( this.local.rows[children[0]] !== undefined) {
+      const parent = this.local.rows[children[0]].extra.parent;
+      if(parent == undefined)
+        return;
+      const extra = this.local.rows[parent].extra;
+      extra.position = parent; 
+      if (visible && !this.rowsState.includes(extra)) {
+        this.rowsState.push(extra);
+      } else {
+        const i = this.rowsState.indexOf(extra);
+        if (i !== -1) {
+          this.rowsState.splice(i, 1);
+        }
+      }
+    }
+
+    // Toggle
     children.forEach( (child, i) => {
-      //Save row visibles data to rowVisibles.
-      this.rowVisibles[child] = visible;
 
       if (!visible && this.local.rows[child].extra.visible) {
         this.visibleChids(this.local.rows[child].extra.children, visible);
@@ -924,35 +941,38 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     })
 
     if (visible)
-      this.showChildren(children);
+      this.displayChildren(children);
   }
 
-  private showChildren(children: number[]) {
+  private displayChildren(children: number[]) {
     const parent = this.local.rows[children[0]].extra.parent;
     if (parent !== undefined)
       for (let i = children.length - 1; i >= 0; i--)
-        this.rowPositions.splice(this.rowPositions.indexOf(parent) + 1, 0, children[i]);
+        if (!this.rowPositions.includes(children[i]))
+          this.rowPositions.splice(this.rowPositions.indexOf(parent) + 1, 0, children[i]);
   }
   
-  private initRowVisibles() {
-    if (!R.isEmpty(this.rowVisibles)) {
-      // Load visible data from rowVisibles to rows.
-      for (const key in this.rowVisibles) {
-        this.local.rows[key].extra.visible = this.rowVisibles[key];
-      }
-    } else { 
-      // Init have children in rows.
-      this.local.rows.forEach((row, rowI) => {
-        if (row.extra.parent !== undefined && !this.local.rows[row.extra.parent].extra.children.includes(rowI)) {
-          this.local.rows[row.extra.parent].extra.children.push(rowI);
-          let level = 1;
-          let parent = this.local.rows[row.extra.parent].extra.parent;
-          while (parent !== undefined) {
-            parent = this.local.rows[parent].extra.parent;
-            level++;
-          }
-          this.local.rows[rowI].extra.level = level;
+  private initRowsState() {
+    this.local.rows.forEach((row, rowI) => {
+      if (row.extra.parent !== undefined && !this.local.rows[row.extra.parent].extra.children.includes(rowI)) {
+        this.local.rows[row.extra.parent].extra.children.push(rowI);
+        let level = 1;
+        let parent = this.local.rows[row.extra.parent].extra.parent;
+        while (parent !== undefined) {
+          parent = this.local.rows[parent].extra.parent;
+          level++;
         }
+        this.local.rows[rowI].extra.level = level;
+      }
+    })
+    if (!R.isEmpty(this.rowsState)) {
+      // Load visible data from rowsState to rows.
+      this.rowsState.forEach(extra => {
+        const id = this?.local?.rows[extra.position]?.extra?.selectionEntry?.id ?? undefined;
+        if (id !== undefined && id == extra.selectionEntry.id)
+          nextRenderOneJump().then(() => {
+            this.visibleChids(this.local.rows[extra.position].extra.children, true);
+          });
       })
     }
   }
@@ -967,11 +987,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.rowPositions = rows.map((row, rowI) => rowI);
       if (this.filter.length !== 0) {
         this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], this.filter));
-      }
-
-      if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree)
+      } else if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree) {
         this.rowPositions = this.rowPositions.filter(rowI => this.local.rows[rowI].extra.visible);
-
+      }
       this.sortRows();
       this.updateShowLength();
     }
@@ -1250,7 +1268,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   private updateRows() {
-    this.initRowVisibles();
+    this.initRowsState();
     this.buildRowPositions();
     // this.setShowEmptyRow(this.uv.rows === null || this.uv.rows.length === 0);
   }
