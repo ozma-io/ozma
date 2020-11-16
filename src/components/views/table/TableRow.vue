@@ -40,6 +40,7 @@
       :value="row.values[i]"
       :local-value="localRow.values[i]"
       :children="localRow.extra.children"
+      :arrow-down="localRow.extra.arrowDown === undefined ? false : localRow.extra.arrowDown"
       :column-position="i"
       :index="index"
       :column="localUv.columns[i]"

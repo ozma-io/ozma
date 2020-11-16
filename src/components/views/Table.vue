@@ -289,6 +289,7 @@ interface ITableRowExtra {
   position?: number;
   parent?: number;
   level?: number;
+  arrowDown?: boolean;
   children: number[];
   style?: Record<string, any>;
   height?: number;
@@ -969,10 +970,12 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       // Load visible data from rowsState to rows.
       this.rowsState.forEach(extra => {
         const id = this?.local?.rows[extra.position]?.extra?.selectionEntry?.id ?? undefined;
-        if (id !== undefined && id == extra.selectionEntry.id)
+        if (id !== undefined && id == extra.selectionEntry.id) {
+          this.local.rows[extra.position].extra.arrowDown = true;
           nextRenderOneJump().then(() => {
             this.visibleChids(this.local.rows[extra.position].extra.children, true);
           });
+        }
       })
     }
   }

@@ -41,7 +41,7 @@
         <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && localValue.valueText.length > 0}]">
           <span 
             :style="{'margin-left': treeLevel*25+'px'}"
-            :class="['display-arrow material-icons', {'click-stop': arrowClickStop}, {'down': visibleChids}]" 
+            :class="['display-arrow material-icons', {'click-stop': arrowClickStop}, {'down': isArrowDown}]" 
             @click="toggleChildren"
             @dblclick.stop
           >
@@ -83,10 +83,11 @@ export default class TableCell extends Vue {
   @Prop({ type: Number, default: null }) index!: number;
   @Prop({ type: Array,  default: [] }) children!: any;
   @Prop({ type: Number, required: true }) level!: number;
+  @Prop({ type: Boolean, required: true }) arrowDown!: boolean;
 
 
-  private visibleChids = false;
   private arrowClickStop = false;
+  private isArrowDown = false;
 
   private get valueType(): string | undefined {
     return R.path(['info', 'field', 'valueType', 'type'], this.value);
@@ -110,8 +111,8 @@ export default class TableCell extends Vue {
   }
 
   private toggleChildren() {
-    this.visibleChids = !this.visibleChids;
-    this.$emit("update:visibleChids", this.children, this.visibleChids);
+    this.isArrowDown = !this.isArrowDown;
+    this.$emit("update:visibleChids", this.children, this.isArrowDown);
     this.arrowClickStop = true;
     setTimeout(()=>{this.arrowClickStop=false}, 1000);
   }
@@ -120,6 +121,9 @@ export default class TableCell extends Vue {
     return iconValue(this.localValue.link.target);
   }
 
+  mounted() {
+    this.isArrowDown = this.arrowDown;
+  }
 }
 </script>
 
