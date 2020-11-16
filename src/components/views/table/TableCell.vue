@@ -11,7 +11,7 @@
                           'error_style': value.erroredOnce,
                           'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable,
                           'editing_style': localValue.editing !== undefined,
-                          'tree-branches': column.treeBranchesView && children !== undefined && children.length > 0,
+                          'tree-branches': column.treeBranchesView && children !== undefined && children.length > 0 && isTree,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click="$emit('cell-click', columnPosition, $event)"
   >
@@ -48,6 +48,7 @@
             arrow_forward_ios
           </span>
           <span
+            v-if="isTree"
             :style="{'margin-left': treeLevel*35+'px'}"
             class="hidden-arrow-space"
           ></span>
@@ -84,7 +85,7 @@ export default class TableCell extends Vue {
   @Prop({ type: Array,  default: [] }) children!: any;
   @Prop({ type: Number, required: true }) level!: number;
   @Prop({ type: Boolean, required: true }) arrowDown!: boolean;
-
+  @Prop({ type: Boolean, required: true }) isTree!: boolean;
 
   private arrowClickStop = false;
   private isArrowDown = false;

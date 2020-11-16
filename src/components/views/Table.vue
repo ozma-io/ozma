@@ -194,6 +194,7 @@
               :column-indexes="columnIndexes"
               :local-uv="local.extra"
               :show-fixed-row="showFixedRow"
+              :is-tree="isTree"
               @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
               @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
               @update:visibleChids="visibleChids(arguments[0], arguments[1])"
@@ -286,7 +287,6 @@ interface ITableRowExtra {
   searchText: string;
   selected: boolean;
   visible: boolean;
-  position?: number;
   parent?: number;
   level?: number;
   arrowDown?: boolean;
@@ -753,7 +753,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   private cellEditHeight = 0;
 
-  private rowsState: Array<any> = [];
+  private rowsState: Record<number, any> = {};
+  private isTree = false;
 
   get columnIndexes() {
     const columns = this.local.extra.columns.map((column, index) => ({
@@ -871,6 +872,14 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       const newWords = this.currentFilter.filter(newWord => !oldFilter.some(oldWord => oldWord.startsWith(newWord)));
       this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], newWords));
     }
+
+    if (this.filter.length == 0) {
+      this.buildRowPositions();
+      this.initRowsState();      
+    } else {
+      if (this.isTree)
+        this.offTree();
+    }
   }
 
   @Watch("editingValue")
@@ -916,14 +925,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       if(parent == undefined)
         return;
       const extra = this.local.rows[parent].extra;
-      extra.position = parent; 
-      if (visible && !this.rowsState.includes(extra)) {
-        this.rowsState.push(extra);
+      if (visible) {
+        this.rowsState[parent] = extra;
       } else {
-        const i = this.rowsState.indexOf(extra);
-        if (i !== -1) {
-          this.rowsState.splice(i, 1);
-        }
+        delete this.rowsState[parent]; 
+        this.local.rows[parent].extra.arrowDown = false;
       }
     }
 
@@ -948,9 +954,13 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   private displayChildren(children: number[]) {
     const parent = this.local.rows[children[0]].extra.parent;
     if (parent !== undefined)
-      for (let i = children.length - 1; i >= 0; i--)
-        if (!this.rowPositions.includes(children[i]))
-          this.rowPositions.splice(this.rowPositions.indexOf(parent) + 1, 0, children[i]);
+      for (let i = children.length - 1; i >= 0; i--) {
+        if (this.rowPositions.includes(children[i])) {
+          const childPosition = this.rowPositions.indexOf(children[i]);
+          this.rowPositions.splice(childPosition, 1);
+        }
+        this.rowPositions.splice(this.rowPositions.indexOf(parent) + 1, 0, children[i]);
+      }
   }
   
   private initRowsState() {
@@ -968,22 +978,28 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     })
     if (!R.isEmpty(this.rowsState)) {
       // Load visible data from rowsState to rows.
-      this.rowsState.forEach(extra => {
-        const id = this?.local?.rows[extra.position]?.extra?.selectionEntry?.id ?? undefined;
-        if (id !== undefined && id == extra.selectionEntry.id) {
-          this.local.rows[extra.position].extra.arrowDown = true;
+      for (const key in this.rowsState) {
+        const id = this?.local?.rows[key]?.extra?.selectionEntry?.id ?? undefined;
+        if (id !== undefined && id == this.rowsState[key].selectionEntry.id) {
+          this.local.rows[key].extra.arrowDown = true;
           nextRenderOneJump().then(() => {
-            this.visibleChids(this.local.rows[extra.position].extra.children, true);
+            this.visibleChids(this.local.rows[key].extra.children, true);
           });
         }
-      })
+      }
+    } else {
+      this.buildRowPositions();
     }
+  }
+
+  private offTree() {
+    this.isTree = false;
+    this.buildRowPositions();
   }
 
   // Update this.rows from this.entries
   private buildRowPositions() {
     const rows = this.uv.rows;
-
     if (rows === null) {
       this.rowPositions = [];
     } else {
@@ -992,6 +1008,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], this.filter));
       } else if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree) {
         this.rowPositions = this.rowPositions.filter(rowI => this.local.rows[rowI].extra.visible);
+        this.isTree = true;
       }
       this.sortRows();
       this.updateShowLength();
@@ -1271,8 +1288,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   private updateRows() {
-    this.initRowsState();
     this.buildRowPositions();
+    this.initRowsState();
     // this.setShowEmptyRow(this.uv.rows === null || this.uv.rows.length === 0);
   }
 
