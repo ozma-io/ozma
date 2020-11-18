@@ -4,27 +4,34 @@
         "input_placeholder": "Empty",
         "qrcode_scanner": "QR Code scanner",
         "new_scan": "Connecting to camera...",
-        "last_result": "Last result"
+        "scan_result": "Scan result",
+        "clear": "Clear",
+        "paste_data": "Paste data"
     },
     "ru": {
         "input_placeholder": "Пусто",
         "qrcode_scanner": "QR Code сканер",
         "new_scan": "Подключение к камере...",
-        "last_result": "Последний результат"
+        "scan_result": "Результат сканирования",
+        "clear": "Очистить",
+        "paste_data": "Вставить данные"
     }
   }
 </i18n>
 <template>
   <b-modal 
+    id='qrcode-scanner-modal'
     v-model="modalShow"
     hide-footer 
-    :title="$t('qrcode_scanner')">
+    :title="$t('qrcode_scanner')" 
+  >
     <qrcode-stream 
+      v-if="!destroyed"
       :camera="camera" 
       @decode="onDecode" 
       @init="onInit"
     >
-      <div class="loading-indicator" v-if="loading">
+      <div v-if="loading" class="loading-indicator">
         {{ $t('new_scan') }}
       </div>
 
@@ -32,7 +39,33 @@
         {{ error }}
       </div>
     </qrcode-stream>
-    <div v-if="result.length > 0" class="decode-result">{{ $t('last_result') }}:<br/> <b>{{ result }}</b></div>
+    <div v-if="result.length > 0" class="decode-result">
+      <strong>{{ $t('scan_result') }}:</strong>
+      <ol>
+        <li 
+          v-for="value in result"
+          :key="value"
+        > 
+          {{value[3]}}
+        </li>
+      </ol>
+      <div v-if="multiScan">
+        <b-button
+          block 
+          variant="info"
+          @click="clearList"
+        >
+          {{ $t('clear') }}
+        </b-button>
+        <b-button
+          block 
+          variant="success"
+          @click="sendList"
+        >
+          {{ $t('paste_data') }}
+        </b-button>
+      </div>
+    </div>
   </b-modal>
 </template>
 
@@ -43,12 +76,14 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 export default class QRCodeScanner extends Vue {
   @Prop({ type: Boolean, default: false }) openScanner!: boolean;
   @Prop({ type: Boolean, default: false }) closeAfterScan!: boolean;
+  @Prop({ type: Boolean, default: false }) multiScan!: boolean;
 
   modalShow = false;
   camera ='auto';
-  result = '';
+  result: Array<any> = [];
   error = '';
   loading = false;
+  destroyed = false;
 
   @Watch('openScanner')
   private toggleOpenScanner() {
@@ -81,16 +116,25 @@ export default class QRCodeScanner extends Vue {
 
   private async onDecode (content: string) {
     this.$emit('update:scanResult', content);
-    this.result = content;
-    this.turnCameraOff();
-    // window.navigator.vibrate(100); // vibrate for 200ms
-    // some more delay, so users have time to read the message
-    
-    if (this.closeAfterScan)
-      this.toggleOpenScanner();
+    this.result.push(content.split("&&"));
 
-    await this.timeout(1);
-    this.turnCameraOn();
+    try {
+      window.navigator.vibrate([100,30,200]);
+    } catch (e) {
+      console.error(e);
+    }
+
+    if (!this.multiScan) {
+      this.turnCameraOff();
+      
+      if (this.closeAfterScan) {
+        this.toggleOpenScanner();
+        this.result = [];
+      }
+
+      await this.timeout(1);
+      this.turnCameraOn();
+    }
   };
 
   private turnCameraOn () {
@@ -105,6 +149,23 @@ export default class QRCodeScanner extends Vue {
     return new Promise(resolve => {
       window.setTimeout(resolve, ms);
     })
+  };
+
+  async reload () {
+    this.destroyed = true
+    await this.$nextTick()
+    this.destroyed = false
+  };
+
+  private sendList() {
+    this.$bvModal.hide('qrcode-scanner-modal');
+    this.$emit("select", this.result);
+    this.result = [];
+  };
+
+  private clearList() {
+    this.reload();
+    this.result = [];
   };
 
 }
