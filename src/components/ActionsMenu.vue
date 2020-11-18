@@ -196,10 +196,6 @@ export default class ActionsMenu extends Vue {
     margin-right: 20px;
   }
 
-  .right {
-    right: 0;
-  }
-
   .div-with-actions {
     width: max-content;
     flex: 1;
@@ -275,6 +271,10 @@ export default class ActionsMenu extends Vue {
 
   .actions-menu_actions-button:focus {
     outline: none;
+  }
+
+  .right {
+    margin-left: -74vw;
   }
 
   @media screen and (max-aspect-ratio: 13/9) {

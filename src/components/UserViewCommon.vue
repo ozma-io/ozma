@@ -26,7 +26,11 @@
       @select="selectFromUserView($event)"
       @close="modalView = null"
     />
-    <QRCodeScanner :open-scanner="openQRCodeScanner"/>
+    <QRCodeScanner 
+      :open-scanner="openQRCodeScanner"
+      @select="selectFromQRScanner($event)"
+      :multiScan="true"
+    />
   </span>
 </template>
 
@@ -284,7 +288,6 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
         };
       }
     }, this.uv.columnAttributes);
-
     return modalReferenceField.pop() || null;
   }
 
@@ -300,6 +303,12 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
     this.updateValue(this.modalReferenceField.field, id);
     this.modalView = null;
+  }
+
+  private selectFromQRScanner(result: any[]) {
+    result.forEach(r => {
+      this.updateValue({type: "new", column: Number(r[0])}, r[4]);
+    })
   }
 }
 </script>
