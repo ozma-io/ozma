@@ -822,6 +822,14 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", () => {
       this.removeCellEditing();
     });
+
++   this.$root.$on("cell-click", () => {
+      this.local.extra.selectedValues.keys().forEach(key => {
+        this.local.selectCell(key, false);
+      });
+      this.lastSelectedRow = null;
+      this.lastSelectedValue = null;
+    });
   }
 
   protected destroyed() {
@@ -1030,6 +1038,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     this.local.extra.selectedValues.keys().forEach(prevRef => {
       this.local.selectCell(prevRef, false);
     });
+
+    // Deselect another cells
+    this.$root.$emit("cell-click");
+
     this.local.selectCell(ref, true);
     this.lastSelectedValue = ref;
   }
