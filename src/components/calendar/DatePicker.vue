@@ -75,7 +75,7 @@ export default class DatePicker extends Vue {
 }
 </script>
 
-<style scoped>  
+<style scoped>
   .actions {
     float: right;
   }
