@@ -54,9 +54,9 @@
       @input="updateInputCellEdit"
       @focus="onFocus"
     />
-    <span 
-      v-if="qrcodeInput" 
-      class="material-icons qr_code" 
+    <span
+      v-if="qrcodeInput"
+      class="material-icons qr_code"
       @click="openQRCodeScanner = !openQRCodeScanner"
     >
       qr_code_2
@@ -93,8 +93,8 @@ export default class Input extends Vue {
   @Prop({ type: String, default: "text" }) type!: string;
   @Prop({ type: Boolean, default: false }) focus!: boolean;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
-  @Prop({type: Boolean, default: false}) qrcodeInput!: boolean;
+  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
+  @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
 
   private focused = false;
   private maxInputWidth = 0;
@@ -278,10 +278,18 @@ export default class Input extends Vue {
 
   .input-field__required {
     background: var(--WarningColor) !important;
+
+    &::placeholder {
+      color: var(--WarningPlaceholderColor) !important;
+    }
   }
 
   .input-field__error {
     background: var(--FailColor) !important;
+
+    &::placeholder {
+      color: var(--FailPlaceholderColor) !important;
+    }
   }
 
   // .input_field__focused {

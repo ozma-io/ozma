@@ -104,7 +104,9 @@ export default class App extends Vue {
 
       "SuccessColor": this.settings.getEntry("success_color", String, "#28a745"),
       "FailColor": this.settings.getEntry("fail_color", String, "#dc3545"),
+      "FailPlaceholderColor": this.settings.getEntry("fail_placeholder_color", String, "#2c0b0e"),
       "WarningColor": this.settings.getEntry("fail_color", String, "#ffc107"),
+      "WarningPlaceholderColor": this.settings.getEntry("warning_placeholder_color", String, "#4c3a02"),
       "StateTextColor": this.settings.getEntry("state_text_color", String, "white"),
     };
     return Object.entries(values).reduce((currSettings, [name, value]) => {
