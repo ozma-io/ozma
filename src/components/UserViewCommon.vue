@@ -17,7 +17,7 @@
             "import_from_csv": "Импорт из .csv",
             "scan_qrcode": "QR Code сканер",
             "qrcode_error_not_attr":"Ошибка добавления данных! Проверьте наличие атрибута @input_from_qrcode.",
-            "qrcode_error_not_ref":""Ошибка добавления данных! Убедитесь что заполняемое поле является ссылкой на таблицу:",
+            "qrcode_error_not_ref":"Ошибка добавления данных! Убедитесь что заполняемое поле является ссылкой на таблицу:",
             "error": "Ошибка"
         }
     }
@@ -333,7 +333,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
   private selectFromQRScanner(result: any[]) {
     result.forEach(r => {
-      if (this.qrCodeReferenceField !== null) {
+      if (this.qrCodeReferenceField == null) {
         this.makeToast(this.$t('qrcode_error_not_attr').toString());
       } else {
         if(this.qrCodeReferenceField.entity.schema == r.s && this.qrCodeReferenceField.entity.name == r.n) {
