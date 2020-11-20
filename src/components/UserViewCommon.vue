@@ -5,14 +5,20 @@
             "create_in_modal": "Create referenced in modal window",
             "export_to_csv": "Export to .csv",
             "import_from_csv": "Import from .csv",
-            "scan_qrcode": "Scan QR Code"
+            "scan_qrcode": "Scan QR Code",
+            "qrcode_error_not_attr":"Adding data error! Check for the @input_from_qrcode attribute.",
+            "qrcode_error_not_ref":"Adding data error! Make sure that the field you fill out is a link to a table:",
+            "error": "Error"
         },
         "ru": {
             "create": "Создать новую",
             "create_in_modal": "Создать связанную запись в окне",
             "export_to_csv": "Экспорт в .csv",
             "import_from_csv": "Импорт из .csv",
-            "scan_qrcode": "QR Code сканер"
+            "scan_qrcode": "QR Code сканер",
+            "qrcode_error_not_attr":"Ошибка добавления данных! Проверьте наличие атрибута @input_from_qrcode.",
+            "qrcode_error_not_ref":""Ошибка добавления данных! Убедитесь что заполняемое поле является ссылкой на таблицу:",
+            "error": "Ошибка"
         }
     }
 </i18n>
@@ -28,8 +34,8 @@
     />
     <QRCodeScanner 
       :open-scanner="openQRCodeScanner"
+      :multi-scan="true"
       @select="selectFromQRScanner($event)"
-      :multiScan="true"
     />
   </span>
 </template>
@@ -57,6 +63,11 @@ import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
 interface IModalReferenceField {
   field: ValueRef;
   uv: IQuery;
+  entity: IEntityRef;
+}
+
+interface IQRCodeReferenceField {
+  field: ValueRef;
   entity: IEntityRef;
 }
 
@@ -305,9 +316,41 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
     this.modalView = null;
   }
 
+  get qrCodeReferenceField(): IQRCodeReferenceField | null {
+    const qrCodeReferenceField = mapMaybe((column, columnIndex): IQRCodeReferenceField | undefined => {
+      const getColumnAttr = (name: string) => tryDicts(name, this.uv.columnAttributes[columnIndex], this.uv.attributes);
+      const inputFormQRCodeAttr = Boolean(getColumnAttr("input_from_qrcode"));
+      const fieldType = this.uv.info.columns[columnIndex].mainField?.field.fieldType;
+      if (inputFormQRCodeAttr && fieldType !== undefined && fieldType.type === "reference") {
+        return {
+          field: { type: "new", column: columnIndex },
+          entity: fieldType.entity,
+        };
+      }
+    }, this.uv.columnAttributes);
+    return qrCodeReferenceField.pop() || null;
+  }
+
   private selectFromQRScanner(result: any[]) {
     result.forEach(r => {
-      this.updateValue({type: "new", column: Number(r[0])}, r[4]);
+      if (this.qrCodeReferenceField !== null) {
+        this.makeToast(this.$t('qrcode_error_not_attr').toString());
+      } else {
+        if(this.qrCodeReferenceField.entity.schema == r.s && this.qrCodeReferenceField.entity.name == r.n) {
+          this.updateValue(this.qrCodeReferenceField.field, r.i);
+        } else {
+          this.makeToast(this.$t('qrcode_error_not_ref').toString() + `{schema: ${r.s}, name: ${r.n}}`);
+        }
+      }
+    })
+  }
+
+  private makeToast(message: string) {
+    this.$bvToast.toast(message, {
+      title: this.$t('error').toString(),
+      variant: 'danger',
+      solid: true,
+      noAutoHide: true
     })
   }
 }

@@ -6,7 +6,8 @@
         "new_scan": "Connecting to camera...",
         "scan_result": "Scan result",
         "clear": "Clear",
-        "paste_data": "Paste data"
+        "paste_data": "Paste data",
+        "incorrect_format": "ERROR: Incorrect format."
     },
     "ru": {
         "input_placeholder": "Пусто",
@@ -14,7 +15,8 @@
         "new_scan": "Подключение к камере...",
         "scan_result": "Результат сканирования",
         "clear": "Очистить",
-        "paste_data": "Вставить данные"
+        "paste_data": "Вставить данные",
+        "incorrect_format": "ОШИБКА: Неправильный формат."
     }
   }
 </i18n>
@@ -26,7 +28,6 @@
     :title="$t('qrcode_scanner')" 
   >
     <qrcode-stream 
-      v-if="!destroyed"
       :camera="camera" 
       @decode="onDecode" 
       @init="onInit"
@@ -44,36 +45,31 @@
       <ol>
         <li 
           v-for="value in result"
-          :key="value"
+          :key="value.i"
         > 
-          {{value[3]}}
+          {{ value.v }}
         </li>
       </ol>
-      <div v-if="multiScan">
-        <b-button
-          block 
-          variant="info"
-          @click="clearList"
-        >
-          {{ $t('clear') }}
-        </b-button>
-        <b-button
-          block 
-          variant="success"
-          @click="sendList"
-        >
-          {{ $t('paste_data') }}
-        </b-button>
-      </div>
+      <b-button
+        v-if="multiScan"
+        block 
+        variant="success"
+        @click="sendList"
+      >
+        {{ $t('paste_data') }}
+      </b-button>
     </div>
   </b-modal>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { mixins } from "vue-class-component";
+import BaseEntriesView from "@/components/BaseEntriesView";
+import { IEntriesRef } from "@/state/user_view";
 
 @Component
-export default class QRCodeScanner extends Vue {
+export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Prop({ type: Boolean, default: false }) openScanner!: boolean;
   @Prop({ type: Boolean, default: false }) closeAfterScan!: boolean;
   @Prop({ type: Boolean, default: false }) multiScan!: boolean;
@@ -83,11 +79,18 @@ export default class QRCodeScanner extends Vue {
   result: Array<any> = [];
   error = '';
   loading = false;
-  destroyed = false;
+  entry: IEntriesRef | null = null;
+  entries: Record<string, string> = {};
+  currentContent: any | null = null;
 
   @Watch('openScanner')
   private toggleOpenScanner() {
     this.modalShow = !this.modalShow;
+    this.currentContent = JSON.parse('{"n":"product","s":"s","i":3}'); // Format for QR codes.
+    // this.currentContent = null;
+    this.result = [];
+    this.entry = null;
+    this.entries = {};
   }
 
   async onInit (promise: any) {
@@ -115,16 +118,10 @@ export default class QRCodeScanner extends Vue {
   };
 
   private async onDecode (content: string) {
-    this.$emit('update:scanResult', content);
-    this.result.push(content.split("&&"));
-
-    try {
-      window.navigator.vibrate([100,30,200]);
-    } catch (e) {
-      console.error(e);
-    }
-
+    this.error = "";
+    
     if (!this.multiScan) {
+      this.$emit('update:scanResult', content);
       this.turnCameraOff();
       
       if (this.closeAfterScan) {
@@ -134,7 +131,24 @@ export default class QRCodeScanner extends Vue {
 
       await this.timeout(1);
       this.turnCameraOn();
+
+    } else {
+      try {
+        content = JSON.parse(content);
+      } catch(e) {
+        this.error = this.$t('incorrect_format').toString() + " QR code: " + content;
+        content = "";
+      }
+      if (content !== "")
+        this.currentContent = content;
     }
+
+    try {
+      window.navigator.vibrate([100,30,200]);
+    } catch (e) {
+      console.error(e);
+    }
+
   };
 
   private turnCameraOn () {
@@ -151,22 +165,34 @@ export default class QRCodeScanner extends Vue {
     })
   };
 
-  async reload () {
-    this.destroyed = true
-    await this.$nextTick()
-    this.destroyed = false
-  };
-
   private sendList() {
     this.$bvModal.hide('qrcode-scanner-modal');
     this.$emit("select", this.result);
     this.result = [];
   };
 
-  private clearList() {
-    this.reload();
-    this.result = [];
-  };
+  get entriesEntity() {
+    return this.entry;
+  }
+
+  @Watch('currentContent', { deep: true, immediate: true })
+  private changeCurrentContent() {
+    if (this.currentContent !== null && this.currentContent.n !== undefined &&  this.currentContent.s !== undefined && this.currentContent.i !== undefined ) {
+      if (this.entry !== null) {
+        this.currentContent.v = this.entries[Number(this.currentContent.i)]; 
+        this.result.push(this.currentContent);
+      } else {
+        this.entry = {entity: {name: this.currentContent.n, schema: this.currentContent.s}};
+      }
+    }
+  }
+
+  @Watch('currentEntries')
+  private changeCurrentEntries() {
+    if (this.currentEntries !== null)
+      Object.entries(this.currentEntries).forEach(([id, name]) => {this.entries[id] = name});
+    this.changeCurrentContent();
+  }
 
 }
 </script> 
@@ -175,6 +201,8 @@ export default class QRCodeScanner extends Vue {
   .error {
     font-weight: bold;
     color: red;
+    background-color: white;
+    border-bottom: 2px solid red;
   }
 
   .loading-indicator {

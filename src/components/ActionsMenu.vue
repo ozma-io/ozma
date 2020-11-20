@@ -274,7 +274,7 @@ export default class ActionsMenu extends Vue {
   }
 
   .right {
-    margin-left: -74vw;
+    right: 0;
   }
 
   @media screen and (max-aspect-ratio: 13/9) {
@@ -313,6 +313,10 @@ export default class ActionsMenu extends Vue {
         width: 100%;
         text-align: left;
         z-index: 1000 !important; /* кнопка выбора действий выше темного блока */
+      }
+
+      .right {
+        margin-left: -75vw;
       }
     }
   }
