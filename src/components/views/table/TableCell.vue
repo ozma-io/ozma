@@ -47,6 +47,7 @@
           >
             arrow_forward_ios
           </span>
+          <!-- This isTree need for hidden when table filtering from search panel -->
           <span
             v-if="isTree"
             :style="{'margin-left': treeLevel*35+'px'}"
@@ -113,8 +114,9 @@ export default class TableCell extends Vue {
 
   private toggleChildren() {
     this.isArrowDown = !this.isArrowDown;
-    this.$emit("update:visibleChids", this.children, this.isArrowDown);
+    this.$emit("update:visibleChildren", this.children, this.isArrowDown);
     this.arrowClickStop = true;
+    // This pause need for block double click by arrow.
     setTimeout(()=>{this.arrowClickStop=false}, 1000);
   }
   

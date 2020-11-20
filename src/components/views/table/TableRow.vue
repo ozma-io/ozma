@@ -49,7 +49,7 @@
       :level="localRow.extra.level"
       :is-tree="isTree"
       @cell-click="$emit('cell-click', arguments[0], arguments[1])"
-      @update:visibleChids="$emit('update:visibleChids', arguments[0], arguments[1])"
+      @update:visibleChildren="$emit('update:visibleChildren', arguments[0], arguments[1])"
       @goto="$emit('goto', $event)"
     />
   </tr>
