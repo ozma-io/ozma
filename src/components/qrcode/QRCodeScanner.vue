@@ -86,8 +86,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Watch('openScanner')
   private toggleOpenScanner() {
     this.modalShow = !this.modalShow;
-    this.currentContent = JSON.parse('{"n":"product","s":"s","i":3}'); // Format for QR codes.
-    // this.currentContent = null;
+    this.currentContent = null;
     this.result = [];
     this.entry = null;
     this.entries = {};
