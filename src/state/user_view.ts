@@ -357,7 +357,7 @@ export class CombinedUserView {
       const updateMapping: IUpdateMapping = {};
       rows.forEach((rawRow, rowI) => {
         const row = rawRow as ICombinedRow;
-        const domain = this.info.domains[row.domainId];
+        const domain = (row.domainId !== null) ? this.info.domains[row.domainId] : undefined;
 
         if (row.mainId !== undefined) {
           row.deleted = row.mainId in (mainChanges as IEntityChanges).deleted;
@@ -371,13 +371,14 @@ export class CombinedUserView {
         }
 
         info.columns.forEach((columnInfo, colI) => {
+          if (domain === undefined) {
+            return;
+          }
           const field = domain[columnInfo.name];
-
-          const value = row.values[colI];
-
           if (field === undefined || !(field.idColumn in entityIds)) {
             return;
           }
+          const value = row.values[colI];
 
           const id = entityIds[field.idColumn];
           const fieldRef = id.subEntity ? { entity: id.subEntity, name: field.ref.name } : field.ref;
@@ -656,9 +657,13 @@ const fetchUserView = async (context: ActionContext<IUserViewState, {}>, args: I
           changes,
         });
       } else {
+        let uvArgs = args.args;
+        if (process.env.NODE_ENV !== "production" && window.location.search.includes("__force_recompile")) {
+          uvArgs = {...args.args, ["__force_recompile"]: true};
+        }
         const res: IViewExprResult = await dispatch("callProtectedApi", {
           func: Api.getNamedUserView.bind(Api),
-          args: [args.source.ref, args.args],
+          args: [args.source.ref, uvArgs],
         }, { root: true });
         await momentLocale;
         current = new CombinedUserView(context, {
@@ -674,9 +679,13 @@ const fetchUserView = async (context: ActionContext<IUserViewState, {}>, args: I
       if (args.args === null) {
         throw new Error("Getting information about anonymous views is not supported");
       } else {
+        let uvArgs = args.args;
+        if (process.env.NODE_ENV !== "production" && window.location.search.includes("__force_recompile")) {
+          uvArgs = {...args.args, ["__force_recompile"]: true};
+        }
         const res: IViewExprResult = await dispatch("callProtectedApi", {
           func: Api.getAnonymousUserView.bind(Api),
-          args: [args.source.query, args.args],
+          args: [args.source.query, uvArgs],
         }, { root: true });
         await momentLocale;
         current = new CombinedUserView(context, {
