@@ -22,6 +22,9 @@ export const waitTimeout = (timeout?: number): Promise<void> => new Promise((res
 export const nextRender = (): Promise<void> => new Promise((resolve) =>
   Vue.nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
 
+export const nextRenderOneJump = (): Promise<void> => new Promise((resolve) =>
+  Vue.nextTick(() => requestAnimationFrame((() => resolve()))));
+
 export declare let process: {
   env: Record<string, string>;
 };
