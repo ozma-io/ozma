@@ -225,7 +225,7 @@ export default class MultiSelect extends Vue {
   private inputValue = "";
   private isNeedFilter = true;
   private isTopFilter = true;
-  private optionsContainerCoords = {top: 0, bottom: 0};
+  private optionsContainerCoords = { top: 0, bottom: 0 };
 
   private mounted() {
 
@@ -319,7 +319,7 @@ export default class MultiSelect extends Vue {
   }
 
   private get listValueStyle() {
-    const height = this.height ? { maxHeight: `${this.height}px`} : {};
+    const height = this.height ? { maxHeight: `${this.height}px` } : {};
     return {
       ...height,
     };

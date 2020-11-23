@@ -154,24 +154,24 @@
 </template>
 
 <script lang="ts">
-import {Route} from "vue-router";
-import {Component, Vue, Watch} from "vue-property-decorator";
-import {namespace} from "vuex-class";
-import {Debounce} from "vue-debounce-decorator";
+import { Route } from "vue-router";
+import { Component, Vue, Watch } from "vue-property-decorator";
+import { namespace } from "vuex-class";
+import { Debounce } from "vue-debounce-decorator";
 
 import * as Api from "@/api";
-import {setHeadTitle} from "@/elements";
-import {CombinedUserView, CurrentUserViews, IUserViewArguments, UserViewError} from "@/state/user_view";
-import {ErrorKey} from "@/state/errors";
-import {CurrentChanges, ScopeName} from "@/state/staging_changes";
-import {Action} from "@/components/ActionsMenu.vue";
-import {IPanelButton} from "@/components/ButtonsPanel.vue";
+import { setHeadTitle } from "@/elements";
+import { CombinedUserView, CurrentUserViews, IUserViewArguments, UserViewError } from "@/state/user_view";
+import { ErrorKey } from "@/state/errors";
+import { CurrentChanges, ScopeName } from "@/state/staging_changes";
+import { Action } from "@/components/ActionsMenu.vue";
+import { IPanelButton } from "@/components/ButtonsPanel.vue";
 import ModalUserView from "@/components/ModalUserView.vue";
 import SearchPanel from "@/components/SearchPanel.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
-import {CurrentAuth, getAuthedLink} from "@/state/auth";
-import {ICurrentQuery, IQuery, queryLocation, ICurrentQueryHistory} from "@/state/query";
-import {convertToWords} from "@/utils";
+import { CurrentAuth, getAuthedLink } from "@/state/auth";
+import { ICurrentQuery, IQuery, queryLocation, ICurrentQueryHistory } from "@/state/query";
+import { convertToWords } from "@/utils";
 
 const auth = namespace("auth");
 const userView = namespace("userView");
@@ -180,9 +180,9 @@ const settings = namespace("settings");
 const query = namespace("query");
 const errors = namespace("errors");
 
-@Component({components: {
+@Component({ components: {
   SearchPanel, ModalUserView, ProgressBar,
-}})
+} })
 export default class TopLevelUserView extends Vue {
   @auth.State("current") currentAuth!: CurrentAuth | null;
   @auth.State("pending") authPending!: Promise<void> | null;
@@ -218,7 +218,7 @@ export default class TopLevelUserView extends Vue {
 
   get errors() {
     return Object.entries(this.rawErrors).flatMap(([key, keyErrors]) => keyErrors.map(error => {
-      return this.$t(`${key}_error`, {msg: error});
+      return this.$t(`${key}_error`, { msg: error });
     }));
   }
 
@@ -244,7 +244,7 @@ export default class TopLevelUserView extends Vue {
     })
   }
 
-  @Watch("$route", {deep: true, immediate: true})
+  @Watch("$route", { deep: true, immediate: true })
   private onRouteChanged() {
     this.resetRoute(this.$route);
   }
@@ -273,15 +273,15 @@ export default class TopLevelUserView extends Vue {
     actions.push(...this.extraActions);
     if (this.currentAuth !== null) {
       if (Api.developmentMode) {
-        actions.push({name: this.$t("authed_link").toString(), order: 1000, callback: () => {
+        actions.push({ name: this.$t("authed_link").toString(), order: 1000, callback: () => {
           const link = getAuthedLink(this.currentAuth!);
           navigator.clipboard.writeText(link);
-        }});
+        } });
       }
-      actions.push({name: this.$t("account").toString(), order: 1000, link: { href: Api.accountUrl }});
-      actions.push({name: this.$t("logout").toString(), order: 1000, callback: this.logout});
+      actions.push({ name: this.$t("account").toString(), order: 1000, link: { href: Api.accountUrl } });
+      actions.push({ name: this.$t("logout").toString(), order: 1000, callback: this.logout });
     } else {
-      actions.push({name: this.$t("login").toString(), order: 1000, callback: this.login});
+      actions.push({ name: this.$t("login").toString(), order: 1000, callback: this.login });
     }
     return actions;
   }

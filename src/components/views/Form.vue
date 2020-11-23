@@ -400,13 +400,13 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
     const deleteRef = this.useDeleteAction;
     if (deleteRef !== null) {
       actions.push(
-        {name: this.$t("delete").toString(), callback: () => this.confirmDelete(deleteRef)},
+        { name: this.$t("delete").toString(), callback: () => this.confirmDelete(deleteRef) },
       );
     }
     return actions;
   }
 
-  @Watch("actions", {deep: true, immediate: true})
+  @Watch("actions", { deep: true, immediate: true })
   private updateActions() {
     this.$emit("update:actions", this.actions);
   }

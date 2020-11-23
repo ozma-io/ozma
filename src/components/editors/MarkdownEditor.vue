@@ -39,7 +39,7 @@ import '@toast-ui/editor/dist/i18n/ru-ru';
 
 type EditorType = Vue & { invoke: (name: string) => any };
 
-@Component({components: { Editor, Viewer }})
+@Component({ components: { Editor, Viewer } })
 export default class CodeEditor extends Vue {
   @Prop({ type: String }) content!: string;
   @Prop({ type: Number }) height!: number;

@@ -215,16 +215,16 @@
 </template>
 
 <script lang="ts">
-import {Component, Vue, Watch} from "vue-property-decorator";
-import {mixins} from "vue-class-component";
-import {namespace} from "vuex-class";
-import {Store} from "vuex";
-import {Moment} from "moment";
+import { Component, Vue, Watch } from "vue-property-decorator";
+import { mixins } from "vue-class-component";
+import { namespace } from "vuex-class";
+import { Store } from "vuex";
+import { Moment } from "moment";
 import * as moment from "moment";
 
-import {deepEquals, isFirefox, isIOS, mapMaybe, nextRender, nextRenderOneJump, ObjectSet, tryDicts, ReferenceName} from "@/utils";
-import {valueIsNull} from "@/values";
-import {IResultColumnInfo} from "@/api";
+import { deepEquals, isFirefox, isIOS, mapMaybe, nextRender, nextRenderOneJump, ObjectSet, tryDicts, ReferenceName } from "@/utils";
+import { valueIsNull } from "@/values";
+import { IResultColumnInfo } from "@/api";
 import {
   CombinedUserView,
   currentValue,
@@ -238,9 +238,9 @@ import {
   Entries,
   referenceEntriesRef,
 } from "@/state/user_view";
-import {UserView} from "@/components";
-import {ScopeName, AddedRowId, AutoSaveLock} from "@/state/staging_changes";
-import {attrToQueryRef, attrToQuerySelf, IAttrToQueryOpts, IQuery} from "@/state/query";
+import { UserView } from "@/components";
+import { ScopeName, AddedRowId, AutoSaveLock } from "@/state/staging_changes";
+import { attrToQueryRef, attrToQuerySelf, IAttrToQueryOpts, IQuery } from "@/state/query";
 import {
   equalRowPositionRef,
   ILocalRow,
@@ -250,12 +250,12 @@ import {
   RowRef,
   ValueRef,
 } from "@/local_user_view";
-import BaseUserView, {ISelectionRef} from "@/components/BaseUserView";
-import {Action} from "@/components/ActionsMenu.vue";
+import BaseUserView, { ISelectionRef } from "@/components/BaseUserView";
+import { Action } from "@/components/ActionsMenu.vue";
 import TableRow from "@/components/views/table/TableRow.vue";
 import TableFixedRow from "@/components/views/table/TableFixedRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
-import TableCellEdit, {ICellCoords, IEditParams} from "@/components/views/table/TableCellEdit.vue";
+import TableCellEdit, { ICellCoords, IEditParams } from "@/components/views/table/TableCellEdit.vue";
 import { Link, attrToLinkRef, attrToLinkSelf } from "@/links";
 import * as R from "ramda";
 
@@ -609,7 +609,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     };
     const home = homeSchema(this.uv.args);
     if (home !== null) {
-      extra.linkOpts = {homeSchema: home};
+      extra.linkOpts = { homeSchema: home };
     }
     return extra;
   }
@@ -804,7 +804,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         const columnInfo = this.uv.info.columns[this.editing.ref.column];
         const columnAttrs = this.uv.columnAttributes[this.editing.ref.column];
         const type = columnInfo.valueType;
-        const attributes = {...this.uv.attributes, ...columnAttrs, ...value.row.row.attributes, ...value.value.attributes};
+        const attributes = { ...this.uv.attributes, ...columnAttrs, ...value.row.row.attributes, ...value.value.attributes };
         return {
           value: value.value,
           attributes,
@@ -830,7 +830,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         this.showLength = this.local.rows.length;
       };
       window.addEventListener("beforeprint", printCallback);
-      this.printListener = {query, queryCallback, printCallback};
+      this.printListener = { query, queryCallback, printCallback };
     }
   }
 
@@ -917,15 +917,15 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (emptyRow !== null) {
       this.showEmptyRow = newValue;
       if (!newValue) {
-        this.baseLocal.selectRow({type: "new"}, false);
+        this.baseLocal.selectRow({ type: "new" }, false);
         emptyRow.local.values.forEach((_, colI) => {
-          this.local.selectCell({type: "new", column: colI}, false);
+          this.local.selectCell({ type: "new", column: colI }, false);
         });
       }
       nextRender().then(() => {
         const emptyRowRefElement = this.$refs.emptyRowRef as any | undefined;
         if (emptyRowRefElement !== undefined)
-          this.cellEditByTarget({type:"new", column: emptyRowRefElement.columnIndexes[0]}, emptyRowRefElement.$children[0].$el);
+          this.cellEditByTarget({ type:"new", column: emptyRowRefElement.columnIndexes[0] }, emptyRowRefElement.$children[0].$el);
       });
     }
   }
@@ -1068,7 +1068,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         return;
       }
 
-      this.editing = {ref, lock};
+      this.editing = { ref, lock };
     });
   }
 
@@ -1206,7 +1206,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   private getRowByLocalPosition(rowRef: RowPositionRef): RowRef | null {
     if (rowRef.type === "existing") {
-      return this.local.getRowByPosition({type: "existing", position: this.rowPositions[rowRef.position]});
+      return this.local.getRowByPosition({ type: "existing", position: this.rowPositions[rowRef.position] });
     } else {
       return this.local.getRowByPosition(rowRef);
     }
@@ -1296,8 +1296,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     const actions: Action[] = [];
     if (this.uv.info.mainEntity !== null) {
       actions.push(
-        {name: this.$t("remove_selected_rows").toString(), callback: () => this.removeSelectedRows()},
-        {name: this.$t("show_new_row").toString(), callback: () => this.setShowEmptyRow(true)},
+        { name: this.$t("remove_selected_rows").toString(), callback: () => this.removeSelectedRows() },
+        { name: this.$t("show_new_row").toString(), callback: () => this.setShowEmptyRow(true) },
       );
     }
 
@@ -1325,11 +1325,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.sortColumn = sortColumn;
       switch (type) {
         case "decimal":
-          this.sortOptions = {numeric: true};
+          this.sortOptions = { numeric: true };
           this.sortAsc = false;
           break;
         case "int":
-          this.sortOptions = {numeric: true};
+          this.sortOptions = { numeric: true };
           this.sortAsc = false;
           break;
         case "bool":
@@ -1338,7 +1338,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
           break;
         case "string":
           this.sortAsc = true;
-          this.sortOptions = {sensitivity: "accent"};
+          this.sortOptions = { sensitivity: "accent" };
           break;
         default:
           this.sortAsc = true;

@@ -41,7 +41,7 @@ const errors = namespace("errors");
 
 const errorKey = "modal_user_view";
 
-@Component({ components: { ModalUserView }})
+@Component({ components: { ModalUserView } })
 export default class SelectUserView extends Vue {
   @userView.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
   @errors.Mutation("setError") setError!: (args: { key: ErrorKey; error: string }) => void;

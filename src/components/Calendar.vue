@@ -86,7 +86,7 @@ import moment, { Moment, months, Duration } from "moment";
 import { dateFormat, dateTimeFormat, valueToText } from "@/values";
 import DatePicker from "@/components/calendar/DatePicker.vue";
 import TimePicker from "@/components/calendar/TimePicker.vue";
-import {nextRender} from "@/utils";
+import { nextRender } from "@/utils";
 
 @Component({
   components: {
@@ -100,7 +100,7 @@ export default class Calendar extends Vue {
   @Prop({ type: Number, default: null }) timeStep!: number | null;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: Boolean, default: false }) noOpenOnFocus!: boolean;
-  @Prop({ type: Boolean, default: false}) isCellEdit!: boolean;
+  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
 
   private isCalendarOpen = false;
   private position = false;

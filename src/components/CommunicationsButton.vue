@@ -98,11 +98,11 @@ interface ISocialLinks {
 
 const settings = namespace("settings");
 
-@Component({components: {
+@Component({ components: {
   TelegramIcon,
   EmailIcon,
   WhatsAppIcon,
-}})
+} })
 export default class CommunicationsButton extends Vue {
   @settings.State("current") settings!: CurrentSettings;
   private isOpen = false;

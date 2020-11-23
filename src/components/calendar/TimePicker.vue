@@ -72,7 +72,7 @@ const numToText2 = (num: number) => {
 const getRange = (min: number, max: number, step: number) => {
   const range: ITimeRange[] = [];
   for (let i = min; i < max; i += step ) {
-    const el: ITimeRange = {min: -1, max: -1, value: i, text: `${numToText2(i)}`};
+    const el: ITimeRange = { min: -1, max: -1, value: i, text: `${numToText2(i)}` };
     range.push(el);
   }
   return range;

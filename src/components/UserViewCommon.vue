@@ -263,11 +263,11 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
     // FIXME: workaround until we have proper role-based permissions for this.
     if (this.uv.attributes["export_to_csv"] || "__export_to_csv" in this.$route.query) {
-      actions.push({name: this.$t("export_to_csv").toString(), callback: () => this.exportToCsv()});
+      actions.push({ name: this.$t("export_to_csv").toString(), callback: () => this.exportToCsv() });
     }
 
     if (this.uv.attributes["scan_qrcode"]) {
-      actions.push({name: this.$t("scan_qrcode").toString(), callback: () => this.openQRCodeScanner = !this.openQRCodeScanner});
+      actions.push({ name: this.$t("scan_qrcode").toString(), callback: () => this.openQRCodeScanner = !this.openQRCodeScanner });
     }
 
     return actions;
@@ -307,7 +307,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
   private selectFromQRScanner(result: any[]) {
     result.forEach(r => {
-      this.updateValue({type: "new", column: Number(r[0])}, r[4]);
+      this.updateValue({ type: "new", column: Number(r[0]) }, r[4]);
     })
   }
 }

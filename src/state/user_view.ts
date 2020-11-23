@@ -535,7 +535,7 @@ export const equalEntriesRef = (a: IEntriesRef, b: IEntriesRef): boolean => {
 };
 
 export const referenceEntriesRef = (r: IReferenceFieldType): IEntriesRef => {
-  return {entity: r.entity, where: r.where};
+  return { entity: r.entity, where: r.where };
 };
 
 export class CurrentEntries {
@@ -659,7 +659,7 @@ const fetchUserView = async (context: ActionContext<IUserViewState, {}>, args: I
       } else {
         let uvArgs = args.args;
         if (process.env.NODE_ENV !== "production" && window.location.search.includes("__force_recompile")) {
-          uvArgs = {...args.args, ["__force_recompile"]: true};
+          uvArgs = { ...args.args, ["__force_recompile"]: true };
         }
         const res: IViewExprResult = await dispatch("callProtectedApi", {
           func: Api.getNamedUserView.bind(Api),
@@ -681,7 +681,7 @@ const fetchUserView = async (context: ActionContext<IUserViewState, {}>, args: I
       } else {
         let uvArgs = args.args;
         if (process.env.NODE_ENV !== "production" && window.location.search.includes("__force_recompile")) {
-          uvArgs = {...args.args, ["__force_recompile"]: true};
+          uvArgs = { ...args.args, ["__force_recompile"]: true };
         }
         const res: IViewExprResult = await dispatch("callProtectedApi", {
           func: Api.getAnonymousUserView.bind(Api),

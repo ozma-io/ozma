@@ -73,14 +73,14 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { Action } from "@/components/ActionsMenu.vue";
-import {IQuery, queryLocation} from "@/state/query";
+import { IQuery, queryLocation } from "@/state/query";
 import { CurrentChanges, ScopeName } from "@/state/staging_changes";
 import ModalPortal from "@/components/modal/ModalPortal";
 import { router } from "@/modules";
 
 const staging = namespace("staging");
 
-@Component({ components: { ModalPortal }})
+@Component({ components: { ModalPortal } })
 export default class ModalUserView extends Vue {
   @staging.State("current") changes!: CurrentChanges;
   @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void> }) => Promise<void>;

@@ -78,7 +78,7 @@ import { isMobile, getTextWidth } from "@/utils";
 
 import Modal from "@/components/modal/Modal.vue";
 import Input from "@/components/form/Input.vue";
-import {ICombinedValue} from "@/state/user_view";
+import { ICombinedValue } from "@/state/user_view";
 
 @Component({ components: { Modal, Input } })
 export default class InputSlot extends Vue {
@@ -90,7 +90,7 @@ export default class InputSlot extends Vue {
   @Prop({ type: Boolean }) disabled!: boolean;
   @Prop({ type: Boolean, default: true }) inline!: boolean;
   @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
-  @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
+  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: String }) textAlign!: string;
 

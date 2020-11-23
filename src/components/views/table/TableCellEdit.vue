@@ -25,15 +25,15 @@ export interface IEditParams {
   minHeight: number;
 }
 
-import {Component, Prop, Vue} from "vue-property-decorator";
+import { Component, Prop, Vue } from "vue-property-decorator";
 
 @Component
 export default class TableCellEdit extends Vue {
-  @Prop({default: () => ({x: 0, y: 0}) }) coords!: ICellCoords;
+  @Prop({ default: () => ({ x: 0, y: 0 }) }) coords!: ICellCoords;
   @Prop() width!: number;
   @Prop() height!: number;
   @Prop() minHeight!: number;
-  @Prop({type: Boolean, default: false}) isLastFixedCell!: boolean;
+  @Prop({ type: Boolean, default: false }) isLastFixedCell!: boolean;
 }
 </script>
 

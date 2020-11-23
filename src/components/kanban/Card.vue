@@ -100,7 +100,7 @@ interface ICardStyle {
 
 const query = namespace("query");
 
-@Component({ directives: { dragscroll }})
+@Component({ directives: { dragscroll } })
 export class Card extends Vue {
   @query.Action("addWindow") addWindow!: (query: IQuery) => Promise<void>;
   @Prop({ type: Object, required: true }) data!: ICard;

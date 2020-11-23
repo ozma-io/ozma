@@ -17,7 +17,7 @@ storiesOf("Calendar", module)
         },
         bindProps: {
           type: Object,
-          default: { showTime: boolean("Show Time", false)},
+          default: { showTime: boolean("Show Time", false) },
         },
       },
       components: { FormField },

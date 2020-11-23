@@ -353,7 +353,7 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import {valueToText, valueIsNull, dateTimeFormat} from "@/values";
+import { valueToText, valueIsNull, dateTimeFormat } from "@/values";
 import { AttributesMap, ValueType } from "@/api";
 import { Action } from "@/components/ActionsMenu.vue";
 import { IUserViewArguments, homeSchema, ICombinedValue, currentValue, IEntriesRef, referenceEntriesRef } from "@/state/user_view";
@@ -495,7 +495,7 @@ export default class FormControl extends Vue {
   @Prop({ type: String, required: true }) scope!: string; // this.scope
   @Prop({ type: Number, required: true }) level!: number; // this.level
   @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
-  @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
+  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
 
   private actions: Action[] = [];
   private codeEditorKey = 0;
