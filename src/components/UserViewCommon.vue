@@ -57,7 +57,7 @@ import { mapMaybe, saveToFile, tryDicts } from "@/utils";
 import { Action } from "@/components/ActionsMenu.vue";
 import { IPanelButton } from "@/components/ButtonsPanel.vue";
 import { ScopeName, UserViewKey, IAddedResult, AddedRowId } from "@/state/staging_changes";
-import { attrToLink } from "@/links";
+import { attrToLink, Link } from "@/links";
 import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
 
 interface IModalReferenceField {
@@ -88,7 +88,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
   @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName; fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; value: any }) => Promise<void>;
 
   modalView: IQuery | null = null;
-  openQRCodeScanner = false;
+  openQRCodeScanner: Link | null = null;
 
 
 
@@ -259,6 +259,28 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       });
     }
 
+    const qrcodeActions = this.uv.attributes["qrcode_actions"];
+    if (Array.isArray(qrcodeActions)) {
+      const opts: IAttrToQueryOpts = {};
+      const home = homeSchema(this.uv.args);
+      if (home !== null) {
+        opts.homeSchema = home;
+      }
+      qrcodeActions.forEach((action: any) => {
+        if (typeof action.name !== "string") {
+          return;
+        }
+        const link = attrToLink(action, opts);
+        if (link === null) {
+          return;
+        }
+        actions.push({
+          name: action.name,
+          callback: () => this.qrCodeCallback(link) 
+        });
+      });
+    }
+    
     if (this.createView !== null) {
       actions.push({ name: this.$t("create").toString(), link: this.createView });
     }
@@ -275,10 +297,6 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
     // FIXME: workaround until we have proper role-based permissions for this.
     if (this.uv.attributes["export_to_csv"] || "__export_to_csv" in this.$route.query) {
       actions.push({name: this.$t("export_to_csv").toString(), callback: () => this.exportToCsv()});
-    }
-
-    if (this.uv.attributes["scan_qrcode"]) {
-      actions.push({name: this.$t("scan_qrcode").toString(), callback: () => this.openQRCodeScanner = !this.openQRCodeScanner});
     }
 
     return actions;
@@ -352,6 +370,12 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       solid: true,
       noAutoHide: true
     })
+  }
+
+  private qrCodeCallback(link: Link | null) {
+    if (link !== null) {
+      this.openQRCodeScanner = link
+    }
   }
 }
 </script>

@@ -478,7 +478,7 @@ const inlineTypes = ["markdown", "codeeditor", "textarea", "reference"];
 
     SearchPanel: () => import("@/components/SearchPanel.vue"),
     NestedUserView: () => import("@/components/NestedUserView.vue"),
-    QRCode: () => import("@/components/qrcode/qrcode.vue"),
+    QRCode: () => import("@/components/qrcode/QRCode.vue"),
   },
 })
 export default class FormControl extends Vue {

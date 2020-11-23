@@ -67,10 +67,11 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import { IEntriesRef } from "@/state/user_view";
+import { Link } from "@/links";
 
 @Component
 export default class QRCodeScanner extends mixins(BaseEntriesView) {
-  @Prop({ type: Boolean, default: false }) openScanner!: boolean;
+  @Prop({ type: Object, default: false }) openScanner!: Link;
   @Prop({ type: Boolean, default: false }) closeAfterScan!: boolean;
   @Prop({ type: Boolean, default: false }) multiScan!: boolean;
 
