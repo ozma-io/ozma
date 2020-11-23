@@ -851,7 +851,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.removeCellEditing();
     });
 
-+   this.$root.$on("cell-click", () => {
+    this.$root.$on("cell-click", () => {
       this.local.extra.selectedValues.keys().forEach(key => {
         this.local.selectCell(key, false);
       });

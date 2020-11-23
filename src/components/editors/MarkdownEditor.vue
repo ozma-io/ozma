@@ -11,18 +11,18 @@
 <template>
   <viewer 
     v-if="readOnly" 
-    :initialValue="content" 
+    :initial-value="content" 
     :height="`${height}px`" 
   />
   <editor
     v-else
     :key="key"
     ref="editor"
-    :initialValue="content"
-    :initialEditType= "editType"  
+    :initial-value="content"
+    :initial-edit-type="editType"  
     :options="editorOptions"
     :height="`${height}px`"
-    previewStyle="tab"
+    preview-style="tab"
     @change="onChange"
   />
 </template>

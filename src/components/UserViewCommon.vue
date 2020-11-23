@@ -28,8 +28,8 @@
     />
     <QRCodeScanner 
       :open-scanner="openQRCodeScanner"
+      :multi-scan="true"
       @select="selectFromQRScanner($event)"
-      :multiScan="true"
     />
   </span>
 </template>

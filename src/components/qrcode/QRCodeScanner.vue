@@ -20,7 +20,7 @@
 </i18n>
 <template>
   <b-modal 
-    id='qrcode-scanner-modal'
+    id="qrcode-scanner-modal"
     v-model="modalShow"
     hide-footer 
     :title="$t('qrcode_scanner')" 
@@ -46,7 +46,7 @@
           v-for="value in result"
           :key="value"
         > 
-          {{value[3]}}
+          {{ value[3] }}
         </li>
       </ol>
       <div v-if="multiScan">

@@ -52,7 +52,7 @@
             v-if="isTree"
             :style="{'margin-left': treeLevel*35+'px'}"
             class="hidden-arrow-space"
-          ></span>
+          />
           <span>{{ localValue.valueText || "" }}</span>
         </div>
       </template>

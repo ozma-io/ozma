@@ -62,9 +62,9 @@
       qr_code_2
     </span>
     <QRCodeScanner
-      :closeAfterScan="true"
-      @update:scanResult="updateInputCellEdit"
+      :close-after-scan="true"
       :open-scanner="openQRCodeScanner"
+      @update:scanResult="updateInputCellEdit"
     />
   </fragment>
 </template>

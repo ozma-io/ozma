@@ -1,7 +1,7 @@
 <template>
   <div>
-    <qrcode :value="content" :options="{ width: height }"></qrcode>
-    <span><b>{{content}}</b></span>
+    <qrcode :value="content" :options="{ width: height }" />
+    <span><b>{{ content }}</b></span>
   </div>
 </template>
 

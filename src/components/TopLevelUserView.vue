@@ -80,7 +80,7 @@
           :filter-string="query.root.search"
           @update:filterString="replaceRootSearch($event)"
         />
-        <ButtonsPanel :buttons="panelButtons"/>
+        <ButtonsPanel :buttons="panelButtons" />
       </div>
       <div
         class="userview-div"
