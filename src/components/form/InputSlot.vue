@@ -46,14 +46,15 @@
     <b-col
       v-if="label"
       :cols="inline ? 4 : 12"
-      class="input_label__container"
     >
-      <label
-        v-if="label"
-        :class="['input_label', { 'input_label__focused': focused }]"
-        :for="inputName"
-        :title="label"
-      >{{ label }}</label>
+      <div class="input_label__container">
+        <label
+          v-if="label"
+          :class="['input_label', { 'input_label__focused': focused }]"
+          :for="inputName"
+          :title="label"
+        >{{ label }}</label>
+      </div>
     </b-col>
     <b-col
       :cols="(!!label && inline) ? 8 : 12"
@@ -139,7 +140,7 @@ export default class InputSlot extends Vue {
 
 <style lang="scss" scoped>
   .input_slot {
-    padding: 0 15px;
+    /* padding: 0 15px; */
   }
 
   .input_slot__row {
