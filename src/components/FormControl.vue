@@ -511,6 +511,7 @@ export default class FormControl extends Vue {
     return this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable;
   }
 
+  // Current value, can be a raw value (e.g., a string for a `datetime` value) or a validated value.
   get currentValue() {
     return currentValue(this.value);
   }
@@ -528,6 +529,11 @@ export default class FormControl extends Vue {
     return this.locked || this.value.info === undefined || this.value.info.field === null;
   }
 
+  // FIXME: move to `textValue` instead. We could add an optional object
+  //        argument to `valueToText` instead, which specifies a format
+  //        string for `date` and `datetime`. If so, we should probably do the
+  //        same for `valueFromRaw` and pass this "options" object all the way
+  //        from `update:value` event.
   get calendarValue() {
     if (this.type.type === "datetime" && this.currentValue) {
       if (typeof this.currentValue === 'string') return this.currentValue;
@@ -536,6 +542,7 @@ export default class FormControl extends Vue {
     return this.textValue;
   }
 
+  // Textual representation of `currentValue`.
   get textValue() {
     return valueToText(this.type, this.currentValue);
   }
