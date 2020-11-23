@@ -115,7 +115,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       const row = this.uv.newRows[rowId];
       row.values.forEach((cell, colI) => {
         const info = this.uv.info.columns[colI];
-        data +- csvCell(valueToPunnedText(info.valueType, cell));
+        data += csvCell(valueToPunnedText(info.valueType, cell));
       });
       data += "\n";
     });
