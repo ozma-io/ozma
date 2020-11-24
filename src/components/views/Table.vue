@@ -224,7 +224,7 @@ import * as moment from "moment";
 
 import { deepEquals, isFirefox, isIOS, mapMaybe, nextRender, nextRenderOneJump, ObjectSet, tryDicts, ReferenceName } from "@/utils";
 import { valueIsNull } from "@/values";
-import { IResultColumnInfo } from "@/api";
+import { IResultColumnInfo, ValueType } from "@/api";
 import {
   CombinedUserView,
   currentValue,
@@ -370,35 +370,30 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     const valueText = valueToPunnedText(columnInfo.valueType, value);
 
     const style: Record<string, any> = {};
-    let touchedStyle = false;
 
     const cellColor = getCellAttr("cell_color");
     if (cellColor !== undefined && cellColor !== null) {
       style["background-color"] = String(cellColor);
-      touchedStyle = true;
     }
 
-    const textAlignRightTypes = ['int', 'decimal']; 
-    if(textAlignRightTypes.includes(columnInfo.valueType.type)) {
-      style["text-align"] = 'right';
-      touchedStyle = true;
+    const textAlignRightTypes: (ValueType["type"])[] = ["int", "decimal"];
+    const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType
+    if(textAlignRightTypes.includes(punOrValue.type)) {
+      style["text-align"] = "right";
     }
 
     const textAlignAttr = getCellAttr("text_align");
     if (textAlignAttr !== undefined) {
       style["text-align"] = String(textAlignAttr);
-      touchedStyle = true;
     }
 
     if (localRow.extra.height !== undefined) {
       style["height"] = `${localRow.extra.height}px`;
-      touchedStyle = true;
     }
 
     const fixedPosition = this.extra.fixedColumnPositions[columnIndex];
     if (fixedPosition !== undefined) {
       style["left"] = fixedPosition;
-      touchedStyle = true;
     }
 
     const selected = oldLocal !== null ? oldLocal.selected && !deleted : false;
@@ -406,9 +401,8 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     const extra: ITableValueExtra = {
       selected,
       valueText,
-
     };
-    if (touchedStyle) {
+    if (!R.isEmpty(style)) {
       extra.style = style;
     }
     return extra;
