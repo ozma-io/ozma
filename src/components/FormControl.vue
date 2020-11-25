@@ -578,10 +578,10 @@ export default class FormControl extends Vue {
 
   get textAlign() {
     if ("text_align" in this.attributes)
-      return  String(this.attributes["text_align"]);
+      return String(this.attributes["text_align"]);
 
-    if (this.inputType.name == 'text' && this.inputType.type == 'number')
-      return 'right';
+    if (this.inputType.name === "text" && this.inputType.type === "number")
+      return "right";
   }
 
   get cellColor() {
