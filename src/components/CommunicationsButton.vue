@@ -116,7 +116,7 @@ export default class CommunicationsButton extends Vue {
   } 
 
   private get hasLinks(): boolean {
-    return Object.keys(this.links).filter(link => this.links[link] != undefined).length > 0;
+    return Object.keys(this.links).filter(link => this.links[link] !== undefined).length > 0;
   }
 
   private onClick() {

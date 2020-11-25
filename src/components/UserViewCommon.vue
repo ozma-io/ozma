@@ -119,7 +119,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       });
       data += "\n";
     });
-    if (this.uv.rows != null) {
+    if (this.uv.rows !== null) {
       this.uv.rows.forEach(row => {
         row.values.forEach((cell, colI) => {
           const info = this.uv.info.columns[colI];
@@ -257,7 +257,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       actions.push({ name: this.$t("create_in_modal").toString(), callback: () => this.modalView = modalReferenceField.uv });
     }
 
-    if (this.uv.info.mainEntity != null) {
+    if (this.uv.info.mainEntity !== null) {
       actions.push({ name: this.$t("import_from_csv").toString(), uploadFile: (file) => this.importFromCsv(file) });
     }
 

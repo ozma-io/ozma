@@ -443,9 +443,9 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       const rows = this?.uv?.rows ?? null;
       if (parent > 0 && rows !== null) {
         const parentIndex = rows.findIndex(row => {
-          if (row.entityIds == undefined || Object.keys(row.entityIds)[0] == undefined)
+          if (row.entityIds === undefined || Object.keys(row.entityIds)[0] === undefined)
             return -1;
-          return row.entityIds[Object.keys(row.entityIds)[0]].id == parent;
+          return row.entityIds[Object.keys(row.entityIds)[0]].id === parent;
         });
         if (parentIndex > -1) {
           localRow.extra.parent = parentIndex;
@@ -887,7 +887,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], newWords));
     }
 
-    if (this.filter.length == 0) {
+    if (this.filter.length === 0) {
       this.buildRowPositions();
       this.initRowsState();      
     } else {
@@ -936,7 +936,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     //Save state.
     if( this.local.rows[children[0]] !== undefined) {
       const parent = this.local.rows[children[0]].extra.parent;
-      if(parent == undefined)
+      if(parent === undefined)
         return;
       const extra = this.local.rows[parent].extra;
       if (visible) {
@@ -994,7 +994,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       // Load visible data from rowsState to rows.
       for (const key in this.rowsState) {
         const id = this?.local?.rows[key]?.extra?.selectionEntry?.id ?? undefined;
-        if (id !== undefined && id == this.rowsState[key].selectionEntry.id) {
+        if (id !== undefined && id === this.rowsState[key].selectionEntry.id) {
           this.local.rows[key].extra.arrowDown = true;
           // nextRenderOneJump need for correct render rows after update. But be cearful with Chrome!
           // https://stackoverflow.com/questions/44145740/how-does-double-requestanimationframe-work 

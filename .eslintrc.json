@@ -22,6 +22,7 @@
   ],
   "rules": {
     "indent": "off",
+    "eqeqeq": ["error", "always"],
     "space-before-blocks": "error",
     "object-curly-spacing": ["warn", "always"],
     "vue/custom-event-name-casing": "warn",
