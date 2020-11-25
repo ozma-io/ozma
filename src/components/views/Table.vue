@@ -448,9 +448,15 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       const parent = getCellAttr("tree_branches") && value.value ? value.value : 0;
       const rows = this?.uv?.rows ?? null;
       if (parent > 0 && rows !== null) {
-        const parentIndex = rows.findIndex(row => row.mainId == parent);
-        localRow.extra.parent = parentIndex;
-        localRow.extra.visible = false;
+        const parentIndex = rows.findIndex(row => {
+          if (row.entityIds == undefined || Object.keys(row.entityIds)[0] == undefined)
+            return -1;
+          return row.entityIds[Object.keys(row.entityIds)[0]].id == parent;
+        });
+        if (parentIndex > -1) {
+          localRow.extra.parent = parentIndex;
+          localRow.extra.visible = false;
+        }
       }
     }
 
@@ -979,11 +985,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   
   private initRowsState() {
     this.local.rows.forEach((row, rowI) => {
-      if (row.extra.parent !== undefined && !this.local.rows[row.extra.parent].extra.children.includes(rowI)) {
+      if (row.extra.parent !== undefined &&  this.local.rows[row.extra.parent] !== undefined &&!this.local.rows[row.extra.parent].extra.children.includes(rowI)) {
         this.local.rows[row.extra.parent].extra.children.push(rowI);
         let level = 1;
         let parent = this.local.rows[row.extra.parent].extra.parent;
-        while (parent !== undefined && level < 100) {
+        while (parent !== undefined && this.local.rows[parent] !== undefined && level < 100) {
           parent = this.local.rows[parent].extra.parent;
           level++;
         }
