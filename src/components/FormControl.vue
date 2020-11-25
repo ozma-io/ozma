@@ -111,7 +111,7 @@
           :required="!isNullable"
           @update:content="updateValue"
         />
-        <QRCode 
+        <QRCode
           v-else-if="inputType.name === 'qrcode'"
           ref="control"
           :height="customHeight"
@@ -221,7 +221,7 @@
           @input="updateValue($event.target.value)"
           @focus="iSlot.onFocus"
         >
-        <QRCode 
+        <QRCode
           v-else-if="inputType.name === 'qrcode'"
           ref="control"
           :height="customHeight"
@@ -474,7 +474,7 @@ const inlineTypes = ["markdown", "codeeditor", "textarea", "reference"];
        SearchPanel needs to be moved to NestedUserView when ActionsMenu and
        other components will free the FormControl.
        FormControl needs to be cleaned into small components.
-    */    
+    */
 
     SearchPanel: () => import("@/components/SearchPanel.vue"),
     NestedUserView: () => import("@/components/NestedUserView.vue"),

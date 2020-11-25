@@ -1,7 +1,7 @@
 <template>
   <!-- <draggable tag="v-layout" v-model="columns" group="column"> -->
-  <div 
-    v-dragscroll.x="!isMobile" 
+  <div
+    v-dragscroll.x="!isMobile"
     class="board_container"
   >
     <Column
@@ -57,7 +57,7 @@ export default class Board extends Vue {
 }
 </script>
 
-<style scoped lang="css">  
+<style scoped lang="css">
   .board_container {
     width: 100%;
     height: 100%;

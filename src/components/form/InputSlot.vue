@@ -97,7 +97,7 @@ export default class InputSlot extends Vue {
   private focused = false;
   private isModalOpen = false;
 
-  private mounted() { 
+  private mounted() {
     if (this.autoOpen && this.isMobile) {
       this.isModalOpen = true;
     }

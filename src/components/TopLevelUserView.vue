@@ -109,9 +109,9 @@
       <div class="count-row">
         {{ statusLine }}
       </div>
-      <i 
-        v-if="errors.length > 0" 
-        class="material-icons" 
+      <i
+        v-if="errors.length > 0"
+        class="material-icons"
         :style="{cursor: 'pointer', color: 'red'}"
         @click="makeErrorToast"
       >
@@ -240,7 +240,7 @@ export default class TopLevelUserView extends Vue {
         title: this.$t("error").toString(),
         variant: 'danger',
         solid: true
-      })  
+      })
     })
   }
 

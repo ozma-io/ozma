@@ -26,7 +26,7 @@
       @select="selectFromUserView($event)"
       @close="modalView = null"
     />
-    <QRCodeScanner 
+    <QRCodeScanner
       :open-scanner="openQRCodeScanner"
       :multi-scan="true"
       @select="selectFromQRScanner($event)"
@@ -128,7 +128,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
         data += "\n";
       });
     }
-    
+
     saveToFile(`${this.uv.name}.csv`, "text/csv", data);
   }
 
@@ -178,9 +178,9 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
   }
 
   get panelButtons() {
-    const buttons: IPanelButton[] = []; 
+    const buttons: IPanelButton[] = [];
     const panelButtons = this.uv.attributes["panel_buttons"];
-    
+
     if (Array.isArray(panelButtons)) {
       panelButtons.forEach((button: any) => {
 
@@ -212,8 +212,8 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
           actions
         });
       })
-    }    
-    
+    }
+
     return buttons;
   }
 

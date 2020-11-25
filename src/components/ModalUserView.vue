@@ -113,7 +113,7 @@ export default class ModalUserView extends Vue {
 }
 </script>
 
-<style>  
+<style>
   .selection_view_save__container {
     width: 100%;
     display: flex;

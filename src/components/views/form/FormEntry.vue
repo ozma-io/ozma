@@ -95,7 +95,7 @@ export default class FormEntry extends Vue {
 }
 </script>
 
-<style scoped>  
+<style scoped>
   .form-entry {
     border-bottom: 0;
     border-top: 0;

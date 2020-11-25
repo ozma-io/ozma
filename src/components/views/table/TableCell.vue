@@ -39,9 +39,9 @@
           disabled
         />
         <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && localValue.valueText.length > 0}]">
-          <span 
+          <span
             :style="{'margin-left': treeLevel*25+'px'}"
-            :class="['display-arrow material-icons', {'click-stop': arrowClickStop}, {'down': isArrowDown}]" 
+            :class="['display-arrow material-icons', {'click-stop': arrowClickStop}, {'down': isArrowDown}]"
             @click="toggleChildren"
             @dblclick.stop
           >
@@ -119,7 +119,7 @@ export default class TableCell extends Vue {
     // This pause need for block double click by arrow.
     setTimeout(()=>{this.arrowClickStop=false}, 1000);
   }
-  
+
   get iconValue() {
     return iconValue(this.localValue.link.target);
   }

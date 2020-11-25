@@ -22,7 +22,7 @@
             {{ entriesOrError }}
           </span>
         </b-col>
-        <MenuEntry 
+        <MenuEntry
           v-for="(entry, index) in entriesOrError"
           v-else
           :key="index"
@@ -94,7 +94,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
         base.size = size;
       }
     }
-    
+
     if ("content" in entry) {
       if (!(entry.content instanceof Array)) {
         return null;

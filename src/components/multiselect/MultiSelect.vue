@@ -94,13 +94,13 @@
           </div>
         </slot>
       </div>
-      <div 
+      <div
         class="select_container__options_container"
         :style="{
           top: optionsContainerCoords.top ?`${optionsContainerCoords.top}px` : 'auto',
           bottom: optionsContainerCoords.bottom ? `${optionsContainerCoords.bottom}px` : 'auto'
         }"
-      >        
+      >
         <input
           v-if="isOpen && isNeedFilter && isTopFilter"
           ref="controlInput"
@@ -150,7 +150,7 @@
             />
           </div>
         </slot>
-        
+
         <input
           v-if="isOpen && isNeedFilter && !isTopFilter"
           ref="controlInput"
@@ -232,7 +232,7 @@ export default class MultiSelect extends Vue {
     if (this.selectedOptions.length < 3 && this.single)
       this.isNeedFilter = false;
 
-    //nextRender need for set coordinates selectedContainer after load cell data. 
+    //nextRender need for set coordinates selectedContainer after load cell data.
     nextRender().then(() => {
       const bodyRect = document.body.getBoundingClientRect();
       const selectContainerElement = this.$refs.selectContainer as HTMLInputElement;
@@ -243,7 +243,7 @@ export default class MultiSelect extends Vue {
         if (selectContainerRect.top > (bodyRect.bottom - selectContainerRect.bottom)) {
           this.isTopFilter = !this.isTopFilter;
           this.optionsContainerCoords.bottom = selectContainerRect.height;
-          // It is need for set focus to search input if options opened. 
+          // It is need for set focus to search input if options opened.
           if(this.isOpen)
             this.setIsOpen(true);
         } else {

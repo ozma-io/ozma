@@ -126,7 +126,7 @@ export default class CustomSelect extends Vue {
 }
 </script>
 
-<style>  
+<style>
   .user_bar__container_single {
     height: 40px;
   }

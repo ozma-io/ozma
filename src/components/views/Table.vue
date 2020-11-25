@@ -83,7 +83,7 @@
               class="fixed-column checkbox-cells table-th"
               @click="selectAllRows"
             >
-              <checkbox :checked="baseLocal.selectedAll" /> 
+              <checkbox :checked="baseLocal.selectedAll" />
             </th>
             <th
               v-if="local.extra.hasRowLinks"
@@ -205,7 +205,7 @@
       </table>
       <input
         v-if="baseLocal.extra.rowCount < 30 && local.emptyRow !== null"
-        type="button" 
+        type="button"
         :value="this.$t('add').toString()"
         class="button"
         @click="setShowEmptyRow(true)"
@@ -749,7 +749,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     x: 0,
     y: 0,
   };
-  private editParams: IEditParams = {    
+  private editParams: IEditParams = {
     height: 0,
     width: 0,
     minHeight: 0
@@ -889,7 +889,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
     if (this.filter.length === 0) {
       this.buildRowPositions();
-      this.initRowsState();      
+      this.initRowsState();
     } else {
       if (this.isTree)
         this.offTree();
@@ -942,7 +942,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       if (visible) {
         this.rowsState[parent] = extra;
       } else {
-        delete this.rowsState[parent]; 
+        delete this.rowsState[parent];
         this.local.rows[parent].extra.arrowDown = false;
       }
     }
@@ -957,7 +957,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         const childPosition = this.rowPositions.indexOf(child);
         this.rowPositions.splice(childPosition, 1);
       }
-      
+
       this.local.rows[child].extra.visible = visible;
     })
 
@@ -976,7 +976,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         this.rowPositions.splice(this.rowPositions.indexOf(parent) + 1, 0, children[i]);
       }
   }
-  
+
   private initRowsState() {
     this.local.rows.forEach((row, rowI) => {
       if (row.extra.parent !== undefined &&  this.local.rows[row.extra.parent] !== undefined &&!this.local.rows[row.extra.parent].extra.children.includes(rowI)) {
@@ -997,7 +997,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         if (id !== undefined && id === this.rowsState[key].selectionEntry.id) {
           this.local.rows[key].extra.arrowDown = true;
           // nextRenderOneJump need for correct render rows after update. But be cearful with Chrome!
-          // https://stackoverflow.com/questions/44145740/how-does-double-requestanimationframe-work 
+          // https://stackoverflow.com/questions/44145740/how-does-double-requestanimationframe-work
           nextRenderOneJump().then(() => {
             this.visibleChildren(this.local.rows[key].extra.children, true);
           });
@@ -1046,7 +1046,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (this.editing === null) {
       return;
     }
-  
+
     if ('loss_of_focus_save' in this.uv.attributes && Boolean(this.uv.attributes['loss_of_focus_save']))
       this.submitChanges({ scope: this.scope });
 
@@ -1084,11 +1084,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
     this.editCoords.x = rect.x;
 
-    // If edit window lower than screen, raise the window up. 
+    // If edit window lower than screen, raise the window up.
     // +54px for bottom panel.
     if (0 > bodyRect.bottom - rect.bottom - 54) {
       this.editCoords.y = bodyRect.bottom - this.editParams.height - 54;
-      this.editParams.height += 54; 
+      this.editParams.height += 54;
     } else {
       this.editCoords.y = rect.y;
     }
@@ -1116,7 +1116,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
     this.cellEditHandler(ref, event.target);
   }
-  
+
   private cellEditByTarget(ref: ValueRef, target: HTMLElement) {
     this.removeCellEditing();
     this.setCellEditing(ref);
@@ -1151,7 +1151,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       }
     }
 
-    
+
   }
 
   private selectCell(ref: ValueRef) {

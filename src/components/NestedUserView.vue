@@ -39,5 +39,5 @@ export default class NestedUserView extends Vue {
   }
 
 }
-  
+
 </script>

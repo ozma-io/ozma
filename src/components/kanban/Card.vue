@@ -120,7 +120,7 @@ export class Card extends Vue {
 export default Card;
 </script>
 
-<style scoped>  
+<style scoped>
   .card_container {
     cursor: grab;
     border: 1px solid var(--MainBorderColor);
