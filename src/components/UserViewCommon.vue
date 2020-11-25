@@ -35,6 +35,7 @@
     <QRCodeScanner 
       :open-scanner="openQRCodeScanner"
       :multi-scan="true"
+      :link="currentQRCodeLink"
       @select="selectFromQRScanner($event)"
     />
   </span>
@@ -88,8 +89,8 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
   @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName; fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; value: any }) => Promise<void>;
 
   modalView: IQuery | null = null;
-  openQRCodeScanner: Link | null = null;
-
+  openQRCodeScanner = false;
+  currentQRCodeLink: Link | null = null;
 
 
   get createView() {
@@ -354,7 +355,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       if (this.qrCodeReferenceField == null) {
         this.makeToast(this.$t('qrcode_error_not_attr').toString());
       } else {
-        if(this.qrCodeReferenceField.entity.schema == r.s && this.qrCodeReferenceField.entity.name == r.n) {
+        if (this.qrCodeReferenceField.entity.schema == r.s && this.qrCodeReferenceField.entity.name == r.n) {
           this.updateValue(this.qrCodeReferenceField.field, r.i);
         } else {
           this.makeToast(this.$t('qrcode_error_not_ref').toString() + `{schema: ${r.s}, name: ${r.n}}`);
@@ -374,7 +375,12 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
   private qrCodeCallback(link: Link | null) {
     if (link !== null) {
-      this.openQRCodeScanner = link
+      this.currentQRCodeLink = link;
+      if ("query" in this.currentQRCodeLink ) {
+        this.currentQRCodeLink.query.args.args = {id: 407};
+      }
+      console.log(this.currentQRCodeLink);
+      this.openQRCodeScanner = !this.openQRCodeScanner;
     }
   }
 }

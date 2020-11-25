@@ -71,9 +71,10 @@ import { Link } from "@/links";
 
 @Component
 export default class QRCodeScanner extends mixins(BaseEntriesView) {
-  @Prop({ type: Object, default: false }) openScanner!: Link;
+  @Prop({ type: Boolean, default: false }) openScanner!: boolean;
   @Prop({ type: Boolean, default: false }) closeAfterScan!: boolean;
   @Prop({ type: Boolean, default: false }) multiScan!: boolean;
+  @Prop({ type: Object, default: null }) link!: Link;
 
   modalShow = false;
   camera ='auto';
@@ -181,6 +182,9 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
       if (this.entry !== null) {
         this.currentContent.v = this.entries[Number(this.currentContent.i)]; 
         this.result.push(this.currentContent);
+        if (this.link !== null) {
+          this.linkHandler();
+        }
       } else {
         this.entry = {entity: {name: this.currentContent.n, schema: this.currentContent.s}};
       }
@@ -189,11 +193,15 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
 
   @Watch('currentEntries')
   private changeCurrentEntries() {
-    if (this.currentEntries !== null)
+    if (this.currentEntries !== null) {
       Object.entries(this.currentEntries).forEach(([id, name]) => {this.entries[id] = name});
+    }
     this.changeCurrentContent();
   }
 
+  private linkHandler() {
+    console.log(this.link, this.currentContent);
+  }
 }
 </script> 
 
