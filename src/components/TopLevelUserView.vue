@@ -84,7 +84,7 @@
             <ActionsMenu
               v-if="!isMainView"
               :actions="extraActions"
-              menuAlign="right"
+              menu-align="right"
               @goto="pushRoot"
             />
           </template>
