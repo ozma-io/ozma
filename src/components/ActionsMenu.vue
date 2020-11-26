@@ -149,8 +149,8 @@ export default class ActionsMenu extends Vue {
    * @return {String}
    */
   get titleIcon() {
-    if (this.icon == "") {
-      return this.menuAlign == "left" ? "menu" : "more_vert";
+    if (this.icon === "") {
+      return this.menuAlign === "left" ? "menu" : "more_vert";
     }
     return this.icon;
   }
