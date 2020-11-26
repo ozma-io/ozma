@@ -119,7 +119,7 @@ export default class Calendar extends Vue {
   private position = false;
 
   private get isEmpty(): boolean {
-    return this.value == null;
+    return this.value === undefined || this.value === null;
   }
 
   private mounted() {
