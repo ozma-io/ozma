@@ -3,6 +3,10 @@
     :width="modalWidth"
     :height="modalHeight"
     :name="uid"
+    :classes="[
+      'v--modal',
+      { 'is-mobile': isMobile }
+    ]"
     @before-close="beforeClose"
     @opened="$emit('opened')"
   >
@@ -16,7 +20,10 @@
     </template>
     <div
       v-if="hasTabs"
-      class="modal__tab_headers"
+      :class="[
+        'modal__tab_headers',
+        { 'is-mobile': isMobile },
+      ]"
     >
       <ModalTabHeader
         v-for="(tab, index) in modalTabs"
@@ -31,26 +38,47 @@
           <ModalContent :nodes="tab.actionsMenu" />
         </template>
         <template v-if="tab.actionsRight" #actions-right>
-          <ModalContent :nodes="tab.actionsRight" />
+          <fragment>
+            <ModalContent :nodes="tab.actionsRight" />
+            <i v-if="isMobile"
+               class="material-icons mobile_close_button"
+               @click="$emit('close')"
+            >close</i>
+          </fragment>
         </template>
       </ModalTabHeader>
     </div>
     <div
       v-if="hasTabs"
-      class="modal__content"
+      :class="[
+        'modal__content',
+        {
+          'modal__content__fullscreen': fullscreen,
+          'is-mobile': isMobile,
+        }
+      ]"
     >
       <div
         v-for="(tab, index) in modalTabs"
         v-show="index === selectedTab"
         :key="index"
-        class="modal__tab-content"
+        :class="[
+          modal__tab-content,
+          { 'is-mobile': isMobile },
+        ]"
       >
         <ModalContent :nodes="tab.content" />
       </div>
     </div>
     <div
       v-if="!hasTabs"
-      :class="['modal__content', {'modal__content__fullscreen': fullscreen }]"
+      :class="[
+        'modal__content',
+        {
+          'modal__content__fullscreen': fullscreen,
+          'is-mobile': isMobile,
+        }
+      ]"
     >
       <slot name="content" />
     </div>
@@ -127,33 +155,36 @@ export default class Modal extends Vue {
   }
 
   private get modalWidth(): string {
-    if (this.fullscreen || isMobile) {
-      return "100%";
-    }
-    return this.width;
+    return (this.fullscreen || isMobile)
+      ? "100%"
+      : this.width;
   }
 
   private get modalHeight(): string {
-    if (this.fullscreen) {
-      return "100%";
-    }
-    if (isMobile) {
-      return "95%";
-    }
-    return this.height;
+    return (this.fullscreen || isMobile)
+      ? "100%"
+      : this.height;
   }
 
   private get currentTabContent(): Vue | string {
     return R.pathOr("No Content", [this.selectedTab, "content"], this.modalTabs);
   }
+
+  private get isMobile(): boolean {
+    return isMobile;
+  }
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   .modal__tab_headers {
     display: flex;
     flex-direction: row;
     padding: 5px 10px 0 10px;
+
+    &.is-mobile {
+      padding: 0;
+    }
   }
 
   .modal__close_button {
@@ -171,6 +202,11 @@ export default class Modal extends Vue {
     overflow: auto;
     height: 80vh;
     border-top: 1px solid var(--MainBorderColor);
+
+    &.is-mobile {
+      height: auto;
+      padding: 0;
+    }
   }
 
   .modal__content >>> .view-form {
@@ -194,9 +230,13 @@ export default class Modal extends Vue {
     cursor: pointer;
     float: right;
   }
+
+  .mobile_close_button {
+    margin-left: 15px;
+  }
 </style>
 
-<style>
+<style lang="scss">
   /* styles for vue-js-modal.
     It's their naming so don't touch this
     if you refactor styles */
@@ -208,6 +248,10 @@ export default class Modal extends Vue {
     display: flex;
     flex-flow: column nowrap;
     flex-grow: 1;
+
+    &.is-mobile {
+      border: none;
+    }
   }
 
   @media screen and (max-width: 768px) {
@@ -223,6 +267,10 @@ export default class Modal extends Vue {
 
   .modal__tab-content {
     height: calc(100% - 45px);
+
+    &.is-mobile {
+      height: 100%;
+    }
   }
 </style>
 
