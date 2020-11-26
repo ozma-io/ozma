@@ -70,7 +70,6 @@
           home
         </router-link>
         <ActionsMenu
-          title="view_headline"
           :actions="actions"
           @goto="pushRoot"
         />
@@ -80,7 +79,16 @@
           :filter-string="query.root.search"
           @update:filterString="replaceRootSearch($event)"
         />
-        <ButtonsPanel :buttons="panelButtons"/>
+        <ButtonsPanel :buttons="panelButtons">
+          <template #actions-menu>
+            <ActionsMenu
+              v-if="!isMainView"
+              :actions="extraActions"
+              menuAlign="right"
+              @goto="pushRoot"
+            />
+          </template>
+        </ButtonsPanel>
       </div>
       <div
         class="userview-div"
@@ -270,7 +278,9 @@ export default class TopLevelUserView extends Vue {
 
   get actions() {
     const actions: Action[] = [];
-    actions.push(...this.extraActions);
+    if (this.isMainView) {
+      actions.push(...this.extraActions);
+    }
     if (this.currentAuth !== null) {
       if (Api.developmentMode) {
         actions.push({name: this.$t("authed_link").toString(), order: 1000, callback: () => {
