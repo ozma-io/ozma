@@ -40,9 +40,10 @@
         <template v-if="tab.actionsRight" #actions-right>
           <fragment>
             <ModalContent :nodes="tab.actionsRight" />
-            <i v-if="isMobile"
-               class="material-icons mobile_close_button"
-               @click="$emit('close')"
+            <i
+              v-if="isMobile"
+              class="material-icons mobile_close_button"
+              @click="$emit('close')"
             >close</i>
           </fragment>
         </template>
