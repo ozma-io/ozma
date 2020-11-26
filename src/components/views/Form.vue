@@ -270,7 +270,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
     const viewAttrs = this.uv.attributes;
     const blocks: IGridSection[] =
       (this.blockSizes ?? [12]).map(size => ({ type: "section", size, content: [] }));
-    // If 'block_sizes' attribute doesn't set or invalid,
+    // If 'block_sizes' attribute doesn't used or invalid,
     // then two-column layout used.
     const inputWidth = this.blockSizes === null ? 6 : 12;
 
@@ -287,8 +287,6 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
       const blockAttr = Number(getColumnAttr("form_block"));
       const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr;
       const block = Math.max(0, Math.min(blockNumber, blocks.length - 1));
-
-      // const formElementAttr = String(getColumnAttr("form_element"));
 
       const caption = String(getColumnAttr("caption") ?? columnInfo.name);
 
