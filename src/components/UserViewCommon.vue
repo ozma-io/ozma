@@ -26,10 +26,10 @@
       @select="selectFromUserView($event)"
       @close="modalView = null"
     />
-    <QRCodeScanner 
+    <QRCodeScanner
       :open-scanner="openQRCodeScanner"
+      :multi-scan="true"
       @select="selectFromQRScanner($event)"
-      :multiScan="true"
     />
   </span>
 </template>
@@ -119,7 +119,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       });
       data += "\n";
     });
-    if (this.uv.rows != null) {
+    if (this.uv.rows !== null) {
       this.uv.rows.forEach(row => {
         row.values.forEach((cell, colI) => {
           const info = this.uv.info.columns[colI];
@@ -128,7 +128,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
         data += "\n";
       });
     }
-    
+
     saveToFile(`${this.uv.name}.csv`, "text/csv", data);
   }
 
@@ -178,9 +178,9 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
   }
 
   get panelButtons() {
-    const buttons: IPanelButton[] = []; 
+    const buttons: IPanelButton[] = [];
     const panelButtons = this.uv.attributes["panel_buttons"];
-    
+
     if (Array.isArray(panelButtons)) {
       panelButtons.forEach((button: any) => {
 
@@ -212,8 +212,8 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
           actions
         });
       })
-    }    
-    
+    }
+
     return buttons;
   }
 
@@ -257,17 +257,17 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       actions.push({ name: this.$t("create_in_modal").toString(), callback: () => this.modalView = modalReferenceField.uv });
     }
 
-    if (this.uv.info.mainEntity != null) {
+    if (this.uv.info.mainEntity !== null) {
       actions.push({ name: this.$t("import_from_csv").toString(), uploadFile: (file) => this.importFromCsv(file) });
     }
 
     // FIXME: workaround until we have proper role-based permissions for this.
     if (this.uv.attributes["export_to_csv"] || "__export_to_csv" in this.$route.query) {
-      actions.push({name: this.$t("export_to_csv").toString(), callback: () => this.exportToCsv()});
+      actions.push({ name: this.$t("export_to_csv").toString(), callback: () => this.exportToCsv() });
     }
 
     if (this.uv.attributes["scan_qrcode"]) {
-      actions.push({name: this.$t("scan_qrcode").toString(), callback: () => this.openQRCodeScanner = !this.openQRCodeScanner});
+      actions.push({ name: this.$t("scan_qrcode").toString(), callback: () => this.openQRCodeScanner = !this.openQRCodeScanner });
     }
 
     return actions;
@@ -307,7 +307,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
   private selectFromQRScanner(result: any[]) {
     result.forEach(r => {
-      this.updateValue({type: "new", column: Number(r[0])}, r[4]);
+      this.updateValue({ type: "new", column: Number(r[0]) }, r[4]);
     })
   }
 }

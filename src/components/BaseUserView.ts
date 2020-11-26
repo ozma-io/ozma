@@ -55,7 +55,7 @@ export class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBas
   }
 
   createCommonLocalRow(row: IRowCommon): IBaseRowExtra {
-    
+
     const extra: IBaseRowExtra = {
       selected: false
     };
@@ -124,7 +124,7 @@ export class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBas
       this.extra.selectedRows = new ObjectSet<RowRef>();
     }
   }
-  
+
   postInitRow(rowIndex: number, row: ICombinedRow, localRow: IBaseLocalRow) {
     this.postInitCommonRow(row, localRow);
     if (row.deleted) {

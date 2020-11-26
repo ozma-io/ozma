@@ -92,11 +92,11 @@ import * as R from "ramda";
 import MultiSelect, { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 
 const users: ISelectOption[] = [
-  { value: "user_a", label: "User A", meta: { img: "https://gensokyo.social/system/media_attachments/files/000/970/409/original/abb19b4f3bff62c0.png"}},
-  { value: "user_b", label: "User B", meta: { img: "https://files.botsin.space/accounts/avatars/000/168/024/original/fe5556fe411f42f4.png"}},
-  { value: "user_c", label: "User C", meta: { img: "https://cdn.mastodon.technology/accounts/avatars/000/107/402/original/f3ee4e42a0dcd88a.png"}},
-  { value: "user_d", label: "User D", meta: { img: "https://pleroma.voidlurker.net/media/72364a5c2141851a4c89478c000f7feb960a9d0e8922ef3efe6e1f7e0dbe76fc.png?name=blob.png"}},
-  { value: "user_f", label: "User F", meta: { img: "https://media.monads.online/monads-online-mastodon/accounts/avatars/000/000/001/original/2NN3S9C2IA81.png"}},
+  { value: "user_a", label: "User A", meta: { img: "https://gensokyo.social/system/media_attachments/files/000/970/409/original/abb19b4f3bff62c0.png" } },
+  { value: "user_b", label: "User B", meta: { img: "https://files.botsin.space/accounts/avatars/000/168/024/original/fe5556fe411f42f4.png" } },
+  { value: "user_c", label: "User C", meta: { img: "https://cdn.mastodon.technology/accounts/avatars/000/107/402/original/f3ee4e42a0dcd88a.png" } },
+  { value: "user_d", label: "User D", meta: { img: "https://pleroma.voidlurker.net/media/72364a5c2141851a4c89478c000f7feb960a9d0e8922ef3efe6e1f7e0dbe76fc.png?name=blob.png" } },
+  { value: "user_f", label: "User F", meta: { img: "https://media.monads.online/monads-online-mastodon/accounts/avatars/000/000/001/original/2NN3S9C2IA81.png" } },
 ];
 
 @Component({
@@ -126,7 +126,7 @@ export default class CustomSelect extends Vue {
 }
 </script>
 
-<style>  
+<style>
   .user_bar__container_single {
     height: 40px;
   }

@@ -108,9 +108,9 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     return undefined;
   }
 
-  // Attribute 
+  // Attribute
   // EXAMPLE @"header_color" = '#fff0f5'
-  // Column header background color. 
+  // Column header background color.
   get columnHeaderColor(): string {
     return "header_color" in this.uv.attributes ? String(this.uv.attributes.header_color) : "none";
   }
@@ -267,7 +267,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
         cardLink = rowLink;
       }
     });
-    
+
     return {
       groupRef,
       groupLabel: punnedValue,

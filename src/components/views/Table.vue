@@ -83,7 +83,7 @@
               class="fixed-column checkbox-cells table-th"
               @click="selectAllRows"
             >
-              <checkbox :checked="baseLocal.selectedAll" /> 
+              <checkbox :checked="baseLocal.selectedAll" />
             </th>
             <th
               v-if="local.extra.hasRowLinks"
@@ -194,8 +194,10 @@
               :column-indexes="columnIndexes"
               :local-uv="local.extra"
               :show-fixed-row="showFixedRow"
+              :is-tree="isTree"
               @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
               @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
+              @update:visibleChildren="visibleChildren(arguments[0], arguments[1])"
               @goto="$emit('goto', $event)"
             />
           </template>
@@ -203,7 +205,7 @@
       </table>
       <input
         v-if="baseLocal.extra.rowCount < 30 && local.emptyRow !== null"
-        type="button" 
+        type="button"
         :value="this.$t('add').toString()"
         class="button"
         @click="setShowEmptyRow(true)"
@@ -213,16 +215,16 @@
 </template>
 
 <script lang="ts">
-import {Component, Vue, Watch} from "vue-property-decorator";
-import {mixins} from "vue-class-component";
-import {namespace} from "vuex-class";
-import {Store} from "vuex";
-import {Moment} from "moment";
+import { Component, Vue, Watch } from "vue-property-decorator";
+import { mixins } from "vue-class-component";
+import { namespace } from "vuex-class";
+import { Store } from "vuex";
+import { Moment } from "moment";
 import * as moment from "moment";
 
-import {deepEquals, isFirefox, isIOS, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName} from "@/utils";
-import {valueIsNull} from "@/values";
-import {IResultColumnInfo} from "@/api";
+import { deepEquals, isFirefox, isIOS, mapMaybe, nextRender, nextRenderOneJump, ObjectSet, tryDicts, ReferenceName } from "@/utils";
+import { valueIsNull } from "@/values";
+import { IResultColumnInfo, ValueType } from "@/api";
 import {
   CombinedUserView,
   currentValue,
@@ -236,9 +238,9 @@ import {
   Entries,
   referenceEntriesRef,
 } from "@/state/user_view";
-import {UserView} from "@/components";
-import {ScopeName, AddedRowId, AutoSaveLock} from "@/state/staging_changes";
-import {attrToQueryRef, attrToQuerySelf, IAttrToQueryOpts, IQuery} from "@/state/query";
+import { UserView } from "@/components";
+import { ScopeName, AddedRowId, AutoSaveLock } from "@/state/staging_changes";
+import { attrToQueryRef, attrToQuerySelf, IAttrToQueryOpts, IQuery } from "@/state/query";
 import {
   equalRowPositionRef,
   ILocalRow,
@@ -248,13 +250,14 @@ import {
   RowRef,
   ValueRef,
 } from "@/local_user_view";
-import BaseUserView, {ISelectionRef} from "@/components/BaseUserView";
-import {Action} from "@/components/ActionsMenu.vue";
+import BaseUserView, { ISelectionRef } from "@/components/BaseUserView";
+import { Action } from "@/components/ActionsMenu.vue";
 import TableRow from "@/components/views/table/TableRow.vue";
 import TableFixedRow from "@/components/views/table/TableFixedRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
-import TableCellEdit, {ICellCoords, IEditParams} from "@/components/views/table/TableCellEdit.vue";
+import TableCellEdit, { ICellCoords, IEditParams } from "@/components/views/table/TableCellEdit.vue";
 import { Link, attrToLinkRef, attrToLinkSelf } from "@/links";
+import * as R from "ramda";
 
 interface ITableEditing {
   lock: AutoSaveLock;
@@ -269,6 +272,7 @@ interface IColumn {
   mobileFixed: boolean;
   columnInfo: IResultColumnInfo;
   width: number; // in px
+  treeBranchesView: boolean;
 }
 
 interface ITableValueExtra {
@@ -281,6 +285,11 @@ interface ITableValueExtra {
 interface ITableRowExtra {
   searchText: string;
   selected: boolean;
+  visible: boolean;
+  parent?: number;
+  level?: number;
+  arrowDown?: boolean;
+  children: number[];
   style?: Record<string, any>;
   height?: number;
   link?: Link;
@@ -330,8 +339,12 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
     const visibleColumnAttr = getColumnAttr("visible");
     const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
 
+    const treeBranchesViewAttr = getColumnAttr("tree_branches_view");
+    const treeBranchesView = treeBranchesViewAttr === undefined ? false : Boolean(treeBranchesViewAttr);
+
     return {
-      caption, style,
+      caption,
+      style,
       visible: visibleColumn,
       fixed: fixedColumn,
       //mobileFixed: fixedField,
@@ -339,6 +352,7 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
       columnInfo,
       attrs: columnAttrs,
       width: columnWidth,
+      treeBranchesView,
     };
   });
 };
@@ -356,35 +370,30 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     const valueText = valueToPunnedText(columnInfo.valueType, value);
 
     const style: Record<string, any> = {};
-    let touchedStyle = false;
 
     const cellColor = getCellAttr("cell_color");
     if (cellColor !== undefined && cellColor !== null) {
       style["background-color"] = String(cellColor);
-      touchedStyle = true;
     }
 
-    const textAlignRightTypes = ['int', 'decimal']; 
-    if(textAlignRightTypes.includes(columnInfo.valueType.type)) {
-      style["text-align"] = 'right';
-      touchedStyle = true;
+    const textAlignRightTypes: (ValueType["type"])[] = ["int", "decimal"];
+    const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType
+    if(textAlignRightTypes.includes(punOrValue.type)) {
+      style["text-align"] = "right";
     }
 
     const textAlignAttr = getCellAttr("text_align");
     if (textAlignAttr !== undefined) {
       style["text-align"] = String(textAlignAttr);
-      touchedStyle = true;
     }
 
     if (localRow.extra.height !== undefined) {
       style["height"] = `${localRow.extra.height}px`;
-      touchedStyle = true;
     }
 
     const fixedPosition = this.extra.fixedColumnPositions[columnIndex];
     if (fixedPosition !== undefined) {
       style["left"] = fixedPosition;
-      touchedStyle = true;
     }
 
     const selected = oldLocal !== null ? oldLocal.selected && !deleted : false;
@@ -393,7 +402,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       selected,
       valueText,
     };
-    if (touchedStyle) {
+    if (!R.isEmpty(style)) {
       extra.style = style;
     }
     return extra;
@@ -429,6 +438,19 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       if (currLinkForRow) {
         localRow.extra.link = currLinkForRow;
         this.extra.hasRowLinks = true;
+      }
+      const parent = getCellAttr("tree_branches") && value.value ? value.value : 0;
+      const rows = this?.uv?.rows ?? null;
+      if (parent > 0 && rows !== null) {
+        const parentIndex = rows.findIndex(row => {
+          if (row.entityIds === undefined || Object.keys(row.entityIds)[0] === undefined)
+            return -1;
+          return row.entityIds[Object.keys(row.entityIds)[0]].id === parent;
+        });
+        if (parentIndex > -1) {
+          localRow.extra.parent = parentIndex;
+          localRow.extra.visible = false;
+        }
       }
     }
 
@@ -501,6 +523,9 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     const extra: ITableRowExtra = {
       selected: false,
       searchText: "",
+      visible: true,
+      children: [],
+      level: 0,
     };
 
     const style: Record<string, any> = {};
@@ -584,7 +609,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     };
     const home = homeSchema(this.uv.args);
     if (home !== null) {
-      extra.linkOpts = {homeSchema: home};
+      extra.linkOpts = { homeSchema: home };
     }
     return extra;
   }
@@ -724,7 +749,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     x: 0,
     y: 0,
   };
-  private editParams: IEditParams = {    
+  private editParams: IEditParams = {
     height: 0,
     width: 0,
     minHeight: 0
@@ -733,6 +758,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   private keptEntries = new ObjectSet<IEntriesRef>();
 
   private cellEditHeight = 0;
+
+  private rowsState: Record<number, any> = {};
+  private isTree = false;
 
   get columnIndexes() {
     const columns = this.local.extra.columns.map((column, index) => ({
@@ -776,7 +804,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         const columnInfo = this.uv.info.columns[this.editing.ref.column];
         const columnAttrs = this.uv.columnAttributes[this.editing.ref.column];
         const type = columnInfo.valueType;
-        const attributes = {...this.uv.attributes, ...columnAttrs, ...value.row.row.attributes, ...value.value.attributes};
+        const attributes = { ...this.uv.attributes, ...columnAttrs, ...value.row.row.attributes, ...value.value.attributes };
         return {
           value: value.value,
           attributes,
@@ -802,7 +830,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         this.showLength = this.local.rows.length;
       };
       window.addEventListener("beforeprint", printCallback);
-      this.printListener = {query, queryCallback, printCallback};
+      this.printListener = { query, queryCallback, printCallback };
     }
   }
 
@@ -821,6 +849,14 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     this.updateShowLength();
     (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", () => {
       this.removeCellEditing();
+    });
+
+    this.$root.$on("cell-click", () => {
+      this.local.extra.selectedValues.keys().forEach(key => {
+        this.local.selectCell(key, false);
+      });
+      this.lastSelectedRow = null;
+      this.lastSelectedValue = null;
     });
   }
 
@@ -850,6 +886,14 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       const newWords = this.currentFilter.filter(newWord => !oldFilter.some(oldWord => oldWord.startsWith(newWord)));
       this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], newWords));
     }
+
+    if (this.filter.length === 0) {
+      this.buildRowPositions();
+      this.initRowsState();
+    } else {
+      if (this.isTree)
+        this.offTree();
+    }
   }
 
   @Watch("editingValue")
@@ -873,31 +917,115 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (emptyRow !== null) {
       this.showEmptyRow = newValue;
       if (!newValue) {
-        this.baseLocal.selectRow({type: "new"}, false);
+        this.baseLocal.selectRow({ type: "new" }, false);
         emptyRow.local.values.forEach((_, colI) => {
-          this.local.selectCell({type: "new", column: colI}, false);
+          this.local.selectCell({ type: "new", column: colI }, false);
         });
       }
       nextRender().then(() => {
         const emptyRowRefElement = this.$refs.emptyRowRef as any | undefined;
         if (emptyRowRefElement !== undefined)
-          this.cellEditByTarget({type:"new", column: emptyRowRefElement.columnIndexes[0]}, emptyRowRefElement.$children[0].$el);
+          this.cellEditByTarget({ type:"new", column: emptyRowRefElement.columnIndexes[0] }, emptyRowRefElement.$children[0].$el);
       });
     }
+  }
+
+  // Toggle children rows visibles.
+  private visibleChildren(children: number[], visible: boolean) {
+
+    //Save state.
+    if( this.local.rows[children[0]] !== undefined) {
+      const parent = this.local.rows[children[0]].extra.parent;
+      if(parent === undefined)
+        return;
+      const extra = this.local.rows[parent].extra;
+      if (visible) {
+        this.rowsState[parent] = extra;
+      } else {
+        delete this.rowsState[parent];
+        this.local.rows[parent].extra.arrowDown = false;
+      }
+    }
+
+    // Toggle
+    children.forEach( (child, i) => {
+
+      if (!visible && this.local.rows[child].extra.visible) {
+        this.visibleChildren(this.local.rows[child].extra.children, visible);
+
+        // Hidden children.
+        const childPosition = this.rowPositions.indexOf(child);
+        this.rowPositions.splice(childPosition, 1);
+      }
+
+      this.local.rows[child].extra.visible = visible;
+    })
+
+    if (visible)
+      this.displayChildren(children);
+  }
+
+  private displayChildren(children: number[]) {
+    const parent = this.local.rows[children[0]].extra.parent;
+    if (parent !== undefined)
+      for (let i = children.length - 1; i >= 0; i--) {
+        if (this.rowPositions.includes(children[i])) {
+          const childPosition = this.rowPositions.indexOf(children[i]);
+          this.rowPositions.splice(childPosition, 1);
+        }
+        this.rowPositions.splice(this.rowPositions.indexOf(parent) + 1, 0, children[i]);
+      }
+  }
+
+  private initRowsState() {
+    this.local.rows.forEach((row, rowI) => {
+      if (row.extra.parent !== undefined &&  this.local.rows[row.extra.parent] !== undefined &&!this.local.rows[row.extra.parent].extra.children.includes(rowI)) {
+        this.local.rows[row.extra.parent].extra.children.push(rowI);
+        let level = 1;
+        let parent = this.local.rows[row.extra.parent].extra.parent;
+        while (parent !== undefined && this.local.rows[parent] !== undefined && level < 100) {
+          parent = this.local.rows[parent].extra.parent;
+          level++;
+        }
+        this.local.rows[rowI].extra.level = level;
+      }
+    })
+    if (!R.isEmpty(this.rowsState)) {
+      // Load visible data from rowsState to rows.
+      for (const key in this.rowsState) {
+        const id = this?.local?.rows[key]?.extra?.selectionEntry?.id ?? undefined;
+        if (id !== undefined && id === this.rowsState[key].selectionEntry.id) {
+          this.local.rows[key].extra.arrowDown = true;
+          // nextRenderOneJump need for correct render rows after update. But be cearful with Chrome!
+          // https://stackoverflow.com/questions/44145740/how-does-double-requestanimationframe-work
+          nextRenderOneJump().then(() => {
+            this.visibleChildren(this.local.rows[key].extra.children, true);
+          });
+        }
+      }
+    } else {
+      this.buildRowPositions();
+    }
+  }
+
+  private offTree() {
+    this.isTree = false;
+    this.buildRowPositions();
   }
 
   // Update this.rows from this.entries
   private buildRowPositions() {
     const rows = this.uv.rows;
-
     if (rows === null) {
       this.rowPositions = [];
     } else {
       this.rowPositions = rows.map((row, rowI) => rowI);
       if (this.filter.length !== 0) {
         this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], this.filter));
+      } else if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree) {
+        this.rowPositions = this.rowPositions.filter(rowI => this.local.rows[rowI].extra.visible);
+        this.isTree = true;
       }
-
       this.sortRows();
       this.updateShowLength();
     }
@@ -918,7 +1046,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (this.editing === null) {
       return;
     }
-  
+
     if ('loss_of_focus_save' in this.uv.attributes && Boolean(this.uv.attributes['loss_of_focus_save']))
       this.submitChanges({ scope: this.scope });
 
@@ -940,7 +1068,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         return;
       }
 
-      this.editing = {ref, lock};
+      this.editing = { ref, lock };
     });
   }
 
@@ -956,11 +1084,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
     this.editCoords.x = rect.x;
 
-    // If edit window lower than screen, raise the window up. 
+    // If edit window lower than screen, raise the window up.
     // +54px for bottom panel.
     if (0 > bodyRect.bottom - rect.bottom - 54) {
       this.editCoords.y = bodyRect.bottom - this.editParams.height - 54;
-      this.editParams.height += 54; 
+      this.editParams.height += 54;
     } else {
       this.editCoords.y = rect.y;
     }
@@ -988,7 +1116,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
     this.cellEditHandler(ref, event.target);
   }
-  
+
   private cellEditByTarget(ref: ValueRef, target: HTMLElement) {
     this.removeCellEditing();
     this.setCellEditing(ref);
@@ -1023,13 +1151,17 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       }
     }
 
-    
+
   }
 
   private selectCell(ref: ValueRef) {
     this.local.extra.selectedValues.keys().forEach(prevRef => {
       this.local.selectCell(prevRef, false);
     });
+
+    // Deselect another cells
+    this.$root.$emit("cell-click");
+
     this.local.selectCell(ref, true);
     this.lastSelectedValue = ref;
   }
@@ -1074,7 +1206,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   private getRowByLocalPosition(rowRef: RowPositionRef): RowRef | null {
     if (rowRef.type === "existing") {
-      return this.local.getRowByPosition({type: "existing", position: this.rowPositions[rowRef.position]});
+      return this.local.getRowByPosition({ type: "existing", position: this.rowPositions[rowRef.position] });
     } else {
       return this.local.getRowByPosition(rowRef);
     }
@@ -1164,8 +1296,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     const actions: Action[] = [];
     if (this.uv.info.mainEntity !== null) {
       actions.push(
-        {name: this.$t("remove_selected_rows").toString(), callback: () => this.removeSelectedRows()},
-        {name: this.$t("show_new_row").toString(), callback: () => this.setShowEmptyRow(true)},
+        { name: this.$t("remove_selected_rows").toString(), callback: () => this.removeSelectedRows() },
+        { name: this.$t("show_new_row").toString(), callback: () => this.setShowEmptyRow(true) },
       );
     }
 
@@ -1177,6 +1309,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   private updateRows() {
     this.buildRowPositions();
+    this.initRowsState();
     // this.setShowEmptyRow(this.uv.rows === null || this.uv.rows.length === 0);
   }
 
@@ -1192,11 +1325,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.sortColumn = sortColumn;
       switch (type) {
         case "decimal":
-          this.sortOptions = {numeric: true};
+          this.sortOptions = { numeric: true };
           this.sortAsc = false;
           break;
         case "int":
-          this.sortOptions = {numeric: true};
+          this.sortOptions = { numeric: true };
           this.sortAsc = false;
           break;
         case "bool":
@@ -1205,7 +1338,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
           break;
         case "string":
           this.sortAsc = true;
-          this.sortOptions = {sensitivity: "accent"};
+          this.sortOptions = { sensitivity: "accent" };
           break;
         default:
           this.sortAsc = true;

@@ -107,7 +107,7 @@ const requestToken = async (params: Record<string, string>): Promise<CurrentAuth
   const headers: Record<string, string> = {
     "Content-Type": "application/x-www-form-urlencoded",
   };
-  const newParams = {...params, ["client_id"]: authClientId};
+  const newParams = { ...params, ["client_id"]: authClientId };
   const paramsString = new URLSearchParams(newParams).toString();
 
   const ret = await Utils.fetchJson(`${authUrl}/token`, {
@@ -261,7 +261,7 @@ const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExist
 const authQueryKey = "__auth";
 
 export const getAuthedLink = (auth: CurrentAuth): string => {
-  const query = {...router.currentRoute.query};
+  const query = { ...router.currentRoute.query };
   query[authQueryKey] = auth.refreshToken;
   const href = router.resolve({ path: router.currentRoute.path, query }).href;
   return window.location.origin + href;
@@ -375,7 +375,7 @@ export const authModule: Module<IAuthState, {}> = {
           } else if (developmentMode && authQueryKey in router.currentRoute.query) {
             dropCurrentAuth();
             const refreshToken = String(router.currentRoute.query[authQueryKey]);
-            const newQuery = {...router.currentRoute.query};
+            const newQuery = { ...router.currentRoute.query };
             delete newQuery[authQueryKey];
             await router.replace({ query: newQuery });
             const params: Record<string, string> = {

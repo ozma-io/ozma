@@ -1,6 +1,6 @@
 <template>
   <div class="column_container" :style="style">
-    <div 
+    <div
       class="column_header"
       :style="titleStyle"
     >
@@ -141,7 +141,7 @@ export default class Column extends Vue {
   private isCardSelected(rowIndex: number) {
     return this.selected.includes(rowIndex);
   }
-  
+
   private get isMobile(): boolean {
     return isMobile;
   }
@@ -211,7 +211,7 @@ export default class Column extends Vue {
     nextRender().then(() => {
       this.dragging = false;
     });
-    
+
     const newCard = this.cards[event.newIndex];
     // Avoid calling onMove after onAdd event: It should do it on it's own.
     if (newCard) {
@@ -222,14 +222,14 @@ export default class Column extends Vue {
           : 0
       );
       const nextCardOrder = R.pathOr<number>(prevCardOrder + 1, [event.newIndex + 1, "order"], this.cards);
-      
+
       let mean = 0;
-      if(prevCardOrder == 0 && nextCardOrder < 0) {
+      if(prevCardOrder === 0 && nextCardOrder < 0) {
         mean = nextCardOrder * 2 ;
       }else{
         mean = (prevCardOrder + nextCardOrder) / 2;
       }
-      
+
       if (this.move && newCard.orderRef) {
         this.move(newCard.orderRef, mean);
       }

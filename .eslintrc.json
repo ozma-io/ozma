@@ -22,17 +22,20 @@
   ],
   "rules": {
     "indent": "off",
-    "space-before-blocks": "error",
+    "space-before-blocks": "warn",
+    "no-trailing-spaces": "warn",
+    "eqeqeq": "error",
+    "object-curly-spacing": ["warn", "always"],
     "vue/custom-event-name-casing": "warn",
     "vue/no-deprecated-functional-template": "off",
-    "@typescript-eslint/indent": ["error", 2],
-    "vue/html-indent": ["error", 2],
+    "@typescript-eslint/indent": ["warn", 2],
+    "vue/html-indent": ["warn", 2],
     "vue/this-in-template": "error",
     "vue/require-default-prop": "error",
-    "vue/component-tags-order": ["error", {
+    "vue/component-tags-order": ["warn", {
       "order": ["template", "script", "style"]
     }],
-    "vue/max-attributes-per-line": ["error", {
+    "vue/max-attributes-per-line": ["warn", {
       "singleline": 2
     }],
     "no-console": ["warn", {

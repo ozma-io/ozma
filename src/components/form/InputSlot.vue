@@ -46,14 +46,15 @@
     <b-col
       v-if="label"
       :cols="inline ? 4 : 12"
-      class="input_label__container"
     >
-      <label
-        v-if="label"
-        :class="['input_label', { 'input_label__focused': focused }]"
-        :for="inputName"
-        :title="label"
-      >{{ label }}</label>
+      <div class="input_label__container">
+        <label
+          v-if="label"
+          :class="['input_label', { 'input_label__focused': focused }]"
+          :for="inputName"
+          :title="label"
+        >{{ label }}</label>
+      </div>
     </b-col>
     <b-col
       :cols="(!!label && inline) ? 8 : 12"
@@ -77,7 +78,7 @@ import { isMobile, getTextWidth } from "@/utils";
 
 import Modal from "@/components/modal/Modal.vue";
 import Input from "@/components/form/Input.vue";
-import {ICombinedValue} from "@/state/user_view";
+import { ICombinedValue } from "@/state/user_view";
 
 @Component({ components: { Modal, Input } })
 export default class InputSlot extends Vue {
@@ -89,14 +90,14 @@ export default class InputSlot extends Vue {
   @Prop({ type: Boolean }) disabled!: boolean;
   @Prop({ type: Boolean, default: true }) inline!: boolean;
   @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
-  @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
+  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: String }) textAlign!: string;
 
   private focused = false;
   private isModalOpen = false;
 
-  private mounted() { 
+  private mounted() {
     if (this.autoOpen && this.isMobile) {
       this.isModalOpen = true;
     }
@@ -139,7 +140,7 @@ export default class InputSlot extends Vue {
 
 <style lang="scss" scoped>
   .input_slot {
-    padding: 0 15px;
+    /* padding: 0 15px; */
   }
 
   .input_slot__row {

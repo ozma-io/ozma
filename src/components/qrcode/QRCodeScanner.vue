@@ -19,16 +19,16 @@
   }
 </i18n>
 <template>
-  <b-modal 
-    id='qrcode-scanner-modal'
+  <b-modal
+    id="qrcode-scanner-modal"
     v-model="modalShow"
-    hide-footer 
-    :title="$t('qrcode_scanner')" 
+    hide-footer
+    :title="$t('qrcode_scanner')"
   >
-    <qrcode-stream 
+    <qrcode-stream
       v-if="!destroyed"
-      :camera="camera" 
-      @decode="onDecode" 
+      :camera="camera"
+      @decode="onDecode"
       @init="onInit"
     >
       <div v-if="loading" class="loading-indicator">
@@ -42,23 +42,23 @@
     <div v-if="result.length > 0" class="decode-result">
       <strong>{{ $t('scan_result') }}:</strong>
       <ol>
-        <li 
+        <li
           v-for="value in result"
           :key="value"
-        > 
-          {{value[3]}}
+        >
+          {{ value[3] }}
         </li>
       </ol>
       <div v-if="multiScan">
         <b-button
-          block 
+          block
           variant="info"
           @click="clearList"
         >
           {{ $t('clear') }}
         </b-button>
         <b-button
-          block 
+          block
           variant="success"
           @click="sendList"
         >
@@ -126,7 +126,7 @@ export default class QRCodeScanner extends Vue {
 
     if (!this.multiScan) {
       this.turnCameraOff();
-      
+
       if (this.closeAfterScan) {
         this.toggleOpenScanner();
         this.result = [];
@@ -169,7 +169,7 @@ export default class QRCodeScanner extends Vue {
   };
 
 }
-</script> 
+</script>
 
 <style scoped>
   .error {

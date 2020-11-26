@@ -25,7 +25,7 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from "vue-property-decorator";
+import { Component, Prop, Vue } from "vue-property-decorator";
 
 @Component(
   {
@@ -36,8 +36,8 @@ import {Component, Prop, Vue} from "vue-property-decorator";
   },
 )
 export default class Checkbox extends Vue {
-  @Prop({default: false, type: Boolean}) checked!: boolean;
-  @Prop({type: String}) label!: string;
+  @Prop({ default: false, type: Boolean }) checked!: boolean;
+  @Prop({ type: String }) label!: string;
 }
 </script>
 

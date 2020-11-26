@@ -11,7 +11,7 @@ import { Vue, Component } from 'vue-property-decorator';
 import CommsButton from '@/components/CommunicationsButton.vue';
 
 @Component({ components: { CommsButton } })
-export default class FabCluster extends Vue { 
+export default class FabCluster extends Vue {
 }
 </script>
 

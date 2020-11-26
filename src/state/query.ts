@@ -378,11 +378,11 @@ export interface IQueryHistory extends IQuery {
 }
 
 const pushHistory = (current: IQueryHistory, newCurrent: IQuery): IQueryHistory => {
-  return {...newCurrent, previous: current};
+  return { ...newCurrent, previous: current };
 };
 
 const replaceHistory = (current: IQueryHistory, newCurrent: IQuery): IQueryHistory => {
-  return {...newCurrent, previous: current.previous};
+  return { ...newCurrent, previous: current.previous };
 };
 
 export type ICurrentQueryHistory = IGenericCurrentQuery<IQueryHistory>;

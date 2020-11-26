@@ -62,9 +62,9 @@
       qr_code_2
     </span>
     <QRCodeScanner
-      :closeAfterScan="true"
-      @update:scanResult="updateInputCellEdit"
+      :close-after-scan="true"
       :open-scanner="openQRCodeScanner"
+      @update:scanResult="updateInputCellEdit"
     />
   </fragment>
 </template>
@@ -77,7 +77,7 @@ import Textarea from "@/components/form/Textarea.vue";
 import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
 
 @Component({
-  components: {Textarea, QRCodeScanner}
+  components: { Textarea, QRCodeScanner }
 })
 export default class Input extends Vue {
   @Prop({ type: String }) label!: string;

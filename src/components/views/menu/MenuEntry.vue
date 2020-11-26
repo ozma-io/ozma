@@ -56,7 +56,7 @@ interface IMenuBase {
   size?: number;
 }
 
-export interface IMenuLink extends IMenuBase { 
+export interface IMenuLink extends IMenuBase {
   icon?: string;
   link: Link;
 }
@@ -80,7 +80,7 @@ export default class MenuEntry extends Vue {
       const divider = (this.level / scaleFactor);
       const fontSize = initialSize / divider;
       return { fontSize: `${fontSize}px` };
-    } 
+    }
     const fontSize = initialSize;
     return { fontSize: `${fontSize}px` };
   }

@@ -142,10 +142,10 @@ const maxLevel = 4;
  *      user view is reloaded. In this case, old data is used to restore as much old state as possible (for example, keep
  *      selected table rows selected when the table is reloaded, even when new rows were added).
  */
-@Component({components: {
+@Component({ components: {
   UserViewCommon,
   ...components
-}})
+} })
 export default class UserView extends Vue {
   @userView.State("current") currentUvs!: CurrentUserViews;
   @userView.Mutation("addUserViewConsumer") addUserViewConsumer!: (args: { args: IUserViewArguments; reference: ReferenceName }) => void;
@@ -387,7 +387,7 @@ export default class UserView extends Vue {
           return;
         }
         const id = (createOp as ICombinedInsertEntityResult).id;
-        if (id != null && this.selectionMode) {
+        if (id !== null && this.selectionMode) {
           const ref: ISelectionRef = {
             entity: currentUv.info.mainEntity!,
             id,

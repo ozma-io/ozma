@@ -43,7 +43,7 @@
       >
         {{ $t('delete_confirmation') }}
       </b-modal>
-    
+
       <!-- The first form control is special, it points either to the empty row or to the first added row
                  _dynamically_. This is as to not lose focus when user starts editing empty row. -->
       <FormEntry
@@ -306,22 +306,22 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
     });
 
     // Add buttons from @form_buttons attributes to blocks
-    /* 
-     * EXAMPLE  
+    /*
+     * EXAMPLE
      * @"form_buttons" = [{
      *     form_block : 3,
      *     actions : [
-     *         {   
+     *         {
      *             name: 'Удалить записи',
      *             variant: 'danger',
      *             call_process: { schema: 'foo', name: 'delete', args: {'hello':'world'}},
      *         },
-     *         {   
+     *         {
      *             name: 'Добавить записи',
      *             variant: 'success',
      *             call_process: { schema: 'foo', name: 'add' },
      *         },
-     *         {   
+     *         {
      *             name: 'Обновить записи',
      *             variant: 'warning',
      *             call_process: { schema: 'foo', name: 'update' },
@@ -331,17 +331,17 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
      * {
      *     form_block : 4,
      *     actions : [
-     *         {   
+     *         {
      *             name: 'Удалить записи 1',
      *             variant: 'danger',
      *             call_process: { schema: 'foo', name: 'delete' },
      *         },
-     *         {   
+     *         {
      *             name: 'Добавить записи 1',
      *             variant: 'success',
      *             call_process: { schema: 'foo', name: 'add' },
      *         },
-     *         {   
+     *         {
      *             name: 'Обновить записи 1',
      *             variant: 'warning',
      *             call_process: { schema: 'foo', name: 'update' },
@@ -400,13 +400,13 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
     const deleteRef = this.useDeleteAction;
     if (deleteRef !== null) {
       actions.push(
-        {name: this.$t("delete").toString(), callback: () => this.confirmDelete(deleteRef)},
+        { name: this.$t("delete").toString(), callback: () => this.confirmDelete(deleteRef) },
       );
     }
     return actions;
   }
 
-  @Watch("actions", {deep: true, immediate: true})
+  @Watch("actions", { deep: true, immediate: true })
   private updateActions() {
     this.$emit("update:actions", this.actions);
   }
@@ -448,7 +448,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
 }
 </script>
 
-<style scoped>  
+<style scoped>
   .view-form {
     padding: 0 0 50px 0 !important;
     overflow-y: auto;

@@ -73,7 +73,7 @@ export default class SaveRestoreSchema extends Vue {
 
   async saveSchema() {
     try {
-      const schemas = this.schema == "" ? null : [this.schema];
+      const schemas = this.schema === "" ? null : [this.schema];
       const res: Blob = await this.callProtectedApi({
         func: Api.saveSchemas,
         args: [schemas],
@@ -84,7 +84,7 @@ export default class SaveRestoreSchema extends Vue {
         const element = document.createElement("a");
         try {
           element.setAttribute("href", url);
-          const name = this.schema == "" ? "schemas" : this.schema;
+          const name = this.schema === "" ? "schemas" : this.schema;
           element.setAttribute("download", `${name}.zip`);
           element.style.display = "none";
 

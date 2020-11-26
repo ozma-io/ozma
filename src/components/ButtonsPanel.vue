@@ -1,17 +1,17 @@
 <template>
   <ul class="buttons">
     <li v-for="(button, i) in buttons" :key="i">
-      <i v-if="button.icon" class="material-icons">{{ button.icon }}</i> 
+      <i v-if="button.icon" class="material-icons">{{ button.icon }}</i>
       <span>{{ button.name }}</span>
       <ul class="actions">
         <FunLink
-          v-for="(action, j) in button.actions" 
+          v-for="(action, j) in button.actions"
           :key="j"
           :link="action.link"
           @goto="$emit('goto', $event)"
         >
           <li v-if="'link' in action" :key="action.name">
-            <i v-if="button.icon" class="material-icons">{{ action.icon }}</i> 
+            <i v-if="button.icon" class="material-icons">{{ action.icon }}</i>
             <span>{{ action.name }}</span>
           </li>
         </FunLink>
@@ -27,7 +27,7 @@ import { Action } from "@/components/ActionsMenu.vue";
 export interface IPanelButton {
   icon?: string;
   name: string;
-  actions: Action[]; 
+  actions: Action[];
 };
 
 @Component

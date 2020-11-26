@@ -111,7 +111,7 @@
           :required="!isNullable"
           @update:content="updateValue"
         />
-        <QRCode 
+        <QRCode
           v-else-if="inputType.name === 'qrcode'"
           ref="control"
           :height="customHeight"
@@ -221,7 +221,7 @@
           @input="updateValue($event.target.value)"
           @focus="iSlot.onFocus"
         >
-        <QRCode 
+        <QRCode
           v-else-if="inputType.name === 'qrcode'"
           ref="control"
           :height="customHeight"
@@ -353,7 +353,7 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import {valueToText, valueIsNull, dateTimeFormat} from "@/values";
+import { valueToText, valueIsNull, dateTimeFormat } from "@/values";
 import { AttributesMap, ValueType } from "@/api";
 import { Action } from "@/components/ActionsMenu.vue";
 import { IUserViewArguments, homeSchema, ICombinedValue, currentValue, IEntriesRef, referenceEntriesRef } from "@/state/user_view";
@@ -474,7 +474,7 @@ const inlineTypes = ["markdown", "codeeditor", "textarea", "reference"];
        SearchPanel needs to be moved to NestedUserView when ActionsMenu and
        other components will free the FormControl.
        FormControl needs to be cleaned into small components.
-    */    
+    */
 
     SearchPanel: () => import("@/components/SearchPanel.vue"),
     NestedUserView: () => import("@/components/NestedUserView.vue"),
@@ -495,7 +495,7 @@ export default class FormControl extends Vue {
   @Prop({ type: String, required: true }) scope!: string; // this.scope
   @Prop({ type: Number, required: true }) level!: number; // this.level
   @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
-  @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
+  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
 
   private actions: Action[] = [];
   private codeEditorKey = 0;
@@ -511,6 +511,7 @@ export default class FormControl extends Vue {
     return this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable;
   }
 
+  // Current value, can be a raw value (e.g., a string for a `datetime` value) or a validated value.
   get currentValue() {
     return currentValue(this.value);
   }
@@ -528,6 +529,11 @@ export default class FormControl extends Vue {
     return this.locked || this.value.info === undefined || this.value.info.field === null;
   }
 
+  // FIXME: move to `textValue` instead. We could add an optional object
+  //        argument to `valueToText` instead, which specifies a format
+  //        string for `date` and `datetime`. If so, we should probably do the
+  //        same for `valueFromRaw` and pass this "options" object all the way
+  //        from `update:value` event.
   get calendarValue() {
     if (this.type.type === "datetime" && this.currentValue) {
       if (typeof this.currentValue === 'string') return this.currentValue;
@@ -536,6 +542,7 @@ export default class FormControl extends Vue {
     return this.textValue;
   }
 
+  // Textual representation of `currentValue`.
   get textValue() {
     return valueToText(this.type, this.currentValue);
   }
@@ -571,10 +578,10 @@ export default class FormControl extends Vue {
 
   get textAlign() {
     if ("text_align" in this.attributes)
-      return  String(this.attributes["text_align"]);
+      return String(this.attributes["text_align"]);
 
-    if (this.inputType.name == 'text' && this.inputType.type == 'number')
-      return 'right';
+    if (this.inputType.name === "text" && this.inputType.type === "number")
+      return "right";
   }
 
   get cellColor() {

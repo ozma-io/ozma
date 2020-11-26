@@ -24,7 +24,7 @@
     >
       <b-input-group>
         <b-form-input
-          ref="searchInput" 
+          ref="searchInput"
           v-model="localFilterString"
           class="find_in form-control"
           :placeholder="$t('search_placeholder')"
@@ -56,7 +56,7 @@
 
 <script lang="ts">
 
-import {Component, Prop, Vue, Watch} from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 
 @Component
 export default class SearchPanel extends Vue {
@@ -87,7 +87,7 @@ export default class SearchPanel extends Vue {
     this.$emit("update:filterString", this.localFilterString);
   }
 
-  @Watch("isShownSearchField") 
+  @Watch("isShownSearchField")
   setFocusOnField() {
     if (this.isShownSearchField) {
       (this.$refs.searchInput as HTMLElement).focus();

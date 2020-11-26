@@ -37,14 +37,13 @@
     <div
       v-show="showActions"
       :class="['div-with-actions', menuAlign]"
-
-    > 
+    >
       <template v-if="sortedActions.length == 0">
         <label class="div-with-actions_button">
           {{ $t('empty') }}
         </label>
       </template>
-      <template v-else v-for="(action, i) in sortedActions">
+      <template v-for="(action, i) in sortedActions" v-else>
         <hr
           v-if="action === null"
           :key="i"
