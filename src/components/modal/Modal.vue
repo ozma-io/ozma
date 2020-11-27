@@ -64,7 +64,7 @@
         v-show="index === selectedTab"
         :key="index"
         :class="[
-          modal__tab-content,
+          'modal__tab-content',
           { 'is-mobile': isMobile },
         ]"
       >
@@ -258,6 +258,10 @@ export default class Modal extends Vue {
   @media screen and (max-width: 768px) {
     .v--modal-box.v--modal {
       height: 90vh;
+
+      &.is-mobile {
+        height: 100vh !important;
+      }
     }
 
     .v--modal-background-click {
