@@ -7,7 +7,13 @@
         "scan_result": "Scan result",
         "clear": "Clear",
         "paste_data": "Paste data",
-        "incorrect_format": "ERROR: Incorrect format."
+        "incorrect_format": "ERROR: Incorrect format.",
+        "error_access_camera": "ERROR: you need to grant camera access permisson",
+        "error_no_camera": "ERROR: no camera on this device",
+        "error_secure_context": "ERROR: secure context required (HTTPS, localhost)",
+        "error_camera_used": "ERROR: is the camera already in use?",
+        "error_camera_not_suitable": "ERROR: installed cameras are not suitable",
+        "error_stream_not_suppotred": "ERROR: Stream API is not supported in this browser"
     },
     "ru": {
         "input_placeholder": "Пусто",
@@ -16,7 +22,13 @@
         "scan_result": "Результат сканирования",
         "clear": "Очистить",
         "paste_data": "Вставить данные",
-        "incorrect_format": "ОШИБКА: Неправильный формат."
+        "incorrect_format": "ОШИБКА: Неправильный формат.",
+        "error_access_camera": "ОШИБКА: вам необходимо предоставить разрешение на доступ к камере",
+        "error_no_camera": "ОШИБКА: нет камеры на этом устройстве",
+        "error_secure_context": "ОШИБКА: требуется безопасный контекст (HTTPS, localhost)",
+        "error_camera_used": "ОШИБКА: камера уже используется?",
+        "error_camera_not_suitable": "ОШИБКА: установленные камеры не подходят",
+        "error_stream_not_suppotred": "ОШИБКА: Stream API не поддерживается в этом браузере"
     }
   }
 </i18n>
@@ -68,6 +80,15 @@ import { mixins } from "vue-class-component";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import { IEntriesRef } from "@/state/user_view";
 import { Link } from "@/links";
+import { saveAndRunAction } from "@/state/actions";
+import { queryLocation, IQueryState } from "@/state/query";
+
+
+interface ICurrentContent {
+  s: ValueRef;
+  n: IQuery;
+  a: IEntityRef;
+}
 
 @Component
 export default class QRCodeScanner extends mixins(BaseEntriesView) {
@@ -88,6 +109,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Watch('openScanner')
   private toggleOpenScanner() {
     this.modalShow = !this.modalShow;
+    // this.currentContent = JSON.parse('{"n":"product","s":"s","a": {"id":3}}');
     this.currentContent = null;
     this.result = [];
     this.entry = null;
@@ -100,19 +122,21 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
       await promise
     } catch (error) {
       this.error = error.name;
+
       if (error.name === 'NotAllowedError') {
-        this.error = "ERROR: you need to grant camera access permisson"
+        this.error = this.$t('error_access_camera').toString();
       } else if (error.name === 'NotFoundError') {
-        this.error = "ERROR: no camera on this device"
+        this.error = this.$t('error_no_camera').toString();
       } else if (error.name === 'NotSupportedError') {
-        this.error = "ERROR: secure context required (HTTPS, localhost)"
+        this.error = this.$t('error_secure_context').toString();
       } else if (error.name === 'NotReadableError') {
-        this.error = "ERROR: is the camera already in use?"
+        this.error = this.$t('error_camera_used').toString();
       } else if (error.name === 'OverconstrainedError') {
-        this.error = "ERROR: installed cameras are not suitable"
+        this.error = this.$t('error_camera_not_suitable').toString();
       } else if (error.name === 'StreamApiNotSupportedError') {
-        this.error = "ERROR: Stream API is not supported in this browser"
+        this.error = this.$t('error_stream_not_suppotred').toString();
       }
+
     } finally {
       this.loading = false;
     }
@@ -178,12 +202,12 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
 
   @Watch('currentContent', { deep: true, immediate: true })
   private changeCurrentContent() {
-    if (this.currentContent !== null && this.currentContent.n !== undefined &&  this.currentContent.s !== undefined && this.currentContent.i !== undefined ) {
+    if (this.currentContent !== null && this.currentContent.n !== undefined &&  this.currentContent.s !== undefined && this.currentContent.a !== undefined ) {
       if (this.entry !== null) {
-        this.currentContent.v = this.entries[Number(this.currentContent.i)]; 
+        this.currentContent.v = this.entries[Number(this.currentContent.a.id)]; 
         this.result.push(this.currentContent);
         if (this.link !== null) {
-          this.linkHandler();
+          this.linkHandler(this.link);
         }
       } else {
         this.entry = {entity: {name: this.currentContent.n, schema: this.currentContent.s}};
@@ -199,8 +223,32 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     this.changeCurrentContent();
   }
 
-  private linkHandler() {
-    console.log(this.link, this.currentContent);
+  private linkHandler(link: Link) {
+    if ('query' in link) {
+      link.query.args.args = this.currentContent.a;
+      if (link.target === "modal") {
+        this.$store.dispatch("query/addWindow", link.query);
+      } else if (link.target === "root") {
+        this.$emit("goto", link.query);
+      } else if (link.target === "top") {
+        this.$store.dispatch("query/pushRoot", link.query);
+      } else if (link.target === "blank") {
+        const href = this.$router.resolve( queryLocation(link.query) ).href;
+        window.open(href, '_blank');
+      } else if (link.target === "modal-auto") {
+        const queryState = this.$store.state.query as IQueryState;
+        if (queryState.current?.windows.length === 0) {
+          this.$store.dispatch("query/addWindow", link.query);
+        } else {
+          this.$emit("goto", link.query);
+        }
+      } else {
+        throw new Error("Impossible");
+      }
+    } else if ("action" in link) {
+      saveAndRunAction(this.$store, link.action, this.currentContent.a);
+    }
+    this.modalShow = false; 
   }
 }
 </script> 
