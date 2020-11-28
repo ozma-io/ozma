@@ -943,7 +943,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
       // Open in depth
       if (depth) {
-        this.visibleChildren(this.local.rows[child].extra.children, true);
+        this.visibleChildren(this.local.rows[child].extra.children, true, depth);
       }
 
       this.local.rows[child].extra.visible = visible;
