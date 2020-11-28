@@ -914,7 +914,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   // Toggle children rows visibles.
-  private visibleChildren(children: number[], visible: boolean) {
+  private visibleChildren(children: number[], visible: boolean, depth: boolean = false) {
     //Save state.
     if( this.local.rows[children[0]] !== undefined) {
       const parent = this.local.rows[children[0]].extra.parent;
@@ -941,6 +941,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         this.rowPositions.splice(childPosition, 1);
       }
 
+      // Open in depth
+      if (depth) {
+        this.visibleChildren(this.local.rows[child].extra.children, true);
+      }
+
       this.local.rows[child].extra.visible = visible;
     });
 
@@ -962,11 +967,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       }
   }
 
-  private hiddenAllTreeChildren() {
+  private toggleAllTreeChildren(visible: boolean) {
     this.rowPositions.forEach(rowI =>{
       const firstChild = this.local.rows[rowI].extra.children[0];
       if (this.local.rows[rowI].extra.children.length > 0 && this.local.rows[firstChild].extra.visible) {
-        this.visibleChildren(this.local.rows[rowI].extra.children, false);
+        this.visibleChildren(this.local.rows[rowI].extra.children, visible, true);
       }
     });
   }
