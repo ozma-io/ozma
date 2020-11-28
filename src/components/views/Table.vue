@@ -841,6 +841,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.lastSelectedRow = null;
       this.lastSelectedValue = null;
     });
+    if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree)
+      if ("tree_all_open" in this.local.uv.attributes && this.local.uv.attributes.tree_all_open) {
+        this.toggleAllTreeChildren(true);
+      }
   }
 
   protected destroyed() {
@@ -923,11 +927,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       }
       const parentIndex = this.local.extra.rowsParentPositions[parent];
       const extra = this.local.rows[parentIndex].extra;
+      this.local.rows[parentIndex].extra.arrowDown = visible;
       if (visible) {
         this.rowsState[parentIndex] = extra;
       } else {
         delete this.rowsState[parentIndex];
-        this.local.rows[parentIndex].extra.arrowDown = false;
       }
     }
     
@@ -969,11 +973,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   private toggleAllTreeChildren(visible: boolean) {
     this.rowPositions.forEach(rowI =>{
-      const firstChild = this.local.rows[rowI].extra.children[0];
-      if (this.local.rows[rowI].extra.children.length > 0 && this.local.rows[firstChild].extra.visible) {
+      if (this.local.rows[rowI].extra.children.length > 0 && this.local.rows[rowI].extra.parent == undefined) {
         this.visibleChildren(this.local.rows[rowI].extra.children, visible, true);
       }
     });
+    this.initRowsState();
   }
 
   private initRowsState() {
