@@ -129,8 +129,13 @@ class LocalFormUserView extends LocalUserView<IFormValueExtra, IFormRowExtra, IF
 
   createCommonLocalValue(row: IRowCommon, localRow: IFormLocalRowInfo, columnIndex: number, value: ICombinedValue): IFormValueExtra {
     const columnAttrs = this.uv.columnAttributes[columnIndex];
-    const attributes = { ...this.uv.attributes, ...columnAttrs, ...row.attributes, ...value.attributes };
-    const visible  =  "visible" in attributes ? Boolean(attributes["visible"]) : true;
+    const attributes: {visible?: boolean} = {
+      ...this.uv.attributes,
+      ...columnAttrs,
+      ...row.attributes,
+      ...value.attributes,
+    };
+    const visible = Boolean(attributes["visible"] ?? true);
     const extra = {
       attributes,
       visible
@@ -245,39 +250,36 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
     }
   }
 
-  get blockSizes(): number[] {
+  get blockSizes(): number[] | null {
     const rawBlockSizes = this.uv.attributes["block_sizes"];
     if (!(rawBlockSizes instanceof Array)) {
-      return [12];
+      return null;
     }
     const blockSizes = rawBlockSizes.map(x => {
       const n = Math.round(Number(x));
-      if (Number.isInteger(n)) {
-        return Math.max(0, Math.min(12, n));
-      } else {
-        return undefined;
-      }
+      return Number.isInteger(n)
+        ? Math.max(0, Math.min(n, 12))
+        : undefined;
     });
-    if (blockSizes.some(x => x === undefined)) {
-      return [12];
-    } else {
-      return blockSizes as number[];
-    }
+    return blockSizes.every(x => x !== undefined)
+      ? blockSizes as number[]
+      : null;
   }
 
   get gridBlocks(): GridElement[] {
     const viewAttrs = this.uv.attributes;
-    const blocks: IGridSection[] = this.blockSizes.map(size => ({ type: "section", size, content: [] }));
-    const inputWidth = R.equals(this.blockSizes, [12]) ? 6 : 12;
+    const blocks: IGridSection[] =
+      (this.blockSizes ?? [12]).map(size => ({ type: "section", size, content: [] }));
+    // If 'block_sizes' attribute doesn't used or invalid,
+    // then two-column layout used.
+    const inputWidth = this.blockSizes === null ? 6 : 12;
 
-    //Add columns to blocks
+    // Add columns to blocks
     this.uv.info.columns.forEach((columnInfo, i) => {
       const columnAttrs = this.uv.columnAttributes[i];
       const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
 
-      const visibleColumnAttr = getColumnAttr("visible");
-      const visible = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
-
+      const visible = Boolean(getColumnAttr("visible") ?? true);
       if (!visible) {
         return;
       }
@@ -286,10 +288,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
       const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr;
       const block = Math.max(0, Math.min(blockNumber, blocks.length - 1));
 
-      const formElementAttr = String(getColumnAttr("form_element"));
-
-      const captionAttr = getColumnAttr("caption");
-      const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name;
+      const caption = String(getColumnAttr("caption") ?? columnInfo.name);
 
       const field = {
         index: i,
@@ -350,7 +349,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
      * }]
      */
     const formButtons = this.uv.attributes['form_buttons'];
-    if(formButtons !== undefined && Array.isArray(formButtons)) {
+    if (formButtons !== undefined && Array.isArray(formButtons)) {
       formButtons.forEach((buttons: IButtons, i: number) => {
 
         const blockAttr = Number(buttons["form_block"]);
@@ -358,7 +357,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
         const block = Math.max(0, Math.min(blockNumber, blocks.length - 1));
 
         const actions: IButtonAction[] = [];
-        if(buttons.actions !== undefined && Array.isArray(buttons.actions)) {
+        if (buttons.actions !== undefined && Array.isArray(buttons.actions)) {
           buttons.actions.forEach((action: any) => {
             if (typeof action.name !== "string")
               return;
@@ -371,7 +370,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
           })
         }
 
-        if( actions.length > 0) {
+        if (actions.length > 0) {
           const element: IGridButtons = {
             type: "buttons",
             actions
