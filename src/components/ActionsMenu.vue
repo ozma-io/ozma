@@ -273,7 +273,7 @@ export default class ActionsMenu extends Vue {
   }
 
   .right {
-    margin-left: -74vw;
+    right: 0;
   }
 
   @media screen and (max-aspect-ratio: 13/9) {
