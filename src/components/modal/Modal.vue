@@ -131,7 +131,9 @@ export default class Modal extends Vue {
   }
 
   private fixupTab() {
-    if (this.modalTabs && this.modalTabs.length > 0 && this.selectedTab >= this.modalTabs.length) {
+    if (this.modalTabs &&
+        this.modalTabs.length > 0 &&
+        this.selectedTab >= this.modalTabs.length) {
       this.selectedTab = this.modalTabs.length - 1;
     }
   }
@@ -205,7 +207,7 @@ export default class Modal extends Vue {
     border-top: 1px solid var(--MainBorderColor);
 
     &.is-mobile {
-      height: auto;
+      height: 100%;
       padding: 0;
     }
   }
@@ -252,21 +254,17 @@ export default class Modal extends Vue {
 
     &.is-mobile {
       border: none;
+
+      /* VueModal writes :height prop in element's inline style,
+        so !important is required */
+      height: 100% !important;
     }
   }
 
-  @media screen and (max-width: 768px) {
-    .v--modal-box.v--modal {
-      height: 90vh;
-
-      &.is-mobile {
-        height: 100vh !important;
-      }
-    }
-
-    .v--modal-background-click {
-      display: flex;
-      align-items: flex-end;
+  .v--modal-background-click {
+    &,
+    .v--modal-overlay {
+      height: 100% !important;
     }
   }
 
