@@ -240,10 +240,10 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
     const modalReferenceField = this.modalReferenceField;
     if (modalReferenceField) {
       actions.push({
-         name: this.$t("create_in_modal").toString(),
+        name: this.$t("create_in_modal").toString(),
         callback: () => {
           this.modalView = modalReferenceField.uv;
-        }
+        },
       });
     }
 
@@ -261,7 +261,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
         name: this.$t("scan_qrcode").toString(),
         callback: () => {
           this.openQRCodeScanner = !this.openQRCodeScanner;
-        }
+        },
       });
     }
 
