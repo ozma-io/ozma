@@ -45,11 +45,11 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
-import { IQuery } from '@/state/query';
+import { Component, Prop, Vue } from "vue-property-decorator";
+import { IQuery } from "@/state/query";
 
-import MenuHeading from '@/components/menu/MenuHeading.vue';
-import { Link } from '@/links';
+import MenuHeading from "@/components/menu/MenuHeading.vue";
+import { Link } from "@/links";
 
 interface IMenuBase {
   name: string;
@@ -70,7 +70,7 @@ export type MenuValue = IMenuLink | IMenuCategory;
 const initialSize = 50;
 const scaleFactor = 0.85;
 
-@Component({ name: 'MenuEntry', components: { MenuHeading } })
+@Component({ name: "MenuEntry", components: { MenuHeading } })
 export default class MenuEntry extends Vue {
   @Prop({ type: Number, required: false, default: 0 }) level!: number;
   @Prop({ type: Object, required: true }) entry!: MenuValue;

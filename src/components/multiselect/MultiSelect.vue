@@ -228,9 +228,9 @@ export default class MultiSelect extends Vue {
   private optionsContainerCoords = { top: 0, bottom: 0 };
 
   private mounted() {
-
-    if (this.selectedOptions.length < 3 && this.single)
+    if (this.selectedOptions.length < 3 && this.single) {
       this.isNeedFilter = false;
+    }
 
     // nextRender need for set coordinates selectedContainer after load cell data.
     nextRender().then(() => {
@@ -238,17 +238,19 @@ export default class MultiSelect extends Vue {
       const selectContainerElement = this.$refs.selectContainer as HTMLInputElement;
       const selectContainerRect = selectContainerElement !== undefined ? selectContainerElement.getBoundingClientRect() : null;
 
-      if (selectContainerRect !== null)
+      if (selectContainerRect !== null) {
         // There we check cell position for open selectContainer up or down.
         if (selectContainerRect.top > (bodyRect.bottom - selectContainerRect.bottom)) {
           this.isTopFilter = !this.isTopFilter;
           this.optionsContainerCoords.bottom = selectContainerRect.height;
           // It is need for set focus to search input if options opened.
-          if (this.isOpen)
+          if (this.isOpen) {
             this.setIsOpen(true);
+          }
         } else {
           this.optionsContainerCoords.top = selectContainerRect.height;
         }
+      }
     });
 
     if (this.autofocus) {
@@ -390,7 +392,7 @@ export default class MultiSelect extends Vue {
     } else if (newSelectedOption >= selectedOptions.length) {
       this.selectedOption = 0;
     } else {
-      this.selectedOption = this.selectedOption + offset;
+      this.selectedOption += offset;
     }
   }
 
@@ -411,8 +413,9 @@ export default class MultiSelect extends Vue {
       }
       this.inputValue = "";
       const controlInput = this.$refs.controlInput as HTMLInputElement;
-      if (controlInput !== undefined)
+      if (controlInput !== undefined) {
         controlInput.focus();
+      }
       this.findNewSelected();
     }
   }
@@ -432,7 +435,7 @@ export default class MultiSelect extends Vue {
   }
 
   private removeValue(index?: number) {
-    if ((index !== undefined) && !this.single)  {
+    if ((index !== undefined) && !this.single) {
       const newValue = this.currentValues.filter((_: any, i: number) => index !== i);
       this.$emit("update:value", newValue);
     } else {

@@ -92,7 +92,7 @@ export default class InputSlot extends Vue {
   @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
-  @Prop({ type: String }) textAlign!: string;
+  @Prop({ type: String, default: "left" }) textAlign!: string;
 
   private focused = false;
   private isModalOpen = false;

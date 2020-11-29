@@ -7,7 +7,7 @@ import { IUpdatedValue, IFieldInfo, valueFromRaw } from "@/values";
 import {
   ITransaction, ITransactionResult, IEntityRef, IFieldRef, IEntity, RowId, SchemaName, FieldName, EntityName,
   IInsertEntityOp, IUpdateEntityOp, IDeleteEntityOp, IInsertEntityResult, IUpdateEntityResult, IDeleteEntityResult,
-  IColumnField, TransactionOp, default as Api
+  IColumnField, TransactionOp, default as Api,
 } from "@/api";
 import { i18n } from "@/modules";
 
@@ -287,7 +287,7 @@ const validateValue = (info: IFieldInfo, value: any): IUpdatedValue => {
 };
 
 const getEntityInfo = async (context: ActionContext<IStagingState, {}>, ref: IEntityRef): Promise<IEntity> => {
-  return await context.dispatch("userView/getEntity", ref, { root: true });
+  return context.dispatch("userView/getEntity", ref, { root: true });
 };
 
 const getFieldInfo = async (context: ActionContext<IStagingState, {}>, ref: IFieldRef): Promise<IFieldInfo> => {
@@ -753,12 +753,10 @@ const stagingModule: Module<IStagingState, {}> = {
           commit("errors/resetErrors", errorKey, { root: true });
           if (state.touched) {
             await dispatch("clearAdded", scope);
+          } else if (scope) {
+            await dispatch("resetScoped", scope);
           } else {
-            if (scope) {
-              await dispatch("resetScoped", scope);
-            } else {
-              await dispatch("reset");
-            }
+            await dispatch("reset");
           }
           return map2((op, res) => ({ ...op, ...res } as CombinedTransactionResult), ops, result.results);
         } else {
@@ -767,7 +765,7 @@ const stagingModule: Module<IStagingState, {}> = {
         }
       })();
       commit("startSubmit", submit);
-      return await submit;
+      return submit;
     },
   },
 };

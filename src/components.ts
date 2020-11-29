@@ -1,6 +1,5 @@
-import Vue from "vue";
 import Component from "vue-class-component";
-import { VueConstructor } from "vue";
+import { VueConstructor, default as Vue } from "vue";
 import { Store } from "vuex";
 
 import { CombinedUserView } from "@/state/user_view";

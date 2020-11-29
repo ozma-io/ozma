@@ -10,7 +10,7 @@ export default class ModalWithTabs extends Vue {
 
   render(createElement: any) {
     const tabs = this.getModalTabs(createElement);
-    return createElement(Modal,  { props: {
+    return createElement(Modal, { props: {
       isOpen: this.isOpen,
       modalTabs: tabs,
       on: { "modal:beforeClose": (evt: any) => console.log(evt) }, // eslint-disable-line

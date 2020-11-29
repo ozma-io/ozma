@@ -61,9 +61,10 @@
 </template>
 
 <script lang="ts">
-import * as R from 'ramda';
+import * as R from "ramda";
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
+import { ICombinedValue } from "@/state/user_view";
 import { valueIsNull } from "@/values";
 import { iconValue } from "@/links";
 
@@ -76,14 +77,14 @@ export default class TableCell extends Vue {
   // We don't bother to set types here properly, they matter no more than for TableRow.
   // The reason this is not a functional component is because of performance.
   // See https://forum.vuejs.org/t/performance-for-large-numbers-of-components/13545/10
-  @Prop({ type: Object, required: true }) value!: any;
+  @Prop({ type: Object, required: true }) value!: ICombinedValue;
   @Prop({ type: Object, required: true }) localValue!: any;
   @Prop({ type: Object, required: true }) column!: any;
   @Prop({ type: Number, required: true }) columnPosition!: number;
   @Prop({ type: String, default: "existing" }) from!: string;
   @Prop({ type: Number, default: null }) lastFixedColumnIndex!: number;
   @Prop({ type: Number, default: null }) index!: number;
-  @Prop({ type: Array,  default: [] }) children!: any;
+  @Prop({ type: Array, default: [] }) children!: any;
   @Prop({ type: Number, required: true }) level!: number;
   @Prop({ type: Boolean, required: true }) arrowDown!: boolean;
   @Prop({ type: Boolean, required: true }) isTree!: boolean;
@@ -92,11 +93,11 @@ export default class TableCell extends Vue {
   private isArrowDown = false;
 
   private get valueType(): string | undefined {
-    return R.path(['info', 'field', 'valueType', 'type'], this.value);
+    return this.value.info?.field?.valueType.type;
   }
 
   private get fieldType(): string | undefined {
-    return R.path(['info', 'field', 'fieldType', 'type'], this.value);
+    return this.value.info?.field?.fieldType?.type;
   }
 
   private get treeLevel() {
@@ -117,7 +118,9 @@ export default class TableCell extends Vue {
     this.$emit("update:visibleChildren", this.children, this.isArrowDown);
     this.arrowClickStop = true;
     // This pause need for block double click by arrow.
-    setTimeout(()=>{this.arrowClickStop=false}, 1000);
+    setTimeout(() => {
+      this.arrowClickStop = false;
+    }, 1000);
   }
 
   get iconValue() {

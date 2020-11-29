@@ -79,47 +79,47 @@ export default class QRCodeScanner extends Vue {
   @Prop({ type: Boolean, default: false }) multiScan!: boolean;
 
   modalShow = false;
-  camera ='auto';
+  camera ="auto";
   result: Array<any> = [];
-  error = '';
+  error = "";
   loading = false;
   destroyed = false;
 
-  @Watch('openScanner')
+  @Watch("openScanner")
   private toggleOpenScanner() {
     this.modalShow = !this.modalShow;
   }
 
-  async onInit (promise: any) {
+  async onInit(promise: any) {
     this.loading = true;
     try {
-      await promise
+      await promise;
     } catch (error) {
       this.error = error.name;
-      if (error.name === 'NotAllowedError') {
-        this.error = "ERROR: you need to grant camera access permisson"
-      } else if (error.name === 'NotFoundError') {
-        this.error = "ERROR: no camera on this device"
-      } else if (error.name === 'NotSupportedError') {
-        this.error = "ERROR: secure context required (HTTPS, localhost)"
-      } else if (error.name === 'NotReadableError') {
-        this.error = "ERROR: is the camera already in use?"
-      } else if (error.name === 'OverconstrainedError') {
-        this.error = "ERROR: installed cameras are not suitable"
-      } else if (error.name === 'StreamApiNotSupportedError') {
-        this.error = "ERROR: Stream API is not supported in this browser"
+      if (error.name === "NotAllowedError") {
+        this.error = "ERROR: you need to grant camera access permisson";
+      } else if (error.name === "NotFoundError") {
+        this.error = "ERROR: no camera on this device";
+      } else if (error.name === "NotSupportedError") {
+        this.error = "ERROR: secure context required (HTTPS, localhost)";
+      } else if (error.name === "NotReadableError") {
+        this.error = "ERROR: is the camera already in use?";
+      } else if (error.name === "OverconstrainedError") {
+        this.error = "ERROR: installed cameras are not suitable";
+      } else if (error.name === "StreamApiNotSupportedError") {
+        this.error = "ERROR: Stream API is not supported in this browser";
       }
     } finally {
       this.loading = false;
     }
-  };
+  }
 
-  private async onDecode (content: string) {
-    this.$emit('update:scanResult', content);
+  private async onDecode(content: string) {
+    this.$emit("update:scanResult", content);
     this.result.push(content.split("&&"));
 
     try {
-      window.navigator.vibrate([100,30,200]);
+      window.navigator.vibrate([100, 30, 200]);
     } catch (e) {
       console.error(e);
     }
@@ -135,39 +135,38 @@ export default class QRCodeScanner extends Vue {
       await this.timeout(1);
       this.turnCameraOn();
     }
-  };
+  }
 
-  private turnCameraOn () {
-    this.camera = 'auto';
-  };
+  private turnCameraOn() {
+    this.camera = "auto";
+  }
 
-  private turnCameraOff () {
-    this.camera = 'off';
-  };
+  private turnCameraOff() {
+    this.camera = "off";
+  }
 
-  private timeout (ms: number) {
+  private timeout(ms: number) {
     return new Promise(resolve => {
       window.setTimeout(resolve, ms);
-    })
-  };
+    });
+  }
 
-  async reload () {
-    this.destroyed = true
-    await this.$nextTick()
-    this.destroyed = false
-  };
+  async reload() {
+    this.destroyed = true;
+    await this.$nextTick();
+    this.destroyed = false;
+  }
 
   private sendList() {
-    this.$bvModal.hide('qrcode-scanner-modal');
+    this.$bvModal.hide("qrcode-scanner-modal");
     this.$emit("select", this.result);
     this.result = [];
-  };
+  }
 
   private clearList() {
     this.reload();
     this.result = [];
-  };
-
+  }
 }
 </script>
 

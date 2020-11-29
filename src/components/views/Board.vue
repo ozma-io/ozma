@@ -56,14 +56,13 @@ import { CombinedUserView, IValueInfo, IUserViewValueRef, ICombinedValue, IRowCo
 import Board from "@/components/kanban/Board.vue";
 import { ICard, ICardCol, ICardRow, CardColType, allowedTargets } from "@/components/kanban/Card.vue";
 import { IColumn } from "@/components/kanban/Column.vue";
+import Errorbox from "@/components/Errorbox.vue";
+import { FieldType } from "ozma-api/src";
+import { attrToLinkRef, attrToLinkSelf, Link } from "@/links";
 import { IFieldRef, IReferenceFieldType, ValueType, IEntityRef } from "../../api";
 import { attrToQuery, attrToQueryRef } from "../../state/query";
 import BaseEntriesView from "../BaseEntriesView";
 import { IFieldInfo } from "../../values";
-
-import Errorbox from "@/components/Errorbox.vue";
-import { FieldType } from "ozma-api/src";
-import { attrToLinkRef, attrToLinkSelf, Link } from "@/links";
 
 interface ICardExtra {
   groupRef: IExistingValueRef;
@@ -77,7 +76,6 @@ type IColumnTitleMap = Record<number, string>;
 })
 @Component({ components: { Board, Errorbox } })
 export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntriesView>(BaseUserView, BaseEntriesView) {
-
   @Prop() uv!: CombinedUserView;
   selectedCards: any[] = [];
 
@@ -92,10 +90,10 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
   get cardTarget(): string | undefined {
     const cardTarget = this.uv.attributes.card_target;
     if (
-      typeof cardTarget === 'string'
+      typeof cardTarget === "string"
       || cardTarget instanceof String
       || allowedTargets.indexOf(cardTarget) !== -1) {
-      return cardTarget
+      return cardTarget;
     }
     return undefined;
   }
@@ -149,14 +147,14 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
         console.warn(`Old-style link attribute detected: "${oldName}"`);
         return oldRet;
       }
+      return undefined;
     };
     const createView = attrToQuery(
       getDeprecatedAttr("card_create_view", "create_view"),
       { infoByDefault: true },
     ) || undefined;
     const groupedColumns = R.groupBy(card => String(R.path(["groupValue"], card)),
-      cards,
-    );
+      cards);
     const filteredColumns = this.columnNames
       .reduce((acc: object, columTitle: string) => {
         const column: IColumn[] = R.pathOr([], [columTitle], groupedColumns);
@@ -260,7 +258,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
 
     let cardLink: Link | undefined;
     row.values.forEach((value, colI) => {
-      const columnAttrs =  this.uv.columnAttributes[colI];
+      const columnAttrs = this.uv.columnAttributes[colI];
       const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, this.uv.attributes);
       const rowLink = attrToLinkSelf(getCellAttr("row_link"), value.info);
       if (rowLink !== null) {

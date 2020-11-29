@@ -110,12 +110,12 @@ import { IQuery } from "@/state/query";
 import { LocalUserView, SimpleLocalUserView, ILocalRowInfo, ILocalRow, ValueRef, RowRef } from "@/local_user_view";
 import { UserView } from "@/components";
 import { Action } from "@/components/ActionsMenu.vue";
-import { ISelectionRef } from "@/components/BaseUserView";
-import BaseUserView from "@/components/BaseUserView";
+import BaseUserView, { ISelectionRef } from "@/components/BaseUserView";
+
 import FormEntry from "@/components/views/form/FormEntry.vue";
 
 import {
-  IFieldInfo, IBlockInfo, IFormValueExtra, IFormRowExtra, IFormUserViewExtra, GridElement, IGridSection, IGridInput, IButtons, IGridButtons, IButtonAction
+  IFieldInfo, IBlockInfo, IFormValueExtra, IFormRowExtra, IFormUserViewExtra, GridElement, IGridSection, IGridInput, IButtons, IGridButtons, IButtonAction,
 } from "@/components/form/types";
 import { attrToLink, attrToLinkSelf } from "@/links";
 
@@ -123,10 +123,6 @@ type IFormLocalRowInfo = ILocalRowInfo<IFormRowExtra>;
 type IFormLocalRow = ILocalRow<IFormValueExtra, IFormRowExtra>;
 
 class LocalFormUserView extends LocalUserView<IFormValueExtra, IFormRowExtra, IFormUserViewExtra> {
-  constructor(store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>, oldLocal: LocalUserView<IFormValueExtra, IFormRowExtra, IFormUserViewExtra> | null) {
-    super(store, uv, defaultRawValues, oldLocal);
-  }
-
   createCommonLocalValue(row: IRowCommon, localRow: IFormLocalRowInfo, columnIndex: number, value: ICombinedValue): IFormValueExtra {
     const columnAttrs = this.uv.columnAttributes[columnIndex];
     const attributes: {visible?: boolean} = {
@@ -138,7 +134,7 @@ class LocalFormUserView extends LocalUserView<IFormValueExtra, IFormRowExtra, IF
     const visible = Boolean(attributes["visible"] ?? true);
     const extra = {
       attributes,
-      visible
+      visible,
     };
     return extra;
   }
@@ -242,9 +238,9 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
   // When we only have one record displayed, we hide "Delete" button and add is an an action to menu instead.
   get useDeleteAction(): RowRef | null {
     if (this.rowPositions.length === 0 && this.newRowsPositions.length === 1) {
-      return { type: "added", id: this.newRowsPositions[0] }
+      return { type: "added", id: this.newRowsPositions[0] };
     } else if (this.rowPositions.length === 1 && this.newRowsPositions.length === 0) {
-      return { type: "existing", position: this.rowPositions[0] }
+      return { type: "existing", position: this.rowPositions[0] };
     } else {
       return null;
     }
@@ -348,10 +344,9 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
      *     ]
      * }]
      */
-    const formButtons = this.uv.attributes['form_buttons'];
+    const formButtons = this.uv.attributes["form_buttons"];
     if (formButtons !== undefined && Array.isArray(formButtons)) {
       formButtons.forEach((buttons: IButtons, i: number) => {
-
         const blockAttr = Number(buttons["form_block"]);
         const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr;
         const block = Math.max(0, Math.min(blockNumber, blocks.length - 1));
@@ -359,25 +354,28 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
         const actions: IButtonAction[] = [];
         if (buttons.actions !== undefined && Array.isArray(buttons.actions)) {
           buttons.actions.forEach((action: any) => {
-            if (typeof action.name !== "string")
+            if (typeof action.name !== "string") {
               return;
-            if (typeof action.variant !== "string")
+            }
+            if (typeof action.variant !== "string") {
               return;
+            }
             const link = attrToLink(action);
-            if (link === null)
+            if (link === null) {
               return;
+            }
             actions.push({ name: action.name, variant: action.variant, link });
-          })
+          });
         }
 
         if (actions.length > 0) {
           const element: IGridButtons = {
             type: "buttons",
-            actions
+            actions,
           };
           blocks[block].content.push(element);
         }
-      })
+      });
     }
     return blocks;
   }

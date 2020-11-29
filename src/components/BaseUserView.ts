@@ -43,7 +43,6 @@ type IBaseLocalRow = ILocalRow<IBaseValueExtra, IBaseRowExtra>;
 
 // BaseUserView class for save local data to vuex
 export class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBaseRowExtra, IBaseUserViewExtra> {
-
   createCommonLocalValue(row: IRowCommon, localRow: IBaseLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: IBaseValueExtra | null): IBaseValueExtra {
     const selected = oldLocal !== null ? oldLocal.selected : false;
 
@@ -55,9 +54,8 @@ export class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBas
   }
 
   createCommonLocalRow(row: IRowCommon): IBaseRowExtra {
-
     const extra: IBaseRowExtra = {
-      selected: false
+      selected: false,
     };
 
     this.extra.rowCount++;
@@ -73,7 +71,7 @@ export class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBas
   createLocalUserView(): IBaseUserViewExtra {
     const extra = {
       rowCount: -1, // FIXME why not 0?
-      selectedRows: new ObjectSet<RowRef>()
+      selectedRows: new ObjectSet<RowRef>(),
     };
     return extra;
   }
@@ -92,7 +90,6 @@ export class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBas
       }
     }
   }
-
 
   selectAll(selectedStatus: boolean) {
     Object.entries(this.newRows).forEach(([rowIdRaw, row]) => {

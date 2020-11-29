@@ -12,6 +12,7 @@ declare module "v-click-outside" {
 
 declare module "*.vue" {
   import Vue from "vue";
+
   export default Vue;
 }
 
@@ -39,4 +40,3 @@ declare module "vue-textarea-autosize";
 declare module "vue-dragscroll";
 declare module "vue-qrcode-reader";
 declare module "@chenfengyuan/vue-qrcode";
-

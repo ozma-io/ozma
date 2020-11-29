@@ -41,9 +41,9 @@ import { namespace } from "vuex-class";
 import * as R from "ramda";
 
 import BaseUserView from "@/components/BaseUserView";
-import { LocalUserView } from "@/local_user_view";
+import { LocalUserView, ValueRef } from "@/local_user_view";
 import { IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
-import { ValueRef } from "@/local_user_view";
+
 import { homeSchema, valueToPunnedText, currentValue } from "@/state/user_view";
 import { funappSchema, IEntityRef, IFieldRef } from "@/api";
 import SelectUserView from "@/components/SelectUserView.vue";
@@ -61,9 +61,9 @@ interface IModalReferenceField {
 }
 
 const csvCell = (str: string): string => {
-  let csvstr = str.replace(/"/g, '""');
+  let csvstr = str.replace(/"/g, `""`);
   if (csvstr.search(/("|;|\n)/g) > 0) {
-    csvstr = "\"" + csvstr + "\"";
+    csvstr = `"${csvstr}"`;
   }
   csvstr += ";";
   return csvstr;
@@ -78,8 +78,6 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
   modalView: IQuery | null = null;
   openQRCodeScanner = false;
-
-
 
   get createView() {
     const opts: IAttrToQueryOpts = {
@@ -100,6 +98,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
         console.warn(`Old-style link attribute detected: "${oldName}"`);
         return oldRet;
       }
+      return undefined;
     };
 
     return attrToLink(getDeprecatedAttr("create_link", "create_view"), opts);
@@ -153,8 +152,8 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
         await Promise.all(this.uv.info.columns.map((columnInfo, index) => {
           const fallbackName: string | null = R.pathOr(
-            null, [index, 'csv_import_column'],
-            this.uv.columnAttributes
+            null, [index, "csv_import_column"],
+            this.uv.columnAttributes,
           );
           const columnName = fallbackName || columnInfo.name;
           const currValue = row[columnName];
@@ -173,7 +172,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
             return Promise.resolve();
           }
         }));
-      }
+      },
     });
   }
 
@@ -183,7 +182,6 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
     if (Array.isArray(panelButtons)) {
       panelButtons.forEach((button: any) => {
-
         const actions: Action[] = [];
         if (Array.isArray(button.actions)) {
           const opts: IAttrToQueryOpts = {};
@@ -205,13 +203,13 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
               link,
             });
           });
-        };
+        }
         buttons.push({
           icon: button.icon,
           name: button.name,
-          actions
+          actions,
         });
-      })
+      });
     }
 
     return buttons;
@@ -254,11 +252,16 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
     const modalReferenceField = this.modalReferenceField;
     if (modalReferenceField) {
-      actions.push({ name: this.$t("create_in_modal").toString(), callback: () => this.modalView = modalReferenceField.uv });
+      actions.push({
+         name: this.$t("create_in_modal").toString(),
+        callback: () => {
+          this.modalView = modalReferenceField.uv;
+        }
+      });
     }
 
     if (this.uv.info.mainEntity !== null) {
-      actions.push({ name: this.$t("import_from_csv").toString(), uploadFile: (file) => this.importFromCsv(file) });
+      actions.push({ name: this.$t("import_from_csv").toString(), uploadFile: file => this.importFromCsv(file) });
     }
 
     // FIXME: workaround until we have proper role-based permissions for this.
@@ -267,7 +270,12 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
     }
 
     if (this.uv.attributes["scan_qrcode"]) {
-      actions.push({ name: this.$t("scan_qrcode").toString(), callback: () => this.openQRCodeScanner = !this.openQRCodeScanner });
+      actions.push({
+        name: this.$t("scan_qrcode").toString(),
+        callback: () => {
+          this.openQRCodeScanner = !this.openQRCodeScanner;
+        }
+      });
     }
 
     return actions;
@@ -287,6 +295,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
           entity: fieldType.entity,
         };
       }
+      return undefined;
     }, this.uv.columnAttributes);
     return modalReferenceField.pop() || null;
   }
@@ -308,7 +317,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
   private selectFromQRScanner(result: any[]) {
     result.forEach(r => {
       this.updateValue({ type: "new", column: Number(r[0]) }, r[4]);
-    })
+    });
   }
 }
 </script>

@@ -30,9 +30,9 @@ import draggable from "vuedraggable";
 
 import { ICard, CardTarget } from "@/components/kanban/Card.vue";
 import Column, { IColumn } from "@/components/kanban/Column.vue";
-import { ValueRef } from "../../local_user_view";
 import { dragscroll } from "vue-dragscroll";
 import { isMobile } from "@/utils";
+import { ValueRef } from "../../local_user_view";
 
 @Component({ components: { Column, draggable }, directives: { dragscroll } })
 export default class Board extends Vue {

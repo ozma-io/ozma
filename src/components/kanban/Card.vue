@@ -112,7 +112,7 @@ export class Card extends Vue {
     const color: string | undefined = R.pathOr("white", ["style", "color"], this.data);
     return {
       backgroundColor: color,
-      width: `${this.width - 20}px`
+      width: `${this.width - 20}px`,
     };
   }
 }

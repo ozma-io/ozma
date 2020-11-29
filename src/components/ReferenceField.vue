@@ -110,15 +110,13 @@ import { namespace } from "vuex-class";
 import { IUserViewArguments, ICombinedValue, homeSchema, currentValue, IEntriesRef } from "@/state/user_view";
 import { IQuery } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
-import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
-import MultiSelect from "@/components/multiselect/MultiSelect.vue";
+import MultiSelect, { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
+
 import { Action } from "@/components/ActionsMenu.vue";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import { attrToLinkRef } from "@/links";
 
-
 const query = namespace("query");
-
 
 export interface IReferenceSelectAction {
   name: string;
@@ -174,15 +172,16 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
   }
 
   private iconValue(target: string) {
-    if (target === 'modal-auto' || target === 'modal')
-      return 'flip_to_front';
-    else
-      return 'open_in_new';
+    if (target === "modal-auto" || target === "modal") {
+      return "flip_to_front";
+    } else {
+      return "open_in_new";
+    }
   }
 
   private selectFromView(id: number) {
     this.selectedView = null;
-    this.$emit('update', id);
+    this.$emit("update", id);
   }
 }
 </script>

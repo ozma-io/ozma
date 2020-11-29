@@ -1,7 +1,7 @@
 import { Dispatch, Commit } from "vuex";
 
 import {
-  IActionRef, IActionResult, default as Api
+  IActionRef, IActionResult, default as Api,
 } from "@/api";
 import { CombinedTransactionResult } from "@/state/staging_changes";
 

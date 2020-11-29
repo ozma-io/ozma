@@ -37,11 +37,11 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
   private get modalTabs(): IInternalModalTab[] {
     return this.passengers.map((node, index) => {
       const modalPortal: any = node.context!.$children[0];
-      const modalMenuActions: any = ('actions-menu' in modalPortal.$slots)
-        ? modalPortal.$slots['actions-menu'][0]
+      const modalMenuActions: any = ("actions-menu" in modalPortal.$slots)
+        ? modalPortal.$slots["actions-menu"][0]
         : undefined;
-      const modalRightActions: any = ('actions-right' in modalPortal.$slots)
-        ? modalPortal.$slots['actions-right'][0]
+      const modalRightActions: any = ("actions-right" in modalPortal.$slots)
+        ? modalPortal.$slots["actions-right"][0]
         : undefined;
       const title: string | undefined = modalPortal.tabName;
       const order: number = modalPortal.order;
@@ -53,7 +53,7 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
         tab: modalPortal,
         selectedOnStart: selected,
         actionsMenu: modalMenuActions,
-        actionsRight: modalRightActions
+        actionsRight: modalRightActions,
       };
     }).sort((a, b) => a.order - b.order);
   }

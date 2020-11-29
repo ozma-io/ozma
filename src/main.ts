@@ -17,7 +17,7 @@ import App from "@/App.vue";
 
 import TextareaAutosize from "vue-textarea-autosize";
 import VueQrcodeReader from "vue-qrcode-reader";
-import VueQrcode from '@chenfengyuan/vue-qrcode';
+import VueQrcode from "@chenfengyuan/vue-qrcode";
 
 import authModule from "@/state/auth";
 import settingsModule from "@/state/settings";
@@ -51,8 +51,9 @@ Vue.component("ButtonsPanel", ButtonsPanel);
 Vue.component("FormControl", FormControl);
 Vue.component("FunLink", FunLink);
 
-Vue.directive('visible', (el, bind) => {
-  el.style.visibility=(!!bind.value) ? 'visible' : 'hidden';});
+Vue.directive("visible", (el, bind) => {
+  el.style.visibility = (bind.value) ? "visible" : "hidden";
+});
 
 Modules.router.beforeResolve((to, from, next) => {
   // Reset page title

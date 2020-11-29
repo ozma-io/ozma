@@ -238,10 +238,10 @@ export default class TopLevelUserView extends Vue {
     this.errors.forEach(error => {
       this.$bvToast.toast(error.toString(), {
         title: this.$t("error").toString(),
-        variant: 'danger',
-        solid: true
-      })
-    })
+        variant: "danger",
+        solid: true,
+      });
+    });
   }
 
   @Watch("$route", { deep: true, immediate: true })
@@ -251,8 +251,9 @@ export default class TopLevelUserView extends Vue {
 
   @Watch("errors")
   private errorsChanged() {
-    if (this.errors.length > 0)
+    if (this.errors.length > 0) {
       this.makeErrorToast();
+    }
   }
 
   private updateTitle(title: string) {
@@ -273,10 +274,12 @@ export default class TopLevelUserView extends Vue {
     actions.push(...this.extraActions);
     if (this.currentAuth !== null) {
       if (Api.developmentMode) {
-        actions.push({ name: this.$t("authed_link").toString(), order: 1000, callback: () => {
-          const link = getAuthedLink(this.currentAuth!);
-          navigator.clipboard.writeText(link);
-        } });
+        actions.push({ name: this.$t("authed_link").toString(),
+          order: 1000,
+          callback: () => {
+            const link = getAuthedLink(this.currentAuth!);
+            navigator.clipboard.writeText(link);
+          } });
       }
       actions.push({ name: this.$t("account").toString(), order: 1000, link: { href: Api.accountUrl } });
       actions.push({ name: this.$t("logout").toString(), order: 1000, callback: this.logout });

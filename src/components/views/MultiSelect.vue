@@ -121,7 +121,7 @@ const findValueDelta = (rows: ICombinedRow[], newRows: Record<number, IRowCommon
   Object.entries(newRows).forEach(([rowId, row]) => {
     storeValues[row.values[indexColumn].value] = { type: "added", id: Number(rowId) };
   });
-  const selectValues: Record<string, IValueDeltaNew>  = value.reduce((acc, vl) => {
+  const selectValues: Record<string, IValueDeltaNew> = value.reduce((acc, vl) => {
     return { ...acc, [vl]: { ref: { column: indexColumn, type: "new" }, value: vl } };
   }, {});
 
@@ -203,6 +203,7 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView, BaseE
         console.warn(`Old-style link attribute detected: "${oldName}"`);
         return oldRet;
       }
+      return undefined;
     };
     const linkedView = getDeprecatedAttr("row_link", "row_linked_view");
     const entries = this.entriesMap.getEntries(this.entriesEntity);

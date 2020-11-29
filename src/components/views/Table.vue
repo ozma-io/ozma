@@ -358,10 +358,6 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
 };
 
 export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRowExtra, ITableUserViewExtra> {
-  constructor(store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>, oldLocal: LocalUserView<ITableValueExtra, ITableRowExtra, ITableUserViewExtra> | null) {
-    super(store, uv, defaultRawValues, oldLocal);
-  }
-
   createCommonLocalValue(row: IRowCommon, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: ITableValueExtra | null, deleted: boolean): ITableValueExtra {
     const columnInfo = this.uv.info.columns[columnIndex];
     const columnAttrs = this.uv.columnAttributes[columnIndex];
@@ -377,7 +373,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     }
 
     const textAlignRightTypes: (ValueType["type"])[] = ["int", "decimal"];
-    const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType
+    const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType;
     if (textAlignRightTypes.includes(punOrValue.type)) {
       style["text-align"] = "right";
     }
@@ -425,6 +421,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
         console.warn(`Old-style link attribute detected: "${oldName}"`);
         return oldRet;
       }
+      return undefined;
     };
 
     if (value.info) {
@@ -442,10 +439,11 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       const parent = getCellAttr("tree_branches") && value.value ? value.value : 0;
       const rows = this?.uv?.rows ?? null;
       if (parent > 0 && rows !== null) {
-        const parentIndex = rows.findIndex(row => {
-          if (row.entityIds === undefined || Object.keys(row.entityIds)[0] === undefined)
+        const parentIndex = rows.findIndex(parentRow => {
+          if (parentRow.entityIds === undefined || Object.keys(parentRow.entityIds)[0] === undefined) {
             return -1;
-          return row.entityIds[Object.keys(row.entityIds)[0]].id === parent;
+          }
+          return parentRow.entityIds[Object.keys(parentRow.entityIds)[0]].id === parent;
         });
         if (parentIndex > -1) {
           localRow.extra.parent = parentIndex;
@@ -676,12 +674,10 @@ const ordRowPositionRef = (a: RowPositionRef, b: RowPositionRef) => {
     } else {
       return 1;
     }
+  } else if (a.type === "new") {
+    return 0;
   } else {
-    if (a.type === "new") {
-      return 0;
-    } else {
-      return Math.sign(a.position - (b as any).position);
-    }
+    return Math.sign(a.position - (b as any).position);
   }
 };
 
@@ -752,7 +748,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   private editParams: IEditParams = {
     height: 0,
     width: 0,
-    minHeight: 0
+    minHeight: 0,
   };
   // Keep references to entries used for editing once, so we don't re-request them.
   private keptEntries = new ObjectSet<IEntriesRef>();
@@ -890,9 +886,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (this.filter.length === 0) {
       this.buildRowPositions();
       this.initRowsState();
-    } else {
-      if (this.isTree)
-        this.offTree();
+    } else if (this.isTree) {
+      this.offTree();
     }
   }
 
@@ -924,20 +919,21 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       }
       nextRender().then(() => {
         const emptyRowRefElement = this.$refs.emptyRowRef as any | undefined;
-        if (emptyRowRefElement !== undefined)
-          this.cellEditByTarget({ type:"new", column: emptyRowRefElement.columnIndexes[0] }, emptyRowRefElement.$children[0].$el);
+        if (emptyRowRefElement !== undefined) {
+          this.cellEditByTarget({ type: "new", column: emptyRowRefElement.columnIndexes[0] }, emptyRowRefElement.$children[0].$el);
+        }
       });
     }
   }
 
   // Toggle children rows visibles.
   private visibleChildren(children: number[], visible: boolean) {
-
     // Save state.
     if (this.local.rows[children[0]] !== undefined) {
       const parent = this.local.rows[children[0]].extra.parent;
-      if (parent === undefined)
+      if (parent === undefined) {
         return;
+      }
       const extra = this.local.rows[parent].extra;
       if (visible) {
         this.rowsState[parent] = extra;
@@ -949,7 +945,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
     // Toggle
     children.forEach((child, i) => {
-
       if (!visible && this.local.rows[child].extra.visible) {
         this.visibleChildren(this.local.rows[child].extra.children, visible);
 
@@ -959,15 +954,16 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       }
 
       this.local.rows[child].extra.visible = visible;
-    })
+    });
 
-    if (visible)
+    if (visible) {
       this.displayChildren(children);
+    }
   }
 
   private displayChildren(children: number[]) {
     const parent = this.local.rows[children[0]].extra.parent;
-    if (parent !== undefined)
+    if (parent !== undefined) {
       for (let i = children.length - 1; i >= 0; i--) {
         if (this.rowPositions.includes(children[i])) {
           const childPosition = this.rowPositions.indexOf(children[i]);
@@ -975,11 +971,12 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         }
         this.rowPositions.splice(this.rowPositions.indexOf(parent) + 1, 0, children[i]);
       }
+    }
   }
 
   private initRowsState() {
     this.local.rows.forEach((row, rowI) => {
-      if (row.extra.parent !== undefined &&  this.local.rows[row.extra.parent] !== undefined &&!this.local.rows[row.extra.parent].extra.children.includes(rowI)) {
+      if (row.extra.parent !== undefined && this.local.rows[row.extra.parent] !== undefined && !this.local.rows[row.extra.parent].extra.children.includes(rowI)) {
         this.local.rows[row.extra.parent].extra.children.push(rowI);
         let level = 1;
         let parent = this.local.rows[row.extra.parent].extra.parent;
@@ -989,11 +986,12 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         }
         this.local.rows[rowI].extra.level = level;
       }
-    })
+    });
     if (!R.isEmpty(this.rowsState)) {
       // Load visible data from rowsState to rows.
-      for (const key in this.rowsState) {
-        const id = this?.local?.rows[key]?.extra?.selectionEntry?.id ?? undefined;
+      Object.keys(this.rowsState).forEach(rawKey => {
+        const key = Number(rawKey);
+        const id = this?.local?.rows[key]?.extra?.selectionEntry?.id;
         if (id !== undefined && id === this.rowsState[key].selectionEntry.id) {
           this.local.rows[key].extra.arrowDown = true;
           // nextRenderOneJump need for correct render rows after update. But be cearful with Chrome!
@@ -1002,7 +1000,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
             this.visibleChildren(this.local.rows[key].extra.children, true);
           });
         }
-      }
+      });
     } else {
       this.buildRowPositions();
     }
@@ -1047,8 +1045,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       return;
     }
 
-    if ('loss_of_focus_save' in this.uv.attributes && Boolean(this.uv.attributes['loss_of_focus_save']))
+    if ("loss_of_focus_save" in this.uv.attributes && Boolean(this.uv.attributes["loss_of_focus_save"])) {
       this.submitChanges({ scope: this.scope });
+    }
 
     this.removeAutoSaveLock(this.editing.lock);
     this.editing = null;
@@ -1077,7 +1076,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   private setCoordsForEditCell(target: HTMLElement) {
-    this.isSelectedLastFixedCell = target.classList.value.includes('next-after-last-fixed');
+    this.isSelectedLastFixedCell = target.classList.value.includes("next-after-last-fixed");
 
     const bodyRect = document.body.getBoundingClientRect();
     const rect = target.getBoundingClientRect();
@@ -1086,7 +1085,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
     // If edit window lower than screen, raise the window up.
     // +54px for bottom panel.
-    if (0 > bodyRect.bottom - rect.bottom - 54) {
+    if (bodyRect.bottom - rect.bottom - 54 < 0) {
       this.editCoords.y = bodyRect.bottom - this.editParams.height - 54;
       this.editParams.height += 54;
     } else {
@@ -1124,7 +1123,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   private cellEditHandler(ref: ValueRef, target: HTMLElement) {
-
     this.setCoordsForEditCell(target);
     this.editParams.width = target.offsetWidth;
     this.editParams.height = target.offsetHeight;
@@ -1150,8 +1148,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         });
       }
     }
-
-
   }
 
   private selectCell(ref: ValueRef) {
@@ -1412,11 +1408,13 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   get showFixedRow() {
-    /* let tableWidth = this.technicalWidth;
+    /*
+    let tableWidth = this.technicalWidth;
     for (const column of this.local.extra.columns) {
       tableWidth += column.width;
     }
-    return tableWidth > screen.width && this.fixedRowColumnIndexes.length > 0;*/
+    return tableWidth > screen.width && this.fixedRowColumnIndexes.length > 0;
+    */
     return false;
   }
 

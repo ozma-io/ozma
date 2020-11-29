@@ -34,7 +34,8 @@ module.exports = {
   pluginOptions: {
     lintStyleOnBuild: true,
     stylelint: {
-      fix: false
+      fix: false,
+      maxWarnings: process.env.NODE_ENV === 'production' ? 0 : undefined,
     },
 
     i18n: {

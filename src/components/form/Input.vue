@@ -77,7 +77,7 @@ import Textarea from "@/components/form/Textarea.vue";
 import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
 
 @Component({
-  components: { Textarea, QRCodeScanner }
+  components: { Textarea, QRCodeScanner },
 })
 export default class Input extends Vue {
   @Prop({ type: String }) label!: string;
@@ -195,14 +195,16 @@ export default class Input extends Vue {
     }
     if (!this.isMobile) {
       const control = this.$refs.control as HTMLInputElement;
-      if (control !== undefined)
+      if (control !== undefined) {
         control.style.width = "100%";
+      }
     }
   }
 
   private setCursorPositionEnd(controlElement: HTMLInputElement) {
-    if (controlElement)
+    if (controlElement) {
       controlElement.selectionStart = this.value ? this.value.length : 0;
+    }
   }
 
   private updateInput(value: MouseEvent | any) {

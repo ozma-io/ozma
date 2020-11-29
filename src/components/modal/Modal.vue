@@ -225,4 +225,3 @@ export default class Modal extends Vue {
     height: calc(100% - 45px);
   }
 </style>
-

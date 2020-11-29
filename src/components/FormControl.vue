@@ -361,8 +361,8 @@ import { IQuery, attrToQuerySelf, queryLocation } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { isMobile } from "@/utils";
 import { attrToLinkSelf } from "@/links";
-import { IReferenceSelectAction } from "./ReferenceField.vue";
 import { router } from "@/modules";
+import { IReferenceSelectAction } from "./ReferenceField.vue";
 
 interface ITextType {
   name: "text";
@@ -380,7 +380,6 @@ interface ICodeEditorType {
   language: string;
   style: Record<string, any>;
 }
-
 
 interface IQRCodeType {
   name: "qrcode";
@@ -456,7 +455,7 @@ type IType =
 const userView = namespace("userView");
 
 const heightExclusions = ["select", "reference"];
-const multilineTypes = [ "markdown","codeeditor", "textarea" ];
+const multilineTypes = ["markdown", "codeeditor", "textarea"];
 const inlineTypes = ["markdown", "codeeditor", "textarea", "reference"];
 
 @Component({
@@ -536,7 +535,7 @@ export default class FormControl extends Vue {
   //        from `update:value` event.
   get calendarValue() {
     if (this.type.type === "datetime" && this.currentValue) {
-      if (typeof this.currentValue === 'string') return this.currentValue;
+      if (typeof this.currentValue === "string") return this.currentValue;
       return this.currentValue.local().format("L LT");
     }
     return this.textValue;
@@ -561,7 +560,7 @@ export default class FormControl extends Vue {
   private updateTitle(title: string | null) {
     this.title = (!!title && this.columnInfoName === this.caption)
       ? title
-      : this.caption
+      : this.caption;
   }
 
   private setInputHeight(value: number) {
@@ -577,11 +576,13 @@ export default class FormControl extends Vue {
   }
 
   get textAlign() {
-    if ("text_align" in this.attributes)
+    if ("text_align" in this.attributes) {
       return String(this.attributes["text_align"]);
-
-    if (this.inputType.name === "text" && this.inputType.type === "number")
+    } else if (this.inputType.name === "text" && this.inputType.type === "number") {
       return "right";
+    } else {
+      return "left";
+    }
   }
 
   get cellColor() {
@@ -622,6 +623,7 @@ export default class FormControl extends Vue {
         console.warn(`Old-style link attribute detected: "${oldName}"`);
         return oldRet;
       }
+      return undefined;
     };
 
     const controlAttr = String(this.attributes["control"]);
@@ -638,9 +640,9 @@ export default class FormControl extends Vue {
         return { name: "userview", ...nestedRef };
       }
     } else if (controlAttr === "static_text") {
-      return { name: "static_text" }
+      return { name: "static_text" };
     } else if (controlAttr === "static_image") {
-      return { name: "static_image" }
+      return { name: "static_image" };
     }
     // `calc` is needed because sizes should be relative to base font size.
     const heightSinglelineText = "calc(2em + 6px)";
@@ -648,7 +650,7 @@ export default class FormControl extends Vue {
     const heightCodeEditor = "calc(100% - 1.5rem)";
     if (this.fieldType !== null) {
       switch (this.fieldType.type) {
-        case "reference":
+        case "reference": {
           const refEntry: IReferenceType = {
             name: "reference",
             ref: referenceEntriesRef(this.fieldType),
@@ -679,6 +681,7 @@ export default class FormControl extends Vue {
             });
           }
           return refEntry;
+        }
         case "enum":
           return {
             name: "select",

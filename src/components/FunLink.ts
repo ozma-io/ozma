@@ -22,7 +22,7 @@ export const redirectClick = (e: MouseEvent, allowControlKeys?: boolean): boolea
 
   e.preventDefault();
   return true;
-}
+};
 
 export default Vue.component("FunLink", {
   functional: true,
@@ -58,7 +58,7 @@ export default Vue.component("FunLink", {
           };
         } else if (link.target === "blank") {
           handler = () => {
-            window.open(href!, '_blank');
+            window.open(href!, "_blank");
           };
         } else if (link.target === "modal-auto") {
           handler = () => {
@@ -68,7 +68,7 @@ export default Vue.component("FunLink", {
             } else {
               vueEmit(context, "goto", link.query);
             }
-          }
+          };
         } else {
           throw new Error("Impossible");
         }
@@ -80,8 +80,9 @@ export default Vue.component("FunLink", {
     }
 
     const onHandlers = handler === null ? {} : { click: (e: MouseEvent) => {
-      if (!redirectClick(e, href === null))
+      if (!redirectClick(e, href === null)) {
         return;
+      }
       vueEmit(context, "click");
       handler!();
     } };

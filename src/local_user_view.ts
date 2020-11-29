@@ -195,47 +195,47 @@ export abstract class LocalUserView<ValueT, RowT, ViewT> implements IHandlerProv
   abstract createEmptyLocalRow(row: IRowCommon, oldLocal: RowT | null): RowT;
 
   updateValue(rowIndex: number, row: ICombinedRow, localRow: ILocalRowInfo<RowT>, columnIndex: number, value: ICombinedValue, localValue: ValueT) {
-    return;
+
   }
 
   updateAddedValue(rowId: AddedRowId, row: IAddedRow, localRow: ILocalRowInfo<RowT>, columnIndex: number, value: ICombinedValue, localValue: ValueT) {
-    return;
+
   }
 
   updateNewValue(columnIndex: number, value: ICombinedValue, localValue: ValueT) {
-    return;
+
   }
 
   deleteRow(rowIndex: number, row: ICombinedRow, localRow: ILocalRow<ValueT, RowT>) {
-    return;
+
   }
 
   undeleteRow(rowIndex: number, row: ICombinedRow, localRow: ILocalRow<ValueT, RowT>) {
-    return;
+
   }
 
   deleteAddedRow(rowId: AddedRowId, row: IAddedRow, localRow: ILocalRow<ValueT, RowT>) {
-    return;
+
   }
 
   insertAddedRow(rowId: AddedRowId, row: IAddedRow, localRow: ILocalRow<ValueT, RowT>) {
-    return;
+
   }
 
   postInitUserView() {
-    return;
+
   }
 
   postInitRow(rowIndex: number, row: ICombinedRow, localRow: ILocalRowInfo<RowT>) {
-    return;
+
   }
 
   postInitAddedRow(rowId: AddedRowId, row: IAddedRow, localRow: ILocalRowInfo<RowT>) {
-    return;
+
   }
 
   postInitEmptyRow(row: IRowCommon, localRow: ILocalRowInfo<RowT>) {
-    return;
+
   }
 
   getValueByRef(ref: ValueRef) {
@@ -326,10 +326,6 @@ export abstract class LocalUserView<ValueT, RowT, ViewT> implements IHandlerProv
 }
 
 export abstract class SimpleLocalUserView<ValueT, RowT, ViewT> extends LocalUserView<ValueT, RowT, ViewT> {
-  constructor(store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>, oldLocal: LocalUserView<ValueT, RowT, ViewT> | null) {
-    super(store, uv, defaultRawValues, oldLocal);
-  }
-
   abstract createCommonLocalValue(row: IRowCommon, localRow: ILocalRowInfo<RowT>, columnIndex: number, value: ICombinedValue, oldLocal: ValueT | null): ValueT;
 
   createLocalValue(rowIndex: number, row: ICombinedRow, localRow: ILocalRowInfo<RowT>, columnIndex: number, value: ICombinedValue, oldLocal: ValueT | null): ValueT {
@@ -359,7 +355,7 @@ export abstract class SimpleLocalUserView<ValueT, RowT, ViewT> extends LocalUser
   }
 
   updateCommonValue(row: IRowCommon, localRow: ILocalRowInfo<RowT>, columnIndex: number, value: ICombinedValue, localValue: ValueT) {
-    return;
+
   }
 
   updateValue(rowIndex: number, row: ICombinedRow, localRow: ILocalRowInfo<RowT>, columnIndex: number, value: ICombinedValue, localValue: ValueT) {
@@ -375,7 +371,7 @@ export abstract class SimpleLocalUserView<ValueT, RowT, ViewT> extends LocalUser
   }
 
   deleteCommonRow(row: IRowCommon, localRow: ILocalRow<ValueT, RowT>) {
-    return;
+
   }
 
   deleteRow(rowIndex: number, row: ICombinedRow, localRow: ILocalRow<ValueT, RowT>) {
@@ -387,7 +383,7 @@ export abstract class SimpleLocalUserView<ValueT, RowT, ViewT> extends LocalUser
   }
 
   postInitCommonRow(row: IRowCommon, localRow: ILocalRowInfo<RowT>) {
-    return;
+
   }
 
   postInitRow(rowIndex: number, row: ICombinedRow, localRow: ILocalRowInfo<RowT>) {

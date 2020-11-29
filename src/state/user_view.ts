@@ -6,7 +6,7 @@ import { IRef, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDic
 import {
   IColumnField, UserViewSource, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
   SchemaName, EntityName, RowId, FieldName, AttributeName, IViewInfoResult, IViewExprResult,
-  ValueType, FieldType, AttributesMap, IEntity, FunDBError, UserViewErrorType, default as Api
+  ValueType, FieldType, AttributesMap, IEntity, FunDBError, UserViewErrorType, default as Api,
 } from "@/api";
 import { IUpdatedValue, valueToText, equalEntityRef, valueFromRaw, valueIsNull } from "@/values";
 import { CurrentChanges, IStagingState, UpdatedValues, IEntityChanges, IAddedEntry, AddedRowId, UserViewKey } from "@/state/staging_changes";
@@ -659,7 +659,7 @@ const fetchUserView = async (context: ActionContext<IUserViewState, {}>, args: I
       } else {
         let uvArgs = args.args;
         if (process.env.NODE_ENV !== "production" && window.location.search.includes("__force_recompile")) {
-          uvArgs = { ...args.args, ["__force_recompile"]: true };
+          uvArgs = { ...args.args, "__force_recompile": true };
         }
         const res: IViewExprResult = await dispatch("callProtectedApi", {
           func: Api.getNamedUserView.bind(Api),
@@ -681,7 +681,7 @@ const fetchUserView = async (context: ActionContext<IUserViewState, {}>, args: I
       } else {
         let uvArgs = args.args;
         if (process.env.NODE_ENV !== "production" && window.location.search.includes("__force_recompile")) {
-          uvArgs = { ...args.args, ["__force_recompile"]: true };
+          uvArgs = { ...args.args, "__force_recompile": true };
         }
         const res: IViewExprResult = await dispatch("callProtectedApi", {
           func: Api.getAnonymousUserView.bind(Api),
@@ -869,10 +869,10 @@ const userViewModule: Module<IUserViewState, {}> = {
     // Expects all values to be empty, therefore doesn't set updated puns!
     addEntry: (state, params: { entityRef: IEntityRef; userView: UserViewKey; id: AddedRowId; positions: number[]; newValues: UpdatedValues }) => {
       const uv = state.current.userViews.getBySignature(params.userView);
-      if (!uv ||
-          !(uv instanceof CombinedUserView) ||
-          !uv.info.mainEntity ||
-          !equalEntityRef(uv.info.mainEntity, params.entityRef)) {
+      if (!uv
+          || !(uv instanceof CombinedUserView)
+          || !uv.info.mainEntity
+          || !equalEntityRef(uv.info.mainEntity, params.entityRef)) {
         return;
       }
 
@@ -937,7 +937,7 @@ const userViewModule: Module<IUserViewState, {}> = {
       uv.mainColumnMapping[params.fieldRef.name].forEach(colI => {
         // New object because otherwise Vue won't detect changes.
         const updated = params.addedEntry.values[params.fieldRef.name];
-        const value: ICombinedValue = Object.assign({}, newRow.values[colI], updated);
+        const value: ICombinedValue = { ...newRow.values[colI], ...updated };
         Vue.set(newRow.values, colI, value);
         if (entitySummaries !== undefined && "pun" in value) {
           setUpdatedPun(entitySummaries, value);

@@ -133,7 +133,7 @@ export default class Calendar extends Vue {
 
   private onPressEnter(event: any) {
     event.preventDefault();
-    this.$emit('update:value', moment(event.target.value, 'L LT'));
+    this.$emit("update:value", moment(event.target.value, "L LT"));
     event.target.blur();
     this.isCalendarOpen = false;
   }
@@ -159,11 +159,11 @@ export default class Calendar extends Vue {
     return (this.dateValue.isUTC())
       ? {
         hour: this.dateValue.utcOffset(moment().utcOffset()).hour(),
-        min: this.dateValue.utcOffset(moment().utcOffset()).minute()
+        min: this.dateValue.utcOffset(moment().utcOffset()).minute(),
       }
       : {
         hour: this.dateValue.hour(),
-        min: this.dateValue.minute()
+        min: this.dateValue.minute(),
       };
   }
 
