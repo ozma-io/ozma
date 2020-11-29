@@ -137,20 +137,8 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     const cards = this.uv.rows.map((x, i) => this.makeCardObject(x, i));
     const fieldName = this.uv.info.columns[this.groupIndex].name;
     const orderFieldName = this.orderIndex > 0 ? this.uv.info.columns[this.orderIndex].name : "";
-    const getDeprecatedAttr = (name: string, oldName: string) => {
-      const ret = this.uv.attributes[name];
-      if (ret !== undefined) {
-        return ret;
-      }
-      const oldRet = this.uv.attributes[oldName];
-      if (oldRet !== undefined) {
-        console.warn(`Old-style link attribute detected: "${oldName}"`);
-        return oldRet;
-      }
-      return undefined;
-    };
     const createView = attrToQuery(
-      getDeprecatedAttr("card_create_view", "create_view"),
+      this.uv.attributes["card_create_view"],
       { infoByDefault: true },
     ) || undefined;
     const groupedColumns = R.groupBy(card => String(R.path(["groupValue"], card)),

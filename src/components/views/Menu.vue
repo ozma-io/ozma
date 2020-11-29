@@ -171,20 +171,8 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
       const buttonName = valueToPunnedText(buttonColumnInfo.valueType, buttonCell);
       const buttonAttrs = buttonCell.attributes || {};
       const getButtonAttr = (name: string) => tryDicts(name, buttonAttrs, rowAttrs, buttonsAttrs, viewAttrs);
-      const getDeprecatedAttr = (name: string, oldName: string) => {
-        const ret = getButtonAttr(name);
-        if (ret !== undefined) {
-          return ret;
-        }
-        const oldRet = getButtonAttr(oldName);
-        if (oldRet !== undefined) {
-          console.warn(`Old-style link attribute detected: "${oldName}"`);
-          return oldRet;
-        }
-        return undefined;
-      };
 
-      const toQuery = attrToLink(getDeprecatedAttr("link", "linked_view"), this.linkOpts);
+      const toQuery = attrToLink(getButtonAttr("link"), this.linkOpts);
       if (toQuery === null) {
         return;
       }

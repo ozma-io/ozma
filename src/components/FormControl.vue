@@ -613,19 +613,6 @@ export default class FormControl extends Vue {
     const home = homeSchema(this.uvArgs);
     const linkOpts = home !== null ? { homeSchema: home } : undefined;
 
-    const getDeprecatedAttr = (name: string, oldName: string) => {
-      const ret = this.attributes[name];
-      if (ret !== undefined) {
-        return ret;
-      }
-      const oldRet = this.attributes[oldName];
-      if (oldRet !== undefined) {
-        console.warn(`Old-style link attribute detected: "${oldName}"`);
-        return oldRet;
-      }
-      return undefined;
-    };
-
     const controlAttr = String(this.attributes["control"]);
     if (controlAttr === "user_view") {
       if (this.currentValue === null || this.currentValue === undefined) {
@@ -656,7 +643,7 @@ export default class FormControl extends Vue {
             ref: referenceEntriesRef(this.fieldType),
             selectViews: [],
           };
-          refEntry.linkedAttr = getDeprecatedAttr("link", "linked_view");
+          refEntry.linkedAttr = this.attributes["link"];
           refEntry.style = this.controlStyle();
 
           const selectView = attrToQuerySelf(this.attributes["select_view"], this.value.info, linkOpts);
@@ -666,7 +653,7 @@ export default class FormControl extends Vue {
               query: selectView,
             });
           }
-          const extraActions = getDeprecatedAttr("extra_select_views", "extra_select_actions");
+          const extraActions = this.attributes["extra_select_views"];
           if (Array.isArray(extraActions)) {
             extraActions.forEach(action => {
               if (typeof action === "object" && action.name) {

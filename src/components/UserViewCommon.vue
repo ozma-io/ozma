@@ -88,20 +88,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       opts.homeSchema = home;
     }
 
-    const getDeprecatedAttr = (name: string, oldName: string) => {
-      const ret = this.uv.attributes[name];
-      if (ret !== undefined) {
-        return ret;
-      }
-      const oldRet = this.uv.attributes[oldName];
-      if (oldRet !== undefined) {
-        console.warn(`Old-style link attribute detected: "${oldName}"`);
-        return oldRet;
-      }
-      return undefined;
-    };
-
-    return attrToLink(getDeprecatedAttr("create_link", "create_view"), opts);
+    return attrToLink(this.uv.attributes["create_link"], opts);
   }
 
   private exportToCsv() {

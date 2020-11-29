@@ -193,19 +193,7 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView, BaseE
     }
 
     const getColumnAttr = (name: string) => tryDicts(name, this.uv.columnAttributes[this.selectedValueIndex], this.uv.attributes);
-    const getDeprecatedAttr = (name: string, oldName: string) => {
-      const ret = getColumnAttr(name);
-      if (ret !== undefined) {
-        return ret;
-      }
-      const oldRet = getColumnAttr(oldName);
-      if (oldRet !== undefined) {
-        console.warn(`Old-style link attribute detected: "${oldName}"`);
-        return oldRet;
-      }
-      return undefined;
-    };
-    const linkedView = getDeprecatedAttr("row_link", "row_linked_view");
+    const linkedView = getColumnAttr("row_link");
     const entries = this.entriesMap.getEntries(this.entriesEntity);
     if (entries) {
       const options = Object.entries(entries).map(([key, value]) => ({

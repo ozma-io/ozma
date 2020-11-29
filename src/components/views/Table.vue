@@ -411,27 +411,14 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     const columnAttrs = this.uv.columnAttributes[columnIndex];
     const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, this.uv.attributes);
 
-    const getDeprecatedAttr = (name: string, oldName: string) => {
-      const ret = getCellAttr(name);
-      if (ret !== undefined) {
-        return ret;
-      }
-      const oldRet = getCellAttr(oldName);
-      if (oldRet !== undefined) {
-        console.warn(`Old-style link attribute detected: "${oldName}"`);
-        return oldRet;
-      }
-      return undefined;
-    };
-
     if (value.info) {
       if (value.info.field && value.info.field.fieldType.type === "reference") {
-        const link = attrToLinkRef(getDeprecatedAttr("link", "linked_view"), currentValue(value), this.extra.linkOpts);
+        const link = attrToLinkRef(getCellAttr("link"), currentValue(value), this.extra.linkOpts);
         if (link) {
           extra.link = link;
         }
       }
-      const currLinkForRow = attrToLinkSelf(getDeprecatedAttr("row_link", "row_linked_view"), value.info, this.extra.linkOpts);
+      const currLinkForRow = attrToLinkSelf(getCellAttr("row_link"), value.info, this.extra.linkOpts);
       if (currLinkForRow) {
         localRow.extra.link = currLinkForRow;
         this.extra.hasRowLinks = true;
