@@ -55,7 +55,7 @@ export default class BaseEntriesView extends Vue {
 
     const oldPendingEntity = this.pendingEntity;
     this.pendingEntity = newPendingEntity;
-    if(oldPendingEntity !== null && (newEntity === null || !equalEntriesRef(oldPendingEntity, newEntity))) {
+    if (oldPendingEntity !== null && (newEntity === null || !equalEntriesRef(oldPendingEntity, newEntity))) {
       this.removeEntriesConsumer({ ref: oldPendingEntity, reference: this.uid });
     }
   }

@@ -333,8 +333,8 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
     const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr);
 
     // FIXME: we stopped supporting it for now.
-    //const fixedFieldAttr = getColumnAttr("mobile_fixed");
-    //const fixedField = fixedFieldAttr === undefined ? false : Boolean(fixedFieldAttr);
+    // const fixedFieldAttr = getColumnAttr("mobile_fixed");
+    // const fixedField = fixedFieldAttr === undefined ? false : Boolean(fixedFieldAttr);
 
     const visibleColumnAttr = getColumnAttr("visible");
     const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
@@ -347,7 +347,7 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
       style,
       visible: visibleColumn,
       fixed: fixedColumn,
-      //mobileFixed: fixedField,
+      // mobileFixed: fixedField,
       mobileFixed: false,
       columnInfo,
       attrs: columnAttrs,
@@ -378,7 +378,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
 
     const textAlignRightTypes: (ValueType["type"])[] = ["int", "decimal"];
     const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType
-    if(textAlignRightTypes.includes(punOrValue.type)) {
+    if (textAlignRightTypes.includes(punOrValue.type)) {
       style["text-align"] = "right";
     }
 
@@ -933,10 +933,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   // Toggle children rows visibles.
   private visibleChildren(children: number[], visible: boolean) {
 
-    //Save state.
-    if( this.local.rows[children[0]] !== undefined) {
+    // Save state.
+    if (this.local.rows[children[0]] !== undefined) {
       const parent = this.local.rows[children[0]].extra.parent;
-      if(parent === undefined)
+      if (parent === undefined)
         return;
       const extra = this.local.rows[parent].extra;
       if (visible) {
@@ -948,7 +948,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
 
     // Toggle
-    children.forEach( (child, i) => {
+    children.forEach((child, i) => {
 
       if (!visible && this.local.rows[child].extra.visible) {
         this.visibleChildren(this.local.rows[child].extra.children, visible);
@@ -1412,7 +1412,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   get showFixedRow() {
-    /*let tableWidth = this.technicalWidth;
+    /* let tableWidth = this.technicalWidth;
     for (const column of this.local.extra.columns) {
       tableWidth += column.width;
     }

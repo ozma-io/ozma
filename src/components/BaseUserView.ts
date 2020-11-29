@@ -72,7 +72,7 @@ export class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBas
 
   createLocalUserView(): IBaseUserViewExtra {
     const extra = {
-      rowCount: -1, //FIXME why not 0?
+      rowCount: -1, // FIXME why not 0?
       selectedRows: new ObjectSet<RowRef>()
     };
     return extra;

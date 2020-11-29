@@ -23,6 +23,9 @@
   "rules": {
     "indent": "off",
     "space-before-blocks": "warn",
+    "keyword-spacing": "warn",
+    "spaced-comment": "warn",
+    "space-in-parens": "warn",
     "no-trailing-spaces": "warn",
     "eqeqeq": "error",
     "object-curly-spacing": ["warn", "always"],
