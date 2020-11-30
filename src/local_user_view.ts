@@ -179,7 +179,7 @@ export abstract class LocalUserView<ValueT, RowT, ViewT> implements IHandlerProv
   // Local data for existing values from database.
   abstract createLocalValue(rowIndex: number, row: ICombinedRow, localRow: ILocalRowInfo<RowT>, columnIndex: number, value: ICombinedValue, oldLocal: ValueT | null): ValueT;
 
-  // Local data for added, but not yet commited, values.
+  // Local data for added, but not yet committed, values.
   abstract createAddedLocalValue(rowId: AddedRowId, row: IAddedRow, localRow: ILocalRowInfo<RowT>, columnIndex: number, value: ICombinedValue, oldLocal: ValueT | null): ValueT;
 
   // Local data for template values.
