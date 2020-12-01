@@ -1,9 +1,8 @@
 import Vue from "vue";
 
 import { vueEmit } from "@/utils";
-import { queryLocation, IQueryState } from "@/state/query";
-import { Link } from "@/links";
-import { saveAndRunAction } from "@/state/actions";
+import { Link, linkHandler } from "@/links";
+import { queryLocation } from "@/state/query";
 
 export const redirectClick = (e: MouseEvent, allowControlKeys?: boolean): boolean => {
   // Copied from router-link's guardEvent
@@ -42,42 +41,9 @@ export default Vue.component("FunLink", {
       } else if ("href" in link) {
         href = link.href;
       }
-
-      if ("query" in link) {
-        if (link.target === "modal") {
-          handler = () => {
-            context.parent.$store.dispatch("query/addWindow", link.query);
-          };
-        } else if (link.target === "root") {
-          handler = () => {
-            vueEmit(context, "goto", link.query);
-          };
-        } else if (link.target === "top") {
-          handler = () => {
-            context.parent.$store.dispatch("query/pushRoot", link.query);
-          };
-        } else if (link.target === "blank") {
-          handler = () => {
-            window.open(href!, '_blank');
-          };
-        } else if (link.target === "modal-auto") {
-          handler = () => {
-            const queryState = context.parent.$store.state.query as IQueryState;
-            if (queryState.current?.windows.length === 0) {
-              context.parent.$store.dispatch("query/addWindow", link.query);
-            } else {
-              vueEmit(context, "goto", link.query);
-            }
-          }
-        } else {
-          throw new Error("Impossible");
-        }
-      } else if ("action" in link) {
-        handler = () => {
-          saveAndRunAction(context.parent.$store, link.action, link.args);
-        };
-      }
     }
+
+    handler = linkHandler(context.parent.$store, link, href);
 
     const onHandlers = handler === null ? {} : { click: (e: MouseEvent) => {
       if (!redirectClick(e, href === null))

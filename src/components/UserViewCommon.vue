@@ -59,7 +59,7 @@ import { Action } from "@/components/ActionsMenu.vue";
 import { IPanelButton } from "@/components/ButtonsPanel.vue";
 import { ScopeName, UserViewKey, IAddedResult, AddedRowId } from "@/state/staging_changes";
 import { attrToLink, Link } from "@/links";
-import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
+import QRCodeScanner, { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -350,7 +350,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
     return qrCodeReferenceField.pop() || null;
   }
 
-  private selectFromQRScanner(result: any[]) {
+  private selectFromQRScanner(result: Array<IQRResultContent>) {
     result.forEach(r => {
       if (this.qrCodeReferenceField == null) {
         this.makeToast(this.$t('qrcode_error_not_attr').toString());

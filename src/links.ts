@@ -1,6 +1,10 @@
-import { IQuery, setIdSelf, setIdRef, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery } from "@/state/query";
+import { IQueryState, IQuery, setIdSelf, setIdRef, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery } from "@/state/query";
 import { IValueInfo } from "@/state/user_view";
 import { IActionRef } from "ozma-api/src";
+import { RenderContext } from "vue";
+import { vueEmit } from "@/utils";
+import { saveAndRunAction } from "@/state/actions";
+import { Store } from "vuex";
 
 export interface IHrefLink {
   href: string;
@@ -125,4 +129,47 @@ export const iconValue = (target: string) => {
     return 'flip_to_front';
   else
     return 'open_in_new';
+}
+
+export const linkHandler = (store: Store<any>, link: Link | null, href: string | null = null): (() => void) | null => {
+  let handler: (() => void) | null = null;
+  
+  if (link) {
+    if ("query" in link) {
+      if (link.target === "modal") {
+        handler = () => {
+          store.dispatch("query/addWindow", link.query);
+        };
+      } else if (link.target === "root") {
+        handler = () => {
+          vueEmit(context, "goto", link.query);
+        };
+      } else if (link.target === "top") {
+        handler = () => {
+          store.dispatch("query/pushRoot", link.query);
+        };
+      } else if (link.target === "blank") {
+        handler = () => {
+          window.open(href!, '_blank');
+        };
+      } else if (link.target === "modal-auto") {
+        handler = () => {
+          const queryState = store.state.query as IQueryState;
+          if (queryState.current?.windows.length === 0) {
+            store.dispatch("query/addWindow", link.query);
+          } else {
+            vueEmit(context, "goto", link.query);
+          }
+        }
+      } else {
+        throw new Error("Impossible");
+      }
+    } else if ("action" in link) {
+      handler = () => {
+        saveAndRunAction(context.parent.$store, link.action, link.args);
+      };
+    }
+  }
+  
+  return handler;
 }

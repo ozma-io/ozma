@@ -34,7 +34,7 @@
 </i18n>
 <template>
   <b-modal 
-    id='qrcode-scanner-modal'
+    id="qrcode-scanner-modal"
     v-model="modalShow"
     hide-footer 
     :title="$t('qrcode_scanner')" 
@@ -79,38 +79,41 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import { IEntriesRef } from "@/state/user_view";
-import { Link } from "@/links";
+import { Link, linkHandler } from "@/links";
 import { saveAndRunAction } from "@/state/actions";
 import { queryLocation, IQueryState } from "@/state/query";
 
 
-interface ICurrentContent {
-  s: ValueRef;
-  n: IQuery;
-  a: IEntityRef;
+export interface IQRContent {
+  s: string;  //Schema
+  n: string;  //Name
+  i: number;  //ID
+}
+
+export interface IQRResultContent extends IQRContent {
+  v: string; //Value
 }
 
 @Component
 export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Prop({ type: Boolean, default: false }) openScanner!: boolean;
-  @Prop({ type: Boolean, default: false }) closeAfterScan!: boolean;
   @Prop({ type: Boolean, default: false }) multiScan!: boolean;
   @Prop({ type: Object, default: null }) link!: Link;
 
   modalShow = false;
   camera ='auto';
-  result: Array<any> = [];
+  result: Array<IQRResultContent> = [];
   error = '';
   loading = false;
   entry: IEntriesRef | null = null;
   entries: Record<string, string> = {};
-  currentContent: any | null = null;
+  currentContent: IQRContent | null = null;
 
   @Watch('openScanner')
   private toggleOpenScanner() {
     this.modalShow = !this.modalShow;
-    // this.currentContent = JSON.parse('{"n":"product","s":"s","a": {"id":3}}');
-    this.currentContent = null;
+    this.currentContent = JSON.parse('{"n":"product","s":"s","i":3}');
+    // this.currentContent = null;
     this.result = [];
     this.entry = null;
     this.entries = {};
@@ -143,29 +146,30 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   };
 
   private async onDecode (content: string) {
-    this.error = "";
-    
+
     if (!this.multiScan) {
       this.$emit('update:scanResult', content);
       this.turnCameraOff();
       
-      if (this.closeAfterScan) {
-        this.toggleOpenScanner();
-        this.result = [];
-      }
+      this.toggleOpenScanner();
 
       await this.timeout(1);
       this.turnCameraOn();
 
     } else {
+      this.error = "";
+      
+      let parsedContent: IQRContent | null = null;
+
       try {
-        content = JSON.parse(content);
+        parsedContent = JSON.parse(content);
       } catch(e) {
         this.error = this.$t('incorrect_format').toString() + " QR code: " + content;
-        content = "";
+        return;
       }
-      if (content !== "")
-        this.currentContent = content;
+      if (parsedContent !== null) {
+        this.currentContent = parsedContent;
+      }
     }
 
     try {
@@ -202,12 +206,14 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
 
   @Watch('currentContent', { deep: true, immediate: true })
   private changeCurrentContent() {
-    if (this.currentContent !== null && this.currentContent.n !== undefined &&  this.currentContent.s !== undefined && this.currentContent.a !== undefined ) {
+    if (this.currentContent !== null && this.currentContent.n !== undefined &&  this.currentContent.s !== undefined && this.currentContent.i !== undefined ) {
       if (this.entry !== null) {
-        this.currentContent.v = this.entries[Number(this.currentContent.a.id)]; 
-        this.result.push(this.currentContent);
-        if (this.link !== null) {
-          this.linkHandler(this.link);
+        const rusultContent = {...this.currentContent, v:this.entries[Number(this.currentContent.i)]}
+        this.result.push(rusultContent);
+        if (this.link && 'query' in this.link) {
+          this.link.query.args.args.id = this.currentContent.i;
+          const handler= linkHandler(this.$store, this.link);
+          handler();
         }
       } else {
         this.entry = {entity: {name: this.currentContent.n, schema: this.currentContent.s}};
