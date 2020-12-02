@@ -49,7 +49,7 @@
           </span>
           <!-- This isTree need for hidden when table filtering from search panel -->
           <span
-            v-if="isTree"
+            v-if="isTree && treeLevel > 0"
             :style="{'margin-left': treeLevel*25 + 20 +'px'}"
             class="hidden-arrow-space"
           />
