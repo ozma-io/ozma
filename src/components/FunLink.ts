@@ -2,7 +2,7 @@ import Vue from "vue";
 
 import { vueEmit } from "@/utils";
 import { Link, linkHandler } from "@/links";
-import { queryLocation } from "@/state/query";
+import { queryLocation, IQuery } from "@/state/query";
 
 export const redirectClick = (e: MouseEvent, allowControlKeys?: boolean): boolean => {
   // Copied from router-link's guardEvent
@@ -43,7 +43,11 @@ export default Vue.component("FunLink", {
       }
     }
 
-    handler = linkHandler(context.parent.$store, link, href);
+    const emit = (action: string, query: IQuery) => {
+      vueEmit(context, action, query);
+    }
+
+    handler = linkHandler(context.parent.$store, emit, link, href);
 
     const onHandlers = handler === null ? {} : { click: (e: MouseEvent) => {
       if (!redirectClick(e, href === null))

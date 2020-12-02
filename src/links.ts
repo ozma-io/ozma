@@ -131,7 +131,7 @@ export const iconValue = (target: string) => {
     return 'open_in_new';
 }
 
-export const linkHandler = (store: Store<any>, link: Link | null, href: string | null = null): (() => void) | null => {
+export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQuery) => void), link: Link | null, href: string | null = null): (() => void) | null => {
   let handler: (() => void) | null = null;
   
   if (link) {
@@ -142,7 +142,7 @@ export const linkHandler = (store: Store<any>, link: Link | null, href: string |
         };
       } else if (link.target === "root") {
         handler = () => {
-          vueEmit(context, "goto", link.query);
+          emit("goto", link.query);
         };
       } else if (link.target === "top") {
         handler = () => {
@@ -158,7 +158,7 @@ export const linkHandler = (store: Store<any>, link: Link | null, href: string |
           if (queryState.current?.windows.length === 0) {
             store.dispatch("query/addWindow", link.query);
           } else {
-            vueEmit(context, "goto", link.query);
+            emit("goto", link.query);
           }
         }
       } else {
@@ -166,7 +166,7 @@ export const linkHandler = (store: Store<any>, link: Link | null, href: string |
       }
     } else if ("action" in link) {
       handler = () => {
-        saveAndRunAction(context.parent.$store, link.action, link.args);
+        saveAndRunAction(store, link.action, link.args);
       };
     }
   }

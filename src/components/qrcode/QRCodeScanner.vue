@@ -79,9 +79,9 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import { IEntriesRef } from "@/state/user_view";
-import { Link, linkHandler } from "@/links";
+import { Link, linkHandler, attrToLinkRef } from "@/links";
 import { saveAndRunAction } from "@/state/actions";
-import { queryLocation, IQueryState } from "@/state/query";
+import { IQuery } from "@/state/query";
 
 
 export interface IQRContent {
@@ -112,7 +112,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Watch('openScanner')
   private toggleOpenScanner() {
     this.modalShow = !this.modalShow;
-    this.currentContent = JSON.parse('{"n":"product","s":"s","i":3}');
+    this.currentContent = JSON.parse('{"n":"Ingredients","s":"user","i":407}');
     // this.currentContent = null;
     this.result = [];
     this.entry = null;
@@ -207,13 +207,34 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Watch('currentContent', { deep: true, immediate: true })
   private changeCurrentContent() {
     if (this.currentContent !== null && this.currentContent.n !== undefined &&  this.currentContent.s !== undefined && this.currentContent.i !== undefined ) {
+      
       if (this.entry !== null) {
+        
         const rusultContent = {...this.currentContent, v:this.entries[Number(this.currentContent.i)]}
         this.result.push(rusultContent);
-        if (this.link && 'query' in this.link) {
-          this.link.query.args.args.id = this.currentContent.i;
-          const handler= linkHandler(this.$store, this.link);
-          handler();
+        
+        if (this.link) {
+          
+          // const newLink = attrToLinkRef({name: this.currentContent.n, schema: this.currentContent.s}, {id: this.currentContent.i});  
+          if ('query' in this.link) {
+            this.link.query.args.args.id = this.currentContent.i;
+          }
+
+          if ('action' in this.link) {
+            this.link.args.id = this.currentContent.i;
+          }
+
+          
+          const emit = (action: string, query: IQuery) => {
+            this.$emit(action, query);
+          }
+          console.log(this.link);
+          const handler= linkHandler(this.$store, emit, this.link);
+          if (handler) {
+            handler();
+          }
+
+          this.modalShow = false; 
         }
       } else {
         this.entry = {entity: {name: this.currentContent.n, schema: this.currentContent.s}};
@@ -229,33 +250,6 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     this.changeCurrentContent();
   }
 
-  private linkHandler(link: Link) {
-    if ('query' in link) {
-      link.query.args.args = this.currentContent.a;
-      if (link.target === "modal") {
-        this.$store.dispatch("query/addWindow", link.query);
-      } else if (link.target === "root") {
-        this.$emit("goto", link.query);
-      } else if (link.target === "top") {
-        this.$store.dispatch("query/pushRoot", link.query);
-      } else if (link.target === "blank") {
-        const href = this.$router.resolve( queryLocation(link.query) ).href;
-        window.open(href, '_blank');
-      } else if (link.target === "modal-auto") {
-        const queryState = this.$store.state.query as IQueryState;
-        if (queryState.current?.windows.length === 0) {
-          this.$store.dispatch("query/addWindow", link.query);
-        } else {
-          this.$emit("goto", link.query);
-        }
-      } else {
-        throw new Error("Impossible");
-      }
-    } else if ("action" in link) {
-      saveAndRunAction(this.$store, link.action, this.currentContent.a);
-    }
-    this.modalShow = false; 
-  }
 }
 </script> 
 
