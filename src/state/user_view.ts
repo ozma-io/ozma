@@ -381,6 +381,9 @@ export class CombinedUserView {
           const value = row.values[colI];
 
           const id = entityIds[field.idColumn];
+          if (id === undefined) {
+            return;
+          }
           const fieldRef = id.subEntity ? { entity: id.subEntity, name: field.ref.name } : field.ref;
           const updateInfo = {
             field: field.field || null,
