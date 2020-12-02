@@ -50,7 +50,7 @@
           <!-- This isTree need for hidden when table filtering from search panel -->
           <span
             v-if="isTree"
-            :style="{'margin-left': treeLevel*35+'px'}"
+            :style="{'margin-left': treeLevel*25 + 20 +'px'}"
             class="hidden-arrow-space"
           />
           <span>{{ localValue.valueText || "" }}</span>

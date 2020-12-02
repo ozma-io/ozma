@@ -22,15 +22,12 @@ export const waitTimeout = (timeout?: number): Promise<void> => new Promise(reso
 export const nextRender = (): Promise<void> => new Promise(resolve =>
   Vue.nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
 
-export const nextRenderOneJump = (): Promise<void> => new Promise(resolve =>
-  Vue.nextTick(() => requestAnimationFrame((() => resolve()))));
-
 /* eslint-disable import/no-mutable-exports */
 export declare let process: {
   env: Record<string, string>;
 };
-/* eslint-enable import/no-mutable-exports */
 
+/* eslint-enable import/no-mutable-exports */
 export class FetchError extends Error {
   body: any;
   response: Response;

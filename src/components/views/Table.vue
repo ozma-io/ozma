@@ -222,7 +222,7 @@ import { Store } from "vuex";
 import { Moment } from "moment";
 import * as moment from "moment";
 
-import { deepEquals, isFirefox, isIOS, mapMaybe, nextRender, nextRenderOneJump, ObjectSet, tryDicts, ReferenceName } from "@/utils";
+import { deepEquals, isFirefox, isIOS, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName } from "@/utils";
 import { valueIsNull } from "@/values";
 import { IResultColumnInfo, ValueType } from "@/api";
 import {
@@ -302,6 +302,7 @@ interface ITableUserViewExtra {
   selectedValues: ObjectSet<ValueRef>;
   columns: IColumn[];
   fixedColumnPositions: Record<number, string>;
+  rowsParentPositions: Record<number | string, number>;
   linkOpts?: IAttrToQueryOpts;
 }
 
@@ -423,19 +424,17 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
         localRow.extra.link = currLinkForRow;
         this.extra.hasRowLinks = true;
       }
-      const parent = getCellAttr("tree_branches") && value.value ? value.value : 0;
-      const rows = this?.uv?.rows ?? null;
-      if (parent > 0 && rows !== null) {
-        const parentIndex = rows.findIndex(parentRow => {
-          if (parentRow.entityIds === undefined || Object.keys(parentRow.entityIds)[0] === undefined) {
-            return -1;
-          }
-          return parentRow.entityIds[Object.keys(parentRow.entityIds)[0]].id === parent;
-        });
-        if (parentIndex > -1) {
-          localRow.extra.parent = parentIndex;
-          localRow.extra.visible = false;
-        }
+      
+      // Init parent 
+      const parent = getCellAttr("tree_branches") && value.value ? value.value : null;
+      if (parent !== null) {
+        localRow.extra.parent = parent;
+        localRow.extra.visible = false;
+      }
+
+      // Init indexes by entityIds
+      if (row.entityIds !== undefined && Object.keys(row.entityIds)[0]) {
+        this.extra.rowsParentPositions[row.entityIds[Object.keys(row.entityIds)[0]].id] = rowIndex;
       }
     }
 
@@ -591,6 +590,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       selectedValues: new ObjectSet<ValueRef>(),
       columns,
       fixedColumnPositions: {},
+      rowsParentPositions: {},
     };
     const home = homeSchema(this.uv.args);
     if (home !== null) {
@@ -841,6 +841,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.lastSelectedRow = null;
       this.lastSelectedValue = null;
     });
+    if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree)
+      if ("tree_all_open" in this.local.uv.attributes && this.local.uv.attributes.tree_all_open) {
+        this.toggleAllTreeChildren(true);
+      }
   }
 
   protected destroyed() {
@@ -914,22 +918,23 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   // Toggle children rows visibles.
-  private visibleChildren(children: number[], visible: boolean) {
-    // Save state.
-    if (this.local.rows[children[0]] !== undefined) {
+  private visibleChildren(children: number[], visible: boolean, depth: boolean = false) {
+    //Save state.
+    if( this.local.rows[children[0]] !== undefined) {
       const parent = this.local.rows[children[0]].extra.parent;
       if (parent === undefined) {
         return;
       }
-      const extra = this.local.rows[parent].extra;
+      const parentIndex = this.local.extra.rowsParentPositions[parent];
+      const extra = this.local.rows[parentIndex].extra;
+      this.local.rows[parentIndex].extra.arrowDown = visible;
       if (visible) {
-        this.rowsState[parent] = extra;
+        this.rowsState[parentIndex] = extra;
       } else {
-        delete this.rowsState[parent];
-        this.local.rows[parent].extra.arrowDown = false;
+        delete this.rowsState[parentIndex];
       }
     }
-
+    
     // Toggle
     children.forEach((child, i) => {
       if (!visible && this.local.rows[child].extra.visible) {
@@ -938,6 +943,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         // Hidden children.
         const childPosition = this.rowPositions.indexOf(child);
         this.rowPositions.splice(childPosition, 1);
+      }
+
+      // Open in depth
+      if (depth) {
+        this.visibleChildren(this.local.rows[child].extra.children, true, depth);
       }
 
       this.local.rows[child].extra.visible = visible;
@@ -949,8 +959,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   private displayChildren(children: number[]) {
-    const parent = this.local.rows[children[0]].extra.parent;
-    if (parent !== undefined) {
+    const index = this?.local?.rows[children[0]]?.extra?.parent ?? null;
+    const parent = index !== null ? this.local.extra.rowsParentPositions[index] : null;
+    if (parent !== null)
       for (let i = children.length - 1; i >= 0; i--) {
         if (this.rowPositions.includes(children[i])) {
           const childPosition = this.rowPositions.indexOf(children[i]);
@@ -958,36 +969,39 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         }
         this.rowPositions.splice(this.rowPositions.indexOf(parent) + 1, 0, children[i]);
       }
-    }
+  }
+
+  private toggleAllTreeChildren(visible: boolean) {
+    this.rowPositions.forEach(rowI =>{
+      if (this.local.rows[rowI].extra.children.length > 0 && this.local.rows[rowI].extra.parent == undefined) {
+        this.visibleChildren(this.local.rows[rowI].extra.children, visible, true);
+      }
+    });
+    this.initRowsState();
   }
 
   private initRowsState() {
     this.local.rows.forEach((row, rowI) => {
-      if (row.extra.parent !== undefined && this.local.rows[row.extra.parent] !== undefined && !this.local.rows[row.extra.parent].extra.children.includes(rowI)) {
-        this.local.rows[row.extra.parent].extra.children.push(rowI);
-        let level = 1;
-        let parent = this.local.rows[row.extra.parent].extra.parent;
+      const parentIndex = row.extra.parent !== undefined ? this.local.extra.rowsParentPositions[row.extra.parent] : undefined;
+      if (parentIndex !== undefined && this.local.rows[parentIndex] !== undefined && !this.local.rows[parentIndex].extra.children.includes(rowI)) {
+        this.local.rows[parentIndex].extra.children.push(rowI);
+        let level = 0;
+        let parent: number | undefined = parentIndex;
         while (parent !== undefined && this.local.rows[parent] !== undefined && level < 100) {
-          parent = this.local.rows[parent].extra.parent;
+          const index: number | undefined = this?.local?.rows[parent]?.extra?.parent ?? undefined;
+          parent = index !== undefined ? this.local.extra.rowsParentPositions[index] : undefined;
           level++;
         }
         this.local.rows[rowI].extra.level = level;
       }
     });
     if (!R.isEmpty(this.rowsState)) {
+      const sort = R.sortBy(R.compose(R.prop<string, number>('level'), R.prop<any>(1)));
+      const sortable = sort(R.toPairs(this.rowsState));
       // Load visible data from rowsState to rows.
-      Object.keys(this.rowsState).forEach(rawKey => {
-        const key = Number(rawKey);
-        const id = this?.local?.rows[key]?.extra?.selectionEntry?.id;
-        if (id !== undefined && id === this.rowsState[key].selectionEntry.id) {
-          this.local.rows[key].extra.arrowDown = true;
-          // nextRenderOneJump need for correct render rows after update. But be cearful with Chrome!
-          // https://stackoverflow.com/questions/44145740/how-does-double-requestanimationframe-work
-          nextRenderOneJump().then(() => {
-            this.visibleChildren(this.local.rows[key].extra.children, true);
-          });
-        }
-      });
+      sortable.forEach(item => {
+        this.visibleChildren(item[1].children, true);
+      })
     } else {
       this.buildRowPositions();
     }
