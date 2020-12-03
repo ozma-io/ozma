@@ -376,10 +376,6 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
   private qrCodeCallback(link: Link | null) {
     if (link !== null) {
       this.currentQRCodeLink = link;
-      if ("query" in this.currentQRCodeLink ) {
-        this.currentQRCodeLink.query.args.args = {id: 407};
-      }
-      console.log(this.currentQRCodeLink);
       this.openQRCodeScanner = !this.openQRCodeScanner;
     }
   }

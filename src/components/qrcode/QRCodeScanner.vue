@@ -82,7 +82,7 @@ import { IEntriesRef } from "@/state/user_view";
 import { Link, linkHandler, attrToLinkRef } from "@/links";
 import { saveAndRunAction } from "@/state/actions";
 import { IQuery } from "@/state/query";
-
+import { namespace } from "vuex-class";
 
 export interface IQRContent {
   s: string;  //Schema
@@ -94,11 +94,14 @@ export interface IQRResultContent extends IQRContent {
   v: string; //Value
 }
 
+const query = namespace("query");
+
 @Component
 export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Prop({ type: Boolean, default: false }) openScanner!: boolean;
   @Prop({ type: Boolean, default: false }) multiScan!: boolean;
   @Prop({ type: Object, default: null }) link!: Link;
+  @query.Action("pushRoot") pushRoot!: (_: IQuery) => Promise<void>;
 
   modalShow = false;
   camera ='auto';
@@ -112,8 +115,8 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Watch('openScanner')
   private toggleOpenScanner() {
     this.modalShow = !this.modalShow;
-    this.currentContent = JSON.parse('{"n":"Ingredients","s":"user","i":407}');
-    // this.currentContent = null;
+    // this.currentContent = JSON.parse('{"n":"Ingredients","s":"user","i":407}');
+    this.currentContent = null;
     this.result = [];
     this.entry = null;
     this.entries = {};
@@ -210,25 +213,23 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
       
       if (this.entry !== null) {
         
-        const rusultContent = {...this.currentContent, v:this.entries[Number(this.currentContent.i)]}
+        const rusultContent = {...this.currentContent, v:this.entries[Number(this.currentContent.i)]};
         this.result.push(rusultContent);
         
         if (this.link) {
           
-          // const newLink = attrToLinkRef({name: this.currentContent.n, schema: this.currentContent.s}, {id: this.currentContent.i});  
-          if ('query' in this.link) {
+          if ('query' in this.link && this.link.query.args.args) {
             this.link.query.args.args.id = this.currentContent.i;
           }
 
           if ('action' in this.link) {
             this.link.args.id = this.currentContent.i;
           }
-
           
-          const emit = (action: string, query: IQuery) => {
-            this.$emit(action, query);
+          const emit = (_: string, query: IQuery) => {
+            this.pushRoot(query);
           }
-          console.log(this.link);
+
           const handler= linkHandler(this.$store, emit, this.link);
           if (handler) {
             handler();
