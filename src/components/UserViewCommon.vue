@@ -263,11 +263,11 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
         }
         actions.push({
           name: action.name,
-          callback: () => this.qrCodeCallback(link) 
+          callback: () => this.qrCodeCallback(link),
         });
       });
     }
-    
+
     if (this.createView !== null) {
       actions.push({ name: this.$t("create").toString(), link: this.createView });
     }
@@ -354,26 +354,24 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
   private selectFromQRScanner(result: Array<IQRResultContent>) {
     result.forEach(r => {
       if (this.qrCodeReferenceField == null) {
-        this.makeToast(this.$t('qrcode_error_not_attr').toString());
+        this.makeToast(this.$t("qrcode_error_not_attr").toString());
+      } else if (this.qrCodeReferenceField.entity.schema == r.s && this.qrCodeReferenceField.entity.name == r.n) {
+        this.updateValue(this.qrCodeReferenceField.field, r.i);
       } else {
-        if (this.qrCodeReferenceField.entity.schema == r.s && this.qrCodeReferenceField.entity.name == r.n) {
-          this.updateValue(this.qrCodeReferenceField.field, r.i);
-        } else {
-          this.makeToast(this.$t('qrcode_error_not_ref').toString() + `{schema: ${r.s}, name: ${r.n}}`);
-        }
+        this.makeToast(this.$t("qrcode_error_not_ref").toString() + `{schema: ${r.s}, name: ${r.n}}`);
       }
-    })
+    });
   }
 
   private makeToast(message: string) {
     this.$bvToast.toast(message, {
-      title: this.$t('error').toString(),
-      variant: 'danger',
+      title: this.$t("error").toString(),
+      variant: "danger",
       solid: true,
-      noAutoHide: true
-    })
+      noAutoHide: true,
+    });
   }
-  
+
   private qrCodeCallback(link: Link | null) {
     if (link !== null) {
       this.currentQRCodeLink = link;

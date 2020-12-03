@@ -125,15 +125,16 @@ export const attrToLinkRef = (linkedAttr: any, value: any, opts?: IAttrToLinkOpt
 };
 
 export const iconValue = (target: string) => {
-  if (target === 'modal-auto' || target === 'modal')
-    return 'flip_to_front';
-  else
-    return 'open_in_new';
-}
+  if (target === "modal-auto" || target === "modal") {
+    return "flip_to_front";
+  } else {
+    return "open_in_new";
+  }
+};
 
 export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQuery) => void), link: Link | null, href: string | null = null): (() => void) | null => {
   let handler: (() => void) | null = null;
-  
+
   if (link) {
     if ("query" in link) {
       if (link.target === "modal") {
@@ -150,7 +151,7 @@ export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQ
         };
       } else if (link.target === "blank") {
         handler = () => {
-          window.open(href!, '_blank');
+          window.open(href!, "_blank");
         };
       } else if (link.target === "modal-auto") {
         handler = () => {
@@ -160,7 +161,7 @@ export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQ
           } else {
             emit("goto", link.query);
           }
-        }
+        };
       } else {
         throw new Error("Impossible");
       }
@@ -170,6 +171,6 @@ export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQ
       };
     }
   }
-  
+
   return handler;
 };

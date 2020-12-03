@@ -33,7 +33,7 @@
   }
 </i18n>
 <template>
-  <b-modal 
+  <b-modal
     id="qrcode-scanner-modal"
     v-model="modalShow"
     hide-footer
@@ -58,13 +58,13 @@
         <li
           v-for="value in result"
           :key="value.i"
-        > 
+        >
           {{ value.v }}
         </li>
       </ol>
       <b-button
         v-if="multiScan"
-        block 
+        block
         variant="success"
         @click="sendList"
       >
@@ -85,13 +85,13 @@ import { IQuery } from "@/state/query";
 import { namespace } from "vuex-class";
 
 export interface IQRContent {
-  s: string;  //Schema
-  n: string;  //Name
-  i: number;  //ID
+  s: string; // Schema
+  n: string; // Name
+  i: number; // ID
 }
 
 export interface IQRResultContent extends IQRContent {
-  v: string; //Value
+  v: string; // Value
 }
 
 const query = namespace("query");
@@ -104,9 +104,9 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @query.Action("pushRoot") pushRoot!: (_: IQuery) => Promise<void>;
 
   modalShow = false;
-  camera ='auto';
+  camera ="auto";
   result: Array<IQRResultContent> = [];
-  error = '';
+  error = "";
   loading = false;
   entry: IEntriesRef | null = null;
   entries: Record<string, string> = {};
@@ -128,44 +128,42 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
       await promise;
     } catch (error) {
       this.error = error.name;
-      if (error.name === 'NotAllowedError') {
-        this.error = this.$t('error_access_camera').toString();
-      } else if (error.name === 'NotFoundError') {
-        this.error = this.$t('error_no_camera').toString();
-      } else if (error.name === 'NotSupportedError') {
-        this.error = this.$t('error_secure_context').toString();
-      } else if (error.name === 'NotReadableError') {
-        this.error = this.$t('error_camera_used').toString();
-      } else if (error.name === 'OverconstrainedError') {
-        this.error = this.$t('error_camera_not_suitable').toString();
-      } else if (error.name === 'StreamApiNotSupportedError') {
-        this.error = this.$t('error_stream_not_suppotred').toString();
+      if (error.name === "NotAllowedError") {
+        this.error = this.$t("error_access_camera").toString();
+      } else if (error.name === "NotFoundError") {
+        this.error = this.$t("error_no_camera").toString();
+      } else if (error.name === "NotSupportedError") {
+        this.error = this.$t("error_secure_context").toString();
+      } else if (error.name === "NotReadableError") {
+        this.error = this.$t("error_camera_used").toString();
+      } else if (error.name === "OverconstrainedError") {
+        this.error = this.$t("error_camera_not_suitable").toString();
+      } else if (error.name === "StreamApiNotSupportedError") {
+        this.error = this.$t("error_stream_not_suppotred").toString();
       }
     } finally {
       this.loading = false;
     }
   }
 
-
   private async onDecode(content: string) {
     if (!this.multiScan) {
-      this.$emit('update:scanResult', content);
+      this.$emit("update:scanResult", content);
       this.turnCameraOff();
-      
+
       this.toggleOpenScanner();
 
       await this.timeout(1);
       this.turnCameraOn();
-
     } else {
       this.error = "";
-      
+
       let parsedContent: IQRContent | null = null;
 
       try {
         parsedContent = JSON.parse(content);
-      } catch(e) {
-        this.error = this.$t('incorrect_format').toString() + " QR code: " + content;
+      } catch (e) {
+        this.error = this.$t("incorrect_format").toString() + " QR code: " + content;
         return;
       }
       if (parsedContent !== null) {
@@ -174,12 +172,11 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     }
 
     try {
-      window.navigator.vibrate([100,30,200]);
+      window.navigator.vibrate([100, 30, 200]);
     } catch (e) {
       console.error(e);
     }
-
-  };
+  }
 
   private turnCameraOn() {
     this.camera = "auto";
@@ -205,50 +202,48 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     return this.entry;
   }
 
-  @Watch('currentContent', { deep: true, immediate: true })
+  @Watch("currentContent", { deep: true, immediate: true })
   private changeCurrentContent() {
-    if (this.currentContent !== null && this.currentContent.n !== undefined &&  this.currentContent.s !== undefined && this.currentContent.i !== undefined ) {
-      
+    if (this.currentContent !== null && this.currentContent.n !== undefined && this.currentContent.s !== undefined && this.currentContent.i !== undefined) {
       if (this.entry !== null) {
-        
-        const rusultContent = {...this.currentContent, v:this.entries[Number(this.currentContent.i)]};
+        const rusultContent = { ...this.currentContent, v: this.entries[Number(this.currentContent.i)] };
         this.result.push(rusultContent);
-        
+
         if (this.link) {
-          
-          if ('query' in this.link && this.link.query.args.args) {
+          if ("query" in this.link && this.link.query.args.args) {
             this.link.query.args.args.id = this.currentContent.i;
           }
 
-          if ('action' in this.link) {
+          if ("action" in this.link) {
             this.link.args.id = this.currentContent.i;
           }
-          
+
           const emit = (_: string, query: IQuery) => {
             this.pushRoot(query);
-          }
+          };
 
-          const handler= linkHandler(this.$store, emit, this.link);
+          const handler = linkHandler(this.$store, emit, this.link);
           if (handler) {
             handler();
           }
 
-          this.modalShow = false; 
+          this.modalShow = false;
         }
       } else {
-        this.entry = {entity: {name: this.currentContent.n, schema: this.currentContent.s}};
+        this.entry = { entity: { name: this.currentContent.n, schema: this.currentContent.s } };
       }
     }
   }
 
-  @Watch('currentEntries')
+  @Watch("currentEntries")
   private changeCurrentEntries() {
     if (this.currentEntries !== null) {
-      Object.entries(this.currentEntries).forEach(([id, name]) => {this.entries[id] = name});
+      Object.entries(this.currentEntries).forEach(([id, name]) => {
+        this.entries[id] = name;
+      });
     }
     this.changeCurrentContent();
   }
-  
 }
 </script>
 

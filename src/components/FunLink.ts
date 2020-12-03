@@ -45,7 +45,7 @@ export default Vue.component("FunLink", {
 
     const emit = (action: string, query: IQuery) => {
       vueEmit(context, action, query);
-    }
+    };
 
     handler = linkHandler(context.parent.$store, emit, link, href);
 
