@@ -975,7 +975,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   private toggleAllTreeChildren(visible: boolean) {
     this.rowPositions.forEach(rowI => {
-      if (this.local.rows[rowI].extra.children.length > 0 && this.local.rows[rowI].extra.parent == undefined) {
+      if (this.local.rows[rowI].extra.children.length > 0 && this.local.rows[rowI].extra.parent === undefined) {
         this.visibleChildren(this.local.rows[rowI].extra.children, visible, true);
       }
     });

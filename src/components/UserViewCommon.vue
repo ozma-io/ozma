@@ -347,6 +347,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
           entity: fieldType.entity,
         };
       }
+      return undefined;
     }, this.uv.columnAttributes);
     return qrCodeReferenceField.pop() || null;
   }
@@ -355,7 +356,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
     result.forEach(r => {
       if (this.qrCodeReferenceField == null) {
         this.makeToast(this.$t("qrcode_error_not_attr").toString());
-      } else if (this.qrCodeReferenceField.entity.schema == r.s && this.qrCodeReferenceField.entity.name == r.n) {
+      } else if (this.qrCodeReferenceField.entity.schema === r.s && this.qrCodeReferenceField.entity.name === r.n) {
         this.updateValue(this.qrCodeReferenceField.field, r.i);
       } else {
         this.makeToast(this.$t("qrcode_error_not_ref").toString() + `{schema: ${r.s}, name: ${r.n}}`);

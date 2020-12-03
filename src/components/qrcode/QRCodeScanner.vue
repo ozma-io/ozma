@@ -218,8 +218,8 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
             this.link.args.id = this.currentContent.i;
           }
 
-          const emit = (_: string, query: IQuery) => {
-            this.pushRoot(query);
+          const emit = (_: string, gotoquery: IQuery) => {
+            this.pushRoot(gotoquery);
           };
 
           const handler = linkHandler(this.$store, emit, this.link);
