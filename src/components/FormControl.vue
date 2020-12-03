@@ -111,7 +111,7 @@
           :required="!isNullable"
           @update:content="updateValue"
         />
-        <QRCode 
+        <QRCode
           v-else-if="inputType.name === 'qrcode'"
           ref="control"
           :height="customHeight"
@@ -221,7 +221,7 @@
           @input="updateValue($event.target.value)"
           @focus="iSlot.onFocus"
         >
-        <QRCode 
+        <QRCode
           v-else-if="inputType.name === 'qrcode'"
           ref="control"
           :height="customHeight"
@@ -353,7 +353,7 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import {valueToText, valueIsNull, dateTimeFormat} from "@/values";
+import { valueToText, valueIsNull, dateTimeFormat } from "@/values";
 import { AttributesMap, ValueType } from "@/api";
 import { Action } from "@/components/ActionsMenu.vue";
 import { IUserViewArguments, homeSchema, ICombinedValue, currentValue, IEntriesRef, referenceEntriesRef } from "@/state/user_view";
@@ -361,8 +361,8 @@ import { IQuery, attrToQuerySelf, queryLocation } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { isMobile } from "@/utils";
 import { attrToLinkSelf } from "@/links";
-import { IReferenceSelectAction } from "./ReferenceField.vue";
 import { router } from "@/modules";
+import { IReferenceSelectAction } from "./ReferenceField.vue";
 
 interface ITextType {
   name: "text";
@@ -380,7 +380,6 @@ interface ICodeEditorType {
   language: string;
   style: Record<string, any>;
 }
-
 
 interface IQRCodeType {
   name: "qrcode";
@@ -456,7 +455,7 @@ type IType =
 const userView = namespace("userView");
 
 const heightExclusions = ["select", "reference"];
-const multilineTypes = [ "markdown","codeeditor", "textarea" ];
+const multilineTypes = ["markdown", "codeeditor", "textarea"];
 const inlineTypes = ["markdown", "codeeditor", "textarea", "reference"];
 
 @Component({
@@ -474,7 +473,7 @@ const inlineTypes = ["markdown", "codeeditor", "textarea", "reference"];
        SearchPanel needs to be moved to NestedUserView when ActionsMenu and
        other components will free the FormControl.
        FormControl needs to be cleaned into small components.
-    */    
+    */
 
     SearchPanel: () => import("@/components/SearchPanel.vue"),
     NestedUserView: () => import("@/components/NestedUserView.vue"),
@@ -495,7 +494,7 @@ export default class FormControl extends Vue {
   @Prop({ type: String, required: true }) scope!: string; // this.scope
   @Prop({ type: Number, required: true }) level!: number; // this.level
   @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
-  @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
+  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
 
   private actions: Action[] = [];
   private codeEditorKey = 0;
@@ -511,6 +510,7 @@ export default class FormControl extends Vue {
     return this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable;
   }
 
+  // Current value, can be a raw value (e.g., a string for a `datetime` value) or a validated value.
   get currentValue() {
     return currentValue(this.value);
   }
@@ -528,14 +528,20 @@ export default class FormControl extends Vue {
     return this.locked || this.value.info === undefined || this.value.info.field === null;
   }
 
+  // FIXME: move to `textValue` instead. We could add an optional object
+  //        argument to `valueToText` instead, which specifies a format
+  //        string for `date` and `datetime`. If so, we should probably do the
+  //        same for `valueFromRaw` and pass this "options" object all the way
+  //        from `update:value` event.
   get calendarValue() {
     if (this.type.type === "datetime" && this.currentValue) {
-      if (typeof this.currentValue === 'string') return this.currentValue;
+      if (typeof this.currentValue === "string") return this.currentValue;
       return this.currentValue.local().format("L LT");
     }
     return this.textValue;
   }
 
+  // Textual representation of `currentValue`.
   get textValue() {
     return valueToText(this.type, this.currentValue);
   }
@@ -554,7 +560,7 @@ export default class FormControl extends Vue {
   private updateTitle(title: string | null) {
     this.title = (!!title && this.columnInfoName === this.caption)
       ? title
-      : this.caption
+      : this.caption;
   }
 
   private setInputHeight(value: number) {
@@ -570,11 +576,13 @@ export default class FormControl extends Vue {
   }
 
   get textAlign() {
-    if ("text_align" in this.attributes)
-      return  String(this.attributes["text_align"]);
-
-    if (this.inputType.name == 'text' && this.inputType.type == 'number')
-      return 'right';
+    if ("text_align" in this.attributes) {
+      return String(this.attributes["text_align"]);
+    } else if (this.inputType.name === "text" && this.inputType.type === "number") {
+      return "right";
+    } else {
+      return "left";
+    }
   }
 
   get cellColor() {
@@ -605,18 +613,6 @@ export default class FormControl extends Vue {
     const home = homeSchema(this.uvArgs);
     const linkOpts = home !== null ? { homeSchema: home } : undefined;
 
-    const getDeprecatedAttr = (name: string, oldName: string) => {
-      const ret = this.attributes[name];
-      if (ret !== undefined) {
-        return ret;
-      }
-      const oldRet = this.attributes[oldName];
-      if (oldRet !== undefined) {
-        console.warn(`Old-style link attribute detected: "${oldName}"`);
-        return oldRet;
-      }
-    };
-
     const controlAttr = String(this.attributes["control"]);
     if (controlAttr === "user_view") {
       if (this.currentValue === null || this.currentValue === undefined) {
@@ -631,9 +627,9 @@ export default class FormControl extends Vue {
         return { name: "userview", ...nestedRef };
       }
     } else if (controlAttr === "static_text") {
-      return { name: "static_text" }
+      return { name: "static_text" };
     } else if (controlAttr === "static_image") {
-      return { name: "static_image" }
+      return { name: "static_image" };
     }
     // `calc` is needed because sizes should be relative to base font size.
     const heightSinglelineText = "calc(2em + 6px)";
@@ -641,13 +637,13 @@ export default class FormControl extends Vue {
     const heightCodeEditor = "calc(100% - 1.5rem)";
     if (this.fieldType !== null) {
       switch (this.fieldType.type) {
-        case "reference":
+        case "reference": {
           const refEntry: IReferenceType = {
             name: "reference",
             ref: referenceEntriesRef(this.fieldType),
             selectViews: [],
           };
-          refEntry.linkedAttr = getDeprecatedAttr("link", "linked_view");
+          refEntry.linkedAttr = this.attributes["link"];
           refEntry.style = this.controlStyle();
 
           const selectView = attrToQuerySelf(this.attributes["select_view"], this.value.info, linkOpts);
@@ -657,7 +653,7 @@ export default class FormControl extends Vue {
               query: selectView,
             });
           }
-          const extraActions = getDeprecatedAttr("extra_select_views", "extra_select_actions");
+          const extraActions = this.attributes["extra_select_views"];
           if (Array.isArray(extraActions)) {
             extraActions.forEach(action => {
               if (typeof action === "object" && action.name) {
@@ -672,6 +668,7 @@ export default class FormControl extends Vue {
             });
           }
           return refEntry;
+        }
         case "enum":
           return {
             name: "select",

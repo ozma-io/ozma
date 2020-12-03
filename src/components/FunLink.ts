@@ -21,7 +21,7 @@ export const redirectClick = (e: MouseEvent, allowControlKeys?: boolean): boolea
 
   e.preventDefault();
   return true;
-}
+};
 
 export default Vue.component("FunLink", {
   functional: true,
@@ -50,8 +50,9 @@ export default Vue.component("FunLink", {
     handler = linkHandler(context.parent.$store, emit, link, href);
 
     const onHandlers = handler === null ? {} : { click: (e: MouseEvent) => {
-      if (!redirectClick(e, href === null))
+      if (!redirectClick(e, href === null)) {
         return;
+      }
       vueEmit(context, "click");
       handler!();
     } };

@@ -39,12 +39,17 @@
       :key="i"
       :value="row.values[i]"
       :local-value="localRow.values[i]"
+      :children="localRow.extra.children"
+      :arrow-down="localRow.extra.arrowDown === undefined ? false : localRow.extra.arrowDown"
       :column-position="i"
       :index="index"
       :column="localUv.columns[i]"
       :from="from"
       :last-fixed-column-index="lastFixedColumnIndex"
+      :level="localRow.extra.level"
+      :is-tree="isTree"
       @cell-click="$emit('cell-click', arguments[0], arguments[1])"
+      @update:visibleChildren="$emit('update:visibleChildren', arguments[0], arguments[1])"
       @goto="$emit('goto', $event)"
     />
   </tr>
@@ -72,6 +77,7 @@ export default class TableRow extends Vue {
   @Prop({ type: Object, required: true }) localUv!: any;
   @Prop({ type: String, default: "existing" }) from!: string;
   @Prop({ type: Boolean, default: false }) showFixedRow!: boolean;
+  @Prop({ type: Boolean, default: false }) isTree!: boolean;
 
   get lastFixedColumnIndex(): number {
     return this.localUv.columns.filter((item: any) => item.fixed).length;

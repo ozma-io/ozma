@@ -6,7 +6,7 @@ import { IRef, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDic
 import {
   IColumnField, UserViewSource, IEntityRef, IFieldRef, IResultViewInfo, IExecutedRow, IExecutedValue,
   SchemaName, EntityName, RowId, FieldName, AttributeName, IViewInfoResult, IViewExprResult,
-  ValueType, FieldType, AttributesMap, IEntity, FunDBError, UserViewErrorType, default as Api
+  ValueType, FieldType, AttributesMap, IEntity, FunDBError, UserViewErrorType, default as Api,
 } from "@/api";
 import { IUpdatedValue, valueToText, equalEntityRef, valueFromRaw, valueIsNull } from "@/values";
 import { CurrentChanges, IStagingState, UpdatedValues, IEntityChanges, IAddedEntry, AddedRowId, UserViewKey } from "@/state/staging_changes";
@@ -357,7 +357,7 @@ export class CombinedUserView {
       const updateMapping: IUpdateMapping = {};
       rows.forEach((rawRow, rowI) => {
         const row = rawRow as ICombinedRow;
-        const domain = this.info.domains[row.domainId];
+        const domain = (row.domainId !== null) ? this.info.domains[row.domainId] : undefined;
 
         if (row.mainId !== undefined) {
           row.deleted = row.mainId in (mainChanges as IEntityChanges).deleted;
@@ -371,15 +371,19 @@ export class CombinedUserView {
         }
 
         info.columns.forEach((columnInfo, colI) => {
+          if (domain === undefined) {
+            return;
+          }
           const field = domain[columnInfo.name];
-
-          const value = row.values[colI];
-
           if (field === undefined || !(field.idColumn in entityIds)) {
             return;
           }
+          const value = row.values[colI];
 
           const id = entityIds[field.idColumn];
+          if (id === undefined) {
+            return;
+          }
           const fieldRef = id.subEntity ? { entity: id.subEntity, name: field.ref.name } : field.ref;
           const updateInfo = {
             field: field.field || null,
@@ -534,7 +538,7 @@ export const equalEntriesRef = (a: IEntriesRef, b: IEntriesRef): boolean => {
 };
 
 export const referenceEntriesRef = (r: IReferenceFieldType): IEntriesRef => {
-  return {entity: r.entity, where: r.where};
+  return { entity: r.entity, where: r.where };
 };
 
 export class CurrentEntries {
@@ -656,9 +660,13 @@ const fetchUserView = async (context: ActionContext<IUserViewState, {}>, args: I
           changes,
         });
       } else {
+        let uvArgs = args.args;
+        if (process.env.NODE_ENV !== "production" && window.location.search.includes("__force_recompile")) {
+          uvArgs = { ...args.args, "__force_recompile": true };
+        }
         const res: IViewExprResult = await dispatch("callProtectedApi", {
           func: Api.getNamedUserView.bind(Api),
-          args: [args.source.ref, args.args],
+          args: [args.source.ref, uvArgs],
         }, { root: true });
         await momentLocale;
         current = new CombinedUserView(context, {
@@ -674,9 +682,13 @@ const fetchUserView = async (context: ActionContext<IUserViewState, {}>, args: I
       if (args.args === null) {
         throw new Error("Getting information about anonymous views is not supported");
       } else {
+        let uvArgs = args.args;
+        if (process.env.NODE_ENV !== "production" && window.location.search.includes("__force_recompile")) {
+          uvArgs = { ...args.args, "__force_recompile": true };
+        }
         const res: IViewExprResult = await dispatch("callProtectedApi", {
           func: Api.getAnonymousUserView.bind(Api),
-          args: [args.source.query, args.args],
+          args: [args.source.query, uvArgs],
         }, { root: true });
         await momentLocale;
         current = new CombinedUserView(context, {
@@ -860,10 +872,10 @@ const userViewModule: Module<IUserViewState, {}> = {
     // Expects all values to be empty, therefore doesn't set updated puns!
     addEntry: (state, params: { entityRef: IEntityRef; userView: UserViewKey; id: AddedRowId; positions: number[]; newValues: UpdatedValues }) => {
       const uv = state.current.userViews.getBySignature(params.userView);
-      if (!uv ||
-          !(uv instanceof CombinedUserView) ||
-          !uv.info.mainEntity ||
-          !equalEntityRef(uv.info.mainEntity, params.entityRef)) {
+      if (!uv
+          || !(uv instanceof CombinedUserView)
+          || !uv.info.mainEntity
+          || !equalEntityRef(uv.info.mainEntity, params.entityRef)) {
         return;
       }
 
@@ -928,7 +940,7 @@ const userViewModule: Module<IUserViewState, {}> = {
       uv.mainColumnMapping[params.fieldRef.name].forEach(colI => {
         // New object because otherwise Vue won't detect changes.
         const updated = params.addedEntry.values[params.fieldRef.name];
-        const value: ICombinedValue = Object.assign({}, newRow.values[colI], updated);
+        const value: ICombinedValue = { ...newRow.values[colI], ...updated };
         Vue.set(newRow.values, colI, value);
         if (entitySummaries !== undefined && "pun" in value) {
           setUpdatedPun(entitySummaries, value);

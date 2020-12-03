@@ -43,7 +43,7 @@
       >
         {{ $t('delete_confirmation') }}
       </b-modal>
-    
+
       <!-- The first form control is special, it points either to the empty row or to the first added row
                  _dynamically_. This is as to not lose focus when user starts editing empty row. -->
       <FormEntry
@@ -110,12 +110,12 @@ import { IQuery } from "@/state/query";
 import { LocalUserView, SimpleLocalUserView, ILocalRowInfo, ILocalRow, ValueRef, RowRef } from "@/local_user_view";
 import { UserView } from "@/components";
 import { Action } from "@/components/ActionsMenu.vue";
-import { ISelectionRef } from "@/components/BaseUserView";
-import BaseUserView from "@/components/BaseUserView";
+import BaseUserView, { ISelectionRef } from "@/components/BaseUserView";
+
 import FormEntry from "@/components/views/form/FormEntry.vue";
 
 import {
-  IFieldInfo, IBlockInfo, IFormValueExtra, IFormRowExtra, IFormUserViewExtra, GridElement, IGridSection, IGridInput, IButtons, IGridButtons, IButtonAction
+  IFieldInfo, IBlockInfo, IFormValueExtra, IFormRowExtra, IFormUserViewExtra, GridElement, IGridSection, IGridInput, IButtons, IGridButtons, IButtonAction,
 } from "@/components/form/types";
 import { attrToLink, attrToLinkSelf } from "@/links";
 
@@ -123,17 +123,18 @@ type IFormLocalRowInfo = ILocalRowInfo<IFormRowExtra>;
 type IFormLocalRow = ILocalRow<IFormValueExtra, IFormRowExtra>;
 
 class LocalFormUserView extends LocalUserView<IFormValueExtra, IFormRowExtra, IFormUserViewExtra> {
-  constructor(store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>, oldLocal: LocalUserView<IFormValueExtra, IFormRowExtra, IFormUserViewExtra> | null) {
-    super(store, uv, defaultRawValues, oldLocal);
-  }
-
   createCommonLocalValue(row: IRowCommon, localRow: IFormLocalRowInfo, columnIndex: number, value: ICombinedValue): IFormValueExtra {
     const columnAttrs = this.uv.columnAttributes[columnIndex];
-    const attributes = { ...this.uv.attributes, ...columnAttrs, ...row.attributes, ...value.attributes };
-    const visible  =  "visible" in attributes ? Boolean(attributes["visible"]) : true;
+    const attributes: {visible?: boolean} = {
+      ...this.uv.attributes,
+      ...columnAttrs,
+      ...row.attributes,
+      ...value.attributes,
+    };
+    const visible = Boolean(attributes["visible"] ?? true);
     const extra = {
       attributes,
-      visible
+      visible,
     };
     return extra;
   }
@@ -237,47 +238,44 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
   // When we only have one record displayed, we hide "Delete" button and add is an an action to menu instead.
   get useDeleteAction(): RowRef | null {
     if (this.rowPositions.length === 0 && this.newRowsPositions.length === 1) {
-      return { type: "added", id: this.newRowsPositions[0] }
+      return { type: "added", id: this.newRowsPositions[0] };
     } else if (this.rowPositions.length === 1 && this.newRowsPositions.length === 0) {
-      return { type: "existing", position: this.rowPositions[0] }
+      return { type: "existing", position: this.rowPositions[0] };
     } else {
       return null;
     }
   }
 
-  get blockSizes(): number[] {
+  get blockSizes(): number[] | null {
     const rawBlockSizes = this.uv.attributes["block_sizes"];
     if (!(rawBlockSizes instanceof Array)) {
-      return [12];
+      return null;
     }
     const blockSizes = rawBlockSizes.map(x => {
       const n = Math.round(Number(x));
-      if (Number.isInteger(n)) {
-        return Math.max(0, Math.min(12, n));
-      } else {
-        return undefined;
-      }
+      return Number.isInteger(n)
+        ? Math.max(0, Math.min(n, 12))
+        : undefined;
     });
-    if (blockSizes.some(x => x === undefined)) {
-      return [12];
-    } else {
-      return blockSizes as number[];
-    }
+    return blockSizes.every(x => x !== undefined)
+      ? blockSizes as number[]
+      : null;
   }
 
   get gridBlocks(): GridElement[] {
     const viewAttrs = this.uv.attributes;
-    const blocks: IGridSection[] = this.blockSizes.map(size => ({ type: "section", size, content: [] }));
-    const inputWidth = R.equals(this.blockSizes, [12]) ? 6 : 12;
+    const blocks: IGridSection[] =
+      (this.blockSizes ?? [12]).map(size => ({ type: "section", size, content: [] }));
+    // If 'block_sizes' attribute doesn't used or invalid,
+    // then two-column layout used.
+    const inputWidth = this.blockSizes === null ? 6 : 12;
 
-    //Add columns to blocks
+    // Add columns to blocks
     this.uv.info.columns.forEach((columnInfo, i) => {
       const columnAttrs = this.uv.columnAttributes[i];
       const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
 
-      const visibleColumnAttr = getColumnAttr("visible");
-      const visible = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
-
+      const visible = Boolean(getColumnAttr("visible") ?? true);
       if (!visible) {
         return;
       }
@@ -286,10 +284,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
       const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr;
       const block = Math.max(0, Math.min(blockNumber, blocks.length - 1));
 
-      const formElementAttr = String(getColumnAttr("form_element"));
-
-      const captionAttr = getColumnAttr("caption");
-      const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name;
+      const caption = String(getColumnAttr("caption") ?? columnInfo.name);
 
       const field = {
         index: i,
@@ -306,22 +301,22 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
     });
 
     // Add buttons from @form_buttons attributes to blocks
-    /* 
-     * EXAMPLE  
+    /*
+     * EXAMPLE
      * @"form_buttons" = [{
      *     form_block : 3,
      *     actions : [
-     *         {   
+     *         {
      *             name: 'Удалить записи',
      *             variant: 'danger',
      *             call_process: { schema: 'foo', name: 'delete', args: {'hello':'world'}},
      *         },
-     *         {   
+     *         {
      *             name: 'Добавить записи',
      *             variant: 'success',
      *             call_process: { schema: 'foo', name: 'add' },
      *         },
-     *         {   
+     *         {
      *             name: 'Обновить записи',
      *             variant: 'warning',
      *             call_process: { schema: 'foo', name: 'update' },
@@ -331,17 +326,17 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
      * {
      *     form_block : 4,
      *     actions : [
-     *         {   
+     *         {
      *             name: 'Удалить записи 1',
      *             variant: 'danger',
      *             call_process: { schema: 'foo', name: 'delete' },
      *         },
-     *         {   
+     *         {
      *             name: 'Добавить записи 1',
      *             variant: 'success',
      *             call_process: { schema: 'foo', name: 'add' },
      *         },
-     *         {   
+     *         {
      *             name: 'Обновить записи 1',
      *             variant: 'warning',
      *             call_process: { schema: 'foo', name: 'update' },
@@ -349,36 +344,38 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
      *     ]
      * }]
      */
-    const formButtons = this.uv.attributes['form_buttons'];
-    if(formButtons !== undefined && Array.isArray(formButtons)) {
+    const formButtons = this.uv.attributes["form_buttons"];
+    if (formButtons !== undefined && Array.isArray(formButtons)) {
       formButtons.forEach((buttons: IButtons, i: number) => {
-
         const blockAttr = Number(buttons["form_block"]);
         const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr;
         const block = Math.max(0, Math.min(blockNumber, blocks.length - 1));
 
         const actions: IButtonAction[] = [];
-        if(buttons.actions !== undefined && Array.isArray(buttons.actions)) {
+        if (buttons.actions !== undefined && Array.isArray(buttons.actions)) {
           buttons.actions.forEach((action: any) => {
-            if (typeof action.name !== "string")
+            if (typeof action.name !== "string") {
               return;
-            if (typeof action.variant !== "string")
+            }
+            if (typeof action.variant !== "string") {
               return;
+            }
             const link = attrToLink(action);
-            if (link === null)
+            if (link === null) {
               return;
+            }
             actions.push({ name: action.name, variant: action.variant, link });
-          })
+          });
         }
 
-        if( actions.length > 0) {
+        if (actions.length > 0) {
           const element: IGridButtons = {
             type: "buttons",
-            actions
+            actions,
           };
           blocks[block].content.push(element);
         }
-      })
+      });
     }
     return blocks;
   }
@@ -400,13 +397,13 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
     const deleteRef = this.useDeleteAction;
     if (deleteRef !== null) {
       actions.push(
-        {name: this.$t("delete").toString(), callback: () => this.confirmDelete(deleteRef)},
+        { name: this.$t("delete").toString(), callback: () => this.confirmDelete(deleteRef) },
       );
     }
     return actions;
   }
 
-  @Watch("actions", {deep: true, immediate: true})
+  @Watch("actions", { deep: true, immediate: true })
   private updateActions() {
     this.$emit("update:actions", this.actions);
   }
@@ -448,13 +445,12 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
 }
 </script>
 
-<style scoped>  
+<style scoped>
   .view-form {
     padding: 0 0 50px 0 !important;
     overflow-y: auto;
     overflow-x: hidden;
     height: 100% !important;
-    width: 100vw;
     background-color: var(--MainBackgroundColor);
   }
 

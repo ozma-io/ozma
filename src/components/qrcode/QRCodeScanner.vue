@@ -36,12 +36,12 @@
   <b-modal 
     id="qrcode-scanner-modal"
     v-model="modalShow"
-    hide-footer 
-    :title="$t('qrcode_scanner')" 
+    hide-footer
+    :title="$t('qrcode_scanner')"
   >
-    <qrcode-stream 
-      :camera="camera" 
-      @decode="onDecode" 
+    <qrcode-stream
+      :camera="camera"
+      @decode="onDecode"
       @init="onInit"
     >
       <div v-if="loading" class="loading-indicator">
@@ -55,7 +55,7 @@
     <div v-if="result.length > 0" class="decode-result">
       <strong>{{ $t('scan_result') }}:</strong>
       <ol>
-        <li 
+        <li
           v-for="value in result"
           :key="value.i"
         > 
@@ -112,7 +112,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   entries: Record<string, string> = {};
   currentContent: IQRContent | null = null;
 
-  @Watch('openScanner')
+  @Watch("openScanner")
   private toggleOpenScanner() {
     this.modalShow = !this.modalShow;
     // this.currentContent = JSON.parse('{"n":"Ingredients","s":"user","i":407}');
@@ -122,13 +122,12 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     this.entries = {};
   }
 
-  async onInit (promise: any) {
+  async onInit(promise: any) {
     this.loading = true;
     try {
-      await promise
+      await promise;
     } catch (error) {
       this.error = error.name;
-
       if (error.name === 'NotAllowedError') {
         this.error = this.$t('error_access_camera').toString();
       } else if (error.name === 'NotFoundError') {
@@ -142,14 +141,13 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
       } else if (error.name === 'StreamApiNotSupportedError') {
         this.error = this.$t('error_stream_not_suppotred').toString();
       }
-
     } finally {
       this.loading = false;
     }
-  };
+  }
 
-  private async onDecode (content: string) {
 
+  private async onDecode(content: string) {
     if (!this.multiScan) {
       this.$emit('update:scanResult', content);
       this.turnCameraOff();
@@ -183,25 +181,25 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
 
   };
 
-  private turnCameraOn () {
-    this.camera = 'auto';
-  };
+  private turnCameraOn() {
+    this.camera = "auto";
+  }
 
-  private turnCameraOff () {
-    this.camera = 'off';
-  };
+  private turnCameraOff() {
+    this.camera = "off";
+  }
 
-  private timeout (ms: number) {
+  private timeout(ms: number) {
     return new Promise(resolve => {
       window.setTimeout(resolve, ms);
-    })
-  };
+    });
+  }
 
   private sendList() {
-    this.$bvModal.hide('qrcode-scanner-modal');
+    this.$bvModal.hide("qrcode-scanner-modal");
     this.$emit("select", this.result);
     this.result = [];
-  };
+  }
 
   get entriesEntity() {
     return this.entry;
@@ -250,9 +248,9 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     }
     this.changeCurrentContent();
   }
-
+  
 }
-</script> 
+</script>
 
 <style scoped>
   .error {

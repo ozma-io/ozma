@@ -121,7 +121,7 @@ const findValueDelta = (rows: ICombinedRow[], newRows: Record<number, IRowCommon
   Object.entries(newRows).forEach(([rowId, row]) => {
     storeValues[row.values[indexColumn].value] = { type: "added", id: Number(rowId) };
   });
-  const selectValues: Record<string, IValueDeltaNew>  = value.reduce((acc, vl) => {
+  const selectValues: Record<string, IValueDeltaNew> = value.reduce((acc, vl) => {
     return { ...acc, [vl]: { ref: { column: indexColumn, type: "new" }, value: vl } };
   }, {});
 
@@ -193,18 +193,7 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView, BaseE
     }
 
     const getColumnAttr = (name: string) => tryDicts(name, this.uv.columnAttributes[this.selectedValueIndex], this.uv.attributes);
-    const getDeprecatedAttr = (name: string, oldName: string) => {
-      const ret = getColumnAttr(name);
-      if (ret !== undefined) {
-        return ret;
-      }
-      const oldRet = getColumnAttr(oldName);
-      if (oldRet !== undefined) {
-        console.warn(`Old-style link attribute detected: "${oldName}"`);
-        return oldRet;
-      }
-    };
-    const linkedView = getDeprecatedAttr("row_link", "row_linked_view");
+    const linkedView = getColumnAttr("row_link");
     const entries = this.entriesMap.getEntries(this.entriesEntity);
     if (entries) {
       const options = Object.entries(entries).map(([key, value]) => ({
@@ -225,7 +214,7 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView, BaseE
   }
 }
 </script>
-<style scoped>  
+<style scoped>
   .values_list__value > a,
   .select_container__options_list__option > a {
     color: var(--MainTextColor);

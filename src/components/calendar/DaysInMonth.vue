@@ -50,7 +50,7 @@ export default class DaysInMonth extends Vue {
 }
 </script>
 
-<style scoped>  
+<style scoped>
   .cal-day {
     display: grid;
     grid-template-columns: repeat(7, 30px);

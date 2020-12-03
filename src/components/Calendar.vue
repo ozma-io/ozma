@@ -11,12 +11,23 @@
 <template>
   <div
     v-click-outside="onClickOutside"
-    class="calendar_container"
+    :class="['calendar_container',
+             {
+               'required': required && isEmpty,
+               'error': error,
+             }
+    ]"
   >
     <div class="main_input">
       <input
         type="button"
-        class="material-icons calendar_input__icon"
+        :class="['material-icons',
+                 'calendar_input__icon',
+                 {
+                   'required': required && isEmpty,
+                   'error': error,
+                 }
+        ]"
         style="margin-right: 10px;"
         value="event"
       >
@@ -42,7 +53,7 @@
       ref="popup"
       :class="['main_cal', {
         'main_cal__open': isCalendarOpen,
-        'main-cal_cell-edit': isCellEdit,
+        'main_cal_cell-edit': isCellEdit,
         'main_cal__open-top': position
       }]"
     >
@@ -86,7 +97,7 @@ import moment, { Moment, months, Duration } from "moment";
 import { dateFormat, dateTimeFormat, valueToText } from "@/values";
 import DatePicker from "@/components/calendar/DatePicker.vue";
 import TimePicker from "@/components/calendar/TimePicker.vue";
-import {nextRender} from "@/utils";
+import { nextRender } from "@/utils";
 
 @Component({
   components: {
@@ -96,14 +107,20 @@ import {nextRender} from "@/utils";
 export default class Calendar extends Vue {
   @Prop() value!: Moment | undefined | null;
   @Prop({ type: String }) textValue!: string;
+  @Prop({ type: Boolean }) error!: boolean;
+  @Prop({ type: Boolean }) required!: boolean;
   @Prop({ default: true, type: Boolean }) showTime!: boolean;
   @Prop({ type: Number, default: null }) timeStep!: number | null;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: Boolean, default: false }) noOpenOnFocus!: boolean;
-  @Prop({ type: Boolean, default: false}) isCellEdit!: boolean;
+  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
 
   private isCalendarOpen = false;
   private position = false;
+
+  private get isEmpty(): boolean {
+    return this.value === undefined || this.value === null;
+  }
 
   private mounted() {
     const controlElement = this.$refs.control as HTMLInputElement;
@@ -116,7 +133,7 @@ export default class Calendar extends Vue {
 
   private onPressEnter(event: any) {
     event.preventDefault();
-    this.$emit('update:value', moment(event.target.value, 'L LT'));
+    this.$emit("update:value", moment(event.target.value, "L LT"));
     event.target.blur();
     this.isCalendarOpen = false;
   }
@@ -142,11 +159,11 @@ export default class Calendar extends Vue {
     return (this.dateValue.isUTC())
       ? {
         hour: this.dateValue.utcOffset(moment().utcOffset()).hour(),
-        min: this.dateValue.utcOffset(moment().utcOffset()).minute()
+        min: this.dateValue.utcOffset(moment().utcOffset()).minute(),
       }
       : {
         hour: this.dateValue.hour(),
-        min: this.dateValue.minute()
+        min: this.dateValue.minute(),
       };
   }
 
@@ -203,10 +220,27 @@ export default class Calendar extends Vue {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   .calendar_container {
     position: relative;
     display: block;
+    background-color: var(--MainBackgroundColor);
+
+    &.required {
+      background-color: var(--WarningColor) !important;
+
+      &::placeholder {
+        color: var(--WarningPlaceholderColor) !important;
+      }
+    }
+
+    &.error {
+      background-color: var(--FailColor) !important;
+
+      &::placeholder {
+        color: var(--FailPlaceholderColor) !important;
+      }
+    }
   }
 
   .calendar_input {
@@ -232,7 +266,6 @@ export default class Calendar extends Vue {
     color: var(--MainTextColor);
     border-bottom: 1px solid var(--MainBorderColor) !important;
     cursor: text;
-    background-color: var(--MainBackgroundColor);
   }
 
   .close_input__icon,
@@ -241,6 +274,14 @@ export default class Calendar extends Vue {
     border: none;
     padding: 0;
     color: var(--MainBorderColor);
+
+    &.required {
+      color: var(--WarningPlaceholderColor) !important;
+    }
+
+    &.error {
+      color: var(--FailPlaceholderColor) !important;
+    }
   }
 
   .close_input__icon {

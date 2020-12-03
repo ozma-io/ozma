@@ -100,7 +100,7 @@ interface ICardStyle {
 
 const query = namespace("query");
 
-@Component({ directives: { dragscroll }})
+@Component({ directives: { dragscroll } })
 export class Card extends Vue {
   @query.Action("addWindow") addWindow!: (query: IQuery) => Promise<void>;
   @Prop({ type: Object, required: true }) data!: ICard;
@@ -112,7 +112,7 @@ export class Card extends Vue {
     const color: string | undefined = R.pathOr("white", ["style", "color"], this.data);
     return {
       backgroundColor: color,
-      width: `${this.width - 20}px`
+      width: `${this.width - 20}px`,
     };
   }
 }
@@ -120,7 +120,7 @@ export class Card extends Vue {
 export default Card;
 </script>
 
-<style scoped>  
+<style scoped>
   .card_container {
     cursor: grab;
     border: 1px solid var(--MainBorderColor);

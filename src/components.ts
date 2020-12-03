@@ -1,6 +1,5 @@
-import Vue from "vue";
 import Component from "vue-class-component";
-import { VueConstructor } from "vue";
+import { VueConstructor, default as Vue } from "vue";
 import { Store } from "vuex";
 
 import { CombinedUserView } from "@/state/user_view";
@@ -11,7 +10,7 @@ import { IHandlerProvider } from "@/local_user_view";
  * LocalUserView contains all the state of this user view which must be passed between reloads, e.g. what rows are
  * currently selected. Enclosing component manages its lifetime and passes previous instances of local state
  * (`oldLocal` argument), from which current state can be re-initialized.
- * 
+ *
  * To accomplish this we add an extra value, `localConstructor`, to the user view constructor object.
  */
 export interface IUserViewOptions<ConstrT extends IHandlerProvider> {

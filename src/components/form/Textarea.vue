@@ -108,7 +108,7 @@ export default class Textarea extends Vue {
   }
 
   private updateInput(value: string) {
-    this.$emit('update:value', value);
+    this.$emit("update:value", value);
     this.setInputHeight();
   }
 
@@ -125,7 +125,7 @@ export default class Textarea extends Vue {
 
   private get textareaRows(): number | null {
     if (this.height) {
-      return null
+      return null;
     }
 
     return this.rows;
@@ -137,6 +137,7 @@ export default class Textarea extends Vue {
         height: `${this.height}px`,
       };
     }
+    return null;
   }
 
   private onFocus(evt: HTMLInputElement) {
@@ -153,8 +154,9 @@ export default class Textarea extends Vue {
   }
 
   private setCursorPositionEnd(controlElement: HTMLInputElement) {
-    if (controlElement)
+    if (controlElement) {
       controlElement.selectionStart = this.value ? this.value.length : 0;
+    }
   }
 
   private positionField() {

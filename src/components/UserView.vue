@@ -142,10 +142,10 @@ const maxLevel = 4;
  *      user view is reloaded. In this case, old data is used to restore as much old state as possible (for example, keep
  *      selected table rows selected when the table is reloaded, even when new rows were added).
  */
-@Component({components: {
+@Component({ components: {
   UserViewCommon,
-  ...components
-}})
+  ...components,
+} })
 export default class UserView extends Vue {
   @userView.State("current") currentUvs!: CurrentUserViews;
   @userView.Mutation("addUserViewConsumer") addUserViewConsumer!: (args: { args: IUserViewArguments; reference: ReferenceName }) => void;
@@ -178,12 +178,13 @@ export default class UserView extends Vue {
   private pendingArgs: IUserViewArguments | null = null;
 
   get title() {
-    if (this.currentUv instanceof CombinedUserView && this.currentUv.attributes.hasOwnProperty('title'))
+    if (this.currentUv instanceof CombinedUserView && "title" in this.currentUv.attributes) {
       return this.currentUv.attributes.title;
-    if (this.args.source.type === "named")
+    } else if (this.args.source.type === "named") {
       return this.args.source.ref.name;
-
-    return this.$t("anonymous_query").toString();
+    } else {
+      return this.$t("anonymous_query").toString();
+    }
   }
 
   get newUv() {
@@ -243,16 +244,14 @@ export default class UserView extends Vue {
   get errorMessage() {
     if (!(this.currentUv instanceof UserViewError)) {
       return null;
+    } else if (this.currentUv.type === "access_denied") {
+      return this.$t("forbidden");
+    } else if (this.currentUv.type === "not_found") {
+      return this.$t("not_found");
+    } else if (this.currentUv.type === "arguments") {
+      return this.$t("bad_request", { msg: this.currentUv.message });
     } else {
-      if (this.currentUv.type === "access_denied") {
-        return this.$t("forbidden");
-      } else if (this.currentUv.type === "not_found") {
-        return this.$t("not_found");
-      } else if (this.currentUv.type === "arguments") {
-        return this.$t("bad_request", { msg: this.currentUv.message });
-      } else {
-        return this.$t("unknown_error", { msg: this.currentUv.message });
-      }
+      return this.$t("unknown_error", { msg: this.currentUv.message });
     }
   }
 
@@ -387,7 +386,7 @@ export default class UserView extends Vue {
           return;
         }
         const id = (createOp as ICombinedInsertEntityResult).id;
-        if (id != null && this.selectionMode) {
+        if (id !== null && this.selectionMode) {
           const ref: ISelectionRef = {
             entity: currentUv.info.mainEntity!,
             id,

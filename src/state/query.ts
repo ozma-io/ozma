@@ -68,7 +68,7 @@ export const attrObjectToQuery = (linkedAttr: any, opts?: IAttrToQueryOpts): IQu
       return null;
     }
     args = retArgs;
-  };
+  }
 
   let defaultValues: Record<string, any>;
   if (linkedAttr["default_values"]) {
@@ -97,7 +97,7 @@ export const attrObjectToQuery = (linkedAttr: any, opts?: IAttrToQueryOpts): IQu
     },
     search: "",
   };
-}
+};
 
 export const attrToQuery = (linkedAttr: any, opts?: IAttrToQueryOpts): IQuery | null => {
   if (typeof linkedAttr === "object") {
@@ -170,7 +170,7 @@ export const queryLocation = (query: IQuery): RawLocation => {
 let windowKey = 0;
 const getWindowKey = () => {
   return windowKey++;
-}
+};
 
 export interface IGenericWindow<T> {
   key: number;
@@ -210,7 +210,7 @@ const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: 
       windows[id] = windowQuery;
     }
     return windowQuery;
-  }
+  };
 
   Object.entries(search).forEach(([name, rawVal]) => {
     let val: string;
@@ -257,8 +257,8 @@ const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: 
           ref: {
             schema: refMatch[1],
             name: refMatch[2],
-          }
-        }
+          },
+        };
       }
       return;
     }
@@ -268,13 +268,13 @@ const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: 
       const windowId = windowArgMatch[1];
       const windowName = windowArgMatch[2];
       const window = getWindow(windowId);
-      let args = window.args;
-      if (args === undefined) {
-        args = {};
-        window.args = args;
+      let windowArgs = window.args;
+      if (windowArgs === undefined) {
+        windowArgs = {};
+        window.args = windowArgs;
       }
-      if (args !== null) {
-        args[windowName] = JSON.parse(val);
+      if (windowArgs !== null) {
+        windowArgs[windowName] = JSON.parse(val);
       }
       return;
     }
@@ -312,7 +312,7 @@ const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: 
 
   const rawWindowsArray = mapMaybe(([rawId, rawWindow]): [number, IQuery] | undefined => {
     if (rawWindow.source === undefined) {
-      return;
+      return undefined;
     }
 
     const id = Number(rawId);
@@ -323,7 +323,7 @@ const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: 
       },
       defaultValues: rawWindow.defaultValues,
       search: rawWindow.search,
-    }
+    };
     return [id, query];
   }, Object.entries(windows));
   rawWindowsArray.sort(([id1, query1], [id2, query2]) => id1 - id2);
@@ -338,8 +338,8 @@ const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: 
     root,
     windows: windowsArray,
     selectedWindow: selectedWindowIndex,
-  }
-}
+  };
+};
 
 export const currentQueryLocation = (query: ICurrentQuery): RawLocation => {
   const ret = queryLocation(query.root);
@@ -378,11 +378,11 @@ export interface IQueryHistory extends IQuery {
 }
 
 const pushHistory = (current: IQueryHistory, newCurrent: IQuery): IQueryHistory => {
-  return {...newCurrent, previous: current};
+  return { ...newCurrent, previous: current };
 };
 
 const replaceHistory = (current: IQueryHistory, newCurrent: IQuery): IQueryHistory => {
-  return {...newCurrent, previous: current.previous};
+  return { ...newCurrent, previous: current.previous };
 };
 
 export type ICurrentQueryHistory = IGenericCurrentQuery<IQueryHistory>;
@@ -443,7 +443,7 @@ const queryModule: Module<IQueryState, {}> = {
         root: state.current ? pushHistory(state.current.root, query) : deepClone(query),
         windows: [],
         selectedWindow: null,
-      }
+      };
       updateCurrent(state, newCurrent);
       state.resetLocks += 1;
     },
@@ -452,7 +452,7 @@ const queryModule: Module<IQueryState, {}> = {
         root: state.current ? replaceHistory(state.current.root, query) : deepClone(query),
         windows: [],
         selectedWindow: null,
-      }
+      };
       updateCurrent(state, newCurrent);
       state.resetLocks += 1;
     },

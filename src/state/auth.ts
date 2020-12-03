@@ -107,7 +107,7 @@ const requestToken = async (params: Record<string, string>): Promise<CurrentAuth
   const headers: Record<string, string> = {
     "Content-Type": "application/x-www-form-urlencoded",
   };
-  const newParams = {...params, ["client_id"]: authClientId};
+  const newParams = { ...params, "client_id": authClientId };
   const paramsString = new URLSearchParams(newParams).toString();
 
   const ret = await Utils.fetchJson(`${authUrl}/token`, {
@@ -117,7 +117,7 @@ const requestToken = async (params: Record<string, string>): Promise<CurrentAuth
   });
 
   return new CurrentAuth(ret.access_token, ret.refresh_token, ret.id_token);
-}
+};
 
 const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<string, string>) => {
   const { state, commit, dispatch } = context;
@@ -128,7 +128,9 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
     if (oldPending !== null) {
       try {
         await oldPending;
-      } catch (e) { }
+      } catch (_) {
+        // It's handled somewhere else.
+      }
     }
     try {
       const auth = await requestToken(params);
@@ -146,13 +148,11 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
             if (e.body.error === "invalid_grant") {
               // token got revoked, not an error condition
               description = null;
-            } else {
-              if ("error_description" in e.body) {
-                description = e.body.error_description;
-              }
+            } else if ("error_description" in e.body) {
+              description = e.body.error_description;
             }
-          } catch (e) {
-            // just don't try
+          } catch (_) {
+            // just don't try.
           }
         }
 
@@ -194,8 +194,8 @@ const renewAuth = async (context: ActionContext<IAuthState, {}>) => {
   }
 
   const params: Record<string, string> = {
-    ["grant_type"]: "refresh_token",
-    ["refresh_token"]: state.current.refreshToken,
+    "grant_type": "refresh_token",
+    "refresh_token": state.current.refreshToken,
   };
   await startGetToken(context, params);
 };
@@ -238,13 +238,13 @@ const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExist
     path,
   };
   const params = {
-    ["client_id"]: authClientId,
-    ["redirect_uri"]: redirectUri(),
-    ["state"]: btoa(JSON.stringify(savedState)),
-    ["scope"]: "openid",
-    ["response_mode"]: "query",
-    ["response_type"]: "code",
-    ["prompt"]: tryExisting ? "none" : "login",
+    "client_id": authClientId,
+    "redirect_uri": redirectUri(),
+    "state": btoa(JSON.stringify(savedState)),
+    "scope": "openid",
+    "response_mode": "query",
+    "response_type": "code",
+    "prompt": tryExisting ? "none" : "login",
   };
   const paramsString = new URLSearchParams(params).toString();
 
@@ -261,7 +261,7 @@ const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExist
 const authQueryKey = "__auth";
 
 export const getAuthedLink = (auth: CurrentAuth): string => {
-  const query = {...router.currentRoute.query};
+  const query = { ...router.currentRoute.query };
   query[authQueryKey] = auth.refreshToken;
   const href = router.resolve({ path: router.currentRoute.path, query }).href;
   return window.location.origin + href;
@@ -352,9 +352,9 @@ export const authModule: Module<IAuthState, {}> = {
                 const code = getQueryValue("code");
                 if (code !== null) {
                   const params: Record<string, string> = {
-                    ["grant_type"]: "authorization_code",
-                    ["code"]: code,
-                    ["redirect_uri"]: redirectUri(),
+                    "grant_type": "authorization_code",
+                    "code": code,
+                    "redirect_uri": redirectUri(),
                   };
                   const auth = await requestToken(params);
                   await updateAuth(context, auth);
@@ -375,12 +375,12 @@ export const authModule: Module<IAuthState, {}> = {
           } else if (developmentMode && authQueryKey in router.currentRoute.query) {
             dropCurrentAuth();
             const refreshToken = String(router.currentRoute.query[authQueryKey]);
-            const newQuery = {...router.currentRoute.query};
+            const newQuery = { ...router.currentRoute.query };
             delete newQuery[authQueryKey];
             await router.replace({ query: newQuery });
             const params: Record<string, string> = {
-              ["grant_type"]: "refresh_token",
-              ["refresh_token"]: refreshToken,
+              "grant_type": "refresh_token",
+              "refresh_token": refreshToken,
             };
             try {
               const currAuth = await requestToken(params);
@@ -413,7 +413,9 @@ export const authModule: Module<IAuthState, {}> = {
               }
             }
           };
-          window.addEventListener("storage", e => { authStorageHandler(e); });
+          window.addEventListener("storage", e => {
+            authStorageHandler(e);
+          });
 
           if (state.current === null) {
             if (tryExisting) {
@@ -435,7 +437,9 @@ export const authModule: Module<IAuthState, {}> = {
         if (state.pending !== null) {
           try {
             await state.pending;
-          } catch (e) { }
+          } catch (_) {
+            // It's handled somewhere else.
+          }
         }
 
         commit("increaseProtectedCalls");
@@ -470,7 +474,7 @@ export const authModule: Module<IAuthState, {}> = {
       }
 
       const params = {
-        ["redirect_uri"]: redirectUri(),
+        "redirect_uri": redirectUri(),
       };
       const paramsString = new URLSearchParams(params).toString();
       dropCurrentAuth();

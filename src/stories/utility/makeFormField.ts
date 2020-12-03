@@ -3,7 +3,7 @@ import Vue from "vue";
 export default function makeFormField(Component: any, componentName: string) {
   return (
     Vue.component("FormField", {
-      components: {[componentName]: Component},
+      components: { [componentName]: Component },
       props: {
         bindProps: { type: Object, required: true },
         value: { type: Object, required: true },

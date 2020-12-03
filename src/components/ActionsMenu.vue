@@ -37,14 +37,13 @@
     <div
       v-show="showActions"
       :class="['div-with-actions', menuAlign]"
-
-    > 
+    >
       <template v-if="sortedActions.length == 0">
         <label class="div-with-actions_button">
           {{ $t('empty') }}
         </label>
       </template>
-      <template v-else v-for="(action, i) in sortedActions">
+      <template v-for="(action, i) in sortedActions" v-else>
         <hr
           v-if="action === null"
           :key="i"
@@ -104,7 +103,7 @@ export interface IAction {
   icon?: string;
   name: string;
   order?: number;
-};
+}
 
 export interface ILocationAction extends IAction {
   location: RawLocation;
@@ -155,7 +154,7 @@ export default class ActionsMenu extends Vue {
     return newActions as (Action | null)[];
   }
 
-  @Watch('$route', { immediate: true, deep: true })
+  @Watch("$route", { immediate: true, deep: true })
   onUrlChange(newVal: any) {
     this.showActions = false;
   }

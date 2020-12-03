@@ -1,7 +1,7 @@
 <template>
   <!-- <draggable tag="v-layout" v-model="columns" group="column"> -->
-  <div 
-    v-dragscroll.x="!isMobile" 
+  <div
+    v-dragscroll.x="!isMobile"
     class="board_container"
   >
     <Column
@@ -30,9 +30,9 @@ import draggable from "vuedraggable";
 
 import { ICard, CardTarget } from "@/components/kanban/Card.vue";
 import Column, { IColumn } from "@/components/kanban/Column.vue";
-import { ValueRef } from "../../local_user_view";
 import { dragscroll } from "vue-dragscroll";
 import { isMobile } from "@/utils";
+import { ValueRef } from "../../local_user_view";
 
 @Component({ components: { Column, draggable }, directives: { dragscroll } })
 export default class Board extends Vue {
@@ -57,7 +57,7 @@ export default class Board extends Vue {
 }
 </script>
 
-<style scoped lang="css">  
+<style scoped lang="css">
   .board_container {
     width: 100%;
     height: 100%;

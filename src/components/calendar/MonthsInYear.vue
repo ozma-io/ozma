@@ -23,7 +23,7 @@ export default class MonthsInYear extends Vue {
 }
 </script>
 
-<style scoped>  
+<style scoped>
   .cal-month {
     display: grid;
     grid-template-columns: repeat(4, 40px);

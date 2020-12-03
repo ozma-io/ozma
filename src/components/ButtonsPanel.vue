@@ -1,17 +1,17 @@
 <template>
   <ul class="buttons">
     <li v-for="(button, i) in buttons" :key="i">
-      <i v-if="button.icon" class="material-icons">{{ button.icon }}</i> 
+      <i v-if="button.icon" class="material-icons">{{ button.icon }}</i>
       <span>{{ button.name }}</span>
       <ul class="actions">
         <FunLink
-          v-for="(action, j) in button.actions" 
+          v-for="(action, j) in button.actions"
           :key="j"
           :link="action.link"
           @goto="$emit('goto', $event)"
         >
           <li v-if="'link' in action" :key="action.name">
-            <i v-if="button.icon" class="material-icons">{{ action.icon }}</i> 
+            <i v-if="button.icon" class="material-icons">{{ action.icon }}</i>
             <span>{{ action.name }}</span>
           </li>
         </FunLink>
@@ -23,11 +23,12 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { Action } from "@/components/ActionsMenu.vue";
+
 export interface IPanelButton {
   icon?: string;
   name: string;
-  actions: Action[]; 
-};
+  actions: Action[];
+}
 
 @Component
 export default class ButtonsPanel extends Vue {
@@ -64,8 +65,7 @@ export default class ButtonsPanel extends Vue {
   ul.buttons .material-icons {
     position: absolute;
     font-size: 18px;
-    left: 0;
-    margin: 1px 0 0 2px;
+    left: 7px;
     padding: 0;
   }
 
@@ -75,7 +75,7 @@ export default class ButtonsPanel extends Vue {
     float: left;
     border: 1px solid var(--MainBackgroundColor);
     border-radius: 3px;
-    padding: 5px 5px 5px 22px;
+    padding: 5px 5px 5px 30px;
     margin-right: 10px;
     cursor: pointer;
     transition: 0.2s background-color ease-in-out, 0.2s box-shadow ease-in-out, 0.2s border-color ease-in-out;
@@ -85,7 +85,7 @@ export default class ButtonsPanel extends Vue {
     position: absolute;
     font-size: 18px;
     left: 0;
-    margin: 1px 0 0 10px;
+    margin: 0 0 0 10px;
   }
 
   ul.actions > a > li {
@@ -107,7 +107,7 @@ export default class ButtonsPanel extends Vue {
     background-color: var(--MainBackgroundColor);
     box-shadow: 0 5px 5px rgba(0, 0, 0, 0.1);
     top: calc(100% + 5px);
-    right: -10px;
+    right: 0;
     z-index: 1200;
     transition: 0.2s visibility ease-in-out, 0.2s opacity ease-in-out;
   }

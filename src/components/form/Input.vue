@@ -22,15 +22,15 @@
       v-if="!isCellEdit"
       :id="id"
       ref="control"
-      :class="['input_field',
+      :class="['input-field',
                {
-                 'input_field__disabled': disabled,
-                 'input_field__focused': focused,
-                 'input_field__unfocused': !focused,
-                 'input-field__error': error,
-                 'input-field__required': required && isEmpty,
-                 'input-field_cell-edit': isCellEdit,
-                 'input_field_padding-right_25': qrcodeInput,
+                 'disabled': disabled,
+                 'focused': focused,
+                 'unfocused': !focused,
+                 'error': error,
+                 'required': required && isEmpty,
+                 'cell-edit': isCellEdit,
+                 'with-qr-code': qrcodeInput,
                }
       ]"
       autocomplete="off"
@@ -54,9 +54,9 @@
       @input="updateInputCellEdit"
       @focus="onFocus"
     />
-    <span 
-      v-if="qrcodeInput" 
-      class="material-icons qr_code" 
+    <span
+      v-if="qrcodeInput"
+      class="material-icons qr_code"
       @click="openQRCodeScanner = !openQRCodeScanner"
     >
       qr_code_2
@@ -76,7 +76,7 @@ import Textarea from "@/components/form/Textarea.vue";
 import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
 
 @Component({
-  components: {Textarea, QRCodeScanner}
+  components: { Textarea, QRCodeScanner },
 })
 export default class Input extends Vue {
   @Prop({ type: String }) label!: string;
@@ -92,8 +92,8 @@ export default class Input extends Vue {
   @Prop({ type: String, default: "text" }) type!: string;
   @Prop({ type: Boolean, default: false }) focus!: boolean;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  @Prop({type: Boolean, default: false}) isCellEdit!: boolean;
-  @Prop({type: Boolean, default: false}) qrcodeInput!: boolean;
+  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
+  @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
 
   private focused = false;
   private maxInputWidth = 0;
@@ -194,14 +194,16 @@ export default class Input extends Vue {
     }
     if (!this.isMobile) {
       const control = this.$refs.control as HTMLInputElement;
-      if (control !== undefined)
+      if (control !== undefined) {
         control.style.width = "100%";
+      }
     }
   }
 
   private setCursorPositionEnd(controlElement: HTMLInputElement) {
-    if (controlElement)
+    if (controlElement) {
       controlElement.selectionStart = this.value ? this.value.length : 0;
+    }
   }
 
   private updateInput(value: MouseEvent | any) {
@@ -226,7 +228,9 @@ export default class Input extends Vue {
     const controlElement = this.$refs.control as HTMLInputElement;
     const autosizeMeter = this.$refs.autosizeMeter as HTMLSpanElement;
     const leftPos = controlElement.getBoundingClientRect().left;
-    const newWidth = autosizeMeter.scrollWidth >= this.maxInputWidth ? autosizeMeter.scrollWidth : this.maxInputWidth;
+    const newWidth = autosizeMeter.scrollWidth >= this.maxInputWidth
+      ? autosizeMeter.scrollWidth
+      : this.maxInputWidth;
     const rightPos = leftPos + newWidth;
     const viewportWidth = document.documentElement.clientWidth - 10;
 
@@ -275,12 +279,66 @@ export default class Input extends Vue {
     padding-left: 15px;
   }
 
-  .input-field__required {
-    background: var(--WarningColor) !important;
-  }
+  .input-field {
+    width: 100% !important;
+    text-align: inherit;
+    padding: 0 5px;
+    background-color: rgba(0, 0, 0, 0);
+    border: 0;
+    z-index: 2;
+    order: 2;
+    flex: 2;
+    height: 2em;
+    color: var(--MainTextColor);
+    cursor: pointer;
+    border-bottom: 1px solid var(--MainBorderColor);
+    text-overflow: ellipsis;
+    transition: border-color 0.2s ease-in;
 
-  .input-field__error {
-    background: var(--FailColor) !important;
+    &::placeholder {
+      color: var(--MainTextColorLight);
+    }
+
+    &:hover,
+    &:focus {
+      outline: none;
+      color: var(--MainTextColor);
+      cursor: text;
+      z-index: 2000;
+    }
+
+    &.disabled {
+      cursor: not-allowed;
+    }
+
+    &.required {
+      background-color: var(--WarningColor) !important;
+
+      &::placeholder {
+        color: var(--WarningPlaceholderColor) !important;
+      }
+    }
+
+    &.error {
+      background-color: var(--FailColor) !important;
+
+      &::placeholder {
+        color: var(--FailPlaceholderColor) !important;
+      }
+    }
+
+    &.cell-edit {
+      width: auto;
+
+      &:focus,
+      &:hover {
+        border-bottom: 1px solid transparent;
+      }
+    }
+
+    &.with-qr-code {
+      padding-right: 25px;
+    }
   }
 
   // .input_field__focused {
@@ -316,48 +374,6 @@ export default class Input extends Vue {
     z-index: -1;
     transform: scale(0.9);
     box-shadow: 0 0 8px 2px #000;
-  }
-
-  .input_field {
-    width: 100% !important;
-    text-align: inherit;
-    padding: 0 5px;
-    background-color: rgba(0, 0, 0, 0);
-    border: 0;
-    z-index: 2;
-    order: 2;
-    flex: 2;
-    height: 2em;
-    color: var(--MainTextColor);
-    cursor: pointer;
-    border-bottom: 1px solid var(--MainBorderColor);
-    text-overflow: ellipsis;
-    transition: border-color 0.2s ease-in;
-  }
-
-  .input_field::placeholder {
-    color: var(--MainTextColorLight);
-  }
-
-  .input_field:hover,
-  .input_field:focus {
-    outline: none;
-    color: var(--MainTextColor);
-    cursor: text;
-    z-index: 2000;
-  }
-
-  .input-field_cell-edit {
-    width: auto;
-  }
-
-  .input-field_cell-edit:focus,
-  .input-field_cell-edit:hover {
-    border-bottom: 1px solid transparent;
-  }
-
-  .input_field__disabled {
-    cursor: not-allowed;
   }
 
   .input_modal_field {
@@ -411,13 +427,9 @@ export default class Input extends Vue {
     position: absolute;
     cursor: pointer;
     right: 0;
-  }
 
-  .material-icons.qr_code:hover {
-    opacity: 0.7;
-  }
-
-  .input_field_padding-right_25 {
-    padding-right: 25px;
+    &:hover {
+      opacity: 0.7;
+    }
   }
 </style>

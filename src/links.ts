@@ -94,7 +94,7 @@ export const attrToLinkSelf = (linkedAttr: any, update?: IValueInfo, opts?: IAtt
 
   const ret = attrToLink(linkedAttr, opts);
   if (ret !== null && update) {
-    let args: Record<string, any>
+    let args: Record<string, any>;
     if ("args" in ret) {
       args = ret.args;
     } else if ("query" in ret && ret.query.args.args) {
@@ -111,7 +111,7 @@ export const attrToLinkSelf = (linkedAttr: any, update?: IValueInfo, opts?: IAtt
 export const attrToLinkRef = (linkedAttr: any, value: any, opts?: IAttrToLinkOpts): Link | null => {
   const ret = attrToLink(linkedAttr, opts);
   if (ret !== null && value !== null && value !== undefined) {
-    let args: Record<string, any>
+    let args: Record<string, any>;
     if ("args" in ret) {
       args = ret.args;
     } else if ("query" in ret && ret.query.args.args) {
@@ -172,4 +172,4 @@ export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQ
   }
   
   return handler;
-}
+};
