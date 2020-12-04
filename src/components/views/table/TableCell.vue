@@ -11,7 +11,7 @@
                           'error_style': value.erroredOnce,
                           'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable,
                           'editing_style': localValue.editing !== undefined,
-                          'tree-branches': column.treeBranchesView && children !== undefined && children.length > 0 && isTree,
+                          'tree-branches': column.treeUnfoldColumn && children !== undefined && children.length > 0 && isTree,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click="$emit('cell-click', columnPosition, $event)"
   >
@@ -101,7 +101,7 @@ export default class TableCell extends Vue {
   }
 
   private get treeLevel() {
-    if (this.column.treeBranchesView) {
+    if (this.column.treeUnfoldColumn) {
       return this.level;
     } else {
       return 0;

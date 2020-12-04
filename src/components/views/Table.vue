@@ -271,8 +271,9 @@ interface IColumn {
   fixed: boolean;
   mobileFixed: boolean;
   columnInfo: IResultColumnInfo;
+  attrs: Record<string, any>;
   width: number; // in px
-  treeBranchesView: boolean;
+  treeUnfoldColumn: boolean;
 }
 
 interface ITableValueExtra {
@@ -316,8 +317,10 @@ const technicalFieldsWidth = 35; // checkbox's and openform's td width
 
 const createColumns = (uv: CombinedUserView): IColumn[] => {
   const viewAttrs = uv.attributes;
+  const columns: IColumn[] = [];
+  let isTreeUnfoldColumnSet = false;
 
-  return uv.info.columns.map((columnInfo, i) => {
+  uv.info.columns.forEach((columnInfo, i) => {
     const columnAttrs = uv.columnAttributes[i];
     const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
 
@@ -340,10 +343,14 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
     const visibleColumnAttr = getColumnAttr("visible");
     const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
 
-    const treeBranchesViewAttr = getColumnAttr("tree_branches_view");
-    const treeBranchesView = treeBranchesViewAttr === undefined ? false : Boolean(treeBranchesViewAttr);
+    const treeUnfoldColumnAttr = getColumnAttr("tree_unfold_column");
+    const treeUnfoldColumn = treeUnfoldColumnAttr === undefined ? false : Boolean(treeUnfoldColumnAttr);
 
-    return {
+    if (treeUnfoldColumn) {
+      isTreeUnfoldColumnSet = true;
+    }
+
+    columns[i] = {
       caption,
       style,
       visible: visibleColumn,
@@ -353,9 +360,15 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
       columnInfo,
       attrs: columnAttrs,
       width: columnWidth,
-      treeBranchesView,
+      treeUnfoldColumn,
     };
   });
+
+  if (!isTreeUnfoldColumnSet) {
+    columns[0].treeUnfoldColumn = true;
+  }
+
+  return columns;
 };
 
 export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRowExtra, ITableUserViewExtra> {
@@ -424,17 +437,16 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
         localRow.extra.link = currLinkForRow;
         this.extra.hasRowLinks = true;
       }
-      
-      // Init parent 
-      const parent = getCellAttr("tree_branches") && value.value ? value.value : null;
-      if (parent !== null) {
-        localRow.extra.parent = parent;
-        localRow.extra.visible = false;
-      }
 
-      // Init indexes by entityIds
-      if (row.entityIds !== undefined && Object.keys(row.entityIds)[0]) {
-        this.extra.rowsParentPositions[row.entityIds[Object.keys(row.entityIds)[0]].id] = rowIndex;
+      if (getCellAttr("tree_parent_ids")) {
+        // Init indexes by ids
+        this.extra.rowsParentPositions[value.info.id] = rowIndex;
+
+        // Init parent
+        if (value.value !== null) {
+          localRow.extra.parent = value.value;
+          localRow.extra.visible = false;
+        }
       }
     }
 
@@ -841,10 +853,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.lastSelectedRow = null;
       this.lastSelectedValue = null;
     });
-    if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree)
-      if ("tree_all_open" in this.local.uv.attributes && this.local.uv.attributes.tree_all_open) {
-        this.toggleAllTreeChildren(true);
-      }
+
+    if (!R.isEmpty(this.local.extra.rowsParentPositions) && "tree_all_open" in this.local.uv.attributes && this.local.uv.attributes.tree_all_open) {
+      this.toggleAllTreeChildren(true);
+    }
   }
 
   protected destroyed() {
@@ -918,9 +930,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   // Toggle children rows visibles.
-  private visibleChildren(children: number[], visible: boolean, depth: boolean = false) {
-    //Save state.
-    if( this.local.rows[children[0]] !== undefined) {
+  private visibleChildren(children: number[], visible: boolean, depth = false) {
+    // Save state.
+    if (this.local.rows[children[0]] !== undefined) {
       const parent = this.local.rows[children[0]].extra.parent;
       if (parent === undefined) {
         return;
@@ -934,7 +946,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         delete this.rowsState[parentIndex];
       }
     }
-    
+
     // Toggle
     children.forEach((child, i) => {
       if (!visible && this.local.rows[child].extra.visible) {
@@ -961,7 +973,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   private displayChildren(children: number[]) {
     const index = this?.local?.rows[children[0]]?.extra?.parent ?? null;
     const parent = index !== null ? this.local.extra.rowsParentPositions[index] : null;
-    if (parent !== null)
+    if (parent !== null) {
       for (let i = children.length - 1; i >= 0; i--) {
         if (this.rowPositions.includes(children[i])) {
           const childPosition = this.rowPositions.indexOf(children[i]);
@@ -969,11 +981,12 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         }
         this.rowPositions.splice(this.rowPositions.indexOf(parent) + 1, 0, children[i]);
       }
+    }
   }
 
   private toggleAllTreeChildren(visible: boolean) {
-    this.rowPositions.forEach(rowI =>{
-      if (this.local.rows[rowI].extra.children.length > 0 && this.local.rows[rowI].extra.parent == undefined) {
+    this.rowPositions.forEach(rowI => {
+      if (this.local.rows[rowI].extra.children.length > 0 && this.local.rows[rowI].extra.parent === undefined) {
         this.visibleChildren(this.local.rows[rowI].extra.children, visible, true);
       }
     });
@@ -996,12 +1009,12 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       }
     });
     if (!R.isEmpty(this.rowsState)) {
-      const sort = R.sortBy(R.compose(R.prop<string, number>('level'), R.prop<any>(1)));
+      const sort = R.sortBy(R.compose(R.prop<string, number>("level"), R.prop<any>(1)));
       const sortable = sort(R.toPairs(this.rowsState));
       // Load visible data from rowsState to rows.
       sortable.forEach(item => {
         this.visibleChildren(item[1].children, true);
-      })
+      });
     } else {
       this.buildRowPositions();
     }
@@ -1021,7 +1034,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.rowPositions = rows.map((row, rowI) => rowI);
       if (this.filter.length !== 0) {
         this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], this.filter));
-      } else if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree) {
+      } else if (!R.isEmpty(this.local.extra.rowsParentPositions)) {
         this.rowPositions = this.rowPositions.filter(rowI => this.local.rows[rowI].extra.visible);
         this.isTree = true;
       }
