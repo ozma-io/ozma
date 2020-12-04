@@ -568,16 +568,10 @@ const stagingModule: Module<IStagingState, {}> = {
     addEntry: async (
       context,
       args: {
+        scope: ScopeName;
         entityRef: IEntityRef;
         userView: UserViewKey;
         position?: number;
-        defaultValues?: {
-          values: ICombinedValue[];
-          rawValue: any;
-          scope: ScopeName;
-          columnInfos: IResultColumnInfo[];
-          columnNumber: number;
-        };
       },
     ): Promise<IAddedResult> => {
       const { state, commit, dispatch } = context;
@@ -596,31 +590,47 @@ const stagingModule: Module<IStagingState, {}> = {
       await checkCounters(context);
       await dispatch("userView/afterAddEntry", { ...args, ...result }, { root: true });
 
-      if (args.defaultValues) {
-        const { values, columnInfos, scope, rawValue, columnNumber } = args.defaultValues;
-        await Promise.all(
-          values.map((cell, colI) => ({
-            columnInfo: columnInfos[colI],
-            currValue: colI === columnNumber ? rawValue : currentValue(cell),
-          }))
-            .filter(({ columnInfo, currValue }) => columnInfo.mainField && currValue)
-            .map(({ columnInfo, currValue }) =>
-              dispatch("setAddedField", {
-                scope,
-                fieldRef: {
-                  entity: args.entityRef,
-                  name: columnInfo.mainField!.name,
-                },
-                userView: args.userView,
-                id: Number(newId),
-                value: currValue,
-                noTouch: true,
-              })),
-        );
+      return result;
+    },
+    // Like `addEntry`, but doesn't sets `touched` property of entry for setting `defaultValues`.
+    addEntryWithDefaults: async (
+      context,
+      args: {
+        entityRef: IEntityRef;
+        userView: UserViewKey;
+        position?: number;
+        scope: ScopeName;
+        defaultValues: Record<string, any>;
+      },
+    ): Promise<IAddedResult> => {
+      const { dispatch } = context;
+      const result: IAddedResult = await dispatch("addEntry", args);
+      for (const [mainFieldName, value] of Object.entries(args.defaultValues)) {
+        // eslint-disable-next-line
+        await dispatch("setAddedField", {
+          scope: args.scope,
+          fieldRef: {
+            entity: args.entityRef,
+            name: mainFieldName,
+          },
+          userView: args.userView,
+          id: result.id,
+          value,
+          noTouch: true,
+        });
       }
       return result;
     },
-    setAddedField: async (context, args: { fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; value: any; noTouch?: boolean }) => {
+    setAddedField: async (
+      context,
+      args: {
+        fieldRef: IFieldRef;
+        userView: UserViewKey;
+        id: AddedRowId;
+        value: any;
+        noTouch?: boolean; // Used to initialize entries with values.
+      },
+    ) => {
       const { commit, dispatch } = context;
       const fieldInfo = await getFieldInfo(context, args.fieldRef);
       commit("setAddedField", { ...args, fieldInfo });
