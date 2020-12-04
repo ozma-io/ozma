@@ -174,6 +174,11 @@ export default Card;
     overflow: hidden;
   }
 
+  .card_icon {
+    display: inline-block;
+    padding: 3px 0;
+  }
+
   @media screen and (max-width: 700px) {
     .card_container {
       width: unset;
