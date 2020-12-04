@@ -303,7 +303,7 @@ interface ITableUserViewExtra {
   selectedValues: ObjectSet<ValueRef>;
   columns: IColumn[];
   fixedColumnPositions: Record<number, string>;
-  rowsParentPositions: Record<number | string, number>;
+  rowsParentPositions: Record<number, number>;
   linkOpts?: IAttrToQueryOpts;
 }
 
