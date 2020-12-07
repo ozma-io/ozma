@@ -1,10 +1,11 @@
-import { IQueryState, IQuery, setIdSelf, setIdRef, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery } from "@/state/query";
+import { queryLocation, IQueryState, IQuery, setIdSelf, setIdRef, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery } from "@/state/query";
 import { IValueInfo } from "@/state/user_view";
 import { IActionRef } from "ozma-api/src";
 import { RenderContext } from "vue";
 import { vueEmit } from "@/utils";
 import { saveAndRunAction } from "@/state/actions";
 import { Store } from "vuex";
+import { router } from "@/modules";
 
 export interface IHrefLink {
   href: string;
@@ -132,8 +133,22 @@ export const iconValue = (target: string) => {
   }
 };
 
-export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQuery) => void), link: Link | null, href: string | null = null): (() => void) | null => {
+export interface IlinkHandler {
+  handler: (() => void) | null;
+  href: string | null;
+}
+
+export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQuery) => void), link: Link | null): IlinkHandler => {
   let handler: (() => void) | null = null;
+  let href: string | null = null;
+  
+  if (link) {
+    if ("query" in link) {
+      href = router.resolve(queryLocation(link.query)).href;
+    } else if ("href" in link) {
+      href = link.href;
+    }
+  }
 
   if (link) {
     if ("query" in link) {
@@ -172,5 +187,5 @@ export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQ
     }
   }
 
-  return handler;
+  return {handler, href};
 };
