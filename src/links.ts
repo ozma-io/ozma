@@ -141,7 +141,7 @@ export interface ILinkHandler {
 export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQuery) => void), link: Link | null): ILinkHandler => {
   let handler: (() => void) | null = null;
   let href: string | null = null;
-  
+
   if (link) {
     if ("query" in link) {
       href = router.resolve(queryLocation(link.query)).href;
