@@ -92,7 +92,6 @@ export default class BarCodeScanner extends Vue {
 }
 </script>
 
-
 <style scoped>
   .decode-result {
     word-wrap: break-word;
