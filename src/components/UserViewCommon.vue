@@ -5,14 +5,16 @@
             "create_in_modal": "Create referenced in modal window",
             "export_to_csv": "Export to .csv",
             "import_from_csv": "Import from .csv",
-            "scan_qrcode": "Scan QR Code"
+            "scan_qrcode": "Scan QR Code",
+            "scan_barcode": "Scan Bar Code"
         },
         "ru": {
             "create": "Создать новую",
             "create_in_modal": "Создать связанную запись в окне",
             "export_to_csv": "Экспорт в .csv",
             "import_from_csv": "Импорт из .csv",
-            "scan_qrcode": "QR Code сканер"
+            "scan_qrcode": "QR Code сканер",
+            "scan_barcode": "Сканер штрих-кодов"
         }
     }
 </i18n>
@@ -30,6 +32,10 @@
       :open-scanner="openQRCodeScanner"
       :multi-scan="true"
       @select="selectFromQRScanner($event)"
+    />
+    <BarCodeScanner
+      :open-scanner="openBarCodeScanner"
+      @select="selectFromBarScanner($event)"
     />
   </span>
 </template>
@@ -53,6 +59,7 @@ import { IPanelButton } from "@/components/ButtonsPanel.vue";
 import { ScopeName, UserViewKey, IAddedResult, AddedRowId } from "@/state/staging_changes";
 import { attrToLink } from "@/links";
 import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
+import BarCodeScanner from "@/components/barcode/BarCodeScanner.vue";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -71,13 +78,14 @@ const csvCell = (str: string): string => {
 
 const staging = namespace("staging");
 
-@Component({ components: { SelectUserView, QRCodeScanner } })
+@Component({ components: { SelectUserView, QRCodeScanner, BarCodeScanner } })
 export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<undefined, undefined, undefined>, undefined, undefined, undefined>>(BaseUserView) {
   @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName; entityRef: IEntityRef; userView: UserViewKey; position?: number }) => Promise<IAddedResult>;
   @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName; fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; value: any }) => Promise<void>;
 
   modalView: IQuery | null = null;
   openQRCodeScanner = false;
+  openBarCodeScanner = false;
 
   get createView() {
     const opts: IAttrToQueryOpts = {
@@ -265,6 +273,15 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       });
     }
 
+    if (this.uv.attributes["scan_barcode"] === true) {
+      actions.push({
+        name: this.$t("scan_barcode").toString(),
+        callback: () => {
+          this.openBarCodeScanner = !this.openBarCodeScanner;
+        },
+      });
+    }
+
     return actions;
   }
 
@@ -304,6 +321,12 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
   private selectFromQRScanner(result: any[]) {
     result.forEach(r => {
       this.updateValue({ type: "new", column: Number(r[0]) }, r[4]);
+    });
+  }
+
+  private selectFromBarScanner(result: any[]) {
+    result.forEach(r => {
+      this.updateValue({ type: "new", column: 0}, r);
     });
   }
 }
