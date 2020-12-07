@@ -326,7 +326,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
   private selectFromBarScanner(result: any[]) {
     result.forEach(r => {
-      this.updateValue({ type: "new", column: 0}, r);
+      this.updateValue({ type: "new", column: 0 }, r);
     });
   }
 }
