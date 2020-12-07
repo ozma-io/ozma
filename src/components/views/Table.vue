@@ -1110,6 +1110,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   private clickCell(ref: ValueRef, event: MouseEvent | any) {
     this.removeCellEditing();
 
+    // Not need cell edit and another manipulation when click by tree arrows.
+    if (event.target.className.includes("display-arrow")) {
+      return undefined;
+    }
+
     // this.selectCell() breaks the timer for double click in iOS,
     // so when we're running iOS we don't check for double click
     if (this.clickTimeoutId === null) {
@@ -1128,6 +1133,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
 
     this.cellEditHandler(ref, event.target);
+    return undefined;
   }
 
   private cellEditByTarget(ref: ValueRef, target: HTMLElement) {
