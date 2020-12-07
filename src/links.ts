@@ -133,12 +133,12 @@ export const iconValue = (target: string) => {
   }
 };
 
-export interface IlinkHandler {
+export interface ILinkHandler {
   handler: (() => void) | null;
   href: string | null;
 }
 
-export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQuery) => void), link: Link | null): IlinkHandler => {
+export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQuery) => void), link: Link | null): ILinkHandler => {
   let handler: (() => void) | null = null;
   let href: string | null = null;
   
@@ -187,5 +187,5 @@ export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQ
     }
   }
 
-  return {handler, href};
+  return { handler, href };
 };

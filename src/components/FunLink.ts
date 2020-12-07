@@ -36,14 +36,14 @@ export default Vue.component("FunLink", {
       vueEmit(context, action, query);
     };
 
-    const {handler, href} = linkHandler(context.parent.$store, emit, link);
+    const { handler, href } = linkHandler(context.parent.$store, emit, link);
 
     const onHandlers = handler === null ? {} : { click: (e: MouseEvent) => {
       if (!redirectClick(e, href === null)) {
         return;
       }
       vueEmit(context, "click");
-      handler!();
+      handler();
     } };
 
     if (!context.props.noHref && href !== null) {

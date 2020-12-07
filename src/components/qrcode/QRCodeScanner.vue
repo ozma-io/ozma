@@ -222,7 +222,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
             this.pushRoot(gotoquery);
           };
 
-          const {handler, href} = linkHandler(this.$store, emit, this.link);
+          const { handler, href } = linkHandler(this.$store, emit, this.link);
           if (handler) {
             handler();
           }
