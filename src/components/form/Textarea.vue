@@ -10,42 +10,44 @@
 </i18n>
 <template>
   <fragment>
-    <textarea-autosize
-      v-if="isCellEdit"
-      ref="controlTextarea"
-      :placeholder="$t('input_placeholder')"
-      :value="value"
-      :readonly="disabled"
-      rows="1"
-      :class="['textarea_field', {
-        'textarea_field__disabled': disabled,
-        'textarea-field_cell-edit': isCellEdit,
-        'textarea_field__desktop': !isMobile,
-      }]"
-      @keydown.enter.prevent
-      @input="updateInput"
-    />
-    <textarea
-      v-show="!isCellEdit"
-      :id="inputName"
-      ref="control"
-      :class="['textarea_field', {
-        'textarea_field__disabled': disabled,
-        'textarea_field__desktop': !isMobile,
-        'textarea_field__required': required && isEmpty,
-        'textarea_field__error': error,
-        'textarea_field__max_height': !height
-      }]"
-      :type="type"
-      :style="style"
-      :value="value"
-      :placeholder="$t('input_placeholder')"
-      :disabled="disabled"
-      :rows="textareaRows"
-      @focus="onFocus"
-      @blur="onBlur"
-      @input="$emit('update:value', $event.target.value)"
-    />
+    <div :style="{'margin-left': '15px'}">
+      <textarea-autosize
+        v-if="isCellEdit"
+        ref="controlTextarea"
+        :placeholder="$t('input_placeholder')"
+        :value="value"
+        :readonly="disabled"
+        rows="1"
+        :class="['textarea_field', {
+          'textarea_field__disabled': disabled,
+          'textarea-field_cell-edit': isCellEdit,
+          'textarea_field__desktop': !isMobile,
+        }]"
+        @keydown.enter.prevent
+        @input="updateInput"
+      />
+      <textarea
+        v-show="!isCellEdit"
+        :id="inputName"
+        ref="control"
+        :class="['textarea_field', {
+          'textarea_field__disabled': disabled,
+          'textarea_field__desktop': !isMobile,
+          'textarea_field__required': required && isEmpty,
+          'textarea_field__error': error,
+          'textarea_field__max_height': !height
+        }]"
+        :type="type"
+        :style="style"
+        :value="value"
+        :placeholder="$t('input_placeholder')"
+        :disabled="disabled"
+        :rows="textareaRows"
+        @focus="onFocus"
+        @blur="onBlur"
+        @input="$emit('update:value', $event.target.value)"
+      />
+    </div>
   </fragment>
 </template>
 
