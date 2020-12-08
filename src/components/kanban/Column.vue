@@ -126,6 +126,7 @@ export default class Column extends Vue {
         ...this.createView!.args,
       },
       defaultValues: {
+        ...this.createView!.defaultValues,
         [this.fieldName]: this.id,
       },
       search: "",
