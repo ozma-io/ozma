@@ -424,8 +424,8 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
         localRow.extra.link = currLinkForRow;
         this.extra.hasRowLinks = true;
       }
-      
-      // Init parent 
+
+      // Init parent
       const parent = getCellAttr("tree_branches") && value.value ? value.value : null;
       if (parent !== null) {
         localRow.extra.parent = parent;
@@ -841,10 +841,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.lastSelectedRow = null;
       this.lastSelectedValue = null;
     });
-    if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree)
+    if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree) {
       if ("tree_all_open" in this.local.uv.attributes && this.local.uv.attributes.tree_all_open) {
         this.toggleAllTreeChildren(true);
       }
+    }
   }
 
   protected destroyed() {
@@ -1426,6 +1427,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (ref.type === "new") {
       editing.ref = newRef;
       this.selectCell(newRef);
+      if (this.uv.columnAttributes[newRef.column].text_type === "barcode") {
+        this.setShowEmptyRow(true);
+      }
     }
   }
 }

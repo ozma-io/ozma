@@ -31,6 +31,16 @@
           <span class="reference-text">{{ localValue.valueText || '&nbsp;' }}</span>
         </div>
       </template>
+      <template v-else-if="isScannable">
+        <div class="selectable">
+          <input
+            type="button"
+            class="material-icons reference-open-modal"
+            value="qr_code_scanner"
+          >
+          <span class="reference-text">{{ localValue.valueText || "&nbsp;" }}</span>
+        </div>
+      </template>
       <template v-else>
         <checkbox
           v-if="valueType === 'bool'"
@@ -111,6 +121,10 @@ export default class TableCell extends Vue {
   get isNull() {
     // We use `value.value` here to highlight unvalidated values.
     return valueIsNull(this.value.value);
+  }
+
+  get isScannable() {
+    return this.column.attrs.text_type === "barcode" || false;
   }
 
   private toggleChildren() {
@@ -228,7 +242,7 @@ export default class TableCell extends Vue {
     opacity: 0.7;
   }
 
-  a + span.reference-text {
+  span.reference-text {
     padding-left: 20px;
     display: block;
   }

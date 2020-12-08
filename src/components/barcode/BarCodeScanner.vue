@@ -22,12 +22,8 @@
     hide-footer
     :title="$t('barcode_scanner')"
   >
-    <b-form-input
-      ref="barCodeInput"
-      v-model="currentCode"
-      placeholder="Scan..."
-      autofocus
-      @change="onScanned"
+    <BarCode
+      @scanned="onScanned"
     />
     <div v-if="result.length > 0" class="decode-result">
       <strong>{{ $t('scan_result') }}:</strong>
@@ -61,13 +57,13 @@
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import BaseEntriesView from "@/components/BaseEntriesView";
+import BarCode from "@/components/barcode/BarCode.vue";
 
-@Component
+@Component({ components: { BarCode } })
 export default class BarCodeScanner extends Vue {
   @Prop({ type: Boolean, default: false }) openScanner!: boolean;
 
   modalShow = false;
-  currentCode = "";
   result: Array<string> = [];
 
   @Watch("openScanner")
@@ -77,7 +73,6 @@ export default class BarCodeScanner extends Vue {
 
   private onScanned(code: string) {
     this.result.push(code);
-    this.currentCode = "";
   }
 
   private sendList() {

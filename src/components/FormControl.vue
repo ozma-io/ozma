@@ -117,6 +117,12 @@
           :height="customHeight"
           :content="textValue"
         />
+        <BarCode
+          v-else-if="inputType.name === 'barcode'"
+          ref="control"
+          :content="textValue"
+          @scanned="barCodeScanned"
+        />
       </template>
       <template #input="iSlot">
         <template v-if="inputType.name === 'error'">
@@ -226,6 +232,12 @@
           ref="control"
           :height="customHeight"
           :content="textValue"
+        />
+        <BarCode
+          v-else-if="inputType.name === 'barcode'"
+          ref="control"
+          :content="textValue"
+          @scanned="barCodeScanned"
         />
         <div v-else-if="inputType.name === 'static_text'">
           {{ textValue }}
@@ -385,6 +397,10 @@ interface IQRCodeType {
   name: "qrcode";
 }
 
+interface IBarCodeType {
+  name: "barcode";
+}
+
 interface IMarkdownEditorType {
   name: "markdown";
   editType: string;
@@ -450,7 +466,8 @@ type IType =
   | ICalendarType
   | IStaticTextType
   | IStaticImageType
-  | IQRCodeType;
+  | IQRCodeType
+  | IBarCodeType;
 
 const userView = namespace("userView");
 
@@ -478,6 +495,7 @@ const inlineTypes = ["markdown", "codeeditor", "textarea", "reference"];
     SearchPanel: () => import("@/components/SearchPanel.vue"),
     NestedUserView: () => import("@/components/NestedUserView.vue"),
     QRCode: () => import("@/components/qrcode/qrcode.vue"),
+    BarCode: () => import("@/components/barcode/BarCode.vue"),
   },
 })
 export default class FormControl extends Vue {
@@ -569,6 +587,11 @@ export default class FormControl extends Vue {
 
   private forceRerender() {
     this.codeEditorKey += 1;
+  }
+
+  private barCodeScanned(code: string) {
+    this.updateValue(code);
+    this.$emit("close-modal-input");
   }
 
   get isQRCodeInput() {
@@ -723,6 +746,8 @@ export default class FormControl extends Vue {
         };
       case "qrcode":
         return { name: "qrcode" };
+      case "barcode":
+        return { name: "barcode" };
       default:
         return { name: "text", type: "text", style: this.controlStyle() };
     }
