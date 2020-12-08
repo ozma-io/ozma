@@ -1,6 +1,11 @@
-import { IQuery, setIdSelf, setIdRef, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery } from "@/state/query";
+import { queryLocation, IQueryState, IQuery, setIdSelf, setIdRef, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery } from "@/state/query";
 import { IValueInfo } from "@/state/user_view";
 import { IActionRef } from "ozma-api/src";
+import { RenderContext } from "vue";
+import { vueEmit } from "@/utils";
+import { saveAndRunAction } from "@/state/actions";
+import { Store } from "vuex";
+import { router } from "@/modules";
 
 export interface IHrefLink {
   href: string;
@@ -126,4 +131,61 @@ export const iconValue = (target: string) => {
   } else {
     return "open_in_new";
   }
+};
+
+export interface ILinkHandler {
+  handler: (() => void) | null;
+  href: string | null;
+}
+
+export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQuery) => void), link: Link | null): ILinkHandler => {
+  let handler: (() => void) | null = null;
+  let href: string | null = null;
+
+  if (link) {
+    if ("query" in link) {
+      href = router.resolve(queryLocation(link.query)).href;
+    } else if ("href" in link) {
+      href = link.href;
+    }
+  }
+
+  if (link) {
+    if ("query" in link) {
+      if (link.target === "modal") {
+        handler = () => {
+          store.dispatch("query/addWindow", link.query);
+        };
+      } else if (link.target === "root") {
+        handler = () => {
+          emit("goto", link.query);
+        };
+      } else if (link.target === "top") {
+        handler = () => {
+          store.dispatch("query/pushRoot", link.query);
+        };
+      } else if (link.target === "blank") {
+        handler = () => {
+          window.open(href!, "_blank");
+        };
+      } else if (link.target === "modal-auto") {
+        handler = () => {
+          const queryState = store.state.query as IQueryState;
+          if (queryState.current?.windows.length === 0) {
+            store.dispatch("query/addWindow", link.query);
+          } else {
+            emit("goto", link.query);
+          }
+        };
+      } else {
+        throw new Error("Impossible");
+      }
+    } else if ("action" in link) {
+      handler = () => {
+        saveAndRunAction(store, link.action, link.args);
+      };
+    }
+  }
+
+  return { handler, href };
 };

@@ -313,6 +313,10 @@ export default class ActionsMenu extends Vue {
         text-align: left;
         z-index: 1000 !important; /* кнопка выбора действий выше темного блока */
       }
+
+      .right {
+        margin-left: -75vw;
+      }
     }
   }
 

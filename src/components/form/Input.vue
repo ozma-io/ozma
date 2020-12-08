@@ -62,7 +62,6 @@
       qr_code_2
     </span>
     <QRCodeScanner
-      :close-after-scan="true"
       :open-scanner="openQRCodeScanner"
       @update:scanResult="updateInputCellEdit"
     />
