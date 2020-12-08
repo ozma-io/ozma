@@ -41,7 +41,7 @@
         <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && localValue.valueText.length > 0}]">
           <span
             :style="{'margin-left': treeLevel*25+'px'}"
-            :class="['display-arrow material-icons', {'click-stop': arrowClickStop}, {'down': isArrowDown}]"
+            :class="['display-arrow material-icons', {'down': isArrowDown}]"
             @click="toggleChildren"
             @dblclick.stop
           >
@@ -89,7 +89,6 @@ export default class TableCell extends Vue {
   @Prop({ type: Boolean, required: true }) arrowDown!: boolean;
   @Prop({ type: Boolean, required: true }) isTree!: boolean;
 
-  private arrowClickStop = false;
   private isArrowDown = false;
 
   private get valueType(): string | undefined {
@@ -116,11 +115,6 @@ export default class TableCell extends Vue {
   private toggleChildren() {
     this.isArrowDown = !this.isArrowDown;
     this.$emit("update:visibleChildren", this.children, this.isArrowDown);
-    this.arrowClickStop = true;
-    // This pause need for block double click by arrow.
-    setTimeout(() => {
-      this.arrowClickStop = false;
-    }, 1000);
   }
 
   get iconValue() {
