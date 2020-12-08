@@ -28,7 +28,9 @@
               :value="iconValue"
             >
           </FunLink>
-          <span class="reference-text">{{ localValue.valueText || '&nbsp;' }}</span>
+          <!-- eslint-disable vue/no-v-html -->
+          <span class="reference-text" v-html="localValueTextHtml" />
+          <!-- eslint-enable -->
         </div>
       </template>
       <template v-else>
@@ -53,7 +55,9 @@
             :style="{'margin-left': treeLevel*25 + 20 +'px'}"
             class="hidden-arrow-space"
           />
-          <span>{{ localValue.valueText || "" }}</span>
+          <!-- eslint-disable vue/no-v-html -->
+          <span v-html="localValueTextHtml" />
+          <!-- eslint-enable -->
         </div>
       </template>
     </p>
@@ -67,6 +71,7 @@ import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { ICombinedValue } from "@/state/user_view";
 import { valueIsNull } from "@/values";
 import { iconValue } from "@/links";
+import { replaceHtmlLinks } from "@/utils";
 
 @Component({
   components: {
@@ -91,6 +96,15 @@ export default class TableCell extends Vue {
 
   private arrowClickStop = false;
   private isArrowDown = false;
+
+  private get localValueTextHtml(): string {
+    const text: string = typeof this.localValue.valueText === "string"
+      ? this.localValue.valueText
+      : "";
+    return (this.valueType === "string") || this.localValue.link
+      ? replaceHtmlLinks(text)
+      : text;
+  }
 
   private get valueType(): string | undefined {
     return this.value.info?.field?.valueType.type;
@@ -133,8 +147,7 @@ export default class TableCell extends Vue {
 }
 </script>
 
-<style scoped>
-
+<style lang="scss" scoped>
   .selectable {
     position: relative;
     float: left;
@@ -154,11 +167,24 @@ export default class TableCell extends Vue {
 
   .table-td {
     touch-action: manipulation;
-  }
 
-  .table-td > p {
-    pointer-events: none;
-    padding: 3px 7px 2px 7px;
+    > p {
+      pointer-events: none;
+      padding: 3px 7px 2px 7px;
+
+      ::v-deep a {
+        pointer-events: all;
+        cursor: pointer;
+
+        &:link {
+          color: rgb(0, 123, 255) !important;
+        }
+
+        &:visited {
+          color: #551a8b !important;
+        }
+      }
+    }
   }
 
   .table-td_selected {

@@ -1,5 +1,6 @@
 import moment from "moment";
 import Vue, { RenderContext } from "vue";
+import sanitizeHtml from "sanitize-html";
 
 export type Result<A> = A | Error;
 
@@ -631,4 +632,32 @@ export const convertToWords = (str: string) => {
     }
   }
   return words;
+};
+
+// In all regexes capturing groups replaced to non-capturing (`(` -> `(?:`).
+// Source: https://emailregex.com/
+const emailRegex = /(?:(?:[^<>(?:)[\]\\.,;:\s@"]+(?:\.[^<>(?:)[\]\\.,;:\s@"]+)*)|(?:".+"))@(?:(?:\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(?:(?:[a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/;
+// Source: https://qna.habr.com/answer?answer_id=852265
+const telRegex = /(?:\+)?(?:[- _(?:):=+]?\d[- _(?:):=+]?){10,14}(?:\s*)?/;
+const telRemoveFormating = (tel: string) => tel.replace(/^(\+)|\D/g, "$1");
+// Source: https://stackoverflow.com/a/3809435
+const urlRegex = /https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9(?:)]{1,6}\b(?:[-a-zA-Z0-9(?:)@:%_+.~#?&//=]*)/;
+const linksRegex =
+  new RegExp(`(?:^|\\s)(?:\
+(${emailRegex.source})|\
+(${telRegex.source})|\
+(${urlRegex.source}))(?:$|\\s)`, "gm");
+const replaceLink = (match: string, email: string, tel: string, url: string) => {
+  const prefix =
+    email ? "mailto:" :
+      tel ? "tel:" :
+        "";
+  const formattedMatch = tel ? telRemoveFormating(match) : match;
+  return `<a \
+target="_blank" rel="noopener noreferrer" \
+href="${prefix}${formattedMatch}">${match}</a>`;
+};
+export const replaceHtmlLinks = (text: string): string => {
+  const sanitized = sanitizeHtml(text, { allowedTags: [], disallowedTagsMode: "escape" });
+  return sanitized.replace(linksRegex, replaceLink);
 };

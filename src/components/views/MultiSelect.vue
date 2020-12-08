@@ -27,7 +27,12 @@
         <span
           v-for="(option, index) in select.valueOptions"
           :key="option.value"
-          class="values_list__value"
+          :class="[
+            'values_list__value',
+            {
+              'has_links': option.label !== option.labelHtml,
+            },
+          ]"
           :style="select.listValueStyle"
           @click.stop
         >
@@ -42,9 +47,9 @@
               value="open_in_new"
             >
           </FunLink>
-          <span>
-            {{ option.label }}
-          </span>
+          <!-- eslint-disable vue/no-v-html -->
+          <span v-html="option.labelHtml" />
+          <!-- eslint-enable vue/no-v-html -->
           <input
             v-if="select.showValueRemove"
             type="button"
@@ -66,13 +71,15 @@
             :class="[
               'single_value',
               'select_container__options_list__option',
-              {'select_container__options_list__option_active': select.selectedOption === index }
+              {
+                'select_container__options_list__option_active': select.selectedOption === index,
+              }
             ]"
             @click="select.addOptionToValue(option, $event)"
           >
-            <span>
-              {{ option.label }}
-            </span>
+            <!-- eslint-disable vue/no-v-html -->
+            <span v-html="option.label" />
+            <!-- eslint-enable vue/no-v-html -->
           </li>
         </ul>
       </template>
@@ -214,11 +221,19 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView, BaseE
   }
 }
 </script>
-<style scoped>
+<style lang="scss" scoped>
   .values_list__value > a,
   .select_container__options_list__option > a {
     color: var(--MainTextColor);
     text-decoration: underline;
+  }
+
+  .single_value,
+  .values_list__value {
+    &.has_links {
+      // Otherwise it's sometimes tricky to click/tap inside.
+      padding-right: 40px;
+    }
   }
 
   .reference__open_modal {
