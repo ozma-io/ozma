@@ -2,6 +2,7 @@
   <ul class="buttons">
     <li v-for="(button, i) in buttons" :key="i">
       <i v-if="button.icon" class="material-icons">{{ button.icon }}</i>
+      <i v-else class="material-icons">arrow_right</i>
       <span>{{ button.name }}</span>
       <ul class="actions">
         <FunLink
@@ -11,7 +12,8 @@
           @goto="$emit('goto', $event)"
         >
           <li v-if="'link' in action" :key="action.name">
-            <i v-if="button.icon" class="material-icons">{{ action.icon }}</i>
+            <i v-if="action.icon" class="material-icons">{{ action.icon }}</i>
+            <i v-else class="material-icons">arrow_right</i>
             <span>{{ action.name }}</span>
           </li>
         </FunLink>
