@@ -1,11 +1,11 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import { RowId, IEntityRef, IFieldRef } from "@/api";
+import { RowId, IEntityRef, IFieldRef, IResultColumnInfo } from "@/api";
 import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow } from "@/state/user_view";
 import { ErrorKey } from "@/state/errors";
 import { ScopeName, UserViewKey, AddedRowId, CombinedTransactionResult, IAddedResult } from "@/state/staging_changes";
-import { LocalUserView, RowRef, ValueRef, SimpleLocalUserView, ILocalRow, ILocalRowInfo } from "@/local_user_view";
+import { LocalUserView, RowRef, ValueRef, SimpleLocalUserView, ILocalRow, ILocalRowInfo, INewValueRef } from "@/local_user_view";
 import { equalEntityRef } from "@/values";
 import { ObjectSet } from "@/utils";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
@@ -152,6 +152,15 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
   @staging.Action("deleteEntry") deleteEntry!: (args: { scope: ScopeName; entityRef: IEntityRef; id: RowId }) => Promise<void>;
   @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { entityRef: IEntityRef; userView: UserViewKey; id: AddedRowId }) => Promise<void>;
   @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName; entityRef: IEntityRef; userView: UserViewKey; position?: number }) => Promise<IAddedResult>;
+  @staging.Action("addEntryWithDefaults") addEntryWithDefaults!: (
+    args: {
+      scope: ScopeName;
+      entityRef: IEntityRef;
+      userView: UserViewKey;
+      position?: number;
+      defaultValues: Record<string, any>;
+    }
+  ) => Promise<IAddedResult>;
   @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName; fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; value: any }) => Promise<void>;
   @staging.Action("updateField") updateField!: (args: { scope: ScopeName; fieldRef: IFieldRef; id: RowId; value: any }) => Promise<void>;
   @errors.Mutation("setError") setError!: (args: { key: ErrorKey; error: string }) => void;
@@ -240,31 +249,23 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
         throw new Error("Invalid value");
       }
 
+      const defaultValues = Object.fromEntries(
+        this.local.emptyRow!.row.values
+          .map((cell, colI) => ({
+            columnInfo: this.uv.info.columns[colI],
+            currValue: colI === ref.column ? rawValue : currentValue(cell),
+          }))
+          .filter(({ columnInfo, currValue }) => columnInfo.mainField && currValue)
+          .map(({ columnInfo, currValue }) => ([columnInfo.mainField!.name, currValue])),
+      );
       // FIXME: Theoretical race condition with another addEntry because it's async
-      const res = await this.addEntry({
+      const res = await this.addEntryWithDefaults({
         scope: this.scope,
         entityRef: entity,
         userView: this.uv.userViewKey,
         position: 0,
+        defaultValues,
       });
-      await Promise.all(this.local.emptyRow!.row.values.map((cell, colI) => {
-        const columnInfo = this.uv.info.columns[colI];
-        const currValue = colI === ref.column ? rawValue : currentValue(cell);
-        if (columnInfo.mainField && currValue) {
-          return this.setAddedField({
-            scope: this.scope,
-            fieldRef: {
-              entity,
-              name: columnInfo.mainField.name,
-            },
-            userView: this.uv.userViewKey,
-            id: res.id,
-            value: currValue,
-          });
-        } else {
-          return Promise.resolve();
-        }
-      }));
       return { type: "added", id: res.id, column: ref.column };
     } else {
       throw new Error("Impossible");

@@ -392,7 +392,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       style["text-align"] = "right";
     }
 
-    const textAlignAttr = getCellAttr("text_align");
+    const textAlignAttr: any = getCellAttr("text_align");
     if (textAlignAttr !== undefined) {
       style["text-align"] = String(textAlignAttr);
     }
