@@ -277,6 +277,7 @@ interface IColumn {
 }
 
 interface ITableValueExtra {
+  // FIXME: is this still needed? We could drop it and use computed properties in TableRows instead.
   valueText: string;
   link?: Link;
   style?: Record<string, any>;
