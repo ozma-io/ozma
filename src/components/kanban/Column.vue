@@ -34,6 +34,7 @@
       ghost-class="card_dragging_ghost"
       chosen-class="card_dragging_chosen"
       drag-class="card_dragging_drag"
+      :style="{background: backgroundColor}"
       :force-fallback="true"
       :fallback-on-body="true"
       :delay-on-touch-only="true"
@@ -115,6 +116,7 @@ export default class Column extends Vue {
   @Prop({ type: Function, required: false }) move!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Number, required: false, default: 300 }) width!: number;
   @Prop({ type: String, required: true, default: "none" }) headerColor!: string;
+  @Prop({ type: String, required: true, default: "none" }) backgroundColor!: string;
   @Prop({ type: String, required: false }) cardTarget!: CardTarget;
 
   selected: number[] = [];
@@ -284,7 +286,6 @@ export default class Column extends Vue {
     padding: 15px 10px 0 10px;
     overflow-x: hidden;
     height: 100%;
-    background-color: rgba(255, 250, 250, 0.6);
     min-height: 100px;
   }
 
