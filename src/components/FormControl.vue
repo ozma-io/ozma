@@ -366,9 +366,10 @@ import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { valueToText, valueIsNull, dateTimeFormat } from "@/values";
-import { AttributesMap, ValueType } from "@/api";
+import type { AttributesMap, ValueType } from "@/api";
 import { Action } from "@/components/ActionsMenu.vue";
-import { IUserViewArguments, homeSchema, ICombinedValue, currentValue, IEntriesRef, referenceEntriesRef } from "@/state/user_view";
+import type { IUserViewArguments, ICombinedValue, IEntriesRef } from "@/state/user_view";
+import { currentValue, homeSchema, referenceEntriesRef } from "@/state/user_view";
 import { IQuery, attrToQuerySelf, queryLocation } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { isMobile } from "@/utils";

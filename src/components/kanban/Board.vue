@@ -28,7 +28,7 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 import draggable from "vuedraggable";
 
-import { ICard, CardTarget } from "@/components/kanban/Card.vue";
+import type { ICard, CardTarget } from "@/components/kanban/Card.vue";
 import Column, { IColumn } from "@/components/kanban/Column.vue";
 import { dragscroll } from "vue-dragscroll";
 import { isMobile } from "@/utils";

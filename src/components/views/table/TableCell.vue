@@ -74,7 +74,7 @@
 import * as R from "ramda";
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
-import { ICombinedValue } from "@/state/user_view";
+import type { ICombinedValue } from "@/state/user_view";
 import { valueIsNull } from "@/values";
 import { iconValue } from "@/links";
 
