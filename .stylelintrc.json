@@ -2,8 +2,19 @@
   "extends": "stylelint-config-standard",
   "defaultSeverity": "warning",
   "rules": {
-    "indentation": [2, {
-      "baseIndentLevel": 1
-    }]
+    "indentation": [
+      2,
+      {
+        "baseIndentLevel": 1
+      }
+    ],
+    "selector-pseudo-element-no-unknown": [
+      true,
+      {
+        "ignorePseudoElements": [
+          "v-deep"
+        ]
+      }
+    ]
   }
 }

@@ -194,12 +194,16 @@
 import * as R from "ramda";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { valueIsNull } from "@/values";
-import { nextRender } from "@/utils";
+import { nextRender, replaceHtmlLinks } from "@/utils";
 
 export interface ISelectOption {
   value: any;
   label: string;
   meta?: { [key: string]: any };
+}
+
+export interface ISelectOptionHtml extends ISelectOption {
+  labelHtml: string; // Stores label with links replaced with <a> tags.
 }
 
 const defaultOptionFilter = (query: string) => (option: ISelectOption) =>
@@ -289,15 +293,31 @@ export default class MultiSelect extends Vue {
     return (!this.disabled && !(isLastValueLeft && this.required));
   }
 
-  private get valueOption(): ISelectOption | undefined {
-    return this.getOption(this.currentValue);
+  /* private get valueOption(): ISelectOption | undefined {
+   *   return this.getOption(this.currentValue);
+   * } */
+
+  private get valueOption(): ISelectOptionHtml | undefined {
+    const option = this.getOption(this.currentValue);
+    if (option === undefined) {
+      return undefined;
+    }
+    const labelHtml = replaceHtmlLinks(option.label);
+    return {
+      ...option,
+      labelHtml,
+    };
   }
 
-  private get valueOptions(): ISelectOption[] {
+  private get valueOptions(): ISelectOptionHtml[] {
     if (this.value instanceof Array) {
-      return this.currentValues
+      return (this.currentValues
         .map(x => this.getOption(x))
-        .filter(R.identity) as ISelectOption[];
+        .filter(R.identity) as ISelectOption[])
+        .map(option => ({
+          ...option,
+          labelHtml: replaceHtmlLinks(option.label),
+        }));
     }
     return [];
   }
@@ -348,15 +368,14 @@ export default class MultiSelect extends Vue {
     return !this.currentValues.length;
   }
 
-  private get selectedOptions(): ISelectOption[] {
-    if (this.single) {
-      return this.options
-        .filter(this.optionFilterFN(this.inputValue))
-        .map(option => ({ ...option, label: this.getLabel(option) }));
-    }
+  private get selectedOptions(): ISelectOptionHtml[] {
     return this.options
       .filter(this.optionFilterFN(this.inputValue))
-      .map(option => ({ ...option, label: this.getLabel(option) }));
+      .map(option => {
+        const label = this.getLabel(option);
+        const labelHtml = replaceHtmlLinks(label);
+        return { ...option, label, labelHtml };
+      });
   }
 
   private focusInput() {

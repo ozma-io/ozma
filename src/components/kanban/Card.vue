@@ -13,7 +13,7 @@
       @goto="$emit('goto', $event)"
     >
       <b-row
-        v-for="(row, rowIndex) in data.rows"
+        v-for="(row, rowIndex) in dataHtml.rows"
         :key="rowIndex"
         data-no-dragscroll
         class="card_row"
@@ -44,7 +44,9 @@
             >
               {{ col.icon }}
             </span>
-            {{ col.value }}
+            <!-- eslint-disable vue/no-v-html -->
+            <span @click="$event.stopPropagation()" v-html="col.valueHtml" />
+            <!-- eslint-enable vue/no-v-html -->
           </span>
         </b-col>
       </b-row>
@@ -64,6 +66,7 @@ import { IFieldRef } from "@/api";
 import { IQuery, queryLocation } from "@/state/query";
 import { dateTimeFormat, dateFormat } from "@/values";
 import { Link } from "@/links";
+import { replaceHtmlLinks } from "@/utils";
 
 export type CardColType = "text" | "image";
 export type CardTarget = "modal" | "top" | "blank";
@@ -93,6 +96,14 @@ export interface ICard {
   };
 }
 
+interface ICardColHtml extends ICardCol {
+  valueHtml: string;
+}
+type ICardRowHtml = ICardColHtml[];
+interface ICardHtml extends Omit<ICard, "rows"> {
+  rows: ICardRowHtml[];
+}
+
 interface ICardStyle {
   width?: string;
   backgrondColor?: string;
@@ -107,6 +118,14 @@ export class Card extends Vue {
   @Prop({ type: Boolean, required: false, default: false }) selected!: boolean;
   @Prop({ type: Boolean, required: false, default: false }) dragging!: boolean;
   @Prop({ type: Number, required: true }) width!: number;
+
+  private get dataHtml(): ICardHtml {
+    return {
+      ...this.data,
+      rows: this.data.rows.map(row => row.map(col =>
+        ({ ...col, valueHtml: col.type === "text" ? replaceHtmlLinks(col.value) : col.value }))),
+    };
+  }
 
   private get cardStyle() {
     const color: string | undefined = R.pathOr("white", ["style", "color"], this.data);
@@ -176,7 +195,7 @@ export default Card;
 
   .card_icon {
     display: inline-block;
-    padding: 3px 0;
+    padding: 3px;
   }
 
   @media screen and (max-width: 700px) {
