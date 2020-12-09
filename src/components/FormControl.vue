@@ -734,12 +734,12 @@ export default class FormControl extends Vue {
     // via `update:` events. This creates a problem: when do we clean these state values? For example, when
     // switched from "user_view" to "text" component type, we can't expect `update:actions` event that will
     // clear `actions`, as the new component is not aware of actions at all.
-    // 
+    //
     // To address this, we assume that every single component is capable of correctly reacting to update of its props
     // and issues `update:` events as needed. Therefore we only need to focus on switches between components.
     // If we detect a switch we clear all state values and expect the new component to emit `update:` events for
     // values it actually supports.
-    
+
     this.actions = [];
     this.enableFilter = false;
   }
