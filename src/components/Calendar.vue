@@ -224,7 +224,7 @@ export default class Calendar extends Vue {
   .calendar_container {
     position: relative;
     display: block;
-    background-color: var(--MainBackgroundColor);
+    background-color: inherit;
 
     &.required {
       background-color: var(--WarningColor) !important;
@@ -245,7 +245,7 @@ export default class Calendar extends Vue {
 
   .calendar_input {
     padding: 5px 2px 5px 0;
-    background-color: rgba(0, 0, 0, 0);
+    background: none;
     border: 0;
     z-index: 2;
     order: 2;

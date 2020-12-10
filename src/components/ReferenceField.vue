@@ -56,13 +56,23 @@
               :value="iconValue(select.valueOption.meta.link.target)"
             >
           </FunLink>
-          <span>{{ select.valueOption.label }}</span>
+          <!-- eslint-disable vue/no-v-html -->
+          <span v-html="select.valueOption.labelHtml" />
+          <!-- eslint-enable vue/no-v-html -->
         </span>
+        <!-- eslint-disable vue/no-v-html -->
         <span
           v-else
           :style="select.listValueStyle"
-          class="single_value"
-        >{{ select.valueOption.label }}</span>
+          :class="[
+            'single_value',
+            {
+              'has_links': select.valueOption.label !== select.valueOption.labelHtml,
+            }
+          ]"
+          v-html="select.valueOption.labelHtml"
+        />
+        <!-- eslint-enable vue/no-v-html -->
       </template>
       <template
         v-if="!isDisabled"
@@ -187,13 +197,20 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   .reference_backup_input {
     width: 100%;
   }
 
   .form-view {
     width: 85vw;
+  }
+
+  .single_value {
+    &.has_links {
+      // Otherwise it's sometimes tricky to click/tap inside.
+      padding-right: 40px;
+    }
   }
 
   .single_value > a,

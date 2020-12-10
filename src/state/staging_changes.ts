@@ -7,9 +7,10 @@ import { IUpdatedValue, IFieldInfo, valueFromRaw } from "@/values";
 import {
   ITransaction, ITransactionResult, IEntityRef, IFieldRef, IEntity, RowId, SchemaName, FieldName, EntityName,
   IInsertEntityOp, IUpdateEntityOp, IDeleteEntityOp, IInsertEntityResult, IUpdateEntityResult, IDeleteEntityResult,
-  IColumnField, TransactionOp, default as Api,
+  IColumnField, TransactionOp, default as Api, IResultColumnInfo,
 } from "@/api";
 import { i18n } from "@/modules";
+import { ICombinedValue, currentValue } from "./user_view";
 
 export type ScopeName = string;
 
@@ -31,6 +32,7 @@ export type AddedRowId = number;
 export interface IAddedEntry {
   scopes: Scopes;
   values: AddedValues;
+  touched: boolean;
 }
 
 export interface IDeletedEntry {
@@ -437,6 +439,7 @@ const stagingModule: Module<IStagingState, {}> = {
       const newEntry = {
         values: getEmptyValues(scope, entityInfo),
         scopes: { [scope]: null },
+        touched: false,
       };
       const newId = uvAdded.nextId++;
       uvAdded.entries[newId] = newEntry;
@@ -451,8 +454,19 @@ const stagingModule: Module<IStagingState, {}> = {
       });
       state.touched = true;
     },
-    setAddedField: (state, params: { scope: ScopeName; fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; value: any; fieldInfo: IFieldInfo }) => {
-      const { scope, fieldRef, userView, id, value, fieldInfo } = params;
+    setAddedField: (
+      state,
+      params: {
+        scope: ScopeName;
+        fieldRef: IFieldRef;
+        userView: UserViewKey;
+        id: AddedRowId;
+        value: any;
+        fieldInfo: IFieldInfo;
+        noTouch?: boolean;
+      },
+    ) => {
+      const { scope, fieldRef, userView, id, value, fieldInfo, noTouch } = params;
       // During submit new entries aren't allowed to be added because this can result in duplicates.
       if (state.currentSubmit !== null) {
         throw new Error("Adding entries is forbidden while submitting");
@@ -474,6 +488,7 @@ const stagingModule: Module<IStagingState, {}> = {
         });
       }
       Vue.set(added.values, fieldRef.name, validateValue(fieldInfo, value));
+      added.touched = !noTouch;
       state.touched = true;
     },
     deleteEntry: (state, params: { scope: ScopeName; entityRef: IEntityRef; id: RowId }) => {
@@ -550,28 +565,72 @@ const stagingModule: Module<IStagingState, {}> = {
       await checkCounters(context);
       await dispatch("userView/afterUpdateField", args, { root: true });
     },
-    addEntry: async (context, args: { entityRef: IEntityRef; userView: UserViewKey; position?: number }): Promise<IAddedResult> => {
+    addEntry: async (
+      context,
+      args: {
+        scope: ScopeName;
+        entityRef: IEntityRef;
+        userView: UserViewKey;
+        position?: number;
+      },
+    ): Promise<IAddedResult> => {
       const { state, commit, dispatch } = context;
       const entityInfo = await getEntityInfo(context, args.entityRef);
       commit("addEntry", { ...args, entityInfo });
+
       const entityChanges = state.current.changesForEntity(args.entityRef);
       const uvAdded = entityChanges.added[args.userView];
       const newId = uvAdded.nextId - 1;
-      let position: number;
-      if (args.position === undefined) {
-        position = uvAdded.positions.length - 1;
-      } else {
-        position = args.position;
-      }
+      const position = args.position ?? uvAdded.positions.length - 1;
+
       const result = {
         id: newId,
         position,
       };
       await checkCounters(context);
       await dispatch("userView/afterAddEntry", { ...args, ...result }, { root: true });
+
       return result;
     },
-    setAddedField: async (context, args: { fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; value: any }) => {
+    // Like `addEntry`, but doesn't sets `touched` property of entry for setting `defaultValues`.
+    addEntryWithDefaults: async (
+      context,
+      args: {
+        entityRef: IEntityRef;
+        userView: UserViewKey;
+        position?: number;
+        scope: ScopeName;
+        defaultValues: Record<string, any>;
+      },
+    ): Promise<IAddedResult> => {
+      const { dispatch } = context;
+      const result: IAddedResult = await dispatch("addEntry", args);
+      for (const [mainFieldName, value] of Object.entries(args.defaultValues)) {
+        // eslint-disable-next-line
+        await dispatch("setAddedField", {
+          scope: args.scope,
+          fieldRef: {
+            entity: args.entityRef,
+            name: mainFieldName,
+          },
+          userView: args.userView,
+          id: result.id,
+          value,
+          noTouch: true,
+        });
+      }
+      return result;
+    },
+    setAddedField: async (
+      context,
+      args: {
+        fieldRef: IFieldRef;
+        userView: UserViewKey;
+        id: AddedRowId;
+        value: any;
+        noTouch?: boolean; // Used to initialize entries with values.
+      },
+    ) => {
       const { commit, dispatch } = context;
       const fieldInfo = await getFieldInfo(context, args.fieldRef);
       commit("setAddedField", { ...args, fieldInfo });
@@ -609,20 +668,36 @@ const stagingModule: Module<IStagingState, {}> = {
       commit("resetDeleteEntry", args);
       await checkCounters(context);
     },
-    // If scope is specified, clears only entries which have it.
-    clearAdded: ({ state, dispatch }, scope?: ScopeName) => {
-      Object.entries(state.current.changes).forEach(([schema, entities]) => {
-        Object.entries(entities).forEach(([entity, entityChanges]) => {
-          Object.entries(entityChanges.added).forEach(([userView, uvAdded]) => {
-            Object.entries(uvAdded.entries).forEach(([addedIdStr, addedEntry]) => {
-              const addedId = Number(addedIdStr);
-              if (scope === undefined || scope in addedEntry.scopes) {
-                dispatch("resetAddedEntry", { entityRef: { schema, name: entity }, userView, id: addedId });
+    clearAdded: async (
+      { state, dispatch },
+      params: {
+        scope?: ScopeName; // If specified, clears only entries which have this scope.
+        onlyUntouched?: boolean; // If true, clears only untouched (added and not edited) entries.
+      },
+    ) => {
+      const { scope, onlyUntouched = false } = params;
+      for (const [schema, entities] of Object.entries(state.current.changes)) {
+        for (const [entity, entityChanges] of Object.entries(entities)) {
+          for (const [userView, uvAdded] of Object.entries(entityChanges.added)) {
+            for (const [addedIdStr, addedEntry] of Object.entries(uvAdded.entries)) {
+              if ((scope === undefined || scope in addedEntry.scopes)
+                  && (!onlyUntouched || (!addedEntry.touched))) {
+                // Not sure about safety of parallel "resetAddedEntry" dispatches
+                // and they are almost instant anyway, so awaits in loop is fine.
+                // eslint-disable-next-line
+                await dispatch(
+                  "resetAddedEntry",
+                  {
+                    entityRef: { schema, name: entity },
+                    userView,
+                    id: Number(addedIdStr),
+                  },
+                );
               }
-            });
-          });
-        });
-      });
+            }
+          }
+        }
+      }
     },
     // Removes scope and entries that are only bound to it.
     removeScope: (context, scope: ScopeName) => {
@@ -653,6 +728,7 @@ const stagingModule: Module<IStagingState, {}> = {
       }
 
       commit("errors/resetErrors", errorKey, { root: true });
+      // await dispatch("clearAdded", { onlyUntouched: true });
       commit("validate");
       const nestedOps = await Promise.all(Object.entries(state.current.changes).map(async ([schemaName, entities]) => {
         const ret = await Promise.all(Object.entries(entities).map(async ([entityName, entityChanges]) => {
@@ -752,7 +828,7 @@ const stagingModule: Module<IStagingState, {}> = {
         if (!(result instanceof Error)) {
           commit("errors/resetErrors", errorKey, { root: true });
           if (state.touched) {
-            await dispatch("clearAdded", scope);
+            await dispatch("clearAdded", { scope });
           } else if (scope) {
             await dispatch("resetScoped", scope);
           } else {

@@ -30,6 +30,7 @@
       v-else
       :column-width="columnWidth"
       :column-header-color="columnHeaderColor"
+      :background-color="backgroundColor"
       :columns="columns"
       :titles="boardTitles"
       :add="changeGroup"
@@ -111,6 +112,10 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
   // Column header background color.
   get columnHeaderColor(): string {
     return "header_color" in this.uv.attributes ? String(this.uv.attributes.header_color) : "none";
+  }
+
+  get backgroundColor(): string {
+    return "background_color" in this.uv.attributes ? String(this.uv.attributes.background_color) : "none";
   }
 
   get groupIndex() {

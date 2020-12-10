@@ -271,11 +271,13 @@ interface IColumn {
   fixed: boolean;
   mobileFixed: boolean;
   columnInfo: IResultColumnInfo;
+  attrs: Record<string, any>;
   width: number; // in px
-  treeBranchesView: boolean;
+  treeUnfoldColumn: boolean;
 }
 
 interface ITableValueExtra {
+  // FIXME: is this still needed? We could drop it and use computed properties in TableRows instead.
   valueText: string;
   link?: Link;
   style?: Record<string, any>;
@@ -302,7 +304,7 @@ interface ITableUserViewExtra {
   selectedValues: ObjectSet<ValueRef>;
   columns: IColumn[];
   fixedColumnPositions: Record<number, string>;
-  rowsParentPositions: Record<number | string, number>;
+  rowsParentPositions: Record<number, number>;
   linkOpts?: IAttrToQueryOpts;
 }
 
@@ -316,8 +318,10 @@ const technicalFieldsWidth = 35; // checkbox's and openform's td width
 
 const createColumns = (uv: CombinedUserView): IColumn[] => {
   const viewAttrs = uv.attributes;
+  const columns: IColumn[] = [];
+  let isTreeUnfoldColumnSet = false;
 
-  return uv.info.columns.map((columnInfo, i) => {
+  uv.info.columns.forEach((columnInfo, i) => {
     const columnAttrs = uv.columnAttributes[i];
     const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
 
@@ -340,10 +344,14 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
     const visibleColumnAttr = getColumnAttr("visible");
     const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
 
-    const treeBranchesViewAttr = getColumnAttr("tree_branches_view");
-    const treeBranchesView = treeBranchesViewAttr === undefined ? false : Boolean(treeBranchesViewAttr);
+    const treeUnfoldColumnAttr = getColumnAttr("tree_unfold_column");
+    const treeUnfoldColumn = treeUnfoldColumnAttr === undefined ? false : Boolean(treeUnfoldColumnAttr);
 
-    return {
+    if (treeUnfoldColumn) {
+      isTreeUnfoldColumnSet = true;
+    }
+
+    columns[i] = {
       caption,
       style,
       visible: visibleColumn,
@@ -353,9 +361,15 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
       columnInfo,
       attrs: columnAttrs,
       width: columnWidth,
-      treeBranchesView,
+      treeUnfoldColumn,
     };
   });
+
+  if (!isTreeUnfoldColumnSet) {
+    columns[0].treeUnfoldColumn = true;
+  }
+
+  return columns;
 };
 
 export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRowExtra, ITableUserViewExtra> {
@@ -379,7 +393,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       style["text-align"] = "right";
     }
 
-    const textAlignAttr = getCellAttr("text_align");
+    const textAlignAttr: any = getCellAttr("text_align");
     if (textAlignAttr !== undefined) {
       style["text-align"] = String(textAlignAttr);
     }
@@ -425,16 +439,15 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
         this.extra.hasRowLinks = true;
       }
 
-      // Init parent
-      const parent = getCellAttr("tree_branches") && value.value ? value.value : null;
-      if (parent !== null) {
-        localRow.extra.parent = parent;
-        localRow.extra.visible = false;
-      }
+      if (getCellAttr("tree_parent_ids")) {
+        // Init indexes by ids
+        this.extra.rowsParentPositions[value.info.id] = rowIndex;
 
-      // Init indexes by entityIds
-      if (row.entityIds !== undefined && Object.keys(row.entityIds)[0]) {
-        this.extra.rowsParentPositions[row.entityIds[Object.keys(row.entityIds)[0]].id] = rowIndex;
+        // Init parent
+        if (value.value !== null) {
+          localRow.extra.parent = value.value;
+          localRow.extra.visible = false;
+        }
       }
     }
 
@@ -841,10 +854,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.lastSelectedRow = null;
       this.lastSelectedValue = null;
     });
-    if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree) {
-      if ("tree_all_open" in this.local.uv.attributes && this.local.uv.attributes.tree_all_open) {
-        this.toggleAllTreeChildren(true);
-      }
+
+    if (!R.isEmpty(this.local.extra.rowsParentPositions) && "tree_all_open" in this.local.uv.attributes && this.local.uv.attributes.tree_all_open) {
+      this.toggleAllTreeChildren(true);
     }
   }
 
@@ -1023,7 +1035,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.rowPositions = rows.map((row, rowI) => rowI);
       if (this.filter.length !== 0) {
         this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], this.filter));
-      } else if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree) {
+      } else if (!R.isEmpty(this.local.extra.rowsParentPositions)) {
         this.rowPositions = this.rowPositions.filter(rowI => this.local.rows[rowI].extra.visible);
         this.isTree = true;
       }
@@ -1099,6 +1111,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   private clickCell(ref: ValueRef, event: MouseEvent | any) {
     this.removeCellEditing();
 
+    // Not need cell edit and another manipulation when click by tree arrows.
+    if (event.target.className.includes("display-arrow")) {
+      return undefined;
+    }
+
     // this.selectCell() breaks the timer for double click in iOS,
     // so when we're running iOS we don't check for double click
     if (this.clickTimeoutId === null) {
@@ -1117,6 +1134,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
 
     this.cellEditHandler(ref, event.target);
+    return undefined;
   }
 
   private cellEditByTarget(ref: ValueRef, target: HTMLElement) {

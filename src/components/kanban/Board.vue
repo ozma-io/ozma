@@ -16,6 +16,7 @@
       :card-target="cardTarget"
       :width="columnWidth"
       :header-color="columnHeaderColor"
+      :background-color="backgroundColor"
       :add="add"
       :move="move"
       @goto="$emit('goto', $event)"
@@ -42,6 +43,7 @@ export default class Board extends Vue {
   @Prop({ type: Object }) titles!: { [key: number]: string } | null;
   @Prop({ type: Number }) columnWidth!: number | null;
   @Prop({ type: String }) columnHeaderColor!: string;
+  @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: String, required: false }) cardTarget!: CardTarget;
 
   private get isMobile(): boolean {
