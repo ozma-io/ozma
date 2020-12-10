@@ -11,6 +11,7 @@
 
 <template>
   <div
+    v-if="sortedActions.length > 0"
     :class="['actions-menu', {'actions-menu_active': showActions}]"
   >
     <input

@@ -82,7 +82,6 @@
         <ButtonsPanel :buttons="panelButtons">
           <template #actions-menu>
             <ActionsMenu
-              v-if="!isMainView"
               :actions="extraActions"
               menu-align="right"
               @goto="pushRoot"
@@ -278,9 +277,7 @@ export default class TopLevelUserView extends Vue {
 
   get actions() {
     const actions: Action[] = [];
-    if (this.isMainView) {
-      actions.push(...this.extraActions);
-    }
+    actions.push(...this.extraActions);
     if (this.currentAuth !== null) {
       if (Api.developmentMode) {
         actions.push({ name: this.$t("authed_link").toString(), order: 1000, callback: () => {
