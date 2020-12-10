@@ -49,7 +49,7 @@ import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import * as R from "ramda";
 
-import MenuEntry, { MenuValue, IMenuLink } from '@/components/views/menu/MenuEntry.vue';
+import MenuEntry, { MenuValue, IMenuLink } from "@/components/views/menu/MenuEntry.vue";
 import { attrToLink, IAttrToLinkOpts } from "@/links";
 
 @UserView({
@@ -65,7 +65,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
   }
 
   private get isCentered(): boolean {
-    const isCentered = R.pathOr(false, ['attributes', 'menu_centered'], this.uv);
+    const isCentered = R.pathOr(false, ["attributes", "menu_centered"], this.uv);
     if (typeof isCentered === "boolean") {
       return isCentered;
     }
@@ -103,7 +103,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
       return { ...base, content };
     } else {
       const ref = attrToLink(entry, this.linkOpts);
-      let icon = undefined;
+      let icon;
       if (typeof entry.icon === "string") {
         icon = entry.icon;
       }
@@ -113,7 +113,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
 
       return { ...base, icon, link: ref };
     }
-  };
+  }
 
   private buildNewMenu(): MenuValue[] | string {
     if (this.uv.info.columns[0].valueType.type !== "json") {
@@ -137,7 +137,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
         return [];
       }
     });
-  };
+  }
 
   private buildOldMenu(): MenuValue[] | string {
     const viewAttrs = this.uv.attributes;
@@ -171,19 +171,8 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
       const buttonName = valueToPunnedText(buttonColumnInfo.valueType, buttonCell);
       const buttonAttrs = buttonCell.attributes || {};
       const getButtonAttr = (name: string) => tryDicts(name, buttonAttrs, rowAttrs, buttonsAttrs, viewAttrs);
-      const getDeprecatedAttr = (name: string, oldName: string) => {
-        const ret = getButtonAttr(name);
-        if (ret !== undefined) {
-          return ret;
-        }
-        const oldRet = getButtonAttr(oldName);
-        if (oldRet !== undefined) {
-          console.warn(`Old-style link attribute detected: "${oldName}"`);
-          return oldRet;
-        }
-      };
 
-      const toQuery = attrToLink(getDeprecatedAttr("link", "linked_view"), this.linkOpts);
+      const toQuery = attrToLink(getButtonAttr("link"), this.linkOpts);
       if (toQuery === null) {
         return;
       }
@@ -194,7 +183,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
       };
       category.content.push(button);
     });
-    return Array.from(categories.entries()).sort(([nameA,a], [nameB, b]) => a.index - b.index).map(([name, x]) => ({ name, content: x.content }));
+    return Array.from(categories.entries()).sort(([nameA, a], [nameB, b]) => a.index - b.index).map(([name, x]) => ({ name, content: x.content }));
   }
 
   get entriesOrError(): MenuValue[] | string {

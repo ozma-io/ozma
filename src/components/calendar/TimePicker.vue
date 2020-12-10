@@ -66,12 +66,12 @@ interface ITime {
 }
 
 const numToText2 = (num: number) => {
-  return  (num < 10) ? `0${num}` : `${num}`;
+  return (num < 10) ? `0${num}` : `${num}`;
 };
 
 const getRange = (min: number, max: number, step: number) => {
   const range: ITimeRange[] = [];
-  for (let i = min; i < max; i += step ) {
+  for (let i = min; i < max; i += step) {
     const el: ITimeRange = { min: -1, max: -1, value: i, text: `${numToText2(i)}` };
     range.push(el);
   }
@@ -88,17 +88,19 @@ const DateRange = (min: number, max: number, steps: number[]): ITimeRangeAll => 
   };
 };
 
-const scrollTo = (wrapper: any, target: any) => {
-  if ("children" in wrapper)
+const scrollTo = (wrapper: HTMLElement, target: HTMLElement) => {
+  if ("children" in wrapper) {
     if (wrapper.childElementCount > 6) {
-      if (!target)
+      if (!target) {
         wrapper.scroll(0, 240);
-      else {
-        for (const k in target)
-          wrapper.scroll(0, target[k].offsetTop - wrapper.offsetTop);
+      } else {
+        Object.values(target.children).forEach(child => {
+          wrapper.scroll(0, (child as HTMLElement).offsetTop - wrapper.offsetTop);
+        });
       }
     }
-}
+  }
+};
 
 @Component
 export default class TimePicker extends Vue {
@@ -110,17 +112,18 @@ export default class TimePicker extends Vue {
   private mins: ITimeRangeAll = DateRange(0, 60, [this.step]);
 
   get step() {
-    return (!!this.timeStep)
+    return (this.timeStep)
       ? this.timeStep
-      : 15
+      : 15;
   }
 
-  @Watch('isOpen')
+  @Watch("isOpen")
   private selectedTime() {
     if (this.isOpen) {
-      scrollTo(this.$refs.wrapperHour, this.$refs.selectHour);
-      if (!!this.$refs.selectMin)
-        scrollTo(this.$refs.wrapperMin, this.$refs.selectMin);
+      scrollTo(this.$refs.wrapperHour as HTMLElement, this.$refs.selectHour as HTMLElement);
+      if (this.$refs.selectMin) {
+        scrollTo(this.$refs.wrapperMin as HTMLElement, this.$refs.selectMin as HTMLElement);
+      }
     }
   }
 

@@ -104,7 +104,7 @@ export interface IAction {
   icon?: string;
   name: string;
   order?: number;
-};
+}
 
 export interface ILocationAction extends IAction {
   location: RawLocation;
@@ -173,7 +173,7 @@ export default class ActionsMenu extends Vue {
     return newActions as (Action | null)[];
   }
 
-  @Watch('$route', { immediate: true, deep: true })
+  @Watch("$route", { immediate: true, deep: true })
   onUrlChange(newVal: any) {
     this.showActions = false;
   }
@@ -292,7 +292,7 @@ export default class ActionsMenu extends Vue {
   }
 
   .right {
-    margin-left: -74vw;
+    right: 0;
   }
 
   @media screen and (max-aspect-ratio: 13/9) {
@@ -331,6 +331,10 @@ export default class ActionsMenu extends Vue {
         width: 100%;
         text-align: left;
         z-index: 1000 !important; /* кнопка выбора действий выше темного блока */
+      }
+
+      .right {
+        margin-left: -75vw;
       }
     }
   }

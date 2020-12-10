@@ -60,7 +60,6 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 
 @Component
 export default class SearchPanel extends Vue {
-
   @Prop({ type: String, required: false, default: "" }) filterString!: string;
 
   private localFilterString = "";
@@ -74,7 +73,6 @@ export default class SearchPanel extends Vue {
   }
 
   private toggleSearchFieldVisibility(flag?: boolean) {
-
     if (flag !== undefined) {
       this.isShownSearchField = flag;
     } else {
@@ -95,7 +93,6 @@ export default class SearchPanel extends Vue {
       this.localFilterString = "";
     }
   }
-
 }
 
 </script>

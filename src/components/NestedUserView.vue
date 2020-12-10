@@ -37,7 +37,6 @@ export default class NestedUserView extends Vue {
   updateTitle(title: string | null) {
     this.$emit("update:title", title);
   }
-
 }
 
 </script>

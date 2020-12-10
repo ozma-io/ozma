@@ -16,6 +16,7 @@
       :card-target="cardTarget"
       :width="columnWidth"
       :header-color="columnHeaderColor"
+      :background-color="backgroundColor"
       :add="add"
       :move="move"
       @goto="$emit('goto', $event)"
@@ -30,9 +31,9 @@ import draggable from "vuedraggable";
 
 import { ICard, CardTarget } from "@/components/kanban/Card.vue";
 import Column, { IColumn } from "@/components/kanban/Column.vue";
-import { ValueRef } from "../../local_user_view";
 import { dragscroll } from "vue-dragscroll";
 import { isMobile } from "@/utils";
+import { ValueRef } from "../../local_user_view";
 
 @Component({ components: { Column, draggable }, directives: { dragscroll } })
 export default class Board extends Vue {
@@ -42,6 +43,7 @@ export default class Board extends Vue {
   @Prop({ type: Object }) titles!: { [key: number]: string } | null;
   @Prop({ type: Number }) columnWidth!: number | null;
   @Prop({ type: String }) columnHeaderColor!: string;
+  @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: String, required: false }) cardTarget!: CardTarget;
 
   private get isMobile(): boolean {

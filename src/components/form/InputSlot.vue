@@ -59,7 +59,6 @@
     <b-col
       :cols="(!!label && inline) ? 8 : 12"
       :class="['input_container', `text_align_${textAlign}`, {'input_container_cell-edit': isCellEdit}]"
-      :style="{'background': backgroundColor}"
     >
       <slot
         name="input"
@@ -92,7 +91,7 @@ export default class InputSlot extends Vue {
   @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
-  @Prop({ type: String }) textAlign!: string;
+  @Prop({ type: String, default: "left" }) textAlign!: string;
 
   private focused = false;
   private isModalOpen = false;
@@ -199,8 +198,8 @@ export default class InputSlot extends Vue {
   .input_modal__input_group {
     display: flex;
     flex-direction: column;
-    padding-bottom: 50px;
     height: 100%;
+    padding: 10% 0;
     justify-content: space-between;
     background-color: var(--MainBackgroundColor);
   }

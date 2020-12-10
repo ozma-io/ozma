@@ -7,8 +7,8 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component } from 'vue-property-decorator';
-import CommsButton from '@/components/CommunicationsButton.vue';
+import { Vue, Component } from "vue-property-decorator";
+import CommsButton from "@/components/CommunicationsButton.vue";
 
 @Component({ components: { CommsButton } })
 export default class FabCluster extends Vue {

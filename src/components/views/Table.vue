@@ -222,7 +222,7 @@ import { Store } from "vuex";
 import { Moment } from "moment";
 import * as moment from "moment";
 
-import { deepEquals, isFirefox, isIOS, mapMaybe, nextRender, nextRenderOneJump, ObjectSet, tryDicts, ReferenceName } from "@/utils";
+import { deepEquals, isFirefox, isIOS, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName } from "@/utils";
 import { valueIsNull } from "@/values";
 import { IResultColumnInfo, ValueType } from "@/api";
 import {
@@ -271,11 +271,13 @@ interface IColumn {
   fixed: boolean;
   mobileFixed: boolean;
   columnInfo: IResultColumnInfo;
+  attrs: Record<string, any>;
   width: number; // in px
-  treeBranchesView: boolean;
+  treeUnfoldColumn: boolean;
 }
 
 interface ITableValueExtra {
+  // FIXME: is this still needed? We could drop it and use computed properties in TableRows instead.
   valueText: string;
   link?: Link;
   style?: Record<string, any>;
@@ -302,6 +304,7 @@ interface ITableUserViewExtra {
   selectedValues: ObjectSet<ValueRef>;
   columns: IColumn[];
   fixedColumnPositions: Record<number, string>;
+  rowsParentPositions: Record<number, number>;
   linkOpts?: IAttrToQueryOpts;
 }
 
@@ -315,8 +318,10 @@ const technicalFieldsWidth = 35; // checkbox's and openform's td width
 
 const createColumns = (uv: CombinedUserView): IColumn[] => {
   const viewAttrs = uv.attributes;
+  const columns: IColumn[] = [];
+  let isTreeUnfoldColumnSet = false;
 
-  return uv.info.columns.map((columnInfo, i) => {
+  uv.info.columns.forEach((columnInfo, i) => {
     const columnAttrs = uv.columnAttributes[i];
     const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
 
@@ -333,35 +338,41 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
     const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr);
 
     // FIXME: we stopped supporting it for now.
-    //const fixedFieldAttr = getColumnAttr("mobile_fixed");
-    //const fixedField = fixedFieldAttr === undefined ? false : Boolean(fixedFieldAttr);
+    // const fixedFieldAttr = getColumnAttr("mobile_fixed");
+    // const fixedField = fixedFieldAttr === undefined ? false : Boolean(fixedFieldAttr);
 
     const visibleColumnAttr = getColumnAttr("visible");
     const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
 
-    const treeBranchesViewAttr = getColumnAttr("tree_branches_view");
-    const treeBranchesView = treeBranchesViewAttr === undefined ? false : Boolean(treeBranchesViewAttr);
+    const treeUnfoldColumnAttr = getColumnAttr("tree_unfold_column");
+    const treeUnfoldColumn = treeUnfoldColumnAttr === undefined ? false : Boolean(treeUnfoldColumnAttr);
 
-    return {
+    if (treeUnfoldColumn) {
+      isTreeUnfoldColumnSet = true;
+    }
+
+    columns[i] = {
       caption,
       style,
       visible: visibleColumn,
       fixed: fixedColumn,
-      //mobileFixed: fixedField,
+      // mobileFixed: fixedField,
       mobileFixed: false,
       columnInfo,
       attrs: columnAttrs,
       width: columnWidth,
-      treeBranchesView,
+      treeUnfoldColumn,
     };
   });
+
+  if (!isTreeUnfoldColumnSet) {
+    columns[0].treeUnfoldColumn = true;
+  }
+
+  return columns;
 };
 
 export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRowExtra, ITableUserViewExtra> {
-  constructor(store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>, oldLocal: LocalUserView<ITableValueExtra, ITableRowExtra, ITableUserViewExtra> | null) {
-    super(store, uv, defaultRawValues, oldLocal);
-  }
-
   createCommonLocalValue(row: IRowCommon, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: ITableValueExtra | null, deleted: boolean): ITableValueExtra {
     const columnInfo = this.uv.info.columns[columnIndex];
     const columnAttrs = this.uv.columnAttributes[columnIndex];
@@ -377,12 +388,12 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     }
 
     const textAlignRightTypes: (ValueType["type"])[] = ["int", "decimal"];
-    const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType
-    if(textAlignRightTypes.includes(punOrValue.type)) {
+    const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType;
+    if (textAlignRightTypes.includes(punOrValue.type)) {
       style["text-align"] = "right";
     }
 
-    const textAlignAttr = getCellAttr("text_align");
+    const textAlignAttr: any = getCellAttr("text_align");
     if (textAlignAttr !== undefined) {
       style["text-align"] = String(textAlignAttr);
     }
@@ -415,40 +426,26 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     const columnAttrs = this.uv.columnAttributes[columnIndex];
     const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, this.uv.attributes);
 
-    const getDeprecatedAttr = (name: string, oldName: string) => {
-      const ret = getCellAttr(name);
-      if (ret !== undefined) {
-        return ret;
-      }
-      const oldRet = getCellAttr(oldName);
-      if (oldRet !== undefined) {
-        console.warn(`Old-style link attribute detected: "${oldName}"`);
-        return oldRet;
-      }
-    };
-
     if (value.info) {
       if (value.info.field && value.info.field.fieldType.type === "reference") {
-        const link = attrToLinkRef(getDeprecatedAttr("link", "linked_view"), currentValue(value), this.extra.linkOpts);
+        const link = attrToLinkRef(getCellAttr("link"), currentValue(value), this.extra.linkOpts);
         if (link) {
           extra.link = link;
         }
       }
-      const currLinkForRow = attrToLinkSelf(getDeprecatedAttr("row_link", "row_linked_view"), value.info, this.extra.linkOpts);
+      const currLinkForRow = attrToLinkSelf(getCellAttr("row_link"), value.info, this.extra.linkOpts);
       if (currLinkForRow) {
         localRow.extra.link = currLinkForRow;
         this.extra.hasRowLinks = true;
       }
-      const parent = getCellAttr("tree_branches") && value.value ? value.value : 0;
-      const rows = this?.uv?.rows ?? null;
-      if (parent > 0 && rows !== null) {
-        const parentIndex = rows.findIndex(row => {
-          if (row.entityIds === undefined || Object.keys(row.entityIds)[0] === undefined)
-            return -1;
-          return row.entityIds[Object.keys(row.entityIds)[0]].id === parent;
-        });
-        if (parentIndex > -1) {
-          localRow.extra.parent = parentIndex;
+
+      if (getCellAttr("tree_parent_ids")) {
+        // Init indexes by ids
+        this.extra.rowsParentPositions[value.info.id] = rowIndex;
+
+        // Init parent
+        if (value.value !== null) {
+          localRow.extra.parent = value.value;
           localRow.extra.visible = false;
         }
       }
@@ -606,6 +603,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       selectedValues: new ObjectSet<ValueRef>(),
       columns,
       fixedColumnPositions: {},
+      rowsParentPositions: {},
     };
     const home = homeSchema(this.uv.args);
     if (home !== null) {
@@ -676,12 +674,10 @@ const ordRowPositionRef = (a: RowPositionRef, b: RowPositionRef) => {
     } else {
       return 1;
     }
+  } else if (a.type === "new") {
+    return 0;
   } else {
-    if (a.type === "new") {
-      return 0;
-    } else {
-      return Math.sign(a.position - (b as any).position);
-    }
+    return Math.sign(a.position - (b as any).position);
   }
 };
 
@@ -752,7 +748,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   private editParams: IEditParams = {
     height: 0,
     width: 0,
-    minHeight: 0
+    minHeight: 0,
   };
   // Keep references to entries used for editing once, so we don't re-request them.
   private keptEntries = new ObjectSet<IEntriesRef>();
@@ -858,6 +854,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.lastSelectedRow = null;
       this.lastSelectedValue = null;
     });
+
+    if (!R.isEmpty(this.local.extra.rowsParentPositions) && "tree_all_open" in this.local.uv.attributes && this.local.uv.attributes.tree_all_open) {
+      this.toggleAllTreeChildren(true);
+    }
   }
 
   protected destroyed() {
@@ -890,9 +890,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (this.filter.length === 0) {
       this.buildRowPositions();
       this.initRowsState();
-    } else {
-      if (this.isTree)
-        this.offTree();
+    } else if (this.isTree) {
+      this.offTree();
     }
   }
 
@@ -924,32 +923,33 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       }
       nextRender().then(() => {
         const emptyRowRefElement = this.$refs.emptyRowRef as any | undefined;
-        if (emptyRowRefElement !== undefined)
-          this.cellEditByTarget({ type:"new", column: emptyRowRefElement.columnIndexes[0] }, emptyRowRefElement.$children[0].$el);
+        if (emptyRowRefElement !== undefined) {
+          this.cellEditByTarget({ type: "new", column: emptyRowRefElement.columnIndexes[0] }, emptyRowRefElement.$children[0].$el);
+        }
       });
     }
   }
 
   // Toggle children rows visibles.
-  private visibleChildren(children: number[], visible: boolean) {
-
-    //Save state.
-    if( this.local.rows[children[0]] !== undefined) {
+  private visibleChildren(children: number[], visible: boolean, depth = false) {
+    // Save state.
+    if (this.local.rows[children[0]] !== undefined) {
       const parent = this.local.rows[children[0]].extra.parent;
-      if(parent === undefined)
+      if (parent === undefined) {
         return;
-      const extra = this.local.rows[parent].extra;
+      }
+      const parentIndex = this.local.extra.rowsParentPositions[parent];
+      const extra = this.local.rows[parentIndex].extra;
+      this.local.rows[parentIndex].extra.arrowDown = visible;
       if (visible) {
-        this.rowsState[parent] = extra;
+        this.rowsState[parentIndex] = extra;
       } else {
-        delete this.rowsState[parent];
-        this.local.rows[parent].extra.arrowDown = false;
+        delete this.rowsState[parentIndex];
       }
     }
 
     // Toggle
-    children.forEach( (child, i) => {
-
+    children.forEach((child, i) => {
       if (!visible && this.local.rows[child].extra.visible) {
         this.visibleChildren(this.local.rows[child].extra.children, visible);
 
@@ -958,16 +958,23 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         this.rowPositions.splice(childPosition, 1);
       }
 
-      this.local.rows[child].extra.visible = visible;
-    })
+      // Open in depth
+      if (depth) {
+        this.visibleChildren(this.local.rows[child].extra.children, true, depth);
+      }
 
-    if (visible)
+      this.local.rows[child].extra.visible = visible;
+    });
+
+    if (visible) {
       this.displayChildren(children);
+    }
   }
 
   private displayChildren(children: number[]) {
-    const parent = this.local.rows[children[0]].extra.parent;
-    if (parent !== undefined)
+    const index = this?.local?.rows[children[0]]?.extra?.parent ?? null;
+    const parent = index !== null ? this.local.extra.rowsParentPositions[index] : null;
+    if (parent !== null) {
       for (let i = children.length - 1; i >= 0; i--) {
         if (this.rowPositions.includes(children[i])) {
           const childPosition = this.rowPositions.indexOf(children[i]);
@@ -975,34 +982,40 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         }
         this.rowPositions.splice(this.rowPositions.indexOf(parent) + 1, 0, children[i]);
       }
+    }
+  }
+
+  private toggleAllTreeChildren(visible: boolean) {
+    this.rowPositions.forEach(rowI => {
+      if (this.local.rows[rowI].extra.children.length > 0 && this.local.rows[rowI].extra.parent === undefined) {
+        this.visibleChildren(this.local.rows[rowI].extra.children, visible, true);
+      }
+    });
+    this.initRowsState();
   }
 
   private initRowsState() {
     this.local.rows.forEach((row, rowI) => {
-      if (row.extra.parent !== undefined &&  this.local.rows[row.extra.parent] !== undefined &&!this.local.rows[row.extra.parent].extra.children.includes(rowI)) {
-        this.local.rows[row.extra.parent].extra.children.push(rowI);
-        let level = 1;
-        let parent = this.local.rows[row.extra.parent].extra.parent;
+      const parentIndex = row.extra.parent !== undefined ? this.local.extra.rowsParentPositions[row.extra.parent] : undefined;
+      if (parentIndex !== undefined && this.local.rows[parentIndex] !== undefined && !this.local.rows[parentIndex].extra.children.includes(rowI)) {
+        this.local.rows[parentIndex].extra.children.push(rowI);
+        let level = 0;
+        let parent: number | undefined = parentIndex;
         while (parent !== undefined && this.local.rows[parent] !== undefined && level < 100) {
-          parent = this.local.rows[parent].extra.parent;
+          const index: number | undefined = this?.local?.rows[parent]?.extra?.parent ?? undefined;
+          parent = index !== undefined ? this.local.extra.rowsParentPositions[index] : undefined;
           level++;
         }
         this.local.rows[rowI].extra.level = level;
       }
-    })
+    });
     if (!R.isEmpty(this.rowsState)) {
+      const sort = R.sortBy(R.compose(R.prop<string, number>("level"), R.prop<any>(1)));
+      const sortable = sort(R.toPairs(this.rowsState));
       // Load visible data from rowsState to rows.
-      for (const key in this.rowsState) {
-        const id = this?.local?.rows[key]?.extra?.selectionEntry?.id ?? undefined;
-        if (id !== undefined && id === this.rowsState[key].selectionEntry.id) {
-          this.local.rows[key].extra.arrowDown = true;
-          // nextRenderOneJump need for correct render rows after update. But be cearful with Chrome!
-          // https://stackoverflow.com/questions/44145740/how-does-double-requestanimationframe-work
-          nextRenderOneJump().then(() => {
-            this.visibleChildren(this.local.rows[key].extra.children, true);
-          });
-        }
-      }
+      sortable.forEach(item => {
+        this.visibleChildren(item[1].children, true);
+      });
     } else {
       this.buildRowPositions();
     }
@@ -1022,7 +1035,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.rowPositions = rows.map((row, rowI) => rowI);
       if (this.filter.length !== 0) {
         this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], this.filter));
-      } else if ("tree" in this.local.uv.attributes && this.local.uv.attributes.tree) {
+      } else if (!R.isEmpty(this.local.extra.rowsParentPositions)) {
         this.rowPositions = this.rowPositions.filter(rowI => this.local.rows[rowI].extra.visible);
         this.isTree = true;
       }
@@ -1047,8 +1060,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       return;
     }
 
-    if ('loss_of_focus_save' in this.uv.attributes && Boolean(this.uv.attributes['loss_of_focus_save']))
+    if ("loss_of_focus_save" in this.uv.attributes && Boolean(this.uv.attributes["loss_of_focus_save"])) {
       this.submitChanges({ scope: this.scope });
+    }
 
     this.removeAutoSaveLock(this.editing.lock);
     this.editing = null;
@@ -1077,7 +1091,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   private setCoordsForEditCell(target: HTMLElement) {
-    this.isSelectedLastFixedCell = target.classList.value.includes('next-after-last-fixed');
+    this.isSelectedLastFixedCell = target.classList.value.includes("next-after-last-fixed");
 
     const bodyRect = document.body.getBoundingClientRect();
     const rect = target.getBoundingClientRect();
@@ -1086,7 +1100,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
     // If edit window lower than screen, raise the window up.
     // +54px for bottom panel.
-    if (0 > bodyRect.bottom - rect.bottom - 54) {
+    if (bodyRect.bottom - rect.bottom - 54 < 0) {
       this.editCoords.y = bodyRect.bottom - this.editParams.height - 54;
       this.editParams.height += 54;
     } else {
@@ -1096,6 +1110,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   private clickCell(ref: ValueRef, event: MouseEvent | any) {
     this.removeCellEditing();
+
+    // Not need cell edit and another manipulation when click by tree arrows.
+    if (event.target.className.includes("display-arrow")) {
+      return undefined;
+    }
 
     // this.selectCell() breaks the timer for double click in iOS,
     // so when we're running iOS we don't check for double click
@@ -1115,6 +1134,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
 
     this.cellEditHandler(ref, event.target);
+    return undefined;
   }
 
   private cellEditByTarget(ref: ValueRef, target: HTMLElement) {
@@ -1124,7 +1144,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   private cellEditHandler(ref: ValueRef, target: HTMLElement) {
-
     this.setCoordsForEditCell(target);
     this.editParams.width = target.offsetWidth;
     this.editParams.height = target.offsetHeight;
@@ -1150,8 +1169,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         });
       }
     }
-
-
   }
 
   private selectCell(ref: ValueRef) {
@@ -1412,11 +1429,13 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   get showFixedRow() {
-    /*let tableWidth = this.technicalWidth;
+    /*
+    let tableWidth = this.technicalWidth;
     for (const column of this.local.extra.columns) {
       tableWidth += column.width;
     }
-    return tableWidth > screen.width && this.fixedRowColumnIndexes.length > 0;*/
+    return tableWidth > screen.width && this.fixedRowColumnIndexes.length > 0;
+    */
     return false;
   }
 

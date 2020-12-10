@@ -49,7 +49,6 @@ const staging = namespace("staging");
 export default class App extends Vue {
   @settings.State("current") settings!: CurrentSettings;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
-  @settings.Action("getSettings") getSettings!: () => Promise<void>;
   @auth.State("current") currentAuth!: CurrentAuth | null;
   @auth.State("pending") pendingAuth!: Promise<CurrentAuth> | null;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
@@ -57,7 +56,6 @@ export default class App extends Vue {
 
   created() {
     this.startAuth();
-    this.getSettings();
   }
 
   get authErrors() {

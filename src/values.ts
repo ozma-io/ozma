@@ -56,12 +56,14 @@ const convertArray = (entryType: FieldType, value: any[]): any[] | undefined => 
   }
 };
 
-export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, value: any): any => {
+export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: any): any => {
+  const value = typeof rawValue === "string" ? rawValue.trim() : rawValue;
+
   if (valueIsNull(value)) {
     return isNullable ? null : undefined;
   } else if (fieldType.type === "string" || fieldType.type === "enum" || fieldType.type === "interval") {
     // Remove whitespaces
-    return typeof value === "string" ? value.trim() : undefined;
+    return typeof value === "string" ? value : undefined;
   } else if (fieldType.type === "bool") {
     if (typeof value === "boolean") {
       return value;

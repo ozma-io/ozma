@@ -112,7 +112,7 @@ export default class CommunicationsButton extends Vue {
       telegram: this.settings.getEntry("instance_help_telegram", String, undefined),
       whatsapp: this.settings.getEntry("instance_help_whatsapp", String, undefined),
       email: this.settings.getEntry("instance_help_email", String, undefined),
-    }
+    };
   }
 
   private get hasLinks(): boolean {

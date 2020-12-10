@@ -194,12 +194,16 @@
 import * as R from "ramda";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { valueIsNull } from "@/values";
-import { nextRender } from "@/utils";
+import { nextRender, replaceHtmlLinks } from "@/utils";
 
 export interface ISelectOption {
   value: any;
   label: string;
   meta?: { [key: string]: any };
+}
+
+export interface ISelectOptionHtml extends ISelectOption {
+  labelHtml: string; // Stores label with links replaced with <a> tags.
 }
 
 const defaultOptionFilter = (query: string) => (option: ISelectOption) =>
@@ -228,27 +232,29 @@ export default class MultiSelect extends Vue {
   private optionsContainerCoords = { top: 0, bottom: 0 };
 
   private mounted() {
-
-    if (this.selectedOptions.length < 3 && this.single)
+    if (this.selectedOptions.length < 3 && this.single) {
       this.isNeedFilter = false;
+    }
 
-    //nextRender need for set coordinates selectedContainer after load cell data.
+    // nextRender need for set coordinates selectedContainer after load cell data.
     nextRender().then(() => {
       const bodyRect = document.body.getBoundingClientRect();
       const selectContainerElement = this.$refs.selectContainer as HTMLInputElement;
       const selectContainerRect = selectContainerElement !== undefined ? selectContainerElement.getBoundingClientRect() : null;
 
-      if (selectContainerRect !== null)
-        //There we check cell position for open selectContainer up or down.
+      if (selectContainerRect !== null) {
+        // There we check cell position for open selectContainer up or down.
         if (selectContainerRect.top > (bodyRect.bottom - selectContainerRect.bottom)) {
           this.isTopFilter = !this.isTopFilter;
           this.optionsContainerCoords.bottom = selectContainerRect.height;
           // It is need for set focus to search input if options opened.
-          if(this.isOpen)
+          if (this.isOpen) {
             this.setIsOpen(true);
+          }
         } else {
           this.optionsContainerCoords.top = selectContainerRect.height;
         }
+      }
     });
 
     if (this.autofocus) {
@@ -287,15 +293,31 @@ export default class MultiSelect extends Vue {
     return (!this.disabled && !(isLastValueLeft && this.required));
   }
 
-  private get valueOption(): ISelectOption | undefined {
-    return this.getOption(this.currentValue);
+  /* private get valueOption(): ISelectOption | undefined {
+   *   return this.getOption(this.currentValue);
+   * } */
+
+  private get valueOption(): ISelectOptionHtml | undefined {
+    const option = this.getOption(this.currentValue);
+    if (option === undefined) {
+      return undefined;
+    }
+    const labelHtml = replaceHtmlLinks(option.label);
+    return {
+      ...option,
+      labelHtml,
+    };
   }
 
-  private get valueOptions(): ISelectOption[] {
+  private get valueOptions(): ISelectOptionHtml[] {
     if (this.value instanceof Array) {
-      return this.currentValues
+      return (this.currentValues
         .map(x => this.getOption(x))
-        .filter(R.identity) as ISelectOption[];
+        .filter(R.identity) as ISelectOption[])
+        .map(option => ({
+          ...option,
+          labelHtml: replaceHtmlLinks(option.label),
+        }));
     }
     return [];
   }
@@ -346,15 +368,14 @@ export default class MultiSelect extends Vue {
     return !this.currentValues.length;
   }
 
-  private get selectedOptions(): ISelectOption[] {
-    if (this.single) {
-      return this.options
-        .filter(this.optionFilterFN(this.inputValue))
-        .map(option => ({ ...option, label: this.getLabel(option) }));
-    }
+  private get selectedOptions(): ISelectOptionHtml[] {
     return this.options
       .filter(this.optionFilterFN(this.inputValue))
-      .map(option => ({ ...option, label: this.getLabel(option) }));
+      .map(option => {
+        const label = this.getLabel(option);
+        const labelHtml = replaceHtmlLinks(label);
+        return { ...option, label, labelHtml };
+      });
   }
 
   private focusInput() {
@@ -390,7 +411,7 @@ export default class MultiSelect extends Vue {
     } else if (newSelectedOption >= selectedOptions.length) {
       this.selectedOption = 0;
     } else {
-      this.selectedOption = this.selectedOption + offset;
+      this.selectedOption += offset;
     }
   }
 
@@ -411,8 +432,9 @@ export default class MultiSelect extends Vue {
       }
       this.inputValue = "";
       const controlInput = this.$refs.controlInput as HTMLInputElement;
-      if(controlInput !== undefined)
+      if (controlInput !== undefined) {
         controlInput.focus();
+      }
       this.findNewSelected();
     }
   }
@@ -432,7 +454,7 @@ export default class MultiSelect extends Vue {
   }
 
   private removeValue(index?: number) {
-    if ((index !== undefined) && !this.single)  {
+    if ((index !== undefined) && !this.single) {
       const newValue = this.currentValues.filter((_: any, i: number) => index !== i);
       this.$emit("update:value", newValue);
     } else {

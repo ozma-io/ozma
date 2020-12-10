@@ -361,8 +361,8 @@ import { IQuery, attrToQuerySelf, queryLocation } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { isMobile } from "@/utils";
 import { attrToLinkSelf } from "@/links";
-import { IReferenceSelectAction } from "./ReferenceField.vue";
 import { router } from "@/modules";
+import { IReferenceSelectAction } from "./ReferenceField.vue";
 
 interface ITextType {
   name: "text";
@@ -380,7 +380,6 @@ interface ICodeEditorType {
   language: string;
   style: Record<string, any>;
 }
-
 
 interface IQRCodeType {
   name: "qrcode";
@@ -456,7 +455,7 @@ type IType =
 const userView = namespace("userView");
 
 const heightExclusions = ["select", "reference"];
-const multilineTypes = [ "markdown","codeeditor", "textarea" ];
+const multilineTypes = ["markdown", "codeeditor", "textarea"];
 const inlineTypes = ["markdown", "codeeditor", "textarea", "reference"];
 
 @Component({
@@ -478,7 +477,7 @@ const inlineTypes = ["markdown", "codeeditor", "textarea", "reference"];
 
     SearchPanel: () => import("@/components/SearchPanel.vue"),
     NestedUserView: () => import("@/components/NestedUserView.vue"),
-    QRCode: () => import("@/components/qrcode/qrcode.vue"),
+    QRCode: () => import("@/components/qrcode/QRCode.vue"),
   },
 })
 export default class FormControl extends Vue {
@@ -536,7 +535,7 @@ export default class FormControl extends Vue {
   //        from `update:value` event.
   get calendarValue() {
     if (this.type.type === "datetime" && this.currentValue) {
-      if (typeof this.currentValue === 'string') return this.currentValue;
+      if (typeof this.currentValue === "string") return this.currentValue;
       return this.currentValue.local().format("L LT");
     }
     return this.textValue;
@@ -561,7 +560,7 @@ export default class FormControl extends Vue {
   private updateTitle(title: string | null) {
     this.title = (!!title && this.columnInfoName === this.caption)
       ? title
-      : this.caption
+      : this.caption;
   }
 
   private setInputHeight(value: number) {
@@ -577,11 +576,13 @@ export default class FormControl extends Vue {
   }
 
   get textAlign() {
-    if ("text_align" in this.attributes)
+    if ("text_align" in this.attributes) {
       return String(this.attributes["text_align"]);
-
-    if (this.inputType.name === "text" && this.inputType.type === "number")
+    } else if (this.inputType.name === "text" && this.inputType.type === "number") {
       return "right";
+    } else {
+      return "left";
+    }
   }
 
   get cellColor() {
@@ -612,18 +613,6 @@ export default class FormControl extends Vue {
     const home = homeSchema(this.uvArgs);
     const linkOpts = home !== null ? { homeSchema: home } : undefined;
 
-    const getDeprecatedAttr = (name: string, oldName: string) => {
-      const ret = this.attributes[name];
-      if (ret !== undefined) {
-        return ret;
-      }
-      const oldRet = this.attributes[oldName];
-      if (oldRet !== undefined) {
-        console.warn(`Old-style link attribute detected: "${oldName}"`);
-        return oldRet;
-      }
-    };
-
     const controlAttr = String(this.attributes["control"]);
     if (controlAttr === "user_view") {
       if (this.currentValue === null || this.currentValue === undefined) {
@@ -638,9 +627,9 @@ export default class FormControl extends Vue {
         return { name: "userview", ...nestedRef };
       }
     } else if (controlAttr === "static_text") {
-      return { name: "static_text" }
+      return { name: "static_text" };
     } else if (controlAttr === "static_image") {
-      return { name: "static_image" }
+      return { name: "static_image" };
     }
     // `calc` is needed because sizes should be relative to base font size.
     const heightSinglelineText = "calc(2em + 6px)";
@@ -648,13 +637,13 @@ export default class FormControl extends Vue {
     const heightCodeEditor = "calc(100% - 1.5rem)";
     if (this.fieldType !== null) {
       switch (this.fieldType.type) {
-        case "reference":
+        case "reference": {
           const refEntry: IReferenceType = {
             name: "reference",
             ref: referenceEntriesRef(this.fieldType),
             selectViews: [],
           };
-          refEntry.linkedAttr = getDeprecatedAttr("link", "linked_view");
+          refEntry.linkedAttr = this.attributes["link"];
           refEntry.style = this.controlStyle();
 
           const selectView = attrToQuerySelf(this.attributes["select_view"], this.value.info, linkOpts);
@@ -664,7 +653,7 @@ export default class FormControl extends Vue {
               query: selectView,
             });
           }
-          const extraActions = getDeprecatedAttr("extra_select_views", "extra_select_actions");
+          const extraActions = this.attributes["extra_select_views"];
           if (Array.isArray(extraActions)) {
             extraActions.forEach(action => {
               if (typeof action === "object" && action.name) {
@@ -679,6 +668,7 @@ export default class FormControl extends Vue {
             });
           }
           return refEntry;
+        }
         case "enum":
           return {
             name: "select",
@@ -738,8 +728,18 @@ export default class FormControl extends Vue {
     }
   }
 
-  @Watch("inputType", { deep: true })
+  @Watch("inputType.name")
   private watchInputType() {
+    // These state values are essentially "backward props", that is, are supposed to be set by child components
+    // via `update:` events. This creates a problem: when do we clean these state values? For example, when
+    // switched from "user_view" to "text" component type, we can't expect `update:actions` event that will
+    // clear `actions`, as the new component is not aware of actions at all.
+    //
+    // To address this, we assume that every single component is capable of correctly reacting to update of its props
+    // and issues `update:` events as needed. Therefore we only need to focus on switches between components.
+    // If we detect a switch we clear all state values and expect the new component to emit `update:` events for
+    // values it actually supports.
+
     this.actions = [];
     this.enableFilter = false;
   }

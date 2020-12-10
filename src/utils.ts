@@ -1,5 +1,6 @@
 import moment from "moment";
 import Vue, { RenderContext } from "vue";
+import sanitizeHtml from "sanitize-html";
 
 export type Result<A> = A | Error;
 
@@ -17,18 +18,17 @@ export const resultMap = <A, B>(func: ((_: A) => B), res: Result<A>): Result<B> 
   }
 };
 
-export const waitTimeout = (timeout?: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, timeout));
+export const waitTimeout = (timeout?: number): Promise<void> => new Promise(resolve => setTimeout(resolve, timeout));
 
-export const nextRender = (): Promise<void> => new Promise((resolve) =>
+export const nextRender = (): Promise<void> => new Promise(resolve =>
   Vue.nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
 
-export const nextRenderOneJump = (): Promise<void> => new Promise((resolve) =>
-  Vue.nextTick(() => requestAnimationFrame((() => resolve()))));
-
+/* eslint-disable import/no-mutable-exports */
 export declare let process: {
   env: Record<string, string>;
 };
 
+/* eslint-enable import/no-mutable-exports */
 export class FetchError extends Error {
   body: any;
   response: Response;
@@ -61,7 +61,7 @@ export const fetchSuccess = async (input: RequestInfo, init?: RequestInit): Prom
 
 export const fetchJson = async (input: RequestInfo, init?: RequestInit): Promise<any> => {
   const response = await fetchSuccess(input, init);
-  return await response.json();
+  return response.json();
 };
 
 export const randomId = () => {
@@ -195,10 +195,11 @@ export const deepClone = <T>(a: T): T => {
     return a.map(deepClone) as any;
   } else if (!hasUserPrototype(a as any)) {
     const res: any = { ...a };
-    /* tslint:disable:forin */
+    /* eslint-disable guard-for-in */
     for (const k in res) {
       res[k] = deepClone(res[k]);
     }
+    /* eslint-enable guard-for-in */
     return res;
   } else {
     throw new Error("Cannot deep clone an object");
@@ -219,8 +220,8 @@ export const deepEquals = <T>(a: T, b: T): boolean => {
     }
   } else if (!(hasUserPrototype(a as any) || hasUserPrototype(b as any))) {
     const bObj = b as any;
-    return Object.keys(b).every(k => k in a) &&
-            Object.entries(a).every(([k, v]) => k in b && deepEquals(v, bObj[k]));
+    return Object.keys(b).every(k => k in a)
+            && Object.entries(a).every(([k, v]) => k in b && deepEquals(v, bObj[k]));
   } else {
     throw new Error("Cannot compare objects");
   }
@@ -631,4 +632,32 @@ export const convertToWords = (str: string) => {
     }
   }
   return words;
+};
+
+// In all regexes capturing groups replaced to non-capturing (`(` -> `(?:`).
+// Source: https://emailregex.com/
+const emailRegex = /(?:(?:[^<>(?:)[\]\\.,;:\s@"]+(?:\.[^<>(?:)[\]\\.,;:\s@"]+)*)|(?:".+"))@(?:(?:\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(?:(?:[a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/;
+// Source: https://qna.habr.com/answer?answer_id=852265
+const telRegex = /(?:\+)?(?:[- _(?:):=+]?\d[- _(?:):=+]?){10,14}(?:\s*)?/;
+const telRemoveFormating = (tel: string) => tel.replace(/^(\+)|\D/g, "$1");
+// Source: https://stackoverflow.com/a/3809435
+const urlRegex = /https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9(?:)]{1,6}\b(?:[-a-zA-Z0-9(?:)@:%_+.~#?&//=]*)/;
+const linksRegex =
+  new RegExp(`(?:^|\\s)(?:\
+(${emailRegex.source})|\
+(${telRegex.source})|\
+(${urlRegex.source}))(?:$|\\s)`, "gm");
+const replaceLink = (match: string, email: string, tel: string, url: string) => {
+  const prefix =
+    email ? "mailto:" :
+      tel ? "tel:" :
+        "";
+  const formattedMatch = tel ? telRemoveFormating(match) : match;
+  return `<a \
+target="_blank" rel="noopener noreferrer" \
+href="${prefix}${formattedMatch}">${match}</a>`;
+};
+export const replaceHtmlLinks = (text: string): string => {
+  const sanitized = sanitizeHtml(text, { allowedTags: [], disallowedTagsMode: "escape" });
+  return sanitized.replace(linksRegex, replaceLink);
 };

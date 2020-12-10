@@ -5,14 +5,20 @@
             "create_in_modal": "Create referenced in modal window",
             "export_to_csv": "Export to .csv",
             "import_from_csv": "Import from .csv",
-            "scan_qrcode": "Scan QR Code"
+            "scan_qrcode": "Scan QR Code",
+            "qrcode_error_not_attr":"Adding data error! Check for the @input_from_qrcode attribute.",
+            "qrcode_error_not_ref":"Adding data error! Make sure that the field you fill out is a link to a table:",
+            "error": "Error"
         },
         "ru": {
             "create": "Создать новую",
             "create_in_modal": "Создать связанную запись в окне",
             "export_to_csv": "Экспорт в .csv",
             "import_from_csv": "Импорт из .csv",
-            "scan_qrcode": "QR Code сканер"
+            "scan_qrcode": "QR Code сканер",
+            "qrcode_error_not_attr":"Ошибка добавления данных! Проверьте наличие атрибута @input_from_qrcode.",
+            "qrcode_error_not_ref":"Ошибка добавления данных! Убедитесь что заполняемое поле является ссылкой на таблицу:",
+            "error": "Ошибка"
         }
     }
 </i18n>
@@ -29,6 +35,7 @@
     <QRCodeScanner
       :open-scanner="openQRCodeScanner"
       :multi-scan="true"
+      :link="currentQRCodeLink"
       @select="selectFromQRScanner($event)"
     />
   </span>
@@ -41,9 +48,9 @@ import { namespace } from "vuex-class";
 import * as R from "ramda";
 
 import BaseUserView from "@/components/BaseUserView";
-import { LocalUserView } from "@/local_user_view";
+import { LocalUserView, ValueRef } from "@/local_user_view";
 import { IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
-import { ValueRef } from "@/local_user_view";
+
 import { homeSchema, valueToPunnedText, currentValue } from "@/state/user_view";
 import { funappSchema, IEntityRef, IFieldRef } from "@/api";
 import SelectUserView from "@/components/SelectUserView.vue";
@@ -51,8 +58,8 @@ import { mapMaybe, saveToFile, tryDicts } from "@/utils";
 import { Action } from "@/components/ActionsMenu.vue";
 import { IPanelButton } from "@/components/ButtonsPanel.vue";
 import { ScopeName, UserViewKey, IAddedResult, AddedRowId } from "@/state/staging_changes";
-import { attrToLink } from "@/links";
-import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
+import { attrToLink, Link } from "@/links";
+import QRCodeScanner, { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -60,10 +67,15 @@ interface IModalReferenceField {
   entity: IEntityRef;
 }
 
+interface IQRCodeReferenceField {
+  field: ValueRef;
+  entity: IEntityRef;
+}
+
 const csvCell = (str: string): string => {
-  let csvstr = str.replace(/"/g, '""');
+  let csvstr = str.replace(/"/g, `""`);
   if (csvstr.search(/("|;|\n)/g) > 0) {
-    csvstr = "\"" + csvstr + "\"";
+    csvstr = `"${csvstr}"`;
   }
   csvstr += ";";
   return csvstr;
@@ -78,8 +90,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
   modalView: IQuery | null = null;
   openQRCodeScanner = false;
-
-
+  currentQRCodeLink: Link | null = null;
 
   get createView() {
     const opts: IAttrToQueryOpts = {
@@ -90,19 +101,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       opts.homeSchema = home;
     }
 
-    const getDeprecatedAttr = (name: string, oldName: string) => {
-      const ret = this.uv.attributes[name];
-      if (ret !== undefined) {
-        return ret;
-      }
-      const oldRet = this.uv.attributes[oldName];
-      if (oldRet !== undefined) {
-        console.warn(`Old-style link attribute detected: "${oldName}"`);
-        return oldRet;
-      }
-    };
-
-    return attrToLink(getDeprecatedAttr("create_link", "create_view"), opts);
+    return attrToLink(this.uv.attributes["create_link"], opts);
   }
 
   private exportToCsv() {
@@ -115,7 +114,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       const row = this.uv.newRows[rowId];
       row.values.forEach((cell, colI) => {
         const info = this.uv.info.columns[colI];
-        data +- csvCell(valueToPunnedText(info.valueType, cell));
+        data += csvCell(valueToPunnedText(info.valueType, cell));
       });
       data += "\n";
     });
@@ -153,8 +152,8 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
         await Promise.all(this.uv.info.columns.map((columnInfo, index) => {
           const fallbackName: string | null = R.pathOr(
-            null, [index, 'csv_import_column'],
-            this.uv.columnAttributes
+            null, [index, "csv_import_column"],
+            this.uv.columnAttributes,
           );
           const columnName = fallbackName || columnInfo.name;
           const currValue = row[columnName];
@@ -173,7 +172,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
             return Promise.resolve();
           }
         }));
-      }
+      },
     });
   }
 
@@ -183,7 +182,6 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
     if (Array.isArray(panelButtons)) {
       panelButtons.forEach((button: any) => {
-
         const actions: Action[] = [];
         if (Array.isArray(button.actions)) {
           const opts: IAttrToQueryOpts = {};
@@ -205,13 +203,13 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
               link,
             });
           });
-        };
+        }
         buttons.push({
           icon: button.icon,
           name: button.name,
-          actions
+          actions,
         });
-      })
+      });
     }
 
     return buttons;
@@ -227,7 +225,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
    * @return {boolean} Allow showing default actions (edit, import from csv, etc.)
    */
   get showDefaultActions() {
-    return this.uv.attributes.hide_default_actions === true ? false : true;
+    return !this.uv.attributes.hide_default_actions === true || true;
   }
 
   get actions() {
@@ -256,19 +254,46 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       });
     }
 
+    const qrcodeActions = this.uv.attributes["qrcode_actions"];
+    if (Array.isArray(qrcodeActions)) {
+      const opts: IAttrToQueryOpts = {};
+      const home = homeSchema(this.uv.args);
+      if (home !== null) {
+        opts.homeSchema = home;
+      }
+      qrcodeActions.forEach((action: any) => {
+        if (typeof action.name !== "string") {
+          return;
+        }
+        const link = attrToLink(action, opts);
+        if (link === null) {
+          return;
+        }
+        actions.push({
+          name: action.name,
+          callback: () => this.qrCodeCallback(link),
+        });
+      });
+    }
+
     if (this.createView !== null) {
       actions.push({ name: this.$t("create").toString(), link: this.createView });
     }
 
     const modalReferenceField = this.modalReferenceField;
     if (modalReferenceField) {
-      actions.push({ name: this.$t("create_in_modal").toString(), callback: () => this.modalView = modalReferenceField.uv });
+      actions.push({
+        name: this.$t("create_in_modal").toString(),
+        callback: () => {
+          this.modalView = modalReferenceField.uv;
+        },
+      });
     }
 
     if (typeof this.uv.info.mainEntity === "object" && this.showDefaultActions) {
       actions.push({
         name: this.$t("import_from_csv").toString(),
-        uploadFile: (file) => this.importFromCsv(file)
+        uploadFile: file => this.importFromCsv(file),
       });
     }
 
@@ -278,7 +303,12 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
     }
 
     if (this.uv.attributes["scan_qrcode"]) {
-      actions.push({ name: this.$t("scan_qrcode").toString(), callback: () => this.openQRCodeScanner = !this.openQRCodeScanner });
+      actions.push({
+        name: this.$t("scan_qrcode").toString(),
+        callback: () => {
+          this.openQRCodeScanner = !this.openQRCodeScanner;
+        },
+      });
     }
 
     return actions;
@@ -298,6 +328,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
           entity: fieldType.entity,
         };
       }
+      return undefined;
     }, this.uv.columnAttributes);
     return modalReferenceField.pop() || null;
   }
@@ -316,10 +347,48 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
     this.modalView = null;
   }
 
-  private selectFromQRScanner(result: any[]) {
+  get qrCodeReferenceField(): IQRCodeReferenceField | null {
+    const qrCodeReferenceField = mapMaybe((column, columnIndex): IQRCodeReferenceField | undefined => {
+      const getColumnAttr = (name: string) => tryDicts(name, this.uv.columnAttributes[columnIndex], this.uv.attributes);
+      const inputFormQRCodeAttr = Boolean(getColumnAttr("input_from_qrcode"));
+      const fieldType = this.uv.info.columns[columnIndex].mainField?.field.fieldType;
+      if (inputFormQRCodeAttr && fieldType !== undefined && fieldType.type === "reference") {
+        return {
+          field: { type: "new", column: columnIndex },
+          entity: fieldType.entity,
+        };
+      }
+      return undefined;
+    }, this.uv.columnAttributes);
+    return qrCodeReferenceField.pop() || null;
+  }
+
+  private selectFromQRScanner(result: Array<IQRResultContent>) {
     result.forEach(r => {
-      this.updateValue({ type: "new", column: Number(r[0]) }, r[4]);
-    })
+      if (this.qrCodeReferenceField == null) {
+        this.makeToast(this.$t("qrcode_error_not_attr").toString());
+      } else if (this.qrCodeReferenceField.entity.schema === r.s && this.qrCodeReferenceField.entity.name === r.n) {
+        this.updateValue(this.qrCodeReferenceField.field, r.i);
+      } else {
+        this.makeToast(this.$t("qrcode_error_not_ref").toString() + `{schema: ${r.s}, name: ${r.n}}`);
+      }
+    });
+  }
+
+  private makeToast(message: string) {
+    this.$bvToast.toast(message, {
+      title: this.$t("error").toString(),
+      variant: "danger",
+      solid: true,
+      noAutoHide: true,
+    });
+  }
+
+  private qrCodeCallback(link: Link | null) {
+    if (link !== null) {
+      this.currentQRCodeLink = link;
+      this.openQRCodeScanner = !this.openQRCodeScanner;
+    }
   }
 }
 </script>

@@ -34,6 +34,7 @@
       ghost-class="card_dragging_ghost"
       chosen-class="card_dragging_chosen"
       drag-class="card_dragging_drag"
+      :style="{background: backgroundColor}"
       :force-fallback="true"
       :fallback-on-body="true"
       :delay-on-touch-only="true"
@@ -62,14 +63,14 @@
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 import draggable from "vuedraggable";
-import { dragscroll } from 'vue-dragscroll';
+import { dragscroll } from "vue-dragscroll";
 import { namespace } from "vuex-class";
 import * as R from "ramda";
 
 import Card, { ICard, CardTarget } from "@/components/kanban/Card.vue";
+import { nextRender, isMobile } from "@/utils";
 import { ValueRef } from "../../local_user_view";
 import { IQuery } from "../../state/query";
-import { nextRender, isMobile } from "@/utils";
 
 export interface IColumn {
   id?: any;
@@ -114,28 +115,30 @@ export default class Column extends Vue {
   @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Function, required: false }) move!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Number, required: false, default: 300 }) width!: number;
-  @Prop({ type: String, required: true, default: 'none' }) headerColor!: string;
+  @Prop({ type: String, required: true, default: "none" }) headerColor!: string;
+  @Prop({ type: String, required: true, default: "none" }) backgroundColor!: string;
   @Prop({ type: String, required: false }) cardTarget!: CardTarget;
 
   selected: number[] = [];
   dragging = false;
 
   private async openModal() {
-    const query: IQuery = {
+    const modalQuery: IQuery = {
       args: {
         ...this.createView!.args,
       },
       defaultValues: {
+        ...this.createView!.defaultValues,
         [this.fieldName]: this.id,
       },
       search: "",
     };
 
-    if(this.orderFieldName.length > 0) {
-      query.defaultValues[this.orderFieldName] = this.cards[0] && this.cards[0].order ? this.cards[0].order - 1 : 1;
+    if (this.orderFieldName.length > 0) {
+      modalQuery.defaultValues[this.orderFieldName] = this.cards[0] && this.cards[0].order ? this.cards[0].order - 1 : 1;
     }
 
-    await this.addWindow(query);
+    await this.addWindow(modalQuery);
   }
 
   private isCardSelected(rowIndex: number) {
@@ -148,20 +151,20 @@ export default class Column extends Vue {
 
   private get style(): IColumnStyle {
     return {
-      width: `${this.width}px`
-    }
+      width: `${this.width}px`,
+    };
   }
 
   private get titleStyle(): IColumnStyle {
     const strWidth = `${this.width}px`;
     return {
       maxWidth: strWidth,
-      backgroundColor: this.headerColor
-    }
+      backgroundColor: this.headerColor,
+    };
   }
 
   private get cardCount() {
-    return (this.cards.length > 0) ? `(${this.cards.length})` : '';
+    return (this.cards.length > 0) ? `(${this.cards.length})` : "";
   }
 
   private get isAllSelected() {
@@ -207,7 +210,6 @@ export default class Column extends Vue {
   }
 
   private onMove(event: IVueDraggableEvent) {
-
     nextRender().then(() => {
       this.dragging = false;
     });
@@ -224,9 +226,9 @@ export default class Column extends Vue {
       const nextCardOrder = R.pathOr<number>(prevCardOrder + 1, [event.newIndex + 1, "order"], this.cards);
 
       let mean = 0;
-      if(prevCardOrder === 0 && nextCardOrder < 0) {
-        mean = nextCardOrder * 2 ;
-      }else{
+      if (prevCardOrder === 0 && nextCardOrder < 0) {
+        mean = nextCardOrder * 2;
+      } else {
         mean = (prevCardOrder + nextCardOrder) / 2;
       }
 
@@ -284,7 +286,6 @@ export default class Column extends Vue {
     padding: 15px 10px 0 10px;
     overflow-x: hidden;
     height: 100%;
-    background-color: rgba(255, 250, 250, 0.6);
     min-height: 100px;
   }
 

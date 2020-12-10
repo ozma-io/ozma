@@ -56,13 +56,23 @@
               :value="iconValue(select.valueOption.meta.link.target)"
             >
           </FunLink>
-          <span>{{ select.valueOption.label }}</span>
+          <!-- eslint-disable vue/no-v-html -->
+          <span v-html="select.valueOption.labelHtml" />
+          <!-- eslint-enable vue/no-v-html -->
         </span>
+        <!-- eslint-disable vue/no-v-html -->
         <span
           v-else
           :style="select.listValueStyle"
-          class="single_value"
-        >{{ select.valueOption.label }}</span>
+          :class="[
+            'single_value',
+            {
+              'has_links': select.valueOption.label !== select.valueOption.labelHtml,
+            }
+          ]"
+          v-html="select.valueOption.labelHtml"
+        />
+        <!-- eslint-enable vue/no-v-html -->
       </template>
       <template
         v-if="!isDisabled"
@@ -110,15 +120,13 @@ import { namespace } from "vuex-class";
 import { IUserViewArguments, ICombinedValue, homeSchema, currentValue, IEntriesRef } from "@/state/user_view";
 import { IQuery } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
-import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
-import MultiSelect from "@/components/multiselect/MultiSelect.vue";
+import MultiSelect, { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
+
 import { Action } from "@/components/ActionsMenu.vue";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import { attrToLinkRef } from "@/links";
 
-
 const query = namespace("query");
-
 
 export interface IReferenceSelectAction {
   name: string;
@@ -174,26 +182,34 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
   }
 
   private iconValue(target: string) {
-    if (target === 'modal-auto' || target === 'modal')
-      return 'flip_to_front';
-    else
-      return 'open_in_new';
+    if (target === "modal-auto" || target === "modal") {
+      return "flip_to_front";
+    } else {
+      return "open_in_new";
+    }
   }
 
   private selectFromView(id: number) {
     this.selectedView = null;
-    this.$emit('update', id);
+    this.$emit("update", id);
   }
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   .reference_backup_input {
     width: 100%;
   }
 
   .form-view {
     width: 85vw;
+  }
+
+  .single_value {
+    &.has_links {
+      // Otherwise it's sometimes tricky to click/tap inside.
+      padding-right: 40px;
+    }
   }
 
   .single_value > a,
