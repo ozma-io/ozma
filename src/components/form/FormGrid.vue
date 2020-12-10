@@ -29,7 +29,7 @@ export default class FormGrid extends Vue {
 
 <style scoped>
   .form_container {
-    margin-top: 25px;
+    /* margin-top: 25px; */
   }
 
   @media screen and (max-device-width: 480px) {

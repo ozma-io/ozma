@@ -119,12 +119,18 @@ export default class ModalUserView extends Vue {
     width: 100%;
     display: flex;
     justify-content: flex-end;
-    position: relative;
-    top: 10px;
+    /* position: relative; */
+    /* top: 10px; */
+    position: absolute;
+    bottom: 0;
   }
 
   .section-modal {
-    height: 100%;
+    height: 50%;
+    position: relative;
+    /* display: flex; */
+    /* flex-direction: column; */
+    /* justify-content: space-around; */
   }
 
   .selection_view_save__button {

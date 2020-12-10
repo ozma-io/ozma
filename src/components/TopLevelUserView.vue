@@ -406,7 +406,7 @@ export default class TopLevelUserView extends Vue {
     position: relative;
     background-color: var(--MainBackgroundColor) !important;
     border-top: 1px solid var(--MainBorderColor);
-    z-index: 1030; /* низ страницы */
+    z-index: 500; /* низ страницы */
     display: -webkit-box;
     display: -ms-flexbox;
     display: flex;
@@ -426,7 +426,7 @@ export default class TopLevelUserView extends Vue {
 
   .count-row {
     bottom: 0;
-    z-index: 2000; /* кол-во записей внизу */
+    z-index: 600; /* кол-во записей внизу */
     line-height: normal;
     float: left;
     margin-left: 5px;

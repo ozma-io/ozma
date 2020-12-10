@@ -208,7 +208,7 @@ export default class Modal extends Vue {
 
     &.is-mobile {
       height: 100%;
-      padding: 0;
+      /* padding: 0; */
     }
   }
 
@@ -269,7 +269,8 @@ export default class Modal extends Vue {
   }
 
   .modal__tab-content {
-    height: calc(100% - 45px);
+    /* height: calc(100% - 45px); */
+    height: 100%;
 
     &.is-mobile {
       height: 100%;
