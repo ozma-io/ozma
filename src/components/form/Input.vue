@@ -301,6 +301,7 @@ export default class Input extends Vue {
 
     &:hover,
     &:focus {
+      background-color: var(--CellSelectColor);
       outline: none;
       color: var(--MainTextColor);
       cursor: text;

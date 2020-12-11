@@ -10,7 +10,6 @@
 </i18n>
 <template>
   <fragment>
-    <div :style="{'margin-left': '15px'}">
       <textarea-autosize
         v-if="isCellEdit"
         ref="controlTextarea"
@@ -26,28 +25,28 @@
         @keydown.enter.prevent
         @input="updateInput"
       />
-      <textarea
-        v-show="!isCellEdit"
-        :id="inputName"
-        ref="control"
-        :class="['textarea_field', {
-          'textarea_field__disabled': disabled,
-          'textarea_field__desktop': !isMobile,
-          'textarea_field__required': required && isEmpty,
-          'textarea_field__error': error,
-          'textarea_field__max_height': !height
-        }]"
-        :type="type"
-        :style="style"
-        :value="value"
-        :placeholder="$t('input_placeholder')"
-        :disabled="disabled"
-        :rows="textareaRows"
-        @focus="onFocus"
-        @blur="onBlur"
-        @input="$emit('update:value', $event.target.value)"
-      />
-    </div>
+      <div v-show="!isCellEdit" :style="{'margin-left': '15px'}">
+        <textarea
+          :id="inputName"
+          ref="control"
+          :class="['textarea_field', {
+            'textarea_field__disabled': disabled,
+            'textarea_field__desktop': !isMobile,
+            'textarea_field__required': required && isEmpty,
+            'textarea_field__error': error,
+            'textarea_field__max_height': !height
+          }]"
+          :type="type"
+          :style="style"
+          :value="value"
+          :placeholder="$t('input_placeholder')"
+          :disabled="disabled"
+          :rows="textareaRows"
+          @focus="onFocus"
+          @blur="onBlur"
+          @input="$emit('update:value', $event.target.value)"
+        />
+      </div>
   </fragment>
 </template>
 
@@ -236,11 +235,13 @@ export default class Textarea extends Vue {
 
   .textarea_field:hover {
     overflow-y: auto;
+    background-color: var(--CellSelectColor);
   }
 
   .textarea_field:focus {
     outline: none;
     width: 100%;
+    background-color: var(--CellSelectColor);
   }
 
   .textarea_field__desktop {

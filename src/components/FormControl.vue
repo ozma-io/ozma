@@ -329,20 +329,20 @@
               />
             </template>
           </InputSlot>
-          <NestedUserView
-            v-else-if="inputType.name === 'userview'"
-            ref="control"
-            :args="inputType.args"
-            :default-values="inputType.defaultValues"
-            :scope="scope"
-            :level="level + 1"
-            :filter-string="filterString"
-            :background-color="cellColor"
-            @update:actions="actions = $event"
-            @goto="$emit('goto', $event)"
-            @update:enableFilter="enableFilter = $event"
-            @update:title="updateTitle"
-          />
+          <div v-else-if="inputType.name === 'userview'" :style="{backgroundColor:cellColor}" >
+            <NestedUserView
+              ref="control"
+              :args="inputType.args"
+              :default-values="inputType.defaultValues"
+              :scope="scope"
+              :level="level + 1"
+              :filter-string="filterString"
+              @update:actions="actions = $event"
+              @goto="$emit('goto', $event)"
+              @update:enableFilter="enableFilter = $event"
+              @update:title="updateTitle"
+            />
+          </div>
         </b-col>
       </b-row>
     </template>
@@ -586,7 +586,7 @@ export default class FormControl extends Vue {
   }
 
   get cellColor() {
-    return "cell_color" in this.attributes ? String(this.attributes["cell_color"]) : "none";
+    return "cell_color" in this.attributes ? String(this.attributes["cell_color"]) : undefined;
   }
 
   get customHeight() {

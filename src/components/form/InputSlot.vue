@@ -59,6 +59,7 @@
     <b-col
       :cols="(!!label && inline) ? 8 : 12"
       :class="['input_container', `text_align_${textAlign}`, {'input_container_cell-edit': isCellEdit}]"
+      :style="{backgroundColor: backgroundColor}"
     >
       <slot
         name="input"
@@ -179,10 +180,6 @@ export default class InputSlot extends Vue {
 
   .input_container_cell-edit {
     padding: 0;
-  }
-
-  .input_container.input_container_cell-edit {
-    padding: 2px;
   }
 
   .input_modal_label {

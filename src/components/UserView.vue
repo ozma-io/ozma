@@ -57,7 +57,6 @@
         :level="level"
         :selection-mode="selectionMode"
         :default-values="defaultValues"
-        :background-color="backgroundColor"
         @goto="$emit('goto', $event)"
         @select="$emit('select', $event)"
         @update:actions="extraActions = $event"
@@ -165,7 +164,6 @@ export default class UserView extends Vue {
   @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, any>;
   // Use this user view to select and return an entry.
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
-  @Prop({ type: String }) backgroundColor!: string;
 
   private panelButtons: IPanelButton[] = [];
   private extraActions: Action[] = [];
