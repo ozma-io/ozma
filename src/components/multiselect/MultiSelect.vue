@@ -237,14 +237,15 @@ export default class MultiSelect extends Vue {
   private setOptionsContainerCoords() {
     this.optionsContainerCoords = { top: 0, bottom: 0 };
     this.isTopFilter = true;
+
+    const bodyRect = document.body.getBoundingClientRect();
     const selectContainerElement = this.$refs.selectContainer as HTMLInputElement;
     const selectContainerRect = selectContainerElement !== undefined ? selectContainerElement.getBoundingClientRect() : null;
-    const formEntry = document.querySelector('.form-entry') as HTMLElement;
-    const offsetHeight  = formEntry !== null ? formEntry.offsetHeight : 0;      
+
     if (selectContainerRect !== null) {
       // There we check cell position for open selectContainer up or down.
-      if (offsetHeight !== 0 && offsetHeight - selectContainerRect.top < 0) {
-        this.isTopFilter = false;
+      if (selectContainerRect.top - selectContainerRect.top * 0.7 > (bodyRect.bottom - selectContainerRect.bottom)) {
+        this.isTopFilter = !this.isTopFilter;
         this.optionsContainerCoords.bottom = selectContainerRect.height;
         // It is need for set focus to search input if options opened.
         if (this.isOpen) {
@@ -430,7 +431,7 @@ export default class MultiSelect extends Vue {
       this.findNewSelected();
     }
     this.setIsOpen(false);
-   }
+  }
 
   private addSelectedOptionToValue() {
     if (this.selectedOption > -1) {

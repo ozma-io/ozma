@@ -329,7 +329,7 @@
               />
             </template>
           </InputSlot>
-          <div v-else-if="inputType.name === 'userview'" :style="{backgroundColor:cellColor}" >
+          <div v-else-if="inputType.name === 'userview'" :style="{backgroundColor:cellColor}">
             <NestedUserView
               ref="control"
               :args="inputType.args"

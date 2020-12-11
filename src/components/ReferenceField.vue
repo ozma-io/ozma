@@ -205,6 +205,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 
   .single_value {
     word-break: break-all;
+
     &.has_links {
       // Otherwise it's sometimes tricky to click/tap inside.
       padding-right: 5px;
