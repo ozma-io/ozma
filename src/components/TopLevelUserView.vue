@@ -334,6 +334,7 @@ export default class TopLevelUserView extends Vue {
     height: inherit;
     display: flex;
     flex-direction: column;
+    position: relative;
     z-index: 0; /* вся страница, кроме низа */
   }
 
@@ -381,6 +382,7 @@ export default class TopLevelUserView extends Vue {
     font-size: 20px;
     padding: 0;
     margin-right: 10px;
+    position: relative;
     z-index: 1000;
   }
 
@@ -425,6 +427,7 @@ export default class TopLevelUserView extends Vue {
   }
 
   .count-row {
+    position: relative;
     bottom: 0;
     z-index: 600; /* кол-во записей внизу */
     line-height: normal;
