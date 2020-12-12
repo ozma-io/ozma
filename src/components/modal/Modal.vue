@@ -269,7 +269,6 @@ export default class Modal extends Vue {
   }
 
   .modal__tab-content {
-    /* height: calc(100% - 45px); */
     height: 100%;
 
     &.is-mobile {
