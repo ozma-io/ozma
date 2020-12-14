@@ -19,6 +19,7 @@
         </FunLink>
       </ul>
     </li>
+    <slot name="actions-menu" />
   </ul>
 </template>
 

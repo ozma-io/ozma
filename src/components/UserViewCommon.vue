@@ -220,6 +220,14 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
     this.$emit("update:panelButtons", this.panelButtons);
   }
 
+  /**
+   * Return true if `hide_default_actions` attribute is not set
+   * @return {boolean} Allow showing default actions (edit, import from csv, etc.)
+   */
+  get showDefaultActions() {
+    return !this.uv.attributes.hide_default_actions === true || true;
+  }
+
   get actions() {
     const actions: Action[] = [];
 
@@ -282,8 +290,11 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       });
     }
 
-    if (this.uv.info.mainEntity !== null) {
-      actions.push({ name: this.$t("import_from_csv").toString(), uploadFile: file => this.importFromCsv(file) });
+    if (typeof this.uv.info.mainEntity === "object" && this.showDefaultActions) {
+      actions.push({
+        name: this.$t("import_from_csv").toString(),
+        uploadFile: file => this.importFromCsv(file),
+      });
     }
 
     // FIXME: workaround until we have proper role-based permissions for this.
