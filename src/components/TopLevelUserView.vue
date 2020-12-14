@@ -70,6 +70,7 @@
           home
         </router-link>
         <ActionsMenu
+          title="view_headline"
           :actions="actions"
           @goto="pushRoot"
         />
@@ -79,15 +80,7 @@
           :filter-string="query.root.search"
           @update:filterString="replaceRootSearch($event)"
         />
-        <ButtonsPanel :buttons="panelButtons">
-          <template #actions-menu>
-            <ActionsMenu
-              :actions="extraActions"
-              menu-align="right"
-              @goto="pushRoot"
-            />
-          </template>
-        </ButtonsPanel>
+        <ButtonsPanel :buttons="panelButtons" />
       </div>
       <div
         class="userview-div"
