@@ -447,10 +447,9 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
 
 <style scoped>
   .view-form {
-    padding: 0 0 50px 0 !important;
     overflow-y: auto;
     overflow-x: hidden;
-    height: 100% !important;
+    height: 100%;
     background-color: var(--MainBackgroundColor);
   }
 

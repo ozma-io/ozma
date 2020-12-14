@@ -203,7 +203,7 @@ export default class Modal extends Vue {
   .modal__content {
     padding: 10px;
     overflow: auto;
-    height: 80vh;
+    height: 100vh;
     border-top: 1px solid var(--MainBorderColor);
 
     &.is-mobile {
@@ -265,14 +265,6 @@ export default class Modal extends Vue {
     &,
     .v--modal-overlay {
       height: 100% !important;
-    }
-  }
-
-  .modal__tab-content {
-    height: calc(100% - 45px);
-
-    &.is-mobile {
-      height: 100%;
     }
   }
 </style>
