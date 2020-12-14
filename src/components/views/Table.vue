@@ -243,6 +243,8 @@ import { ScopeName, AddedRowId, AutoSaveLock } from "@/state/staging_changes";
 import { attrToQueryRef, attrToQuerySelf, IAttrToQueryOpts, IQuery } from "@/state/query";
 import {
   equalRowPositionRef,
+  IAddedRowPositionRef,
+  IExistingRowPositionRef,
   ILocalRow,
   ILocalRowInfo,
   LocalUserView,
@@ -266,12 +268,11 @@ interface ITableEditing {
 
 interface IColumn {
   caption: string;
-  style: Record<string, any>;
+  style: Record<string, unknown>;
   visible: boolean;
   fixed: boolean;
   mobileFixed: boolean;
   columnInfo: IResultColumnInfo;
-  attrs: Record<string, any>;
   width: number; // in px
   treeUnfoldColumn: boolean;
 }
@@ -280,7 +281,7 @@ interface ITableValueExtra {
   // FIXME: is this still needed? We could drop it and use computed properties in TableRows instead.
   valueText: string;
   link?: Link;
-  style?: Record<string, any>;
+  style?: Record<string, unknown>;
   selected: boolean;
 }
 
@@ -292,7 +293,7 @@ interface ITableRowExtra {
   level?: number;
   arrowDown?: boolean;
   children: number[];
-  style?: Record<string, any>;
+  style?: Record<string, unknown>;
   height?: number;
   link?: Link;
   selectionEntry?: ISelectionRef;
@@ -328,7 +329,7 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
     const captionAttr = getColumnAttr("caption");
     const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name;
 
-    const style: Record<string, any> = {};
+    const style: Record<string, unknown> = {};
 
     const columnWidthAttr = Number(getColumnAttr("column_width"));
     const columnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr;
@@ -359,7 +360,6 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
       // mobileFixed: fixedField,
       mobileFixed: false,
       columnInfo,
-      attrs: columnAttrs,
       width: columnWidth,
       treeUnfoldColumn,
     };
@@ -380,7 +380,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
 
     const valueText = valueToPunnedText(columnInfo.valueType, value);
 
-    const style: Record<string, any> = {};
+    const style: Record<string, unknown> = {};
 
     const cellColor = getCellAttr("cell_color");
     if (cellColor !== undefined && cellColor !== null) {
@@ -393,7 +393,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       style["text-align"] = "right";
     }
 
-    const textAlignAttr: any = getCellAttr("text_align");
+    const textAlignAttr = getCellAttr("text_align");
     if (textAlignAttr !== undefined) {
       style["text-align"] = String(textAlignAttr);
     }
@@ -445,7 +445,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
 
         // Init parent
         if (value.value !== null) {
-          localRow.extra.parent = value.value;
+          localRow.extra.parent = Number(value.value);
           localRow.extra.visible = false;
         }
       }
@@ -525,7 +525,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       level: 0,
     };
 
-    const style: Record<string, any> = {};
+    const style: Record<string, unknown> = {};
     let touchedStyle = false;
 
     const height = Number(getRowAttr("row_height"));
@@ -677,7 +677,7 @@ const ordRowPositionRef = (a: RowPositionRef, b: RowPositionRef) => {
   } else if (a.type === "new") {
     return 0;
   } else {
-    return Math.sign(a.position - (b as any).position);
+    return Math.sign(a.position - (b as IAddedRowPositionRef | IExistingRowPositionRef).position);
   }
 };
 
@@ -697,9 +697,9 @@ const rowIndicesCompare = (aIndex: number, bIndex: number, entries: IRowCommon[]
   } else if (aValue instanceof moment) {
     return (aValue as Moment).unix() - (bValue as Moment).unix();
   } else if (typeof aValue === "number") {
-    return aValue - bValue;
+    return aValue - (bValue as number);
   } else {
-    return collator.compare(aValue, bValue);
+    return collator.compare(String(aValue), String(bValue));
   }
 };
 
@@ -774,7 +774,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   get lastFixedColumnIndex(): number {
-    return this.local.extra.columns.filter((item: any) => item.fixed).length;
+    return this.local.extra.columns.filter(item => item.fixed).length;
   }
 
   get fixedRowColumnIndexes() {
@@ -904,7 +904,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       if (fieldType !== undefined && fieldType.type === "reference") {
         if (!this.keptEntries.exists(fieldType)) {
           const ref = referenceEntriesRef(fieldType);
-          this.getEntries({ ref, reference: this.uid });
+          void this.getEntries({ ref, reference: this.uid });
           this.keptEntries.insert(ref);
         }
       }
@@ -921,7 +921,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
           this.local.selectCell({ type: "new", column: colI }, false);
         });
       }
-      nextRender().then(() => {
+      void nextRender().then(() => {
         const emptyRowRefElement = this.$refs.emptyRowRef as any | undefined;
         if (emptyRowRefElement !== undefined) {
           this.cellEditByTarget({ type: "new", column: emptyRowRefElement.columnIndexes[0] }, emptyRowRefElement.$children[0].$el);
@@ -1061,10 +1061,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
 
     if ("loss_of_focus_save" in this.uv.attributes && Boolean(this.uv.attributes["loss_of_focus_save"])) {
-      this.submitChanges({ scope: this.scope });
+      void this.submitChanges({ scope: this.scope });
     }
 
-    this.removeAutoSaveLock(this.editing.lock);
+    void this.removeAutoSaveLock(this.editing.lock);
     this.editing = null;
   }
 
@@ -1072,13 +1072,13 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   private setCellEditing(ref: ValueRef) {
     this.removeCellEditing();
 
-    this.addAutoSaveLock().then(lock => {
+    void this.addAutoSaveLock().then(async lock => {
       const value = this.local.getValueByRef(ref);
 
       if (this.editing !== null // Lock already taken (somehow)
           || value === null // value not found
       ) {
-        this.removeAutoSaveLock(lock);
+        await this.removeAutoSaveLock(lock);
         return;
       }
 
@@ -1108,13 +1108,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
   }
 
-  private clickCell(ref: ValueRef, event: MouseEvent | any) {
+  private clickCell(ref: ValueRef, event: MouseEvent) {
     this.removeCellEditing();
-
-    // Not need cell edit and another manipulation when click by tree arrows.
-    if (event.target.className.includes("display-arrow")) {
-      return undefined;
-    }
 
     // this.selectCell() breaks the timer for double click in iOS,
     // so when we're running iOS we don't check for double click
@@ -1133,7 +1128,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       }
     }
 
-    this.cellEditHandler(ref, event.target);
+    this.cellEditHandler(ref, event.target as HTMLElement);
     return undefined;
   }
 
@@ -1162,7 +1157,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
           throw new Error("View doesn't have a main entity");
         }
 
-        this.resetAddedEntry({
+        void this.resetAddedEntry({
           entityRef: entity,
           userView: this.uv.userViewKey,
           id: this.lastSelectedValue.id,

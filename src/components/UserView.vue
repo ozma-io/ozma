@@ -293,7 +293,7 @@ export default class UserView extends Vue {
       this.setUvError(newUv);
     } else if (newUv === null) {
       // We need deep clone here as args may change, and getUserView expects them freezed.
-      this.getUserView({ args: deepClone(this.args), reference: this.uid });
+      void this.getUserView({ args: deepClone(this.args), reference: this.uid });
     }
   }
 
@@ -348,7 +348,7 @@ export default class UserView extends Vue {
     const newPendingArgs = deepClone(newArgs);
     if (this.newUv === null) {
       // We need deep clone here as args may change, and getUserView expects them freezed.
-      this.getUserView({ args: newPendingArgs, reference: this.uid });
+      void this.getUserView({ args: newPendingArgs, reference: this.uid });
     }
 
     const oldPendingArgs = this.pendingArgs;
@@ -367,7 +367,7 @@ export default class UserView extends Vue {
   private changesSubmitted(submitPromise: Promise<CombinedTransactionResult[]> | null) {
     const currentUv = this.currentUv;
     if (currentUv instanceof CombinedUserView && currentUv.rows === null && submitPromise !== null) {
-      (async () => {
+      void (async () => {
         let ret: CombinedTransactionResult[];
         try {
           ret = await submitPromise;

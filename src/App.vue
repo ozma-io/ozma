@@ -55,7 +55,7 @@ export default class App extends Vue {
   @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
 
   created() {
-    this.startAuth();
+    void this.startAuth();
   }
 
   get authErrors() {

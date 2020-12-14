@@ -14,9 +14,9 @@ export class CurrentAuth {
   token: string;
   refreshToken: string;
   idToken: string;
-  decodedToken: any;
-  decodedRefreshToken: any;
-  decodedIdToken: any;
+  decodedToken: Record<string, string>;
+  decodedRefreshToken: Record<string, string>;
+  decodedIdToken: Record<string, string>;
 
   constructor(token: string, refreshToken: string, idToken: string, createdTime?: number) {
     this.createdTime = (createdTime !== undefined) ? createdTime : Utils.sse();
@@ -33,11 +33,11 @@ export class CurrentAuth {
   }
 
   get refreshValidFor(): number {
-    return this.decodedRefreshToken["exp"] - this.decodedRefreshToken["iat"];
+    return Number(this.decodedRefreshToken["exp"]) - Number(this.decodedRefreshToken["iat"]);
   }
 
   get validFor(): number {
-    return this.decodedToken["exp"] - this.decodedToken["iat"];
+    return Number(this.decodedToken["exp"]) - Number(this.decodedToken["iat"]);
   }
 
   get session(): string {
@@ -158,9 +158,9 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
 
         await dispatch("removeAuth", undefined, { root: true });
         if (description !== null) {
-          dispatch("setError", `Error when getting token: ${description}`);
+          void dispatch("setError", `Error when getting token: ${description}`);
         }
-        requestLogin(context, false);
+        void requestLogin(context, false);
       }
       throw e;
     } finally {
@@ -218,7 +218,7 @@ const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
   }
   const renewalTimeoutId = setTimeout(() => {
     if (state.pending === null) {
-      renewAuth(context);
+      void renewAuth(context);
     } else {
       commit("setRenewalTimeout", null);
     }
@@ -363,7 +363,7 @@ export const authModule: Module<IAuthState, {}> = {
                   const error = getQueryValue("error");
                   if (error !== "login_required") {
                     const errorDescription = getQueryValue("errorDescription");
-                    dispatch("setError", `Invalid auth response query parameters, error ${error} ${errorDescription}`);
+                    void dispatch("setError", `Invalid auth response query parameters, error ${error} ${errorDescription}`);
                   }
                 }
                 await router.replace(savedState.path);
@@ -393,7 +393,7 @@ export const authModule: Module<IAuthState, {}> = {
             const oldAuth = loadCurrentAuth();
             if (oldAuth !== null) {
               await updateAuth(context, oldAuth);
-              renewAuth(context);
+              void renewAuth(context);
             }
           }
           localStorage.removeItem(authNonceKey);
@@ -414,7 +414,7 @@ export const authModule: Module<IAuthState, {}> = {
             }
           };
           window.addEventListener("storage", e => {
-            authStorageHandler(e);
+            void authStorageHandler(e);
           });
 
           if (state.current === null) {
@@ -433,7 +433,7 @@ export const authModule: Module<IAuthState, {}> = {
     },
     callProtectedApi: {
       root: true,
-      handler: async ({ state, commit, dispatch }, { func, args }: { func: ((_1: string | null, ..._2: any[]) => Promise<any>); args?: any[] }): Promise<any> => {
+      handler: async ({ state, commit, dispatch }, { func, args }: { func: ((_1: string | null, ..._2: unknown[]) => Promise<unknown>); args?: unknown[] }): Promise<unknown> => {
         if (state.pending !== null) {
           try {
             await state.pending;

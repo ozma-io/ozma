@@ -54,7 +54,7 @@
           <span
             :style="{'margin-left': treeLevel*25+'px'}"
             :class="['display-arrow material-icons', {'down': isArrowDown}]"
-            @click="toggleChildren"
+            @click.stop="toggleChildren"
             @dblclick.stop
           >
             arrow_forward_ios

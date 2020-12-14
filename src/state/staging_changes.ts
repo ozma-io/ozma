@@ -7,10 +7,9 @@ import { IUpdatedValue, IFieldInfo, valueFromRaw } from "@/values";
 import {
   ITransaction, ITransactionResult, IEntityRef, IFieldRef, IEntity, RowId, SchemaName, FieldName, EntityName,
   IInsertEntityOp, IUpdateEntityOp, IDeleteEntityOp, IInsertEntityResult, IUpdateEntityResult, IDeleteEntityResult,
-  IColumnField, TransactionOp, default as Api, IResultColumnInfo,
+  IColumnField, TransactionOp, default as Api,
 } from "@/api";
 import { i18n } from "@/modules";
-import { ICombinedValue, currentValue } from "./user_view";
 
 export type ScopeName = string;
 
@@ -237,7 +236,7 @@ const startAutoSave = (context: ActionContext<IStagingState, {}>) => {
 
   if (state.autoSaveTimeout !== null) {
     const timeoutId = setTimeout(() => {
-      dispatch("submit", {});
+      void dispatch("submit", {});
     }, state.autoSaveTimeout);
     commit("setAutoSaveHandler", timeoutId);
   }
@@ -262,7 +261,7 @@ const checkCounters = async (context: ActionContext<IStagingState, {}>) => {
   }
 };
 
-const changeToParam = (fieldInfo: IColumnField, name: FieldName, change: IUpdatedValue): any => {
+const changeToParam = (fieldInfo: IColumnField, name: FieldName, change: IUpdatedValue): unknown => {
   if (change.value === undefined) {
     throw new Error(`Value for ${name} didn't pass validation`);
   }
@@ -280,7 +279,7 @@ const changeToParam = (fieldInfo: IColumnField, name: FieldName, change: IUpdate
   }
 };
 
-const validateValue = (info: IFieldInfo, value: any): IUpdatedValue => {
+const validateValue = (info: IFieldInfo, value: unknown): IUpdatedValue => {
   return {
     rawValue: value,
     value: valueFromRaw(info, value),
@@ -321,7 +320,7 @@ const resetScopeBy = ({ state, dispatch }: ActionContext<IStagingState, {}>, che
         Object.entries(uvAdded.entries).forEach(([addedIdStr, addedEntry]) => {
           const addedId = Number(addedIdStr);
           if (!checkScope(addedEntry.scopes)) {
-            dispatch("resetAddedEntry", { entityRef: { schema, name: entity }, userView, id: addedId });
+            void dispatch("resetAddedEntry", { entityRef: { schema, name: entity }, userView, id: addedId });
           }
         });
       });
@@ -330,7 +329,7 @@ const resetScopeBy = ({ state, dispatch }: ActionContext<IStagingState, {}>, che
         const updatedId = Number(updatedIdStr);
         Object.entries(updatedEntry).forEach(([fieldName, updatedField]) => {
           if (!checkScope(updatedField.scopes)) {
-            dispatch("resetUpdatedField", { fieldRef: { entity: { schema, name: entity }, name: fieldName }, id: updatedId });
+            void dispatch("resetUpdatedField", { fieldRef: { entity: { schema, name: entity }, name: fieldName }, id: updatedId });
           }
         });
       });
@@ -338,7 +337,7 @@ const resetScopeBy = ({ state, dispatch }: ActionContext<IStagingState, {}>, che
       Object.entries(entityChanges.deleted).forEach(([deletedIdStr, deletedEntry]) => {
         const deletedId = Number(deletedIdStr);
         if (!checkScope(deletedEntry.scopes)) {
-          dispatch("resetDeleteEntry", { entityRef: { schema, name: entity }, id: deletedId });
+          void dispatch("resetDeleteEntry", { entityRef: { schema, name: entity }, id: deletedId });
         }
       });
     });
@@ -400,7 +399,7 @@ const stagingModule: Module<IStagingState, {}> = {
     finishSubmit: state => {
       state.currentSubmit = null;
     },
-    updateField: (state, params: { scope: ScopeName; fieldRef: IFieldRef; id: RowId; value: any; fieldInfo: IFieldInfo }) => {
+    updateField: (state, params: { scope: ScopeName; fieldRef: IFieldRef; id: RowId; value: unknown; fieldInfo: IFieldInfo }) => {
       const { scope, fieldRef, id, value, fieldInfo } = params;
 
       const entityChanges = state.current.getOrCreateChanges(fieldRef.entity);
@@ -461,7 +460,7 @@ const stagingModule: Module<IStagingState, {}> = {
         fieldRef: IFieldRef;
         userView: UserViewKey;
         id: AddedRowId;
-        value: any;
+        value: unknown;
         fieldInfo: IFieldInfo;
         noTouch?: boolean;
       },
@@ -558,7 +557,7 @@ const stagingModule: Module<IStagingState, {}> = {
     },
   },
   actions: {
-    updateField: async (context, args: { fieldRef: IFieldRef; id: RowId; value: any }) => {
+    updateField: async (context, args: { fieldRef: IFieldRef; id: RowId; value: unknown }) => {
       const { commit, dispatch } = context;
       const fieldInfo = await getFieldInfo(context, args.fieldRef);
       commit("updateField", { ...args, fieldInfo });
@@ -600,7 +599,7 @@ const stagingModule: Module<IStagingState, {}> = {
         userView: UserViewKey;
         position?: number;
         scope: ScopeName;
-        defaultValues: Record<string, any>;
+        defaultValues: Record<string, unknown>;
       },
     ): Promise<IAddedResult> => {
       const { dispatch } = context;
@@ -627,7 +626,7 @@ const stagingModule: Module<IStagingState, {}> = {
         fieldRef: IFieldRef;
         userView: UserViewKey;
         id: AddedRowId;
-        value: any;
+        value: unknown;
         noTouch?: boolean; // Used to initialize entries with values.
       },
     ) => {
@@ -782,7 +781,7 @@ const stagingModule: Module<IStagingState, {}> = {
             return [...updated, ...added, ...deleted];
           } catch (e) {
             commit("errors/pushError", { key: errorKey, error: `Invalid value for ${schemaName}.${entityName}: ${e.message}` }, { root: true });
-            dispatch("userView/updateErroredOnce", undefined, { root: true });
+            void dispatch("userView/updateErroredOnce", undefined, { root: true });
             throw e;
           }
         }));

@@ -1,78 +1,87 @@
 import { Module } from "vuex";
-import { RawLocation, Route } from "vue-router";
+import { Location, Route } from "vue-router";
 
 import { UserViewSource } from "@/api";
-import { deepUpdateObject, mapMaybe, deepClone, deepFreeze } from "@/utils";
+import { deepUpdateObject, mapMaybe, deepClone } from "@/utils";
 import { router } from "@/modules";
 import { IUserViewArguments, IValueInfo } from "@/state/user_view";
 import { SchemaName, IUserViewRef } from "ozma-api/src";
 
 export interface IQuery {
   args: IUserViewArguments;
-  defaultValues: Record<string, any>;
+  defaultValues: Record<string, unknown>;
   search: string;
 }
 
 export interface IAttrToQueryOpts {
   homeSchema?: SchemaName;
   infoByDefault?: boolean; // Whether to create new entries by default
-  makeDefaultValues?: () => Record<string, any>;
+  makeDefaultValues?: () => Record<string, unknown>;
 }
 
-export const attrToRef = (ref: any, opts?: IAttrToQueryOpts): { schema: string; name: string } | null => {
-  const name = ref["name"];
-  let schema = ref["schema"];
+export const attrToRef = (ref: unknown, opts?: IAttrToQueryOpts): { schema: string; name: string } | null => {
+  if (typeof ref !== "object" || ref === null) {
+    return null;
+  }
+  const refObj = ref as Record<string, unknown>;
+  const name = refObj["name"];
+  const schema = refObj["schema"];
   if (typeof name !== "string") {
     return null;
   }
   if (schema === undefined) {
     if (opts?.homeSchema !== undefined) {
-      schema = opts.homeSchema;
+      return { schema: opts.homeSchema, name };
     } else {
       return null;
     }
-  } else if (typeof schema !== "string") {
+  } else if (typeof schema === "string") {
+    return { schema, name };
+  } else {
     return null;
   }
-  return { schema, name };
 };
 
-export const attrToRecord = (rawArgs: any): Record<string, any> | null => {
+export const attrToRecord = (rawArgs: unknown): Record<string, unknown> | null => {
   if (rawArgs === undefined) {
     return {};
   } else if (typeof rawArgs !== "object") {
     return null;
   } else {
-    return rawArgs;
+    return rawArgs as Record<string, unknown> | null;
   }
 };
 
-export const attrObjectToQuery = (linkedAttr: any, opts?: IAttrToQueryOpts): IQuery | null => {
+export const attrObjectToQuery = (linkedAttr: unknown, opts?: IAttrToQueryOpts): IQuery | null => {
+  if (typeof linkedAttr !== "object" || linkedAttr === null) {
+    return null;
+  }
+  const linkedAttrObj = linkedAttr as Record<string, unknown>;
   let ref: IUserViewRef | null;
-  if (typeof linkedAttr["ref"] === "object" && linkedAttr["ref"] !== null) {
-    ref = attrToRef(linkedAttr["ref"]);
+  if (typeof linkedAttrObj["ref"] === "object" && linkedAttrObj["ref"] !== null) {
+    ref = attrToRef(linkedAttrObj["ref"]);
   } else {
-    ref = attrToRef(linkedAttr);
+    ref = attrToRef(linkedAttrObj);
   }
   if (ref === null) {
     return null;
   }
 
-  let args: Record<string, any> | null;
-  const newAttr = linkedAttr["new"];
+  let args: Record<string, unknown> | null;
+  const newAttr = linkedAttrObj["new"];
   if (newAttr || (newAttr === undefined && opts?.infoByDefault)) {
     args = null;
   } else {
-    const retArgs = attrToRecord(linkedAttr["args"]);
+    const retArgs = attrToRecord(linkedAttrObj["args"]);
     if (retArgs === null) {
       return null;
     }
     args = retArgs;
   }
 
-  let defaultValues: Record<string, any>;
-  if (linkedAttr["default_values"]) {
-    const def = attrToRecord(linkedAttr["default_values"]);
+  let defaultValues: Record<string, unknown>;
+  if (linkedAttrObj["default_values"]) {
+    const def = attrToRecord(linkedAttrObj["default_values"]);
     if (def === null) {
       return null;
     }
@@ -99,7 +108,7 @@ export const attrObjectToQuery = (linkedAttr: any, opts?: IAttrToQueryOpts): IQu
   };
 };
 
-export const attrToQuery = (linkedAttr: any, opts?: IAttrToQueryOpts): IQuery | null => {
+export const attrToQuery = (linkedAttr: unknown, opts?: IAttrToQueryOpts): IQuery | null => {
   if (typeof linkedAttr === "object") {
     return attrObjectToQuery(linkedAttr, opts);
   } else {
@@ -108,14 +117,14 @@ export const attrToQuery = (linkedAttr: any, opts?: IAttrToQueryOpts): IQuery | 
 };
 
 // Set 'id' argument to the value id.
-export const setIdSelf = (args: Record<string, any>, update: IValueInfo) => {
+export const setIdSelf = (args: Record<string, unknown>, update: IValueInfo) => {
   if (!("id" in args)) {
     args.id = update.id;
   }
 };
 
 // Set 'id' argument to the id of the referenced value.
-export const setIdRef = (args: Record<string, any>, value: any) => {
+export const setIdRef = (args: Record<string, unknown>, value: unknown) => {
   if (!("id" in args)) {
     const id = Number(value);
     if (!Number.isNaN(id)) {
@@ -125,7 +134,7 @@ export const setIdRef = (args: Record<string, any>, value: any) => {
 };
 
 // Set 'id' argument to the value id.
-export const attrToQuerySelf = (linkedAttr: any, update?: IValueInfo, opts?: IAttrToQueryOpts): IQuery | null => {
+export const attrToQuerySelf = (linkedAttr: unknown, update?: IValueInfo, opts?: IAttrToQueryOpts): IQuery | null => {
   const ret = attrToQuery(linkedAttr, opts);
   if (ret?.args.args && update) {
     setIdSelf(ret.args.args, update);
@@ -134,7 +143,7 @@ export const attrToQuerySelf = (linkedAttr: any, update?: IValueInfo, opts?: IAt
 };
 
 // Set 'id' argument to the id of the referenced value.
-export const attrToQueryRef = (linkedAttr: any, value: any, opts?: IAttrToQueryOpts): IQuery | null => {
+export const attrToQueryRef = (linkedAttr: unknown, value: unknown, opts?: IAttrToQueryOpts): IQuery | null => {
   const ret = attrToQuery(linkedAttr, opts);
   if (ret?.args.args && value !== null && value !== undefined) {
     setIdRef(ret.args.args, value);
@@ -142,12 +151,12 @@ export const attrToQueryRef = (linkedAttr: any, value: any, opts?: IAttrToQueryO
   return ret;
 };
 
-export const queryLocation = (query: IQuery): RawLocation => {
+export const queryLocation = (query: IQuery): Location => {
   if (query.args.source.type !== "named") {
     throw new Error("Unnamed user views aren't supported now");
   }
 
-  const search: Record<string, any> = {};
+  const search: Record<string, string> = {};
   if (query.args.args !== null) {
     Object.entries(query.args.args).forEach(([name, value]) => {
       search[name] = JSON.stringify(value);
@@ -187,14 +196,14 @@ export type ICurrentQuery = IGenericCurrentQuery<IQuery>;
 
 interface IWindowPartialQuery {
   source?: UserViewSource;
-  args: Record<string, any> | null;
-  defaultValues: Record<string, any>;
+  args: Record<string, unknown> | null;
+  defaultValues: Record<string, unknown>;
   search: string;
 }
 
 const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: Record<string, string | (string | null)[]>): ICurrentQuery => {
-  const args: Record<string, any> | null = createNew ? null : {};
-  const defaultValues: Record<string, any> = {};
+  const args: Record<string, unknown> | null = createNew ? null : {};
+  const defaultValues: Record<string, unknown> = {};
   let searchString = "";
   const windows: Record<string, IWindowPartialQuery> = {};
   let selectedWindowId: number | null = null;
@@ -341,9 +350,9 @@ const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: 
   };
 };
 
-export const currentQueryLocation = (query: ICurrentQuery): RawLocation => {
+export const currentQueryLocation = (query: ICurrentQuery): Location => {
   const ret = queryLocation(query.root);
-  const search: Record<string, any> = (ret as any).query;
+  const search = ret.query as Record<string, string>;
 
   query.windows.forEach(({ query: windowQuery }, i) => {
     const args = windowQuery.args;
@@ -367,7 +376,7 @@ export const currentQueryLocation = (query: ICurrentQuery): RawLocation => {
   });
 
   if (query.windows.length > 1) {
-    search["__w"] = query.selectedWindow!;
+    search["__w"] = String(query.selectedWindow!);
   }
 
   return ret;
