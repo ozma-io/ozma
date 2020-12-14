@@ -4,7 +4,7 @@ import { namespace } from "vuex-class";
 import { RowId, IEntityRef, IFieldRef, IResultColumnInfo } from "@/api";
 import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow } from "@/state/user_view";
 import { ErrorKey } from "@/state/errors";
-import { ScopeName, UserViewKey, AddedRowId, CombinedTransactionResult, IAddedResult } from "@/state/staging_changes";
+import type { ScopeName, UserViewKey, AddedRowId, CombinedTransactionResult, IAddedResult } from "@/state/staging_changes";
 import { LocalUserView, RowRef, ValueRef, SimpleLocalUserView, ILocalRow, ILocalRowInfo, INewValueRef } from "@/local_user_view";
 import { equalEntityRef } from "@/values";
 import { ObjectSet } from "@/utils";

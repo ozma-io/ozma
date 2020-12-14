@@ -14,7 +14,7 @@
 </i18n>
 
 <template>
-  <div>
+  <div :style="{backgroundColor: backgroundColor}">
     <!-- Used when user selects an entry -->
     <SelectUserView
       v-if="selectedView"
@@ -23,7 +23,6 @@
       @select="selectFromView"
       @close="selectedView = null"
     />
-
     <MultiSelect
       v-if="options !== null"
       ref="control"
@@ -35,7 +34,6 @@
       :dont-open="dontOpen"
       :required="!isNullable"
       :disabled="isDisabled"
-      :background-color="backgroundColor"
       @update:value="$emit('update', $event)"
       @focus="$emit('focus', $event)"
     >
@@ -94,7 +92,7 @@
         </button>
       </template>
     </MultiSelect>
-    <center v-else style="margin-top: 5px; color:#777;">
+    <center v-else style="margin-top: 5px; color: #777;">
       {{ $t('loading') }}...
     </center>
     <!-- <input
@@ -117,7 +115,8 @@ import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
 
-import { IUserViewArguments, ICombinedValue, homeSchema, currentValue, IEntriesRef } from "@/state/user_view";
+import type { IUserViewArguments, ICombinedValue, IEntriesRef } from "@/state/user_view";
+import { homeSchema, currentValue } from "@/state/user_view";
 import { IQuery } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
 import MultiSelect, { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
@@ -206,9 +205,11 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
   }
 
   .single_value {
+    word-break: break-all;
+
     &.has_links {
       // Otherwise it's sometimes tricky to click/tap inside.
-      padding-right: 40px;
+      padding-right: 5px;
     }
   }
 

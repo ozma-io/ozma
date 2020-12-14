@@ -232,7 +232,7 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView, BaseE
   .values_list__value {
     &.has_links {
       // Otherwise it's sometimes tricky to click/tap inside.
-      padding-right: 40px;
+      padding-right: 5px;
     }
   }
 

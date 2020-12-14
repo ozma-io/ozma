@@ -106,6 +106,8 @@ export default class App extends Vue {
       "WarningColor": this.settings.getEntry("fail_color", String, "#ffc107"),
       "WarningPlaceholderColor": this.settings.getEntry("warning_placeholder_color", String, "#4c3a02"),
       "StateTextColor": this.settings.getEntry("state_text_color", String, "white"),
+
+      "CellSelectColor": this.settings.getEntry("cell_select_color", String, "rgba(238,238,238,0.3)"),
     };
     return Object.entries(values).reduce((currSettings, [name, value]) => {
       currSettings[`--${name}`] = value;

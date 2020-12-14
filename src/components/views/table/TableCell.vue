@@ -33,6 +33,16 @@
           <!-- eslint-enable -->
         </div>
       </template>
+      <template v-else-if="isScannable">
+        <div class="selectable">
+          <input
+            type="button"
+            class="material-icons reference-open-modal"
+            value="qr_code_scanner"
+          >
+          <span class="reference-text">{{ localValue.valueText || "&nbsp;" }}</span>
+        </div>
+      </template>
       <template v-else>
         <checkbox
           v-if="valueType === 'bool'"
@@ -68,7 +78,7 @@
 import * as R from "ramda";
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
-import { ICombinedValue } from "@/state/user_view";
+import type { ICombinedValue } from "@/state/user_view";
 import { valueIsNull } from "@/values";
 import { iconValue } from "@/links";
 import { replaceHtmlLinks } from "@/utils";
@@ -124,6 +134,10 @@ export default class TableCell extends Vue {
   get isNull() {
     // We use `value.value` here to highlight unvalidated values.
     return valueIsNull(this.value.value);
+  }
+
+  get isScannable() {
+    return this.column.attrs.text_type === "barcode" || false;
   }
 
   private toggleChildren() {
@@ -248,7 +262,7 @@ export default class TableCell extends Vue {
     opacity: 0.7;
   }
 
-  a + span.reference-text {
+  span.reference-text {
     padding-left: 20px;
     display: block;
   }

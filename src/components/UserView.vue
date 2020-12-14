@@ -57,7 +57,6 @@
         :level="level"
         :selection-mode="selectionMode"
         :default-values="defaultValues"
-        :background-color="backgroundColor"
         @goto="$emit('goto', $event)"
         @select="$emit('select', $event)"
         @update:actions="extraActions = $event"
@@ -84,9 +83,10 @@ import { Store } from "vuex";
 import { RecordSet, ReferenceName, deepEquals, snakeToPascal, deepClone } from "@/utils";
 import { funappSchema } from "@/api";
 import { equalEntityRef } from "@/values";
-import { CombinedUserView, UserViewError, IUserViewArguments, IUserViewEventHandler, CurrentUserViews, IUserViewState, homeSchema, UserViewResult } from "@/state/user_view";
+import type { IUserViewArguments, IUserViewEventHandler, IUserViewState } from "@/state/user_view";
+import { CombinedUserView, UserViewError, CurrentUserViews, homeSchema, UserViewResult } from "@/state/user_view";
 import { CurrentAuth } from "@/state/auth";
-import { CombinedTransactionResult, ICombinedInsertEntityResult, ScopeName } from "@/state/staging_changes";
+import type { CombinedTransactionResult, ICombinedInsertEntityResult, ScopeName } from "@/state/staging_changes";
 import { ICurrentQuery, queryLocation, IQuery, IAttrToQueryOpts } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
 import { IHandlerProvider } from "@/local_user_view";
@@ -165,7 +165,6 @@ export default class UserView extends Vue {
   @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, any>;
   // Use this user view to select and return an entry.
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
-  @Prop({ type: String }) backgroundColor!: string;
 
   private panelButtons: IPanelButton[] = [];
   private extraActions: Action[] = [];

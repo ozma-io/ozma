@@ -6,11 +6,11 @@ const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 
 const defaultConfig = require("./config/development.json");
 const configName = process.env["CONFIG"] || process.env["NODE_ENV"];
-let config;
+let buildConfig;
 try {
-  config = require(`./config/${configName}.json`);
+  buildConfig = require(`./config/${configName}.json`);
 } catch (e) {
-  config = defaultConfig;
+  buildConfig = defaultConfig;
 }
 const defaults = {
   "__DISABLE_AUTH__": false,
@@ -22,6 +22,7 @@ const defaults = {
 
 const analyzeBundle = process.env["ANALYZE"];
 const outputDir = process.env["OUTDIR"] || "dist";
+const enableLint = process.env["NODE_ENV"] !== "production";
 
 module.exports = {
   assetsDir: "static",
@@ -29,13 +30,12 @@ module.exports = {
 
   productionSourceMap: false,
 
-  lintOnSave: process.env.NODE_ENV === 'production' ? "error" : true,
+  lintOnSave: enableLint,
 
   pluginOptions: {
-    lintStyleOnBuild: true,
+    lintStyleOnBuild: enableLint,
     stylelint: {
       fix: false,
-      maxWarnings: process.env.NODE_ENV === 'production' ? 0 : undefined,
     },
 
     i18n: {
@@ -52,14 +52,14 @@ module.exports = {
       }),
       new IgnorePlugin(/^\.\/locale$/, /moment$/),
       ...(analyzeBundle ? [new BundleAnalyzerPlugin()] : []),
-    ]
+    ],
   },
 
-  chainWebpack: webpackConfig => {
+  chainWebpack: config => {
     /* Manually set prefetched chunks */
-    webpackConfig.plugins.delete("prefetch");
-    webpackConfig.plugin("define").tap(
-      ([ definitions, ...rest ]) => [{ ...definitions, ...defaults, ...config }, ...rest]
+    config.plugins.delete("prefetch");
+    config.plugin("define").tap(
+      ([ definitions, ...rest ]) => [{ ...definitions, ...defaults, ...buildConfig }, ...rest]
     );
   },
 }

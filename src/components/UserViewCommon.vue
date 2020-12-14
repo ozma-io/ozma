@@ -8,6 +8,7 @@
             "scan_qrcode": "Scan QR Code",
             "qrcode_error_not_attr":"Adding data error! Check for the @input_from_qrcode attribute.",
             "qrcode_error_not_ref":"Adding data error! Make sure that the field you fill out is a link to a table:",
+            "scan_barcode": "Scan Bar Code",
             "error": "Error"
         },
         "ru": {
@@ -18,6 +19,7 @@
             "scan_qrcode": "QR Code сканер",
             "qrcode_error_not_attr":"Ошибка добавления данных! Проверьте наличие атрибута @input_from_qrcode.",
             "qrcode_error_not_ref":"Ошибка добавления данных! Убедитесь что заполняемое поле является ссылкой на таблицу:",
+            "scan_barcode": "Сканер штрих-кодов",
             "error": "Ошибка"
         }
     }
@@ -37,6 +39,10 @@
       :multi-scan="true"
       :link="currentQRCodeLink"
       @select="selectFromQRScanner($event)"
+    />
+    <BarCodeScanner
+      :open-scanner="openBarCodeScanner"
+      @select="selectFromBarScanner($event)"
     />
   </span>
 </template>
@@ -60,6 +66,7 @@ import { IPanelButton } from "@/components/ButtonsPanel.vue";
 import { ScopeName, UserViewKey, IAddedResult, AddedRowId } from "@/state/staging_changes";
 import { attrToLink, Link } from "@/links";
 import QRCodeScanner, { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
+import BarCodeScanner from "@/components/barcode/BarCodeScanner.vue";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -83,13 +90,14 @@ const csvCell = (str: string): string => {
 
 const staging = namespace("staging");
 
-@Component({ components: { SelectUserView, QRCodeScanner } })
+@Component({ components: { SelectUserView, QRCodeScanner, BarCodeScanner } })
 export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<undefined, undefined, undefined>, undefined, undefined, undefined>>(BaseUserView) {
   @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName; entityRef: IEntityRef; userView: UserViewKey; position?: number }) => Promise<IAddedResult>;
   @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName; fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; value: any }) => Promise<void>;
 
   modalView: IQuery | null = null;
   openQRCodeScanner = false;
+  openBarCodeScanner = false;
   currentQRCodeLink: Link | null = null;
 
   get createView() {
@@ -300,6 +308,15 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       });
     }
 
+    if (this.uv.attributes["scan_barcode"] === true) {
+      actions.push({
+        name: this.$t("scan_barcode").toString(),
+        callback: () => {
+          this.openBarCodeScanner = !this.openBarCodeScanner;
+        },
+      });
+    }
+
     return actions;
   }
 
@@ -370,6 +387,12 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       variant: "danger",
       solid: true,
       noAutoHide: true,
+    });
+  }
+
+  private selectFromBarScanner(result: Array<string>) {
+    result.forEach(r => {
+      this.updateValue({ type: "new", column: 0 }, r);
     });
   }
 
