@@ -113,30 +113,20 @@ export default class ModalUserView extends Vue {
 }
 </script>
 
-<style lang="scss" scoped>
+<style>
   .selection_view_save__container {
     width: 100%;
     display: flex;
     justify-content: flex-end;
-    position: sticky;
-    bottom: 0;
-    z-index: 1000;
-    height: 50px;
-
-    /* Ugly fix for ugly iOS, does not the best padding, but save button hides otherwise */
-    padding-bottom: 50px;
+    position: relative;
+    top: 10px;
   }
 
   .section-modal {
     height: 100%;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
   }
 
   .selection_view_save__button {
-    height: fit-content;
     background-color: var(--WarningColor);
     color: var(--StateTextColor);
     padding: 5px;
