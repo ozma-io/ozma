@@ -10,24 +10,23 @@
 </i18n>
 <template>
   <fragment>
-    <div :style="{'margin-left': '15px'}">
-      <textarea-autosize
-        v-if="isCellEdit"
-        ref="controlTextarea"
-        :placeholder="$t('input_placeholder')"
-        :value="value"
-        :readonly="disabled"
-        rows="1"
-        :class="['textarea_field', {
-          'textarea_field__disabled': disabled,
-          'textarea-field_cell-edit': isCellEdit,
-          'textarea_field__desktop': !isMobile,
-        }]"
-        @keydown.enter.prevent
-        @input="updateInput"
-      />
+    <textarea-autosize
+      v-if="isCellEdit"
+      ref="controlTextarea"
+      :placeholder="$t('input_placeholder')"
+      :value="value"
+      :readonly="disabled"
+      rows="1"
+      :class="['textarea_field', {
+        'textarea_field__disabled': disabled,
+        'textarea-field_cell-edit': isCellEdit,
+        'textarea_field__desktop': !isMobile,
+      }]"
+      @keydown.enter.prevent
+      @input="updateInput"
+    />
+    <div v-show="!isCellEdit" :style="{'margin-left': '15px'}">
       <textarea
-        v-show="!isCellEdit"
         :id="inputName"
         ref="control"
         :class="['textarea_field', {
@@ -236,11 +235,13 @@ export default class Textarea extends Vue {
 
   .textarea_field:hover {
     overflow-y: auto;
+    background-color: var(--CellSelectColor);
   }
 
   .textarea_field:focus {
     outline: none;
     width: 100%;
+    background-color: var(--CellSelectColor);
   }
 
   .textarea_field__desktop {

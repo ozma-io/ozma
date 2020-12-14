@@ -20,11 +20,10 @@
     <div
       ref="selectContainer"
       v-click-outside="() => setIsOpen(false)"
-      :style="{'background': backgroundColor}"
       :class="[
         'select_container',
         {
-          'select_container_hover': !isOpen,
+          'select_container_hover': isOpen,
           'select_container_fixed_height': hasHeight && !isOpen && !single,
           'select_container__required': required && isEmpty,
         },
@@ -33,7 +32,7 @@
       <div
         v-if="single && !isEmpty"
         class="single_value_button"
-        @click="setIsOpen(true)"
+        @click="setIsOpen(!isOpen)"
       >
         <slot
           name="singleValue"
@@ -49,10 +48,10 @@
         </slot>
       </div>
       <span
-        v-if="isEmpty && !isOpen"
+        v-if="isEmpty"
         :style="listValueStyle"
         class="empty_message_text"
-        @click="setIsOpen(true)"
+        @click="setIsOpen(!isOpen)"
       >{{ $t('empty_message') }}</span>
       <div
         v-if="(!single && !isEmpty)"
@@ -65,7 +64,7 @@
           }
         ]"
         :style="containerContentStyle"
-        @click="setIsOpen(true)"
+        @click="setIsOpen(!isOpen)"
       >
         <slot
           v-if="!single"
@@ -166,27 +165,20 @@
         >
       </div>
       <input
-        v-if="!disabled && ((single && required) || (single && isEmpty) || !single)"
+        v-if="!disabled && (required || isEmpty)"
         type="button"
         class="material-icons select_container__chevron"
         :value="isOpen ? 'arrow_drop_up' : 'arrow_drop_down'"
         @click="setIsOpen(!isOpen)"
       >
       <input
-        v-if="single && !isEmpty && !required && !disabled"
+        v-if="!isEmpty && !required && !disabled"
         type="button"
         class="material-icons select_container__chevron"
         value="close"
         @click.stop="removeValue()"
       >
     </div>
-    <span
-      v-if="!single && !required && showValueRemove"
-      class="clear_all_button"
-      @click="clearValues"
-    >
-      {{ $t('clear_all') }}
-    </span>
   </div>
 </template>
 
@@ -222,7 +214,6 @@ export default class MultiSelect extends Vue {
   @Prop({ type: String, default: null }) optionsListHeight!: string;
   @Prop({ type: Boolean, default: false }) dontOpen!: boolean;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  @Prop({ type: String }) backgroundColor!: string;
 
   private isOpen = false;
   private selectedOption = -1;
@@ -235,32 +226,34 @@ export default class MultiSelect extends Vue {
     if (this.selectedOptions.length < 3 && this.single) {
       this.isNeedFilter = false;
     }
-
-    // nextRender need for set coordinates selectedContainer after load cell data.
-    nextRender().then(() => {
-      const bodyRect = document.body.getBoundingClientRect();
-      const selectContainerElement = this.$refs.selectContainer as HTMLInputElement;
-      const selectContainerRect = selectContainerElement !== undefined ? selectContainerElement.getBoundingClientRect() : null;
-
-      if (selectContainerRect !== null) {
-        // There we check cell position for open selectContainer up or down.
-        if (selectContainerRect.top > (bodyRect.bottom - selectContainerRect.bottom)) {
-          this.isTopFilter = !this.isTopFilter;
-          this.optionsContainerCoords.bottom = selectContainerRect.height;
-          // It is need for set focus to search input if options opened.
-          if (this.isOpen) {
-            this.setIsOpen(true);
-          }
-        } else {
-          this.optionsContainerCoords.top = selectContainerRect.height;
-        }
-      }
-    });
-
+    this.setOptionsContainerCoords();
     if (this.autofocus) {
       Vue.nextTick().then(() => {
         this.setIsOpen(true);
       });
+    }
+  }
+
+  private setOptionsContainerCoords() {
+    this.optionsContainerCoords = { top: 0, bottom: 0 };
+    this.isTopFilter = true;
+
+    const bodyRect = document.body.getBoundingClientRect();
+    const selectContainerElement = this.$refs.selectContainer as HTMLInputElement;
+    const selectContainerRect = selectContainerElement !== undefined ? selectContainerElement.getBoundingClientRect() : null;
+
+    if (selectContainerRect !== null) {
+      // There we check cell position for open selectContainer up or down.
+      if (selectContainerRect.top - selectContainerRect.top * 0.7 > (bodyRect.bottom - selectContainerRect.bottom)) {
+        this.isTopFilter = !this.isTopFilter;
+        this.optionsContainerCoords.bottom = selectContainerRect.height;
+        // It is need for set focus to search input if options opened.
+        if (this.isOpen) {
+          this.focusInput();
+        }
+      } else {
+        this.optionsContainerCoords.top = selectContainerRect.height;
+      }
     }
   }
 
@@ -388,6 +381,7 @@ export default class MultiSelect extends Vue {
     if (this.disabled) {
       return;
     }
+    this.setOptionsContainerCoords();
     if (!this.dontOpen) {
       this.isOpen = val;
       this.selectedOption = -1;
@@ -424,7 +418,6 @@ export default class MultiSelect extends Vue {
   private addOptionToValue(option: ISelectOption) {
     if (!this.disabled) {
       if (this.single) {
-        this.setIsOpen(false);
         this.$emit("update:value", option.value);
       } else {
         const newValue = R.uniq([...this.currentValues, option.value]);
@@ -437,6 +430,7 @@ export default class MultiSelect extends Vue {
       }
       this.findNewSelected();
     }
+    this.setIsOpen(false);
   }
 
   private addSelectedOptionToValue() {
@@ -460,6 +454,7 @@ export default class MultiSelect extends Vue {
     } else {
       this.$emit("update:value", this.emptyValue);
     }
+    this.setIsOpen(false);
   }
 
   private clearValues() {
@@ -470,7 +465,11 @@ export default class MultiSelect extends Vue {
 }
 </script>
 
-<style>
+<style lang="scss">
+  .select_container_hover {
+    background-color: var(--CellSelectColor);
+  }
+
   .empty_message_text {
     display: inline-flex;
     width: 100%;
@@ -488,10 +487,10 @@ export default class MultiSelect extends Vue {
     box-sizing: border-box;
     width: 100%;
     border-bottom: 1px solid var(--MainBorderColor);
-  }
 
-  .table-cell-edit .select_container {
-    margin: 0 0 0 -2px;
+    &:hover {
+      background-color: var(--CellSelectColor);
+    }
   }
 
   .input_modal__input_group .select_container {
@@ -522,6 +521,8 @@ export default class MultiSelect extends Vue {
     width: 100%;
     cursor: pointer;
     align-content: center;
+    max-height: 150px;
+    overflow-x: auto;
   }
 
   .select_container__content_fixed_height {
@@ -577,11 +578,10 @@ export default class MultiSelect extends Vue {
     margin: 0;
     box-sizing: border-box;
     max-height: 250px;
-    overflow: auto;
+    overflow-x: hidden;
     transition: all ease-in 0.3s;
-    height: 100%;
     border-bottom: 1px solid var(--MainBorderColor);
-    background-color: var(--MainBackgroundColor);
+    background-color: var(--CellSelectColor);
     border-top: 1px solid #ccc;
   }
 
@@ -591,8 +591,9 @@ export default class MultiSelect extends Vue {
     margin-right: 10px;
     margin-top: 5px;
     padding-right: 10px;
-    box-sizing: border-box;
     cursor: pointer;
+    word-break: break-all;
+    max-width: 250px;
   }
 
   .select_container__options_list > li.select_container__options_list__option:hover,
@@ -616,6 +617,8 @@ export default class MultiSelect extends Vue {
     margin: 5px;
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
+    max-width: 250px;
+    word-break: break-all;
   }
 
   .values_list__value,

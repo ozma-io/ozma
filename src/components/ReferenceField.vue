@@ -14,7 +14,7 @@
 </i18n>
 
 <template>
-  <div>
+  <div :style="{backgroundColor: backgroundColor}">
     <!-- Used when user selects an entry -->
     <SelectUserView
       v-if="selectedView"
@@ -23,7 +23,6 @@
       @select="selectFromView"
       @close="selectedView = null"
     />
-
     <MultiSelect
       v-if="options !== null"
       ref="control"
@@ -35,7 +34,6 @@
       :dont-open="dontOpen"
       :required="!isNullable"
       :disabled="isDisabled"
-      :background-color="backgroundColor"
       @update:value="$emit('update', $event)"
       @focus="$emit('focus', $event)"
     >
@@ -206,9 +204,11 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
   }
 
   .single_value {
+    word-break: break-all;
+
     &.has_links {
       // Otherwise it's sometimes tricky to click/tap inside.
-      padding-right: 40px;
+      padding-right: 5px;
     }
   }
 
