@@ -25,7 +25,6 @@ export default class FabCluster extends Vue {
     right: 20px;
     float: right;
     width: auto;
-    z-index: 700;
   }
 
   .fab_zone__cluster {
