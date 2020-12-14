@@ -1446,6 +1446,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (ref.type === "new") {
       editing.ref = newRef;
       this.selectCell(newRef);
+      if (this.uv.columnAttributes[newRef.column].text_type === "barcode") {
+        this.setShowEmptyRow(true);
+      }
     }
   }
 }

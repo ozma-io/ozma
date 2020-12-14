@@ -1,0 +1,35 @@
+<i18n>
+    {
+        "en": {
+            "scan": "Scan..."
+        },
+        "ru": {
+            "scan": "Сканируйте..."
+        }
+    }
+</i18n>
+
+<template>
+  <b-form-input
+    v-model="currentCode"
+    :placeholder="$t('scan')"
+    autofocus
+    @change="onScanned"
+  />
+</template>
+
+<script lang="ts">
+import { Component, Vue, Prop } from "vue-property-decorator";
+
+@Component
+export default class BarCode extends Vue {
+  @Prop({ type: String, default: "" }) content!: string;
+
+  currentCode = this.content;
+
+  private onScanned(code: string) {
+    this.$emit("scanned", code);
+    this.currentCode = "";
+  }
+}
+</script>

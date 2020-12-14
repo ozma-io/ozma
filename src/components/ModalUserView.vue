@@ -73,7 +73,8 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { Action } from "@/components/ActionsMenu.vue";
-import { IQuery, queryLocation } from "@/state/query";
+import type { IQuery } from "@/state/query";
+import { queryLocation } from "@/state/query";
 import { CurrentChanges, ScopeName } from "@/state/staging_changes";
 import ModalPortal from "@/components/modal/ModalPortal";
 import { router } from "@/modules";

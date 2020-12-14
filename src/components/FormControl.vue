@@ -117,6 +117,12 @@
           :height="customHeight"
           :content="textValue"
         />
+        <BarCode
+          v-else-if="inputType.name === 'barcode'"
+          ref="control"
+          :content="textValue"
+          @scanned="barCodeScanned"
+        />
       </template>
       <template #input="iSlot">
         <template v-if="inputType.name === 'error'">
@@ -226,6 +232,12 @@
           ref="control"
           :height="customHeight"
           :content="textValue"
+        />
+        <BarCode
+          v-else-if="inputType.name === 'barcode'"
+          ref="control"
+          :content="textValue"
+          @scanned="barCodeScanned"
         />
         <div v-else-if="inputType.name === 'static_text'">
           {{ textValue }}
@@ -354,9 +366,10 @@ import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { valueToText, valueIsNull, dateTimeFormat } from "@/values";
-import { AttributesMap, ValueType } from "@/api";
+import type { AttributesMap, ValueType } from "@/api";
 import { Action } from "@/components/ActionsMenu.vue";
-import { IUserViewArguments, homeSchema, ICombinedValue, currentValue, IEntriesRef, referenceEntriesRef } from "@/state/user_view";
+import type { IUserViewArguments, ICombinedValue, IEntriesRef } from "@/state/user_view";
+import { currentValue, homeSchema, referenceEntriesRef } from "@/state/user_view";
 import { IQuery, attrToQuerySelf, queryLocation } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { isMobile } from "@/utils";
@@ -383,6 +396,10 @@ interface ICodeEditorType {
 
 interface IQRCodeType {
   name: "qrcode";
+}
+
+interface IBarCodeType {
+  name: "barcode";
 }
 
 interface IMarkdownEditorType {
@@ -450,7 +467,8 @@ type IType =
   | ICalendarType
   | IStaticTextType
   | IStaticImageType
-  | IQRCodeType;
+  | IQRCodeType
+  | IBarCodeType;
 
 const userView = namespace("userView");
 
@@ -478,6 +496,7 @@ const inlineTypes = ["markdown", "codeeditor", "textarea", "reference"];
     SearchPanel: () => import("@/components/SearchPanel.vue"),
     NestedUserView: () => import("@/components/NestedUserView.vue"),
     QRCode: () => import("@/components/qrcode/QRCode.vue"),
+    BarCode: () => import("@/components/barcode/BarCode.vue"),
   },
 })
 export default class FormControl extends Vue {
@@ -569,6 +588,11 @@ export default class FormControl extends Vue {
 
   private forceRerender() {
     this.codeEditorKey += 1;
+  }
+
+  private barCodeScanned(code: string) {
+    this.updateValue(code);
+    this.$emit("close-modal-input");
   }
 
   get isQRCodeInput() {
@@ -723,6 +747,8 @@ export default class FormControl extends Vue {
         };
       case "qrcode":
         return { name: "qrcode" };
+      case "barcode":
+        return { name: "barcode" };
       default:
         return { name: "text", type: "text", style: this.controlStyle() };
     }

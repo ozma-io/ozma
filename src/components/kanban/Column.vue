@@ -67,7 +67,8 @@ import { dragscroll } from "vue-dragscroll";
 import { namespace } from "vuex-class";
 import * as R from "ramda";
 
-import Card, { ICard, CardTarget } from "@/components/kanban/Card.vue";
+import Card from "@/components/kanban/Card.vue";
+import type { ICard, CardTarget } from "@/components/kanban/Card.vue";
 import { nextRender, isMobile } from "@/utils";
 import { ValueRef } from "../../local_user_view";
 import { IQuery } from "../../state/query";

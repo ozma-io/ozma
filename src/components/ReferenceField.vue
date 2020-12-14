@@ -115,7 +115,8 @@ import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
 
-import { IUserViewArguments, ICombinedValue, homeSchema, currentValue, IEntriesRef } from "@/state/user_view";
+import type { IUserViewArguments, ICombinedValue, IEntriesRef } from "@/state/user_view";
+import { homeSchema, currentValue } from "@/state/user_view";
 import { IQuery } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
 import MultiSelect, { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
