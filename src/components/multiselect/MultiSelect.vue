@@ -521,7 +521,6 @@ export default class MultiSelect extends Vue {
     width: 100%;
     cursor: pointer;
     align-content: center;
-    max-height: 150px;
     overflow-x: auto;
   }
 
@@ -558,6 +557,10 @@ export default class MultiSelect extends Vue {
     cursor: pointer;
     z-index: 10;
     color: var(--MainBorderColor);
+
+    &:hover {
+      background: rgba(255, 0, 0, 0.2);
+    }
   }
 
   .select_container__options_container {
@@ -593,7 +596,6 @@ export default class MultiSelect extends Vue {
     padding-right: 10px;
     cursor: pointer;
     word-break: break-all;
-    max-width: 250px;
   }
 
   .select_container__options_list > li.select_container__options_list__option:hover,
@@ -617,7 +619,6 @@ export default class MultiSelect extends Vue {
     margin: 5px;
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
-    max-width: 250px;
     word-break: break-all;
   }
 
