@@ -198,18 +198,6 @@ export default class UserView extends Vue {
     return this.currentUv instanceof CombinedUserView && this.component !== null;
   }
 
-  /**
-   * Return true if `hide_default_actions` attribute is not set
-   * @return {boolean} Allow showing default actions (edit, import from csv, etc.)
-   */
-  get showDefaultActions() {
-    if (this.currentUv instanceof CombinedUserView &&
-        this.currentUv.attributes.hide_default_actions === true) {
-      return false;
-    }
-    return true;
-  }
-
   get actions() {
     const actions = [...this.extraCommonActions, ...this.extraActions];
     if (this.currentUv === null) {
@@ -233,13 +221,7 @@ export default class UserView extends Vue {
         },
         search: "",
       };
-
-      if (this.showDefaultActions) {
-        actions.push({
-          name: this.$t("edit_view").toString(),
-          link: { query: editQuery, target: "modal-auto" },
-        });
-      }
+      actions.push({ name: this.$t("edit_view").toString(), link: { query: editQuery, target: "modal-auto" } });
     }
     return actions;
   }
