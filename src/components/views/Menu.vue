@@ -16,7 +16,7 @@
 <template>
   <div :class="['menu_container', { 'menu_container__centered': isCentered }]">
     <b-container>
-      <b-row :class="[{ 'centered': isCentered }]">
+      <b-row :class="[{ 'justify-content-center': isCentered }]">
         <b-col v-if="typeof entriesOrError === 'string'" cols="12">
           <span>
             {{ entriesOrError }}
@@ -239,10 +239,6 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
     flex-wrap: wrap;
     margin-right: -15px;
     margin-left: -15px;
-
-    &.centered {
-      justify-content: center;
-    }
   }
 
   .submain-menu-block {
