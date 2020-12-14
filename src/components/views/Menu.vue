@@ -16,7 +16,7 @@
 <template>
   <div :class="['menu_container', { 'menu_container__centered': isCentered }]">
     <b-container>
-      <b-row>
+      <b-row :class="[{ 'centered': isCentered }]">
         <b-col v-if="typeof entriesOrError === 'string'" cols="12">
           <span>
             {{ entriesOrError }}
@@ -200,7 +200,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 
   .menu_container {
     /* margin-top: 120px; */
@@ -210,9 +210,11 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
 
   .menu_container__centered {
     width: 100%;
+    height: 100%;
     padding: 1% 0;
     display: flex;
     justify-content: center;
+    align-items: center;
   }
 
   .main-menu-block {
@@ -234,6 +236,10 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
     flex-wrap: wrap;
     margin-right: -15px;
     margin-left: -15px;
+
+    &.centered {
+      justify-content: center;
+    }
   }
 
   .submain-menu-block {

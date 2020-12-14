@@ -314,9 +314,9 @@ export default class ActionsMenu extends Vue {
         z-index: 1000 !important; /* кнопка выбора действий выше темного блока */
       }
 
-      .right {
-        margin-left: -75vw;
-      }
+      /* .right {
+       *   margin-left: -75vw;
+       * } */
     }
   }
 
