@@ -61,5 +61,12 @@ module.exports = {
     config.plugin("define").tap(
       ([ definitions, ...rest ]) => [{ ...definitions, ...defaults, ...buildConfig }, ...rest]
     );
+    config.module
+      .rule("i18n")
+      .resourceQuery(/blockType=i18n/)
+      .type('javascript/auto')
+      .use("i18n")
+        .loader("@kazupon/vue-i18n-loader")
+        .end();
   },
 }

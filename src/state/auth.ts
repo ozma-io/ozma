@@ -173,12 +173,12 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
   return pending.ref;
 };
 
-const updateAuth = async ({ state, commit, dispatch }: ActionContext<IAuthState, {}>, auth: CurrentAuth) => {
+const updateAuth = ({ state, commit, dispatch }: ActionContext<IAuthState, {}>, auth: CurrentAuth) => {
   const oldAuth = state.current;
   commit("setAuth", auth);
   persistCurrentAuth(auth);
   if (oldAuth === null) {
-    await dispatch("setAuth", undefined, { root: true });
+    void dispatch("setAuth", undefined, { root: true });
   }
 };
 
