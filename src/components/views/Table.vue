@@ -1,20 +1,20 @@
 <i18n>
     {
       "en": {
-        "clear": "Clear",
+        "clear": "Clear entries",
         "yes": "Yes",
         "no": "No",
-        "add": "➕Add",
-        "remove_selected_rows": "Remove selected rows",
-        "show_new_row": "Add/remove new row"
+        "add": "➕Add entry",
+        "remove_selected_rows": "Remove selected entries",
+        "show_new_row": "Add/remove new entry"
       },
       "ru": {
-        "clear": "Очистить",
+        "clear": "Очистить записи",
         "yes": "Да",
         "no": "Нет",
-        "add": "➕Добавить",
+        "add": "➕Добавить запись",
         "remove_selected_rows": "Удалить выбранные записи",
-        "show_new_row": "Добавить/убрать новую строку"
+        "show_new_row": "Добавить/убрать новую запись"
       }
     }
 </i18n>
@@ -168,7 +168,7 @@
         </tbody>
       </table>
       <input
-        v-if="baseLocal.extra.rowCount < 30 && local.emptyRow !== null"
+        v-if="local.emptyRow !== null"
         type="button"
         :value="this.$t('add').toString()"
         class="button"
@@ -868,21 +868,30 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   private setShowEmptyRow(newValue: boolean) {
     const emptyRow = this.local.emptyRow;
-    if (emptyRow !== null) {
-      this.showEmptyRow = newValue;
-      if (!newValue) {
-        this.baseLocal.selectRow({ type: "new" }, false);
-        emptyRow.local.values.forEach((_, colI) => {
-          this.local.selectCell({ type: "new", column: colI }, false);
-        });
-      }
-      void nextRender().then(() => {
-        const emptyRowRefElement = this.$refs.emptyRowRef as any | undefined;
-        if (emptyRowRefElement !== undefined) {
-          this.cellEditByTarget({ type: "new", column: emptyRowRefElement.columnIndexes[0] }, emptyRowRefElement.$children[0].$el);
-        }
+    if (emptyRow === null) {
+      return;
+    }
+
+    this.showEmptyRow = newValue;
+    if (!newValue) {
+      this.baseLocal.selectRow({ type: "new" }, false);
+      emptyRow.local.values.forEach((_, colI) => {
+        this.local.selectCell({ type: "new", column: colI }, false);
       });
     }
+
+    void nextRender().then(() => {
+      const emptyRowRefElement = this.$refs.emptyRowRef as any | undefined;
+      if (emptyRowRefElement !== undefined) {
+        this.cellEditByTarget(
+          {
+            type: "new",
+            column: emptyRowRefElement.columnIndexes[0],
+          },
+          emptyRowRefElement.$children[0].$el,
+        );
+      }
+    });
   }
 
   // Toggle children rows visibles.

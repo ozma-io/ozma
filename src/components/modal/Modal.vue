@@ -141,7 +141,7 @@ export default class Modal extends Vue {
   // Event is not typed for vue-js-modal
   private beforeClose(ev: any) {
     if (this.show) {
-      ev.stop();
+      ev.cancel();
     }
     this.$emit("close");
   }
