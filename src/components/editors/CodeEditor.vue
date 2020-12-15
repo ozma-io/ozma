@@ -44,7 +44,7 @@ export default class CodeEditor extends Vue {
 
   @Watch("content")
   private updateContent(content: string) {
-    if (this.editor !== null) {
+    if (this.editor !== null && this.editor.getValue() !== content) {
       this.editor.setValue(content);
     }
   }
