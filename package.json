@@ -40,7 +40,6 @@
     "vue-fragment": "^1.5.1",
     "vue-i18n": "^8.16.0",
     "vue-js-modal": "^2.0.0-rc.6",
-    "vue-monaco": "^1.1.0",
     "vue-property-decorator": "^9.1.2",
     "vue-qrcode-reader": "^2.3.14",
     "vue-router": "^3.1.2",

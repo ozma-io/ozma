@@ -9535,11 +9535,6 @@ monaco-editor-webpack-plugin@^2.0.0:
   dependencies:
     loader-utils "^2.0.0"
 
-monaco-editor@^0.20.0:
-  version "0.20.0"
-  resolved "https://registry.yarnpkg.com/monaco-editor/-/monaco-editor-0.20.0.tgz#5d5009343a550124426cb4d965a4d27a348b4dea"
-  integrity sha512-hkvf4EtPJRMQlPC3UbMoRs0vTAFAYdzFQ+gpMb8A+9znae1c43q8Mab9iVsgTcg/4PNiLGGn3SlDIa8uvK1FIQ==
-
 monaco-editor@^0.21.2:
   version "0.21.2"
   resolved "https://registry.yarnpkg.com/monaco-editor/-/monaco-editor-0.21.2.tgz#37054e63e480d51a2dd17d609dcfb192304d5605"
@@ -9613,11 +9608,6 @@ nan@^2.12.1:
   version "2.14.2"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.14.2.tgz#f5376400695168f4cc694ac9393d0c9585eeea19"
   integrity sha512-M2ufzIiINKCuDfBSAUr1vWQ+vuVcA9kqx8JJUsbQi6yf1uGRyb7HfpdfUr5qLXf3B/t8dPvcjhKMmlfnP47EzQ==
-
-nano-assign@^1.0.0:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/nano-assign/-/nano-assign-1.0.1.tgz#abb1c50d0416b865fb37bbd155c5368bb54378e5"
-  integrity sha512-1K8ncUoAYFPYcCZqrB+K2XQaFCmA35rryJCtPkGrG3zYkwm+iIUZRIHyaAfuy6zxaK9siPdjeJq7+Inijm6xhw==
 
 nanoid@^3.1.20:
   version "3.1.20"
@@ -14419,14 +14409,6 @@ vue-loader@^15.9.2:
     loader-utils "^1.1.0"
     vue-hot-reload-api "^2.3.0"
     vue-style-loader "^4.1.0"
-
-vue-monaco@^1.1.0:
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/vue-monaco/-/vue-monaco-1.2.1.tgz#b44d6f2af080103c9412cb89be43c849c323b636"
-  integrity sha512-2orch8gJ9sxb95UJbFe7YIS5t9q0Op5ppU+rWUjHgHHsY2Hc2svcnJsbXBKNJYYyJLdzRq0uO4eP0N7mi1iG7w==
-  dependencies:
-    monaco-editor "^0.20.0"
-    nano-assign "^1.0.0"
 
 vue-property-decorator@^9.1.2:
   version "9.1.2"
