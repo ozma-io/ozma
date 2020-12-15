@@ -36,20 +36,22 @@
     </template>
 
     <section class="section-modal">
-      <UserView
-        :is-root="isRoot"
-        :args="view.args"
-        :default-values="view.defaultValues"
-        :selection-mode="selectionMode"
-        :scope="uid"
-        @update:actions="extraActions = $event"
-        @update:title="title = $event"
-        @goto="$emit('goto', $event)"
-        @select="$emit('select', $event)"
-      />
+      <div class="view-container">
+        <UserView
+          :is-root="isRoot"
+          :args="view.args"
+          :default-values="view.defaultValues"
+          :selection-mode="selectionMode"
+          :scope="uid"
+          @update:actions="extraActions = $event"
+          @update:title="title = $event"
+          @goto="$emit('goto', $event)"
+          @select="$emit('select', $event)"
+        />
+      </div>
       <div
         v-if="!changes.isScopeEmpty(uid)"
-        class="selection_view_save__container"
+        :class="['selection_view_save__container', { 'is_mobile': isMobile }]"
       >
         <button
           type="button"
@@ -78,6 +80,7 @@ import { queryLocation } from "@/state/query";
 import { CurrentChanges, ScopeName } from "@/state/staging_changes";
 import ModalPortal from "@/components/modal/ModalPortal";
 import { router } from "@/modules";
+import { isMobile } from "@/utils";
 
 const staging = namespace("staging");
 
@@ -100,6 +103,10 @@ export default class ModalUserView extends Vue {
     return actions;
   }
 
+  get isMobile() {
+    return isMobile;
+  }
+
   private openFullscreen() {
     router.push(queryLocation(this.view));
   }
@@ -118,14 +125,9 @@ export default class ModalUserView extends Vue {
   .selection_view_save__container {
     width: 100%;
     display: flex;
-    justify-content: flex-end;
-    position: sticky;
-    bottom: 0;
     z-index: 1000;
-    height: 50px;
-
-    /* Ugly fix for ugly iOS, does not the best padding, but save button hides otherwise */
-    padding-bottom: 50px;
+    justify-content: flex-end;
+    padding: 10px;
   }
 
   .section-modal {
@@ -134,6 +136,11 @@ export default class ModalUserView extends Vue {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+  }
+
+  .view-container {
+    overflow: auto;
+    height: 100%;
   }
 
   .selection_view_save__button {
