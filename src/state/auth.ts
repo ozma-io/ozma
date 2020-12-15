@@ -137,7 +137,7 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
       if (state.pending !== pending.ref) {
         throw new Error("Pending operation cancelled");
       }
-      await updateAuth(context, auth);
+      updateAuth(context, auth);
       startTimeouts(context);
     } catch (e) {
       if (state.pending === pending.ref) {
@@ -357,7 +357,7 @@ export const authModule: Module<IAuthState, {}> = {
                     "redirect_uri": redirectUri(),
                   };
                   const auth = await requestToken(params);
-                  await updateAuth(context, auth);
+                  updateAuth(context, auth);
                   startTimeouts(context);
                 } else {
                   const error = getQueryValue("error");
@@ -384,7 +384,7 @@ export const authModule: Module<IAuthState, {}> = {
             };
             try {
               const currAuth = await requestToken(params);
-              await updateAuth(context, currAuth);
+              updateAuth(context, currAuth);
               startTimeouts(context);
             } catch (e) {
               console.error("Failed to use refresh token from URL", e);
@@ -392,7 +392,7 @@ export const authModule: Module<IAuthState, {}> = {
           } else {
             const oldAuth = loadCurrentAuth();
             if (oldAuth !== null) {
-              await updateAuth(context, oldAuth);
+              updateAuth(context, oldAuth);
               void renewAuth(context);
             }
           }
@@ -408,7 +408,7 @@ export const authModule: Module<IAuthState, {}> = {
             } else {
               const newAuth = loadCurrentAuth();
               if (newAuth !== null && (state.current === null || newAuth.token !== state.current.token)) {
-                await updateAuth(context, newAuth);
+                updateAuth(context, newAuth);
                 startTimeouts(context);
               }
             }
