@@ -61,10 +61,10 @@
                  {'edit_active': editingValue !== null}]"
       >
         <colgroup>
-          <col :class="['checkbox-col', {'checkbox-cells': showFixedRow}]"> <!-- Checkbox column -->
+          <col class="checkbox-col"> <!-- Checkbox column -->
           <col
             v-if="local.extra.hasRowLinks"
-            :class="['open-form-col', {'openform-cells': showFixedRow}]"
+            class="open-form-col"
           >
           <!-- Row link column -->
           <col
@@ -124,16 +124,6 @@
         </thead>
         <tbody class="table-body">
           <template v-if="showEmptyRow">
-            <!--<TableFixedRow
-              v-if="showFixedRow"
-              :row="local.emptyRow.row"
-              :local-row="local.emptyRow.local"
-              :column-indexes="fixedRowColumnIndexes"
-              :local-uv="local.extra"
-              from="new"
-              @cell-click="clickCell({ type: 'new', column: arguments[0] }, arguments[1])"
-              @goto="$emit('goto', $event)"
-            />-->
             <TableRow
               ref="emptyRowRef"
               :row="local.emptyRow.row"
@@ -141,25 +131,12 @@
               :base-local-row="baseLocal.emptyRow.local"
               :column-indexes="columnIndexes"
               :local-uv="local.extra"
-              :show-fixed-row="showFixedRow"
               from="new"
               @cell-click="clickCell({ type: 'new', column: arguments[0] }, arguments[1])"
               @goto="$emit('goto', $event)"
             />
           </template>
           <template v-for="(rowId, rowIndex) in uv.newRowsPositions">
-            <!--<TableFixedRow
-              v-if="showFixedRow"
-              :key="`fixed-new-${rowId}`"
-              :row="uv.newRows[rowId]"
-              :local-row="local.newRows[rowId]"
-              :column-indexes="fixedRowColumnIndexes"
-              :local-uv="local.extra"
-              from="added"
-              @select="selectRow({ type: 'added', position: rowIndex }, $event)"
-              @cell-click="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
-              @goto="$emit('goto', $event)"
-            />-->
             <TableRow
               :key="`new-${rowId}`"
               :row="uv.newRows[rowId]"
@@ -167,7 +144,6 @@
               :base-local-row="baseLocal.newRows[rowId]"
               :column-indexes="columnIndexes"
               :local-uv="local.extra"
-              :show-fixed-row="showFixedRow"
               from="added"
               @select="selectRow({ type: 'added', position: rowIndex }, $event)"
               @cell-click="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
@@ -175,17 +151,6 @@
             />
           </template>
           <template v-for="(rowI, rowIndex) in shownRowPositions">
-            <!--<TableFixedRow
-              v-if="showFixedRow"
-              :key="`fixed-${rowI}`"
-              :row="uv.rows[rowI]"
-              :local-row="local.rows[rowI]"
-              :column-indexes="fixedRowColumnIndexes"
-              :local-uv="local.extra"
-              @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
-              @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
-              @goto="$emit('goto', $event)"
-            />-->
             <TableRow
               :key="rowI"
               :row="uv.rows[rowI]"
@@ -193,7 +158,6 @@
               :base-local-row="baseLocal.rows[rowI]"
               :column-indexes="columnIndexes"
               :local-uv="local.extra"
-              :show-fixed-row="showFixedRow"
               :is-tree="isTree"
               @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
               @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
@@ -255,7 +219,6 @@ import {
 import BaseUserView, { ISelectionRef } from "@/components/BaseUserView";
 import { Action } from "@/components/ActionsMenu.vue";
 import TableRow from "@/components/views/table/TableRow.vue";
-import TableFixedRow from "@/components/views/table/TableFixedRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
 import TableCellEdit, { ICellCoords, IEditParams } from "@/components/views/table/TableCellEdit.vue";
 import { Link, attrToLinkRef, attrToLinkSelf } from "@/links";
@@ -271,10 +234,10 @@ interface IColumn {
   style: Record<string, unknown>;
   visible: boolean;
   fixed: boolean;
-  mobileFixed: boolean;
   columnInfo: IResultColumnInfo;
   width: number; // in px
   treeUnfoldColumn: boolean;
+  scannable: boolean;
 }
 
 interface ITableValueExtra {
@@ -338,30 +301,26 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
     const fixedColumnAttr = getColumnAttr("fixed");
     const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr);
 
-    // FIXME: we stopped supporting it for now.
-    // const fixedFieldAttr = getColumnAttr("mobile_fixed");
-    // const fixedField = fixedFieldAttr === undefined ? false : Boolean(fixedFieldAttr);
-
     const visibleColumnAttr = getColumnAttr("visible");
     const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
 
     const treeUnfoldColumnAttr = getColumnAttr("tree_unfold_column");
     const treeUnfoldColumn = treeUnfoldColumnAttr === undefined ? false : Boolean(treeUnfoldColumnAttr);
-
     if (treeUnfoldColumn) {
       isTreeUnfoldColumnSet = true;
     }
+
+    const scannable = getColumnAttr("text_type") === "barcode";
 
     columns[i] = {
       caption,
       style,
       visible: visibleColumn,
       fixed: fixedColumn,
-      // mobileFixed: fixedField,
-      mobileFixed: false,
       columnInfo,
       width: columnWidth,
       treeUnfoldColumn,
+      scannable,
     };
   });
 
@@ -715,7 +674,7 @@ const staging = namespace("staging");
 })
 @Component({
   components: {
-    TableRow, TableFixedRow, Checkbox, TableCellEdit,
+    TableRow, Checkbox, TableCellEdit,
   },
 })
 export default class UserViewTable extends mixins<BaseUserView<LocalTableUserView, ITableValueExtra, ITableRowExtra, ITableUserViewExtra>>(BaseUserView) {
@@ -775,10 +734,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   get lastFixedColumnIndex(): number {
     return this.local.extra.columns.filter(item => item.fixed).length;
-  }
-
-  get fixedRowColumnIndexes() {
-    return mapMaybe((col, colI) => col.mobileFixed ? colI : undefined, this.local.extra.columns);
   }
 
   get editingLocked() {
@@ -1421,17 +1376,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       left += technicalFieldsWidth;
     }
     return left;
-  }
-
-  get showFixedRow() {
-    /*
-    let tableWidth = this.technicalWidth;
-    for (const column of this.local.extra.columns) {
-      tableWidth += column.width;
-    }
-    return tableWidth > screen.width && this.fixedRowColumnIndexes.length > 0;
-    */
-    return false;
   }
 
   private async updateCurrentValue(rawValue: any) {
