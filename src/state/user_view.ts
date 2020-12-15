@@ -1,6 +1,6 @@
 import Vue from "vue";
 import { Store, Dispatch, Module, ActionContext } from "vuex";
-import moment from "moment";
+import moment, { MomentInput } from "moment";
 
 import { IRef, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, waitTimeout } from "@/utils";
 import {
@@ -347,7 +347,7 @@ export class CombinedUserView {
           rows.forEach(row => {
             const cell = row.values[colI];
             if (cell.value) {
-              cell.value = moment.utc(cell.value);
+              cell.value = moment.utc(cell.value as MomentInput);
             }
           });
         }
