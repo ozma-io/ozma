@@ -347,7 +347,7 @@ export class CombinedUserView {
           rows.forEach(row => {
             const cell = row.values[colI];
             if (cell.value) {
-              cell.value = moment.utc(cell.value as any);
+              cell.value = moment.utc(cell.value);
             }
           });
         }
