@@ -78,6 +78,7 @@ export default class SearchPanel extends Vue {
     } else {
       this.isShownSearchField = !this.isShownSearchField;
     }
+    Vue.nextTick(() => this.setFocusOnField());
   }
 
   @Watch("localFilterString")
@@ -85,7 +86,6 @@ export default class SearchPanel extends Vue {
     this.$emit("update:filterString", this.localFilterString);
   }
 
-  @Watch("isShownSearchField")
   setFocusOnField() {
     if (this.isShownSearchField) {
       (this.$refs.searchInput as HTMLElement).focus();
@@ -97,7 +97,6 @@ export default class SearchPanel extends Vue {
 
 </script>
 <style scoped>
-
   .search-wrapper {
     display: flex;
     align-items: center;
