@@ -194,13 +194,13 @@ export const deepClone = <T>(a: T): T => {
   } else if (a instanceof Array) {
     return a.map(deepClone) as any;
   } else if (!hasUserPrototype(a as any)) {
-    const res: any = { ...a };
+    const res: Record<string, any> = { ...a };
     /* eslint-disable guard-for-in */
     for (const k in res) {
       res[k] = deepClone(res[k]);
     }
     /* eslint-enable guard-for-in */
-    return res;
+    return res as any;
   } else {
     throw new Error("Cannot deep clone an object");
   }
@@ -219,9 +219,9 @@ export const deepEquals = <T>(a: T, b: T): boolean => {
       return a.every((aVal, idx) => deepEquals(aVal, bArr[idx]));
     }
   } else if (!(hasUserPrototype(a as any) || hasUserPrototype(b as any))) {
-    const bObj = b as any;
+    const bObj = b as any as Record<string, any>;
     return Object.keys(b).every(k => k in a)
-            && Object.entries(a).every(([k, v]) => k in b && deepEquals(v, bObj[k]));
+        && Object.entries(a).every(([k, v]) => k in b && deepEquals(v, bObj[k]));
   } else {
     throw new Error("Cannot compare objects");
   }

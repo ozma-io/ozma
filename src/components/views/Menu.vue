@@ -72,9 +72,12 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
     return false;
   }
 
-  private convertNewMenuEntries(entries: any[]): MenuValue[] {
+  private convertNewMenuEntries(entries: unknown[]): MenuValue[] {
     return mapMaybe(entry => {
-      const ret = this.convertNewMenuEntry(entry);
+      if (typeof entry !== "object" || entry === null) {
+        return undefined;
+      }
+      const ret = this.convertNewMenuEntry(entry as Record<string, unknown>);
       if (ret === null) {
         return undefined;
       } else {
@@ -83,7 +86,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
     }, entries);
   }
 
-  private convertNewMenuEntry(entry: any): MenuValue | null {
+  private convertNewMenuEntry(entry: Record<string, unknown>): MenuValue | null {
     if (typeof entry.name !== "string") {
       return null;
     }
@@ -126,8 +129,8 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
       const rawMenu = currentValue(row.values[0]);
       if (rawMenu instanceof Array) {
         return this.convertNewMenuEntries(rawMenu);
-      } else if (typeof rawMenu === "object") {
-        const ret = this.convertNewMenuEntry(rawMenu);
+      } else if (typeof rawMenu === "object" && rawMenu !== null) {
+        const ret = this.convertNewMenuEntry(rawMenu as Record<string, unknown>);
         if (ret === null) {
           return [];
         } else {

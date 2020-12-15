@@ -1,5 +1,4 @@
 <template>
-  <!-- When you change anything here, also make corresponding changes in TableFixedRow! -->
   <tr
     :style="localRow.extra.style"
     :class="['table-tr',
@@ -9,7 +8,7 @@
   >
     <td
       v-if="from !== 'new'"
-      :class="[{ 'hide_content': showFixedRow }, 'fixed-column', 'checkbox-cells']"
+      class="fixed-column checkbox-cells"
       @click="$emit('select', $event)"
     >
       <!-- Key is needed to force checkbox re-render when `selected` changes. Not sure why. -->
@@ -23,7 +22,7 @@
     />
     <td
       v-if="localUv.hasRowLinks"
-      :class="[{ 'hide_content': showFixedRow },'fixed-column', 'opemform-cells']"
+      class="fixed-column opemform-cells"
     >
       <FunLink
         v-if="localRow.extra.link !== undefined"
@@ -76,7 +75,6 @@ export default class TableRow extends Vue {
   @Prop({ type: Array, required: true }) columnIndexes!: any[];
   @Prop({ type: Object, required: true }) localUv!: any;
   @Prop({ type: String, default: "existing" }) from!: string;
-  @Prop({ type: Boolean, default: false }) showFixedRow!: boolean;
   @Prop({ type: Boolean, default: false }) isTree!: boolean;
 
   get lastFixedColumnIndex(): number {

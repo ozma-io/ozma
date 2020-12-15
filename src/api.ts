@@ -10,7 +10,7 @@ export const developmentMode = Boolean(__DEVELOPMENT_MODE__);
 export const disableAuth = Boolean(__DISABLE_AUTH__);
 
 export const authOrigin = String(__API_AUTH_URL__);
-export const authUrlBase = `${authOrigin}${__API_AUTH_URL_BASE__}`;
+export const authUrlBase = `${authOrigin}${String(__API_AUTH_URL_BASE__)}`;
 export const authUrl = `${authUrlBase}/protocol/openid-connect`;
 export const accountUrl = `${authUrlBase}/account`;
 export const authClientId = String(__AUTH_CLIENT_ID__);

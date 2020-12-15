@@ -115,7 +115,7 @@ import BaseUserView, { ISelectionRef } from "@/components/BaseUserView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
 
 import {
-  IFieldInfo, IBlockInfo, IFormValueExtra, IFormRowExtra, IFormUserViewExtra, GridElement, IGridSection, IGridInput, IButtons, IGridButtons, IButtonAction,
+  IFieldInfo, IBlockInfo, IFormValueExtra, IFormRowExtra, IFormUserViewExtra, GridElement, IGridSection, IGridInput, IGridButtons, IButtonAction,
 } from "@/components/form/types";
 import { attrToLink, attrToLinkSelf } from "@/links";
 
@@ -346,14 +346,14 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
      */
     const formButtons = this.uv.attributes["form_buttons"];
     if (formButtons !== undefined && Array.isArray(formButtons)) {
-      formButtons.forEach((buttons: IButtons, i: number) => {
+      formButtons.forEach((buttons, i) => {
         const blockAttr = Number(buttons["form_block"]);
         const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr;
         const block = Math.max(0, Math.min(blockNumber, blocks.length - 1));
 
         const actions: IButtonAction[] = [];
-        if (buttons.actions !== undefined && Array.isArray(buttons.actions)) {
-          buttons.actions.forEach((action: any) => {
+        if (Array.isArray(buttons["actions"])) {
+          buttons["actions"].forEach(action => {
             if (typeof action.name !== "string") {
               return;
             }

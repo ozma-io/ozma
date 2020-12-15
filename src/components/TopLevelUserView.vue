@@ -278,7 +278,7 @@ export default class TopLevelUserView extends Vue {
           order: 1000,
           callback: () => {
             const link = getAuthedLink(this.currentAuth!);
-            navigator.clipboard.writeText(link);
+            void navigator.clipboard.writeText(link);
           } });
       }
       actions.push({ name: this.$t("account").toString(), order: 1000, link: { href: Api.accountUrl } });

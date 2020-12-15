@@ -28,7 +28,7 @@ export interface IUpdatedValue {
 }
 
 // Should be in sync with `valueFromRaw` and be idempotent.
-export const valueToText = (valueType: ValueType, value: any): string => {
+export const valueToText = (valueType: ValueType, value: unknown): string => {
   if (typeof value === "string") {
     return value;
   } else if (value === undefined || value === null) {
@@ -45,9 +45,9 @@ export const valueToText = (valueType: ValueType, value: any): string => {
 };
 
 // Checks if raw value is null.
-export const valueIsNull = (value: any) => !(value !== null && value !== undefined && value !== "");
+export const valueIsNull = (value: unknown) => !(value !== null && value !== undefined && value !== "");
 
-const convertArray = (entryType: FieldType, value: any[]): any[] | undefined => {
+const convertArray = (entryType: FieldType, value: unknown[]): unknown[] | undefined => {
   const converted = value.map(entry => valueFromRaw({ fieldType: entryType, isNullable: false }, entry));
   if (converted.some(entry => entry === undefined)) {
     return undefined;
@@ -56,7 +56,7 @@ const convertArray = (entryType: FieldType, value: any[]): any[] | undefined => 
   }
 };
 
-export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: any): any => {
+export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: unknown): unknown => {
   const value = typeof rawValue === "string" ? rawValue.trim() : rawValue;
 
   if (valueIsNull(value)) {
@@ -89,14 +89,14 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: an
     }
   } else if (fieldType.type === "date") {
     // We use local time for dates.
-    const date = moment(value, dateFormat);
+    const date = moment(value as any, dateFormat);
     if (!date.isValid()) {
       return undefined;
     } else {
       return date;
     }
   } else if (fieldType.type === "datetime") {
-    const date = moment(value, dateTimeFormat).utc();
+    const date = moment(value as any, dateTimeFormat).utc();
     if (!date.isValid()) {
       return undefined;
     } else {
@@ -118,7 +118,7 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: an
     }
   } else if (fieldType.type === "json") {
     try {
-      return JSON.parse(value);
+      return JSON.parse(String(value));
     } catch (e) {
       return undefined;
     }

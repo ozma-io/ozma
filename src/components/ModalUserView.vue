@@ -108,7 +108,7 @@ export default class ModalUserView extends Vue {
   }
 
   private openFullscreen() {
-    router.push(queryLocation(this.view));
+    void router.push(queryLocation(this.view));
   }
 
   private async saveView() {
@@ -116,7 +116,7 @@ export default class ModalUserView extends Vue {
   }
 
   private destroyed() {
-    this.removeScope(this.uid);
+    void this.removeScope(this.uid);
   }
 }
 </script>

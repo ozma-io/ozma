@@ -123,10 +123,10 @@ interface IValueDeltaNew { ref: ValueRef; value: number }
 const findValueDelta = (rows: ICombinedRow[], newRows: Record<number, IRowCommon>, value: any[], indexColumn: number): IValueDelta => {
   const storeValues: Record<string, RowRef> = {};
   rows.forEach((row, index) => {
-    storeValues[row.values[indexColumn].value] = { type: "existing", position: index };
+    storeValues[row.values[indexColumn].value as string] = { type: "existing", position: index };
   });
   Object.entries(newRows).forEach(([rowId, row]) => {
-    storeValues[row.values[indexColumn].value] = { type: "added", id: Number(rowId) };
+    storeValues[row.values[indexColumn].value as string] = { type: "added", id: Number(rowId) };
   });
   const selectValues: Record<string, IValueDeltaNew> = value.reduce((acc, vl) => {
     return { ...acc, [vl]: { ref: { column: indexColumn, type: "new" }, value: vl } };
@@ -159,7 +159,7 @@ const query = namespace("query");
   components: { MultiSelect },
 })
 export default class UserViewMultiSelect extends mixins<EmptyBaseUserView, BaseEntriesView>(BaseUserView, BaseEntriesView) {
-  @query.Action("addWindow") addWindow!: (query: IQuery) => Promise<void>;
+  @query.Action("addWindow") addWindow!: (queryObj: IQuery) => Promise<void>;
   @Prop({ type: String }) backgroundColor!: string;
 
   get entriesEntity() {
@@ -171,7 +171,8 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView, BaseE
   }
 
   private get selectedValueIndex() {
-    return mapMaybe((attrs, i) => attrs["select"] && i, this.uv.columnAttributes).shift() || 0;
+    const ret = this.uv.columnAttributes.findIndex(attrs => attrs["select"]);
+    return ret === -1 ? 0 : ret;
   }
 
   private onSelectChange(value: any[]) {
@@ -181,7 +182,7 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView, BaseE
         this.deleteRow(row);
       });
       delta.rowsToAdd.forEach(row => {
-        this.updateValue(row.ref, row.value);
+        void this.updateValue(row.ref, row.value);
       });
     }
   }

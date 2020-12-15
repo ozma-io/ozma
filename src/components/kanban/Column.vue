@@ -106,7 +106,7 @@ const query = namespace("query");
 
 @Component({ components: { Card, draggable }, directives: { dragscroll } })
 export default class Column extends Vue {
-  @query.Action("addWindow") addWindow!: (query: IQuery) => Promise<void>;
+  @query.Action("addWindow") addWindow!: (queryObj: IQuery) => Promise<void>;
   @Prop() id!: any;
   @Prop({ type: Array, required: true }) cards!: ICard[];
   @Prop({ type: String, required: true }) title!: string;
@@ -211,7 +211,7 @@ export default class Column extends Vue {
   }
 
   private onMove(event: IVueDraggableEvent) {
-    nextRender().then(() => {
+    void nextRender().then(() => {
       this.dragging = false;
     });
 

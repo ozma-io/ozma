@@ -154,7 +154,7 @@ export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQ
     if ("query" in link) {
       if (link.target === "modal") {
         handler = () => {
-          store.dispatch("query/addWindow", link.query);
+          void store.dispatch("query/addWindow", link.query);
         };
       } else if (link.target === "root") {
         handler = () => {
@@ -162,7 +162,7 @@ export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQ
         };
       } else if (link.target === "top") {
         handler = () => {
-          store.dispatch("query/pushRoot", link.query);
+          void store.dispatch("query/pushRoot", link.query);
         };
       } else if (link.target === "blank") {
         handler = () => {
@@ -172,7 +172,7 @@ export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQ
         handler = () => {
           const queryState = store.state.query as IQueryState;
           if (queryState.current?.windows.length === 0) {
-            store.dispatch("query/addWindow", link.query);
+            void store.dispatch("query/addWindow", link.query);
           } else {
             emit("goto", link.query);
           }
@@ -182,7 +182,7 @@ export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQ
       }
     } else if ("action" in link) {
       handler = () => {
-        saveAndRunAction(store, link.action, link.args);
+        void saveAndRunAction(store, link.action, link.args);
       };
     }
   }
