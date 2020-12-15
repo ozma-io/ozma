@@ -155,7 +155,7 @@ export default class ActionsMenu extends Vue {
   }
 
   @Watch("$route", { immediate: true, deep: true })
-  onUrlChange(newVal: any) {
+  onUrlChange() {
     this.showActions = false;
   }
 }

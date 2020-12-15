@@ -70,7 +70,10 @@ import { replaceHtmlLinks } from "@/utils";
 
 export type CardColType = "text" | "image";
 export type CardTarget = "modal" | "top" | "blank";
-export const allowedTargets: CardTarget[] = ["modal", "top", "blank"];
+
+export const isCardTarget = (name: string): name is CardTarget => {
+  return ["modal", "top", "blank"].includes(name);
+};
 
 export interface ICardCol {
   fieldName?: string;
@@ -113,7 +116,7 @@ const query = namespace("query");
 
 @Component({ directives: { dragscroll } })
 export class Card extends Vue {
-  @query.Action("addWindow") addWindow!: (query: IQuery) => Promise<void>;
+  @query.Action("addWindow") addWindow!: (queryObj: IQuery) => Promise<void>;
   @Prop({ type: Object, required: true }) data!: ICard;
   @Prop({ type: Boolean, required: false, default: false }) selected!: boolean;
   @Prop({ type: Boolean, required: false, default: false }) dragging!: boolean;

@@ -85,7 +85,7 @@ export default class Textarea extends Vue {
     this.dummyWidth = control.clientWidth;
 
     if (this.autofocus) {
-      Vue.nextTick().then(() => {
+      void Vue.nextTick().then(() => {
         if (this.isCellEdit) {
           controlTextareaElement.$el.focus();
           this.setCursorPositionEnd(controlTextareaElement.$el);

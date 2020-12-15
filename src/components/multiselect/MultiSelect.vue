@@ -228,7 +228,7 @@ export default class MultiSelect extends Vue {
     }
     this.setOptionsContainerCoords();
     if (this.autofocus) {
-      Vue.nextTick().then(() => {
+      void Vue.nextTick().then(() => {
         this.setIsOpen(true);
       });
     }
@@ -387,7 +387,7 @@ export default class MultiSelect extends Vue {
       this.selectedOption = -1;
       if (val) {
         // Using nextTick() to set focus because upon setting isOpen it's not present yet
-        Vue.nextTick().then(() => {
+        void Vue.nextTick().then(() => {
           this.focusInput();
         });
       }

@@ -125,7 +125,7 @@ export default class Calendar extends Vue {
   private mounted() {
     const controlElement = this.$refs.control as HTMLInputElement;
     if (this.autofocus) {
-      Vue.nextTick().then(() => {
+      void Vue.nextTick().then(() => {
         controlElement.focus();
       });
     }
@@ -142,7 +142,7 @@ export default class Calendar extends Vue {
     this.$emit("focus");
     if (!this.noOpenOnFocus) {
       this.isCalendarOpen = true;
-      nextRender().then(() => {
+      void nextRender().then(() => {
         const bodyRect = document.body.getBoundingClientRect();
         const popup = this.$refs.popup as HTMLInputElement;
         const popupRect = popup.getBoundingClientRect();

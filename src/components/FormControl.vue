@@ -364,6 +364,7 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
+import moment from "moment";
 
 import { valueToText, valueIsNull, dateTimeFormat } from "@/values";
 import type { AttributesMap, ValueType } from "@/api";
@@ -380,18 +381,18 @@ import { IReferenceSelectAction } from "./ReferenceField.vue";
 interface ITextType {
   name: "text";
   type: "text" | "number";
-  style: Record<string, any>;
+  style: Record<string, unknown>;
 }
 
 interface ITextAreaType {
   name: "textarea";
-  style: Record<string, any>;
+  style: Record<string, unknown>;
 }
 
 interface ICodeEditorType {
   name: "codeeditor";
   language: string;
-  style: Record<string, any>;
+  style: Record<string, unknown>;
 }
 
 interface IQRCodeType {
@@ -405,7 +406,7 @@ interface IBarCodeType {
 interface IMarkdownEditorType {
   name: "markdown";
   editType: string;
-  style: Record<string, any>;
+  style: Record<string, unknown>;
 }
 
 interface ISelectType {
@@ -416,9 +417,9 @@ interface ISelectType {
 interface IReferenceType {
   name: "reference";
   ref: IEntriesRef;
-  linkedAttr?: any;
+  linkedAttr?: unknown;
   selectViews: IReferenceSelectAction[];
-  style?: Record<string, any>;
+  style?: Record<string, unknown>;
 }
 
 interface ICheckType {
@@ -554,8 +555,11 @@ export default class FormControl extends Vue {
   //        from `update:value` event.
   get calendarValue() {
     if (this.type.type === "datetime" && this.currentValue) {
-      if (typeof this.currentValue === "string") return this.currentValue;
-      return this.currentValue.local().format("L LT");
+      if (moment.isMoment(this.currentValue)) {
+        return this.currentValue.local().format("L LT");
+      } else {
+        return String(this.currentValue);
+      }
     }
     return this.textValue;
   }
@@ -566,14 +570,18 @@ export default class FormControl extends Vue {
   }
 
   private get controlPanelStyle() {
+    if (this.customHeight === null) {
+      return {};
+    }
+
     const excludeHeight = heightExclusions.includes(this.inputType.name);
     const isHeightOnPanel = !multilineTypes.includes(this.inputType.name);
     const height = isHeightOnPanel ? { height: `${this.customHeight}px` } : {};
-    return this.customHeight !== null && !excludeHeight ? { ...height, maxHeight: "initial" } : {};
+    return !excludeHeight ? { ...height, maxHeight: "initial" } : {};
   }
 
   private openFullscreen(view: IUserViewType) {
-    router.push(queryLocation(view));
+    void router.push(queryLocation(view));
   }
 
   private updateTitle(title: string | null) {
@@ -622,7 +630,7 @@ export default class FormControl extends Vue {
     return String(this.attributes["text_type"]);
   }
 
-  private controlStyle(height?: string): Record<string, any> {
+  private controlStyle(height?: string): Record<string, unknown> {
     const systemHeight = height ? { height } : {};
     const userHeight = this.customHeight !== null ? { height: `${this.customHeight}px` } : {};
     const editorStyle = this.textType === "codeeditor" ? { minHeight: "200px" } : {};
@@ -774,20 +782,20 @@ export default class FormControl extends Vue {
     this.forceRerender();
     if (this.autofocus) {
       const type = this.inputType;
-      const control: any = this.$refs["control"];
+      const control = this.$refs["control"];
       if (control) {
         if (type.name === "text") {
-          control.focus();
+          (control as HTMLElement).focus();
         } else if (type.name === "textarea") {
-          control.focus();
+          (control as HTMLElement).focus();
         } else if (type.name === "check") {
-          control.focus();
+          (control as HTMLElement).focus();
         }
       }
     }
   }
 
-  private updateValue(newValue: any) {
+  private updateValue(newValue: unknown) {
     if (this.currentValue !== newValue) {
       this.$emit("update", newValue);
     }

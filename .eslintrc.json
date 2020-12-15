@@ -34,6 +34,7 @@
     "no-undef": "off",
     "no-restricted-syntax": "off",
     "no-nested-ternary": "off",
+    "no-use-before-define": "off",
     "prefer-destructuring": "off",
     "max-classes-per-file": "off",
     "class-methods-use-this": "off",
@@ -86,19 +87,26 @@
     "vue/max-attributes-per-line": ["warn", {
       "singleline": 2
     }],
+    "vue/no-v-for-template-key-on-child": "off",
     "no-console": ["warn", {
       "allow": ["warn", "error", "trace", "assert"]
     }],
-    "@typescript-eslint/interface-name-prefix": ["error", {
-      "prefixWithI": "always"
-    }],
+    "no-void": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/ban-ts-ignore": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/no-use-before-define": "off",
-    "@typescript-eslint/no-unused-vars": "off"
+    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/no-unsafe-return": "off",
+    "@typescript-eslint/ban-types": "off",
+    "@typescript-eslint/no-unsafe-assignment": "off",
+    "@typescript-eslint/no-unsafe-member-access": "off",
+    "@typescript-eslint/no-unsafe-call": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/restrict-template-expressions": "off"
   },
   "overrides": [
     {

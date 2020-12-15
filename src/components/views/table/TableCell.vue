@@ -1,6 +1,5 @@
 <template>
   <!-- FIXME: Pls solve these classes -->
-  <!-- When you change anything here, also make corresponding changes in TableFixedCell! -->
   <td
     :style="localValue.style"
     :class="['table-td', {'fixed-column': column.fixed,
@@ -33,7 +32,7 @@
           <!-- eslint-enable -->
         </div>
       </template>
-      <template v-else-if="isScannable">
+      <template v-else-if="column.scannable">
         <div class="selectable">
           <input
             type="button"
@@ -54,7 +53,7 @@
           <span
             :style="{'margin-left': treeLevel*25+'px'}"
             :class="['display-arrow material-icons', {'down': isArrowDown}]"
-            @click="toggleChildren"
+            @click.stop="toggleChildren"
             @dblclick.stop
           >
             arrow_forward_ios
@@ -134,10 +133,6 @@ export default class TableCell extends Vue {
   get isNull() {
     // We use `value.value` here to highlight unvalidated values.
     return valueIsNull(this.value.value);
-  }
-
-  get isScannable() {
-    return this.column.attrs.text_type === "barcode" || false;
   }
 
   private toggleChildren() {

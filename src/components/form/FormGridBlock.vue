@@ -51,7 +51,7 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 
 import FormControl from "@/components/FormControl.vue";
-import { GridElement, IGridProps } from "@/components/form/types";
+import type { GridElement, IGridProps } from "@/components/form/types";
 
 @Component({
   name: "FormGridBlock",
