@@ -375,7 +375,6 @@ export default class TopLevelUserView extends Vue {
   .head-menu_main-menu-button {
     color: var(--MainTextColor) !important;
     background: hsla(0, 0%, 100%, 0.3);
-    line-height: normal;
     border: none;
     text-decoration: none;
     font-size: 20px;
