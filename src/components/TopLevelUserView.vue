@@ -157,7 +157,6 @@
 import { Route } from "vue-router";
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
-import { Debounce } from "vue-debounce-decorator";
 
 import * as Api from "@/api";
 import { setHeadTitle } from "@/elements";
@@ -334,6 +333,7 @@ export default class TopLevelUserView extends Vue {
     height: inherit;
     display: flex;
     flex-direction: column;
+    position: relative;
     z-index: 0; /* вся страница, кроме низа */
   }
 
@@ -375,12 +375,12 @@ export default class TopLevelUserView extends Vue {
   .head-menu_main-menu-button {
     color: var(--MainTextColor) !important;
     background: hsla(0, 0%, 100%, 0.3);
-    line-height: normal;
     border: none;
     text-decoration: none;
     font-size: 20px;
     padding: 0;
     margin-right: 10px;
+    position: relative;
     z-index: 1000;
   }
 
@@ -406,7 +406,7 @@ export default class TopLevelUserView extends Vue {
     position: relative;
     background-color: var(--MainBackgroundColor) !important;
     border-top: 1px solid var(--MainBorderColor);
-    z-index: 1030; /* низ страницы */
+    z-index: 500; /* низ страницы */
     display: -webkit-box;
     display: -ms-flexbox;
     display: flex;
@@ -425,8 +425,9 @@ export default class TopLevelUserView extends Vue {
   }
 
   .count-row {
+    position: relative;
     bottom: 0;
-    z-index: 2000; /* кол-во записей внизу */
+    z-index: 600; /* кол-во записей внизу */
     line-height: normal;
     float: left;
     margin-left: 5px;

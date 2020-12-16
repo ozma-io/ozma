@@ -728,6 +728,10 @@ export default class FormControl extends Vue {
           };
         case "int":
           return { name: "text", type: "number", style: this.controlStyle() };
+        case "date":
+          return { name: "calendar", showTime: false, timeStep: null };
+        case "datetime":
+          return { name: "calendar", showTime: true, timeStep: null };
       }
     }
 

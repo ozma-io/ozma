@@ -195,9 +195,10 @@ export default class InputSlot extends Vue {
   .input_modal__input_group {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    padding: 10% 0;
-    justify-content: space-between;
+    height: auto;
+    position: relative;
+    top: 40%;
+    padding: 0 5%;
     background-color: var(--MainBackgroundColor);
   }
 

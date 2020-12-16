@@ -1,8 +1,8 @@
 <i18n>
     {
         "en": {
-            "create": "Create new",
-            "create_in_modal": "Create referenced in modal window",
+            "create": "Create new entry",
+            "create_in_modal": "Create referenced entry in modal window",
             "export_to_csv": "Export to .csv",
             "import_from_csv": "Import from .csv",
             "scan_qrcode": "Scan QR Code",
@@ -12,7 +12,7 @@
             "error": "Error"
         },
         "ru": {
-            "create": "Создать новую",
+            "create": "Создать новую запись",
             "create_in_modal": "Создать связанную запись в окне",
             "export_to_csv": "Экспорт в .csv",
             "import_from_csv": "Импорт из .csv",
