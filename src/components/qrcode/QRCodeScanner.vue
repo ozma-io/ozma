@@ -89,7 +89,7 @@ import { namespace } from "vuex-class";
 import { IPrintQRCode } from "@/components/qrcode/QRCode.vue";
 
 /* eslint @typescript-eslint/no-var-requires: "off" */
-const beep = require("@/components/qrcode/beep.mp3");
+const beep = require("../../../public/assets/beep.mp3");
 
 export interface IQRContent {
   schema: string;
