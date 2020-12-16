@@ -157,7 +157,6 @@
 import { Route } from "vue-router";
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
-import { Debounce } from "vue-debounce-decorator";
 
 import * as Api from "@/api";
 import { setHeadTitle } from "@/elements";

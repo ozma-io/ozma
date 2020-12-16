@@ -12,38 +12,40 @@
 <template>
   <div
     :class="['search-wrapper', {
-      'search-show': isShownSearchField,
+      'search-show': expanded,
     }]"
   >
     <b-form
       inline
       :class="['find', {
-        'search-field_hidden': !isShownSearchField,
+        'search-field_hidden': !expanded,
       }]"
-      @submit.prevent="submitFilter()"
+      @submit.prevent=""
     >
       <b-input-group>
         <b-form-input
           ref="searchInput"
-          v-model="localFilterString"
+          :value="filterString"
           class="find_in form-control"
+          lazy
           :placeholder="$t('search_placeholder')"
+          @update="updateInput"
         />
-        <b-input-group-append v-if="localFilterString.length > 0">
+        <b-input-group-append v-if="filterString.length > 0">
           <span
             id="searchclear"
             class="material-icons clear-search"
-            @click="localFilterString = ''"
+            @click="$emit('update:filterString', '')"
           >backspace</span>
         </b-input-group-append>
       </b-input-group>
     </b-form>
     <button
       class="search-button"
-      @click.prevent="toggleSearchFieldVisibility()"
+      @click.prevent="toogleExpanded"
     >
       <i
-        v-if="!isShownSearchField"
+        v-if="!expanded"
         class="material-icons search-button__icon"
       >search</i>
       <i
@@ -60,37 +62,33 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 
 @Component
 export default class SearchPanel extends Vue {
-  @Prop({ type: String, required: false, default: "" }) filterString!: string;
+  @Prop({ type: String, default: "" }) filterString!: string;
 
-  private localFilterString = "";
-  private isShownSearchField = false;
+  private expanded = false;
 
-  private mounted() {
-    if (this.filterString.length > 0) {
-      this.localFilterString = this.filterString;
-      this.isShownSearchField = true;
+  private toogleExpanded() {
+    this.expanded = !this.expanded;
+  }
+
+  private updateInput(newValue: string) {
+    this.$emit("update:filterString", newValue);
+  }
+
+  @Watch("filterString", { immediate: true })
+  private expandIfNonEmpty(value: string) {
+    if (value.length > 0) {
+      this.expanded = true;
     }
   }
 
-  private toggleSearchFieldVisibility(flag?: boolean) {
-    if (flag !== undefined) {
-      this.isShownSearchField = flag;
-    } else {
-      this.isShownSearchField = !this.isShownSearchField;
-    }
-    Vue.nextTick(() => this.setFocusOnField());
-  }
+  @Watch("expanded")
+  private setFocusOnField(newValue: boolean, oldValue: boolean) {
+    if (newValue === oldValue) return;
 
-  @Watch("localFilterString")
-  private submitFilter() {
-    this.$emit("update:filterString", this.localFilterString);
-  }
-
-  setFocusOnField() {
-    if (this.isShownSearchField) {
+    if (newValue) {
       (this.$refs.searchInput as HTMLElement).focus();
     } else {
-      this.localFilterString = "";
+      this.$emit("update:filterString", "");
     }
   }
 }
