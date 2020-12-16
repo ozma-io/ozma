@@ -643,10 +643,10 @@ const telRemoveFormating = (tel: string) => tel.replace(/^(\+)|\D/g, "$1");
 // Source: https://stackoverflow.com/a/3809435
 const urlRegex = /https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9(?:)]{1,6}\b(?:[-a-zA-Z0-9(?:)@:%_+.~#?&//=]*)/;
 const linksRegex =
-  new RegExp(`(?:^|\\s)(?:\
+  new RegExp(`(?:^|\\s|,)(?:\
 (${emailRegex.source})|\
 (${telRegex.source})|\
-(${urlRegex.source}))(?:$|\\s)`, "gm");
+(${urlRegex.source}))(?:$|\\s|,|\\.|;)`, "gm");
 const replaceLink = (match: string, email: string, tel: string, url: string) => {
   const prefix =
     email ? "mailto:" :

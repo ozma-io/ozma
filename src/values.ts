@@ -1,6 +1,5 @@
 import { ValueType, FieldType, IFieldRef, IEntityRef } from "@/api";
-import { Moment } from "moment";
-import * as moment from "moment";
+import moment, { Moment, MomentInput } from "moment";
 
 // Date/time is stored as Moment objects in UTC.
 export const dateFormat = "L";
@@ -89,14 +88,14 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: un
     }
   } else if (fieldType.type === "date") {
     // We use local time for dates.
-    const date = moment(value as any, dateFormat);
+    const date = moment(value as MomentInput, dateFormat);
     if (!date.isValid()) {
       return undefined;
     } else {
       return date;
     }
   } else if (fieldType.type === "datetime") {
-    const date = moment(value as any, dateTimeFormat).utc();
+    const date = moment(value as MomentInput, dateTimeFormat).utc();
     if (!date.isValid()) {
       return undefined;
     } else {

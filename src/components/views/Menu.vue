@@ -16,7 +16,7 @@
 <template>
   <div :class="['menu_container', { 'menu_container__centered': isCentered }]">
     <b-container>
-      <b-row>
+      <b-row :class="[{ 'justify-content-center': isCentered }]">
         <b-col v-if="typeof entriesOrError === 'string'" cols="12">
           <span>
             {{ entriesOrError }}
@@ -40,7 +40,7 @@ import { Location } from "vue-router";
 import { namespace } from "vuex-class";
 import { mixins } from "vue-class-component";
 
-import { tryDicts, mapMaybe } from "@/utils";
+import { tryDicts, mapMaybe, isMobile } from "@/utils";
 import { CombinedUserView, valueToPunnedText, homeSchema, currentValue, ICombinedValue } from "@/state/user_view";
 import { IQuery } from "@/state/query";
 import { CurrentChanges, IEntityChanges } from "@/state/staging_changes";
@@ -65,6 +65,9 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
   }
 
   private get isCentered(): boolean {
+    if (isMobile) {
+      return false;
+    }
     const isCentered = R.pathOr(false, ["attributes", "menu_centered"], this.uv);
     if (typeof isCentered === "boolean") {
       return isCentered;
@@ -203,7 +206,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 
   .menu_container {
     /* margin-top: 120px; */
@@ -213,9 +216,11 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
 
   .menu_container__centered {
     width: 100%;
+    height: 100%;
     padding: 1% 0;
     display: flex;
     justify-content: center;
+    align-items: center;
   }
 
   .main-menu-block {
