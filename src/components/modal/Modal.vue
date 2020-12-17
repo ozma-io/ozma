@@ -2,6 +2,7 @@
   <VueModal
     :width="modalWidth"
     :height="modalHeight"
+    :shift-y="0.90"
     :name="uid"
     :classes="[
       'v--modal',
