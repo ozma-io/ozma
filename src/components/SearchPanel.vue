@@ -12,40 +12,41 @@
 <template>
   <div
     :class="['search-wrapper', {
-      'search-show': expanded,
+      'search-show': showInput,
     }]"
   >
     <b-form
       inline
       :class="['find', {
-        'search-field_hidden': !expanded,
+        'search-field_hidden': !showInput,
       }]"
-      @submit.prevent=""
+      @submit.prevent="updateInput"
     >
       <b-input-group>
         <b-form-input
           ref="searchInput"
-          :value="filterString"
+          :value="localFilterString"
           class="find_in form-control"
-          lazy
           :placeholder="$t('search_placeholder')"
-          @update="updateInput"
+          @update="localFilterString = $event; debouncedUpdateInput()"
+          @change="updateInput"
+          @blur="updateInput"
         />
-        <b-input-group-append v-if="filterString.length > 0">
+        <b-input-group-append v-if="localFilterString.length > 0">
           <span
             id="searchclear"
             class="material-icons clear-search"
-            @click="$emit('update:filterString', '')"
+            @click="localFilterString = ''; updateInput()"
           >backspace</span>
         </b-input-group-append>
       </b-input-group>
     </b-form>
     <button
       class="search-button"
-      @click.prevent="toogleExpanded"
+      @click.prevent="toggleShowInput"
     >
       <i
-        v-if="!expanded"
+        v-if="!showInput"
         class="material-icons search-button__icon"
       >search</i>
       <i
@@ -59,36 +60,45 @@
 <script lang="ts">
 
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { Debounce } from "vue-debounce-decorator";
 
 @Component
 export default class SearchPanel extends Vue {
   @Prop({ type: String, default: "" }) filterString!: string;
 
-  private expanded = false;
+  private showInput;
+  private localFilterString;
 
-  private toogleExpanded() {
-    this.expanded = !this.expanded;
+  constructor() {
+    super();
+    this.localFilterString = this.filterString;
+    this.showInput = this.filterString !== "";
   }
 
-  private updateInput(newValue: string) {
-    this.$emit("update:filterString", newValue);
+  private toggleShowInput() {
+    this.showInput = !this.showInput;
   }
 
-  @Watch("filterString", { immediate: true })
-  private expandIfNonEmpty(value: string) {
-    if (value.length > 0) {
-      this.expanded = true;
+  private updateInput() {
+    if (this.localFilterString !== this.filterString) {
+      this.$emit("update:filterString", this.localFilterString);
     }
   }
 
-  @Watch("expanded")
+  @Debounce(2000)
+  private debouncedUpdateInput() {
+    this.updateInput();
+  }
+
+  @Watch("showInput")
   private setFocusOnField(newValue: boolean, oldValue: boolean) {
     if (newValue === oldValue) return;
 
     if (newValue) {
       (this.$refs.searchInput as HTMLElement).focus();
     } else {
-      this.$emit("update:filterString", "");
+      this.localFilterString = "";
+      this.updateInput();
     }
   }
 }
