@@ -107,7 +107,7 @@ export default class ButtonsPanel extends Vue {
     border: 1px solid var(--MainBorderColor);
     border-radius: 3px;
     background-color: var(--MainBackgroundColor);
-    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.3);
     top: calc(100% + 5px);
     right: 0;
     z-index: 1200;
