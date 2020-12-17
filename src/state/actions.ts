@@ -5,7 +5,7 @@ import {
 } from "@/api";
 import { CombinedTransactionResult } from "@/state/staging_changes";
 
-export const saveAndRunAction = async ({ dispatch, commit }: { dispatch: Dispatch; commit: Commit }, ref: IActionRef, args: Record<string, any>): Promise<IActionResult> => {
+export const saveAndRunAction = async ({ dispatch, commit }: { dispatch: Dispatch; commit: Commit }, ref: IActionRef, args: Record<string, unknown>): Promise<IActionResult> => {
   let ret: IActionResult | undefined;
   let reloaded = false;
   try {

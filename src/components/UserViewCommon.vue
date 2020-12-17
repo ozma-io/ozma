@@ -1,8 +1,8 @@
 <i18n>
     {
         "en": {
-            "create": "Create new",
-            "create_in_modal": "Create referenced in modal window",
+            "create": "Create new entry",
+            "create_in_modal": "Create referenced entry in modal window",
             "export_to_csv": "Export to .csv",
             "import_from_csv": "Import from .csv",
             "scan_qrcode": "Scan QR Code",
@@ -12,7 +12,7 @@
             "error": "Error"
         },
         "ru": {
-            "create": "Создать новую",
+            "create": "Создать новую запись",
             "create_in_modal": "Создать связанную запись в окне",
             "export_to_csv": "Экспорт в .csv",
             "import_from_csv": "Импорт из .csv",
@@ -349,7 +349,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       throw new Error("Impossible");
     }
 
-    this.updateValue(this.modalReferenceField.field, id);
+    void this.updateValue(this.modalReferenceField.field, id);
     this.modalView = null;
   }
 
@@ -374,7 +374,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       if (this.qrCodeReferenceField == null) {
         this.makeToast(this.$t("qrcode_error_not_attr").toString());
       } else if (this.qrCodeReferenceField.entity.schema === r.s && this.qrCodeReferenceField.entity.name === r.n) {
-        this.updateValue(this.qrCodeReferenceField.field, r.i);
+        void this.updateValue(this.qrCodeReferenceField.field, r.i);
       } else {
         this.makeToast(this.$t("qrcode_error_not_ref").toString() + `{schema: ${r.s}, name: ${r.n}}`);
       }
@@ -392,7 +392,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
   private selectFromBarScanner(result: Array<string>) {
     result.forEach(r => {
-      this.updateValue({ type: "new", column: 0 }, r);
+      void this.updateValue({ type: "new", column: 0 }, r);
     });
   }
 

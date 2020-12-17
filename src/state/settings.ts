@@ -49,14 +49,14 @@ const settingsModule: Module<ISettingsState, {}> = {
   actions: {
     removeAuth: {
       root: true,
-      handler: ({ dispatch }) => {
-        dispatch("getSettings");
+      handler: async ({ dispatch }) => {
+        await dispatch("getSettings");
       },
     },
     setAuth: {
       root: true,
-      handler: ({ dispatch }) => {
-        dispatch("getSettings");
+      handler: async ({ dispatch }) => {
+        await dispatch("getSettings");
       },
     },
 
@@ -94,7 +94,7 @@ const settingsModule: Module<ISettingsState, {}> = {
           return settings;
         } catch (e) {
           if (state.pending === pending.ref) {
-            dispatch("setError", e.message);
+            void dispatch("setError", e.message);
           }
           throw e;
         }

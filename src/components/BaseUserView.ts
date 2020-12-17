@@ -188,7 +188,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
     const entity = this.uv.info.mainEntity;
 
     if (ref.type === "added") {
-      this.resetAddedEntry({
+      void this.resetAddedEntry({
         entityRef: entity,
         userView: this.uv.userViewKey,
         id: ref.id,
@@ -203,7 +203,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
       } else {
         this.resetErrors(errorKey);
       }
-      this.deleteEntry({
+      void this.deleteEntry({
         scope: this.scope,
         entityRef: entity,
         // Guaranteed to exist if mainEntity exists.

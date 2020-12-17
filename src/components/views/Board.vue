@@ -52,10 +52,10 @@ import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
 import { LocalUserView, IExistingValueRef, ValueRef } from "@/local_user_view";
-import { CombinedUserView, IValueInfo, IUserViewValueRef, ICombinedValue, IRowCommon, ICombinedRow, valueToPunnedText, referenceEntriesRef } from "@/state/user_view";
+import { CombinedUserView, IValueInfo, IUserViewValueRef, ICombinedValue, IRowCommon, ICombinedRow, valueToPunnedText, referenceEntriesRef, currentValue } from "@/state/user_view";
 
 import Board from "@/components/kanban/Board.vue";
-import { ICard, ICardCol, ICardRow, CardColType, allowedTargets } from "@/components/kanban/Card.vue";
+import { ICard, ICardCol, ICardRow, CardColType, isCardTarget } from "@/components/kanban/Card.vue";
 import { IColumn } from "@/components/kanban/Column.vue";
 import Errorbox from "@/components/Errorbox.vue";
 import { FieldType } from "ozma-api/src";
@@ -78,7 +78,7 @@ type IColumnTitleMap = Record<number, string>;
 @Component({ components: { Board, Errorbox } })
 export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntriesView>(BaseUserView, BaseEntriesView) {
   @Prop() uv!: CombinedUserView;
-  selectedCards: any[] = [];
+  selectedCards: unknown[] = [];
 
   get entriesEntity() {
     const fieldType = this.uv.info.columns[this.groupIndex].mainField?.field.fieldType;
@@ -89,11 +89,10 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
   }
 
   get cardTarget(): string | undefined {
-    const cardTarget = this.uv.attributes.card_target;
+    const cardTarget = this.uv.attributes["card_target"];
     if (
       typeof cardTarget === "string"
-      || cardTarget instanceof String
-      || allowedTargets.indexOf(cardTarget) !== -1) {
+        && isCardTarget(cardTarget)) {
       return cardTarget;
     }
     return undefined;
@@ -132,7 +131,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       return null;
     }
 
-    return rawColumns.map((i: any) => String(i));
+    return rawColumns.map(i => String(i));
   }
 
   private get columns(): IColumn[] | null {
@@ -193,11 +192,11 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
   }
 
   private changeOrder(orderRef: ValueRef, value: number) {
-    this.updateValue(orderRef, value);
+    void this.updateValue(orderRef, value);
   }
 
   private changeGroup(groupRef: ValueRef, value: any, orderRef: ValueRef, orderValue: number) {
-    this.updateValue(groupRef, value);
+    void this.updateValue(groupRef, value);
   }
 
   private getCardColumns(values: ICombinedValue[]): ICardCol[] {
@@ -245,7 +244,10 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     // These two lines are necessary because user can omit BoardOrder attribute
     // To be replaced with a better ternary version later when we update TS
     // (should check if orderIndex > -1)
-    const { value: order } = this.orderIndex === -1 ? { value: undefined } : row.values[this.orderIndex];
+    let order: number | undefined;
+    if (this.orderIndex !== -1) {
+      order = Number(currentValue(row.values[this.orderIndex]));
+    }
     const color = R.path<string>(["attributes", "cell_color"], groupValue);
     const groupField = R.path<string>(["info", "fieldRef", "name"], groupValue);
 

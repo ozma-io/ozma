@@ -139,7 +139,7 @@ export interface IReferenceSelectAction {
   },
 })
 export default class ReferenceField extends mixins(BaseEntriesView) {
-  @query.Action("addWindow") addWindow!: (query: IQuery) => Promise<void>;
+  @query.Action("addWindow") addWindow!: (queryObj: IQuery) => Promise<void>;
   @Prop({ type: Array, default: () => [] }) selectViews!: IReferenceSelectAction[];
   @Prop({ type: Object, required: true }) value!: ICombinedValue;
   @Prop({ type: Object, required: true }) entry!: IEntriesRef;
@@ -205,6 +205,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
   }
 
   .single_value {
+    margin: 2px;
     word-break: break-all;
 
     &.has_links {

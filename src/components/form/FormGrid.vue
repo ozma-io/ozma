@@ -18,7 +18,7 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 
 import FormGridBlock from "@/components/form/FormGridBlock.vue";
-import { IGridProps, GridElement } from "@/components/form/types";
+import type { IGridProps, GridElement } from "@/components/form/types";
 
 @Component({ components: { FormGridBlock } })
 export default class FormGrid extends Vue {
@@ -28,10 +28,6 @@ export default class FormGrid extends Vue {
 </script>
 
 <style scoped>
-  .form_container {
-    margin-top: 25px;
-  }
-
   @media screen and (max-device-width: 480px) {
     .container-fluid {
       padding: 0;

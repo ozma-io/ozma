@@ -194,13 +194,13 @@ export const deepClone = <T>(a: T): T => {
   } else if (a instanceof Array) {
     return a.map(deepClone) as any;
   } else if (!hasUserPrototype(a as any)) {
-    const res: any = { ...a };
+    const res: Record<string, any> = { ...a };
     /* eslint-disable guard-for-in */
     for (const k in res) {
       res[k] = deepClone(res[k]);
     }
     /* eslint-enable guard-for-in */
-    return res;
+    return res as any;
   } else {
     throw new Error("Cannot deep clone an object");
   }
@@ -219,9 +219,9 @@ export const deepEquals = <T>(a: T, b: T): boolean => {
       return a.every((aVal, idx) => deepEquals(aVal, bArr[idx]));
     }
   } else if (!(hasUserPrototype(a as any) || hasUserPrototype(b as any))) {
-    const bObj = b as any;
+    const bObj = b as any as Record<string, any>;
     return Object.keys(b).every(k => k in a)
-            && Object.entries(a).every(([k, v]) => k in b && deepEquals(v, bObj[k]));
+        && Object.entries(a).every(([k, v]) => k in b && deepEquals(v, bObj[k]));
   } else {
     throw new Error("Cannot compare objects");
   }
@@ -643,10 +643,10 @@ const telRemoveFormating = (tel: string) => tel.replace(/^(\+)|\D/g, "$1");
 // Source: https://stackoverflow.com/a/3809435
 const urlRegex = /https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9(?:)]{1,6}\b(?:[-a-zA-Z0-9(?:)@:%_+.~#?&//=]*)/;
 const linksRegex =
-  new RegExp(`(?:^|\\s)(?:\
+  new RegExp(`(?:^|\\s|,)(?:\
 (${emailRegex.source})|\
 (${telRegex.source})|\
-(${urlRegex.source}))(?:$|\\s)`, "gm");
+(${urlRegex.source}))(?:$|\\s|,|\\.|;)`, "gm");
 const replaceLink = (match: string, email: string, tel: string, url: string) => {
   const prefix =
     email ? "mailto:" :

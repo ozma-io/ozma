@@ -39,7 +39,7 @@ export default class BaseEntriesView extends Vue {
       if (this.newEntries instanceof Error) {
         this.currentEntries = null;
       } else if (this.newEntries === null) {
-        this.getEntries({ ref: this.entriesEntity, reference: this.uid });
+        void this.getEntries({ ref: this.entriesEntity, reference: this.uid });
       } else if (!(this.newEntries instanceof Promise)) {
         this.currentEntries = this.newEntries;
       }
@@ -50,7 +50,7 @@ export default class BaseEntriesView extends Vue {
   entityChanged(newEntity: IEntriesRef | null) {
     const newPendingEntity = deepClone(newEntity);
     if (newPendingEntity !== null && this.newEntries === null) {
-      this.getEntries({ ref: newPendingEntity, reference: this.uid });
+      void this.getEntries({ ref: newPendingEntity, reference: this.uid });
     }
 
     const oldPendingEntity = this.pendingEntity;

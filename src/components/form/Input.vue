@@ -106,7 +106,7 @@ export default class Input extends Vue {
   private mounted() {
     const controlElement = this.$refs.control as HTMLInputElement;
     if (this.autofocus) {
-      Vue.nextTick().then(() => {
+      void Vue.nextTick().then(() => {
         if (this.isCellEdit) {
           const controlTextareaElement = this.$refs.controlTextarea as any;
           controlTextareaElement.$el.focus();

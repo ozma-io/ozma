@@ -21,11 +21,6 @@ export interface IGridButtons {
   actions: IButtonAction[];
 }
 
-export interface IButtons {
-  form_block: number;
-  actions: IButtonAction[];
-}
-
 export interface IButtonAction {
   name: string;
   variant: string;

@@ -1,6 +1,6 @@
 import Vue from "vue";
 import { Store, Dispatch, Module, ActionContext } from "vuex";
-import moment from "moment";
+import moment, { MomentInput } from "moment";
 
 import { IRef, ObjectResourceMap, ReferenceName, ObjectMap, momentLocale, tryDicts, valueSignature, waitTimeout } from "@/utils";
 import {
@@ -14,7 +14,7 @@ import { IReferenceFieldType } from "ozma-api/src";
 
 export interface IUserViewArguments {
   source: UserViewSource;
-  args: Record<string, any> | null;
+  args: Record<string, unknown> | null;
 }
 
 export interface IValueInfo {
@@ -25,13 +25,13 @@ export interface IValueInfo {
 
 export interface ICombinedValue extends IExecutedValue {
   // `undefined` here means that value didn't pass validation
-  value: any;
+  value: unknown;
   // See `values.ts` for explanation of this. The idea is to use `rawValue` everywhere when it's defined,
   // unless you need validated value.
   // Even better, use `currentValue()`.
-  rawValue?: any;
+  rawValue?: unknown;
   erroredOnce?: boolean;
-  initialValue?: any;
+  initialValue?: unknown;
   // `undefined` is used when pun is not yet resolved, to avoid adding/removing values.
   pun?: string | null | undefined;
   initialPun?: string;
@@ -114,7 +114,7 @@ export const setUpdatedPun = (entitySummaries: Entries | null, value: ICombinedV
   if (valueIsNull(ref)) {
     value.pun = "";
   } else {
-    const pun = entitySummaries ? entitySummaries[ref] : undefined;
+    const pun = entitySummaries ? entitySummaries[ref as any] : undefined;
     if (pun === undefined) {
       value.pun = String(ref);
     } else {
@@ -134,10 +134,10 @@ const setOrRequestUpdatedPun = (context: { dispatch: Dispatch; state: IUserViewS
     } else {
       const summaries = state.entries.entries.get(fieldType);
       if (summaries === undefined) {
-        dispatch("userView/getEntries", { ref: referenceEntriesRef(fieldType), reference: "update" }, { root: true });
+        void dispatch("userView/getEntries", { ref: referenceEntriesRef(fieldType), reference: "update" }, { root: true });
         value.pun = undefined;
       } else if (!(summaries instanceof Error) && !(summaries instanceof Promise)) {
-        const pun = summaries[ref];
+        const pun = summaries[ref as any];
         if (pun === undefined) {
           value.pun = String(ref);
         } else {
@@ -165,7 +165,7 @@ const clearUpdatedValue = (value: ICombinedValue) => {
   }
 };
 
-export const newEmptyRow = (store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>): IRowCommon => {
+export const newEmptyRow = (store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, unknown>): IRowCommon => {
   const eref = uv.info.mainEntity;
   if (!eref) {
     throw new Error("Main entity must be specified");
@@ -182,7 +182,7 @@ export const newEmptyRow = (store: Store<any>, uv: CombinedUserView, defaultRawV
     const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
 
     if (info.mainField) {
-      let rawDefaultValue: any;
+      let rawDefaultValue: unknown;
       if (info.mainField.name in defaultRawValues) {
         rawDefaultValue = defaultRawValues[info.mainField.name];
       } else {
@@ -240,8 +240,8 @@ export interface IUserViewEventHandler {
 interface ICombinedUserViewParams {
   args: IUserViewArguments;
   info: IResultViewInfo;
-  attributes: Record<AttributeName, any>;
-  columnAttributes: Record<AttributeName, any>[];
+  attributes: Record<AttributeName, unknown>;
+  columnAttributes: Record<AttributeName, unknown>[];
   rows: IExecutedRow[] | null;
   changes: CurrentChanges;
 }
@@ -251,8 +251,8 @@ export class CombinedUserView {
   args: IUserViewArguments;
   homeSchema: SchemaName | null;
   info: IResultViewInfo;
-  attributes: Record<AttributeName, any>;
-  columnAttributes: Record<AttributeName, any>[];
+  attributes: Record<AttributeName, unknown>;
+  columnAttributes: Record<AttributeName, unknown>[];
   rows: ICombinedRow[] | null;
   // Rows added by user, not yet commited to the database.
   newRows: Record<AddedRowId, IAddedRow>;
@@ -347,7 +347,7 @@ export class CombinedUserView {
           rows.forEach(row => {
             const cell = row.values[colI];
             if (cell.value) {
-              cell.value = moment.utc(cell.value);
+              cell.value = moment.utc(cell.value as MomentInput);
             }
           });
         }
@@ -451,7 +451,8 @@ export class CombinedUserView {
     if (this.rows !== null) {
       Object.values(this.info.domains).forEach(domain => {
         Object.values(domain).forEach(field => {
-          if (!field.field || !fieldPredicate(field.field)) {
+          const colField = field.field;
+          if (!colField || !fieldPredicate(colField)) {
             return;
           }
 
@@ -485,7 +486,7 @@ export class CombinedUserView {
             }
 
             entryRefs.forEach(valueRef => {
-              valueFunc(field.field as IColumnField, valueRef);
+              valueFunc(colField, valueRef);
             });
           });
         });
@@ -717,12 +718,12 @@ const fetchUserView = async (context: ActionContext<IUserViewState, {}>, args: I
 const prefetchUserViewInfo = ({ dispatch }: ActionContext<IUserViewState, {}>, uv: CombinedUserView) => {
   // Preload entities information.
   if (uv.info.mainEntity) {
-    dispatch("getEntity", uv.info.mainEntity);
+    void dispatch("getEntity", uv.info.mainEntity);
   }
   if (uv.rows !== null) {
     Object.values(uv.info.domains).forEach(domain => {
       Object.values(domain).forEach(column => {
-        dispatch("getEntity", column.ref.entity);
+        void dispatch("getEntity", column.ref.entity);
       });
     });
   }
@@ -1223,7 +1224,7 @@ const userViewModule: Module<IUserViewState, {}> = {
           }
           const mainType = res.info.columns[1].valueType;
           const entries = Object.fromEntries(res.result.rows.map<[number, string]>(row => {
-            const id = row.values[0].value;
+            const id = row.values[0].value as number;
             const main = valueToText(mainType, row.values[1].value);
             return [id, main];
           }));
@@ -1332,7 +1333,7 @@ const userViewModule: Module<IUserViewState, {}> = {
       const updatedValue = changes.changes[args.fieldRef.entity.schema][args.fieldRef.entity.name].updated[args.id][args.fieldRef.name];
       const fieldType = state.entities.getEntity(args.fieldRef.entity)?.columnFields[args.fieldRef.name].fieldType;
       if (fieldType && fieldType.type === "reference") {
-        dispatch("getEntries", { ref: referenceEntriesRef(fieldType), reference: "update" });
+        void dispatch("getEntries", { ref: referenceEntriesRef(fieldType), reference: "update" });
       }
       commit("updateField", { ...args, updatedValue, fieldType });
     },
@@ -1349,7 +1350,7 @@ const userViewModule: Module<IUserViewState, {}> = {
       const addedEntry = changes.changes[args.fieldRef.entity.schema][args.fieldRef.entity.name].added[args.userView].entries[args.id];
       const fieldType = state.entities.getEntity(args.fieldRef.entity)?.columnFields[args.fieldRef.name].fieldType;
       if (fieldType && fieldType.type === "reference") {
-        dispatch("getEntries", { ref: referenceEntriesRef(fieldType), reference: "update" });
+        void dispatch("getEntries", { ref: referenceEntriesRef(fieldType), reference: "update" });
       }
       commit("setAddedField", { ...args, addedEntry, fieldType });
     },
@@ -1364,7 +1365,6 @@ const userViewModule: Module<IUserViewState, {}> = {
       commit("resetUpdatedField", args);
     },
     beforeResetAddedEntry: ({ rootState, commit }, args: { entityRef: IEntityRef; userView: UserViewKey; id: AddedRowId }) => {
-      const changes = ((rootState as any).staging as IStagingState).current;
       commit("resetAddedEntry", args);
     },
     beforeResetDeleteEntry: ({ commit }, args: { entityRef: IEntityRef; id: RowId }) => {
