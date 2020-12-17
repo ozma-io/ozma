@@ -471,7 +471,6 @@ export default class MultiSelect extends Vue {
   }
 
   .empty_message_text {
-    padding-left: 2px;
     display: inline-flex;
     width: 100%;
     cursor: pointer;
@@ -483,8 +482,8 @@ export default class MultiSelect extends Vue {
   .select_container {
     display: flex;
     flex-direction: row;
-    padding: 2px;
     position: relative;
+    padding: 2px 5px;
     box-sizing: border-box;
     width: 100%;
     border-bottom: 1px solid var(--MainBorderColor);
@@ -496,6 +495,10 @@ export default class MultiSelect extends Vue {
 
   .input_modal__input_group .select_container {
     padding: 2px;
+  }
+
+  .input_container > div > div > .select_container {
+    padding: 2px 5px;
   }
 
   .form_grid_block__column > div > div > span > div > div > .select_container {
@@ -518,6 +521,7 @@ export default class MultiSelect extends Vue {
     width: 100%;
     cursor: pointer;
     align-content: center;
+    max-height: 150px;
     overflow-x: auto;
   }
 
@@ -554,10 +558,6 @@ export default class MultiSelect extends Vue {
     cursor: pointer;
     z-index: 10;
     color: var(--MainBorderColor);
-
-    &:hover {
-      background: rgba(255, 0, 0, 0.2);
-    }
   }
 
   .select_container__options_container {
@@ -574,7 +574,7 @@ export default class MultiSelect extends Vue {
   }
 
   .select_container__options_list {
-    padding: 2px;
+    padding: 0 0 5px 5px;
     margin: 0;
     box-sizing: border-box;
     max-height: 250px;
@@ -587,10 +587,13 @@ export default class MultiSelect extends Vue {
 
   .select_container__options_list > li.select_container__options_list__option {
     color: var(--MainTextColor);
-    margin: 2px;
-    padding: 1px 8px;
+    padding-left: 10px;
+    margin-right: 10px;
+    margin-top: 5px;
+    padding-right: 10px;
     cursor: pointer;
     word-break: break-all;
+    max-width: 250px;
   }
 
   .select_container__options_list > li.select_container__options_list__option:hover,
@@ -611,9 +614,10 @@ export default class MultiSelect extends Vue {
   }
 
   .values_list__value {
-    margin: 2px;
+    margin: 5px;
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
+    max-width: 250px;
     word-break: break-all;
   }
 

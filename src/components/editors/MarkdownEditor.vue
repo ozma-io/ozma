@@ -9,24 +9,22 @@
   }
 </i18n>
 <template>
-  <div :style="{'margin-left': '15px'}">
-    <viewer
-      v-if="readOnly"
-      :initial-value="content"
-      :height="`${height}px`"
-    />
-    <editor
-      v-else
-      :key="key"
-      ref="editor"
-      :initial-value="content"
-      :initial-edit-type="editType"
-      :options="editorOptions"
-      :height="`${height}px`"
-      preview-style="tab"
-      @change="onChange"
-    />
-  </div>
+  <viewer
+    v-if="readOnly"
+    :initial-value="content"
+    :height="`${height}px`"
+  />
+  <editor
+    v-else
+    :key="key"
+    ref="editor"
+    :initial-value="content"
+    :initial-edit-type="editType"
+    :options="editorOptions"
+    :height="`${height}px`"
+    preview-style="tab"
+    @change="onChange"
+  />
 </template>
 
 <script lang="ts">
