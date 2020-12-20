@@ -41,36 +41,7 @@ export default class CodeEditor extends Vue {
     };
   }
 
-<<<<<<< HEAD
-  @Watch("options")
-  private updateOptions(newOptions: monaco.editor.IStandaloneEditorConstructionOptions) {
-    if (this.editor !== null) {
-      this.editor.updateOptions(newOptions);
-    }
-  }
-
-  @Watch("content")
-  private updateContent(content: string) {
-    if (this.editor !== null && this.editor.getValue() !== content) {
-      this.editor.setValue(content);
-    }
-  }
-
-  private mounted() {
-    const editor = monaco.editor.create(this.$el as HTMLElement, {
-      ...this.options,
-      value: this.content,
-    });
-    editor.onDidChangeModelContent(event => {
-      const content = editor.getValue();
-      if (content !== this.content) {
-        this.$emit("update:content", content);
-      }
-    });
-    this.editor = editor;
-=======
   private onEditorMounted(editor: Monaco.editor.IStandaloneCodeEditor) {
->>>>>>> parent of 283a037c (Drop vue-monaco)
     if (this.autofocus) {
       editor.focus();
     }
