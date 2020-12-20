@@ -1,18 +1,26 @@
 <template>
-  <div :class="{'monaco-editor_modal': isModal}" />
+  <MonacoEditor
+    :class="{'monaco-editor_modal': isModal}"
+    :value="content"
+    :options="options"
+    @change="onChange"
+    @focus="$emit('focus', $event)"
+    @editorDidMount="onEditorMounted"
+  />
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import * as monaco from "monaco-editor";
+import Monaco from "monaco-editor";
+import MonacoEditor from "vue-monaco";
 
 import { CurrentSettings } from "@/state/settings";
 
 const settings = namespace("settings");
 
-@Component
+@Component({ components: { MonacoEditor } })
 export default class CodeEditor extends Vue {
   @settings.State("current") settings!: CurrentSettings;
 
@@ -23,9 +31,7 @@ export default class CodeEditor extends Vue {
   @Prop({ default: false }) autofocus!: boolean;
   @Prop({ default: false }) isModal!: boolean;
 
-  editor: monaco.editor.IStandaloneCodeEditor | null = null;
-
-  get options(): monaco.editor.IStandaloneEditorConstructionOptions {
+  get options(): Monaco.editor.IStandaloneEditorConstructionOptions {
     const fontSize = this.settings.getEntry("font_size", Number, 14);
 
     return {
@@ -35,6 +41,7 @@ export default class CodeEditor extends Vue {
     };
   }
 
+<<<<<<< HEAD
   @Watch("options")
   private updateOptions(newOptions: monaco.editor.IStandaloneEditorConstructionOptions) {
     if (this.editor !== null) {
@@ -61,9 +68,16 @@ export default class CodeEditor extends Vue {
       }
     });
     this.editor = editor;
+=======
+  private onEditorMounted(editor: Monaco.editor.IStandaloneCodeEditor) {
+>>>>>>> parent of 283a037c (Drop vue-monaco)
     if (this.autofocus) {
       editor.focus();
     }
+  }
+
+  private onChange(value: string) {
+    this.$emit("update:content", value);
   }
 }
 </script>
