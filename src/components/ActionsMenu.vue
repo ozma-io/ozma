@@ -11,7 +11,7 @@
 
 <template>
   <div
-    :class="['actions-menu', {'actions-menu_active': showActions}, menuAlign]"
+    :class="['actions-menu', {'actions-menu_active': showActions}]"
   >
     <input
       v-if="menuAlign == 'left'"
@@ -176,20 +176,8 @@ export default class ActionsMenu extends Vue {
     align-items: center;
   }
 
-  .actions-menu.right {
-    position: absolute;
-    right: 15px;
-  }
-
-  .search-wrapper + .actions-menu {
-    position: relative;
-    right: auto;
-  }
-
   .modal__tab_header .actions-menu {
     display: inline-flex;
-    position: relative;
-    right: auto;
   }
 
   .actions-menu_active {
@@ -217,7 +205,7 @@ export default class ActionsMenu extends Vue {
     border: 1px solid var(--MainBorderColor);
     margin-top: 0;
     top: calc(100% + 5px);
-    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.1);
     border-radius: 3px;
   }
 

@@ -80,11 +80,6 @@
           :filter-string="query.root.search"
           @update:filterString="replaceRootSearch($event)"
         />
-        <ActionsMenu
-          :actions="extraActions"
-          menu-align="right"
-          @goto="pushRoot"
-        />
         <ButtonsPanel :buttons="panelButtons" />
       </div>
       <div
@@ -275,6 +270,7 @@ export default class TopLevelUserView extends Vue {
 
   get actions() {
     const actions: Action[] = [];
+    actions.push(...this.extraActions);
     if (this.currentAuth !== null) {
       if (Api.developmentMode) {
         actions.push({ name: this.$t("authed_link").toString(),
