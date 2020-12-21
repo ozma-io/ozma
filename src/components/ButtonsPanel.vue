@@ -90,6 +90,7 @@ export default class ButtonsPanel extends Vue {
     margin: 0 0 0 10px;
   }
 
+  ul.actions > span > li,
   ul.actions > a > li {
     padding: 5px 15px 5px 35px;
   }
@@ -119,6 +120,7 @@ export default class ButtonsPanel extends Vue {
     visibility: visible;
   }
 
+  ul.actions > span > li:hover,
   ul.actions > a > li:hover {
     background-color: var(--MainBorderColor);
   }
