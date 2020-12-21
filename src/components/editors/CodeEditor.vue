@@ -65,6 +65,10 @@ export default class CodeEditor extends Vue {
       editor.focus();
     }
   }
+
+  private beforeDestroy() {
+    this.editor!.dispose();
+  }
 }
 </script>
 
