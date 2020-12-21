@@ -230,6 +230,7 @@
         <QRCode
           v-else-if="inputType.name === 'qrcode'"
           ref="control"
+          :entry="inputType.ref"
           :height="customHeight"
           :content="textValue"
         />
@@ -397,6 +398,7 @@ interface ICodeEditorType {
 
 interface IQRCodeType {
   name: "qrcode";
+  ref: IEntriesRef;
 }
 
 interface IBarCodeType {
@@ -670,6 +672,10 @@ export default class FormControl extends Vue {
     if (this.fieldType !== null) {
       switch (this.fieldType.type) {
         case "reference": {
+          if ("print_qrcode" in this.attributes && this.attributes["print_qrcode"]) {
+            return { name: "qrcode", ref: referenceEntriesRef(this.fieldType) };
+          }
+
           const refEntry: IReferenceType = {
             name: "reference",
             ref: referenceEntriesRef(this.fieldType),
@@ -757,8 +763,6 @@ export default class FormControl extends Vue {
           editType: "wysiwyg",
           style: this.controlStyle(heightMultilineText),
         };
-      case "qrcode":
-        return { name: "qrcode" };
       case "barcode":
         return { name: "barcode" };
       default:

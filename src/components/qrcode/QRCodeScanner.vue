@@ -13,7 +13,8 @@
         "error_secure_context": "ERROR: secure context required (HTTPS, localhost)",
         "error_camera_used": "ERROR: is the camera already in use?",
         "error_camera_not_suitable": "ERROR: installed cameras are not suitable",
-        "error_stream_not_suppotred": "ERROR: Stream API is not supported in this browser"
+        "error_stream_not_suppotred": "ERROR: Stream API is not supported in this browser",
+        "error_qrcode_is_inappropriate" : "QRCode is inappropriate"
     },
     "ru": {
         "input_placeholder": "Пусто",
@@ -28,7 +29,8 @@
         "error_secure_context": "ОШИБКА: требуется безопасный контекст (HTTPS, localhost)",
         "error_camera_used": "ОШИБКА: камера уже используется?",
         "error_camera_not_suitable": "ОШИБКА: установленные камеры не подходят",
-        "error_stream_not_suppotred": "ОШИБКА: Stream API не поддерживается в этом браузере"
+        "error_stream_not_suppotred": "ОШИБКА: Stream API не поддерживается в этом браузере",
+        "error_qrcode_is_inappropriate" : "QRCode не соответствует назначению"
     }
   }
 </i18n>
@@ -57,13 +59,13 @@
       <ol>
         <li
           v-for="value in result"
-          :key="value.i"
+          :key="value.id"
         >
-          {{ value.v }}
+          {{ value.value }}
         </li>
       </ol>
       <b-button
-        v-if="multiScan"
+        v-if="multiScan && error.length === 0"
         block
         variant="success"
         @click="sendList"
@@ -84,15 +86,19 @@ import { linkHandler, attrToLinkRef } from "@/links";
 import { saveAndRunAction } from "@/state/actions";
 import { IQuery } from "@/state/query";
 import { namespace } from "vuex-class";
+import { IPrintQRCode } from "@/components/qrcode/QRCode.vue";
+
+/* eslint @typescript-eslint/no-var-requires: "off" */
+const beep = require("../../../public/assets/beep.mp3");
 
 export interface IQRContent {
-  s: string; // Schema
-  n: string; // Name
-  i: number; // ID
+  schema: string;
+  name: string;
+  id: number;
 }
 
 export interface IQRResultContent extends IQRContent {
-  v: string; // Value
+  value: string;
 }
 
 const query = namespace("query");
@@ -112,15 +118,16 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   entry: IEntriesRef | null = null;
   entries: Record<string, string> = {};
   currentContent: IQRContent | null = null;
+  audio = new Audio(beep);
 
   @Watch("openScanner")
   private toggleOpenScanner() {
     this.modalShow = !this.modalShow;
-    // this.currentContent = JSON.parse('{"n":"Ingredients","s":"user","i":407}');
     this.currentContent = null;
     this.result = [];
     this.entry = null;
     this.entries = {};
+    this.error = "";
   }
 
   async onInit(promise: any) {
@@ -148,6 +155,14 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   }
 
   private async onDecode(content: string) {
+    await this.audio.play();
+
+    try {
+      window.navigator.vibrate([100, 30, 200]);
+    } catch (e) {
+      console.error(e);
+    }
+
     if (!this.multiScan) {
       this.$emit("update:scanResult", content);
       this.turnCameraOff();
@@ -159,7 +174,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     } else {
       this.error = "";
 
-      let parsedContent: IQRContent | null = null;
+      let parsedContent: IPrintQRCode | null = null;
 
       try {
         parsedContent = JSON.parse(content);
@@ -168,14 +183,8 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
         return;
       }
       if (parsedContent !== null) {
-        this.currentContent = parsedContent;
+        this.currentContent = { schema: parsedContent.s, name: parsedContent.n, id: Number(parsedContent.i) };
       }
-    }
-
-    try {
-      window.navigator.vibrate([100, 30, 200]);
-    } catch (e) {
-      console.error(e);
     }
   }
 
@@ -205,18 +214,24 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
 
   @Watch("currentContent", { deep: true, immediate: true })
   private changeCurrentContent() {
-    if (this.currentContent !== null && this.currentContent.n !== undefined && this.currentContent.s !== undefined && this.currentContent.i !== undefined) {
+    if (this.currentContent !== null) {
       if (this.entry !== null) {
-        const rusultContent = { ...this.currentContent, v: this.entries[Number(this.currentContent.i)] };
-        this.result.push(rusultContent);
-
         if (this.link) {
+          let ref = null;
+
           if ("query" in this.link && this.link.query.args.args) {
-            this.link.query.args.args.id = this.currentContent.i;
+            ref = "ref" in this.link.query.args.source ? this.link.query.args.source.ref : null;
+            this.link.query.args.args.id = this.currentContent.id;
           }
 
           if ("action" in this.link) {
-            this.link.args.id = this.currentContent.i;
+            ref = this.link.action;
+            this.link.args.id = this.currentContent.id;
+          }
+
+          if (ref === null || ref.name !== this.currentContent.name || ref.schema !== this.currentContent.schema) {
+            this.error = this.$t("error_qrcode_is_inappropriate").toString();
+            return;
           }
 
           const emit = (_: string, gotoquery: IQuery) => {
@@ -230,8 +245,11 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
 
           this.modalShow = false;
         }
+
+        const rusultContent = { ...this.currentContent, value: this.entries[Number(this.currentContent.id)] };
+        this.result.push(rusultContent);
       } else {
-        this.entry = { entity: { name: this.currentContent.n, schema: this.currentContent.s } };
+        this.entry = { entity: { name: this.currentContent.name, schema: this.currentContent.schema } };
       }
     }
   }
