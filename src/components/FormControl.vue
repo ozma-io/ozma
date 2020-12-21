@@ -1044,6 +1044,10 @@ export default class FormControl extends Vue {
         left: 3px;
         width: max-content;
       }
+
+      .input_label {
+        max-width: 150px;
+      }
     }
   }
 
