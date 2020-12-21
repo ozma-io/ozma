@@ -7,7 +7,7 @@ import { ErrorKey } from "@/state/errors";
 import type { ScopeName, UserViewKey, AddedRowId, CombinedTransactionResult, IAddedResult } from "@/state/staging_changes";
 import { LocalUserView, RowRef, ValueRef, SimpleLocalUserView, ILocalRow, ILocalRowInfo, INewValueRef } from "@/local_user_view";
 import { equalEntityRef } from "@/values";
-import { ObjectSet } from "@/utils";
+import { mapMaybe, ObjectSet } from "@/utils";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
 
 export interface ISelectionRef {
@@ -216,6 +216,33 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
     this.resetErrors(errorKey);
   }
 
+  protected async addNewRow(): Promise<number> {
+    const entity = this.uv.info.mainEntity;
+    if (!entity) {
+      throw new Error("View doesn't have a main entity");
+    }
+
+    const defaultValues = Object.fromEntries(
+      mapMaybe((cell, colI) => {
+        const columnInfo = this.uv.info.columns[colI];
+        const currValue = currentValue(cell);
+        return (columnInfo.mainField && currValue)
+          ? [columnInfo.mainField.name, currValue]
+          : undefined;
+      },
+      this.local.emptyRow!.row.values),
+    );
+    // FIXME: Theoretical race condition with another addEntry because it's async
+    const res = await this.addEntryWithDefaults({
+      scope: this.scope,
+      entityRef: entity,
+      userView: this.uv.userViewKey,
+      position: 0,
+      defaultValues,
+    });
+    return res.id;
+  }
+
   protected async updateValue(ref: ValueRef, rawValue: any): Promise<ValueRef> {
     const value = this.local.getValueByRef(ref)!;
     if (ref.type === "added") {
@@ -249,24 +276,23 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
         throw new Error("Invalid value");
       }
 
-      const defaultValues = Object.fromEntries(
-        this.local.emptyRow!.row.values
-          .map((cell, colI) => ({
-            columnInfo: this.uv.info.columns[colI],
-            currValue: colI === ref.column ? rawValue : currentValue(cell),
-          }))
-          .filter(({ columnInfo, currValue }) => columnInfo.mainField && currValue)
-          .map(({ columnInfo, currValue }) => ([columnInfo.mainField!.name, currValue])),
-      );
-      // FIXME: Theoretical race condition with another addEntry because it's async
-      const res = await this.addEntryWithDefaults({
-        scope: this.scope,
-        entityRef: entity,
-        userView: this.uv.userViewKey,
-        position: 0,
-        defaultValues,
-      });
-      return { type: "added", id: res.id, column: ref.column };
+      const id = await this.addNewRow();
+      const fieldName = this.uv.info.columns[ref.column].mainField?.name;
+      if (fieldName) {
+        await this.setAddedField({
+          scope: this.scope,
+          fieldRef: {
+            entity,
+            name: fieldName,
+          },
+          userView: this.uv.userViewKey,
+          id,
+          value: rawValue,
+        });
+        return { type: "added", id, column: ref.column };
+      } else {
+        throw new Error("Column without mainField");
+      }
     } else {
       throw new Error("Impossible");
     }

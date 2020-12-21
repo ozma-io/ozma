@@ -727,7 +727,7 @@ const stagingModule: Module<IStagingState, {}> = {
       }
 
       commit("errors/resetErrors", errorKey, { root: true });
-      // await dispatch("clearAdded", { onlyUntouched: true });
+      await dispatch("clearAdded", { onlyUntouched: true });
       commit("validate");
       const nestedOps = await Promise.all(Object.entries(state.current.changes).map(async ([schemaName, entities]) => {
         const ret = await Promise.all(Object.entries(entities).map(async ([entityName, entityChanges]) => {
