@@ -70,7 +70,6 @@
       </div>
 
       <table
-        ref="table"
         :class="['custom-table', 'table', 'b-table',
                  {'edit_active': editingValue !== null}]"
       >
@@ -89,7 +88,6 @@
           >
         </colgroup>
         <thead
-          ref="tableHead"
           class="table-head"
         >
           <tr>

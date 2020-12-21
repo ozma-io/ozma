@@ -6,7 +6,7 @@ import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, ICombinedRo
 import { ErrorKey } from "@/state/errors";
 import type { ScopeName, UserViewKey, AddedRowId, CombinedTransactionResult, IAddedResult } from "@/state/staging_changes";
 import { LocalUserView, RowRef, ValueRef, SimpleLocalUserView, ILocalRow, ILocalRowInfo, INewValueRef } from "@/local_user_view";
-import { equalEntityRef } from "@/values";
+import { equalEntityRef, valueIsNull } from "@/values";
 import { mapMaybe, ObjectSet } from "@/utils";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
 
@@ -226,7 +226,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
       mapMaybe((cell, colI) => {
         const columnInfo = this.uv.info.columns[colI];
         const currValue = currentValue(cell);
-        return (columnInfo.mainField && currValue)
+        return (columnInfo.mainField && !valueIsNull(currValue))
           ? [columnInfo.mainField.name, currValue]
           : undefined;
       },

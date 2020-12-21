@@ -179,8 +179,9 @@ export default class TableRow extends Vue {
     overflow-y: auto;
   }
 
+  /* !importants was used because styles for fixed columns have priority otherwise. */
   td.required_cell_style {
-    background-color: var(--WarningColor);
+    background-color: var(--WarningColor) !important;
   }
 
   td.error_style {
