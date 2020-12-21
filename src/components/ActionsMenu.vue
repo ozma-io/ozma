@@ -285,6 +285,10 @@ export default class ActionsMenu extends Vue {
         top: 54px;
       }
 
+      .nested-menu .div-with-actions.right {
+        left: -83vw !important;
+      }
+
       .black-block {
         top: -50vh !important;
         right: 0;
@@ -312,10 +316,6 @@ export default class ActionsMenu extends Vue {
         width: 100%;
         text-align: left;
         z-index: 1000 !important; /* кнопка выбора действий выше темного блока */
-      }
-
-      .right {
-        margin-left: -75vw;
       }
     }
   }
