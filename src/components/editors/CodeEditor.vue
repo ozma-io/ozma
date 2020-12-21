@@ -1,26 +1,18 @@
 <template>
-  <MonacoEditor
-    :class="{'monaco-editor_modal': isModal}"
-    :value="content"
-    :options="options"
-    @change="onChange"
-    @focus="$emit('focus', $event)"
-    @editorDidMount="onEditorMounted"
-  />
+  <div :class="{'monaco-editor_modal': isModal}" />
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import Monaco from "monaco-editor";
-import MonacoEditor from "vue-monaco";
+import * as monaco from "monaco-editor";
 
 import { CurrentSettings } from "@/state/settings";
 
 const settings = namespace("settings");
 
-@Component({ components: { MonacoEditor } })
+@Component
 export default class CodeEditor extends Vue {
   @settings.State("current") settings!: CurrentSettings;
 
@@ -31,7 +23,9 @@ export default class CodeEditor extends Vue {
   @Prop({ default: false }) autofocus!: boolean;
   @Prop({ default: false }) isModal!: boolean;
 
-  get options(): Monaco.editor.IStandaloneEditorConstructionOptions {
+  editor: monaco.editor.IStandaloneCodeEditor | null = null;
+
+  get options(): monaco.editor.IStandaloneEditorConstructionOptions {
     const fontSize = this.settings.getEntry("font_size", Number, 14);
 
     return {
@@ -41,14 +35,35 @@ export default class CodeEditor extends Vue {
     };
   }
 
-  private onEditorMounted(editor: Monaco.editor.IStandaloneCodeEditor) {
-    if (this.autofocus) {
-      editor.focus();
+  @Watch("options")
+  private updateOptions(newOptions: monaco.editor.IStandaloneEditorConstructionOptions) {
+    if (this.editor !== null) {
+      this.editor.updateOptions(newOptions);
     }
   }
 
-  private onChange(value: string) {
-    this.$emit("update:content", value);
+  @Watch("content")
+  private updateContent(content: string) {
+    if (this.editor !== null && this.editor.getValue() !== content) {
+      this.editor.setValue(content);
+    }
+  }
+
+  private mounted() {
+    const editor = monaco.editor.create(this.$el as HTMLElement, {
+      ...this.options,
+      value: this.content,
+    });
+    editor.onDidChangeModelContent(event => {
+      const content = editor.getValue();
+      if (content !== this.content) {
+        this.$emit("update:content", content);
+      }
+    });
+    this.editor = editor;
+    if (this.autofocus) {
+      editor.focus();
+    }
   }
 }
 </script>
