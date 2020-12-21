@@ -2,7 +2,6 @@
   <VueModal
     :width="modalWidth"
     :height="modalHeight"
-    :shift-y="0.90"
     :name="uid"
     :classes="[
       'v--modal',
@@ -245,6 +244,7 @@ export default class Modal extends Vue {
     It's their naming so don't touch this
     if you refactor styles */
   .v--modal-box.v--modal {
+    top: 5% !important;
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
     border-radius: 3px;
