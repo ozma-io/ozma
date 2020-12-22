@@ -133,49 +133,48 @@
           </tr>
         </thead>
         <tbody class="table-body">
-          <template v-for="(rowId, rowIndex) in local.extra.newRowTopSidePositions">
-            <TableRow
-              :key="`top-${rowId}`"
-              :row="uv.newRows[rowId]"
-              :local-row="local.newRows[rowId]"
-              :base-local-row="baseLocal.newRows[rowId]"
-              :column-indexes="columnIndexes"
-              :local-uv="local.extra"
-              from="added"
-              @select="selectRow({ type: 'added', position: rowIndex }, $event)"
-              @cell-click="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
-              @goto="$emit('goto', $event)"
-            />
-          </template>
-          <template v-for="(rowI, rowIndex) in shownRowPositions">
-            <TableRow
-              :key="rowI"
-              :row="uv.rows[rowI]"
-              :local-row="local.rows[rowI]"
-              :base-local-row="baseLocal.rows[rowI]"
-              :column-indexes="columnIndexes"
-              :local-uv="local.extra"
-              :is-tree="isTree"
-              @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
-              @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
-              @update:visibleChildren="visibleChildren(arguments[0], arguments[1])"
-              @goto="$emit('goto', $event)"
-            />
-          </template>
-          <template v-for="(rowId, rowIndex) in local.extra.newRowBottomSidePositions">
-            <TableRow
-              :key="`bottom-${rowId}`"
-              :row="uv.newRows[rowId]"
-              :local-row="local.newRows[rowId]"
-              :base-local-row="baseLocal.newRows[rowId]"
-              :column-indexes="columnIndexes"
-              :local-uv="local.extra"
-              from="added"
-              @select="selectRow({ type: 'added', position: rowIndex }, $event)"
-              @cell-click="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
-              @goto="$emit('goto', $event)"
-            />
-          </template>
+          <TableRow
+            v-for="(rowId, rowIndex) in local.extra.newRowTopSidePositions"
+            ref="newRowsTopSideRef"
+            :key="`top-${rowId}`"
+            :row="uv.newRows[rowId]"
+            :local-row="local.newRows[rowId]"
+            :base-local-row="baseLocal.newRows[rowId]"
+            :column-indexes="columnIndexes"
+            :local-uv="local.extra"
+            from="added"
+            @select="selectRow({ type: 'added', position: rowIndex }, $event)"
+            @cell-click="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
+            @goto="$emit('goto', $event)"
+          />
+          <TableRow
+            v-for="(rowI, rowIndex) in shownRowPositions"
+            :key="rowI"
+            :row="uv.rows[rowI]"
+            :local-row="local.rows[rowI]"
+            :base-local-row="baseLocal.rows[rowI]"
+            :column-indexes="columnIndexes"
+            :local-uv="local.extra"
+            :is-tree="isTree"
+            @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
+            @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
+            @update:visibleChildren="visibleChildren(arguments[0], arguments[1])"
+            @goto="$emit('goto', $event)"
+          />
+          <TableRow
+            v-for="(rowId, rowIndex) in local.extra.newRowBottomSidePositions"
+            ref="newRowsBottomSideRef"
+            :key="`bottom-${rowId}`"
+            :row="uv.newRows[rowId]"
+            :local-row="local.newRows[rowId]"
+            :base-local-row="baseLocal.newRows[rowId]"
+            :column-indexes="columnIndexes"
+            :local-uv="local.extra"
+            from="added"
+            @select="selectRow({ type: 'added', position: rowIndex }, $event)"
+            @cell-click="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
+            @goto="$emit('goto', $event)"
+          />
         </tbody>
       </table>
       <div
@@ -848,7 +847,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.lastSelectedValue = null;
     });
 
-    if (!R.isEmpty(this.local.extra.rowsParentPositions) && "tree_all_open" in this.local.uv.attributes && this.local.uv.attributes.tree_all_open) {
+    if (!R.isEmpty(this.local.extra.rowsParentPositions)
+     && "tree_all_open" in this.local.uv.attributes
+     && this.local.uv.attributes.tree_all_open
+    ) {
       this.toggleAllTreeChildren(true);
     }
   }
@@ -917,9 +919,33 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   private async addNewRowOnPosition(side: NewRowSide): Promise<void> {
-    const rowI = await this.addNewRow();
-    Vue.set(this.local.newRows[rowI].extra, "newRowSide", side);
+    const rowId = await this.addNewRow();
+    Vue.set(this.local.newRows[rowId].extra, "newRowSide", side);
     this.updateNewRowsSides();
+
+    void nextRender().then(() => {
+      const sideName = side === "top" ? "newRowsTopSideRef" : "newRowsBottomSideRef";
+      const newRowsRef = this.$refs[sideName] as TableRow[] | undefined;
+      if (newRowsRef === undefined) {
+        return;
+      }
+      const newRowRef = newRowsRef[newRowsRef.length - 1];
+      const newRowValues = newRowRef.row.values as {info?: unknown}[];
+      const firstNotDisabledI = newRowValues.findIndex(value => value?.info !== undefined);
+      if (firstNotDisabledI === -1
+       || newRowRef === undefined
+      ) {
+        return;
+      }
+      this.cellEditByTarget(
+        {
+          type: "added",
+          id: rowId,
+          column: newRowRef.columnIndexes[firstNotDisabledI],
+        },
+        newRowRef.$children[1 + firstNotDisabledI].$el as HTMLElement,
+      );
+    });
   }
 
   // Toggle children rows visibles.
@@ -989,7 +1015,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   private initRowsState() {
     this.local.rows.forEach((row, rowI) => {
       const parentIndex = row.extra.parent !== undefined ? this.local.extra.rowsParentPositions[row.extra.parent] : undefined;
-      if (parentIndex !== undefined && this.local.rows[parentIndex] !== undefined && !this.local.rows[parentIndex].extra.children.includes(rowI)) {
+      if (parentIndex !== undefined
+       && this.local.rows[parentIndex] !== undefined
+       && !this.local.rows[parentIndex].extra.children.includes(rowI)
+      ) {
         this.local.rows[parentIndex].extra.children.push(rowI);
         let level = 0;
         let parent: number | undefined = parentIndex;
@@ -1052,7 +1081,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       return;
     }
 
-    if ("loss_of_focus_save" in this.uv.attributes && Boolean(this.uv.attributes["loss_of_focus_save"])) {
+    if ("loss_of_focus_save" in this.uv.attributes
+     && Boolean(this.uv.attributes["loss_of_focus_save"])
+    ) {
       void this.submitChanges({ scope: this.scope });
     }
 
@@ -1068,7 +1099,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       const value = this.local.getValueByRef(ref);
 
       if (this.editing !== null // Lock already taken (somehow)
-          || value === null // value not found
+       || value === null // value not found
       ) {
         await this.removeAutoSaveLock(lock);
         return;
@@ -1127,7 +1158,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   private cellEditByTarget(ref: ValueRef, target: HTMLElement) {
-    this.removeCellEditing();
     this.setCellEditing(ref);
     this.cellEditHandler(ref, target);
   }
@@ -1139,9 +1169,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     this.editParams.minHeight = target.offsetHeight;
 
     this.selectCell(ref);
-    if (this.lastSelectedValue &&
-                !deepEquals(this.lastSelectedValue, ref) &&
-                this.lastSelectedValue.type === "added") {
+    if (this.lastSelectedValue
+     && !deepEquals(this.lastSelectedValue, ref)
+     && this.lastSelectedValue.type === "added") {
       const row = this.uv.newRows[this.lastSelectedValue.id];
       if (!row) {
         this.lastSelectedValue = null;
@@ -1377,7 +1407,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
     // + 1 is needed because of rare cases like that:
     // top 974.4000244140625, client height 690, scroll height 1665
-    if (tableContainer.scrollTop + tableContainer.clientHeight + 1 >= tableContainer.scrollHeight && this.showLength < this.rowPositions.length) {
+    if (tableContainer.scrollTop + tableContainer.clientHeight + 1 >= tableContainer.scrollHeight
+     && this.showLength < this.rowPositions.length
+    ) {
       this.showLength = Math.min(this.showLength + showStep, this.local.rows.length);
       Vue.nextTick(() => this.updateShowLength());
     }
