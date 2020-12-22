@@ -102,8 +102,8 @@
               class="fixed-column openform-cells table-th"
             >
               <FunLink
-                v-if="addRowInModal !== null"
-                :link="addRowInModal"
+                v-if="creationLink !== null"
+                :link="creationLink"
                 @goto="$emit('goto', $event)"
               >
                 <i
@@ -740,19 +740,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   private rowsState: Record<number, any> = {};
   private isTree = false;
-
-  // TODO: I just copy-pasted function createView() from CommonUserView, it's very bad, but it almost works.
-  get addRowInModal() {
-    const opts: IAttrToQueryOpts = {
-      infoByDefault: true,
-    };
-    const home = homeSchema(this.uv.args);
-    if (home !== null) {
-      opts.homeSchema = home;
-    }
-
-    return attrToLink(this.uv.attributes["create_link"], opts);
-  }
 
   get columnIndexes() {
     const columns = this.local.extra.columns.map((column, index) => ({
@@ -1765,34 +1752,54 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     margin-bottom: 0;
   }
 
-  .openform-cells {
-    padding: 0;
-  }
-
   .openform-add-icon {
     position: relative;
     top: 5px;
     color: var(--MainTextColorLight);
+
+    &:hover {
+      color: var(--MainTextColor);
+    }
   }
 
-  .checkbox-cells,
-  .openform-cells {
+  ::v-deep .openform-cells {
+    padding: 0;
+    padding-top: 4px;
     text-align: center;
+    left: 35px;
+    width: 35px;
+
+    a {
+      color: var(--MainTextColorLight);
+    }
+
+    > span > i {
+      position: absolute;
+      top: 4px;
+      left: 5px;
+    }
+
+    &:hover a {
+      color: var(--MainTextColor);
+    }
+
+    &.table-th {
+      padding: 0;
+    }
   }
 
-  .openform-cells > span > i {
-    position: absolute;
-    top: 4px;
-    left: 5px;
+  ::v-deep .checkbox-cells {
+    text-align: center;
+    color: var(--MainTextColorLight);
+
+    &:hover {
+      color: var(--MainTextColor);
+      background-color: rgb(239, 239, 239);
+    }
   }
 
   .checkbox-col,
   .open-form-col {
-    width: 35px;
-  }
-
-  ::v-deep .openform-cells {
-    left: 35px;
     width: 35px;
   }
 

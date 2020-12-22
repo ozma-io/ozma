@@ -2,13 +2,16 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { RowId, IEntityRef, IFieldRef, IResultColumnInfo } from "@/api";
-import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow } from "@/state/user_view";
+import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, homeSchema } from "@/state/user_view";
 import { ErrorKey } from "@/state/errors";
 import type { ScopeName, UserViewKey, AddedRowId, CombinedTransactionResult, IAddedResult } from "@/state/staging_changes";
 import { LocalUserView, RowRef, ValueRef, SimpleLocalUserView, ILocalRow, ILocalRowInfo, INewValueRef } from "@/local_user_view";
 import { equalEntityRef, valueIsNull } from "@/values";
 import { mapMaybe, ObjectSet } from "@/utils";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
+import { IAttrToQueryOpts } from "@/state/query";
+
+import { attrToLink } from "@/links";
 
 export interface ISelectionRef {
   entity: IEntityRef;
@@ -214,6 +217,18 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
 
   protected destroyed() {
     this.resetErrors(errorKey);
+  }
+
+  get creationLink() {
+    const opts: IAttrToQueryOpts = {
+      infoByDefault: true,
+    };
+    const home = homeSchema(this.uv.args);
+    if (home !== null) {
+      opts.homeSchema = home;
+    }
+
+    return attrToLink(this.uv.attributes["create_link"], opts);
   }
 
   protected async addNewRow(): Promise<number> {
