@@ -78,6 +78,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { QrcodeStream } from "vue-qrcode-reader";
 import { mixins } from "vue-class-component";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import { IEntriesRef } from "@/state/user_view";
@@ -88,7 +89,6 @@ import { IQuery } from "@/state/query";
 import { namespace } from "vuex-class";
 import { IPrintQRCode } from "@/components/qrcode/QRCode.vue";
 
-/* eslint @typescript-eslint/no-var-requires: "off" */
 const beep = require("../../../public/assets/beep.mp3");
 
 export interface IQRContent {
@@ -103,7 +103,11 @@ export interface IQRResultContent extends IQRContent {
 
 const query = namespace("query");
 
-@Component
+@Component({
+  components: {
+    QrcodeStream,
+  },
+})
 export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Prop({ type: Boolean, default: false }) openScanner!: boolean;
   @Prop({ type: Boolean, default: false }) multiScan!: boolean;

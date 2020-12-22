@@ -6,6 +6,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import VueQrcode from "@chenfengyuan/vue-qrcode";
 import type { IEntriesRef } from "@/state/user_view";
 
 export interface IPrintQRCode {
@@ -14,7 +15,11 @@ export interface IPrintQRCode {
   i: string; // ID
 }
 
-@Component
+@Component({
+  components: {
+    [VueQrcode.name]: VueQrcode,
+  },
+})
 export default class QRCode extends Vue {
   @Prop({ type: String, default: "" }) content!: string;
   @Prop({ type: Number, default: 200 }) height!: number;
