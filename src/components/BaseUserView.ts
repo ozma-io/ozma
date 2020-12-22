@@ -246,6 +246,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
   protected async updateValue(ref: ValueRef, rawValue: any): Promise<ValueRef> {
     const value = this.local.getValueByRef(ref)!;
     if (ref.type === "added") {
+      // FIXME: throws error `updateInfo is undefined` when user tries to edit disabled cell.
       const updateInfo = value.value.info!;
       await this.setAddedField({
         scope: this.scope,
