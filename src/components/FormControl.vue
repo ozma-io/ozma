@@ -117,7 +117,7 @@
           :height="customHeight"
           :content="textValue"
         />
-        <BarCode
+        <BarCodePrint
           v-else-if="inputType.name === 'barcode'"
           ref="control"
           :content="textValue"
@@ -234,7 +234,7 @@
           :height="customHeight"
           :content="textValue"
         />
-        <BarCode
+        <BarCodePrint
           v-else-if="inputType.name === 'barcode'"
           ref="control"
           :content="textValue"
@@ -500,6 +500,7 @@ const inlineTypes = ["markdown", "codeeditor", "textarea", "reference"];
     NestedUserView: () => import("@/components/NestedUserView.vue"),
     QRCode: () => import("@/components/qrcode/QRCode.vue"),
     BarCode: () => import("@/components/barcode/BarCode.vue"),
+    BarCodePrint: () => import("@/components/barcode/BarCodePrint.vue"),
   },
 })
 export default class FormControl extends Vue {
@@ -676,6 +677,10 @@ export default class FormControl extends Vue {
             return { name: "qrcode", ref: referenceEntriesRef(this.fieldType) };
           }
 
+          if (controlAttr === "barcode") {
+            return { name: "barcode" };
+          }
+
           const refEntry: IReferenceType = {
             name: "reference",
             ref: referenceEntriesRef(this.fieldType),
@@ -763,8 +768,6 @@ export default class FormControl extends Vue {
           editType: "wysiwyg",
           style: this.controlStyle(heightMultilineText),
         };
-      case "barcode":
-        return { name: "barcode" };
       default:
         return { name: "text", type: "text", style: this.controlStyle() };
     }

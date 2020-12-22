@@ -40,3 +40,4 @@ declare module "vue-textarea-autosize";
 declare module "vue-dragscroll";
 declare module "vue-qrcode-reader";
 declare module "@chenfengyuan/vue-qrcode";
+declare module "vue-barcode";
