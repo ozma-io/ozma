@@ -14,7 +14,7 @@
         "error_camera_used": "ERROR: is the camera already in use?",
         "error_camera_not_suitable": "ERROR: installed cameras are not suitable",
         "error_stream_not_suppotred": "ERROR: Stream API is not supported in this browser",
-        "error_qrcode_is_inappropriate" : "QRCode is inappropriate"
+        "error_qrcode_is_inappropriate" : "ERROR: QRCode is inappropriate"
     },
     "ru": {
         "input_placeholder": "Пусто",
@@ -30,7 +30,7 @@
         "error_camera_used": "ОШИБКА: камера уже используется?",
         "error_camera_not_suitable": "ОШИБКА: установленные камеры не подходят",
         "error_stream_not_suppotred": "ОШИБКА: Stream API не поддерживается в этом браузере",
-        "error_qrcode_is_inappropriate" : "QRCode не соответствует назначению"
+        "error_qrcode_is_inappropriate" : "ОШИБКА: QRCode не соответствует назначению"
     }
   }
 </i18n>
@@ -89,7 +89,7 @@ import { namespace } from "vuex-class";
 import { IPrintQRCode } from "@/components/qrcode/QRCode.vue";
 
 /* eslint @typescript-eslint/no-var-requires: "off" */
-const beep = require("../../../public/assets/beep.mp3");
+const beep = require("@/resources/beep.mp3");
 
 export interface IQRContent {
   schema: string;
