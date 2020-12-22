@@ -1,25 +1,29 @@
 <template>
-  <ul class="buttons">
-    <li v-for="(button, i) in buttons" :key="i">
-      <i v-if="button.icon" class="material-icons">{{ button.icon }}</i>
-      <i v-else class="material-icons">arrow_right</i>
-      <span>{{ button.name }}</span>
-      <ul class="actions">
-        <FunLink
-          v-for="(action, j) in button.actions"
-          :key="j"
-          :link="action.link"
-          @goto="$emit('goto', $event)"
-        >
-          <li v-if="'link' in action" :key="action.name">
-            <i v-if="action.icon" class="material-icons">{{ action.icon }}</i>
-            <i v-else class="material-icons">arrow_right</i>
-            <span>{{ action.name }}</span>
-          </li>
-        </FunLink>
-      </ul>
-    </li>
-  </ul>
+  <div class="buttons_panel">
+    <ul class="buttons">
+      <li v-for="(button, i) in buttons" :key="i">
+        <i v-if="button.icon" class="material-icons">{{ button.icon }}</i>
+        <i v-else class="material-icons">arrow_right</i>
+        <span>{{ button.name }}</span>
+        <ul class="actions">
+          <FunLink
+            v-for="(action, j) in button.actions"
+            :key="j"
+            :link="action.link"
+            @goto="$emit('goto', $event)"
+          >
+            <li v-if="'link' in action" :key="action.name">
+              <i v-if="action.icon" class="material-icons">{{ action.icon }}</i>
+              <i v-else class="material-icons">arrow_right</i>
+              <span>{{ action.name }}</span>
+            </li>
+          </FunLink>
+        </ul>
+      </li>
+    </ul>
+    <slot name="search-panel" />
+    <slot name="actions-menu" />
+  </div>
 </template>
 
 <script lang="ts">
@@ -39,6 +43,12 @@ export default class ButtonsPanel extends Vue {
 </script>
 
 <style scoped>
+  .buttons_panel {
+    position: absolute;
+    right: 15px;
+    display: flex;
+  }
+
   ul {
     margin: 0;
     padding: 0;
@@ -50,14 +60,13 @@ export default class ButtonsPanel extends Vue {
     padding: 0;
   }
 
+  ul.buttons {
+    margin-right: 15px;
+  }
+
   ul.buttons a {
     color: inherit;
     text-decoration: none;
-  }
-
-  ul.buttons {
-    position: absolute;
-    right: 55px;
   }
 
   .search-show + ul.buttons {

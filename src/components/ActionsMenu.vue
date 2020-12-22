@@ -11,20 +11,21 @@
 
 <template>
   <div
+    v-if="sortedActions.length > 0"
     :class="['actions-menu', {'actions-menu_active': showActions}]"
   >
     <input
       v-if="menuAlign == 'left'"
       type="button"
       class="actions-menu_actions-button material-icons"
-      value="menu"
+      :value="titleIcon"
       @click="showActions = !showActions"
     >
     <i
       v-else
       class="material-icons right-actions-menu-button"
       @click="showActions = !showActions"
-    >more_vert</i>
+    >{{ titleIcon }}</i>
     <div
       v-if="showActions"
       class="black-block"
@@ -88,6 +89,27 @@
           >
         </label>
       </template>
+      <ul class="buttons">
+        <li v-for="(button, i) in buttons" :key="i">
+          <i v-if="button.icon" class="material-icons">{{ button.icon }}</i>
+          <i v-else class="material-icons">arrow_right</i>
+          <span>{{ button.name }}</span>
+          <ul class="actions">
+            <FunLink
+              v-for="(action, j) in button.actions"
+              :key="j"
+              :link="action.link"
+              @goto="$emit('goto', $event)"
+            >
+              <li v-if="'link' in action" :key="action.name">
+                <i v-if="action.icon" class="material-icons">{{ action.icon }}</i>
+                <i v-else class="material-icons">arrow_right</i>
+                <span>{{ action.name }}</span>
+              </li>
+            </FunLink>
+          </ul>
+        </li>
+      </ul>
     </div>
   </div>
 </template>
@@ -95,6 +117,7 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { RawLocation } from "vue-router";
+import { IPanelButton } from "@/components/ButtonsPanel.vue";
 
 import { Link } from "@/links";
 import { IActionRef } from "ozma-api/src";
@@ -126,7 +149,14 @@ export type Action = ILocationAction | ILinkAction | ICallbackAction | IUploadFi
 @Component
 export default class ActionsMenu extends Vue {
   @Prop({ type: Array, required: true }) actions!: Action[];
-  @Prop({ type: String, required: true }) title!: string;
+  @Prop({ type: Array, required: true }) buttons!: IPanelButton[];
+  /**
+   * icon Material design icon item title.
+   *   By default 'menu' for menuAlign=left and 'more_vert' for menuAlign=any.
+   *   See computed `titleIcon`
+   *   More icons - https://material.io/resources/icons
+   */
+  @Prop({ type: String, default: "" }) icon!: string;
   @Prop({ type: String, default: "left" }) menuAlign!: string;
 
   private showActions = false;
@@ -135,6 +165,18 @@ export default class ActionsMenu extends Vue {
     this.showActions = false;
     const files = input.files as FileList;
     next(files[0]);
+  }
+
+  /**
+   * Return material design icon item title for this menu
+   *
+   * @return {String}
+   */
+  get titleIcon() {
+    if (this.icon === "") {
+      return this.menuAlign === "left" ? "menu" : "more_vert";
+    }
+    return this.icon;
   }
 
   get sortedActions() {
