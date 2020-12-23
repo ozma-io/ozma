@@ -20,7 +20,7 @@ export interface IQueryLink {
 
 export interface IActionLink {
   action: IActionRef;
-  args: Record<string, any>;
+  args: Record<string, unknown>;
 }
 
 export type Link = IHrefLink | IQueryLink | IActionLink;
@@ -29,7 +29,7 @@ export interface IAttrToLinkOpts extends IAttrToQueryOpts {
   queryTypeByDefault?: ITargetType;
 }
 
-const attrToQueryLink = (linkedAttr: any, opts?: IAttrToLinkOpts): IQueryLink | null => {
+const attrToQueryLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLinkOpts): IQueryLink | null => {
   const query = attrObjectToQuery(linkedAttr, opts);
   if (query === null) {
     return null;
@@ -48,7 +48,7 @@ const attrToQueryLink = (linkedAttr: any, opts?: IAttrToLinkOpts): IQueryLink | 
   return { query, target };
 };
 
-export const attrToActionLink = (linkedAttr: any, opts?: IAttrToLinkOpts): IActionLink | null => {
+export const attrToActionLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLinkOpts): IActionLink | null => {
   if (typeof linkedAttr["action"] !== "object") {
     return null;
   }
@@ -64,22 +64,23 @@ export const attrToActionLink = (linkedAttr: any, opts?: IAttrToLinkOpts): IActi
   return { action, args };
 };
 
-export const attrToLink = (linkedAttr: any, opts?: IAttrToLinkOpts): Link | null => {
+export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | null => {
   if (typeof linkedAttr !== "object" || linkedAttr === null) {
     return null;
   }
+  const linkedAttrObj = linkedAttr as Record<string, unknown>;
 
-  const query = attrToQueryLink(linkedAttr, opts);
+  const query = attrToQueryLink(linkedAttrObj, opts);
   if (query !== null) {
     return query;
   }
 
-  const href = linkedAttr["href"];
+  const href = linkedAttrObj["href"];
   if (typeof href === "string") {
     return { href };
   }
 
-  const action = attrToActionLink(linkedAttr, opts);
+  const action = attrToActionLink(linkedAttrObj, opts);
   if (action !== null) {
     return action;
   }
@@ -88,14 +89,14 @@ export const attrToLink = (linkedAttr: any, opts?: IAttrToLinkOpts): Link | null
 };
 
 // Set 'id' argument to the value id.
-export const attrToLinkSelf = (linkedAttr: any, update?: IValueInfo, opts?: IAttrToLinkOpts): Link | null => {
+export const attrToLinkSelf = (linkedAttr: unknown, update?: IValueInfo, opts?: IAttrToLinkOpts): Link | null => {
   if (typeof linkedAttr !== "object") {
     return null;
   }
 
   const ret = attrToLink(linkedAttr, opts);
   if (ret !== null && update) {
-    let args: Record<string, any>;
+    let args: Record<string, unknown>;
     if ("args" in ret) {
       args = ret.args;
     } else if ("query" in ret && ret.query.args.args) {
@@ -109,10 +110,10 @@ export const attrToLinkSelf = (linkedAttr: any, update?: IValueInfo, opts?: IAtt
 };
 
 // Set 'id' argument to the id of the referenced value.
-export const attrToLinkRef = (linkedAttr: any, value: any, opts?: IAttrToLinkOpts): Link | null => {
+export const attrToLinkRef = (linkedAttr: unknown, value: unknown, opts?: IAttrToLinkOpts): Link | null => {
   const ret = attrToLink(linkedAttr, opts);
   if (ret !== null && value !== null && value !== undefined) {
-    let args: Record<string, any>;
+    let args: Record<string, unknown>;
     if ("args" in ret) {
       args = ret.args;
     } else if ("query" in ret && ret.query.args.args) {

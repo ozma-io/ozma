@@ -93,7 +93,7 @@ const staging = namespace("staging");
 @Component({ components: { SelectUserView, QRCodeScanner, BarCodeScanner } })
 export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<undefined, undefined, undefined>, undefined, undefined, undefined>>(BaseUserView) {
   @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName; entityRef: IEntityRef; userView: UserViewKey; position?: number }) => Promise<IAddedResult>;
-  @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName; fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; value: any }) => Promise<void>;
+  @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName; fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; value: unknown }) => Promise<void>;
 
   modalView: IQuery | null = null;
   openQRCodeScanner = false;
@@ -138,8 +138,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       worker: true,
       header: true,
       skipEmptyLines: true,
-      step: async (rawRow: any) => {
-        const row = rawRow.data as Record<string, string>;
+      step: async (rawRow: { data: Record<string, string> }) => {
         const added = await this.addEntry({
           scope: this.scope,
           entityRef,
@@ -152,7 +151,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
             this.uv.columnAttributes,
           );
           const columnName = fallbackName || columnInfo.name;
-          const currValue = row[columnName];
+          const currValue = rawRow.data[columnName];
           if (columnInfo.mainField && currValue) {
             return this.setAddedField({
               scope: this.scope,
@@ -172,43 +171,57 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
     });
   }
 
-  get panelButtons() {
-    const buttons: IPanelButton[] = [];
+  get panelButtons(): IPanelButton[] {
     const panelButtons = this.uv.attributes["panel_buttons"];
 
-    if (Array.isArray(panelButtons)) {
-      panelButtons.forEach((button: any) => {
-        const actions: Action[] = [];
-        if (Array.isArray(button.actions)) {
-          const opts: IAttrToQueryOpts = {};
-          const home = homeSchema(this.uv.args);
-          if (home !== null) {
-            opts.homeSchema = home;
-          }
-          button.actions.forEach((action: any) => {
-            if (typeof action.name !== "string") {
-              return;
-            }
-            const link = attrToLink(action, opts);
-            if (link === null) {
-              return;
-            }
-            actions.push({
-              icon: action.icon,
-              name: action.name,
-              link,
-            });
-          });
-        }
-        buttons.push({
-          icon: button.icon,
-          name: button.name,
-          actions,
-        });
-      });
+    if (!Array.isArray(panelButtons)) {
+      return [];
     }
 
-    return buttons;
+    return mapMaybe((rawButton: unknown) => {
+      if (typeof rawButton !== "object" || rawButton === null) {
+        return undefined;
+      }
+      const buttonObj = rawButton as Record<string, unknown>;
+
+      if (!Array.isArray(buttonObj.actions)) {
+        return undefined;
+      }
+      if (typeof buttonObj.name !== "string") {
+        return undefined;
+      }
+      const buttonIcon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
+
+      const opts: IAttrToQueryOpts = {};
+      const home = homeSchema(this.uv.args);
+      if (home !== null) {
+        opts.homeSchema = home;
+      }
+      const actions = mapMaybe((rawAction: unknown) => {
+        const link = attrToLink(rawAction, opts);
+        if (link === null) {
+          return undefined;
+        }
+        // `rawAction` at this point is guaranteed to be `Record<string, unknown>`,
+        // but TypeScript doesn't support advanced type witnesses like that.
+        const actionObj = rawAction as Record<string, unknown>;
+        if (typeof actionObj.name !== "string") {
+          return undefined;
+        }
+        const icon = typeof actionObj.icon === "string" ? actionObj.icon : undefined;
+
+        return {
+          icon,
+          name: actionObj.name,
+          link,
+        };
+      }, buttonObj.actions);
+      return {
+        icon: buttonIcon,
+        name: buttonObj.name,
+        actions,
+      };
+    }, panelButtons);
   }
 
   @Watch("panelButtons", { deep: true, immediate: true })
@@ -234,16 +247,19 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       if (home !== null) {
         opts.homeSchema = home;
       }
-      extraActions.forEach((action: any) => {
-        if (typeof action.name !== "string") {
-          return;
-        }
-        const link = attrToLink(action, opts);
+      extraActions.forEach((rawAction: unknown) => {
+        const link = attrToLink(rawAction, opts);
         if (link === null) {
           return;
         }
+        // `rawAction` at this point is guaranteed to be `Record<string, unknown>`,
+        // but TypeScript doesn't support advanced type witnesses like that.
+        const actionObj = rawAction as Record<string, unknown>;
+        if (typeof actionObj.name !== "string") {
+          return;
+        }
         actions.push({
-          name: action.name,
+          name: actionObj.name,
           order: -10,
           link,
         });
@@ -257,16 +273,19 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       if (home !== null) {
         opts.homeSchema = home;
       }
-      qrcodeActions.forEach((action: any) => {
-        if (typeof action.name !== "string") {
-          return;
-        }
-        const link = attrToLink(action, opts);
+      qrcodeActions.forEach((rawAction: unknown) => {
+        const link = attrToLink(rawAction, opts);
         if (link === null) {
           return;
         }
+        // `rawAction` at this point is guaranteed to be `Record<string, unknown>`,
+        // but TypeScript doesn't support advanced type witnesses like that.
+        const actionObj = rawAction as Record<string, unknown>;
+        if (typeof actionObj.name !== "string") {
+          return;
+        }
         actions.push({
-          name: action.name,
+          name: actionObj.name,
           callback: () => this.qrCodeCallback(link),
         });
       });
@@ -303,15 +322,6 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
         name: this.$t("scan_qrcode").toString(),
         callback: () => {
           this.openQRCodeScanner = !this.openQRCodeScanner;
-        },
-      });
-    }
-
-    if (this.uv.attributes["scan_barcode"] === true) {
-      actions.push({
-        name: this.$t("scan_barcode").toString(),
-        callback: () => {
-          this.openBarCodeScanner = !this.openBarCodeScanner;
         },
       });
     }
