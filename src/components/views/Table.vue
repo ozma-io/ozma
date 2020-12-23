@@ -64,7 +64,7 @@
           class="button"
           @click="addNewRowOnPosition('top')"
         >
-          <i class="material-icons md-24">add_box</i>
+          <i class="material-icons md-24">add</i>
           <span class="label">{{ this.$t('add_entry').toString() }}</span>
         </div>
       </div>
@@ -110,7 +110,7 @@
                   v-b-tooltip.hover.right
                   :title="$t('add_entry_in_modal')"
                   class="material-icons md-24 openform-add-icon"
-                >add</i>
+                >add_box</i>
               </FunLink>
             </th>
             <th
@@ -185,7 +185,7 @@
           class="button"
           @click="addNewRowOnPosition('bottom')"
         >
-          <i class="material-icons md-24">add_box</i>
+          <i class="material-icons md-24">add</i>
           <span class="label">{{ this.$t('add_entry').toString() }}</span>
         </div>
       </div>
@@ -1489,7 +1489,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
       > .label {
         padding-left: 3px;
-        font-size: 1.3em;
+        font-size: 1.2em;
       }
     }
   }
@@ -1779,8 +1779,18 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       left: 5px;
     }
 
-    &:hover a {
-      color: var(--MainTextColor);
+    &:hover {
+      background-color: rgb(239, 239, 239);
+
+      .openform-cells__icon {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 34px;
+        height: 100%;
+        padding-top: 4px;
+        color: var(--MainTextColor);
+      }
     }
 
     &.table-th {
