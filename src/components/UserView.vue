@@ -66,8 +66,17 @@
       />
     </template>
     <div
-      v-else-if="errorMessage !== null"
-      class="loading"
+      v-else-if="errorMessage === null"
+      class="loading-container h-100 p-3 d-flex justify-content-center align-items-center"
+      style="background-color: rgba(0, 0, 0, 0.05); cursor: wait;"
+    >
+      <div
+        class="spinner-border"
+        style="width: 3em; height: 3em; border-color: rgba(0, 0, 0, 0.5); border-right-color: transparent;"
+      />
+    </div>
+    <div
+      v-else
     >
       {{ errorMessage }}
     </div>
