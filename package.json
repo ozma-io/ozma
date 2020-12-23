@@ -1,4 +1,7 @@
 {
+  "//": [
+    "We use stylelint directly, not `vue-cli-service lint:style`, because the latter doesn't return proper error codes."
+  ],
   "name": "fun-app",
   "version": "0.1.0",
   "private": true,
@@ -6,7 +9,7 @@
     "serve": "vue-cli-service serve --mode development",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "lint:style": "vue-cli-service lint:style",
+    "lint:style": "stylelint src/",
     "storybook:build": "vue-cli-service storybook:build -c config/storybook",
     "storybook:serve": "vue-cli-service storybook:serve -s ./public -p 8000 -c config/storybook"
   },
