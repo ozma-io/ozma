@@ -70,17 +70,27 @@
           home
         </router-link>
         <ActionsMenu
-          title="view_headline"
           :actions="actions"
           @goto="pushRoot"
         />
         <span v-if="!!title" class="head-menu_title">{{ title }}</span>
-        <SearchPanel
-          v-if="enableFilter"
-          :filter-string="query.root.search"
-          @update:filterString="replaceRootSearch($event)"
-        />
-        <ButtonsPanel :buttons="panelButtons" />
+        <ButtonsPanel :buttons="panelButtons">
+          <template #search-panel>
+            <SearchPanel
+              v-if="enableFilter"
+              :filter-string="query.root.search"
+              @update:filterString="replaceRootSearch($event)"
+            />
+          </template>
+          <template #actions-menu>
+            <ActionsMenu
+              :actions="extraActions"
+              :buttons="panelButtons"
+              menu-align="right"
+              @goto="pushRoot"
+            />
+          </template>
+        </ButtonsPanel>
       </div>
       <div
         class="userview-div"
@@ -270,7 +280,6 @@ export default class TopLevelUserView extends Vue {
 
   get actions() {
     const actions: Action[] = [];
-    actions.push(...this.extraActions);
     if (this.currentAuth !== null) {
       if (Api.developmentMode) {
         actions.push({ name: this.$t("authed_link").toString(),
