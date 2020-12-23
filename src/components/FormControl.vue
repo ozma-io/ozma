@@ -673,7 +673,7 @@ export default class FormControl extends Vue {
     if (this.fieldType !== null) {
       switch (this.fieldType.type) {
         case "reference": {
-          if ("print_qrcode" in this.attributes && this.attributes["print_qrcode"]) {
+          if (controlAttr === "qrcode") {
             return { name: "qrcode", ref: referenceEntriesRef(this.fieldType) };
           }
 
