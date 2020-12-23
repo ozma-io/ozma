@@ -134,7 +134,7 @@ export default class ButtonsPanel extends Vue {
     background-color: var(--MainBorderColor);
   }
 
-  @media only screen and (max-width: 600px) {
+  @media only screen and (max-width: 900px) {
     ul.buttons {
       display: none;
     }

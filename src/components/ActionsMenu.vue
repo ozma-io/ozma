@@ -91,9 +91,11 @@
       </template>
       <ul class="buttons">
         <li v-for="(button, i) in buttons" :key="i">
-          <i v-if="button.icon" class="material-icons">{{ button.icon }}</i>
-          <i v-else class="material-icons">arrow_right</i>
-          <span>{{ button.name }}</span>
+          <div>
+            <i v-if="button.icon" class="material-icons">{{ button.icon }}</i>
+            <i v-else class="material-icons">arrow_right</i>
+            <span>{{ button.name }}</span>
+          </div>
           <ul class="actions">
             <FunLink
               v-for="(action, j) in button.actions"
@@ -102,9 +104,11 @@
               @goto="$emit('goto', $event)"
             >
               <li v-if="'link' in action" :key="action.name">
-                <i v-if="action.icon" class="material-icons">{{ action.icon }}</i>
-                <i v-else class="material-icons">arrow_right</i>
-                <span>{{ action.name }}</span>
+                <div>
+                  <i v-if="action.icon" class="material-icons">{{ action.icon }}</i>
+                  <i v-else class="material-icons">arrow_right</i>
+                  <span>{{ action.name }}</span>
+                </div>
               </li>
             </FunLink>
           </ul>
@@ -211,6 +215,66 @@ export default class ActionsMenu extends Vue {
    * Div around button menu (900)
    * Black-block (for mob)  (700)
    */
+
+  ul.buttons {
+    padding: 0;
+    margin: 0;
+    display: none;
+  }
+
+  ul.buttons > li {
+    list-style: none;
+  }
+
+  ul.buttons > li > div {
+    background-color: #f9f9fb;
+    font-weight: 600;
+    display: flex;
+    padding: 5px 20px;
+  }
+
+  ul.buttons > li > div > span {
+    padding-left: 10px;
+  }
+
+  ul.actions {
+    padding: 0;
+    margin: 0;
+  }
+
+  ul.actions > a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  ul.actions > span > li,
+  ul.actions > a > li {
+    list-style: none;
+  }
+
+  ul.actions > span > li:hover,
+  ul.actions > a > li:hover {
+    background-color: var(--MainBorderColor);
+    color: var(--MainTextColor);
+  }
+
+  ul.actions > span > li > div,
+  ul.actions > a > li > div {
+    display: flex;
+    padding: 5px 20px;
+  }
+
+  ul.actions > span > li > div > span,
+  ul.actions > a > li > div > span {
+    padding-left: 10px;
+  }
+
+  @media only screen and (max-width: 900px) {
+    ul.buttons {
+      display: block;
+    }
+  }
+
   .actions-menu {
     margin: 0;
     z-index: 995;
@@ -238,6 +302,9 @@ export default class ActionsMenu extends Vue {
   }
 
   .div-with-actions {
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 80vh;
     width: max-content;
     flex: 1;
     position: absolute;
@@ -260,10 +327,8 @@ export default class ActionsMenu extends Vue {
     cursor: pointer;
     display: block;
     background: hsla(0, 0%, 100%, 0.3) !important;
-    padding: 5px;
+    padding: 5px 20px;
     line-height: normal;
-    padding-left: 20px;
-    padding-right: 15px;
     color: var(--MainTextColor) !important;
     text-decoration: none;
     width: 100%;
