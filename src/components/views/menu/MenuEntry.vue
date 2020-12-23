@@ -91,6 +91,7 @@ export default class MenuEntry extends Vue {
 
   .menu_category_block {
     margin-top: 10px;
+    margin-bottom: 40px;
   }
 
   .menu_category_block h1,
