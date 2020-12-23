@@ -100,18 +100,6 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
   openBarCodeScanner = false;
   currentQRCodeLink: Link | null = null;
 
-  get createView() {
-    const opts: IAttrToQueryOpts = {
-      infoByDefault: true,
-    };
-    const home = homeSchema(this.uv.args);
-    if (home !== null) {
-      opts.homeSchema = home;
-    }
-
-    return attrToLink(this.uv.attributes["create_link"], opts);
-  }
-
   private exportToCsv() {
     let data = "";
     this.uv.info.columns.forEach(col => {
@@ -284,8 +272,8 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       });
     }
 
-    if (this.createView !== null) {
-      actions.push({ name: this.$t("create").toString(), link: this.createView });
+    if (this.creationLink !== null) {
+      actions.push({ name: this.$t("create").toString(), link: this.creationLink });
     }
 
     const modalReferenceField = this.modalReferenceField;
