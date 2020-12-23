@@ -832,6 +832,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       });
       this.lastSelectedRow = null;
       this.lastSelectedValue = null;
+      this.removeCellEditing();
     });
 
     if (!R.isEmpty(this.local.extra.rowsParentPositions)
