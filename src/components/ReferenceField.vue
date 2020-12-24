@@ -2,13 +2,11 @@
     {
         "en": {
             "select_view": "Add in modal window",
-            "follow_reference": "Open in modal window",
-            "loading": "Loading"
+            "follow_reference": "Open in modal window"
         },
         "ru": {
             "select_view": "Создать во вложенном окне",
-            "follow_reference": "Открыть во вложенном окне",
-            "loading": "Загрузка"
+            "follow_reference": "Открыть во вложенном окне"
         }
     }
 </i18n>
@@ -92,9 +90,15 @@
         </button>
       </template>
     </MultiSelect>
-    <center v-else style="margin-top: 5px; color: #777;">
-      {{ $t('loading') }}...
-    </center>
+    <div
+      v-else
+      class="h-100 p-1 d-flex justify-content-center align-items-center"
+    >
+      <div
+        class="spinner-border spinner-border-sm"
+        style="border-color: rgba(0, 0, 0, 0.5); border-right-color: transparent;"
+      />
+    </div>
     <!-- <input
       v-else
       ref="control"
