@@ -326,6 +326,15 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       });
     }
 
+    if (this.uv.attributes["scan_barcode"] === true) {
+      actions.push({
+        name: this.$t("scan_barcode").toString(),
+        callback: () => {
+          this.openBarCodeScanner = !this.openBarCodeScanner;
+        },
+      });
+    }
+
     return actions;
   }
 
