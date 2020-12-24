@@ -217,6 +217,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
   .menu_container__centered {
     width: 100%;
     height: 100%;
+    margin-top: -25px; /* To compensate header's height */
     padding: 1% 0;
     display: flex;
     justify-content: center;
