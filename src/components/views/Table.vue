@@ -1593,7 +1593,14 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   th.fixed-column {
     z-index: 25; /* поверх обычных столбцов */
-    box-shadow: 2px 2px 0 var(--MainBorderColor);
+    box-shadow: 0 2px 0 var(--MainBorderColor);
+
+    &.checkbox-cells {
+      z-index: 26;
+      box-shadow:
+        0 2px 0 var(--MainBorderColor),
+        1px 0 0 var(--MainBorderColor);
+    }
   }
 
   th.th_after-last-fixed {
