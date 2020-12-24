@@ -1479,14 +1479,14 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       align-items: center;
       cursor: pointer;
       color: var(--MainTextColorLight);
-      padding: 3px 8px;
+      padding: 3px 6px;
 
       &:hover {
         color: var(--MainTextColor);
       }
 
       > .label {
-        padding-left: 3px;
+        padding-left: 2px;
       }
     }
   }
