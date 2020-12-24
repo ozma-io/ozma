@@ -6,13 +6,10 @@
     <span class="checkbox__input">
       <i
         v-if="checked"
-        style="font-size: 20px;"
-        class="material-icons md-20"
       >check_box</i>
       <i
         v-else
-        style="font-size: 20px;"
-        class="material-icons md-20"
+        class="material-icons"
       >check_box_outline_blank</i>
     </span>
     <span

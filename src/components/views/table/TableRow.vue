@@ -137,10 +137,6 @@ export default class TableRow extends Vue {
     overflow: visible !important;
   }
 
-  .openform-cells__icon {
-    font-size: 20px;
-  }
-
   td {
     border-right: 1px solid var(--MainBorderColor);
     padding: 4px 0 0 3px;
