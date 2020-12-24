@@ -64,7 +64,7 @@
           class="button"
           @click="addNewRowOnPosition('top')"
         >
-          <i class="material-icons md-24">add_box</i>
+          <i class="material-icons md-24">add</i>
           <span class="label">{{ this.$t('add_entry').toString() }}</span>
         </div>
       </div>
@@ -110,7 +110,7 @@
                   v-b-tooltip.hover.right
                   :title="$t('add_entry_in_modal')"
                   class="material-icons md-24 openform-add-icon"
-                >add</i>
+                >add_box</i>
               </FunLink>
             </th>
             <th
@@ -185,7 +185,7 @@
           class="button"
           @click="addNewRowOnPosition('bottom')"
         >
-          <i class="material-icons md-24">add_box</i>
+          <i class="material-icons md-24">add</i>
           <span class="label">{{ this.$t('add_entry').toString() }}</span>
         </div>
       </div>
@@ -1468,7 +1468,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     width: 100%;
     position: sticky;
     left: 0;
-    padding: 3px;
 
     &.bottom {
       border-bottom: 1px solid var(--MainBorderColor);
@@ -1480,16 +1479,14 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       align-items: center;
       cursor: pointer;
       color: var(--MainTextColorLight);
-      padding: 0;
-      padding-left: 5px;
+      padding: 3px 6px;
 
       &:hover {
         color: var(--MainTextColor);
       }
 
       > .label {
-        padding-left: 3px;
-        font-size: 1.3em;
+        padding-left: 2px;
       }
     }
   }
@@ -1764,10 +1761,19 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   ::v-deep .openform-cells {
     padding: 0;
-    padding-top: 4px;
+    padding-top: 5px;
     text-align: center;
-    left: 35px;
     width: 35px;
+    position: relative;
+
+    .openform-cells__icon {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 34px;
+      height: 100%;
+      padding-top: 5px;
+    }
 
     a {
       color: var(--MainTextColorLight);
@@ -1775,12 +1781,16 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
     > span > i {
       position: absolute;
-      top: 4px;
+      top: 5px;
       left: 5px;
     }
 
-    &:hover a {
-      color: var(--MainTextColor);
+    &:hover {
+      background-color: rgb(239, 239, 239);
+
+      .openform-cells__icon {
+        color: var(--MainTextColor);
+      }
     }
 
     &.table-th {
@@ -1791,6 +1801,12 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   ::v-deep .checkbox-cells {
     text-align: center;
     color: var(--MainTextColorLight);
+    padding: 5px 0 0 0;
+
+    &.table-th .material-icons {
+      margin-left: -4px;
+      margin-top: -1px;
+    }
 
     &:hover {
       color: var(--MainTextColor);
