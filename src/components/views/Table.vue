@@ -1772,18 +1772,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     padding-top: 5px;
     text-align: center;
     width: 35px;
-    position: relative;
+    left: 35px;
 
     .openform-cells__icon {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 34px;
-      height: 100%;
-      padding-top: 5px;
-    }
-
-    a {
+      position: relative;
+      left: -2px;
       color: var(--MainTextColorLight);
     }
 
