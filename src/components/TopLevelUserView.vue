@@ -282,17 +282,18 @@ export default class TopLevelUserView extends Vue {
     const actions: Action[] = [];
     if (this.currentAuth !== null) {
       if (Api.developmentMode) {
-        actions.push({ name: this.$t("authed_link").toString(),
+        actions.push({ icon: "link",
+          name: this.$t("authed_link").toString(),
           order: 1000,
           callback: () => {
             const link = getAuthedLink(this.currentAuth!);
             void navigator.clipboard.writeText(link);
           } });
       }
-      actions.push({ name: this.$t("account").toString(), order: 1000, link: { href: Api.accountUrl } });
-      actions.push({ name: this.$t("logout").toString(), order: 1000, callback: this.logout });
+      actions.push({ icon: "perm_identity", name: this.$t("account").toString(), order: 1000, link: { href: Api.accountUrl } });
+      actions.push({ icon: "exit_to_app", name: this.$t("logout").toString(), order: 1000, callback: this.logout });
     } else {
-      actions.push({ name: this.$t("login").toString(), order: 1000, callback: this.login });
+      actions.push({ icon: "login", name: this.$t("login").toString(), order: 1000, callback: this.login });
     }
     return actions;
   }

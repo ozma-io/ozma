@@ -28,7 +28,7 @@
         >
         <div
           v-else
-          class="menu_entry_icon menu_entry_icon__text"
+          class="material-icons menu_entry_icon menu_entry_icon__text"
         >
           {{ entry.icon }}
         </div>
@@ -113,6 +113,7 @@ export default class MenuEntry extends Vue {
     text-decoration: underline;
     text-decoration-color: var(--MainBorderColor);
     margin-left: 5px;
+    padding-top: 2px;
   }
 
   .first_level_entries {
