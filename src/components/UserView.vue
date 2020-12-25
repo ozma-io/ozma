@@ -3,25 +3,25 @@
         "en": {
             "loading": "Now loading",
             "forbidden": "Sorry, you are not authorized to use this user view. Contact your administrator.",
-            "no_instance": "Instance not found",
-            "not_found": "User view not found",
+            "no_instance": "Instance not found.",
+            "not_found": "User view not found.",
             "bad_request": "User view request error: {msg}",
             "unknown_error": "Unknown user view fetch error: {msg}",
             "anonymous_query": "(anonymous query)",
             "edit_view": "Edit user view",
-            "new_mode_no_main": "FOR INSERT INTO clause is required for new entry mode",
+            "new_mode_no_main": "FOR INSERT INTO clause is required for new entry mode.",
             "link_to_nowhere": "This user view was a link which didn't replace it, so there's nothing to show."
         },
         "ru": {
             "loading": "Загрузка данных",
             "forbidden": "К сожалению у вас нет прав доступа для просмотра этого представления. Свяжитесь с администратором.",
-            "no_instance": "База не найдена",
-            "not_found": "Представление не найдено",
+            "no_instance": "База не найдена.",
+            "not_found": "Представление не найдено.",
             "bad_request": "Неверный запрос для этого представления: {msg}",
             "unknown_error": "Неизвестная ошибка загрузки представления: {msg}",
             "anonymous_query": "(анонимный запрос)",
             "edit_view": "Редактировать представление",
-            "new_mode_no_main": "Для ежима создания новой записи должна использоваться конструкция FOR INSERT INTO",
+            "new_mode_no_main": "Для режима создания новой записи должна использоваться конструкция FOR INSERT INTO.",
             "link_to_nowhere": "Это отображение являлось ссылкой, которая его не заменила. Теперь здесь нечего показать."
         }
     }
