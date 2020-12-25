@@ -258,7 +258,10 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
         if (typeof actionObj.name !== "string") {
           return;
         }
+
+        const icon = typeof actionObj.icon === "string" ? actionObj.icon : undefined;
         actions.push({
+          icon,
           name: actionObj.name,
           order: -10,
           link,
@@ -307,6 +310,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
     if (typeof this.uv.info.mainEntity === "object" && this.showDefaultActions) {
       actions.push({
+        icon: "import_export",
         name: this.$t("import_from_csv").toString(),
         uploadFile: file => this.importFromCsv(file),
       });
@@ -314,11 +318,16 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
     // FIXME: workaround until we have proper role-based permissions for this.
     if (this.uv.attributes["export_to_csv"] || "__export_to_csv" in this.$route.query) {
-      actions.push({ name: this.$t("export_to_csv").toString(), callback: () => this.exportToCsv() });
+      actions.push({
+        icon: "import_export",
+        name: this.$t("export_to_csv").toString(),
+        callback: () => this.exportToCsv(),
+      });
     }
 
     if (this.uv.attributes["scan_qrcode"]) {
       actions.push({
+        icon: "qr_code_2",
         name: this.$t("scan_qrcode").toString(),
         callback: () => {
           this.openQRCodeScanner = !this.openQRCodeScanner;
@@ -328,6 +337,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
     if (this.uv.attributes["scan_barcode"] === true) {
       actions.push({
+        icon: "qr_code_scanner",
         name: this.$t("scan_barcode").toString(),
         callback: () => {
           this.openBarCodeScanner = !this.openBarCodeScanner;
