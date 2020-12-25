@@ -44,7 +44,7 @@ export const valueToText = (valueType: ValueType, value: unknown): string => {
 };
 
 // Checks if raw value is null.
-export const valueIsNull = (value: unknown) => value === null || value === undefined || value === "";
+export const valueIsNull = (value: unknown) => !(value !== null && value !== undefined && value !== "");
 
 const convertArray = (entryType: FieldType, value: unknown[]): unknown[] | undefined => {
   const converted = value.map(entry => valueFromRaw({ fieldType: entryType, isNullable: false }, entry));

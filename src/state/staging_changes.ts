@@ -175,10 +175,7 @@ export class CurrentChanges {
   }
 
   cleanupEntity(ref: IEntityRef, entityChanges: IEntityChanges) {
-    if (Object.keys(entityChanges.updated).length === 0
-     && Object.keys(entityChanges.added).length === 0
-     && Object.keys(entityChanges.deleted).length === 0
-    ) {
+    if (Object.keys(entityChanges.updated).length === 0 && Object.keys(entityChanges.added).length === 0 && Object.keys(entityChanges.deleted).length === 0) {
       const schemaChanges = this.changes[ref.schema];
       Vue.delete(schemaChanges, ref.name);
       if (Object.keys(schemaChanges).length === 0) {
@@ -247,10 +244,7 @@ const startAutoSave = (context: ActionContext<IStagingState, {}>) => {
 
 const checkAutoSave = (context: ActionContext<IStagingState, {}>) => {
   const { state, commit } = context;
-  if (state.current.addedCount === 0
-   && state.currentSubmit === null
-   && Object.keys(state.autoSaveLocks).length === 0
-  ) {
+  if (state.current.addedCount === 0 && state.currentSubmit === null && Object.keys(state.autoSaveLocks).length === 0) {
     startAutoSave(context);
   } else {
     stopAutoSave(context);
@@ -733,7 +727,7 @@ const stagingModule: Module<IStagingState, {}> = {
       }
 
       commit("errors/resetErrors", errorKey, { root: true });
-      await dispatch("clearAdded", { onlyUntouched: true });
+      // await dispatch("clearAdded", { onlyUntouched: true });
       commit("validate");
       const nestedOps = await Promise.all(Object.entries(state.current.changes).map(async ([schemaName, entities]) => {
         const ret = await Promise.all(Object.entries(entities).map(async ([entityName, entityChanges]) => {

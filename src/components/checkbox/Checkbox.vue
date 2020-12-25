@@ -5,8 +5,15 @@
   >
     <span class="checkbox__input">
       <i
-        class="material-icons"
-      >{{ checked ? "check_box" : "check_box_outline_blank" }}</i>
+        v-if="checked"
+        style="font-size: 20px;"
+        class="material-icons md-20"
+      >check_box</i>
+      <i
+        v-else
+        style="font-size: 20px;"
+        class="material-icons md-20"
+      >check_box_outline_blank</i>
     </span>
     <span
       v-if="label"
