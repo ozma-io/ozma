@@ -22,7 +22,7 @@
     />
     <td
       v-if="localUv.hasRowLinks"
-      class="fixed-column opemform-cells"
+      class="fixed-column openform-cells"
     >
       <FunLink
         v-if="localRow.extra.link !== undefined"
@@ -30,7 +30,7 @@
         class="icon-link"
         @goto="$emit('goto', $event)"
       >
-        <i class="material-icons opemform-cells__icon">open_in_new</i>
+        <i class="material-icons openform-cells__icon">open_in_new</i>
       </FunLink>
     </td>
     <TableCell
@@ -110,6 +110,11 @@ export default class TableRow extends Vue {
 
   .checkbox-cells {
     cursor: pointer;
+    color: var(--MainTextColorLight);
+
+    &:hover {
+      color: var(--MainTextColor);
+    }
   }
 
   .checkbox-cells > .table-th_span {
@@ -132,15 +137,11 @@ export default class TableRow extends Vue {
     overflow: visible !important;
   }
 
-  .opemform-cells__icon {
-    font-size: 20px;
-  }
-
   td {
     border-right: 1px solid var(--MainBorderColor);
     padding: 4px 0 0 3px;
     overflow: hidden;
-    color: var(--TableTextColor) !important;
+    color: var(--TableTextColor);
     text-overflow: ellipsis;
     white-space: nowrap;
     vertical-align: top;
@@ -160,7 +161,7 @@ export default class TableRow extends Vue {
 
   td >>> p,
   td >>> a {
-    color: var(--TableTextColor) !important;
+    /* color: var(--TableTextColor) [> !important <]; */
     max-height: 154px;
     overflow-y: auto;
   }
@@ -179,8 +180,9 @@ export default class TableRow extends Vue {
     overflow-y: auto;
   }
 
+  /* !importants was used because styles for fixed columns have priority otherwise. */
   td.required_cell_style {
-    background-color: var(--WarningColor);
+    background-color: var(--WarningColor) !important;
   }
 
   td.error_style {
@@ -191,7 +193,7 @@ export default class TableRow extends Vue {
     z-index: 15; /* обычные ячейки ниже фиксированных */
   }
 
-  .opemform-cells {
+  .openform-cells {
     text-align: center;
     width: 100%;
     border-right: 1px solid var(--MainBorderColor);
@@ -202,7 +204,7 @@ export default class TableRow extends Vue {
       left: 0;
     }
 
-    .opemform-cells {
+    .openform-cells {
       left: 35px;
     }
 
@@ -210,13 +212,6 @@ export default class TableRow extends Vue {
       position: sticky;
       z-index: 20; /* поверх обычных ячеек */
     }
-
-    /* .opemform-cells > span {
-           justify-content: center !important;
-           align-items: center;
-           display: inline-flex;
-           width: 100%;
-           } */
 
     .table-head .fixed-column {
       position: sticky;
