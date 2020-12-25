@@ -36,14 +36,18 @@ export default Vue.component("FunLink", {
       vueEmit(context, action, query);
     };
 
+    if (link === null) {
+      return context.children;
+    }
+
     const { handler, href } = linkHandler(context.parent.$store, emit, link);
 
-    const onHandlers = handler === null ? {} : { click: (e: MouseEvent) => {
+    const onHandlers = { click: (e: MouseEvent) => {
       if (!redirectClick(e, href === null)) {
         return;
       }
       vueEmit(context, "click");
-      handler();
+      void handler();
     } };
 
     if (!context.props.noHref && href !== null) {
@@ -52,15 +56,13 @@ export default Vue.component("FunLink", {
         attrs: {
           href,
         },
-        on: onHandlers as any,
-      }, context.children);
-    } else if (handler !== null) {
-      return createElement("span", {
-        ...context.data,
-        on: onHandlers as any,
+        on: onHandlers,
       }, context.children);
     } else {
-      return context.children;
+      return createElement("span", {
+        ...context.data,
+        on: onHandlers,
+      }, context.children);
     }
   },
 });

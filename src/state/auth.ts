@@ -6,8 +6,6 @@ import { IRef } from "@/utils";
 import { FunDBError, disableAuth, authClientId, authUrl, default as Api, developmentMode } from "@/api";
 import * as Utils from "@/utils";
 import { router, getQueryValue } from "@/modules";
-import { andThen } from "ramda";
-import { RawLocation } from "vue-router";
 
 export class CurrentAuth {
   createdTime: number;
@@ -248,12 +246,7 @@ const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExist
   };
   const paramsString = new URLSearchParams(params).toString();
 
-  window.location.href = `${authUrl}/auth?${paramsString}`;
-  const waitForLoad = new Promise<void>((resolve, reject) => {
-    addEventListener("load", () => {
-      reject();
-    });
-  });
+  const waitForLoad = Utils.gotoHref(`${authUrl}/auth?${paramsString}`);
   commit("setPending", waitForLoad);
   return waitForLoad;
 };

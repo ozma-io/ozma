@@ -1,8 +1,7 @@
-import { queryLocation, IQueryState, IQuery, setIdSelf, setIdRef, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery } from "@/state/query";
+import { queryLocation, IQueryState, IQuery, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery, selfIdArgs, refIdArgs } from "@/state/query";
 import { IValueInfo } from "@/state/user_view";
 import { IActionRef } from "ozma-api/src";
-import { RenderContext } from "vue";
-import { vueEmit } from "@/utils";
+import { gotoHref } from "@/utils";
 import { saveAndRunAction } from "@/state/actions";
 import { Store } from "vuex";
 import { router } from "@/modules";
@@ -11,11 +10,15 @@ export interface IHrefLink {
   href: string;
 }
 
-export type ITargetType = "top" | "root" | "modal" | "blank" | "modal-auto";
+export type TargetType = "top" | "root" | "modal" | "blank" | "modal-auto";
+
+const isTargetType = (rawType: unknown): rawType is TargetType => {
+  return rawType === "top" || rawType === "root" || rawType === "modal" || rawType === "blank" || rawType === "modal-auto";
+};
 
 export interface IQueryLink {
   query: IQuery;
-  target: ITargetType;
+  target: TargetType;
 }
 
 export interface IActionLink {
@@ -26,8 +29,16 @@ export interface IActionLink {
 export type Link = IHrefLink | IQueryLink | IActionLink;
 
 export interface IAttrToLinkOpts extends IAttrToQueryOpts {
-  queryTypeByDefault?: ITargetType;
+  defaultTarget?: TargetType;
 }
+
+export const addLinkDefaultArgs = (link: Link, args: Record<string, unknown>) => {
+  if ("args" in link) {
+    link.args = { ...args, ...link.args };
+  } else if ("query" in link && link.query.args.args) {
+    link.query.args.args = { ...args, ...link.query.args.args };
+  }
+};
 
 const attrToQueryLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLinkOpts): IQueryLink | null => {
   const query = attrObjectToQuery(linkedAttr, opts);
@@ -36,11 +47,11 @@ const attrToQueryLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLink
   }
 
   const targetAttr = linkedAttr["target"];
-  let target: ITargetType;
-  if (targetAttr === "top" || targetAttr === "root" || targetAttr === "modal" || targetAttr === "blank" || targetAttr === "modal-auto") {
+  let target: TargetType;
+  if (isTargetType(targetAttr)) {
     target = targetAttr;
-  } else if (opts?.queryTypeByDefault) {
-    target = opts.queryTypeByDefault;
+  } else if (opts?.defaultTarget) {
+    target = opts.defaultTarget;
   } else {
     target = "modal-auto";
   }
@@ -49,9 +60,6 @@ const attrToQueryLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLink
 };
 
 export const attrToActionLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLinkOpts): IActionLink | null => {
-  if (typeof linkedAttr["action"] !== "object") {
-    return null;
-  }
   const action = attrToRef(linkedAttr["action"]);
   if (action === null) {
     return null;
@@ -95,16 +103,8 @@ export const attrToLinkSelf = (linkedAttr: unknown, update?: IValueInfo, opts?: 
   }
 
   const ret = attrToLink(linkedAttr, opts);
-  if (ret !== null && update) {
-    let args: Record<string, unknown>;
-    if ("args" in ret) {
-      args = ret.args;
-    } else if ("query" in ret && ret.query.args.args) {
-      args = ret.query.args.args;
-    } else {
-      return ret;
-    }
-    setIdSelf(args, update);
+  if (ret !== null) {
+    addLinkDefaultArgs(ret, selfIdArgs(update));
   }
   return ret;
 };
@@ -112,16 +112,8 @@ export const attrToLinkSelf = (linkedAttr: unknown, update?: IValueInfo, opts?: 
 // Set 'id' argument to the id of the referenced value.
 export const attrToLinkRef = (linkedAttr: unknown, value: unknown, opts?: IAttrToLinkOpts): Link | null => {
   const ret = attrToLink(linkedAttr, opts);
-  if (ret !== null && value !== null && value !== undefined) {
-    let args: Record<string, unknown>;
-    if ("args" in ret) {
-      args = ret.args;
-    } else if ("query" in ret && ret.query.args.args) {
-      args = ret.query.args.args;
-    } else {
-      return ret;
-    }
-    setIdRef(args, value);
+  if (ret !== null) {
+    addLinkDefaultArgs(ret, refIdArgs(value));
   }
   return ret;
 };
@@ -135,57 +127,63 @@ export const iconValue = (target: string) => {
 };
 
 export interface ILinkHandler {
-  handler: (() => void) | null;
+  handler: () => Promise<void>;
   href: string | null;
 }
 
-export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQuery) => void), link: Link | null): ILinkHandler => {
-  let handler: (() => void) | null = null;
+export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQuery) => void), link: Link): ILinkHandler => {
+  let handler: () => Promise<void>;
   let href: string | null = null;
 
-  if (link) {
-    if ("query" in link) {
-      href = router.resolve(queryLocation(link.query)).href;
-    } else if ("href" in link) {
-      href = link.href;
-    }
-  }
-
-  if (link) {
-    if ("query" in link) {
-      if (link.target === "modal") {
-        handler = () => {
-          void store.dispatch("query/addWindow", link.query);
-        };
-      } else if (link.target === "root") {
-        handler = () => {
-          emit("goto", link.query);
-        };
-      } else if (link.target === "top") {
-        handler = () => {
-          void store.dispatch("query/pushRoot", link.query);
-        };
-      } else if (link.target === "blank") {
-        handler = () => {
-          window.open(href!, "_blank");
-        };
-      } else if (link.target === "modal-auto") {
-        handler = () => {
-          const queryState = store.state.query as IQueryState;
-          if (queryState.current?.windows.length === 0) {
-            void store.dispatch("query/addWindow", link.query);
-          } else {
-            emit("goto", link.query);
-          }
-        };
-      } else {
-        throw new Error("Impossible");
-      }
-    } else if ("action" in link) {
-      handler = () => {
-        void saveAndRunAction(store, link.action, link.args);
+  if ("query" in link) {
+    if (link.target === "modal") {
+      handler = async () => {
+        await store.dispatch("query/addWindow", link.query);
       };
+    } else if (link.target === "root") {
+      // eslint-disable-next-line @typescript-eslint/require-await
+      handler = async () => {
+        emit("goto", link.query);
+      };
+    } else if (link.target === "top") {
+      handler = async () => {
+        await store.dispatch("query/pushRoot", link.query);
+      };
+    } else if (link.target === "blank") {
+      // eslint-disable-next-line @typescript-eslint/require-await
+      handler = async () => {
+        window.open(href!, "_blank");
+      };
+    } else if (link.target === "modal-auto") {
+      handler = async () => {
+        const queryState = store.state.query as IQueryState;
+        if (queryState.current?.windows.length === 0) {
+          await store.dispatch("query/addWindow", link.query);
+        } else {
+          emit("goto", link.query);
+        }
+      };
+    } else {
+      throw new Error("Impossible");
     }
+
+    href = router.resolve(queryLocation(link.query)).href;
+  } else if ("href" in link) {
+    const curHref = link.href;
+    handler = async () => {
+      await gotoHref(curHref);
+    };
+    href = curHref;
+  } else if ("action" in link) {
+    handler = async () => {
+      const ret = await saveAndRunAction(store, link.action, link.args);
+      const retLink = attrToLink(ret.result, { defaultTarget: "root" });
+      if (retLink !== null) {
+        await linkHandler(store, emit, retLink).handler();
+      }
+    };
+  } else {
+    throw new Error("Impossible");
   }
 
   return { handler, href };

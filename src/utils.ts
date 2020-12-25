@@ -598,6 +598,15 @@ export const saveToFile = (name: string, mime: string, data: string) => {
   document.body.removeChild(element);
 };
 
+export const gotoHref = (href: string): Promise<void> => {
+  window.location.href = href;
+  return new Promise<void>((resolve, reject) => {
+    addEventListener("load", () => {
+      reject();
+    });
+  });
+};
+
 const makeWordsRegex = () => {
   // Match words that doesn't start with quotes
   const wordRegex = `([^"'«„”\\s][^\\s]*)`;
