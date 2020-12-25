@@ -3,6 +3,7 @@
         "en": {
             "loading": "Now loading",
             "forbidden": "Sorry, you are not authorized to use this user view. Contact your administrator.",
+            "no_instance": "Instance not found",
             "not_found": "User view not found",
             "bad_request": "User view request error: {msg}",
             "unknown_error": "Unknown user view fetch error: {msg}",
@@ -14,6 +15,7 @@
         "ru": {
             "loading": "Загрузка данных",
             "forbidden": "К сожалению у вас нет прав доступа для просмотра этого представления. Свяжитесь с администратором.",
+            "no_instance": "База не найдена",
             "not_found": "Представление не найдено",
             "bad_request": "Неверный запрос для этого представления: {msg}",
             "unknown_error": "Неизвестная ошибка загрузки представления: {msg}",
@@ -381,9 +383,11 @@ export default class UserView extends Vue {
   private uvErrorMessage(uv: UserViewError): string {
     if (uv.type === "access_denied") {
       return this.$t("forbidden").toString();
+    } else if (uv.type === "no_instance") {
+      return this.$t("no_instance").toString();
     } else if (uv.type === "not_found") {
       return this.$t("not_found").toString();
-    } else if (uv.type === "arguments") {
+    } else if (uv.type === "arguments" || uv.type === "request") {
       return this.$t("bad_request", { msg: uv.message }).toString();
     } else {
       return this.$t("unknown_error", { msg: uv.message }).toString();
