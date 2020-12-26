@@ -495,7 +495,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     this.updateCommonValue(this.emptyRow!.row, this.emptyRow!.local, columnIndex, value, localValue);
   }
 
-  createCommonLocalRow(row: IRowCommon): ITableRowExtra {
+  createCommonLocalRow(row: IRowCommon, oldLocal: ITableRowExtra | null): ITableRowExtra {
     const getRowAttr = (name: string) => tryDicts(name, row.attributes, this.uv.attributes);
 
     const extra: ITableRowExtra = {
@@ -504,7 +504,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       visible: true,
       children: [],
       level: 0,
-      newRowSide: "bottom",
+      newRowSide: oldLocal?.newRowSide ?? "bottom",
     };
 
     const style: Record<string, unknown> = {};
@@ -524,8 +524,8 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     return extra;
   }
 
-  createLocalRow(rowIndex: number, row: ICombinedRow) {
-    const extra = this.createCommonLocalRow(row);
+  createLocalRow(rowIndex: number, row: ICombinedRow, oldLocal: ITableRowExtra | null) {
+    const extra = this.createCommonLocalRow(row, oldLocal);
     if (row.mainId !== undefined) {
       extra.selectionEntry = {
         entity: this.uv.info.mainEntity!,
@@ -535,12 +535,12 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     return extra;
   }
 
-  createAddedLocalRow(rowId: AddedRowId, row: IAddedRow) {
-    return this.createCommonLocalRow(row);
+  createAddedLocalRow(rowId: AddedRowId, row: IAddedRow, oldLocal: ITableRowExtra | null) {
+    return this.createCommonLocalRow(row, oldLocal);
   }
 
-  createEmptyLocalRow(row: IRowCommon) {
-    return this.createCommonLocalRow(row);
+  createEmptyLocalRow(row: IRowCommon, oldLocal: ITableRowExtra | null) {
+    return this.createCommonLocalRow(row, oldLocal);
   }
 
   postInitCommonRow(row: IRowCommon, localRow: ITableLocalRow) {
