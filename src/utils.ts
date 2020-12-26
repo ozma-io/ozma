@@ -653,9 +653,6 @@ const replaceLink = (match: string, email: string, tel: string, url: string) => 
       tel ? "tel:" :
         "";
   const formattedMatch = tel ? telRemoveFormating(match) : match;
-  if (tel) {
-    console.log(tel, formattedMatch);
-  }
   return `<a \
 target="_blank" rel="noopener noreferrer" \
 href="${prefix}${formattedMatch}">${match}</a>`;
