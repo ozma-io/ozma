@@ -925,13 +925,14 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       ) {
         return;
       }
+      const swapedFirstNotDisabledI: number = newRowRef.columnIndexes[firstNotDisabledI];
       this.cellEditByTarget(
         {
           type: "added",
           id: rowId,
-          column: newRowRef.columnIndexes[firstNotDisabledI],
+          column: firstNotDisabledI,
         },
-        newRowRef.$children[1 + firstNotDisabledI].$el as HTMLElement,
+        newRowRef.$children[1 + swapedFirstNotDisabledI].$el as HTMLElement,
       );
     });
   }
