@@ -634,25 +634,11 @@ export const convertToWords = (str: string) => {
   return words;
 };
 
-// Check for Russian ИНН, it's not related to inns.
-const isInn = (inn: string) => {
-  const innReducer = (acc: number, curr: number, i: number) => acc + curr * Number(inn[i]);
-  const reduceInn = (coefficients: number[]) => (coefficients.reduce(innReducer, 0) % 11) % 10;
-
-  if (inn.length === 10) {
-    return Number(inn[9]) === reduceInn([2, 4, 10, 3, 5, 9, 4, 6, 8]);
-  } else if (inn.length === 12) {
-    return ((Number(inn[10]) === reduceInn([7, 2, 4, 10, 3, 5, 9, 4, 6, 8])
-     && (Number(inn[11]) === reduceInn([3, 7, 2, 4, 10, 3, 5, 9, 4, 6, 8]))));
-  } else {
-    return false;
-  }
-};
 // In all regexes capturing groups replaced to non-capturing (`(` -> `(?:`).
 // Source: https://emailregex.com/
 const emailRegex = /(?:(?:[^<>(?:)[\]\\.,;:\s@"]+(?:\.[^<>(?:)[\]\\.,;:\s@"]+)*)|(?:".+"))@(?:(?:\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(?:(?:[a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/;
 // Source: https://qna.habr.com/answer?answer_id=852265
-const telRegex = /(?:\+)?(?:[- _(?:):=+]?\d[- _(?:):=+]?){10,14}(?:\s*)?/;
+const telRegex = /\+(?:[- _(?:):=+]?\d[- _(?:):=+]?){10,14}(?:\s*)?/;
 const telRemoveFormating = (tel: string) => tel.replace(/^(\+)|\D/g, "$1");
 // Source: https://stackoverflow.com/a/3809435
 const urlRegex = /https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9(?:)]{1,6}\b(?:[-a-zA-Z0-9(?:)@:%_+.~#?&//=]*)/;
@@ -667,9 +653,6 @@ const replaceLink = (match: string, email: string, tel: string, url: string) => 
       tel ? "tel:" :
         "";
   const formattedMatch = tel ? telRemoveFormating(match) : match;
-  if (tel && match.trim() === formattedMatch && isInn(formattedMatch)) {
-    return match;
-  }
   return `<a \
 target="_blank" rel="noopener noreferrer" \
 href="${prefix}${formattedMatch}">${match}</a>`;
