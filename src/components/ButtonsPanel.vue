@@ -22,6 +22,7 @@
       </li>
     </ul>
     <slot name="search-panel" />
+    <slot name="scanners-buttons" />
     <slot name="actions-menu" />
   </div>
 </template>

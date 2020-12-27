@@ -82,6 +82,10 @@
               @update:filterString="replaceRootSearch($event)"
             />
           </template>
+          <template #scanners-buttons>
+            <i class="material-icons" style="line-height: inherit; margin: 0 5px;">qr_code_scanner</i>
+            <i class="material-icons" style="line-height: inherit; margin: 0 5px;">qr_code_2</i>
+          </template>
           <template #actions-menu>
             <ActionsMenu
               :actions="extraActions"

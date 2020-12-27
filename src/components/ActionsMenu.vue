@@ -129,6 +129,7 @@ export interface IAction {
   icon?: string;
   name: string;
   order?: number;
+  attribute?: string;
 }
 
 export interface ILocationAction extends IAction {
