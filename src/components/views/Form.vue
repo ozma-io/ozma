@@ -6,7 +6,6 @@
             "delete_confirmation": "Are you sure want to delete this record?",
             "ok": "OK",
             "cancel": "Cancel",
-            "no_value": "(No value)",
             "yes": "Yes",
             "no": "No"
         },
@@ -16,7 +15,6 @@
             "delete_confirmation": "Вы действительно хотите удалить эту запись?",
             "ok": "ОК",
             "cancel": "Отмена",
-            "no_value": "(Пусто)",
             "yes": "Да",
             "no": "Нет"
         }

@@ -4,7 +4,6 @@
             "yes": "Yes",
             "no": "No",
             "invalid_uv": "Nested user view rows should be JSON objects with 'ref' and 'args' defined",
-            "empty": "(empty)",
             "select_view": "Add in modal window",
             "data_will_load_after_save": "(Data will load after save)"
         },
@@ -12,7 +11,6 @@
             "yes": "Да",
             "no": "Нет",
             "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'ref' и 'args'",
-            "empty": "(пусто)",
             "select_view": "Создать во вложенном окне",
             "data_will_load_after_save": "(Данные загрузятся после сохранения)"
         }
