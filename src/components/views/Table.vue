@@ -1595,7 +1595,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     box-shadow: 0 2px 0 var(--MainBorderColor);
 
     &.checkbox-cells {
-      z-index: 26;
       box-shadow:
         0 2px 0 var(--MainBorderColor),
         1px 0 0 var(--MainBorderColor);
@@ -1672,7 +1671,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
 
     .openform-cells {
-      left: 20px;
+      left: 35px;
     }
 
     .fixed-column {
@@ -1758,27 +1757,64 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     margin-bottom: 0;
   }
 
-  .openform-add-icon {
-    position: relative;
-    top: 5px;
+  ::v-deep .checkbox-cells {
+    text-align: center;
     color: var(--MainTextColorLight);
+    padding: 0;
+
+    &.table-th .material-icons {
+      top: 5px;
+      left: 5px;
+    }
+
+    .table-td_span .material-icons {
+      position: relative;
+      top: 2px;
+    }
 
     &:hover {
       color: var(--MainTextColor);
+      background-color: rgb(239, 239, 239);
     }
   }
 
   ::v-deep .openform-cells {
     padding: 0;
-    padding-top: 5px;
     text-align: center;
-    width: 35px;
-    left: 35px;
+    height: 100%;
+    width: 100%;
+
+    .openform-add-icon {
+      color: var(--MainTextColorLight);
+      position: relative;
+      top: 5px;
+    }
+
+    > a {
+      display: block;
+      text-decoration: none;
+
+      &:hover {
+        .openform-add-icon {
+          color: var(--MainTextColor);
+        }
+      }
+    }
 
     .openform-cells__icon {
-      position: relative;
-      left: -2px;
       color: var(--MainTextColorLight);
+    }
+
+    .icon-link {
+      height: 100%;
+      width: 100%;
+      display: block;
+      text-decoration: none;
+
+      .material-icons {
+        position: relative;
+        top: 2px;
+      }
     }
 
     > span > i {
@@ -1797,22 +1833,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
     &.table-th {
       padding: 0;
-    }
-  }
-
-  ::v-deep .checkbox-cells {
-    text-align: center;
-    color: var(--MainTextColorLight);
-    padding: 5px 0 0 0;
-
-    &.table-th .material-icons {
-      margin-left: -4px;
-      margin-top: -1px;
-    }
-
-    &:hover {
-      color: var(--MainTextColor);
-      background-color: rgb(239, 239, 239);
     }
   }
 
