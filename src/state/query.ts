@@ -16,7 +16,6 @@ export interface IQuery {
 export interface IAttrToQueryOpts {
   homeSchema?: SchemaName;
   infoByDefault?: boolean; // Whether to create new entries by default
-  makeDefaultValues?: () => Record<string, unknown>;
 }
 
 export const attrToRef = (ref: unknown, opts?: IAttrToQueryOpts): { schema: string; name: string } | null => {
@@ -72,11 +71,10 @@ export const attrObjectToQuery = (linkedAttr: unknown, opts?: IAttrToQueryOpts):
   if (newAttr || (newAttr === undefined && opts?.infoByDefault)) {
     args = null;
   } else {
-    const retArgs = attrToRecord(linkedAttrObj["args"]);
-    if (retArgs === null) {
+    args = attrToRecord(linkedAttrObj["args"]);
+    if (args === null) {
       return null;
     }
-    args = retArgs;
   }
 
   let defaultValues: Record<string, unknown>;
@@ -86,8 +84,6 @@ export const attrObjectToQuery = (linkedAttr: unknown, opts?: IAttrToQueryOpts):
       return null;
     }
     defaultValues = def;
-  } else if (opts?.makeDefaultValues !== undefined) {
-    defaultValues = opts.makeDefaultValues();
   } else {
     defaultValues = {};
   }
@@ -116,37 +112,36 @@ export const attrToQuery = (linkedAttr: unknown, opts?: IAttrToQueryOpts): IQuer
   }
 };
 
-// Set 'id' argument to the value id.
-export const setIdSelf = (args: Record<string, unknown>, update: IValueInfo) => {
-  if (!("id" in args)) {
-    args.id = update.id;
+export const addQueryDefaultArgs = (query: IQuery, args: Record<string, unknown>) => {
+  if (query.args.args !== null) {
+    query.args.args = { ...args, ...query.args.args };
   }
 };
 
+// Set 'id' argument to the value id.
+export const selfIdArgs = (update: IValueInfo | undefined): Record<string, unknown> => {
+  return update ? { id: update.id } : {};
+};
+
 // Set 'id' argument to the id of the referenced value.
-export const setIdRef = (args: Record<string, unknown>, value: unknown) => {
-  if (!("id" in args)) {
-    const id = Number(value);
-    if (!Number.isNaN(id)) {
-      args.id = id;
-    }
-  }
+export const refIdArgs = (value: unknown): Record<string, unknown> => {
+  const id = Number(value);
+  return !Number.isNaN(id) ? { id } : {};
 };
 
 // Set 'id' argument to the value id.
 export const attrToQuerySelf = (linkedAttr: unknown, update?: IValueInfo, opts?: IAttrToQueryOpts): IQuery | null => {
   const ret = attrToQuery(linkedAttr, opts);
-  if (ret?.args.args && update) {
-    setIdSelf(ret.args.args, update);
+  if (ret !== null) {
+    addQueryDefaultArgs(ret, selfIdArgs(update));
   }
   return ret;
 };
 
-// Set 'id' argument to the id of the referenced value.
 export const attrToQueryRef = (linkedAttr: unknown, value: unknown, opts?: IAttrToQueryOpts): IQuery | null => {
   const ret = attrToQuery(linkedAttr, opts);
-  if (ret?.args.args && value !== null && value !== undefined) {
-    setIdRef(ret.args.args, value);
+  if (ret !== null) {
+    addQueryDefaultArgs(ret, refIdArgs(value));
   }
   return ret;
 };

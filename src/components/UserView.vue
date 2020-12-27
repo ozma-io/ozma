@@ -3,20 +3,26 @@
         "en": {
             "loading": "Now loading",
             "forbidden": "Sorry, you are not authorized to use this user view. Contact your administrator.",
-            "not_found": "User view not found",
+            "no_instance": "Instance not found.",
+            "not_found": "User view not found.",
             "bad_request": "User view request error: {msg}",
             "unknown_error": "Unknown user view fetch error: {msg}",
             "anonymous_query": "(anonymous query)",
-            "edit_view": "Edit user view"
+            "edit_view": "Edit user view",
+            "new_mode_no_main": "FOR INSERT INTO clause is required for new entry mode.",
+            "link_to_nowhere": "This user view was a link which didn't replace it, so there's nothing to show."
         },
         "ru": {
             "loading": "Загрузка данных",
             "forbidden": "К сожалению у вас нет прав доступа для просмотра этого представления. Свяжитесь с администратором.",
-            "not_found": "Представление не найдено",
+            "no_instance": "База не найдена.",
+            "not_found": "Представление не найдено.",
             "bad_request": "Неверный запрос для этого представления: {msg}",
             "unknown_error": "Неизвестная ошибка загрузки представления: {msg}",
             "anonymous_query": "(анонимный запрос)",
-            "edit_view": "Редактировать представление"
+            "edit_view": "Редактировать представление",
+            "new_mode_no_main": "Для режима создания новой записи должна использоваться конструкция FOR INSERT INTO.",
+            "link_to_nowhere": "Это отображение являлось ссылкой, которая его не заменила. Теперь здесь нечего показать."
         }
     }
 </i18n>
@@ -30,14 +36,14 @@
 
 <template>
   <span>
-    <template v-if="uvIsReady">
+    <template v-if="state.state === 'show'">
       <UserViewCommon
-        :uv="currentUv"
+        :uv="state.uv"
         :is-root="isRoot"
         :is-top-level="isTopLevel"
         :filter="filter"
-        :local="local"
-        :base-local="baseLocal"
+        :local="state.local"
+        :base-local="state.baseLocal"
         :scope="scope"
         :level="level"
         :selection-mode="selectionMode"
@@ -46,13 +52,13 @@
         @update:panelButtons="panelButtons = $event"
       />
       <component
-        :is="`UserView${userViewType}`"
-        :uv="currentUv"
+        :is="`UserView${state.componentName}`"
+        :uv="state.uv"
         :is-root="isRoot"
         :is-top-level="isTopLevel"
         :filter="filter"
-        :local="local"
-        :base-local="baseLocal"
+        :local="state.local"
+        :base-local="state.baseLocal"
         :scope="scope"
         :level="level"
         :selection-mode="selectionMode"
@@ -66,7 +72,12 @@
       />
     </template>
     <div
-      v-else-if="errorMessage === null"
+      v-else-if="state.state === 'error'"
+    >
+      {{ state.message }}
+    </div>
+    <div
+      v-else
       class="loading-container h-100 p-3 d-flex justify-content-center align-items-center"
       style="background-color: rgba(0, 0, 0, 0.05); cursor: wait;"
     >
@@ -74,11 +85,6 @@
         class="spinner-border"
         style="width: 3em; height: 3em; border-color: rgba(0, 0, 0, 0.5); border-right-color: transparent;"
       />
-    </div>
-    <div
-      v-else
-    >
-      {{ errorMessage }}
     </div>
   </span>
 </template>
@@ -89,7 +95,7 @@ import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { Store } from "vuex";
 
-import { RecordSet, ReferenceName, deepEquals, snakeToPascal, deepClone } from "@/utils";
+import { RecordSet, ReferenceName, deepEquals, snakeToPascal, deepClone, waitTimeout } from "@/utils";
 import { funappSchema } from "@/api";
 import { equalEntityRef } from "@/values";
 import type { IUserViewArguments, IUserViewEventHandler, IUserViewState } from "@/state/user_view";
@@ -103,6 +109,7 @@ import { Action } from "@/components/ActionsMenu.vue";
 import { ISelectionRef, LocalBaseUserView } from "@/components/BaseUserView";
 import UserViewCommon from "@/components/UserViewCommon.vue";
 import { IPanelButton } from "@/components/ButtonsPanel.vue";
+import { addLinkDefaultArgs, attrToLink, Link, linkHandler } from "@/links";
 
 const types: RecordSet<string> = {
   "form": null,
@@ -121,21 +128,58 @@ const userView = namespace("userView");
 const staging = namespace("staging");
 const query = namespace("query");
 
-const userViewType = (uv: CombinedUserView) => {
-  if (!("type" in uv.attributes)) {
-    return "Table";
+interface UserViewComponent {
+  type: "component",
+  component: string,
+}
+
+interface UserViewLink {
+  type: "link",
+  link: Link,
+}
+
+type UserViewType = UserViewComponent | UserViewLink;
+
+const userViewType = (uv: CombinedUserView): UserViewType => {
+  const typeAttr = uv.attributes["type"];
+
+  if (typeof typeAttr === "string") {
+    const component = typeAttr in types ? snakeToPascal(typeAttr) : "Table";
+    return { type: "component", component };
+  } else if (typeof typeAttr === "object" && typeAttr !== null) {
+    const obj = typeAttr as Record<string, unknown>;
+    const link = attrToLink(obj["link"], { defaultTarget: "root" });
+    if (link !== null) {
+      return { type: "link", link };
+    }
   }
 
-  const typeAttr = String(uv.attributes["type"]);
-
-  if (typeAttr in types) {
-    return snakeToPascal(typeAttr);
-  } else {
-    return "Table";
-  }
+  return { type: "component", component: "Table" };
 };
 
+interface IUserViewShow {
+  state: "show";
+  componentName: string;
+  uv: CombinedUserView;
+  component: IUserViewConstructor<Vue> | null;
+  local: IHandlerProvider | null;
+  baseLocal: LocalBaseUserView;
+}
+
+interface IUserViewLoading {
+  state: "loading";
+}
+
+interface IUserViewError {
+  state: "error";
+  message: string;
+}
+
+type UserViewLoadingState = IUserViewShow | IUserViewLoading | IUserViewError;
+
 const maxLevel = 4;
+
+const loadingState: IUserViewLoading = { state: "loading" };
 
 /* This is enclosing component, which runs Vuex actions to load actual user view data, manages lifetime of
  * user views themselves etc. For instance, it ensures smooth reloading of components when user view data is
@@ -178,16 +222,13 @@ export default class UserView extends Vue {
   private panelButtons: IPanelButton[] = [];
   private extraActions: Action[] = [];
   private extraCommonActions: Action[] = [];
-  private component: IUserViewConstructor<Vue> | null = null;
-  private local: IHandlerProvider | null = null;
-  private baseLocal: LocalBaseUserView | null = null;
-  // currentUv is shown while new component for uv is loaded.
-  private currentUv: CombinedUserView | UserViewError | null = null;
+  // Old user view is shown while new component for uv is loaded.
+  private state: UserViewLoadingState = loadingState;
   private pendingArgs: IUserViewArguments | null = null;
 
   get title() {
-    if (this.currentUv instanceof CombinedUserView && "title" in this.currentUv.attributes) {
-      return this.currentUv.attributes.title;
+    if (this.state.state === "show" && "title" in this.state.uv.attributes) {
+      return this.state.uv.attributes["title"];
     } else if (this.args.source.type === "named") {
       return this.args.source.ref.name;
     } else {
@@ -204,53 +245,37 @@ export default class UserView extends Vue {
     }
   }
 
-  get uvIsReady() {
-    return this.currentUv instanceof CombinedUserView && this.component !== null;
-  }
-
-  /**
-   * Return true if `hide_default_actions` attribute is not set
-   * @return {boolean} Allow showing default actions (edit, import from csv, etc.)
-   */
-  get showDefaultActions() {
-    if (this.currentUv instanceof CombinedUserView &&
-        this.currentUv.attributes["hide_default_actions"] === true) {
-      return false;
-    }
-    return true;
-  }
-
   get actions() {
     const actions = [...this.extraCommonActions, ...this.extraActions];
-    if (this.currentUv === null) {
-      return actions;
-    }
-    if (this.currentUv.args.source.type === "named") {
-      const editQuery: IQuery = {
-        defaultValues: {},
-        args: {
-          source: {
-            type: "named",
-            ref: {
-              schema: funappSchema,
-              name: "user_view_by_name",
+
+    if (this.state.state === "show" && !this.state.uv.attributes["hide_default_actions"]) {
+      if (this.state.uv.args.source.type === "named") {
+        const editQuery: IQuery = {
+          defaultValues: {},
+          args: {
+            source: {
+              type: "named",
+              ref: {
+                schema: funappSchema,
+                name: "user_view_by_name",
+              },
+            },
+            args: {
+              schema: this.state.uv.args.source.ref.schema,
+              name: this.state.uv.args.source.ref.name,
             },
           },
-          args: {
-            schema: this.currentUv.args.source.ref.schema,
-            name: this.currentUv.args.source.ref.name,
-          },
-        },
-        search: "",
-      };
+          search: "",
+        };
 
-      if (this.showDefaultActions) {
         actions.push({
+          icon: "code",
           name: this.$t("edit_view").toString(),
           link: { query: editQuery, target: "modal-auto" },
         });
       }
     }
+
     return actions;
   }
 
@@ -259,87 +284,90 @@ export default class UserView extends Vue {
     this.$emit("update:panelButtons", this.panelButtons);
   }
 
-  get userViewType() {
-    if (this.currentUv instanceof CombinedUserView) {
-      return userViewType(this.currentUv);
-    } else {
-      return null;
-    }
-  }
-
-  get errorMessage() {
-    if (!(this.currentUv instanceof UserViewError)) {
-      return null;
-    } else if (this.currentUv.type === "access_denied") {
-      return this.$t("forbidden");
-    } else if (this.currentUv.type === "not_found") {
-      return this.$t("not_found");
-    } else if (this.currentUv.type === "arguments") {
-      return this.$t("bad_request", { msg: this.currentUv.message });
-    } else {
-      return this.$t("unknown_error", { msg: this.currentUv.message });
-    }
-  }
-
   // Load new user view and replace old data. We keep old user view loaded as long as possible, to avoid "loading" placeholders.
   @Watch("newUv", { immediate: true })
   private async awaitUserView(newUv: CombinedUserView | UserViewError | Promise<UserViewResult> | null) {
-    if (newUv !== null && newUv === this.currentUv) {
+    if (newUv !== null && this.state.state === "show" && newUv === this.state.uv) {
       return;
     }
 
     if (newUv instanceof CombinedUserView) {
       if (newUv.rows === null && newUv.info.mainEntity === null) {
-        this.setUvError(new UserViewError("execution", "Creation mode requires main entity to be specified", newUv.args));
+        this.setState({ state: "error", message: this.$t("new_mode_no_main").toString() });
         return;
       }
+      if (this.state.state === "error") {
+        this.destroyCurrentUserView();
+      }
+
       const newType = userViewType(newUv);
-      const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType}.vue`)).default;
-      // Check we weren't restarted.
-      if (!deepEquals(newUv.args, this.args) || newUv !== this.currentUvs.getUserViewOrError(newUv.args)) {
-        return;
-      }
+      if (newType.type === "component") {
+        const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType.component}.vue`)).default;
+        // Check we weren't restarted.
+        if (!deepEquals(newUv.args, this.args) || newUv !== this.currentUvs.getUserViewOrError(newUv.args)) {
+          return;
+        }
 
-      // Exceptions in async watchers are silently ignored (?), so print it explicitly.
-      let local: IHandlerProvider | null;
-      if (component.localConstructor !== undefined) {
-        const givenLocal = this.local !== null && this.userViewType === newType ? this.local : null;
-        local = component.localConstructor(this.$store, newUv, this.defaultValues, givenLocal);
-        this.registerHandler({ args: newUv.args, handler: local.handler });
+        // Exceptions in async watchers are silently ignored (?), so print it explicitly.
+        let local: IHandlerProvider | null;
+        if (component.localConstructor !== undefined) {
+          const givenLocal = this.state.state === "show" && this.state.componentName === newType.component ? this.state.local : null;
+          local = component.localConstructor(this.$store, newUv, this.defaultValues, givenLocal);
+          this.registerHandler({ args: newUv.args, handler: local.handler });
+        } else {
+          local = null;
+        }
+        const baseLocal = new LocalBaseUserView(this.$store, newUv, this.defaultValues, this.state.state === "show" ? this.state.baseLocal : null);
+        this.registerHandler({ args: newUv.args, handler: baseLocal.handler });
+
+        this.setState({
+          state: "show",
+          local,
+          baseLocal,
+          componentName: newType.component,
+          component,
+          uv: newUv,
+        });
+      } else if (newType.type === "link") {
+        const handler = linkHandler(this.$store, (...args) => this.$emit(...args), newType.link);
+        await handler.handler();
+        // Because we need router to switch URL.
+        await this.$nextTick();
+        if (deepEquals(newUv.args, this.args) && newUv === this.currentUvs.getUserViewOrError(newUv.args)) {
+          this.setState({
+            state: "error",
+            message: this.$t("link_to_nowhere").toString(),
+          });
+        }
       } else {
-        local = null;
+        throw new Error("Impossible");
       }
-      const baseLocal = new LocalBaseUserView(this.$store, newUv, this.defaultValues, this.baseLocal);
-      this.registerHandler({ args: newUv.args, handler: baseLocal.handler });
-
-      this.setUv(newUv);
-      this.local = local;
-      this.baseLocal = baseLocal;
-      this.component = component;
     } else if (newUv instanceof UserViewError) {
-      this.setUvError(newUv);
+      this.setState({
+        state: "error",
+        message: this.uvErrorMessage(newUv),
+      });
     } else if (newUv === null) {
+      if (this.state.state === "error") {
+        this.destroyCurrentUserView();
+      }
       // We need deep clone here as args may change, and getUserView expects them freezed.
       void this.getUserView({ args: deepClone(this.args), reference: this.uid });
     }
   }
 
   private destroyCurrentUserView() {
-    if (this.currentUv === null) {
+    if (this.state.state !== "show") {
       return;
     }
 
-    const args = this.currentUv.args;
-    if (this.local !== null) {
-      this.unregisterHandler({ args, handler: this.local.handler });
-      this.local = null;
+    const args = this.state.uv.args;
+    if (this.state.local !== null) {
+      this.unregisterHandler({ args, handler: this.state.local.handler });
     }
-    if (this.baseLocal !== null) {
-      this.unregisterHandler({ args, handler: this.baseLocal.handler });
-      this.baseLocal = null;
-    }
+    this.unregisterHandler({ args, handler: this.state.baseLocal.handler });
 
-    this.currentUv = null;
+    this.state = loadingState;
     this.extraActions = [];
     this.extraCommonActions = [];
     this.$emit("update:statusLine", "");
@@ -347,15 +375,23 @@ export default class UserView extends Vue {
     this.$emit("update:bodyStyle", "");
   }
 
-  private setUv(newUv: CombinedUserView) {
+  private setState(state: UserViewLoadingState) {
     this.destroyCurrentUserView();
-    this.currentUv = newUv;
+    this.state = state;
   }
 
-  private setUvError(error: UserViewError) {
-    this.destroyCurrentUserView();
-    this.currentUv = error;
-    this.component = null;
+  private uvErrorMessage(uv: UserViewError): string {
+    if (uv.type === "access_denied") {
+      return this.$t("forbidden").toString();
+    } else if (uv.type === "no_instance") {
+      return this.$t("no_instance").toString();
+    } else if (uv.type === "not_found") {
+      return this.$t("not_found").toString();
+    } else if (uv.type === "arguments" || uv.type === "request") {
+      return this.$t("bad_request", { msg: uv.message }).toString();
+    } else {
+      return this.$t("unknown_error", { msg: uv.message }).toString();
+    }
   }
 
   @Watch("actions", { deep: true, immediate: true })
@@ -392,43 +428,54 @@ export default class UserView extends Vue {
 
   @Watch("submitPromise", { immediate: true })
   private changesSubmitted(submitPromise: Promise<CombinedTransactionResult[]> | null) {
-    const currentUv = this.currentUv;
-    if (currentUv instanceof CombinedUserView && currentUv.rows === null && submitPromise !== null) {
-      void (async () => {
-        let ret: CombinedTransactionResult[];
-        try {
-          ret = await submitPromise;
-        } catch (e) {
-          return;
-        }
-
-        if (!deepEquals(this.args, currentUv.args)) {
-          // We went somewhere else meanwhile.
-          return;
-        }
-
-        const createOp = ret.find(x => x.type === "insert" && equalEntityRef(x.entity, currentUv.info.mainEntity!));
-        if (createOp === undefined) {
-          return;
-        }
-        const id = (createOp as ICombinedInsertEntityResult).id;
-        if (id !== null && this.selectionMode) {
-          const ref: ISelectionRef = {
-            entity: currentUv.info.mainEntity!,
-            id,
-          };
-          this.$emit("select", ref);
-        } else {
-          const args: IUserViewArguments = { source: currentUv.args.source, args: { id } };
-          const newQuery: IQuery = {
-            defaultValues: {},
-            args,
-            search: "",
-          };
-          this.$emit("goto", newQuery);
-        }
-      })();
+    if (this.state.state !== "show" || this.state.uv.rows !== null || submitPromise === null) {
+      return;
     }
+    const uv = this.state.uv;
+
+    void (async () => {
+      let ret: CombinedTransactionResult[];
+      try {
+        ret = await submitPromise;
+      } catch (e) {
+        return;
+      }
+
+      if (!deepEquals(this.args, uv.args)) {
+        // We went somewhere else meanwhile.
+        return;
+      }
+
+      const createOp = ret.find(x => x.type === "insert" && equalEntityRef(x.entity, uv.info.mainEntity!));
+      if (createOp === undefined) {
+        return;
+      }
+      const id = (createOp as ICombinedInsertEntityResult).id;
+      if (id !== null && this.selectionMode) {
+        const ref: ISelectionRef = {
+          entity: uv.info.mainEntity!,
+          id,
+        };
+        this.$emit("select", ref);
+      } else {
+        const customLink = attrToLink(uv.attributes["post_create_link"], { defaultTarget: "root" });
+        let link: Link;
+        if (customLink === null) {
+          link = {
+            query: {
+              defaultValues: {},
+              args: { source: uv.args.source, args: { id } },
+              search: "",
+            },
+            target: "root",
+          };
+        } else {
+          addLinkDefaultArgs(customLink, { id });
+          link = customLink;
+        }
+        void linkHandler(this.$store, (...args) => this.$emit(...args), link).handler();
+      }
+    })();
   }
 }
 </script>

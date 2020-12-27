@@ -61,7 +61,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
 
   get linkOpts(): IAttrToLinkOpts {
     const home = homeSchema(this.uv.args) || undefined;
-    return { homeSchema: home, queryTypeByDefault: "root" };
+    return { homeSchema: home, defaultTarget: "root" };
   }
 
   private get isCentered(): boolean {

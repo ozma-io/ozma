@@ -43,51 +43,79 @@
           {{ $t('empty') }}
         </label>
       </template>
-      <template v-for="(action, i) in sortedActions" v-else>
-        <hr
-          v-if="action === null"
-          :key="i"
-          class="div-with-actions_hr"
-        >
-        <!-- Passing v-on:click to v-bind doesn't seem to work, hence this ugly solution -->
-        <router-link
-          v-else-if="'location' in action"
-          :key="action.name"
-          class="div-with-actions_button"
-          :to="action.location"
-        >
-          {{ action.name }}
-        </router-link>
-        <FunLink
-          v-else-if="'link' in action"
-          :key="action.name"
-          :link="action.link"
-          class="div-with-actions_button"
-          @click="showActions = false"
-          @goto="$emit('goto', $event)"
-        >
-          {{ action.name }}
-        </FunLink>
-        <input
-          v-else-if="'callback' in action"
-          :key="action.name"
-          type="button"
-          :value="action.name"
-          class="div-with-actions_button"
-          @click="showActions = false; action.callback()"
-        >
-        <label
-          v-else-if="'uploadFile' in action"
-          :key="action.name"
-          class="div-with-actions_button"
-        >
-          {{ action.name }}
-          <input
-            type="file"
-            @change="uploadFile($event.target, action.uploadFile)"
+
+      <ul
+        v-else
+        class="actions"
+      >
+        <template v-for="(action, i) in sortedActions">
+          <hr
+            v-if="action === null"
+            :key="i"
           >
-        </label>
-      </template>
+          <!-- Passing v-on:click to v-bind doesn't seem to work, hence this ugly solution -->
+          <router-link
+            v-else-if="'location' in action"
+            :key="action.name"
+            :to="action.location"
+          >
+            <li>
+              <div>
+                <i v-if="action.icon" class="material-icons">{{ action.icon }}</i>
+                <i v-else class="material-icons">arrow_right</i>
+                <span>{{ action.name }}</span>
+              </div>
+            </li>
+          </router-link>
+
+          <FunLink
+            v-else-if="'link' in action"
+            :key="action.name"
+            :link="action.link"
+            @goto="$emit('goto', $event)"
+          >
+            <li>
+              <div>
+                <i v-if="action.icon" class="material-icons">{{ action.icon }}</i>
+                <i v-else class="material-icons">arrow_right</i>
+                <span>{{ action.name }}</span>
+              </div>
+            </li>
+          </FunLink>
+
+          <span
+            v-else-if="'callback' in action"
+            :key="action.name"
+            @click="action.callback()"
+          >
+            <li>
+              <div>
+                <i v-if="action.icon" class="material-icons">{{ action.icon }}</i>
+                <i v-else class="material-icons">arrow_right</i>
+                <span>{{ action.name }}</span>
+              </div>
+            </li>
+          </span>
+
+          <label
+            v-else-if="'uploadFile' in action"
+            :key="action.name"
+          >
+            <li>
+              <div>
+                <i v-if="action.icon" class="material-icons">{{ action.icon }}</i>
+                <i v-else class="material-icons">arrow_right</i>
+                <span>{{ action.name }}</span>
+                <input
+                  type="file"
+                  @change="uploadFile($event.target, action.uploadFile)"
+                >
+              </div>
+            </li>
+          </label>
+        </template>
+      </ul>
+
       <ul class="buttons">
         <li v-for="(button, i) in buttons" :key="i">
           <div>
@@ -153,7 +181,7 @@ export type Action = ILocationAction | ILinkAction | ICallbackAction | IUploadFi
 @Component
 export default class ActionsMenu extends Vue {
   @Prop({ type: Array, required: true }) actions!: Action[];
-  @Prop({ type: Array, required: true }) buttons!: IPanelButton[];
+  @Prop({ type: Array }) buttons!: IPanelButton[];
   /**
    * icon Material design icon item title.
    *   By default 'menu' for menuAlign=left and 'more_vert' for menuAlign=any.
@@ -230,11 +258,12 @@ export default class ActionsMenu extends Vue {
     background-color: #f9f9fb;
     font-weight: 600;
     display: flex;
-    padding: 5px 20px;
+    padding: 5px 25px 5px 15px;
   }
 
   ul.buttons > li > div > span {
     padding-left: 10px;
+    padding-top: 1px;
   }
 
   ul.actions {
@@ -247,26 +276,41 @@ export default class ActionsMenu extends Vue {
     color: inherit;
   }
 
+  ul.actions > label {
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  ul.actions > label input {
+    display: none;
+  }
+
+  ul.actions > label > li,
   ul.actions > span > li,
   ul.actions > a > li {
     list-style: none;
+    cursor: pointer;
   }
 
+  ul.actions > label > li:hover,
   ul.actions > span > li:hover,
   ul.actions > a > li:hover {
     background-color: var(--MainBorderColor);
     color: var(--MainTextColor);
   }
 
+  ul.actions > label > li > div,
   ul.actions > span > li > div,
   ul.actions > a > li > div {
     display: flex;
-    padding: 5px 20px;
+    padding: 5px 25px 5px 15px;
   }
 
+  ul.actions > label > li > div > span,
   ul.actions > span > li > div > span,
   ul.actions > a > li > div > span {
     padding-left: 10px;
+    padding-top: 2px;
   }
 
   @media only screen and (max-width: 900px) {
@@ -304,7 +348,7 @@ export default class ActionsMenu extends Vue {
   .div-with-actions {
     overflow-y: auto;
     overflow-x: hidden;
-    max-height: 80vh;
+    max-height: 70vh;
     width: max-content;
     flex: 1;
     position: absolute;

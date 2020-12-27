@@ -244,7 +244,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
 
           const { handler, href } = linkHandler(this.$store, emit, this.link);
           if (handler) {
-            handler();
+            void handler();
           }
 
           this.modalShow = false;
