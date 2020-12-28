@@ -1,10 +1,10 @@
 <i18n>
 {
     "en": {
-        "input_placeholder": "Fill this value here"
+        "input_placeholder": "Empty"
     },
     "ru": {
-        "input_placeholder": "Заполните здесь"
+        "input_placeholder": "Пусто"
     }
 }
 </i18n>
