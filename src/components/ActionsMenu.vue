@@ -272,7 +272,7 @@ export default class ActionsMenu extends Vue {
 
   ul.actions > a {
     text-decoration: none;
-    color: inherit;
+    color: var(--MainTextColor);
   }
 
   ul.actions > label {
@@ -289,6 +289,7 @@ export default class ActionsMenu extends Vue {
   ul.actions > a > li {
     list-style: none;
     cursor: pointer;
+    color: var(--MainTextColor);
   }
 
   ul.actions > label > li:hover,
