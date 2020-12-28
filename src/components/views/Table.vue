@@ -1,20 +1,20 @@
 <i18n>
     {
       "en": {
-        "clear": "Clear",
+        "clear": "Clear entries",
         "yes": "Yes",
         "no": "No",
-        "add": "➕Add",
-        "remove_selected_rows": "Remove selected rows",
-        "show_new_row": "Add/remove new row"
+        "add_entry": "Add entry",
+        "remove_selected_rows": "Remove selected entries",
+        "add_entry_in_modal": "Add new entry (in modal)"
       },
       "ru": {
-        "clear": "Очистить",
+        "clear": "Очистить записи",
         "yes": "Да",
         "no": "Нет",
-        "add": "➕Добавить",
+        "add_entry": "Добавить запись",
         "remove_selected_rows": "Удалить выбранные записи",
-        "show_new_row": "Добавить/убрать новую строку"
+        "add_entry_in_modal": "Добавить новую запись (в модале)"
       }
     }
 </i18n>
@@ -56,6 +56,19 @@
       @scroll="updateShowLength()"
       @resize="updateShowLength()"
     >
+      <div
+        v-if="local.emptyRow !== null"
+        class="button-container top"
+      >
+        <div
+          class="button"
+          @click="addNewRowOnPosition('top')"
+        >
+          <i class="material-icons md-24">add</i>
+          <span class="label">{{ this.$t('add_entry').toString() }}</span>
+        </div>
+      </div>
+
       <table
         :class="['custom-table', 'table', 'b-table',
                  {'edit_active': editingValue !== null}]"
@@ -75,7 +88,6 @@
           >
         </colgroup>
         <thead
-          ref="tableHead"
           class="table-head"
         >
           <tr>
@@ -89,19 +101,17 @@
               v-if="local.extra.hasRowLinks"
               class="fixed-column openform-cells table-th"
             >
-              <span
-                :title="this.$t('show_new_row')"
-                @click="setShowEmptyRow(!showEmptyRow)"
+              <FunLink
+                v-if="creationLink !== null"
+                :link="creationLink"
+                @goto="$emit('goto', $event)"
               >
                 <i
-                  v-if="showEmptyRow"
-                  class="material-icons md-20"
-                >remove</i>
-                <i
-                  v-else
-                  class="material-icons md-20"
-                >add</i>
-              </span>
+                  v-b-tooltip.hover.right
+                  :title="$t('add_entry_in_modal')"
+                  class="material-icons md-24 openform-add-icon"
+                >add_box</i>
+              </FunLink>
             </th>
             <th
               v-for="(i, index) in columnIndexes"
@@ -123,57 +133,62 @@
           </tr>
         </thead>
         <tbody class="table-body">
-          <template v-if="showEmptyRow">
-            <TableRow
-              ref="emptyRowRef"
-              :row="local.emptyRow.row"
-              :local-row="local.emptyRow.local"
-              :base-local-row="baseLocal.emptyRow.local"
-              :column-indexes="columnIndexes"
-              :local-uv="local.extra"
-              from="new"
-              @cell-click="clickCell({ type: 'new', column: arguments[0] }, arguments[1])"
-              @goto="$emit('goto', $event)"
-            />
-          </template>
-          <template v-for="(rowId, rowIndex) in uv.newRowsPositions">
-            <TableRow
-              :key="`new-${rowId}`"
-              :row="uv.newRows[rowId]"
-              :local-row="local.newRows[rowId]"
-              :base-local-row="baseLocal.newRows[rowId]"
-              :column-indexes="columnIndexes"
-              :local-uv="local.extra"
-              from="added"
-              @select="selectRow({ type: 'added', position: rowIndex }, $event)"
-              @cell-click="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
-              @goto="$emit('goto', $event)"
-            />
-          </template>
-          <template v-for="(rowI, rowIndex) in shownRowPositions">
-            <TableRow
-              :key="rowI"
-              :row="uv.rows[rowI]"
-              :local-row="local.rows[rowI]"
-              :base-local-row="baseLocal.rows[rowI]"
-              :column-indexes="columnIndexes"
-              :local-uv="local.extra"
-              :is-tree="isTree"
-              @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
-              @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
-              @update:visibleChildren="visibleChildren(arguments[0], arguments[1])"
-              @goto="$emit('goto', $event)"
-            />
-          </template>
+          <TableRow
+            v-for="(rowId, rowIndex) in local.extra.newRowTopSidePositions"
+            ref="newRowsTopSideRef"
+            :key="`top-${rowId}`"
+            :row="uv.newRows[rowId]"
+            :local-row="local.newRows[rowId]"
+            :base-local-row="baseLocal.newRows[rowId]"
+            :column-indexes="columnIndexes"
+            :local-uv="local.extra"
+            from="added"
+            @select="selectRow({ type: 'added', position: rowIndex }, $event)"
+            @cell-click="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
+            @goto="$emit('goto', $event)"
+          />
+          <TableRow
+            v-for="(rowI, rowIndex) in shownRowPositions"
+            :key="rowI"
+            :row="uv.rows[rowI]"
+            :local-row="local.rows[rowI]"
+            :base-local-row="baseLocal.rows[rowI]"
+            :column-indexes="columnIndexes"
+            :local-uv="local.extra"
+            :is-tree="isTree"
+            @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
+            @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
+            @update:visibleChildren="visibleChildren(arguments[0], arguments[1])"
+            @goto="$emit('goto', $event)"
+          />
+          <TableRow
+            v-for="(rowId, rowIndex) in local.extra.newRowBottomSidePositions"
+            ref="newRowsBottomSideRef"
+            :key="`bottom-${rowId}`"
+            :row="uv.newRows[rowId]"
+            :local-row="local.newRows[rowId]"
+            :base-local-row="baseLocal.newRows[rowId]"
+            :column-indexes="columnIndexes"
+            :local-uv="local.extra"
+            from="added"
+            @select="selectRow({ type: 'added', position: rowIndex }, $event)"
+            @cell-click="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
+            @goto="$emit('goto', $event)"
+          />
         </tbody>
       </table>
-      <input
-        v-if="baseLocal.extra.rowCount < 30 && local.emptyRow !== null"
-        type="button"
-        :value="this.$t('add').toString()"
-        class="button"
-        @click="setShowEmptyRow(true)"
+      <div
+        v-if="local.emptyRow !== null"
+        class="button-container bottom"
       >
+        <div
+          class="button"
+          @click="addNewRowOnPosition('bottom')"
+        >
+          <i class="material-icons md-24">add</i>
+          <span class="label">{{ this.$t('add_entry').toString() }}</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -208,9 +223,11 @@ import { attrToQueryRef, attrToQuerySelf, IAttrToQueryOpts, IQuery } from "@/sta
 import {
   equalRowPositionRef,
   IAddedRowPositionRef,
+  IAddedRowRef,
   IExistingRowPositionRef,
   ILocalRow,
   ILocalRowInfo,
+  INewRowRef,
   LocalUserView,
   RowPositionRef,
   RowRef,
@@ -221,7 +238,7 @@ import { Action } from "@/components/ActionsMenu.vue";
 import TableRow from "@/components/views/table/TableRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
 import TableCellEdit, { ICellCoords, IEditParams } from "@/components/views/table/TableCellEdit.vue";
-import { Link, attrToLinkRef, attrToLinkSelf } from "@/links";
+import { Link, attrToLinkRef, attrToLinkSelf, attrToLink } from "@/links";
 import * as R from "ramda";
 
 interface ITableEditing {
@@ -248,6 +265,8 @@ interface ITableValueExtra {
   selected: boolean;
 }
 
+type NewRowSide = "top" | "bottom";
+
 interface ITableRowExtra {
   searchText: string;
   selected: boolean;
@@ -260,6 +279,7 @@ interface ITableRowExtra {
   height?: number;
   link?: Link;
   selectionEntry?: ISelectionRef;
+  newRowSide: NewRowSide;
 }
 
 interface ITableUserViewExtra {
@@ -270,6 +290,8 @@ interface ITableUserViewExtra {
   fixedColumnPositions: Record<number, string>;
   rowsParentPositions: Record<number, number>;
   linkOpts?: IAttrToQueryOpts;
+  newRowTopSidePositions: number[];
+  newRowBottomSidePositions: number[];
 }
 
 type ITableLocalRowInfo = ILocalRowInfo<ITableRowExtra>;
@@ -473,7 +495,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     this.updateCommonValue(this.emptyRow!.row, this.emptyRow!.local, columnIndex, value, localValue);
   }
 
-  createCommonLocalRow(row: IRowCommon): ITableRowExtra {
+  createCommonLocalRow(row: IRowCommon, oldLocal: ITableRowExtra | null): ITableRowExtra {
     const getRowAttr = (name: string) => tryDicts(name, row.attributes, this.uv.attributes);
 
     const extra: ITableRowExtra = {
@@ -482,6 +504,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       visible: true,
       children: [],
       level: 0,
+      newRowSide: oldLocal?.newRowSide ?? "bottom",
     };
 
     const style: Record<string, unknown> = {};
@@ -501,8 +524,8 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     return extra;
   }
 
-  createLocalRow(rowIndex: number, row: ICombinedRow) {
-    const extra = this.createCommonLocalRow(row);
+  createLocalRow(rowIndex: number, row: ICombinedRow, oldLocal: ITableRowExtra | null) {
+    const extra = this.createCommonLocalRow(row, oldLocal);
     if (row.mainId !== undefined) {
       extra.selectionEntry = {
         entity: this.uv.info.mainEntity!,
@@ -512,12 +535,12 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     return extra;
   }
 
-  createAddedLocalRow(rowId: AddedRowId, row: IAddedRow) {
-    return this.createCommonLocalRow(row);
+  createAddedLocalRow(rowId: AddedRowId, row: IAddedRow, oldLocal: ITableRowExtra | null) {
+    return this.createCommonLocalRow(row, oldLocal);
   }
 
-  createEmptyLocalRow(row: IRowCommon) {
-    return this.createCommonLocalRow(row);
+  createEmptyLocalRow(row: IRowCommon, oldLocal: ITableRowExtra | null) {
+    return this.createCommonLocalRow(row, oldLocal);
   }
 
   postInitCommonRow(row: IRowCommon, localRow: ITableLocalRow) {
@@ -563,6 +586,8 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       columns,
       fixedColumnPositions: {},
       rowsParentPositions: {},
+      newRowTopSidePositions: [],
+      newRowBottomSidePositions: [],
     };
     const home = homeSchema(this.uv.args);
     if (home !== null) {
@@ -696,7 +721,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   private editing: ITableEditing | null = null;
   private printListener: { query: MediaQueryList; queryCallback: (mql: MediaQueryListEvent) => void; printCallback: () => void } | null = null;
   private clickTimeoutId: NodeJS.Timeout | null = null;
-  private showEmptyRow = false;
   private emptyLocalRow: ITableLocalRow | null = null;
   private isFirefoxBrowser: boolean = isFirefox();
   private isSelectedLastFixedCell = false;
@@ -811,7 +835,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.removeCellEditing();
     });
 
-    if (!R.isEmpty(this.local.extra.rowsParentPositions) && "tree_all_open" in this.local.uv.attributes && this.local.uv.attributes.tree_all_open) {
+    if (!R.isEmpty(this.local.extra.rowsParentPositions)
+     && "tree_all_open" in this.local.uv.attributes
+     && this.local.uv.attributes.tree_all_open
+    ) {
       this.toggleAllTreeChildren(true);
     }
   }
@@ -867,23 +894,47 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
   }
 
-  private setShowEmptyRow(newValue: boolean) {
-    const emptyRow = this.local.emptyRow;
-    if (emptyRow !== null) {
-      this.showEmptyRow = newValue;
-      if (!newValue) {
-        this.baseLocal.selectRow({ type: "new" }, false);
-        emptyRow.local.values.forEach((_, colI) => {
-          this.local.selectCell({ type: "new", column: colI }, false);
-        });
+  private getNewRowsBySide(position: NewRowSide): number[] {
+    return this.uv.newRowsPositions.filter(
+      (rowI: number) => this.local.newRows[rowI].extra.newRowSide === position,
+    );
+  }
+
+  @Watch("uv.newRows")
+  private updateNewRowsSides() {
+    Vue.set(this.local.extra, "newRowTopSidePositions", this.getNewRowsBySide("top"));
+    Vue.set(this.local.extra, "newRowBottomSidePositions", this.getNewRowsBySide("bottom").reverse());
+  }
+
+  private async addNewRowOnPosition(side: NewRowSide): Promise<void> {
+    const rowId = await this.addNewRow();
+    Vue.set(this.local.newRows[rowId].extra, "newRowSide", side);
+    this.updateNewRowsSides();
+
+    void nextRender().then(() => {
+      const sideName = side === "top" ? "newRowsTopSideRef" : "newRowsBottomSideRef";
+      const newRowsRef = this.$refs[sideName] as TableRow[] | undefined;
+      if (newRowsRef === undefined) {
+        return;
       }
-      void nextRender().then(() => {
-        const emptyRowRefElement = this.$refs.emptyRowRef as any | undefined;
-        if (emptyRowRefElement !== undefined) {
-          this.cellEditByTarget({ type: "new", column: emptyRowRefElement.columnIndexes[0] }, emptyRowRefElement.$children[0].$el);
-        }
-      });
-    }
+      const newRowRef = newRowsRef[newRowsRef.length - 1];
+      const newRowValues = newRowRef.row.values as {info?: unknown}[];
+      const firstNotDisabledI = newRowValues.findIndex(value => value?.info !== undefined);
+      if (firstNotDisabledI === -1
+       || newRowRef === undefined
+      ) {
+        return;
+      }
+      const swapedFirstNotDisabledI: number = newRowRef.columnIndexes[firstNotDisabledI];
+      this.cellEditByTarget(
+        {
+          type: "added",
+          id: rowId,
+          column: firstNotDisabledI,
+        },
+        newRowRef.$children[1 + swapedFirstNotDisabledI].$el as HTMLElement,
+      );
+    });
   }
 
   // Toggle children rows visibles.
@@ -953,7 +1004,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   private initRowsState() {
     this.local.rows.forEach((row, rowI) => {
       const parentIndex = row.extra.parent !== undefined ? this.local.extra.rowsParentPositions[row.extra.parent] : undefined;
-      if (parentIndex !== undefined && this.local.rows[parentIndex] !== undefined && !this.local.rows[parentIndex].extra.children.includes(rowI)) {
+      if (parentIndex !== undefined
+       && this.local.rows[parentIndex] !== undefined
+       && !this.local.rows[parentIndex].extra.children.includes(rowI)
+      ) {
         this.local.rows[parentIndex].extra.children.push(rowI);
         let level = 0;
         let parent: number | undefined = parentIndex;
@@ -1016,7 +1070,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       return;
     }
 
-    if ("loss_of_focus_save" in this.uv.attributes && Boolean(this.uv.attributes["loss_of_focus_save"])) {
+    if ("loss_of_focus_save" in this.uv.attributes
+     && Boolean(this.uv.attributes["loss_of_focus_save"])
+    ) {
       void this.submitChanges({ scope: this.scope });
     }
 
@@ -1032,7 +1088,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       const value = this.local.getValueByRef(ref);
 
       if (this.editing !== null // Lock already taken (somehow)
-          || value === null // value not found
+       || value === null // value not found
       ) {
         await this.removeAutoSaveLock(lock);
         return;
@@ -1064,32 +1120,33 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
   }
 
-  private clickCell(ref: ValueRef, event: MouseEvent) {
-    this.removeCellEditing();
-
+  private updateClickTimer(ref: ValueRef) {
     // this.selectCell() breaks the timer for double click in iOS,
     // so when we're running iOS we don't check for double click
+    const sameCellClicked = deepEquals(this.lastSelectedValue, ref);
     if (this.clickTimeoutId === null) {
       this.clickTimeoutId = setTimeout(() => {
         this.clickTimeoutId = null;
       }, doubleClickTime);
-      if (this.lastSelectedValue !== null && !deepEquals(this.lastSelectedValue, ref)) {
+      if (this.lastSelectedValue !== null && !sameCellClicked) {
         this.removeCellEditing();
       }
     } else {
       clearTimeout(this.clickTimeoutId);
       this.clickTimeoutId = null;
-      if (this.lastSelectedValue !== null && deepEquals(this.lastSelectedValue, ref)) {
+      if (this.lastSelectedValue !== null && sameCellClicked) {
         this.setCellEditing(ref);
       }
     }
+  }
 
+  private clickCell(ref: ValueRef, event: MouseEvent) {
+    this.removeCellEditing();
+    this.updateClickTimer(ref);
     this.cellEditHandler(ref, event.target as HTMLElement);
-    return undefined;
   }
 
   private cellEditByTarget(ref: ValueRef, target: HTMLElement) {
-    this.removeCellEditing();
     this.setCellEditing(ref);
     this.cellEditHandler(ref, target);
   }
@@ -1101,9 +1158,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     this.editParams.minHeight = target.offsetHeight;
 
     this.selectCell(ref);
-    if (this.lastSelectedValue &&
-                !deepEquals(this.lastSelectedValue, ref) &&
-                this.lastSelectedValue.type === "added") {
+    if (this.lastSelectedValue
+     && !deepEquals(this.lastSelectedValue, ref)
+     && this.lastSelectedValue.type === "added") {
       const row = this.uv.newRows[this.lastSelectedValue.id];
       if (!row) {
         this.lastSelectedValue = null;
@@ -1265,7 +1322,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (this.uv.info.mainEntity !== null) {
       actions.push(
         { icon: "check_box", name: this.$t("remove_selected_rows").toString(), callback: () => this.removeSelectedRows() },
-        { icon: "playlist_add", name: this.$t("show_new_row").toString(), callback: () => this.setShowEmptyRow(true) },
+        { icon: "playlist_add", name: this.$t("add_entry").toString(), callback: () => this.addNewRowOnPosition("top") },
       );
     }
 
@@ -1278,7 +1335,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   private updateRows() {
     this.buildRowPositions();
     this.initRowsState();
-    // this.setShowEmptyRow(this.uv.rows === null || this.uv.rows.length === 0);
   }
 
   /*
@@ -1340,7 +1396,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
     // + 1 is needed because of rare cases like that:
     // top 974.4000244140625, client height 690, scroll height 1665
-    if (tableContainer.scrollTop + tableContainer.clientHeight + 1 >= tableContainer.scrollHeight && this.showLength < this.rowPositions.length) {
+    if (tableContainer.scrollTop + tableContainer.clientHeight + 1 >= tableContainer.scrollHeight
+     && this.showLength < this.rowPositions.length
+    ) {
       this.showLength = Math.min(this.showLength + showStep, this.local.rows.length);
       Vue.nextTick(() => this.updateShowLength());
     }
@@ -1363,7 +1421,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   @Watch("statusLine")
   private updateStatusLine() {
-    this.setShowEmptyRow(false);
     this.$emit("update:statusLine", this.statusLine);
   }
 
@@ -1387,14 +1444,14 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       editing.ref = newRef;
       this.selectCell(newRef);
       if (this.uv.columnAttributes[newRef.column].text_type === "barcode") {
-        this.setShowEmptyRow(true);
+        void this.addNewRowOnPosition("bottom");
       }
     }
   }
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   /* Current Z layout:
 
     * Form control          (2000)
@@ -1409,21 +1466,31 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     border: 1px solid var(--MainBackgroundColor);
   }
 
-  .button {
-    background-color: transparent;
-    border: none;
-    border-radius: 5px;
-    color: var(--MainTextColorLight);
-    padding: 2px 5px;
-    margin: 5px 0;
-  }
+  .button-container {
+    width: 100%;
+    position: sticky;
+    left: 0;
 
-  .button:hover {
-    color: var(--MainTextColor);
-  }
+    &.bottom {
+      border-bottom: 1px solid var(--MainBorderColor);
+    }
 
-  .button:focus {
-    outline: 0 !important;
+    .button {
+      width: max-content;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      color: var(--MainTextColorLight);
+      padding: 3px 6px;
+
+      &:hover {
+        color: var(--MainTextColor);
+      }
+
+      > .label {
+        padding-left: 2px;
+      }
+    }
   }
 
   .table-block {
@@ -1519,7 +1586,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     border-right: none;
   }
 
-  /deep/ td > p {
+  ::v-deep td > p {
     margin-bottom: 0;
   }
 
@@ -1528,7 +1595,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     box-shadow: 0 2px 0 var(--MainBorderColor);
 
     &.checkbox-cells {
-      z-index: 26;
       box-shadow:
         0 2px 0 var(--MainBorderColor),
         1px 0 0 var(--MainBorderColor);
@@ -1605,7 +1671,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
 
     .openform-cells {
-      left: 20px;
+      left: 35px;
     }
 
     .fixed-column {
@@ -1691,24 +1757,87 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     margin-bottom: 0;
   }
 
-  .checkbox-cells,
-  .openform-cells {
+  ::v-deep .checkbox-cells {
     text-align: center;
+    color: var(--MainTextColorLight);
+    padding: 0;
+
+    &.table-th .material-icons {
+      top: 5px;
+      left: 5px;
+    }
+
+    .table-td_span .material-icons {
+      position: relative;
+      top: 2px;
+    }
+
+    &:hover {
+      color: var(--MainTextColor);
+      background-color: rgb(239, 239, 239);
+    }
   }
 
-  .openform-cells > span > i {
-    position: absolute;
-    top: 4px;
-    left: 5px;
+  ::v-deep .openform-cells {
+    padding: 0;
+    text-align: center;
+    height: 100%;
+    width: 100%;
+
+    .openform-add-icon {
+      color: var(--MainTextColorLight);
+      position: relative;
+      top: 5px;
+    }
+
+    > a {
+      display: block;
+      text-decoration: none;
+
+      &:hover {
+        .openform-add-icon {
+          color: var(--MainTextColor);
+        }
+      }
+    }
+
+    .openform-cells__icon {
+      color: var(--MainTextColorLight);
+    }
+
+    .icon-link {
+      height: 100%;
+      width: 100%;
+      display: block;
+      text-decoration: none;
+
+      .material-icons {
+        position: relative;
+        top: 2px;
+      }
+    }
+
+    > span > i {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+    }
+
+    &:hover {
+      background-color: rgb(239, 239, 239);
+
+      .openform-cells__icon {
+        color: var(--MainTextColor);
+      }
+    }
+
+    &.table-th {
+      padding: 0;
+    }
   }
 
   .checkbox-col,
   .open-form-col {
-    width: 35px;
-  }
-
-  /deep/ .openform-cells {
-    left: 35px;
     width: 35px;
   }
 
