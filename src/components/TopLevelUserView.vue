@@ -83,8 +83,20 @@
             />
           </template>
           <template #scanners-buttons>
-            <i class="material-icons" style="line-height: inherit; margin: 0 5px;">qr_code_scanner</i>
-            <i class="material-icons" style="line-height: inherit; margin: 0 5px;">qr_code_2</i>
+            <i
+              v-if="qrCodeScanner !== null"
+              class="material-icons scanner-button"
+              @click="qrCodeScanner"
+            >
+              qr_code_scanner
+            </i>
+            <i
+              v-if="barCodeScanner !== null"
+              class="material-icons scanner-button"
+              @click="barCodeScanner"
+            >
+              qr_code_2
+            </i>
           </template>
           <template #actions-menu>
             <ActionsMenu
@@ -184,7 +196,7 @@ import SearchPanel from "@/components/SearchPanel.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { CurrentAuth, getAuthedLink } from "@/state/auth";
 import { ICurrentQuery, IQuery, queryLocation, ICurrentQueryHistory } from "@/state/query";
-import { convertToWords } from "@/utils";
+import { convertToWords, isMobile } from "@/utils";
 
 const auth = namespace("auth");
 const userView = namespace("userView");
@@ -222,11 +234,23 @@ export default class TopLevelUserView extends Vue {
   private enableFilter = false;
   private styleNode: HTMLStyleElement;
   private title = "";
+  private qrCodeScanner: (() => void) | null = null;
+  private barCodeScanner: (() => void) | null = null;
 
   constructor() {
     super();
     this.styleNode = document.createElement("style");
     this.styleNode.type = "text/css";
+  }
+
+  @Watch("extraActions")
+  extraActionsChange() {
+    if (isMobile) {
+      const qrCodeScanner = this.extraActions.find(action => action.attribute === "scan_qrcode");
+      this.qrCodeScanner = qrCodeScanner !== undefined && "callback" in qrCodeScanner ? qrCodeScanner.callback : null;
+      const barCodeScanner = this.extraActions.find(action => action.attribute === "scan_barcode");
+      this.barCodeScanner = barCodeScanner !== undefined && "callback" in barCodeScanner ? barCodeScanner.callback : null;
+    }
   }
 
   get errors() {
@@ -323,6 +347,15 @@ export default class TopLevelUserView extends Vue {
 * All page without footer   (0)
 
 */
+  .scanner-button {
+    line-height: inherit;
+    margin: 0 5px;
+  }
+
+  .scanner-button:hover {
+    opacity: 0.7;
+  }
+
   /deep/ .input-group {
     padding-left: 0;
     border-radius: 3px;
