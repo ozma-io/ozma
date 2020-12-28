@@ -256,6 +256,7 @@ export default class Modal extends Vue {
     &.is-mobile {
       border: none;
       top: auto !important;
+
       /* VueModal writes :height prop in element's inline style,
         so !important is required */
       height: 100% !important;
