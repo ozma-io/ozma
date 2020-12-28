@@ -1264,7 +1264,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     const actions: Action[] = [];
     if (this.uv.info.mainEntity !== null) {
       actions.push(
-        { icon: "check_box", name: this.$t("remove_selected_rows").toString(), callback: () => this.removeSelectedRows() },
+        { icon: "delete_sweep", name: this.$t("remove_selected_rows").toString(), callback: () => this.removeSelectedRows() },
         { icon: "playlist_add", name: this.$t("show_new_row").toString(), callback: () => this.setShowEmptyRow(true) },
       );
     }
