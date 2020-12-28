@@ -12,7 +12,7 @@
       @click="$emit('select', $event)"
     >
       <!-- Key is needed to force checkbox re-render when `selected` changes. Not sure why. -->
-      <span class="table-th_span">
+      <span class="table-td_span">
         <checkbox :checked="baseLocalRow.extra.selected" />
       </span>
     </td>
@@ -83,7 +83,7 @@ export default class TableRow extends Vue {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   /* Current Z layout:
 
 * FormControl           (200)
@@ -117,7 +117,7 @@ export default class TableRow extends Vue {
     }
   }
 
-  .checkbox-cells > .table-th_span {
+  .checkbox-cells > .table-td_span {
     display: flex;
     width: 100%;
     justify-content: center;
@@ -129,7 +129,7 @@ export default class TableRow extends Vue {
 
   .table-tr {
     background-color: white; /* цвет таблицы возможно надо сменить на настраевоемый */
-    height: 100% @-moz-document url-prefix();
+    height: 100%;
   }
 
   .editing_style {
@@ -226,7 +226,7 @@ export default class TableRow extends Vue {
       position: sticky;
       z-index: 20;
       background-color: inherit;
-      box-shadow: 2px 0 0 var(--MainBorderColor);
+      box-shadow: 1px 0 0 var(--MainBorderColor);
     }
 
     .table-tr.selected .fixed-column {
