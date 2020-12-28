@@ -7,7 +7,7 @@
     ]"
   >
     <td
-      v-if="from !== 'new'"
+      v-if="from !== 'new' && showSelectionCell"
       class="fixed-column checkbox-cells"
       @click="$emit('select', $event)"
     >
@@ -17,12 +17,18 @@
       </span>
     </td>
     <td
-      v-else
+      v-else-if="showSelectionCell"
       class="fixed-column checkbox-cells"
     />
     <td
       v-if="localUv.hasRowLinks"
-      class="fixed-column openform-cells"
+      :class="[
+        'fixed-column',
+        'openform-cells',
+        {
+          'without-selection-cell': !isSelectionColumnEnabled,
+        }
+      ]"
     >
       <FunLink
         v-if="localRow.extra.link !== undefined"
@@ -30,7 +36,7 @@
         class="icon-link"
         @goto="$emit('goto', $event)"
       >
-        <i class="material-icons openform-cells__icon">open_in_new</i>
+        <i class="material-icons edit-in-modal-icon">open_in_new</i>
       </FunLink>
     </td>
     <TableCell
@@ -76,6 +82,7 @@ export default class TableRow extends Vue {
   @Prop({ type: Object, required: true }) localUv!: any;
   @Prop({ type: String, default: "existing" }) from!: string;
   @Prop({ type: Boolean, default: false }) isTree!: boolean;
+  @Prop({ type: Boolean, default: true }) showSelectionCell!: boolean;
 
   get lastFixedColumnIndex(): number {
     return this.localUv.columns.filter((item: any) => item.fixed).length;
@@ -159,14 +166,14 @@ export default class TableRow extends Vue {
     border-right: none;
   }
 
-  td >>> p,
-  td >>> a {
+  td ::v-deep p,
+  td ::v-deep a {
     /* color: var(--TableTextColor) [> !important <]; */
     max-height: 154px;
     overflow-y: auto;
   }
 
-  td >>> p {
+  td ::v-deep p {
     overflow: hidden;
     width: 100%;
     text-overflow: ellipsis;
@@ -175,7 +182,7 @@ export default class TableRow extends Vue {
     white-space: initial;
   }
 
-  td >>> p:hover {
+  td ::v-deep p:hover {
     overflow-x: hidden;
     overflow-y: auto;
   }
@@ -206,6 +213,10 @@ export default class TableRow extends Vue {
 
     .openform-cells {
       left: 35px;
+
+      .without-selection-cell {
+        left: 0;
+      }
     }
 
     td.select_fixed {
