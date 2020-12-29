@@ -139,7 +139,7 @@ export default class TableRow extends Vue {
 
   td {
     border-right: 1px solid var(--MainBorderColor);
-    padding: 4px 0 0 3px;
+    padding: 2px 0 2px 0;
     overflow: hidden;
     color: var(--TableTextColor);
     text-overflow: ellipsis;

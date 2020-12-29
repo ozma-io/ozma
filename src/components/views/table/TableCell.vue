@@ -177,6 +177,7 @@ export default class TableCell extends Vue {
       height: inherit;
       pointer-events: none;
       padding: 3px 7px 2px 7px;
+      max-height: 150px;
 
       ::v-deep a {
         pointer-events: all;
@@ -195,11 +196,6 @@ export default class TableCell extends Vue {
 
   .table-td_selected {
     border: 2px solid rgb(14, 101, 235);
-    padding: 3px 0 0 1px !important;
-  }
-
-  .next-after-last-fixed.table-td_selected {
-    padding: 3px 2px 0 3px !important;
   }
 
   .checkbox_click-none {
@@ -263,9 +259,13 @@ export default class TableCell extends Vue {
   span.reference-text {
     padding-left: 20px;
     display: block;
+    white-space: normal;
+    line-height: 1rem;
   }
 
   .cell-text {
     overflow: hidden;
+    white-space: break-spaces;
+    line-height: 1rem;
   }
 </style>

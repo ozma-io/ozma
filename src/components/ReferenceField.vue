@@ -210,7 +210,7 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 
   .single_value {
     margin: 2px;
-    word-break: break-all;
+    line-height: 1rem;
 
     &.has_links {
       // Otherwise it's sometimes tricky to click/tap inside.

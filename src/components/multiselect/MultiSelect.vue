@@ -588,9 +588,9 @@ export default class MultiSelect extends Vue {
   .select_container__options_list > li.select_container__options_list__option {
     color: var(--MainTextColor);
     margin: 2px;
-    padding: 1px 8px;
+    padding: 4px 8px;
     cursor: pointer;
-    word-break: break-all;
+    line-height: 1rem;
   }
 
   .select_container__options_list > li.select_container__options_list__option:hover,
@@ -624,19 +624,17 @@ export default class MultiSelect extends Vue {
     align-items: center;
     color: var(--MainTextColor);
     border-radius: 5px;
+    padding: 2px 5px;
+    line-height: 1rem;
 
     /* background-color: white; */
-    padding: 0 5px;
     box-sizing: border-box;
   }
 
   .single_value {
     align-self: center;
-    border-radius: 5px;
-    padding: 1px 7px;
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
-    color: var(--MainTextColor);
   }
 
   .single_value_open {
