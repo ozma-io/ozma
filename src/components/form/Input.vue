@@ -38,6 +38,7 @@
       :value="value"
       :placeholder="$t('input_placeholder')"
       :disabled="disabled"
+      @keydown.enter.prevent
       @input="updateInput"
       @focus="onFocus"
       @blur="onBlur"

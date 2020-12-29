@@ -39,7 +39,9 @@
             class="material-icons reference-open-modal"
             value="qr_code_scanner"
           >
-          <span class="reference-text">{{ localValue.valueText || "&nbsp;" }}</span>
+          <!-- eslint-disable vue/no-v-html -->
+          <span class="reference-text" v-html="localValueTextHtml" />
+          <!-- eslint-enable -->
         </div>
       </template>
       <template v-else>
@@ -109,9 +111,9 @@ export default class TableCell extends Vue {
     const text: string = typeof this.localValue.valueText === "string"
       ? this.localValue.valueText
       : "";
-    return (this.valueType === "string") || this.localValue.link
+    return ((this.valueType === "string") || this.localValue.link
       ? replaceHtmlLinks(text)
-      : text;
+      : text) || "&nbsp;";
   }
 
   private get valueType(): string | undefined {

@@ -1,10 +1,10 @@
 <i18n>
   {
     "en": {
-      "empty": "(empty)"
+      "empty": "Empty"
     },
     "ru": {
-      "empty": "(пусто)"
+      "empty": "Пусто"
     }
   }
 </i18n>
@@ -39,7 +39,7 @@
       :class="['div-with-actions', menuAlign]"
     >
       <template v-if="sortedActions.length == 0">
-        <label class="div-with-actions_button">
+        <label class="div-with-actions_button empty">
           {{ $t('empty') }}
         </label>
       </template>
@@ -234,7 +234,7 @@ export default class ActionsMenu extends Vue {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   /* Current Z layout:
 
    * Drop-down menu         (1200)
@@ -272,7 +272,7 @@ export default class ActionsMenu extends Vue {
 
   ul.actions > a {
     text-decoration: none;
-    color: inherit;
+    color: var(--MainTextColor);
   }
 
   ul.actions > label {
@@ -289,6 +289,7 @@ export default class ActionsMenu extends Vue {
   ul.actions > a > li {
     list-style: none;
     cursor: pointer;
+    color: var(--MainTextColor);
   }
 
   ul.actions > label > li:hover,
@@ -379,6 +380,11 @@ export default class ActionsMenu extends Vue {
     border: 0;
     font-size: 14px;
     margin-bottom: 0; /* override defaults for label from Bootstrap */
+
+    &.empty {
+      color: var(--MainTextLightColor) !important;
+      cursor: not-allowed;
+    }
   }
 
   .div-with-actions_button input[type="file"] {

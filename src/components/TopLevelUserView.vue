@@ -332,10 +332,10 @@ export default class TopLevelUserView extends Vue {
   }
 
   .userview-div {
-    padding: 50px 0 0 0;
+    padding: 52px 0 0 0;
     width: 100%;
+    height: 100%;
     overflow: hidden;
-    flex: 1;
   }
 
   .userview-upper-div {

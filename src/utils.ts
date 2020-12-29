@@ -647,8 +647,8 @@ export const convertToWords = (str: string) => {
 // Source: https://emailregex.com/
 const emailRegex = /(?:(?:[^<>(?:)[\]\\.,;:\s@"]+(?:\.[^<>(?:)[\]\\.,;:\s@"]+)*)|(?:".+"))@(?:(?:\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(?:(?:[a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/;
 // Source: https://qna.habr.com/answer?answer_id=852265
-const telRegex = /(?:\+)?(?:[- _(?:):=+]?\d[- _(?:):=+]?){10,14}(?:\s*)?/;
-const telRemoveFormating = (tel: string) => tel.replace(/^(\+)|\D/g, "$1");
+const telRegex = /\+(?:[- _(?:):=+]?\d[- _(?:):=+]?){10,14}/;
+const telRemoveFormating = (tel: string) => "+" + tel.replace(/\D/g, "");
 // Source: https://stackoverflow.com/a/3809435
 const urlRegex = /https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9(?:)]{1,6}\b(?:[-a-zA-Z0-9(?:)@:%_+.~#?&//=]*)/;
 const linksRegex =

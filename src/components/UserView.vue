@@ -172,6 +172,7 @@ interface IUserViewLoading {
 
 interface IUserViewError {
   state: "error";
+  args: IUserViewArguments;
   message: string;
 }
 
@@ -248,8 +249,9 @@ export default class UserView extends Vue {
   get actions() {
     const actions = [...this.extraCommonActions, ...this.extraActions];
 
-    if (this.state.state === "show" && !this.state.uv.attributes["hide_default_actions"]) {
-      if (this.state.uv.args.source.type === "named") {
+    if (this.state.state === "error" || (this.state.state === "show" && !this.state.uv.attributes["hide_default_actions"])) {
+      const args = this.state.state === "show" ? this.state.uv.args : this.state.args;
+      if (args.source.type === "named") {
         const editQuery: IQuery = {
           defaultValues: {},
           args: {
@@ -261,8 +263,8 @@ export default class UserView extends Vue {
               },
             },
             args: {
-              schema: this.state.uv.args.source.ref.schema,
-              name: this.state.uv.args.source.ref.name,
+              schema: args.source.ref.schema,
+              name: args.source.ref.name,
             },
           },
           search: "",
@@ -293,7 +295,7 @@ export default class UserView extends Vue {
 
     if (newUv instanceof CombinedUserView) {
       if (newUv.rows === null && newUv.info.mainEntity === null) {
-        this.setState({ state: "error", message: this.$t("new_mode_no_main").toString() });
+        this.setState({ state: "error", args: newUv.args, message: this.$t("new_mode_no_main").toString() });
         return;
       }
       if (this.state.state === "error") {
@@ -336,6 +338,7 @@ export default class UserView extends Vue {
         if (deepEquals(newUv.args, this.args) && newUv === this.currentUvs.getUserViewOrError(newUv.args)) {
           this.setState({
             state: "error",
+            args: newUv.args,
             message: this.$t("link_to_nowhere").toString(),
           });
         }
@@ -345,6 +348,7 @@ export default class UserView extends Vue {
     } else if (newUv instanceof UserViewError) {
       this.setState({
         state: "error",
+        args: newUv.args,
         message: this.uvErrorMessage(newUv),
       });
     } else if (newUv === null) {

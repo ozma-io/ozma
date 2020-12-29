@@ -160,6 +160,9 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
 
   private async onDecode(content: string) {
     await this.audio.play();
+    this.turnCameraOff();
+    await this.timeout(1);
+    this.turnCameraOn();
 
     try {
       window.navigator.vibrate([100, 30, 200]);
@@ -169,12 +172,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
 
     if (!this.multiScan) {
       this.$emit("update:scanResult", content);
-      this.turnCameraOff();
-
       this.toggleOpenScanner();
-
-      await this.timeout(1);
-      this.turnCameraOn();
     } else {
       this.error = "";
 
