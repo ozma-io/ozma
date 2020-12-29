@@ -938,37 +938,35 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   @Watch("uv.newRows")
   private updateNewRowsSides() {
-    Vue.set(this.local.extra, "newRowTopSidePositions", this.getNewRowsBySide("top"));
-    Vue.set(this.local.extra, "newRowBottomSidePositions", this.getNewRowsBySide("bottom").reverse());
+    this.local.extra.newRowTopSidePositions = this.getNewRowsBySide("top");
+    this.local.extra.newRowBottomSidePositions = this.getNewRowsBySide("bottom").reverse();
   }
 
   private async addNewRowOnPosition(side: NewRowSide): Promise<void> {
     const rowId = await this.addNewRow();
-    Vue.set(this.local.newRows[rowId].extra, "newRowSide", side);
+    this.local.newRows[rowId].extra.newRowSide = side;
     this.updateNewRowsSides();
+
+    const firstNotDisabledColumn = this.uv.newRows[rowId].values.findIndex((value, i) => {
+      return value.info !== undefined && this.local.extra.columns[i].visible;
+    });
+    const firstNotDisabledDOMColumn = this.columnIndexes.indexOf(firstNotDisabledColumn);
+    if (firstNotDisabledDOMColumn === -1) return;
 
     void nextRender().then(() => {
       const sideName = side === "top" ? "newRowsTopSideRef" : "newRowsBottomSideRef";
       const newRowsRef = this.$refs[sideName] as TableRow[] | undefined;
-      if (newRowsRef === undefined) {
-        return;
-      }
-      const newRowRef = newRowsRef[newRowsRef.length - 1];
-      const newRowValues = newRowRef.row.values as {info?: unknown}[];
-      const firstNotDisabledI = newRowValues.findIndex(value => value?.info !== undefined);
-      if (firstNotDisabledI === -1
-       || newRowRef === undefined
-      ) {
-        return;
-      }
-      const swapedFirstNotDisabledI: number = newRowRef.columnIndexes[firstNotDisabledI];
+      if (newRowsRef === undefined) return;
+      const childRef = newRowsRef?.[newRowsRef.length - 1]?.$children?.[1 + firstNotDisabledDOMColumn].$el;
+      if (childRef === undefined) return;
+
       this.cellEditByTarget(
         {
           type: "added",
           id: rowId,
-          column: firstNotDisabledI,
+          column: firstNotDisabledColumn,
         },
-        newRowRef.$children[1 + swapedFirstNotDisabledI].$el as HTMLElement,
+        childRef as HTMLElement,
       );
     });
   }

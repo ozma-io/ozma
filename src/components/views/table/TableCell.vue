@@ -270,9 +270,13 @@ export default class TableCell extends Vue {
   span.reference-text {
     padding-left: 20px;
     display: block;
+    white-space: normal;
+    line-height: 1rem;
   }
 
   .cell-text {
     overflow: hidden;
+    white-space: break-spaces;
+    line-height: 1rem;
   }
 </style>
