@@ -919,13 +919,18 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       }
       const newRowRef = newRowsRef[newRowsRef.length - 1];
       const newRowValues = newRowRef.row.values as {info?: unknown}[];
-      const firstNotDisabledI = newRowValues.findIndex(value => value?.info !== undefined);
+
+      const firstNotDisabledI = newRowValues.findIndex((value, i) => {
+        return value?.info !== undefined && this.local.extra.columns[i].visible;
+      });
+
       if (firstNotDisabledI === -1
        || newRowRef === undefined
       ) {
         return;
       }
-      const swapedFirstNotDisabledI: number = newRowRef.columnIndexes[firstNotDisabledI];
+
+      const swapedFirstNotDisabledI: number = newRowRef.columnIndexes.findIndex(value => value === firstNotDisabledI);
       this.cellEditByTarget(
         {
           type: "added",
