@@ -921,7 +921,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       const sideName = side === "top" ? "newRowsTopSideRef" : "newRowsBottomSideRef";
       const newRowsRef = this.$refs[sideName] as TableRow[] | undefined;
       if (newRowsRef === undefined) return;
-      const childRef = newRowsRef?.[newRowsRef.length - 1].$children?.[1 + firstNotDisabledDOMColumn].$el;
+      const childRef = newRowsRef?.[newRowsRef.length - 1]?.$children?.[1 + firstNotDisabledDOMColumn].$el;
       if (childRef === undefined) return;
 
       this.cellEditByTarget(
