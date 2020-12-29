@@ -70,7 +70,7 @@
       </div>
 
       <table
-        :class="['custom-table', 'table', 'b-table',
+        :class="['custom-table', 'table', 'table-sm', 'b-table',
                  {'edit_active': editingValue !== null}]"
       >
         <colgroup>
@@ -107,7 +107,7 @@
                 'fixed-column',
                 'openform-cells',
                 {
-                  'without-selection-cell': !isSelectionColumnEnabled,
+                  'without-selection-cell': !local.extra.isSelectionColumnEnabled,
                 }
               ]"
             >
@@ -333,6 +333,17 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
     const columnWidthAttr = Number(getColumnAttr("column_width"));
     const columnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr;
     style["width"] = `${columnWidth}px`;
+
+    const textAlignRightTypes: (ValueType["type"])[] = ["int", "decimal"];
+    const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType;
+    if (textAlignRightTypes.includes(punOrValue.type)) {
+      style["text-align"] = "right";
+    }
+
+    const textAlignAttr = getColumnAttr("text_align");
+    if (textAlignAttr !== undefined) {
+      style["text-align"] = String(textAlignAttr);
+    }
 
     const fixedColumnAttr = getColumnAttr("fixed");
     const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr);
@@ -1579,6 +1590,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     height: 100%;
     width: 100%; /* на весь экран */
     padding: 0;
+    padding-left: 5px;
     overflow: auto; /* чтобы скролить таблицу в том числе на мобилке */
   }
 
@@ -1598,7 +1610,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     max-width: 50px !important;
     overflow: hidden;
     white-space: nowrap;
-    padding: 2px 10px 0 10px;
     box-shadow: 0 2px 0 var(--MainBorderColor);
     text-overflow: ellipsis;
     position: sticky; /* фиксация шапки при скроле */
@@ -1631,10 +1642,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         0 2px 0 var(--MainBorderColor),
         1px 0 0 var(--MainBorderColor);
     }
-  }
-
-  th.th_after-last-fixed {
-    padding-left: 10px;
   }
 
   th.tabl_heading {
@@ -1795,13 +1802,13 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     padding: 0;
 
     &.table-th .material-icons {
-      top: 5px;
+      top: 9px;
       left: 5px;
     }
 
     .table-td_span .material-icons {
       position: relative;
-      top: 2px;
+      top: 0;
     }
 
     &:hover {
@@ -1820,7 +1827,12 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       left: 0;
     }
 
-    .add-in-modal-icon,
+    .add-in-modal-icon {
+      position: relative;
+      top: 3px;
+      color: var(--MainTextColorLight);
+    }
+
     .edit-in-modal-icon {
       position: relative;
       top: 5px;
@@ -1839,6 +1851,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
 
     .icon-link {
+      position: absolute;
       height: 100%;
       width: 100%;
       display: block;
@@ -1846,7 +1859,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
       .material-icons {
         position: relative;
-        top: 2px;
+        top: 0;
       }
     }
 

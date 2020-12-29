@@ -26,7 +26,7 @@
         'fixed-column',
         'openform-cells',
         {
-          'without-selection-cell': !isSelectionColumnEnabled,
+          'without-selection-cell': !showSelectionCell,
         }
       ]"
     >
@@ -116,6 +116,7 @@ export default class TableRow extends Vue {
   }
 
   .checkbox-cells {
+    position: relative;
     cursor: pointer;
     color: var(--MainTextColorLight);
 
@@ -128,6 +129,10 @@ export default class TableRow extends Vue {
     display: flex;
     width: 100%;
     justify-content: center;
+  }
+
+  .checkbox {
+    position: absolute;
   }
 
   .table-tr-new .checkbox-cells {
@@ -146,7 +151,6 @@ export default class TableRow extends Vue {
 
   td {
     border-right: 1px solid var(--MainBorderColor);
-    padding: 4px 0 0 3px;
     overflow: hidden;
     color: var(--TableTextColor);
     text-overflow: ellipsis;
@@ -168,7 +172,6 @@ export default class TableRow extends Vue {
 
   td ::v-deep p,
   td ::v-deep a {
-    /* color: var(--TableTextColor) [> !important <]; */
     max-height: 154px;
     overflow-y: auto;
   }
