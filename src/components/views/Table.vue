@@ -1322,7 +1322,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (this.uv.info.mainEntity !== null) {
       actions.push(
         { icon: "delete_sweep", name: this.$t("remove_selected_rows").toString(), callback: () => this.removeSelectedRows() },
-        { icon: "playlist_add", name: this.$t("show_new_row").toString(), callback: () => this.setShowEmptyRow(true) },
+        { icon: "playlist_add", name: this.$t("add_entry").toString(), callback: () => this.addNewRowOnPosition("top") },
       );
     }
 
