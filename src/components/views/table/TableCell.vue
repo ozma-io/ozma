@@ -173,7 +173,8 @@ export default class TableCell extends Vue {
       height: 100%;
       pointer-events: none;
 
-      ::v-deep .checkbox { position: absolute;
+      ::v-deep .checkbox {
+        position: absolute;
 
         .material-icons {
           position: relative;
