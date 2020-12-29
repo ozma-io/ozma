@@ -255,6 +255,7 @@ export default class Input extends Vue {
     max-height: 165px;
     background: white;
     text-align: inherit;
+    line-height: 1rem;
   }
 
   .input-textarea-fake {

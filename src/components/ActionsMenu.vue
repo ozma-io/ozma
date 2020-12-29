@@ -358,7 +358,7 @@ export default class ActionsMenu extends Vue {
     border: 1px solid var(--MainBorderColor);
     margin-top: 0;
     top: calc(100% + 5px);
-    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.3);
     border-radius: 3px;
   }
 
