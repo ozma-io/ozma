@@ -261,14 +261,14 @@
             />
             <i
               v-if="qrCodeScanner !== null"
-              class="material-icons scanner-button"
+              class="material-icons material-button scanner-button"
               @click="qrCodeScanner"
             >
               qr_code_2
             </i>
             <i
               v-if="barCodeScanner !== null"
-              class="material-icons scanner-button"
+              class="material-icons material-button scanner-button"
               @click="barCodeScanner"
             >
               qr_code_scanner
@@ -279,7 +279,7 @@
               @goto="$emit('goto', $event)"
             />
             <i
-              class="material-icons fullscreen_button"
+              class="material-icons material-button fullscreen_button"
               @click.stop="openFullscreen(inputType)"
             >fullscreen</i>
           </div>

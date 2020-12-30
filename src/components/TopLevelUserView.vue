@@ -59,13 +59,13 @@
           v-if="!isMainView"
           type="button"
           value="arrow_back"
-          class="head-menu_back-button material-icons md-14"
+          class="head-menu_back-button material-icons material-button"
           @click="$router.go(-1)"
         >
         <router-link
           v-if="!isMainView"
           :to="{ name: 'main' }"
-          class="head-menu_main-menu-button material-icons"
+          class="head-menu_main-menu-button material-icons material-button"
         >
           home
         </router-link>
@@ -369,7 +369,7 @@ export default class TopLevelUserView extends Vue {
   }
 
   .userview-div {
-    padding: 52px 0 0 0;
+    padding: 39px 0 0 0; /* To compensate header's height */
     width: 100%;
     height: 100%;
     overflow: hidden;
@@ -404,7 +404,7 @@ export default class TopLevelUserView extends Vue {
     white-space: nowrap;
     background-color: var(--MainBackgroundColor);
     width: 100%;
-    padding: 0.75rem;
+    padding: 5px;
     position: fixed;
     left: 0;
     top: 0;
@@ -424,7 +424,6 @@ export default class TopLevelUserView extends Vue {
     background: hsla(0, 0%, 100%, 0.3);
     border: none;
     text-decoration: none;
-    font-size: 20px;
     padding: 0;
     margin-right: 10px;
     position: relative;
@@ -439,6 +438,7 @@ export default class TopLevelUserView extends Vue {
     margin: 1px 2px 0;
     font-weight: 600;
     font-size: 1.25em;
+    color: var(--MainTextColor);
   }
 
   .fix-bot {

@@ -46,7 +46,7 @@ export default class ButtonsPanel extends Vue {
 <style scoped>
   .buttons_panel {
     position: absolute;
-    right: 15px;
+    right: 5px;
     display: flex;
   }
 

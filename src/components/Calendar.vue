@@ -44,7 +44,7 @@
       <input
         v-if="!!value"
         type="button"
-        class="material-icons close_input__icon"
+        class="material-icons material-button close_input__icon"
         value="close"
         @click="clearValue"
       >

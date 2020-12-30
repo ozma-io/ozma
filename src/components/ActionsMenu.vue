@@ -16,13 +16,13 @@
     <input
       v-if="menuAlign == 'left'"
       type="button"
-      class="actions-menu_actions-button material-icons"
+      class="actions-menu_actions-button material-icons material-button"
       :value="titleIcon"
       @click="showActions = !showActions"
     >
     <i
       v-else
-      class="material-icons right-actions-menu-button"
+      class="material-icons material-button right-actions-menu-button"
       @click="showActions = !showActions"
     >{{ titleIcon }}</i>
     <div
@@ -62,8 +62,7 @@
           >
             <li>
               <div>
-                <i v-if="action.icon" class="material-icons">{{ action.icon }}</i>
-                <i v-else class="material-icons">arrow_right</i>
+                <i class="material-icons">{{ action.icon || "arrow_right" }}</i>
                 <span>{{ action.name }}</span>
               </div>
             </li>
@@ -77,8 +76,7 @@
           >
             <li>
               <div>
-                <i v-if="action.icon" class="material-icons">{{ action.icon }}</i>
-                <i v-else class="material-icons">arrow_right</i>
+                <i class="material-icons">{{ action.icon || "arrow_right" }}</i>
                 <span>{{ action.name }}</span>
               </div>
             </li>
@@ -91,8 +89,7 @@
           >
             <li>
               <div>
-                <i v-if="action.icon" class="material-icons">{{ action.icon }}</i>
-                <i v-else class="material-icons">arrow_right</i>
+                <i class="material-icons">{{ action.icon || "arrow_right" }}</i>
                 <span>{{ action.name }}</span>
               </div>
             </li>
@@ -104,8 +101,7 @@
           >
             <li>
               <div>
-                <i v-if="action.icon" class="material-icons">{{ action.icon }}</i>
-                <i v-else class="material-icons">arrow_right</i>
+                <i class="material-icons">{{ action.icon || "arrow_right" }}</i>
                 <span>{{ action.name }}</span>
                 <input
                   type="file"
@@ -123,8 +119,7 @@
       >
         <li v-for="(button, i) in buttons" :key="i">
           <div>
-            <i v-if="button.icon" class="material-icons">{{ button.icon }}</i>
-            <i v-else class="material-icons">arrow_right</i>
+            <i class="material-icons material-button">{{ button.icon || "arrow_right" }}</i>
             <span>{{ button.name }}</span>
           </div>
           <ul class="actions">
@@ -136,8 +131,7 @@
             >
               <li v-if="'link' in action" :key="action.name">
                 <div>
-                  <i v-if="action.icon" class="material-icons">{{ action.icon }}</i>
-                  <i v-else class="material-icons">arrow_right</i>
+                  <i class="material-icons material-button">{{ action.icon || "arrow_right" }}</i>
                   <span>{{ action.name }}</span>
                 </div>
               </li>
@@ -325,6 +319,7 @@ export default class ActionsMenu extends Vue {
   }
 
   .actions-menu {
+    height: 24px;
     margin: 0;
     z-index: 995;
     display: flex;
@@ -422,11 +417,8 @@ export default class ActionsMenu extends Vue {
     border: none;
     text-align: left;
     padding: 0;
-    line-height: normal;
-    font-size: 20px;
     margin-right: 10px;
     vertical-align: bottom;
-    height: 1.25em;
   }
 
   .actions-menu_actions-button:focus {
@@ -488,7 +480,6 @@ export default class ActionsMenu extends Vue {
   }
 
   .right-actions-menu-button {
-    line-height: 1.25em;
     font-size: 24px;
     background: none;
     border: none;

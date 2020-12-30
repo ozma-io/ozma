@@ -53,7 +53,7 @@
           <input
             v-if="select.showValueRemove"
             type="button"
-            class="material-icons values_list__value__close"
+            class="material-icons material-button values_list__value__close"
             value="close"
             @click="select.removeValue(index)"
           >

@@ -87,7 +87,8 @@ export default class MenuEntry extends Vue {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+  @import "../../../styles/mixins.scss";
 
   .menu_category_block {
     margin-top: 10px;
@@ -109,6 +110,9 @@ export default class MenuEntry extends Vue {
   }
 
   .menu_entry > a {
+    @include material-button;
+
+    width: 100%;
     color: var(--MainTextColor);
     text-decoration: underline;
     text-decoration-color: var(--MainBorderColor);

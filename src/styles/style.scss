@@ -5,6 +5,7 @@ $font-family-sans-serif: var(--Font);
 $font-family-serif: var(--Font);
 
 @import '../../node_modules/bootstrap/scss/bootstrap';
+@import 'mixins.scss';
 
 /*
  *общие настройки
@@ -172,3 +173,9 @@ div {
 
 .material-icons.md-light { color: rgba(255, 255, 255, 1); }
 .material-icons.md-light.md-inactive { color: rgba(255, 255, 255, 0.3); }
+
+.material-icons.material-button {
+  @include material-button;
+
+  user-select: none;
+}
