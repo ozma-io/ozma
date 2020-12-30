@@ -47,6 +47,7 @@
       <ul
         v-else
         class="actions"
+        @click="showActions=false"
       >
         <template v-for="(action, i) in sortedActions">
           <hr
@@ -116,7 +117,10 @@
         </template>
       </ul>
 
-      <ul class="buttons">
+      <ul
+        class="buttons"
+        @click="showActions=false"
+      >
         <li v-for="(button, i) in buttons" :key="i">
           <div>
             <i v-if="button.icon" class="material-icons">{{ button.icon }}</i>
