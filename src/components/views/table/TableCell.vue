@@ -15,7 +15,10 @@
     @click="$emit('cell-click', columnPosition, $event)"
   >
     <p>
-      <template v-if="localValue.link !== undefined && localValue.valueText.length > 0">
+      <template v-if="column.type == 'buttons'">
+        <CellButtons :value="value"/>
+      </template>
+      <template v-else-if="localValue.link !== undefined && localValue.valueText.length > 0">
         <div class="selectable">
           <FunLink
             :link="localValue.link"
@@ -87,6 +90,7 @@ import { replaceHtmlLinks } from "@/utils";
 @Component({
   components: {
     Checkbox: () => import("@/components/checkbox/Checkbox.vue"),
+    CellButtons: () => import("@/components/buttons/CellButtons.vue"),
   },
 })
 export default class TableCell extends Vue {
