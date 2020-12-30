@@ -332,6 +332,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
         callback: () => {
           this.openQRCodeScanner = !this.openQRCodeScanner;
         },
+        attribute: "scan_qrcode",
       });
     }
 
@@ -342,6 +343,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
         callback: () => {
           this.openBarCodeScanner = !this.openBarCodeScanner;
         },
+        attribute: "scan_barcode",
       });
     }
 

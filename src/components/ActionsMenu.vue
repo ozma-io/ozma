@@ -157,6 +157,7 @@ export interface IAction {
   icon?: string;
   name: string;
   order?: number;
+  attribute?: string;
 }
 
 export interface ILocationAction extends IAction {
@@ -180,7 +181,7 @@ export type Action = ILocationAction | ILinkAction | ICallbackAction | IUploadFi
 @Component
 export default class ActionsMenu extends Vue {
   @Prop({ type: Array, required: true }) actions!: Action[];
-  @Prop({ type: Array }) buttons!: IPanelButton[];
+  @Prop({ type: Array, required: false }) buttons!: IPanelButton[];
   /**
    * icon Material design icon item title.
    *   By default 'menu' for menuAlign=left and 'more_vert' for menuAlign=any.
