@@ -88,14 +88,14 @@
               class="material-icons scanner-button"
               @click="qrCodeScanner"
             >
-              qr_code_scanner
+              qr_code_2
             </i>
             <i
               v-if="barCodeScanner !== null"
               class="material-icons scanner-button"
               @click="barCodeScanner"
             >
-              qr_code_2
+              qr_code_scanner
             </i>
           </template>
           <template #actions-menu>
