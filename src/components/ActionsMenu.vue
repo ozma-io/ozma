@@ -117,7 +117,7 @@
         </template>
       </ul>
 
-      <ul 
+      <ul
         class="buttons"
         @click="showActions=false"
       >
