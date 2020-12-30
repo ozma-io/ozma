@@ -183,11 +183,7 @@ export default class Modal extends Vue {
   .modal__tab_headers {
     display: flex;
     flex-direction: row;
-    padding: 5px 10px 0 10px;
-
-    &.is-mobile {
-      padding: 0;
-    }
+    padding: 0;
   }
 
   .modal__close_button {
@@ -221,17 +217,6 @@ export default class Modal extends Vue {
     height: 100%;
     padding: 0;
     overflow: hidden;
-  }
-
-  .modal__tab_fullscreen_button {
-    visibility: hidden;
-    padding: 1px 5px 0;
-    line-height: 1.25em;
-    font-size: 20px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    float: right;
   }
 
   .mobile_close_button {

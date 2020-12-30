@@ -21,7 +21,6 @@
   >
     <template #actions-menu>
       <ActionsMenu
-        title="view_headline"
         :actions="actions"
         menu-align="right"
         @goto="$emit('goto', $event)"
@@ -30,7 +29,7 @@
 
     <template #actions-right>
       <i
-        class="material-icons modal__tab_fullscreen_button"
+        class="material-icons fullscreen-button"
         @click.stop="openFullscreen"
       >fullscreen</i>
     </template>
@@ -158,5 +157,9 @@ export default class ModalUserView extends Vue {
     background: none;
     border: none;
     padding: 0 20px;
+  }
+
+  .fullscreen-button {
+    cursor: pointer;
   }
 </style>
