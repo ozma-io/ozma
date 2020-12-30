@@ -541,7 +541,7 @@ export default class FormControl extends Vue {
 
   @Watch("actions")
   extraActionsChange() {
-    if (isMobile || true) {
+    if (isMobile) {
       const qrCodeScanner = this.actions.find(action => action.attribute === "scan_qrcode");
       this.qrCodeScanner = qrCodeScanner !== undefined && "callback" in qrCodeScanner ? qrCodeScanner.callback : null;
       const barCodeScanner = this.actions.find(action => action.attribute === "scan_barcode");
