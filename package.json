@@ -36,6 +36,7 @@
     "portal-vue": "^2.1.6",
     "ramda": "^0.27.0",
     "sanitize-html": "^2.2.0",
+    "stylelint-scss": "^3.18.0",
     "uuid": "^8.3.2",
     "v-click-outside": "^3.0.1",
     "vue": "^2.6.10",
