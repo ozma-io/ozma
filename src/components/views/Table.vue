@@ -417,7 +417,6 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
       const currLinkForRow = attrToLinkSelf(getCellAttr("row_link"), value.info, this.extra.linkOpts);
       if (currLinkForRow) {
         localRow.extra.link = currLinkForRow;
-        this.extra.hasRowLinks = true;
       }
 
       if (getCellAttr("tree_parent_ids")) {
@@ -579,8 +578,9 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
 
   createLocalUserView(): ITableUserViewExtra {
     const columns = createColumns(this.uv);
+    const hasRowLinks = this.uv.columnAttributes.find(col => col.row_link !== undefined) !== undefined;
     const extra: ITableUserViewExtra = {
-      hasRowLinks: false,
+      hasRowLinks,
       selectedRows: new ObjectSet<RowRef>(),
       selectedValues: new ObjectSet<ValueRef>(),
       columns,
