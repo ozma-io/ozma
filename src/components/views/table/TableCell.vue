@@ -16,7 +16,9 @@
   >
     <p>
       <template v-if="column.type == 'buttons'">
-        <CellButtons :value="value"/>
+        <CellButtons
+          :value="value"
+        />
       </template>
       <template v-else-if="localValue.link !== undefined && localValue.valueText.length > 0">
         <div class="selectable">
