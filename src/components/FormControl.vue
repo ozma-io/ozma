@@ -259,6 +259,20 @@
               v-visible="enableFilter"
               @update:filterString="filterString = $event"
             />
+            <i
+              v-if="qrCodeScanner !== null"
+              class="material-icons scanner-button"
+              @click="qrCodeScanner"
+            >
+              qr_code_2
+            </i>
+            <i
+              v-if="barCodeScanner !== null"
+              class="material-icons scanner-button"
+              @click="barCodeScanner"
+            >
+              qr_code_scanner
+            </i>
             <ActionsMenu
               title="view_headline"
               :actions="actions"
@@ -522,6 +536,18 @@ export default class FormControl extends Vue {
   private filterString = "";
   private title = "";
   private enableFilter = false;
+  private qrCodeScanner: (() => void) | null = null;
+  private barCodeScanner: (() => void) | null = null;
+
+  @Watch("actions")
+  extraActionsChange() {
+    if (isMobile || true) {
+      const qrCodeScanner = this.actions.find(action => action.attribute === "scan_qrcode");
+      this.qrCodeScanner = qrCodeScanner !== undefined && "callback" in qrCodeScanner ? qrCodeScanner.callback : null;
+      const barCodeScanner = this.actions.find(action => action.attribute === "scan_barcode");
+      this.barCodeScanner = barCodeScanner !== undefined && "callback" in barCodeScanner ? barCodeScanner.callback : null;
+    }
+  }
 
   get isInline(): boolean {
     return inlineTypes.includes(this.inputType.name);
@@ -819,6 +845,16 @@ export default class FormControl extends Vue {
   * FormControl       (1000)
 
   */
+
+  .scanner-button {
+    color: var(--MainTextColor);
+    line-height: inherit;
+    margin: 0 5px;
+  }
+
+  .scanner-button:hover {
+    opacity: 0.7;
+  }
 
   .fullscreen_button {
     line-height: 1.25em;
