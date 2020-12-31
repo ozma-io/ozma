@@ -112,7 +112,6 @@ export default class SearchPanel extends Vue {
     flex: 1;
     max-width: 500px;
     margin-left: auto;
-    z-index: 1000;
   }
 
   .clear-search {
