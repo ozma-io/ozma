@@ -268,6 +268,7 @@ interface IColumn {
   width: number; // in px
   treeUnfoldColumn: boolean;
   scannable: boolean;
+  type: string;
 }
 
 interface ITableValueExtra {
@@ -357,6 +358,8 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
       isTreeUnfoldColumnSet = true;
     }
 
+    const type = String(getColumnAttr("column_type"));
+
     const scannable = getColumnAttr("text_type") === "barcode";
 
     columns[i] = {
@@ -368,6 +371,7 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
       width: columnWidth,
       treeUnfoldColumn,
       scannable,
+      type,
     };
   });
 
