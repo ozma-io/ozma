@@ -260,7 +260,6 @@
               @update:filterString="filterString = $event"
             />
             <ActionsMenu
-              title="view_headline"
               :actions="actions"
               menu-align="right"
               @goto="$emit('goto', $event)"
@@ -274,7 +273,6 @@
             <div class="nested-menu">
               <label class="input_label">{{ caption }}</label>
               <ActionsMenu
-                title="view_headline"
                 :actions="[]"
               />
             </div>

@@ -88,6 +88,7 @@ export default class ModalTabHeader extends Vue {
 
   .modal__tab_header.only_tab {
     border-color: transparent;
+    cursor: initial;
   }
 
   .modal__tab_close_button {
@@ -101,17 +102,12 @@ export default class ModalTabHeader extends Vue {
   }
 
   .modal__tab_header.selected > .modal__tab_close_button,
-  .modal__tab_header:hover > .modal__tab_close_button,
-  .modal__tab_header.selected > .modal__tab_fullscreen_button,
-  .modal__tab_header:hover > .modal__tab_fullscreen_button {
+  .modal__tab_header:hover > .modal__tab_close_button {
     visibility: visible;
+    cursor: pointer;
   }
 
   .modal__tab_header.only_tab > .modal__tab_close_button {
     display: none;
-  }
-
-  .modal__tab_header.only_tab > .modal__tab_fullscreen_button {
-    visibility: visible;
   }
 </style>
