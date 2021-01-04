@@ -6,7 +6,7 @@
                           'select_fixed': localValue.selected && column.fixed,
                           'next-after-last-fixed': index === lastFixedColumnIndex,
                           'select': localValue.selected && !column.fixed,
-                          'table-td_selected': localValue.selected,
+                          'selected': localValue.selected,
                           'error_style': value.erroredOnce,
                           'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable,
                           'editing_style': localValue.editing !== undefined,
@@ -156,28 +156,31 @@ export default class TableCell extends Vue {
   .selectable {
     position: relative;
     float: left;
-    margin-top: -2px;
-    border-radius: 5px;
-    padding: 3px 8px;
+    padding: 0 5px;
     border: 1px solid var(--MainBorderColor);
+    border-radius: 5px;
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
     width: 100%;
     word-wrap: break-word;
   }
 
-  .next-after-last-fixed {
-    padding: 4px 3px 0 5px !important;
-  }
-
   .table-td {
     touch-action: manipulation;
 
     > p {
-      height: inherit;
+      position: relative;
+      height: 100%;
       pointer-events: none;
-      padding: 3px 7px 2px 7px;
-      max-height: 150px;
+
+      ::v-deep .checkbox {
+        position: absolute;
+
+        .material-icons {
+          position: relative;
+          top: -3px;
+        }
+      }
 
       ::v-deep a {
         pointer-events: all;
@@ -194,8 +197,16 @@ export default class TableCell extends Vue {
     }
   }
 
-  .table-td_selected {
-    border: 2px solid rgb(14, 101, 235);
+  .table-td.selected {
+    box-shadow:
+      inset 2px 2px 0 rgb(14, 101, 235),
+      inset -2px -2px 0 rgb(14, 101, 235);
+  }
+
+  .table-td.fixed-column.selected {
+    box-shadow:
+      inset 2px 2px 0 rgb(14, 101, 235),
+      inset -2px -2px 0 rgb(14, 101, 235);
   }
 
   .checkbox_click-none {
@@ -243,7 +254,7 @@ export default class TableCell extends Vue {
   .reference-open-modal {
     pointer-events: auto !important;
     left: 0;
-    top: 0;
+    top: -3px;
     position: absolute;
     border: none;
     background: none;
