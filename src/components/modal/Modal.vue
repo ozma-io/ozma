@@ -208,7 +208,7 @@ export default class Modal extends Vue {
     }
   }
 
-  .modal__content ::v-deep .view-form {
+  .modal__content >>> .view-form {
     width: 100%;
   }
 

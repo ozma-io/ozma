@@ -70,18 +70,16 @@
       </div>
 
       <table
-        :class="['custom-table', 'table', 'table-sm', 'b-table',
+        :class="['custom-table', 'table', 'b-table',
                  {'edit_active': editingValue !== null}]"
       >
         <colgroup>
-          <col
-            v-if="local.extra.isSelectionColumnEnabled"
-            class="checkbox-col"
-          > <!-- Checkbox column -->
+          <col class="checkbox-col"> <!-- Checkbox column -->
           <col
             v-if="local.extra.hasRowLinks"
             class="open-form-col"
-          > <!-- Row link column -->
+          >
+          <!-- Row link column -->
           <col
             v-for="i in columnIndexes"
             :key="i"
@@ -94,7 +92,6 @@
         >
           <tr>
             <th
-              v-if="local.extra.isSelectionColumnEnabled"
               class="fixed-column checkbox-cells table-th"
               @click="selectAllRows"
             >
@@ -102,14 +99,7 @@
             </th>
             <th
               v-if="local.extra.hasRowLinks"
-              :class="[
-                'table-th',
-                'fixed-column',
-                'openform-cells',
-                {
-                  'without-selection-cell': !local.extra.isSelectionColumnEnabled,
-                }
-              ]"
+              class="fixed-column openform-cells table-th"
             >
               <FunLink
                 v-if="creationLink !== null"
@@ -119,7 +109,7 @@
                 <i
                   v-b-tooltip.hover.right
                   :title="$t('add_entry_in_modal')"
-                  class="material-icons md-24 add-in-modal-icon"
+                  class="material-icons md-24 openform-add-icon"
                 >add_box</i>
               </FunLink>
             </th>
@@ -152,7 +142,6 @@
             :base-local-row="baseLocal.newRows[rowId]"
             :column-indexes="columnIndexes"
             :local-uv="local.extra"
-            :show-selection-cell="local.extra.isSelectionColumnEnabled"
             from="added"
             @select="selectRow({ type: 'added', position: rowIndex }, $event)"
             @cell-click="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
@@ -167,7 +156,6 @@
             :column-indexes="columnIndexes"
             :local-uv="local.extra"
             :is-tree="isTree"
-            :show-selection-cell="local.extra.isSelectionColumnEnabled"
             @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
             @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
             @update:visibleChildren="visibleChildren(arguments[0], arguments[1])"
@@ -182,7 +170,6 @@
             :base-local-row="baseLocal.newRows[rowId]"
             :column-indexes="columnIndexes"
             :local-uv="local.extra"
-            :show-selection-cell="local.extra.isSelectionColumnEnabled"
             from="added"
             @select="selectRow({ type: 'added', position: rowIndex }, $event)"
             @cell-click="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
@@ -297,7 +284,6 @@ interface ITableRowExtra {
 }
 
 interface ITableUserViewExtra {
-  isSelectionColumnEnabled: boolean;
   hasRowLinks: boolean;
   selectedRows: ObjectSet<RowRef>;
   selectedValues: ObjectSet<ValueRef>;
@@ -334,17 +320,6 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
     const columnWidthAttr = Number(getColumnAttr("column_width"));
     const columnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr;
     style["width"] = `${columnWidth}px`;
-
-    const textAlignRightTypes: (ValueType["type"])[] = ["int", "decimal"];
-    const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType;
-    if (textAlignRightTypes.includes(punOrValue.type)) {
-      style["text-align"] = "right";
-    }
-
-    const textAlignAttr = getColumnAttr("text_align");
-    if (textAlignAttr !== undefined) {
-      style["text-align"] = String(textAlignAttr);
-    }
 
     const fixedColumnAttr = getColumnAttr("fixed");
     const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr);
@@ -606,17 +581,9 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
     }
   }
 
-  get isSelectionColumnEnabled(): boolean {
-    const disableSelectionColumn = this.uv.attributes["disable_selection_column"];
-    return typeof disableSelectionColumn === "boolean"
-      ? !disableSelectionColumn
-      : true;
-  }
-
   createLocalUserView(): ITableUserViewExtra {
     const columns = createColumns(this.uv);
     const extra: ITableUserViewExtra = {
-      isSelectionColumnEnabled: this.isSelectionColumnEnabled,
       hasRowLinks: false,
       selectedRows: new ObjectSet<RowRef>(),
       selectedValues: new ObjectSet<ValueRef>(),
@@ -667,10 +634,7 @@ export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRo
   }
 
   get technicalWidth() {
-    let left = 0;
-    if (this.extra.isSelectionColumnEnabled) {
-      left += technicalFieldsWidth;
-    }
+    let left = technicalFieldsWidth;
     if (this.extra.hasRowLinks) {
       left += technicalFieldsWidth;
     }
@@ -1358,12 +1322,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
     const actions: Action[] = [];
     if (this.uv.info.mainEntity !== null) {
-      if (this.local.extra.isSelectionColumnEnabled) {
-        actions.push(
-          { icon: "delete_sweep", name: this.$t("remove_selected_rows").toString(), callback: () => this.removeSelectedRows() },
-        );
-      }
       actions.push(
+        { icon: "delete_sweep", name: this.$t("remove_selected_rows").toString(), callback: () => this.removeSelectedRows() },
         { icon: "playlist_add", name: this.$t("add_entry").toString(), callback: () => this.addNewRowOnPosition("top") },
       );
     }
@@ -1471,10 +1431,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   get technicalWidth() {
-    let left = 0;
-    if (this.local.extra.isSelectionColumnEnabled) {
-      left += technicalFieldsWidth;
-    }
+    let left = technicalFieldsWidth;
     if (this.local.extra.hasRowLinks) {
       left += technicalFieldsWidth;
     }
@@ -1592,7 +1549,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     height: 100%;
     width: 100%; /* на весь экран */
     padding: 0;
-    padding-left: 5px;
     overflow: auto; /* чтобы скролить таблицу в том числе на мобилке */
   }
 
@@ -1612,6 +1568,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     max-width: 50px !important;
     overflow: hidden;
     white-space: nowrap;
+    padding: 2px 10px 0 10px;
     box-shadow: 0 2px 0 var(--MainBorderColor);
     text-overflow: ellipsis;
     position: sticky; /* фиксация шапки при скроле */
@@ -1644,6 +1601,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         0 2px 0 var(--MainBorderColor),
         1px 0 0 var(--MainBorderColor);
     }
+  }
+
+  th.th_after-last-fixed {
+    padding-left: 10px;
   }
 
   th.tabl_heading {
@@ -1748,7 +1709,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       border-spacing: 0;
     }
 
-    td ::v-deep a {
+    td >>> a {
       text-decoration: none !important;
     }
   }
@@ -1804,13 +1765,13 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     padding: 0;
 
     &.table-th .material-icons {
-      top: 9px;
+      top: 5px;
       left: 5px;
     }
 
     .table-td_span .material-icons {
       position: relative;
-      top: 0;
+      top: 2px;
     }
 
     &:hover {
@@ -1825,20 +1786,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     height: 100%;
     width: 100%;
 
-    &.without-selection-cell {
-      left: 0;
-    }
-
-    .add-in-modal-icon {
-      position: relative;
-      top: 3px;
+    .openform-add-icon {
       color: var(--MainTextColorLight);
-    }
-
-    .edit-in-modal-icon {
       position: relative;
       top: 5px;
-      color: var(--MainTextColorLight);
     }
 
     > a {
@@ -1846,14 +1797,17 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       text-decoration: none;
 
       &:hover {
-        .add-in-modal-icon {
+        .openform-add-icon {
           color: var(--MainTextColor);
         }
       }
     }
 
+    .openform-cells__icon {
+      color: var(--MainTextColorLight);
+    }
+
     .icon-link {
-      position: absolute;
       height: 100%;
       width: 100%;
       display: block;
@@ -1861,7 +1815,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
       .material-icons {
         position: relative;
-        top: 0;
+        top: 2px;
       }
     }
 
@@ -1874,7 +1828,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     &:hover {
       background-color: rgb(239, 239, 239);
 
-      .edit-in-modal-icon {
+      .openform-cells__icon {
         color: var(--MainTextColor);
       }
     }
