@@ -35,7 +35,7 @@
         <b-input-group-append v-if="localFilterString.length > 0">
           <span
             id="searchclear"
-            class="material-icons clear-search"
+            class="material-icons material-button clear-search"
             @click="localFilterString = ''; updateInput()"
           >backspace</span>
         </b-input-group-append>
@@ -47,11 +47,11 @@
     >
       <i
         v-if="!showInput"
-        class="material-icons search-button__icon"
+        class="material-icons material-button search-button__icon"
       >search</i>
       <i
         v-else
-        class="material-icons search-button__icon"
+        class="material-icons material-button search-button__icon"
       >close</i>
     </button>
   </div>
@@ -115,8 +115,7 @@ export default class SearchPanel extends Vue {
   }
 
   .clear-search {
-    height: 20px;
-    font-size: 20px;
+    height: 24px;
     margin: 0;
     position: absolute;
     top: 50%;
@@ -147,11 +146,12 @@ export default class SearchPanel extends Vue {
   .search-button {
     padding: 0;
     background: transparent;
-    height: 20px;
+    height: 24px;
     outline: none;
   }
 
   .search-button__icon {
-    font-size: 20px;
+    margin-right: 10px;
+    color: var(--MainTextColor);
   }
 </style>

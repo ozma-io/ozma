@@ -29,7 +29,7 @@
 
     <template #actions-right>
       <i
-        class="material-icons fullscreen-button"
+        class="material-icons material-button fullscreen-button"
         @click.stop="openFullscreen"
       >fullscreen</i>
     </template>

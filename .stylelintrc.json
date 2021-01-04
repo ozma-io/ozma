@@ -1,6 +1,9 @@
 {
   "extends": "stylelint-config-standard",
   "defaultSeverity": "warning",
+  "plugins": [
+    "stylelint-scss"
+  ],
   "rules": {
     "indentation": [
       2,
@@ -15,6 +18,8 @@
           "v-deep"
         ]
       }
-    ]
+    ],
+    "at-rule-no-unknown": null,
+    "scss/at-rule-no-unknown": true
   }
 }

@@ -64,7 +64,7 @@
           class="button"
           @click="addNewRowOnPosition('top')"
         >
-          <i class="material-icons md-24">add</i>
+          <i class="material-icons">add</i>
           <span class="label">{{ this.$t('add_entry').toString() }}</span>
         </div>
       </div>
@@ -109,7 +109,7 @@
                 <i
                   v-b-tooltip.hover.right
                   :title="$t('add_entry_in_modal')"
-                  class="material-icons md-24 openform-add-icon"
+                  class="material-icons openform-add-icon"
                 >add_box</i>
               </FunLink>
             </th>
@@ -185,7 +185,7 @@
           class="button"
           @click="addNewRowOnPosition('bottom')"
         >
-          <i class="material-icons md-24">add</i>
+          <i class="material-icons">add</i>
           <span class="label">{{ this.$t('add_entry').toString() }}</span>
         </div>
       </div>

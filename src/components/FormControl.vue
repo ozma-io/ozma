@@ -265,7 +265,7 @@
               @goto="$emit('goto', $event)"
             />
             <i
-              class="material-icons fullscreen_button"
+              class="material-icons material-button fullscreen_button"
               @click.stop="openFullscreen(inputType)"
             >fullscreen</i>
           </div>

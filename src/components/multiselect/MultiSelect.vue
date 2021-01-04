@@ -174,7 +174,7 @@
       <input
         v-if="!isEmpty && !required && !disabled"
         type="button"
-        class="material-icons select_container__chevron"
+        class="material-icons material-button select_container__chevron"
         value="close"
         @click.stop="removeValue()"
       >
@@ -554,10 +554,6 @@ export default class MultiSelect extends Vue {
     cursor: pointer;
     z-index: 10;
     color: var(--MainBorderColor);
-
-    &:hover {
-      background: rgba(255, 0, 0, 0.2);
-    }
   }
 
   .select_container__options_container {

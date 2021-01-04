@@ -6,12 +6,12 @@
     <input
       type="button"
       value="arrow_back"
-      class="head-menu_back-button material-icons md-14"
+      class="head-menu_back-button material-icons material-button"
       @click="$router.go(-1)"
     >
     <router-link
       :to="{ name: 'main' }"
-      class="head-menu_main-menu-button material-icons"
+      class="head-menu_main-menu-button material-icons material-button"
     >
       home
     </router-link>
@@ -20,7 +20,7 @@
     <input
       type="button"
       value="close"
-      class="material-icons modal__tab_close_button"
+      class="material-icons material-button modal__tab_close_button"
       @click.stop="$emit('tab-close')"
     >
     <slot name="actions-right" />
@@ -51,7 +51,6 @@ export default class ModalTabHeader extends Vue {
     background: hsla(0, 0%, 100%, 0.3);
     border: none;
     text-decoration: none;
-    font-size: 20px;
     padding: 0;
     margin-right: 10px;
     z-index: 1000;
@@ -94,7 +93,6 @@ export default class ModalTabHeader extends Vue {
   .modal__tab_close_button {
     visibility: hidden;
     line-height: 1.25em;
-    font-size: 20px;
     background: none;
     border: none;
     cursor: pointer;

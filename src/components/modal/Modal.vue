@@ -14,7 +14,7 @@
       <input
         type="button"
         value="close"
-        class="material-icons modal__close_button"
+        class="material-icons material-button modal__close_button"
         @click="$emit('close')"
       >
     </template>
@@ -42,7 +42,7 @@
             <ModalContent :nodes="tab.actionsRight" />
             <i
               v-if="isMobile"
-              class="material-icons mobile_close_button"
+              class="material-icons material-button mobile_close_button"
               @click="$emit('close')"
             >close</i>
           </fragment>
