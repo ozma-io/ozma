@@ -172,10 +172,10 @@ export default class TableCell extends Vue {
   }
 
   .table-td {
+    position: relative;
     touch-action: manipulation;
 
     > p {
-      position: relative;
       height: 100%;
       pointer-events: none;
 

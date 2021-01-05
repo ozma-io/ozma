@@ -1592,7 +1592,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     height: 100%;
     width: 100%; /* на весь экран */
     padding: 0;
-    padding-left: 5px;
     overflow: auto; /* чтобы скролить таблицу в том числе на мобилке */
   }
 
@@ -1638,6 +1637,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   th.fixed-column {
     z-index: 25; /* поверх обычных столбцов */
     box-shadow: 0 2px 0 var(--MainBorderColor);
+    position: sticky;
 
     &.checkbox-cells {
       box-shadow:
@@ -1820,6 +1820,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   ::v-deep .openform-cells {
+    position: relative;
     padding: 0;
     text-align: center;
     height: 100%;
