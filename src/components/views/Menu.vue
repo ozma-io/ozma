@@ -209,7 +209,6 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
 <style lang="scss" scoped>
 
   .menu_container {
-    /* margin-top: 120px; */
     max-height: 100%;
     overflow-y: auto;
   }

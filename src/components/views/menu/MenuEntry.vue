@@ -3,7 +3,14 @@
     :sm="entry.size || 12"
   >
     <template v-if="entry.content">
-      <div class="menu_category_block">
+      <div
+        :class="[
+          'menu_category_block',
+          {
+            'is-mobile': isMobile,
+          },
+        ]"
+      >
         <MenuHeading :level="level + 1">
           {{ entry.name }}
         </MenuHeading>
@@ -50,6 +57,7 @@ import { IQuery } from "@/state/query";
 
 import MenuHeading from "@/components/menu/MenuHeading.vue";
 import { Link } from "@/links";
+import { isMobile } from "@/utils";
 
 interface IMenuBase {
   name: string;
@@ -84,14 +92,26 @@ export default class MenuEntry extends Vue {
     const fontSize = initialSize;
     return { fontSize: `${fontSize}px` };
   }
+
+  private get isMobile() {
+    return isMobile;
+  }
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 
   .menu_category_block {
     margin-top: 10px;
     margin-bottom: 40px;
+
+    &.is-mobile {
+      margin: 0;
+    }
+
+    @media (max-width: 575.98px) {
+      margin: 0;
+    }
   }
 
   .menu_category_block h1,
