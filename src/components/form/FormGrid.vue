@@ -27,10 +27,8 @@ export default class FormGrid extends Vue {
 }
 </script>
 
-<style scoped>
-  @media screen and (max-device-width: 480px) {
-    .container-fluid {
-      padding: 0;
-    }
+<style lang="scss" scoped>
+  .form_container {
+    padding: 0;
   }
 </style>

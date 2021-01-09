@@ -60,12 +60,15 @@
     <b-col
       :cols="(!!label && inline) ? 8 : 12"
       :class="['input_container', `text_align_${textAlign}`, {'input_container_cell-edit': isCellEdit}]"
-      :style="{backgroundColor: backgroundColor}"
     >
-      <slot
-        name="input"
-        :onFocus="onFocus"
-      />
+      <div
+        :style="{ backgroundColor: backgroundColor }"
+      >
+        <slot
+          name="input"
+          :onFocus="onFocus"
+        />
+      </div>
     </b-col>
   </b-row>
 </template>
