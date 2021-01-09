@@ -25,7 +25,7 @@
       @keydown.enter.prevent
       @input="updateInput"
     />
-    <div v-show="!isCellEdit" :style="{'margin-left': '15px'}">
+    <div v-show="!isCellEdit">
       <textarea
         :id="inputName"
         ref="control"

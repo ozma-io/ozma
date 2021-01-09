@@ -3,7 +3,7 @@
     fluid
     class="form_container"
   >
-    <b-row>
+    <b-row class="sm-gutters">
       <FormGridBlock
         v-for="(block, blockI) in gridContent"
         :key="blockI"

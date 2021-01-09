@@ -14,6 +14,7 @@
   <b-row
     :class="[
       'input_slot',
+      'sm-gutters',
       {'input_slot__row': inline, 'input-slot_cell-edit': isCellEdit}
     ]"
   >
@@ -172,10 +173,6 @@ export default class InputSlot extends Vue {
     z-index: -1;
     transform: scale(0.9);
     box-shadow: 0 0 8px 2px #000;
-  }
-
-  .input_container {
-    padding: 0;
   }
 
   .input_container_cell-edit {

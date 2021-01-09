@@ -161,6 +161,17 @@ div {
   }
 }
 
+// Works like `no-gutters` for Bootstrap's `.row`.
+.sm-gutters {
+  margin-left: -10px;
+  margin-right: -10px;
+
+  > [class^="col"] {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+}
+
 /* Source: https://google.github.io/material-design-icons/ */
 .material-icons.md-18 { font-size: 18px; }
 .material-icons.md-24 { font-size: 24px; }
