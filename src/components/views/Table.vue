@@ -773,7 +773,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   get editingValue() {
-    if (this.editing === null) {
+    if (this.editing === null
+     || this.editingTypeIsBool // Bools are special case because they toggles by double click.
+    ) {
       return null;
     } else {
       const value = this.local.getValueByRef(this.editing.ref);
@@ -1098,6 +1100,23 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
       this.editing = { ref, lock };
     });
+  }
+
+  private get editingTypeIsBool(): boolean {
+    return this.editing !== null
+      ? this.uv.info.columns[this.editing.ref.column].valueType.type === "bool"
+      : false;
+  }
+
+  @Watch("editing")
+  private async checkEditingForBool() {
+    if (this.editing === null) return;
+
+    const ref = this.editing.ref;
+    if (ref.type === "existing" && this.editingTypeIsBool) {
+      await this.updateCurrentValue(!this.uv.rows![ref.position].values[ref.column].value);
+      this.removeCellEditing();
+    }
   }
 
   private setInputHeight(value: number) {
