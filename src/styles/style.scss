@@ -166,7 +166,7 @@ div {
   margin-left: -10px;
   margin-right: -10px;
 
-  > [class^="col"] {
+  > div[class*="col-"] {
     padding-right: 10px;
     padding-left: 10px;
   }
