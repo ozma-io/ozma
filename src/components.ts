@@ -43,17 +43,19 @@ Component.registerHooks([
   "beforeRouteUpdate",
 ]);
 
-Vue.mixin({
-  data: function() {
-    return {
-      get $isMobile() {
+export const VueIsMobile = {
+  // eslint-disable-next-line no-shadow
+  install(Vue: VueConstructor, options: unknown) {
+    Object.defineProperty(Vue.prototype, "$isMobile", {
+      get() {
         return isMobile;
-      }
-    }
-  }
-});
+      },
+    });
+  },
+};
 
-declare module 'vue/types/vue' {
+declare module "vue/types/vue" {
+  // eslint-disable-next-line no-shadow
   interface Vue {
     $isMobile: boolean;
   }
