@@ -2,6 +2,7 @@ import Component from "vue-class-component";
 import { VueConstructor, default as Vue } from "vue";
 import { Store } from "vuex";
 
+import { isMobile } from "@/utils";
 import { CombinedUserView } from "@/state/user_view";
 import { IHandlerProvider } from "@/local_user_view";
 
@@ -41,3 +42,19 @@ Component.registerHooks([
   "beforeRouteLeave",
   "beforeRouteUpdate",
 ]);
+
+Vue.mixin({
+  data: function() {
+    return {
+      get $isMobile() {
+        return isMobile;
+      }
+    }
+  }
+});
+
+declare module 'vue/types/vue' {
+  interface Vue {
+    $isMobile: boolean;
+  }
+}

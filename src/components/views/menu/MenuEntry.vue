@@ -7,7 +7,7 @@
         :class="[
           'menu_category_block',
           {
-            'is-mobile': isMobile,
+            'is-mobile': $isMobile,
           },
         ]"
       >
@@ -57,7 +57,6 @@ import { IQuery } from "@/state/query";
 
 import MenuHeading from "@/components/menu/MenuHeading.vue";
 import { Link } from "@/links";
-import { isMobile } from "@/utils";
 
 interface IMenuBase {
   name: string;
@@ -91,10 +90,6 @@ export default class MenuEntry extends Vue {
     }
     const fontSize = initialSize;
     return { fontSize: `${fontSize}px` };
-  }
-
-  private get isMobile() {
-    return isMobile;
   }
 }
 </script>

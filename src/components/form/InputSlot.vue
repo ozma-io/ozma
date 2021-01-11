@@ -19,7 +19,7 @@
     ]"
   >
     <Modal
-      v-if="isMobile"
+      v-if="$isMobile"
       :show="isModalOpen"
       fullscreen
       @opened="onModalOpen"
@@ -78,7 +78,7 @@ import { Action } from "@/components/ActionsMenu.vue";
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
-import { isMobile, getTextWidth } from "@/utils";
+import { getTextWidth } from "@/utils";
 
 import Modal from "@/components/modal/Modal.vue";
 import Input from "@/components/form/Input.vue";
@@ -102,17 +102,13 @@ export default class InputSlot extends Vue {
   private isModalOpen = false;
 
   private mounted() {
-    if (this.autoOpen && this.isMobile) {
+    if (this.autoOpen && this.$isMobile) {
       this.isModalOpen = true;
     }
   }
 
   private get inputName(): string {
     return `${this.uid}-input`;
-  }
-
-  private get isMobile(): boolean {
-    return isMobile;
   }
 
   private onModalOpen() {
@@ -130,7 +126,7 @@ export default class InputSlot extends Vue {
   }
 
   private onFocus() {
-    if (this.isMobile) {
+    if (this.$isMobile) {
       this.isModalOpen = true;
     }
   }

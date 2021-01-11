@@ -5,7 +5,7 @@
     :name="uid"
     :classes="[
       'v--modal',
-      { 'is-mobile': isMobile }
+      { 'is-mobile': $isMobile }
     ]"
     @before-close="beforeClose"
     @opened="$emit('opened')"
@@ -22,7 +22,7 @@
       v-if="hasTabs"
       :class="[
         'modal__tab_headers',
-        { 'is-mobile': isMobile },
+        { 'is-mobile': $isMobile },
       ]"
     >
       <ModalTabHeader
@@ -41,7 +41,7 @@
           <fragment>
             <ModalContent :nodes="tab.actionsRight" />
             <i
-              v-if="isMobile"
+              v-if="$isMobile"
               class="material-icons mobile_close_button"
               @click="$emit('close')"
             >close</i>
@@ -55,7 +55,7 @@
         'modal__content',
         {
           'modal__content__fullscreen': fullscreen,
-          'is-mobile': isMobile,
+          'is-mobile': $isMobile,
         }
       ]"
     >
@@ -65,7 +65,7 @@
         :key="index"
         :class="[
           'modal__tab-content',
-          { 'is-mobile': isMobile },
+          { 'is-mobile': $isMobile },
         ]"
       >
         <ModalContent :nodes="tab.content" />
@@ -77,7 +77,7 @@
         'modal__content',
         {
           'modal__content__fullscreen': fullscreen,
-          'is-mobile': isMobile,
+          'is-mobile': $isMobile,
         }
       ]"
     >
@@ -93,7 +93,6 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import ModalContent from "@/components/modal/ModalContent";
 import ModalTabHeader from "@/components/modal/ModalTabHeader.vue";
 import { IModalTab } from "@/components/modal/types";
-import { isMobile } from "../../utils";
 
 @Component({ components: { ModalContent, ModalTabHeader } })
 export default class Modal extends Vue {
@@ -158,23 +157,19 @@ export default class Modal extends Vue {
   }
 
   private get modalWidth(): string {
-    return (this.fullscreen || isMobile)
+    return (this.fullscreen || this.$isMobile)
       ? "100%"
       : this.width;
   }
 
   private get modalHeight(): string {
-    return (this.fullscreen || isMobile)
+    return (this.fullscreen || this.$isMobile)
       ? "100%"
       : this.height;
   }
 
   private get currentTabContent(): Vue | string {
     return R.pathOr("No Content", [this.selectedTab, "content"], this.modalTabs);
-  }
-
-  private get isMobile(): boolean {
-    return isMobile;
   }
 }
 </script>

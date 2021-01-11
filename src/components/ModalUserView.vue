@@ -50,7 +50,7 @@
       </div>
       <div
         v-if="!changes.isScopeEmpty(uid)"
-        :class="['selection_view_save__container', { 'is_mobile': isMobile }]"
+        :class="['selection_view_save__container', { 'is_mobile': $isMobile }]"
       >
         <button
           type="button"
@@ -79,7 +79,6 @@ import { queryLocation } from "@/state/query";
 import { CurrentChanges, ScopeName } from "@/state/staging_changes";
 import ModalPortal from "@/components/modal/ModalPortal";
 import { router } from "@/modules";
-import { isMobile } from "@/utils";
 
 const staging = namespace("staging");
 
@@ -100,10 +99,6 @@ export default class ModalUserView extends Vue {
     const actions: Action[] = [];
     actions.push(...this.extraActions);
     return actions;
-  }
-
-  get isMobile() {
-    return isMobile;
   }
 
   private openFullscreen() {

@@ -20,7 +20,7 @@
       :class="['textarea_field', {
         'textarea_field__disabled': disabled,
         'textarea-field_cell-edit': isCellEdit,
-        'textarea_field__desktop': !isMobile,
+        'textarea_field__desktop': !$isMobile,
       }]"
       @keydown.enter.prevent
       @input="updateInput"
@@ -31,7 +31,7 @@
         ref="control"
         :class="['textarea_field', {
           'textarea_field__disabled': disabled,
-          'textarea_field__desktop': !isMobile,
+          'textarea_field__desktop': !$isMobile,
           'textarea_field__required': required && isEmpty,
           'textarea_field__error': error,
           'textarea_field__max_height': !height
@@ -53,7 +53,6 @@
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 
-import { isMobile } from "@/utils";
 import { valueIsNull } from "@/values";
 
 @Component
@@ -100,10 +99,6 @@ export default class Textarea extends Vue {
     return valueIsNull(this.value);
   }
 
-  private get isMobile(): boolean {
-    return isMobile;
-  }
-
   private get inputName(): string {
     return `${this.uid}-input`;
   }
@@ -143,7 +138,7 @@ export default class Textarea extends Vue {
 
   private onFocus(evt: HTMLInputElement) {
     this.setCursorPositionEnd(evt);
-    if (!this.isMobile) {
+    if (!this.$isMobile) {
       this.positionField();
       this.focused = true;
     }
