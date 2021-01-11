@@ -202,7 +202,7 @@ export default class Modal extends Vue {
     border-top: 1px solid var(--MainBorderColor);
   }
 
-  .modal__content >>> .view-form {
+  .modal__content ::v-deep .view-form {
     width: 100%;
   }
 
