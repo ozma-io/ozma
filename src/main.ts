@@ -13,6 +13,7 @@ import FunLink from "@/components/FunLink";
 import ActionsMenu from "@/components/ActionsMenu.vue";
 import ButtonsPanel from "@/components/ButtonsPanel.vue";
 import FormControl from "@/components/FormControl.vue";
+import { VueIsMobile } from "@/components";
 import App from "@/App.vue";
 
 import TextareaAutosize from "vue-textarea-autosize";
@@ -40,6 +41,7 @@ export const store = new Vuex.Store({
 });
 
 Vue.use(TextareaAutosize);
+Vue.use(VueIsMobile);
 
 Vue.component("UserView", UserView);
 Vue.component("ActionsMenu", ActionsMenu);

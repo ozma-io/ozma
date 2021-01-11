@@ -2,6 +2,7 @@ import Component from "vue-class-component";
 import { VueConstructor, default as Vue } from "vue";
 import { Store } from "vuex";
 
+import { isMobile } from "@/utils";
 import { CombinedUserView } from "@/state/user_view";
 import { IHandlerProvider } from "@/local_user_view";
 
@@ -41,3 +42,21 @@ Component.registerHooks([
   "beforeRouteLeave",
   "beforeRouteUpdate",
 ]);
+
+export const VueIsMobile = {
+  // eslint-disable-next-line no-shadow
+  install(Vue: VueConstructor, options: unknown) {
+    Object.defineProperty(Vue.prototype, "$isMobile", {
+      get() {
+        return isMobile;
+      },
+    });
+  },
+};
+
+declare module "vue/types/vue" {
+  // eslint-disable-next-line no-shadow
+  interface Vue {
+    $isMobile: boolean;
+  }
+}

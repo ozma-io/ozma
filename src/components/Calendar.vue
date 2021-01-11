@@ -225,6 +225,7 @@ export default class Calendar extends Vue {
     position: relative;
     display: block;
     background-color: inherit;
+    border-bottom: 1px solid var(--MainBorderColor);
 
     &:hover {
       background-color: var(--CellSelectColor);

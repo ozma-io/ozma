@@ -38,7 +38,7 @@
           :is-cell-edit="isCellEdit"
           :dont-focus="dontFocus"
           :disabled="isDisabled"
-          :autofocus="autofocus || isMobile"
+          :autofocus="autofocus || $isMobile"
           :error="value.erroredOnce"
           :required="!isNullable"
           :qrcode-input="isQRCodeInput"
@@ -50,7 +50,7 @@
           v-else-if="inputType.name === 'textarea'"
           :value="currentValue"
           :is-cell-edit="isCellEdit"
-          :autofocus="autofocus || isMobile"
+          :autofocus="autofocus || $isMobile"
           :dont-focus="dontFocus"
           :disabled="isDisabled"
           :error="value.erroredOnce"
@@ -63,7 +63,7 @@
           ref="control"
           :value="currentValue"
           :is-cell-edit="isCellEdit"
-          :autofocus="autofocus || isMobile"
+          :autofocus="autofocus || $isMobile"
           :show-time="inputType.showTime"
           :time-step="inputType.timeStep"
           :error="value.erroredOnce"
@@ -75,7 +75,7 @@
           ref="control"
           :value="currentValue"
           :options="inputType.options"
-          :autofocus="autofocus || isMobile"
+          :autofocus="autofocus || $isMobile"
           :height="customHeight"
           single
           :error="value.erroredOnce"
@@ -160,7 +160,7 @@
           :value="value.value"
           :text-value="calendarValue"
           :autofocus="autofocus"
-          :no-open-on-focus="isMobile"
+          :no-open-on-focus="$isMobile"
           :is-cell-edit="isCellEdit"
           :show-time="inputType.showTime"
           :time-step="inputType.timeStep"
@@ -177,7 +177,7 @@
           :height="customHeight"
           single
           :autofocus="autofocus"
-          :dont-open="isMobile"
+          :dont-open="$isMobile"
           :is-cell-edit="isCellEdit"
           :error="value.erroredOnce"
           :required="!isNullable"
@@ -303,7 +303,7 @@
                 :height="customHeight"
                 :entry="inputType.ref"
                 :linked-attr="inputType.linkedAttr"
-                :autofocus="autofocus || isMobile"
+                :autofocus="autofocus || $isMobile"
                 :control-style="inputType.style"
                 :uv-args="uvArgs"
                 :is-cell-edit="isCellEdit"
@@ -326,7 +326,7 @@
                 :control-style="inputType.style"
                 :uv-args="uvArgs"
                 :autofocus="autofocus"
-                :dont-open="isMobile"
+                :dont-open="$isMobile"
                 :is-nullable="isNullable"
                 :is-disabled="isDisabled"
                 :is-cell-edit="isCellEdit"
@@ -370,7 +370,6 @@ import type { IUserViewArguments, ICombinedValue, IEntriesRef } from "@/state/us
 import { currentValue, homeSchema, referenceEntriesRef } from "@/state/user_view";
 import { IQuery, attrToQuerySelf, queryLocation } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
-import { isMobile } from "@/utils";
 import { attrToLinkSelf } from "@/links";
 import { router } from "@/modules";
 import { IReferenceSelectAction } from "./ReferenceField.vue";
@@ -532,10 +531,6 @@ export default class FormControl extends Vue {
   // Current value, can be a raw value (e.g., a string for a `datetime` value) or a validated value.
   get currentValue() {
     return currentValue(this.value);
-  }
-
-  private get isMobile(): boolean {
-    return isMobile;
   }
 
   get isAwaited() {
@@ -891,7 +886,7 @@ export default class FormControl extends Vue {
     color: var(--MainBorderColor) !important;
     display: flex;
     align-items: center;
-    margin-bottom: 5px;
+    margin-top: 5px;
   }
 
   .nested-menu > .actions-menu {

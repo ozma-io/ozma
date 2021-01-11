@@ -3,7 +3,14 @@
     :sm="entry.size || 12"
   >
     <template v-if="entry.content">
-      <div class="menu_category_block">
+      <div
+        :class="[
+          'menu_category_block',
+          {
+            'is-mobile': $isMobile,
+          },
+        ]"
+      >
         <MenuHeading :level="level + 1">
           {{ entry.name }}
         </MenuHeading>
@@ -93,6 +100,14 @@ export default class MenuEntry extends Vue {
   .menu_category_block {
     margin-top: 10px;
     margin-bottom: 40px;
+
+    &.is-mobile {
+      margin: 0;
+    }
+
+    @media (max-width: 575.98px) {
+      margin: 0;
+    }
   }
 
   .menu_category_block h1,

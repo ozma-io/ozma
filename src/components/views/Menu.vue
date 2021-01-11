@@ -40,7 +40,7 @@ import { Location } from "vue-router";
 import { namespace } from "vuex-class";
 import { mixins } from "vue-class-component";
 
-import { tryDicts, mapMaybe, isMobile } from "@/utils";
+import { tryDicts, mapMaybe } from "@/utils";
 import { CombinedUserView, valueToPunnedText, homeSchema, currentValue, ICombinedValue } from "@/state/user_view";
 import { IQuery } from "@/state/query";
 import { CurrentChanges, IEntityChanges } from "@/state/staging_changes";
@@ -65,7 +65,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
   }
 
   private get isCentered(): boolean {
-    if (isMobile) {
+    if (this.$isMobile) {
       return false;
     }
     const isCentered = R.pathOr(false, ["attributes", "menu_centered"], this.uv);
@@ -209,7 +209,6 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
 <style lang="scss" scoped>
 
   .menu_container {
-    /* margin-top: 120px; */
     max-height: 100%;
     overflow-y: auto;
   }

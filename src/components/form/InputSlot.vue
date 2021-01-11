@@ -14,11 +14,12 @@
   <b-row
     :class="[
       'input_slot',
+      'sm-gutters',
       {'input_slot__row': inline, 'input-slot_cell-edit': isCellEdit}
     ]"
   >
     <Modal
-      v-if="isMobile"
+      v-if="$isMobile"
       :show="isModalOpen"
       fullscreen
       @opened="onModalOpen"
@@ -59,12 +60,15 @@
     <b-col
       :cols="(!!label && inline) ? 8 : 12"
       :class="['input_container', `text_align_${textAlign}`, {'input_container_cell-edit': isCellEdit}]"
-      :style="{backgroundColor: backgroundColor}"
     >
-      <slot
-        name="input"
-        :onFocus="onFocus"
-      />
+      <div
+        :style="{ backgroundColor: backgroundColor }"
+      >
+        <slot
+          name="input"
+          :onFocus="onFocus"
+        />
+      </div>
     </b-col>
   </b-row>
 </template>
@@ -74,7 +78,7 @@ import { Action } from "@/components/ActionsMenu.vue";
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
-import { isMobile, getTextWidth } from "@/utils";
+import { getTextWidth } from "@/utils";
 
 import Modal from "@/components/modal/Modal.vue";
 import Input from "@/components/form/Input.vue";
@@ -98,17 +102,13 @@ export default class InputSlot extends Vue {
   private isModalOpen = false;
 
   private mounted() {
-    if (this.autoOpen && this.isMobile) {
+    if (this.autoOpen && this.$isMobile) {
       this.isModalOpen = true;
     }
   }
 
   private get inputName(): string {
     return `${this.uid}-input`;
-  }
-
-  private get isMobile(): boolean {
-    return isMobile;
   }
 
   private onModalOpen() {
@@ -126,7 +126,7 @@ export default class InputSlot extends Vue {
   }
 
   private onFocus() {
-    if (this.isMobile) {
+    if (this.$isMobile) {
       this.isModalOpen = true;
     }
   }
@@ -172,10 +172,6 @@ export default class InputSlot extends Vue {
     z-index: -1;
     transform: scale(0.9);
     box-shadow: 0 0 8px 2px #000;
-  }
-
-  .input_container {
-    padding: 0;
   }
 
   .input_container_cell-edit {

@@ -9,7 +9,7 @@
   }
 </i18n>
 <template>
-  <div class="margin-left-15">
+  <div>
     <viewer
       v-if="readOnly"
       :initial-value="content"
@@ -92,9 +92,3 @@ export default class CodeEditor extends Vue {
   }
 }
 </script>
-
-<style>
-  .margin-left-15 {
-    margin-left: 15px;
-  }
-</style>

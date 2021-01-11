@@ -71,7 +71,6 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import { isMobile } from "@/utils";
 import { valueIsNull } from "@/values";
 import Textarea from "@/components/form/Textarea.vue";
 import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
@@ -143,7 +142,7 @@ export default class Input extends Vue {
   @Watch("value")
   private onValueUpdate(value: string) {
     this.setInputHeight();
-    if (!this.isMobile && !this.isCellEdit) {
+    if (!this.$isMobile && !this.isCellEdit) {
       this.updateWidth(value);
     }
   }
@@ -175,16 +174,12 @@ export default class Input extends Vue {
     }
   }
 
-  private get isMobile(): boolean {
-    return isMobile;
-  }
-
   private onFocus(evt: Event) {
     this.$emit("focus", evt);
     if (!this.dontFocus) {
       this.focused = true;
     }
-    if (!this.isMobile) {
+    if (!this.$isMobile) {
       this.updateWidth(this.value);
     }
   }
@@ -193,7 +188,7 @@ export default class Input extends Vue {
     if (!this.dontFocus) {
       this.focused = false;
     }
-    if (!this.isMobile) {
+    if (!this.$isMobile) {
       const control = this.$refs.control as HTMLInputElement;
       if (control !== undefined) {
         control.style.width = "100%";

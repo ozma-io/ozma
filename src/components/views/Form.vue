@@ -23,7 +23,6 @@
 
 <template>
   <div
-    fluid
     class="view-form"
   >
     <div v-if="rowPositions.length === 0 && firstRow === null">
