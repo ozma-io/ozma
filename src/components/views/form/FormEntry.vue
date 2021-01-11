@@ -97,7 +97,7 @@ export default class FormEntry extends Vue {
 
 <style scoped>
   .form-entry {
-    margin-top: 15px;
+    margin-top: 10px;
     border-bottom: 0;
     border-top: 0;
   }

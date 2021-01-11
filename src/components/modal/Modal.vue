@@ -197,15 +197,9 @@ export default class Modal extends Vue {
   }
 
   .modal__content {
-    padding: 10px;
-    padding-bottom: 0;
     overflow: auto;
     height: 100%;
     border-top: 1px solid var(--MainBorderColor);
-
-    &.is-mobile {
-      padding: 0;
-    }
   }
 
   .modal__content >>> .view-form {

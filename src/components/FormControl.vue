@@ -891,7 +891,7 @@ export default class FormControl extends Vue {
     color: var(--MainBorderColor) !important;
     display: flex;
     align-items: center;
-    margin-bottom: 5px;
+    margin-top: 5px;
   }
 
   .nested-menu > .actions-menu {

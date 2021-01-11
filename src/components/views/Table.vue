@@ -1564,7 +1564,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   .tabl {
-    margin-bottom: 10px;
     height: 100%;
     width: 100%; /* на весь экран */
     padding: 0;
@@ -1639,6 +1638,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   .table-th_span {
     justify-content: center;
+  }
+
+  .nested-table-block {
+    border: 1px solid var(--MainBorderColor);
   }
 
   @media screen and (max-aspect-ratio: 13/9) {

@@ -3,7 +3,7 @@
     fluid
     class="form_container"
   >
-    <b-row>
+    <b-row class="sm-gutters">
       <FormGridBlock
         v-for="(block, blockI) in gridContent"
         :key="blockI"
@@ -27,10 +27,8 @@ export default class FormGrid extends Vue {
 }
 </script>
 
-<style scoped>
-  @media screen and (max-device-width: 480px) {
-    .container-fluid {
-      padding: 0;
-    }
+<style lang="scss" scoped>
+  .form_container {
+    padding: 0;
   }
 </style>
