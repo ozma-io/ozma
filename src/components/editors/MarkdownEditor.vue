@@ -42,7 +42,7 @@ import "@toast-ui/editor/dist/i18n/ru-ru";
 type EditorType = Vue & { invoke: (name: string) => any };
 
 @Component({ components: { Editor, Viewer } })
-export default class CodeEditor extends Vue {
+export default class MarkdownEditor extends Vue {
   @Prop({ type: String }) content!: string;
   @Prop({ type: Number }) height!: number;
   @Prop({ type: String, default: "markdown" }) editType!: string;
@@ -50,7 +50,7 @@ export default class CodeEditor extends Vue {
 
   private key = 0;
   private editorOptions = {
-    minHeight: "200px",
+    minHeight: "205px",
     useCommandShortcut: true,
     useDefaultHTMLSanitizer: true,
     usageStatistics: false,
@@ -92,3 +92,17 @@ export default class CodeEditor extends Vue {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+  ::v-deep {
+    .tui-editor-defaultUI {
+      border-color: var(--MainBorderColor);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .te-mode-switch-section {
+      height: 25px;
+    }
+  }
+</style>
