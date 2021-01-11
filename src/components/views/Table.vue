@@ -774,7 +774,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   get editingValue() {
     if (this.editing === null
-     || this.editingTypeIsBool // Bools are special case because they toggles by double click.
+     || this.editingIsBool // Bools are special case because they toggles by double click.
     ) {
       return null;
     } else {
@@ -1102,19 +1102,20 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     });
   }
 
-  private get editingTypeIsBool(): boolean {
-    return this.editing !== null
-      ? this.uv.info.columns[this.editing.ref.column].valueType.type === "bool"
-      : false;
+  private get editingIsBool(): boolean {
+    if (this.editing === null) return false;
+    return this.uv.info.columns[this.editing.ref.column].valueType.type === "bool";
   }
 
   @Watch("editing")
-  private async checkEditingForBool() {
+  private async watchEditingForBool() {
     if (this.editing === null) return;
-
     const ref = this.editing.ref;
-    if (ref.type === "existing" && this.editingTypeIsBool) {
-      await this.updateCurrentValue(!this.uv.rows![ref.position].values[ref.column].value);
+    if (ref.type === "new") return;
+
+    if (this.editingIsBool) {
+      const value = this.local.getValueByRef(ref)!.value.value;
+      await this.updateCurrentValue(!value);
       this.removeCellEditing();
     }
   }
@@ -1642,6 +1643,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   .nested-table-block {
     border: 1px solid var(--MainBorderColor);
+    border-radius: 4px;
+    overflow: hidden;
   }
 
   @media screen and (max-aspect-ratio: 13/9) {

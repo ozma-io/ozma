@@ -151,7 +151,6 @@ export default class SearchPanel extends Vue {
   }
 
   .search-button__icon {
-    margin-right: 10px;
     color: var(--MainTextColor);
   }
 </style>
