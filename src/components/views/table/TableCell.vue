@@ -181,7 +181,6 @@ export default class TableCell extends Vue {
 
     > p {
       height: inherit;
-      pointer-events: none;
       padding: 3px 7px 2px 7px;
       max-height: 150px;
 
