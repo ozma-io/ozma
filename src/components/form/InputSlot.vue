@@ -14,7 +14,6 @@
   <b-row
     :class="[
       'input_slot',
-      'sm-gutters',
       {'input_slot__row': inline, 'input-slot_cell-edit': isCellEdit}
     ]"
   >
