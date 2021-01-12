@@ -58,7 +58,7 @@
     >
       <div
         v-if="local.emptyRow !== null"
-        class="button-container top"
+        class="button-container"
       >
         <div
           class="button"
@@ -119,7 +119,7 @@
                 <i
                   v-b-tooltip.hover.right
                   :title="$t('add_entry_in_modal')"
-                  class="material-icons openform-add-icon"
+                  class="material-icons add-in-modal-icon"
                 >add_box</i>
               </FunLink>
             </th>
@@ -192,7 +192,7 @@
       </table>
       <div
         v-if="local.emptyRow !== null"
-        class="button-container bottom"
+        class="button-container"
       >
         <div
           class="button"
@@ -1517,13 +1517,14 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 </script>
 
 <style lang="scss" scoped>
-  /* Current Z layout:
+  @import "../../styles/mixins.scss";
 
-    * Form control          (2000)
-    * Disable-edit block    (500)
-    * Table head            (20)
-    * FixedColumn           (25)
-*/
+  /* Current Z layout:
+   * Form control          (2000)
+   * Disable-edit block    (500)
+   * Table head            (20)
+   * FixedColumn           (25)
+   */
 
   table,
   th,
@@ -1536,11 +1537,9 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     position: sticky;
     left: 0;
 
-    &.bottom {
-      border-bottom: 1px solid var(--MainBorderColor);
-    }
-
     .button {
+      @include material-button;
+
       width: max-content;
       display: flex;
       align-items: center;
@@ -1835,7 +1834,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
     .table-td_span .material-icons {
       position: relative;
-      top: 0;
+      top: 3px;
     }
 
     &:hover {
@@ -1859,6 +1858,14 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       position: relative;
       top: 3px;
       color: var(--MainTextColorLight);
+    }
+
+    &.table-th {
+      padding: 0;
+
+      .add-in-modal-icon {
+        top: 2px;
+      }
     }
 
     .edit-in-modal-icon {
@@ -1887,7 +1894,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
       .material-icons {
         position: relative;
-        top: 0;
+        top: 3px;
       }
     }
 
@@ -1903,10 +1910,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       .edit-in-modal-icon {
         color: var(--MainTextColor);
       }
-    }
-
-    &.table-th {
-      padding: 0;
     }
   }
 

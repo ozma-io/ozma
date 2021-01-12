@@ -131,10 +131,6 @@ export default class TableRow extends Vue {
     justify-content: center;
   }
 
-  .checkbox {
-    position: absolute;
-  }
-
   .table-tr-new .checkbox-cells {
     cursor: default;
   }
