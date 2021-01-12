@@ -1,5 +1,5 @@
 <template>
-  <div :class="{'monaco-editor_modal': isModal}" />
+  <div :class="['code-editor', { 'monaco-editor_modal': isModal }]" />
 </template>
 
 <script lang="ts">
@@ -31,6 +31,8 @@ export default class CodeEditor extends Vue {
     return {
       language: this.language,
       readOnly: this.readOnly,
+      automaticLayout: true,
+      lineNumbersMinChars: 3,
       fontSize,
     };
   }
@@ -72,7 +74,13 @@ export default class CodeEditor extends Vue {
 }
 </script>
 
-<style>
+<style lang="scss" scoped>
+  .code-editor {
+    border: 1px solid var(--MainBorderColor);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
   .monaco-editor_modal {
     height: 350px;
   }
