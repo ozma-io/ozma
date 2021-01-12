@@ -6,10 +6,9 @@
       :link="action.link"
       @goto="$emit('goto', $event)"
     >
-      <li v-if="'link' in action" :key="action.name">
+      <li>
         <div>
-          <i v-if="action.icon" class="material-icons">{{ action.icon }}</i>
-          <i v-else class="material-icons">arrow_right</i>
+          <i class="material-icons">{{ action.icon || "arrow_right" }}</i>
           <span>{{ action.name }}</span>
         </div>
       </li>

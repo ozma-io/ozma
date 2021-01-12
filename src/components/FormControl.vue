@@ -612,7 +612,7 @@ export default class FormControl extends Vue {
   }
 
   get cellColor() {
-    return "cell_color" in this.attributes ? String(this.attributes["cell_color"]) : undefined;
+    return "cell_color" in this.attributes ? String(this.attributes["cell_color"]) : null;
   }
 
   get customHeight() {
@@ -624,11 +624,9 @@ export default class FormControl extends Vue {
     return String(this.attributes["text_type"]);
   }
 
-  private controlStyle(height?: string): Record<string, unknown> {
-    const systemHeight = height ? { height } : {};
-    const userHeight = this.customHeight !== null ? { height: `${this.customHeight}px` } : {};
-    const editorStyle = this.textType === "codeeditor" ? { minHeight: "200px" } : {};
-    return { ...systemHeight, ...userHeight, ...editorStyle };
+  private controlStyle(defaultHeight?: string): Record<string, unknown> {
+    const height = this.customHeight !== null ? `${this.customHeight}px` : defaultHeight;
+    return { height };
   }
 
   get fieldType() {
@@ -658,9 +656,8 @@ export default class FormControl extends Vue {
       return { name: "static_image" };
     }
     // `calc` is needed because sizes should be relative to base font size.
-    const heightSinglelineText = "calc(2em + 6px)";
     const heightMultilineText = "calc(4em + 12px)";
-    const heightCodeEditor = "calc(100% - 1.5rem)";
+    const heightCodeEditor = "200px";
     if (this.fieldType !== null) {
       switch (this.fieldType.type) {
         case "reference": {
@@ -720,6 +717,12 @@ export default class FormControl extends Vue {
           return { name: "calendar", showTime: false, timeStep: null };
         case "datetime":
           return { name: "calendar", showTime: true, timeStep: this.attributes["time_step"] };
+        case "json":
+          return {
+            name: "codeeditor",
+            language: "json",
+            style: this.controlStyle(heightCodeEditor),
+          };
       }
     } else {
       switch (this.type.type) {
@@ -734,6 +737,12 @@ export default class FormControl extends Vue {
           return { name: "calendar", showTime: false, timeStep: null };
         case "datetime":
           return { name: "calendar", showTime: true, timeStep: null };
+        case "json":
+          return {
+            name: "codeeditor",
+            language: "json",
+            style: this.controlStyle(heightCodeEditor),
+          };
       }
     }
 
