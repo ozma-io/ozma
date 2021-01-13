@@ -462,30 +462,22 @@ export default class UserView extends Vue {
         return;
       }
       const id = (createOp as ICombinedInsertEntityResult).id;
-      if (id !== null && this.selectionMode) {
-        const ref: ISelectionRef = {
-          entity: uv.info.mainEntity!,
-          id,
+      const customLink = attrToLink(uv.attributes["post_create_link"], { defaultTarget: "root" });
+      let link: Link;
+      if (customLink === null) {
+        link = {
+          query: {
+            defaultValues: {},
+            args: { source: uv.args.source, args: { id } },
+            search: "",
+          },
+          target: "root",
         };
-        this.$emit("select", ref);
       } else {
-        const customLink = attrToLink(uv.attributes["post_create_link"], { defaultTarget: "root" });
-        let link: Link;
-        if (customLink === null) {
-          link = {
-            query: {
-              defaultValues: {},
-              args: { source: uv.args.source, args: { id } },
-              search: "",
-            },
-            target: "root",
-          };
-        } else {
-          addLinkDefaultArgs(customLink, { id });
-          link = customLink;
-        }
-        void linkHandler(this.$store, (...args) => this.$emit(...args), link).handler();
+        addLinkDefaultArgs(customLink, { id });
+        link = customLink;
       }
+      void linkHandler(this.$store, (...args) => this.$emit(...args), link).handler();
     })();
   }
 }

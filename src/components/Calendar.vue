@@ -112,7 +112,7 @@ export default class Calendar extends Vue {
   @Prop({ default: true, type: Boolean }) showTime!: boolean;
   @Prop({ type: Number, default: null }) timeStep!: number | null;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  @Prop({ type: Boolean, default: false }) noOpenOnFocus!: boolean;
+  // FIXME: remove this and style parent nodes instead.
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
 
   private isCalendarOpen = false;
@@ -140,15 +140,13 @@ export default class Calendar extends Vue {
 
   private onInputFocus() {
     this.$emit("focus");
-    if (!this.noOpenOnFocus) {
-      this.isCalendarOpen = true;
-      void nextRender().then(() => {
-        const bodyRect = document.body.getBoundingClientRect();
-        const popup = this.$refs.popup as HTMLInputElement;
-        const popupRect = popup.getBoundingClientRect();
-        this.position = !((bodyRect.bottom - popupRect.bottom) > 0);
-      });
-    }
+    this.isCalendarOpen = true;
+    void nextRender().then(() => {
+      const bodyRect = document.body.getBoundingClientRect();
+      const popup = this.$refs.popup as HTMLInputElement;
+      const popupRect = popup.getBoundingClientRect();
+      this.position = !((bodyRect.bottom - popupRect.bottom) > 0);
+    });
   }
 
   get dateValue() {

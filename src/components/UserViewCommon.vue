@@ -93,7 +93,7 @@ const staging = namespace("staging");
 @Component({ components: { SelectUserView, QRCodeScanner, BarCodeScanner } })
 export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<undefined, undefined, undefined>, undefined, undefined, undefined>>(BaseUserView) {
   @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName; entityRef: IEntityRef; userView: UserViewKey; position?: number }) => Promise<IAddedResult>;
-  @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName; fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; value: unknown }) => Promise<void>;
+  @staging.Action("setAddedField") setAddedField!: (args: { fieldRef: IFieldRef; id: AddedRowId; value: unknown }) => Promise<void>;
 
   modalView: IQuery | null = null;
   openQRCodeScanner = false;
@@ -154,12 +154,10 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
           const currValue = rawRow.data[columnName];
           if (columnInfo.mainField && currValue) {
             return this.setAddedField({
-              scope: this.scope,
               fieldRef: {
                 entity: entityRef,
                 name: columnInfo.mainField.name,
               },
-              userView,
               id: added.id,
               value: currValue,
             });

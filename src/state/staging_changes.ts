@@ -2,61 +2,47 @@ import Vue from "vue";
 import { Module, ActionContext } from "vuex";
 import { Moment } from "moment";
 
-import { RecordSet, deepClone, mapMaybe, map2, waitTimeout } from "@/utils";
-import { IUpdatedValue, IFieldInfo, valueFromRaw } from "@/values";
+import { RecordSet, deepClone, mapMaybe, map2, waitTimeout, debugLog } from "@/utils";
+import { IUpdatedValue, IFieldInfo, valueFromRaw, valueEquals } from "@/values";
 import {
   ITransaction, ITransactionResult, IEntityRef, IFieldRef, IEntity, RowId, SchemaName, FieldName, EntityName,
   IInsertEntityOp, IUpdateEntityOp, IDeleteEntityOp, IInsertEntityResult, IUpdateEntityResult, IDeleteEntityResult,
   IColumnField, TransactionOp, default as Api,
 } from "@/api";
 import { i18n } from "@/modules";
+import { update } from "ramda";
 
 export type ScopeName = string;
 
 export type UserViewKey = string;
 
-// Scopes are used to split changes between different "windows" which can be closed separately,
-// dropping only changes bound to only that particular scope.
-export type Scopes = RecordSet<ScopeName>;
-
-export interface IScopedUpdatedValue extends IUpdatedValue {
-  scopes: Scopes;
-}
-
 export type AddedValues = Record<FieldName, IUpdatedValue>;
-export type UpdatedValues = Record<FieldName, IScopedUpdatedValue>;
+export type UpdatedValues = Record<FieldName, IUpdatedValue>;
 
 export type AddedRowId = number;
 
 export interface IAddedEntry {
-  scopes: Scopes;
+  // Scopes are used to split adds between different "windows" which can be closed separately,
+  // dropping only unfinished entries bound to that particular scope.
+  scope: ScopeName;
+  userView: UserViewKey;
   values: AddedValues;
+  // Used to remove added entries without any changes
+  // (e.g. if user clicked several times on "add entry" button in table and used only one of the rows).
   touched: boolean;
-}
-
-export interface IDeletedEntry {
-  scopes: Scopes;
-}
-
-export interface IAddedEntries {
-  nextId: number;
-  // Actual updated values, indexed by unique id
-  entries: Record<AddedRowId, IAddedEntry>;
-  // Value positions
-  positions: AddedRowId[];
 }
 
 export type AutoSaveLock = number;
 
-// Added entries are bound to a particular user view.
-export type AddedEntriesMap = Record<UserViewKey, IAddedEntries>;
-
 export interface IEntityChanges {
   updated: Record<RowId, UpdatedValues>;
   // Applied to user views with FOR INSERT INTO
-  added: AddedEntriesMap;
+  nextAddedId: AddedRowId;
+  added: Record<AddedRowId, IAddedEntry>;
+  // Added entries are bound to a particular user view.
+  addedPositions: Record<UserViewKey, AddedRowId[]>;
   // Applied to user views with FOR UPDATE OF (or FOR INSERT INTO)
-  deleted: Record<RowId, IDeletedEntry>;
+  deleted: RecordSet<RowId>;
 }
 
 export interface IAddedResult {
@@ -64,22 +50,27 @@ export interface IAddedResult {
   id: AddedRowId;
 }
 
-const emptyAdded: IAddedEntries = {
-  nextId: 0,
-  entries: {},
-  positions: [],
-};
-
 const emptyUpdates: IEntityChanges = {
   updated: {},
+  nextAddedId: 0,
   added: {},
+  addedPositions: {},
   deleted: {},
 };
 
-export interface ICombinedInsertEntityResult extends IInsertEntityOp, IInsertEntityResult {
+export interface IInternalInsertEntityOp extends IInsertEntityOp {
+  internalId: number;
+  entityInfo: IEntity;
 }
 
-export interface ICombinedUpdateEntityResult extends IUpdateEntityOp, IUpdateEntityResult {
+export interface IInternalUpdateEntityOp extends IUpdateEntityOp {
+  entityInfo: IEntity;
+}
+
+export interface ICombinedInsertEntityResult extends IInternalInsertEntityOp, IInsertEntityResult {
+}
+
+export interface ICombinedUpdateEntityResult extends IInternalUpdateEntityOp, IUpdateEntityResult {
 }
 
 export interface ICombinedDeleteEntityResult extends IDeleteEntityOp, IDeleteEntityResult {
@@ -87,40 +78,27 @@ export interface ICombinedDeleteEntityResult extends IDeleteEntityOp, IDeleteEnt
 
 export type CombinedTransactionResult = ICombinedInsertEntityResult | ICombinedUpdateEntityResult | ICombinedDeleteEntityResult;
 
+type InternalTransactionOp = IInternalInsertEntityOp | IInternalUpdateEntityOp | IDeleteEntityOp;
+
+export interface IScope {
+  submitAddsAutomatically: boolean;
+  addedCount: number;
+}
+
 export class CurrentChanges {
   changes: Record<SchemaName, Record<EntityName, IEntityChanges>> = {};
   // Needed for determining whether there are changes for a given scope.
-  counts: Record<ScopeName, IChangesCount> = {};
-  // Needed for quick checking whether any entries are added.
-  addedCount = 0;
+  scopes: Record<ScopeName, IScope> = {};
+  // Needed for quick checking whether any entries are updated or deleted.
+  updatedCount = 0;
+  deletedCount = 0;
 
   get isEmpty() {
     return Object.entries(this.changes).length === 0;
   }
 
-  isScopeEmpty(name: ScopeName) {
-    return !(name in this.counts);
-  }
-
-  incrementCounts(scope: ScopeName, op: (counts: IChangesCount) => void) {
-    let counts = this.counts[scope];
-    if (counts === undefined) {
-      counts = {
-        added: 0,
-        updated: 0,
-        deleted: 0,
-      };
-      Vue.set(this.counts, scope, counts);
-    }
-    op(counts);
-  }
-
-  checkDecrementCounts(scope: ScopeName, op: (counts: IChangesCount) => void) {
-    const counts = this.counts[scope];
-    op(counts);
-    if (counts.added === 0 && counts.deleted === 0 && counts.updated === 0) {
-      Vue.delete(this.counts, scope);
-    }
+  isScopeEmpty(scope: ScopeName) {
+    return this.updatedCount === 0 && this.deletedCount === 0 && (this.scopes[scope]?.addedCount ?? 0) === 0;
   }
 
   getOrCreateChanges(ref: IEntityRef): IEntityChanges {
@@ -142,36 +120,6 @@ export class CurrentChanges {
   resetUpdatedEntryValue(entityChanges: IEntityChanges, id: RowId) {
     const entry = entityChanges.updated[id];
     Vue.delete(entityChanges.updated, id);
-    Object.values(entry).forEach(update => Object.keys(update.scopes).forEach(scope => this.checkDecrementCounts(scope, counts => {
-      counts.updated -= 1;
-    })));
-  }
-
-  resetAddedEntryValue(entityChanges: IEntityChanges, userView: UserViewKey, id: AddedRowId) {
-    const uvAdded = entityChanges.added[userView];
-    const entry = uvAdded.entries[id];
-    Vue.delete(uvAdded.entries, id);
-    const position = uvAdded.positions.indexOf(id);
-
-    if (position === -1) {
-      throw new Error("Impossible");
-    }
-    uvAdded.positions.splice(position, 1);
-    if (uvAdded.positions.length === 0) {
-      Vue.delete(entityChanges.added, userView);
-    }
-    this.addedCount -= 1;
-    Object.keys(entry.scopes).forEach(scope => this.checkDecrementCounts(scope, counts => {
-      counts.added -= 1;
-    }));
-  }
-
-  resetDeletedEntryValue(entityChanges: IEntityChanges, id: RowId) {
-    const entry = entityChanges.deleted[id];
-    Vue.delete(entityChanges.deleted, id);
-    Object.keys(entry.scopes).forEach(scope => this.checkDecrementCounts(scope, counts => {
-      counts.deleted -= 1;
-    }));
   }
 
   cleanupEntity(ref: IEntityRef, entityChanges: IEntityChanges) {
@@ -200,19 +148,10 @@ export class CurrentChanges {
   }
 }
 
-export interface IChangesCount {
-  added: number;
-  updated: number;
-  deleted: number;
-}
-
 export interface IStagingState {
   current: CurrentChanges;
   // Current submit promise
   currentSubmit: Promise<CombinedTransactionResult[]> | null;
-  // Set if changes were made during the submit to decide how to clear.
-  // We allow updating and removing entries while submit is ongoing, but not adding new ones to prevent duplicate inserts.
-  touched: boolean;
   autoSaveTimeout: number | null;
   autoSaveTimeoutId: NodeJS.Timeout | null;
   lastAutoSaveLock: AutoSaveLock;
@@ -246,9 +185,8 @@ const startAutoSave = (context: ActionContext<IStagingState, {}>) => {
 };
 
 const checkAutoSave = (context: ActionContext<IStagingState, {}>) => {
-  const { state, commit } = context;
-  if (state.current.addedCount === 0
-   && state.currentSubmit === null
+  const { state } = context;
+  if (state.currentSubmit === null
    && Object.keys(state.autoSaveLocks).length === 0
   ) {
     startAutoSave(context);
@@ -289,7 +227,6 @@ const validateValue = (info: IFieldInfo, value: unknown): IUpdatedValue => {
   return {
     rawValue: value,
     value: valueFromRaw(info, value),
-    erroredOnce: false,
   };
 };
 
@@ -308,46 +245,86 @@ const getFieldInfo = async (context: ActionContext<IStagingState, {}>, ref: IFie
 
 const getEmptyValues = (scope: ScopeName, entity: IEntity): UpdatedValues => {
   return Object.fromEntries(Object.entries(entity.columnFields).filter(([name, info]) => !(info.isNullable || info.defaultValue !== undefined)).map(([name, info]) => {
-    const value = { value: undefined, rawValue: "", erroredOnce: false, scopes: { [scope]: null } };
+    const value = { value: undefined, rawValue: "" };
     return [name, value];
   }));
 };
 
-const checkUpdatedFields = (fields: Record<FieldName, IUpdatedValue>) => {
-  Object.values(fields).forEach(field => {
-    field.erroredOnce = field.value === undefined;
-  });
+const entityChangesToOperations = async (context: ActionContext<IStagingState, {}>, scope?: ScopeName): Promise<InternalTransactionOp[]> => {
+  const nestedOps = await Promise.all(Object.entries(context.state.current.changes).map(async ([schemaName, entities]) => {
+    const ret = await Promise.all(Object.entries(entities).map(async ([entityName, entityChanges]) => {
+      try {
+        const entity = {
+          schema: schemaName,
+          name: entityName,
+        };
+        const entityInfo = await getEntityInfo(context, entity);
+        const updated =
+          mapMaybe(([updatedIdStr, updatedFields]) => {
+            let entries: unknown[][];
+            try {
+              entries = Object.entries(updatedFields).map(([name, change]) => [name, changeToParam(entityInfo.columnFields[name], name, change)]);
+            } catch (e) {
+              return undefined;
+            }
+            if (entries.length === 0) {
+              return undefined;
+            } else {
+              return {
+                type: "update",
+                entity,
+                id: Number(updatedIdStr),
+                entries: Object.fromEntries(entries),
+                entityInfo,
+              } as InternalTransactionOp;
+            }
+          }, Object.entries(entityChanges.updated));
+        const added =
+          mapMaybe(([addedIdStr, addedFields]) => {
+            if (scope && scope !== addedFields.scope) {
+              return undefined;
+            }
+            let entries: unknown[][];
+            try {
+              entries = Object.entries(addedFields.values).map(([name, value]) => [name, changeToParam(entityInfo.columnFields[name], name, value)]);
+            } catch (e) {
+              return undefined;
+            }
+            return {
+              type: "insert",
+              entity,
+              internalId: Number(addedIdStr),
+              entries: Object.fromEntries(entries),
+              entityInfo,
+            } as InternalTransactionOp;
+          }, Object.entries(entityChanges.added));
+        const deleted =
+          Object.keys(entityChanges.deleted).map(deletedIdStr => {
+            return {
+              type: "delete",
+              entity,
+              id: Number(deletedIdStr),
+            } as InternalTransactionOp;
+          });
+        return [...updated, ...added, ...deleted];
+      } catch (e) {
+        throw new Error(`Invalid value for ${schemaName}.${entityName}: ${e.message}`);
+      }
+    }));
+    return ret.flat(1);
+  }));
+  return nestedOps.flat(1);
 };
 
-const resetScopeBy = ({ state, dispatch }: ActionContext<IStagingState, {}>, checkScope: (scopes: Scopes) => boolean) => {
-  Object.entries(state.current.changes).forEach(([schema, schemaChanges]) => {
-    Object.entries(schemaChanges).forEach(([entity, entityChanges]) => {
-      Object.entries(entityChanges.added).forEach(([userView, uvAdded]) => {
-        Object.entries(uvAdded.entries).forEach(([addedIdStr, addedEntry]) => {
-          const addedId = Number(addedIdStr);
-          if (!checkScope(addedEntry.scopes)) {
-            void dispatch("resetAddedEntry", { entityRef: { schema, name: entity }, userView, id: addedId });
-          }
-        });
-      });
-
-      Object.entries(entityChanges.updated).forEach(([updatedIdStr, updatedEntry]) => {
-        const updatedId = Number(updatedIdStr);
-        Object.entries(updatedEntry).forEach(([fieldName, updatedField]) => {
-          if (!checkScope(updatedField.scopes)) {
-            void dispatch("resetUpdatedField", { fieldRef: { entity: { schema, name: entity }, name: fieldName }, id: updatedId });
-          }
-        });
-      });
-
-      Object.entries(entityChanges.deleted).forEach(([deletedIdStr, deletedEntry]) => {
-        const deletedId = Number(deletedIdStr);
-        if (!checkScope(deletedEntry.scopes)) {
-          void dispatch("resetDeleteEntry", { entityRef: { schema, name: entity }, id: deletedId });
-        }
-      });
-    });
-  });
+// Remove internal fields.
+const internalOpToTransactionOp = (op: InternalTransactionOp): TransactionOp => {
+  if (op.type === "insert") {
+    return { type: "insert", entity: op.entity, entries: op.entries };
+  } else if (op.type === "update") {
+    return { type: "update", entity: op.entity, id: op.id, entries: op.entries };
+  } else {
+    return op;
+  }
 };
 
 const errorKey = "staging";
@@ -357,7 +334,6 @@ const stagingModule: Module<IStagingState, {}> = {
   state: {
     current: new CurrentChanges(),
     currentSubmit: null,
-    touched: false,
     lastAutoSaveLock: 0,
     autoSaveTimeout: null,
     autoSaveTimeoutId: null,
@@ -366,21 +342,6 @@ const stagingModule: Module<IStagingState, {}> = {
   mutations: {
     clear: state => {
       state.current = new CurrentChanges();
-      state.touched = false;
-    },
-    validate: state => {
-      Object.entries(state.current.changes).forEach(([schemaName, entities]) => {
-        Object.entries(entities).forEach(([entityName, entityChanges]) => {
-          Object.entries(entityChanges.updated).forEach(([updatedIdStr, updatedFields]) => {
-            checkUpdatedFields(updatedFields);
-          });
-          Object.values(entityChanges.added).forEach(uvAdded => {
-            Object.values(uvAdded.entries).forEach(addedFields => {
-              checkUpdatedFields(addedFields.values);
-            });
-          });
-        });
-      });
     },
     setAutoSaveHandler: (state, timeoutId: NodeJS.Timeout) => {
       state.autoSaveTimeoutId = timeoutId;
@@ -399,130 +360,99 @@ const stagingModule: Module<IStagingState, {}> = {
       Vue.delete(state.autoSaveLocks, lock);
     },
     startSubmit: (state, submit: Promise<CombinedTransactionResult[]>) => {
-      state.touched = false;
       state.currentSubmit = submit;
     },
     finishSubmit: state => {
       state.currentSubmit = null;
     },
-    updateField: (state, params: { scope: ScopeName; fieldRef: IFieldRef; id: RowId; value: unknown; fieldInfo: IFieldInfo }) => {
-      const { scope, fieldRef, id, value, fieldInfo } = params;
+    updateField: (state, params: { fieldRef: IFieldRef; id: RowId; value: unknown; fieldInfo: IFieldInfo }) => {
+      const { fieldRef, id, value, fieldInfo } = params;
 
       const entityChanges = state.current.getOrCreateChanges(fieldRef.entity);
       let fields = entityChanges.updated[id];
       if (fields === undefined) {
-        fields = {};
         if (id in entityChanges.deleted) {
-          state.current.resetDeletedEntryValue(entityChanges, id);
+          throw new Error("Cannot update fields in deleted entry");
         }
+        fields = {};
         Vue.set(entityChanges.updated, String(id), fields);
+        state.current.updatedCount += 1;
       }
-      const oldField = fields[fieldRef.name];
-      const scopes = oldField === undefined ? { [scope]: null } : { [scope]: null, ...oldField.scopes };
-      Vue.set(fields, fieldRef.name, { scopes, ...validateValue(fieldInfo, value) });
-      if (oldField === undefined || !(scope in oldField.scopes)) {
-        state.current.incrementCounts(scope, counts => {
-          counts.updated += 1;
-        });
-      }
-      state.touched = true;
+      Vue.set(fields, fieldRef.name, validateValue(fieldInfo, value));
     },
-    addEntry: (state, params: { scope: ScopeName; entityRef: IEntityRef; userView: UserViewKey; position?: number; entityInfo: IEntity }) => {
-      const { scope, entityRef, userView, position, entityInfo } = params;
-
-      // During submit new entries aren't allowed to be added because this can result in duplicates.
-      if (state.currentSubmit !== null) {
-        throw new Error("Adding entries is forbidden while submitting");
-      }
+    addEntry: (state, params: { scope: ScopeName; submitAddsAutomatically: boolean, entityRef: IEntityRef; userView: UserViewKey; position?: number; entityInfo: IEntity }) => {
+      const { scope, submitAddsAutomatically, entityRef, userView, position, entityInfo } = params;
 
       const entityChanges = state.current.getOrCreateChanges(entityRef);
-      let uvAdded = entityChanges.added[userView];
-      if (uvAdded === undefined) {
-        uvAdded = deepClone(emptyAdded);
-        entityChanges.added[userView] = uvAdded;
-      }
       const newEntry = {
         values: getEmptyValues(scope, entityInfo),
-        scopes: { [scope]: null },
+        scope,
+        userView,
         touched: false,
       };
-      const newId = uvAdded.nextId++;
-      uvAdded.entries[newId] = newEntry;
-      if (position === undefined) {
-        uvAdded.positions.push(newId);
-      } else {
-        uvAdded.positions.splice(position, 0, newId);
+      const newId = entityChanges.nextAddedId++;
+      entityChanges.added[newId] = newEntry;
+
+      let uvPositions = entityChanges.addedPositions[userView];
+      if (uvPositions === undefined) {
+        uvPositions = [];
+        entityChanges.addedPositions[userView] = uvPositions;
       }
-      state.current.addedCount += 1;
-      state.current.incrementCounts(scope, counts => {
-        counts.added += 1;
-      });
-      state.touched = true;
+
+      if (position === undefined) {
+        uvPositions.push(newId);
+      } else {
+        uvPositions.splice(position, 0, newId);
+      }
+      let scopeInfo = state.current.scopes[scope];
+      if (scopeInfo === undefined) {
+        scopeInfo = {
+          submitAddsAutomatically,
+          addedCount: 0,
+        };
+        state.current.scopes[scope] = scopeInfo;
+      }
+      scopeInfo.addedCount += 1;
     },
     setAddedField: (
       state,
       params: {
-        scope: ScopeName;
         fieldRef: IFieldRef;
-        userView: UserViewKey;
         id: AddedRowId;
         value: unknown;
         fieldInfo: IFieldInfo;
         noTouch?: boolean;
       },
     ) => {
-      const { scope, fieldRef, userView, id, value, fieldInfo, noTouch } = params;
-      // During submit new entries aren't allowed to be added because this can result in duplicates.
-      if (state.currentSubmit !== null) {
-        throw new Error("Adding entries is forbidden while submitting");
-      }
+      const { fieldRef, id, value, fieldInfo, noTouch } = params;
 
       const entityChanges = state.current.getOrCreateChanges(fieldRef.entity);
-      const uvAdded = entityChanges.added[userView];
-      if (uvAdded === undefined) {
-        throw new Error(`New entity id ${id} is not found`);
-      }
-      const added = uvAdded.entries[id];
+      const added = entityChanges.added[id];
       if (added === undefined) {
         throw new Error(`New entity id ${id} is not found`);
       }
-      if (!(scope in added.scopes)) {
-        Vue.set(added.scopes, scope, null);
-        state.current.incrementCounts(scope, counts => {
-          counts.added += 1;
-        });
-      }
       Vue.set(added.values, fieldRef.name, validateValue(fieldInfo, value));
       added.touched = !noTouch;
-      state.touched = true;
     },
-    deleteEntry: (state, params: { scope: ScopeName; entityRef: IEntityRef; id: RowId }) => {
-      const { scope, entityRef, id } = params;
+    deleteEntry: (state, params: { entityRef: IEntityRef; id: RowId }) => {
+      const { entityRef, id } = params;
       const entityChanges = state.current.getOrCreateChanges(entityRef);
       const deleted = entityChanges.deleted[id];
       if (deleted === undefined) {
-        const entry = {
-          scopes: { [scope]: null },
-        };
-        Vue.set(entityChanges.deleted, String(id), entry);
+        Vue.set(entityChanges.deleted, String(id), null);
         if (id in entityChanges.updated) {
           state.current.resetUpdatedEntryValue(entityChanges, id);
         }
-        state.current.incrementCounts(scope, counts => {
-          counts.deleted += 1;
-        });
-        state.touched = true;
-      } else {
-        if (!(scope in deleted.scopes)) {
-          state.current.incrementCounts(scope, counts => {
-            counts.deleted += 1;
-          });
-        }
-        Vue.set(deleted.scopes, scope, null);
+        state.current.deletedCount += 1;
       }
     },
     resetUpdatedField: (state, params: { fieldRef: IFieldRef; id: RowId }) => {
       const { fieldRef, id } = params;
+
+      if (state.currentSubmit !== null) {
+        throw new Error("Resetting changes is forbidden while submitting");
+      }
+
       const entityChanges = state.current.getOrCreateChanges(fieldRef.entity);
       const fieldUpdates = entityChanges.updated[id];
       if (fieldUpdates === undefined) {
@@ -531,34 +461,57 @@ const stagingModule: Module<IStagingState, {}> = {
       const update = fieldUpdates[fieldRef.name];
       if (update !== undefined) {
         Vue.delete(fieldUpdates, fieldRef.name);
-        Object.keys(update.scopes).forEach(scope => state.current.checkDecrementCounts(scope, counts => {
-          counts.updated -= 1;
-        }));
         if (Object.keys(fieldUpdates).length === 0) {
           state.current.resetUpdatedEntryValue(entityChanges, id);
           state.current.cleanupEntity(fieldRef.entity, entityChanges);
         }
+        state.current.updatedCount -= 1;
       }
     },
-    resetAddedEntry: (state, params: { entityRef: IEntityRef; userView: UserViewKey; id: AddedRowId }) => {
-      const { entityRef, userView, id } = params;
+    resetAddedEntry: (state, params: { entityRef: IEntityRef; id: AddedRowId }) => {
+      const { entityRef, id } = params;
+
+      if (state.currentSubmit !== null) {
+        throw new Error("Resetting changes is forbidden while submitting");
+      }
+
       const entityChanges = state.current.getOrCreateChanges(entityRef);
-      const uvAdded = entityChanges.added[userView];
-      if (uvAdded === undefined) {
+      const entry = entityChanges.added[id];
+      if (entry === undefined) {
         return;
       }
-      const added = uvAdded.entries[id];
-      if (added === undefined) {
-        return;
+      Vue.delete(entityChanges.added, id);
+      if (Object.entries(entityChanges.added).length === 0) {
+        entityChanges.nextAddedId = 0;
       }
-      state.current.resetAddedEntryValue(entityChanges, userView, id);
+
+      const uvPositions = entityChanges.addedPositions[entry.userView];
+      const position = uvPositions.indexOf(id);
+      if (position === -1) {
+        throw new Error("Impossible");
+      }
+      uvPositions.splice(position, 1);
+      if (uvPositions.length === 0) {
+        Vue.delete(entityChanges.addedPositions, entry.userView);
+      }
+
+      const scope = state.current.scopes[entry.scope];
+      scope.addedCount -= 1;
+      if (scope.addedCount === 0) {
+        Vue.delete(state.current.scopes, entry.scope);
+      }
       state.current.cleanupEntity(entityRef, entityChanges);
     },
     resetDeleteEntry: (state, { entityRef, id }: { entityRef: IEntityRef; id: number }) => {
+      if (state.currentSubmit !== null) {
+        throw new Error("Resetting changes is forbidden while submitting");
+      }
+
       const entityChanges = state.current.getOrCreateChanges(entityRef);
       if (id in entityChanges.deleted) {
-        state.current.resetDeletedEntryValue(entityChanges, id);
+        Vue.delete(entityChanges.deleted, id);
         state.current.cleanupEntity(entityRef, entityChanges);
+        state.current.deletedCount -= 1;
       }
     },
   },
@@ -584,9 +537,9 @@ const stagingModule: Module<IStagingState, {}> = {
       commit("addEntry", { ...args, entityInfo });
 
       const entityChanges = state.current.changesForEntity(args.entityRef);
-      const uvAdded = entityChanges.added[args.userView];
-      const newId = uvAdded.nextId - 1;
-      const position = args.position ?? uvAdded.positions.length - 1;
+      const newId = entityChanges.nextAddedId - 1;
+      const uvPositions = entityChanges.addedPositions[args.userView];
+      const position = args.position ?? uvPositions.length - 1;
 
       const result = {
         id: newId,
@@ -630,7 +583,6 @@ const stagingModule: Module<IStagingState, {}> = {
       context,
       args: {
         fieldRef: IFieldRef;
-        userView: UserViewKey;
         id: AddedRowId;
         value: unknown;
         noTouch?: boolean; // Used to initialize entries with values.
@@ -683,37 +635,51 @@ const stagingModule: Module<IStagingState, {}> = {
       const { scope, onlyUntouched = false } = params;
       for (const [schema, entities] of Object.entries(state.current.changes)) {
         for (const [entity, entityChanges] of Object.entries(entities)) {
-          for (const [userView, uvAdded] of Object.entries(entityChanges.added)) {
-            for (const [addedIdStr, addedEntry] of Object.entries(uvAdded.entries)) {
-              if ((scope === undefined || scope in addedEntry.scopes)
-                  && (!onlyUntouched || (!addedEntry.touched))) {
-                // Not sure about safety of parallel "resetAddedEntry" dispatches
-                // and they are almost instant anyway, so awaits in loop is fine.
-                // eslint-disable-next-line
-                await dispatch(
-                  "resetAddedEntry",
-                  {
-                    entityRef: { schema, name: entity },
-                    userView,
-                    id: Number(addedIdStr),
-                  },
-                );
-              }
+          for (const [addedIdStr, addedEntry] of Object.entries(entityChanges.added)) {
+            if ((scope === undefined || scope === addedEntry.scope)
+                && (!onlyUntouched || (!addedEntry.touched))) {
+              // Not sure about safety of parallel "resetAddedEntry" dispatches
+              // and they are almost instant anyway, so awaits in loop is fine.
+              // eslint-disable-next-line
+              await dispatch(
+                "resetAddedEntry",
+                {
+                  entityRef: { schema, name: entity },
+                  id: Number(addedIdStr),
+                },
+              );
             }
           }
         }
       }
     },
-    // Removes scope and entries that are only bound to it.
-    removeScope: (context, scope: ScopeName) => {
-      resetScopeBy(context, scopes => {
-        Vue.delete(scopes, scope);
-        return Object.keys(scopes).length !== 0;
-      });
-    },
-    // Clears all scoped entries (when they have been successfully submitted).
-    resetScoped: (context, scope: ScopeName) => {
-      resetScopeBy(context, scopes => !(scope in scopes));
+    clearUnchanged: async (context, ops: CombinedTransactionResult[]) => {
+      const { state, dispatch } = context;
+      await Promise.all(ops.map(async op => {
+        const entityChanges = state.current.changes[op.entity.schema][op.entity.name];
+        if (op.type === "insert") {
+          const addedValues = entityChanges.added[op.internalId];
+          await Promise.all(Object.entries(addedValues.values).map(async ([fieldName, newValue]) => {
+            const maybeOldValue = op.entries[fieldName];
+            const valueType = op.entityInfo.columnFields[fieldName].valueType;
+            if (!valueEquals(valueType, maybeOldValue, newValue.value)) {
+              await dispatch("updateField", { entityRef: op.entity, id: op.id, value: newValue.rawValue });
+            };
+          }));
+          await dispatch("resetAddedEntry", { entityRef: op.entity, id: op.internalId });
+        } else if (op.type === "update") {
+          const updatedValues = entityChanges.updated[op.id];
+          await Promise.all(Object.entries(updatedValues).map(async ([fieldName, newValue]) => {
+            const maybeOldValue = op.entries[fieldName];
+            const valueType = op.entityInfo.columnFields[fieldName].valueType;
+            if (valueEquals(valueType, maybeOldValue, newValue.value)) {
+              await dispatch("resetUpdatedField", { fieldRef: { entity: op.entity, name: fieldName }, id: op.id });
+            }
+          }));
+        } else if (op.type === "delete") {
+          await dispatch("resetDeleteEntry", { entityRef: op.entity, id: op.id });
+        }
+      }));
     },
 
     addAutoSaveLock: context => {
@@ -734,66 +700,13 @@ const stagingModule: Module<IStagingState, {}> = {
 
       commit("errors/resetErrors", errorKey, { root: true });
       await dispatch("clearAdded", { scope, onlyUntouched: true });
-      commit("validate");
-      const nestedOps = await Promise.all(Object.entries(state.current.changes).map(async ([schemaName, entities]) => {
-        const ret = await Promise.all(Object.entries(entities).map(async ([entityName, entityChanges]) => {
-          try {
-            const entity = {
-              schema: schemaName,
-              name: entityName,
-            };
-            const entityInfo = await getEntityInfo(context, entity);
-            const updated =
-              mapMaybe(([updatedIdStr, updatedFields]) => {
-                const entries =
-                      mapMaybe(([name, change]) => (scope && !(scope in change.scopes)) ? undefined : [name, changeToParam(entityInfo.columnFields[name], name, change)],
-                        Object.entries(updatedFields));
-                if (entries.length === 0) {
-                  return undefined;
-                } else {
-                  return {
-                    type: "update",
-                    entity,
-                    id: Number(updatedIdStr),
-                    entries: Object.fromEntries(entries),
-                  } as TransactionOp;
-                }
-              }, Object.entries(entityChanges.updated));
-            const added =
-              Object.values(entityChanges.added).flatMap(uvAdded => mapMaybe(addedFields => {
-                if (scope && !(scope in addedFields.scopes)) {
-                  return undefined;
-                } else {
-                  const entries = Object.entries(addedFields.values).map(([name, value]) => [name, changeToParam(entityInfo.columnFields[name], name, value)]);
-                  return {
-                    type: "insert",
-                    entity,
-                    entries: Object.fromEntries(entries),
-                  } as TransactionOp;
-                }
-              }, Object.values(uvAdded.entries)));
-            const deleted =
-              mapMaybe(([deletedIdStr, deletedEntry]) => {
-                if (scope && !(scope in deletedEntry.scopes)) {
-                  return undefined;
-                } else {
-                  return {
-                    type: "delete",
-                    entity,
-                    id: Number(deletedIdStr),
-                  } as TransactionOp;
-                }
-              }, Object.entries(entityChanges.deleted));
-            return [...updated, ...added, ...deleted];
-          } catch (e) {
-            commit("errors/pushError", { key: errorKey, error: `Invalid value for ${schemaName}.${entityName}: ${e.message}` }, { root: true });
-            void dispatch("userView/updateErroredOnce", undefined, { root: true });
-            throw e;
-          }
-        }));
-        return ret.flat(1);
-      }));
-      const ops = nestedOps.flat(1);
+      let ops: InternalTransactionOp[];
+      try {
+        ops = await entityChangesToOperations(context, scope);
+      } catch (e) {
+        commit("errors/pushError", { key: errorKey, error: e.message }, { root: true });
+        throw e;
+      }
       if (ops.length === 0) {
         if (preReload) {
           try {
@@ -804,7 +717,7 @@ const stagingModule: Module<IStagingState, {}> = {
         }
         return [];
       }
-      const action: ITransaction = { operations: ops };
+      const action: ITransaction = { operations: ops.map(internalOpToTransactionOp) };
 
       const submit = (async (): Promise<CombinedTransactionResult[]> => {
         await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
@@ -832,14 +745,9 @@ const stagingModule: Module<IStagingState, {}> = {
         commit("finishSubmit");
         if (!(result instanceof Error)) {
           commit("errors/resetErrors", errorKey, { root: true });
-          if (state.touched) {
-            await dispatch("clearAdded", { scope });
-          } else if (scope) {
-            await dispatch("resetScoped", scope);
-          } else {
-            await dispatch("reset");
-          }
-          return map2((op, res) => ({ ...op, ...res } as CombinedTransactionResult), ops, result.results);
+          const opResults = map2((op, res) => ({ ...op, ...res } as CombinedTransactionResult), ops, result.results);
+          await dispatch("clearUnchanged", opResults);
+          return opResults;
         } else {
           commit("errors/setError", { key: errorKey, error: result.message }, { root: true });
           throw result;

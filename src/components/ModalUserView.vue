@@ -86,7 +86,7 @@ const staging = namespace("staging");
 export default class ModalUserView extends Vue {
   @staging.State("current") changes!: CurrentChanges;
   @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void> }) => Promise<void>;
-  @staging.Action("removeScope") removeScope!: (scope: ScopeName) => Promise<void>;
+  @staging.Action("clearAdded") clearAdded!: (_: { scope?: ScopeName; onlyUntouched?: boolean; }) => Promise<void>;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
   @Prop({ type: Object, required: true }) view!: IQuery;
@@ -110,7 +110,7 @@ export default class ModalUserView extends Vue {
   }
 
   private destroyed() {
-    void this.removeScope(this.uid);
+    void this.clearAdded({ scope: this.uid });
   }
 }
 </script>

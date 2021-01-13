@@ -7,7 +7,6 @@
                           'next-after-last-fixed': index === lastFixedColumnIndex,
                           'select': localValue.selected && !column.fixed,
                           'table-td_selected': localValue.selected,
-                          'error_style': value.erroredOnce,
                           'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable,
                           'editing_style': localValue.editing !== undefined,
                           'tree-branches': column.treeUnfoldColumn && children !== undefined && children.length > 0 && isTree,
@@ -88,11 +87,13 @@ import type { ICombinedValue } from "@/state/user_view";
 import { valueIsNull } from "@/values";
 import { iconValue } from "@/links";
 import { replaceHtmlLinks } from "@/utils";
+import Checkbox from "@/components/checkbox/Checkbox.vue";
+import CellButtons from "@/components/buttons/CellButtons.vue";
 
 @Component({
   components: {
-    Checkbox: () => import("@/components/checkbox/Checkbox.vue"),
-    CellButtons: () => import("@/components/buttons/CellButtons.vue"),
+    Checkbox,
+    CellButtons,
   },
 })
 export default class TableCell extends Vue {

@@ -6,7 +6,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve:lite": "vue-cli-service serve --mode development --skip-plugins @vue/cli-plugin-eslint",
+    "serve:lite": "vue-cli-service serve --mode development --skip-plugins @vue/cli-plugin-eslint,@ascendancyy/vue-cli-plugin-stylelint",
     "serve": "vue-cli-service serve --mode development",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",

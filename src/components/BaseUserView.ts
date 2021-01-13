@@ -1,7 +1,7 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import { RowId, IEntityRef, IFieldRef, IResultColumnInfo } from "@/api";
+import { RowId, IEntityRef, IFieldRef } from "@/api";
 import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, homeSchema } from "@/state/user_view";
 import { ErrorKey } from "@/state/errors";
 import type { ScopeName, UserViewKey, AddedRowId, CombinedTransactionResult, IAddedResult } from "@/state/staging_changes";
@@ -20,7 +20,6 @@ export interface ISelectionRef {
 
 const staging = namespace("staging");
 const errors = namespace("errors");
-const userView = namespace("userView");
 
 const errorKey = "base_user_view";
 
@@ -152,8 +151,8 @@ export class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBas
 @Component
 export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, ValueT, RowT, ViewT> extends Vue {
   @staging.State("currentSubmit") currentSubmit!: Promise<CombinedTransactionResult[]> | null;
-  @staging.Action("deleteEntry") deleteEntry!: (args: { scope: ScopeName; entityRef: IEntityRef; id: RowId }) => Promise<void>;
-  @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { entityRef: IEntityRef; userView: UserViewKey; id: AddedRowId }) => Promise<void>;
+  @staging.Action("deleteEntry") deleteEntry!: (args: { entityRef: IEntityRef; id: RowId }) => Promise<void>;
+  @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { entityRef: IEntityRef; id: AddedRowId }) => Promise<void>;
   @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName; entityRef: IEntityRef; userView: UserViewKey; position?: number }) => Promise<IAddedResult>;
   @staging.Action("addEntryWithDefaults") addEntryWithDefaults!: (
     args: {
@@ -164,8 +163,8 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
       defaultValues: Record<string, any>;
     }
   ) => Promise<IAddedResult>;
-  @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName; fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; value: any }) => Promise<void>;
-  @staging.Action("updateField") updateField!: (args: { scope: ScopeName; fieldRef: IFieldRef; id: RowId; value: any }) => Promise<void>;
+  @staging.Action("setAddedField") setAddedField!: (args: { fieldRef: IFieldRef; id: AddedRowId; value: any }) => Promise<void>;
+  @staging.Action("updateField") updateField!: (args: { fieldRef: IFieldRef; id: RowId; value: any }) => Promise<void>;
   @errors.Mutation("setError") setError!: (args: { key: ErrorKey; error: string }) => void;
   @errors.Mutation("resetErrors") resetErrors!: (key: ErrorKey) => void;
 
@@ -193,7 +192,6 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
     if (ref.type === "added") {
       void this.resetAddedEntry({
         entityRef: entity,
-        userView: this.uv.userViewKey,
         id: ref.id,
       });
     } else if (ref.type === "existing") {
@@ -207,7 +205,6 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
         this.resetErrors(errorKey);
       }
       void this.deleteEntry({
-        scope: this.scope,
         entityRef: entity,
         // Guaranteed to exist if mainEntity exists.
         id: row.mainId as number,
@@ -264,9 +261,7 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
       // FIXME: throws error `updateInfo is undefined` when user tries to edit disabled cell.
       const updateInfo = value.value.info!;
       await this.setAddedField({
-        scope: this.scope,
         fieldRef: updateInfo.fieldRef,
-        userView: this.uv.userViewKey,
         id: updateInfo.id,
         value: rawValue,
       });
@@ -274,7 +269,6 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
     } else if (ref.type === "existing") {
       const updateInfo = value.value.info!;
       await this.updateField({
-        scope: this.scope,
         fieldRef: updateInfo.fieldRef,
         id: updateInfo.id,
         value: rawValue,
@@ -296,12 +290,10 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
       const fieldName = this.uv.info.columns[ref.column].mainField?.name;
       if (fieldName) {
         await this.setAddedField({
-          scope: this.scope,
           fieldRef: {
             entity,
             name: fieldName,
           },
-          userView: this.uv.userViewKey,
           id,
           value: rawValue,
         });

@@ -13,13 +13,12 @@
 <template>
   <b-row
     :class="[
-      'input_slot',
       'sm-gutters',
       {'input_slot__row': inline, 'input-slot_cell-edit': isCellEdit}
     ]"
   >
     <Modal
-      v-if="$isMobile"
+      v-if="modal"
       :show="isModalOpen"
       fullscreen
       @opened="onModalOpen"
@@ -29,7 +28,10 @@
         <div class="input_modal__input_group">
           <div>
             <slot
-              name="input-modal"
+              name="input"
+              :onFocus="emptyHandler"
+              modal
+              :autofocus="isModalOpen"
             />
           </div>
           <div class="input_modal__button_container">
@@ -44,32 +46,30 @@
         </div>
       </template>
     </Modal>
-    <b-col
-      v-if="label"
-      :cols="inline ? 4 : 12"
-    >
-      <div class="input_label__container">
-        <label
-          v-if="label"
-          :class="['input_label', { 'input_label__focused': focused }]"
-          :for="inputName"
-          :title="label"
-        >{{ label }}</label>
-      </div>
-    </b-col>
-    <b-col
-      :cols="(!!label && inline) ? 8 : 12"
-      :class="['input_container', `text_align_${textAlign}`, {'input_container_cell-edit': isCellEdit}]"
-    >
-      <div
-        :style="{ backgroundColor: backgroundColor }"
+    <template v-if="!(modalOnly && modal)">
+      <b-col
+        v-if="label"
+        :cols="inline ? 4 : 12"
+      >
+        <div class="input_label__container">
+          <label
+            v-if="label"
+            :class="['input_label', { 'input_label__focused': focused }]"
+            :for="inputName"
+            :title="label"
+          >{{ label }}</label>
+        </div>
+      </b-col>
+      <b-col
+        :cols="(!!label && inline) ? 8 : 12"
+        :class="['input_container', `text_align_${textAlign}`, {'input_container_cell-edit': isCellEdit}]"
       >
         <slot
           name="input"
-          :onFocus="onFocus"
+          :onFocus="onNonmodalFocus"
         />
-      </div>
-    </b-col>
+      </b-col>
+    </template>
   </b-row>
 </template>
 
@@ -87,22 +87,19 @@ import { ICombinedValue } from "@/state/user_view";
 @Component({ components: { Modal, Input } })
 export default class InputSlot extends Vue {
   @Prop({ type: String }) label!: string;
-  @Prop({ type: Boolean }) error!: boolean;
-  @Prop({ type: String }) warning!: string;
-  @Prop({ type: Number }) height!: number;
-  @Prop({ type: Array }) actions!: Action[];
-  @Prop({ type: Boolean }) disabled!: boolean;
   @Prop({ type: Boolean, default: true }) inline!: boolean;
-  @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
+  // FIXME: remove this and style parent nodes instead.
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: String, default: "left" }) textAlign!: string;
+  @Prop({ type: Boolean, default: false }) modal!: boolean;
+  @Prop({ type: Boolean, default: false }) modalOnly!: boolean;
 
   private focused = false;
   private isModalOpen = false;
 
-  private mounted() {
-    if (this.autoOpen && this.$isMobile) {
+  private created() {
+    if (this.modalOnly && this.modal) {
       this.isModalOpen = true;
     }
   }
@@ -120,13 +117,16 @@ export default class InputSlot extends Vue {
     });
   }
 
+  private emptyHandler() {
+  }
+
   private onModalClose() {
     this.isModalOpen = false;
     this.$emit("close-modal-input");
   }
 
-  private onFocus() {
-    if (this.$isMobile) {
+  private onNonmodalFocus() {
+    if (this.modal) {
       this.isModalOpen = true;
     }
   }
@@ -139,10 +139,6 @@ export default class InputSlot extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  .input_slot {
-    /* padding: 0 15px; */
-  }
-
   .input_slot__row {
     flex-direction: row;
   }
