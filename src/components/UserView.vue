@@ -224,6 +224,7 @@ export default class UserView extends Vue {
   // Old user view is shown while new component for uv is loaded.
   private state: UserViewLoadingState = loadingState;
   private pendingArgs: IUserViewArguments | null = null;
+  private previousArgs: IUserViewArguments | null = null;
 
   get title() {
     if (this.state.state === "show" && "title" in this.state.uv.attributes) {
@@ -308,6 +309,8 @@ export default class UserView extends Vue {
           return;
         }
 
+        this.checkScrollToTop(newUv.args);
+
         // Exceptions in async watchers are silently ignored (?), so print it explicitly.
         let local: IHandlerProvider | null;
         if (component.localConstructor !== undefined) {
@@ -328,8 +331,6 @@ export default class UserView extends Vue {
           component,
           uv: newUv,
         });
-
-        this.scrollToTop();
       } else if (newType.type === "link") {
         const handler = linkHandler(this.$store, (...args) => this.$emit(...args), newType.link);
         await handler.handler();
@@ -362,6 +363,13 @@ export default class UserView extends Vue {
 
   private scrollToTop() {
     (this.$refs.userViewRef as Vue)?.$el.scrollTo(0, 0);
+  }
+
+  private checkScrollToTop(newArgs: IUserViewArguments) {
+    if (!deepEquals(newArgs, this.previousArgs)) {
+      this.scrollToTop();
+    }
+    this.previousArgs = deepClone(this.args);
   }
 
   private destroyCurrentUserView() {
