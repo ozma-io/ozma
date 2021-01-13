@@ -688,8 +688,6 @@ export default class FormControl extends Vue {
   */
 
   .fullscreen_button {
-    line-height: 1.25em;
-    font-size: 24px;
     background: none;
     border: none;
     cursor: pointer;

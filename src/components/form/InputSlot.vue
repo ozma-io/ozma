@@ -12,10 +12,7 @@
 </i18n>
 <template>
   <b-row
-    :class="[
-      'sm-gutters',
-      {'input_slot__row': inline, 'input-slot_cell-edit': isCellEdit}
-    ]"
+    :class="{'input_slot__row': inline, 'input-slot_cell-edit': isCellEdit}"
   >
     <Modal
       v-if="modal"
