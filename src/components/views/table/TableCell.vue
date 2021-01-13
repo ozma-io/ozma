@@ -186,7 +186,7 @@ export default class TableCell extends Vue {
       max-height: 150px;
 
       ::v-deep ul.actions {
-          > span {
+        > span {
           pointer-events: all;
           cursor: pointer;
         }
