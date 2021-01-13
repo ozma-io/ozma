@@ -8,7 +8,7 @@
     >
       <li>
         <div>
-          <i class="material-icons">{{ action.icon || "arrow_right" }}</i>
+          <i :class="['material-icons', {'font-size-20': action.icon && action.icon.length < 3}]">{{ action.icon || "arrow_right" }}</i>
           <span>{{ action.name }}</span>
         </div>
       </li>
@@ -65,11 +65,11 @@ export default class CellButtons extends Vue {
   ul.actions > a {
     text-decoration: none;
     color: var(--MainTextColor);
-    pointer-events: auto !important;
   }
 
   ul.actions > span > li,
   ul.actions > a > li {
+    background-color: white;
     list-style: none;
     cursor: pointer;
     border-radius: 3px;
@@ -102,4 +102,8 @@ export default class CellButtons extends Vue {
     white-space: nowrap;
   }
 
+  .font-size-20 {
+    font-size: 20px;
+    margin-right: 5px;
+  }
 </style>
