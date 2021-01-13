@@ -84,7 +84,7 @@ export default class Textarea extends Vue {
     this.dummyHeight = control.clientHeight;
     this.dummyWidth = control.clientWidth;
 
-    void Vue.nextTick().then(this.updateAutofocus);
+    void Vue.nextTick().then(() => this.updateAutofocus());
   }
 
   private updateAutofocus() {

@@ -10,7 +10,6 @@ import {
   IColumnField, TransactionOp, default as Api,
 } from "@/api";
 import { i18n } from "@/modules";
-import { update } from "ramda";
 
 export type ScopeName = string;
 
@@ -664,7 +663,7 @@ const stagingModule: Module<IStagingState, {}> = {
             const valueType = op.entityInfo.columnFields[fieldName].valueType;
             if (!valueEquals(valueType, maybeOldValue, newValue.value)) {
               await dispatch("updateField", { entityRef: op.entity, id: op.id, value: newValue.rawValue });
-            };
+            }
           }));
           await dispatch("resetAddedEntry", { entityRef: op.entity, id: op.internalId });
         } else if (op.type === "update") {
