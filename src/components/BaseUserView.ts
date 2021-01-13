@@ -5,7 +5,7 @@ import { RowId, IEntityRef, IFieldRef } from "@/api";
 import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, homeSchema } from "@/state/user_view";
 import { ErrorKey } from "@/state/errors";
 import type { ScopeName, UserViewKey, AddedRowId, CombinedTransactionResult, IAddedResult } from "@/state/staging_changes";
-import { LocalUserView, RowRef, ValueRef, SimpleLocalUserView, ILocalRow, ILocalRowInfo, INewValueRef } from "@/local_user_view";
+import { LocalUserView, RowRef, ValueRef, SimpleLocalUserView, ILocalRow, ILocalRowInfo } from "@/local_user_view";
 import { equalEntityRef, valueIsNull } from "@/values";
 import { mapMaybe, ObjectSet } from "@/utils";
 import LocalEmptyUserView from "@/LocalEmptyUserView";

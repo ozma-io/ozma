@@ -186,7 +186,7 @@
 import * as R from "ramda";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { valueIsNull } from "@/values";
-import { nextRender, replaceHtmlLinks } from "@/utils";
+import { replaceHtmlLinks } from "@/utils";
 
 export interface ISelectOption {
   value: any;

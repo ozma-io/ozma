@@ -35,15 +35,11 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Watch, Vue } from "vue-property-decorator";
-import { Location } from "vue-router";
-import { namespace } from "vuex-class";
+import { Component, Prop } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
 import { tryDicts, mapMaybe } from "@/utils";
-import { CombinedUserView, valueToPunnedText, homeSchema, currentValue, ICombinedValue } from "@/state/user_view";
-import { IQuery } from "@/state/query";
-import { CurrentChanges, IEntityChanges } from "@/state/staging_changes";
+import { CombinedUserView, valueToPunnedText, homeSchema, currentValue } from "@/state/user_view";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
 import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";

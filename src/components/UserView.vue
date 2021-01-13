@@ -91,23 +91,20 @@
 </template>
 
 <script lang="ts">
-import { VueConstructor } from "vue";
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
-import { Store } from "vuex";
 
-import { RecordSet, ReferenceName, deepEquals, snakeToPascal, deepClone, waitTimeout } from "@/utils";
+import { RecordSet, ReferenceName, deepEquals, snakeToPascal, deepClone } from "@/utils";
 import { funappSchema } from "@/api";
 import { equalEntityRef } from "@/values";
-import type { IUserViewArguments, IUserViewEventHandler, IUserViewState } from "@/state/user_view";
-import { CombinedUserView, UserViewError, CurrentUserViews, homeSchema, UserViewResult } from "@/state/user_view";
-import { CurrentAuth } from "@/state/auth";
+import type { IUserViewArguments, IUserViewEventHandler } from "@/state/user_view";
+import { CombinedUserView, UserViewError, CurrentUserViews, UserViewResult } from "@/state/user_view";
 import type { CombinedTransactionResult, ICombinedInsertEntityResult, ScopeName } from "@/state/staging_changes";
-import { ICurrentQuery, queryLocation, IQuery, IAttrToQueryOpts } from "@/state/query";
+import { ICurrentQuery, IQuery } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
 import { IHandlerProvider } from "@/local_user_view";
 import { Action } from "@/components/ActionsMenu.vue";
-import { ISelectionRef, LocalBaseUserView } from "@/components/BaseUserView";
+import { LocalBaseUserView } from "@/components/BaseUserView";
 import UserViewCommon from "@/components/UserViewCommon.vue";
 import { IPanelButton } from "@/components/ButtonsPanel.vue";
 import { addLinkDefaultArgs, attrToLink, Link, linkHandler } from "@/links";

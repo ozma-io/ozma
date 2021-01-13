@@ -225,14 +225,12 @@ import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import moment from "moment";
 
-import { valueToText, valueIsNull, dateTimeFormat } from "@/values";
+import { valueToText, valueIsNull } from "@/values";
 import type { AttributesMap, ValueType } from "@/api";
-import { attrToLinkSelf } from "@/links";
 import { router } from "@/modules";
 import { Action } from "@/components/ActionsMenu.vue";
 import type { IUserViewArguments, ICombinedValue, IEntriesRef } from "@/state/user_view";
 import { currentValue, homeSchema, referenceEntriesRef } from "@/state/user_view";
-import type { ScopeName } from "@/state/staging_changes";
 import { IQuery, attrToQuerySelf, queryLocation } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { IReferenceSelectAction } from "@/components/ReferenceField.vue";

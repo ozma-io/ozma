@@ -57,8 +57,8 @@ import BaseUserView from "@/components/BaseUserView";
 import { LocalUserView, ValueRef } from "@/local_user_view";
 import { IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
 
-import { homeSchema, valueToPunnedText, currentValue } from "@/state/user_view";
-import { funappSchema, IEntityRef, IFieldRef } from "@/api";
+import { homeSchema, valueToPunnedText } from "@/state/user_view";
+import { IEntityRef, IFieldRef } from "@/api";
 import SelectUserView from "@/components/SelectUserView.vue";
 import { mapMaybe, saveToFile, tryDicts } from "@/utils";
 import { Action } from "@/components/ActionsMenu.vue";

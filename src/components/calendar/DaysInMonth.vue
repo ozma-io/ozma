@@ -22,8 +22,8 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import moment, { Moment, months, Duration } from "moment";
+import { Component, Prop, Vue } from "vue-property-decorator";
+import moment, { Moment } from "moment";
 
 import * as Utils from "@/utils";
 

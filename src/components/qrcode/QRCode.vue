@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import VueQrcode from "@chenfengyuan/vue-qrcode";
 import type { IEntriesRef } from "@/state/user_view";
 

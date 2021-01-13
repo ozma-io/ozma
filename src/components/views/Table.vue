@@ -197,11 +197,10 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
-import { Store } from "vuex";
 import { Moment } from "moment";
 import * as moment from "moment";
 
-import { deepEquals, isFirefox, isIOS, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, debugLog } from "@/utils";
+import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, debugLog } from "@/utils";
 import { valueIsNull } from "@/values";
 import { IResultColumnInfo, ValueType } from "@/api";
 import {
@@ -218,16 +217,14 @@ import {
   referenceEntriesRef,
 } from "@/state/user_view";
 import { UserView } from "@/components";
-import { ScopeName, AddedRowId, AutoSaveLock } from "@/state/staging_changes";
-import { attrToQueryRef, attrToQuerySelf, IAttrToQueryOpts, IQuery } from "@/state/query";
+import { AddedRowId, AutoSaveLock } from "@/state/staging_changes";
+import { IAttrToQueryOpts } from "@/state/query";
 import {
   equalRowPositionRef,
   IAddedRowPositionRef,
-  IAddedRowRef,
   IExistingRowPositionRef,
   ILocalRow,
   ILocalRowInfo,
-  INewRowRef,
   LocalUserView,
   RowPositionRef,
   RowRef,
@@ -238,7 +235,7 @@ import { Action } from "@/components/ActionsMenu.vue";
 import TableRow from "@/components/views/table/TableRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
 import TableCellEdit, { ICellCoords, IEditParams } from "@/components/views/table/TableCellEdit.vue";
-import { Link, attrToLinkRef, attrToLinkSelf, attrToLink } from "@/links";
+import { Link, attrToLinkRef, attrToLinkSelf } from "@/links";
 import * as R from "ramda";
 
 interface ITableEditing {

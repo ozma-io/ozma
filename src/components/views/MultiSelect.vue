@@ -94,22 +94,18 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Watch, Vue } from "vue-property-decorator";
-import * as R from "ramda";
+import { Component, Prop } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
 
-import { RecordSet, tryDicts, mapMaybe } from "@/utils";
-import { AttributesMap, IResultColumnInfo, IReferenceFieldType, IMainFieldInfo, IEntityRef } from "@/api";
-import { CurrentEntries, CombinedUserView, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, homeSchema, referenceEntriesRef } from "@/state/user_view";
+import { tryDicts, mapMaybe } from "@/utils";
+import { IRowCommon, ICombinedRow, referenceEntriesRef } from "@/state/user_view";
 import { RowRef, ValueRef } from "@/local_user_view";
-import { AddedRowId } from "@/state/staging_changes";
-import { IQuery, attrToQueryRef } from "@/state/query";
+import { IQuery } from "@/state/query";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
 import { UserView } from "@/components";
-import BaseUserView, { ISelectionRef, EmptyBaseUserView } from "@/components/BaseUserView";
+import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import BaseEntriesView from "@/components/BaseEntriesView";
-import FormEntry from "@/components/views/form/FormEntry.vue";
 import MultiSelect from "@/components/multiselect/MultiSelect.vue";
 import { attrToLinkRef } from "@/links";
 

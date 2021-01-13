@@ -91,10 +91,9 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import moment, { Moment, months, Duration } from "moment";
+import { Component, Prop, Vue } from "vue-property-decorator";
+import moment, { Moment } from "moment";
 
-import { dateFormat, dateTimeFormat, valueToText } from "@/values";
 import DatePicker from "@/components/calendar/DatePicker.vue";
 import TimePicker from "@/components/calendar/TimePicker.vue";
 import { nextRender } from "@/utils";

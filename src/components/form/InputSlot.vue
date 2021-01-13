@@ -74,15 +74,10 @@
 </template>
 
 <script lang="ts">
-import { Action } from "@/components/ActionsMenu.vue";
-import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import { mixins } from "vue-class-component";
-
-import { getTextWidth } from "@/utils";
+import { Vue, Component, Prop } from "vue-property-decorator";
 
 import Modal from "@/components/modal/Modal.vue";
 import Input from "@/components/form/Input.vue";
-import { ICombinedValue } from "@/state/user_view";
 
 @Component({ components: { Modal, Input } })
 export default class InputSlot extends Vue {

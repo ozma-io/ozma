@@ -80,8 +80,7 @@
 </template>
 
 <script lang="ts">
-import * as R from "ramda";
-import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { Component, Vue, Prop } from "vue-property-decorator";
 
 import type { ICombinedValue } from "@/state/user_view";
 import { valueIsNull } from "@/values";

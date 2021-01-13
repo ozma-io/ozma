@@ -10,7 +10,7 @@
 
 <script lang="ts">
 import { Vue, Prop, Component } from "vue-property-decorator";
-import Card, { ICard, ICardRow } from "@/components/kanban/Card.vue";
+import Card, { ICard } from "@/components/kanban/Card.vue";
 
 const data: ICard = {
   rows: [

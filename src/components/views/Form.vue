@@ -93,28 +93,23 @@
 </template>
 
 <script lang="ts">
-import * as R from "ramda";
-import { Component, Prop, Watch, Vue } from "vue-property-decorator";
+import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-import { Store } from "vuex";
 import { namespace } from "vuex-class";
 
 import { tryDicts, mapMaybe } from "@/utils";
-import { AttributesMap, IResultColumnInfo } from "@/api";
-import { CombinedUserView, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, homeSchema } from "@/state/user_view";
-import { ScopeName, AddedRowId } from "@/state/staging_changes";
+import { ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, homeSchema } from "@/state/user_view";
+import { AddedRowId } from "@/state/staging_changes";
 import { IQuery } from "@/state/query";
-import { LocalUserView, SimpleLocalUserView, ILocalRowInfo, ILocalRow, ValueRef, RowRef } from "@/local_user_view";
+import { LocalUserView, ILocalRowInfo, ILocalRow, RowRef } from "@/local_user_view";
 import { UserView } from "@/components";
 import { Action } from "@/components/ActionsMenu.vue";
-import BaseUserView, { ISelectionRef } from "@/components/BaseUserView";
+import BaseUserView from "@/components/BaseUserView";
 
 import FormEntry from "@/components/views/form/FormEntry.vue";
 
-import {
-  IFieldInfo, IBlockInfo, IFormValueExtra, IFormRowExtra, IFormUserViewExtra, GridElement, IGridSection, IGridInput, IGridButtons, IButtonAction,
-} from "@/components/form/types";
-import { attrToLink, attrToLinkSelf } from "@/links";
+import { IFormValueExtra, IFormRowExtra, IFormUserViewExtra, GridElement, IGridSection, IGridInput, IGridButtons, IButtonAction } from "@/components/form/types";
+import { attrToLink } from "@/links";
 
 type IFormLocalRowInfo = ILocalRowInfo<IFormRowExtra>;
 type IFormLocalRow = ILocalRow<IFormValueExtra, IFormRowExtra>;

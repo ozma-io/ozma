@@ -58,8 +58,8 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
-import { Action, namespace } from "vuex-class";
+import { Component, Vue } from "vue-property-decorator";
+import { Action } from "vuex-class";
 
 import Api from "@/api";
 

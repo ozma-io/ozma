@@ -2,7 +2,7 @@ import Vue from "vue";
 import { Module, ActionContext } from "vuex";
 import { Moment } from "moment";
 
-import { RecordSet, deepClone, mapMaybe, map2, waitTimeout, debugLog } from "@/utils";
+import { RecordSet, deepClone, mapMaybe, map2, waitTimeout } from "@/utils";
 import { IUpdatedValue, IFieldInfo, valueFromRaw, valueEquals } from "@/values";
 import {
   ITransaction, ITransactionResult, IEntityRef, IFieldRef, IEntity, RowId, SchemaName, FieldName, EntityName,
