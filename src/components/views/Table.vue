@@ -1094,12 +1094,13 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
   }
 
-  private clickOutsideEdit(event: MouseEvent) {
-    const element = event ? document.elementFromPoint(event.x, event.y) : null;
-    if (element) {
-      if (element.closest(".v--modal-box")) {
-        return;
-      }
+  private clickOutsideEdit(event: Event) {
+    const element = (event instanceof MouseEvent) ? document.elementFromPoint(event.x, event.y) : null;
+    // Fix for case when some cell is being edited and modal opens,
+    // otherwise any click on this modal will close the cell editing and modal too.
+    // FIXME: rely on CSS-classes for logic is bad thing, fix it someone, please.
+    if (element?.closest(".v--modal-box") && !this.$el.closest(".v--modal-box")) {
+      return;
     }
     this.removeCellEditing();
     this.cellEditHeight = 0;
