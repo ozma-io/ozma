@@ -10,11 +10,6 @@
 </i18n>
 <template>
   <fragment>
-    <div
-      v-if="!isCellEdit"
-      ref="inputMaxWidthSizeMeter"
-      class="input__max-width-size-meter"
-    />
     <input
       v-if="!isCellEdit"
       :id="id"
@@ -119,18 +114,13 @@ export default class Input extends Vue {
   @Watch("value")
   private onValueUpdate(value: string) {
     this.setInputHeight();
-    if (!this.$isMobile && !this.isCellEdit) {
-      this.updateWidth(value);
-    }
   }
 
   @Watch("autofocus")
   private onAutofocus(autofocus: boolean) {
     if (autofocus) {
-      const control = this.$refs.control as HTMLInputElement;
-      if (control) {
-        control.focus();
-      }
+      const control = this.$refs.control as HTMLInputElement | undefined;
+      control?.focus();
     }
   }
 
@@ -156,9 +146,6 @@ export default class Input extends Vue {
   private onFocus(evt: Event) {
     this.$emit("focus", evt);
     this.focused = true;
-    if (!this.$isMobile) {
-      this.updateWidth(this.value);
-    }
   }
 
   private onBlur(evt: Event) {
@@ -190,25 +177,6 @@ export default class Input extends Vue {
     if (this.$refs.controlTextarea) {
       const controlTextareaElement = this.$refs.controlTextarea as any;
       this.$emit("set-input-height", controlTextareaElement.$el.clientHeight);
-    }
-  }
-
-  private updateWidth(text: string) {
-    this.maxInputWidth = (this.$refs.inputMaxWidthSizeMeter as HTMLDivElement).offsetWidth;
-    const value = text !== "" ? text : String(this.$t("input_placeholder"));
-    const controlElement = this.$refs.control as HTMLInputElement;
-    const autosizeMeter = this.$refs.autosizeMeter as HTMLSpanElement;
-    const leftPos = controlElement.getBoundingClientRect().left;
-    const newWidth = autosizeMeter.scrollWidth >= this.maxInputWidth
-      ? autosizeMeter.scrollWidth
-      : this.maxInputWidth;
-    const rightPos = leftPos + newWidth;
-    const viewportWidth = document.documentElement.clientWidth - 10;
-
-    if (rightPos < (viewportWidth - 15)) {
-      controlElement.style.width = `${newWidth + 10}px`;
-    } else {
-      controlElement.style.width = `${viewportWidth - leftPos + 10}px`;
     }
   }
 }
@@ -390,10 +358,6 @@ export default class Input extends Vue {
 
   .input_modal__button__cancel {
     background-color: var(--FailColor);
-  }
-
-  .input__max-width-size-meter {
-    visibility: hidden;
   }
 
   .material-icons.qr_code {
