@@ -115,7 +115,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
 
@@ -125,6 +125,7 @@ import { IQuery } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
 import MultiSelect, { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 
+import { Action } from "@/components/ActionsMenu.vue";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import { attrToLinkRef } from "@/links";
 

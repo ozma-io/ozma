@@ -91,9 +91,10 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
-import moment, { Moment } from "moment";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import moment, { Moment, months, Duration } from "moment";
 
+import { dateFormat, dateTimeFormat, valueToText } from "@/values";
 import DatePicker from "@/components/calendar/DatePicker.vue";
 import TimePicker from "@/components/calendar/TimePicker.vue";
 import { nextRender } from "@/utils";
@@ -111,7 +112,7 @@ export default class Calendar extends Vue {
   @Prop({ default: true, type: Boolean }) showTime!: boolean;
   @Prop({ type: Number, default: null }) timeStep!: number | null;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  // FIXME: remove this and style parent nodes instead.
+  @Prop({ type: Boolean, default: false }) noOpenOnFocus!: boolean;
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
 
   private isCalendarOpen = false;
@@ -139,13 +140,15 @@ export default class Calendar extends Vue {
 
   private onInputFocus() {
     this.$emit("focus");
-    this.isCalendarOpen = true;
-    void nextRender().then(() => {
-      const bodyRect = document.body.getBoundingClientRect();
-      const popup = this.$refs.popup as HTMLInputElement;
-      const popupRect = popup.getBoundingClientRect();
-      this.position = !((bodyRect.bottom - popupRect.bottom) > 0);
-    });
+    if (!this.noOpenOnFocus) {
+      this.isCalendarOpen = true;
+      void nextRender().then(() => {
+        const bodyRect = document.body.getBoundingClientRect();
+        const popup = this.$refs.popup as HTMLInputElement;
+        const popupRect = popup.getBoundingClientRect();
+        this.position = !((bodyRect.bottom - popupRect.bottom) > 0);
+      });
+    }
   }
 
   get dateValue() {

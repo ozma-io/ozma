@@ -170,7 +170,7 @@ import { namespace } from "vuex-class";
 
 import * as Api from "@/api";
 import { setHeadTitle } from "@/elements";
-import { CurrentUserViews } from "@/state/user_view";
+import { CombinedUserView, CurrentUserViews, IUserViewArguments, UserViewError } from "@/state/user_view";
 import { ErrorKey } from "@/state/errors";
 import { CurrentChanges, ScopeName } from "@/state/staging_changes";
 import { Action } from "@/components/ActionsMenu.vue";
@@ -179,7 +179,7 @@ import ModalUserView from "@/components/ModalUserView.vue";
 import SearchPanel from "@/components/SearchPanel.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { CurrentAuth, getAuthedLink } from "@/state/auth";
-import { IQuery, ICurrentQueryHistory } from "@/state/query";
+import { ICurrentQuery, IQuery, queryLocation, ICurrentQueryHistory } from "@/state/query";
 import { convertToWords } from "@/utils";
 
 const auth = namespace("auth");

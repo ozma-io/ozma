@@ -68,13 +68,6 @@ export default class CodeEditor extends Vue {
     }
   }
 
-  @Watch("autofocus")
-  private onAutofocus(autofocus: boolean) {
-    if (autofocus && this.editor) {
-      this.editor.focus();
-    }
-  }
-
   private beforeDestroy() {
     this.editor!.dispose();
   }

@@ -1,4 +1,4 @@
-import { withKnobs } from "@storybook/addon-knobs";
+import { boolean, withKnobs } from "@storybook/addon-knobs";
 import { storiesOf } from "@storybook/vue";
 
 import CardWrapper from "@/stories/components/kanban/CardWrapper.vue";

@@ -91,20 +91,23 @@
 </template>
 
 <script lang="ts">
+import { VueConstructor } from "vue";
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
+import { Store } from "vuex";
 
-import { RecordSet, ReferenceName, deepEquals, snakeToPascal, deepClone } from "@/utils";
+import { RecordSet, ReferenceName, deepEquals, snakeToPascal, deepClone, waitTimeout } from "@/utils";
 import { funappSchema } from "@/api";
 import { equalEntityRef } from "@/values";
-import type { IUserViewArguments, IUserViewEventHandler } from "@/state/user_view";
-import { CombinedUserView, UserViewError, CurrentUserViews, UserViewResult } from "@/state/user_view";
+import type { IUserViewArguments, IUserViewEventHandler, IUserViewState } from "@/state/user_view";
+import { CombinedUserView, UserViewError, CurrentUserViews, homeSchema, UserViewResult } from "@/state/user_view";
+import { CurrentAuth } from "@/state/auth";
 import type { CombinedTransactionResult, ICombinedInsertEntityResult, ScopeName } from "@/state/staging_changes";
-import { ICurrentQuery, IQuery } from "@/state/query";
+import { ICurrentQuery, queryLocation, IQuery, IAttrToQueryOpts } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
 import { IHandlerProvider } from "@/local_user_view";
 import { Action } from "@/components/ActionsMenu.vue";
-import { LocalBaseUserView } from "@/components/BaseUserView";
+import { ISelectionRef, LocalBaseUserView } from "@/components/BaseUserView";
 import UserViewCommon from "@/components/UserViewCommon.vue";
 import { IPanelButton } from "@/components/ButtonsPanel.vue";
 import { addLinkDefaultArgs, attrToLink, Link, linkHandler } from "@/links";
@@ -459,22 +462,30 @@ export default class UserView extends Vue {
         return;
       }
       const id = (createOp as ICombinedInsertEntityResult).id;
-      const customLink = attrToLink(uv.attributes["post_create_link"], { defaultTarget: "root" });
-      let link: Link;
-      if (customLink === null) {
-        link = {
-          query: {
-            defaultValues: {},
-            args: { source: uv.args.source, args: { id } },
-            search: "",
-          },
-          target: "root",
+      if (id !== null && this.selectionMode) {
+        const ref: ISelectionRef = {
+          entity: uv.info.mainEntity!,
+          id,
         };
+        this.$emit("select", ref);
       } else {
-        addLinkDefaultArgs(customLink, { id });
-        link = customLink;
+        const customLink = attrToLink(uv.attributes["post_create_link"], { defaultTarget: "root" });
+        let link: Link;
+        if (customLink === null) {
+          link = {
+            query: {
+              defaultValues: {},
+              args: { source: uv.args.source, args: { id } },
+              search: "",
+            },
+            target: "root",
+          };
+        } else {
+          addLinkDefaultArgs(customLink, { id });
+          link = customLink;
+        }
+        void linkHandler(this.$store, (...args) => this.$emit(...args), link).handler();
       }
-      void linkHandler(this.$store, (...args) => this.$emit(...args), link).handler();
     })();
   }
 }

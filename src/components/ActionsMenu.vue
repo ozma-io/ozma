@@ -149,6 +149,7 @@ import { RawLocation } from "vue-router";
 import { IPanelButton } from "@/components/ButtonsPanel.vue";
 
 import { Link } from "@/links";
+import { IActionRef } from "ozma-api/src";
 
 export interface IAction {
   icon?: string;

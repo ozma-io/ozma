@@ -186,7 +186,7 @@
 import * as R from "ramda";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { valueIsNull } from "@/values";
-import { replaceHtmlLinks } from "@/utils";
+import { nextRender, replaceHtmlLinks } from "@/utils";
 
 export interface ISelectOption {
   value: any;
@@ -212,6 +212,7 @@ export default class MultiSelect extends Vue {
   @Prop({ default: null }) emptyValue: any;
   @Prop({ type: Number, default: null }) height!: number;
   @Prop({ type: String, default: null }) optionsListHeight!: string;
+  @Prop({ type: Boolean, default: false }) dontOpen!: boolean;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
 
   private isOpen = false;
@@ -230,13 +231,6 @@ export default class MultiSelect extends Vue {
       void Vue.nextTick().then(() => {
         this.setIsOpen(true);
       });
-    }
-  }
-
-  @Watch("autofocus")
-  private onAutofocus(autofocus: boolean) {
-    if (autofocus) {
-      this.setIsOpen(true);
     }
   }
 
@@ -388,13 +382,15 @@ export default class MultiSelect extends Vue {
       return;
     }
     this.setOptionsContainerCoords();
-    this.isOpen = val;
-    this.selectedOption = -1;
-    if (val) {
-      // Using nextTick() to set focus because upon setting isOpen it's not present yet
-      void Vue.nextTick().then(() => {
-        this.focusInput();
-      });
+    if (!this.dontOpen) {
+      this.isOpen = val;
+      this.selectedOption = -1;
+      if (val) {
+        // Using nextTick() to set focus because upon setting isOpen it's not present yet
+        void Vue.nextTick().then(() => {
+          this.focusInput();
+        });
+      }
     }
     if (val) {
       this.$emit("focus", null);

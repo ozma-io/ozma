@@ -29,7 +29,7 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 import draggable from "vuedraggable";
 
-import type { CardTarget } from "@/components/kanban/Card.vue";
+import type { ICard, CardTarget } from "@/components/kanban/Card.vue";
 import Column, { IColumn } from "@/components/kanban/Column.vue";
 import { dragscroll } from "vue-dragscroll";
 import { ValueRef } from "../../local_user_view";

@@ -77,13 +77,14 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Watch } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { QrcodeStream } from "vue-qrcode-reader";
 import { mixins } from "vue-class-component";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import { IEntriesRef } from "@/state/user_view";
 import type { Link } from "@/links";
-import { linkHandler } from "@/links";
+import { linkHandler, attrToLinkRef } from "@/links";
+import { saveAndRunAction } from "@/state/actions";
 import { IQuery } from "@/state/query";
 import { namespace } from "vuex-class";
 import { IPrintQRCode } from "@/components/qrcode/QRCode.vue";

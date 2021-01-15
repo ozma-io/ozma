@@ -6,7 +6,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve:lite": "vue-cli-service serve --mode development --skip-plugins @vue/cli-plugin-eslint,@ascendancyy/vue-cli-plugin-stylelint",
+    "serve:lite": "vue-cli-service serve --mode development --skip-plugins @vue/cli-plugin-eslint",
     "serve": "vue-cli-service serve --mode development",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
@@ -81,7 +81,6 @@
     "eslint": "^7.15.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-unused-imports": "^1.0.1",
     "eslint-plugin-vue": "^7.0.0-alpha.0",
     "fast-async": "^7.0.6",
     "sass": "^1.18.0",

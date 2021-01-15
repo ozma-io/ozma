@@ -43,7 +43,7 @@
         :level="level"
         is-cell-edit
         autofocus
-        modal-only
+        auto-open
         @set-input-height="setInputHeight"
         @update="updateCurrentValue"
         @close-modal-input="clickOutsideEdit"
@@ -210,10 +210,11 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
+import { Store } from "vuex";
 import { Moment } from "moment";
 import * as moment from "moment";
 
-import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, debugLog } from "@/utils";
+import { deepEquals, isFirefox, isIOS, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName } from "@/utils";
 import { valueIsNull } from "@/values";
 import { IResultColumnInfo, ValueType } from "@/api";
 import {
@@ -230,14 +231,16 @@ import {
   referenceEntriesRef,
 } from "@/state/user_view";
 import { UserView } from "@/components";
-import { AddedRowId, AutoSaveLock } from "@/state/staging_changes";
-import { IAttrToQueryOpts } from "@/state/query";
+import { ScopeName, AddedRowId, AutoSaveLock } from "@/state/staging_changes";
+import { attrToQueryRef, attrToQuerySelf, IAttrToQueryOpts, IQuery } from "@/state/query";
 import {
   equalRowPositionRef,
   IAddedRowPositionRef,
+  IAddedRowRef,
   IExistingRowPositionRef,
   ILocalRow,
   ILocalRowInfo,
+  INewRowRef,
   LocalUserView,
   RowPositionRef,
   RowRef,
@@ -248,7 +251,7 @@ import { Action } from "@/components/ActionsMenu.vue";
 import TableRow from "@/components/views/table/TableRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
 import TableCellEdit, { ICellCoords, IEditParams } from "@/components/views/table/TableCellEdit.vue";
-import { Link, attrToLinkRef, attrToLinkSelf } from "@/links";
+import { Link, attrToLinkRef, attrToLinkSelf, attrToLink } from "@/links";
 import * as R from "ramda";
 
 interface ITableEditing {
@@ -742,6 +745,7 @@ const staging = namespace("staging");
 export default class UserViewTable extends mixins<BaseUserView<LocalTableUserView, ITableValueExtra, ITableRowExtra, ITableUserViewExtra>>(BaseUserView) {
   @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
   @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
+  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void> }) => Promise<void>;
   @userView.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IEntriesRef; reference: ReferenceName }) => void;
   @userView.Action("getEntries") getEntries!: (args: { reference: ReferenceName; ref: IEntriesRef }) => Promise<Entries>;
 
@@ -1072,7 +1076,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     this.buildRowPositions();
   }
 
-  // Update this.rowsPositions when this.uv.rows has changed.
+  // Update this.rows from this.entries
   private buildRowPositions() {
     const rows = this.uv.rows;
     if (rows === null) {
@@ -1085,14 +1089,13 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
         this.rowPositions = this.rowPositions.filter(rowI => this.local.rows[rowI].extra.visible);
         this.isTree = true;
       }
-      debugLog("buildRowsPositions", this.uv.rows, this.rowPositions);
       this.sortRows();
       this.updateShowLength();
     }
   }
 
-  private clickOutsideEdit(event: Event) {
-    const element = (event instanceof MouseEvent) ? document.elementFromPoint(event.x, event.y) : null;
+  private clickOutsideEdit(event: MouseEvent) {
+    const element = event ? document.elementFromPoint(event.x, event.y) : null;
     if (element) {
       if (element.closest(".v--modal-box")) {
         return;
@@ -1105,6 +1108,12 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   private removeCellEditing() {
     if (this.editing === null) {
       return;
+    }
+
+    if ("loss_of_focus_save" in this.uv.attributes
+     && Boolean(this.uv.attributes["loss_of_focus_save"])
+    ) {
+      void this.submitChanges({ scope: this.scope });
     }
 
     void this.removeAutoSaveLock(this.editing.lock);
@@ -1221,6 +1230,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
         void this.resetAddedEntry({
           entityRef: entity,
+          userView: this.uv.userViewKey,
           id: this.lastSelectedValue.id,
         });
       }

@@ -15,7 +15,7 @@
     :class="{'input_slot__row': inline, 'input-slot_cell-edit': isCellEdit}"
   >
     <Modal
-      v-if="modal"
+      v-if="$isMobile"
       :show="isModalOpen"
       fullscreen
       @opened="onModalOpen"
@@ -25,10 +25,7 @@
         <div class="input_modal__input_group">
           <div>
             <slot
-              name="input"
-              :onFocus="emptyHandler"
-              modal
-              :autofocus="isModalOpen"
+              name="input-modal"
             />
           </div>
           <div class="input_modal__button_container">
@@ -43,55 +40,65 @@
         </div>
       </template>
     </Modal>
-    <template v-if="!(modalOnly && modal)">
-      <b-col
-        v-if="label"
-        :cols="inline ? 4 : 12"
-      >
-        <div class="input_label__container">
-          <label
-            v-if="label"
-            :class="['input_label', { 'input_label__focused': focused }]"
-            :for="inputName"
-            :title="label"
-          >{{ label }}</label>
-        </div>
-      </b-col>
-      <b-col
-        :cols="(!!label && inline) ? 8 : 12"
-        :class="['input_container', `text_align_${textAlign}`, {'input_container_cell-edit': isCellEdit}]"
+    <b-col
+      v-if="label"
+      :cols="inline ? 4 : 12"
+    >
+      <div class="input_label__container">
+        <label
+          v-if="label"
+          :class="['input_label', { 'input_label__focused': focused }]"
+          :for="inputName"
+          :title="label"
+        >{{ label }}</label>
+      </div>
+    </b-col>
+    <b-col
+      :cols="(!!label && inline) ? 8 : 12"
+      :class="['input_container', `text_align_${textAlign}`, {'input_container_cell-edit': isCellEdit}]"
+    >
+      <div
+        :style="{ backgroundColor: backgroundColor }"
       >
         <slot
           name="input"
-          :onFocus="onNonmodalFocus"
+          :onFocus="onFocus"
         />
-      </b-col>
-    </template>
+      </div>
+    </b-col>
   </b-row>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
+import { Action } from "@/components/ActionsMenu.vue";
+import { Vue, Component, Prop, Watch } from "vue-property-decorator";
+import { mixins } from "vue-class-component";
+
+import { getTextWidth } from "@/utils";
 
 import Modal from "@/components/modal/Modal.vue";
 import Input from "@/components/form/Input.vue";
+import { ICombinedValue } from "@/state/user_view";
 
 @Component({ components: { Modal, Input } })
 export default class InputSlot extends Vue {
   @Prop({ type: String }) label!: string;
+  @Prop({ type: Boolean }) error!: boolean;
+  @Prop({ type: String }) warning!: string;
+  @Prop({ type: Number }) height!: number;
+  @Prop({ type: Array }) actions!: Action[];
+  @Prop({ type: Boolean }) disabled!: boolean;
   @Prop({ type: Boolean, default: true }) inline!: boolean;
-  // FIXME: remove this and style parent nodes instead.
+  @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: String, default: "left" }) textAlign!: string;
-  @Prop({ type: Boolean, default: false }) modal!: boolean;
-  @Prop({ type: Boolean, default: false }) modalOnly!: boolean;
 
   private focused = false;
   private isModalOpen = false;
 
-  private created() {
-    if (this.modalOnly && this.modal) {
+  private mounted() {
+    if (this.autoOpen && this.$isMobile) {
       this.isModalOpen = true;
     }
   }
@@ -109,16 +116,13 @@ export default class InputSlot extends Vue {
     });
   }
 
-  private emptyHandler() {
-  }
-
   private onModalClose() {
     this.isModalOpen = false;
     this.$emit("close-modal-input");
   }
 
-  private onNonmodalFocus() {
-    if (this.modal) {
+  private onFocus() {
+    if (this.$isMobile) {
       this.isModalOpen = true;
     }
   }
@@ -131,6 +135,10 @@ export default class InputSlot extends Vue {
 </script>
 
 <style lang="scss" scoped>
+  .input_slot {
+    /* padding: 0 15px; */
+  }
+
   .input_slot__row {
     flex-direction: row;
   }

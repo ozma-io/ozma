@@ -52,7 +52,7 @@
 
 <script lang="ts">
 /* eslint @typescript-eslint/unbound-method: "warn" */
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import FormGrid from "@/components/form/FormGrid.vue";
 import { IGridProps } from "@/components/form/types";
 

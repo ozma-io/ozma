@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import jwtDecode from "jwt-decode";
 
 import { IRef } from "@/utils";
-import { FunDBError, disableAuth, authClientId, authUrl, developmentMode } from "@/api";
+import { FunDBError, disableAuth, authClientId, authUrl, default as Api, developmentMode } from "@/api";
 import * as Utils from "@/utils";
 import { router, getQueryValue } from "@/modules";
 

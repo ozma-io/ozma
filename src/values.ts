@@ -1,6 +1,5 @@
 import { ValueType, FieldType, IFieldRef, IEntityRef } from "@/api";
 import moment, { Moment, MomentInput } from "moment";
-import { deepEquals } from "./utils";
 
 // Date/time is stored as Moment objects in UTC.
 export const dateFormat = "L";
@@ -21,9 +20,10 @@ export const equalFieldRef = (a: IFieldRef, b: IFieldRef) => {
 
 export interface IUpdatedValue {
   // "edited" value - may come in several different types, like parsed moment date or a string for a "datetime" field.
-  rawValue: unknown;
+  rawValue: any;
   // `undefined` here means that value didn't pass validation
-  value: unknown;
+  value: any;
+  erroredOnce: boolean; // failed on submit
 }
 
 // Should be in sync with `valueFromRaw` and be idempotent.
@@ -40,18 +40,6 @@ export const valueToText = (valueType: ValueType, value: unknown): string => {
     return JSON.stringify(value);
   } else {
     return String(value);
-  }
-};
-
-export const valueEquals = (valueType: ValueType, a: unknown, b: unknown) : boolean => {
-  if (a === undefined || b === undefined) {
-    return false;
-  }
-
-  if (valueType.type === "date" || valueType.type === "datetime") {
-    return (a as Moment).isSame(b as Moment);
-  } else {
-    return deepEquals(a, b);
   }
 };
 
