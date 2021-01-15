@@ -26,27 +26,26 @@
       </div>
     </template>
     <template v-else>
-      <div class="menu_entry">
-        <input
-          v-if="!entry.icon"
-          type="button"
-          class="material-icons menu_entry_icon"
-          value="chevron_right"
+      <FunLink
+        class="menu-entry"
+        :link="entry.link"
+        @goto="$emit('goto', $event)"
+      >
+        <i
+          :class="[
+            'material-icons',
+            'icon',
+            {
+              'no-icon': !entry.icon,
+              'emoji': getIconType(entry.icon) === 'emoji',
+            }]"
         >
-        <div
-          v-else
-          class="material-icons menu_entry_icon menu_entry_icon__text"
-        >
-          {{ entry.icon }}
-        </div>
-        <FunLink
-          class="navigation-entry"
-          :link="entry.link"
-          @goto="$emit('goto', $event)"
-        >
+          {{ entry.icon || "chevron_right" }}
+        </i>
+        <span class="name">
           {{ entry.name }}
-        </FunLink>
-      </div>
+        </span>
+      </FunLink>
     </template>
   </b-col>
 </template>
@@ -56,6 +55,7 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 
 import MenuHeading from "@/components/menu/MenuHeading.vue";
 import { Link } from "@/links";
+import { getIconType } from "@/utils";
 
 interface IMenuBase {
   name: string;
@@ -90,6 +90,10 @@ export default class MenuEntry extends Vue {
     const fontSize = initialSize;
     return { fontSize: `${fontSize}px` };
   }
+
+  private getIconType(str: string | undefined | null) {
+    return getIconType(str);
+  }
 }
 </script>
 
@@ -123,45 +127,40 @@ export default class MenuEntry extends Vue {
     padding-left: 0;
   }
 
-  .menu_entry > a {
+  .menu-entry {
     @include material-button;
 
     width: 100%;
+    display: flex;
+    align-items: center;
     color: var(--MainTextColor);
-    text-decoration: underline;
-    text-decoration-color: var(--MainBorderColor);
-    margin-left: 5px;
-    padding-top: 2px;
+    margin-bottom: 5px;
+    text-decoration: none;
+
+    .icon {
+      user-select: none;
+
+      &.no-icon {
+        color: var(--MainBorderColor);
+      }
+
+      &.emoji {
+        font-family: initial;
+      }
+    }
+
+    .name {
+      margin-left: 5px;
+    }
   }
 
   .first_level_entries {
     padding-left: 0 !important;
   }
 
-  .menu_entry {
-    display: flex;
-    align-items: center;
-    color: var(--MainTextColor);
-    margin-bottom: 5px;
-  }
-
   .menu_category_title {
     color: #000;
     font-weight: bold;
-  }
-
-  .menu_entry_icon {
-    background: none;
-    color: var(--MainBorderColor);
-    border: none;
-    padding: 0;
-  }
-
-  .menu_entry_icon__text {
-    color: var(--MainTextColor);
-    width: 24px;
-    font-size: 20px;
-    line-height: 24px;
   }
 
   @media (max-width: 600px) {

@@ -670,3 +670,14 @@ export const replaceHtmlLinks = (text: string): string => {
   const sanitized = sanitizeHtml(text, { allowedTags: [], disallowedTagsMode: "escape" });
   return sanitized.replace(linksRegex, replaceLink);
 };
+
+const asciiRegex = /[\p{ASCII}]+/u;
+export const isAscii = (str: string): boolean => asciiRegex.test(str);
+
+export type IconType = "material" | "emoji" | null;
+export const getIconType = (str: string | null | undefined): IconType => {
+  if (!str) return null;
+  return isAscii(str)
+    ? "material"
+    : "emoji";
+};
