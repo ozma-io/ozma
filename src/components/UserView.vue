@@ -53,7 +53,6 @@
       />
       <component
         :is="`UserView${state.componentName}`"
-        ref="userViewRef"
         :uv="state.uv"
         :is-root="isRoot"
         :is-top-level="isTopLevel"
@@ -331,8 +330,6 @@ export default class UserView extends Vue {
           component,
           uv: newUv,
         });
-
-        this.scrollToTop();
       } else if (newType.type === "link") {
         const handler = linkHandler(this.$store, (...args) => this.$emit(...args), newType.link);
         await handler.handler();
@@ -361,10 +358,6 @@ export default class UserView extends Vue {
       // We need deep clone here as args may change, and getUserView expects them freezed.
       void this.getUserView({ args: deepClone(this.args), reference: this.uid });
     }
-  }
-
-  private scrollToTop() {
-    (this.$refs.userViewRef as Vue)?.$el.scrollTo(0, 0);
   }
 
   private destroyCurrentUserView() {
