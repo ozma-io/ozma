@@ -24,15 +24,13 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { Component, Vue, Prop } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { IEntityRef, IEntity } from "@/api";
 import { equalEntityRef } from "@/values";
-import { Action } from "@/components/ActionsMenu.vue";
 import type { IQuery } from "@/state/query";
 import { ErrorKey } from "@/state/errors";
-import { CurrentChanges, ScopeName } from "@/state/staging_changes";
 import { ISelectionRef } from "@/components/BaseUserView";
 import ModalUserView from "@/components/ModalUserView.vue";
 

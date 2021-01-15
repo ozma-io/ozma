@@ -20,108 +20,16 @@
 <template>
   <fragment>
     <InputSlot
-      v-if="inputType.name !== 'userview' && inputType.name !== 'reference' && inputType.name !== 'empty_userview'"
-      :is-cell-edit="isCellEdit"
-      :label="(inputType.name !== 'static_text' && inputType.name !== 'static_image') ? caption : ''"
+      v-if="inputType.name !== 'userview' && inputType.name !== 'empty_userview'"
       :inline="!isInline"
-      :value="currentValue"
-      :actions="actions"
-      :auto-open="autoOpen"
+      :modal-only="modalOnly"
+      :is-cell-edit="isCellEdit"
+      :label="(inputType.name === 'static_text' || inputType.name === 'static_image') ? undefined : caption"
       :background-color="cellColor"
       :text-align="textAlign"
+      :modal="$isMobile && (forceModalOnMobile || isMultiline)"
       @close-modal-input="$emit('close-modal-input')"
     >
-      <template #input-modal>
-        <Input
-          v-if="inputType.name === 'text'"
-          :value="currentValue"
-          :is-cell-edit="isCellEdit"
-          :dont-focus="dontFocus"
-          :disabled="isDisabled"
-          :autofocus="autofocus || $isMobile"
-          :error="value.erroredOnce"
-          :required="!isNullable"
-          :qrcode-input="isQRCodeInput"
-          focus
-          @set-input-height="setInputHeight"
-          @input="updateValue($event)"
-        />
-        <Textarea
-          v-else-if="inputType.name === 'textarea'"
-          :value="currentValue"
-          :is-cell-edit="isCellEdit"
-          :autofocus="autofocus || $isMobile"
-          :dont-focus="dontFocus"
-          :disabled="isDisabled"
-          :error="value.erroredOnce"
-          :required="!isNullable"
-          @set-input-height="setInputHeight"
-          @update:value="updateValue"
-        />
-        <Calendar
-          v-else-if="inputType.name === 'calendar'"
-          ref="control"
-          :value="currentValue"
-          :is-cell-edit="isCellEdit"
-          :autofocus="autofocus || $isMobile"
-          :show-time="inputType.showTime"
-          :time-step="inputType.timeStep"
-          :error="value.erroredOnce"
-          :required="!isNullable"
-          @update:value="updateValue"
-        />
-        <MultiSelect
-          v-else-if="inputType.name === 'select'"
-          ref="control"
-          :value="currentValue"
-          :options="inputType.options"
-          :autofocus="autofocus || $isMobile"
-          :height="customHeight"
-          single
-          :error="value.erroredOnce"
-          :required="!isNullable"
-          :disabled="isDisabled"
-          :is-cell-edit="isCellEdit"
-          @update:value="updateValue"
-        />
-        <CodeEditor
-          v-else-if="inputType.name === 'codeeditor'"
-          :key="codeEditorKey"
-          ref="control"
-          :language="inputType.language"
-          is-modal
-          :content="textValue"
-          :read-only="isDisabled"
-          :is-cell-edit="isCellEdit"
-          :autofocus="autofocus"
-          :error="value.erroredOnce"
-          :required="!isNullable"
-          @update:content="updateValue"
-        />
-        <MarkdownEditor
-          v-else-if="inputType.name === 'markdown'"
-          ref="control"
-          :height="customHeight"
-          :edit-type="inputType.editType"
-          :content="textValue"
-          :read-only="isDisabled"
-          :error="value.erroredOnce"
-          :required="!isNullable"
-          @update:content="updateValue"
-        />
-        <QRCode
-          v-else-if="inputType.name === 'qrcode'"
-          ref="control"
-          :height="customHeight"
-          :content="textValue"
-        />
-        <BarCodePrint
-          v-else-if="inputType.name === 'barcode'"
-          ref="control"
-          :content="textValue"
-          @scanned="barCodeScanned"
-        />
-      </template>
       <template #input="iSlot">
         <template v-if="inputType.name === 'error'">
           {{ inputType.text }}
@@ -129,13 +37,11 @@
         <Input
           v-else-if="inputType.name === 'text'"
           :value="currentValue"
-          :autofocus="autofocus"
           :is-cell-edit="isCellEdit"
-          :dont-focus="dontFocus"
           :disabled="isDisabled"
-          :error="value.erroredOnce"
           :required="!isNullable"
           :qrcode-input="isQRCodeInput"
+          :autofocus="autofocus || iSlot.autofocus"
           @input="updateValue"
           @set-input-height="setInputHeight"
           @focus="iSlot.onFocus"
@@ -143,13 +49,11 @@
         <Textarea
           v-else-if="inputType.name === 'textarea'"
           :value="currentValue"
-          :autofocus="autofocus"
-          :dont-focus="dontFocus"
           :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
           :height="customHeight"
-          :error="value.erroredOnce"
           :required="!isNullable"
+          :autofocus="autofocus || iSlot.autofocus"
           @set-input-height="setInputHeight"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
@@ -157,14 +61,12 @@
         <Calendar
           v-else-if="inputType.name === 'calendar'"
           ref="control"
-          :value="value.value"
+          :value="currentValue"
           :text-value="calendarValue"
-          :autofocus="autofocus"
-          :no-open-on-focus="$isMobile"
+          :autofocus="autofocus || iSlot.autofocus"
           :is-cell-edit="isCellEdit"
           :show-time="inputType.showTime"
           :time-step="inputType.timeStep"
-          :error="value.erroredOnce"
           :required="!isNullable"
           @focus="iSlot.onFocus"
           @update:value="updateValue"
@@ -176,10 +78,7 @@
           :options="inputType.options"
           :height="customHeight"
           single
-          :autofocus="autofocus"
-          :dont-open="$isMobile"
-          :is-cell-edit="isCellEdit"
-          :error="value.erroredOnce"
+          :autofocus="autofocus || iSlot.autofocus"
           :required="!isNullable"
           :disabled="isDisabled"
           @update:value="updateValue"
@@ -190,12 +89,11 @@
           :key="codeEditorKey"
           ref="control"
           :language="inputType.language"
+          :is-modal="iSlot.modal"
           :style="inputType.style"
           :content="textValue"
           :read-only="isDisabled"
-          :is-cell-edit="isCellEdit"
-          :autofocus="autofocus"
-          :error="value.erroredOnce"
+          :autofocus="autofocus || iSlot.autofocus"
           :required="!isNullable"
           @update:content="updateValue"
         />
@@ -206,7 +104,7 @@
           :edit-type="inputType.editType"
           :content="textValue"
           :read-only="isDisabled"
-          :error="value.erroredOnce"
+          :autofocus="autofocus || iSlot.autofocus"
           :required="!isNullable"
           @update:content="updateValue"
         />
@@ -215,12 +113,10 @@
           ref="control"
           type="checkbox"
           :value="currentValue"
-          :autofocus="autofocus"
+          :autofocus="autofocus || iSlot.autofocus"
           :class="['form-control-panel_checkbox',
-                   {'form-control-panel_checkbox_error': value.erroredOnce,
-                    'form-control-panel_checkbox_req': isAwaited && !disableColor}]"
+                   {'form-control-panel_checkbox_req': isAwaited && !disableColor}]"
           :disabled="isDisabled"
-          :error="value.erroredOnce"
           :required="!isNullable"
           @input="updateValue($event.target.value)"
           @focus="iSlot.onFocus"
@@ -242,9 +138,28 @@
           {{ textValue }}
         </div>
         <img v-else-if="inputType.name === 'static_image'" :src="textValue">
+        <ReferenceField
+          v-else-if="inputType.name === 'reference'"
+          ref="control"
+          :value="value"
+          :select-views="inputType.selectViews"
+          :height="customHeight"
+          :entry="inputType.ref"
+          :linked-attr="inputType.linkedAttr"
+          :control-style="inputType.style"
+          :uv-args="uvArgs"
+          :autofocus="autofocus || iSlot.autofocus"
+          :is-nullable="isNullable"
+          :is-disabled="isDisabled"
+          :background-color="cellColor"
+          @update:actions="actions = $event"
+          @focus="iSlot.onFocus"
+          @update="updateValue($event)"
+          @goto="$emit('goto', $event)"
+        />
       </template>
     </InputSlot>
-    <template v-if="inputType.name === 'reference' || inputType.name === 'userview' || inputType.name == 'empty_userview'">
+    <template v-if="inputType.name === 'userview' || inputType.name == 'empty_userview'">
       <b-row>
         <b-col
           v-if="caption"
@@ -285,60 +200,7 @@
           </div>
         </b-col>
         <b-col :cols="isInline && caption ? 8 : 12">
-          <InputSlot
-            v-if="inputType.name === 'reference'"
-            style="padding-left: 0;"
-            :value="currentValue"
-            :type="type"
-            :auto-open="autoOpen"
-            :is-cell-edit="isCellEdit"
-            @close-modal-input="$emit('close-modal-input')"
-            @update:value="updateValue($event)"
-          >
-            <template #input-modal>
-              <ReferenceField
-                ref="control"
-                :value="value"
-                :select-views="inputType.selectViews"
-                :height="customHeight"
-                :entry="inputType.ref"
-                :linked-attr="inputType.linkedAttr"
-                :autofocus="autofocus || $isMobile"
-                :control-style="inputType.style"
-                :uv-args="uvArgs"
-                :is-cell-edit="isCellEdit"
-                :is-nullable="isNullable"
-                :is-disabled="isDisabled"
-                :background-color="cellColor"
-                @update:actions="actions = $event"
-                @update="updateValue"
-                @goto="$emit('goto', $event)"
-              />
-            </template>
-            <template #input="iSlot">
-              <ReferenceField
-                ref="control"
-                :value="value"
-                :select-views="inputType.selectViews"
-                :height="customHeight"
-                :entry="inputType.ref"
-                :linked-attr="inputType.linkedAttr"
-                :control-style="inputType.style"
-                :uv-args="uvArgs"
-                :autofocus="autofocus"
-                :dont-open="$isMobile"
-                :is-nullable="isNullable"
-                :is-disabled="isDisabled"
-                :is-cell-edit="isCellEdit"
-                :background-color="cellColor"
-                @update:actions="actions = $event"
-                @focus="iSlot.onFocus"
-                @update="updateValue($event)"
-                @goto="$emit('goto', $event)"
-              />
-            </template>
-          </InputSlot>
-          <div v-else-if="inputType.name === 'userview'" :style="{backgroundColor:cellColor}">
+          <div v-if="inputType.name === 'userview'" :style="{backgroundColor:cellColor}">
             <NestedUserView
               ref="control"
               :args="inputType.args"
@@ -363,16 +225,15 @@ import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import moment from "moment";
 
-import { valueToText, valueIsNull, dateTimeFormat } from "@/values";
+import { valueToText, valueIsNull } from "@/values";
 import type { AttributesMap, ValueType } from "@/api";
+import { router } from "@/modules";
 import { Action } from "@/components/ActionsMenu.vue";
 import type { IUserViewArguments, ICombinedValue, IEntriesRef } from "@/state/user_view";
 import { currentValue, homeSchema, referenceEntriesRef } from "@/state/user_view";
 import { IQuery, attrToQuerySelf, queryLocation } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
-import { attrToLinkSelf } from "@/links";
-import { router } from "@/modules";
-import { IReferenceSelectAction } from "./ReferenceField.vue";
+import { IReferenceSelectAction } from "@/components/ReferenceField.vue";
 
 interface ITextType {
   name: "text";
@@ -468,7 +329,7 @@ type IType =
   | IQRCodeType
   | IBarCodeType;
 
-const userView = namespace("userView");
+const staging = namespace("staging");
 
 const heightExclusions = ["select", "reference"];
 const multilineTypes = ["markdown", "codeeditor", "textarea"];
@@ -487,8 +348,8 @@ const inlineTypes = ["markdown", "codeeditor", "textarea", "reference"];
 
     /* FIXME SearchPanel doesn't have to be in FormControl.
        SearchPanel needs to be moved to NestedUserView when ActionsMenu and
-       other components will free the FormControl.
-       FormControl needs to be cleaned into small components.
+       other components are moved from FormControl.
+       FormControl needs to be split into smaller components.
     */
 
     SearchPanel: () => import("@/components/SearchPanel.vue"),
@@ -503,16 +364,18 @@ export default class FormControl extends Vue {
   @Prop({ type: Object, required: true }) value!: ICombinedValue; // this.local.getValueByRef, or other value
   @Prop({ type: Object, default: () => ({}) }) attributes!: AttributesMap; // {...this.uv.attributes, ...this.uv.columnAttributes[x], ...row.attributes, ...value.attributes}
   @Prop({ type: Boolean, default: false }) locked!: boolean;
-  @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  @Prop({ type: Boolean, default: false }) dontFocus!: boolean;
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments; // this.uv.args
   @Prop({ type: String, default: "" }) caption!: string;
-  @Prop({ type: String, default: "" }) columnInfoName!: string;
   @Prop({ type: Boolean, default: false }) disableColor!: boolean;
   @Prop({ type: String, required: true }) scope!: string; // this.scope
   @Prop({ type: Number, required: true }) level!: number; // this.level
-  @Prop({ type: Boolean, default: false }) autoOpen!: boolean;
+  @Prop({ type: Boolean, default: false }) autofocus!: boolean;
+  // Whether to only use modal, if applicable.
+  @Prop({ type: Boolean, default: false }) modalOnly!: boolean;
+  // Is this FormControl used from a Table.
+  // FIXME: maybe we can get rid of this?
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
+  @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
 
   private actions: Action[] = [];
   private codeEditorKey = 0;
@@ -563,13 +426,17 @@ export default class FormControl extends Vue {
     return valueToText(this.type, this.currentValue);
   }
 
+  get isMultiline() {
+    return multilineTypes.includes(this.inputType.name);
+  }
+
   private get controlPanelStyle() {
     if (this.customHeight === null) {
       return {};
     }
 
     const excludeHeight = heightExclusions.includes(this.inputType.name);
-    const isHeightOnPanel = !multilineTypes.includes(this.inputType.name);
+    const isHeightOnPanel = !this.isMultiline;
     const height = isHeightOnPanel ? { height: `${this.customHeight}px` } : {};
     return !excludeHeight ? { ...height, maxHeight: "initial" } : {};
   }
@@ -579,9 +446,7 @@ export default class FormControl extends Vue {
   }
 
   private updateTitle(title: string | null) {
-    this.title = (!!title && this.columnInfoName === this.caption)
-      ? title
-      : this.caption;
+    this.title = title ?? this.caption;
   }
 
   private setInputHeight(value: number) {

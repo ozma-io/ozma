@@ -55,8 +55,6 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { mixins } from "vue-class-component";
-import BaseEntriesView from "@/components/BaseEntriesView";
 import BarCode from "@/components/barcode/BarCode.vue";
 
 @Component({ components: { BarCode } })

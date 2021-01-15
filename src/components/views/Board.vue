@@ -43,27 +43,24 @@
 
 <script lang="ts">
 import * as R from "ramda";
-import { Component, Prop, Watch, Vue } from "vue-property-decorator";
+import { Component, Prop } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-import { Value } from "Misc/JSON/_api";
 
 import { mapMaybe, tryDicts } from "@/utils";
 import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import LocalEmptyUserView from "@/LocalEmptyUserView";
-import { LocalUserView, IExistingValueRef, ValueRef } from "@/local_user_view";
-import { CombinedUserView, IValueInfo, IUserViewValueRef, ICombinedValue, IRowCommon, ICombinedRow, valueToPunnedText, referenceEntriesRef, currentValue } from "@/state/user_view";
+import { IExistingValueRef, ValueRef } from "@/local_user_view";
+import { CombinedUserView, ICombinedValue, ICombinedRow, valueToPunnedText, referenceEntriesRef, currentValue } from "@/state/user_view";
 
 import Board from "@/components/kanban/Board.vue";
-import { ICard, ICardCol, ICardRow, CardColType, isCardTarget } from "@/components/kanban/Card.vue";
+import { ICard, ICardCol, isCardTarget } from "@/components/kanban/Card.vue";
 import { IColumn } from "@/components/kanban/Column.vue";
 import Errorbox from "@/components/Errorbox.vue";
-import { FieldType } from "ozma-api/src";
-import { attrToLinkRef, attrToLinkSelf, Link } from "@/links";
-import { IFieldRef, IReferenceFieldType, ValueType, IEntityRef } from "../../api";
-import { attrToQuery, attrToQueryRef } from "../../state/query";
+import { attrToLinkSelf, Link } from "@/links";
+import { IFieldRef } from "../../api";
+import { attrToQuery } from "../../state/query";
 import BaseEntriesView from "../BaseEntriesView";
-import { IFieldInfo } from "../../values";
 
 interface ICardExtra {
   groupRef: IExistingValueRef;

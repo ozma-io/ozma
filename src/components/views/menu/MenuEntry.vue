@@ -53,7 +53,6 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import { IQuery } from "@/state/query";
 
 import MenuHeading from "@/components/menu/MenuHeading.vue";
 import { Link } from "@/links";

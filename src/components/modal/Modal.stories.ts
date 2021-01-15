@@ -1,7 +1,7 @@
 import Vue from "vue";
 import VueJSModal from "vue-js-modal";
 import { storiesOf } from "@storybook/vue";
-import { boolean, text, number, withKnobs } from "@storybook/addon-knobs";
+import { boolean, withKnobs } from "@storybook/addon-knobs";
 
 import Modal from "@/components/modal/Modal.vue";
 import ModalWithTabs from "@/stories/components/ModalWithTabs";

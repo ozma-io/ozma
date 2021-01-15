@@ -14,7 +14,6 @@
 <script lang="ts">
 import { Vue, Prop, Component } from "vue-property-decorator";
 import Board from "@/components/kanban/Board.vue";
-import { ICard } from "@/components/kanban/Card.vue";
 import { IColumn } from "@/components/kanban/Column.vue";
 
 const columns: IColumn[] = [

@@ -47,6 +47,8 @@ export default class MarkdownEditor extends Vue {
   @Prop({ type: Number }) height!: number;
   @Prop({ type: String, default: "markdown" }) editType!: string;
   @Prop({ default: false }) readOnly!: boolean;
+  // TODO: implement.
+  @Prop({ type: Boolean, default: false }) autofocus!: boolean;
 
   private key = 0;
   private editorOptions = {
@@ -83,7 +85,10 @@ export default class MarkdownEditor extends Vue {
 
   private onChange() {
     const editor = this.$refs.editor as EditorType;
-    this.$emit("update:content", editor.invoke("getMarkdown"));
+    const newValue = editor.invoke("getMarkdown");
+    if (this.content !== newValue) {
+      this.$emit("update:content", newValue);
+    }
   }
 
   @Watch("editType")

@@ -51,7 +51,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
+import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 
 import { valueIsNull } from "@/values";
 
@@ -68,6 +68,8 @@ export default class Textarea extends Vue {
   @Prop({ type: Boolean, default: true }) inline!: boolean;
   @Prop({ type: String, default: "text" }) type!: string;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
+  // FIXME: remove this and style parent nodes instead.
+  // Perhaps we need "autosize" prop instead?
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
 
   private focused = false;
@@ -79,20 +81,30 @@ export default class Textarea extends Vue {
 
   private mounted() {
     const control = this.$refs.control as HTMLInputElement;
-    const controlTextareaElement = this.$refs.controlTextarea as any;
     this.dummyHeight = control.clientHeight;
     this.dummyWidth = control.clientWidth;
 
+    void Vue.nextTick().then(() => this.updateAutofocus());
+  }
+
+  private updateAutofocus() {
     if (this.autofocus) {
-      void Vue.nextTick().then(() => {
-        if (this.isCellEdit) {
-          controlTextareaElement.$el.focus();
-          this.setCursorPositionEnd(controlTextareaElement.$el);
-        } else {
-          control.focus();
-        }
-      });
+      if (this.isCellEdit) {
+        const controlTextareaElement = this.$refs.controlTextarea as any;
+        if (!controlTextareaElement) return;
+        controlTextareaElement.$el.focus();
+        this.setCursorPositionEnd(controlTextareaElement.$el);
+      } else {
+        const control = this.$refs.control as HTMLInputElement;
+        if (!control) return;
+        control.focus();
+      }
     }
+  }
+
+  @Watch("autofocus")
+  private onAutofocus(focus: boolean) {
+    this.updateAutofocus();
   }
 
   private get isEmpty(): boolean {

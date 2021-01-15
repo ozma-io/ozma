@@ -10,9 +10,6 @@
 </i18n>
 <template>
   <fragment>
-    <span v-if="!isCellEdit" ref="autosizeMeter">
-      {{ value || $t('input_placeholder') }}
-    </span>
     <div
       v-if="!isCellEdit"
       ref="inputMaxWidthSizeMeter"
@@ -88,10 +85,10 @@ export default class Input extends Vue {
   @Prop({ type: Boolean }) disabled!: boolean;
   @Prop({ type: String }) id!: string;
   @Prop({ type: Boolean, default: true }) inline!: boolean;
-  @Prop({ type: Boolean, default: false }) dontFocus!: boolean;
   @Prop({ type: String, default: "text" }) type!: string;
-  @Prop({ type: Boolean, default: false }) focus!: boolean;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
+  // FIXME: remove this and style parent nodes instead.
+  // Perhaps we need "autosize" prop instead?
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
 
@@ -117,26 +114,6 @@ export default class Input extends Vue {
         }
       });
     }
-
-    if (!this.isCellEdit) {
-      const autosizeMeter = this.$refs.autosizeMeter as HTMLSpanElement;
-      const styles = window.getComputedStyle(controlElement);
-      Object.assign(autosizeMeter.style, {
-        position: "absolute",
-        top: "0",
-        left: "0",
-        visibility: "hidden",
-        height: "0",
-        overflow: "hidden",
-        whiteSpace: "pre",
-        fontSize: styles.fontSize,
-        fontFamily: styles.fontFamily,
-        fontWeight: styles.fontWeight,
-        fontStyle: styles.fontStyle,
-        letterSpacing: styles.letterSpacing,
-        textTransform: styles.textTransform,
-      });
-    }
   }
 
   @Watch("value")
@@ -147,11 +124,13 @@ export default class Input extends Vue {
     }
   }
 
-  @Watch("focus")
-  private onFocusProp(focus: boolean) {
-    if (focus) {
+  @Watch("autofocus")
+  private onAutofocus(autofocus: boolean) {
+    if (autofocus) {
       const control = this.$refs.control as HTMLInputElement;
-      this.$nextTick(() => control.focus());
+      if (control) {
+        control.focus();
+      }
     }
   }
 
@@ -176,18 +155,14 @@ export default class Input extends Vue {
 
   private onFocus(evt: Event) {
     this.$emit("focus", evt);
-    if (!this.dontFocus) {
-      this.focused = true;
-    }
+    this.focused = true;
     if (!this.$isMobile) {
       this.updateWidth(this.value);
     }
   }
 
   private onBlur(evt: Event) {
-    if (!this.dontFocus) {
-      this.focused = false;
-    }
+    this.focused = false;
     if (!this.$isMobile) {
       const control = this.$refs.control as HTMLInputElement;
       if (control !== undefined) {

@@ -57,8 +57,8 @@ import BaseUserView from "@/components/BaseUserView";
 import { LocalUserView, ValueRef } from "@/local_user_view";
 import { IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
 
-import { homeSchema, valueToPunnedText, currentValue } from "@/state/user_view";
-import { funappSchema, IEntityRef, IFieldRef } from "@/api";
+import { homeSchema, valueToPunnedText } from "@/state/user_view";
+import { IEntityRef, IFieldRef } from "@/api";
 import SelectUserView from "@/components/SelectUserView.vue";
 import { mapMaybe, saveToFile, tryDicts } from "@/utils";
 import { Action } from "@/components/ActionsMenu.vue";
@@ -93,7 +93,7 @@ const staging = namespace("staging");
 @Component({ components: { SelectUserView, QRCodeScanner, BarCodeScanner } })
 export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<undefined, undefined, undefined>, undefined, undefined, undefined>>(BaseUserView) {
   @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName; entityRef: IEntityRef; userView: UserViewKey; position?: number }) => Promise<IAddedResult>;
-  @staging.Action("setAddedField") setAddedField!: (args: { scope: ScopeName; fieldRef: IFieldRef; userView: UserViewKey; id: AddedRowId; value: unknown }) => Promise<void>;
+  @staging.Action("setAddedField") setAddedField!: (args: { fieldRef: IFieldRef; id: AddedRowId; value: unknown }) => Promise<void>;
 
   modalView: IQuery | null = null;
   openQRCodeScanner = false;
@@ -154,12 +154,10 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
           const currValue = rawRow.data[columnName];
           if (columnInfo.mainField && currValue) {
             return this.setAddedField({
-              scope: this.scope,
               fieldRef: {
                 entity: entityRef,
                 name: columnInfo.mainField.name,
               },
-              userView,
               id: added.id,
               value: currValue,
             });
