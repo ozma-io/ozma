@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/usr/bin/env bash
 # Build and publish the application.
 
 . ./prepare.sh

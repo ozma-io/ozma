@@ -1,6 +1,6 @@
-#!/bin/sh -e
+#!/usr/bin/env bash
 
-set -x
+set -ex
 
 test -f yarn.lock
 pushd ../ozma-api
