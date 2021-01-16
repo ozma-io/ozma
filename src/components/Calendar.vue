@@ -109,7 +109,7 @@ export default class Calendar extends Vue {
   @Prop({ type: Boolean }) error!: boolean;
   @Prop({ type: Boolean }) required!: boolean;
   @Prop({ default: true, type: Boolean }) showTime!: boolean;
-  @Prop({ type: Number, default: null }) timeStep!: number | null;
+  @Prop({ type: Number }) timeStep!: number | undefined;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   // FIXME: remove this and style parent nodes instead.
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;

@@ -32,11 +32,12 @@ import draggable from "vuedraggable";
 import type { CardTarget } from "@/components/kanban/Card.vue";
 import Column, { IColumn } from "@/components/kanban/Column.vue";
 import { dragscroll } from "vue-dragscroll";
-import { ValueRef } from "../../local_user_view";
+import { ValueRef } from "@/user_views/combined";
 
 @Component({ components: { Column, draggable }, directives: { dragscroll } })
 export default class Board extends Vue {
   @Prop({ type: Array, required: true }) columns!: IColumn[];
+  // FIXME: convert these to events.
   @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Function, required: false }) move!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Object }) titles!: { [key: number]: string } | null;

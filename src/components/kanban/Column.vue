@@ -62,7 +62,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
-import draggable from "vuedraggable";
+import draggable, { IVueDraggableEvent } from "vuedraggable";
 import { dragscroll } from "vue-dragscroll";
 import { namespace } from "vuex-class";
 import * as R from "ramda";
@@ -70,8 +70,8 @@ import * as R from "ramda";
 import Card from "@/components/kanban/Card.vue";
 import type { ICard, CardTarget } from "@/components/kanban/Card.vue";
 import { nextRender } from "@/utils";
-import { ValueRef } from "../../local_user_view";
-import { IQuery } from "../../state/query";
+import { IQuery } from "@/state/query";
+import { ValueRef } from "@/user_views/combined";
 
 export interface IColumn {
   id?: any;
@@ -79,19 +79,6 @@ export interface IColumn {
   createView?: IQuery;
   fieldName?: string;
   cards: ICard[];
-}
-
-// This is an interface to a 3rd Party Vue plugin
-// It lists only properties that are used or are of use for the board
-// Consult https://github.com/SortableJS/Vue.Draggable
-// Please add types to this interface if something you use is missing
-export interface IVueDraggableEvent {
-  type: "start" | "add" | "remove" | "update" | "end" | "choose" | "unchoose" | "sort" | "filter" | "clone";
-  originalEvent: Event;
-  newIndex: number;
-  oldIndex: number;
-  oldDraggableIndex: number;
-  newDraggableIndex: number;
 }
 
 export interface IColumnStyle {
@@ -113,6 +100,7 @@ export default class Column extends Vue {
   @Prop({ type: String, required: true }) fieldName!: string;
   @Prop({ type: String, required: true }) orderFieldName!: string;
   @Prop({ type: Object }) createView!: IQuery | undefined;
+  // FIXME: convert these to events.
   @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Function, required: false }) move!: (ref: ValueRef, value: any) => void;
   @Prop({ type: Number, required: false, default: 300 }) width!: number;

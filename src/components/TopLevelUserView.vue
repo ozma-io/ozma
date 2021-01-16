@@ -170,7 +170,6 @@ import { namespace } from "vuex-class";
 
 import * as Api from "@/api";
 import { setHeadTitle } from "@/elements";
-import { CurrentUserViews } from "@/state/user_view";
 import { ErrorKey } from "@/state/errors";
 import { CurrentChanges, ScopeName } from "@/state/staging_changes";
 import { Action } from "@/components/ActionsMenu.vue";
@@ -183,7 +182,6 @@ import { IQuery, ICurrentQueryHistory } from "@/state/query";
 import { convertToWords } from "@/utils";
 
 const auth = namespace("auth");
-const userView = namespace("userView");
 const staging = namespace("staging");
 const settings = namespace("settings");
 const query = namespace("query");
@@ -198,8 +196,6 @@ export default class TopLevelUserView extends Vue {
   @auth.State("protectedCalls") protectedCalls!: number;
   @auth.Action("login") login!: () => Promise<void>;
   @auth.Action("logout") logout!: () => Promise<void>;
-  @userView.Mutation("clear") clearView!: () => void;
-  @userView.State("current") userViews!: CurrentUserViews;
   @staging.State("current") changes!: CurrentChanges;
   @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void> }) => Promise<void>;
   @staging.Action("reset") clearChanges!: () => Promise<void>;

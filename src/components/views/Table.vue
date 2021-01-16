@@ -5,7 +5,6 @@
         "yes": "Yes",
         "no": "No",
         "add_entry": "Add entry",
-        "remove_selected_rows": "Remove selected entries",
         "add_entry_in_modal": "Add new entry (in modal)"
       },
       "ru": {
@@ -13,7 +12,6 @@
         "yes": "Да",
         "no": "Нет",
         "add_entry": "Добавить запись",
-        "remove_selected_rows": "Удалить выбранные записи",
         "add_entry_in_modal": "Добавить новую запись (в модале)"
       }
     }
@@ -57,7 +55,7 @@
       @resize="updateShowLength()"
     >
       <div
-        v-if="local.emptyRow !== null"
+        v-if="uv.emptyRow !== null"
         class="button-container"
       >
         <div
@@ -75,18 +73,18 @@
       >
         <colgroup>
           <col
-            v-if="local.extra.isSelectionColumnEnabled"
+            v-if="uv.extra.isSelectionColumnEnabled"
             class="checkbox-col"
           > <!-- Checkbox column -->
           <col
-            v-if="local.extra.hasRowLinks"
+            v-if="uv.extra.hasRowLinks"
             class="open-form-col"
           > <!-- Row link column -->
           <col
             v-for="i in columnIndexes"
             :key="i"
             class="data-col"
-            :style="local.extra.columns[i].style"
+            :style="uv.extra.columns[i].style"
           >
         </colgroup>
         <thead
@@ -94,20 +92,20 @@
         >
           <tr>
             <th
-              v-if="local.extra.isSelectionColumnEnabled"
+              v-if="uv.extra.isSelectionColumnEnabled"
               class="fixed-column checkbox-cells table-th"
               @click="selectAllRows"
             >
-              <checkbox :checked="baseLocal.selectedAll" />
+              <checkbox :checked="selectedAll" />
             </th>
             <th
-              v-if="local.extra.hasRowLinks"
+              v-if="uv.extra.hasRowLinks"
               :class="[
                 'table-th',
                 'fixed-column',
                 'openform-cells',
                 {
-                  'without-selection-cell': !local.extra.isSelectionColumnEnabled,
+                  'without-selection-cell': !uv.extra.isSelectionColumnEnabled,
                 }
               ]"
             >
@@ -127,71 +125,40 @@
               v-for="(i, index) in columnIndexes"
               :key="i"
               :class="['sorting', 'table-th', {
-                'fixed-column' : local.extra.columns[i].fixed,
+                'fixed-column' : uv.extra.columns[i].fixed,
                 'th_after-last-fixed': lastFixedColumnIndex === index,
                 'td-moz': isFirefoxBrowser
               }]"
-              :style="local.extra.columns[i].style"
-              :title="local.extra.columns[i].caption"
+              :style="uv.extra.columns[i].style"
+              :title="uv.extra.columns[i].caption"
               @click="updateSort(i)"
             >
               <span class="table_header__content">
-                {{ local.extra.columns[i].caption }}
+                {{ uv.extra.columns[i].caption }}
               </span>
-              <span v-if="sortColumn === i">{{ sortAsc ? "▲" : "▼" }}</span>
+              <span v-if="uv.extra.sortColumn === i">{{ uv.extra.sortAsc ? "▲" : "▼" }}</span>
             </th>
           </tr>
         </thead>
         <tbody class="table-body">
           <TableRow
-            v-for="(rowId, rowIndex) in local.extra.newRowTopSidePositions"
-            ref="newRowsTopSideRef"
-            :key="`top-${rowId}`"
-            :row="uv.newRows[rowId]"
-            :local-row="local.newRows[rowId]"
-            :base-local-row="baseLocal.newRows[rowId]"
+            v-for="(row, rowIndex) in shownRows"
+            :key="row.key"
+            :uv="uv"
+            :row="row.row"
             :column-indexes="columnIndexes"
-            :local-uv="local.extra"
-            :show-selection-cell="local.extra.isSelectionColumnEnabled"
-            from="added"
-            @select="selectRow({ type: 'added', position: rowIndex }, $event)"
-            @cell-click="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
-            @goto="$emit('goto', $event)"
-          />
-          <TableRow
-            v-for="(rowI, rowIndex) in shownRowPositions"
-            :key="rowI"
-            :row="uv.rows[rowI]"
-            :local-row="local.rows[rowI]"
-            :base-local-row="baseLocal.rows[rowI]"
-            :column-indexes="columnIndexes"
-            :local-uv="local.extra"
             :is-tree="isTree"
-            :show-selection-cell="local.extra.isSelectionColumnEnabled"
-            @select="selectRow({ type: 'existing', position: rowIndex }, $event)"
-            @cell-click="clickCell({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
+            :not-existing="row.notExisting"
+            :show-selection-cell="uv.extra.isSelectionColumnEnabled"
+            @select="selectTableRow(rowIndex, $event)"
+            @cell-click="clickCell({ ...row.ref, column: arguments[0] }, arguments[1])"
             @update:visibleChildren="visibleChildren(arguments[0], arguments[1])"
-            @goto="$emit('goto', $event)"
-          />
-          <TableRow
-            v-for="(rowId, rowIndex) in local.extra.newRowBottomSidePositions"
-            ref="newRowsBottomSideRef"
-            :key="`bottom-${rowId}`"
-            :row="uv.newRows[rowId]"
-            :local-row="local.newRows[rowId]"
-            :base-local-row="baseLocal.newRows[rowId]"
-            :column-indexes="columnIndexes"
-            :local-uv="local.extra"
-            :show-selection-cell="local.extra.isSelectionColumnEnabled"
-            from="added"
-            @select="selectRow({ type: 'added', position: rowIndex }, $event)"
-            @cell-click="clickCell({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
             @goto="$emit('goto', $event)"
           />
         </tbody>
       </table>
       <div
-        v-if="local.emptyRow !== null"
+        v-if="uv.emptyRow !== null"
         class="button-container"
       >
         <div
@@ -210,53 +177,30 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
-import { Moment } from "moment";
-import * as moment from "moment";
+import { Moment, default as moment } from "moment";
+import * as R from "ramda";
 
-import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, debugLog } from "@/utils";
+import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, RecordSet, debugLog } from "@/utils";
 import { valueIsNull } from "@/values";
 import { IResultColumnInfo, ValueType } from "@/api";
-import {
-  CombinedUserView,
-  currentValue,
-  homeSchema,
-  IAddedRow,
-  ICombinedRow,
-  ICombinedValue,
-  IRowCommon,
-  valueToPunnedText,
-  IEntriesRef,
-  Entries,
-  referenceEntriesRef,
-} from "@/state/user_view";
 import { UserView } from "@/components";
 import { AddedRowId, AutoSaveLock } from "@/state/staging_changes";
 import { IAttrToQueryOpts } from "@/state/query";
-import {
-  equalRowPositionRef,
-  IAddedRowPositionRef,
-  IExistingRowPositionRef,
-  ILocalRow,
-  ILocalRowInfo,
-  LocalUserView,
-  RowPositionRef,
-  RowRef,
-  ValueRef,
-} from "@/local_user_view";
-import BaseUserView, { ISelectionRef } from "@/components/BaseUserView";
+import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, baseUserViewHandler } from "@/components/BaseUserView";
 import { Action } from "@/components/ActionsMenu.vue";
 import TableRow from "@/components/views/table/TableRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
 import TableCellEdit, { ICellCoords, IEditParams } from "@/components/views/table/TableCellEdit.vue";
 import { Link, attrToLinkRef, attrToLinkSelf } from "@/links";
-import * as R from "ramda";
+import {
+  currentValue, IAddedRow, IAddedRowRef, ICombinedRow, ICombinedUserView, ICombinedUserViewAny, ICombinedValue, IExistingRowRef, IExtendedAddedRow,
+  IExtendedRow, IExtendedRowCommon, IExtendedRowInfo, IExtendedValue, IRowCommon, IUserViewHandler, RowRef, ValueRef,
+  valueToPunnedText,
+} from "@/user_views/combined";
+import { Entries, IEntriesRef, referenceEntriesRef } from "@/state/entries";
+import { RowId } from "ozma-api/src";
 
-interface ITableEditing {
-  lock: AutoSaveLock;
-  ref: ValueRef;
-}
-
-interface IColumn {
+export interface IColumn {
   caption: string;
   style: Record<string, unknown>;
   visible: boolean;
@@ -268,53 +212,61 @@ interface IColumn {
   type: string;
 }
 
-interface ITableValueExtra {
+export interface ITableValueExtra extends IBaseValueExtra {
   // FIXME: is this still needed? We could drop it and use computed properties in TableRows instead.
   valueText: string;
-  link?: Link;
-  style?: Record<string, unknown>;
+  link: Link | null;
+  style: Record<string, unknown> | null;
   selected: boolean;
 }
 
-type NewRowSide = "top" | "bottom";
-
-interface ITableRowExtra {
+export interface ITableRowExtra extends IBaseRowExtra {
   searchText: string;
-  selected: boolean;
   visible: boolean;
-  parent?: number;
-  level?: number;
-  arrowDown?: boolean;
+  parent: number | null;
+  level: number | null;
+  arrowDown: boolean | null;
   children: number[];
-  style?: Record<string, unknown>;
-  height?: number;
-  link?: Link;
-  selectionEntry?: ISelectionRef;
-  newRowSide: NewRowSide;
+  style: Record<string, unknown> | null;
+  height: number | null;
+  link: Link | null;
 }
 
-interface ITableUserViewExtra {
+export interface IAddedNewRowRef {
+  type: "added";
+  addedId: AddedRowId;
+}
+
+export interface ICommittedNewRowRef {
+  type: "committed";
+  id: RowId;
+}
+
+export type NewRowRef = IAddedNewRowRef | ICommittedNewRowRef;
+
+export interface ITableViewExtra extends IBaseViewExtra {
   isSelectionColumnEnabled: boolean;
   hasRowLinks: boolean;
-  selectedRows: ObjectSet<RowRef>;
   selectedValues: ObjectSet<ValueRef>;
   columns: IColumn[];
   fixedColumnPositions: Record<number, string>;
   rowsParentPositions: Record<number, number>;
   linkOpts?: IAttrToQueryOpts;
-  newRowTopSidePositions: number[];
-  newRowBottomSidePositions: number[];
+  // Used to hide rows which are displayed as fake "new rows" instead, to avoid jumping rows after submissions.
+  oldCommittedRowPositions: RecordSet<number>;
+  newRowTopSidePositions: NewRowRef[];
+  newRowBottomSidePositions: NewRowRef[];
+  sortColumn: number | null;
+  sortAsc: boolean;
+  sortOptions: Intl.CollatorOptions;
 }
-
-type ITableLocalRowInfo = ILocalRowInfo<ITableRowExtra>;
-type ITableLocalRow = ILocalRow<ITableValueExtra, ITableRowExtra>;
 
 const showStep = 20;
 const doubleClickTime = 700;
 // FIXME: Use CSS variables to avoid this constant
 const technicalFieldsWidth = 35; // checkbox's and openform's td width
 
-const createColumns = (uv: CombinedUserView): IColumn[] => {
+const createColumns = (uv: ICombinedUserViewAny): IColumn[] => {
   const viewAttrs = uv.attributes;
   const columns: IColumn[] = [];
   let isTreeUnfoldColumnSet = false;
@@ -379,330 +331,449 @@ const createColumns = (uv: CombinedUserView): IColumn[] => {
   return columns;
 };
 
-export class LocalTableUserView extends LocalUserView<ITableValueExtra, ITableRowExtra, ITableUserViewExtra> {
-  createCommonLocalValue(row: IRowCommon, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: ITableValueExtra | null, deleted: boolean): ITableValueExtra {
-    const columnInfo = this.uv.info.columns[columnIndex];
-    const columnAttrs = this.uv.columnAttributes[columnIndex];
-    const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, this.uv.attributes);
+export type ITableCombinedUserView = ICombinedUserView<ITableValueExtra, ITableRowExtra, ITableViewExtra>;
+export type ITableExtendedValue = IExtendedValue<ITableValueExtra>;
+export type ITableExtendedRowInfo = IExtendedRowInfo<ITableRowExtra>;
+export type ITableExtendedRow = IExtendedRow<ITableValueExtra, ITableRowExtra>;
+export type ITableExtendedRowCommon = IExtendedRowCommon<ITableValueExtra, ITableRowExtra>;
+export type ITableExtendedAddedRow = IExtendedAddedRow<ITableValueExtra, ITableRowExtra>;
 
-    const valueText = valueToPunnedText(columnInfo.valueType, value);
+const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & ITableExtendedRowInfo, columnIndex: number, value: ICombinedValue) => {
+  const columnInfo = uv.info.columns[columnIndex];
+  const columnAttrs = uv.columnAttributes[columnIndex];
+  const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, uv.attributes);
 
-    const style: Record<string, unknown> = {};
+  const valueText = valueToPunnedText(columnInfo.valueType, value);
 
-    const cellColor = getCellAttr("cell_color");
-    if (cellColor !== undefined && cellColor !== null) {
-      style["background-color"] = String(cellColor);
-    }
+  const style: Record<string, unknown> = {};
 
-    const textAlignRightTypes: (ValueType["type"])[] = ["int", "decimal"];
-    const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType;
-    if (textAlignRightTypes.includes(punOrValue.type)) {
-      style["text-align"] = "right";
-    }
-
-    const textAlignAttr = getCellAttr("text_align");
-    if (textAlignAttr !== undefined) {
-      style["text-align"] = String(textAlignAttr);
-    }
-
-    if (localRow.extra.height !== undefined) {
-      style["height"] = `${localRow.extra.height}px`;
-    }
-
-    const fixedPosition = this.extra.fixedColumnPositions[columnIndex];
-    if (fixedPosition !== undefined) {
-      style["left"] = fixedPosition;
-    }
-
-    const selected = oldLocal !== null ? oldLocal.selected && !deleted : false;
-
-    const extra: ITableValueExtra = {
-      selected,
-      valueText,
-    };
-    if (!R.isEmpty(style)) {
-      extra.style = style;
-    }
-    return extra;
+  const cellColor = getCellAttr("cell_color");
+  if (cellColor !== undefined && cellColor !== null) {
+    style["background-color"] = String(cellColor);
   }
 
-  createLocalValue(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: ITableValueExtra | null) {
-    const extra = this.createCommonLocalValue(row, localRow, columnIndex, value, oldLocal, row.deleted);
+  const textAlignRightTypes: (ValueType["type"])[] = ["int", "decimal"];
+  const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType;
+  if (textAlignRightTypes.includes(punOrValue.type)) {
+    style["text-align"] = "right";
+  }
 
-    const columnInfo = this.uv.info.columns[columnIndex];
-    const columnAttrs = this.uv.columnAttributes[columnIndex];
-    const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, this.uv.attributes);
+  const textAlignAttr = getCellAttr("text_align");
+  if (textAlignAttr !== undefined) {
+    style["text-align"] = String(textAlignAttr);
+  }
+
+  if (row.extra.height !== undefined) {
+    style["height"] = `${row.extra.height}px`;
+  }
+
+  const fixedPosition = uv.extra.fixedColumnPositions[columnIndex];
+  if (fixedPosition !== undefined) {
+    style["left"] = fixedPosition;
+  }
+
+  const extra = {
+    valueText,
+    style: null as Record<string, unknown> | null,
+  };
+  if (!R.isEmpty(style)) {
+    extra.style = style;
+  }
+  return extra;
+};
+
+const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLocal: ITableRowExtra | null) => {
+  const getRowAttr = (name: string) => tryDicts(name, row.attributes, uv.attributes);
+
+  const style: Record<string, unknown> = {};
+
+  const extra = {
+    searchText: "",
+    visible: true,
+    children: [],
+    level: 0,
+    height: null as number | null,
+    style: null as Record<string, unknown> | null,
+    parent: null,
+    arrowDown: null,
+    link: null,
+  };
+
+  const height = Number(getRowAttr("row_height"));
+  if (!Number.isNaN(height)) {
+    style["white-space"] = "nowrap";
+    extra.height = height;
+  }
+
+  if (!R.isEmpty(style)) {
+    extra.style = style;
+  }
+
+  return extra;
+};
+
+const updateCommonValue = (uv: ITableCombinedUserView, row: ITableExtendedRowCommon, columnIndex: number, value: ITableExtendedValue) => {
+  const columnInfo = uv.info.columns[columnIndex];
+
+  value.extra.valueText = valueToPunnedText(columnInfo.valueType, value);
+};
+
+const postInitCommonRow = (uv: ITableCombinedUserView, row: ITableExtendedRowCommon) => {
+  const searchStrings = row.values.map(value => {
+    return value.extra.valueText.toLocaleLowerCase();
+  });
+  row.extra.searchText = "\0".concat(...searchStrings);
+};
+
+const technicalWidth = (uv: ITableCombinedUserView): number => {
+  let left = 0;
+  if (uv.extra.isSelectionColumnEnabled) {
+    left += technicalFieldsWidth;
+  }
+  if (uv.extra.hasRowLinks) {
+    left += technicalFieldsWidth;
+  }
+  return left;
+};
+
+const fixedColumnPositions = (uv: ITableCombinedUserView): Record<number, string> => {
+  let left = technicalWidth(uv);
+  const fixedColumnIndexes = mapMaybe((col, colI) => col.fixed ? colI : undefined, uv.extra.columns);
+  const positions: Record<number, string> = {};
+  for (const fixedColumnIndex of fixedColumnIndexes) {
+    positions[fixedColumnIndex] = `${left}px`;
+    left += uv.extra.columns[fixedColumnIndex].width;
+  }
+  return positions;
+};
+
+const equalNewRowRef = (a: NewRowRef, b: NewRowRef): boolean => {
+  return a.type === b.type && (
+    (a.type === "added" && a.addedId === (b as IAddedNewRowRef).addedId) ||
+    (a.type === "committed" && a.id === (b as ICommittedNewRowRef).id));
+};
+
+const deleteFromPositions = (ref: NewRowRef, extra: ITableViewExtra) => {
+  extra.newRowTopSidePositions = extra.newRowTopSidePositions.filter(r => !equalNewRowRef(ref, r));
+  extra.newRowBottomSidePositions = extra.newRowBottomSidePositions.filter(r => !equalNewRowRef(ref, r));
+};
+
+const inheritOldRowsPosition = (uv: ITableCombinedUserView, pos: NewRowRef): NewRowRef | null => {
+  if (pos.type === "added") {
+    const newRow = uv.newRows[pos.addedId];
+    if (newRow) {
+      return pos;
+    } else {
+      const rowIndex = uv.oldCommittedRows[pos.addedId];
+      if (rowIndex === undefined) {
+        return null;
+      }
+      const row = uv.rows![rowIndex];
+      return { type: "committed", id: row.mainId! };
+    }
+  } else if (pos.type === "committed") {
+    if (!(pos.id in uv.mainRowMapping)) {
+      return null;
+    }
+    return { type: "committed", id: pos.id };
+  } else {
+    throw new Error("Impossible");
+  }
+};
+
+const inheritOldRowsPositions = (uv: ITableCombinedUserView, positions: NewRowRef[]): NewRowRef[] => {
+  return mapMaybe(pos => inheritOldRowsPosition(uv, pos) ?? undefined, positions);
+};
+
+interface INewRow {
+  row: ITableExtendedRow | ITableExtendedAddedRow;
+  ref: IExistingRowRef | IAddedRowRef;
+}
+
+const getNewRow = (uv: ITableCombinedUserView, pos: NewRowRef): INewRow => {
+  if (pos.type === "added") {
+    return {
+      ref: {
+        type: "added",
+        id: pos.addedId,
+      },
+      row: uv.newRows[pos.addedId],
+    };
+  } else {
+    // We are sure this row ref is to an existing value.
+    const ref = uv.mainRowMapping[pos.id][0] as IExistingRowRef;
+    return {
+      ref,
+      row: uv.rows![ref.position],
+    };
+  }
+};
+
+export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowExtra, ITableViewExtra> = {
+  ...baseUserViewHandler,
+
+  createLocalValue(
+    uv: ITableCombinedUserView,
+    rowIndex: number,
+    row: ICombinedRow & ITableExtendedRowInfo,
+    columnIndex: number,
+    value: ICombinedValue,
+    oldView: ITableViewExtra | null,
+    oldRow: ITableRowExtra | null,
+    oldValue: ITableValueExtra | null,
+  ): ITableValueExtra {
+    const baseExtra = baseUserViewHandler.createLocalValue(uv, rowIndex, row, columnIndex, value, oldView, oldRow, oldValue);
+    const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
+
+    const columnInfo = uv.info.columns[columnIndex];
+    const columnAttrs = uv.columnAttributes[columnIndex];
+    const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, uv.attributes);
+
+    const link = value.info?.field?.fieldType.type === "reference" ? attrToLinkRef(getCellAttr("link"), currentValue(value), uv.extra.linkOpts) : null;
+    const currLinkForRow = value.info ? attrToLinkSelf(getCellAttr("row_link"), value.info, uv.extra.linkOpts) : null;
+    if (currLinkForRow) {
+      row.extra.link = currLinkForRow;
+      uv.extra.hasRowLinks = true;
+    }
 
     if (value.info) {
-      if (value.info.field && value.info.field.fieldType.type === "reference") {
-        const link = attrToLinkRef(getCellAttr("link"), currentValue(value), this.extra.linkOpts);
-        if (link) {
-          extra.link = link;
-        }
-      }
-      const currLinkForRow = attrToLinkSelf(getCellAttr("row_link"), value.info, this.extra.linkOpts);
-      if (currLinkForRow) {
-        localRow.extra.link = currLinkForRow;
-        this.extra.hasRowLinks = true;
-      }
-
       if (getCellAttr("tree_parent_ids")) {
         // Init indexes by ids
-        this.extra.rowsParentPositions[value.info.id] = rowIndex;
+        uv.extra.rowsParentPositions[value.info.id!] = rowIndex;
 
         // Init parent
         if (value.value !== null) {
-          localRow.extra.parent = Number(value.value);
-          localRow.extra.visible = false;
+          row.extra.parent = Number(value.value);
+          row.extra.visible = false;
         }
       }
     }
 
-    if (getCellAttr("selectable") && value.info) {
-      localRow.extra.selectionEntry = {
-        entity: value.info.fieldRef.entity,
-        id: value.info.id,
-      };
-    } else if (this.uv.info.mainEntity) {
-      localRow.extra.selectionEntry = {
-        entity: this.uv.info.mainEntity,
-        id: row.mainId!,
-      };
-    }
-
-    if (extra.selected) {
-      this.extra.selectedValues.insert({
+    const selected = (oldValue?.selected ?? false) && !row.deleted;
+    if (selected) {
+      uv.extra.selectedValues.insert({
         type: "existing",
         position: rowIndex,
         column: columnIndex,
       });
     }
-    return extra;
-  }
 
-  createAddedLocalValue(rowId: AddedRowId, row: IAddedRow, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: ITableValueExtra | null) {
-    const extra = this.createCommonLocalValue(row, localRow, columnIndex, value, oldLocal, false);
-    if (extra.selected) {
-      this.extra.selectedValues.insert({
+    return {
+      ...baseExtra,
+      ...commonExtra,
+      selected,
+      link,
+    };
+  },
+
+  createAddedLocalValue(
+    uv: ITableCombinedUserView,
+    rowId: AddedRowId,
+    row: IAddedRow & ITableExtendedRowInfo,
+    columnIndex: number,
+    value: ICombinedValue,
+    oldView: ITableViewExtra | null,
+    oldRow: ITableRowExtra | null,
+    oldValue: ITableValueExtra | null,
+  ) {
+    const baseExtra = baseUserViewHandler.createAddedLocalValue(uv, rowId, row, columnIndex, value, oldView, oldRow, oldValue);
+    const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
+
+    const selected = oldValue?.selected ?? false;
+    if (selected) {
+      uv.extra.selectedValues.insert({
         type: "added",
         id: rowId,
         column: columnIndex,
       });
     }
-    return extra;
-  }
+    return {
+      ...baseExtra,
+      ...commonExtra,
+      selected,
+      link: null,
+    };
+  },
 
-  createEmptyLocalValue(row: IRowCommon, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: ITableValueExtra | null) {
-    const extra = this.createCommonLocalValue(row, localRow, columnIndex, value, oldLocal, false);
-    if (extra.selected) {
-      this.extra.selectedValues.insert({
+  createEmptyLocalValue(
+    uv: ITableCombinedUserView,
+    row: IRowCommon & ITableExtendedRowInfo,
+    columnIndex: number,
+    value: ICombinedValue,
+    oldView: ITableViewExtra | null,
+    oldRow: ITableRowExtra | null,
+    oldValue: ITableValueExtra | null,
+  ) {
+    const baseExtra = baseUserViewHandler.createEmptyLocalValue(uv, row, columnIndex, value, oldView, oldRow, oldValue);
+    const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
+
+    const selected = oldValue?.selected ?? false;
+    if (selected) {
+      uv.extra.selectedValues.insert({
         type: "new",
         column: columnIndex,
       });
     }
-    return extra;
-  }
-
-  updateCommonValue(row: IRowCommon, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, extra: ITableValueExtra) {
-    const columnInfo = this.uv.info.columns[columnIndex];
-
-    extra.valueText = valueToPunnedText(columnInfo.valueType, value);
-  }
-
-  updateValue(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, localValue: ITableValueExtra) {
-    this.updateCommonValue(row, localRow, columnIndex, value, localValue);
-  }
-
-  updateAddedValue(rowId: number, row: IAddedRow, localRow: ITableLocalRowInfo, columnIndex: number, value: ICombinedValue, localValue: ITableValueExtra) {
-    this.updateCommonValue(row, localRow, columnIndex, value, localValue);
-  }
-
-  updateNewValue(columnIndex: number, value: ICombinedValue, localValue: ITableValueExtra) {
-    this.updateCommonValue(this.emptyRow!.row, this.emptyRow!.local, columnIndex, value, localValue);
-  }
-
-  createCommonLocalRow(row: IRowCommon, oldLocal: ITableRowExtra | null): ITableRowExtra {
-    const getRowAttr = (name: string) => tryDicts(name, row.attributes, this.uv.attributes);
-
-    const extra: ITableRowExtra = {
+    return {
+      ...baseExtra,
+      ...commonExtra,
       selected: false,
-      searchText: "",
-      visible: true,
-      children: [],
-      level: 0,
-      newRowSide: oldLocal?.newRowSide ?? "bottom",
+      link: null,
     };
+  },
 
-    const style: Record<string, unknown> = {};
-    let touchedStyle = false;
+  updateValue(uv: ITableCombinedUserView, rowIndex: number, row: ITableExtendedRow, columnIndex: number, value: ITableExtendedValue) {
+    baseUserViewHandler.updateValue(uv, rowIndex, row, columnIndex, value);
+    updateCommonValue(uv, row, columnIndex, value);
+  },
 
-    const height = Number(getRowAttr("row_height"));
-    if (!Number.isNaN(height)) {
-      style["white-space"] = "nowrap";
-      extra.height = height;
-      touchedStyle = true;
+  updateAddedValue(uv: ITableCombinedUserView, rowId: number, row: ITableExtendedAddedRow, columnIndex: number, value: ITableExtendedValue) {
+    baseUserViewHandler.updateAddedValue(uv, rowId, row, columnIndex, value);
+    updateCommonValue(uv, row, columnIndex, value);
+  },
+
+  updateEmptyValue(uv: ITableCombinedUserView, columnIndex: number, value: ITableExtendedValue) {
+    baseUserViewHandler.updateEmptyValue(uv, columnIndex, value);
+    updateCommonValue(uv, uv.emptyRow!, columnIndex, value);
+  },
+
+  createLocalRow(uv: ITableCombinedUserView, rowIndex: number, row: ICombinedRow, oldView: ITableViewExtra | null, oldRow: ITableRowExtra | null) {
+    const baseExtra = baseUserViewHandler.createLocalRow(uv, rowIndex, row, oldView, oldRow);
+    const commonExtra = createCommonLocalRow(uv, row, oldRow);
+    return {
+      ...commonExtra,
+      ...baseExtra,
+    };
+  },
+
+  createAddedLocalRow(uv: ITableCombinedUserView, rowId: AddedRowId, row: IAddedRow, oldView: ITableViewExtra | null, oldRow: ITableRowExtra | null) {
+    const baseExtra = baseUserViewHandler.createAddedLocalRow(uv, rowId, row, oldView, oldRow);
+    const commonExtra = createCommonLocalRow(uv, row, oldRow);
+    const newRef: NewRowRef = {
+      type: "added",
+      addedId: rowId,
+    };
+    if (!uv.extra.newRowTopSidePositions.find(ref => equalNewRowRef(newRef, ref))
+      && !uv.extra.newRowBottomSidePositions.find(ref => equalNewRowRef(newRef, ref))
+    ) {
+      uv.extra.newRowBottomSidePositions.push(newRef);
     }
+    return {
+      ...commonExtra,
+      ...baseExtra,
+    };
+  },
 
-    if (touchedStyle) {
-      extra.style = style;
-    }
+  createEmptyLocalRow(uv: ITableCombinedUserView, row: IRowCommon, oldView: ITableViewExtra | null, oldRow: ITableRowExtra | null) {
+    const baseExtra = baseUserViewHandler.createEmptyLocalRow(uv, row, oldView, oldRow);
+    const commonExtra = createCommonLocalRow(uv, row, oldRow);
+    return {
+      ...commonExtra,
+      ...baseExtra,
+    };
+  },
 
-    return extra;
-  }
+  postInitRow(uv: ITableCombinedUserView, rowIndex: number, row: ITableExtendedRow) {
+    baseUserViewHandler.postInitRow(uv, rowIndex, row);
+    postInitCommonRow(uv, row);
+  },
 
-  createLocalRow(rowIndex: number, row: ICombinedRow, oldLocal: ITableRowExtra | null) {
-    const extra = this.createCommonLocalRow(row, oldLocal);
-    if (row.mainId !== undefined) {
-      extra.selectionEntry = {
-        entity: this.uv.info.mainEntity!,
-        id: row.mainId,
-      };
-    }
-    return extra;
-  }
+  postInitAddedRow(uv: ITableCombinedUserView, rowId: AddedRowId, row: ITableExtendedAddedRow) {
+    baseUserViewHandler.postInitAddedRow(uv, rowId, row);
+    postInitCommonRow(uv, row);
+  },
 
-  createAddedLocalRow(rowId: AddedRowId, row: IAddedRow, oldLocal: ITableRowExtra | null) {
-    return this.createCommonLocalRow(row, oldLocal);
-  }
-
-  createEmptyLocalRow(row: IRowCommon, oldLocal: ITableRowExtra | null) {
-    return this.createCommonLocalRow(row, oldLocal);
-  }
-
-  postInitCommonRow(row: IRowCommon, localRow: ITableLocalRow) {
-    const searchStrings = localRow.values.map(extra => {
-      return extra.valueText.toLocaleLowerCase();
+  deleteRow(uv: ITableCombinedUserView, rowIndex: number, row: ITableExtendedRow) {
+    baseUserViewHandler.deleteRow(uv, rowIndex, row);
+    row.values.forEach((value, colI) => {
+      if (value.extra.selected) {
+        value.extra.selected = false;
+        uv.extra.selectedValues.delete({
+          type: "existing",
+          position: rowIndex,
+          column: colI,
+        });
+      }
     });
-    localRow.extra.searchText = "\0".concat(...searchStrings);
-  }
+  },
 
-  postInitAddedRow(rowId: AddedRowId, row: IAddedRow, localRow: ITableLocalRow) {
-    this.postInitCommonRow(row, localRow);
-  }
-
-  postInitRow(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRow) {
-    this.postInitCommonRow(row, localRow);
-  }
-
-  deleteRow(rowIndex: number, row: ICombinedRow, localRow: ITableLocalRowInfo) {
-    if (localRow.extra.selected) {
-      localRow.extra.selected = false;
-      this.extra.selectedRows.delete({
-        type: "existing",
-        position: rowIndex,
-      });
+  deleteAddedRow(uv: ITableCombinedUserView, rowId: AddedRowId, row: ITableExtendedAddedRow) {
+    baseUserViewHandler.deleteAddedRow(uv, rowId, row);
+    row.values.forEach((value, colI) => {
+      if (value.extra.selected) {
+        value.extra.selected = false;
+        uv.extra.selectedValues.delete({
+          type: "added",
+          id: rowId,
+          column: colI,
+        });
+      }
+    });
+    if (row.newId === undefined) {
+      deleteFromPositions({ type: "added", addedId: rowId }, uv.extra);
     }
-  }
+  },
 
-  deleteAddedRow(rowId: AddedRowId, row: ICombinedRow, localRow: ITableLocalRowInfo) {
-    if (localRow.extra.selected) {
-      this.extra.selectedRows.delete({
-        type: "added",
-        id: rowId,
-      });
-    }
-  }
+  createLocalUserView(uv: ITableCombinedUserView, oldView: ITableViewExtra | null) {
+    const baseExtra = baseUserViewHandler.createLocalUserView(uv, oldView);
+    const columns = createColumns(uv);
 
-  get isSelectionColumnEnabled(): boolean {
-    const disableSelectionColumn = this.uv.attributes["disable_selection_column"];
-    return typeof disableSelectionColumn === "boolean"
+    const disableSelectionColumn = uv.attributes["disable_selection_column"];
+    const isSelectionColumnEnabled = typeof disableSelectionColumn === "boolean"
       ? !disableSelectionColumn
       : true;
-  }
 
-  createLocalUserView(): ITableUserViewExtra {
-    const columns = createColumns(this.uv);
-    const extra: ITableUserViewExtra = {
-      isSelectionColumnEnabled: this.isSelectionColumnEnabled,
+    const newRowTopSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowTopSidePositions) : [];
+    const newRowBottomSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowBottomSidePositions) : [];
+    debugLog("createLocalUserView", [...newRowTopSidePositions, ...newRowBottomSidePositions], uv);
+    const oldCommittedRowPositions = Object.fromEntries(mapMaybe(pos => {
+      if (pos.type === "committed") {
+        const index = uv.mainRowMapping[pos.id][0];
+        return [index, null];
+      } else {
+        return undefined;
+      }
+    }, [...newRowTopSidePositions, ...newRowBottomSidePositions]));
+
+    return {
+      ...baseExtra,
+      isSelectionColumnEnabled,
       hasRowLinks: false,
-      selectedRows: new ObjectSet<RowRef>(),
       selectedValues: new ObjectSet<ValueRef>(),
       columns,
       fixedColumnPositions: {},
       rowsParentPositions: {},
-      newRowTopSidePositions: [],
-      newRowBottomSidePositions: [],
+      newRowTopSidePositions,
+      newRowBottomSidePositions,
+      oldCommittedRowPositions,
+      linkOpts: uv.homeSchema ? { homeSchema: uv.homeSchema } : {},
+      sortAsc: oldView?.sortAsc ?? true,
+      sortColumn: oldView?.sortColumn ?? null,
+      sortOptions: oldView?.sortOptions ?? {},
     };
-    const home = homeSchema(this.uv.args);
-    if (home !== null) {
-      extra.linkOpts = { homeSchema: home };
-    }
-    return extra;
-  }
+  },
 
-  postInitUserView() {
-    this.extra.fixedColumnPositions = this.fixedColumnPositions(this.extra.columns);
-    Object.entries(this.extra.fixedColumnPositions).forEach(([colIRaw, position]) => {
+  postInitUserView(uv: ITableCombinedUserView) {
+    uv.extra.fixedColumnPositions = fixedColumnPositions(uv);
+    Object.entries(uv.extra.fixedColumnPositions).forEach(([colIRaw, position]) => {
       const colI = Number(colIRaw);
-      this.extra.columns[colI].style["left"] = position;
+      uv.extra.columns[colI].style["left"] = position;
 
-      this.forEachLocalRow(row => {
+      uv.forEachRow(row => {
         const value = row.values[colI];
-        let style = value.style;
-        if (style === undefined) {
+
+        let style = value.extra.style;
+        if (style === null) {
           style = {};
-          value.style = style;
+          value.extra.style = style;
         }
         style["left"] = position;
       });
     });
-  }
-
-  selectCell(ref: ValueRef, selectedStatus: boolean) {
-    const cell = this.getValueByRef(ref);
-    if (cell === null) {
-      return;
-    }
-    if (cell.local.selected !== selectedStatus) {
-      cell.local.selected = selectedStatus;
-      if (selectedStatus) {
-        this.extra.selectedValues.insert(ref);
-      } else {
-        this.extra.selectedValues.delete(ref);
-      }
-    }
-  }
-
-  get technicalWidth() {
-    let left = 0;
-    if (this.extra.isSelectionColumnEnabled) {
-      left += technicalFieldsWidth;
-    }
-    if (this.extra.hasRowLinks) {
-      left += technicalFieldsWidth;
-    }
-    return left;
-  }
-
-  private fixedColumnPositions(columns: IColumn[]): Record<number, string> {
-    let left = this.technicalWidth;
-    const fixedColumnIndexes = mapMaybe((col, colI) => col.fixed ? colI : undefined, columns);
-    const positions: Record<number, string> = {};
-    for (const fixedColumnIndex of fixedColumnIndexes) {
-      positions[fixedColumnIndex] = `${left}px`;
-      left += columns[fixedColumnIndex].width;
-    }
-    return positions;
-  }
-}
-
-const ordRowPositionRef = (a: RowPositionRef, b: RowPositionRef) => {
-  if (a.type !== b.type) {
-    if (a.type === "new") {
-      return -1;
-    } else if (a.type === "added" && b.type !== "new") {
-      return -1;
-    } else {
-      return 1;
-    }
-  } else if (a.type === "new") {
-    return 0;
-  } else {
-    return Math.sign(a.position - (b as IAddedRowPositionRef | IExistingRowPositionRef).position);
-  }
+  },
 };
 
-const rowContains = (row: ITableLocalRow, searchWords: string[]) => {
+const rowContains = (row: ITableExtendedRowCommon, searchWords: string[]) => {
   return searchWords.every(word => row.extra.searchText.includes(word));
 };
 
@@ -728,37 +799,47 @@ const isEmptyRow = (row: IRowCommon) => {
   return row.values.every(cell => valueIsNull(cell.rawValue) || cell.info === null);
 };
 
-const userView = namespace("userView");
+interface ITableEditing {
+  lock: AutoSaveLock;
+  ref: ValueRef;
+}
+
+const entries = namespace("entries");
 const staging = namespace("staging");
 
+interface IShownRow {
+  key: string;
+  row: ITableExtendedRowCommon;
+  notExisting: boolean;
+  ref: RowRef;
+}
+
 @UserView({
-  localConstructor: LocalTableUserView,
+  handler: tableUserViewHandler,
 })
 @Component({
   components: {
     TableRow, Checkbox, TableCellEdit,
   },
 })
-export default class UserViewTable extends mixins<BaseUserView<LocalTableUserView, ITableValueExtra, ITableRowExtra, ITableUserViewExtra>>(BaseUserView) {
+export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra, ITableRowExtra, ITableViewExtra>>(BaseUserView) {
   @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
   @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
-  @userView.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IEntriesRef; reference: ReferenceName }) => void;
-  @userView.Action("getEntries") getEntries!: (args: { reference: ReferenceName; ref: IEntriesRef }) => Promise<Entries>;
+  @entries.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IEntriesRef; reference: ReferenceName }) => void;
+  @entries.Action("getEntries") getEntries!: (args: { reference: ReferenceName; ref: IEntriesRef }) => Promise<Entries>;
 
+  // These two aren't computed properties for performance. They are computed during `init()` and mutated when other values change.
+  // If `init()` is called again, their values after recomputation should be equal to those before it.
   private currentFilter: string[] = [];
-  private sortColumn: number | null = null;
-  private sortAsc = true;
-  private sortOptions: Intl.CollatorOptions = {};
   private rowPositions: number[] = [];
   private showLength = 0;
-  // XXX: this has positions relative to current sorting and filtering. It needs to be converted to a global position ref using `getRowByLocalPosition`.
-  private lastSelectedRow: RowPositionRef | null = null;
+  private lastSelectedRow: number | null = null;
   private lastSelectedValue: ValueRef | null = null;
   private editing: ITableEditing | null = null;
   private printListener: { query: MediaQueryList; queryCallback: (mql: MediaQueryListEvent) => void; printCallback: () => void } | null = null;
   private clickTimeoutId: NodeJS.Timeout | null = null;
-  private emptyLocalRow: ITableLocalRow | null = null;
   private isFirefoxBrowser: boolean = isFirefox();
+  // FIXME: we should get rid of this.
   private isSelectedLastFixedCell = false;
   private editCoords: ICellCoords = {
     x: 0,
@@ -775,10 +856,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   private cellEditHeight = 0;
 
   private rowsState: Record<number, any> = {};
-  private isTree = false;
+  private isTree = false
 
   get columnIndexes() {
-    const columns = this.local.extra.columns.map((column, index) => ({
+    const columns = this.uv.extra.columns.map((column, index) => ({
       index,
       fixed: column.fixed,
       visible: column.visible,
@@ -789,11 +870,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   get fixedColumnIndexes() {
-    return mapMaybe((col, colI) => col.fixed ? colI : undefined, this.local.extra.columns);
+    return mapMaybe((col, colI) => col.fixed ? colI : undefined, this.uv.extra.columns);
   }
 
   get lastFixedColumnIndex(): number {
-    return this.local.extra.columns.filter(item => item.fixed).length;
+    return this.uv.extra.columns.filter(item => item.fixed).length;
   }
 
   get editingLocked() {
@@ -806,18 +887,18 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   get editingValue() {
     if (this.editing === null
-     || this.editingIsBool // Bools are special case because they toggles by double click.
+     || this.editingBool // Bools are special case because they toggles by double click.
     ) {
       return null;
     } else {
-      const value = this.local.getValueByRef(this.editing.ref);
-      if (value === null) {
+      const value = this.uv.getValueByRef(this.editing.ref);
+      if (!value) {
         return null;
       } else {
         const columnInfo = this.uv.info.columns[this.editing.ref.column];
         const columnAttrs = this.uv.columnAttributes[this.editing.ref.column];
         const type = columnInfo.valueType;
-        const attributes = { ...this.uv.attributes, ...columnAttrs, ...value.row.row.attributes, ...value.value.attributes };
+        const attributes = { ...this.uv.attributes, ...columnAttrs, ...value.row.attributes, ...value.value.attributes };
         return {
           value: value.value,
           attributes,
@@ -834,13 +915,13 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (this.isTopLevel) {
       const queryCallback = (mql: MediaQueryListEvent) => {
         if (mql.matches) {
-          this.showLength = this.local.rows.length;
+          this.showLength = this.uv.rows?.length ?? 0;
         }
       };
       const query = window.matchMedia("print");
       query.addListener(queryCallback);
       const printCallback = () => {
-        this.showLength = this.local.rows.length;
+        this.showLength = this.uv.rows?.length ?? 0;
       };
       window.addEventListener("beforeprint", printCallback);
       this.printListener = { query, queryCallback, printCallback };
@@ -851,10 +932,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   protected uvChanged() {
     this.init();
     this.updateShowLength();
-  }
-
-  @Watch("uv")
-  protected uvInsidesChanged() {
     this.updateRows();
   }
 
@@ -864,18 +941,19 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
       this.removeCellEditing();
     });
 
+    // Deselect cells in this table if cell is selected in another table.
     this.$root.$on("cell-click", () => {
-      this.local.extra.selectedValues.keys().forEach(key => {
-        this.local.selectCell(key, false);
+      this.uv.extra.selectedValues.keys().forEach(key => {
+        this.selectValue(key, false);
       });
       this.lastSelectedRow = null;
       this.lastSelectedValue = null;
       this.removeCellEditing();
     });
 
-    if (!R.isEmpty(this.local.extra.rowsParentPositions)
-     && "tree_all_open" in this.local.uv.attributes
-     && this.local.uv.attributes.tree_all_open
+    if (!R.isEmpty(this.uv.extra.rowsParentPositions)
+     && "tree_all_open" in this.uv.attributes
+     && this.uv.attributes.tree_all_open
     ) {
       this.toggleAllTreeChildren(true);
     }
@@ -905,14 +983,14 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     } else {
       // Filter existing rows when we filter a subset of already filtered ones.
       const newWords = this.currentFilter.filter(newWord => !oldFilter.some(oldWord => oldWord.startsWith(newWord)));
-      this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], newWords));
+      this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.uv.rows![rowI], newWords));
     }
 
     if (this.filter.length === 0) {
       this.buildRowPositions();
       this.initRowsState();
     } else if (this.isTree) {
-      this.offTree();
+      this.disableTree();
     }
   }
 
@@ -932,25 +1010,16 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
   }
 
-  private getNewRowsBySide(position: NewRowSide): number[] {
-    return this.uv.newRowsPositions.filter(
-      (rowI: number) => this.local.newRows[rowI].extra.newRowSide === position,
-    );
-  }
-
-  @Watch("uv.newRows")
-  private updateNewRowsSides() {
-    this.local.extra.newRowTopSidePositions = this.getNewRowsBySide("top");
-    this.local.extra.newRowBottomSidePositions = this.getNewRowsBySide("bottom").reverse();
-  }
-
-  private async addNewRowOnPosition(side: NewRowSide): Promise<void> {
+  private async addNewRowOnPosition(side: "top" | "bottom"): Promise<void> {
     const rowId = await this.addNewRow();
-    this.local.newRows[rowId].extra.newRowSide = side;
-    this.updateNewRowsSides();
+    // Remove auto-inserted reference.
+    if (side === "top") {
+      const ref = this.uv.extra.newRowBottomSidePositions.pop();
+      this.uv.extra.newRowTopSidePositions.push(ref!);
+    }
 
     const firstNotDisabledColumn = this.uv.newRows[rowId].values.findIndex((value, i) => {
-      return value.info !== undefined && this.local.extra.columns[i].visible;
+      return value.info !== undefined && this.uv.extra.columns[i].visible;
     });
     const firstNotDisabledDOMColumn = this.columnIndexes.indexOf(firstNotDisabledColumn);
     if (firstNotDisabledDOMColumn === -1) return;
@@ -973,17 +1042,21 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     });
   }
 
-  // Toggle children rows visibles.
-  private visibleChildren(children: number[], visible: boolean, depth = false) {
+  // Toggle visibility of children rows.
+  private visibleChildren(children: number[], visible: boolean, deep = false) {
+    if (!this.uv.rows) {
+      throw new Error("Impossible");
+    }
+
     // Save state.
-    if (this.local.rows[children[0]] !== undefined) {
-      const parent = this.local.rows[children[0]].extra.parent;
-      if (parent === undefined) {
+    if (this.uv.rows[children[0]] !== undefined) {
+      const parent = this.uv.rows[children[0]].extra.parent;
+      if (!parent) {
         return;
       }
-      const parentIndex = this.local.extra.rowsParentPositions[parent];
-      const extra = this.local.rows[parentIndex].extra;
-      this.local.rows[parentIndex].extra.arrowDown = visible;
+      const parentIndex = this.uv.extra.rowsParentPositions[parent];
+      const extra = this.uv.rows[parentIndex].extra;
+      this.uv.rows[parentIndex].extra.arrowDown = visible;
       if (visible) {
         this.rowsState[parentIndex] = extra;
       } else {
@@ -993,20 +1066,19 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
     // Toggle
     children.forEach((child, i) => {
-      if (!visible && this.local.rows[child].extra.visible) {
-        this.visibleChildren(this.local.rows[child].extra.children, visible);
+      if (!visible && this.uv.rows![child].extra.visible) {
+        this.visibleChildren(this.uv.rows![child].extra.children, visible);
 
         // Hidden children.
         const childPosition = this.rowPositions.indexOf(child);
         this.rowPositions.splice(childPosition, 1);
       }
 
-      // Open in depth
-      if (depth) {
-        this.visibleChildren(this.local.rows[child].extra.children, true, depth);
+      if (deep) {
+        this.visibleChildren(this.uv.rows![child].extra.children, true, deep);
       }
 
-      this.local.rows[child].extra.visible = visible;
+      this.uv.rows![child].extra.visible = visible;
     });
 
     if (visible) {
@@ -1015,8 +1087,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   private displayChildren(children: number[]) {
-    const index = this?.local?.rows[children[0]]?.extra?.parent ?? null;
-    const parent = index !== null ? this.local.extra.rowsParentPositions[index] : null;
+    const index = this.uv.rows?.[children[0]].extra.parent ?? null;
+    const parent = index !== null ? this.uv.extra.rowsParentPositions[index] : null;
     if (parent !== null) {
       for (let i = children.length - 1; i >= 0; i--) {
         if (this.rowPositions.includes(children[i])) {
@@ -1030,31 +1102,33 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
   private toggleAllTreeChildren(visible: boolean) {
     this.rowPositions.forEach(rowI => {
-      if (this.local.rows[rowI].extra.children.length > 0 && this.local.rows[rowI].extra.parent === undefined) {
-        this.visibleChildren(this.local.rows[rowI].extra.children, visible, true);
+      if (this.uv.rows![rowI].extra.children.length > 0 && this.uv.rows![rowI].extra.parent === undefined) {
+        this.visibleChildren(this.uv.rows![rowI].extra.children, visible, true);
       }
     });
     this.initRowsState();
   }
 
   private initRowsState() {
-    this.local.rows.forEach((row, rowI) => {
-      const parentIndex = row.extra.parent !== undefined ? this.local.extra.rowsParentPositions[row.extra.parent] : undefined;
-      if (parentIndex !== undefined
-       && this.local.rows[parentIndex] !== undefined
-       && !this.local.rows[parentIndex].extra.children.includes(rowI)
-      ) {
-        this.local.rows[parentIndex].extra.children.push(rowI);
-        let level = 0;
-        let parent: number | undefined = parentIndex;
-        while (parent !== undefined && this.local.rows[parent] !== undefined && level < 100) {
-          const index: number | undefined = this?.local?.rows[parent]?.extra?.parent ?? undefined;
-          parent = index !== undefined ? this.local.extra.rowsParentPositions[index] : undefined;
-          level++;
+    if (this.uv.rows) {
+      this.uv.rows.forEach((row, rowI) => {
+        const parentIndex = row.extra.parent ? this.uv.extra.rowsParentPositions[row.extra.parent] : undefined;
+        if (parentIndex !== undefined
+        && this.uv.rows![parentIndex] !== undefined
+        && !this.uv.rows![parentIndex].extra.children.includes(rowI)
+        ) {
+          this.uv.rows![parentIndex].extra.children.push(rowI);
+          let level = 0;
+          let parent: number | undefined = parentIndex;
+          while (parent !== undefined && this.uv.rows![parent] !== undefined && level < 100) {
+            const index: number | undefined = this.uv.rows![parent]?.extra?.parent ?? undefined;
+            parent = index !== undefined ? this.uv.extra.rowsParentPositions[index] : undefined;
+            level++;
+          }
+          this.uv.rows![rowI].extra.level = level;
         }
-        this.local.rows[rowI].extra.level = level;
-      }
-    });
+      });
+    }
     if (!R.isEmpty(this.rowsState)) {
       const sort = R.sortBy(R.compose(R.prop<string, number>("level"), R.prop<any>(1)));
       const sortable = sort(R.toPairs(this.rowsState));
@@ -1067,7 +1141,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
   }
 
-  private offTree() {
+  private disableTree() {
     this.isTree = false;
     this.buildRowPositions();
   }
@@ -1080,12 +1154,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     } else {
       this.rowPositions = rows.map((row, rowI) => rowI);
       if (this.filter.length !== 0) {
-        this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.local.rows[rowI], this.filter));
-      } else if (!R.isEmpty(this.local.extra.rowsParentPositions)) {
-        this.rowPositions = this.rowPositions.filter(rowI => this.local.rows[rowI].extra.visible);
+        this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.uv.rows![rowI], this.filter));
+      } else if (!R.isEmpty(this.uv.extra.rowsParentPositions)) {
+        this.rowPositions = this.rowPositions.filter(rowI => this.uv.rows![rowI].extra.visible);
         this.isTree = true;
       }
-      debugLog("buildRowsPositions", this.uv.rows, this.rowPositions);
       this.sortRows();
       this.updateShowLength();
     }
@@ -1117,10 +1190,10 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     this.removeCellEditing();
 
     void this.addAutoSaveLock().then(async lock => {
-      const value = this.local.getValueByRef(ref);
+      const value = this.uv.getValueByRef(ref);
 
       if (this.editing !== null // Lock already taken (somehow)
-       || value === null // value not found
+       || !value
       ) {
         await this.removeAutoSaveLock(lock);
         return;
@@ -1130,7 +1203,7 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     });
   }
 
-  private get editingIsBool(): boolean {
+  private get editingBool(): boolean {
     if (this.editing === null) return false;
     return this.uv.info.columns[this.editing.ref.column].valueType.type === "bool";
   }
@@ -1141,8 +1214,8 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     const ref = this.editing.ref;
     if (ref.type === "new") return;
 
-    if (this.editingIsBool) {
-      const value = this.local.getValueByRef(ref)!.value.value;
+    if (this.editingBool) {
+      const value = this.uv.getValueByRef(ref)!.value.value;
       await this.updateCurrentValue(!value);
       this.removeCellEditing();
     }
@@ -1228,123 +1301,65 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     }
   }
 
+  private selectValue(ref: ValueRef, selectedStatus: boolean) {
+    const cell = this.uv.getValueByRef(ref);
+    if (!cell) {
+      return;
+    }
+    if (cell.value.extra.selected !== selectedStatus) {
+      cell.value.extra.selected = selectedStatus;
+      if (selectedStatus) {
+        this.uv.extra.selectedValues.insert(ref);
+      } else {
+        this.uv.extra.selectedValues.delete(ref);
+      }
+    }
+  }
+
+  // More high-level than `selectValue`: deselects other cells and
+  // remembers last selected cell.
   private selectCell(ref: ValueRef) {
-    this.local.extra.selectedValues.keys().forEach(prevRef => {
-      this.local.selectCell(prevRef, false);
+    this.uv.extra.selectedValues.keys().forEach(prevRef => {
+      this.selectValue(prevRef, false);
     });
 
     // Deselect another cells
     this.$root.$emit("cell-click");
 
-    this.local.selectCell(ref, true);
+    this.selectValue(ref, true);
     this.lastSelectedValue = ref;
   }
 
-  @Watch("rowPositions")
+  @Watch("allRows")
   private clearSelectedRow() {
     this.lastSelectedRow = null;
   }
 
-  private nextLocalRowPosition(rowRef: RowPositionRef): RowPositionRef | null {
-    let type: string;
-    let position: number;
-    if (rowRef.type === "new") {
-      type = "added";
-      position = 0;
-    } else {
-      type = rowRef.type;
-      position = rowRef.position + 1;
-    }
-
-    if (type === "added") {
-      if (position < this.uv.newRowsPositions.length) {
-        return {
-          type, position,
-        };
-      } else {
-        type = "existing";
-        position = 0;
-      }
-    }
-
-    if (type === "existing") {
-      if (position < this.rowPositions.length) {
-        return {
-          type, position,
-        };
-      }
-    }
-
-    return null;
-  }
-
-  private getRowByLocalPosition(rowRef: RowPositionRef): RowRef | null {
-    if (rowRef.type === "existing") {
-      return this.local.getRowByPosition({ type: "existing", position: this.rowPositions[rowRef.position] });
-    } else {
-      return this.local.getRowByPosition(rowRef);
-    }
-  }
-
-  private selectRow(posRef: RowPositionRef, event: MouseEvent) {
-    const ref = this.getRowByLocalPosition(posRef);
-    if (ref === null) {
-      return;
-    }
-    const row = this.baseLocal.getRowByRef(ref);
-    if (row === null) {
-      return;
-    }
+  private selectTableRow(pos: number, event: MouseEvent) {
+    const row = this.allRows[pos];
 
     // If we are in a selection mode, just emit selected row.
-    if (this.selectionMode && posRef.type === "existing" && row.local.extra.selectionEntry !== undefined) {
-      this.$emit("select", row.local.extra.selectionEntry);
+    if (this.selectionMode && row.ref.type === "existing" && row.row.extra.selectionEntry !== undefined) {
+      this.$emit("select", row.row.extra.selectionEntry);
       return;
     }
 
-    const proc = () => {
-      const prevLocalRef = this.lastSelectedRow!;
-      // Select all rows between current one and the previous selected one.
-      const prevRef = this.getRowByLocalPosition(prevLocalRef);
-      if (prevRef === null) {
-        return false;
+    if (this.lastSelectedRow !== null && event.shiftKey) {
+      const prevRow = this.allRows[this.lastSelectedRow];
+      const prevSelected = prevRow.row.extra.selected;
+      const [from, to] = this.lastSelectedRow <= pos ? [this.lastSelectedRow, pos] : [pos, this.lastSelectedRow];
+      for (let i = from; i <= to; i++) {
+        this.selectRow(this.allRows[i].ref, prevSelected);
       }
-      const prevRow = this.baseLocal.getRowByRef(prevRef);
-      if (prevRow === null) {
-        return false;
-      }
-      const [from, to] = ordRowPositionRef(prevLocalRef, posRef) <= 0 ? [prevLocalRef, posRef] : [posRef, prevLocalRef];
-      let i: RowPositionRef | null = from;
-      while (i !== null && !equalRowPositionRef(i, to)) {
-        const currRef = this.getRowByLocalPosition(i);
-        if (currRef === null) {
-          throw new Error("impossible");
-        }
-        this.baseLocal.selectRow(currRef, prevRow.local.extra.selected);
-        i = this.nextLocalRowPosition(i);
-      }
-      this.baseLocal.selectRow(this.getRowByLocalPosition(to)!, prevRow.local.extra.selected);
-      return true;
-    };
-
-    if (!(this.lastSelectedRow !== null && event.shiftKey && proc())) {
-      this.baseLocal.selectRow(ref, !row.local.extra.selected);
+    } else {
+      this.selectRow(row.ref, !row.row.extra.selected);
     }
 
-    this.lastSelectedRow = posRef;
+    this.lastSelectedRow = pos;
   }
 
   private selectAllRows() {
-    this.baseLocal.selectAll(!this.baseLocal.selectedAll);
-  }
-
-  private removeSelectedRows() {
-    const entity = this.uv.info.mainEntity;
-    if (entity === null || this.uv.rows === null) {
-      throw new Error("View doesn't have a main entity");
-    }
-
-    this.baseLocal.extra.selectedRows.keys().forEach(rowRef => this.deleteRow(rowRef));
+    this.selectAll(!this.selectedAll);
   }
 
   private releaseEntries() {
@@ -1369,11 +1384,6 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
 
     const actions: Action[] = [];
     if (this.uv.info.mainEntity !== null) {
-      if (this.local.extra.isSelectionColumnEnabled) {
-        actions.push(
-          { icon: "delete_sweep", name: this.$t("remove_selected_rows").toString(), callback: () => this.removeSelectedRows() },
-        );
-      }
       actions.push(
         { icon: "playlist_add", name: this.$t("add_entry").toString(), callback: () => this.addNewRowOnPosition("top") },
       );
@@ -1391,38 +1401,38 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   }
 
   /*
-            first sort
-            bool:   descending
-            number: descending
-            string: ascending
-        */
+    first sort
+    bool:   descending
+    number: descending
+    string: ascending
+  */
   private updateSort(sortColumn: number) {
-    const type = this.local.extra.columns[sortColumn].columnInfo.valueType.type;
-    if (this.sortColumn !== sortColumn) {
-      this.sortColumn = sortColumn;
+    const type = this.uv.extra.columns[sortColumn].columnInfo.valueType.type;
+    if (this.uv.extra.sortColumn !== sortColumn) {
+      this.uv.extra.sortColumn = sortColumn;
       switch (type) {
         case "decimal":
-          this.sortOptions = { numeric: true };
-          this.sortAsc = false;
+          this.uv.extra.sortOptions = { numeric: true };
+          this.uv.extra.sortAsc = false;
           break;
         case "int":
-          this.sortOptions = { numeric: true };
-          this.sortAsc = false;
+          this.uv.extra.sortOptions = { numeric: true };
+          this.uv.extra.sortAsc = false;
           break;
         case "bool":
-          this.sortAsc = false;
-          this.sortOptions = {};
+          this.uv.extra.sortAsc = false;
+          this.uv.extra.sortOptions = {};
           break;
         case "string":
-          this.sortAsc = true;
-          this.sortOptions = { sensitivity: "accent" };
+          this.uv.extra.sortAsc = true;
+          this.uv.extra.sortOptions = { sensitivity: "accent" };
           break;
         default:
-          this.sortAsc = true;
-          this.sortOptions = {};
+          this.uv.extra.sortAsc = true;
+          this.uv.extra.sortOptions = {};
       }
     } else {
-      this.sortAsc = !this.sortAsc;
+      this.uv.extra.sortAsc = !this.uv.extra.sortAsc;
     }
     this.sortRows();
   }
@@ -1430,11 +1440,11 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
   private sortRows() {
     const rows = this.uv.rows!;
 
-    if (this.sortColumn !== null) {
-      const sortColumn = this.sortColumn;
-      const collator = new Intl.Collator(["en", "ru"], this.sortOptions);
+    if (this.uv.extra.sortColumn !== null) {
+      const sortColumn = this.uv.extra.sortColumn;
+      const collator = new Intl.Collator(["en", "ru"], this.uv.extra.sortOptions);
       const sortFunction: (a: number, b: number) => number =
-        this.sortAsc ?
+        this.uv.extra.sortAsc ?
           (a, b) => rowIndicesCompare(a, b, rows, sortColumn, collator) :
           (a, b) => rowIndicesCompare(b, a, rows, sortColumn, collator);
       this.rowPositions.sort(sortFunction);
@@ -1452,24 +1462,62 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     if (tableContainer.scrollTop + tableContainer.clientHeight + 1 >= tableContainer.scrollHeight
      && this.showLength < this.rowPositions.length
     ) {
-      this.showLength = Math.min(this.showLength + showStep, this.local.rows.length);
+      this.showLength = Math.min(this.showLength + showStep, this.uv.rows?.length ?? 0);
       Vue.nextTick(() => this.updateShowLength());
     }
   }
 
-  get nonDeletedRowPositions() {
+  get existingRows(): IShownRow[] {
     const rows = this.uv.rows;
     if (rows === null) {
       return [];
     } else {
-      return this.rowPositions.filter(rowI => !rows[rowI].deleted);
+      return mapMaybe(rowI => {
+        if (rowI in this.uv.extra.oldCommittedRowPositions) {
+          return undefined;
+        }
+        const row = rows[rowI];
+        if (row.deleted) {
+          return undefined;
+        }
+        return {
+          key: String(rowI),
+          notExisting: false,
+          row,
+          ref: {
+            type: "existing",
+            position: rowI,
+          },
+        };
+      }, this.rowPositions);
     }
   }
 
+  private getNewRows(rowPositions: NewRowRef[]): IShownRow[] {
+    return mapMaybe(ref => {
+      const row = getNewRow(this.uv, ref);
+      return row.row.deleted ? undefined : {
+        key: `${ref.type}-${ref.type === "added" ? ref.addedId : ref.id}`,
+        row: row.row,
+        notExisting: true,
+        ref: row.ref,
+      };
+    }, rowPositions);
+  }
+
+  get topRows(): IShownRow[] {
+    return this.getNewRows(this.uv.extra.newRowTopSidePositions);
+  }
+
+  get bottomRows(): IShownRow[] {
+    return this.getNewRows(this.uv.extra.newRowBottomSidePositions);
+  }
+
   get statusLine() {
-    const selectedCount = this.baseLocal.selectedCount;
+    const selectedCount = this.uv.extra.selectedRows.length;
     const selected = (selectedCount > 0) ? `${selectedCount}/` : "";
-    return `${selected}${this.uv.newRowsPositions.length + this.nonDeletedRowPositions.length}`;
+    const totalAdded = this.topRows.length + this.bottomRows.length;
+    return `${selected}${totalAdded + this.existingRows.length}`;
   }
 
   @Watch("statusLine")
@@ -1477,19 +1525,12 @@ export default class UserViewTable extends mixins<BaseUserView<LocalTableUserVie
     this.$emit("update:statusLine", this.statusLine);
   }
 
-  get shownRowPositions() {
-    return this.nonDeletedRowPositions.slice(0, this.showLength);
+  get allRows() {
+    return [...this.topRows, ...this.existingRows, ...this.bottomRows];
   }
 
-  get technicalWidth() {
-    let left = 0;
-    if (this.local.extra.isSelectionColumnEnabled) {
-      left += technicalFieldsWidth;
-    }
-    if (this.local.extra.hasRowLinks) {
-      left += technicalFieldsWidth;
-    }
-    return left;
+  get shownRows() {
+    return this.allRows.slice(0, this.showLength);
   }
 
   private async updateCurrentValue(rawValue: any) {

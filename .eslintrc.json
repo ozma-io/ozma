@@ -94,6 +94,8 @@
       "allow": ["warn", "error", "trace", "assert"]
     }],
     "no-void": "off",
+    "no-bitwise": "off",
+    "no-continue": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/ban-ts-ignore": "off",
@@ -110,7 +112,8 @@
     "@typescript-eslint/ban-ts-comment": "off",
     // Used for `require`-ing resources.
     "@typescript-eslint/no-var-requires": "off",
-    "@typescript-eslint/restrict-template-expressions": "off"
+    "@typescript-eslint/restrict-template-expressions": "off",
+    "@typescript-eslint/no-empty-interface": "off"
   },
   "overrides": [
     {

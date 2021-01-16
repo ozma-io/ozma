@@ -119,14 +119,15 @@ import { Component, Prop } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
 
-import type { IUserViewArguments, ICombinedValue, IEntriesRef } from "@/state/user_view";
-import { homeSchema, currentValue } from "@/state/user_view";
 import { IQuery } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
 import MultiSelect, { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 
 import BaseEntriesView from "@/components/BaseEntriesView";
 import { attrToLinkRef } from "@/links";
+import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
+import { currentValue, homeSchema } from "@/user_views/combined";
+import type { IEntriesRef } from "@/state/entries";
 
 const query = namespace("query");
 

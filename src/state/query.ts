@@ -4,8 +4,8 @@ import { Location, Route } from "vue-router";
 import { UserViewSource } from "@/api";
 import { deepUpdateObject, mapMaybe, deepClone } from "@/utils";
 import { router } from "@/modules";
-import { IUserViewArguments, IValueInfo } from "@/state/user_view";
 import { SchemaName, IUserViewRef } from "ozma-api/src";
+import { IUserViewArguments, IValueInfo } from "@/user_views/combined";
 
 export interface IQuery {
   args: IUserViewArguments;

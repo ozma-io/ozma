@@ -1,10 +1,8 @@
 import Component from "vue-class-component";
 import { VueConstructor, default as Vue } from "vue";
-import { Store } from "vuex";
 
 import { isMobile } from "@/utils";
-import { CombinedUserView } from "@/state/user_view";
-import { IHandlerProvider } from "@/local_user_view";
+import { IUserViewHandler } from "@/user_views/combined";
 
 /* This defines an attribute, `UserView`, which is used on all user view components.
  * We use it to pass an optional constructor for LocalUserView descendant to an enclosing component `UserView.vue`.
@@ -14,23 +12,20 @@ import { IHandlerProvider } from "@/local_user_view";
  *
  * To accomplish this we add an extra value, `localConstructor`, to the user view constructor object.
  */
-export interface IUserViewOptions<ConstrT extends IHandlerProvider> {
-  localConstructor?: new (store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>, oldLocal: ConstrT | null) => ConstrT;
+export interface IUserViewOptions<ValueT, RowT, ViewT, T extends IUserViewHandler<ValueT, RowT, ViewT>> {
+  handler?: T;
 }
 
 export interface IUserViewConstructor<V extends Vue = Vue> extends VueConstructor<V> {
-  localConstructor?: (store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>, oldLocal: IHandlerProvider | null) => IHandlerProvider;
+  handler?: IUserViewHandler<any, any, any>;
 }
 
-export const UserView = <ConstrT extends IHandlerProvider>(opts?: IUserViewOptions<ConstrT>) => {
-  return <VC>(constructor: VC) => {
-    const constructorMut = constructor as any as IUserViewConstructor<Vue>;
+export const UserView = <ValueT, RowT, ViewT, T extends IUserViewHandler<ValueT, RowT, ViewT>>(opts?: IUserViewOptions<ValueT, RowT, ViewT, T>) => {
+  return <V extends Vue, VC extends VueConstructor<V>>(constructor: VC) => {
+    const constructorMut = constructor as IUserViewConstructor<V>;
     if (opts !== undefined) {
-      const localConstructor = opts.localConstructor;
-      if (localConstructor !== undefined) {
-        constructorMut.localConstructor = (store: Store<any>, uv: CombinedUserView, defaultRawValues: Record<string, any>, oldLocal: IHandlerProvider | null) => {
-          return new localConstructor(store, uv, defaultRawValues, oldLocal instanceof localConstructor ? oldLocal : null);
-        };
+      if (opts.handler !== undefined) {
+        constructorMut.handler = opts.handler;
       }
     }
     return constructor;

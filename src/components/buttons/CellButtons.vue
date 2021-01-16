@@ -18,10 +18,10 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import type { ICombinedValue } from "@/state/user_view";
 import { mapMaybe } from "@/utils";
 import { attrToLinkSelf } from "@/links";
 import { Action } from "@/components/ActionsMenu.vue";
+import type { ICombinedValue } from "@/user_views/combined";
 
 @Component
 export default class CellButtons extends Vue {

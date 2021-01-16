@@ -2,275 +2,342 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { RowId, IEntityRef, IFieldRef } from "@/api";
-import { CombinedUserView, currentValue, ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, homeSchema } from "@/state/user_view";
 import { ErrorKey } from "@/state/errors";
-import type { ScopeName, UserViewKey, AddedRowId, CombinedTransactionResult, IAddedResult } from "@/state/staging_changes";
-import { LocalUserView, RowRef, ValueRef, SimpleLocalUserView, ILocalRow, ILocalRowInfo } from "@/local_user_view";
+import type { ScopeName, AddedRowId, CombinedTransactionResult } from "@/state/staging_changes";
+import type {
+  IExtendedRowInfo, ICombinedValue, IExtendedRow, ICombinedUserView,
+  ICombinedUserViewAny, IUserViewHandler, ICombinedRow, IAddedRow, IExtendedAddedRow,
+} from "@/user_views/combined";
+import { RowRef, ValueRef, CombinedUserView, currentValue } from "@/user_views/combined";
 import { equalEntityRef, valueIsNull } from "@/values";
-import { mapMaybe, ObjectSet } from "@/utils";
-import LocalEmptyUserView from "@/LocalEmptyUserView";
+import { ObjectSet, tryDicts } from "@/utils";
 import { IAttrToQueryOpts } from "@/state/query";
 
 import { attrToLink } from "@/links";
+import { emptyUserViewHandlerFunctions } from "@/user_views/trivial";
 
 export interface ISelectionRef {
   entity: IEntityRef;
   id: number;
 }
 
-const staging = namespace("staging");
-const errors = namespace("errors");
+export const userViewTitle = (uv: ICombinedUserViewAny): string | null => {
+  if ("title" in uv.attributes) {
+    return String(uv.attributes["title"]);
+  } else if (uv.args.source.type === "named") {
+    return uv.args.source.ref.name;
+  } else {
+    return null;
+  }
+};
 
-const errorKey = "base_user_view";
+// Common extra data for every user view, and its handler.
 
-// Interface for save cell value to storage vuex
-interface IBaseValueExtra {
-  selected: boolean;
+export interface IBaseValueExtra {
 }
 
-// Interface for save row to storage vuex
-interface IBaseRowExtra {
+export interface IBaseRowExtra {
   selected: boolean;
-  selectionEntry?: ISelectionRef;
+  selectionEntry: ISelectionRef | null;
 }
 
-// Interface for save user_view to storage vuex
-interface IBaseUserViewExtra {
+export interface IBaseViewExtra {
   rowCount: number;
   selectedRows: ObjectSet<RowRef>;
 }
 
-type IBaseLocalRowInfo = ILocalRowInfo<IBaseRowExtra>;
-type IBaseLocalRow = ILocalRow<IBaseValueExtra, IBaseRowExtra>;
+type IBaseCombinedUserView = ICombinedUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>;
+type IBaseExtendedRow = IExtendedRow<IBaseValueExtra, IBaseRowExtra>;
+type IBaseExtendedRowInfo = IExtendedRowInfo<IBaseRowExtra>;
+type IBaseExtendedAddedRow = IExtendedAddedRow<IBaseValueExtra, IBaseRowExtra>;
 
-// BaseUserView class for save local data to vuex
-export class LocalBaseUserView extends SimpleLocalUserView<IBaseValueExtra, IBaseRowExtra, IBaseUserViewExtra> {
-  createCommonLocalValue(row: IRowCommon, localRow: IBaseLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: IBaseValueExtra | null): IBaseValueExtra {
-    const selected = oldLocal !== null ? oldLocal.selected : false;
+export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra> = {
+  ...emptyUserViewHandlerFunctions,
 
-    const extra: IBaseValueExtra = {
+  createLocalValue(uv: IBaseCombinedUserView, rowIndex: number, row: ICombinedRow & IBaseExtendedRowInfo, columnIndex: number, value: ICombinedValue): IBaseValueExtra {
+    if (value.info && tryDicts("selectable", value.attributes, row.attributes, uv.columnAttributes[columnIndex], uv.attributes)) {
+      row.extra.selectionEntry = {
+        entity: value.info.fieldRef.entity,
+        id: value.info.id!,
+      };
+    }
+    return {};
+  },
+  createAddedLocalValue() {
+    return {};
+  },
+  createEmptyLocalValue() {
+    return {};
+  },
+
+  createLocalRow(uv: IBaseCombinedUserView, rowIndex: number, row: ICombinedRow, oldView: IBaseViewExtra | null, oldRow: IBaseRowExtra | null) {
+    const selectionEntry = uv.info.mainEntity ? {
+      entity: uv.info.mainEntity,
+      id: row.mainId!,
+    } : null;
+    const selected = (oldRow?.selected ?? false) && !row.deleted;
+    if (selected) {
+      uv.extra.selectedRows.insert({ type: "existing", position: rowIndex });
+    }
+    return {
       selected,
+      selectionEntry,
     };
+  },
 
-    return extra;
-  }
+  createAddedLocalRow(uv: IBaseCombinedUserView, rowId: AddedRowId, row: IAddedRow, oldView: IBaseViewExtra | null, oldRow: IBaseRowExtra | null) {
+    const selected = oldRow?.selected ?? false;
+    if (selected) {
+      uv.extra.selectedRows.insert({ type: "added", id: rowId });
+    }
+    return {
+      selected,
+      selectionEntry: null,
+    };
+  },
 
-  createCommonLocalRow(row: IRowCommon): IBaseRowExtra {
-    const extra: IBaseRowExtra = {
+  createEmptyLocalRow() {
+    return {
       selected: false,
+      selectionEntry: null,
     };
+  },
 
-    this.extra.rowCount++;
-    return extra;
-  }
-
-  createAddedLocalRow(rowId: AddedRowId, row: IAddedRow) {
-    this.extra.rowCount++;
-
-    return this.createCommonLocalRow(row);
-  }
-
-  createLocalUserView(): IBaseUserViewExtra {
-    const extra = {
-      rowCount: -1, // FIXME why not 0?
+  createLocalUserView() {
+    return {
+      rowCount: 0,
       selectedRows: new ObjectSet<RowRef>(),
     };
-    return extra;
-  }
+  },
 
-  selectRow(ref: RowRef, selectedStatus: boolean) {
-    const row = this.getRowByRef(ref);
-    if (row === null) {
-      return;
+  postInitRow(uv: IBaseCombinedUserView, rowIndex: number, row: IBaseExtendedRow) {
+    if (!row.deleted) {
+      uv.extra.rowCount++;
     }
-    if (row.local.extra.selected !== selectedStatus) {
-      row.local.extra.selected = selectedStatus;
-      if (selectedStatus) {
-        this.extra.selectedRows.insert(ref);
-      } else {
-        this.extra.selectedRows.delete(ref);
-      }
+  },
+
+  postInitAddedRow(uv: IBaseCombinedUserView, rowId: AddedRowId, row: IBaseExtendedAddedRow) {
+    if (!row.deleted) {
+      uv.extra.rowCount++;
     }
-  }
+  },
 
-  selectAll(selectedStatus: boolean) {
-    Object.entries(this.newRows).forEach(([rowIdRaw, row]) => {
-      const rowId = Number(rowIdRaw);
-      row.extra.selected = selectedStatus;
-      if (selectedStatus) {
-        this.extra.selectedRows.insert({
-          type: "added",
-          id: rowId,
-        });
-      }
-    });
-    if (this.uv.rows !== null) {
-      this.rows.forEach((localRow, rowI) => {
-        const row = (this.uv.rows as ICombinedRow[])[rowI];
-        if (!row.deleted) {
-          localRow.extra.selected = selectedStatus;
-          if (selectedStatus) {
-            this.extra.selectedRows.insert({
-              type: "existing",
-              position: rowI,
-            });
-          }
-        }
-      });
+  deleteRow(uv: IBaseCombinedUserView, rowIndex: number, row: IBaseExtendedRow) {
+    uv.extra.rowCount--;
+    if (row.extra.selected) {
+      row.extra.selected = false;
+      uv.extra.selectedRows.delete({ type: "existing", position: rowIndex });
     }
+  },
 
-    if (!selectedStatus) {
-      this.extra.selectedRows = new ObjectSet<RowRef>();
+  deleteAddedRow(uv: IBaseCombinedUserView, rowId: AddedRowId, row: IBaseExtendedAddedRow) {
+    uv.extra.rowCount--;
+    if (row.extra.selected) {
+      row.extra.selected = false;
+      uv.extra.selectedRows.delete({ type: "added", id: rowId });
     }
-  }
+  },
 
-  postInitRow(rowIndex: number, row: ICombinedRow, localRow: IBaseLocalRow) {
-    this.postInitCommonRow(row, localRow);
-    if (row.deleted) {
-      this.extra.rowCount--;
-    }
-  }
+  undeleteRow(uv: IBaseCombinedUserView) {
+    uv.extra.rowCount++;
+  },
 
-  deleteCommonRow(row: ICombinedRow, localRow: IBaseLocalRowInfo) {
-    this.extra.rowCount--;
-  }
+  undeleteAddedRow(uv: IBaseCombinedUserView) {
+    uv.extra.rowCount++;
+  },
+};
 
-  undeleteRow(rowIndex: number, row: ICombinedRow, localRow: IBaseLocalRowInfo) {
-    this.extra.rowCount++;
-  }
+const staging = namespace("staging");
+const errors = namespace("errors");
 
-  get selectedCount() {
-    return this.extra.selectedRows.length;
-  }
-
-  get selectedAll(): boolean {
-    return this.selectedCount === this.extra.rowCount && this.selectedCount > 0;
-  }
-}
-
+// Base class for all user views.
 @Component
-export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, ValueT, RowT, ViewT> extends Vue {
+export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends IBaseRowExtra, ViewT extends IBaseViewExtra> extends Vue {
   @staging.State("currentSubmit") currentSubmit!: Promise<CombinedTransactionResult[]> | null;
   @staging.Action("deleteEntry") deleteEntry!: (args: { entityRef: IEntityRef; id: RowId }) => Promise<void>;
   @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { entityRef: IEntityRef; id: AddedRowId }) => Promise<void>;
-  @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName; entityRef: IEntityRef; userView: UserViewKey; position?: number }) => Promise<IAddedResult>;
-  @staging.Action("addEntryWithDefaults") addEntryWithDefaults!: (
-    args: {
-      scope: ScopeName;
-      entityRef: IEntityRef;
-      userView: UserViewKey;
-      position?: number;
-      defaultValues: Record<string, any>;
-    }
-  ) => Promise<IAddedResult>;
+  @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName; entityRef: IEntityRef }) => Promise<AddedRowId>;
   @staging.Action("setAddedField") setAddedField!: (args: { fieldRef: IFieldRef; id: AddedRowId; value: any }) => Promise<void>;
   @staging.Action("updateField") updateField!: (args: { fieldRef: IFieldRef; id: RowId; value: any }) => Promise<void>;
   @errors.Mutation("setError") setError!: (args: { key: ErrorKey; error: string }) => void;
   @errors.Mutation("resetErrors") resetErrors!: (key: ErrorKey) => void;
 
-  @Prop({ type: CombinedUserView, required: true }) uv!: CombinedUserView;
-  @Prop({ type: Object, required: true }) local!: T;
-  @Prop({ type: Object, required: true }) baseLocal!: LocalBaseUserView;
+  @Prop({ type: CombinedUserView, required: true }) uv!: ICombinedUserView<ValueT, RowT, ViewT>;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
   @Prop({ type: Boolean, default: false }) isTopLevel!: boolean;
   @Prop({ type: Array, required: true }) filter!: string[];
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
   @Prop({ type: String, required: true }) scope!: ScopeName;
   @Prop({ type: Number, required: true }) level!: number;
-  @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, any>;
+  @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, unknown>;
 
   get addedLocked() {
     return this.currentSubmit !== null;
   }
 
-  protected deleteRow(ref: RowRef) {
+  selectRow(ref: RowRef, selectedStatus: boolean) {
+    if (ref.type === "new") {
+      throw new Error("Cannot select empty row");
+    }
+
+    const row = this.uv.getRowByRef(ref);
+    if (!row) {
+      return;
+    }
+    if (row.extra.selected !== selectedStatus) {
+      row.extra.selected = selectedStatus;
+      if (selectedStatus) {
+        this.uv.extra.selectedRows.insert(ref);
+      } else {
+        this.uv.extra.selectedRows.delete(ref);
+      }
+    }
+  }
+
+  selectAll(selectedStatus: boolean) {
+    if (selectedStatus) {
+      Object.entries(this.uv.newRows).forEach(([rowIdRaw, row]) => {
+        const rowId = Number(rowIdRaw);
+        row.extra.selected = true;
+        this.uv.extra.selectedRows.insert({
+          type: "added",
+          id: rowId,
+        });
+      });
+      if (this.uv.rows !== null) {
+        this.uv.rows.forEach((localRow, rowI) => {
+          const row = this.uv.rows![rowI];
+          if (!row.deleted) {
+            localRow.extra.selected = true;
+            this.uv.extra.selectedRows.insert({
+              type: "existing",
+              position: rowI,
+            });
+          }
+        });
+      }
+    } else {
+      this.uv.extra.selectedRows.keys().forEach(ref => {
+        if (ref.type === "existing") {
+          this.uv.rows![ref.position].extra.selected = false;
+        } else if (ref.type === "added") {
+          this.uv.newRows[ref.id].extra.selected = false;
+        } else {
+          throw new Error("Impossible");
+        }
+      });
+      this.uv.extra.selectedRows = new ObjectSet();
+    }
+  }
+
+  get selectedAll(): boolean {
+    return this.uv.extra.selectedRows.length === this.uv.extra.rowCount && this.uv.extra.selectedRows.length > 0;
+  }
+
+  deleteRow(ref: RowRef) {
     if (!this.uv.info.mainEntity) {
       throw new Error("View doesn't have a main entity");
     }
     const entity = this.uv.info.mainEntity;
 
     if (ref.type === "added") {
-      void this.resetAddedEntry({
-        entityRef: entity,
-        id: ref.id,
-      });
+      const row = this.uv.newRows[ref.id];
+      if (row.newId !== undefined) {
+        void this.deleteEntry({
+          entityRef: entity,
+          id: row.newId,
+        });
+      } else {
+        void this.resetAddedEntry({
+          entityRef: entity,
+          id: ref.id,
+        });
+      }
     } else if (ref.type === "existing") {
       const rows = this.uv.rows!;
       const row = rows[ref.position];
       if (row.mainSubEntity !== undefined && !equalEntityRef(row.mainSubEntity, entity)) {
         const message = "Row from a child entity cannot be deleted from user view with parent main entity";
-        this.setError({ key: errorKey, error: message });
+        this.setError({ key: this.uid, error: message });
         throw new Error(message);
       } else {
-        this.resetErrors(errorKey);
+        this.resetErrors(this.uid);
       }
       void this.deleteEntry({
         entityRef: entity,
-        // Guaranteed to exist if mainEntity exists.
-        id: row.mainId as number,
+        id: row.mainId!,
       });
+    } else {
+      throw new Error("Cannot delete empty row");
     }
   }
 
   protected destroyed() {
-    this.resetErrors(errorKey);
+    this.resetErrors(this.uid);
   }
 
   get creationLink() {
     const opts: IAttrToQueryOpts = {
       infoByDefault: true,
+      homeSchema: this.uv.homeSchema ?? undefined,
     };
-    const home = homeSchema(this.uv.args);
-    if (home !== null) {
-      opts.homeSchema = home;
-    }
 
     return attrToLink(this.uv.attributes["create_link"], opts);
   }
 
-  protected async addNewRow(): Promise<number> {
+  async addNewRow(): Promise<number> {
     const entity = this.uv.info.mainEntity;
     if (!entity) {
       throw new Error("View doesn't have a main entity");
     }
 
-    const defaultValues = Object.fromEntries(
-      mapMaybe((cell, colI) => {
-        const columnInfo = this.uv.info.columns[colI];
-        const currValue = currentValue(cell);
-        return (columnInfo.mainField && !valueIsNull(currValue))
-          ? [columnInfo.mainField.name, currValue]
-          : undefined;
-      },
-      this.local.emptyRow!.row.values),
-    );
     // FIXME: Theoretical race condition with another addEntry because it's async
-    const res = await this.addEntryWithDefaults({
+    const id = await this.addEntry({
       scope: this.scope,
       entityRef: entity,
-      userView: this.uv.userViewKey,
-      position: 0,
-      defaultValues,
     });
-    return res.id;
+    await Promise.all(this.uv.emptyRow!.values.map(async (cell, colI) => {
+      const columnInfo = this.uv.info.columns[colI];
+      const currValue = currentValue(cell);
+      if (columnInfo.mainField && !valueIsNull(currValue)) {
+        await this.setAddedField({
+          fieldRef: {
+            entity,
+            name: columnInfo.mainField.name,
+          },
+          id,
+          value: currentValue(cell),
+        });
+      }
+    }));
+    this.uv.trackAddedEntry(id);
+    return id;
   }
 
-  protected async updateValue(ref: ValueRef, rawValue: any): Promise<ValueRef> {
-    const value = this.local.getValueByRef(ref)!;
+  async updateValue(ref: ValueRef, rawValue: any): Promise<ValueRef> {
+    const value = this.uv.getValueByRef(ref)!;
     if (ref.type === "added") {
       // FIXME: throws error `updateInfo is undefined` when user tries to edit disabled cell.
       const updateInfo = value.value.info!;
-      await this.setAddedField({
-        fieldRef: updateInfo.fieldRef,
-        id: updateInfo.id,
-        value: rawValue,
-      });
+      if (updateInfo.id === undefined) {
+        await this.setAddedField({
+          fieldRef: updateInfo.fieldRef,
+          id: ref.id,
+          value: rawValue,
+        });
+      } else {
+        await this.updateField({
+          fieldRef: updateInfo.fieldRef,
+          id: updateInfo.id,
+          value: rawValue,
+        });
+      }
       return ref;
     } else if (ref.type === "existing") {
       const updateInfo = value.value.info!;
       await this.updateField({
         fieldRef: updateInfo.fieldRef,
-        id: updateInfo.id,
+        id: updateInfo.id!,
         value: rawValue,
       });
       return ref;
@@ -307,4 +374,4 @@ export default class BaseUserView<T extends LocalUserView<ValueT, RowT, ViewT>, 
   }
 }
 
-export type EmptyBaseUserView = BaseUserView<LocalEmptyUserView, undefined, undefined, undefined>;
+export type EmptyBaseUserView = BaseUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>;

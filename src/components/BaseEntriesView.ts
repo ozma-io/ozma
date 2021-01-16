@@ -1,16 +1,16 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import { ReferenceName, deepClone } from "@/utils";
-import { Entries, CurrentEntries, IEntriesRef, equalEntriesRef } from "@/state/user_view";
+import { ReferenceName, deepClone, deepEquals } from "@/utils";
+import { CurrentEntries, Entries, IEntriesRef } from "@/state/entries";
 
-const userView = namespace("userView");
+const entries = namespace("entries");
 
 @Component
 export default class BaseEntriesView extends Vue {
-  @userView.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IEntriesRef; reference: ReferenceName }) => void;
-  @userView.State("entries") entriesMap!: CurrentEntries;
-  @userView.Action("getEntries") getEntries!: (args: { reference: ReferenceName; ref: IEntriesRef }) => Promise<Entries>;
+  @entries.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IEntriesRef; reference: ReferenceName }) => void;
+  @entries.State("current") entriesMap!: CurrentEntries;
+  @entries.Action("getEntries") getEntries!: (args: { reference: ReferenceName; ref: IEntriesRef }) => Promise<Entries>;
 
   protected currentEntries: Entries | Error | null = null;
   private pendingEntity: IEntriesRef | null = null;
@@ -19,9 +19,9 @@ export default class BaseEntriesView extends Vue {
     throw Error("Not implemented");
   }
 
-  get newEntries() {
-    if (this.entriesEntity) {
-      const ret = this.entriesMap.entries.get(this.entriesEntity);
+  private get newEntries() {
+    if (this.pendingEntity) {
+      const ret = this.entriesMap.entries.get(this.pendingEntity);
       return ret === undefined ? null : ret;
     }
     return null;
@@ -34,12 +34,12 @@ export default class BaseEntriesView extends Vue {
   }
 
   @Watch("newEntries", { immediate: true })
-  updateEntries() {
-    if (this.entriesEntity) {
+  private updateEntries() {
+    if (this.pendingEntity) {
       if (this.newEntries instanceof Error) {
         this.currentEntries = null;
       } else if (this.newEntries === null) {
-        void this.getEntries({ ref: this.entriesEntity, reference: this.uid });
+        void this.getEntries({ ref: this.pendingEntity, reference: this.uid });
       } else if (!(this.newEntries instanceof Promise)) {
         this.currentEntries = this.newEntries;
       }
@@ -47,15 +47,19 @@ export default class BaseEntriesView extends Vue {
   }
 
   @Watch("entriesEntity", { deep: true, immediate: true })
-  entityChanged(newEntity: IEntriesRef | null) {
+  private entityChanged(newEntity: IEntriesRef | null) {
+    if (deepEquals(this.pendingEntity, newEntity)) {
+      return;
+    }
     const newPendingEntity = deepClone(newEntity);
     if (newPendingEntity !== null && this.newEntries === null) {
       void this.getEntries({ ref: newPendingEntity, reference: this.uid });
     }
 
+    this.currentEntries = null;
     const oldPendingEntity = this.pendingEntity;
     this.pendingEntity = newPendingEntity;
-    if (oldPendingEntity !== null && (newEntity === null || !equalEntriesRef(oldPendingEntity, newEntity))) {
+    if (oldPendingEntity !== null) {
       this.removeEntriesConsumer({ ref: oldPendingEntity, reference: this.uid });
     }
   }

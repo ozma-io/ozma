@@ -42,19 +42,18 @@
       </b-modal>
 
       <!-- The first form control is special, it points either to the empty row or to the first added row
-                 _dynamically_. This is as to not lose focus when user starts editing empty row. -->
+           dynamically_. This is as to not lose focus when user starts editing empty row. -->
       <FormEntry
         v-if="firstRow !== null"
         :uv="uv"
         :blocks="gridBlocks"
         :row="firstRow.row"
-        :local-row="firstRow.local"
         :locked="addedLocked"
         :scope="scope"
         :level="level"
         :show-delete="useDeleteAction === null"
-        @update="updateValue({ ...firstRow.rowRef, column: arguments[0] }, arguments[1])"
-        @delete="confirmDelete(firstRow.rowRef)"
+        @update="updateValue({ ...firstRow.ref, column: arguments[0] }, arguments[1])"
+        @delete="confirmDelete(firstRow.ref)"
         @goto="$emit('goto', $event)"
       />
       <FormEntry
@@ -63,7 +62,6 @@
         :uv="uv"
         :blocks="gridBlocks"
         :row="uv.newRows[rowId]"
-        :local-row="local.newRows[rowId]"
         :locked="addedLocked"
         :scope="scope"
         :level="level"
@@ -78,7 +76,6 @@
         :uv="uv"
         :blocks="gridBlocks"
         :row="uv.rows[rowI]"
-        :local-row="local.rows[rowI]"
         :scope="scope"
         :level="level"
         :selection-mode="selectionMode"
@@ -96,126 +93,143 @@
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
+import { AttributesMap, IResultColumnInfo } from "ozma-api";
 
 import { tryDicts, mapMaybe } from "@/utils";
-import { ICombinedValue, IRowCommon, ICombinedRow, IAddedRow, homeSchema } from "@/state/user_view";
 import { AddedRowId } from "@/state/staging_changes";
 import { IQuery } from "@/state/query";
-import { LocalUserView, ILocalRowInfo, ILocalRow, RowRef } from "@/local_user_view";
 import { UserView } from "@/components";
 import { Action } from "@/components/ActionsMenu.vue";
-import BaseUserView from "@/components/BaseUserView";
-
+import BaseUserView, { baseUserViewHandler, IBaseRowExtra, IBaseValueExtra, IBaseViewExtra } from "@/components/BaseUserView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
+import { attrToLink, Link } from "@/links";
+import { IAddedRow, ICombinedRow, ICombinedUserView, ICombinedValue, IExtendedRowCommon, IExtendedRowInfo, IRowCommon, IUserViewHandler, RowRef } from "@/user_views/combined";
+import { GridElement, IGridInput, IGridSection } from "@/components/form/FormGrid.vue";
 
-import { IFormValueExtra, IFormRowExtra, IFormUserViewExtra, GridElement, IGridSection, IGridInput, IGridButtons, IButtonAction } from "@/components/form/types";
-import { attrToLink } from "@/links";
-
-type IFormLocalRowInfo = ILocalRowInfo<IFormRowExtra>;
-type IFormLocalRow = ILocalRow<IFormValueExtra, IFormRowExtra>;
-
-class LocalFormUserView extends LocalUserView<IFormValueExtra, IFormRowExtra, IFormUserViewExtra> {
-  createCommonLocalValue(row: IRowCommon, localRow: IFormLocalRowInfo, columnIndex: number, value: ICombinedValue): IFormValueExtra {
-    const columnAttrs = this.uv.columnAttributes[columnIndex];
-    const attributes: {visible?: boolean} = {
-      ...this.uv.attributes,
-      ...columnAttrs,
-      ...row.attributes,
-      ...value.attributes,
-    };
-    const visible = Boolean(attributes["visible"] ?? true);
-    const extra = {
-      attributes,
-      visible,
-    };
-    return extra;
-  }
-
-  createLocalValue(rowIndex: number, row: ICombinedRow, localRow: IFormLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: IFormValueExtra | null) {
-    const extra = this.createCommonLocalValue(row, localRow, columnIndex, value);
-    if (extra.attributes["selectable"] && value.info) {
-      localRow.extra.selectionEntry = {
-        entity: value.info.fieldRef.entity,
-        id: value.info.id,
-      };
-    } else if (this.uv.info.mainEntity) {
-      localRow.extra.selectionEntry = {
-        entity: this.uv.info.mainEntity,
-        id: row.mainId!,
-      };
-    }
-    return extra;
-  }
-
-  createAddedLocalValue(rowId: AddedRowId, row: IAddedRow, localRow: IFormLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: IFormValueExtra | null) {
-    const extra = this.createCommonLocalValue(row, localRow, columnIndex, value);
-    return extra;
-  }
-
-  createEmptyLocalValue(row: IRowCommon, localRow: IFormLocalRowInfo, columnIndex: number, value: ICombinedValue, oldLocal: IFormValueExtra | null) {
-    const extra = this.createCommonLocalValue(row, localRow, columnIndex, value);
-    return extra;
-  }
-
-  createCommonLocalRow(row: IRowCommon): IFormRowExtra {
-    return {};
-  }
-
-  createLocalRow(rowIndex: number, row: ICombinedRow) {
-    const extra = this.createCommonLocalRow(row);
-    if (row.mainId !== undefined) {
-      extra.selectionEntry = {
-        entity: this.uv.info.mainEntity!,
-        id: row.mainId,
-      };
-    }
-    return extra;
-  }
-
-  createAddedLocalRow(rowId: AddedRowId, row: IAddedRow) {
-    return this.createCommonLocalRow(row);
-  }
-
-  createEmptyLocalRow(row: IRowCommon) {
-    return this.createCommonLocalRow(row);
-  }
-
-  createLocalUserView(): IFormUserViewExtra {
-    const extra = {
-      homeSchema: homeSchema(this.uv.args),
-    };
-    return extra;
-  }
+export interface IButtonAction {
+  name: string;
+  variant: string;
+  link: Link;
 }
+
+export interface IElementField {
+  type: "field";
+  index: number;
+  columnInfo: IResultColumnInfo;
+  caption: string;
+}
+
+export interface IElementButtons {
+  type: "buttons";
+  actions: IButtonAction[];
+}
+
+export type FormElement = IElementField | IElementButtons;
+
+export type FormGridElement = GridElement<FormElement>;
+
+export interface IFormValueExtra extends IBaseValueExtra {
+  attributes: AttributesMap;
+  visible: boolean;
+}
+
+export type IFormRowExtra = IBaseRowExtra
+
+export type IFormViewExtra = IBaseViewExtra
+
+export type IFormCombinedUserView = ICombinedUserView<IFormValueExtra, IFormRowExtra, IFormViewExtra>;
+export type IFormExtendedRowInfo = IExtendedRowInfo<IFormRowExtra>;
+export type IFormExtendedRowCommon = IExtendedRowCommon<IFormValueExtra, IFormRowExtra>;
+
+const createCommonLocalValue = (uv: IFormCombinedUserView, row: IRowCommon & IFormExtendedRowInfo, columnIndex: number, value: ICombinedValue) => {
+  const columnAttrs = uv.columnAttributes[columnIndex];
+  const attributes = {
+    ...uv.attributes,
+    ...columnAttrs,
+    ...row.attributes,
+    ...value.attributes,
+  };
+  const visible = Boolean(attributes["visible"] ?? true);
+  return {
+    attributes,
+    visible,
+  };
+};
+
+export const formUserViewHandler: IUserViewHandler<IFormValueExtra, IFormRowExtra, IFormViewExtra> = {
+  ...baseUserViewHandler,
+
+  createLocalValue(
+    uv: IFormCombinedUserView,
+    rowIndex: number,
+    row: ICombinedRow & IFormExtendedRowInfo,
+    columnIndex: number,
+    value: ICombinedValue,
+    oldView: IFormViewExtra | null,
+    oldRow: IFormRowExtra | null,
+    oldValue: IFormValueExtra | null,
+  ) {
+    const baseExtra = baseUserViewHandler.createLocalValue(uv, rowIndex, row, columnIndex, value, oldView, oldRow, oldValue);
+    const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
+    return { ...baseExtra, ...commonExtra };
+  },
+
+  createAddedLocalValue(
+    uv: IFormCombinedUserView,
+    rowId: AddedRowId,
+    row: IAddedRow & IFormExtendedRowInfo,
+    columnIndex: number,
+    value: ICombinedValue,
+    oldView: IFormViewExtra | null,
+    oldRow: IFormRowExtra | null,
+    oldValue: IFormValueExtra | null,
+  ) {
+    const baseExtra = baseUserViewHandler.createAddedLocalValue(uv, rowId, row, columnIndex, value, oldView, oldRow, oldValue);
+    const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
+    return { ...baseExtra, ...commonExtra };
+  },
+
+  createEmptyLocalValue(
+    uv: IFormCombinedUserView,
+    row: IRowCommon & IFormExtendedRowInfo,
+    columnIndex: number,
+    value: ICombinedValue,
+    oldView: IFormViewExtra | null,
+    oldRow: IFormRowExtra | null,
+    oldValue: IFormValueExtra | null,
+  ) {
+    const baseExtra = baseUserViewHandler.createEmptyLocalValue(uv, row, columnIndex, value, oldView, oldRow, oldValue);
+    const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
+    return { ...baseExtra, ...commonExtra };
+  },
+};
 
 const query = namespace("query");
 
 @UserView({
-  localConstructor: LocalFormUserView,
+  handler: formUserViewHandler,
 })
 @Component({
   components: {
     FormEntry,
   },
 })
-export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView, IFormValueExtra, IFormRowExtra, IFormUserViewExtra>>(BaseUserView) {
+export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, IFormRowExtra, IFormViewExtra>>(BaseUserView) {
   @query.State("previous") previousQuery!: IQuery | null;
 
   private deletedOne = false;
   private toBeDeletedRef: RowRef | null = null;
 
-  get firstRow() {
-    if (this.uv.newRowsPositions.length === 0 && this.uv.rows === null && this.uv.info.mainEntity !== null) {
+  get firstRow(): { row: IFormExtendedRowCommon, ref: RowRef } | null {
+    if (this.uv.newRowsOrder.length === 0 && this.uv.rows === null && this.uv.info.mainEntity !== null) {
       return {
-        row: this.local.emptyRow!.row,
-        local: this.local.emptyRow!.local,
-        rowRef: { type: "new" },
+        row: this.uv.emptyRow!,
+        ref: { type: "new" },
       };
-    } else if (this.uv.newRowsPositions.length > 0) {
+    } else if (this.uv.newRowsOrder.length > 0) {
       return {
-        row: this.uv.newRows[this.uv.newRowsPositions[0]],
-        local: this.local.newRows[this.uv.newRowsPositions[0]],
-        rowRef: { type: "added", id: this.uv.newRowsPositions[0] },
+        row: this.uv.newRows[this.uv.newRowsOrder[0]],
+        ref: { type: "added", id: this.uv.newRowsOrder[0] },
       };
     } else {
       return null;
@@ -224,7 +238,7 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
 
   // Because we treat the first added row specially we use only second+ new rows here.
   get newRowsPositions() {
-    return this.uv.newRowsPositions.slice(1);
+    return this.uv.newRowsOrder.slice(1);
   }
 
   // When we only have one record displayed, we hide "Delete" button and add is an an action to menu instead.
@@ -254,12 +268,12 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
       : null;
   }
 
-  get gridBlocks(): GridElement[] {
+  get gridBlocks(): FormGridElement[] {
     const viewAttrs = this.uv.attributes;
-    const blocks: IGridSection[] =
+    const blocks: IGridSection<FormElement>[] =
       (this.blockSizes ?? [12]).map(size => ({ type: "section", size, content: [] }));
-    // If 'block_sizes' attribute doesn't used or invalid,
-    // then two-column layout used.
+    // If 'block_sizes' attribute is not used or invalid,
+    // then two-column layout is used.
     const inputWidth = this.blockSizes === null ? 6 : 12;
 
     // Add columns to blocks
@@ -278,16 +292,15 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
 
       const caption = String(getColumnAttr("caption") ?? columnInfo.name);
 
-      const field = {
-        index: i,
-        columnInfo,
-        caption,
-      };
-
-      const element: IGridInput = {
-        type: "input",
+      const element: IGridInput<IElementField> = {
+        type: "element",
         size: inputWidth,
-        field,
+        element: {
+          type: "field",
+          index: i,
+          columnInfo,
+          caption,
+        },
       };
       blocks[block].content.push(element);
     });
@@ -361,9 +374,13 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
         }
 
         if (actions.length > 0) {
-          const element: IGridButtons = {
-            type: "buttons",
-            actions,
+          const element: IGridInput<IElementButtons> = {
+            type: "element",
+            size: 12,
+            element: {
+              type: "buttons",
+              actions,
+            },
           };
           blocks[block].content.push(element);
         }
@@ -395,15 +412,6 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
     return actions;
   }
 
-  @Watch("actions", { deep: true, immediate: true })
-  private updateActions() {
-    this.$emit("update:actions", this.actions);
-  }
-
-  private created() {
-    this.init();
-  }
-
   private confirmDelete(ref: RowRef) {
     this.toBeDeletedRef = ref;
     this.$bvModal.show(this.$id("confirmDelete"));
@@ -414,14 +422,24 @@ export default class UserViewForm extends mixins<BaseUserView<LocalFormUserView,
     this.deletedOne = true;
   }
 
-  @Watch("uv", { deep: true })
+  @Watch("actions", { deep: true, immediate: true })
+  private updateActions() {
+    this.$emit("update:actions", this.actions);
+  }
+
+  private created() {
+    this.init();
+  }
+
+  @Watch("uv")
   private uvChanged() {
     this.init();
   }
 
   @Watch("rowPositions")
   private returnIfEmpty() {
-    if (this.isRoot && this.deletedOne && this.rowPositions.length === 0 && this.uv.newRowsPositions.length === 0 && this.previousQuery !== null) {
+    // Go back if we removed all entries.
+    if (this.isRoot && this.deletedOne && this.rowPositions.length === 0 && this.uv.newRowsOrder.length === 0 && this.previousQuery !== null) {
       this.deletedOne = false; // In case we end up in the same uv.
       this.$emit("goto", this.previousQuery);
     }

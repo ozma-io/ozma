@@ -18,11 +18,11 @@ import { convertToWords } from "@/utils";
 
 @Component
 export default class NestedUserView extends Vue {
-  @Prop({ type: Object, required: true }) args!: Record<string, any>;
+  @Prop({ type: Object, required: true }) args!: Record<string, unknown>;
   @Prop({ type: String, required: true }) scope!: string;
   @Prop({ type: Number, required: true }) level!: number;
   @Prop({ type: String, required: true }) filterString!: string;
-  @Prop({ type: Object, required: true }) defaultValues!: Record<string, any>;
+  @Prop({ type: Object, required: true }) defaultValues!: Record<string, unknown>;
 
   get filterWords() {
     const value = this.filterString;

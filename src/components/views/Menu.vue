@@ -35,29 +35,23 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop } from "vue-property-decorator";
+import { Component } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
 import { tryDicts, mapMaybe } from "@/utils";
-import { CombinedUserView, valueToPunnedText, homeSchema, currentValue } from "@/state/user_view";
-import LocalEmptyUserView from "@/LocalEmptyUserView";
 import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import * as R from "ramda";
 
 import MenuEntry, { MenuValue, IMenuLink } from "@/components/views/menu/MenuEntry.vue";
 import { attrToLink, IAttrToLinkOpts } from "@/links";
+import { currentValue, valueToPunnedText } from "@/user_views/combined";
 
-@UserView({
-  localConstructor: LocalEmptyUserView,
-})
+@UserView()
 @Component({ components: { MenuEntry } })
 export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView) {
-  @Prop() uv!: CombinedUserView;
-
   get linkOpts(): IAttrToLinkOpts {
-    const home = homeSchema(this.uv.args) || undefined;
-    return { homeSchema: home, defaultTarget: "root" };
+    return { homeSchema: this.uv.homeSchema ?? undefined, defaultTarget: "root" };
   }
 
   private get isCentered(): boolean {
@@ -121,10 +115,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
     if (this.uv.info.columns[0].valueType.type !== "json") {
       return this.$t("invalid_new_menu_value").toString();
     }
-    return this.uv.rows!.flatMap(row => {
-      if (row.deleted) {
-        return [];
-      }
+    return this.uv.mapVisibleRow(row => {
       const rawMenu = currentValue(row.values[0]);
       if (rawMenu instanceof Array) {
         return this.convertNewMenuEntries(rawMenu);
@@ -138,7 +129,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
       } else {
         return [];
       }
-    });
+    }).flat();
   }
 
   private buildOldMenu(): MenuValue[] | string {
