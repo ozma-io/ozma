@@ -398,7 +398,7 @@ const stagingModule: Module<IStagingState, {}> = {
       }
       Vue.set(fields, fieldRef.name, validateValue(fieldInfo, value));
     },
-    addEntry: (state, params: { scope: ScopeName; submitAddsAutomatically: boolean, entityRef: IEntityRef; entityInfo: IEntity }) => {
+    addEntry: (state, params: { scope: ScopeName; submitAddsAutomatically: boolean; entityRef: IEntityRef; entityInfo: IEntity }) => {
       const { scope, submitAddsAutomatically, entityRef, entityInfo } = params;
 
       const entityChanges = state.current.getOrCreateChanges(entityRef);
@@ -614,7 +614,7 @@ const stagingModule: Module<IStagingState, {}> = {
     // For inserts this is more difficult -- we need to explicitly tell a user view about inserted
     // entry, so that further field updates in that period are indeed reported as updates to the new
     // inserted entry.
-    resetUpdatedField: async (context, args: { fieldRef: IFieldRef; id: RowId, dontNotify?: boolean }) => {
+    resetUpdatedField: async (context, args: { fieldRef: IFieldRef; id: RowId; dontNotify?: boolean }) => {
       const { commit, state } = context;
       if (!args.dontNotify) {
         Object.values(state.handlers).forEach(handler => handler.resetUpdatedField(args.fieldRef, args.id));
@@ -622,7 +622,7 @@ const stagingModule: Module<IStagingState, {}> = {
       commit("resetUpdatedField", args);
       await checkCounters(context);
     },
-    resetAddedEntry: async (context, args: { entityRef: IEntityRef; id: AddedRowId, dontNotify?: boolean }) => {
+    resetAddedEntry: async (context, args: { entityRef: IEntityRef; id: AddedRowId; dontNotify?: boolean }) => {
       const { commit, state } = context;
       if (!args.dontNotify) {
         Object.values(state.handlers).forEach(handler => handler.resetAddedEntry(args.entityRef, args.id));
@@ -630,7 +630,7 @@ const stagingModule: Module<IStagingState, {}> = {
       commit("resetAddedEntry", args);
       await checkCounters(context);
     },
-    resetDeleteEntry: async (context, args: { entityRef: IEntityRef; id: RowId, dontNotify?: boolean }) => {
+    resetDeleteEntry: async (context, args: { entityRef: IEntityRef; id: RowId; dontNotify?: boolean }) => {
       const { commit, state } = context;
       if (!args.dontNotify) {
         Object.values(state.handlers).forEach(handler => handler.resetDeleteEntry(args.entityRef, args.id));

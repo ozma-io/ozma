@@ -125,13 +125,13 @@ const staging = namespace("staging");
 const query = namespace("query");
 
 interface UserViewComponent {
-  type: "component",
-  component: string,
+  type: "component";
+  component: string;
 }
 
 interface UserViewLink {
-  type: "link",
-  link: Link,
+  type: "link";
+  link: Link;
 }
 
 type UserViewType = UserViewComponent | UserViewLink;

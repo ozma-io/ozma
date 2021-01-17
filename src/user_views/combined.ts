@@ -270,7 +270,7 @@ export interface ICombinedUserView<ValueT, RowT, ViewT> extends IStagingEventHan
   readonly entries: Record<SchemaName, Record<EntityName, Entries>>;
 
   trackAddedEntry(id: AddedRowId): void;
-  getValueByRef(ref: ValueRef): { value: IExtendedValue<ValueT>, row: IExtendedRowCommon<ValueT, RowT> } | undefined;
+  getValueByRef(ref: ValueRef): { value: IExtendedValue<ValueT>; row: IExtendedRowCommon<ValueT, RowT> } | undefined;
   getRowByRef(ref: RowRef): IExtendedRowCommon<ValueT, RowT> | undefined;
 
   forEachRow(func: (row: IExtendedRowCommon<ValueT, RowT>) => void): void;
@@ -1038,7 +1038,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     return rows as ICombinedRow[];
   }
 
-  getValueByRef(ref: ValueRef): { row: IExtendedRowCommon<ValueT, RowT>, value: IExtendedValue<ValueT> } | undefined {
+  getValueByRef(ref: ValueRef): { row: IExtendedRowCommon<ValueT, RowT>; value: IExtendedValue<ValueT> } | undefined {
     const row = this.getRowByRef(ref);
     if (!row) {
       return undefined;

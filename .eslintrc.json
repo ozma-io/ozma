@@ -7,7 +7,6 @@
   "extends": [
     "airbnb-base",
     "plugin:@typescript-eslint/recommended",
-    "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/recommended-requiring-type-checking",
     "plugin:vue/vue3-recommended"
   ],
@@ -25,6 +24,10 @@
   ],
   "rules": {
     "indent": "off",
+    "@typescript-eslint/indent": ["warn", 2],
+    "semi": "off",
+    "@typescript-eslint/semi": "warn",
+    "@typescript-eslint/member-delimiter-style": "warn",
     "arrow-parens": ["warn", "as-needed"],
     "max-len": "off",
     "quotes": ["error", "double", {
@@ -79,7 +82,6 @@
     "unused-imports/no-unused-imports-ts": "warn",
     "vue/custom-event-name-casing": "warn",
     "vue/no-deprecated-functional-template": "off",
-    "@typescript-eslint/indent": ["warn", 2],
     "vue/html-indent": ["warn", 2],
     "vue/this-in-template": "error",
     "vue/require-default-prop": "error",

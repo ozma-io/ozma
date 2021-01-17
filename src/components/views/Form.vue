@@ -133,9 +133,9 @@ export interface IFormValueExtra extends IBaseValueExtra {
   visible: boolean;
 }
 
-export type IFormRowExtra = IBaseRowExtra
+export type IFormRowExtra = IBaseRowExtra;
 
-export type IFormViewExtra = IBaseViewExtra
+export type IFormViewExtra = IBaseViewExtra;
 
 export type IFormCombinedUserView = ICombinedUserView<IFormValueExtra, IFormRowExtra, IFormViewExtra>;
 export type IFormExtendedRowInfo = IExtendedRowInfo<IFormRowExtra>;
@@ -220,7 +220,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
   private deletedOne = false;
   private toBeDeletedRef: RowRef | null = null;
 
-  get firstRow(): { row: IFormExtendedRowCommon, ref: RowRef } | null {
+  get firstRow(): { row: IFormExtendedRowCommon; ref: RowRef } | null {
     if (this.uv.newRowsOrder.length === 0 && this.uv.rows === null && this.uv.info.mainEntity !== null) {
       return {
         row: this.uv.emptyRow!,

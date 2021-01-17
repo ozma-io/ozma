@@ -856,7 +856,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private cellEditHeight = 0;
 
   private rowsState: Record<number, any> = {};
-  private isTree = false
+  private isTree = false;
 
   get columnIndexes() {
     const columns = this.uv.extra.columns.map((column, index) => ({
