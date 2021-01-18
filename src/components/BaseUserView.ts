@@ -18,7 +18,7 @@ import { emptyUserViewHandlerFunctions } from "@/user_views/trivial";
 
 export interface ISelectionRef {
   entity: IEntityRef;
-  id: number;
+  id: RowId;
 }
 
 export const userViewTitle = (uv: ICombinedUserViewAny): string | null => {

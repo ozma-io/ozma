@@ -18,6 +18,7 @@
       v-if="selectedView"
       :initial-view="selectedView"
       :select-entity="entry.entity"
+      autofocus
       @select="selectFromView"
       @close="selectedView = null"
     />

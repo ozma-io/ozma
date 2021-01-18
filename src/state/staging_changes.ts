@@ -81,7 +81,6 @@ export type CombinedTransactionResult = ICombinedInsertEntityResult | ICombinedU
 type InternalTransactionOp = IInternalInsertEntityOp | IInternalUpdateEntityOp | IDeleteEntityOp;
 
 export interface IScope {
-  submitAddsAutomatically: boolean;
   addedCount: number;
 }
 
@@ -266,7 +265,7 @@ const getEmptyValues = (scope: ScopeName, entity: IEntity): UpdatedValues => {
   }));
 };
 
-const entityChangesToOperations = async (context: ActionContext<IStagingState, {}>, scope?: ScopeName): Promise<InternalTransactionOp[]> => {
+const entityChangesToOperations = async (context: ActionContext<IStagingState, {}>, scope: ScopeName | null, errorOnIncomplete: boolean): Promise<InternalTransactionOp[]> => {
   const nestedOps = await Promise.all(Object.entries(context.state.current.changes).map(async ([schemaName, entities]) => {
     const ret = await Promise.all(Object.entries(entities).map(async ([entityName, entityChanges]) => {
       try {
@@ -304,7 +303,11 @@ const entityChangesToOperations = async (context: ActionContext<IStagingState, {
             try {
               entries = Object.entries(addedFields.values).map(([name, value]) => [name, changeToParam(entityInfo.columnFields[name], name, value)]);
             } catch (e) {
-              return undefined;
+              if (!errorOnIncomplete) {
+                return undefined;
+              } else {
+                throw e;
+              }
             }
             return {
               type: "insert",
@@ -398,8 +401,8 @@ const stagingModule: Module<IStagingState, {}> = {
       }
       Vue.set(fields, fieldRef.name, validateValue(fieldInfo, value));
     },
-    addEntry: (state, params: { scope: ScopeName; submitAddsAutomatically: boolean; entityRef: IEntityRef; entityInfo: IEntity }) => {
-      const { scope, submitAddsAutomatically, entityRef, entityInfo } = params;
+    addEntry: (state, params: { scope: ScopeName; entityRef: IEntityRef; entityInfo: IEntity }) => {
+      const { scope, entityRef, entityInfo } = params;
 
       const entityChanges = state.current.getOrCreateChanges(entityRef);
       const newEntry = {
@@ -408,16 +411,15 @@ const stagingModule: Module<IStagingState, {}> = {
       };
 
       const id = entityChanges.nextAddedId;
-      entityChanges.added[id] = newEntry;
+      Vue.set(entityChanges.added, id, newEntry);
       entityChanges.nextAddedId = (entityChanges.nextAddedId + 1) % maxNextAddedId;
 
       let scopeInfo = state.current.scopes[scope];
       if (scopeInfo === undefined) {
         scopeInfo = {
-          submitAddsAutomatically,
           addedCount: 0,
         };
-        state.current.scopes[scope] = scopeInfo;
+        Vue.set(state.current.scopes, scope, scopeInfo);
       }
       scopeInfo.addedCount += 1;
     },
@@ -650,7 +652,7 @@ const stagingModule: Module<IStagingState, {}> = {
           for (const [addedIdStr, addedEntry] of Object.entries(entityChanges.added)) {
             if (scope === undefined || scope === addedEntry.scope) {
               // Not sure about safety of parallel "resetAddedEntry" dispatches
-              // and they are almost instant anyway, so awaits in loop is fine.
+              // and they are almost instant anyway, so awaits in loop are fine.
               // eslint-disable-next-line
               await dispatch(
                 "resetAddedEntry",
@@ -710,7 +712,7 @@ const stagingModule: Module<IStagingState, {}> = {
       context.commit("removeAutoSaveLock", id);
       checkAutoSave(context);
     },
-    submit: async (context, { scope, preReload }: { scope?: ScopeName; preReload?: () => Promise<void> }): Promise<CombinedTransactionResult[]> => {
+    submit: async (context, params: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }): Promise<CombinedTransactionResult[]> => {
       const { state, commit, dispatch } = context;
       if (state.currentSubmit !== null) {
         await state.currentSubmit;
@@ -719,15 +721,15 @@ const stagingModule: Module<IStagingState, {}> = {
       commit("errors/resetErrors", errorKey, { root: true });
       let ops: InternalTransactionOp[];
       try {
-        ops = await entityChangesToOperations(context, scope);
+        ops = await entityChangesToOperations(context, params.scope ?? null, params.errorOnIncomplete ?? false);
       } catch (e) {
         commit("errors/pushError", { key: errorKey, error: e.message }, { root: true });
         throw e;
       }
       if (ops.length === 0) {
-        if (preReload) {
+        if (params.preReload) {
           try {
-            await preReload();
+            await params.preReload();
           } catch (e) {
             console.error("Error while commiting", e);
           }
@@ -749,8 +751,8 @@ const stagingModule: Module<IStagingState, {}> = {
         }
         if (!(result instanceof Error)) {
           try {
-            if (preReload) {
-              await preReload();
+            if (params.preReload) {
+              await params.preReload();
             }
             void dispatch("reload", undefined, { root: true });
           } catch (e) {

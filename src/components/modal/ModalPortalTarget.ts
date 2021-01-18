@@ -7,7 +7,7 @@ import Modal from "@/components/modal/Modal.vue";
 
 interface IInternalModalTab extends IModalTab {
   tab: any;
-  selectedOnStart: boolean;
+  autofocus: boolean;
   actionsMenu: any;
   actionsRight: any;
 }
@@ -45,13 +45,13 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
         : undefined;
       const title: string | undefined = modalPortal.tabName;
       const order: number = modalPortal.order;
-      const selected: boolean = modalPortal.selected;
+      const autofocus: boolean = modalPortal.autofocus;
       return {
         title: title || String(index),
         content: node,
         order,
         tab: modalPortal,
-        selectedOnStart: selected,
+        autofocus,
         actionsMenu: modalMenuActions,
         actionsRight: modalRightActions,
       };
@@ -63,7 +63,7 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
     const existingTabs = new Set(prevTabs.map(t => t.tab));
     this.startingTab = -1;
     tabs.forEach((t, i) => {
-      if (!existingTabs.has(t.tab) && t.selectedOnStart) {
+      if (!existingTabs.has(t.tab) && t.autofocus) {
         this.startingTab = i;
       }
     });

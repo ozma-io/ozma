@@ -83,12 +83,10 @@ export default class TableRow extends Vue {
 
 <style lang="scss" scoped>
   /* Current Z layout:
-
-* FormControl           (200)
-* Selected fixed cell   (20)
-* Selected cell         (15)
-
-*/
+   * FormControl           (200)
+   * Selected fixed cell   (20)
+   * Selected cell         (15)
+   */
 
   .fixed-place-tr {
     display: none;
@@ -123,7 +121,7 @@ export default class TableRow extends Vue {
   }
 
   .table-tr {
-    background-color: white; /* цвет таблицы возможно надо сменить на настраевоемый */
+    background-color: white; /* probably should be moved to settings */
     height: 100%;
   }
 
