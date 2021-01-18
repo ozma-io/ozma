@@ -139,8 +139,7 @@ export default class SearchPanel extends Vue {
   }
 
   .search-field_hidden {
-    opacity: 0;
-    pointer-events: none;
+    display: none;
   }
 
   .search-button {
