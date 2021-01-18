@@ -1,14 +1,18 @@
 @mixin material-button {
+  transition: background 0.1s;
+
   &:hover {
     background-color: #efefef;
 
     /* `outline` works wrong for <a> tags at least on Fifrefox */
     box-shadow: 0 0 0 2px #efefef;
     border-radius: 4px;
+    transition: background 0s;
   }
 
   &:active {
     background-color: #bcbcbc;
     box-shadow: 0 0 0 2px #bcbcbc;
+    transition: background 0s;
   }
 }

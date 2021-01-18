@@ -1858,6 +1858,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     text-align: center;
     color: var(--MainTextColorLight);
     padding: 0;
+    transition: background 0.1s;
 
     &.table-th .material-icons {
       top: 9px;
@@ -1872,6 +1873,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     &:hover {
       color: var(--MainTextColor);
       background-color: rgb(239, 239, 239);
+      transition: background 0s;
     }
   }
 
@@ -1881,6 +1883,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     text-align: center;
     height: 100%;
     width: 100%;
+    transition: background 0.1s;
 
     &.without-selection-cell {
       left: 0;
@@ -1938,6 +1941,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     &:hover {
       background-color: rgb(239, 239, 239);
+      transition: background 0s;
 
       .edit-in-modal-icon {
         color: var(--MainTextColor);
