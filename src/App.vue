@@ -14,7 +14,12 @@
     id="app"
     :style="styleSettings"
   >
-    <GlobalBanner />
+    <GlobalBanner
+      :message="bannerMessage"
+      :variant="bannerVariant"
+      :styles="bannerStyles"
+      @banner-close="onBannerClose"
+    />
     <ModalPortalTarget
       name="tabbed-modal"
       multiple
@@ -115,6 +120,32 @@ export default class App extends Vue {
       currSettings[`--${name}`] = value;
       return currSettings;
     }, {} as Record<string, unknown>);
+  }
+
+  private get bannerMessage() {
+    const message = this.settings.getEntry("banner_message", String, "");
+    const viewedMessage = localStorage.getItem("viewed-banner-message");
+    if (message.trim() === "" || message === viewedMessage) return "";
+    return message;
+  }
+
+  private onBannerClose() {
+    localStorage.setItem("viewed-banner-message", this.bannerMessage);
+  }
+
+  private get bannerVariant() {
+    const validVariants = ["primary", "secondary", "success", "danger", "warning", "info", "light", "dark"];
+    const variant = this.settings.getEntry("banner_variant", String, "info");
+    return validVariants.includes(variant)
+      ? variant
+      : "info";
+  }
+
+  private get bannerStyles() {
+    return {
+      background: this.settings.getEntry("banner_background_color", String, ""),
+      color: this.settings.getEntry("banner_text_color", String, ""),
+    };
   }
 }
 </script>
