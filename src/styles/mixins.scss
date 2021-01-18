@@ -1,10 +1,11 @@
 @mixin material-button {
+  border-radius: 4px;
+
   &:hover {
     background-color: #efefef;
 
-    /* `outline` works wrong for <a> tags at least on Fifrefox */
+    /* `outline` works wrong for <a> tags at least on Firefox */
     box-shadow: 0 0 0 2px #efefef;
-    border-radius: 4px;
   }
 
   &:active {
