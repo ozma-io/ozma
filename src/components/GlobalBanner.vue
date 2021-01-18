@@ -45,7 +45,10 @@ export default class GlobalBanner extends Vue {
     const viewedMessage = localStorage.getItem("viewed-banner-message");
     if (message.trim() === "" || message === viewedMessage) return;
 
-    const messageHtml = modifyLinks(sanitize(message));
+    let messageHtml = sanitize(message);
+    if (this.useBootstrapLinkStyles()) {
+      messageHtml = modifyLinks(messageHtml);
+    }
 
     if (messageHtml.trim() === "" || messageHtml === viewedMessage) return;
 
@@ -72,7 +75,7 @@ export default class GlobalBanner extends Vue {
   }
 
   private useBootstrapLinkStyles() {
-    return Object.entries(this.styles).every(([name, value]) => value !== "");
+    return Object.entries(this.styles).every(([name, value]) => value === "");
   }
 
   @Watch("show")

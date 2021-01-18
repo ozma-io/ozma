@@ -16,8 +16,8 @@ export default class FabCluster extends Vue {
 <style scoped>
   .fab-container {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
+    bottom: 50px;
+    right: 20px;
     z-index: 700;
   }
 
