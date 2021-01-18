@@ -77,7 +77,7 @@
             class="checkbox-col"
           > <!-- Checkbox column -->
           <col
-            v-if="uv.extra.hasRowLinks"
+            v-if="hasLinksColumn"
             class="open-form-col"
           > <!-- Row link column -->
           <col
@@ -99,7 +99,7 @@
               <checkbox :checked="selectedAll" />
             </th>
             <th
-              v-if="uv.extra.hasRowLinks || creationLink"
+              v-if="hasLinksColumn"
               :class="[
                 'table-th',
                 'fixed-column',
@@ -149,7 +149,7 @@
             :column-indexes="columnIndexes"
             :is-tree="isTree"
             :not-existing="row.notExisting"
-            :show-link-column="uv.extra.hasRowLinks || creationLink"
+            :show-link-column="hasLinksColumn"
             @select="selectTableRow(rowIndex, $event)"
             @cell-click="clickCell({ ...row.ref, column: arguments[0] }, arguments[1])"
             @update:visibleChildren="visibleChildren(arguments[0], arguments[1])"
@@ -881,6 +881,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     } else {
       return this.editing.ref.type !== "existing" && this.addedLocked;
     }
+  }
+
+  get hasLinksColumn() {
+    return this.uv.extra.hasRowLinks || this.creationLink !== null;
   }
 
   get editingValue() {
