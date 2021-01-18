@@ -13,8 +13,6 @@ import { i18n } from "@/modules";
 
 export type ScopeName = string;
 
-export type UserViewKey = string;
-
 export type AddedValues = Record<FieldName, IUpdatedValue>;
 export type UpdatedValues = Record<FieldName, IUpdatedValue>;
 
@@ -24,36 +22,39 @@ export interface IAddedEntry {
   // Scopes are used to split adds between different "windows" which can be closed separately,
   // dropping only unfinished entries bound to that particular scope.
   scope: ScopeName;
-  userView: UserViewKey;
   values: AddedValues;
-  // Used to remove added entries without any changes
-  // (e.g. if user clicked several times on "add entry" button in table and used only one of the rows).
-  touched: boolean;
 }
 
 export type AutoSaveLock = number;
+
+export interface IAddedPosition {
+  type: "added";
+  id: number;
+}
+
+// Transient entries are entries which were just added, and we need to keep them in place
+// till user view is closed. They might actually be gone, or not shown in current user
+// view because of `WHERE` clause, or have a different ordering.
+export interface ITransientPosition {
+  type: "transient";
+  id: number;
+}
+
+const maxNextAddedId = 2 ** 32;
 
 export interface IEntityChanges {
   updated: Record<RowId, UpdatedValues>;
   // Applied to user views with FOR INSERT INTO
   nextAddedId: AddedRowId;
   added: Record<AddedRowId, IAddedEntry>;
-  // Added entries are bound to a particular user view.
-  addedPositions: Record<UserViewKey, AddedRowId[]>;
   // Applied to user views with FOR UPDATE OF (or FOR INSERT INTO)
   deleted: RecordSet<RowId>;
-}
-
-export interface IAddedResult {
-  position: number;
-  id: AddedRowId;
 }
 
 const emptyUpdates: IEntityChanges = {
   updated: {},
   nextAddedId: 0,
   added: {},
-  addedPositions: {},
   deleted: {},
 };
 
@@ -80,7 +81,6 @@ export type CombinedTransactionResult = ICombinedInsertEntityResult | ICombinedU
 type InternalTransactionOp = IInternalInsertEntityOp | IInternalUpdateEntityOp | IDeleteEntityOp;
 
 export interface IScope {
-  submitAddsAutomatically: boolean;
   addedCount: number;
 }
 
@@ -147,6 +147,21 @@ export class CurrentChanges {
   }
 }
 
+// Event handler which is notified about user view changes.
+export interface IStagingEventHandler {
+  updateField(fieldRef: IFieldRef, id: RowId, value: IUpdatedValue): void;
+  addEntry(entityRef: IEntityRef, id: AddedRowId): void;
+  setAddedField(fieldRef: IFieldRef, id: AddedRowId, value: IUpdatedValue): void;
+  deleteEntry(entityRef: IEntityRef, id: RowId): void;
+  resetUpdatedField(fieldRef: IFieldRef, id: RowId): void;
+  resetAddedEntry(entityRef: IEntityRef, id: AddedRowId): void;
+  resetDeleteEntry(entityRef: IEntityRef, id: RowId): void;
+  // Called after an added entry has been commited and assigned a database id.
+  commitAddedEntry(entityRef: IEntityRef, id: AddedRowId, newId: RowId): void;
+}
+
+export type StagingKey = string;
+
 export interface IStagingState {
   current: CurrentChanges;
   // Current submit promise
@@ -155,6 +170,7 @@ export interface IStagingState {
   autoSaveTimeoutId: NodeJS.Timeout | null;
   lastAutoSaveLock: AutoSaveLock;
   autoSaveLocks: Record<AutoSaveLock, null>;
+  handlers: Record<StagingKey, IStagingEventHandler>;
 }
 
 const askOnClose = (e: BeforeUnloadEvent) => {
@@ -230,7 +246,7 @@ const validateValue = (info: IFieldInfo, value: unknown): IUpdatedValue => {
 };
 
 const getEntityInfo = async (context: ActionContext<IStagingState, {}>, ref: IEntityRef): Promise<IEntity> => {
-  return context.dispatch("userView/getEntity", ref, { root: true });
+  return context.dispatch("entities/getEntity", ref, { root: true });
 };
 
 const getFieldInfo = async (context: ActionContext<IStagingState, {}>, ref: IFieldRef): Promise<IFieldInfo> => {
@@ -249,7 +265,7 @@ const getEmptyValues = (scope: ScopeName, entity: IEntity): UpdatedValues => {
   }));
 };
 
-const entityChangesToOperations = async (context: ActionContext<IStagingState, {}>, scope?: ScopeName): Promise<InternalTransactionOp[]> => {
+const entityChangesToOperations = async (context: ActionContext<IStagingState, {}>, scope: ScopeName | null, errorOnIncomplete: boolean): Promise<InternalTransactionOp[]> => {
   const nestedOps = await Promise.all(Object.entries(context.state.current.changes).map(async ([schemaName, entities]) => {
     const ret = await Promise.all(Object.entries(entities).map(async ([entityName, entityChanges]) => {
       try {
@@ -287,7 +303,11 @@ const entityChangesToOperations = async (context: ActionContext<IStagingState, {
             try {
               entries = Object.entries(addedFields.values).map(([name, value]) => [name, changeToParam(entityInfo.columnFields[name], name, value)]);
             } catch (e) {
-              return undefined;
+              if (!errorOnIncomplete) {
+                return undefined;
+              } else {
+                throw e;
+              }
             }
             return {
               type: "insert",
@@ -337,6 +357,7 @@ const stagingModule: Module<IStagingState, {}> = {
     autoSaveTimeout: null,
     autoSaveTimeoutId: null,
     autoSaveLocks: {},
+    handlers: {},
   },
   mutations: {
     clear: state => {
@@ -364,6 +385,7 @@ const stagingModule: Module<IStagingState, {}> = {
     finishSubmit: state => {
       state.currentSubmit = null;
     },
+
     updateField: (state, params: { fieldRef: IFieldRef; id: RowId; value: unknown; fieldInfo: IFieldInfo }) => {
       const { fieldRef, id, value, fieldInfo } = params;
 
@@ -379,37 +401,25 @@ const stagingModule: Module<IStagingState, {}> = {
       }
       Vue.set(fields, fieldRef.name, validateValue(fieldInfo, value));
     },
-    addEntry: (state, params: { scope: ScopeName; submitAddsAutomatically: boolean, entityRef: IEntityRef; userView: UserViewKey; position?: number; entityInfo: IEntity }) => {
-      const { scope, submitAddsAutomatically, entityRef, userView, position, entityInfo } = params;
+    addEntry: (state, params: { scope: ScopeName; entityRef: IEntityRef; entityInfo: IEntity }) => {
+      const { scope, entityRef, entityInfo } = params;
 
       const entityChanges = state.current.getOrCreateChanges(entityRef);
       const newEntry = {
         values: getEmptyValues(scope, entityInfo),
         scope,
-        userView,
-        touched: false,
       };
-      const newId = entityChanges.nextAddedId++;
-      entityChanges.added[newId] = newEntry;
 
-      let uvPositions = entityChanges.addedPositions[userView];
-      if (uvPositions === undefined) {
-        uvPositions = [];
-        entityChanges.addedPositions[userView] = uvPositions;
-      }
+      const id = entityChanges.nextAddedId;
+      Vue.set(entityChanges.added, id, newEntry);
+      entityChanges.nextAddedId = (entityChanges.nextAddedId + 1) % maxNextAddedId;
 
-      if (position === undefined) {
-        uvPositions.push(newId);
-      } else {
-        uvPositions.splice(position, 0, newId);
-      }
       let scopeInfo = state.current.scopes[scope];
       if (scopeInfo === undefined) {
         scopeInfo = {
-          submitAddsAutomatically,
           addedCount: 0,
         };
-        state.current.scopes[scope] = scopeInfo;
+        Vue.set(state.current.scopes, scope, scopeInfo);
       }
       scopeInfo.addedCount += 1;
     },
@@ -420,10 +430,9 @@ const stagingModule: Module<IStagingState, {}> = {
         id: AddedRowId;
         value: unknown;
         fieldInfo: IFieldInfo;
-        noTouch?: boolean;
       },
     ) => {
-      const { fieldRef, id, value, fieldInfo, noTouch } = params;
+      const { fieldRef, id, value, fieldInfo } = params;
 
       const entityChanges = state.current.getOrCreateChanges(fieldRef.entity);
       const added = entityChanges.added[id];
@@ -431,7 +440,6 @@ const stagingModule: Module<IStagingState, {}> = {
         throw new Error(`New entity id ${id} is not found`);
       }
       Vue.set(added.values, fieldRef.name, validateValue(fieldInfo, value));
-      added.touched = !noTouch;
     },
     deleteEntry: (state, params: { entityRef: IEntityRef; id: RowId }) => {
       const { entityRef, id } = params;
@@ -480,19 +488,6 @@ const stagingModule: Module<IStagingState, {}> = {
         return;
       }
       Vue.delete(entityChanges.added, id);
-      if (Object.entries(entityChanges.added).length === 0) {
-        entityChanges.nextAddedId = 0;
-      }
-
-      const uvPositions = entityChanges.addedPositions[entry.userView];
-      const position = uvPositions.indexOf(id);
-      if (position === -1) {
-        throw new Error("Impossible");
-      }
-      uvPositions.splice(position, 1);
-      if (uvPositions.length === 0) {
-        Vue.delete(entityChanges.addedPositions, entry.userView);
-      }
 
       const scope = state.current.scopes[entry.scope];
       scope.addedCount -= 1;
@@ -501,7 +496,7 @@ const stagingModule: Module<IStagingState, {}> = {
       }
       state.current.cleanupEntity(entityRef, entityChanges);
     },
-    resetDeleteEntry: (state, { entityRef, id }: { entityRef: IEntityRef; id: number }) => {
+    resetDeleteEntry: (state, { entityRef, id }: { entityRef: IEntityRef; id: RowId }) => {
       if (state.currentSubmit !== null) {
         throw new Error("Resetting changes is forbidden while submitting");
       }
@@ -513,70 +508,43 @@ const stagingModule: Module<IStagingState, {}> = {
         state.current.deletedCount -= 1;
       }
     },
+
+    setHandler: (state, { key, handler }: { key: StagingKey; handler: IStagingEventHandler }) => {
+      Vue.set(state.handlers, key, handler);
+    },
+    removeHandler: (state, key: StagingKey) => {
+      Vue.delete(state.handlers, key);
+    },
   },
   actions: {
     updateField: async (context, args: { fieldRef: IFieldRef; id: RowId; value: unknown }) => {
-      const { commit, dispatch } = context;
+      const { state, commit } = context;
       const fieldInfo = await getFieldInfo(context, args.fieldRef);
       commit("updateField", { ...args, fieldInfo });
       await checkCounters(context);
-      await dispatch("userView/afterUpdateField", args, { root: true });
+
+      // Vuex is stupid, so we need to re-fetch the value.
+      const value = state.current.getOrCreateChanges(args.fieldRef.entity).updated[args.id][args.fieldRef.name];
+      Object.values(state.handlers).forEach(handler => handler.updateField(args.fieldRef, args.id, value));
     },
     addEntry: async (
       context,
       args: {
         scope: ScopeName;
         entityRef: IEntityRef;
-        userView: UserViewKey;
-        position?: number;
       },
-    ): Promise<IAddedResult> => {
-      const { state, commit, dispatch } = context;
+    ): Promise<AddedRowId> => {
+      const { state, commit } = context;
       const entityInfo = await getEntityInfo(context, args.entityRef);
       commit("addEntry", { ...args, entityInfo });
+      await checkCounters(context);
 
       const entityChanges = state.current.changesForEntity(args.entityRef);
-      const newId = entityChanges.nextAddedId - 1;
-      const uvPositions = entityChanges.addedPositions[args.userView];
-      const position = args.position ?? uvPositions.length - 1;
+      // UGH. We'd like to return new id from `addEntry` instead.
+      const newId = entityChanges.nextAddedId === 0 ? maxNextAddedId : entityChanges.nextAddedId - 1;
+      Object.values(state.handlers).forEach(handler => handler.addEntry(args.entityRef, newId));
 
-      const result = {
-        id: newId,
-        position,
-      };
-      await checkCounters(context);
-      await dispatch("userView/afterAddEntry", { ...args, ...result }, { root: true });
-
-      return result;
-    },
-    // Like `addEntry`, but doesn't sets `touched` property of entry for setting `defaultValues`.
-    addEntryWithDefaults: async (
-      context,
-      args: {
-        entityRef: IEntityRef;
-        userView: UserViewKey;
-        position?: number;
-        scope: ScopeName;
-        defaultValues: Record<string, unknown>;
-      },
-    ): Promise<IAddedResult> => {
-      const { dispatch } = context;
-      const result: IAddedResult = await dispatch("addEntry", args);
-      for (const [mainFieldName, value] of Object.entries(args.defaultValues)) {
-        // eslint-disable-next-line
-        await dispatch("setAddedField", {
-          scope: args.scope,
-          fieldRef: {
-            entity: args.entityRef,
-            name: mainFieldName,
-          },
-          userView: args.userView,
-          id: result.id,
-          value,
-          noTouch: true,
-        });
-      }
-      return result;
+      return newId;
     },
     setAddedField: async (
       context,
@@ -584,43 +552,91 @@ const stagingModule: Module<IStagingState, {}> = {
         fieldRef: IFieldRef;
         id: AddedRowId;
         value: unknown;
-        noTouch?: boolean; // Used to initialize entries with values.
       },
     ) => {
-      const { commit, dispatch } = context;
+      const { state, commit } = context;
       const fieldInfo = await getFieldInfo(context, args.fieldRef);
       commit("setAddedField", { ...args, fieldInfo });
       await checkCounters(context);
-      await dispatch("userView/afterSetAddedField", args, { root: true });
+
+      // Vuex is stupid, so we need to re-fetch the value.
+      const value = state.current.getOrCreateChanges(args.fieldRef.entity).added[args.id].values[args.fieldRef.name];
+      Object.values(state.handlers).forEach(handler => handler.setAddedField(args.fieldRef, args.id, value));
     },
     deleteEntry: async (context, args: { entityRef: IEntityRef; id: RowId }) => {
-      const { commit, dispatch } = context;
+      const { state, commit } = context;
       commit("deleteEntry", args);
       await checkCounters(context);
-      await dispatch("userView/afterDeleteEntry", args, { root: true });
+
+      // Vuex is stupid, so we need to re-fetch the value.
+      Object.values(state.handlers).forEach(handler => handler.deleteEntry(args.entityRef, args.id));
     },
-    reset: async context => {
-      const { commit, dispatch } = context;
-      await dispatch("userView/beforeResetChanges", undefined, { root: true });
+    reset: context => {
+      const { state, commit } = context;
+
+      for (const [schemaName, schemaChanges] of Object.entries(state.current.changes)) {
+        for (const [entityName, entityChanges] of Object.entries(schemaChanges)) {
+          const entityRef = {
+            schema: schemaName,
+            name: entityName,
+          };
+
+          for (const [rawId, updated] of Object.entries(entityChanges.updated)) {
+            for (const fieldName of Object.keys(updated)) {
+              const fieldRef = {
+                entity: entityRef,
+                name: fieldName,
+              };
+              const id = Number(rawId);
+              Object.values(state.handlers).forEach(handler => handler.resetUpdatedField(fieldRef, id));
+            }
+          }
+
+          for (const rawId of Object.keys(entityChanges.added)) {
+            const id = Number(rawId);
+            Object.values(state.handlers).forEach(handler => handler.resetAddedEntry(entityRef, id));
+          }
+
+          for (const rawId of Object.keys(entityChanges.deleted)) {
+            const id = Number(rawId);
+            Object.values(state.handlers).forEach(handler => handler.resetDeleteEntry(entityRef, id));
+          }
+        }
+      }
+
       commit("clear");
       stopAutoSave(context);
       window.removeEventListener("beforeunload", askOnClose);
     },
-    resetUpdatedField: async (context, args: { entityRef: IEntityRef; id: RowId; field: FieldName }) => {
-      const { commit, dispatch } = context;
-      await dispatch("userView/beforeResetUpdatedField", args, { root: true });
+    // `dontNotify` is used to avoid notifying user views that changes were reset.
+    // It is used after a reload, because there is a period between a successful submit and user view reload
+    // when there are no changes in the store, but user view should maintain changed values until
+    // reloaded.
+    // For updates and deletes this is easy enough -- just don't notify about a reset.
+    // For inserts this is more difficult -- we need to explicitly tell a user view about inserted
+    // entry, so that further field updates in that period are indeed reported as updates to the new
+    // inserted entry.
+    resetUpdatedField: async (context, args: { fieldRef: IFieldRef; id: RowId; dontNotify?: boolean }) => {
+      const { commit, state } = context;
+      if (!args.dontNotify) {
+        Object.values(state.handlers).forEach(handler => handler.resetUpdatedField(args.fieldRef, args.id));
+      }
       commit("resetUpdatedField", args);
       await checkCounters(context);
     },
-    resetAddedEntry: async (context, args: { entityRef: IEntityRef; userView: UserViewKey; id: AddedRowId }) => {
-      const { commit, dispatch } = context;
-      await dispatch("userView/beforeResetAddedEntry", args, { root: true });
+    resetAddedEntry: async (context, args: { entityRef: IEntityRef; id: AddedRowId; dontNotify?: boolean }) => {
+      const { commit, state } = context;
+      if (!args.dontNotify) {
+        Object.values(state.handlers).forEach(handler => handler.resetAddedEntry(args.entityRef, args.id));
+      }
       commit("resetAddedEntry", args);
       await checkCounters(context);
     },
-    resetDeleteEntry: async (context, args: { entityRef: IEntityRef; id: RowId }) => {
-      const { commit, dispatch } = context;
-      await dispatch("userView/beforeResetDeleteEntry", args, { root: true });
+    resetDeleteEntry: async (context, args: { entityRef: IEntityRef; id: RowId; dontNotify?: boolean }) => {
+      const { commit, state } = context;
+      if (!args.dontNotify) {
+        Object.values(state.handlers).forEach(handler => handler.resetDeleteEntry(args.entityRef, args.id));
+      }
       commit("resetDeleteEntry", args);
       await checkCounters(context);
     },
@@ -628,17 +644,15 @@ const stagingModule: Module<IStagingState, {}> = {
       { state, dispatch },
       params: {
         scope?: ScopeName; // If specified, clears only entries which have this scope.
-        onlyUntouched?: boolean; // If true, clears only untouched (added and not edited) entries.
       },
     ) => {
-      const { scope, onlyUntouched = false } = params;
+      const { scope } = params;
       for (const [schema, entities] of Object.entries(state.current.changes)) {
         for (const [entity, entityChanges] of Object.entries(entities)) {
           for (const [addedIdStr, addedEntry] of Object.entries(entityChanges.added)) {
-            if ((scope === undefined || scope === addedEntry.scope)
-                && (!onlyUntouched || (!addedEntry.touched))) {
+            if (scope === undefined || scope === addedEntry.scope) {
               // Not sure about safety of parallel "resetAddedEntry" dispatches
-              // and they are almost instant anyway, so awaits in loop is fine.
+              // and they are almost instant anyway, so awaits in loop are fine.
               // eslint-disable-next-line
               await dispatch(
                 "resetAddedEntry",
@@ -657,26 +671,33 @@ const stagingModule: Module<IStagingState, {}> = {
       await Promise.all(ops.map(async op => {
         const entityChanges = state.current.changes[op.entity.schema][op.entity.name];
         if (op.type === "insert") {
-          const addedValues = entityChanges.added[op.internalId];
-          await Promise.all(Object.entries(addedValues.values).map(async ([fieldName, newValue]) => {
-            const maybeOldValue = op.entries[fieldName];
-            const valueType = op.entityInfo.columnFields[fieldName].valueType;
-            if (!valueEquals(valueType, maybeOldValue, newValue.value)) {
-              await dispatch("updateField", { entityRef: op.entity, id: op.id, value: newValue.rawValue });
-            }
-          }));
-          await dispatch("resetAddedEntry", { entityRef: op.entity, id: op.internalId });
+          if (op.id !== null) {
+            Object.values(state.handlers).forEach(handler => handler.commitAddedEntry(op.entity, op.internalId, op.id!));
+            const addedValues = entityChanges.added[op.internalId];
+            await Promise.all(Object.entries(addedValues.values).map(async ([fieldName, newValue]) => {
+              const maybeOldValue = op.entries[fieldName];
+              const valueType = op.entityInfo.columnFields[fieldName].valueType;
+              if (!valueEquals(valueType, maybeOldValue, newValue.value)) {
+                await dispatch("updateField", { entityRef: op.entity, id: op.id, value: newValue.rawValue });
+              }
+            }));
+            await dispatch("resetAddedEntry", { entityRef: op.entity, id: op.internalId, dontNotify: true });
+          } else {
+            // This means some trigger cancelled INSERT operation. We can't do much here -- be honest
+            // and just report that the entry is gone.
+            await dispatch("resetAddedEntry", { entityRef: op.entity, id: op.internalId });
+          }
         } else if (op.type === "update") {
           const updatedValues = entityChanges.updated[op.id];
           await Promise.all(Object.entries(updatedValues).map(async ([fieldName, newValue]) => {
             const maybeOldValue = op.entries[fieldName];
             const valueType = op.entityInfo.columnFields[fieldName].valueType;
             if (valueEquals(valueType, maybeOldValue, newValue.value)) {
-              await dispatch("resetUpdatedField", { fieldRef: { entity: op.entity, name: fieldName }, id: op.id });
+              await dispatch("resetUpdatedField", { fieldRef: { entity: op.entity, name: fieldName }, id: op.id, dontNotify: true });
             }
           }));
         } else if (op.type === "delete") {
-          await dispatch("resetDeleteEntry", { entityRef: op.entity, id: op.id });
+          await dispatch("resetDeleteEntry", { entityRef: op.entity, id: op.id, dontNotify: true });
         }
       }));
     },
@@ -691,25 +712,24 @@ const stagingModule: Module<IStagingState, {}> = {
       context.commit("removeAutoSaveLock", id);
       checkAutoSave(context);
     },
-    submit: async (context, { scope, preReload }: { scope?: ScopeName; preReload?: () => Promise<void> }): Promise<CombinedTransactionResult[]> => {
+    submit: async (context, params: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }): Promise<CombinedTransactionResult[]> => {
       const { state, commit, dispatch } = context;
       if (state.currentSubmit !== null) {
         await state.currentSubmit;
       }
 
       commit("errors/resetErrors", errorKey, { root: true });
-      await dispatch("clearAdded", { scope, onlyUntouched: true });
       let ops: InternalTransactionOp[];
       try {
-        ops = await entityChangesToOperations(context, scope);
+        ops = await entityChangesToOperations(context, params.scope ?? null, params.errorOnIncomplete ?? false);
       } catch (e) {
         commit("errors/pushError", { key: errorKey, error: e.message }, { root: true });
         throw e;
       }
       if (ops.length === 0) {
-        if (preReload) {
+        if (params.preReload) {
           try {
-            await preReload();
+            await params.preReload();
           } catch (e) {
             console.error("Error while commiting", e);
           }
@@ -731,10 +751,10 @@ const stagingModule: Module<IStagingState, {}> = {
         }
         if (!(result instanceof Error)) {
           try {
-            if (preReload) {
-              await preReload();
+            if (params.preReload) {
+              await params.preReload();
             }
-            commit("userView/clear", undefined, { root: true });
+            void dispatch("reload", undefined, { root: true });
           } catch (e) {
             console.error("Error while commiting", e);
             // Ignore errors; they've been already handled for userView

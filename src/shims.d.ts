@@ -41,3 +41,16 @@ declare module "vue-dragscroll";
 declare module "vue-qrcode-reader";
 declare module "@chenfengyuan/vue-qrcode";
 declare module "vue-barcode";
+
+declare module "vuedraggable" {
+  // It lists only properties that are used or are of use for the board.
+  // Please add types to this interface if something you use is missing.
+  export interface IVueDraggableEvent {
+    type: "start" | "add" | "remove" | "update" | "end" | "choose" | "unchoose" | "sort" | "filter" | "clone";
+    originalEvent: Event;
+    newIndex: number;
+    oldIndex: number;
+    oldDraggableIndex: number;
+    newDraggableIndex: number;
+  }
+}

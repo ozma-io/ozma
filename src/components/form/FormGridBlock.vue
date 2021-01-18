@@ -4,45 +4,19 @@
     :lg="blockContent.size"
     class="form_grid_block__column"
   >
-    <FormControl
-      v-if="blockContent.type === 'input' && gridProps.localRow.values[blockContent.field.index].visible"
-      :caption="blockContent.field.caption"
-      :column-info-name="blockContent.field.columnInfo.name"
-      :value="gridProps.row.values[blockContent.field.index]"
-      :attributes="gridProps.localRow.values[blockContent.field.index].attributes"
-      :type="blockContent.field.columnInfo.valueType"
-      :locked="gridProps.locked"
-      :uv-args="gridProps.uv.args"
-      :scope="gridProps.scope"
-      :level="gridProps.level"
-      @goto="gridProps.onGoto"
-      @update="gridProps.onUpdate($event, blockContent.field.index)"
+    <slot
+      v-if="blockContent.type === 'element'"
+      :element="blockContent.element"
     />
     <b-row v-else-if="blockContent.type === 'section'">
       <FormGridBlock
         v-for="(subBlock, subBlockI) in blockContent.content"
         :key="subBlockI"
+        v-slot="slotProps"
         :block-content="subBlock"
-        :grid-props="gridProps"
-      />
-    </b-row>
-    <b-row v-else-if="blockContent.type === 'buttons'">
-      <b-col>
-        <FunLink
-          v-for="(subBlock, subBlockI) in blockContent.actions"
-          :key="subBlockI"
-          :link="subBlock.link"
-          @goto="gridProps.goto"
-        >
-          <b-button
-            :key="subBlockI"
-            block
-            :variant="subBlock.variant"
-          >
-            {{ subBlock.name }}
-          </b-button>
-        </FunLink>
-      </b-col>
+      >
+        <slot :element="slotProps.element" />
+      </FormGridBlock>
     </b-row>
   </b-col>
 </template>
@@ -51,15 +25,14 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 
 import FormControl from "@/components/FormControl.vue";
-import type { GridElement, IGridProps } from "@/components/form/types";
+import type { GridElement } from "@/components/form/FormGrid.vue";
 
 @Component({
   name: "FormGridBlock",
   components: { FormControl },
 })
 export default class FormGridBlock extends Vue {
-  @Prop({ type: Object }) blockContent!: GridElement;
-  @Prop({ type: Object }) gridProps!: IGridProps;
+  @Prop({ type: Object }) blockContent!: GridElement<any>;
 }
 </script>
 

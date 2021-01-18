@@ -32,8 +32,8 @@ export default Vue.component("FunLink", {
   render: (createElement, context) => {
     const link = context.props.link as Link | null;
 
-    const emit = (action: string, query: IQuery) => {
-      vueEmit(context, action, query);
+    const emit = (query: IQuery) => {
+      vueEmit(context, "goto", query);
     };
 
     if (link === null) {

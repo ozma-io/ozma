@@ -25,7 +25,6 @@
         <div class="input_modal__input_group">
           <div>
             <slot
-              name="input"
               :onFocus="emptyHandler"
               modal
               :autofocus="isModalOpen"
@@ -61,10 +60,13 @@
         :cols="(!!label && inline) ? 8 : 12"
         :class="['input_container', `text_align_${textAlign}`, {'input_container_cell-edit': isCellEdit}]"
       >
-        <slot
-          name="input"
-          :onFocus="onNonmodalFocus"
-        />
+        <div
+          :style="{ backgroundColor }"
+        >
+          <slot
+            :onFocus="onNonmodalFocus"
+          />
+        </div>
       </b-col>
     </template>
   </b-row>

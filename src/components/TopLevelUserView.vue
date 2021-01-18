@@ -47,7 +47,7 @@
         :key="window.key"
         is-root
         :view="window.query"
-        :selected="query.selectedWindow === i"
+        :autofocus="query.selectedWindow === i"
         @close="closeWindow(i)"
         @goto="pushWindow({index: i, query: $event})"
       />
@@ -137,7 +137,7 @@
             'save_button__error': errors.length > 0,
           }]"
           :title="$t('save')"
-          @click="submitChanges({ scope: 'root' })"
+          @click="saveView"
         >
           <input
             v-if="errors.length > 0"
@@ -170,9 +170,8 @@ import { namespace } from "vuex-class";
 
 import * as Api from "@/api";
 import { setHeadTitle } from "@/elements";
-import { CurrentUserViews } from "@/state/user_view";
 import { ErrorKey } from "@/state/errors";
-import { CurrentChanges, ScopeName } from "@/state/staging_changes";
+import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/staging_changes";
 import { Action } from "@/components/ActionsMenu.vue";
 import { IPanelButton } from "@/components/ButtonsPanel.vue";
 import ModalUserView from "@/components/ModalUserView.vue";
@@ -183,7 +182,6 @@ import { IQuery, ICurrentQueryHistory } from "@/state/query";
 import { convertToWords } from "@/utils";
 
 const auth = namespace("auth");
-const userView = namespace("userView");
 const staging = namespace("staging");
 const settings = namespace("settings");
 const query = namespace("query");
@@ -198,10 +196,8 @@ export default class TopLevelUserView extends Vue {
   @auth.State("protectedCalls") protectedCalls!: number;
   @auth.Action("login") login!: () => Promise<void>;
   @auth.Action("logout") logout!: () => Promise<void>;
-  @userView.Mutation("clear") clearView!: () => void;
-  @userView.State("current") userViews!: CurrentUserViews;
   @staging.State("current") changes!: CurrentChanges;
-  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void> }) => Promise<void>;
+  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<CombinedTransactionResult[]>;
   @staging.Action("reset") clearChanges!: () => Promise<void>;
   @query.State("current") query!: ICurrentQueryHistory | null;
   @query.Action("resetRoute") resetRoute!: (_: Route) => void;
@@ -276,6 +272,10 @@ export default class TopLevelUserView extends Vue {
 
   private destroyed() {
     this.styleNode.remove();
+  }
+
+  private saveView() {
+    void this.submitChanges({ scope: "root", errorOnIncomplete: true });
   }
 
   get actions() {

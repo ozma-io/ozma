@@ -112,7 +112,7 @@ export default class App extends Vue {
     return Object.entries(values).reduce((currSettings, [name, value]) => {
       currSettings[`--${name}`] = value;
       return currSettings;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, unknown>);
   }
 }
 </script>

@@ -1,10 +1,10 @@
 import { queryLocation, IQueryState, IQuery, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery, selfIdArgs, refIdArgs } from "@/state/query";
-import { IValueInfo } from "@/state/user_view";
 import { IActionRef } from "ozma-api/src";
 import { gotoHref } from "@/utils";
 import { saveAndRunAction } from "@/state/actions";
 import { Store } from "vuex";
 import { router } from "@/modules";
+import { IValueInfo } from "@/user_views/combined";
 
 export interface IHrefLink {
   href: string;
@@ -131,7 +131,7 @@ export interface ILinkHandler {
   href: string | null;
 }
 
-export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQuery) => void), link: Link): ILinkHandler => {
+export const linkHandler = (store: Store<any>, goto: ((query: IQuery) => void), link: Link): ILinkHandler => {
   let handler: () => Promise<void>;
   let href: string | null = null;
 
@@ -143,7 +143,7 @@ export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQ
     } else if (link.target === "root") {
       // eslint-disable-next-line @typescript-eslint/require-await
       handler = async () => {
-        emit("goto", link.query);
+        goto(link.query);
       };
     } else if (link.target === "top") {
       handler = async () => {
@@ -160,7 +160,7 @@ export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQ
         if (queryState.current?.windows.length === 0) {
           await store.dispatch("query/addWindow", link.query);
         } else {
-          emit("goto", link.query);
+          goto(link.query);
         }
       };
     } else {
@@ -179,7 +179,7 @@ export const linkHandler = (store: Store<any>, emit: ((action: string, query: IQ
       const ret = await saveAndRunAction(store, link.action, link.args);
       const retLink = attrToLink(ret.result, { defaultTarget: "root" });
       if (retLink !== null) {
-        await linkHandler(store, emit, retLink).handler();
+        await linkHandler(store, goto, retLink).handler();
       }
     };
   } else {

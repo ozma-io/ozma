@@ -56,7 +56,7 @@ export const valueEquals = (valueType: ValueType, a: unknown, b: unknown) : bool
 };
 
 // Checks if raw value is null.
-export const valueIsNull = (value: unknown) => value === null || value === undefined || value === "";
+export const valueIsNull = (value: unknown): value is (null | undefined | "") => value === null || value === undefined || value === "";
 
 const convertArray = (entryType: FieldType, value: unknown[]): unknown[] | undefined => {
   const converted = value.map(entry => valueFromRaw({ fieldType: entryType, isNullable: false }, entry));

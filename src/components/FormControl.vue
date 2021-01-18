@@ -30,7 +30,7 @@
       :modal="$isMobile && (forceModalOnMobile || isMultiline)"
       @close-modal-input="$emit('close-modal-input')"
     >
-      <template #input="iSlot">
+      <template #default="iSlot">
         <template v-if="inputType.name === 'error'">
           {{ inputType.text }}
         </template>
@@ -66,7 +66,7 @@
           :autofocus="autofocus || iSlot.autofocus"
           :is-cell-edit="isCellEdit"
           :show-time="inputType.showTime"
-          :time-step="inputType.timeStep"
+          :time-step="inputType.timeStep ? inputType.timeStep : undefined"
           :required="!isNullable"
           @focus="iSlot.onFocus"
           @update:value="updateValue"
@@ -229,11 +229,12 @@ import { valueToText, valueIsNull } from "@/values";
 import type { AttributesMap, ValueType } from "@/api";
 import { router } from "@/modules";
 import { Action } from "@/components/ActionsMenu.vue";
-import type { IUserViewArguments, ICombinedValue, IEntriesRef } from "@/state/user_view";
-import { currentValue, homeSchema, referenceEntriesRef } from "@/state/user_view";
 import { IQuery, attrToQuerySelf, queryLocation } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { IReferenceSelectAction } from "@/components/ReferenceField.vue";
+import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
+import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
+import { currentValue, homeSchema } from "@/user_views/combined";
 
 interface ITextType {
   name: "text";
@@ -580,8 +581,10 @@ export default class FormControl extends Vue {
         // FIXME: Fix calendar field.
         case "date":
           return { name: "calendar", showTime: false, timeStep: null };
-        case "datetime":
-          return { name: "calendar", showTime: true, timeStep: this.attributes["time_step"] };
+        case "datetime": {
+          const timeStep = Number(this.attributes["time_step"]);
+          return { name: "calendar", showTime: true, timeStep: Number.isNaN(timeStep) ? null : timeStep };
+        }
         case "json":
           return {
             name: "codeeditor",
@@ -600,8 +603,10 @@ export default class FormControl extends Vue {
           return { name: "text", type: "number", style: this.controlStyle() };
         case "date":
           return { name: "calendar", showTime: false, timeStep: null };
-        case "datetime":
-          return { name: "calendar", showTime: true, timeStep: null };
+        case "datetime": {
+          const timeStep = Number(this.attributes["time_step"]);
+          return { name: "calendar", showTime: true, timeStep: Number.isNaN(timeStep) ? null : timeStep };
+        }
         case "json":
           return {
             name: "codeeditor",

@@ -43,21 +43,20 @@
 
 <script lang="ts">
 import * as R from "ramda";
-import { Component, Prop } from "vue-property-decorator";
+import { Component } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
 import { mapMaybe, tryDicts } from "@/utils";
 import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
-import LocalEmptyUserView from "@/LocalEmptyUserView";
-import { IExistingValueRef, ValueRef } from "@/local_user_view";
-import { CombinedUserView, ICombinedValue, ICombinedRow, valueToPunnedText, referenceEntriesRef, currentValue } from "@/state/user_view";
 
 import Board from "@/components/kanban/Board.vue";
 import { ICard, ICardCol, isCardTarget } from "@/components/kanban/Card.vue";
 import { IColumn } from "@/components/kanban/Column.vue";
 import Errorbox from "@/components/Errorbox.vue";
 import { attrToLinkSelf, Link } from "@/links";
+import { currentValue, ICombinedRow, ICombinedValue, IExistingValueRef, ValueRef, valueToPunnedText } from "@/user_views/combined";
+import { referenceEntriesRef } from "@/state/entries";
 import { IFieldRef } from "../../api";
 import { attrToQuery } from "../../state/query";
 import BaseEntriesView from "../BaseEntriesView";
@@ -69,12 +68,9 @@ interface ICardExtra {
 
 type IColumnTitleMap = Record<number, string>;
 
-@UserView({
-  localConstructor: LocalEmptyUserView,
-})
+@UserView()
 @Component({ components: { Board, Errorbox } })
 export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntriesView>(BaseUserView, BaseEntriesView) {
-  @Prop() uv!: CombinedUserView;
   selectedCards: unknown[] = [];
 
   get entriesEntity() {
@@ -135,6 +131,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     if (!this.uv.rows || !this.columnNames) {
       return null;
     }
+    // FIXME: this should also map new rows! Use `mapVisibleRows`; maybe we need to add a variant which passes `RowRef`s.
     const cards = this.uv.rows.map((x, i) => this.makeCardObject(x, i));
     const fieldName = this.uv.info.columns[this.groupIndex].name;
     const orderFieldName = this.orderIndex > 0 ? this.uv.info.columns[this.orderIndex].name : "";

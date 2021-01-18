@@ -105,17 +105,11 @@ const scrollTo = (wrapper: HTMLElement, target: HTMLElement) => {
 @Component
 export default class TimePicker extends Vue {
   @Prop() time!: ITime;
-  @Prop({ type: Number, default: null }) timeStep!: number | null;
+  @Prop({ type: Number, default: 15 }) timeStep!: number;
   @Prop({ default: true, type: Boolean }) isOpen!: boolean;
 
   private hours: ITimeRangeAll = DateRange(0, 24, [1]);
-  private mins: ITimeRangeAll = DateRange(0, 60, [this.step]);
-
-  get step() {
-    return (this.timeStep)
-      ? this.timeStep
-      : 15;
-  }
+  private mins: ITimeRangeAll = DateRange(0, 60, [this.timeStep]);
 
   @Watch("isOpen")
   private selectedTime() {

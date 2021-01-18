@@ -99,15 +99,14 @@ import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
 
 import { tryDicts, mapMaybe } from "@/utils";
-import { IRowCommon, ICombinedRow, referenceEntriesRef } from "@/state/user_view";
-import { RowRef, ValueRef } from "@/local_user_view";
 import { IQuery } from "@/state/query";
-import LocalEmptyUserView from "@/LocalEmptyUserView";
 import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import MultiSelect from "@/components/multiselect/MultiSelect.vue";
 import { attrToLinkRef } from "@/links";
+import { ICombinedRow, IRowCommon, RowRef, ValueRef } from "@/user_views/combined";
+import { referenceEntriesRef } from "@/state/entries";
 
 interface IValueDelta {
   rowsToRemove: RowRef[];
@@ -148,9 +147,7 @@ const findValueDelta = (rows: ICombinedRow[], newRows: Record<number, IRowCommon
 
 const query = namespace("query");
 
-@UserView({
-  localConstructor: LocalEmptyUserView,
-})
+@UserView()
 @Component({
   components: { MultiSelect },
 })

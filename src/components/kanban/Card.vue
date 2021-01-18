@@ -6,6 +6,8 @@
     class="card_container"
     :style="cardStyle"
   >
+    <!-- FIXME: either move this to a slot (because this is not a generic kanban anymore),
+         or bite the bullet and move kanban to `views/board`. -->
     <FunLink
       :link="data.cardLink"
       no-href
@@ -60,11 +62,11 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { dragscroll } from "vue-dragscroll";
 
-import { IExistingValueRef, ValueRef } from "@/local_user_view";
 import { IFieldRef } from "@/api";
 import { IQuery } from "@/state/query";
 import { Link } from "@/links";
 import { replaceHtmlLinks } from "@/utils";
+import { IExistingValueRef, ValueRef } from "@/user_views/combined";
 
 export type CardColType = "text" | "image";
 export type CardTarget = "modal" | "top" | "blank";
@@ -114,6 +116,7 @@ const query = namespace("query");
 
 @Component({ directives: { dragscroll } })
 export class Card extends Vue {
+  // FIXME: Again, specific to our usage of kanban. Can we move this logic to a slot?
   @query.Action("addWindow") addWindow!: (queryObj: IQuery) => Promise<void>;
   @Prop({ type: Object, required: true }) data!: ICard;
   @Prop({ type: Boolean, required: false, default: false }) selected!: boolean;

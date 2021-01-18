@@ -17,9 +17,42 @@
       <b-col size="12">
         <form class="form-entry">
           <FormGrid
+            v-slot="{ element }"
             :grid-content="blocks"
-            :grid-props="gridProps"
-          />
+          >
+            <FormControl
+              v-if="element.type === 'field'"
+              :caption="element.caption"
+              :column-info-name="element.columnInfo.name"
+              :value="row.values[element.index]"
+              :attributes="row.values[element.index].extra.attributes"
+              :type="element.columnInfo.valueType"
+              :locked="locked"
+              :uv-args="uv.args"
+              :scope="scope"
+              :level="level"
+              @goto="$emit('goto', $event)"
+              @update="$emit('update', element.index, $event)"
+            />
+            <b-row v-else-if="element.type === 'buttons'">
+              <b-col>
+                <FunLink
+                  v-for="(subBlock, subBlockI) in element.actions"
+                  :key="subBlockI"
+                  :link="subBlock.link"
+                  @goto="$emit('goto', $event)"
+                >
+                  <b-button
+                    :key="subBlockI"
+                    block
+                    :variant="subBlock.variant"
+                  >
+                    {{ subBlock.name }}
+                  </b-button>
+                </FunLink>
+              </b-col>
+            </b-row>
+          </FormGrid>
           <!-- FIXME FIXME FIXME look at permissions! -->
           <div
             v-if="showDelete && row.mainId !== undefined"
@@ -34,14 +67,14 @@
           </div>
 
           <div
-            v-if="selectionMode && localRow.extra.selectionEntry !== undefined"
+            v-if="selectionMode && row.extra.selectionEntry !== undefined"
             class="delete-block"
           >
             <input
               type="button"
               :value="$t('select')"
               class="delete-block_delete-button"
-              @click="$emit('select', localRow.extra.selectionEntry)"
+              @click="$emit('select', row.extra.selectionEntry)"
             >
           </div>
         </form>
@@ -54,44 +87,19 @@
 /* eslint @typescript-eslint/unbound-method: "warn" */
 import { Component, Vue, Prop } from "vue-property-decorator";
 import FormGrid from "@/components/form/FormGrid.vue";
-import { IGridProps } from "@/components/form/types";
+import type { IFormCombinedUserView, FormGridElement, IFormExtendedRowCommon } from "@/components/views/Form.vue";
 
 @Component({ components: { FormGrid } })
 export default class FormEntry extends Vue {
-  // We don't bother to set types here properly, they matter no more than for TableRow.
   // The reason this is not a functional component is because of i18n.
-
-  @Prop({ type: Object, required: true }) uv!: any;
-  @Prop({ type: Array, required: true }) blocks!: any;
-  @Prop({ type: Object, required: true }) row!: any;
-  @Prop({ type: Object, required: true }) localRow!: any;
+  @Prop({ type: Object, required: true }) uv!: IFormCombinedUserView;
+  @Prop({ type: Array, required: true }) blocks!: FormGridElement[];
+  @Prop({ type: Object, required: true }) row!: IFormExtendedRowCommon;
   @Prop({ type: Boolean, default: false }) locked!: boolean;
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
   @Prop({ type: String, required: true }) scope!: string;
   @Prop({ type: Number, required: true }) level!: number;
   @Prop({ type: Boolean, default: true }) showDelete!: number;
-
-  public onGoto(event: any) {
-    this.$emit("goto", event);
-  }
-
-  public onUpdate(event: any, fieldIndex: number) {
-    this.$emit("update", fieldIndex, event);
-  }
-
-  get gridProps(): IGridProps {
-    return {
-      uv: this.uv,
-      row: this.row,
-      localRow: this.localRow,
-      locked: this.locked,
-      selectionMode: this.selectionMode,
-      scope: this.scope,
-      level: this.level,
-      onUpdate: (event, fieldIndex) => this.onUpdate(event, fieldIndex),
-      onGoto: event => this.onGoto(event),
-    };
-  }
 }
 </script>
 

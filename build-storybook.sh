@@ -1,9 +1,6 @@
-#!/bin/sh -e
+#!/usr/bin/env bash
 # Build and publish storybook.
 
-set -x
-
-test -f yarn.lock
+. ./prepare.sh
 rm -rf storybook-static
-yarn
 yarn storybook:build

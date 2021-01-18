@@ -1,38 +1,32 @@
 <template>
   <tr
-    :style="localRow.extra.style"
+    :style="row.extra.style"
     :class="['table-tr',
-             baseLocalRow.extra.selected ? 'selected' : 'none_selected',
-             {'table-tr-new': from==='new' },
-    ]"
+             row.extra.selected ? 'selected' : 'none_selected']"
   >
     <td
-      v-if="from !== 'new' && showSelectionCell"
+      v-if="uv.extra.isSelectionColumnEnabled"
       class="fixed-column checkbox-cells"
       @click="$emit('select', $event)"
     >
       <!-- Key is needed to force checkbox re-render when `selected` changes. Not sure why. -->
       <span class="table-td_span">
-        <checkbox :checked="baseLocalRow.extra.selected" />
+        <Checkbox :checked="row.extra.selected" />
       </span>
     </td>
     <td
-      v-else-if="showSelectionCell"
-      class="fixed-column checkbox-cells"
-    />
-    <td
-      v-if="localUv.hasRowLinks"
+      v-if="showLinkColumn"
       :class="[
         'fixed-column',
         'openform-cells',
         {
-          'without-selection-cell': !showSelectionCell,
+          'without-selection-cell': !uv.extra.isSelectionColumnEnabled,
         }
       ]"
     >
       <FunLink
-        v-if="localRow.extra.link !== undefined"
-        :link="localRow.extra.link"
+        v-if="row.extra.link !== undefined"
+        :link="row.extra.link"
         class="icon-link"
         @goto="$emit('goto', $event)"
       >
@@ -43,15 +37,14 @@
       v-for="(i, index) in columnIndexes"
       :key="i"
       :value="row.values[i]"
-      :local-value="localRow.values[i]"
-      :children="localRow.extra.children"
-      :arrow-down="localRow.extra.arrowDown === undefined ? false : localRow.extra.arrowDown"
+      :children="row.extra.children"
+      :arrow-down="row.extra.arrowDown === null ? false : row.extra.arrowDown"
       :column-position="i"
       :index="index"
-      :column="localUv.columns[i]"
-      :from="from"
+      :column="uv.extra.columns[i]"
+      :not-existing="notExisting"
       :last-fixed-column-index="lastFixedColumnIndex"
-      :level="localRow.extra.level"
+      :level="row.extra.level"
       :is-tree="isTree"
       @cell-click="$emit('cell-click', arguments[0], arguments[1])"
       @update:visibleChildren="$emit('update:visibleChildren', arguments[0], arguments[1])"
@@ -65,6 +58,7 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 
 import TableCell from "@/components/views/table/TableCell.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
+import type { ITableCombinedUserView, ITableExtendedRowCommon } from "@/components/views/Table.vue";
 
 @Component({
   components: {
@@ -72,32 +66,27 @@ import Checkbox from "@/components/checkbox/Checkbox.vue";
   },
 })
 export default class TableRow extends Vue {
-  // We don't bother to set types here properly, they matter no more than for TableRow.
   // The reason this is not a functional component is because of performance.
   // See https://forum.vuejs.org/t/performance-for-large-numbers-of-components/13545/10
-  @Prop({ type: Object, required: true }) row!: any;
-  @Prop({ type: Object, required: true }) localRow!: any;
-  @Prop({ type: Object, required: true }) baseLocalRow!: any;
-  @Prop({ type: Array, required: true }) columnIndexes!: any[];
-  @Prop({ type: Object, required: true }) localUv!: any;
-  @Prop({ type: String, default: "existing" }) from!: string;
+  @Prop({ type: Object, required: true }) row!: ITableExtendedRowCommon;
+  @Prop({ type: Array, required: true }) columnIndexes!: number[];
+  @Prop({ type: Object, required: true }) uv!: ITableCombinedUserView;
+  @Prop({ type: Boolean, default: false }) notExisting!: boolean;
   @Prop({ type: Boolean, default: false }) isTree!: boolean;
-  @Prop({ type: Boolean, default: true }) showSelectionCell!: boolean;
+  @Prop({ type: Boolean, default: false }) showLinkColumn!: boolean;
 
   get lastFixedColumnIndex(): number {
-    return this.localUv.columns.filter((item: any) => item.fixed).length;
+    return this.uv.extra.columns.filter(item => item.fixed).length;
   }
 }
 </script>
 
 <style lang="scss" scoped>
   /* Current Z layout:
-
-* FormControl           (200)
-* Selected fixed cell   (20)
-* Selected cell         (15)
-
-*/
+   * FormControl           (200)
+   * Selected fixed cell   (20)
+   * Selected cell         (15)
+   */
 
   .fixed-place-tr {
     display: none;
@@ -131,12 +120,8 @@ export default class TableRow extends Vue {
     justify-content: center;
   }
 
-  .table-tr-new .checkbox-cells {
-    cursor: default;
-  }
-
   .table-tr {
-    background-color: white; /* цвет таблицы возможно надо сменить на настраевоемый */
+    background-color: white; /* probably should be moved to settings */
     height: 100%;
   }
 
@@ -152,10 +137,6 @@ export default class TableRow extends Vue {
     text-overflow: ellipsis;
     white-space: nowrap;
     vertical-align: top;
-  }
-
-  .table-tr-new > td {
-    height: 35px;
   }
 
   .selected td {

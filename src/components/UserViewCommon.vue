@@ -9,6 +9,7 @@
             "qrcode_error_not_attr":"Adding data error! Check for the @input_from_qrcode attribute.",
             "qrcode_error_not_ref":"Adding data error! Make sure that the field you fill out is a link to a table:",
             "scan_barcode": "Scan Bar Code",
+            "remove_selected_rows": "Remove selected entries",
             "error": "Error"
         },
         "ru": {
@@ -20,6 +21,7 @@
             "qrcode_error_not_attr":"Ошибка добавления данных! Проверьте наличие атрибута @input_from_qrcode.",
             "qrcode_error_not_ref":"Ошибка добавления данных! Убедитесь что заполняемое поле является ссылкой на таблицу:",
             "scan_barcode": "Сканер штрих-кодов",
+            "remove_selected_rows": "Удалить выбранные записи",
             "error": "Ошибка"
         }
     }
@@ -31,6 +33,7 @@
       v-if="modalView"
       :select-view="modalView"
       :entity="modalReferenceField.entity"
+      autofocus
       @select="selectFromUserView($event)"
       @close="modalView = null"
     />
@@ -50,23 +53,20 @@
 <script lang="ts">
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-import { namespace } from "vuex-class";
 import * as R from "ramda";
 
-import BaseUserView from "@/components/BaseUserView";
-import { LocalUserView, ValueRef } from "@/local_user_view";
+import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, userViewTitle } from "@/components/BaseUserView";
 import { IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
 
-import { homeSchema, valueToPunnedText } from "@/state/user_view";
-import { IEntityRef, IFieldRef } from "@/api";
+import { IEntityRef } from "@/api";
 import SelectUserView from "@/components/SelectUserView.vue";
 import { mapMaybe, saveToFile, tryDicts } from "@/utils";
 import { Action } from "@/components/ActionsMenu.vue";
 import { IPanelButton } from "@/components/ButtonsPanel.vue";
-import { ScopeName, UserViewKey, IAddedResult, AddedRowId } from "@/state/staging_changes";
 import { attrToLink, Link } from "@/links";
 import QRCodeScanner, { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
 import BarCodeScanner from "@/components/barcode/BarCodeScanner.vue";
+import { ValueRef, valueToPunnedText } from "@/user_views/combined";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -88,13 +88,8 @@ const csvCell = (str: string): string => {
   return csvstr;
 };
 
-const staging = namespace("staging");
-
 @Component({ components: { SelectUserView, QRCodeScanner, BarCodeScanner } })
-export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<undefined, undefined, undefined>, undefined, undefined, undefined>>(BaseUserView) {
-  @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName; entityRef: IEntityRef; userView: UserViewKey; position?: number }) => Promise<IAddedResult>;
-  @staging.Action("setAddedField") setAddedField!: (args: { fieldRef: IFieldRef; id: AddedRowId; value: unknown }) => Promise<void>;
-
+export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>>(BaseUserView) {
   modalView: IQuery | null = null;
   openQRCodeScanner = false;
   openBarCodeScanner = false;
@@ -106,8 +101,7 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       data += csvCell(col.name);
     });
     data += "\n";
-    this.uv.newRowsPositions.forEach(rowId => {
-      const row = this.uv.newRows[rowId];
+    Object.values(this.uv.newRows).forEach(row => {
       row.values.forEach((cell, colI) => {
         const info = this.uv.info.columns[colI];
         data += csvCell(valueToPunnedText(info.valueType, cell));
@@ -124,7 +118,8 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       });
     }
 
-    saveToFile(`${this.uv.name}.csv`, "text/csv", data);
+    const title = userViewTitle(this.uv) ?? "unnamed";
+    saveToFile(`${title}.csv`, "text/csv", data);
   }
 
   private async importFromCsv(file: File) {
@@ -133,16 +128,14 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
     const info = this.uv.info;
     const entityRef = info.mainEntity!;
-    const userView = this.uv.userViewKey;
     Papa.parse(file, {
       worker: true,
       header: true,
       skipEmptyLines: true,
       step: async (rawRow: { data: Record<string, string> }) => {
-        const added = await this.addEntry({
+        const id = await this.addEntry({
           scope: this.scope,
           entityRef,
-          userView,
         });
 
         await Promise.all(this.uv.info.columns.map((columnInfo, index) => {
@@ -158,13 +151,14 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
                 entity: entityRef,
                 name: columnInfo.mainField.name,
               },
-              id: added.id,
+              id,
               value: currValue,
             });
           } else {
             return Promise.resolve();
           }
         }));
+        this.uv.trackAddedEntry(id);
       },
     });
   }
@@ -190,11 +184,9 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       }
       const buttonIcon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
 
-      const opts: IAttrToQueryOpts = {};
-      const home = homeSchema(this.uv.args);
-      if (home !== null) {
-        opts.homeSchema = home;
-      }
+      const opts: IAttrToQueryOpts = {
+        homeSchema: this.uv.homeSchema ?? undefined,
+      };
       const actions = mapMaybe((rawAction: unknown) => {
         const link = attrToLink(rawAction, opts);
         if (link === null) {
@@ -235,16 +227,14 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
     return !(this.uv.attributes["hide_default_actions"] === true);
   }
 
-  get actions() {
+  get staticActions() {
     const actions: Action[] = [];
 
     const extraActions = this.uv.attributes["extra_actions"];
     if (Array.isArray(extraActions)) {
-      const opts: IAttrToQueryOpts = {};
-      const home = homeSchema(this.uv.args);
-      if (home !== null) {
-        opts.homeSchema = home;
-      }
+      const opts: IAttrToQueryOpts = {
+        homeSchema: this.uv.homeSchema ?? undefined,
+      };
       extraActions.forEach((rawAction: unknown) => {
         const link = attrToLink(rawAction, opts);
         if (link === null) {
@@ -269,11 +259,9 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
 
     const qrcodeActions = this.uv.attributes["qrcode_actions"];
     if (Array.isArray(qrcodeActions)) {
-      const opts: IAttrToQueryOpts = {};
-      const home = homeSchema(this.uv.args);
-      if (home !== null) {
-        opts.homeSchema = home;
-      }
+      const opts: IAttrToQueryOpts = {
+        homeSchema: this.uv.homeSchema ?? undefined,
+      };
       qrcodeActions.forEach((rawAction: unknown) => {
         const link = attrToLink(rawAction, opts);
         if (link === null) {
@@ -346,6 +334,20 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
     return actions;
   }
 
+  get selectionActions() {
+    const actions: Action[] = [];
+    if (this.uv.info.mainEntity && this.uv.extra.selectedRows.length > 0) {
+      actions.push(
+        { icon: "delete_sweep", name: this.$t("remove_selected_rows").toString(), callback: () => this.removeSelectedRows() },
+      );
+    }
+    return actions;
+  }
+
+  private removeSelectedRows() {
+    this.uv.extra.selectedRows.keys().forEach(rowRef => this.deleteRow(rowRef));
+  }
+
   // Used to create referenced entries and automatically insert them into current table.
   get modalReferenceField(): IModalReferenceField | null {
     const modalReferenceField = mapMaybe((column, columnIndex): IModalReferenceField | undefined => {
@@ -363,6 +365,10 @@ export default class UserViewCommon extends mixins<BaseUserView<LocalUserView<un
       return undefined;
     }, this.uv.columnAttributes);
     return modalReferenceField.pop() || null;
+  }
+
+  get actions() {
+    return [...this.staticActions, ...this.selectionActions];
   }
 
   @Watch("actions", { deep: true, immediate: true })

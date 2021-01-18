@@ -1,14 +1,14 @@
 <template>
   <!-- FIXME: Pls solve these classes -->
   <td
-    :style="localValue.style"
+    :style="value.extra.style"
     :class="['table-td', {'fixed-column': column.fixed,
-                          'select_fixed': localValue.selected && column.fixed,
+                          'select_fixed': value.extra.selected && column.fixed,
                           'next-after-last-fixed': index === lastFixedColumnIndex,
-                          'select': localValue.selected && !column.fixed,
-                          'selected': localValue.selected,
+                          'select': value.extra.selected && !column.fixed,
+                          'selected': value.extra.selected,
                           'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable,
-                          'editing_style': localValue.editing !== undefined,
+                          'editing_style': value.extra.editing !== undefined,
                           'tree-branches': column.treeUnfoldColumn && children !== undefined && children.length > 0 && isTree,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click="$emit('cell-click', columnPosition, $event)"
@@ -19,10 +19,10 @@
           :value="value"
         />
       </template>
-      <template v-else-if="localValue.link !== undefined && localValue.valueText.length > 0">
+      <template v-else-if="value.extra.link !== null && value.extra.valueText.length > 0">
         <div class="selectable">
           <FunLink
-            :link="localValue.link"
+            :link="value.extra.link"
             @goto="$emit('goto', $event)"
           >
             <input
@@ -49,13 +49,12 @@
         </div>
       </template>
       <template v-else>
-        <checkbox
+        <Checkbox
           v-if="valueType === 'bool'"
           class="checkbox_click-none"
           :checked="value.value"
-          disabled
         />
-        <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && localValue.valueText.length > 0}]">
+        <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueText.length > 0}]">
           <span
             :style="{'margin-left': treeLevel*25+'px'}"
             :class="['display-arrow material-icons', {'down': isArrowDown}]"
@@ -82,12 +81,12 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 
-import type { ICombinedValue } from "@/state/user_view";
 import { valueIsNull } from "@/values";
 import { iconValue } from "@/links";
 import { replaceHtmlLinks } from "@/utils";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
 import CellButtons from "@/components/buttons/CellButtons.vue";
+import type { IColumn, ITableExtendedValue } from "@/components/views/Table.vue";
 
 @Component({
   components: {
@@ -99,14 +98,13 @@ export default class TableCell extends Vue {
   // We don't bother to set types here properly, they matter no more than for TableRow.
   // The reason this is not a functional component is because of performance.
   // See https://forum.vuejs.org/t/performance-for-large-numbers-of-components/13545/10
-  @Prop({ type: Object, required: true }) value!: ICombinedValue;
-  @Prop({ type: Object, required: true }) localValue!: any;
-  @Prop({ type: Object, required: true }) column!: any;
+  @Prop({ type: Object, required: true }) value!: ITableExtendedValue;
+  @Prop({ type: Object, required: true }) column!: IColumn;
   @Prop({ type: Number, required: true }) columnPosition!: number;
   @Prop({ type: String, default: "existing" }) from!: string;
   @Prop({ type: Number, default: null }) lastFixedColumnIndex!: number;
   @Prop({ type: Number, default: null }) index!: number;
-  @Prop({ type: Array, default: [] }) children!: any;
+  @Prop({ type: Array, default: [] }) children!: number[];
   @Prop({ type: Number, required: true }) level!: number;
   @Prop({ type: Boolean, required: true }) arrowDown!: boolean;
   @Prop({ type: Boolean, required: true }) isTree!: boolean;
@@ -114,20 +112,20 @@ export default class TableCell extends Vue {
   private isArrowDown = false;
 
   private get localValueTextHtml(): string {
-    const text: string = typeof this.localValue.valueText === "string"
-      ? this.localValue.valueText
+    const text: string = typeof this.value.extra.valueText === "string"
+      ? this.value.extra.valueText
       : "";
-    return ((this.valueType === "string") || this.localValue.link
+    return ((this.valueType === "string") || this.value.extra.link
       ? replaceHtmlLinks(text)
       : text) || "&nbsp;";
   }
 
-  private get valueType(): string | undefined {
-    return this.value.info?.field?.valueType.type;
+  private get valueType(): string | null {
+    return this.value.info?.field?.valueType.type ?? null;
   }
 
-  private get fieldType(): string | undefined {
-    return this.value.info?.field?.fieldType?.type;
+  private get fieldType(): string | null {
+    return this.value.info?.field?.fieldType?.type ?? null;
   }
 
   private get treeLevel() {
@@ -144,12 +142,14 @@ export default class TableCell extends Vue {
   }
 
   private toggleChildren() {
+    // FIXME: shouldn't be used like this! `arrowDown` should be fully controlled by a prop.
+    // Remove `isArrowDown`.
     this.isArrowDown = !this.isArrowDown;
     this.$emit("update:visibleChildren", this.children, this.isArrowDown);
   }
 
   get iconValue() {
-    return iconValue(this.localValue.link.target);
+    return this.value.extra.link && "target" in this.value.extra.link ? iconValue(this.value.extra.link.target) : null;
   }
 
   mounted() {

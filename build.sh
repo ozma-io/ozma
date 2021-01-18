@@ -1,9 +1,6 @@
-#!/bin/sh -e
+#!/usr/bin/env bash
 # Build and publish the application.
 
-set -x
-
-test -f yarn.lock
+. ./prepare.sh
 rm -rf dist
-yarn
 yarn build

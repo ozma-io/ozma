@@ -7,7 +7,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
 import VueQrcode from "@chenfengyuan/vue-qrcode";
-import type { IEntriesRef } from "@/state/user_view";
+import type { IEntriesRef } from "@/state/entries";
 
 export interface IPrintQRCode {
   s: string; // Schema

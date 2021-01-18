@@ -7,9 +7,11 @@
       <FormGridBlock
         v-for="(block, blockI) in gridContent"
         :key="blockI"
+        v-slot="slotProps"
         :block-content="block"
-        :grid-props="gridProps"
-      />
+      >
+        <slot :element="slotProps.element" />
+      </FormGridBlock>
     </b-row>
   </b-container>
 </template>
@@ -18,12 +20,26 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 
 import FormGridBlock from "@/components/form/FormGridBlock.vue";
-import type { IGridProps, GridElement } from "@/components/form/types";
+
+export interface IGridBase {
+  size: number;
+}
+
+export interface IGridInput<T> extends IGridBase {
+  type: "element";
+  element: T;
+}
+
+export interface IGridSection<T> extends IGridBase {
+  type: "section";
+  content: GridElement<T>[];
+}
+
+export type GridElement<T> = IGridInput<T> | IGridSection<T>;
 
 @Component({ components: { FormGridBlock } })
 export default class FormGrid extends Vue {
-  @Prop({ type: Array }) gridContent!: GridElement[];
-  @Prop({ type: Object }) gridProps!: IGridProps;
+  @Prop({ type: Array }) gridContent!: GridElement<any>[];
 }
 </script>
 

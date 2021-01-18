@@ -7,6 +7,6 @@ import type { IQuery } from "@/state/query";
 export default class ModalPortal extends mixins(Portal) {
   @Prop({ type: String }) tabName!: string;
   @Prop({ type: Number, default: 0 }) order!: number;
-  @Prop({ type: Boolean, default: false }) selected!: boolean;
+  @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: Object, required: true }) view!: IQuery;
 }
