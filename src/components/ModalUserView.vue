@@ -15,7 +15,7 @@
   <ModalPortal
     to="tabbed-modal"
     :tab-name="title"
-    :selected="selected"
+    :autofocus="autofocus"
     :view="view"
     @close="$emit('close')"
   >
@@ -76,21 +76,22 @@ import { namespace } from "vuex-class";
 import { Action } from "@/components/ActionsMenu.vue";
 import type { IQuery } from "@/state/query";
 import { queryLocation } from "@/state/query";
-import { CurrentChanges, ScopeName } from "@/state/staging_changes";
+import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/staging_changes";
 import ModalPortal from "@/components/modal/ModalPortal";
 import { router } from "@/modules";
+import { ISelectionRef } from "./BaseUserView";
 
 const staging = namespace("staging");
 
 @Component({ components: { ModalPortal } })
 export default class ModalUserView extends Vue {
   @staging.State("current") changes!: CurrentChanges;
-  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void> }) => Promise<void>;
+  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<CombinedTransactionResult[]>;
   @staging.Action("clearAdded") clearAdded!: (_: { scope?: ScopeName; onlyUntouched?: boolean }) => Promise<void>;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
   @Prop({ type: Object, required: true }) view!: IQuery;
-  @Prop({ type: Boolean, default: false }) selected!: boolean;
+  @Prop({ type: Boolean, default: false }) autofocus!: boolean;
 
   private title = "";
   private extraActions: Action[] = [];
@@ -106,7 +107,16 @@ export default class ModalUserView extends Vue {
   }
 
   private async saveView() {
-    await this.submitChanges({ scope: this.uid });
+    const ops = await this.submitChanges({ scope: this.uid, errorOnIncomplete: true });
+    if (ops.length === 1) {
+      const op = ops[0];
+      if (op.type === "insert") {
+        this.$emit("select", {
+          entity: op.entity,
+          id: op.id,
+        } as ISelectionRef);
+      }
+    }
   }
 
   private destroyed() {

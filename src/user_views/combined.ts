@@ -5,7 +5,7 @@ import {
   IExecutedValue, IColumnField, IFieldRef, RowId, AttributesMap, IExecutedRow, SchemaName, EntityName, FieldName, UserViewSource, IResultViewInfo, AttributeName, FieldType, IEntityRef,
 } from "ozma-api";
 import { AddedRowId, IAddedEntry, IEntityChanges, IStagingEventHandler, IStagingState } from "@/state/staging_changes";
-import { debugLog, mapMaybe, tryDicts } from "@/utils";
+import { mapMaybe, tryDicts } from "@/utils";
 import { equalEntityRef, IUpdatedValue, valueFromRaw, valueIsNull, valueToText } from "@/values";
 import { Entries, IEntriesState, referenceEntriesRef } from "@/state/entries";
 import { ValueType } from "ozma-api/src";
@@ -555,12 +555,10 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
 
   addEntry(entityRef: IEntityRef, id: AddedRowId) {
     // We await for our parent to insert entry with position instead.
-    debugLog("addEntry", entityRef, id);
   }
 
   private pushAddedEntry(id: AddedRowId, newValues: IAddedEntry) {
     const eref = this.info.mainEntity!;
-    debugLog("pushAddedEntry", id, newValues);
 
     const values = this.info.columns.map((column, colI): ICombinedValue => {
       if (column.mainField) {
@@ -618,9 +616,9 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
 
     const newValues = this.storeChanges.changes[eref.schema][eref.name].added[id];
     const row = this.pushAddedEntry(id, newValues);
-    row.extra = this.handler.createAddedLocalRow(this, id, row, null, null);
+    Vue.set(row, "extra", this.handler.createAddedLocalRow(this, id, row, null, null));
     row.values.forEach((value, colI) => {
-      value.extra = this.handler.createAddedLocalValue(this, id, row, colI, value, null, null, null);
+      Vue.set(value, "extra", this.handler.createAddedLocalValue(this, id, row, colI, value, null, null, null));
     });
     this.handler.postInitAddedRow(this, id, row);
   }

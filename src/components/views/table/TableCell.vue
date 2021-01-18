@@ -49,11 +49,10 @@
         </div>
       </template>
       <template v-else>
-        <checkbox
+        <Checkbox
           v-if="valueType === 'bool'"
           class="checkbox_click-none"
           :checked="value.value"
-          disabled
         />
         <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueText.length > 0}]">
           <span
@@ -143,6 +142,8 @@ export default class TableCell extends Vue {
   }
 
   private toggleChildren() {
+    // FIXME: shouldn't be used like this! `arrowDown` should be fully controlled by a prop.
+    // Remove `isArrowDown`.
     this.isArrowDown = !this.isArrowDown;
     this.$emit("update:visibleChildren", this.children, this.isArrowDown);
   }

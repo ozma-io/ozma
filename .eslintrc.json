@@ -17,7 +17,7 @@
     "extraFileExtensions": [".vue"],
     "sourceType": "module"
   },
-  "ignorePatterns": ["*.config.js", "node_modules/"],
+  "ignorePatterns": ["dist/", "*.config.js", "node_modules/"],
   "plugins": [
     "@typescript-eslint",
     "unused-imports"

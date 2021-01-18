@@ -33,6 +33,7 @@
       v-if="modalView"
       :select-view="modalView"
       :entity="modalReferenceField.entity"
+      autofocus
       @select="selectFromUserView($event)"
       @close="modalView = null"
     />

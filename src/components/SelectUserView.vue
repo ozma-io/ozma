@@ -15,7 +15,7 @@
   <ModalUserView
     :selection-mode="selectEntity !== undefined"
     :view="currentView"
-    :selected="selected"
+    :autofocus="autofocus"
     @close="$emit('close')"
     @goto="goto"
     @select="selectFromView"
@@ -33,7 +33,6 @@ import type { IQuery } from "@/state/query";
 import { ErrorKey } from "@/state/errors";
 import { ISelectionRef } from "@/components/BaseUserView";
 import ModalUserView from "@/components/ModalUserView.vue";
-import { debugLog } from "@/utils";
 
 const entities = namespace("entities");
 const errors = namespace("errors");
@@ -47,7 +46,7 @@ export default class SelectUserView extends Vue {
   @errors.Mutation("resetErrors") resetErrors!: (key: ErrorKey) => void;
   @Prop({ type: Object }) selectEntity!: IEntityRef | undefined;
   @Prop({ type: Object, required: true }) initialView!: IQuery;
-  @Prop({ type: Boolean, default: false }) selected!: boolean;
+  @Prop({ type: Boolean, default: false }) autofocus!: boolean;
 
   private currentView: IQuery = this.initialView;
 
@@ -55,8 +54,6 @@ export default class SelectUserView extends Vue {
     if (this.selectEntity === undefined) {
       throw new Error("Impossible");
     }
-
-    debugLog("selection", this.selectEntity, selection);
 
     const entityInfo = await this.getEntity(this.selectEntity);
     if (!(equalEntityRef(this.selectEntity, selection.entity) || entityInfo.children.some(x => equalEntityRef(x.ref, selection.entity)))) {

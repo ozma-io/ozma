@@ -77,7 +77,7 @@
             class="checkbox-col"
           > <!-- Checkbox column -->
           <col
-            v-if="uv.extra.hasRowLinks"
+            v-if="hasLinksColumn"
             class="open-form-col"
           > <!-- Row link column -->
           <col
@@ -99,7 +99,7 @@
               <checkbox :checked="selectedAll" />
             </th>
             <th
-              v-if="uv.extra.hasRowLinks"
+              v-if="hasLinksColumn"
               :class="[
                 'table-th',
                 'fixed-column',
@@ -110,7 +110,7 @@
               ]"
             >
               <FunLink
-                v-if="creationLink !== null"
+                v-if="creationLink"
                 :link="creationLink"
                 @goto="$emit('goto', $event)"
               >
@@ -149,7 +149,7 @@
             :column-indexes="columnIndexes"
             :is-tree="isTree"
             :not-existing="row.notExisting"
-            :show-selection-cell="uv.extra.isSelectionColumnEnabled"
+            :show-link-column="hasLinksColumn"
             @select="selectTableRow(rowIndex, $event)"
             @cell-click="clickCell({ ...row.ref, column: arguments[0] }, arguments[1])"
             @update:visibleChildren="visibleChildren(arguments[0], arguments[1])"
@@ -180,7 +180,7 @@ import { namespace } from "vuex-class";
 import { Moment, default as moment } from "moment";
 import * as R from "ramda";
 
-import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, RecordSet, debugLog } from "@/utils";
+import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName } from "@/utils";
 import { valueIsNull } from "@/values";
 import { IResultColumnInfo, ValueType } from "@/api";
 import { UserView } from "@/components";
@@ -223,6 +223,7 @@ export interface ITableValueExtra extends IBaseValueExtra {
 export interface ITableRowExtra extends IBaseRowExtra {
   searchText: string;
   visible: boolean;
+  shownAsNewRow: boolean;
   parent: number | null;
   level: number | null;
   arrowDown: boolean | null;
@@ -252,8 +253,6 @@ export interface ITableViewExtra extends IBaseViewExtra {
   fixedColumnPositions: Record<number, string>;
   rowsParentPositions: Record<number, number>;
   linkOpts?: IAttrToQueryOpts;
-  // Used to hide rows which are displayed as fake "new rows" instead, to avoid jumping rows after submissions.
-  oldCommittedRowPositions: RecordSet<number>;
   newRowTopSidePositions: NewRowRef[];
   newRowBottomSidePositions: NewRowRef[];
   sortColumn: number | null;
@@ -397,6 +396,7 @@ const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLo
     parent: null,
     arrowDown: null,
     link: null,
+    shownAsNewRow: false,
   };
 
   const height = Number(getRowAttr("row_height"));
@@ -725,15 +725,6 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
 
     const newRowTopSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowTopSidePositions) : [];
     const newRowBottomSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowBottomSidePositions) : [];
-    debugLog("createLocalUserView", [...newRowTopSidePositions, ...newRowBottomSidePositions], uv);
-    const oldCommittedRowPositions = Object.fromEntries(mapMaybe(pos => {
-      if (pos.type === "committed") {
-        const index = uv.mainRowMapping[pos.id][0];
-        return [index, null];
-      } else {
-        return undefined;
-      }
-    }, [...newRowTopSidePositions, ...newRowBottomSidePositions]));
 
     return {
       ...baseExtra,
@@ -745,7 +736,6 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       rowsParentPositions: {},
       newRowTopSidePositions,
       newRowBottomSidePositions,
-      oldCommittedRowPositions,
       linkOpts: uv.homeSchema ? { homeSchema: uv.homeSchema } : {},
       sortAsc: oldView?.sortAsc ?? true,
       sortColumn: oldView?.sortColumn ?? null,
@@ -770,6 +760,14 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
         style["left"] = position;
       });
     });
+
+    for (const pos of [...uv.extra.newRowTopSidePositions, ...uv.extra.newRowBottomSidePositions]) {
+      if (pos.type === "committed") {
+        // `index.type === "existing"` here; "added" may only appear after a commit.
+        const index = uv.mainRowMapping[pos.id][0] as IExistingRowRef;
+        uv.rows![index.position].extra.shownAsNewRow = true;
+      }
+    }
   },
 };
 
@@ -883,6 +881,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     } else {
       return this.editing.ref.type !== "existing" && this.addedLocked;
     }
+  }
+
+  get hasLinksColumn() {
+    return this.uv.extra.hasRowLinks || this.creationLink !== null;
   }
 
   get editingValue() {
@@ -1473,11 +1475,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       return [];
     } else {
       return mapMaybe(rowI => {
-        if (rowI in this.uv.extra.oldCommittedRowPositions) {
-          return undefined;
-        }
         const row = rows[rowI];
-        if (row.deleted) {
+        if (row.deleted || row.extra.shownAsNewRow) {
           return undefined;
         }
         return {
@@ -1530,7 +1529,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   get shownRows() {
-    return this.allRows.slice(0, this.showLength);
+    const totalAdded = this.topRows.length + this.bottomRows.length;
+    return this.allRows.slice(0, totalAdded + this.showLength);
   }
 
   private async updateCurrentValue(rawValue: any) {
