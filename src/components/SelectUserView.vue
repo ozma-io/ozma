@@ -33,7 +33,6 @@ import type { IQuery } from "@/state/query";
 import { ErrorKey } from "@/state/errors";
 import { ISelectionRef } from "@/components/BaseUserView";
 import ModalUserView from "@/components/ModalUserView.vue";
-import { debugLog } from "@/utils";
 
 const entities = namespace("entities");
 const errors = namespace("errors");
@@ -55,8 +54,6 @@ export default class SelectUserView extends Vue {
     if (this.selectEntity === undefined) {
       throw new Error("Impossible");
     }
-
-    debugLog("selection", this.selectEntity, selection);
 
     const entityInfo = await this.getEntity(this.selectEntity);
     if (!(equalEntityRef(this.selectEntity, selection.entity) || entityInfo.children.some(x => equalEntityRef(x.ref, selection.entity)))) {

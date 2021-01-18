@@ -91,7 +91,7 @@ import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { AttributesMap } from "ozma-api";
 
-import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, debugLog } from "@/utils";
+import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout } from "@/utils";
 import { funappSchema } from "@/api";
 import { equalEntityRef } from "@/values";
 import type { AddedRowId, CombinedTransactionResult, ICombinedInsertEntityResult, IStagingEventHandler, ScopeName, StagingKey } from "@/state/staging_changes";
@@ -515,7 +515,6 @@ export default class UserView extends Vue {
 
         const oldArgs = deepClone(this.args);
         try {
-          debugLog("initiating reload");
           await linkHandler(this.$store, target => this.$emit("goto", target), link).handler();
         } catch (e) {
           this.reloadIfRoot();

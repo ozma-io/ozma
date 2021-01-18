@@ -11,7 +11,7 @@
     >
       <!-- Key is needed to force checkbox re-render when `selected` changes. Not sure why. -->
       <span class="table-td_span">
-        <checkbox :checked="row.extra.selected" />
+        <Checkbox :checked="row.extra.selected" />
       </span>
     </td>
     <td
