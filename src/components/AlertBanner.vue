@@ -31,7 +31,7 @@ const anchorRegex = /<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1>(.*)<\/a>/;
 const modifyLinks = (html: string) => html.replace(anchorRegex, "<a href='$2' class='alert-link'>$3</a>");
 
 @Component
-export default class GlobalBanner extends Vue {
+export default class AlertBanner extends Vue {
   @Prop({ type: String, required: true }) message!: string;
   @Prop({ type: String, required: true }) variant!: string;
   @Prop({ type: Object, required: true }) styles!: string;

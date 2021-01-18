@@ -14,7 +14,7 @@
     id="app"
     :style="styleSettings"
   >
-    <GlobalBanner
+    <AlertBanner
       :message="bannerMessage"
       :variant="bannerVariant"
       :styles="bannerStyles"
@@ -44,7 +44,7 @@ import { CurrentSettings } from "@/state/settings";
 import { CurrentAuth } from "@/state/auth";
 import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import FabCluster from "@/components/FabCluster/FabCluster.vue";
-import GlobalBanner from "@/components/GlobalBanner.vue";
+import AlertBanner from "@/components/AlertBanner.vue";
 import { ErrorKey } from "@/state/errors";
 
 const settings = namespace("settings");
@@ -52,7 +52,7 @@ const auth = namespace("auth");
 const errors = namespace("errors");
 const staging = namespace("staging");
 
-@Component({ components: { ModalPortalTarget, FabCluster, GlobalBanner } })
+@Component({ components: { ModalPortalTarget, FabCluster, AlertBanner } })
 export default class App extends Vue {
   @settings.State("current") settings!: CurrentSettings;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
