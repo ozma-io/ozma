@@ -19,7 +19,7 @@
           :value="value"
         />
       </template>
-      <template v-else-if="value.extra.link !== undefined && value.extra.valueText.length > 0">
+      <template v-else-if="value.extra.link !== null && value.extra.valueText.length > 0">
         <div class="selectable">
           <FunLink
             :link="value.extra.link"
