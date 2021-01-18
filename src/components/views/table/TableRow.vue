@@ -5,7 +5,7 @@
              row.extra.selected ? 'selected' : 'none_selected']"
   >
     <td
-      v-if="showSelectionCell"
+      v-if="uv.extra.isSelectionColumnEnabled"
       class="fixed-column checkbox-cells"
       @click="$emit('select', $event)"
     >
@@ -15,12 +15,12 @@
       </span>
     </td>
     <td
-      v-if="uv.extra.hasRowLinks"
+      v-if="showLinkColumn"
       :class="[
         'fixed-column',
         'openform-cells',
         {
-          'without-selection-cell': !showSelectionCell,
+          'without-selection-cell': !uv.extra.isSelectionColumnEnabled,
         }
       ]"
     >
@@ -73,7 +73,7 @@ export default class TableRow extends Vue {
   @Prop({ type: Object, required: true }) uv!: ITableCombinedUserView;
   @Prop({ type: Boolean, default: false }) notExisting!: boolean;
   @Prop({ type: Boolean, default: false }) isTree!: boolean;
-  @Prop({ type: Boolean, default: true }) showSelectionCell!: boolean;
+  @Prop({ type: Boolean, default: false }) showLinkColumn!: boolean;
 
   get lastFixedColumnIndex(): number {
     return this.uv.extra.columns.filter(item => item.fixed).length;

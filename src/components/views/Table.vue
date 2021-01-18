@@ -99,7 +99,7 @@
               <checkbox :checked="selectedAll" />
             </th>
             <th
-              v-if="uv.extra.hasRowLinks"
+              v-if="uv.extra.hasRowLinks || creationLink"
               :class="[
                 'table-th',
                 'fixed-column',
@@ -110,7 +110,7 @@
               ]"
             >
               <FunLink
-                v-if="creationLink !== null"
+                v-if="creationLink"
                 :link="creationLink"
                 @goto="$emit('goto', $event)"
               >
@@ -149,7 +149,7 @@
             :column-indexes="columnIndexes"
             :is-tree="isTree"
             :not-existing="row.notExisting"
-            :show-selection-cell="uv.extra.isSelectionColumnEnabled"
+            :show-link-column="uv.extra.hasRowLinks || creationLink"
             @select="selectTableRow(rowIndex, $event)"
             @cell-click="clickCell({ ...row.ref, column: arguments[0] }, arguments[1])"
             @update:visibleChildren="visibleChildren(arguments[0], arguments[1])"
