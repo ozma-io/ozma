@@ -399,13 +399,6 @@ export default class UserView extends Vue {
     (this.$refs.userViewRef as Vue)?.$el.scrollTo(0, 0);
   }
 
-  /* private checkScrollToTop(newArgs: IUserViewArguments) {
-   *   if (!deepEquals(newArgs, this.previousArgs)) {
-   *     this.scrollToTop();
-   *   }
-   *   this.previousArgs = deepClone(this.args);
-   * } */
-
   private destroyCurrentUserView() {
     if (this.state.state !== "show") {
       return;
@@ -420,6 +413,13 @@ export default class UserView extends Vue {
   }
 
   private setState(state: UserViewLoadingState) {
+    if (state.state === "show"
+     && this.state.state === "show"
+     && !deepEquals(this.state.uv.args, state.uv.args)
+    ) {
+      this.scrollToTop();
+    }
+
     this.destroyCurrentUserView();
     this.state = state;
     if (state.state === "show") {
