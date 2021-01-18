@@ -1,8 +1,6 @@
 <template>
-  <div class="fab_zone__container">
-    <div class="fab_zone__cluster">
-      <CommsButton />
-    </div>
+  <div class="fab-container">
+    <CommsButton />
   </div>
 </template>
 
@@ -16,29 +14,18 @@ export default class FabCluster extends Vue {
 </script>
 
 <style scoped>
-  .fab_zone__container {
-    position: sticky;
-    display: inline-flex;
-    flex-direction: row-reverse;
-    align-items: flex-end;
-    bottom: 45px;
-    right: 20px;
-    float: right;
-    width: auto;
+  .fab-container {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
     z-index: 700;
-  }
-
-  .fab_zone__cluster {
-    position: relative;
-    display: inline-block;
-    height: 60px;
-    width: auto;
   }
 
   @media screen and (max-aspect-ratio: 13/9) {
     @media screen and (max-device-width: 480px) {
-      .fab_zone__container {
+      .fab-container {
         bottom: 20px;
+        right: 20px;
       }
     }
   }

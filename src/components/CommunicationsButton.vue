@@ -7,43 +7,8 @@
       :class="['comm_icon__trigger', {'comm_icon__trigger_opened': isOpen}]"
       @click="onClick"
     >
-      <div class="comm_icon__open">
-        <svg
-          width="35"
-          height="32"
-          viewBox="0 0 35 32"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M11.2667 12.6981H23.3667M11.2667 16.4717H23.3667M4.8104 23.5777C2.4311 21.1909 1 18.1215 1 14.7736C1 7.16679 8.38723 1 17.5 1C26.6128 1 34 7.16679 34 14.7736C34 22.3804 26.6128 28.5472 17.5 28.5472C15.6278 28.5472 13.8286 28.2868 12.1511 27.8072L12 27.7925L5.03333 31V23.8219L4.8104 23.5777Z"
-            stroke="#ffffff"
-            stroke-width="2"
-            stroke-miterlimit="10"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            fill="none"
-          />
-        </svg>
-      </div>
-      <div class="comm_icon__close">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 23 23"
-        >
-          <g fillrule="evenodd">
-            <path
-              d="M10.314 -3.686H12.314V26.314H10.314z"
-              transform="rotate(-45 11.314 11.314)"
-            />
-            <path
-              d="M10.314 -3.686H12.314V26.314H10.314z"
-              transform="rotate(45 11.314 11.314)"
-            />
-          </g>
-        </svg>
-      </div>
+      <i class="material-icons md-36 comm_icon__open">message</i>
+      <i class="material-icons md-36 comm_icon__close">close</i>
     </div>
     <ul
       :class="['comm_icon__menu', { 'comm_icon__menu_opened': isOpen }]"
@@ -133,12 +98,12 @@ export default class CommunicationsButton extends Vue {
   }
 
   .comm_icon__trigger {
-    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.75);
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.5);
     height: 60px;
     width: 60px;
     display: flex;
     justify-content: center;
-    background-color: #08c;
+    background-color: #17a2b8;
     align-items: center;
     position: relative;
     border-radius: 30px;
@@ -154,7 +119,7 @@ export default class CommunicationsButton extends Vue {
     visibility: hidden;
     position: absolute;
     transition: visibility 0.7s, opacity 0.7s;
-    top: -200px;
+    top: -190px;
     padding: 5px;
     list-style: none;
   }
@@ -185,6 +150,7 @@ export default class CommunicationsButton extends Vue {
     left: 0;
     right: 0;
     transition: visibility 0s, opacity 0.5s;
+    color: white;
   }
 
   .comm_icon__close {
