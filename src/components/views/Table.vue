@@ -1171,9 +1171,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     // Fix for case when some cell is being edited and modal opens,
     // otherwise any click on this modal will close the cell editing and modal too.
     // FIXME: rely on CSS-classes for logic is bad thing, fix it someone, please.
-    if (element?.closest(".v--modal-box") && !this.$el.closest(".v--modal-box")) {
+    if ((element?.closest(".v--modal-box") && !this.$el.closest(".v--modal-box"))
+     || (element?.closest(".modal__tab-content") !== this.$el.closest(".modal__tab-content"))
+    ) {
       return;
     }
+
     this.removeCellEditing();
     this.cellEditHeight = 0;
   }
