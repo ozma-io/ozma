@@ -39,6 +39,8 @@
         :uv-args="uv.args"
         :scope="scope"
         :level="level"
+        caption=""
+        force-caption
         is-cell-edit
         autofocus
         modal-only

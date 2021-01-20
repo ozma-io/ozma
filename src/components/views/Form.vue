@@ -115,6 +115,7 @@ export interface IElementField {
   index: number;
   columnInfo: IResultColumnInfo;
   caption: string;
+  forceCaption: boolean;
 }
 
 export interface IElementButtons {
@@ -284,7 +285,8 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
       const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr;
       const block = Math.max(0, Math.min(blockNumber, blocks.length - 1));
 
-      const caption = String(getColumnAttr("caption") ?? columnInfo.name);
+      const captionAttr = getColumnAttr("caption");
+      const caption = String(captionAttr ?? columnInfo.name);
 
       const element: IGridInput<IElementField> = {
         type: "element",
@@ -294,6 +296,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
           index: i,
           columnInfo,
           caption,
+          forceCaption: Boolean(captionAttr),
         },
       };
       blocks[block].content.push(element);
