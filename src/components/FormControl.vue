@@ -21,7 +21,7 @@
   <fragment>
     <InputSlot
       v-if="inputType.name !== 'userview' && inputType.name !== 'empty_userview'"
-      :inline="!isInline"
+      :inline="isInline"
       :modal-only="modalOnly"
       :is-cell-edit="isCellEdit"
       :label="(inputType.name === 'static_text' || inputType.name === 'static_image') ? undefined : caption"
