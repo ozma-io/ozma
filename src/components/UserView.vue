@@ -414,6 +414,13 @@ export default class UserView extends Vue {
   }
 
   private setState(state: UserViewLoadingState) {
+    if (state.state === "show"
+     && this.state.state === "show"
+     && !deepEquals(this.state.uv.args, state.uv.args)
+    ) {
+      this.scrollToTop();
+    }
+
     this.destroyCurrentUserView();
     this.state = state;
     if (state.state === "show") {
