@@ -21,10 +21,10 @@
   <fragment>
     <InputSlot
       v-if="inputType.name !== 'userview' && inputType.name !== 'empty_userview'"
-      :inline="isInline"
+      :inline="!isMultiline"
       :modal-only="modalOnly"
       :is-cell-edit="isCellEdit"
-      :label="(inputType.name === 'static_text' || inputType.name === 'static_image') ? undefined : caption"
+      :label="(inputType.name === 'static_text' || inputType.name === 'static_image') ? undefined : usedCaption"
       :background-color="cellColor"
       :text-align="textAlign"
       :modal="$isMobile && (forceModalOnMobile || isMultiline)"
@@ -162,14 +162,14 @@
     <template v-if="inputType.name === 'userview' || inputType.name == 'empty_userview'">
       <b-row>
         <b-col
-          v-if="caption"
-          :cols="isInline ? 4 : 12"
+          v-if="usedCaption"
+          :cols="isMultiline ? 12 : 4"
         >
           <div
             v-if="actions.length > 0"
             class="nested-menu"
           >
-            <label class="input_label">{{ title }}</label>
+            <label class="input_label">{{ usedCaption }}</label>
             <SearchPanel
               v-visible="enableFilter"
               @update:filterString="filterString = $event"
@@ -186,7 +186,7 @@
           </div>
           <div v-else-if="inputType.name == 'empty_userview'">
             <div class="nested-menu">
-              <label class="input_label">{{ caption }}</label>
+              <label class="input_label">{{ usedCaption }}</label>
               <ActionsMenu
                 :actions="[]"
               />
@@ -196,10 +196,10 @@
             </div>
           </div>
           <div v-else class="input_label__container">
-            <label class="input_label_single">{{ caption }}</label>
+            <label class="input_label_single">{{ usedCaption }}</label>
           </div>
         </b-col>
-        <b-col :cols="isInline && caption ? 8 : 12">
+        <b-col :cols="!isMultiline && usedCaption ? 8 : 12">
           <div v-if="inputType.name === 'userview'" :style="{backgroundColor:cellColor}">
             <NestedUserView
               ref="control"
@@ -332,8 +332,7 @@ type IType =
 const staging = namespace("staging");
 
 const heightExclusions = ["select", "reference"];
-const multilineTypes = ["markdown", "codeeditor", "textarea"];
-const inlineTypes = ["markdown", "codeeditor", "textarea", "reference"];
+const multilineTypes = ["markdown", "codeeditor", "textarea", "userview", "empty_userview", "static_image"];
 
 @Component({
   components: {
@@ -383,10 +382,6 @@ export default class FormControl extends Vue {
   private title = "";
   private enableFilter = false;
 
-  get isInline(): boolean {
-    return inlineTypes.includes(this.inputType.name);
-  }
-
   get isNullable() {
     return this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable;
   }
@@ -414,7 +409,15 @@ export default class FormControl extends Vue {
     return multilineTypes.includes(this.inputType.name);
   }
 
-  private get controlPanelStyle() {
+  get usedCaption(): string {
+    if (this.caption !== "") {
+      return this.caption;
+    } else {
+      return this.title;
+    }
+  }
+
+  get controlPanelStyle() {
     if (this.customHeight === null) {
       return {};
     }
