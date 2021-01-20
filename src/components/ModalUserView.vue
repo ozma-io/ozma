@@ -45,6 +45,7 @@
           @update:actions="extraActions = $event"
           @update:title="title = $event"
           @goto="$emit('goto', $event)"
+          @goto-previous="$emit('goto-previous')"
           @select="$emit('select', $event)"
         />
       </div>

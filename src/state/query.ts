@@ -196,7 +196,7 @@ interface IWindowPartialQuery {
   search: string;
 }
 
-const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: Record<string, string | (string | null)[]>): ICurrentQuery => {
+const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: Record<string, string | (string | null)[]>): ICurrentQueryHistory => {
   const args: Record<string, unknown> | null = createNew ? null : {};
   const defaultValues: Record<string, unknown> = {};
   let searchString = "";
@@ -312,9 +312,10 @@ const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: 
     },
     defaultValues,
     search: searchString,
+    previous: null,
   };
 
-  const rawWindowsArray = mapMaybe(([rawId, rawWindow]): [number, IQuery] | undefined => {
+  const rawWindowsArray = mapMaybe(([rawId, rawWindow]): [number, IQueryHistory] | undefined => {
     if (rawWindow.source === undefined) {
       return undefined;
     }
@@ -327,6 +328,7 @@ const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: 
       },
       defaultValues: rawWindow.defaultValues,
       search: rawWindow.search,
+      previous: null,
     };
     return [id, query];
   }, Object.entries(windows));
@@ -378,15 +380,22 @@ export const currentQueryLocation = (query: ICurrentQuery): Location => {
 };
 
 export interface IQueryHistory extends IQuery {
-  previous?: IQueryHistory;
+  previous: IQueryHistory | null;
 }
 
+// We first make a shallow copy with "previous" updated, and then deep clone.
+// This is because sometimes `newCurrent` is actually `IQueryHistory`, and we
+// don't want to clone the whole linked list.
 const pushHistory = (current: IQueryHistory, newCurrent: IQuery): IQueryHistory => {
-  return { ...newCurrent, previous: current };
+  return deepClone({ ...newCurrent, previous: current });
 };
 
 const replaceHistory = (current: IQueryHistory, newCurrent: IQuery): IQueryHistory => {
-  return { ...newCurrent, previous: current.previous };
+  return deepClone({ ...newCurrent, previous: current.previous });
+};
+
+const queryWithHistory = (query: IQuery): IQueryHistory => {
+  return deepClone({ ...query, previous: null });
 };
 
 export type ICurrentQueryHistory = IGenericCurrentQuery<IQueryHistory>;
@@ -444,7 +453,7 @@ const queryModule: Module<IQueryState, {}> = {
     },
     pushRoot: (state, query: IQuery) => {
       const newCurrent: ICurrentQueryHistory = {
-        root: state.current ? pushHistory(state.current.root, query) : deepClone(query),
+        root: state.current ? pushHistory(state.current.root, query) : queryWithHistory(query),
         windows: [],
         selectedWindow: null,
       };
@@ -453,7 +462,7 @@ const queryModule: Module<IQueryState, {}> = {
     },
     replaceRoot: (state, query: IQuery) => {
       const newCurrent: ICurrentQueryHistory = {
-        root: state.current ? replaceHistory(state.current.root, query) : deepClone(query),
+        root: state.current ? replaceHistory(state.current.root, query) : queryWithHistory(query),
         windows: [],
         selectedWindow: null,
       };
@@ -468,7 +477,7 @@ const queryModule: Module<IQueryState, {}> = {
       if (state.current === null) {
         throw new Error("No current query");
       }
-      state.current.windows.push({ key: getWindowKey(), query: deepClone(query) });
+      state.current.windows.push({ key: getWindowKey(), query: queryWithHistory(query) });
       state.current.selectedWindow = state.current.windows.length - 1;
       state.resetLocks += 1;
     },

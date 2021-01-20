@@ -49,6 +49,7 @@
         :view="window.query"
         :autofocus="query.selectedWindow === i"
         @close="closeWindow(i)"
+        @goto-previous="gotoPreviousWindow(i)"
         @goto="pushWindow({index: i, query: $event})"
       />
     </template>
@@ -103,6 +104,7 @@
           :default-values="query.root.defaultValues"
           scope="root"
           @goto="pushRoot"
+          @goto-previous="gotoPreviousRoot"
           @update:panelButtons="panelButtons = $event"
           @update:actions="extraActions = $event"
           @update:statusLine="statusLine = $event"
@@ -237,6 +239,20 @@ export default class TopLevelUserView extends Vue {
       return Array.from(new Set(convertToWords(value.toString())));
     }
     return [];
+  }
+
+  private gotoPreviousRoot() {
+    const previous = this.query?.root.previous;
+    if (previous) {
+      void this.pushRoot(previous);
+    }
+  }
+
+  private gotoPreviousWindow(i: number) {
+    const previous = this.query?.windows[i].query.previous;
+    if (previous) {
+      void this.pushWindow({ index: i, query: previous });
+    }
   }
 
   private makeErrorToast() {

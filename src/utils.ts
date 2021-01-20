@@ -342,6 +342,7 @@ const convertDebugArgs = (message?: any, ...optionalParams: any[]) => {
     try {
       return JSON.parse(JSON.stringify(arg));
     } catch (e) {
+      console.error("Error during convertDebugArgs", e);
       return arg;
     }
   });

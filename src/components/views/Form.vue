@@ -92,12 +92,10 @@
 <script lang="ts">
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-import { namespace } from "vuex-class";
 import { AttributesMap, IResultColumnInfo } from "ozma-api";
 
 import { tryDicts, mapMaybe } from "@/utils";
 import { AddedRowId } from "@/state/staging_changes";
-import { IQuery } from "@/state/query";
 import { UserView } from "@/components";
 import { Action } from "@/components/ActionsMenu.vue";
 import BaseUserView, { baseUserViewHandler, IBaseRowExtra, IBaseValueExtra, IBaseViewExtra } from "@/components/BaseUserView";
@@ -204,8 +202,6 @@ export const formUserViewHandler: IUserViewHandler<IFormValueExtra, IFormRowExtr
   },
 };
 
-const query = namespace("query");
-
 @UserView({
   handler: formUserViewHandler,
 })
@@ -215,8 +211,6 @@ const query = namespace("query");
   },
 })
 export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, IFormRowExtra, IFormViewExtra>>(BaseUserView) {
-  @query.State("previous") previousQuery!: IQuery | null;
-
   private deletedOne = false;
   private toBeDeletedRef: RowRef | null = null;
 
@@ -439,9 +433,9 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
   @Watch("rowPositions")
   private returnIfEmpty() {
     // Go back if we removed all entries.
-    if (this.isRoot && this.deletedOne && this.rowPositions.length === 0 && this.uv.newRowsOrder.length === 0 && this.previousQuery !== null) {
+    if (this.isRoot && this.deletedOne && this.rowPositions.length === 0 && this.uv.newRowsOrder.length === 0) {
       this.deletedOne = false; // In case we end up in the same uv.
-      this.$emit("goto", this.previousQuery);
+      this.$emit("goto-previous");
     }
   }
 

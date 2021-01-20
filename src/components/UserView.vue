@@ -61,6 +61,7 @@
         :selection-mode="selectionMode"
         :default-values="defaultValues"
         @goto="$emit('goto', $event)"
+        @goto-previous="$emit('goto-previous')"
         @select="$emit('select', $event)"
         @update:actions="extraActions = $event"
         @update:statusLine="$emit('update:statusLine', $event)"
@@ -95,7 +96,7 @@ import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout } fr
 import { funappSchema } from "@/api";
 import { equalEntityRef } from "@/values";
 import type { AddedRowId, CombinedTransactionResult, ICombinedInsertEntityResult, IStagingEventHandler, ScopeName, StagingKey } from "@/state/staging_changes";
-import { ICurrentQuery, IQuery } from "@/state/query";
+import { ICurrentQueryHistory, IQuery } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
 import { Action } from "@/components/ActionsMenu.vue";
 import UserViewCommon from "@/components/UserViewCommon.vue";
@@ -207,7 +208,7 @@ export default class UserView extends Vue {
   @staging.Mutation("removeHandler") removeStagingHandler!: (key: StagingKey) => void;
   @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { entityRef: IEntityRef; id: AddedRowId }) => Promise<void>;
   @staging.State("currentSubmit") submitPromise!: Promise<CombinedTransactionResult[]> | null;
-  @query.State("current") query!: ICurrentQuery | null;
+  @query.State("current") query!: ICurrentQueryHistory | null;
 
   @Prop({ type: Object, required: true }) args!: IUserViewArguments;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
