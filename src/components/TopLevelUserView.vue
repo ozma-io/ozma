@@ -335,20 +335,16 @@ export default class TopLevelUserView extends Vue {
 * All page without footer   (0)
 
 */
-  /deep/ .input-group {
-    padding-left: 0;
-    border-radius: 3px;
-  }
 
   .main-div {
     padding: 0;
     height: 100%;
     display: flex;
     flex-direction: column;
+    overflow: auto;
   }
 
   .userview-div {
-    padding: 39px 0 0 0; /* To compensate header's height */
     width: 100%;
     height: 100%;
     overflow: hidden;
@@ -384,9 +380,6 @@ export default class TopLevelUserView extends Vue {
     background-color: var(--MainBackgroundColor);
     width: 100%;
     padding: 5px;
-    position: fixed;
-    left: 0;
-    top: 0;
     z-index: 999;
     border-bottom: 1px solid var(--MainBorderColor);
   }
