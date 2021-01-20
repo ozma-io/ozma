@@ -557,10 +557,15 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     // We await for our parent to insert entry with position instead.
   }
 
-  private pushAddedEntry(id: AddedRowId, newValues: IAddedEntry) {
+  private pushAddedEntry(id: AddedRowId, newValues: IAddedEntry): IAddedRow {
     const eref = this.info.mainEntity!;
 
-    const values = this.info.columns.map((column, colI): ICombinedValue => {
+    // We expect it to be filled with `extra` later. This is unsafe!
+    const row = {
+      deleted: false,
+    } as IAddedRow;
+
+    row.values = this.info.columns.map((column, colI) => {
       if (column.mainField) {
         const updateInfo = {
           field: column.mainField.field,
@@ -587,7 +592,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
             info: updateInfo,
           };
           this.setOrRequestUpdatedPun(result, updateInfo.field.fieldType, newValue => {
-            this.handler.updateAddedValue(this, id, this.newRows[id], colI, newValue as IExtendedValue<ValueT>);
+            this.handler.updateAddedValue(this, id, row as IExtendedAddedRow<ValueT, RowT>, colI, newValue as IExtendedValue<ValueT>);
           });
           return result;
         }
@@ -598,11 +603,6 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
       }
     });
 
-    // We expect it to be filled with `extra` later. This is unsafe!
-    const row = {
-      values,
-      deleted: false,
-    } as IExtendedAddedRow<ValueT, RowT>;
     Vue.set(this.newRows, id, row);
     this.newRowsOrder.push(id);
     return row;
@@ -615,7 +615,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     }
 
     const newValues = this.storeChanges.changes[eref.schema][eref.name].added[id];
-    const row = this.pushAddedEntry(id, newValues);
+    const row = this.pushAddedEntry(id, newValues) as IExtendedAddedRow<ValueT, RowT>;
     Vue.set(row, "extra", this.handler.createAddedLocalRow(this, id, row, null, null));
     row.values.forEach((value, colI) => {
       Vue.set(value, "extra", this.handler.createAddedLocalValue(this, id, row, colI, value, null, null, null));
@@ -1026,7 +1026,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
             Object.assign(value, updated);
             const fieldType = field.field!.fieldType;
             this.setOrRequestUpdatedPun(value, fieldType, nextValue => {
-              this.handler.updateValue(this, rowI, this.rows![rowI], colI, nextValue as IExtendedValue<ValueT>);
+              this.handler.updateValue(this, rowI, row as IExtendedRow<ValueT, RowT>, colI, nextValue as IExtendedValue<ValueT>);
             });
           }
         }
