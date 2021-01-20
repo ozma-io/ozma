@@ -220,24 +220,6 @@ const checkCounters = async (context: ActionContext<IStagingState, {}>) => {
   }
 };
 
-const changeToParam = (fieldInfo: IColumnField, name: FieldName, change: IUpdatedValue): unknown => {
-  if (change.value === undefined) {
-    throw new Error(`Value for ${name} didn't pass validation`);
-  }
-
-  if (change.value === null) {
-    return null;
-  }
-
-  if (fieldInfo.valueType.type === "date") {
-    return (change.value as Moment).format("YYYY-MM-DD");
-  } else if (fieldInfo.valueType.type === "datetime") {
-    return (change.value as Moment).format(); // ISO 8601
-  } else {
-    return change.value;
-  }
-};
-
 const validateValue = (info: IFieldInfo, value: unknown): IUpdatedValue => {
   return {
     rawValue: value,
@@ -276,39 +258,40 @@ const entityChangesToOperations = async (context: ActionContext<IStagingState, {
         const entityInfo = await getEntityInfo(context, entity);
         const updated =
           mapMaybe(([updatedIdStr, updatedFields]) => {
-            let entries: unknown[][];
-            try {
-              entries = Object.entries(updatedFields).map(([name, change]) => [name, changeToParam(entityInfo.columnFields[name], name, change)]);
-            } catch (e) {
-              return undefined;
-            }
-            if (entries.length === 0) {
-              return undefined;
-            } else {
-              return {
-                type: "update",
-                entity,
-                id: Number(updatedIdStr),
-                entries: Object.fromEntries(entries),
-                entityInfo,
-              } as InternalTransactionOp;
-            }
+            const entries = mapMaybe(([name, change]) => {
+              if (change.value === undefined) {
+                if (!errorOnIncomplete) {
+                  return undefined;
+                } else {
+                  throw new Error(`Value for ${name} didn't pass validation`);
+                }
+              } else {
+                return [name, change.value];
+              }
+            }, Object.entries(updatedFields));
+            return {
+              type: "update",
+              entity,
+              id: Number(updatedIdStr),
+              entries: Object.fromEntries(entries),
+              entityInfo,
+            } as InternalTransactionOp;
           }, Object.entries(entityChanges.updated));
         const added =
           mapMaybe(([addedIdStr, addedFields]) => {
             if (scope && scope !== addedFields.scope) {
               return undefined;
             }
-            let entries: unknown[][];
-            try {
-              entries = Object.entries(addedFields.values).map(([name, value]) => [name, changeToParam(entityInfo.columnFields[name], name, value)]);
-            } catch (e) {
-              if (!errorOnIncomplete) {
-                return undefined;
-              } else {
-                throw e;
+            for (const [name, value] of Object.entries(addedFields.values)) {
+              if (value.value === undefined) {
+                if (!errorOnIncomplete) {
+                  return undefined;
+                } else {
+                  throw new Error(`Value for ${name} didn't pass validation`);
+                }
               }
             }
+            const entries = Object.entries(addedFields.values).map(([name, value]) => [name, value.value]);
             return {
               type: "insert",
               entity,
@@ -335,12 +318,29 @@ const entityChangesToOperations = async (context: ActionContext<IStagingState, {
   return nestedOps.flat(1);
 };
 
-// Remove internal fields.
+const serializeValue = (fieldInfo: IColumnField, value: Exclude<unknown, undefined>): unknown => {
+  if (value === null) {
+    return null;
+  }
+
+  if (fieldInfo.valueType.type === "date") {
+    return (value as Moment).format("YYYY-MM-DD");
+  } else if (fieldInfo.valueType.type === "datetime") {
+    return (value as Moment).format(); // ISO 8601
+  } else {
+    return value;
+  }
+};
+
+const serializeValues = (entityInfo: IEntity, entries: Record<FieldName, unknown>): Record<FieldName, unknown> => {
+  return Object.fromEntries(Object.entries(entries).map(([name, value]) => [name, serializeValue(entityInfo.columnFields[name], value)]));
+};
+
 const internalOpToTransactionOp = (op: InternalTransactionOp): TransactionOp => {
   if (op.type === "insert") {
-    return { type: "insert", entity: op.entity, entries: op.entries };
+    return { type: "insert", entity: op.entity, entries: serializeValues(op.entityInfo, op.entries) };
   } else if (op.type === "update") {
-    return { type: "update", entity: op.entity, id: op.id, entries: op.entries };
+    return { type: "update", entity: op.entity, id: op.id, entries: serializeValues(op.entityInfo, op.entries) };
   } else {
     return op;
   }
