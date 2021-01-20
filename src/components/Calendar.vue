@@ -46,7 +46,7 @@
         type="button"
         class="material-icons material-button close_input__icon"
         value="close"
-        @click="clearValue"
+        @click="updateValue(null)"
       >
     </div>
     <div
@@ -104,11 +104,11 @@ import { nextRender } from "@/utils";
   },
 })
 export default class Calendar extends Vue {
-  @Prop() value!: Moment | undefined | null;
-  @Prop({ type: String }) textValue!: string;
+  @Prop() value!: Moment | string | undefined | null;
   @Prop({ type: Boolean }) error!: boolean;
   @Prop({ type: Boolean }) required!: boolean;
   @Prop({ default: true, type: Boolean }) showTime!: boolean;
+  @Prop({ type: String }) format!: string | undefined;
   @Prop({ type: Number }) timeStep!: number | undefined;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   // FIXME: remove this and style parent nodes instead.
@@ -117,8 +117,32 @@ export default class Calendar extends Vue {
   private isCalendarOpen = false;
   private position = false;
 
-  private get isEmpty(): boolean {
-    return this.value === undefined || this.value === null;
+  get usedFormat() {
+    if (this.format) {
+      return this.format;
+    } else if (this.showTime) {
+      return "L LT";
+    } else {
+      return "L";
+    }
+  }
+
+  get dateValue() {
+    return moment.isMoment(this.value) ? this.value : moment.invalid();
+  }
+
+  get textValue() {
+    if (this.dateValue.isValid()) {
+      return this.dateValue.format(this.usedFormat);
+    } else if (typeof this.value === "string") {
+      return this.value;
+    } else {
+      return "";
+    }
+  }
+
+  get isEmpty(): boolean {
+    return !this.value;
   }
 
   private mounted() {
@@ -130,10 +154,23 @@ export default class Calendar extends Vue {
     }
   }
 
-  private onPressEnter(event: any) {
+  private updateValue(newValue: Moment | undefined | null) {
+    if (moment.isMoment(newValue) && newValue.isSame(this.value)) {
+      return;
+    }
+
+    if (this.value === newValue) {
+      return;
+    }
+
+    this.$emit("update:value", newValue);
+  }
+
+  private onPressEnter(event: KeyboardEvent) {
     event.preventDefault();
-    this.$emit("update:value", moment(event.target.value, "L LT"));
-    event.target.blur();
+    const target = event.target! as HTMLInputElement;
+    this.updateValue(moment(target.value, this.usedFormat));
+    target.blur();
     this.isCalendarOpen = false;
   }
 
@@ -146,10 +183,6 @@ export default class Calendar extends Vue {
       const popupRect = popup.getBoundingClientRect();
       this.position = !((bodyRect.bottom - popupRect.bottom) > 0);
     });
-  }
-
-  get dateValue() {
-    return this.value ? this.value : moment.invalid();
   }
 
   get timeForPicker() {
@@ -168,14 +201,10 @@ export default class Calendar extends Vue {
     this.isCalendarOpen = false;
   }
 
-  private clearValue() {
-    this.$emit("update:value", null);
-  }
-
   private updatePart(mutate: (m: Moment) => void) {
     const newValue = this.dateValue.isValid() ? this.dateValue.clone() : moment.utc().millisecond(0);
     mutate(newValue.local());
-    this.$emit("update:value", newValue);
+    this.updateValue(newValue);
   }
 
   private updateDate(val: Moment) {

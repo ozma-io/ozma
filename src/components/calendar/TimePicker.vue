@@ -78,7 +78,7 @@ const getRange = (min: number, max: number, step: number) => {
   return range;
 };
 
-const DateRange = (min: number, max: number, steps: number[]): ITimeRangeAll => {
+const dateRange = (min: number, max: number, steps: number[]): ITimeRangeAll => {
   const stepsTmp = steps.length > 0 ? steps : [1];
   return {
     steps: stepsTmp,
@@ -89,11 +89,11 @@ const DateRange = (min: number, max: number, steps: number[]): ITimeRangeAll => 
 };
 
 const scrollTo = (wrapper: HTMLElement, target: HTMLElement) => {
-  if ("children" in wrapper) {
+  if (wrapper.children) {
     if (wrapper.childElementCount > 6) {
       if (!target) {
         wrapper.scroll(0, 240);
-      } else {
+      } else if (target.children) {
         Object.values(target.children).forEach(child => {
           wrapper.scroll(0, (child as HTMLElement).offsetTop - wrapper.offsetTop);
         });
@@ -108,8 +108,8 @@ export default class TimePicker extends Vue {
   @Prop({ type: Number, default: 15 }) timeStep!: number;
   @Prop({ default: true, type: Boolean }) isOpen!: boolean;
 
-  private hours: ITimeRangeAll = DateRange(0, 24, [1]);
-  private mins: ITimeRangeAll = DateRange(0, 60, [this.timeStep]);
+  private hours: ITimeRangeAll = dateRange(0, 24, [1]);
+  private mins: ITimeRangeAll = dateRange(0, 60, [this.timeStep]);
 
   @Watch("isOpen")
   private selectedTime() {

@@ -62,7 +62,7 @@
           v-else-if="inputType.name === 'calendar'"
           ref="control"
           :value="currentValue"
-          :text-value="calendarValue"
+          :text-value="textValue"
           :autofocus="autofocus || iSlot.autofocus"
           :is-cell-edit="isCellEdit"
           :show-time="inputType.showTime"
@@ -223,7 +223,6 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
-import moment from "moment";
 
 import { valueToText, valueIsNull } from "@/values";
 import type { AttributesMap, ValueType } from "@/api";
@@ -404,22 +403,6 @@ export default class FormControl extends Vue {
 
   get isDisabled() {
     return this.locked || this.value.info === undefined || this.value.info.field === null;
-  }
-
-  // FIXME: move to `textValue` instead. We could add an optional object
-  //        argument to `valueToText` instead, which specifies a format
-  //        string for `date` and `datetime`. If so, we should probably do the
-  //        same for `valueFromRaw` and pass this "options" object all the way
-  //        from `update:value` event.
-  get calendarValue() {
-    if (this.type.type === "datetime" && this.currentValue) {
-      if (moment.isMoment(this.currentValue)) {
-        return this.currentValue.local().format("L LT");
-      } else {
-        return String(this.currentValue);
-      }
-    }
-    return this.textValue;
   }
 
   // Textual representation of `currentValue`.
