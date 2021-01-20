@@ -96,6 +96,10 @@ export class CurrentChanges {
     return Object.entries(this.changes).length === 0;
   }
 
+  get addedCount() {
+    return Object.values(this.scopes).reduce((prev, scope) => prev + scope.addedCount, 0);
+  }
+
   isScopeEmpty(scope: ScopeName) {
     return this.updatedCount === 0 && this.deletedCount === 0 && (this.scopes[scope]?.addedCount ?? 0) === 0;
   }
@@ -204,6 +208,7 @@ const checkAutoSave = (context: ActionContext<IStagingState, {}>) => {
   const { state } = context;
   if (state.currentSubmit === null
    && Object.keys(state.autoSaveLocks).length === 0
+   && state.current.addedCount === 0
   ) {
     startAutoSave(context);
   } else {
