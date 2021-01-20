@@ -43,17 +43,17 @@ export interface ITransientPosition {
 const maxNextAddedId = 2 ** 32;
 
 export interface IEntityChanges {
+  // Reflected everywhere.
   updated: Record<RowId, UpdatedValues>;
-  // Applied to user views with FOR INSERT INTO
-  nextAddedId: AddedRowId;
+  // Reflected (in CombinedUserView) only in the user view where they were initially added.
   added: Record<AddedRowId, IAddedEntry>;
-  // Applied to user views with FOR UPDATE OF (or FOR INSERT INTO)
+  // Reflected in user views with FOR INSERT INTO "this entity"
+  // (in future, possibly, also with FOR UPDATE OF as a relaxed variant).
   deleted: RecordSet<RowId>;
 }
 
 const emptyUpdates: IEntityChanges = {
   updated: {},
-  nextAddedId: 0,
   added: {},
   deleted: {},
 };
@@ -164,6 +164,7 @@ export type StagingKey = string;
 
 export interface IStagingState {
   current: CurrentChanges;
+  nextAddedId: AddedRowId;
   // Current submit promise
   currentSubmit: Promise<CombinedTransactionResult[]> | null;
   autoSaveTimeout: number | null;
@@ -352,6 +353,7 @@ const stagingModule: Module<IStagingState, {}> = {
   namespaced: true,
   state: {
     current: new CurrentChanges(),
+    nextAddedId: 0,
     currentSubmit: null,
     lastAutoSaveLock: 0,
     autoSaveTimeout: null,
@@ -410,9 +412,9 @@ const stagingModule: Module<IStagingState, {}> = {
         scope,
       };
 
-      const id = entityChanges.nextAddedId;
+      const id = state.nextAddedId;
+      state.nextAddedId = (state.nextAddedId + 1) % maxNextAddedId;
       Vue.set(entityChanges.added, id, newEntry);
-      entityChanges.nextAddedId = (entityChanges.nextAddedId + 1) % maxNextAddedId;
 
       let scopeInfo = state.current.scopes[scope];
       if (scopeInfo === undefined) {
@@ -537,11 +539,10 @@ const stagingModule: Module<IStagingState, {}> = {
       const { state, commit } = context;
       const entityInfo = await getEntityInfo(context, args.entityRef);
       commit("addEntry", { ...args, entityInfo });
+      // UGH. We'd like to return new id from `addEntry` instead.
+      const newId = state.nextAddedId === 0 ? maxNextAddedId : state.nextAddedId - 1;
       await checkCounters(context);
 
-      const entityChanges = state.current.changesForEntity(args.entityRef);
-      // UGH. We'd like to return new id from `addEntry` instead.
-      const newId = entityChanges.nextAddedId === 0 ? maxNextAddedId : entityChanges.nextAddedId - 1;
       Object.values(state.handlers).forEach(handler => handler.addEntry(args.entityRef, newId));
 
       return newId;
