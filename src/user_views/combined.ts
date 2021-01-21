@@ -269,7 +269,7 @@ export interface ICombinedUserView<ValueT, RowT, ViewT> extends IStagingEventHan
   readonly oldCommittedRows: Record<AddedRowId, RowPosition>;
   readonly entries: Record<SchemaName, Record<EntityName, Entries>>;
 
-  trackAddedEntry(id: AddedRowId): void;
+  trackAddedEntry(id: AddedRowId, meta?: unknown): void;
   getValueByRef(ref: ValueRef): { value: IExtendedValue<ValueT>; row: IExtendedRowCommon<ValueT, RowT> } | undefined;
   getRowByRef(ref: RowRef): IExtendedRowCommon<ValueT, RowT> | undefined;
 
@@ -296,7 +296,7 @@ export interface IUserViewHandler<ValueT, RowT, ViewT> {
     value: ICombinedValue,
     oldView: ViewT | null,
     oldRow: RowT | null,
-    oldValue: ValueT | null
+    oldValue: ValueT | null,
   ): ValueT;
   // Local data for added, but not yet committed, values.
   createAddedLocalValue(
@@ -307,7 +307,8 @@ export interface IUserViewHandler<ValueT, RowT, ViewT> {
     value: ICombinedValue,
     oldView: ViewT | null,
     oldRow: RowT | null,
-    oldValue: ValueT | null
+    oldValue: ValueT | null,
+    meta?: unknown,
   ): ValueT;
   // Local data for template values.
   createEmptyLocalValue(
@@ -317,26 +318,25 @@ export interface IUserViewHandler<ValueT, RowT, ViewT> {
     value: ICombinedValue,
     oldView: ViewT | null,
     oldRow: RowT | null,
-    oldValue: ValueT | null
+    oldValue: ValueT | null,
   ): ValueT;
   // Local data for the user view itself.
   createLocalUserView(uv: ICombinedUserView<ValueT, RowT, ViewT>, oldView: ViewT | null): ViewT;
   createLocalRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowIndex: RowPosition, row: ICombinedRow, oldView: ViewT | null, oldRow: RowT | null): RowT;
-  createAddedLocalRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IAddedRow, oldView: ViewT | null, oldRow: RowT | null): RowT;
+  createAddedLocalRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IAddedRow, oldView: ViewT | null, oldRow: RowT | null, meta?: unknown): RowT;
   createEmptyLocalRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, row: IRowCommon, oldView: ViewT | null, oldRow: RowT | null): RowT;
 
-  updateValue(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowIndex: RowPosition, row: IExtendedRow<ValueT, RowT>, columnIndex: ColumnPosition, value: IExtendedValue<ValueT>): void;
-  updateAddedValue(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IExtendedAddedRow<ValueT, RowT>, columnIndex: ColumnPosition, value: IExtendedValue<ValueT>): void;
+  updateValue(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowIndex: RowPosition, row: IExtendedRow<ValueT, RowT>, columnIndex: ColumnPosition, value: IExtendedValue<ValueT>, meta?: unknown): void;
+  updateAddedValue(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IExtendedAddedRow<ValueT, RowT>, columnIndex: ColumnPosition, value: IExtendedValue<ValueT>, meta?: unknown): void;
   updateEmptyValue(uv: ICombinedUserView<ValueT, RowT, ViewT>, columnIndex: number, value: IExtendedValue<ValueT>): void;
-  deleteRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowIndex: RowPosition, row: IExtendedRow<ValueT, RowT>): void;
-  undeleteRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowIndex: RowPosition, row: IExtendedRow<ValueT, RowT>): void;
-  deleteAddedRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IExtendedAddedRow<ValueT, RowT>): void;
+  deleteRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowIndex: RowPosition, row: IExtendedRow<ValueT, RowT>, meta?: unknown): void;
+  undeleteRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowIndex: RowPosition, row: IExtendedRow<ValueT, RowT>, meta?: unknown): void;
+  deleteAddedRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IExtendedAddedRow<ValueT, RowT>, meta?: unknown): void;
   // Can happen when committed row is deleted.
-  undeleteAddedRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IExtendedAddedRow<ValueT, RowT>): void;
-  insertAddedRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IExtendedAddedRow<ValueT, RowT>): void;
-  postInitUserView(uv: ICombinedUserView<ValueT, RowT, ViewT>,): void;
-  postInitRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowIndex: RowPosition, row: IExtendedRow<ValueT, RowT>): void;
-  postInitAddedRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IExtendedAddedRow<ValueT, RowT>): void;
+  undeleteAddedRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IExtendedAddedRow<ValueT, RowT>, meta?: unknown): void;
+  postInitUserView(uv: ICombinedUserView<ValueT, RowT, ViewT>): void;
+  postInitRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowIndex: RowPosition, row: IExtendedRow<ValueT, RowT>, meta?: unknown): void;
+  postInitAddedRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IExtendedAddedRow<ValueT, RowT>, meta?: unknown): void;
   postInitEmptyRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, row: IEmptyRow<ValueT, RowT>): void;
   // Called when commit happens; from this point, the row is considered "committed" -- it's already in the database,
   // but we don't have updated user view rows yet, just that it's there somewhere.
@@ -513,7 +513,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     return (this.store.state.staging as IStagingState).current;
   }
 
-  updateField(fieldRef: IFieldRef, id: RowId, updatedValue: IUpdatedValue) {
+  updateField(fieldRef: IFieldRef, id: RowId, updatedValue: IUpdatedValue, meta?: unknown) {
     const fieldType = this.storeEntities.getEntity(fieldRef.entity)?.columnFields[fieldRef.name].fieldType;
 
     if (this.rows === null) {
@@ -533,20 +533,20 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
         Vue.set(row.values, valueRef.column, value);
         if (fieldType) {
           this.setOrRequestUpdatedPun(value, fieldType, newValue => {
-            this.handler.updateValue(this, valueRef.position, row, valueRef.column, newValue);
+            this.handler.updateValue(this, valueRef.position, row, valueRef.column, newValue, meta);
           });
         }
-        this.handler.updateValue(this, valueRef.position, row, valueRef.column, value);
+        this.handler.updateValue(this, valueRef.position, row, valueRef.column, value, meta);
       } else if (valueRef.type === "added") {
         const row = this.newRows[valueRef.id];
         const value: IExtendedValue<ValueT> = { ...row.values[valueRef.column], ...updatedValue };
         Vue.set(row.values, valueRef.column, value);
         if (fieldType) {
           this.setOrRequestUpdatedPun(value, fieldType, newValue => {
-            this.handler.updateAddedValue(this, valueRef.id, row, valueRef.column, newValue);
+            this.handler.updateAddedValue(this, valueRef.id, row, valueRef.column, newValue, meta);
           });
         }
-        this.handler.updateAddedValue(this, valueRef.id, row, valueRef.column, value);
+        this.handler.updateAddedValue(this, valueRef.id, row, valueRef.column, value, meta);
       } else {
         throw new Error("Impossible");
       }
@@ -557,7 +557,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     // We await for our parent to insert entry with position instead.
   }
 
-  private pushAddedEntry(id: AddedRowId, newValues: IAddedEntry): IAddedRow {
+  private pushAddedEntry(id: AddedRowId, newValues: IAddedEntry, meta?: unknown): IAddedRow {
     const eref = this.info.mainEntity!;
 
     // We expect it to be filled with `extra` later. This is unsafe!
@@ -592,7 +592,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
             info: updateInfo,
           };
           this.setOrRequestUpdatedPun(result, updateInfo.field.fieldType, newValue => {
-            this.handler.updateAddedValue(this, id, row as IExtendedAddedRow<ValueT, RowT>, colI, newValue as IExtendedValue<ValueT>);
+            this.handler.updateAddedValue(this, id, row as IExtendedAddedRow<ValueT, RowT>, colI, newValue as IExtendedValue<ValueT>, meta);
           });
           return result;
         }
@@ -608,19 +608,19 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     return row;
   }
 
-  trackAddedEntry(id: AddedRowId) {
+  trackAddedEntry(id: AddedRowId, meta?: unknown) {
     const eref = this.info.mainEntity;
     if (!eref) {
       throw new Error("Impossible");
     }
 
     const newValues = this.storeChanges.changes[eref.schema][eref.name].added[id];
-    const row = this.pushAddedEntry(id, newValues) as IExtendedAddedRow<ValueT, RowT>;
-    Vue.set(row, "extra", this.handler.createAddedLocalRow(this, id, row, null, null));
+    const row = this.pushAddedEntry(id, newValues, meta) as IExtendedAddedRow<ValueT, RowT>;
+    Vue.set(row, "extra", this.handler.createAddedLocalRow(this, id, row, null, null, meta));
     row.values.forEach((value, colI) => {
-      Vue.set(value, "extra", this.handler.createAddedLocalValue(this, id, row, colI, value, null, null, null));
+      Vue.set(value, "extra", this.handler.createAddedLocalValue(this, id, row, colI, value, null, null, null, meta));
     });
-    this.handler.postInitAddedRow(this, id, row);
+    this.handler.postInitAddedRow(this, id, row, meta);
   }
 
   commitAddedEntry(entityRef: IEntityRef, id: AddedRowId, newId: RowId) {
@@ -656,7 +656,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     this.handler.commitAddedRow(this, id, newRow);
   }
 
-  setAddedField(fieldRef: IFieldRef, id: AddedRowId, updatedValue: IUpdatedValue) {
+  setAddedField(fieldRef: IFieldRef, id: AddedRowId, updatedValue: IUpdatedValue, meta?: unknown) {
     const newRow = this.newRows[id];
     if (!newRow) {
       return;
@@ -669,14 +669,14 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
       Vue.set(newRow.values, colI, value);
       if (fieldType) {
         this.setOrRequestUpdatedPun(value, fieldType, newValue => {
-          this.handler.updateAddedValue(this, id, newRow, colI, newValue);
+          this.handler.updateAddedValue(this, id, newRow, colI, newValue, meta);
         });
       }
-      this.handler.updateAddedValue(this, id, newRow, colI, value);
+      this.handler.updateAddedValue(this, id, newRow, colI, value, meta);
     });
   }
 
-  deleteEntry(entityRef: IEntityRef, id: RowId) {
+  deleteEntry(entityRef: IEntityRef, id: RowId, meta?: unknown) {
     if (!this.info.mainEntity || !equalEntityRef(this.info.mainEntity, entityRef)) {
       return;
     }
@@ -689,17 +689,17 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
       if (ref.type === "existing") {
         const row = this.rows![ref.position];
         row.deleted = true;
-        this.handler.deleteRow(this, ref.position, row);
+        this.handler.deleteRow(this, ref.position, row, meta);
       } else if (ref.type === "added") {
         // Happens when committed value got deleted.
         const row = this.newRows[ref.id];
         row.deleted = true;
-        this.handler.deleteAddedRow(this, ref.id, row);
+        this.handler.deleteAddedRow(this, ref.id, row, meta);
       }
     });
   }
 
-  resetUpdatedField(fieldRef: IFieldRef, id: RowId) {
+  resetUpdatedField(fieldRef: IFieldRef, id: RowId, meta?: unknown) {
     if (this.rows === null) {
       return;
     }
@@ -714,19 +714,19 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
         const row = this.rows![valueRef.position];
         const value = row.values[valueRef.column];
         clearUpdatedValue(value);
-        this.handler.updateValue(this, valueRef.position, row, valueRef.column, value);
+        this.handler.updateValue(this, valueRef.position, row, valueRef.column, value, meta);
       } else if (valueRef.type === "added") {
         const row = this.newRows[valueRef.id];
         const value = row.values[valueRef.column];
         clearUpdatedValue(value);
-        this.handler.updateAddedValue(this, valueRef.id, row, valueRef.column, value);
+        this.handler.updateAddedValue(this, valueRef.id, row, valueRef.column, value, meta);
       } else {
         throw new Error("Impossible");
       }
     });
   }
 
-  resetAddedEntry(entityRef: IEntityRef, id: AddedRowId) {
+  resetAddedEntry(entityRef: IEntityRef, id: AddedRowId, meta?: unknown) {
     const newRow = this.newRows[id];
     if (!newRow) {
       return;
@@ -739,10 +739,10 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     }
     this.newRowsOrder.splice(pos, 1);
     Vue.delete(this.newRows, id);
-    this.handler.deleteAddedRow(this, id, row);
+    this.handler.deleteAddedRow(this, id, row, meta);
   }
 
-  resetDeleteEntry(entityRef: IEntityRef, id: RowId) {
+  resetDeleteEntry(entityRef: IEntityRef, id: RowId, meta?: unknown) {
     if (!this.info.mainEntity || !equalEntityRef(this.info.mainEntity, entityRef)) {
       return;
     }
@@ -755,12 +755,12 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
       if (ref.type === "existing") {
         const row = this.rows![ref.position];
         row.deleted = false;
-        this.handler.undeleteRow(this, ref.position, row);
+        this.handler.undeleteRow(this, ref.position, row, meta);
       } else if (ref.type === "added") {
         // Happens when committed value got undeleted.
         const row = this.newRows[ref.id];
         row.deleted = false;
-        this.handler.undeleteAddedRow(this, ref.id, row);
+        this.handler.undeleteAddedRow(this, ref.id, row, meta);
       }
     });
   }

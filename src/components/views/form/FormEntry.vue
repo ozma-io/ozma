@@ -23,6 +23,7 @@
             <FormControl
               v-if="element.type === 'field'"
               :caption="element.caption"
+              :force-caption="element.forceCaption"
               :column-info-name="element.columnInfo.name"
               :value="row.values[element.index]"
               :attributes="row.values[element.index].extra.attributes"

@@ -24,7 +24,7 @@
       :inline="!isMultiline"
       :modal-only="modalOnly"
       :is-cell-edit="isCellEdit"
-      :label="(inputType.name === 'static_text' || inputType.name === 'static_image') ? undefined : usedCaption"
+      :label="usedCaption"
       :background-color="cellColor"
       :text-align="textAlign"
       :modal="$isMobile && (forceModalOnMobile || isMultiline)"
@@ -373,6 +373,7 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) locked!: boolean;
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments; // this.uv.args
   @Prop({ type: String, default: "" }) caption!: string;
+  @Prop({ type: Boolean, default: false }) forceCaption!: boolean;
   @Prop({ type: Boolean, default: false }) disableColor!: boolean;
   @Prop({ type: String, required: true }) scope!: string; // this.scope
   @Prop({ type: Number, required: true }) level!: number; // this.level
@@ -417,11 +418,18 @@ export default class FormControl extends Vue {
     return multilineTypes.includes(this.inputType.name);
   }
 
+  // Priority of captions:
+  // 1. "caption", if caption is forced;
+  // 2. "title", if there is a title or we show static content. The latter has "no title", because most likely
+  //    a user doesn't want to have a caption for these.
+  // 3. "caption".
   get usedCaption(): string {
-    if (this.caption !== "") {
+    if (this.forceCaption) {
       return this.caption;
-    } else {
+    } else if (this.inputType.name === "static_text" || this.inputType.name === "static_image" || this.title !== "") {
       return this.title;
+    } else {
+      return this.caption;
     }
   }
 

@@ -39,6 +39,8 @@
         :uv-args="uv.args"
         :scope="scope"
         :level="level"
+        caption=""
+        force-caption
         is-cell-edit
         autofocus
         modal-only
@@ -51,8 +53,8 @@
     <div
       ref="tableContainer"
       class="tabl"
-      @scroll="updateShowLength()"
-      @resize="updateShowLength()"
+      @scroll="updateShowLength"
+      @resize="updateShowLength"
     >
       <div
         v-if="uv.emptyRow !== null"
@@ -60,7 +62,7 @@
       >
         <div
           class="button"
-          @click="addNewRowOnPosition('top')"
+          @click="addNewRowOnPosition('top_front')"
         >
           <i class="material-icons">add</i>
           <span class="label">{{ this.$t('add_entry').toString() }}</span>
@@ -163,7 +165,7 @@
       >
         <div
           class="button"
-          @click="addNewRowOnPosition('bottom')"
+          @click="addNewRowOnPosition('bottom_back')"
         >
           <i class="material-icons">add</i>
           <span class="label">{{ this.$t('add_entry').toString() }}</span>
@@ -187,7 +189,6 @@ import { UserView } from "@/components";
 import { AddedRowId, AutoSaveLock } from "@/state/staging_changes";
 import { IAttrToQueryOpts } from "@/state/query";
 import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, baseUserViewHandler } from "@/components/BaseUserView";
-import { Action } from "@/components/ActionsMenu.vue";
 import TableRow from "@/components/views/table/TableRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
 import TableCellEdit, { ICellCoords, IEditParams } from "@/components/views/table/TableCellEdit.vue";
@@ -509,6 +510,18 @@ const getNewRow = (uv: ITableCombinedUserView, pos: NewRowRef): INewRow => {
   }
 };
 
+interface IAddedValueMeta {
+  side: "top_front" | "top_back" | "bottom_back";
+}
+
+const isAddedValueMeta = (obj: unknown): obj is IAddedValueMeta => {
+  if (typeof obj !== "object" || obj === null) {
+    return false;
+  }
+  const side = (obj as any).side;
+  return side === "top_front" || side === "top_back" || side === "bottom_back";
+};
+
 export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowExtra, ITableViewExtra> = {
   ...baseUserViewHandler,
 
@@ -646,7 +659,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     };
   },
 
-  createAddedLocalRow(uv: ITableCombinedUserView, rowId: AddedRowId, row: IAddedRow, oldView: ITableViewExtra | null, oldRow: ITableRowExtra | null) {
+  createAddedLocalRow(uv: ITableCombinedUserView, rowId: AddedRowId, row: IAddedRow, oldView: ITableViewExtra | null, oldRow: ITableRowExtra | null, meta?: unknown) {
     const baseExtra = baseUserViewHandler.createAddedLocalRow(uv, rowId, row, oldView, oldRow);
     const commonExtra = createCommonLocalRow(uv, row, oldRow);
     const newRef: NewRowRef = {
@@ -656,7 +669,16 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     if (!uv.extra.newRowTopSidePositions.find(ref => equalNewRowRef(newRef, ref))
       && !uv.extra.newRowBottomSidePositions.find(ref => equalNewRowRef(newRef, ref))
     ) {
-      uv.extra.newRowBottomSidePositions.push(newRef);
+      const side = isAddedValueMeta(meta) ? meta.side : "top_back";
+      if (side === "top_front") {
+        uv.extra.newRowTopSidePositions.splice(0, 0, newRef);
+      } else if (side === "top_back") {
+        uv.extra.newRowTopSidePositions.push(newRef);
+      } else if (side === "bottom_back") {
+        uv.extra.newRowBottomSidePositions.push(newRef);
+      } else {
+        throw new Error("Impossible");
+      }
     }
     return {
       ...commonExtra,
@@ -1012,13 +1034,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private async addNewRowOnPosition(side: "top" | "bottom"): Promise<void> {
-    const rowId = await this.addNewRow();
-    // Remove auto-inserted reference.
-    if (side === "top") {
-      const ref = this.uv.extra.newRowBottomSidePositions.pop();
-      this.uv.extra.newRowTopSidePositions.push(ref!);
-    }
+  private async addNewRowOnPosition(side: IAddedValueMeta["side"]): Promise<void> {
+    const rowId = await this.addNewRow({ side });
 
     const firstNotDisabledColumn = this.uv.newRows[rowId].values.findIndex((value, i) => {
       return value.info !== undefined && this.uv.extra.columns[i].visible;
@@ -1027,7 +1044,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (firstNotDisabledDOMColumn === -1) return;
 
     void nextRender().then(() => {
-      const sideName = side === "top" ? "newRowsTopSideRef" : "newRowsBottomSideRef";
+      const sideName = side === "bottom_back" ? "newRowsBottomSideRef" : "newRowsTopSideRef";
       const newRowsRef = this.$refs[sideName] as TableRow[] | undefined;
       if (newRowsRef === undefined) return;
       const childRef = newRowsRef?.[newRowsRef.length - 1]?.$children?.[1 + firstNotDisabledDOMColumn].$el;
@@ -1387,14 +1404,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
             `);
     }
 
-    const actions: Action[] = [];
-    if (this.uv.info.mainEntity !== null) {
-      actions.push(
-        { icon: "playlist_add", name: this.$t("add_entry").toString(), callback: () => this.addNewRowOnPosition("top") },
-      );
-    }
-
-    this.$emit("update:actions", actions);
     this.$emit("update:enableFilter", this.uv.rows !== null);
 
     this.updateRows();
@@ -1536,15 +1545,16 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return this.allRows.slice(0, totalAdded + this.showLength);
   }
 
-  private async updateCurrentValue(rawValue: any) {
+  private async updateCurrentValue(rawValue: unknown) {
     const editing = this.editing!;
     const ref = editing.ref;
     const newRef = await this.updateValue(ref, rawValue);
     if (ref.type === "new") {
       editing.ref = newRef;
       this.selectCell(newRef);
+      // FIXME: we shouldn't implement this logic purely for barcodes. Instead, react to keyboard <RET> event!
       if (this.uv.columnAttributes[newRef.column].text_type === "barcode") {
-        void this.addNewRowOnPosition("bottom");
+        void this.addNewRowOnPosition("bottom_back");
       }
     }
   }

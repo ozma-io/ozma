@@ -153,15 +153,15 @@ export class CurrentChanges {
 
 // Event handler which is notified about user view changes.
 export interface IStagingEventHandler {
-  updateField(fieldRef: IFieldRef, id: RowId, value: IUpdatedValue): void;
-  addEntry(entityRef: IEntityRef, id: AddedRowId): void;
-  setAddedField(fieldRef: IFieldRef, id: AddedRowId, value: IUpdatedValue): void;
-  deleteEntry(entityRef: IEntityRef, id: RowId): void;
-  resetUpdatedField(fieldRef: IFieldRef, id: RowId): void;
-  resetAddedEntry(entityRef: IEntityRef, id: AddedRowId): void;
-  resetDeleteEntry(entityRef: IEntityRef, id: RowId): void;
+  updateField(fieldRef: IFieldRef, id: RowId, value: IUpdatedValue, meta?: unknown): void;
+  addEntry(entityRef: IEntityRef, id: AddedRowId, meta?: unknown): void;
+  setAddedField(fieldRef: IFieldRef, id: AddedRowId, value: IUpdatedValue, meta?: unknown): void;
+  deleteEntry(entityRef: IEntityRef, id: RowId, meta?: unknown): void;
+  resetUpdatedField(fieldRef: IFieldRef, id: RowId, meta?: unknown): void;
+  resetAddedEntry(entityRef: IEntityRef, id: AddedRowId, meta?: unknown): void;
+  resetDeleteEntry(entityRef: IEntityRef, id: RowId, meta?: unknown): void;
   // Called after an added entry has been commited and assigned a database id.
-  commitAddedEntry(entityRef: IEntityRef, id: AddedRowId, newId: RowId): void;
+  commitAddedEntry(entityRef: IEntityRef, id: AddedRowId, newId: RowId, meta?: unknown): void;
 }
 
 export type StagingKey = string;
@@ -524,7 +524,15 @@ const stagingModule: Module<IStagingState, {}> = {
     },
   },
   actions: {
-    updateField: async (context, args: { fieldRef: IFieldRef; id: RowId; value: unknown }) => {
+    updateField: async (
+      context,
+      args: {
+        fieldRef: IFieldRef;
+        id: RowId;
+        value: unknown;
+        meta?: unknown;
+      },
+    ) => {
       const { state, commit } = context;
       const fieldInfo = await getFieldInfo(context, args.fieldRef);
       commit("updateField", { ...args, fieldInfo });
@@ -532,13 +540,14 @@ const stagingModule: Module<IStagingState, {}> = {
 
       // Vuex is stupid, so we need to re-fetch the value.
       const value = state.current.getOrCreateChanges(args.fieldRef.entity).updated[args.id][args.fieldRef.name];
-      Object.values(state.handlers).forEach(handler => handler.updateField(args.fieldRef, args.id, value));
+      Object.values(state.handlers).forEach(handler => handler.updateField(args.fieldRef, args.id, value, args.meta));
     },
     addEntry: async (
       context,
       args: {
         scope: ScopeName;
         entityRef: IEntityRef;
+        meta?: unknown;
       },
     ): Promise<AddedRowId> => {
       const { state, commit } = context;
@@ -548,7 +557,7 @@ const stagingModule: Module<IStagingState, {}> = {
       const newId = state.nextAddedId === 0 ? maxNextAddedId : state.nextAddedId - 1;
       await checkCounters(context);
 
-      Object.values(state.handlers).forEach(handler => handler.addEntry(args.entityRef, newId));
+      Object.values(state.handlers).forEach(handler => handler.addEntry(args.entityRef, newId, args.meta));
 
       return newId;
     },
@@ -558,6 +567,7 @@ const stagingModule: Module<IStagingState, {}> = {
         fieldRef: IFieldRef;
         id: AddedRowId;
         value: unknown;
+        meta?: unknown;
       },
     ) => {
       const { state, commit } = context;
@@ -567,15 +577,15 @@ const stagingModule: Module<IStagingState, {}> = {
 
       // Vuex is stupid, so we need to re-fetch the value.
       const value = state.current.getOrCreateChanges(args.fieldRef.entity).added[args.id].values[args.fieldRef.name];
-      Object.values(state.handlers).forEach(handler => handler.setAddedField(args.fieldRef, args.id, value));
+      Object.values(state.handlers).forEach(handler => handler.setAddedField(args.fieldRef, args.id, value, args.meta));
     },
-    deleteEntry: async (context, args: { entityRef: IEntityRef; id: RowId }) => {
+    deleteEntry: async (context, args: { entityRef: IEntityRef; id: RowId; meta?: unknown }) => {
       const { state, commit } = context;
       commit("deleteEntry", args);
       await checkCounters(context);
 
       // Vuex is stupid, so we need to re-fetch the value.
-      Object.values(state.handlers).forEach(handler => handler.deleteEntry(args.entityRef, args.id));
+      Object.values(state.handlers).forEach(handler => handler.deleteEntry(args.entityRef, args.id, args.meta));
     },
     reset: context => {
       const { state, commit } = context;
@@ -622,26 +632,50 @@ const stagingModule: Module<IStagingState, {}> = {
     // For inserts this is more difficult -- we need to explicitly tell a user view about inserted
     // entry, so that further field updates in that period are indeed reported as updates to the new
     // inserted entry.
-    resetUpdatedField: async (context, args: { fieldRef: IFieldRef; id: RowId; dontNotify?: boolean }) => {
+    resetUpdatedField: async (
+      context,
+      args: {
+        fieldRef: IFieldRef;
+        id: RowId;
+        dontNotify?: boolean;
+        meta?: unknown;
+      },
+    ) => {
       const { commit, state } = context;
       if (!args.dontNotify) {
-        Object.values(state.handlers).forEach(handler => handler.resetUpdatedField(args.fieldRef, args.id));
+        Object.values(state.handlers).forEach(handler => handler.resetUpdatedField(args.fieldRef, args.id, args.meta));
       }
       commit("resetUpdatedField", args);
       await checkCounters(context);
     },
-    resetAddedEntry: async (context, args: { entityRef: IEntityRef; id: AddedRowId; dontNotify?: boolean }) => {
+    resetAddedEntry: async (
+      context,
+      args: {
+        entityRef: IEntityRef;
+        id: AddedRowId;
+        dontNotify?: boolean;
+        meta?: unknown;
+      },
+    ) => {
       const { commit, state } = context;
       if (!args.dontNotify) {
-        Object.values(state.handlers).forEach(handler => handler.resetAddedEntry(args.entityRef, args.id));
+        Object.values(state.handlers).forEach(handler => handler.resetAddedEntry(args.entityRef, args.id, args.meta));
       }
       commit("resetAddedEntry", args);
       await checkCounters(context);
     },
-    resetDeleteEntry: async (context, args: { entityRef: IEntityRef; id: RowId; dontNotify?: boolean }) => {
+    resetDeleteEntry: async (
+      context,
+      args: {
+        entityRef: IEntityRef;
+        id: RowId;
+        dontNotify?: boolean;
+        meta?: unknown;
+      },
+    ) => {
       const { commit, state } = context;
       if (!args.dontNotify) {
-        Object.values(state.handlers).forEach(handler => handler.resetDeleteEntry(args.entityRef, args.id));
+        Object.values(state.handlers).forEach(handler => handler.resetDeleteEntry(args.entityRef, args.id, args.meta));
       }
       commit("resetDeleteEntry", args);
       await checkCounters(context);
