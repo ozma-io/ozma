@@ -93,88 +93,91 @@
           </div>
         </slot>
       </div>
-      <div
-        class="select_container__options_container"
-        :style="{
-          top: optionsContainerCoords.top ?`${optionsContainerCoords.top}px` : 'auto',
-          bottom: optionsContainerCoords.bottom ? `${optionsContainerCoords.bottom}px` : 'auto'
-        }"
-      >
-        <input
-          v-if="isOpen && isNeedFilter && isTopFilter"
-          ref="controlInput"
-          v-model="inputValue"
-          type="text"
-          :style="listValueStyle"
-          class="select_container__input"
-          :placeholder="$t('enter_value')"
-          @keydown.backspace="onBackspace"
-          @keydown.up="offsetSelectedOption(-1)"
-          @keydown.down="offsetSelectedOption(1)"
-          @keydown.enter="addSelectedOptionToValue"
-        >
-        <slot
+      <transition name="fade">
+        <div
           v-if="isOpen"
-          name="option"
-          :selectedOptions="selectedOptions"
-          :addOptionToValue="addOptionToValue"
-          :selectedOption="selectedOption"
-          :isEmpty="isEmpty"
+          class="select_container__options_container rounded border overflow-hidden"
+          :style="{
+            top: optionsContainerCoords.top ?`${optionsContainerCoords.top}px` : 'auto',
+            bottom: optionsContainerCoords.bottom ? `${optionsContainerCoords.bottom}px` : 'auto'
+          }"
         >
-          <ul
-            ref="optionsList"
-            class="select_container__options_list"
-            :style="optionsListStyle"
+          <input
+            v-if="isOpen && isNeedFilter && isTopFilter"
+            ref="controlInput"
+            v-model="inputValue"
+            type="text"
+            :style="listValueStyle"
+            class="select_container__input"
+            :placeholder="$t('enter_value')"
+            @keydown.backspace="onBackspace"
+            @keydown.up="offsetSelectedOption(-1)"
+            @keydown.down="offsetSelectedOption(1)"
+            @keydown.enter="addSelectedOptionToValue"
           >
-            <li
-              v-for="(option, index) in selectedOptions"
-              :key="option.value"
-              :class="[
-                'select_container__options_list__option',
-                'single_value',
-                {'select_container__options_list__option_active': selectedOption === index }
-              ]"
-              @click="addOptionToValue(option, $event)"
+          <slot
+            v-if="isOpen"
+            name="option"
+            :selectedOptions="selectedOptions"
+            :addOptionToValue="addOptionToValue"
+            :selectedOption="selectedOption"
+            :isEmpty="isEmpty"
+          >
+            <ul
+              ref="optionsList"
+              class="select_container__options_list"
+              :style="optionsListStyle"
             >
-              {{ option.label }}
-            </li>
-          </ul>
-          <div
-            class="select_container__options__actions"
-            @click="setIsOpen(false)"
-          >
-            <slot
-              v-if="isOpen"
-              name="actions"
-            />
-          </div>
-        </slot>
+              <li
+                v-for="(option, index) in selectedOptions"
+                :key="option.value"
+                :class="[
+                  'select_container__options_list__option',
+                  'single_value',
+                  {'select_container__options_list__option_active': selectedOption === index }
+                ]"
+                @click="addOptionToValue(option, $event)"
+              >
+                {{ option.label }}
+              </li>
+            </ul>
+            <div
+              class="select_container__options__actions"
+              @click="setIsOpen(false)"
+            >
+              <slot
+                v-if="isOpen"
+                name="actions"
+              />
+            </div>
+          </slot>
 
-        <input
-          v-if="isOpen && isNeedFilter && !isTopFilter"
-          ref="controlInput"
-          v-model="inputValue"
-          type="text"
-          :style="listValueStyle"
-          class="select_container__input"
-          :placeholder="$t('enter_value')"
-          @keydown.backspace="onBackspace"
-          @keydown.up="offsetSelectedOption(-1)"
-          @keydown.down="offsetSelectedOption(1)"
-          @keydown.enter="addSelectedOptionToValue"
-        >
-      </div>
+          <input
+            v-if="isOpen && isNeedFilter && !isTopFilter"
+            ref="controlInput"
+            v-model="inputValue"
+            type="text"
+            :style="listValueStyle"
+            class="select_container__input"
+            :placeholder="$t('enter_value')"
+            @keydown.backspace="onBackspace"
+            @keydown.up="offsetSelectedOption(-1)"
+            @keydown.down="offsetSelectedOption(1)"
+            @keydown.enter="addSelectedOptionToValue"
+          >
+        </div>
+      </transition>
       <input
         v-if="!disabled && (required || isEmpty)"
         type="button"
         class="material-icons select_container__chevron"
-        :value="isOpen ? 'arrow_drop_up' : 'arrow_drop_down'"
+        :value="isOpen ? 'expand_less' : 'expand_more'"
         @click="setIsOpen(!isOpen)"
       >
       <input
         v-if="!isEmpty && !required && !disabled"
         type="button"
-        class="material-icons material-button select_container__chevron"
+        class="material-icons material-button close-button select_container__chevron"
         value="close"
         @click.stop="removeValue()"
       >
@@ -469,13 +472,19 @@ export default class MultiSelect extends Vue {
 }
 </script>
 
+// FIXME: This styles can not be `scoped` currently because it breaks MultiSelect userview.
 <style lang="scss">
-  .select_container_hover {
-    background-color: var(--CellSelectColor);
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: all 0.1s;
+  }
+
+  .fade-enter,
+  .fade-leave-to {
+    opacity: 0;
   }
 
   .empty_message_text {
-    padding-left: 2px;
     display: inline-flex;
     width: 100%;
     cursor: pointer;
@@ -487,23 +496,26 @@ export default class MultiSelect extends Vue {
   .select_container {
     display: flex;
     flex-direction: row;
-    padding: 2px;
     position: relative;
-    box-sizing: border-box;
     width: 100%;
-    border-bottom: 1px solid var(--MainBorderColor);
+    border: 1px solid #ced4da;
+    border-radius: 0.2rem;
+    padding: 0.15rem 0.5rem;
+    padding-left: 4px;
 
-    &:hover {
-      background-color: var(--CellSelectColor);
+    &:focus-within {
+      /* TODO: Move this to one file! */
+      $input-focus-border-color: #80bdff;
+      $input-focus-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+
+      border-color: $input-focus-border-color !important;
+      box-shadow: $input-focus-shadow !important;
+      border-radius: 0.2rem;
     }
   }
 
   .input_modal__input_group .select_container {
     padding: 2px;
-  }
-
-  .form_grid_block__column > div > div > span > div > div > .select_container {
-    padding: 2px 5px;
   }
 
   .select_container__error {
@@ -539,7 +551,6 @@ export default class MultiSelect extends Vue {
     width: 100%;
     border: 0;
     padding: 5px;
-    box-sizing: border-box;
     color: var(--MainTextColor);
     background-color: var(--MainBackgroundColor);
   }
@@ -557,16 +568,25 @@ export default class MultiSelect extends Vue {
     padding: 0;
     cursor: pointer;
     z-index: 10;
-    color: var(--MainBorderColor);
+    color: var(--MainTextColorLight);
+
+    &.close-button {
+      opacity: 0.3;
+
+      .select_container:hover &,
+      .select_container:focus-within & {
+        opacity: 1;
+      }
+    }
   }
 
   .select_container__options_container {
     z-index: 1001;
     list-style: none;
-    width: 100%;
+    width: calc(100% + 10px);
     position: absolute;
     top: calc(100% + 2px);
-    left: 0;
+    left: -5px;
     margin: 0;
     background: white;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
@@ -576,12 +596,10 @@ export default class MultiSelect extends Vue {
   .select_container__options_list {
     padding: 2px;
     margin: 0;
-    box-sizing: border-box;
     max-height: 250px;
     overflow-x: hidden;
     transition: all ease-in 0.3s;
     border-bottom: 1px solid var(--MainBorderColor);
-    background-color: var(--CellSelectColor);
     border-top: 1px solid #ccc;
   }
 
@@ -626,9 +644,6 @@ export default class MultiSelect extends Vue {
     border-radius: 5px;
     padding: 2px 5px;
     line-height: 1rem;
-
-    /* background-color: white; */
-    box-sizing: border-box;
   }
 
   .single_value {

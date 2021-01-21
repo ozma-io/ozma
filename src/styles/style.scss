@@ -1,8 +1,10 @@
-$enable-rounded: false;
+$enable-rounded: true;
 $enable-shadows: false;
 $enable-gradients: false;
 $font-family-sans-serif: var(--Font);
 $font-family-serif: var(--Font);
+$input-color: var(--MainTextColor);
+$input-placeholder-color: var(--MainTextColorLight);
 
 @import '../../node_modules/bootstrap/scss/bootstrap';
 @import 'mixins.scss';
@@ -66,104 +68,6 @@ body {
   }
 }
 
-/*
- *убираем красивости у кнопок селектов ссылок и прочего (без important придется прописывать этоже буквально для каждой кнопки)
- */
-button {
-  border: 0 !important;
-}
-
-input:focus {
-  outline: none;
-}
-
-/* Фильтр в таблице */
-div {
-  div {
-    div {
-      /* фильтры для маленьких экранов */
-      @media screen and (max-device-width: 650px) {
-        form {
-          &.find {
-            input {
-              margin-top: 0 !important;
-              margin-bottom: 1px !important;
-            }
-          }
-        }
-      }
-
-      form {
-        border-top: 1px solid white;
-        border-bottom: 1px solid white;
-
-        @media screen and (max-device-width: 650px) {
-          border-top: 0;
-          border-bottom: 0;
-        }
-
-        /* Внутренние части текущего фильтра */
-        &.find {
-          top: 0;
-          display: inline-flex;
-          flex: 1;
-          width: auto;
-          border: 0;
-
-          div {
-            background-color: var(--MainBackgroundColor);
-            width: 100% !important;
-            padding-left: 5px;
-
-            div {
-              margin: 0;
-
-              span {
-                border: 0;
-                padding-left: 0 !important;
-                line-height: normal !important;
-                position: absolute !important;
-                display: inline-table;
-                right: 10px;
-                top: 1px;
-                bottom: 0;
-                height: 1.5em;
-                margin: auto;
-                cursor: pointer;
-                z-index: 4 !important;
-              }
-            }
-
-            input {
-              border-color: var(--MainBorderColor);
-              border-radius: 3px;
-
-              &.find_in {
-                height: calc(1.5em + 4px);
-                padding-left: 7px;
-                color: var(--MainTextColor);
-              }
-
-              &.find_in + div {
-                color: var(--MainTextColor);
-              }
-
-              &.find_in::placeholder {
-                color: var(--MainTextColor);
-              }
-            }
-
-            input:focus {
-              border-color: var(--MainBorderColor);
-              box-shadow: 0 0 0 white;
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
 // Works like `no-gutters` for Bootstrap's `.row`.
 .sm-gutters {
   margin-left: -10px;
@@ -173,6 +77,15 @@ div {
     padding-right: 10px;
     padding-left: 10px;
   }
+}
+
+button:not(.btn) {
+  border: none;
+}
+
+.input-field,
+.textarea-field {
+  font-size: var(--FontSize) !important;
 }
 
 /* Source: https://google.github.io/material-design-icons/ */
@@ -187,8 +100,78 @@ div {
 .material-icons.md-light { color: rgba(255, 255, 255, 1); }
 .material-icons.md-light.md-inactive { color: rgba(255, 255, 255, 0.3); }
 
-.material-icons.material-button {
-  @include material-button;
-
+.material-icons {
   user-select: none;
+
+  &.material-button {
+    @include material-button;
+  }
+}
+
+.with-material-icon {
+  &.btn,
+  &.input-group-text {
+    padding: 0 4px !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+}
+
+input.disabled {
+  cursor: not-allowed;
+}
+
+input.with-clear-content-button {
+  border-right-width: 0;
+}
+
+.btn.clear-content-button {
+  border-left-width: 0;
+
+  /* TODO: remove hardcoded color. */
+  border-color: rgb(206, 212, 218);
+  opacity: 1;
+
+  .material-icons {
+    transition: opacity 0.1s;
+  }
+}
+
+.input-group {
+  .clear-content-button.disabled .material-icons {
+    opacity: 0;
+  }
+
+  .clear-content-button:not(.disabled) .material-icons {
+    opacity: 0.3;
+  }
+
+  &:hover,
+  &:focus-within {
+    .clear-content-button:not(.disabled) .material-icons {
+      opacity: 1;
+    }
+  }
+}
+
+$input-focus-border-color: #80bdff;
+$input-focus-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+
+.form-control:focus {
+  box-shadow: $input-focus-shadow;
+}
+
+.input-group.focus-entire:focus-within {
+  border-color: $input-focus-border-color !important;
+  box-shadow: $input-focus-shadow !important;
+  border-radius: 0.2rem;
+
+  .form-control,
+  .input-group-prepend .btn,
+  .input-group-prepend .input-group-text,
+  .input-group-append .btn,
+  .input-group-append .input-group-text {
+    border-color: $input-focus-border-color !important;
+    box-shadow: none;
+  }
 }

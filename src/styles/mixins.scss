@@ -1,6 +1,7 @@
 @mixin material-button {
   transition: background 0.1s;
   border-radius: 4px;
+  cursor: pointer;
 
   &:hover {
     background-color: #efefef;

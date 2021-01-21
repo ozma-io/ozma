@@ -374,6 +374,7 @@ export default class TopLevelUserView extends Vue {
   }
 
   .head-menu {
+    height: 44px;
     display: flex;
     align-items: center;
     white-space: nowrap;
@@ -408,6 +409,7 @@ export default class TopLevelUserView extends Vue {
 
   .head-menu_title {
     margin: 1px 2px 0;
+    margin-right: auto;
     font-weight: 600;
     font-size: 1.25em;
     color: var(--MainTextColor);

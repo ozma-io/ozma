@@ -1597,6 +1597,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     margin: 0;
     position: relative;
     height: 100%;
+    background: var(--MainBackgroundColor);
   }
 
   .data-col {

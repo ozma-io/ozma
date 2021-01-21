@@ -33,6 +33,7 @@ export default class CodeEditor extends Vue {
       readOnly: this.readOnly,
       automaticLayout: true,
       lineNumbersMinChars: 3,
+      scrollbar: { useShadows: false },
       fontSize,
     };
   }
