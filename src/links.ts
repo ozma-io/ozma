@@ -77,11 +77,9 @@ export const attrToActionLink = (linkedAttr: Record<string, unknown>, opts?: IAt
 };
 
 export const attrToCompositeLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLinkOpts): ICompositeLink | null => {
-
   const compositeLink: ICompositeLink = {
     links: {},
   };
-
 
   const linksObj = linkedAttr.links as Record<string, unknown>;
   for (const schema in linksObj) {
@@ -103,8 +101,6 @@ export const attrToCompositeLink = (linkedAttr: Record<string, unknown>, opts?: 
 
   return compositeLink;
 };
-
-
 
 export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | null => {
   if (typeof linkedAttr !== "object" || linkedAttr === null) {
@@ -222,6 +218,7 @@ export const linkHandler = (store: Store<any>, goto: ((query: IQuery) => void), 
       }
     };
   } else if ("links" in link) {
+    // eslint-disable-next-line @typescript-eslint/require-await
     handler = async () => {
       EventBus.$emit("open-qrcode-scanner", link);
     };

@@ -97,6 +97,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
 
   mounted() {
     // Listen to the event.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     EventBus.$on("open-qrcode-scanner", this.qrCodeCallback);
   }
 
