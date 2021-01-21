@@ -60,7 +60,7 @@ import { IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
 
 import { IEntityRef } from "@/api";
 import SelectUserView from "@/components/SelectUserView.vue";
-import { mapMaybe, saveToFile, tryDicts } from "@/utils";
+import { mapMaybe, saveToFile, tryDicts, EventBus } from "@/utils";
 import { Action } from "@/components/ActionsMenu.vue";
 import { IPanelButton } from "@/components/ButtonsPanel.vue";
 import { attrToLink, Link } from "@/links";
@@ -94,6 +94,11 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   openQRCodeScanner = false;
   openBarCodeScanner = false;
   currentQRCodeLink: Link | null = null;
+
+  mounted() {
+    // Listen to the event.
+    EventBus.$on("open-qrcode-scanner", this.qrCodeCallback);
+  }
 
   private exportToCsv() {
     let data = "";

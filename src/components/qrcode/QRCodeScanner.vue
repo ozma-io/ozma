@@ -126,7 +126,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Watch("openScanner")
   private toggleOpenScanner() {
     this.modalShow = !this.modalShow;
-    this.currentContent = null;
+    this.currentContent = null; // For test: this.currentContent = {"name":"Ingredients","schema":"user","id":436};
     this.result = [];
     this.entry = null;
     this.entries = {};
@@ -218,28 +218,30 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     if (this.currentContent !== null) {
       if (this.entry !== null) {
         if (this.link) {
-          let ref = null;
+          let link: Link | null = null;
 
-          if ("query" in this.link && this.link.query.args.args) {
-            ref = "ref" in this.link.query.args.source ? this.link.query.args.source.ref : null;
-            this.link.query.args.args.id = this.currentContent.id;
+          if ("links" in this.link) {
+            link = this.link.links[this.currentContent.schema][this.currentContent.name];
           }
 
-          if ("action" in this.link) {
-            ref = this.link.action;
-            this.link.args.id = this.currentContent.id;
-          }
-
-          if (ref === null || ref.name !== this.currentContent.name || ref.schema !== this.currentContent.schema) {
+          if (!link) {
             this.error = this.$t("error_qrcode_is_inappropriate").toString();
             return;
+          }
+
+          if ("query" in link && link.query.args.args) {
+            link.query.args.args.id = this.currentContent.id;
+          }
+
+          if ("action" in link) {
+            link.args.id = this.currentContent.id;
           }
 
           const emit = (target: IQuery) => {
             void this.pushRoot(target);
           };
 
-          const { handler, href } = linkHandler(this.$store, emit, this.link);
+          const { handler, href } = linkHandler(this.$store, emit, link);
           if (handler) {
             void handler();
           }

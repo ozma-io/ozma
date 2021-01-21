@@ -1,6 +1,6 @@
 import { queryLocation, IQueryState, IQuery, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery, selfIdArgs, refIdArgs } from "@/state/query";
 import { IActionRef } from "ozma-api/src";
-import { gotoHref } from "@/utils";
+import { EventBus, gotoHref } from "@/utils";
 import { saveAndRunAction } from "@/state/actions";
 import { Store } from "vuex";
 import { router } from "@/modules";
@@ -26,7 +26,11 @@ export interface IActionLink {
   args: Record<string, unknown>;
 }
 
-export type Link = IHrefLink | IQueryLink | IActionLink;
+export interface ICompositeLink {
+  links: Record<string, Record<string, Link>>;
+}
+
+export type Link = IHrefLink | IQueryLink | IActionLink | ICompositeLink;
 
 export interface IAttrToLinkOpts extends IAttrToQueryOpts {
   defaultTarget?: TargetType;
@@ -72,6 +76,36 @@ export const attrToActionLink = (linkedAttr: Record<string, unknown>, opts?: IAt
   return { action, args };
 };
 
+export const attrToCompositeLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLinkOpts): ICompositeLink | null => {
+
+  const compositeLink: ICompositeLink = {
+    links: {},
+  };
+
+
+  const linksObj = linkedAttr.links as Record<string, unknown>;
+  for (const schema in linksObj) {
+    if (linksObj[schema]) {
+      const actionObj = linksObj[schema] as Record<string, unknown>;
+      for (const name in actionObj) {
+        if (actionObj[name]) {
+          const link = attrToLink(actionObj[name], opts);
+          if (link !== null) {
+            if (!compositeLink.links[schema]) {
+              compositeLink.links[schema] = {};
+            }
+            compositeLink.links[schema][name] = link;
+          }
+        }
+      }
+    }
+  }
+
+  return compositeLink;
+};
+
+
+
 export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | null => {
   if (typeof linkedAttr !== "object" || linkedAttr === null) {
     return null;
@@ -91,6 +125,11 @@ export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | 
   const action = attrToActionLink(linkedAttrObj, opts);
   if (action !== null) {
     return action;
+  }
+
+  const composite = attrToCompositeLink(linkedAttrObj, opts);
+  if (composite !== null) {
+    return composite;
   }
 
   return null;
@@ -181,6 +220,10 @@ export const linkHandler = (store: Store<any>, goto: ((query: IQuery) => void), 
       if (retLink !== null) {
         await linkHandler(store, goto, retLink).handler();
       }
+    };
+  } else if ("links" in link) {
+    handler = async () => {
+      EventBus.$emit("open-qrcode-scanner", link);
     };
   } else {
     throw new Error("Impossible");

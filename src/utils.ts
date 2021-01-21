@@ -2,6 +2,9 @@ import moment from "moment";
 import Vue, { RenderContext } from "vue";
 import sanitizeHtml from "sanitize-html";
 
+// https://www.digitalocean.com/community/tutorials/vuejs-global-event-bus
+export const EventBus = new Vue();
+
 export type Result<A> = A | Error;
 
 export type RecordSet<K extends string | number | symbol> = Record<K, null>;
