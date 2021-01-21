@@ -339,6 +339,10 @@ export class ObjectSet<K> {
 
 const convertDebugArgs = (message?: any, ...optionalParams: any[]) => {
   return [message, ...optionalParams].map(arg => {
+    if (arg === undefined) {
+      return arg;
+    }
+
     try {
       return JSON.parse(JSON.stringify(arg));
     } catch (e) {

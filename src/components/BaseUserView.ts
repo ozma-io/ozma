@@ -156,9 +156,9 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
   @staging.State("currentSubmit") currentSubmit!: Promise<CombinedTransactionResult[]> | null;
   @staging.Action("deleteEntry") deleteEntry!: (args: { entityRef: IEntityRef; id: RowId }) => Promise<void>;
   @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { entityRef: IEntityRef; id: AddedRowId }) => Promise<void>;
-  @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName; entityRef: IEntityRef }) => Promise<AddedRowId>;
-  @staging.Action("setAddedField") setAddedField!: (args: { fieldRef: IFieldRef; id: AddedRowId; value: any }) => Promise<void>;
-  @staging.Action("updateField") updateField!: (args: { fieldRef: IFieldRef; id: RowId; value: any }) => Promise<void>;
+  @staging.Action("addEntry") addEntry!: (args: { scope: ScopeName; entityRef: IEntityRef; meta?: unknown }) => Promise<AddedRowId>;
+  @staging.Action("setAddedField") setAddedField!: (args: { fieldRef: IFieldRef; id: AddedRowId; value: unknown }) => Promise<void>;
+  @staging.Action("updateField") updateField!: (args: { fieldRef: IFieldRef; id: RowId; value: unknown }) => Promise<void>;
   @errors.Mutation("setError") setError!: (args: { key: ErrorKey; error: string }) => void;
   @errors.Mutation("resetErrors") resetErrors!: (key: ErrorKey) => void;
 
@@ -285,7 +285,7 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
     return attrToLink(this.uv.attributes["create_link"], opts);
   }
 
-  async addNewRow(): Promise<number> {
+  async addNewRow(meta?: unknown): Promise<number> {
     const entity = this.uv.info.mainEntity;
     if (!entity) {
       throw new Error("View doesn't have a main entity");
@@ -295,6 +295,7 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
     const id = await this.addEntry({
       scope: this.scope,
       entityRef: entity,
+      meta,
     });
     await Promise.all(this.uv.emptyRow!.values.map(async (cell, colI) => {
       const columnInfo = this.uv.info.columns[colI];
@@ -310,11 +311,11 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
         });
       }
     }));
-    this.uv.trackAddedEntry(id);
+    this.uv.trackAddedEntry(id, meta);
     return id;
   }
 
-  async updateValue(ref: ValueRef, rawValue: any): Promise<ValueRef> {
+  async updateValue(ref: ValueRef, rawValue: unknown): Promise<ValueRef> {
     const value = this.uv.getValueByRef(ref)!;
     if (ref.type === "added") {
       // FIXME: throws error `updateInfo is undefined` when user tries to edit disabled cell.
