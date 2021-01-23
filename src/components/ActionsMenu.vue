@@ -418,7 +418,7 @@ export default class ActionsMenu extends Vue {
     border: none;
     text-align: left;
     padding: 0;
-    margin-right: 10px;
+    margin-right: 5px;
     vertical-align: bottom;
   }
 

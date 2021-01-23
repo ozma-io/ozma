@@ -74,7 +74,17 @@
           :actions="actions"
           @goto="pushRoot"
         />
-        <span v-if="!!title" class="head-menu_title">{{ title }}</span>
+        <!-- TODO: Make better tooltips for long userview titles.
+             (Without `tabindex` and `:focus { outline: none; }`) -->
+        <span
+          v-if="!!title"
+          v-b-tooltip.click.blur.bottom.noninteractive
+          class="head-menu_title"
+          tabindex="0"
+          :title="title"
+        >
+          {{ title }}
+        </span>
         <ButtonsPanel :buttons="panelButtons">
           <template #search-panel>
             <SearchPanel
@@ -326,7 +336,7 @@ export default class TopLevelUserView extends Vue {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   /* Current Z layout:
 
 * Count off all entries     (2000)
@@ -398,13 +408,9 @@ export default class TopLevelUserView extends Vue {
     border: none;
     text-decoration: none;
     padding: 0;
-    margin-right: 10px;
+    margin-right: 5px;
     position: relative;
     z-index: 1000;
-  }
-
-  .head-menu_back-button:focus {
-    outline: none;
   }
 
   .head-menu_title {
@@ -413,6 +419,12 @@ export default class TopLevelUserView extends Vue {
     font-weight: 600;
     font-size: 1.25em;
     color: var(--MainTextColor);
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:focus {
+      outline: none;
+    }
   }
 
   .fix-bot {

@@ -156,10 +156,6 @@ export default class FormEntry extends Vue {
         left: 0;
         margin-top: 10px;
       }
-
-      .form-entry {
-        display: grid;
-      }
     }
   }
 

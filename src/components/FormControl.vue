@@ -177,7 +177,14 @@
             v-if="actions.length > 0"
             class="nested-menu"
           >
-            <label class="input_label">{{ usedCaption }}</label>
+            <label
+              v-b-tooltip.click.blur.bottom.noninteractive
+              class="input_label"
+              tabindex="0"
+              :title="usedCaption"
+            >
+              {{ usedCaption + usedCaption + usedCaption }}
+            </label>
             <SearchPanel
               v-visible="enableFilter"
               @update:filterString="filterString = $event"
@@ -194,7 +201,14 @@
           </div>
           <div v-else-if="inputType.name == 'empty_userview'">
             <div class="nested-menu">
-              <label class="input_label">{{ usedCaption }}</label>
+              <label
+                v-b-tooltip.click.blur.bottom.noninteractive
+                class="input_label"
+                tabindex="0"
+                :title="usedCaption"
+              >
+                {{ usedCaption }}
+              </label>
               <ActionsMenu
                 :actions="[]"
               />
@@ -762,6 +776,10 @@ export default class FormControl extends Vue {
 
     .input_label {
       margin-right: auto;
+
+      &:focus {
+        outline: none;
+      }
     }
 
     > .actions-menu {
@@ -913,10 +931,6 @@ export default class FormControl extends Vue {
         position: sticky;
         left: 3px;
         width: max-content;
-      }
-
-      .input_label {
-        max-width: 150px;
       }
     }
   }
