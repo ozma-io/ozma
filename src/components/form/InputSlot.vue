@@ -2,11 +2,14 @@
     {
     "en": {
         "ok": "OK",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "required_field": "Required field"
+
         },
     "ru": {
         "ok": "ОК",
-        "cancel": "Отмена"
+        "cancel": "Отмена",
+        "required_field": "Обязятельное поле"
         }
     }
 </i18n>
@@ -71,6 +74,12 @@
           ]"
           :style="{ backgroundColor: backgroundColor ? backgroundColor : 'var(--MainBackgroundColor)' }"
         >
+          <div
+            v-if="required"
+            v-b-tooltip.hover.bottom.noninteractive
+            class="required-indicator"
+            :title="$t('required_field')"
+          />
           <slot
             :onFocus="onNonmodalFocus"
           />
@@ -178,8 +187,7 @@ export default class InputSlot extends Vue {
     border-radius: 0.2rem;
 
     &.required {
-      &::before {
-        content: "";
+      > .required-indicator {
         height: 1rem;
         width: 1rem;
         background-color: rgba(0, 0, 0, 0.05);
@@ -192,7 +200,7 @@ export default class InputSlot extends Vue {
       }
 
       &:not(.inline) {
-        &::before {
+        > .required-indicator {
           left: unset;
           top: -1.5rem;
           right: 0.5rem;
@@ -200,7 +208,7 @@ export default class InputSlot extends Vue {
       }
 
       &.empty {
-        &::before {
+        > .required-indicator {
           background-color: rgba(255, 120, 100, 0.9);
         }
       }
