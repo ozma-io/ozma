@@ -458,7 +458,9 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     padding: 0 0 50px 0 !important;
     overflow-y: auto;
     overflow-x: hidden;
-    background-color: var(--MainBackgroundColor);
+
+    /* background-color: var(--MainBackgroundColor); */
+    background-color: #f8f9fa;
   }
 
   @media screen and (max-aspect-ratio: 13/9) {

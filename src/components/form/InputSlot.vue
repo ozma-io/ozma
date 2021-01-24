@@ -2,11 +2,14 @@
     {
     "en": {
         "ok": "OK",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "required_field": "Required field"
+
         },
     "ru": {
         "ok": "ОК",
-        "cancel": "Отмена"
+        "cancel": "Отмена",
+        "required_field": "Обязятельное поле"
         }
     }
 </i18n>
@@ -50,7 +53,7 @@
         <div class="input_label__container">
           <label
             v-if="label"
-            :class="['input_label', { 'input_label__focused': focused }]"
+            class="input_label"
             :for="inputName"
             :title="label"
           >{{ label }}</label>
@@ -61,8 +64,22 @@
         :class="['input_container', `text_align_${textAlign}`, {'input_container_cell-edit': isCellEdit}]"
       >
         <div
-          :style="{ backgroundColor }"
+          :class="[
+            'input-slot',
+            {
+              'required': required,
+              'empty': empty,
+              'inline': !label || inline,
+            },
+          ]"
+          :style="{ backgroundColor: backgroundColor ? backgroundColor : 'var(--MainBackgroundColor)' }"
         >
+          <div
+            v-if="required"
+            v-b-tooltip.hover.bottom.noninteractive
+            class="required-indicator"
+            :title="$t('required_field')"
+          />
           <slot
             :onFocus="onNonmodalFocus"
           />
@@ -88,6 +105,8 @@ export default class InputSlot extends Vue {
   @Prop({ type: String, default: "left" }) textAlign!: string;
   @Prop({ type: Boolean, default: false }) modal!: boolean;
   @Prop({ type: Boolean, default: false }) modalOnly!: boolean;
+  @Prop({ type: Boolean, default: false }) required!: boolean;
+  @Prop({ type: Boolean, required: true }) empty!: boolean;
 
   private focused = false;
   private isModalOpen = false;
@@ -154,16 +173,6 @@ export default class InputSlot extends Vue {
     color: var(--MainTextColorLight);
   }
 
-  .input_label__focused::after {
-    content: "";
-    position: absolute;
-    width: 100%;
-    bottom: 1px;
-    z-index: -1;
-    transform: scale(0.9);
-    box-shadow: 0 0 8px 2px #000;
-  }
-
   .input_container_cell-edit {
     padding: 0;
   }
@@ -171,6 +180,39 @@ export default class InputSlot extends Vue {
   .input_modal_label {
     color: var(--MainTextColor);
     margin: 5px;
+  }
+
+  .input-slot {
+    position: relative;
+    border-radius: 0.2rem;
+
+    &.required {
+      > .required-indicator {
+        height: 1rem;
+        width: 1rem;
+        background-color: rgba(0, 0, 0, 0.05);
+        border-radius: 50%;
+        position: absolute;
+        left: -1.5rem;
+        top: 0.5rem;
+        z-index: 10;
+        transition: background-color 0.1s;
+      }
+
+      &:not(.inline) {
+        > .required-indicator {
+          left: unset;
+          top: -1.5rem;
+          right: 0.5rem;
+        }
+      }
+
+      &.empty {
+        > .required-indicator {
+          background-color: rgba(255, 120, 100, 0.9);
+        }
+      }
+    }
   }
 
   .input-slot_cell-edit {

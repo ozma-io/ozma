@@ -30,116 +30,118 @@
       class="black-block"
     >
       <button
-        class="black-block_button "
+        class="black-block_button"
         @click="showActions = false"
       />
     </div>
-    <div
-      v-show="showActions"
-      :class="['div-with-actions', menuAlign]"
-    >
-      <template v-if="sortedActions.length == 0">
-        <label class="div-with-actions_button empty">
-          {{ $t('empty') }}
-        </label>
-      </template>
-
-      <ul
-        v-else
-        class="actions"
-        @click="showActions=false"
+    <transition name="fade">
+      <div
+        v-show="showActions"
+        :class="['div-with-actions', menuAlign]"
       >
-        <template v-for="(action, i) in sortedActions">
-          <hr
-            v-if="action === null"
-            :key="i"
-          >
-          <!-- Passing v-on:click to v-bind doesn't seem to work, hence this ugly solution -->
-          <router-link
-            v-else-if="'location' in action"
-            :key="action.name"
-            :to="action.location"
-          >
-            <li>
-              <div>
-                <i class="material-icons">{{ action.icon || "arrow_right" }}</i>
-                <span>{{ action.name }}</span>
-              </div>
-            </li>
-          </router-link>
-
-          <FunLink
-            v-else-if="'link' in action"
-            :key="action.name"
-            :link="action.link"
-            @goto="$emit('goto', $event)"
-          >
-            <li>
-              <div>
-                <i class="material-icons">{{ action.icon || "arrow_right" }}</i>
-                <span>{{ action.name }}</span>
-              </div>
-            </li>
-          </FunLink>
-
-          <span
-            v-else-if="'callback' in action"
-            :key="action.name"
-            @click="action.callback()"
-          >
-            <li>
-              <div>
-                <i class="material-icons">{{ action.icon || "arrow_right" }}</i>
-                <span>{{ action.name }}</span>
-              </div>
-            </li>
-          </span>
-
-          <label
-            v-else-if="'uploadFile' in action"
-            :key="action.name"
-          >
-            <li>
-              <div>
-                <i class="material-icons">{{ action.icon || "arrow_right" }}</i>
-                <span>{{ action.name }}</span>
-                <input
-                  type="file"
-                  @change="uploadFile($event.target, action.uploadFile)"
-                >
-              </div>
-            </li>
+        <template v-if="sortedActions.length == 0">
+          <label class="div-with-actions_button empty">
+            {{ $t('empty') }}
           </label>
         </template>
-      </ul>
 
-      <ul
-        class="buttons"
-        @click="showActions=false"
-      >
-        <li v-for="(button, i) in buttons" :key="i">
-          <div>
-            <i class="material-icons material-button">{{ button.icon || "arrow_right" }}</i>
-            <span>{{ button.name }}</span>
-          </div>
-          <ul class="actions">
+        <ul
+          v-else
+          class="actions"
+          @click="showActions = false"
+        >
+          <template v-for="(action, i) in sortedActions">
+            <hr
+              v-if="action === null"
+              :key="i"
+            >
+            <!-- Passing v-on:click to v-bind doesn't seem to work, hence this ugly solution -->
+            <router-link
+              v-else-if="'location' in action"
+              :key="action.name"
+              :to="action.location"
+            >
+              <li>
+                <div>
+                  <i class="material-icons">{{ action.icon || "arrow_right" }}</i>
+                  <span>{{ action.name }}</span>
+                </div>
+              </li>
+            </router-link>
+
             <FunLink
-              v-for="(action, j) in button.actions"
-              :key="j"
+              v-else-if="'link' in action"
+              :key="action.name"
               :link="action.link"
               @goto="$emit('goto', $event)"
             >
-              <li v-if="'link' in action" :key="action.name">
+              <li>
                 <div>
-                  <i class="material-icons material-button">{{ action.icon || "arrow_right" }}</i>
+                  <i class="material-icons">{{ action.icon || "arrow_right" }}</i>
                   <span>{{ action.name }}</span>
                 </div>
               </li>
             </FunLink>
-          </ul>
-        </li>
-      </ul>
-    </div>
+
+            <span
+              v-else-if="'callback' in action"
+              :key="action.name"
+              @click="action.callback()"
+            >
+              <li>
+                <div>
+                  <i class="material-icons">{{ action.icon || "arrow_right" }}</i>
+                  <span>{{ action.name }}</span>
+                </div>
+              </li>
+            </span>
+
+            <label
+              v-else-if="'uploadFile' in action"
+              :key="action.name"
+            >
+              <li>
+                <div>
+                  <i class="material-icons">{{ action.icon || "arrow_right" }}</i>
+                  <span>{{ action.name }}</span>
+                  <input
+                    type="file"
+                    @change="uploadFile($event.target, action.uploadFile)"
+                  >
+                </div>
+              </li>
+            </label>
+          </template>
+        </ul>
+
+        <ul
+          class="buttons"
+          @click="showActions = false"
+        >
+          <li v-for="(button, i) in buttons" :key="i">
+            <div>
+              <i class="material-icons material-button">{{ button.icon || "arrow_right" }}</i>
+              <span>{{ button.name }}</span>
+            </div>
+            <ul class="actions">
+              <FunLink
+                v-for="(action, j) in button.actions"
+                :key="j"
+                :link="action.link"
+                @goto="$emit('goto', $event)"
+              >
+                <li v-if="'link' in action" :key="action.name">
+                  <div>
+                    <i class="material-icons material-button">{{ action.icon || "arrow_right" }}</i>
+                    <span>{{ action.name }}</span>
+                  </div>
+                </li>
+              </FunLink>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -317,6 +319,7 @@ export default class ActionsMenu extends Vue {
   }
 
   .actions-menu {
+    position: relative;
     height: 24px;
     margin: 0;
     z-index: 995;
@@ -329,7 +332,6 @@ export default class ActionsMenu extends Vue {
   }
 
   .actions-menu_active {
-    position: relative;
     z-index: 1300;
   }
 
@@ -357,7 +359,7 @@ export default class ActionsMenu extends Vue {
     margin-top: 0;
     top: calc(100% + 5px);
     box-shadow: 0 5px 5px rgba(0, 0, 0, 0.3);
-    border-radius: 3px;
+    border-radius: 0.2rem;
   }
 
   .div-with-actions_hr {
@@ -469,6 +471,16 @@ export default class ActionsMenu extends Vue {
         z-index: 1000 !important; /* кнопка выбора действий выше темного блока */
       }
     }
+  }
+
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: all 0.1s;
+  }
+
+  .fade-enter,
+  .fade-leave-to {
+    opacity: 0;
   }
 
   @media print {

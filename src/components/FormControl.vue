@@ -28,6 +28,8 @@
       :background-color="cellColor"
       :text-align="textAlign"
       :modal="$isMobile && (forceModalOnMobile || isMultiline)"
+      :required="!isNullable && inputType.name !== 'select'"
+      :empty="currentValue === '' || currentValue === null || currentValue === undefined"
       @close-modal-input="$emit('close-modal-input')"
     >
       <template #default="iSlot">
@@ -42,6 +44,8 @@
           :required="!isNullable"
           :qrcode-input="isQRCodeInput"
           :autofocus="autofocus || iSlot.autofocus"
+          :text-align="textAlign"
+          :background-color="cellColor"
           @input="updateValue"
           @set-input-height="setInputHeight"
           @focus="iSlot.onFocus"
@@ -54,6 +58,8 @@
           :height="customHeight"
           :required="!isNullable"
           :autofocus="autofocus || iSlot.autofocus"
+          :text-align="textAlign"
+          :background-color="cellColor"
           @set-input-height="setInputHeight"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
@@ -68,6 +74,7 @@
           :show-time="inputType.showTime"
           :time-step="inputType.timeStep ? inputType.timeStep : undefined"
           :required="!isNullable"
+          :background-color="cellColor"
           @focus="iSlot.onFocus"
           @update:value="updateValue"
         />
@@ -81,6 +88,7 @@
           :autofocus="autofocus || iSlot.autofocus"
           :required="!isNullable"
           :disabled="isDisabled"
+          :background-color="cellColor"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
         />
@@ -200,7 +208,7 @@
           </div>
         </b-col>
         <b-col :cols="!isMultiline && usedCaption ? 8 : 12">
-          <div v-if="inputType.name === 'userview'" :style="{backgroundColor:cellColor}">
+          <div v-if="inputType.name === 'userview'" :style="{ backgroundColor: cellColor, borderRadius: '0.2rem' }">
             <NestedUserView
               ref="control"
               :args="inputType.args"
@@ -678,7 +686,7 @@ export default class FormControl extends Vue {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   /* Current Z layout:
 
   * Drop-down menu    (1200)
@@ -692,10 +700,6 @@ export default class FormControl extends Vue {
     cursor: pointer;
     float: right;
     color: var(--MainTextColor);
-  }
-
-  /deep/ .tabl {
-    height: initial !important;
   }
 
   .input_label__container {
@@ -734,10 +738,6 @@ export default class FormControl extends Vue {
     color: var(--MainTextColorLight);
   }
 
-  input {
-    border: 1px solid rgb(81, 152, 57);
-  }
-
   .actions-menu {
     width: max-content;
     display: inline-block;
@@ -754,26 +754,31 @@ export default class FormControl extends Vue {
   }
 
   .nested-menu {
-    color: var(--MainBorderColor) !important;
+    height: 30px;
+    margin-top: 5px;
     display: flex;
     align-items: center;
-    margin-top: 5px;
-  }
+    color: var(--MainTextColor) !important;
 
-  .nested-menu > .actions-menu {
-    width: max-content;
-    display: inline-block;
-  }
+    .input_label {
+      margin-right: auto;
+    }
 
-  .nested-menu >>> .actions-menu_actions-button {
-    border: 0 !important;
-    line-height: normal;
-    padding: 2px;
-    height: 100%;
-    width: auto;
-    text-align: left;
-    border-radius: 0 !important;
-    margin-right: 0;
+    > .actions-menu {
+      width: max-content;
+      display: inline-block;
+    }
+
+    ::v-deep .actions-menu_actions-button {
+      border: 0 !important;
+      line-height: normal;
+      padding: 2px;
+      height: 100%;
+      width: auto;
+      text-align: left;
+      border-radius: 0 !important;
+      margin-right: 0;
+    }
   }
 
   .caption-editors {
@@ -877,7 +882,7 @@ export default class FormControl extends Vue {
         position: sticky;
       }
 
-      .nested-menu > .actions-menu >>> .div-with-actions {
+      ::v-deep .nested-menu > .actions-menu .div-with-actions {
         position: absolute !important;
         top: 35px;
         left: -30px;

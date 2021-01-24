@@ -76,7 +76,7 @@
     </div>
     <div
       v-else
-      class="loading-container h-100 p-3 d-flex justify-content-center align-items-center"
+      class="loading-container h-100 p-3 d-flex justify-content-center align-items-center rounded"
       style="background-color: rgba(0, 0, 0, 0.05); cursor: wait;"
     >
       <div

@@ -1,7 +1,7 @@
 <i18n>
     {
         "en": {
-            "search_placeholder": "Type to search"
+            "search_placeholder": "Search"
         },
         "ru": {
             "search_placeholder": "Поиск"
@@ -11,49 +11,57 @@
 
 <template>
   <div
-    :class="['search-wrapper', {
-      'search-show': showInput,
-    }]"
+    class="search-wrapper"
   >
-    <b-form
-      inline
-      :class="['find', {
-        'search-field_hidden': !showInput,
-      }]"
-      @submit.prevent="updateInput"
+    <transition
+      name="resize-fade"
+      @after-leave="showOpenButton = true"
     >
-      <b-input-group>
-        <b-form-input
-          ref="searchInput"
-          :value="localFilterString"
-          class="find_in form-control"
-          :placeholder="$t('search_placeholder')"
-          @update="localFilterString = $event; debouncedUpdateInput()"
-          @change="updateInput"
-          @blur="updateInput"
-        />
-        <b-input-group-append v-if="localFilterString.length > 0">
-          <span
-            id="searchclear"
-            class="material-icons material-button clear-search"
-            @click="localFilterString = ''; updateInput()"
-          >backspace</span>
-        </b-input-group-append>
-      </b-input-group>
-    </b-form>
-    <button
-      class="search-button"
-      @click.prevent="toggleShowInput"
-    >
-      <i
-        v-if="!showInput"
-        class="material-icons material-button search-button__icon"
-      >search</i>
-      <i
-        v-else
-        class="material-icons material-button search-button__icon"
-      >close</i>
-    </button>
+      <b-form
+        v-if="showInput"
+        inline
+        @submit.prevent="updateInput"
+      >
+        <b-input-group
+          size="sm"
+          class="input-group focus-entire"
+        >
+          <b-form-input
+            ref="searchInput"
+            :value="localFilterString"
+            class="search-input form-control with-clear-content-button"
+            :placeholder="$t('search_placeholder')"
+            @update="localFilterString = $event; debouncedUpdateInput()"
+            @change="updateInput"
+            @blur="updateInput"
+          />
+          <b-input-group-append>
+            <b-button
+              class="button with-material-icon clear-content-button"
+              :disabled="localFilterString.length === 0"
+              variant="outline-secondary"
+              @click.prevent="localFilterString = ''; updateInput()"
+            >
+              <i
+                class="material-icons"
+              >clear</i>
+            </b-button>
+            <b-button
+              class="button with-material-icon"
+              variant="secondary"
+              @click.prevent="toggleShowInput"
+            >
+              <i class="material-icons">search_off</i>
+            </b-button>
+          </b-input-group-append>
+        </b-input-group>
+      </b-form>
+    </transition>
+    <i
+      v-if="showOpenButton"
+      class="material-icons material-button"
+      @click="toggleShowInput"
+    >search</i>
   </div>
 </template>
 
@@ -66,17 +74,22 @@ import { Debounce } from "vue-debounce-decorator";
 export default class SearchPanel extends Vue {
   @Prop({ type: String, default: "" }) filterString!: string;
 
-  private showInput;
-  private localFilterString;
+  private showInput = false;
+  private showOpenButton = true;
+  private localFilterString: string;
 
   constructor() {
     super();
     this.localFilterString = this.filterString;
     this.showInput = this.filterString !== "";
+    this.showOpenButton = this.filterString === "";
   }
 
   private toggleShowInput() {
     this.showInput = !this.showInput;
+    if (this.showInput === true) {
+      this.showOpenButton = false;
+    }
   }
 
   private updateInput() {
@@ -95,7 +108,7 @@ export default class SearchPanel extends Vue {
     if (newValue === oldValue) return;
 
     if (newValue) {
-      (this.$refs.searchInput as HTMLElement).focus();
+      this.$nextTick(() => (this.$refs.searchInput as HTMLElement).focus());
     } else {
       this.localFilterString = "";
       this.updateInput();
@@ -104,51 +117,36 @@ export default class SearchPanel extends Vue {
 }
 
 </script>
-<style scoped>
+<style lang="scss" scoped>
   .search-wrapper {
     display: flex;
     align-items: center;
     width: auto;
-    max-width: 500px;
-    margin-left: auto;
   }
 
-  .clear-search {
-    height: 24px;
-    margin: 0;
-    position: absolute;
-    top: 50%;
-    right: 0;
-    transform: translateY(-50%);
+  .input-group {
+    background-color: var(--MainBackgroundColor);
+    border-radius: 0.2rem;
   }
 
-  .find_in {
-    border-radius: 0;
-    border-top: 0;
-    border-left: 0;
-    border-right: 0;
-    padding-left: 0 !important;
-    padding-right: 20px !important;
-    font-size: 14px !important;
+  .resize-fade-enter-active {
+    transition: all 0.1s;
   }
 
-  .find_in::placeholder {
-    color: var(--MainTextColorLight) !important;
-    font-size: 14px;
+  .resize-fade-leave-active {
+    transition: all 0.2s;
   }
 
-  .search-field_hidden {
-    display: none;
+  .resize-fade-enter,
+  .resize-fade-leave-to {
+    opacity: 0.1;
+    width: 100px;
   }
 
-  .search-button {
-    padding: 0;
-    background: transparent;
-    height: 24px;
-    outline: none;
-  }
-
-  .search-button__icon {
-    color: var(--MainTextColor);
+  .resize-fade-enter-to,
+  .resize-fade-leave {
+    /* TODO: Currently input-group's width is 257px and it's inherits from some Bootstrap rules and it's not very good.
+             Would be cool to make it autiresizeable by text width or something like this. */
+    width: 257px;
   }
 </style>

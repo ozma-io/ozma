@@ -25,26 +25,29 @@
       @keydown.enter.prevent
       @input="updateInput"
     />
-    <div v-show="!isCellEdit">
-      <textarea
+    <div
+      v-else
+      :class="['textarea-container', {
+        'required': required && isEmpty,
+        'error': error,
+        'custom-height': height !== null,
+      }]"
+    >
+      <b-form-textarea
         :id="inputName"
         ref="control"
-        :class="['textarea_field', {
-          'textarea_field__disabled': disabled,
-          'textarea_field__desktop': !$isMobile,
-          'textarea_field__required': required && isEmpty,
-          'textarea_field__error': error,
-          'textarea_field__max_height': !height
-        }]"
+        class="textarea-field"
+        size="sm"
         :type="type"
         :style="style"
         :value="value"
+        :required="required"
         :placeholder="$t('input_placeholder')"
         :disabled="disabled"
         :rows="textareaRows"
         @focus="onFocus"
         @blur="onBlur"
-        @input="$emit('update:value', $event.target.value)"
+        @input="$emit('update:value', $event)"
       />
     </div>
   </fragment>
@@ -76,13 +79,8 @@ export default class Textarea extends Vue {
   private modalValue: string = this.value;
   private isModalOpen = false;
 
-  private dummyHeight = 0;
-  private dummyWidth = 0;
-
   private mounted() {
     const control = this.$refs.control as HTMLInputElement;
-    this.dummyHeight = control.clientHeight;
-    this.dummyWidth = control.clientWidth;
 
     void Vue.nextTick().then(() => this.updateAutofocus());
   }
@@ -151,7 +149,6 @@ export default class Textarea extends Vue {
   private onFocus(evt: HTMLInputElement) {
     this.setCursorPositionEnd(evt);
     if (!this.$isMobile) {
-      this.positionField();
       this.focused = true;
     }
     this.$emit("focus", evt);
@@ -166,74 +163,24 @@ export default class Textarea extends Vue {
       controlElement.selectionStart = this.value ? this.value.length : 0;
     }
   }
-
-  private positionField() {
-    const controlElement = this.$refs.control as HTMLElement;
-    const dummyElement = this.$refs.dummy as HTMLElement;
-    const leftPosition = controlElement.getBoundingClientRect().left;
-    const rightPosition = controlElement.getBoundingClientRect().right;
-    const maxWidth = 600;
-    const maxHeight = 300;
-
-    const screenWidth = document.documentElement.clientWidth - 15;
-    // const screenHeight = document.documentElement.clientHeight - 15;
-
-    const expandLeft = leftPosition + maxWidth + 15 < screenWidth;
-    const expandRight = rightPosition - maxWidth + 15 < screenWidth;
-    if (expandLeft) {
-      controlElement.style.left = "0";
-      controlElement.style.right = "initial";
-    } else if (expandRight) {
-      controlElement.style.right = "0";
-      controlElement.style.left = "initial";
-    }
-
-    if (dummyElement) {
-      dummyElement.style.height = `${this.dummyHeight}px`;
-      dummyElement.style.width = `${this.dummyWidth}px`;
-    }
-  }
 }
 </script>
 
 <style lang="scss" scoped>
-  .textarea_field_container {
-    position: relative;
-    display: inline-flex;
-    flex-direction: column;
-    color: var(--MainTextColor);
-    width: 100%;
-    height: 100%;
-  }
-
-  .input_label {
-    color: var(--MainTextColorLight);
-    opacity: 0.7;
-  }
-
-  .textarea_label {
-    align-self: flex-start;
-    margin-right: 15px;
-    opacity: 0.7;
-  }
-
   .textarea_field {
-    padding: 2px;
-    background-color: rgba(0, 0, 0, 0);
     z-index: 2;
     order: 2;
     flex: 2;
-    width: 100%;
-    resize: none;
-    overflow: auto !important;
-    white-space: pre-wrap;
-    border: 1px solid var(--MainBackgroundColor);
-    display: block;
-    color: var(--MainTextColor);
   }
 
-  .textarea_field__max_height {
-    max-height: 165px;
+  .textarea-container {
+    &.custom-height > textarea.form-control {
+      max-height: 100%;
+    }
+
+    .textarea-field {
+      background-color: rgba(0, 0, 0, 0);
+    }
   }
 
   .textarea_field::placeholder {
@@ -277,60 +224,6 @@ export default class Textarea extends Vue {
 
   .textarea_field__disabled {
     cursor: not-allowed;
-  }
-
-  .input_modal_field {
-    color: var(--MainTextColor);
-    background-color: var(--MainBackgroundColor);
-  }
-
-  .input_modal_label {
-    color: var(--MainTextColor);
-    margin: 5px;
-  }
-
-  .input_modal__input_group {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    justify-content: space-between;
-    background-color: var(--MainBackgroundColor);
-  }
-
-  .input_modal__button__ok,
-  .input_modal__button__cancel {
-    outline: none;
-    border: 0;
-    padding: 10px 18px;
-    cursor: pointer;
-    color: var(--MainTextColor);
-    box-shadow: 0 4px 8px var(--MainBorderColor);
-    background: var(--MainBackgroundColor);
-    font-weight: 600;
-    width: 100%;
-    border-radius: 0;
-    margin-top: 5px;
-  }
-
-  .input_modal__button__ok {
-    background-color: var(--SuccessColor);
-  }
-
-  .input_modal__button__cancel {
-    background-color: var(--FailColor);
-  }
-
-  .modal_textarea_field {
-    position: initial !important;
-    width: 100% !important;
-    border-left: none !important;
-    border-right: none !important;
-    box-sizing: content-box;
-    padding: 5px;
-  }
-
-  .textarea_dummy_focus {
-    padding: 5px 0 5px 0;
   }
 
   .textarea_field__required {

@@ -12,7 +12,10 @@
 </i18n>
 
 <template>
-  <div :style="{backgroundColor: backgroundColor}">
+  <div
+    class="reference-field"
+    :style="{backgroundColor: backgroundColor}"
+  >
     <!-- Used when user selects an entry -->
     <SelectUserView
       v-if="selectedView"
@@ -201,6 +204,10 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
 </script>
 
 <style lang="scss" scoped>
+  .reference-field {
+    border-radius: 0.2rem;
+  }
+
   .reference_backup_input {
     width: 100%;
   }
