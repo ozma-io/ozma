@@ -12,8 +12,8 @@
 </i18n>
 
 <template>
-  <b-container fluid>
-    <b-row>
+  <b-container fluid class="p-0">
+    <b-row class="no-gutters">
       <b-col size="12">
         <form class="form-entry">
           <FormGrid
@@ -106,7 +106,6 @@ export default class FormEntry extends Vue {
 
 <style scoped>
   .form-entry {
-    margin-top: 10px;
     border-bottom: 0;
     border-top: 0;
   }

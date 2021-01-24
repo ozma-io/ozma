@@ -183,7 +183,7 @@
               tabindex="0"
               :title="usedCaption"
             >
-              {{ usedCaption + usedCaption + usedCaption }}
+              {{ usedCaption }}
             </label>
             <SearchPanel
               v-visible="enableFilter"

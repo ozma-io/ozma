@@ -455,19 +455,11 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
 <style scoped>
   .view-form {
     height: 100% !important;
-    padding: 0 0 50px 0 !important;
+    padding: 5px !important;
     overflow-y: auto;
     overflow-x: hidden;
 
     /* background-color: var(--MainBackgroundColor); */
     background-color: #f8f9fa;
-  }
-
-  @media screen and (max-aspect-ratio: 13/9) {
-    @media screen and (max-device-width: 480px) {
-      .view-form {
-        overflow: auto !important;
-      }
-    }
   }
 </style>
