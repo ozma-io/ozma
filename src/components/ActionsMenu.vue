@@ -11,6 +11,7 @@
 
 <template>
   <div
+    v-if="sortedActions.length !== 0"
     :class="['actions-menu', {'actions-menu_active': showActions}]"
   >
     <input
@@ -39,14 +40,7 @@
         v-show="showActions"
         :class="['div-with-actions', menuAlign]"
       >
-        <template v-if="sortedActions.length == 0">
-          <label class="div-with-actions_button empty">
-            {{ $t('empty') }}
-          </label>
-        </template>
-
         <ul
-          v-else
           class="actions"
           @click="showActions = false"
         >
