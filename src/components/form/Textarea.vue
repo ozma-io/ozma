@@ -149,7 +149,6 @@ export default class Textarea extends Vue {
   private onFocus(evt: HTMLInputElement) {
     this.setCursorPositionEnd(evt);
     if (!this.$isMobile) {
-      /* this.positionField(); */
       this.focused = true;
     }
     this.$emit("focus", evt);
