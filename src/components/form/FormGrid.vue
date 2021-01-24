@@ -2,6 +2,7 @@
   <b-container
     fluid
     class="form_container"
+    :style="{ maxWidth }"
   >
     <b-row class="sm-gutters">
       <FormGridBlock
@@ -40,6 +41,7 @@ export type GridElement<T> = IGridInput<T> | IGridSection<T>;
 @Component({ components: { FormGridBlock } })
 export default class FormGrid extends Vue {
   @Prop({ type: Array }) gridContent!: GridElement<any>[];
+  @Prop({ type: String }) maxWidth!: string;
 }
 </script>
 
