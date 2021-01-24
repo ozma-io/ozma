@@ -91,7 +91,7 @@ import FormGrid from "@/components/form/FormGrid.vue";
 import type { IFormCombinedUserView, FormGridElement, IFormExtendedRowCommon } from "@/components/views/Form.vue";
 
 const isNumberWithSuffix = (str: string, suffix: string): boolean =>
-  str.slice(-suffix.length) === suffix && !Number.isNaN(Number(str.slice(0, suffix.length)));
+  str.slice(-suffix.length) === suffix && !Number.isNaN(str.slice(0, suffix.length));
 
 @Component({ components: { FormGrid } })
 export default class FormEntry extends Vue {
@@ -110,7 +110,7 @@ export default class FormEntry extends Vue {
     const maxWidth = this.uv.attributes["max_width"];
     if (typeof maxWidth === "number") return `${maxWidth}px`;
     if (typeof maxWidth !== "string") return defaultMaxWidth;
-    if (!Number.isNaN(Number(maxWidth))) return `${maxWidth}px`;
+    if (!Number.isNaN(maxWidth)) return `${maxWidth}px`;
     if (isNumberWithSuffix(maxWidth, "px")
      || isNumberWithSuffix(maxWidth, "%")) return maxWidth;
     return defaultMaxWidth;
