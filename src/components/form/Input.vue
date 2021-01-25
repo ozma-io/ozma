@@ -37,7 +37,6 @@
         @keydown.enter.prevent
         @input="updateInput"
         @focus="onFocus"
-        @blur="onBlur"
       />
       <textarea-autosize
         v-if="isCellEdit"
@@ -163,8 +162,6 @@ export default class Input extends Vue {
     this.$emit("focus", evt);
     this.focused = true;
   }
-
-  private onBlur(evt: Event) {}
 
   private setCursorPositionEnd(controlElement: HTMLInputElement) {
     if (controlElement) {

@@ -76,11 +76,20 @@ export default class App extends Vue {
     this.setAutoSaveTimeout(autoSaveTimeout);
   }
 
+  private get fontSize(): number {
+    const defaultSize = 14;
+    const normalSize = this.settings.getEntry("font_size", Number, defaultSize);
+    const mobileSize = this.settings.getEntry("font_size_mobile", Number, 0);
+    return this.$isMobile && mobileSize !== 0
+      ? mobileSize
+      : normalSize;
+  }
+
   get styleSettings() {
     const values = {
       // "NavigationBackColor": this.settings.getEntry("navigation_back_color", String, "white"),
       "Font": this.settings.getEntry("font", String, "Courier New, monospace"),
-      "FontSize": `${this.settings.getEntry("font_size", Number, 14)}px`,
+      "FontSize": `${this.fontSize}px`,
       "MenuColor": this.settings.getEntry("menu_color", String, "#F5C700"),
       "TableBackColor": this.settings.getEntry("table_back_color", String, "white"),
       "TableSelectColor": this.settings.getEntry("table_select_color", String, "#CCCCCC"),

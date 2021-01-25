@@ -12,7 +12,7 @@
 </i18n>
 
 <template>
-  <b-container fluid class="p-0">
+  <b-container :style="style" fluid class="p-0">
     <b-row class="no-gutters">
       <b-col size="12">
         <form class="form-entry">
@@ -21,7 +21,7 @@
             :grid-content="blocks"
           >
             <FormControl
-              v-if="element.type === 'field'"
+              v-if="element.type === 'field' && row.values[element.index].extra.visible"
               :caption="element.caption"
               :force-caption="element.forceCaption"
               :column-info-name="element.columnInfo.name"
@@ -90,6 +90,9 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import FormGrid from "@/components/form/FormGrid.vue";
 import type { IFormCombinedUserView, FormGridElement, IFormExtendedRowCommon } from "@/components/views/Form.vue";
 
+const isNumberWithSuffix = (str: string, suffix: string): boolean =>
+  str.slice(-suffix.length) === suffix && !Number.isNaN(Number(str.slice(0, suffix.length)));
+
 @Component({ components: { FormGrid } })
 export default class FormEntry extends Vue {
   // The reason this is not a functional component is because of i18n.
@@ -101,6 +104,23 @@ export default class FormEntry extends Vue {
   @Prop({ type: String, required: true }) scope!: string;
   @Prop({ type: Number, required: true }) level!: number;
   @Prop({ type: Boolean, default: true }) showDelete!: number;
+
+  private get maxWidth(): string {
+    const defaultMaxWidth = "1140px";
+    const maxWidth = this.uv.attributes["max_width"];
+    if (typeof maxWidth === "number") return `${maxWidth}px`;
+    if (typeof maxWidth !== "string") return defaultMaxWidth;
+    if (!Number.isNaN(Number(maxWidth))) return `${maxWidth}px`;
+    if (isNumberWithSuffix(maxWidth, "px")
+     || isNumberWithSuffix(maxWidth, "%")) return maxWidth;
+    return defaultMaxWidth;
+  }
+
+  private get style() {
+    return {
+      maxWidth: this.maxWidth,
+    };
+  }
 }
 </script>
 

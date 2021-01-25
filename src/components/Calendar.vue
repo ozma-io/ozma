@@ -190,14 +190,30 @@ export default class Calendar extends Vue {
   }
 
   private onInputFocus() {
-    this.$emit("focus");
+    // FIXME: this `blur()` fixes not good behavior on mobiles,
+    // but it can broke some cases on smartphones with keyboard and it's just a little ugly fix.
+    if (this.$isMobile && !this.isCalendarOpen) {
+      (this.$refs.control as HTMLInputElement).blur();
+    } else {
+      this.$emit("focus");
+    }
+    void this.openPopup();
+  }
+
+  private async openPopup() {
+    // FIXME: Awful hotfix for Android phones for cases when viewport resizes slowly after keyboard closing.
+    if (this.$isMobile) {
+      await new Promise(r => setTimeout(r, 400));
+    }
+
+    // TODO: after showing on top calendar will show on bottom even if it should show on top.
+
     this.isCalendarOpen = true;
-    void nextRender().then(() => {
-      const bodyRect = document.body.getBoundingClientRect();
-      const popup = this.$refs.popup as HTMLInputElement;
-      const popupRect = popup.getBoundingClientRect();
-      this.position = !((bodyRect.bottom - popupRect.bottom) > 0);
-    });
+    await nextRender();
+    const bodyRect = document.body.getBoundingClientRect();
+    const popup = this.$refs.popup as HTMLInputElement;
+    const popupRect = popup.getBoundingClientRect();
+    this.position = !((bodyRect.bottom - popupRect.bottom) > 0);
   }
 
   get timeForPicker() {

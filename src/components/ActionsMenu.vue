@@ -342,7 +342,6 @@ export default class ActionsMenu extends Vue {
   }
 
   .actions-menu_active {
-    /* position: relative; */
     z-index: 1300;
   }
 
