@@ -20,41 +20,39 @@
             v-slot="{ element }"
             :grid-content="blocks"
           >
-            <template v-if="row.values[element.index].extra.visible">
-              <FormControl
-                v-if="element.type === 'field'"
-                :caption="element.caption"
-                :force-caption="element.forceCaption"
-                :column-info-name="element.columnInfo.name"
-                :value="row.values[element.index]"
-                :attributes="row.values[element.index].extra.attributes"
-                :type="element.columnInfo.valueType"
-                :locked="locked"
-                :uv-args="uv.args"
-                :scope="scope"
-                :level="level"
-                @goto="$emit('goto', $event)"
-                @update="$emit('update', element.index, $event)"
-              />
-              <b-row v-else-if="element.type === 'buttons'">
-                <b-col>
-                  <FunLink
-                    v-for="(subBlock, subBlockI) in element.actions"
+            <FormControl
+              v-if="element.type === 'field' && row.values[element.index].extra.visible"
+              :caption="element.caption"
+              :force-caption="element.forceCaption"
+              :column-info-name="element.columnInfo.name"
+              :value="row.values[element.index]"
+              :attributes="row.values[element.index].extra.attributes"
+              :type="element.columnInfo.valueType"
+              :locked="locked"
+              :uv-args="uv.args"
+              :scope="scope"
+              :level="level"
+              @goto="$emit('goto', $event)"
+              @update="$emit('update', element.index, $event)"
+            />
+            <b-row v-else-if="element.type === 'buttons'">
+              <b-col>
+                <FunLink
+                  v-for="(subBlock, subBlockI) in element.actions"
+                  :key="subBlockI"
+                  :link="subBlock.link"
+                  @goto="$emit('goto', $event)"
+                >
+                  <b-button
                     :key="subBlockI"
-                    :link="subBlock.link"
-                    @goto="$emit('goto', $event)"
+                    block
+                    :variant="subBlock.variant"
                   >
-                    <b-button
-                      :key="subBlockI"
-                      block
-                      :variant="subBlock.variant"
-                    >
-                      {{ subBlock.name }}
-                    </b-button>
-                  </FunLink>
-                </b-col>
-              </b-row>
-            </template>
+                    {{ subBlock.name }}
+                  </b-button>
+                </FunLink>
+              </b-col>
+            </b-row>
           </FormGrid>
           <!-- FIXME FIXME FIXME look at permissions! -->
           <div
