@@ -190,7 +190,20 @@ export default class Calendar extends Vue {
   }
 
   private onInputFocus() {
+    // FIXME: this `blur()` fixes not good behavior on mobiles,
+    // but it can broke some cases on smartphones with keyboard and it's just a little ugly fix.
+    if (this.$isMobile && !this.isCalendarOpen) {
+      (this.$refs.control as HTMLInputElement).blur();
+    }
     this.$emit("focus");
+    this.openPopup();
+  }
+
+  private onInputClick() {
+    this.openPopup();
+  }
+
+  private openPopup() {
     this.isCalendarOpen = true;
     void nextRender().then(() => {
       const bodyRect = document.body.getBoundingClientRect();
