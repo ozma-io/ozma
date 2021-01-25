@@ -197,17 +197,23 @@ export default class Calendar extends Vue {
     } else {
       this.$emit("focus");
     }
-    this.openPopup();
+    void this.openPopup();
   }
 
-  private openPopup() {
+  private async openPopup() {
+    // FIXME: Awful hotfix for Android phones for cases when viewport resizes slowly after keyboard closing.
+    if (this.$isMobile) {
+      await new Promise(r => setTimeout(r, 400));
+    }
+
+    // TODO: after showing on top calendar will show on bottom even if it should show on top.
+
     this.isCalendarOpen = true;
-    void nextRender().then(() => {
-      const bodyRect = document.body.getBoundingClientRect();
-      const popup = this.$refs.popup as HTMLInputElement;
-      const popupRect = popup.getBoundingClientRect();
-      this.position = !((bodyRect.bottom - popupRect.bottom) > 0);
-    });
+    await nextRender();
+    const bodyRect = document.body.getBoundingClientRect();
+    const popup = this.$refs.popup as HTMLInputElement;
+    const popupRect = popup.getBoundingClientRect();
+    this.position = !((bodyRect.bottom - popupRect.bottom) > 0);
   }
 
   get timeForPicker() {
