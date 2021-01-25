@@ -12,7 +12,11 @@
 </i18n>
 
 <template>
-  <b-container :style="style" fluid class="p-0">
+  <b-container
+    :style="style"
+    fluid
+    class="p-0"
+  >
     <b-row class="no-gutters">
       <b-col size="12">
         <form class="form-entry">
