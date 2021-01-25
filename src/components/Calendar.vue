@@ -199,10 +199,6 @@ export default class Calendar extends Vue {
     this.openPopup();
   }
 
-  private onInputClick() {
-    this.openPopup();
-  }
-
   private openPopup() {
     this.isCalendarOpen = true;
     void nextRender().then(() => {
