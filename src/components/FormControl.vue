@@ -210,6 +210,7 @@
                 {{ usedCaption }}
               </label>
               <ActionsMenu
+                menu-align="right"
                 :actions="[]"
               />
             </div>
