@@ -82,7 +82,7 @@ import { QrcodeStream } from "vue-qrcode-reader";
 import { mixins } from "vue-class-component";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import type { Link } from "@/links";
-import { linkHandler } from "@/links";
+import { linkHandler, ILinkHandlerParams } from "@/links";
 import { IQuery } from "@/state/query";
 import { namespace } from "vuex-class";
 import { IPrintQRCode } from "@/components/qrcode/QRCode.vue";
@@ -126,7 +126,8 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Watch("openScanner")
   private toggleOpenScanner() {
     this.modalShow = !this.modalShow;
-    this.currentContent = null; // For test: this.currentContent = {"name":"Ingredients","schema":"user","id":436};
+    //this.currentContent = null; // For test: 
+    this.currentContent = {"name":"Ingredients","schema":"user","id":436};
     this.result = [];
     this.entry = null;
     this.entries = {};
@@ -219,7 +220,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
       if (this.entry !== null) {
         if (this.link) {
           let link: Link | null = null;
-
+          
           if ("links" in this.link) {
             link = this.link.links[this.currentContent.schema][this.currentContent.name];
           }
@@ -241,7 +242,13 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
             void this.pushRoot(target);
           };
 
-          const { handler, href } = linkHandler(this.$store, emit, link);
+          const linkHandlerParams: ILinkHandlerParams = {
+            store: this.$store,
+            goto: emit,
+            link,
+          } 
+
+          const { handler, href } = linkHandler(linkHandlerParams);
           if (handler) {
             void handler();
           }

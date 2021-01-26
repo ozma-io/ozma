@@ -101,7 +101,7 @@ import { IUserViewConstructor } from "@/components";
 import { Action } from "@/components/ActionsMenu.vue";
 import UserViewCommon from "@/components/UserViewCommon.vue";
 import { IPanelButton } from "@/components/ButtonsPanel.vue";
-import { addLinkDefaultArgs, attrToLink, Link, linkHandler } from "@/links";
+import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams } from "@/links";
 import type { ICombinedUserViewAny, IUserViewArguments } from "@/user_views/combined";
 import { CombinedUserView } from "@/user_views/combined";
 import { UserViewError, fetchUserViewData } from "@/user_views/fetch";
@@ -266,7 +266,7 @@ export default class UserView extends Vue {
         actions.push({
           icon: "code",
           name: this.$t("edit_view").toString(),
-          link: { query: editQuery, target: "modal-auto" },
+          link: { query: editQuery, target: "modal-auto", type: "query" },
         });
       }
     }
@@ -366,7 +366,12 @@ export default class UserView extends Vue {
           });
           this.nextUv = null;
         } else if (newType.type === "link") {
-          const handler = linkHandler(this.$store, target => this.$emit("goto", target), newType.link);
+          const linkHandlerParams: ILinkHandlerParams = {
+            store: this.$store,
+            goto: target => this.$emit("goto", target),
+            link: newType.link,
+          }
+          const handler = linkHandler( linkHandlerParams );
           await handler.handler();
           // Because we need router to switch URL.
           await this.$nextTick();
@@ -515,6 +520,7 @@ export default class UserView extends Vue {
               search: "",
             },
             target: "root",
+            type: "query",
           };
         } else {
           addLinkDefaultArgs(customLink, { id });
@@ -523,7 +529,12 @@ export default class UserView extends Vue {
 
         const oldArgs = deepClone(this.args);
         try {
-          await linkHandler(this.$store, target => this.$emit("goto", target), link).handler();
+          const linkHandlerParams: ILinkHandlerParams = {
+            store: this.$store,
+            goto: target => this.$emit("goto", target),
+            link
+          }
+          await linkHandler( linkHandlerParams ).handler();
         } catch (e) {
           this.reloadIfRoot();
           return;

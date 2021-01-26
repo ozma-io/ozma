@@ -40,7 +40,6 @@
     <QRCodeScanner
       :open-scanner="openQRCodeScanner"
       :multi-scan="true"
-      :link="currentQRCodeLink"
       @select="selectFromQRScanner($event)"
     />
     <BarCodeScanner
@@ -60,7 +59,7 @@ import { IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
 
 import { IEntityRef } from "@/api";
 import SelectUserView from "@/components/SelectUserView.vue";
-import { mapMaybe, saveToFile, tryDicts, EventBus } from "@/utils";
+import { mapMaybe, saveToFile, tryDicts } from "@/utils";
 import { Action } from "@/components/ActionsMenu.vue";
 import { IPanelButton } from "@/components/ButtonsPanel.vue";
 import { attrToLink, Link } from "@/links";
@@ -93,13 +92,6 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   modalView: IQuery | null = null;
   openQRCodeScanner = false;
   openBarCodeScanner = false;
-  currentQRCodeLink: Link | null = null;
-
-  mounted() {
-    // Listen to the event.
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    EventBus.$on("open-qrcode-scanner", this.qrCodeCallback);
-  }
 
   private exportToCsv() {
     let data = "";
@@ -263,29 +255,6 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       });
     }
 
-    const qrcodeActions = this.uv.attributes["qrcode_actions"];
-    if (Array.isArray(qrcodeActions)) {
-      const opts: IAttrToQueryOpts = {
-        homeSchema: this.uv.homeSchema ?? undefined,
-      };
-      qrcodeActions.forEach((rawAction: unknown) => {
-        const link = attrToLink(rawAction, opts);
-        if (link === null) {
-          return;
-        }
-        // `rawAction` at this point is guaranteed to be `Record<string, unknown>`,
-        // but TypeScript doesn't support advanced type witnesses like that.
-        const actionObj = rawAction as Record<string, unknown>;
-        if (typeof actionObj.name !== "string") {
-          return;
-        }
-        actions.push({
-          name: actionObj.name,
-          callback: () => this.qrCodeCallback(link),
-        });
-      });
-    }
-
     if (this.creationLink !== null) {
       actions.push({ name: this.$t("create").toString(), link: this.creationLink });
     }
@@ -432,13 +401,6 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     result.forEach(r => {
       void this.updateValue({ type: "new", column: 1 }, r);
     });
-  }
-
-  private qrCodeCallback(link: Link | null) {
-    if (link !== null) {
-      this.currentQRCodeLink = link;
-      this.openQRCodeScanner = !this.openQRCodeScanner;
-    }
   }
 }
 </script>

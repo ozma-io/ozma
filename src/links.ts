@@ -1,6 +1,6 @@
 import { queryLocation, IQueryState, IQuery, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery, selfIdArgs, refIdArgs } from "@/state/query";
 import { IActionRef } from "ozma-api/src";
-import { EventBus, gotoHref } from "@/utils";
+import { gotoHref } from "@/utils";
 import { saveAndRunAction } from "@/state/actions";
 import { Store } from "vuex";
 import { router } from "@/modules";
@@ -8,6 +8,7 @@ import { IValueInfo } from "@/user_views/combined";
 
 export interface IHrefLink {
   href: string;
+  type: "href";
 }
 
 export type TargetType = "top" | "root" | "modal" | "blank" | "modal-auto";
@@ -19,18 +20,21 @@ const isTargetType = (rawType: unknown): rawType is TargetType => {
 export interface IQueryLink {
   query: IQuery;
   target: TargetType;
+  type: "query";
 }
 
 export interface IActionLink {
   action: IActionRef;
   args: Record<string, unknown>;
+  type: "action";
 }
 
-export interface ICompositeLink {
+export interface IQRCodeLink {
   links: Record<string, Record<string, Link>>;
+  type: "qr-code";
 }
 
-export type Link = IHrefLink | IQueryLink | IActionLink | ICompositeLink;
+export type Link = IHrefLink | IQueryLink | IActionLink | IQRCodeLink;
 
 export interface IAttrToLinkOpts extends IAttrToQueryOpts {
   defaultTarget?: TargetType;
@@ -60,7 +64,7 @@ const attrToQueryLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLink
     target = "modal-auto";
   }
 
-  return { query, target };
+  return { query, target, type: "query" };
 };
 
 export const attrToActionLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLinkOpts): IActionLink | null => {
@@ -73,12 +77,13 @@ export const attrToActionLink = (linkedAttr: Record<string, unknown>, opts?: IAt
   if (args === null) {
     return null;
   }
-  return { action, args };
+  return { action, args, type: "action" };
 };
 
-export const attrToCompositeLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLinkOpts): ICompositeLink | null => {
-  const compositeLink: ICompositeLink = {
+export const attrToQRCodeLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLinkOpts): IQRCodeLink | null => {
+  const qrСodeLink: IQRCodeLink = {
     links: {},
+    type: "qr-code",
   };
 
   const linksObj = linkedAttr.links as Record<string, unknown>;
@@ -89,17 +94,17 @@ export const attrToCompositeLink = (linkedAttr: Record<string, unknown>, opts?: 
         if (actionObj[name]) {
           const link = attrToLink(actionObj[name], opts);
           if (link !== null) {
-            if (!compositeLink.links[schema]) {
-              compositeLink.links[schema] = {};
+            if (!qrСodeLink.links[schema]) {
+              qrСodeLink.links[schema] = {};
             }
-            compositeLink.links[schema][name] = link;
+            qrСodeLink.links[schema][name] = link;
           }
         }
       }
     }
   }
 
-  return compositeLink;
+  return qrСodeLink;
 };
 
 export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | null => {
@@ -115,7 +120,7 @@ export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | 
 
   const href = linkedAttrObj["href"];
   if (typeof href === "string") {
-    return { href };
+    return { href, type: "href" };
   }
 
   const action = attrToActionLink(linkedAttrObj, opts);
@@ -123,9 +128,9 @@ export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | 
     return action;
   }
 
-  const composite = attrToCompositeLink(linkedAttrObj, opts);
-  if (composite !== null) {
-    return composite;
+  const qrCode = attrToQRCodeLink(linkedAttrObj, opts);
+  if (qrCode !== null) {
+    return qrCode;
   }
 
   return null;
@@ -165,66 +170,83 @@ export interface ILinkHandler {
   handler: () => Promise<void>;
   href: string | null;
 }
+ 
+export interface ILinkHandlerParams {
+  store: Store<any>; 
+  goto: ((query: IQuery) => void);
+  link: Link;
+  rootEmit?: ((name: string, link: Link) => void);
+}
 
-export const linkHandler = (store: Store<any>, goto: ((query: IQuery) => void), link: Link): ILinkHandler => {
+export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
   let handler: () => Promise<void>;
   let href: string | null = null;
 
-  if ("query" in link) {
-    if (link.target === "modal") {
+  if (params.link.type === "query") {
+    const query = params.link.query;
+    if (params.link.target === "modal") {
       handler = async () => {
-        await store.dispatch("query/addWindow", link.query);
+        await params.store.dispatch("query/addWindow", query);
       };
-    } else if (link.target === "root") {
+    } else if (params.link.target === "root") {
       // eslint-disable-next-line @typescript-eslint/require-await
       handler = async () => {
-        goto(link.query);
+        params.goto(query);
       };
-    } else if (link.target === "top") {
+    } else if (params.link.target === "top") {
       handler = async () => {
-        await store.dispatch("query/pushRoot", link.query);
+        await params.store.dispatch("query/pushRoot", query);
       };
-    } else if (link.target === "blank") {
+    } else if (params.link.target === "blank") {
       // eslint-disable-next-line @typescript-eslint/require-await
       handler = async () => {
         window.open(href!, "_blank");
       };
-    } else if (link.target === "modal-auto") {
+    } else if (params.link.target === "modal-auto") {
       handler = async () => {
-        const queryState = store.state.query as IQueryState;
+        const queryState = params.store.state.query as IQueryState;
         if (queryState.current?.windows.length === 0) {
-          await store.dispatch("query/addWindow", link.query);
+          await params.store.dispatch("query/addWindow", query);
         } else {
-          goto(link.query);
+          params.goto(query);
         }
       };
     } else {
       throw new Error("Impossible");
     }
 
-    href = router.resolve(queryLocation(link.query)).href;
-  } else if ("href" in link) {
-    const curHref = link.href;
+    href = router.resolve(queryLocation(query)).href;
+  } else if (params.link.type === "href") {
+    const curHref = params.link.href;
     handler = async () => {
       await gotoHref(curHref);
     };
     href = curHref;
-  } else if ("action" in link) {
+  } else if (params.link.type === "action") {
+    const action = params.link.action;
+    const args = params.link.args;
+
     handler = async () => {
-      const ret = await saveAndRunAction(store, link.action, link.args);
+      const ret = await saveAndRunAction(params.store, action, args);
       const retLink = attrToLink(ret.result, { defaultTarget: "root" });
       if (retLink !== null) {
-        await linkHandler(store, goto, retLink).handler();
+        const linkHandlerParams: ILinkHandlerParams = {
+          store: params.store,
+          goto: params.goto,
+          link: retLink,
+        }
+        await linkHandler(linkHandlerParams).handler();
       }
     };
-  } else if ("links" in link) {
-    // eslint-disable-next-line @typescript-eslint/require-await
-    handler = async () => {
-      EventBus.$emit("open-qrcode-scanner", link);
-    };
+  } else if (params.link.type === "qr-code") {
+    const emit = params?.rootEmit ?? undefined;
+    if (emit !== undefined) {
+      handler = async () => {
+        emit("open-qrcode-scanner", params.link);
+      }
+    } 
   } else {
     throw new Error("Impossible");
   }
-
   return { handler, href };
 };

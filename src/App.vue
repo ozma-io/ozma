@@ -34,6 +34,11 @@
     </template>
     <router-view v-else />
     <FabCluster />
+    <QRCodeScanner
+      :open-scanner="isOpenQRCodeScanner"
+      :multi-scan="true"
+      :link="currentQRCodeLink"
+    />
   </div>
 </template>
 
@@ -46,13 +51,15 @@ import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import FabCluster from "@/components/FabCluster/FabCluster.vue";
 import AlertBanner from "@/components/AlertBanner.vue";
 import { ErrorKey } from "@/state/errors";
+import { Link } from "@/links";
+import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
 
 const settings = namespace("settings");
 const auth = namespace("auth");
 const errors = namespace("errors");
 const staging = namespace("staging");
 
-@Component({ components: { ModalPortalTarget, FabCluster, AlertBanner } })
+@Component({ components: { ModalPortalTarget, FabCluster, AlertBanner, QRCodeScanner } })
 export default class App extends Vue {
   @settings.State("current") settings!: CurrentSettings;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
@@ -61,8 +68,23 @@ export default class App extends Vue {
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
 
+  private isOpenQRCodeScanner = false;
+  private currentQRCodeLink: Link | null = null;
   created() {
     void this.startAuth();
+  }
+
+  mounted() {
+    // Listen to the event.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    this.$root.$on("open-qrcode-scanner", this.openQRCodeScanner);
+  }
+
+  private openQRCodeScanner(link: Link | null) {
+    if (link !== null) {
+      this.currentQRCodeLink = link;
+      this.isOpenQRCodeScanner = !this.isOpenQRCodeScanner;
+    }
   }
 
   get authErrors() {
