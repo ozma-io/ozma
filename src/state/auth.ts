@@ -338,6 +338,7 @@ export const authModule: Module<IAuthState, {}> = {
             if (stateString !== null) {
               const savedState: IOIDCState = JSON.parse(atob(stateString));
               const nonce = localStorage.getItem(authNonceKey);
+              localStorage.removeItem(authNonceKey);
               if (nonce === null || savedState.nonce !== nonce) {
                 // Invalid nonce; silently redirect.
                 console.error("Invalid client nonce", savedState, nonce);
@@ -390,7 +391,6 @@ export const authModule: Module<IAuthState, {}> = {
               void renewAuth(context);
             }
           }
-          localStorage.removeItem(authNonceKey);
 
           const authStorageHandler = async (e: StorageEvent) => {
             if (e.key !== authKey) {
