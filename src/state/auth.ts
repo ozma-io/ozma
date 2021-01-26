@@ -226,7 +226,7 @@ const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
 
 const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExisting: boolean) => {
   const nonce = uuidv4();
-  localStorage.setItem(authNonceKey, nonce);
+  sessionStorage.setItem(authNonceKey, nonce);
   console.error("new nonce", nonce);
   const path =
         router.currentRoute.name === "auth_response" ?
@@ -337,11 +337,12 @@ export const authModule: Module<IAuthState, {}> = {
             const stateString = getQueryValue("state");
             if (stateString !== null) {
               const savedState: IOIDCState = JSON.parse(atob(stateString));
-              const nonce = localStorage.getItem(authNonceKey);
-              localStorage.removeItem(authNonceKey);
+              const nonce = sessionStorage.getItem(authNonceKey);
+              sessionStorage.removeItem(authNonceKey);
+              console.error("fetched and removed nonce", savedState, nonce);
               if (nonce === null || savedState.nonce !== nonce) {
                 // Invalid nonce; silently redirect.
-                console.error("Invalid client nonce", savedState, nonce);
+                console.error("Invalid client nonce");
                 await router.replace({ name: "main" });
               } else {
                 const code = getQueryValue("code");
