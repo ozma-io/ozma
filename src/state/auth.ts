@@ -227,7 +227,6 @@ const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
 const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExisting: boolean) => {
   const nonce = uuidv4();
   sessionStorage.setItem(authNonceKey, nonce);
-  console.error("new nonce", nonce);
   const path =
         router.currentRoute.name === "auth_response" ?
           router.resolve({ name: "main" }).href :
@@ -339,7 +338,6 @@ export const authModule: Module<IAuthState, {}> = {
               const savedState: IOIDCState = JSON.parse(atob(stateString));
               const nonce = sessionStorage.getItem(authNonceKey);
               sessionStorage.removeItem(authNonceKey);
-              console.error("fetched and removed nonce", savedState, nonce);
               if (nonce === null || savedState.nonce !== nonce) {
                 // Invalid nonce; silently redirect.
                 console.error("Invalid client nonce");
