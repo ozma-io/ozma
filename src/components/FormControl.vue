@@ -94,7 +94,6 @@
         />
         <CodeEditor
           v-else-if="inputType.name === 'codeeditor'"
-          :key="codeEditorKey"
           ref="control"
           :language="inputType.language"
           :is-modal="iSlot.modal"
@@ -386,7 +385,6 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
 
   private actions: Action[] = [];
-  private codeEditorKey = 0;
   private filterString = "";
   private title = "";
   private enableFilter = false;
@@ -454,10 +452,6 @@ export default class FormControl extends Vue {
 
   private setInputHeight(value: number) {
     this.$emit("set-input-height", value);
-  }
-
-  private forceRerender() {
-    this.codeEditorKey += 1;
   }
 
   private barCodeScanned(code: string) {
@@ -658,11 +652,12 @@ export default class FormControl extends Vue {
     // values it actually supports.
 
     this.actions = [];
+    this.title = "";
+    this.filterString = "";
     this.enableFilter = false;
   }
 
   private mounted() {
-    this.forceRerender();
     if (this.autofocus) {
       const type = this.inputType;
       const control = this.$refs["control"];
