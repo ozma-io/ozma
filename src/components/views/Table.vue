@@ -117,7 +117,7 @@
                 @goto="$emit('goto', $event)"
               >
                 <i
-                  v-b-tooltip.hover.right
+                  v-b-tooltip.hover.right.noninteractive
                   :title="$t('add_entry_in_modal')"
                   class="material-icons add-in-modal-icon"
                 >add_box</i>

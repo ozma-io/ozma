@@ -1,10 +1,10 @@
 <i18n>
   {
     "en": {
-      "empty": "Empty"
+      "no_actions": "No actions available"
     },
     "ru": {
-      "empty": "Пусто"
+      "no_actions": "Нет доступных действий"
     }
   }
 </i18n>
@@ -18,12 +18,23 @@
       type="button"
       class="actions-menu_actions-button material-icons material-button"
       :value="titleIcon"
-      @click="showActions = !showActions"
+      :disabled="sortedActions.length === 0"
+      @click="toggleShowActions"
     >
     <i
       v-else
-      class="material-icons material-button right-actions-menu-button"
-      @click="showActions = !showActions"
+      v-b-tooltip.hover.noninteractive
+      :class="[
+        'material-icons',
+        'material-button',
+        'right-actions-menu-button',
+        {
+          'disabled': sortedActions.length === 0,
+        },
+      ]"
+      :title="$t('no_actions')"
+      :disabled="sortedActions.length !== 0"
+      @click="toggleShowActions"
     >{{ titleIcon }}</i>
     <div
       v-if="showActions"
@@ -39,14 +50,7 @@
         v-show="showActions"
         :class="['div-with-actions', menuAlign]"
       >
-        <template v-if="sortedActions.length == 0">
-          <label class="div-with-actions_button empty">
-            {{ $t('empty') }}
-          </label>
-        </template>
-
         <ul
-          v-else
           class="actions"
           @click="showActions = false"
         >
@@ -190,6 +194,12 @@ export default class ActionsMenu extends Vue {
   @Prop({ type: String, default: "left" }) menuAlign!: string;
 
   private showActions = false;
+
+  private toggleShowActions() {
+    if (this.sortedActions.length !== 0) {
+      this.showActions = !this.showActions;
+    }
+  }
 
   private uploadFile(input: HTMLInputElement, next: (file: File) => void) {
     this.showActions = false;
@@ -413,11 +423,11 @@ export default class ActionsMenu extends Vue {
 
   .actions-menu_actions-button {
     color: var(--MainTextColor) !important;
-    background: var(--MainBackgroundColor);
+    background: transparent;
     border: none;
     text-align: left;
     padding: 0;
-    margin-right: 10px;
+    margin-right: 5px;
     vertical-align: bottom;
   }
 

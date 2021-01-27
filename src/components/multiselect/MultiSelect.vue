@@ -569,14 +569,12 @@ export default class MultiSelect extends Vue {
     cursor: pointer;
     z-index: 10;
     color: var(--MainTextColorLight);
+    opacity: 0.3;
+    transition: opacity 0.1s;
 
-    &.close-button {
-      opacity: 0.3;
-
-      .select_container:hover &,
-      .select_container:focus-within & {
-        opacity: 1;
-      }
+    .select_container:hover &,
+    .select_container:focus-within & {
+      opacity: 1;
     }
   }
 
@@ -599,8 +597,6 @@ export default class MultiSelect extends Vue {
     max-height: 250px;
     overflow-x: hidden;
     transition: all ease-in 0.3s;
-    border-bottom: 1px solid var(--MainBorderColor);
-    border-top: 1px solid #ccc;
   }
 
   .select_container__options_list > li.select_container__options_list__option {

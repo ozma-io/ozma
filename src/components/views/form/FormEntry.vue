@@ -12,8 +12,12 @@
 </i18n>
 
 <template>
-  <b-container :style="style" fluid>
-    <b-row>
+  <b-container
+    :style="style"
+    fluid
+    class="p-0"
+  >
+    <b-row class="no-gutters">
       <b-col size="12">
         <form class="form-entry">
           <FormGrid
@@ -126,7 +130,6 @@ export default class FormEntry extends Vue {
 
 <style scoped>
   .form-entry {
-    margin-top: 10px;
     border-bottom: 0;
     border-top: 0;
   }
@@ -175,10 +178,6 @@ export default class FormEntry extends Vue {
         position: sticky;
         left: 0;
         margin-top: 10px;
-      }
-
-      .form-entry {
-        display: grid;
       }
     }
   }
