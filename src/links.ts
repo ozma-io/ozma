@@ -170,12 +170,12 @@ export interface ILinkHandler {
   handler: () => Promise<void>;
   href: string | null;
 }
- 
+
 export interface ILinkHandlerParams {
-  store: Store<any>; 
+  store: Store<any>;
   goto: ((query: IQuery) => void);
   link: Link;
-  rootEmit?: ((name: string, link: Link) => void);
+  openQRCodeScanner: ((name: string, link: Link) => void);
 }
 
 export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
@@ -234,17 +234,16 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
           store: params.store,
           goto: params.goto,
           link: retLink,
-        }
+          openQRCodeScanner: params.openQRCodeScanner,
+        };
         await linkHandler(linkHandlerParams).handler();
       }
     };
   } else if (params.link.type === "qr-code") {
-    const emit = params?.rootEmit ?? undefined;
-    if (emit !== undefined) {
-      handler = async () => {
-        emit("open-qrcode-scanner", params.link);
-      }
-    } 
+    // eslint-disable-next-line @typescript-eslint/require-await
+    handler = async () => {
+      params.openQRCodeScanner("open-qrcode-scanner", params.link);
+    };
   } else {
     throw new Error("Impossible");
   }

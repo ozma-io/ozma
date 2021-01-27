@@ -126,8 +126,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Watch("openScanner")
   private toggleOpenScanner() {
     this.modalShow = !this.modalShow;
-    //this.currentContent = null; // For test: 
-    this.currentContent = {"name":"Ingredients","schema":"user","id":436};
+    this.currentContent = null;
     this.result = [];
     this.entry = null;
     this.entries = {};
@@ -220,7 +219,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
       if (this.entry !== null) {
         if (this.link) {
           let link: Link | null = null;
-          
+
           if ("links" in this.link) {
             link = this.link.links[this.currentContent.schema][this.currentContent.name];
           }
@@ -242,11 +241,16 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
             void this.pushRoot(target);
           };
 
+          const openQRCodeScanner = (name:string, qrLink: Link) => {
+            this.$root.$emit(name, qrLink);
+          };
+
           const linkHandlerParams: ILinkHandlerParams = {
             store: this.$store,
             goto: emit,
             link,
-          } 
+            openQRCodeScanner,
+          };
 
           const { handler, href } = linkHandler(linkHandlerParams);
           if (handler) {

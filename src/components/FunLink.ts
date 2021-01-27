@@ -34,22 +34,22 @@ export default Vue.component("FunLink", {
 
     if (link === null) {
       return context.children;
-    };
+    }
 
     const emit = (query: IQuery) => {
       vueEmit(context, "goto", query);
     };
 
-    const rootEmit = (name:string, link: Link) => {
-      context.parent.$root.$emit(name, link);
+    const openQRCodeScanner = (name:string, qrLink: Link) => {
+      context.parent.$root.$emit(name, qrLink);
     };
 
     const linkHandlerParams: ILinkHandlerParams = {
       store: context.parent.$store,
       goto: emit,
-      rootEmit,
+      openQRCodeScanner,
       link,
-    }
+    };
 
     const { handler, href } = linkHandler(linkHandlerParams);
 

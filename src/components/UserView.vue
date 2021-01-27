@@ -369,9 +369,10 @@ export default class UserView extends Vue {
           const linkHandlerParams: ILinkHandlerParams = {
             store: this.$store,
             goto: target => this.$emit("goto", target),
+            openQRCodeScanner: (name, link) => this.$root.$emit(name, link),
             link: newType.link,
-          }
-          const handler = linkHandler( linkHandlerParams );
+          };
+          const handler = linkHandler(linkHandlerParams);
           await handler.handler();
           // Because we need router to switch URL.
           await this.$nextTick();
@@ -532,9 +533,10 @@ export default class UserView extends Vue {
           const linkHandlerParams: ILinkHandlerParams = {
             store: this.$store,
             goto: target => this.$emit("goto", target),
-            link
-          }
-          await linkHandler( linkHandlerParams ).handler();
+            openQRCodeScanner: (name, qrLink) => this.$root.$emit(name, qrLink),
+            link,
+          };
+          await linkHandler(linkHandlerParams).handler();
         } catch (e) {
           this.reloadIfRoot();
           return;

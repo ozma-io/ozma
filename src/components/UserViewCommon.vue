@@ -62,7 +62,7 @@ import SelectUserView from "@/components/SelectUserView.vue";
 import { mapMaybe, saveToFile, tryDicts } from "@/utils";
 import { Action } from "@/components/ActionsMenu.vue";
 import { IPanelButton } from "@/components/ButtonsPanel.vue";
-import { attrToLink, Link } from "@/links";
+import { attrToLink } from "@/links";
 import QRCodeScanner, { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
 import BarCodeScanner from "@/components/barcode/BarCodeScanner.vue";
 import { ValueRef, valueToPunnedText } from "@/user_views/combined";
