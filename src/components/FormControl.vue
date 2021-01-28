@@ -160,6 +160,7 @@
           :is-disabled="isDisabled"
           :background-color="cellColor"
           @update:actions="actions = $event"
+          @update:buttons="buttons = $event"
           @focus="iSlot.onFocus"
           @update="updateValue($event)"
           @goto="$emit('goto', $event)"
@@ -172,54 +173,15 @@
           v-if="usedCaption"
           :cols="isMultiline ? 12 : 4"
         >
-          <div
-            v-if="actions.length > 0"
-            class="nested-menu"
-          >
-            <label
-              v-b-tooltip.click.blur.bottom.noninteractive
-              class="input_label"
-              tabindex="0"
-              :title="usedCaption"
-            >
-              {{ usedCaption }}
-            </label>
-            <SearchPanel
-              v-visible="enableFilter"
-              @update:filterString="filterString = $event"
-            />
-            <ActionsMenu
-              :actions="actions"
-              menu-align="right"
-              @goto="$emit('goto', $event)"
-            />
-            <i
-              class="material-icons material-button fullscreen_button"
-              @click.stop="openFullscreen(inputType)"
-            >fullscreen</i>
-          </div>
-          <div v-else-if="inputType.name == 'empty_userview'">
-            <div class="nested-menu">
-              <label
-                v-b-tooltip.click.blur.bottom.noninteractive
-                class="input_label"
-                tabindex="0"
-                :title="usedCaption"
-              >
-                {{ usedCaption }}
-              </label>
-              <ActionsMenu
-                menu-align="right"
-                :actions="[]"
-              />
-            </div>
-            <div class="empty_userview_text">
-              {{ inputType.text }}
-            </div>
-          </div>
-          <div v-else class="input_label__container">
-            <label class="input_label_single">{{ usedCaption }}</label>
-          </div>
+          <NestedUserViewPanel
+            :used-caption="usedCaption"
+            :actions="actions"
+            :enable-filter="enableFilter"
+            :input-type="inputType"
+            :panel-buttons="panelButtons"
+            @update:filterString="filterString = $event"
+            @goto="$emit('goto', $event)"
+          />
         </b-col>
         <b-col :cols="!isMultiline && usedCaption ? 8 : 12">
           <div v-if="inputType.name === 'userview'" :style="{ backgroundColor: cellColor, borderRadius: '0.2rem' }">
@@ -231,9 +193,10 @@
               :level="level + 1"
               :filter-string="filterString"
               @update:actions="actions = $event"
-              @goto="$emit('goto', $event)"
+              @update:panelButtons="panelButtons = $event"
               @update:enableFilter="enableFilter = $event"
               @update:title="updateTitle"
+              @goto="$emit('goto', $event)"
             />
           </div>
         </b-col>
@@ -248,14 +211,14 @@ import { namespace } from "vuex-class";
 
 import { valueToText, valueIsNull } from "@/values";
 import type { AttributesMap, ValueType } from "@/api";
-import { router } from "@/modules";
 import { Action } from "@/components/ActionsMenu.vue";
-import { IQuery, attrToQuerySelf, queryLocation } from "@/state/query";
+import { IQuery, attrToQuerySelf } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { IReferenceSelectAction } from "@/components/ReferenceField.vue";
 import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
+import { PanelButton } from "@/components/ButtonsPanel.vue";
 
 interface ITextType {
   name: "text";
@@ -306,7 +269,7 @@ interface ICheckType {
   name: "check";
 }
 
-interface IUserViewType extends IQuery {
+export interface IUserViewType extends IQuery {
   name: "userview";
 }
 
@@ -334,7 +297,7 @@ interface IStaticImageType {
   name: "static_image";
 }
 
-type IType =
+export type IType =
   ITextType
   | ITextAreaType
   | ICodeEditorType
@@ -366,15 +329,8 @@ const multilineTypes = ["markdown", "codeeditor", "textarea", "userview", "empty
     InputSlot: () => import("@/components/form/InputSlot.vue"),
     Input: () => import("@/components/form/Input.vue"),
     Textarea: () => import("@/components/form/Textarea.vue"),
-
-    /* FIXME SearchPanel doesn't have to be in FormControl.
-       SearchPanel needs to be moved to NestedUserView when ActionsMenu and
-       other components are moved from FormControl.
-       FormControl needs to be split into smaller components.
-    */
-
-    SearchPanel: () => import("@/components/SearchPanel.vue"),
     NestedUserView: () => import("@/components/NestedUserView.vue"),
+    NestedUserViewPanel: () => import("@/components/panels/NestedUserViewPanel.vue"),
     QRCode: () => import("@/components/qrcode/QRCode.vue"),
     BarCode: () => import("@/components/barcode/BarCode.vue"),
     BarCodePrint: () => import("@/components/barcode/BarCodePrint.vue"),
@@ -400,6 +356,8 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
 
   private actions: Action[] = [];
+  private panelButtons: PanelButton[] = [];
+  private codeEditorKey = 0;
   private filterString = "";
   private title = "";
   private enableFilter = false;
@@ -455,10 +413,6 @@ export default class FormControl extends Vue {
     const isHeightOnPanel = !this.isMultiline;
     const height = isHeightOnPanel ? { height: `${this.customHeight}px` } : {};
     return !excludeHeight ? { ...height, maxHeight: "initial" } : {};
-  }
-
-  private openFullscreen(view: IUserViewType) {
-    void router.push(queryLocation(view));
   }
 
   private updateTitle(title: string | null) {
@@ -667,6 +621,7 @@ export default class FormControl extends Vue {
     // values it actually supports.
 
     this.actions = [];
+    this.panelButtons = [];
     this.title = "";
     this.filterString = "";
     this.enableFilter = false;

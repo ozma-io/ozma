@@ -120,29 +120,60 @@
 
         <ul
           class="buttons"
-          @click="showActions = false"
+          @click="showActions=false"
         >
-          <li v-for="(button, i) in buttons" :key="i">
-            <div>
-              <i class="material-icons material-button">{{ button.icon || "arrow_right" }}</i>
-              <span>{{ button.name }}</span>
-            </div>
-            <ul class="actions">
-              <FunLink
-                v-for="(action, j) in button.actions"
-                :key="j"
-                :link="action.link"
-                @goto="$emit('goto', $event)"
-              >
-                <li v-if="'link' in action" :key="action.name">
-                  <div>
-                    <i class="material-icons material-button">{{ action.icon || "arrow_right" }}</i>
-                    <span>{{ action.name }}</span>
-                  </div>
-                </li>
-              </FunLink>
-            </ul>
-          </li>
+          <template v-for="(button, i) in buttons">
+            <span
+              v-if="'callback' in button && button.position == 'left'"
+              :key="i"
+              @click="button.callback()"
+            >
+              <li>
+                <div>
+                  <i :class="['material-icons',{'emoji': getIconType(button.icon) == 'emoji' }]">{{ button.icon || "arrow_right" }}</i>
+                  <span>{{ button.name }}</span>
+                </div>
+              </li>
+            </span>
+
+            <FunLink
+              v-else-if="'link' in button && button.position == 'left'"
+              :key="i"
+              :link="button.link"
+              @goto="$emit('goto', $event)"
+            >
+              <li>
+                <div>
+                  <i :class="['material-icons',{'emoji': getIconType(button.icon) == 'emoji' }]">{{ button.icon || "arrow_right" }}</i>
+                  <span>{{ button.name }}</span>
+                </div>
+              </li>
+            </FunLink>
+
+            <span v-else-if="'actions' in button" :key="i">
+              <li>
+                <div class="title">
+                  <i :class="['material-icons',{'emoji': getIconType(button.icon) == 'emoji' }]">{{ button.icon || "arrow_right" }}</i>
+                  <span>{{ button.name }}</span>
+                </div>
+                <ul class="actions">
+                  <FunLink
+                    v-for="(action, j) in button.actions"
+                    :key="j"
+                    :link="action.link"
+                    @goto="$emit('goto', $event)"
+                  >
+                    <li v-if="'link' in action" :key="action.name">
+                      <div>
+                        <i :class="['material-icons',{'emoji': getIconType(action.icon) == 'emoji' }]">{{ action.icon || "arrow_right" }}</i>
+                        <span>{{ action.name }}</span>
+                      </div>
+                    </li>
+                  </FunLink>
+                </ul>
+              </li>
+            </span>
+          </template>
         </ul>
       </div>
     </transition>
@@ -153,6 +184,7 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { RawLocation } from "vue-router";
 import { IPanelButton } from "@/components/ButtonsPanel.vue";
+import { getIconType } from "@/utils";
 
 import { Link } from "@/links";
 
@@ -194,6 +226,10 @@ export default class ActionsMenu extends Vue {
   @Prop({ type: String, default: "left" }) menuAlign!: string;
 
   private showActions = false;
+
+  private getIconType(str: string | undefined | null) {
+    return getIconType(str);
+  }
 
   private toggleShowActions() {
     if (this.sortedActions.length !== 0) {
@@ -258,18 +294,28 @@ export default class ActionsMenu extends Vue {
     display: none;
   }
 
-  ul.buttons > li {
+  ul.buttons li {
     list-style: none;
   }
 
-  ul.buttons > li > div {
-    background-color: #f9f9fb;
-    font-weight: 600;
+  ul.buttons > a > li > div,
+  ul.buttons > span > li > div {
     display: flex;
     padding: 5px 25px 5px 15px;
   }
 
-  ul.buttons > li > div > span {
+  ul.buttons div.title {
+    background-color: #f9f9fb;
+    font-weight: 600;
+  }
+
+  ul.buttons div.title:hover {
+    cursor: auto;
+    background-color: #f9f9fb;
+  }
+
+  ul.buttons > a > li > div > span,
+  ul.buttons > span > li > div > span {
     padding-left: 10px;
     padding-top: 1px;
   }
@@ -320,6 +366,17 @@ export default class ActionsMenu extends Vue {
   ul.actions > a > li > div > span {
     padding-left: 10px;
     padding-top: 2px;
+  }
+
+  ul.buttons > a > li > div:hover,
+  ul.buttons > span > li > div:hover {
+    cursor: pointer;
+    background-color: var(--MainBorderColor);
+    color: var(--MainTextColor);
+  }
+
+  .emoji {
+    font-size: 20px;
   }
 
   @media only screen and (max-width: 900px) {
@@ -446,10 +503,6 @@ export default class ActionsMenu extends Vue {
         position: fixed;
         left: 0;
         top: 54px;
-      }
-
-      .nested-menu .div-with-actions.right {
-        left: -83vw !important;
       }
 
       .black-block {

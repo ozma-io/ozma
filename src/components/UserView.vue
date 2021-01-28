@@ -100,7 +100,7 @@ import { ICurrentQueryHistory, IQuery } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
 import { Action } from "@/components/ActionsMenu.vue";
 import UserViewCommon from "@/components/UserViewCommon.vue";
-import { IPanelButton } from "@/components/ButtonsPanel.vue";
+import { PanelButton } from "@/components/ButtonsPanel.vue";
 import { addLinkDefaultArgs, attrToLink, Link, linkHandler } from "@/links";
 import type { ICombinedUserViewAny, IUserViewArguments } from "@/user_views/combined";
 import { CombinedUserView } from "@/user_views/combined";
@@ -220,7 +220,7 @@ export default class UserView extends Vue {
   // Use this user view to select and return an entry.
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
 
-  private panelButtons: IPanelButton[] = [];
+  private panelButtons: PanelButton[] = [];
   private extraActions: Action[] = [];
   private extraCommonActions: Action[] = [];
   // Old user view is shown while new component for uv is loaded.

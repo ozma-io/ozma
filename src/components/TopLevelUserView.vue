@@ -185,7 +185,7 @@ import { setHeadTitle } from "@/elements";
 import { ErrorKey } from "@/state/errors";
 import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/staging_changes";
 import { Action } from "@/components/ActionsMenu.vue";
-import { IPanelButton } from "@/components/ButtonsPanel.vue";
+import { PanelButton } from "@/components/ButtonsPanel.vue";
 import ModalUserView from "@/components/ModalUserView.vue";
 import SearchPanel from "@/components/SearchPanel.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
@@ -220,7 +220,7 @@ export default class TopLevelUserView extends Vue {
   @errors.Mutation("removeError") removeError!: (params: { key: ErrorKey; index: number }) => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
 
-  private panelButtons: IPanelButton[] = [];
+  private panelButtons: PanelButton[] = [];
   private extraActions: Action[] = [];
   private statusLine = "";
   private enableFilter = false;
