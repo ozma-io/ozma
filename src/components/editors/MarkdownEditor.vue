@@ -86,7 +86,7 @@ export default class MarkdownEditor extends Vue {
 
   private onChange() {
     const editor = this.$refs.editor as EditorType;
-    const newValue = editor.invoke("getMarkdown") as string;
+    const newValue = (editor.invoke("getMarkdown") as string).trim();
     if (this.currentContent !== newValue) {
       this.currentContent = newValue;
       this.$emit("update:content", newValue);
