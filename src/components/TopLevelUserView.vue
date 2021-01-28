@@ -199,9 +199,13 @@ const settings = namespace("settings");
 const query = namespace("query");
 const errors = namespace("errors");
 
-@Component({ components: {
-  SearchPanel, ModalUserView, ProgressBar,
-} })
+@Component({
+  components: {
+    SearchPanel,
+    ModalUserView,
+    ProgressBar,
+  },
+})
 export default class TopLevelUserView extends Vue {
   @auth.State("current") currentAuth!: CurrentAuth | null;
   @auth.State("pending") authPending!: Promise<void> | null;

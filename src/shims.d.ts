@@ -54,3 +54,5 @@ declare module "vuedraggable" {
     newDraggableIndex: number;
   }
 }
+
+declare module "vue-popperjs";

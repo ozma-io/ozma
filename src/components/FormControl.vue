@@ -29,7 +29,7 @@
       :text-align="textAlign"
       :modal="$isMobile && (forceModalOnMobile || isMultiline)"
       :required="!isNullable && inputType.name !== 'select'"
-      :empty="currentValue === '' || currentValue === null || currentValue === undefined"
+      :empty="currentValueIsNull"
       @close-modal-input="$emit('close-modal-input')"
     >
       <template #default="iSlot">
@@ -411,6 +411,10 @@ export default class FormControl extends Vue {
   // Current value, can be a raw value (e.g., a string for a `datetime` value) or a validated value.
   get currentValue() {
     return currentValue(this.value);
+  }
+
+  get currentValueIsNull() {
+    return valueIsNull(currentValue);
   }
 
   get isAwaited() {

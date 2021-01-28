@@ -3,120 +3,152 @@
       "en": {
         "empty_message": "Empty",
         "clear_all": "Clear all",
-        "enter_value": "Enter value"
+        "search_placeholder": "Search"
       },
       "ru": {
         "empty_message": "Пусто",
         "clear_all": "Очистить",
-        "enter_value": "Введите значение"
+        "search_placeholder": "Поиск"
       }
     }
 </i18n>
 
 <template>
   <div
-    @keydown.tab="() => setIsOpen(false)"
+    @keydown.tab="() => closePopup()"
   >
-    <div
-      ref="selectContainer"
-      v-click-outside="() => setIsOpen(false)"
-      :class="[
-        'select_container',
-        {
-          'select_container_hover': isOpen,
-          'select_container_fixed_height': hasHeight && !isOpen && !single,
-          'select_container__required': required && isEmpty,
-        },
-      ]"
+    <popper
+      ref="popup"
+      trigger="clickToToggle"
+      :disabled="disabled"
+      :options="{
+        placement: 'bottom',
+      }"
+      @show="onOpenPopup"
     >
+      <!-- eslint-disable vue/no-deprecated-slot-attribute -->
+      <!-- TODO: Find or make not deprecated popper.js wrapper -->
       <div
-        v-if="single && !isEmpty"
-        class="single_value_button"
-        @click="setIsOpen(!isOpen)"
-      >
-        <slot
-          name="singleValue"
-          :listValueStyle="listValueStyle"
-          :valueOption="valueOption"
-        >
-          <div
-            :style="listValueStyle"
-            :class="[ 'single_value' ]"
-          >
-            {{ valueOption.label }}
-          </div>
-        </slot>
-      </div>
-      <span
-        v-if="isEmpty"
-        :style="listValueStyle"
-        class="empty_message_text"
-        @click="setIsOpen(!isOpen)"
-      >{{ $t('empty_message') }}</span>
-      <div
-        v-if="(!single && !isEmpty)"
-        ref="valuesList"
+        slot="reference"
+        ref="selectContainer"
         :class="[
-          'select_container__content',
+          'select-container',
           {
-            'select_container__content__single': showSingleValue,
-            'select_container__content_fixed_height': hasHeight && !isOpen,
-          }
+            'fixed-height': hasHeight && !isOpen && !single,
+          },
         ]"
-        :style="containerContentStyle"
-        @click="setIsOpen(!isOpen)"
       >
-        <slot
-          v-if="!single"
-          name="label"
-          :valueOptions="valueOptions"
-          :listValueStyle="listValueStyle"
-          :removeValue="removeValue"
-          :showValueRemove="showValueRemove"
+        <!-- eslint-enable vue/no-deprecated-slot-attribute -->
+        <span
+          v-if="isEmpty"
+          :style="listValueStyle"
+          class="empty-message-text"
         >
-          <div
-            v-for="(option, index) in valueOptions"
-            :key="option.value"
-            class="values_list__value single_value"
-            :style="listValueStyle"
-            @click.stop
-          >
-            {{ option.label }}
-            <input
-              v-if="showValueRemove"
-              type="button"
-              class="material-icons values_list__value__close"
-              value="close"
-              @click="removeValue(index)"
-              @blur="() => setIsOpen(false)"
-            >
-          </div>
-        </slot>
-      </div>
-      <transition name="fade">
+          {{ $t('empty_message') }}
+        </span>
+
         <div
-          v-if="isOpen"
-          class="select_container__options_container rounded border overflow-hidden"
-          :style="{
-            top: optionsContainerCoords.top ?`${optionsContainerCoords.top}px` : 'auto',
-            bottom: optionsContainerCoords.bottom ? `${optionsContainerCoords.bottom}px` : 'auto'
-          }"
+          v-else
+          ref="valuesList"
+          :class="[
+            'selected-values',
+            {
+              'fixed-height': hasHeight,
+            }
+          ]"
+          :style="containerContentStyle"
         >
-          <input
-            v-if="isOpen && isNeedFilter && isTopFilter"
-            ref="controlInput"
-            v-model="inputValue"
-            type="text"
-            :style="listValueStyle"
-            class="select_container__input"
-            :placeholder="$t('enter_value')"
-            @keydown.backspace="onBackspace"
-            @keydown.up="offsetSelectedOption(-1)"
-            @keydown.down="offsetSelectedOption(1)"
-            @keydown.enter="addSelectedOptionToValue"
-          >
           <slot
-            v-if="isOpen"
+            v-if="single"
+            name="singleValue"
+            :listValueStyle="listValueStyle"
+            :valueOption="valueOption"
+          >
+            <div
+              :style="listValueStyle"
+              class="single-value"
+            >
+              {{ valueOption.label }}
+            </div>
+          </slot>
+
+          <slot
+            v-else
+            name="label"
+            :valueOptions="valueOptions"
+            :listValueStyle="listValueStyle"
+            :removeValue="removeValue"
+            :showValueRemove="showValueRemove"
+          >
+            <div
+              v-for="(option, index) in valueOptions"
+              :key="option.value"
+              class="one-of-many-value single-value"
+              :style="listValueStyle"
+              @click.stop
+            >
+              {{ option.label }}
+              <input
+                v-if="showValueRemove"
+                type="button"
+                class="material-icons remove-value"
+                value="close"
+                @click="removeValue(index)"
+                @blur="() => closePopup()"
+              >
+            </div>
+          </slot>
+        </div>
+
+        <input
+          v-if="!disabled && (required || isEmpty)"
+          type="button"
+          class="material-icons select-container__chevron"
+          :value="isOpen ? 'expand_less' : 'expand_more'"
+        >
+        <input
+          v-if="!isEmpty && !required && !disabled"
+          type="button"
+          class="material-icons material-button close-button select-container__chevron"
+          value="close"
+          @click.stop="removeValue()"
+        >
+      </div>
+
+      <div class="popper rounded shadow">
+        <div
+          ref="selectedOptionsContainer"
+          class="select-container__options_container overflow-hidden"
+        >
+          <b-input-group
+            v-if="isNeedFilter"
+            class="focus-entire filter-group"
+          >
+            <b-input-group-prepend>
+              <b-input-group-text
+                class="with-material-icon prepend-icon"
+                variant="outline-secondary"
+              >
+                <i class="material-icons"> search </i>
+              </b-input-group-text>
+            </b-input-group-prepend>
+            <b-input
+              ref="filterInput"
+              v-model="filterValue"
+              size="sm"
+              type="text"
+              :style="listValueStyle"
+              class="filter-input"
+              :placeholder="$t('search_placeholder')"
+              @keydown.backspace="onBackspace"
+              @keydown.up="offsetSelectedOption(-1)"
+              @keydown.down="offsetSelectedOption(1)"
+              @keydown.enter="addSelectedOptionToValue"
+              @focus="onFilterInputFocus"
+            />
+          </b-input-group>
+
+          <slot
             name="option"
             :selectedOptions="selectedOptions"
             :addOptionToValue="addOptionToValue"
@@ -125,63 +157,34 @@
           >
             <ul
               ref="optionsList"
-              class="select_container__options_list"
+              class="select-container__options_list"
               :style="optionsListStyle"
             >
               <li
                 v-for="(option, index) in selectedOptions"
                 :key="option.value"
                 :class="[
-                  'select_container__options_list__option',
-                  'single_value',
-                  {'select_container__options_list__option_active': selectedOption === index }
+                  'select-container__options_list__option',
+                  'single-value',
+                  {'select-container__options_list__option_active': selectedOption === index }
                 ]"
-                @click="addOptionToValue(option, $event)"
+                @click="addOptionToValue(option)"
               >
                 {{ option.label }}
               </li>
             </ul>
             <div
-              class="select_container__options__actions"
-              @click="setIsOpen(false)"
+              class="select-container__options__actions"
+              @click="closePopup()"
             >
               <slot
-                v-if="isOpen"
                 name="actions"
               />
             </div>
           </slot>
-
-          <input
-            v-if="isOpen && isNeedFilter && !isTopFilter"
-            ref="controlInput"
-            v-model="inputValue"
-            type="text"
-            :style="listValueStyle"
-            class="select_container__input"
-            :placeholder="$t('enter_value')"
-            @keydown.backspace="onBackspace"
-            @keydown.up="offsetSelectedOption(-1)"
-            @keydown.down="offsetSelectedOption(1)"
-            @keydown.enter="addSelectedOptionToValue"
-          >
         </div>
-      </transition>
-      <input
-        v-if="!disabled && (required || isEmpty)"
-        type="button"
-        class="material-icons select_container__chevron"
-        :value="isOpen ? 'expand_less' : 'expand_more'"
-        @click="setIsOpen(!isOpen)"
-      >
-      <input
-        v-if="!isEmpty && !required && !disabled"
-        type="button"
-        class="material-icons material-button close-button select_container__chevron"
-        value="close"
-        @click.stop="removeValue()"
-      >
-    </div>
+      </div>
+    </popper>
   </div>
 </template>
 
@@ -190,6 +193,8 @@ import * as R from "ramda";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { valueIsNull } from "@/values";
 import { replaceHtmlLinks } from "@/utils";
+import Popper from "vue-popperjs";
+/* import "vue-popperjs/dist/vue-popper.css"; */
 
 export interface ISelectOption {
   value: any;
@@ -204,7 +209,7 @@ export interface ISelectOptionHtml extends ISelectOption {
 const defaultOptionFilter = (query: string) => (option: ISelectOption) =>
   R.contains(query.toLowerCase().trim(), R.pathOr("", ["label"], option).toLowerCase());
 
-@Component({})
+@Component({ components: { Popper } })
 export default class MultiSelect extends Vue {
   @Prop({}) value!: any;
   @Prop({ type: Array, default: () => [] }) options!: ISelectOption[];
@@ -217,57 +222,34 @@ export default class MultiSelect extends Vue {
   @Prop({ type: String, default: null }) optionsListHeight!: string;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
 
-  private isOpen = false;
   private selectedOption = -1;
-  private inputValue = "";
+  private filterValue = "";
   private isNeedFilter = true;
-  private isTopFilter = true;
-  private optionsContainerCoords = { top: 0, bottom: 0 };
+
+  private get isOpen(): boolean {
+    const popupRef: any = this.$refs.popup;
+    return popupRef?.showPopper ?? false;
+  }
 
   private mounted() {
     if (this.selectedOptions.length < 3 && this.single) {
       this.isNeedFilter = false;
     }
-    this.setOptionsContainerCoords();
     if (this.autofocus) {
-      void Vue.nextTick().then(() => {
-        this.setIsOpen(true);
-      });
+      void this.onAutofocus(true);
     }
   }
 
   @Watch("autofocus")
-  private onAutofocus(autofocus: boolean) {
+  private async onAutofocus(autofocus: boolean) {
     if (autofocus) {
-      this.setIsOpen(true);
-    }
-  }
-
-  private setOptionsContainerCoords() {
-    this.optionsContainerCoords = { top: 0, bottom: 0 };
-    this.isTopFilter = true;
-
-    const bodyRect = document.body.getBoundingClientRect();
-    const selectContainerElement = this.$refs.selectContainer as HTMLInputElement;
-    const selectContainerRect = selectContainerElement !== undefined ? selectContainerElement.getBoundingClientRect() : null;
-
-    if (selectContainerRect !== null) {
-      // There we check cell position for open selectContainer up or down.
-      if (selectContainerRect.top - selectContainerRect.top * 0.7 > (bodyRect.bottom - selectContainerRect.bottom)) {
-        this.isTopFilter = !this.isTopFilter;
-        this.optionsContainerCoords.bottom = selectContainerRect.height;
-        // It is need for set focus to search input if options opened.
-        if (this.isOpen) {
-          this.focusInput();
-        }
-      } else {
-        this.optionsContainerCoords.top = selectContainerRect.height;
-      }
+      await this.$nextTick();
+      void this.openPopup();
     }
   }
 
   private onBackspace() {
-    if (this.inputValue === "" && !this.single && !this.disabled && (!this.required || (this.required && this.currentValues.length > 1))) {
+    if (this.filterValue === "" && !this.single && !this.disabled && (!this.required || (this.required && this.currentValues.length > 1))) {
       this.removeValue(this.currentValues.length - 1);
     }
   }
@@ -286,7 +268,7 @@ export default class MultiSelect extends Vue {
   }
 
   private get showSingleValue() {
-    const showIfEditing = !this.isOpen || (this.isOpen && this.inputValue === "");
+    const showIfEditing = !this.isOpen || (this.isOpen && this.filterValue === "");
     return this.single && !this.isEmpty && showIfEditing;
   }
 
@@ -372,7 +354,7 @@ export default class MultiSelect extends Vue {
 
   private get selectedOptions(): ISelectOptionHtml[] {
     return this.options
-      .filter(this.optionFilterFN(this.inputValue))
+      .filter(this.optionFilterFN(this.filterValue))
       .map(option => {
         const label = this.getLabel(option);
         const labelHtml = replaceHtmlLinks(label);
@@ -381,26 +363,50 @@ export default class MultiSelect extends Vue {
   }
 
   private focusInput() {
-    if (this.$refs.controlInput) {
-      (this.$refs.controlInput as HTMLInputElement).focus();
+    if (this.$refs.filterInput) {
+      (this.$refs.filterInput as HTMLInputElement).focus();
     }
   }
 
-  private setIsOpen(val: boolean) {
-    if (this.disabled) {
-      return;
-    }
-    this.setOptionsContainerCoords();
-    this.isOpen = val;
+  private onFilterInputFocus() {
+    this.$emit("focus", null);
+  }
+
+  private async openPopup() {
+    if (this.disabled) return;
+    const popupRef: any = this.$refs.popup;
+    if (!popupRef) return;
+
+    await popupRef.doShow();
     this.selectedOption = -1;
-    if (val) {
-      // Using nextTick() to set focus because upon setting isOpen it's not present yet
-      void Vue.nextTick().then(() => {
-        this.focusInput();
-      });
-    }
-    if (val) {
-      this.$emit("focus", null);
+  }
+
+  private async onOpenPopup() {
+    // On-screen keyboard disturbs if there are not so many options to filter.
+    if (this.$isMobile) return;
+
+    await Vue.nextTick();
+    this.focusInput();
+  }
+
+  private async closePopup() {
+    if (this.disabled) return;
+    const popupRef: any = this.$refs.popup;
+    if (!popupRef) return;
+
+    await popupRef.doClose();
+    this.selectedOption = -1;
+  }
+
+  private togglePopup() {
+    if (this.disabled) return;
+    const popupRef: any = this.$refs.popup;
+    if (!popupRef) return;
+
+    if (popupRef.showPopper) {
+      void this.closePopup();
+    } else {
+      void this.openPopup();
     }
   }
 
@@ -430,16 +436,17 @@ export default class MultiSelect extends Vue {
         const newValue = R.uniq([...this.currentValues, option.value]);
         this.$emit("update:value", newValue);
       }
-      this.inputValue = "";
-      const controlInput = this.$refs.controlInput as HTMLInputElement;
-      if (controlInput !== undefined) {
-        controlInput.focus();
+      this.filterValue = "";
+      const filterInput = this.$refs.filterInput as HTMLInputElement;
+      if (filterInput !== undefined) {
+        filterInput.focus();
       }
       this.findNewSelected();
     }
-    this.setIsOpen(false);
+    void this.closePopup();
   }
 
+  // FIXME: keyboard selecting doesn's seems to work.
   private addSelectedOptionToValue() {
     if (this.selectedOption > -1) {
       const option: ISelectOption | null = R.pathOr(null, [this.selectedOption], this.selectedOptions);
@@ -461,7 +468,7 @@ export default class MultiSelect extends Vue {
     } else {
       this.$emit("update:value", this.emptyValue);
     }
-    this.setIsOpen(false);
+    void this.closePopup();
   }
 
   private clearValues() {
@@ -484,7 +491,13 @@ export default class MultiSelect extends Vue {
     opacity: 0;
   }
 
-  .empty_message_text {
+  .prepend-icon {
+    background-color: var(--MainBackgroundColor);
+    color: var(--MainTextColorLight);
+    border-right-width: 0;
+  }
+
+  .empty-message-text {
     display: inline-flex;
     width: 100%;
     cursor: pointer;
@@ -493,15 +506,18 @@ export default class MultiSelect extends Vue {
     color: var(--MainTextColorLight);
   }
 
-  .select_container {
+  .select-container {
     display: flex;
     flex-direction: row;
-    position: relative;
     width: 100%;
     border: 1px solid #ced4da;
     border-radius: 0.2rem;
     padding: 0.15rem 0.5rem;
     padding-left: 4px;
+
+    &.fixed-height {
+      box-shadow: inset -5px -5px 8px 5px rgba(0, 0, 0, 0.25);
+    }
 
     &:focus-within {
       /* TODO: Move this to one file! */
@@ -514,52 +530,30 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  .input_modal__input_group .select_container {
-    padding: 2px;
-  }
-
-  .select_container__error {
-    background: var(--FailColor) !important;
-  }
-
-  .select_container__required {
-    background: var(--WarningColor) !important;
-  }
-
-  .select_container_fixed_height {
-    box-shadow: inset -5px -5px 8px 5px rgba(0, 0, 0, 0.25);
-  }
-
-  .select_container__content {
+  .selected-values {
     width: 100%;
     cursor: pointer;
     align-content: center;
     overflow-x: auto;
+
+    &.fixed-height {
+      overflow: hidden;
+    }
   }
 
-  .select_container__content_fixed_height {
-    overflow: hidden;
+  .filter-group {
+    margin-bottom: 5px;
+
+    .filter-input {
+      border-left-width: 0;
+    }
+
+    .filter-input:focus {
+      outline: none;
+    }
   }
 
-  .select_container__content_norwap {
-    flex-wrap: nowrap;
-    overflow-x: hidden;
-    height: unset !important;
-  }
-
-  .select_container__input {
-    width: 100%;
-    border: 0;
-    padding: 5px;
-    color: var(--MainTextColor);
-    background-color: var(--MainBackgroundColor);
-  }
-
-  .select_container__input:focus {
-    outline: none;
-  }
-
-  .select_container__chevron {
+  .select-container__chevron {
     display: flex;
     justify-content: center;
     margin-left: auto;
@@ -572,34 +566,31 @@ export default class MultiSelect extends Vue {
     opacity: 0.3;
     transition: opacity 0.1s;
 
-    .select_container:hover &,
-    .select_container:focus-within & {
+    .select-container:hover &,
+    .select-container:focus-within & {
       opacity: 1;
     }
   }
 
-  .select_container__options_container {
+  .select-container__options_container {
     z-index: 1001;
-    list-style: none;
-    width: calc(100% + 10px);
-    position: absolute;
-    top: calc(100% + 2px);
-    left: -5px;
-    margin: 0;
+    width: 100%;
+    max-width: 100vw;
     background: white;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-    border-radius: 1px;
+    list-style: none;
+    padding: 5px;
   }
 
-  .select_container__options_list {
-    padding: 2px;
+  .select-container__options_list {
+    padding: 0;
     margin: 0;
     max-height: 250px;
     overflow-x: hidden;
-    transition: all ease-in 0.3s;
+    text-align: left;
+    transition: all ease-in 0.2s;
   }
 
-  .select_container__options_list > li.select_container__options_list__option {
+  .select-container__options_list > li.select-container__options_list__option {
     color: var(--MainTextColor);
     margin: 2px;
     padding: 4px 8px;
@@ -607,24 +598,24 @@ export default class MultiSelect extends Vue {
     line-height: 1rem;
   }
 
-  .select_container__options_list > li.select_container__options_list__option:hover,
-  .select_container__options_list__option_active {
+  .select-container__options_list > li.select-container__options_list__option:hover,
+  .select-container__options_list__option_active {
     cursor: pointer;
     background-color: var(--MainBorderColor);
     color: var(--MainTextColor);
   }
 
-  .select_container__options_list__option > span {
+  .select-container__options_list__option > span {
     margin: 0;
   }
 
-  div.select_container__options__actions {
+  div.select-container__options__actions {
     bottom: 0;
     padding: 0;
     color: red;
   }
 
-  .values_list__value {
+  .one-of-many-value {
     margin: 2px;
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
@@ -632,43 +623,38 @@ export default class MultiSelect extends Vue {
     max-width: 95%;
   }
 
-  .values_list__value,
-  .single_value {
+  .one-of-many-value,
+  .single-value {
     display: inline-flex;
     align-items: center;
     color: var(--MainTextColor);
-    border-radius: 5px;
+    border-radius: 1rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     padding: 2px 5px;
     line-height: 1rem;
   }
 
-  .single_value {
+  .single-value {
     align-self: center;
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
   }
 
-  .single_value_open {
+  .single-value_open {
     color: gray;
   }
 
-  .single_value_button {
-    cursor: pointer;
-    display: flex;
-    width: 100%;
-  }
-
-  .values_list__value > input.values_list__value__close {
+  .one-of-many-value > input.remove-value {
     background: none;
     border: none;
     padding: 0;
     margin: 0 0 0 5px;
     font-size: inherit;
-    color: var(--FailColor);
+    color: var(--MainTextColor);
   }
 
-  .values_list__value:hover,
-  .values_list__value:hover > input.values_list__value__close {
+  .one-of-many-value:hover,
+  .one-of-many-value:hover > input.remove-value {
     cursor: pointer;
     background-color: var(--MainBorderColor);
   }
