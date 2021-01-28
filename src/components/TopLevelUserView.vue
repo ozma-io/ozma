@@ -189,7 +189,7 @@ import { IPanelButton } from "@/components/ButtonsPanel.vue";
 import ModalUserView from "@/components/ModalUserView.vue";
 import SearchPanel from "@/components/SearchPanel.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
-import { CurrentAuth, getAuthedLink } from "@/state/auth";
+import { CurrentAuth, getAuthedLink, INoAuth } from "@/state/auth";
 import { IQuery, ICurrentQueryHistory } from "@/state/query";
 import { convertToWords } from "@/utils";
 
@@ -203,7 +203,7 @@ const errors = namespace("errors");
   SearchPanel, ModalUserView, ProgressBar,
 } })
 export default class TopLevelUserView extends Vue {
-  @auth.State("current") currentAuth!: CurrentAuth | null;
+  @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
   @auth.State("pending") authPending!: Promise<void> | null;
   @auth.State("protectedCalls") protectedCalls!: number;
   @auth.Action("login") login!: () => Promise<void>;
@@ -306,13 +306,14 @@ export default class TopLevelUserView extends Vue {
 
   get actions() {
     const actions: Action[] = [];
-    if (this.currentAuth !== null) {
+    if (this.currentAuth?.token) {
       if (Api.developmentMode) {
+        const currentAuth = this.currentAuth;
         actions.push({ icon: "link",
           name: this.$t("authed_link").toString(),
           order: 1000,
           callback: () => {
-            const link = getAuthedLink(this.currentAuth!);
+            const link = getAuthedLink(currentAuth);
             void navigator.clipboard.writeText(link);
           } });
       }

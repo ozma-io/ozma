@@ -20,6 +20,15 @@ export const resultMap = <A, B>(func: ((_: A) => B), res: Result<A>): Result<B> 
 
 export const waitTimeout = (timeout?: number): Promise<void> => new Promise(resolve => setTimeout(resolve, timeout));
 
+export const waitForLoad = (): Promise<void> => new Promise((resolve, reject) => {
+  const ref: IRef<() => void> = {};
+  ref.ref = () => {
+    removeEventListener("load", ref.ref!);
+    resolve();
+  };
+  addEventListener("load", ref.ref);
+});
+
 export const nextRender = (): Promise<void> => new Promise(resolve =>
   Vue.nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
 
@@ -605,11 +614,7 @@ export const saveToFile = (name: string, mime: string, data: string) => {
 
 export const gotoHref = (href: string): Promise<void> => {
   window.location.href = href;
-  return new Promise<void>((resolve, reject) => {
-    addEventListener("load", () => {
-      reject();
-    });
-  });
+  return waitForLoad();
 };
 
 const makeWordsRegex = () => {
