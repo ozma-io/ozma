@@ -28,7 +28,6 @@
       :visible-arrow="false"
       :options="{
         placement: 'bottom',
-        modifiers: { offset: { offset: '0,0px' } },
       }"
       @show="onOpenPopup"
     >
