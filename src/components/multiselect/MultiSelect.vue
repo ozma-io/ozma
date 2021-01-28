@@ -15,11 +15,15 @@
 
 <template>
   <div
+    class="popup-container"
     @keydown.tab="() => closePopup()"
   >
     <popper
       ref="popup"
       trigger="clickToToggle"
+      transition="fade"
+      enter-active-class="fade-enter fade-enter-active"
+      leave-active-class="fade-leave fade-leave-active"
       :disabled="disabled"
       :options="{
         placement: 'bottom',
@@ -489,6 +493,17 @@ export default class MultiSelect extends Vue {
   .fade-enter,
   .fade-leave-to {
     opacity: 0;
+  }
+
+  .fade-enter-to,
+  .fade-leave {
+    opacity: 1;
+  }
+
+  .popup-container {
+    position: relative;
+    width: 100%;
+    z-index: 10;
   }
 
   .prepend-icon {
