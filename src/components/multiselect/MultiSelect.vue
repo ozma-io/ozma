@@ -25,8 +25,10 @@
       enter-active-class="fade-enter fade-enter-active"
       leave-active-class="fade-leave fade-leave-active"
       :disabled="disabled"
+      :visible-arrow="false"
       :options="{
         placement: 'bottom',
+        modifiers: { offset: { offset: '0,0px' } },
       }"
       @show="onOpenPopup"
     >
