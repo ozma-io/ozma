@@ -38,7 +38,7 @@
         :class="[
           'select-container',
           {
-            'fixed-height': hasHeight && !isOpen && !single,
+            'fixed-height': hasHeight && !isPopupOpen && !single,
           },
         ]"
       >
@@ -108,7 +108,7 @@
           v-if="!disabled && (required || isEmpty)"
           type="button"
           class="material-icons select-container__chevron"
-          :value="isOpen ? 'expand_less' : 'expand_more'"
+          :value="isPopupOpen ? 'expand_less' : 'expand_more'"
         >
         <input
           v-if="!isEmpty && !required && !disabled"
@@ -119,7 +119,7 @@
         >
       </div>
 
-      <div class="popper rounded shadow">
+      <div class="popper border rounded overflow-hidden shadow">
         <div
           ref="selectedOptionsContainer"
           class="select-container__options_container overflow-hidden"
@@ -230,7 +230,7 @@ export default class MultiSelect extends Vue {
   private filterValue = "";
   private isNeedFilter = true;
 
-  private get isOpen(): boolean {
+  private get isPopupOpen(): boolean {
     const popupRef: any = this.$refs.popup;
     return popupRef?.showPopper ?? false;
   }
@@ -272,7 +272,7 @@ export default class MultiSelect extends Vue {
   }
 
   private get showSingleValue() {
-    const showIfEditing = !this.isOpen || (this.isOpen && this.filterValue === "");
+    const showIfEditing = !this.isPopupOpen || (this.isPopupOpen && this.filterValue === "");
     return this.single && !this.isEmpty && showIfEditing;
   }
 
@@ -315,7 +315,7 @@ export default class MultiSelect extends Vue {
   }
 
   private get containerContentStyle() {
-    const height = this.height && !this.isOpen ? { height: `${this.height}px`, minHeight: "unset" } : {};
+    const height = this.height && !this.isPopupOpen ? { height: `${this.height}px`, minHeight: "unset" } : {};
     return {
       ...height,
     };
