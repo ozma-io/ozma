@@ -15,7 +15,14 @@
     >
       home
     </router-link>
-    <span class="modal__tab_header_title">{{ title }}</span>
+    <span
+      v-b-tooltip.click.blur.bottom.noninteractive
+      class="modal__tab_header_title"
+      tabindex="0"
+      :title="title"
+    >
+      {{ title }}
+    </span>
     <slot name="actions-menu" />
     <input
       type="button"
@@ -38,7 +45,7 @@ export default class ModalTabHeader extends Vue {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   .head-menu_back-button {
     padding-top: 3px;
     padding-bottom: 3px;
@@ -52,11 +59,12 @@ export default class ModalTabHeader extends Vue {
     border: none;
     text-decoration: none;
     padding: 0;
-    margin-right: 10px;
+    margin-right: 5px;
     z-index: 1000;
   }
 
   .modal__tab_header {
+    width: 100%;
     display: flex;
     padding: 5px;
     flex: 1 1 auto;
@@ -76,6 +84,13 @@ export default class ModalTabHeader extends Vue {
     font-weight: 600;
     font-size: 1.25em;
     margin-right: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:focus {
+      outline: none;
+    }
   }
 
   .modal__tab_header.selected,

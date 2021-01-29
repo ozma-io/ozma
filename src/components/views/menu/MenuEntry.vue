@@ -131,6 +131,7 @@ export default class MenuEntry extends Vue {
     @include material-button;
 
     width: 100%;
+    max-width: 100%;
     display: flex;
     align-items: center;
     color: var(--MainTextColor);
@@ -151,6 +152,7 @@ export default class MenuEntry extends Vue {
 
     .name {
       margin-left: 5px;
+      overflow-wrap: anywhere;
     }
   }
 

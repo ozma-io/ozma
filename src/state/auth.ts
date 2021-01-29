@@ -44,10 +44,14 @@ export class CurrentAuth {
 }
 
 export interface IAuthState {
-  current: CurrentAuth | null;
+  current: CurrentAuth | INoAuth | null;
   renewalTimeoutId: NodeJS.Timeout | null;
   pending: Promise<void> | null;
   protectedCalls: number; // Used for tracking fetch requests and displaying a progress bar.
+}
+
+export interface INoAuth {
+  token: null;
 }
 
 interface IOIDCState {
@@ -171,18 +175,17 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
   return pending.ref;
 };
 
-const updateAuth = ({ state, commit, dispatch }: ActionContext<IAuthState, {}>, auth: CurrentAuth) => {
+const updateAuth = ({ state, commit, dispatch }: ActionContext<IAuthState, {}>, auth: CurrentAuth | INoAuth) => {
   const oldAuth = state.current;
   commit("setAuth", auth);
-  persistCurrentAuth(auth);
-  if (oldAuth === null) {
-    void dispatch("setAuth", undefined, { root: true });
+  if (auth.token) {
+    persistCurrentAuth(auth);
   }
 };
 
 const renewAuth = async (context: ActionContext<IAuthState, {}>) => {
   const { commit, state } = context;
-  if (state.current === null) {
+  if (!state.current?.token) {
     throw new Error("Cannot renew without an existing token");
   }
 
@@ -202,8 +205,8 @@ const constantFactorStart = 0.8;
 const constantFactorEnd = 0.9;
 
 const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
-  const { state, commit, dispatch } = context;
-  if (state.current === null) {
+  const { state, commit } = context;
+  if (!state.current?.token) {
     throw new Error("Cannot start timeouts with no tokens");
   }
 
@@ -226,7 +229,7 @@ const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
 
 const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExisting: boolean) => {
   const nonce = uuidv4();
-  localStorage.setItem(authNonceKey, nonce);
+  sessionStorage.setItem(authNonceKey, nonce);
   const path =
         router.currentRoute.name === "auth_response" ?
           router.resolve({ name: "main" }).href :
@@ -249,6 +252,28 @@ const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExist
   const waitForLoad = Utils.gotoHref(`${authUrl}/auth?${paramsString}`);
   commit("setPending", waitForLoad);
   return waitForLoad;
+};
+
+const runProtectedCall = async <Args extends unknown[], Ret>({ state, commit, dispatch }: ActionContext<IAuthState, {}>, func: (token: string | null, ...args: Args) => Promise<Ret>, ...args: Args) => {
+  commit("increaseProtectedCalls");
+  try {
+    const token = state.current?.token ?? null;
+    return await func(token, ...args);
+  } catch (e) {
+    if (e instanceof FunDBError) {
+      if (e.body.error === "unauthorized") {
+        if (state.current === null) {
+          await dispatch("login", undefined);
+        } else {
+          await dispatch("removeAuth", undefined, { root: true });
+          await dispatch("setError", `Authentication error during request: ${e.message}`);
+        }
+      }
+    }
+    throw e;
+  } finally {
+    commit("decreaseProtectedCalls");
+  }
 };
 
 const authQueryKey = "__auth";
@@ -336,7 +361,8 @@ export const authModule: Module<IAuthState, {}> = {
             const stateString = getQueryValue("state");
             if (stateString !== null) {
               const savedState: IOIDCState = JSON.parse(atob(stateString));
-              const nonce = localStorage.getItem(authNonceKey);
+              const nonce = sessionStorage.getItem(authNonceKey);
+              sessionStorage.removeItem(authNonceKey);
               if (nonce === null || savedState.nonce !== nonce) {
                 // Invalid nonce; silently redirect.
                 console.error("Invalid client nonce");
@@ -357,6 +383,8 @@ export const authModule: Module<IAuthState, {}> = {
                   if (error !== "login_required") {
                     const errorDescription = getQueryValue("errorDescription");
                     void dispatch("setError", `Invalid auth response query parameters, error ${error} ${errorDescription}`);
+                  } else {
+                    await requestLogin(context, false);
                   }
                 }
                 await router.replace(savedState.path);
@@ -389,7 +417,6 @@ export const authModule: Module<IAuthState, {}> = {
               void renewAuth(context);
             }
           }
-          localStorage.removeItem(authNonceKey);
 
           const authStorageHandler = async (e: StorageEvent) => {
             if (e.key !== authKey) {
@@ -409,51 +436,45 @@ export const authModule: Module<IAuthState, {}> = {
           window.addEventListener("storage", e => {
             void authStorageHandler(e);
           });
-
-          if (state.current === null) {
-            if (tryExisting) {
-              await requestLogin(context, tryExisting);
-            }
-          }
         } finally {
           if (state.pending === pending.ref) {
             commit("setPending", null);
           }
         }
+        void dispatch("setAuth", undefined, { root: true });
       })();
       commit("setPending", pending.ref);
       return pending.ref;
     },
     callProtectedApi: {
       root: true,
-      handler: async ({ state, commit, dispatch }, { func, args }: { func: ((_1: string | null, ..._2: unknown[]) => Promise<unknown>); args?: unknown[] }): Promise<unknown> => {
+      handler: async (context, { func, args }: { func: (token: string | null, ...funcArgs: unknown[]) => Promise<any>; args?: unknown[] }): Promise<any> => {
+        const { state, commit } = context;
         if (state.pending !== null) {
           try {
             await state.pending;
           } catch (_) {
             // It's handled somewhere else.
           }
+          console.assert(state.pending === null);
         }
 
-        commit("increaseProtectedCalls");
-        try {
-          const argsArray = args === undefined ? [] : args;
-          const token = state.current === null ? null : state.current.token;
-          return await func(token, ...argsArray);
-        } catch (e) {
-          if (e instanceof FunDBError) {
-            if (e.body.error === "unauthorized") {
-              if (state.current === null) {
-                await dispatch("login", undefined);
-              } else {
-                await dispatch("removeAuth", undefined, { root: true });
-                await dispatch("setError", `Authentication error during request: ${e.message}`);
-              }
+        if (state.current !== null) {
+          return runProtectedCall(context, func, ...(args ?? []));
+        } else {
+          // Try to perform operation anyway, see if it fails and set the token to empty if not.
+          const pending: IRef<Promise<any>> = {};
+          pending.ref = (async () => {
+            await Utils.waitTimeout(); // Delay promise so that it gets saved to `pending` first.
+            const ret = await runProtectedCall(context, func, ...(args ?? []));
+            updateAuth(context, { token: null });
+            if (state.pending === pending.ref) {
+              commit("setPending", null);
             }
-          }
-          throw e;
-        } finally {
-          commit("decreaseProtectedCalls");
+            return ret;
+          })();
+          commit("setPending", state.pending);
+          return pending.ref;
         }
       },
     },
@@ -471,17 +492,12 @@ export const authModule: Module<IAuthState, {}> = {
       };
       const paramsString = new URLSearchParams(params).toString();
       dropCurrentAuth();
-      window.location.href = `${authUrl}/logout?${paramsString}`;
-      const waitForLoad = new Promise((resolve, reject) => {
-        addEventListener("load", () => {
-          reject();
-        });
-      });
-      commit("setPending", waitForLoad);
-      await waitForLoad;
+      const wait = Utils.gotoHref(`${authUrl}/logout?${paramsString}`);
+      commit("setPending", wait);
+      await wait;
     },
     login: async context => {
-      await requestLogin(context, false);
+      await requestLogin(context, true);
     },
   },
 };

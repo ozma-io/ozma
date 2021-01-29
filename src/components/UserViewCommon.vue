@@ -59,9 +59,9 @@ import { IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
 
 import { IEntityRef } from "@/api";
 import SelectUserView from "@/components/SelectUserView.vue";
-import { mapMaybe, saveToFile, tryDicts } from "@/utils";
+import { isMobile, mapMaybe, saveToFile, tryDicts } from "@/utils";
 import { Action } from "@/components/ActionsMenu.vue";
-import { IPanelButton } from "@/components/ButtonsPanel.vue";
+import { PanelButton } from "@/components/ButtonsPanel.vue";
 import { attrToLink } from "@/links";
 import QRCodeScanner, { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
 import BarCodeScanner from "@/components/barcode/BarCodeScanner.vue";
@@ -161,30 +161,74 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     });
   }
 
-  get panelButtons(): IPanelButton[] {
+  get panelButtons(): PanelButton[] {
     const panelButtons = this.uv.attributes["panel_buttons"];
 
     if (!Array.isArray(panelButtons)) {
       return [];
     }
 
+    const opts: IAttrToQueryOpts = {
+      homeSchema: this.uv.homeSchema ?? undefined,
+    };
+
     return mapMaybe((rawButton: unknown) => {
       if (typeof rawButton !== "object" || rawButton === null) {
         return undefined;
       }
+
       const buttonObj = rawButton as Record<string, unknown>;
+
+      if (typeof buttonObj.name !== "string") {
+        return undefined;
+      }
+
+      const buttonIcon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
+      const position = typeof buttonObj.position === "string" ? buttonObj.position : "left";
+      const isMobileButton = buttonObj.is_mobile === true;
+
+      if (!isMobile && isMobileButton) {
+        return undefined;
+      }
+
+      if ("type" in rawButton) {
+        if (String(buttonObj.type) === "scan_qrcode") {
+          return {
+            icon: buttonIcon,
+            name: buttonObj.name,
+            position,
+            callback: () => {
+              this.openQRCodeScanner = !this.openQRCodeScanner;
+            },
+          };
+        }
+
+        if (String(buttonObj.type) === "scan_barcode") {
+          return {
+            icon: buttonIcon,
+            name: buttonObj.name,
+            position,
+            callback: () => {
+              this.openBarCodeScanner = !this.openBarCodeScanner;
+            },
+          };
+        }
+      }
+
+      const buttonLink = attrToLink(rawButton, opts);
+      if (buttonLink !== null) {
+        return {
+          icon: buttonIcon,
+          name: buttonObj.name,
+          position,
+          link: buttonLink,
+        };
+      }
 
       if (!Array.isArray(buttonObj.actions)) {
         return undefined;
       }
-      if (typeof buttonObj.name !== "string") {
-        return undefined;
-      }
-      const buttonIcon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
 
-      const opts: IAttrToQueryOpts = {
-        homeSchema: this.uv.homeSchema ?? undefined,
-      };
       const actions = mapMaybe((rawAction: unknown) => {
         const link = attrToLink(rawAction, opts);
         if (link === null) {

@@ -10,7 +10,6 @@ export const emptyUserViewHandlerFunctions = {
   undeleteRow() { },
   deleteAddedRow() { },
   undeleteAddedRow() { },
-  insertAddedRow() { },
   postInitUserView() { },
   postInitRow() { },
   postInitAddedRow() { },

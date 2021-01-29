@@ -19,7 +19,7 @@
       v-else
       :key="key"
       ref="editor"
-      :initial-value="content"
+      :initial-value="currentContent"
       :initial-edit-type="editType"
       :options="editorOptions"
       :height="`${height}px`"
@@ -39,7 +39,7 @@ import "@toast-ui/editor/dist/toastui-editor-viewer.css";
 import { Editor, Viewer } from "@toast-ui/vue-editor";
 import "@toast-ui/editor/dist/i18n/ru-ru";
 
-type EditorType = Vue & { invoke: (name: string) => any };
+type EditorType = Vue & { invoke: (name: string, ...args: any) => any };
 
 @Component({ components: { Editor, Viewer } })
 export default class MarkdownEditor extends Vue {
@@ -50,6 +50,7 @@ export default class MarkdownEditor extends Vue {
   // TODO: implement.
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
 
+  private currentContent = this.content;
   private key = 0;
   private editorOptions = {
     minHeight: "205px",
@@ -85,8 +86,9 @@ export default class MarkdownEditor extends Vue {
 
   private onChange() {
     const editor = this.$refs.editor as EditorType;
-    const newValue = editor.invoke("getMarkdown");
-    if (this.content !== newValue) {
+    const newValue = (editor.invoke("getMarkdown") as string).trim();
+    if (this.currentContent !== newValue) {
+      this.currentContent = newValue;
       this.$emit("update:content", newValue);
     }
   }
@@ -94,6 +96,15 @@ export default class MarkdownEditor extends Vue {
   @Watch("editType")
   private reloadComponent() {
     this.key++;
+  }
+
+  @Watch("content")
+  private updateContent(content: string) {
+    if (this.currentContent === content) return;
+    this.currentContent = content;
+    const editor = this.$refs.editor as EditorType;
+    if (!editor) return;
+    editor.invoke("setMarkdown", content, false);
   }
 }
 </script>

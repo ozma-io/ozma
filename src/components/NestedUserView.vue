@@ -6,6 +6,7 @@
     :level="level"
     :filter="filterWords"
     @update:actions="$emit('update:actions', $event)"
+    @update:panelButtons="$emit('update:panelButtons', $event)"
     @goto="$emit('goto', $event)"
     @update:enableFilter="$emit('update:enableFilter', $event)"
     @update:title="updateTitle"

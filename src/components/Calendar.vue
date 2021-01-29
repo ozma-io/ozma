@@ -19,73 +19,87 @@
     ]"
   >
     <div class="main_input">
-      <input
-        type="button"
-        :class="['material-icons',
-                 'calendar_input__icon',
-                 {
-                   'required': required && isEmpty,
-                   'error': error,
-                 }
-        ]"
-        style="margin-right: 10px;"
-        value="event"
+      <b-input-group
+        class="focus-entire"
+        size="sm"
       >
-      <input
-        ref="control"
-        type="text"
-        :class="['calendar_input', {'calendar-input_cell-edit': isCellEdit}]"
-        :placeholder="$t('input_placeholder')"
-        :value="textValue"
-        @input="$emit('update:value', $event.target.value)"
-        @keypress.enter="onPressEnter"
-        @focus="onInputFocus"
-      >
-      <input
-        v-if="!!value"
-        type="button"
-        class="material-icons material-button close_input__icon"
-        value="close"
-        @click="updateValue(null)"
-      >
-    </div>
-    <div
-      ref="popup"
-      :class="['main_cal', {
-        'main_cal__open': isCalendarOpen,
-        'main_cal_cell-edit': isCellEdit,
-        'main_cal__open-top': position
-      }]"
-    >
-      <div
-        :class="['days', {'mr-2': showTime}]"
-      >
-        <DatePicker
-          :value="dateValue"
-          _in
-          @update:value="updateDate"
+        <b-input-group-prepend>
+          <b-input-group-text
+            class="with-material-icon prepend-icon"
+            :style="{ backgroundColor }"
+          >
+            <i class="material-icons">event</i>
+          </b-input-group-text>
+        </b-input-group-prepend>
+        <b-input
+          ref="control"
+          type="text"
+          :class="['calendar-input', 'with-clear-content-button', {'calendar-input_cell-edit': isCellEdit}]"
+          :style="{ backgroundColor }"
+          :placeholder="$t('input_placeholder')"
+          :value="textValue"
+          @input="$emit('update:value', $event)"
+          @keypress.enter="onPressEnter"
+          @focus="onInputFocus"
         />
-        <button class="today" @click="setDateToday($event)">
-          Today
-        </button>
-      </div>
-      <div class="time">
-        <TimePicker
-          v-if="showTime"
-          :time="timeForPicker"
-          :is-open="isCalendarOpen"
-          :time-step="timeStep"
-          @update:mins="updateMins"
-          @update:hours="updateHours"
-        />
-        <button
-          v-if="showTime"
-          class="now"
-          @click="setTimeNow($event)"
+        <b-input-group-append>
+          <b-button
+            :disabled="!value"
+            class="button with-material-icon clear-content-button"
+            variant="outline-secondary"
+            @click.prevent="updateValue(null)"
+          >
+            <i
+              class="material-icons"
+            >clear</i>
+          </b-button>
+        </b-input-group-append>
+      </b-input-group>
+      <transition name="fade">
+        <div
+          v-if="isCalendarOpen"
+          ref="popup"
+          :class="[
+            'main_cal',
+            'rounded',
+            'border',
+            {
+              'main_cal__open': isCalendarOpen,
+              'main_cal_cell-edit': isCellEdit,
+              'main_cal__open-top': position
+            }
+          ]"
         >
-          Now
-        </button>
-      </div>
+          <div
+            :class="['days', {'mr-2': showTime}]"
+          >
+            <DatePicker
+              :value="dateValue"
+              @update:value="updateDate"
+            />
+            <button class="today" @click="setDateToday($event)">
+              Today
+            </button>
+          </div>
+          <div class="time">
+            <TimePicker
+              v-if="showTime"
+              :time="timeForPicker"
+              :is-open="isCalendarOpen"
+              :time-step="timeStep"
+              @update:mins="updateMins"
+              @update:hours="updateHours"
+            />
+            <button
+              v-if="showTime"
+              class="now"
+              @click="setTimeNow($event)"
+            >
+              Now
+            </button>
+          </div>
+        </div>
+      </transition>
     </div>
   </div>
 </template>
@@ -113,6 +127,7 @@ export default class Calendar extends Vue {
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   // FIXME: remove this and style parent nodes instead.
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
+  @Prop({ type: String }) backgroundColor!: string;
 
   private isCalendarOpen = false;
   private position = false;
@@ -175,14 +190,30 @@ export default class Calendar extends Vue {
   }
 
   private onInputFocus() {
-    this.$emit("focus");
+    // FIXME: this `blur()` fixes not good behavior on mobiles,
+    // but it can broke some cases on smartphones with keyboard and it's just a little ugly fix.
+    if (this.$isMobile && !this.isCalendarOpen) {
+      (this.$refs.control as HTMLInputElement).blur();
+    } else {
+      this.$emit("focus");
+    }
+    void this.openPopup();
+  }
+
+  private async openPopup() {
+    // FIXME: Awful hotfix for Android phones for cases when viewport resizes slowly after keyboard closing.
+    if (this.$isMobile) {
+      await new Promise(r => setTimeout(r, 400));
+    }
+
+    // TODO: after showing on top calendar will show on bottom even if it should show on top.
+
     this.isCalendarOpen = true;
-    void nextRender().then(() => {
-      const bodyRect = document.body.getBoundingClientRect();
-      const popup = this.$refs.popup as HTMLInputElement;
-      const popupRect = popup.getBoundingClientRect();
-      this.position = !((bodyRect.bottom - popupRect.bottom) > 0);
-    });
+    await nextRender();
+    const bodyRect = document.body.getBoundingClientRect();
+    const popup = this.$refs.popup as HTMLInputElement;
+    const popupRect = popup.getBoundingClientRect();
+    this.position = !((bodyRect.bottom - popupRect.bottom) > 0);
   }
 
   get timeForPicker() {
@@ -247,78 +278,24 @@ export default class Calendar extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  .calendar_container {
-    position: relative;
-    display: block;
-    background-color: inherit;
-    border-bottom: 1px solid var(--MainBorderColor);
-
-    &:hover {
-      background-color: var(--CellSelectColor);
-    }
-
-    &.required {
-      background-color: var(--WarningColor) !important;
-
-      &::placeholder {
-        color: var(--WarningPlaceholderColor) !important;
-      }
-    }
-
-    &.error {
-      background-color: var(--FailColor) !important;
-
-      &::placeholder {
-        color: var(--FailPlaceholderColor) !important;
-      }
-    }
+  .prepend-icon {
+    background-color: var(--MainBackgroundColor);
+    color: var(--MainTextColorLight);
+    border-right-width: 0;
   }
 
-  .calendar_input {
-    padding: 5px 2px 5px 0;
-    background: none;
-    border: 0;
-    z-index: 2;
-    order: 2;
-    flex: 2;
-    height: 2em;
-    color: var(--MainTextColor);
-    cursor: pointer;
-    border-bottom: none;
-    width: 100%;
-    text-overflow: ellipsis;
-    border-radius: 0;
-    -webkit-border-radius: 0;
-    -webkit-appearance: none;
+  .calendar-input {
+    border-left-width: 0;
   }
 
-  .calendar_input:focus {
-    outline: none;
-    color: var(--MainTextColor);
-    border-bottom: 1px solid var(--MainBorderColor) !important;
-    cursor: text;
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: all 0.1s;
   }
 
-  .close_input__icon,
-  .calendar_input__icon {
-    background: none;
-    border: none;
-    padding: 0;
-    color: var(--MainBorderColor);
-
-    &.required {
-      color: var(--WarningPlaceholderColor) !important;
-    }
-
-    &.error {
-      color: var(--FailPlaceholderColor) !important;
-    }
-  }
-
-  .close_input__icon {
-    color: var(--MainBorderColor);
-    order: 3;
-    padding: 0;
+  .fade-enter,
+  .fade-leave-to {
+    opacity: 0;
   }
 
   .main_cal {
@@ -332,13 +309,14 @@ export default class Calendar extends Vue {
     color: var(--MainTextColor);
     padding: 10px;
     border: 1px solid var(--MainBorderColor);
-    top: calc(100% + 10px);
+    top: calc(100% + 2px);
     z-index: 1001;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
   }
 
   .main_cal__open-top {
     top: auto;
-    bottom: calc(100% + 10px);
+    bottom: calc(100% + 2px);
   }
 
   .main_input {

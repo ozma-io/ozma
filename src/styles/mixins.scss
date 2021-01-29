@@ -1,8 +1,10 @@
 @mixin material-button {
   transition: background 0.1s;
   border-radius: 4px;
+  cursor: pointer;
+  color: var(--MainTextColor);
 
-  &:hover {
+  &:hover:not(.disabled) {
     background-color: #efefef;
 
     /* `outline` works wrong for <a> tags at least on Firefox */
@@ -10,9 +12,15 @@
     transition: background 0s;
   }
 
-  &:active {
+  &:active:not(.disabled) {
     background-color: #bcbcbc;
     box-shadow: 0 0 0 2px #bcbcbc;
     transition: background 0s;
+  }
+
+  &.disabled {
+    cursor: default;
+    color: var(--MainTextColorLight);
+    opacity: 0.7;
   }
 }

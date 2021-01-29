@@ -41,7 +41,6 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { CurrentSettings } from "@/state/settings";
-import { CurrentAuth } from "@/state/auth";
 import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import FabCluster from "@/components/FabCluster/FabCluster.vue";
 import AlertBanner from "@/components/AlertBanner.vue";
@@ -56,8 +55,6 @@ const staging = namespace("staging");
 export default class App extends Vue {
   @settings.State("current") settings!: CurrentSettings;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
-  @auth.State("current") currentAuth!: CurrentAuth | null;
-  @auth.State("pending") pendingAuth!: Promise<CurrentAuth> | null;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
 
@@ -76,11 +73,20 @@ export default class App extends Vue {
     this.setAutoSaveTimeout(autoSaveTimeout);
   }
 
+  private get fontSize(): number {
+    const defaultSize = 14;
+    const normalSize = this.settings.getEntry("font_size", Number, defaultSize);
+    const mobileSize = this.settings.getEntry("font_size_mobile", Number, 0);
+    return this.$isMobile && mobileSize !== 0
+      ? mobileSize
+      : normalSize;
+  }
+
   get styleSettings() {
     const values = {
       // "NavigationBackColor": this.settings.getEntry("navigation_back_color", String, "white"),
       "Font": this.settings.getEntry("font", String, "Courier New, monospace"),
-      "FontSize": `${this.settings.getEntry("font_size", Number, 14)}px`,
+      "FontSize": `${this.fontSize}px`,
       "MenuColor": this.settings.getEntry("menu_color", String, "#F5C700"),
       "TableBackColor": this.settings.getEntry("table_back_color", String, "white"),
       "TableSelectColor": this.settings.getEntry("table_select_color", String, "#CCCCCC"),
@@ -124,8 +130,9 @@ export default class App extends Vue {
 
   private get bannerMessage() {
     const message = this.settings.getEntry("banner_message", String, "");
+    const isImportant = this.settings.getEntry("banner_important", Boolean, false);
     const viewedMessage = localStorage.getItem("viewed-banner-message");
-    if (message.trim() === "" || message === viewedMessage) return "";
+    if (message.trim() === "" || (!isImportant && message === viewedMessage)) return "";
     return message;
   }
 

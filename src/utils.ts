@@ -20,6 +20,15 @@ export const resultMap = <A, B>(func: ((_: A) => B), res: Result<A>): Result<B> 
 
 export const waitTimeout = (timeout?: number): Promise<void> => new Promise(resolve => setTimeout(resolve, timeout));
 
+export const waitForLoad = (): Promise<void> => new Promise((resolve, reject) => {
+  const ref: IRef<() => void> = {};
+  ref.ref = () => {
+    removeEventListener("load", ref.ref!);
+    resolve();
+  };
+  addEventListener("load", ref.ref);
+});
+
 export const nextRender = (): Promise<void> => new Promise(resolve =>
   Vue.nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
 
@@ -125,6 +134,10 @@ export const convertString = <T>(value: string, constructor: (_: string) => T, d
     }
   } else if (constructor === String as any) {
     return value as any;
+  } else if (constructor === Boolean as any) {
+    return value === "true" ? true
+      : value === "false" ? false
+        : defValue as any;
   } else {
     const conv = constructor(value);
     if (conv instanceof constructor) {
@@ -339,6 +352,10 @@ export class ObjectSet<K> {
 
 const convertDebugArgs = (message?: any, ...optionalParams: any[]) => {
   return [message, ...optionalParams].map(arg => {
+    if (arg === undefined) {
+      return arg;
+    }
+
     try {
       return JSON.parse(JSON.stringify(arg));
     } catch (e) {
@@ -601,11 +618,7 @@ export const saveToFile = (name: string, mime: string, data: string) => {
 
 export const gotoHref = (href: string): Promise<void> => {
   window.location.href = href;
-  return new Promise<void>((resolve, reject) => {
-    addEventListener("load", () => {
-      reject();
-    });
-  });
+  return waitForLoad();
 };
 
 const makeWordsRegex = () => {

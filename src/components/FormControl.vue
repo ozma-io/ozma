@@ -28,6 +28,8 @@
       :background-color="cellColor"
       :text-align="textAlign"
       :modal="$isMobile && (forceModalOnMobile || isMultiline)"
+      :required="!isNullable && inputType.name !== 'select'"
+      :empty="currentValue === '' || currentValue === null || currentValue === undefined"
       @close-modal-input="$emit('close-modal-input')"
     >
       <template #default="iSlot">
@@ -42,6 +44,8 @@
           :required="!isNullable"
           :qrcode-input="isQRCodeInput"
           :autofocus="autofocus || iSlot.autofocus"
+          :text-align="textAlign"
+          :background-color="cellColor"
           @input="updateValue"
           @set-input-height="setInputHeight"
           @focus="iSlot.onFocus"
@@ -54,6 +58,8 @@
           :height="customHeight"
           :required="!isNullable"
           :autofocus="autofocus || iSlot.autofocus"
+          :text-align="textAlign"
+          :background-color="cellColor"
           @set-input-height="setInputHeight"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
@@ -68,6 +74,7 @@
           :show-time="inputType.showTime"
           :time-step="inputType.timeStep ? inputType.timeStep : undefined"
           :required="!isNullable"
+          :background-color="cellColor"
           @focus="iSlot.onFocus"
           @update:value="updateValue"
         />
@@ -81,12 +88,12 @@
           :autofocus="autofocus || iSlot.autofocus"
           :required="!isNullable"
           :disabled="isDisabled"
+          :background-color="cellColor"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
         />
         <CodeEditor
           v-else-if="inputType.name === 'codeeditor'"
-          :key="codeEditorKey"
           ref="control"
           :language="inputType.language"
           :is-modal="iSlot.modal"
@@ -153,6 +160,7 @@
           :is-disabled="isDisabled"
           :background-color="cellColor"
           @update:actions="actions = $event"
+          @update:buttons="buttons = $event"
           @focus="iSlot.onFocus"
           @update="updateValue($event)"
           @goto="$emit('goto', $event)"
@@ -165,42 +173,18 @@
           v-if="usedCaption"
           :cols="isMultiline ? 12 : 4"
         >
-          <div
-            v-if="actions.length > 0"
-            class="nested-menu"
-          >
-            <label class="input_label">{{ usedCaption }}</label>
-            <SearchPanel
-              v-visible="enableFilter"
-              @update:filterString="filterString = $event"
-            />
-            <ActionsMenu
-              :actions="actions"
-              menu-align="right"
-              @goto="$emit('goto', $event)"
-            />
-            <i
-              class="material-icons material-button fullscreen_button"
-              @click.stop="openFullscreen(inputType)"
-            >fullscreen</i>
-          </div>
-          <div v-else-if="inputType.name == 'empty_userview'">
-            <div class="nested-menu">
-              <label class="input_label">{{ usedCaption }}</label>
-              <ActionsMenu
-                :actions="[]"
-              />
-            </div>
-            <div class="empty_userview_text">
-              {{ inputType.text }}
-            </div>
-          </div>
-          <div v-else class="input_label__container">
-            <label class="input_label_single">{{ usedCaption }}</label>
-          </div>
+          <NestedUserViewPanel
+            :used-caption="usedCaption"
+            :actions="actions"
+            :enable-filter="enableFilter"
+            :input-type="inputType"
+            :panel-buttons="panelButtons"
+            @update:filterString="filterString = $event"
+            @goto="$emit('goto', $event)"
+          />
         </b-col>
         <b-col :cols="!isMultiline && usedCaption ? 8 : 12">
-          <div v-if="inputType.name === 'userview'" :style="{backgroundColor:cellColor}">
+          <div v-if="inputType.name === 'userview'" :style="{ backgroundColor: cellColor, borderRadius: '0.2rem' }">
             <NestedUserView
               ref="control"
               :args="inputType.args"
@@ -209,9 +193,10 @@
               :level="level + 1"
               :filter-string="filterString"
               @update:actions="actions = $event"
-              @goto="$emit('goto', $event)"
+              @update:panelButtons="panelButtons = $event"
               @update:enableFilter="enableFilter = $event"
               @update:title="updateTitle"
+              @goto="$emit('goto', $event)"
             />
           </div>
         </b-col>
@@ -226,14 +211,14 @@ import { namespace } from "vuex-class";
 
 import { valueToText, valueIsNull } from "@/values";
 import type { AttributesMap, ValueType } from "@/api";
-import { router } from "@/modules";
 import { Action } from "@/components/ActionsMenu.vue";
-import { IQuery, attrToQuerySelf, queryLocation } from "@/state/query";
+import { IQuery, attrToQuerySelf } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { IReferenceSelectAction } from "@/components/ReferenceField.vue";
 import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
+import { PanelButton } from "@/components/ButtonsPanel.vue";
 
 interface ITextType {
   name: "text";
@@ -284,7 +269,7 @@ interface ICheckType {
   name: "check";
 }
 
-interface IUserViewType extends IQuery {
+export interface IUserViewType extends IQuery {
   name: "userview";
 }
 
@@ -312,7 +297,7 @@ interface IStaticImageType {
   name: "static_image";
 }
 
-type IType =
+export type IType =
   ITextType
   | ITextAreaType
   | ICodeEditorType
@@ -344,15 +329,8 @@ const multilineTypes = ["markdown", "codeeditor", "textarea", "userview", "empty
     InputSlot: () => import("@/components/form/InputSlot.vue"),
     Input: () => import("@/components/form/Input.vue"),
     Textarea: () => import("@/components/form/Textarea.vue"),
-
-    /* FIXME SearchPanel doesn't have to be in FormControl.
-       SearchPanel needs to be moved to NestedUserView when ActionsMenu and
-       other components are moved from FormControl.
-       FormControl needs to be split into smaller components.
-    */
-
-    SearchPanel: () => import("@/components/SearchPanel.vue"),
     NestedUserView: () => import("@/components/NestedUserView.vue"),
+    NestedUserViewPanel: () => import("@/components/panels/NestedUserViewPanel.vue"),
     QRCode: () => import("@/components/qrcode/QRCode.vue"),
     BarCode: () => import("@/components/barcode/BarCode.vue"),
     BarCodePrint: () => import("@/components/barcode/BarCodePrint.vue"),
@@ -378,6 +356,7 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
 
   private actions: Action[] = [];
+  private panelButtons: PanelButton[] = [];
   private codeEditorKey = 0;
   private filterString = "";
   private title = "";
@@ -436,20 +415,12 @@ export default class FormControl extends Vue {
     return !excludeHeight ? { ...height, maxHeight: "initial" } : {};
   }
 
-  private openFullscreen(view: IUserViewType) {
-    void router.push(queryLocation(view));
-  }
-
   private updateTitle(title: string | null) {
     this.title = title ?? this.caption;
   }
 
   private setInputHeight(value: number) {
     this.$emit("set-input-height", value);
-  }
-
-  private forceRerender() {
-    this.codeEditorKey += 1;
   }
 
   private barCodeScanned(code: string) {
@@ -650,11 +621,13 @@ export default class FormControl extends Vue {
     // values it actually supports.
 
     this.actions = [];
+    this.panelButtons = [];
+    this.title = "";
+    this.filterString = "";
     this.enableFilter = false;
   }
 
   private mounted() {
-    this.forceRerender();
     if (this.autofocus) {
       const type = this.inputType;
       const control = this.$refs["control"];
@@ -678,7 +651,7 @@ export default class FormControl extends Vue {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   /* Current Z layout:
 
   * Drop-down menu    (1200)
@@ -692,10 +665,6 @@ export default class FormControl extends Vue {
     cursor: pointer;
     float: right;
     color: var(--MainTextColor);
-  }
-
-  /deep/ .tabl {
-    height: initial !important;
   }
 
   .input_label__container {
@@ -734,10 +703,6 @@ export default class FormControl extends Vue {
     color: var(--MainTextColorLight);
   }
 
-  input {
-    border: 1px solid rgb(81, 152, 57);
-  }
-
   .actions-menu {
     width: max-content;
     display: inline-block;
@@ -754,26 +719,35 @@ export default class FormControl extends Vue {
   }
 
   .nested-menu {
-    color: var(--MainBorderColor) !important;
+    height: 30px;
+    margin-top: 5px;
     display: flex;
     align-items: center;
-    margin-top: 5px;
-  }
+    color: var(--MainTextColor) !important;
 
-  .nested-menu > .actions-menu {
-    width: max-content;
-    display: inline-block;
-  }
+    .input_label {
+      margin-right: auto;
 
-  .nested-menu >>> .actions-menu_actions-button {
-    border: 0 !important;
-    line-height: normal;
-    padding: 2px;
-    height: 100%;
-    width: auto;
-    text-align: left;
-    border-radius: 0 !important;
-    margin-right: 0;
+      &:focus {
+        outline: none;
+      }
+    }
+
+    > .actions-menu {
+      width: max-content;
+      display: inline-block;
+    }
+
+    ::v-deep .actions-menu_actions-button {
+      border: 0 !important;
+      line-height: normal;
+      padding: 2px;
+      height: 100%;
+      width: auto;
+      text-align: left;
+      border-radius: 0 !important;
+      margin-right: 0;
+    }
   }
 
   .caption-editors {
@@ -877,7 +851,7 @@ export default class FormControl extends Vue {
         position: sticky;
       }
 
-      .nested-menu > .actions-menu >>> .div-with-actions {
+      ::v-deep .nested-menu > .actions-menu .div-with-actions {
         position: absolute !important;
         top: 35px;
         left: -30px;
@@ -908,10 +882,6 @@ export default class FormControl extends Vue {
         position: sticky;
         left: 3px;
         width: max-content;
-      }
-
-      .input_label {
-        max-width: 150px;
       }
     }
   }

@@ -74,7 +74,17 @@
           :actions="actions"
           @goto="pushRoot"
         />
-        <span v-if="!!title" class="head-menu_title">{{ title }}</span>
+        <!-- TODO: Make better tooltips for long userview titles.
+             (Without `tabindex` and `:focus { outline: none; }`) -->
+        <span
+          v-if="!!title"
+          v-b-tooltip.click.blur.bottom.noninteractive
+          class="head-menu_title"
+          tabindex="0"
+          :title="title"
+        >
+          {{ title }}
+        </span>
         <ButtonsPanel :buttons="panelButtons">
           <template #search-panel>
             <SearchPanel
@@ -181,11 +191,11 @@ import { setHeadTitle } from "@/elements";
 import { ErrorKey } from "@/state/errors";
 import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/staging_changes";
 import { Action } from "@/components/ActionsMenu.vue";
-import { IPanelButton } from "@/components/ButtonsPanel.vue";
+import { PanelButton } from "@/components/ButtonsPanel.vue";
 import ModalUserView from "@/components/ModalUserView.vue";
 import SearchPanel from "@/components/SearchPanel.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
-import { CurrentAuth, getAuthedLink } from "@/state/auth";
+import { CurrentAuth, getAuthedLink, INoAuth } from "@/state/auth";
 import { IQuery, ICurrentQueryHistory } from "@/state/query";
 import { convertToWords, nextRender } from "@/utils";
 import { Link } from "@/links";
@@ -203,7 +213,7 @@ const errors = namespace("errors");
   QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
 } })
 export default class TopLevelUserView extends Vue {
-  @auth.State("current") currentAuth!: CurrentAuth | null;
+  @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
   @auth.State("pending") authPending!: Promise<void> | null;
   @auth.State("protectedCalls") protectedCalls!: number;
   @auth.Action("login") login!: () => Promise<void>;
@@ -220,7 +230,7 @@ export default class TopLevelUserView extends Vue {
   @errors.Mutation("removeError") removeError!: (params: { key: ErrorKey; index: number }) => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
 
-  private panelButtons: IPanelButton[] = [];
+  private panelButtons: PanelButton[] = [];
   private extraActions: Action[] = [];
   private statusLine = "";
   private enableFilter = false;
@@ -330,13 +340,14 @@ export default class TopLevelUserView extends Vue {
 
   get actions() {
     const actions: Action[] = [];
-    if (this.currentAuth !== null) {
+    if (this.currentAuth?.token) {
       if (Api.developmentMode) {
+        const currentAuth = this.currentAuth;
         actions.push({ icon: "link",
           name: this.$t("authed_link").toString(),
           order: 1000,
           callback: () => {
-            const link = getAuthedLink(this.currentAuth!);
+            const link = getAuthedLink(currentAuth);
             void navigator.clipboard.writeText(link);
           } });
       }
@@ -360,7 +371,7 @@ export default class TopLevelUserView extends Vue {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   /* Current Z layout:
 
 * Count off all entries     (2000)
@@ -408,6 +419,7 @@ export default class TopLevelUserView extends Vue {
   }
 
   .head-menu {
+    height: 44px;
     display: flex;
     align-items: center;
     white-space: nowrap;
@@ -431,20 +443,23 @@ export default class TopLevelUserView extends Vue {
     border: none;
     text-decoration: none;
     padding: 0;
-    margin-right: 10px;
+    margin-right: 5px;
     position: relative;
     z-index: 1000;
   }
 
-  .head-menu_back-button:focus {
-    outline: none;
-  }
-
   .head-menu_title {
     margin: 1px 2px 0;
+    margin-right: auto;
     font-weight: 600;
     font-size: 1.25em;
     color: var(--MainTextColor);
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:focus {
+      outline: none;
+    }
   }
 
   .fix-bot {
