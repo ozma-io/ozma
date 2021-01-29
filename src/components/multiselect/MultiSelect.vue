@@ -107,8 +107,8 @@
           }"
         >
           <input
-            id="input"
             v-if="isOpen && isNeedFilter && isTopFilter"
+            id="input"
             ref="controlInput"
             v-model="inputValue"
             type="text"
@@ -158,8 +158,8 @@
           </slot>
 
           <input
-            id="input"
             v-if="isOpen && isNeedFilter && !isTopFilter"
+            id="input"
             ref="controlInput"
             v-model="inputValue"
             type="text"
@@ -450,12 +450,11 @@ export default class MultiSelect extends Vue {
   }
 
   private addSelectedOptionToValue() {
-
     let qrcode: IPrintQRCode | null = null;
-    
+
     try {
       qrcode = JSON.parse(this.inputValue);
-    } catch(e) {
+    } catch (e) {
       // Do nothing
     }
 
@@ -468,7 +467,7 @@ export default class MultiSelect extends Vue {
         if (option !== undefined) {
           this.addOptionToValue(option);
           return;
-        }      
+        }
       }
     }
 
