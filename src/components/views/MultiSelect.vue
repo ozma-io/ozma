@@ -28,9 +28,9 @@
           v-for="(option, index) in select.valueOptions"
           :key="option.value"
           :class="[
-            'values_list__value',
+            'one-of-many-value',
             {
-              'has_links': option.label !== option.labelHtml,
+              'has-links': option.label !== option.labelHtml,
             },
           ]"
           :style="select.listValueStyle"
@@ -53,7 +53,7 @@
           <input
             v-if="select.showValueRemove"
             type="button"
-            class="material-icons material-button values_list__value__close"
+            class="material-icons material-button remove-value"
             value="close"
             @click="select.removeValue(index)"
           >
@@ -62,17 +62,17 @@
       <template #option="select">
         <ul
           ref="optionsList"
-          class="select_container__options_list"
+          class="select-container__options_list"
           :style="select.optionsListStyle"
         >
           <li
             v-for="(option, index) in select.selectedOptions"
             :key="option.value"
             :class="[
-              'single_value',
-              'select_container__options_list__option',
+              'single-value',
+              'select-container__options_list__option',
               {
-                'select_container__options_list__option_active': select.selectedOption === index,
+                'select-container__options_list__option_active': select.selectedOption === index,
               }
             ]"
             @click="select.addOptionToValue(option, $event)"
@@ -221,15 +221,15 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView, BaseE
     background-color: var(--MainBackgroundColor);
   }
 
-  .values_list__value > a,
-  .select_container__options_list__option > a {
+  .one-of-many-value > a,
+  .select-container__options_list__option > a {
     color: var(--MainTextColor);
     text-decoration: underline;
   }
 
-  .single_value,
-  .values_list__value {
-    &.has_links {
+  .single-value,
+  .one-of-many-value {
+    &.has-links {
       // Otherwise it's sometimes tricky to click/tap inside.
       padding-right: 5px;
     }
