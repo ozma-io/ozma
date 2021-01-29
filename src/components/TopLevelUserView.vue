@@ -321,7 +321,7 @@ export default class TopLevelUserView extends Vue {
 
     // Off listen to the event.
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    this.$root.$on("open-qrcode-scanner", this.openQRCodeScanner);
+    this.$root.$off("open-qrcode-scanner", this.openQRCodeScanner);
   }
 
   private saveView() {

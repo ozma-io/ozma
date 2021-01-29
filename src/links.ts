@@ -31,7 +31,7 @@ export interface IActionLink {
 
 export interface IQRCodeLink {
   links: Record<string, Record<string, Link>>;
-  type: "qr-code";
+  type: "qrcode";
 }
 
 export type Link = IHrefLink | IQueryLink | IActionLink | IQRCodeLink;
@@ -83,26 +83,38 @@ export const attrToActionLink = (linkedAttr: Record<string, unknown>, opts?: IAt
 export const attrToQRCodeLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLinkOpts): IQRCodeLink | null => {
   const qrСodeLink: IQRCodeLink = {
     links: {},
-    type: "qr-code",
+    type: "qrcode",
   };
 
-  const linksObj = linkedAttr.links as Record<string, unknown>;
-  for (const schema in linksObj) {
-    if (linksObj[schema]) {
-      const actionObj = linksObj[schema] as Record<string, unknown>;
-      for (const name in actionObj) {
-        if (actionObj[name]) {
-          const link = attrToLink(actionObj[name], opts);
-          if (link !== null) {
-            if (!qrСodeLink.links[schema]) {
-              qrСodeLink.links[schema] = {};
-            }
-            qrСodeLink.links[schema][name] = link;
-          }
-        }
-      }
-    }
+  if (typeof linkedAttr !== "object" || linkedAttr === null) {
+    return null;
   }
+
+  if (!("qrcode" in linkedAttr) || linkedAttr.qrcode === null) {
+    return null;
+  }
+
+  const linksObj = linkedAttr.qrcode as Record<string, unknown>;
+
+  Object.entries(linksObj).forEach(([schema, sRecoreds]) => {
+    if (typeof sRecoreds !== "object" || sRecoreds === null) {
+      return;
+    }
+
+    const sRecoredsObj = sRecoreds as Record<string, unknown>;
+    Object.entries(sRecoredsObj).forEach(([name, nRercords]) => {
+      if (typeof nRercords !== "object" || nRercords === null) {
+        return;
+      }
+      const link = attrToLink(nRercords, opts);
+      if (link !== null) {
+        if (!qrСodeLink.links[schema]) {
+          qrСodeLink.links[schema] = {};
+        }
+        qrСodeLink.links[schema][name] = link;
+      }
+    });
+  });
 
   return qrСodeLink;
 };
@@ -239,7 +251,7 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
         await linkHandler(linkHandlerParams).handler();
       }
     };
-  } else if (params.link.type === "qr-code") {
+  } else if (params.link.type === "qrcode") {
     // eslint-disable-next-line @typescript-eslint/require-await
     handler = async () => {
       params.openQRCodeScanner("open-qrcode-scanner", params.link);
