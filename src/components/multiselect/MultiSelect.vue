@@ -108,7 +108,6 @@
         >
           <input
             v-if="isOpen && isNeedFilter && isTopFilter"
-            id="input"
             ref="controlInput"
             v-model="inputValue"
             type="text"
@@ -159,7 +158,6 @@
 
           <input
             v-if="isOpen && isNeedFilter && !isTopFilter"
-            id="input"
             ref="controlInput"
             v-model="inputValue"
             type="text"
