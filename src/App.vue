@@ -130,8 +130,9 @@ export default class App extends Vue {
 
   private get bannerMessage() {
     const message = this.settings.getEntry("banner_message", String, "");
+    const isImportant = this.settings.getEntry("banner_important", Boolean, false);
     const viewedMessage = localStorage.getItem("viewed-banner-message");
-    if (message.trim() === "" || message === viewedMessage) return "";
+    if (message.trim() === "" || (!isImportant && message === viewedMessage)) return "";
     return message;
   }
 

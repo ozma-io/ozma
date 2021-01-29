@@ -134,6 +134,10 @@ export const convertString = <T>(value: string, constructor: (_: string) => T, d
     }
   } else if (constructor === String as any) {
     return value as any;
+  } else if (constructor === Boolean as any) {
+    return value === "true" ? true
+      : value === "false" ? false
+        : defValue as any;
   } else {
     const conv = constructor(value);
     if (conv instanceof constructor) {
