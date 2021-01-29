@@ -10,66 +10,68 @@
 </i18n>
 <template>
   <div
-    v-click-outside="onClickOutside"
-    :class="['calendar_container',
-             {
-               'required': required && isEmpty,
-               'error': error,
-             }
-    ]"
+    class="popup-container"
   >
-    <div class="main_input">
-      <b-input-group
-        class="focus-entire"
-        size="sm"
+    <popper
+      ref="popup"
+      trigger="clickToToggle"
+      transition="fade"
+      enter-active-class="fade-enter fade-enter-active"
+      leave-active-class="fade-leave fade-leave-active"
+      :visible-arrow="false"
+      :options="{
+        placement: 'bottom',
+      }"
+    >
+      <!-- eslint-disable vue/no-deprecated-slot-attribute -->
+      <!-- TODO: Find or make not deprecated popper.js wrapper -->
+      <div
+        slot="reference"
+        class="calendar_container"
       >
-        <b-input-group-prepend>
-          <b-input-group-text
-            class="with-material-icon prepend-icon"
-            :style="{ backgroundColor }"
+        <!-- eslint-enable vue/no-deprecated-slot-attribute -->
+        <div class="main-input">
+          <b-input-group
+            class="focus-entire"
+            size="sm"
           >
-            <i class="material-icons">event</i>
-          </b-input-group-text>
-        </b-input-group-prepend>
-        <b-input
-          ref="control"
-          type="text"
-          :class="['calendar-input', 'with-clear-content-button', {'calendar-input_cell-edit': isCellEdit}]"
-          :style="{ backgroundColor }"
-          :placeholder="$t('input_placeholder')"
-          :value="textValue"
-          @input="$emit('update:value', $event)"
-          @keypress.enter="onPressEnter"
-          @focus="onInputFocus"
-        />
-        <b-input-group-append>
-          <b-button
-            :disabled="!value"
-            class="button with-material-icon clear-content-button"
-            variant="outline-secondary"
-            @click.prevent="updateValue(null)"
-          >
-            <i
-              class="material-icons"
-            >clear</i>
-          </b-button>
-        </b-input-group-append>
-      </b-input-group>
-      <transition name="fade">
-        <div
-          v-if="isCalendarOpen"
-          ref="popup"
-          :class="[
-            'main_cal',
-            'rounded',
-            'border',
-            {
-              'main_cal__open': isCalendarOpen,
-              'main_cal_cell-edit': isCellEdit,
-              'main_cal__open-top': position
-            }
-          ]"
-        >
+            <b-input-group-prepend>
+              <b-input-group-text
+                class="with-material-icon prepend-icon"
+                :style="{ backgroundColor }"
+              >
+                <i class="material-icons">event</i>
+              </b-input-group-text>
+            </b-input-group-prepend>
+            <b-input
+              ref="control"
+              type="text"
+              :class="['calendar-input', 'with-clear-content-button']"
+              :style="{ backgroundColor }"
+              :placeholder="$t('input_placeholder')"
+              :value="textValue"
+              @input="$emit('update:value', $event)"
+              @keypress.enter="onPressEnter"
+              @focus="onInputFocus"
+            />
+            <b-input-group-append>
+              <b-button
+                :disabled="!value"
+                class="button with-material-icon clear-content-button"
+                variant="outline-secondary"
+                @click.prevent="updateValue(null)"
+              >
+                <i
+                  class="material-icons"
+                >clear</i>
+              </b-button>
+            </b-input-group-append>
+          </b-input-group>
+        </div>
+      </div>
+
+      <div class="popper border rounded overflow-hidden shadow">
+        <div class="calendar-container">
           <div
             :class="['days', {'mr-2': showTime}]"
           >
@@ -81,11 +83,12 @@
               Today
             </button>
           </div>
+
           <div class="time">
             <TimePicker
               v-if="showTime"
               :time="timeForPicker"
-              :is-open="isCalendarOpen"
+              :is-open="true"
               :time-step="timeStep"
               @update:mins="updateMins"
               @update:hours="updateHours"
@@ -99,8 +102,8 @@
             </button>
           </div>
         </div>
-      </transition>
-    </div>
+      </div>
+    </popper>
   </div>
 </template>
 
@@ -110,11 +113,11 @@ import moment, { Moment } from "moment";
 
 import DatePicker from "@/components/calendar/DatePicker.vue";
 import TimePicker from "@/components/calendar/TimePicker.vue";
-import { nextRender } from "@/utils";
+import Popper from "vue-popperjs";
 
 @Component({
   components: {
-    DatePicker, TimePicker,
+    DatePicker, TimePicker, Popper,
   },
 })
 export default class Calendar extends Vue {
@@ -129,7 +132,6 @@ export default class Calendar extends Vue {
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
 
-  private isCalendarOpen = false;
   private position = false;
 
   get usedFormat() {
@@ -160,6 +162,11 @@ export default class Calendar extends Vue {
     return !this.value;
   }
 
+  private get isPopupOpen(): boolean {
+    const popupRef: any = this.$refs.popup;
+    return popupRef?.showPopper ?? false;
+  }
+
   private mounted() {
     const controlElement = this.$refs.control as HTMLInputElement;
     if (this.autofocus) {
@@ -186,34 +193,16 @@ export default class Calendar extends Vue {
     const target = event.target! as HTMLInputElement;
     this.updateValue(moment(target.value, this.usedFormat));
     target.blur();
-    this.isCalendarOpen = false;
   }
 
   private onInputFocus() {
     // FIXME: this `blur()` fixes not good behavior on mobiles,
     // but it can broke some cases on smartphones with keyboard and it's just a little ugly fix.
-    if (this.$isMobile && !this.isCalendarOpen) {
+    if (this.$isMobile && !this.isPopupOpen) {
       (this.$refs.control as HTMLInputElement).blur();
     } else {
       this.$emit("focus");
     }
-    void this.openPopup();
-  }
-
-  private async openPopup() {
-    // FIXME: Awful hotfix for Android phones for cases when viewport resizes slowly after keyboard closing.
-    if (this.$isMobile) {
-      await new Promise(r => setTimeout(r, 400));
-    }
-
-    // TODO: after showing on top calendar will show on bottom even if it should show on top.
-
-    this.isCalendarOpen = true;
-    await nextRender();
-    const bodyRect = document.body.getBoundingClientRect();
-    const popup = this.$refs.popup as HTMLInputElement;
-    const popupRect = popup.getBoundingClientRect();
-    this.position = !((bodyRect.bottom - popupRect.bottom) > 0);
   }
 
   get timeForPicker() {
@@ -226,10 +215,6 @@ export default class Calendar extends Vue {
         hour: this.dateValue.hour(),
         min: this.dateValue.minute(),
       };
-  }
-
-  private onClickOutside() {
-    this.isCalendarOpen = false;
   }
 
   private updatePart(mutate: (m: Moment) => void) {
@@ -278,16 +263,6 @@ export default class Calendar extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  .prepend-icon {
-    background-color: var(--MainBackgroundColor);
-    color: var(--MainTextColorLight);
-    border-right-width: 0;
-  }
-
-  .calendar-input {
-    border-left-width: 0;
-  }
-
   .fade-enter-active,
   .fade-leave-active {
     transition: all 0.1s;
@@ -298,37 +273,44 @@ export default class Calendar extends Vue {
     opacity: 0;
   }
 
-  .main_cal {
-    display: none;
+  .fade-enter-to,
+  .fade-leave {
+    opacity: 1;
   }
 
-  .main_cal__open {
+  .popup-container {
+    position: relative;
+    width: 100%;
+    z-index: 10;
+  }
+
+  .prepend-icon {
+    background-color: var(--MainBackgroundColor);
+    color: var(--MainTextColorLight);
+    border-right-width: 0;
+  }
+
+  .calendar-input {
+    border-left-width: 0;
+  }
+
+  .calendar-container {
     display: flex;
-    position: absolute;
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
-    padding: 10px;
     border: 1px solid var(--MainBorderColor);
-    top: calc(100% + 2px);
-    z-index: 1001;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
   }
 
-  .main_cal__open-top {
-    top: auto;
-    bottom: calc(100% + 2px);
-  }
-
-  .main_input {
+  .main-input {
     display: flex;
     flex-direction: row;
   }
 
-  .main_input__trigger {
+  .main-input__trigger {
     display: inline-block;
   }
 
-  .main_input__trigger_button {
+  .main-input__trigger_button {
     color: var(--ButtonTextColor) !important;
     background: hsla(0, 0%, 100%, 0.3);
     line-height: 100%;
@@ -367,7 +349,7 @@ export default class Calendar extends Vue {
   }
 
   @media screen and (max-device-width: 480px) {
-    .main_cal__open {
+    .calendar-container__open {
       flex-direction: column;
     }
   }
