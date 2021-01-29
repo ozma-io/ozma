@@ -218,6 +218,7 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView, BaseE
 <style lang="scss" scoped>
   .view-form {
     border-radius: 0.2rem;
+    background-color: var(--MainBackgroundColor);
   }
 
   .values_list__value > a,
