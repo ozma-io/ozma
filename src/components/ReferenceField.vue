@@ -30,6 +30,7 @@
       ref="control"
       :value="currentValue"
       :options="options"
+      :entry="entry"
       :height="height"
       single
       :autofocus="autofocus"

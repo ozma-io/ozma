@@ -3,12 +3,16 @@
       "en": {
         "empty_message": "Empty",
         "clear_all": "Clear all",
-        "enter_value": "Enter value"
+        "enter_value": "Enter value",
+        "error_qrcode_is_inappropriate" : "QRCode is inappropriate",
+        "error": "Error"
       },
       "ru": {
         "empty_message": "Пусто",
         "clear_all": "Очистить",
-        "enter_value": "Введите значение"
+        "enter_value": "Введите значение",
+        "error_qrcode_is_inappropriate" : "QRCode не соответствует назначению",
+        "error": "Ошибка"
       }
     }
 </i18n>
@@ -103,6 +107,7 @@
           }"
         >
           <input
+            id="input"
             v-if="isOpen && isNeedFilter && isTopFilter"
             ref="controlInput"
             v-model="inputValue"
@@ -153,6 +158,7 @@
           </slot>
 
           <input
+            id="input"
             v-if="isOpen && isNeedFilter && !isTopFilter"
             ref="controlInput"
             v-model="inputValue"
@@ -190,6 +196,8 @@ import * as R from "ramda";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { valueIsNull } from "@/values";
 import { replaceHtmlLinks } from "@/utils";
+import type { IEntriesRef } from "@/state/entries";
+import { IPrintQRCode } from "@/components/qrcode/QRCode.vue";
 
 export interface ISelectOption {
   value: any;
@@ -216,6 +224,7 @@ export default class MultiSelect extends Vue {
   @Prop({ type: Number, default: null }) height!: number;
   @Prop({ type: String, default: null }) optionsListHeight!: string;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
+  @Prop({ type: Object, default: null }) entry!: IEntriesRef;
 
   private isOpen = false;
   private selectedOption = -1;
@@ -441,12 +450,46 @@ export default class MultiSelect extends Vue {
   }
 
   private addSelectedOptionToValue() {
+
+    let qrcode: IPrintQRCode | null = null;
+    
+    try {
+      qrcode = JSON.parse(this.inputValue);
+    } catch(e) {
+      // Do nothing
+    }
+
+    if (qrcode !== null && typeof qrcode !== "number") {
+      if (qrcode.n !== this.entry.entity.name || qrcode.s !== this.entry.entity.schema) {
+        this.makeToast(this.$t("error_qrcode_is_inappropriate").toString());
+      } else {
+        const value = Number(qrcode.i);
+        const option: ISelectOption | undefined = this.options.find(o => o.value === value);
+        if (option !== undefined) {
+          this.addOptionToValue(option);
+          return;
+        }      
+      }
+    }
+
     if (this.selectedOption > -1) {
       const option: ISelectOption | null = R.pathOr(null, [this.selectedOption], this.selectedOptions);
       if (option) {
         this.addOptionToValue(option);
+        return;
       }
-    } else if (this.selectedOptions.length) {
+    }
+
+    if (this.options.length) {
+      const value = Number(this.inputValue);
+      const option: ISelectOption | undefined = this.options.find(o => o.value === value);
+      if (option !== undefined) {
+        this.addOptionToValue(option);
+        return;
+      }
+    }
+
+    if (this.selectedOptions.length) {
       const option: ISelectOption = this.selectedOptions[0];
       if (option) {
         this.addOptionToValue(option);
@@ -468,6 +511,15 @@ export default class MultiSelect extends Vue {
     if (!this.single) {
       this.$emit("update:value", this.emptyValue);
     }
+  }
+
+  private makeToast(message: string) {
+    this.$bvToast.toast(message, {
+      title: this.$t("error").toString(),
+      variant: "danger",
+      solid: true,
+      noAutoHide: true,
+    });
   }
 }
 </script>
