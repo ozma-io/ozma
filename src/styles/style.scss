@@ -88,6 +88,19 @@ button:not(.btn) {
   font-size: var(--FontSize) !important;
 }
 
+/* Vue's <transition>s */
+@for $i from 1 through 10 {
+  .fade-#{$i}-enter-active,
+  .fade-#{$i}-leave-active {
+    transition: opacity #{$i / 10}s;
+  }
+
+  .fade-#{$i}-enter,
+  .fade-#{$i}-leave-to {
+    opacity: 0;
+  }
+}
+
 /* Source: https://google.github.io/material-design-icons/ */
 .material-icons.md-18 { font-size: 18px; }
 .material-icons.md-24 { font-size: 24px; }

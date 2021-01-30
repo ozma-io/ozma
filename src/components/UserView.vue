@@ -36,7 +36,9 @@
 
 <template>
   <span>
-    <template v-if="state.state === 'show'">
+    <template
+      v-if="state.state === 'show'"
+    >
       <UserViewCommon
         :uv="state.uv"
         :is-root="isRoot"
@@ -49,41 +51,66 @@
         @update:actions="extraCommonActions = $event"
         @update:panelButtons="panelButtons = $event"
       />
-      <component
-        :is="`UserView${state.componentName}`"
-        ref="userViewRef"
-        :uv="state.uv"
-        :is-root="isRoot"
-        :is-top-level="isTopLevel"
-        :filter="filter"
-        :scope="scope"
-        :level="level"
-        :selection-mode="selectionMode"
-        :default-values="defaultValues"
-        @goto="$emit('goto', $event)"
-        @goto-previous="$emit('goto-previous')"
-        @select="$emit('select', $event)"
-        @update:actions="extraActions = $event"
-        @update:statusLine="$emit('update:statusLine', $event)"
-        @update:enableFilter="$emit('update:enableFilter', $event)"
-        @update:bodyStyle="$emit('update:bodyStyle', $event)"
-      />
+      <transition name="fade-1" mode="out-in">
+        <component
+          :is="`UserView${state.componentName}`"
+          ref="userViewRef"
+          :key="state.uv.args.source"
+          :uv="state.uv"
+          :is-root="isRoot"
+          :is-top-level="isTopLevel"
+          :filter="filter"
+          :scope="scope"
+          :level="level"
+          :selection-mode="selectionMode"
+          :default-values="defaultValues"
+          @goto="$emit('goto', $event)"
+          @goto-previous="$emit('goto-previous')"
+          @select="$emit('select', $event)"
+          @update:actions="extraActions = $event"
+          @update:statusLine="$emit('update:statusLine', $event)"
+          @update:enableFilter="$emit('update:enableFilter', $event)"
+          @update:bodyStyle="$emit('update:bodyStyle', $event)"
+        />
+      </transition>
     </template>
+
     <div
       v-else-if="state.state === 'error'"
     >
       {{ state.message }}
     </div>
-    <div
-      v-else
-      class="loading-container h-100 p-3 d-flex justify-content-center align-items-center rounded"
-      style="background-color: rgba(0, 0, 0, 0.05); cursor: wait;"
+
+    <transition
+      name="fade-2"
     >
       <div
-        class="spinner-border"
-        style="width: 3em; height: 3em; border-color: rgba(0, 0, 0, 0.5); border-right-color: transparent;"
-      />
-    </div>
+        v-if="state.state === 'loading'"
+        :class="[
+          'loading-container',
+          {
+            'nested': !isRoot,
+          }
+        ]"
+      >
+        <div
+          :class="[
+            'loading-background',
+            'h-100',
+            'd-flex',
+            'justify-content-center',
+            'align-items-center',
+            'rounded',
+            'shadow-sm',
+          ]"
+        >
+          <div
+            class="spinner-border"
+            style="width: 3em; height: 3em; border-color: rgba(0, 0, 0, 0.5); border-right-color: transparent;"
+          />
+        </div>
+      </div>
+    </transition>
   </span>
 </template>
 
@@ -539,3 +566,34 @@ export default class UserView extends Vue {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+  .loading-container {
+    min-height: 100px;
+    height: 100%;
+
+    .loading-background {
+      padding: 30px;
+      background-color: rgba(240, 240, 240);
+      cursor: wait;
+    }
+
+    &.fade-2-leave-active {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      min-height: 0;
+
+      &.nested {
+        padding: 0 15px !important; /* Mimic `.col` paddings */
+      }
+
+      .spinner-border {
+        opacity: 0;
+        transition: opacity 0.05s;
+      }
+    }
+  }
+</style>
