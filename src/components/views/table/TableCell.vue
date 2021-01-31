@@ -248,10 +248,6 @@ export default class TableCell extends Vue {
     transition: transform 0.2s;
   }
 
-  .display-arrow.material-icons.click-stop {
-    pointer-events: none !important;
-  }
-
   .display-arrow.material-icons:hover {
     opacity: 0.7;
     overflow: hidden;
