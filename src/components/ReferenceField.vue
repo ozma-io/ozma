@@ -44,10 +44,10 @@
         <span
           v-if="select.valueOption.meta && select.valueOption.meta.link"
           :style="select.listValueStyle"
-          class="single_value"
+          class="single-value"
         >
           <FunLink
-            class="single_value__link"
+            class="single-value__link"
             :link="select.valueOption.meta.link"
             @goto="$emit('goto', $event)"
           >
@@ -66,9 +66,9 @@
           v-else
           :style="select.listValueStyle"
           :class="[
-            'single_value',
+            'single-value',
             {
-              'has_links': select.valueOption.label !== select.valueOption.labelHtml,
+              'has-links': select.valueOption.label !== select.valueOption.labelHtml,
             }
           ]"
           v-html="select.valueOption.labelHtml"
@@ -97,7 +97,7 @@
     </MultiSelect>
     <div
       v-else
-      class="h-100 p-1 d-flex justify-content-center align-items-center"
+      class="loading-box h-100 p-1 d-flex justify-content-center align-items-center"
     >
       <div
         class="spinner-border spinner-border-sm"
@@ -217,23 +217,23 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
     width: 85vw;
   }
 
-  .single_value {
+  .single-value {
     margin: 2px;
     line-height: 1rem;
 
-    &.has_links {
-      // Otherwise it's sometimes tricky to click/tap inside.
+    &.has-links {
+      /* Otherwise it's sometimes tricky to click/tap inside. */
       padding-right: 5px;
     }
   }
 
-  .single_value > a,
-  .select_container__options_list__option > a {
+  .single-value > a,
+  .select-container__options_list__option > a {
     color: var(--MainTextColor);
     text-decoration: underline;
   }
 
-  .single_value__link {
+  .single-value__link {
     display: flex;
   }
 
@@ -251,5 +251,9 @@ export default class ReferenceField extends mixins(BaseEntriesView) {
     align-items: center;
     width: 100%;
     background: var(--MainBorderColor);
+  }
+
+  .loading-box {
+    height: 2rem;
   }
 </style>

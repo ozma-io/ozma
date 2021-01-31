@@ -1634,18 +1634,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     align-items: center;
   }
 
-  /* блок для отключения редактирования в таблице */
-  #disable_edit {
-    position: fixed;
-    top: calc(1.5em + 6px);
-    left: 0;
-  }
-
-  #disable_edit.edit_active {
-    width: 100vw;
-    height: 100vh;
-  }
-
   /* таблица поверх блока отключения редактирования */
   table.edit_active {
     position: relative;
@@ -1731,21 +1719,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     overflow: hidden;
   }
 
-  @media screen and (max-aspect-ratio: 13/9) {
-    @media screen and (max-device-width: 480px) {
-      .nested-table-block {
-        position: sticky;
-        float: right;
-        right: 0;
-      }
-
-      /* This is a potential hack. Here's to hoping it would go away soon. */
-      .nested-table-block > .tabl {
-        width: 92vw !important;
-      }
-    }
-  }
-
   @media screen and (max-device-width: 650px) {
     .tabl {
       flex: 1;
@@ -1792,24 +1765,11 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  @-moz-document url-prefix() {
-    .fixed-column {
-      outline: solid 1px var(--MainBorderColor);
-    }
-  }
-
   @media print {
     .tabl {
       height: 100%;
       float: none !important; /* при печати для правильной масштабируемости */
       overflow: visible !important; /* чтобы при печати была возможность видеть таблицу */
-    }
-
-    @-moz-document url-prefix() { /* стили в лисе исправляем баги с отображением границ таблицы */
-      .custom-table {
-        border-collapse: separate !important;
-        border-right: solid 1px var(--NavigationBackColor);
-      }
     }
 
     .custom-table {
@@ -1823,7 +1783,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  /* FormControl */
   div.form-control-panel {
     position: fixed;
     z-index: 2000; /* FormControl поверх таблицы */
@@ -1977,12 +1936,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   * {
-    -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-    -khtml-user-select: none; /* Konqueror HTML */
-    -moz-user-select: none; /* Old versions of Firefox */
-    -ms-user-select: none; /* Internet Explorer/Edge */
-    user-select: none; /* Non-prefixed version, currently
-                                  supported by Chrome, Opera and Firefox */
+    user-select: none;
   }
 </style>

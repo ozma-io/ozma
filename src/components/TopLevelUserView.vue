@@ -199,9 +199,13 @@ const settings = namespace("settings");
 const query = namespace("query");
 const errors = namespace("errors");
 
-@Component({ components: {
-  SearchPanel, ModalUserView, ProgressBar,
-} })
+@Component({
+  components: {
+    SearchPanel,
+    ModalUserView,
+    ProgressBar,
+  },
+})
 export default class TopLevelUserView extends Vue {
   @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
   @auth.State("pending") authPending!: Promise<void> | null;
@@ -391,7 +395,7 @@ export default class TopLevelUserView extends Vue {
     white-space: nowrap;
     background-color: var(--MainBackgroundColor);
     width: 100%;
-    padding: 5px;
+    padding: 5px 10px;
     z-index: 999;
     border-bottom: 1px solid var(--MainBorderColor);
   }
