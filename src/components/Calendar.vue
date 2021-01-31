@@ -10,7 +10,13 @@
 </i18n>
 <template>
   <div
-    class="popup-container"
+    :class="[
+      'popup-container',
+      {
+        'is-open': isPopupOpen,
+
+      }
+    ]"
   >
     <popper
       ref="popup"
@@ -20,8 +26,10 @@
       leave-active-class="fade-leave fade-leave-active"
       :visible-arrow="false"
       :options="{
-        placement: 'bottom',
+        placement: 'bottom-start',
       }"
+      @show="onOpenPopup"
+      @hide="onClosePopup"
     >
       <!-- eslint-disable vue/no-deprecated-slot-attribute -->
       <!-- TODO: Find or make not deprecated popper.js wrapper -->
@@ -133,6 +141,7 @@ export default class Calendar extends Vue {
   @Prop({ type: String }) backgroundColor!: string;
 
   private position = false;
+  private isPopupOpen = false;
 
   get usedFormat() {
     if (this.format) {
@@ -162,28 +171,34 @@ export default class Calendar extends Vue {
     return !this.value;
   }
 
-  private get isPopupOpen(): boolean {
-    const popupRef: any = this.$refs.popup;
-    return popupRef?.showPopper ?? false;
+  private async onOpenPopup() {
+    this.isPopupOpen = true;
+    // On-screen keyboard disturbs if there are not so many options to filter.
+    if (this.$isMobile) return;
+
+    await Vue.nextTick();
+    this.focusInput();
+  }
+
+  private onClosePopup() {
+    this.isPopupOpen = false;
+  }
+
+  private focusInput() {
+    (this.$refs.control as HTMLInputElement)?.focus();
   }
 
   private mounted() {
-    const controlElement = this.$refs.control as HTMLInputElement;
     if (this.autofocus) {
       void Vue.nextTick().then(() => {
-        controlElement.focus();
+        this.focusInput();
       });
     }
   }
 
   private updateValue(newValue: Moment | undefined | null) {
-    if (moment.isMoment(newValue) && newValue.isSame(this.value)) {
-      return;
-    }
-
-    if (this.value === newValue) {
-      return;
-    }
+    if (moment.isMoment(newValue) && newValue.isSame(this.value)) return;
+    if (this.value === newValue) return;
 
     this.$emit("update:value", newValue);
   }
@@ -279,9 +294,13 @@ export default class Calendar extends Vue {
   }
 
   .popup-container {
-    position: relative;
     width: 100%;
-    z-index: 10;
+    position: relative;
+    z-index: 30;
+
+    &.is-open {
+      z-index: 31; /* To be above other components with popups */
+    }
   }
 
   .prepend-icon {

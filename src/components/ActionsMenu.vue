@@ -389,7 +389,7 @@ export default class ActionsMenu extends Vue {
     position: relative;
     height: 24px;
     margin: 0;
-    z-index: 995;
+    z-index: 27;
     display: flex;
     align-items: center;
   }
