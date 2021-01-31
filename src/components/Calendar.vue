@@ -116,7 +116,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import moment, { Moment } from "moment";
 
 import DatePicker from "@/components/calendar/DatePicker.vue";
@@ -171,11 +171,17 @@ export default class Calendar extends Vue {
     return !this.value;
   }
 
+  private async openPopup() {
+    const popupRef: any = this.$refs.popup;
+    if (!popupRef) return;
+
+    await popupRef.doShow();
+  }
+
   private async onOpenPopup() {
     this.isPopupOpen = true;
-    // On-screen keyboard disturbs if there are not so many options to filter.
-    if (this.$isMobile) return;
 
+    if (this.$isMobile) return;
     await Vue.nextTick();
     this.focusInput();
   }
@@ -190,9 +196,15 @@ export default class Calendar extends Vue {
 
   private mounted() {
     if (this.autofocus) {
-      void Vue.nextTick().then(() => {
-        this.focusInput();
-      });
+      void this.onAutofocus(true);
+    }
+  }
+
+  @Watch("autofocus")
+  private async onAutofocus(autofocus: boolean) {
+    if (autofocus) {
+      await this.$nextTick();
+      void this.openPopup();
     }
   }
 
@@ -280,7 +292,7 @@ export default class Calendar extends Vue {
 <style lang="scss" scoped>
   .fade-enter-active,
   .fade-leave-active {
-    transition: all 0.1s;
+    transition: all 1s;
   }
 
   .fade-enter,

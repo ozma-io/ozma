@@ -1,6 +1,13 @@
 <template>
   <div
-    :class="['table-cell-edit', {'table-cell-edit_last-fixed': isLastFixedCell}]"
+    :class="[
+      'table-cell-edit',
+      'border',
+      'shadow-lg',
+      {
+        'table-cell-edit_last-fixed': isLastFixedCell
+      }
+    ]"
     :style="{
       top: `${coords.y}px`,
       left: `${coords.x}px`,
@@ -39,9 +46,7 @@ export default class TableCellEdit extends Vue {
 
 <style scoped>
   .table-cell-edit {
-    box-shadow: 0 0 10px 5px var(--MainBorderColor);
     background: #fff;
-    box-sizing: border-box;
     position: fixed;
     top: 0;
     z-index: 9999;

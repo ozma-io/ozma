@@ -165,6 +165,7 @@ $input-focus-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
   border-color: $input-focus-border-color !important;
   box-shadow: $input-focus-shadow !important;
   border-radius: 0.2rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 
   .form-control,
   .input-group-prepend .btn,

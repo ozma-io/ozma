@@ -11,7 +11,7 @@
                           'editing_style': value.extra.editing !== undefined,
                           'tree-branches': column.treeUnfoldColumn && children !== undefined && children.length > 0 && isTree,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
-    @click="$emit('cell-click', columnPosition, $event)"
+    @click.stop="$emit('cell-click', columnPosition, $event)"
   >
     <p>
       <template v-if="column.type == 'buttons'">
