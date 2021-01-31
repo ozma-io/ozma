@@ -31,6 +31,7 @@
       <label class="input_label">{{ usedCaption }}</label>
       <ActionsMenu
         :actions="[]"
+        menu-align="right"
       />
     </div>
     <div class="empty_userview_text">
