@@ -193,7 +193,7 @@ $input-focus-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 @import "../../node_modules/vue-popperjs/dist/vue-popper.css";
 
 .popper {
-  max-width: 100%;
+  min-width: 100px;
   padding: 0;
 
   &[x-placement^="bottom"],
