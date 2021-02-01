@@ -256,7 +256,7 @@ export default class UserView extends Vue {
   private nextUv: Promise<void> | null = null;
   private inhibitReload = false;
 
-  get transitionKey() {
+  private get transitionKey() {
     return this.state.state === "show"
       ? JSON.stringify(this.state.uv.args.source)
       : "none";
