@@ -24,12 +24,10 @@
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 
-import FormControl from "@/components/FormControl.vue";
 import type { GridElement } from "@/components/form/FormGrid.vue";
 
 @Component({
   name: "FormGridBlock",
-  components: { FormControl },
 })
 export default class FormGridBlock extends Vue {
   @Prop({ type: Object }) blockContent!: GridElement<any>;

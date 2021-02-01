@@ -85,7 +85,10 @@
         >
           {{ title }}
         </span>
-        <ButtonsPanel :buttons="panelButtons">
+        <ButtonsPanel
+          :buttons="panelButtons"
+          @goto="$emit('goto', $event)"
+        >
           <template #search-panel>
             <SearchPanel
               v-if="enableFilter"
