@@ -209,7 +209,6 @@ export interface IColumn {
   columnInfo: IResultColumnInfo;
   width: number; // in px
   treeUnfoldColumn: boolean;
-  scannable: boolean;
   type: string;
 }
 
@@ -309,8 +308,6 @@ const createColumns = (uv: ICombinedUserViewAny): IColumn[] => {
 
     const type = String(getColumnAttr("column_type"));
 
-    const scannable = getColumnAttr("text_type") === "barcode";
-
     columns[i] = {
       caption,
       style,
@@ -319,7 +316,6 @@ const createColumns = (uv: ICombinedUserViewAny): IColumn[] => {
       columnInfo,
       width: columnWidth,
       treeUnfoldColumn,
-      scannable,
       type,
     };
   });
