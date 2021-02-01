@@ -55,7 +55,7 @@
         <component
           :is="`UserView${state.componentName}`"
           ref="userViewRef"
-          :key="state.uv.args.source"
+          :key="transitionKey"
           :uv="state.uv"
           :is-root="isRoot"
           :is-top-level="isTopLevel"
@@ -255,6 +255,12 @@ export default class UserView extends Vue {
   private pendingArgs: IUserViewArguments | null = null;
   private nextUv: Promise<void> | null = null;
   private inhibitReload = false;
+
+  get transitionKey() {
+    return this.state.state === "show"
+      ? JSON.stringify(this.state.uv.args.source)
+      : "none";
+  }
 
   get title() {
     if (this.state.state === "show" && "title" in this.state.uv.attributes) {
