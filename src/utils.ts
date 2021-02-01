@@ -135,8 +135,9 @@ export const convertString = <T>(value: string, constructor: (_: string) => T, d
   } else if (constructor === String as any) {
     return value as any;
   } else if (constructor === Boolean as any) {
-    return value === "true" ? true
-      : value === "false" ? false
+    const lowercasedValue = value.toLowerCase();
+    return lowercasedValue === "true" ? true
+      : lowercasedValue === "false" ? false
         : defValue as any;
   } else {
     const conv = constructor(value);
