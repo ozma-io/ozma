@@ -82,7 +82,7 @@ import { QrcodeStream } from "vue-qrcode-reader";
 import { mixins } from "vue-class-component";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import type { Link } from "@/links";
-import { linkHandler } from "@/links";
+import { linkHandler, ILinkHandlerParams } from "@/links";
 import { IQuery } from "@/state/query";
 import { namespace } from "vuex-class";
 import { IPrintQRCode } from "@/components/qrcode/QRCode.vue";
@@ -218,28 +218,41 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     if (this.currentContent !== null) {
       if (this.entry !== null) {
         if (this.link) {
-          let ref = null;
+          let link: Link | null = null;
 
-          if ("query" in this.link && this.link.query.args.args) {
-            ref = "ref" in this.link.query.args.source ? this.link.query.args.source.ref : null;
-            this.link.query.args.args.id = this.currentContent.id;
+          if ("links" in this.link) {
+            link = this.link.links[this.currentContent.schema][this.currentContent.name];
           }
 
-          if ("action" in this.link) {
-            ref = this.link.action;
-            this.link.args.id = this.currentContent.id;
-          }
-
-          if (ref === null || ref.name !== this.currentContent.name || ref.schema !== this.currentContent.schema) {
+          if (!link) {
             this.error = this.$t("error_qrcode_is_inappropriate").toString();
             return;
+          }
+
+          if ("query" in link && link.query.args.args) {
+            link.query.args.args.id = this.currentContent.id;
+          }
+
+          if ("action" in link) {
+            link.args.id = this.currentContent.id;
           }
 
           const emit = (target: IQuery) => {
             void this.pushRoot(target);
           };
 
-          const { handler, href } = linkHandler(this.$store, emit, this.link);
+          const openQRCodeScanner = (name:string, qrLink: Link) => {
+            this.$root.$emit(name, qrLink);
+          };
+
+          const linkHandlerParams: ILinkHandlerParams = {
+            store: this.$store,
+            goto: emit,
+            link,
+            openQRCodeScanner,
+          };
+
+          const { handler, href } = linkHandler(linkHandlerParams);
           if (handler) {
             void handler();
           }
