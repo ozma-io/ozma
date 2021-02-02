@@ -12,8 +12,9 @@
 <template>
   <div v-if="header.name==='nested-empty'">
     <div class="nested-menu">
-      <label class="input_label">{{ title }}</label>
+      <label class="input_label">{{ header.title }}</label>
       <ActionsMenu
+        menu-align="right"
         :actions="[]"
       />
     </div>
@@ -21,7 +22,6 @@
       {{ $t('data_will_load_after_save') }}
     </div>
   </div>
-
   <div
     v-else-if="header.name==='nested'"
     class="nested-menu"
@@ -91,7 +91,7 @@ export type Header = INestedHeader | INestedEmptyHeader;
   },
 })
 export default class HeaderPanel extends Vue {
-  @Prop({ type: Object, default: null }) header!: Header;
+  @Prop({ type: Object, required: true }) header!: Header;
   @Prop({ type: Object, default: null }) view!: IUserViewType;
 
   private openFullscreen() {
