@@ -43,6 +43,7 @@
           :selection-mode="selectionMode"
           :scope="uid"
           @update:actions="extraActions = $event"
+          @update:panelButtons="panelButtons = $event"
           @update:title="title = $event"
           @goto="$emit('goto', $event)"
           @goto-previous="$emit('goto-previous')"
@@ -80,6 +81,7 @@ import { queryLocation } from "@/state/query";
 import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/staging_changes";
 import ModalPortal from "@/components/modal/ModalPortal";
 import { router } from "@/modules";
+import { PanelButton } from "@/components/ButtonsPanel.vue";
 import { ISelectionRef } from "./BaseUserView";
 
 const staging = namespace("staging");
@@ -96,6 +98,7 @@ export default class ModalUserView extends Vue {
 
   private title = "";
   private extraActions: Action[] = [];
+  private panelButtons: PanelButton[] = [];
 
   get actions() {
     const actions: Action[] = [];

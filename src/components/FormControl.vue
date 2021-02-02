@@ -4,15 +4,13 @@
             "yes": "Yes",
             "no": "No",
             "invalid_uv": "Nested user view rows should be JSON objects with 'ref' and 'args' defined",
-            "select_view": "Add in modal window",
-            "data_will_load_after_save": "(Data will load after save)"
+            "select_view": "Add in modal window"
         },
         "ru": {
             "yes": "Да",
             "no": "Нет",
             "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'ref' и 'args'",
-            "select_view": "Создать во вложенном окне",
-            "data_will_load_after_save": "(Данные загрузятся после сохранения)"
+            "select_view": "Создать во вложенном окне"
         }
     }
 </i18n>
@@ -173,12 +171,9 @@
           v-if="usedCaption"
           :cols="isMultiline ? 12 : 4"
         >
-          <NestedUserViewPanel
-            :used-caption="usedCaption"
-            :actions="actions"
-            :enable-filter="enableFilter"
-            :input-type="inputType"
-            :panel-buttons="panelButtons"
+          <HeaderPanel
+            :header="inputType.header"
+            :view="inputType"
             @update:filterString="filterString = $event"
             @goto="$emit('goto', $event)"
           />
@@ -219,6 +214,7 @@ import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
 import { PanelButton } from "@/components/ButtonsPanel.vue";
+import type { INestedEmptyHeader, INestedHeader } from "@/components/panels/HeaderPanel.vue";
 
 interface ITextType {
   name: "text";
@@ -271,11 +267,12 @@ interface ICheckType {
 
 export interface IUserViewType extends IQuery {
   name: "userview";
+  header: INestedHeader;
 }
 
 interface IEmptyUserViewType {
   name: "empty_userview";
-  text: string;
+  header: INestedEmptyHeader;
 }
 
 interface IErrorType {
@@ -330,7 +327,7 @@ const multilineTypes = ["markdown", "codeeditor", "textarea", "userview", "empty
     Input: () => import("@/components/form/Input.vue"),
     Textarea: () => import("@/components/form/Textarea.vue"),
     NestedUserView: () => import("@/components/NestedUserView.vue"),
-    NestedUserViewPanel: () => import("@/components/panels/NestedUserViewPanel.vue"),
+    HeaderPanel: () => import("@/components/panels/HeaderPanel.vue"),
     QRCode: () => import("@/components/qrcode/QRCode.vue"),
     BarCode: () => import("@/components/barcode/BarCode.vue"),
     BarCodePrint: () => import("@/components/barcode/BarCodePrint.vue"),
@@ -474,8 +471,14 @@ export default class FormControl extends Vue {
 
     const controlAttr = String(this.attributes["control"]);
     if (controlAttr === "user_view") {
+      
       if (this.currentValue === null || this.currentValue === undefined) {
-        return { name: "empty_userview", text: this.$t("data_will_load_after_save").toString() };
+        const header: INestedEmptyHeader = {
+          name: "nested-empty",
+          title: this.title,
+        }
+        
+        return { name: "empty_userview", header };
       }
 
       const nestedRef = attrToQuerySelf(this.currentValue, this.value.info, linkOpts);
@@ -483,7 +486,16 @@ export default class FormControl extends Vue {
       if (nestedRef === null) {
         return { name: "error", text: this.$t("invalid_uv").toString() };
       } else {
-        return { name: "userview", ...nestedRef };
+        
+        const header: INestedHeader = {
+          name: "nested",
+          title: this.title,
+          actions: this.actions,
+          buttons: this.panelButtons,
+          isEnableFilter: this.enableFilter,
+        }
+
+        return { name: "userview", header, ...nestedRef };
       }
     } else if (controlAttr === "static_text") {
       return { name: "static_text" };
