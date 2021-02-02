@@ -372,7 +372,7 @@ export default class FormControl extends Vue {
   }
 
   get currentValueIsNull() {
-    return valueIsNull(currentValue);
+    return valueIsNull(this.currentValue);
   }
 
   get isAwaited() {
