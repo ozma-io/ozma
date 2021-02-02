@@ -625,7 +625,7 @@ export default class FormControl extends Vue {
   }
 
   @Watch("inputType.name")
-  private watchInputType() {
+  private watchInputType(newName: string, oldName: string) {
     // These state values are essentially "backward props", that is, are supposed to be set by child components
     // via `update:` events. This creates a problem: when do we clean these state values? For example, when
     // switched from "user_view" to "text" component type, we can't expect `update:actions` event that will
@@ -635,6 +635,8 @@ export default class FormControl extends Vue {
     // and issues `update:` events as needed. Therefore we only need to focus on switches between components.
     // If we detect a switch we clear all state values and expect the new component to emit `update:` events for
     // values it actually supports.
+    
+    if (newName === oldName) return;
 
     this.actions = [];
     this.panelButtons = [];
