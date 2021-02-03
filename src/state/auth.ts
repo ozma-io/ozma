@@ -227,16 +227,20 @@ const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
   commit("setRenewalTimeout", renewalTimeoutId);
 };
 
-const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExisting: boolean) => {
+const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExisting: boolean, path?: string) => {
   const nonce = uuidv4();
   sessionStorage.setItem(authNonceKey, nonce);
-  const path =
-        router.currentRoute.name === "auth_response" ?
-          router.resolve({ name: "main" }).href :
-          router.currentRoute.fullPath;
+  let realPath: string;
+  if (path) {
+    realPath = path;
+  } else if (router.currentRoute.name === "auth_response") {
+    realPath = router.resolve({ name: "main" }).href;
+  } else {
+    realPath = router.currentRoute.fullPath;
+  }
   const savedState: IOIDCState = {
     nonce,
-    path,
+    path: realPath,
   };
   const params = {
     "client_id": authClientId,
@@ -384,7 +388,7 @@ export const authModule: Module<IAuthState, {}> = {
                     const errorDescription = getQueryValue("errorDescription");
                     void dispatch("setError", `Invalid auth response query parameters, error ${error} ${errorDescription}`);
                   } else {
-                    await requestLogin(context, false);
+                    await requestLogin(context, false, savedState.path);
                   }
                 }
                 await router.replace(savedState.path);
