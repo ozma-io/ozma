@@ -12,7 +12,7 @@
 <template>
   <div v-if="header.name==='nested-empty'">
     <div class="nested-menu">
-      <label class="input_label">{{ header.title }}</label>
+      <label class="input_label">{{ title }}</label>
       <ActionsMenu
         menu-align="right"
         :actions="[]"
@@ -26,7 +26,7 @@
     v-else-if="header.name==='nested'"
     class="nested-menu"
   >
-    <label class="input_label">{{ header.title }}</label>
+    <label class="input_label">{{ title }}</label>
     <ButtonsPanel 
       :buttons="header.buttons"
       @goto="$emit('goto', $event)"
@@ -68,15 +68,11 @@ import { router } from "@/modules";
 import { PanelButton } from "@/components/ButtonsPanel.vue";
 import SearchPanel from "@/components/SearchPanel.vue";
 
-export interface IHeader {
-  title: string;
-}
-
-export interface INestedEmptyHeader extends IHeader {
+export interface INestedEmptyHeader {
   name: "nested-empty";  
 }
 
-export interface INestedHeader extends IHeader {
+export interface INestedHeader {
   name: "nested"
   actions: Action[];
   buttons: PanelButton[];
@@ -91,6 +87,7 @@ export type Header = INestedHeader | INestedEmptyHeader;
   },
 })
 export default class HeaderPanel extends Vue {
+  @Prop({ type: String, required: true }) title!: string;
   @Prop({ type: Object, required: true }) header!: Header;
   @Prop({ type: Object, default: null }) view!: IUserViewType;
 

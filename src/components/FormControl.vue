@@ -172,7 +172,8 @@
           :cols="isMultiline ? 12 : 4"
         >
           <HeaderPanel
-            :header="inputType.header"
+            :title="usedCaption"
+            :header="header"
             :view="inputType"
             @update:filterString="filterString = $event"
             @goto="$emit('goto', $event)"
@@ -214,7 +215,7 @@ import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
 import { PanelButton } from "@/components/ButtonsPanel.vue";
-import type { INestedEmptyHeader, INestedHeader } from "@/components/panels/HeaderPanel.vue";
+import type { INestedEmptyHeader, INestedHeader, Header } from "@/components/panels/HeaderPanel.vue";
 
 interface ITextType {
   name: "text";
@@ -267,12 +268,10 @@ interface ICheckType {
 
 export interface IUserViewType extends IQuery {
   name: "userview";
-  header: INestedHeader;
 }
 
 interface IEmptyUserViewType {
   name: "empty_userview";
-  header: INestedEmptyHeader;
 }
 
 interface IErrorType {
@@ -358,6 +357,24 @@ export default class FormControl extends Vue {
   private filterString = "";
   private title = "";
   private enableFilter = false;
+
+  get header (): Header {
+    const nestedHeader: INestedHeader = {
+      name: "nested",
+      actions: this.actions,
+      buttons: this.panelButtons,
+      isEnableFilter: this.enableFilter,    
+    }
+
+    const nestedEmptyHeader: INestedEmptyHeader = {
+      name: "nested-empty"
+    }
+    if (this.inputType.name == "userview") {
+      return nestedHeader;
+    }
+
+    return nestedEmptyHeader;
+  }
 
   get isNullable() {
     return this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable;
@@ -473,12 +490,7 @@ export default class FormControl extends Vue {
     if (controlAttr === "user_view") {
       
       if (this.currentValue === null || this.currentValue === undefined) {
-        const header: INestedEmptyHeader = {
-          name: "nested-empty",
-          title: this.title,
-        }
-        
-        return { name: "empty_userview", header };
+        return { name: "empty_userview" };
       }
 
       const nestedRef = attrToQuerySelf(this.currentValue, this.value.info, linkOpts);
@@ -486,16 +498,7 @@ export default class FormControl extends Vue {
       if (nestedRef === null) {
         return { name: "error", text: this.$t("invalid_uv").toString() };
       } else {
-        
-        const header: INestedHeader = {
-          name: "nested",
-          title: this.title,
-          actions: this.actions,
-          buttons: this.panelButtons,
-          isEnableFilter: this.enableFilter,
-        }
-
-        return { name: "userview", header, ...nestedRef };
+        return { name: "userview", ...nestedRef };
       }
     } else if (controlAttr === "static_text") {
       return { name: "static_text" };
