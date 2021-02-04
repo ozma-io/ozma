@@ -80,8 +80,8 @@ import { router } from "@/modules";
 import { PanelButton } from "@/components/ButtonsPanel.vue";
 import type { IModalHeader } from "@/components/panels/HeaderPanel.vue";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
-import { ISelectionRef } from "./BaseUserView";
 import { convertToWords } from "@/utils";
+import { ISelectionRef } from "./BaseUserView";
 
 const staging = namespace("staging");
 
