@@ -130,10 +130,9 @@
         >
         <QRCode
           v-else-if="inputType.name === 'qrcode'"
-          ref="control"
-          :entry="inputType.ref"
+          :entity="inputType.ref"
           :height="customHeight"
-          :content="textValue"
+          :id="typeof currentValue === 'number' ? currentValue : undefined"
         />
         <BarCodePrint
           v-else-if="inputType.name === 'barcode'"
@@ -219,6 +218,7 @@ import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
 import { PanelButton } from "@/components/ButtonsPanel.vue";
+import { IEntityRef } from "ozma-api/src";
 
 interface ITextType {
   name: "text";
@@ -239,7 +239,7 @@ interface ICodeEditorType {
 
 interface IQRCodeType {
   name: "qrcode";
-  ref: IEntriesRef;
+  ref: IEntityRef;
 }
 
 interface IBarCodeType {
@@ -493,11 +493,23 @@ export default class FormControl extends Vue {
     // `calc` is needed because sizes should be relative to base font size.
     const heightMultilineText = "calc(4em + 12px)";
     const heightCodeEditor = "200px";
+
+    // FIXME: return proper type from backend instead.
+    if (this.value.info?.fieldRef.name === "id") {
+      if (controlAttr === "qrcode") {
+        return { name: "qrcode", ref: this.value.info.fieldRef.entity };
+      }
+
+      if (controlAttr === "barcode") {
+        return { name: "barcode" };
+      }
+    }
+
     if (this.fieldType !== null) {
       switch (this.fieldType.type) {
         case "reference": {
           if (controlAttr === "qrcode") {
-            return { name: "qrcode", ref: referenceEntriesRef(this.fieldType) };
+            return { name: "qrcode", ref: referenceEntriesRef(this.fieldType).entity };
           }
 
           if (controlAttr === "barcode") {

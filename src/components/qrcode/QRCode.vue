@@ -55,14 +55,14 @@ export const encodeQRCode = (qrCode: IQRCode): string => {
 export default class QRCode extends Vue {
   @Prop({ type: Number }) id!: number | undefined;
   @Prop({ type: Number, default: 200 }) height!: number;
-  @Prop({ type: Object, required: true }) entry!: IEntriesRef;
+  @Prop({ type: Object, required: true }) entity!: IEntityRef;
 
   get qrcodeContent(): string | null {
     if (this.id === undefined) {
       return null;
     } else {
       return encodeQRCode({
-        entity: this.entry.entity,
+        entity: this.entity,
         id: this.id,
       });
     }
