@@ -18,8 +18,8 @@ export default class ModalWithTabs extends Vue {
   }
   private getModalTabs(createElement: (...args: any) => any): IModalTab[] {
     return [
-      { title: "Yes", content: createElement("div", "First Tab") },
-      { title: "No", content: createElement("div", "Second Tab") },
+      { content: createElement("div", "First Tab") },
+      { content: createElement("div", "Second Tab") },
     ];
   }
 }

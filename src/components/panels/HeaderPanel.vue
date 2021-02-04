@@ -12,7 +12,13 @@
 <template>
   <div v-if="header.name==='nested-empty'">
     <div class="nested-menu">
-      <label class="input_label">{{ title }}</label>
+      <label
+        v-b-tooltip.click.blur.bottom.noninteractive
+        class="input_label"
+        :title="title"
+      >
+        {{ title }}
+      </label>
       <ActionsMenu
         menu-align="right"
         :actions="[]"
@@ -23,11 +29,17 @@
     </div>
   </div>
   <div
-    v-else-if="header.name==='nested'"
+    v-else-if="header.name==='nested' || header.name==='modal'"
     class="nested-menu"
   >
-    <label class="input_label">{{ title }}</label>
-    <ButtonsPanel 
+    <label
+      v-b-tooltip.click.blur.bottom.noninteractive
+      class="input_label"
+      :title="title"
+    >
+      {{ title }}
+    </label>
+    <ButtonsPanel
       :buttons="header.buttons"
       @goto="$emit('goto', $event)"
     >
@@ -69,21 +81,28 @@ import { PanelButton } from "@/components/ButtonsPanel.vue";
 import SearchPanel from "@/components/SearchPanel.vue";
 
 export interface INestedEmptyHeader {
-  name: "nested-empty";  
+  name: "nested-empty";
 }
 
 export interface INestedHeader {
-  name: "nested"
+  name: "nested";
   actions: Action[];
   buttons: PanelButton[];
   isEnableFilter: boolean;
 }
 
-export type Header = INestedHeader | INestedEmptyHeader;
+export interface IModalHeader {
+  name: "modal";
+  actions: Action[];
+  buttons: PanelButton[];
+  isEnableFilter: boolean;
+}
+
+export type Header = INestedHeader | INestedEmptyHeader | IModalHeader;
 
 @Component({
   components: {
-    SearchPanel
+    SearchPanel,
   },
 })
 export default class HeaderPanel extends Vue {
@@ -92,7 +111,7 @@ export default class HeaderPanel extends Vue {
   @Prop({ type: Object, default: null }) view!: IUserViewType;
 
   private openFullscreen() {
-    if ( this.view !== null ) {
+    if (this.view !== null) {
       void router.push(queryLocation(this.view));
     }
   }
@@ -108,7 +127,7 @@ export default class HeaderPanel extends Vue {
   }
 
   .input_label {
-    margin-bottom: 3px;
+    margin-bottom: 0;
     color: var(--MainTextColor);
     font-weight: 600;
     font-size: 1.25em;

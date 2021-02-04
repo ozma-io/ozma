@@ -14,24 +14,18 @@
 <template>
   <ModalPortal
     to="tabbed-modal"
-    :tab-name="title"
     :autofocus="autofocus"
     :view="view"
     @close="$emit('close')"
   >
-    <template #actions-menu>
-      <ActionsMenu
-        :actions="actions"
-        menu-align="right"
+    <template #header>
+      <HeaderPanel
+        :title="title"
+        :header="header"
+        :view="view"
+        @update:filterString="filterString = $event"
         @goto="$emit('goto', $event)"
       />
-    </template>
-
-    <template #actions-right>
-      <i
-        class="material-icons material-button fullscreen-button"
-        @click.stop="openFullscreen"
-      >fullscreen</i>
     </template>
 
     <section class="section-modal">
@@ -44,6 +38,7 @@
           :scope="uid"
           @update:actions="extraActions = $event"
           @update:panelButtons="panelButtons = $event"
+          @update:enableFilter="enableFilter = $event"
           @update:title="title = $event"
           @goto="$emit('goto', $event)"
           @goto-previous="$emit('goto-previous')"
@@ -82,11 +77,13 @@ import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/st
 import ModalPortal from "@/components/modal/ModalPortal";
 import { router } from "@/modules";
 import { PanelButton } from "@/components/ButtonsPanel.vue";
+import type { IModalHeader } from "@/components/panels/HeaderPanel.vue";
+import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { ISelectionRef } from "./BaseUserView";
 
 const staging = namespace("staging");
 
-@Component({ components: { ModalPortal } })
+@Component({ components: { ModalPortal, HeaderPanel } })
 export default class ModalUserView extends Vue {
   @staging.State("current") changes!: CurrentChanges;
   @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<CombinedTransactionResult[]>;
@@ -99,6 +96,16 @@ export default class ModalUserView extends Vue {
   private title = "";
   private extraActions: Action[] = [];
   private panelButtons: PanelButton[] = [];
+  private enableFilter = false;
+
+  get header(): IModalHeader {
+    return {
+      name: "modal",
+      actions: this.extraActions,
+      buttons: this.panelButtons,
+      isEnableFilter: this.enableFilter,
+    };
+  }
 
   get actions() {
     const actions: Action[] = [];

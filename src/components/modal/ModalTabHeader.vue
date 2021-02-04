@@ -15,22 +15,13 @@
     >
       home
     </router-link>
-    <span
-      v-b-tooltip.click.blur.bottom.noninteractive
-      class="modal__tab_header_title"
-      tabindex="0"
-      :title="title"
-    >
-      {{ title }}
-    </span>
-    <slot name="actions-menu" />
+    <slot style="float:right;" name="header" />
     <input
       type="button"
       value="close"
       class="material-icons material-button modal__tab_close_button"
       @click.stop="$emit('tab-close')"
     >
-    <slot name="actions-right" />
   </div>
 </template>
 
@@ -39,13 +30,17 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 
 @Component
 export default class ModalTabHeader extends Vue {
-  @Prop({ type: String, required: true }) title!: string;
   @Prop({ type: Boolean, default: false }) isActive!: boolean;
   @Prop({ type: Boolean, default: false }) onlyTab!: boolean;
 }
 </script>
 
 <style lang="scss" scoped>
+
+  .nested-menu {
+    width: 100%;
+  }
+
   .head-menu_back-button {
     padding-top: 3px;
     padding-bottom: 3px;

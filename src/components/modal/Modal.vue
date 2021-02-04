@@ -34,18 +34,13 @@
         @tab-click="switchTab(index)"
         @tab-close="$emit('tab-close', index)"
       >
-        <template v-if="tab.actionsMenu" #actions-menu>
-          <ModalContent :nodes="tab.actionsMenu" />
-        </template>
-        <template v-if="tab.actionsRight" #actions-right>
-          <fragment>
-            <ModalContent :nodes="tab.actionsRight" />
-            <i
-              v-if="$isMobile"
-              class="material-icons material-button mobile_close_button"
-              @click="$emit('close')"
-            >close</i>
-          </fragment>
+        <template v-if="tab.header" #header>
+          <ModalContent :nodes="tab.header" />
+          <i
+            v-if="$isMobile"
+            class="material-icons material-button mobile_close_button"
+            @click="$emit('close')"
+          >close</i>
         </template>
       </ModalTabHeader>
     </div>
@@ -92,9 +87,10 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 
 import ModalContent from "@/components/modal/ModalContent";
 import ModalTabHeader from "@/components/modal/ModalTabHeader.vue";
+import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { IModalTab } from "@/components/modal/types";
 
-@Component({ components: { ModalContent, ModalTabHeader } })
+@Component({ components: { ModalContent, ModalTabHeader, HeaderPanel } })
 export default class Modal extends Vue {
   @Prop({ type: Array }) modalTabs!: IModalTab[] | undefined;
   @Prop({ type: Boolean, default: true }) show!: boolean;
@@ -209,7 +205,7 @@ export default class Modal extends Vue {
   }
 
   .mobile_close_button {
-    margin-left: 15px;
+    margin-left: 5px;
   }
 </style>
 

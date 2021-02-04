@@ -358,18 +358,18 @@ export default class FormControl extends Vue {
   private title = "";
   private enableFilter = false;
 
-  get header (): Header {
+  get header(): Header {
     const nestedHeader: INestedHeader = {
       name: "nested",
       actions: this.actions,
       buttons: this.panelButtons,
-      isEnableFilter: this.enableFilter,    
-    }
+      isEnableFilter: this.enableFilter,
+    };
 
     const nestedEmptyHeader: INestedEmptyHeader = {
-      name: "nested-empty"
-    }
-    if (this.inputType.name == "userview") {
+      name: "nested-empty",
+    };
+    if (this.inputType.name === "userview") {
       return nestedHeader;
     }
 
@@ -488,7 +488,6 @@ export default class FormControl extends Vue {
 
     const controlAttr = String(this.attributes["control"]);
     if (controlAttr === "user_view") {
-      
       if (this.currentValue === null || this.currentValue === undefined) {
         return { name: "empty_userview" };
       }
@@ -638,7 +637,7 @@ export default class FormControl extends Vue {
     // and issues `update:` events as needed. Therefore we only need to focus on switches between components.
     // If we detect a switch we clear all state values and expect the new component to emit `update:` events for
     // values it actually supports.
-    
+
     if (newName === oldName) return;
 
     this.actions = [];
