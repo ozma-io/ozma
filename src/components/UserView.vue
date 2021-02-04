@@ -36,7 +36,9 @@
 
 <template>
   <span>
-    <template v-if="state.state === 'show'">
+    <template
+      v-if="state.state === 'show'"
+    >
       <UserViewCommon
         :uv="state.uv"
         :is-root="isRoot"
@@ -49,41 +51,66 @@
         @update:actions="extraCommonActions = $event"
         @update:panelButtons="panelButtons = $event"
       />
-      <component
-        :is="`UserView${state.componentName}`"
-        ref="userViewRef"
-        :uv="state.uv"
-        :is-root="isRoot"
-        :is-top-level="isTopLevel"
-        :filter="filter"
-        :scope="scope"
-        :level="level"
-        :selection-mode="selectionMode"
-        :default-values="defaultValues"
-        @goto="$emit('goto', $event)"
-        @goto-previous="$emit('goto-previous')"
-        @select="$emit('select', $event)"
-        @update:actions="extraActions = $event"
-        @update:statusLine="$emit('update:statusLine', $event)"
-        @update:enableFilter="$emit('update:enableFilter', $event)"
-        @update:bodyStyle="$emit('update:bodyStyle', $event)"
-      />
+      <transition name="fade-1" mode="out-in">
+        <component
+          :is="`UserView${state.componentName}`"
+          ref="userViewRef"
+          :key="transitionKey"
+          :uv="state.uv"
+          :is-root="isRoot"
+          :is-top-level="isTopLevel"
+          :filter="filter"
+          :scope="scope"
+          :level="level"
+          :selection-mode="selectionMode"
+          :default-values="defaultValues"
+          @goto="$emit('goto', $event)"
+          @goto-previous="$emit('goto-previous')"
+          @select="$emit('select', $event)"
+          @update:actions="extraActions = $event"
+          @update:statusLine="$emit('update:statusLine', $event)"
+          @update:enableFilter="$emit('update:enableFilter', $event)"
+          @update:bodyStyle="$emit('update:bodyStyle', $event)"
+        />
+      </transition>
     </template>
+
     <div
       v-else-if="state.state === 'error'"
     >
       {{ state.message }}
     </div>
-    <div
-      v-else
-      class="loading-container h-100 p-3 d-flex justify-content-center align-items-center rounded"
-      style="background-color: rgba(0, 0, 0, 0.05); cursor: wait;"
+
+    <transition
+      name="fade-2"
     >
       <div
-        class="spinner-border"
-        style="width: 3em; height: 3em; border-color: rgba(0, 0, 0, 0.5); border-right-color: transparent;"
-      />
-    </div>
+        v-if="state.state === 'loading'"
+        :class="[
+          'loading-container',
+          {
+            'nested': !isRoot,
+          }
+        ]"
+      >
+        <div
+          :class="[
+            'loading-background',
+            'h-100',
+            'd-flex',
+            'justify-content-center',
+            'align-items-center',
+            'rounded',
+            'shadow-sm',
+          ]"
+        >
+          <div
+            class="spinner-border"
+            style="width: 3em; height: 3em; border-color: rgba(0, 0, 0, 0.5); border-right-color: transparent;"
+          />
+        </div>
+      </div>
+    </transition>
   </span>
 </template>
 
@@ -101,7 +128,7 @@ import { IUserViewConstructor } from "@/components";
 import { Action } from "@/components/ActionsMenu.vue";
 import UserViewCommon from "@/components/UserViewCommon.vue";
 import { PanelButton } from "@/components/ButtonsPanel.vue";
-import { addLinkDefaultArgs, attrToLink, Link, linkHandler } from "@/links";
+import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams } from "@/links";
 import type { ICombinedUserViewAny, IUserViewArguments } from "@/user_views/combined";
 import { CombinedUserView } from "@/user_views/combined";
 import { UserViewError, fetchUserViewData } from "@/user_views/fetch";
@@ -229,6 +256,12 @@ export default class UserView extends Vue {
   private nextUv: Promise<void> | null = null;
   private inhibitReload = false;
 
+  private get transitionKey() {
+    return this.state.state === "show"
+      ? JSON.stringify(this.state.uv.args.source)
+      : "none";
+  }
+
   get title() {
     if (this.state.state === "show" && "title" in this.state.uv.attributes) {
       return String(this.state.uv.attributes["title"]);
@@ -266,7 +299,7 @@ export default class UserView extends Vue {
         actions.push({
           icon: "code",
           name: this.$t("edit_view").toString(),
-          link: { query: editQuery, target: "modal-auto" },
+          link: { query: editQuery, target: "modal-auto", type: "query" },
         });
       }
     }
@@ -366,7 +399,13 @@ export default class UserView extends Vue {
           });
           this.nextUv = null;
         } else if (newType.type === "link") {
-          const handler = linkHandler(this.$store, target => this.$emit("goto", target), newType.link);
+          const linkHandlerParams: ILinkHandlerParams = {
+            store: this.$store,
+            goto: target => this.$emit("goto", target),
+            openQRCodeScanner: (name, link) => this.$root.$emit(name, link),
+            link: newType.link,
+          };
+          const handler = linkHandler(linkHandlerParams);
           await handler.handler();
           // Because we need router to switch URL.
           await this.$nextTick();
@@ -515,6 +554,7 @@ export default class UserView extends Vue {
               search: "",
             },
             target: "root",
+            type: "query",
           };
         } else {
           addLinkDefaultArgs(customLink, { id });
@@ -523,7 +563,13 @@ export default class UserView extends Vue {
 
         const oldArgs = deepClone(this.args);
         try {
-          await linkHandler(this.$store, target => this.$emit("goto", target), link).handler();
+          const linkHandlerParams: ILinkHandlerParams = {
+            store: this.$store,
+            goto: target => this.$emit("goto", target),
+            openQRCodeScanner: (name, qrLink) => this.$root.$emit(name, qrLink),
+            link,
+          };
+          await linkHandler(linkHandlerParams).handler();
         } catch (e) {
           this.reloadIfRoot();
           return;
@@ -539,3 +585,34 @@ export default class UserView extends Vue {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+  .loading-container {
+    min-height: 100px;
+    height: 100%;
+
+    .loading-background {
+      padding: 30px;
+      background-color: rgba(240, 240, 240);
+      cursor: wait;
+    }
+
+    &.fade-2-leave-active {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      min-height: 0;
+
+      &.nested {
+        padding: 0 15px !important; /* Mimic `.col` paddings */
+      }
+
+      .spinner-border {
+        opacity: 0;
+        transition: opacity 0.05s;
+      }
+    }
+  }
+</style>

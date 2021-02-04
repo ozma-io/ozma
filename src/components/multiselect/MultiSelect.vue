@@ -3,11 +3,17 @@
       "en": {
         "empty_message": "Empty",
         "clear_all": "Clear all",
+        "enter_value": "Enter value",
+        "error_qrcode_is_inappropriate" : "QRCode is inappropriate",
+        "error": "Error",
         "search_placeholder": "Search"
       },
       "ru": {
         "empty_message": "Пусто",
         "clear_all": "Очистить",
+        "enter_value": "Введите значение",
+        "error_qrcode_is_inappropriate" : "QRCode не соответствует назначению",
+        "error": "Ошибка",
         "search_placeholder": "Поиск"
       }
     }
@@ -15,7 +21,13 @@
 
 <template>
   <div
-    class="popup-container"
+    :class="[
+      'popup-container',
+      {
+        'is-open': isPopupOpen,
+
+      }
+    ]"
     @keydown.tab="() => closePopup()"
   >
     <popper
@@ -31,6 +43,7 @@
         modifiers: { offset: { offset: '0,0px' } },
       }"
       @show="onOpenPopup"
+      @hide="onClosePopup"
     >
       <!-- eslint-disable vue/no-deprecated-slot-attribute -->
       <!-- TODO: Find or make not deprecated popper.js wrapper -->
@@ -121,13 +134,14 @@
         >
       </div>
 
-      <div class="popper border rounded overflow-hidden shadow">
+      <div class="popper multiselect-popper border rounded overflow-hidden shadow">
         <div
           ref="selectedOptionsContainer"
           class="select-container__options_container overflow-hidden"
         >
           <b-input-group
             v-if="isNeedFilter"
+            size="sm"
             class="focus-entire filter-group"
           >
             <b-input-group-prepend>
@@ -199,6 +213,8 @@ import * as R from "ramda";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { valueIsNull } from "@/values";
 import { replaceHtmlLinks } from "@/utils";
+import type { IEntriesRef } from "@/state/entries";
+import { IPrintQRCode } from "@/components/qrcode/QRCode.vue";
 import Popper from "vue-popperjs";
 /* import "vue-popperjs/dist/vue-popper.css"; */
 
@@ -227,15 +243,12 @@ export default class MultiSelect extends Vue {
   @Prop({ type: Number, default: null }) height!: number;
   @Prop({ type: String, default: null }) optionsListHeight!: string;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
+  @Prop({ type: Object, default: null }) entry!: IEntriesRef;
 
   private selectedOption = -1;
   private filterValue = "";
   private isNeedFilter = true;
-
-  private get isPopupOpen(): boolean {
-    const popupRef: any = this.$refs.popup;
-    return popupRef?.showPopper ?? false;
-  }
+  private isPopupOpen = false;
 
   private mounted() {
     if (this.selectedOptions.length < 3 && this.single) {
@@ -369,9 +382,7 @@ export default class MultiSelect extends Vue {
   }
 
   private focusInput() {
-    if (this.$refs.filterInput) {
-      (this.$refs.filterInput as HTMLInputElement).focus();
-    }
+    (this.$refs.filterInput as HTMLInputElement)?.focus();
   }
 
   private onFilterInputFocus() {
@@ -388,6 +399,7 @@ export default class MultiSelect extends Vue {
   }
 
   private async onOpenPopup() {
+    this.isPopupOpen = true;
     // On-screen keyboard disturbs if there are not so many options to filter.
     if (this.$isMobile) return;
 
@@ -402,6 +414,10 @@ export default class MultiSelect extends Vue {
 
     await popupRef.doClose();
     this.selectedOption = -1;
+  }
+
+  private onClosePopup() {
+    this.isPopupOpen = false;
   }
 
   private togglePopup() {
@@ -454,12 +470,45 @@ export default class MultiSelect extends Vue {
 
   // FIXME: keyboard selecting doesn's seems to work.
   private addSelectedOptionToValue() {
+    let qrcode: IPrintQRCode | null = null;
+
+    try {
+      qrcode = JSON.parse(this.filterValue);
+    } catch (e) {
+      // Do nothing
+    }
+
+    if (qrcode !== null && typeof qrcode === "object") {
+      if (qrcode.n !== this.entry.entity.name || qrcode.s !== this.entry.entity.schema) {
+        this.makeToast(this.$t("error_qrcode_is_inappropriate").toString());
+      } else {
+        const value = Number(qrcode.i);
+        const option: ISelectOption | undefined = this.options.find(o => o.value === value);
+        if (option !== undefined) {
+          this.addOptionToValue(option);
+          return;
+        }
+      }
+    }
+
     if (this.selectedOption > -1) {
       const option: ISelectOption | null = R.pathOr(null, [this.selectedOption], this.selectedOptions);
       if (option) {
         this.addOptionToValue(option);
+        return;
       }
-    } else if (this.selectedOptions.length) {
+    }
+
+    if (this.options.length) {
+      const value = Number(this.filterValue);
+      const option: ISelectOption | undefined = this.options.find(o => o.value === value);
+      if (option !== undefined) {
+        this.addOptionToValue(option);
+        return;
+      }
+    }
+
+    if (this.selectedOptions.length) {
       const option: ISelectOption = this.selectedOptions[0];
       if (option) {
         this.addOptionToValue(option);
@@ -482,10 +531,20 @@ export default class MultiSelect extends Vue {
       this.$emit("update:value", this.emptyValue);
     }
   }
+
+  private makeToast(message: string) {
+    this.$bvToast.toast(message, {
+      title: this.$t("error").toString(),
+      variant: "danger",
+      solid: true,
+      noAutoHide: true,
+    });
+  }
 }
 </script>
 
-// FIXME: This styles can not be `scoped` currently because it breaks MultiSelect userview.
+// FIXME: This styles can not be `scoped` currently because it breaks MultiSelect userview and ReferenceField.
+// Class renames also breaks them!
 <style lang="scss">
   .fade-enter-active,
   .fade-leave-active {
@@ -503,9 +562,13 @@ export default class MultiSelect extends Vue {
   }
 
   .popup-container {
-    position: relative;
     width: 100%;
-    z-index: 10;
+    position: relative;
+    z-index: 30;
+
+    &.is-open {
+      z-index: 31; /* To be above other components with popups */
+    }
   }
 
   .prepend-icon {
@@ -520,7 +583,7 @@ export default class MultiSelect extends Vue {
     cursor: pointer;
     align-self: center;
     align-items: center;
-    color: var(--MainTextColorLight);
+    color: var(--MainTextColor);
   }
 
   .select-container {
@@ -559,7 +622,8 @@ export default class MultiSelect extends Vue {
   }
 
   .filter-group {
-    margin-bottom: 5px;
+    margin: 5px;
+    width: auto;
 
     .filter-input {
       border-left-width: 0;
@@ -579,8 +643,8 @@ export default class MultiSelect extends Vue {
     padding: 0;
     cursor: pointer;
     z-index: 10;
-    color: var(--MainTextColorLight);
-    opacity: 0.3;
+    color: var(--MainTextColor);
+    opacity: 0.2;
     transition: opacity 0.1s;
 
     .select-container:hover &,
@@ -589,13 +653,17 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  .select-container__options_container {
-    z-index: 1001;
-    width: 100%;
-    max-width: 100vw;
-    background: white;
-    list-style: none;
-    padding: 5px;
+  .multiselect-popper {
+    max-width: calc(100% + 2px);
+    width: calc(100% + 2px);
+
+    .select-container__options_container {
+      position: relative;
+      z-index: 1001;
+      width: 100%;
+      background: white;
+      list-style: none;
+    }
   }
 
   .select-container__options_list {
@@ -613,6 +681,7 @@ export default class MultiSelect extends Vue {
     padding: 4px 8px;
     cursor: pointer;
     line-height: 1rem;
+    word-break: break-all;
   }
 
   .select-container__options_list > li.select-container__options_list__option:hover,

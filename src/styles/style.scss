@@ -88,6 +88,19 @@ button:not(.btn) {
   font-size: var(--FontSize) !important;
 }
 
+/* Vue's <transition>s */
+@for $i from 1 through 10 {
+  .fade-#{$i}-enter-active,
+  .fade-#{$i}-leave-active {
+    transition: opacity #{$i / 10}s;
+  }
+
+  .fade-#{$i}-enter,
+  .fade-#{$i}-leave-to {
+    opacity: 0;
+  }
+}
+
 /* Source: https://google.github.io/material-design-icons/ */
 .material-icons.md-18 { font-size: 18px; }
 .material-icons.md-24 { font-size: 24px; }
@@ -165,6 +178,7 @@ $input-focus-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
   border-color: $input-focus-border-color !important;
   box-shadow: $input-focus-shadow !important;
   border-radius: 0.2rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 
   .form-control,
   .input-group-prepend .btn,
@@ -179,7 +193,7 @@ $input-focus-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 @import "../../node_modules/vue-popperjs/dist/vue-popper.css";
 
 .popper {
-  max-width: 100vw;
+  min-width: 100px;
   padding: 0;
 
   &[x-placement^="bottom"],

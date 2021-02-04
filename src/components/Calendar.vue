@@ -10,7 +10,13 @@
 </i18n>
 <template>
   <div
-    class="popup-container"
+    :class="[
+      'popup-container',
+      {
+        'is-open': isPopupOpen,
+
+      }
+    ]"
   >
     <popper
       ref="popup"
@@ -20,8 +26,10 @@
       leave-active-class="fade-leave fade-leave-active"
       :visible-arrow="false"
       :options="{
-        placement: 'bottom',
+        placement: 'bottom-start',
       }"
+      @show="onOpenPopup"
+      @hide="onClosePopup"
     >
       <!-- eslint-disable vue/no-deprecated-slot-attribute -->
       <!-- TODO: Find or make not deprecated popper.js wrapper -->
@@ -108,7 +116,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import moment, { Moment } from "moment";
 
 import DatePicker from "@/components/calendar/DatePicker.vue";
@@ -133,6 +141,7 @@ export default class Calendar extends Vue {
   @Prop({ type: String }) backgroundColor!: string;
 
   private position = false;
+  private isPopupOpen = false;
 
   get usedFormat() {
     if (this.format) {
@@ -162,28 +171,46 @@ export default class Calendar extends Vue {
     return !this.value;
   }
 
-  private get isPopupOpen(): boolean {
+  private async openPopup() {
     const popupRef: any = this.$refs.popup;
-    return popupRef?.showPopper ?? false;
+    if (!popupRef) return;
+
+    await popupRef.doShow();
+  }
+
+  private async onOpenPopup() {
+    this.isPopupOpen = true;
+
+    if (this.$isMobile) return;
+    await Vue.nextTick();
+    this.focusInput();
+  }
+
+  private onClosePopup() {
+    this.isPopupOpen = false;
+  }
+
+  private focusInput() {
+    (this.$refs.control as HTMLInputElement)?.focus();
   }
 
   private mounted() {
-    const controlElement = this.$refs.control as HTMLInputElement;
     if (this.autofocus) {
-      void Vue.nextTick().then(() => {
-        controlElement.focus();
-      });
+      void this.onAutofocus(true);
+    }
+  }
+
+  @Watch("autofocus")
+  private async onAutofocus(autofocus: boolean) {
+    if (autofocus) {
+      await this.$nextTick();
+      void this.openPopup();
     }
   }
 
   private updateValue(newValue: Moment | undefined | null) {
-    if (moment.isMoment(newValue) && newValue.isSame(this.value)) {
-      return;
-    }
-
-    if (this.value === newValue) {
-      return;
-    }
+    if (moment.isMoment(newValue) && newValue.isSame(this.value)) return;
+    if (this.value === newValue) return;
 
     this.$emit("update:value", newValue);
   }
@@ -265,7 +292,7 @@ export default class Calendar extends Vue {
 <style lang="scss" scoped>
   .fade-enter-active,
   .fade-leave-active {
-    transition: all 0.1s;
+    transition: all 1s;
   }
 
   .fade-enter,
@@ -279,9 +306,13 @@ export default class Calendar extends Vue {
   }
 
   .popup-container {
-    position: relative;
     width: 100%;
-    z-index: 10;
+    position: relative;
+    z-index: 30;
+
+    &.is-open {
+      z-index: 31; /* To be above other components with popups */
+    }
   }
 
   .prepend-icon {

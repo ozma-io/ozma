@@ -98,7 +98,7 @@ export default class CommunicationsButton extends Vue {
   }
 
   .comm_icon__trigger {
-    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.5);
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.3);
     height: 60px;
     width: 60px;
     display: flex;

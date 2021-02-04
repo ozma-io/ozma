@@ -1,7 +1,7 @@
 import Vue from "vue";
 
 import { vueEmit } from "@/utils";
-import { Link, linkHandler } from "@/links";
+import { Link, linkHandler, ILinkHandlerParams } from "@/links";
 import { IQuery } from "@/state/query";
 
 export const redirectClick = (e: MouseEvent, allowControlKeys?: boolean): boolean => {
@@ -32,15 +32,26 @@ export default Vue.component("FunLink", {
   render: (createElement, context) => {
     const link = context.props.link as Link | null;
 
-    const emit = (query: IQuery) => {
-      vueEmit(context, "goto", query);
-    };
-
     if (link === null) {
       return context.children;
     }
 
-    const { handler, href } = linkHandler(context.parent.$store, emit, link);
+    const emit = (query: IQuery) => {
+      vueEmit(context, "goto", query);
+    };
+
+    const openQRCodeScanner = (name:string, qrLink: Link) => {
+      context.parent.$root.$emit(name, qrLink);
+    };
+
+    const linkHandlerParams: ILinkHandlerParams = {
+      store: context.parent.$store,
+      goto: emit,
+      openQRCodeScanner,
+      link,
+    };
+
+    const { handler, href } = linkHandler(linkHandlerParams);
 
     const onHandlers = { click: (e: MouseEvent) => {
       if (!redirectClick(e, href === null)) {

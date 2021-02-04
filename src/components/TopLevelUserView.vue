@@ -85,7 +85,10 @@
         >
           {{ title }}
         </span>
-        <ButtonsPanel :buttons="panelButtons">
+        <ButtonsPanel
+          :buttons="panelButtons"
+          @goto="$emit('goto', $event)"
+        >
           <template #search-panel>
             <SearchPanel
               v-if="enableFilter"
@@ -172,6 +175,12 @@
         </button>
       </div>
     </nav>
+    <QRCodeScanner
+      v-if="wasOpenedQRCodeScanner"
+      :open-scanner="isOpenQRCodeScanner"
+      :multi-scan="true"
+      :link="currentQRCodeLink"
+    />
   </div>
 </template>
 
@@ -191,7 +200,8 @@ import SearchPanel from "@/components/SearchPanel.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { CurrentAuth, getAuthedLink, INoAuth } from "@/state/auth";
 import { IQuery, ICurrentQueryHistory } from "@/state/query";
-import { convertToWords } from "@/utils";
+import { convertToWords, nextRender } from "@/utils";
+import { Link } from "@/links";
 
 const auth = namespace("auth");
 const staging = namespace("staging");
@@ -199,13 +209,12 @@ const settings = namespace("settings");
 const query = namespace("query");
 const errors = namespace("errors");
 
-@Component({
-  components: {
-    SearchPanel,
-    ModalUserView,
-    ProgressBar,
-  },
-})
+@Component({ components: {
+  SearchPanel,
+  ModalUserView,
+  ProgressBar,
+  QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
+} })
 export default class TopLevelUserView extends Vue {
   @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
   @auth.State("pending") authPending!: Promise<void> | null;
@@ -231,10 +240,30 @@ export default class TopLevelUserView extends Vue {
   private styleNode: HTMLStyleElement;
   private title = "";
 
+  private wasOpenedQRCodeScanner = false;
+  private isOpenQRCodeScanner = false;
+  private currentQRCodeLink: Link | null = null;
+
   constructor() {
     super();
     this.styleNode = document.createElement("style");
     this.styleNode.type = "text/css";
+  }
+
+  mounted() {
+    // Listen to the event.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    this.$root.$on("open-qrcode-scanner", this.openQRCodeScanner);
+  }
+
+  private openQRCodeScanner(link: Link | null) {
+    if (link !== null) {
+      this.currentQRCodeLink = link;
+      this.wasOpenedQRCodeScanner = true;
+      void nextRender().then(() => {
+        this.isOpenQRCodeScanner = !this.isOpenQRCodeScanner;
+      });
+    }
   }
 
   get errors() {
@@ -302,6 +331,10 @@ export default class TopLevelUserView extends Vue {
 
   private destroyed() {
     this.styleNode.remove();
+
+    // Off listen to the event.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    this.$root.$off("open-qrcode-scanner", this.openQRCodeScanner);
   }
 
   private saveView() {
@@ -321,7 +354,7 @@ export default class TopLevelUserView extends Vue {
             void navigator.clipboard.writeText(link);
           } });
       }
-      actions.push({ icon: "perm_identity", name: this.$t("account").toString(), order: 1000, link: { href: Api.accountUrl } });
+      actions.push({ icon: "perm_identity", name: this.$t("account").toString(), order: 1000, link: { href: Api.accountUrl, type: "href" } });
       actions.push({ icon: "exit_to_app", name: this.$t("logout").toString(), order: 1000, callback: this.logout });
     } else {
       actions.push({ icon: "login", name: this.$t("login").toString(), order: 1000, callback: this.login });

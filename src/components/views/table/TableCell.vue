@@ -11,7 +11,7 @@
                           'editing_style': value.extra.editing !== undefined,
                           'tree-branches': column.treeUnfoldColumn && children !== undefined && children.length > 0 && isTree,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
-    @click="$emit('cell-click', columnPosition, $event)"
+    @click.stop="$emit('cell-click', columnPosition, $event)"
   >
     <p>
       <template v-if="column.type == 'buttons'">
@@ -31,18 +31,6 @@
               :value="iconValue"
             >
           </FunLink>
-          <!-- eslint-disable vue/no-v-html -->
-          <span class="reference-text" v-html="localValueTextHtml" />
-          <!-- eslint-enable -->
-        </div>
-      </template>
-      <template v-else-if="column.scannable">
-        <div class="selectable">
-          <input
-            type="button"
-            class="material-icons reference-open-modal"
-            value="qr_code_scanner"
-          >
           <!-- eslint-disable vue/no-v-html -->
           <span class="reference-text" v-html="localValueTextHtml" />
           <!-- eslint-enable -->
@@ -246,10 +234,6 @@ export default class TableCell extends Vue {
     font-size: inherit;
     transform-origin: 30% 50%;
     transition: transform 0.2s;
-  }
-
-  .display-arrow.material-icons.click-stop {
-    pointer-events: none !important;
   }
 
   .display-arrow.material-icons:hover {
