@@ -1,19 +1,51 @@
 <template>
-  <div v-if="content.length > 0">
+  <div v-if="qrcodeContent !== null">
     <qrcode :value="qrcodeContent" :options="{ width: height }" />
   </div>
 </template>
 
 <script lang="ts">
+import { IEntityRef, goodName } from "ozma-api";
 import { Component, Prop, Vue } from "vue-property-decorator";
+
 import VueQrcode from "@chenfengyuan/vue-qrcode";
 import type { IEntriesRef } from "@/state/entries";
 
-export interface IPrintQRCode {
-  s: string; // Schema
-  n: string; // Name
-  i: string; // ID
+export interface IQRCode {
+  entity: IEntityRef;
+  id: number;
 }
+
+const qrCodeVersion = 1;
+
+export const parseQRCode = (str: string): IQRCode | null => {
+  const parts = str.split("/");
+  if (parts.length !== 4) {
+    return null;
+  }
+  const version = Number(parts[0]);
+  if (Number.isNaN(version) || version > qrCodeVersion) {
+    return null;
+  }
+
+  const schema = parts[1];
+  const entity = parts[2];
+  const id = Number(parts[3]);
+  if (!goodName(schema) || !goodName(entity) || Number.isNaN(id)) {
+    return null;
+  }
+  return {
+    entity: {
+      schema,
+      name: entity,
+    },
+    id,
+  };
+};
+
+export const encodeQRCode = (qrCode: IQRCode): string => {
+  return `${qrCodeVersion}/${qrCode.entity.schema}/${qrCode.entity.name}/${qrCode.id}`;
+};
 
 @Component({
   components: {
@@ -21,13 +53,19 @@ export interface IPrintQRCode {
   },
 })
 export default class QRCode extends Vue {
-  @Prop({ type: String, default: "" }) content!: string;
+  @Prop({ type: Number }) id!: number | undefined;
   @Prop({ type: Number, default: 200 }) height!: number;
-  @Prop({ type: Object }) entry!: IEntriesRef;
+  @Prop({ type: Object, required: true }) entry!: IEntriesRef;
 
-  get qrcodeContent() {
-    const content: IPrintQRCode = { s: this.entry.entity.schema, n: this.entry.entity.name, i: this.content };
-    return JSON.stringify(content);
+  get qrcodeContent(): string | null {
+    if (this.id === undefined) {
+      return null;
+    } else {
+      return encodeQRCode({
+        entity: this.entry.entity,
+        id: this.id,
+      });
+    }
   }
 }
 

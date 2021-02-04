@@ -85,18 +85,12 @@ import type { Link } from "@/links";
 import { linkHandler, ILinkHandlerParams } from "@/links";
 import { IQuery } from "@/state/query";
 import { namespace } from "vuex-class";
-import { IPrintQRCode } from "@/components/qrcode/QRCode.vue";
+import { IQRCode, parseQRCode } from "@/components/qrcode/QRCode.vue";
 import { IEntriesRef } from "@/state/entries";
 
 const beep = require("@/resources/beep.mp3");
 
-export interface IQRContent {
-  schema: string;
-  name: string;
-  id: number;
-}
-
-export interface IQRResultContent extends IQRContent {
+export interface IQRResultContent extends IQRCode {
   value: string;
 }
 
@@ -120,7 +114,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   loading = false;
   entry: IEntriesRef | null = null;
   entries: Record<string, string> = {};
-  currentContent: IQRContent | null = null;
+  currentContent: IQRCode | null = null;
   audio = new Audio(beep);
 
   @Watch("openScanner")
@@ -175,16 +169,11 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     } else {
       this.error = "";
 
-      let parsedContent: IPrintQRCode | null = null;
-
-      try {
-        parsedContent = JSON.parse(content);
-      } catch (e) {
+      const parsedContent = parseQRCode(content);
+      if (parsedContent) {
+        this.currentContent = parsedContent;
+      } else {
         this.error = this.$t("incorrect_format").toString() + " QR code: " + content;
-        return;
-      }
-      if (parsedContent !== null) {
-        this.currentContent = { schema: parsedContent.s, name: parsedContent.n, id: Number(parsedContent.i) };
       }
     }
   }
@@ -221,7 +210,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
           let link: Link | null = null;
 
           if ("links" in this.link) {
-            link = this.link.links[this.currentContent.schema][this.currentContent.name];
+            link = this.link.links[this.currentContent.entity.schema][this.currentContent.entity.name];
           }
 
           if (!link) {
@@ -263,7 +252,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
         const rusultContent = { ...this.currentContent, value: this.entries[Number(this.currentContent.id)] };
         this.result.push(rusultContent);
       } else {
-        this.entry = { entity: { name: this.currentContent.name, schema: this.currentContent.schema } };
+        this.entry = { entity: this.currentContent.entity };
       }
     }
   }

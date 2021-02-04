@@ -66,6 +66,7 @@ import { attrToLink } from "@/links";
 import QRCodeScanner, { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
 import BarCodeScanner from "@/components/barcode/BarCodeScanner.vue";
 import { ValueRef, valueToPunnedText } from "@/user_views/combined";
+import { equalEntityRef } from "@/values";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -424,10 +425,10 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     result.forEach(r => {
       if (this.qrCodeReferenceField == null) {
         this.makeToast(this.$t("qrcode_error_not_attr").toString());
-      } else if (this.qrCodeReferenceField.entity.schema === r.schema && this.qrCodeReferenceField.entity.name === r.name) {
+      } else if (equalEntityRef(this.qrCodeReferenceField.entity, r.entity)) {
         void this.updateValue(this.qrCodeReferenceField.field, r.id);
       } else {
-        this.makeToast(this.$t("qrcode_error_not_ref").toString() + `{schema: ${r.schema}, name: ${r.name}}`);
+        this.makeToast(this.$t("qrcode_error_not_ref").toString() + JSON.stringify(r.entity));
       }
     });
   }

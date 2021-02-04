@@ -211,10 +211,10 @@
 <script lang="ts">
 import * as R from "ramda";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { valueIsNull } from "@/values";
+import { equalEntityRef, valueIsNull } from "@/values";
 import { replaceHtmlLinks } from "@/utils";
 import type { IEntriesRef } from "@/state/entries";
-import { IPrintQRCode } from "@/components/qrcode/QRCode.vue";
+import { parseQRCode } from "@/components/qrcode/QRCode.vue";
 import Popper from "vue-popperjs";
 /* import "vue-popperjs/dist/vue-popper.css"; */
 
@@ -470,20 +470,12 @@ export default class MultiSelect extends Vue {
 
   // FIXME: keyboard selecting doesn's seems to work.
   private addSelectedOptionToValue() {
-    let qrcode: IPrintQRCode | null = null;
-
-    try {
-      qrcode = JSON.parse(this.filterValue);
-    } catch (e) {
-      // Do nothing
-    }
-
-    if (qrcode !== null && typeof qrcode === "object") {
-      if (qrcode.n !== this.entry.entity.name || qrcode.s !== this.entry.entity.schema) {
+    const qrcode = parseQRCode(this.filterValue);
+    if (qrcode !== null) {
+      if (!equalEntityRef(qrcode.entity, this.entry.entity)) {
         this.makeToast(this.$t("error_qrcode_is_inappropriate").toString());
       } else {
-        const value = Number(qrcode.i);
-        const option: ISelectOption | undefined = this.options.find(o => o.value === value);
+        const option: ISelectOption | undefined = this.options.find(o => o.value === qrcode.id);
         if (option !== undefined) {
           this.addOptionToValue(option);
           return;
