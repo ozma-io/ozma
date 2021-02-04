@@ -9,7 +9,6 @@ import { IEntityRef, goodName } from "ozma-api";
 import { Component, Prop, Vue } from "vue-property-decorator";
 
 import VueQrcode from "@chenfengyuan/vue-qrcode";
-import type { IEntriesRef } from "@/state/entries";
 
 export interface IQRCode {
   entity: IEntityRef;

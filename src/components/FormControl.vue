@@ -130,9 +130,9 @@
         >
         <QRCode
           v-else-if="inputType.name === 'qrcode'"
+          :id="typeof currentValue === 'number' ? currentValue : undefined"
           :entity="inputType.ref"
           :height="customHeight"
-          :id="typeof currentValue === 'number' ? currentValue : undefined"
         />
         <BarCodePrint
           v-else-if="inputType.name === 'barcode'"
