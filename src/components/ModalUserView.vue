@@ -36,6 +36,7 @@
           :default-values="view.defaultValues"
           :selection-mode="selectionMode"
           :scope="uid"
+          :filter="filterWords"
           @update:actions="extraActions = $event"
           @update:panelButtons="panelButtons = $event"
           @update:enableFilter="enableFilter = $event"
@@ -80,6 +81,7 @@ import { PanelButton } from "@/components/ButtonsPanel.vue";
 import type { IModalHeader } from "@/components/panels/HeaderPanel.vue";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { ISelectionRef } from "./BaseUserView";
+import { convertToWords } from "@/utils";
 
 const staging = namespace("staging");
 
@@ -97,6 +99,7 @@ export default class ModalUserView extends Vue {
   private extraActions: Action[] = [];
   private panelButtons: PanelButton[] = [];
   private enableFilter = false;
+  private filterString = "";
 
   get header(): IModalHeader {
     return {
@@ -111,6 +114,14 @@ export default class ModalUserView extends Vue {
     const actions: Action[] = [];
     actions.push(...this.extraActions);
     return actions;
+  }
+
+  get filterWords() {
+    const value = this.filterString;
+    if (value !== "") {
+      return Array.from(new Set(convertToWords(value.toString())));
+    }
+    return [];
   }
 
   private openFullscreen() {

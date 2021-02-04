@@ -3,19 +3,7 @@
     :class="['modal__tab_header', {'selected': isActive, 'only_tab': onlyTab}]"
     @click="$emit('tab-click')"
   >
-    <input
-      type="button"
-      value="arrow_back"
-      class="head-menu_back-button material-icons material-button"
-      @click="$router.go(-1)"
-    >
-    <router-link
-      :to="{ name: 'main' }"
-      class="head-menu_main-menu-button material-icons material-button"
-    >
-      home
-    </router-link>
-    <slot style="float:right;" name="header" />
+    <slot name="header" />
     <input
       type="button"
       value="close"
