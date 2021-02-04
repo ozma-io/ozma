@@ -384,7 +384,7 @@ export const authModule: Module<IAuthState, {}> = {
                   startTimeouts(context);
                 } else {
                   const error = getQueryValue("error");
-                  if (error !== "login_required") {
+                  if (error !== "login_required" && error !== "interaction_required") {
                     const errorDescription = getQueryValue("errorDescription");
                     void dispatch("setError", `Invalid auth response query parameters, error ${error} ${errorDescription}`);
                   } else {
