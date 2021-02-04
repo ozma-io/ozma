@@ -1,6 +1,4 @@
-import FunDBAPI from "../node_modules/ozma-api/src/index";
-
-export * from "../node_modules/ozma-api/src/index";
+import FunDBAPI from "ozma-api";
 
 const hostnameParts = location.hostname.split(".");
 const instanceName = hostnameParts[0];

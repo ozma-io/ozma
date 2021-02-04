@@ -5,7 +5,8 @@
 </template>
 
 <script lang="ts">
-import { IEntityRef, goodName } from "ozma-api";
+import type { IEntityRef } from "ozma-api";
+import { goodName } from "ozma-api";
 import { Component, Prop, Vue } from "vue-property-decorator";
 
 import VueQrcode from "@chenfengyuan/vue-qrcode";

@@ -78,13 +78,12 @@
           @focus="iSlot.onFocus"
           @update:value="updateValue"
         />
-        <MultiSelect
+        <ValueSelect
           v-else-if="inputType.name === 'select'"
           ref="control"
           :value="currentValue"
           :options="inputType.options"
           :height="customHeight"
-          single
           :autofocus="autofocus || iSlot.autofocus"
           :required="!isNullable"
           :disabled="isDisabled"
@@ -150,18 +149,17 @@
           :value="value"
           :select-views="inputType.selectViews"
           :height="customHeight"
-          :entry="inputType.ref"
-          :linked-attr="inputType.linkedAttr"
-          :control-style="inputType.style"
+          :reference-entity="inputType.ref"
+          :link-attr="inputType.linkAttr"
           :uv-args="uvArgs"
           :autofocus="autofocus || iSlot.autofocus"
-          :is-nullable="isNullable"
-          :is-disabled="isDisabled"
+          :nullable="isNullable"
+          :disabled="isDisabled"
           :background-color="cellColor"
           @update:actions="actions = $event"
           @update:buttons="buttons = $event"
           @focus="iSlot.onFocus"
-          @update="updateValue($event)"
+          @update:value="updateValue($event)"
           @goto="$emit('goto', $event)"
         />
       </template>
@@ -207,18 +205,18 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
+import type { AttributesMap, ValueType } from "ozma-api";
 
 import { valueToText, valueIsNull } from "@/values";
-import type { AttributesMap, ValueType } from "@/api";
 import { Action } from "@/components/ActionsMenu.vue";
 import { IQuery, attrToQuerySelf } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
-import { IReferenceSelectAction } from "@/components/ReferenceField.vue";
 import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
 import { PanelButton } from "@/components/ButtonsPanel.vue";
 import { IEntityRef } from "ozma-api/src";
+import { IReferenceSelectAction } from "./ReferenceMultiSelect.vue";
 
 interface ITextType {
   name: "text";
@@ -254,13 +252,13 @@ interface IMarkdownEditorType {
 
 interface ISelectType {
   name: "select";
-  options: ISelectOption[];
+  options: ISelectOption<unknown>[];
 }
 
 interface IReferenceType {
   name: "reference";
   ref: IEntriesRef;
-  linkedAttr?: unknown;
+  linkAttr?: unknown;
   selectViews: IReferenceSelectAction[];
   style?: Record<string, unknown>;
 }
@@ -323,7 +321,7 @@ const multilineTypes = ["markdown", "codeeditor", "textarea", "userview", "empty
   components: {
     CodeEditor: () => import("@/components/editors/CodeEditor.vue"),
     MarkdownEditor: () => import("@/components/editors/MarkdownEditor.vue"),
-    MultiSelect: () => import("@/components/multiselect/MultiSelect.vue"),
+    ValueSelect: () => import("@/components/ValueSelect.vue"),
     Calendar: () => import("@/components/Calendar.vue"),
     ReferenceField: () => import("@/components/ReferenceField.vue"),
     InputSlot: () => import("@/components/form/InputSlot.vue"),
@@ -521,7 +519,7 @@ export default class FormControl extends Vue {
             ref: referenceEntriesRef(this.fieldType),
             selectViews: [],
           };
-          refEntry.linkedAttr = this.attributes["link"];
+          refEntry.linkAttr = this.attributes["link"];
           refEntry.style = this.controlStyle();
 
           const selectView = attrToQuerySelf(this.attributes["select_view"], this.value.info, linkOpts);

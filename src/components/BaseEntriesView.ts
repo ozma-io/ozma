@@ -10,13 +10,22 @@ const entries = namespace("entries");
 export default class BaseEntriesView extends Vue {
   @entries.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IEntriesRef; reference: ReferenceName }) => void;
   @entries.State("current") entriesMap!: CurrentEntries;
-  @entries.Action("getEntries") getEntries!: (args: { reference: ReferenceName; ref: IEntriesRef }) => Promise<Entries>;
+  @entries.Action("getEntries") internalGetEntries!: (args: { reference: ReferenceName; ref: IEntriesRef; search: string; limit: number }) => Promise<void>;
+  @entries.Action("getSingleEntry") internalGetSingleEntry!: (args: { reference: ReferenceName; ref: IEntriesRef; id: number}) => Promise<string | undefined>;
 
   protected currentEntries: Entries | Error | null = null;
   private pendingEntity: IEntriesRef | null = null;
 
   get entriesEntity(): IEntriesRef | null {
     throw Error("Not implemented");
+  }
+
+  get entriesSearch(): string {
+    return "";
+  }
+
+  get entriesLimit(): number {
+    return 0;
   }
 
   private get newEntries() {
@@ -39,28 +48,56 @@ export default class BaseEntriesView extends Vue {
       if (this.newEntries instanceof Error) {
         this.currentEntries = null;
       } else if (this.newEntries === null) {
-        void this.getEntries({ ref: this.pendingEntity, reference: this.uid });
+        this.getEntries();
       } else if (!(this.newEntries instanceof Promise)) {
-        this.currentEntries = this.newEntries;
+        this.currentEntries = this.newEntries.entries;
       }
     }
   }
 
   @Watch("entriesEntity", { deep: true, immediate: true })
   private entityChanged(newEntity: IEntriesRef | null) {
-    if (deepEquals(this.pendingEntity, newEntity)) {
-      return;
+    if (!deepEquals(this.pendingEntity, newEntity)) {
+      this.currentEntries = null;
+      if (this.pendingEntity !== null) {
+        this.removeEntriesConsumer({ ref: this.pendingEntity, reference: this.uid });
+        this.pendingEntity = null;
+      }
+      this.pendingEntity = deepClone(newEntity);
+      if (newEntity !== null) {
+        this.getEntries();
+      }
     }
-    const newPendingEntity = deepClone(newEntity);
-    if (newPendingEntity !== null && this.newEntries === null) {
-      void this.getEntries({ ref: newPendingEntity, reference: this.uid });
-    }
+  }
 
-    this.currentEntries = null;
-    const oldPendingEntity = this.pendingEntity;
-    this.pendingEntity = newPendingEntity;
-    if (oldPendingEntity !== null) {
-      this.removeEntriesConsumer({ ref: oldPendingEntity, reference: this.uid });
+  @Watch("entriesSearch")
+  private searchChanged(search: string, oldSearch: string) {
+    if (this.pendingEntity !== null && search !== oldSearch) {
+      this.getEntries();
     }
+  }
+
+  @Watch("entriesLimit")
+  private limitChanged(limit: number, oldLimit: number) {
+    if (this.pendingEntity !== null && limit !== oldLimit) {
+      this.getEntries();
+    }
+  }
+
+  private getEntries() {
+    void this.internalGetEntries({
+      ref: this.pendingEntity!,
+      reference: this.uid,
+      search: this.entriesSearch,
+      limit: this.entriesLimit,
+    });
+  }
+
+  protected fetchOneEntry(id: number) {
+    return this.internalGetSingleEntry({
+      ref: this.pendingEntity!,
+      reference: this.uid,
+      id,
+    });
   }
 }

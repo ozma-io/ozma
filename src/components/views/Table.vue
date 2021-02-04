@@ -181,10 +181,10 @@ import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
 import { Moment, default as moment } from "moment";
 import * as R from "ramda";
+import { IResultColumnInfo, ValueType, RowId } from "ozma-api";
 
 import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName } from "@/utils";
 import { valueIsNull } from "@/values";
-import { IResultColumnInfo, ValueType } from "@/api";
 import { UserView } from "@/components";
 import { AddedRowId, AutoSaveLock } from "@/state/staging_changes";
 import { IAttrToQueryOpts } from "@/state/query";
@@ -198,8 +198,7 @@ import {
   IExtendedRow, IExtendedRowCommon, IExtendedRowInfo, IExtendedValue, IRowCommon, IUserViewHandler, RowRef, ValueRef,
   valueToPunnedText,
 } from "@/user_views/combined";
-import { Entries, IEntriesRef, referenceEntriesRef } from "@/state/entries";
-import { RowId } from "ozma-api/src";
+import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 
 export interface IColumn {
   caption: string;
@@ -842,7 +841,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
   @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
   @entries.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IEntriesRef; reference: ReferenceName }) => void;
-  @entries.Action("getEntries") getEntries!: (args: { reference: ReferenceName; ref: IEntriesRef }) => Promise<Entries>;
+  @entries.Mutation("addEntriesConsumer") addEntriesConsumer!: (args: { ref: IEntriesRef; reference: ReferenceName }) => void;
 
   // These two aren't computed properties for performance. They are computed during `init()` and mutated when other values change.
   // If `init()` is called again, their values after recomputation should be equal to those before it.
@@ -1023,7 +1022,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       if (fieldType !== undefined && fieldType.type === "reference") {
         if (!this.keptEntries.exists(fieldType)) {
           const ref = referenceEntriesRef(fieldType);
-          void this.getEntries({ ref, reference: this.uid });
+          void this.addEntriesConsumer({ ref, reference: this.uid });
           this.keptEntries.insert(ref);
         }
       }

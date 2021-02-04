@@ -1,7 +1,8 @@
 import { Module } from "vuex";
+import { IEntityRef, IEntity } from "ozma-api";
 
 import { IRef, ObjectMap, waitTimeout } from "@/utils";
-import { IEntityRef, IEntity, default as Api } from "@/api";
+import Api from "@/api";
 
 // For each entity contains array of all accessible entries (main fields) identified by id
 export type EntityResult = IEntity | Promise<IEntity> | Error;

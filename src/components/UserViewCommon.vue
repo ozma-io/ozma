@@ -53,13 +53,12 @@
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import * as R from "ramda";
+import { IEntityRef } from "ozma-api";
 
+import { isMobile, mapMaybe, saveToFile, tryDicts } from "@/utils";
 import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, userViewTitle } from "@/components/BaseUserView";
 import { IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
-
-import { IEntityRef } from "@/api";
 import SelectUserView from "@/components/SelectUserView.vue";
-import { isMobile, mapMaybe, saveToFile, tryDicts } from "@/utils";
 import { Action } from "@/components/ActionsMenu.vue";
 import { PanelButton } from "@/components/ButtonsPanel.vue";
 import { attrToLink } from "@/links";

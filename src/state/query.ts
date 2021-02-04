@@ -1,10 +1,9 @@
 import { Module } from "vuex";
 import { Location, Route } from "vue-router";
+import { UserViewSource, SchemaName, IUserViewRef } from "ozma-api";
 
-import { UserViewSource } from "@/api";
-import { deepUpdateObject, mapMaybe, deepClone } from "@/utils";
+import { deepSyncObject, mapMaybe, deepClone } from "@/utils";
 import { router } from "@/modules";
-import { SchemaName, IUserViewRef } from "ozma-api/src";
 import { IUserViewArguments, IValueInfo } from "@/user_views/combined";
 
 export interface IQuery {
@@ -409,7 +408,7 @@ const updateCurrent = (state: IQueryState, current: ICurrentQueryHistory) => {
   if (state.current === null) {
     state.current = current;
   } else {
-    deepUpdateObject(state.current, current);
+    deepSyncObject(state.current, current);
   }
 };
 
@@ -511,7 +510,7 @@ const queryModule: Module<IQueryState, {}> = {
       }
       const window = state.current.windows[index];
       const newQuery = replaceHistory(window.query, query);
-      deepUpdateObject(window.query, newQuery);
+      deepSyncObject(window.query, newQuery);
       state.resetLocks += 1;
     },
     pushWindow: (state, { index, query }: { index: number; query: IQuery }) => {
@@ -520,7 +519,7 @@ const queryModule: Module<IQueryState, {}> = {
       }
       const window = state.current.windows[index];
       const newQuery = pushHistory(window.query, query);
-      deepUpdateObject(window.query, newQuery);
+      deepSyncObject(window.query, newQuery);
       state.resetLocks += 1;
     },
     replaceWindowSearch: (state, { index, search }: { index: number; search: string }) => {

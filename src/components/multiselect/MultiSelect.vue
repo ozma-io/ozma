@@ -1,22 +1,18 @@
 <i18n>
-    {
-      "en": {
-        "empty_message": "Empty",
-        "clear_all": "Clear all",
-        "enter_value": "Enter value",
-        "error_qrcode_is_inappropriate" : "QRCode is inappropriate",
-        "error": "Error",
-        "search_placeholder": "Search"
-      },
-      "ru": {
-        "empty_message": "Пусто",
-        "clear_all": "Очистить",
-        "enter_value": "Введите значение",
-        "error_qrcode_is_inappropriate" : "QRCode не соответствует назначению",
-        "error": "Ошибка",
-        "search_placeholder": "Поиск"
-      }
+  {
+    "en": {
+      "empty_message": "Empty",
+      "clear_all": "Clear all",
+      "enter_value": "Enter value",
+      "search_placeholder": "Search"
+    },
+    "ru": {
+      "empty_message": "Пусто",
+      "clear_all": "Очистить",
+      "enter_value": "Введите значение",
+      "search_placeholder": "Поиск"
     }
+  }
 </i18n>
 
 <template>
@@ -28,7 +24,7 @@
 
       }
     ]"
-    @keydown.tab="() => closePopup()"
+    @keydown.tab="closePopup"
   >
     <popper
       ref="popup"
@@ -53,13 +49,13 @@
         :class="[
           'select-container',
           {
-            'fixed-height': hasHeight && !isPopupOpen && !single,
+            'fixed-height': height !== undefined && !isPopupOpen && !single,
           },
         ]"
       >
         <!-- eslint-enable vue/no-deprecated-slot-attribute -->
         <span
-          v-if="isEmpty"
+          v-if="valuesLength === 0"
           :style="listValueStyle"
           class="empty-message-text"
         >
@@ -68,79 +64,81 @@
 
         <div
           v-else
-          ref="valuesList"
           :class="[
             'selected-values',
             {
-              'fixed-height': hasHeight,
+              'fixed-height': height !== undefined,
             }
           ]"
           :style="containerContentStyle"
         >
           <slot
-            v-if="single"
+            v-if="single && selectedOption"
             name="singleValue"
             :listValueStyle="listValueStyle"
-            :valueOption="valueOption"
+            :selectedOption="selectedOption"
           >
             <div
               :style="listValueStyle"
               class="single-value"
             >
-              {{ valueOption.label }}
+              <!-- eslint-disable vue/no-v-html -->
+              <span v-html="selectedOption.labelHtml" />
+              <!-- eslint-enable vue/no-v-html -->
             </div>
           </slot>
 
           <slot
             v-else
             name="label"
-            :valueOptions="valueOptions"
+            :selectedOptions="selectedOptions"
             :listValueStyle="listValueStyle"
-            :removeValue="removeValue"
-            :showValueRemove="showValueRemove"
+            :unselectOption="unselectOption"
+            :showUnselectOption="showUnselectOption"
           >
             <div
-              v-for="(option, index) in valueOptions"
-              :key="option.value"
+              v-for="(option, index) in selectedOptions"
+              :key="index"
               class="one-of-many-value single-value"
               :style="listValueStyle"
               @click.stop
             >
-              {{ option.label }}
+              <!-- eslint-disable vue/no-v-html -->
+              <span v-html="option.labelHtml" />
+              <!-- eslint-enable vue/no-v-html -->
               <input
-                v-if="showValueRemove"
+                v-if="showUnselectOption"
                 type="button"
                 class="material-icons remove-value"
                 value="close"
-                @click="removeValue(index)"
-                @blur="() => closePopup()"
+                @click="unselectOption(option.index)"
+                @blur="closePopup"
               >
             </div>
           </slot>
         </div>
 
         <input
-          v-if="!disabled && (required || isEmpty)"
+          v-if="!disabled"
           type="button"
           class="material-icons select-container__chevron"
           :value="isPopupOpen ? 'expand_less' : 'expand_more'"
         >
         <input
-          v-if="!isEmpty && !required && !disabled"
+          v-if="showUnselectOption"
           type="button"
           class="material-icons material-button close-button select-container__chevron"
           value="close"
-          @click.stop="removeValue()"
+          @click.stop="unselectAll"
         >
       </div>
 
       <div class="popper multiselect-popper border rounded overflow-hidden shadow">
         <div
-          ref="selectedOptionsContainer"
           class="select-container__options_container overflow-hidden"
         >
           <b-input-group
-            v-if="isNeedFilter"
+            v-if="!disabled && showFilter"
             size="sm"
             class="focus-entire filter-group"
           >
@@ -161,41 +159,40 @@
               class="filter-input"
               :placeholder="$t('search_placeholder')"
               @keydown.backspace="onBackspace"
-              @keydown.up="offsetSelectedOption(-1)"
-              @keydown.down="offsetSelectedOption(1)"
-              @keydown.enter="addSelectedOptionToValue"
+              @keydown.up="offsetFocusedOption(-1)"
+              @keydown.down="offsetFocusedOption(1)"
+              @keydown.enter="filterInputFinished"
               @focus="onFilterInputFocus"
             />
           </b-input-group>
-
           <slot
             name="option"
-            :selectedOptions="selectedOptions"
-            :addOptionToValue="addOptionToValue"
-            :selectedOption="selectedOption"
-            :isEmpty="isEmpty"
+            :visibleOptions="visibleOptions"
+            :selectOption="selectOption"
+            :focusedOption="focusedOption"
           >
             <ul
-              ref="optionsList"
               class="select-container__options_list"
               :style="optionsListStyle"
             >
               <li
-                v-for="(option, index) in selectedOptions"
-                :key="option.value"
+                v-for="option in visibleOptions"
+                :key="option.index"
                 :class="[
                   'select-container__options_list__option',
                   'single-value',
-                  {'select-container__options_list__option_active': selectedOption === index }
+                  {'select-container__options_list__option_active': focusedOption === option.index }
                 ]"
-                @click="addOptionToValue(option)"
+                @click="selectOption(option.index)"
               >
-                {{ option.label }}
+                <!-- eslint-disable vue/no-v-html -->
+                <span v-html="option.labelHtml" />
+                <!-- eslint-enable vue/no-v-html -->
               </li>
             </ul>
             <div
               class="select-container__options__actions"
-              @click="closePopup()"
+              @click="closePopup"
             >
               <slot
                 name="actions"
@@ -209,176 +206,148 @@
 </template>
 
 <script lang="ts">
-import * as R from "ramda";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { equalEntityRef, valueIsNull } from "@/values";
 import { replaceHtmlLinks } from "@/utils";
-import type { IEntriesRef } from "@/state/entries";
-import { parseQRCode } from "@/components/qrcode/QRCode.vue";
 import Popper from "vue-popperjs";
 /* import "vue-popperjs/dist/vue-popper.css"; */
 
-export interface ISelectOption {
-  value: any;
+export interface ISelectOption<T> {
   label: string;
-  meta?: { [key: string]: any };
+  value: T;
 }
 
-export interface ISelectOptionHtml extends ISelectOption {
+export interface ISelectOptionHtml<T> extends ISelectOption<T> {
+  index: number;
   labelHtml: string; // Stores label with links replaced with <a> tags.
 }
 
-const defaultOptionFilter = (query: string) => (option: ISelectOption) =>
-  R.contains(query.toLowerCase().trim(), R.pathOr("", ["label"], option).toLowerCase());
-
 @Component({ components: { Popper } })
 export default class MultiSelect extends Vue {
-  @Prop({}) value!: any;
-  @Prop({ type: Array, default: () => [] }) options!: ISelectOption[];
+  @Prop({ required: true }) value!: number | number[] | null;
+  @Prop({ type: Array, default: () => [] }) options!: ISelectOption<unknown>[];
   @Prop({ type: Boolean, default: false }) single!: boolean;
   @Prop({ type: Boolean, default: false }) required!: boolean;
   @Prop({ type: Boolean, default: false }) disabled!: boolean;
-  @Prop({ type: Function, default: defaultOptionFilter }) optionFilterFN!: (query: string) => (option: ISelectOption) => boolean;
-  @Prop({ default: null }) emptyValue: any;
-  @Prop({ type: Number, default: null }) height!: number;
-  @Prop({ type: String, default: null }) optionsListHeight!: string;
+  @Prop({ type: Number }) height!: number | undefined;
+  @Prop({ type: Number }) optionsListHeight!: number | undefined;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  @Prop({ type: Object, default: null }) entry!: IEntriesRef;
+  @Prop({ type: Boolean, default: false }) showFilter!: boolean;
+  @Prop({ type: Function }) processFilter!: (_: string) => Promise<boolean> | undefined;
 
-  private selectedOption = -1;
   private filterValue = "";
-  private isNeedFilter = true;
+  // Option, currently focused in a popup.
+  private focusedOption = -1;
   private isPopupOpen = false;
 
-  private mounted() {
-    if (this.selectedOptions.length < 3 && this.single) {
-      this.isNeedFilter = false;
+  get htmlOptions(): ISelectOptionHtml<unknown>[] {
+    return this.options.map((option, index) => ({
+      ...option,
+      index,
+      labelHtml: replaceHtmlLinks(option.label),
+    }));
+  }
+
+  get lowerFilterValue() {
+    return this.filterValue.toLowerCase();
+  }
+
+  get visibleOptions() {
+    let visible: ISelectOptionHtml<unknown>[];
+    if (this.filterValue === "") {
+      visible = this.htmlOptions;
+    } else {
+      visible = this.htmlOptions.filter(option => option.label.toLowerCase().includes(this.lowerFilterValue));
     }
-    if (this.autofocus) {
-      void this.onAutofocus(true);
+
+    if (!this.single) {
+      return visible.filter(option => (this.value as number[]).indexOf(option.index) === -1);
+    } else {
+      return visible;
     }
   }
 
+  get selectedOptions() {
+    if (this.value === null) {
+      return [];
+    } else if (this.single) {
+      return [this.htmlOptions[this.value as number]];
+    } else {
+      return (this.value as number[]).map(i => this.htmlOptions[i]);
+    }
+  }
+
+  get selectedOption() {
+    if (this.selectedOptions.length > 0) {
+      return this.selectedOptions[0];
+    } else {
+      return null;
+    }
+  }
+
+  private mounted() {
+    if (this.autofocus) {
+      void this.$nextTick().then(() => this.openPopup());
+    }
+  }
+
+  @Watch("disabled")
+  private disabledChanged() {
+    if (this.disabled) {
+      void this.closePopup();
+    }
+  }
+
+  @Watch("filterValue")
+  private emitFilterValue() {
+    this.$emit("update:filter", this.filterValue);
+  }
+
   @Watch("autofocus")
-  private async onAutofocus(autofocus: boolean) {
+  private onAutofocus(autofocus: boolean) {
     if (autofocus) {
-      await this.$nextTick();
       void this.openPopup();
     }
   }
 
+  get valuesLength() {
+    if (this.value === null) {
+      return 0;
+    } else if (this.single) {
+      return 1;
+    } else {
+      return (this.value as number[]).length;
+    }
+  }
+
   private onBackspace() {
-    if (this.filterValue === "" && !this.single && !this.disabled && (!this.required || (this.required && this.currentValues.length > 1))) {
-      this.removeValue(this.currentValues.length - 1);
+    if (this.filterValue === "" && this.showUnselectOption && this.selectedOptions.length > 0) {
+      this.unselectOption(this.selectedOptions[this.selectedOptions.length - 1].index);
     }
   }
 
-  private getOption(value: any): ISelectOption | undefined {
-    const option = this.options.find(R.propEq("value", value)) || { value, label: value };
-    return {
-      ...option,
-      label: this.getLabel(option),
-    };
+  get showUnselectOption() {
+    return this.selectedOptions.length > 0 && !this.disabled && !(this.required && this.selectedOptions.length <= 1);
   }
 
-  private getLabel(option: ISelectOption): string {
-    const label = R.pathOr(option.value, ["label"], option);
-    return label !== "" ? label : option.value;
-  }
-
-  private get showSingleValue() {
-    const showIfEditing = !this.isPopupOpen || (this.isPopupOpen && this.filterValue === "");
-    return this.single && !this.isEmpty && showIfEditing;
-  }
-
-  private get showValueRemove(): boolean {
-    const isLastValueLeft = this.single ? true : this.currentValues.length <= 1;
-    return (!this.disabled && !(isLastValueLeft && this.required));
-  }
-
-  /* private get valueOption(): ISelectOption | undefined {
-   *   return this.getOption(this.currentValue);
-   * } */
-
-  private get valueOption(): ISelectOptionHtml | undefined {
-    const option = this.getOption(this.currentValue);
-    if (option === undefined) {
-      return undefined;
-    }
-    const labelHtml = replaceHtmlLinks(option.label);
-    return {
-      ...option,
-      labelHtml,
-    };
-  }
-
-  private get valueOptions(): ISelectOptionHtml[] {
-    if (this.value instanceof Array) {
-      return (this.currentValues
-        .map(x => this.getOption(x))
-        .filter(R.identity) as ISelectOption[])
-        .map(option => ({
-          ...option,
-          labelHtml: replaceHtmlLinks(option.label),
-        }));
-    }
-    return [];
-  }
-
-  private get hasHeight(): boolean {
-    return !!this.height;
-  }
-
-  private get containerContentStyle() {
+  get containerContentStyle() {
     const height = this.height && !this.isPopupOpen ? { height: `${this.height}px`, minHeight: "unset" } : {};
     return {
       ...height,
     };
   }
 
-  private get optionsListStyle() {
-    const height = this.height ? { maxHeight: `${this.optionsListHeight}px` } : { maxHeight: "200px" };
+  get optionsListStyle() {
+    const height = this.optionsListHeight ? { maxHeight: `${this.optionsListHeight}px` } : { maxHeight: "200px" };
     return {
       ...height,
     };
   }
 
-  private get listValueStyle() {
+  get listValueStyle() {
     const height = this.height ? { maxHeight: `${this.height}px` } : {};
     return {
       ...height,
     };
-  }
-
-  private get currentValue(): any {
-    if (this.single) {
-      return this.value;
-    }
-    return null;
-  }
-
-  private get currentValues(): any[] {
-    if (!this.single) {
-      return this.value || [];
-    }
-    return [];
-  }
-
-  private get isEmpty(): boolean {
-    if (this.single) {
-      return valueIsNull(this.currentValue);
-    }
-    return !this.currentValues.length;
-  }
-
-  private get selectedOptions(): ISelectOptionHtml[] {
-    return this.options
-      .filter(this.optionFilterFN(this.filterValue))
-      .map(option => {
-        const label = this.getLabel(option);
-        const labelHtml = replaceHtmlLinks(label);
-        return { ...option, label, labelHtml };
-      });
   }
 
   private focusInput() {
@@ -386,7 +355,7 @@ export default class MultiSelect extends Vue {
   }
 
   private onFilterInputFocus() {
-    this.$emit("focus", null);
+    this.$emit("focus");
   }
 
   private async openPopup() {
@@ -394,8 +363,8 @@ export default class MultiSelect extends Vue {
     const popupRef: any = this.$refs.popup;
     if (!popupRef) return;
 
+    this.focusedOption = -1;
     await popupRef.doShow();
-    this.selectedOption = -1;
   }
 
   private async onOpenPopup() {
@@ -413,124 +382,84 @@ export default class MultiSelect extends Vue {
     if (!popupRef) return;
 
     await popupRef.doClose();
-    this.selectedOption = -1;
   }
 
   private onClosePopup() {
     this.isPopupOpen = false;
+    this.filterValue = "";
   }
 
-  private togglePopup() {
-    if (this.disabled) return;
-    const popupRef: any = this.$refs.popup;
-    if (!popupRef) return;
-
-    if (popupRef.showPopper) {
-      void this.closePopup();
+  private async togglePopup() {
+    if (this.isPopupOpen) {
+      await this.closePopup();
     } else {
-      void this.openPopup();
+      await this.openPopup();
     }
   }
 
-  private offsetSelectedOption(offset: number) {
-    const selectedOptions = this.selectedOptions;
-    const newSelectedOption = this.selectedOption + offset;
-    if (newSelectedOption < 0) {
-      this.selectedOption = selectedOptions.length - 1;
-    } else if (newSelectedOption >= selectedOptions.length) {
-      this.selectedOption = 0;
+  @Watch("visibleOptions")
+  private visibleOptionsUpdated() {
+    this.offsetFocusedOption(0);
+  }
+
+  private offsetFocusedOption(offset: number) {
+    if (!this.isPopupOpen || this.visibleOptions.length === 0) {
+      this.focusedOption = -1;
     } else {
-      this.selectedOption += offset;
+      this.focusedOption = Math.max(0, Math.min(this.visibleOptions.length - 1, this.focusedOption + offset));
     }
   }
 
-  private findNewSelected() {
-    if (this.selectedOption >= this.selectedOptions.length - 1) {
-      this.selectedOption = (this.selectedOptions.length - 2);
+  private selectOption(index: number) {
+    console.assert(!this.disabled);
+
+    if (this.single) {
+      this.$emit("update:value", index);
+    } else {
+      this.$emit("add-value", index);
     }
+    this.filterValue = "";
+    const filterInput = this.$refs.filterInput as HTMLInputElement;
+    if (filterInput !== undefined) {
+      filterInput.focus();
+    }
+    void this.closePopup();
   }
 
-  private addOptionToValue(option: ISelectOption) {
-    if (!this.disabled) {
-      if (this.single) {
-        this.$emit("update:value", option.value);
-      } else {
-        const newValue = R.uniq([...this.currentValues, option.value]);
-        this.$emit("update:value", newValue);
+  private unselectOption(index: number) {
+    console.assert(!this.disabled);
+
+    if (this.single) {
+      if (this.selectedOptions.length > 0 && this.selectedOptions[0].index === index) {
+        this.$emit("update:value", null);
       }
+    } else {
+      this.$emit("remove-value", index);
+    }
+    void this.closePopup();
+  }
+
+  private unselectAll() {
+    console.assert(!this.disabled);
+
+    if (this.single) {
+      this.$emit("update:value", null);
+    } else {
+      for (const index of this.value as number[]) {
+        this.$emit("remove-value", index);
+      }
+    }
+  }
+
+  private async filterInputFinished() {
+    if (this.focusedOption === -1) {
+      if (this.processFilter && await this.processFilter(this.filterValue)) {
+        this.filterValue = "";
+      }
+    } else {
+      this.selectOption(this.focusedOption);
       this.filterValue = "";
-      const filterInput = this.$refs.filterInput as HTMLInputElement;
-      if (filterInput !== undefined) {
-        filterInput.focus();
-      }
-      this.findNewSelected();
     }
-    void this.closePopup();
-  }
-
-  // FIXME: keyboard selecting doesn's seems to work.
-  private addSelectedOptionToValue() {
-    const qrcode = parseQRCode(this.filterValue);
-    if (qrcode !== null) {
-      if (!equalEntityRef(qrcode.entity, this.entry.entity)) {
-        this.makeToast(this.$t("error_qrcode_is_inappropriate").toString());
-      } else {
-        const option: ISelectOption | undefined = this.options.find(o => o.value === qrcode.id);
-        if (option !== undefined) {
-          this.addOptionToValue(option);
-          return;
-        }
-      }
-    }
-
-    if (this.selectedOption > -1) {
-      const option: ISelectOption | null = R.pathOr(null, [this.selectedOption], this.selectedOptions);
-      if (option) {
-        this.addOptionToValue(option);
-        return;
-      }
-    }
-
-    if (this.options.length) {
-      const value = Number(this.filterValue);
-      const option: ISelectOption | undefined = this.options.find(o => o.value === value);
-      if (option !== undefined) {
-        this.addOptionToValue(option);
-        return;
-      }
-    }
-
-    if (this.selectedOptions.length) {
-      const option: ISelectOption = this.selectedOptions[0];
-      if (option) {
-        this.addOptionToValue(option);
-      }
-    }
-  }
-
-  private removeValue(index?: number) {
-    if ((index !== undefined) && !this.single) {
-      const newValue = this.currentValues.filter((_: any, i: number) => index !== i);
-      this.$emit("update:value", newValue);
-    } else {
-      this.$emit("update:value", this.emptyValue);
-    }
-    void this.closePopup();
-  }
-
-  private clearValues() {
-    if (!this.single) {
-      this.$emit("update:value", this.emptyValue);
-    }
-  }
-
-  private makeToast(message: string) {
-    this.$bvToast.toast(message, {
-      title: this.$t("error").toString(),
-      variant: "danger",
-      solid: true,
-      noAutoHide: true,
-    });
   }
 }
 </script>

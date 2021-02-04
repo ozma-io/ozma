@@ -1,5 +1,5 @@
 import { queryLocation, IQueryState, IQuery, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery, selfIdArgs, refIdArgs } from "@/state/query";
-import { IActionRef } from "ozma-api/src";
+import { IActionRef } from "ozma-api";
 import { gotoHref } from "@/utils";
 import { saveAndRunAction } from "@/state/actions";
 import { Store } from "vuex";

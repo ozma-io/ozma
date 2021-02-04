@@ -26,8 +26,8 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { namespace } from "vuex-class";
+import { IEntityRef, IEntity } from "ozma-api";
 
-import { IEntityRef, IEntity } from "@/api";
 import { equalEntityRef } from "@/values";
 import type { IQuery } from "@/state/query";
 import { ErrorKey } from "@/state/errors";

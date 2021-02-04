@@ -61,8 +61,8 @@ import * as R from "ramda";
 import { Vue, Component, Prop } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { dragscroll } from "vue-dragscroll";
+import { IFieldRef } from "ozma-api";
 
-import { IFieldRef } from "@/api";
 import { IQuery } from "@/state/query";
 import { Link } from "@/links";
 import { replaceHtmlLinks } from "@/utils";

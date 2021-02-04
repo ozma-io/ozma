@@ -1,7 +1,8 @@
 import { Module } from "vuex";
+import { IViewExprResult } from "ozma-api";
 
 import { IRef, convertString, waitTimeout } from "@/utils";
-import { IViewExprResult, funappSchema, default as Api } from "@/api";
+import { funappSchema, default as Api } from "@/api";
 
 const errorKey = "settings";
 

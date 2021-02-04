@@ -1,14 +1,16 @@
 import Vue from "vue";
 import { Module, ActionContext } from "vuex";
 import { Moment } from "moment";
-
-import { RecordSet, deepClone, mapMaybe, map2, waitTimeout } from "@/utils";
-import { IUpdatedValue, IFieldInfo, valueFromRaw, valueEquals } from "@/values";
+import R from "ramda";
 import {
   ITransaction, ITransactionResult, IEntityRef, IFieldRef, IEntity, RowId, SchemaName, FieldName, EntityName,
   IInsertEntityOp, IUpdateEntityOp, IDeleteEntityOp, IInsertEntityResult, IUpdateEntityResult, IDeleteEntityResult,
-  IColumnField, TransactionOp, default as Api,
-} from "@/api";
+  IColumnField, TransactionOp,
+} from "ozma-api";
+
+import { RecordSet, deepClone, mapMaybe, waitTimeout } from "@/utils";
+import { IUpdatedValue, IFieldInfo, valueFromRaw, valueEquals } from "@/values";
+import Api from "@/api";
 import { i18n } from "@/modules";
 
 export type ScopeName = string;
@@ -804,7 +806,7 @@ const stagingModule: Module<IStagingState, {}> = {
         commit("finishSubmit");
         if (!(result instanceof Error)) {
           commit("errors/resetErrors", errorKey, { root: true });
-          const opResults = map2((op, res) => ({ ...op, ...res } as CombinedTransactionResult), ops, result.results);
+          const opResults = R.zipWith((op, res) => ({ ...op, ...res } as CombinedTransactionResult), ops, result.results);
           await dispatch("clearUnchanged", opResults);
           return opResults;
         } else {
