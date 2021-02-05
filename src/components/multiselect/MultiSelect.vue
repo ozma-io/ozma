@@ -210,7 +210,6 @@
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { replaceHtmlLinks } from "@/utils";
 import Popper from "vue-popperjs";
-import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
 
 /* import "vue-popperjs/dist/vue-popper.css"; */
 
@@ -224,7 +223,7 @@ export interface ISelectOptionHtml<T> extends ISelectOption<T> {
   labelHtml: string; // Stores label with links replaced with <a> tags.
 }
 
-@Component({ components: { Popper, QRCodeScanner } })
+@Component({ components: { Popper } })
 export default class MultiSelect extends Vue {
   @Prop({ required: true }) value!: number | number[] | null;
   @Prop({ type: Array, default: () => [] }) options!: ISelectOption<unknown>[];
@@ -241,7 +240,6 @@ export default class MultiSelect extends Vue {
   // Option, currently focused in a popup.
   private focusedOption = -1;
   private isPopupOpen = false;
-  private isQRCodeScanner = false;
 
   get htmlOptions(): ISelectOptionHtml<unknown>[] {
     return this.options.map((option, index) => ({
