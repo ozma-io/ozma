@@ -472,8 +472,6 @@ export default class MultiSelect extends Vue {
 }
 </script>
 
-// FIXME: This styles can not be `scoped` currently because it breaks MultiSelect userview and ReferenceField.
-// Class renames also breaks them!
 <style lang="scss" scoped>
   .fade-enter-active,
   .fade-leave-active {
