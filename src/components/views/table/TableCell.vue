@@ -42,7 +42,7 @@
           class="checkbox_click-none"
           :checked="value.value"
         />
-        <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueText.length > 0}]">
+        <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueText.length > 0, 'tree': isTree}]">
           <span
             :style="{'margin-left': treeLevel*25+'px'}"
             :class="['display-arrow material-icons', {'down': isArrowDown}]"
@@ -58,7 +58,7 @@
             class="hidden-arrow-space"
           />
           <!-- eslint-disable vue/no-v-html -->
-          <span v-html="localValueTextHtml" />
+          <span class="text" v-html="localValueTextHtml" />
           <!-- eslint-enable -->
         </div>
       </template>
@@ -234,11 +234,11 @@ export default class TableCell extends Vue {
     font-size: inherit;
     transform-origin: 30% 50%;
     transition: transform 0.2s;
+    overflow: hidden;
   }
 
   .display-arrow.material-icons:hover {
     opacity: 0.7;
-    overflow: hidden;
   }
 
   .display-arrow.material-icons.down {
@@ -272,5 +272,19 @@ export default class TableCell extends Vue {
     overflow: hidden;
     white-space: break-spaces;
     line-height: 1rem;
+  }
+
+  .cell-text.tree {
+    display: flex;
+    align-self: center;
+    align-items: center;
+    justify-content: flex-begin;
+  }
+
+  .hidden-arrow-space + .text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 </style>
