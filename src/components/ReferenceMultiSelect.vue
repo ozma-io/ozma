@@ -32,87 +32,34 @@
       :options-list-height="optionsListHeight"
       :autofocus="autofocus"
       show-filter
+      :more-options-available="moreEntriesAvailable"
       :process-filter="f => processFilter(f)"
       @update:value="updateValue"
       @add-value="addValue"
       @remove-value="removeValue"
       @update:filter="updateFilter"
-      @more-options="limit += 20"
+      @load-more="limit += 20"
       @focus="$emit('focus')"
     >
-      <template #label="select">
-        <span
-          v-for="(option, index) in select.selectedOptions"
-          :key="index"
-          :class="[
-            'one-of-many-value',
-            {
-              'has-links': option.label !== option.labelHtml,
-            },
-          ]"
-          :style="select.listValueStyle"
-          @click.stop
-        >
+      <template #option="select">
+        <fragment>
           <FunLink
-            v-if="option.value.link"
-            :link="option.value.link"
-            @goto="$emit('goto', $event)"
-          >
-            <input
-              type="button"
-              class="material-icons reference__open_modal"
-              value="open_in_new"
-            >
-          </FunLink>
-          <!-- eslint-disable vue/no-v-html -->
-          <span v-html="option.labelHtml" />
-          <!-- eslint-enable vue/no-v-html -->
-          <input
-            v-if="select.showUnselectOption"
-            type="button"
-            class="material-icons material-button remove-value"
-            value="close"
-            @click="select.unselectOption(index)"
-          >
-        </span>
-      </template>
-
-      <template #singleValue="select">
-        <span
-          v-if="select.selectedOption.value.link"
-          :style="select.listValueStyle"
-          class="single-value"
-        >
-          <FunLink
+            v-if="select.option.value.link"
             class="single-value__link"
-            :link="select.selectedOption.value.link"
+            :link="select.option.value.link"
             @goto="$emit('goto', $event)"
           >
             <input
               type="button"
               class="material-icons reference__open_modal"
-              :value="iconValue(select.selectedOption.value.link.target)"
+              :value="iconValue(select.option.value.link.target)"
             >
           </FunLink>
           <!-- eslint-disable vue/no-v-html -->
-          <span v-html="select.selectedOption.labelHtml" />
+          <span v-html="select.option.labelHtml" />
           <!-- eslint-enable vue/no-v-html -->
-        </span>
-        <!-- eslint-disable vue/no-v-html -->
-        <span
-          v-else
-          :style="select.listValueStyle"
-          :class="[
-            'single-value',
-            {
-              'has-links': select.selectedOption.label !== select.selectedOption.labelHtml,
-            }
-          ]"
-          v-html="select.selectedOption.labelHtml"
-        />
-        <!-- eslint-enable vue/no-v-html -->
+        </fragment>
       </template>
-
       <template
         #actions
       >
@@ -193,7 +140,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Prop({ type: Object }) linkAttr!: unknown | undefined;
 
   private selectedView: IQuery | null = null;
-  private limit = 20;
+  private limit = 0;
   private search = "";
 
   get entriesEntity() {
@@ -206,6 +153,10 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
 
   get entriesSearch() {
     return this.search;
+  }
+
+  get testMoreEntriesAvailable() {
+    return this.moreEntriesAvailable;
   }
 
   private findValue(value: ICombinedValue): number | undefined {
@@ -384,24 +335,9 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
 </script>
 
 <style lang="scss" scoped>
-  .single-value {
-    margin: 2px;
-    line-height: 1rem;
-
-    &.has-links {
-      /* Otherwise it's sometimes tricky to click/tap inside. */
-      padding-right: 5px;
-    }
-  }
-
-  .single-value > a,
-  .select-container__options_list__option > a {
-    color: var(--MainTextColor);
-    text-decoration: underline;
-  }
-
   .single-value__link {
     display: flex;
+    text-decoration: underline;
   }
 
   .reference__open_modal {

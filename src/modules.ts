@@ -10,6 +10,7 @@ import { RawLocation, Dictionary } from "vue-router/types/router";
 import PortalVue from "portal-vue";
 import VueJSModal from "vue-js-modal";
 import { Plugin as FragmentPlugin } from "vue-fragment";
+import infiniteScroll from "vue-infinite-scroll";
 
 import * as Utils from "@/utils";
 import NotFound from "@/components/NotFound.vue";
@@ -30,6 +31,7 @@ Vue.use(VueGrid);
 Vue.use(PortalVue);
 Vue.use(FragmentPlugin);
 Vue.use(VueJSModal, { componentName: "VueModal" });
+Vue.use(infiniteScroll);
 
 const routes = [
   { path: "/", name: "main", redirect: { name: "view", params: { schema: "user", name: "main" } } },

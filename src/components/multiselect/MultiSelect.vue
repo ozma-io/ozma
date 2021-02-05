@@ -45,7 +45,6 @@
       <!-- TODO: Find or make not deprecated popper.js wrapper -->
       <div
         slot="reference"
-        ref="selectContainer"
         :class="[
           'select-container',
           {
@@ -72,50 +71,34 @@
           ]"
           :style="containerContentStyle"
         >
-          <slot
-            v-if="single && selectedOption"
-            name="singleValue"
-            :listValueStyle="listValueStyle"
-            :selectedOption="selectedOption"
+          <span
+            v-for="(option, index) in selectedOptions"
+            :key="index"
+            :class="[
+              single ? 'single-value' : 'one-of-many-value',
+              {
+                'has-links': option.label !== option.labelHtml,
+              },
+            ]"
+            :style="listValueStyle"
+            @click.stop
           >
-            <div
-              :style="listValueStyle"
-              class="single-value"
-            >
-              <!-- eslint-disable vue/no-v-html -->
-              <span v-html="selectedOption.labelHtml" />
-              <!-- eslint-enable vue/no-v-html -->
-            </div>
-          </slot>
-
-          <slot
-            v-else
-            name="label"
-            :selectedOptions="selectedOptions"
-            :listValueStyle="listValueStyle"
-            :unselectOption="unselectOption"
-            :showUnselectOption="showUnselectOption"
-          >
-            <div
-              v-for="(option, index) in selectedOptions"
-              :key="index"
-              class="one-of-many-value single-value"
-              :style="listValueStyle"
-              @click.stop
+            <slot
+              name="option"
+              :option="option"
             >
               <!-- eslint-disable vue/no-v-html -->
               <span v-html="option.labelHtml" />
               <!-- eslint-enable vue/no-v-html -->
-              <input
-                v-if="showUnselectOption"
-                type="button"
-                class="material-icons remove-value"
-                value="close"
-                @click="unselectOption(option.index)"
-                @blur="closePopup"
-              >
-            </div>
-          </slot>
+            </slot>
+            <input
+              v-if="showUnselectOption"
+              type="button"
+              class="material-icons material-button remove-value"
+              value="close"
+              @click="unselectOption(index)"
+            >
+          </span>
         </div>
 
         <input
@@ -165,40 +148,46 @@
               @focus="onFilterInputFocus"
             />
           </b-input-group>
-          <slot
-            name="option"
-            :visibleOptions="visibleOptions"
-            :selectOption="selectOption"
-            :focusedOption="focusedOption"
+          <div
+            ref="optionsContainer"
+            v-infinite-scroll="loadMore"
+            infinite-scroll-distance="10"
+            infinite-scroll-disabled="noMoreOptions"
+            class="select-container__options_list"
+            :style="optionsListStyle"
           >
-            <ul
-              class="select-container__options_list"
-              :style="optionsListStyle"
+            <span
+              v-for="(option, index) in visibleOptions"
+              :key="index"
+              :class="[
+                'single-value',
+                {
+                  'has-links': option.label !== option.labelHtml,
+                  'select-container__options_list__option_active': focusedOption === option.index,
+                },
+              ]"
+              :style="listValueStyle"
+              @mouseover="focusedOption = option.index"
+              @click="selectOption(option.index)"
             >
-              <li
-                v-for="option in visibleOptions"
-                :key="option.index"
-                :class="[
-                  'select-container__options_list__option',
-                  'single-value',
-                  {'select-container__options_list__option_active': focusedOption === option.index }
-                ]"
-                @click="selectOption(option.index)"
+              <slot
+                name="option"
+                :option="option"
               >
                 <!-- eslint-disable vue/no-v-html -->
                 <span v-html="option.labelHtml" />
                 <!-- eslint-enable vue/no-v-html -->
-              </li>
-            </ul>
-            <div
-              class="select-container__options__actions"
-              @click="closePopup"
-            >
-              <slot
-                name="actions"
-              />
-            </div>
-          </slot>
+              </slot>
+            </span>
+          </div>
+          <div
+            class="select-container__options__actions"
+            @click="closePopup"
+          >
+            <slot
+              name="actions"
+            />
+          </div>
         </div>
       </div>
     </popper>
@@ -232,12 +221,17 @@ export default class MultiSelect extends Vue {
   @Prop({ type: Number }) optionsListHeight!: number | undefined;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: Boolean, default: false }) showFilter!: boolean;
+  @Prop({ type: Boolean, default: false }) moreOptionsAvailable!: boolean;
   @Prop({ type: Function }) processFilter!: (_: string) => Promise<boolean> | undefined;
 
   private filterValue = "";
   // Option, currently focused in a popup.
-  private focusedOption = -1;
+  private focusedOption: number | null = null;
   private isPopupOpen = false;
+
+  get noMoreOptions() {
+    return !this.moreOptionsAvailable;
+  }
 
   get htmlOptions(): ISelectOptionHtml<unknown>[] {
     return this.options.map((option, index) => ({
@@ -288,6 +282,10 @@ export default class MultiSelect extends Vue {
     if (this.autofocus) {
       void this.$nextTick().then(() => this.openPopup());
     }
+  }
+
+  private loadMore() {
+    this.$emit("load-more");
   }
 
   @Watch("disabled")
@@ -363,7 +361,7 @@ export default class MultiSelect extends Vue {
     const popupRef: any = this.$refs.popup;
     if (!popupRef) return;
 
-    this.focusedOption = -1;
+    this.focusedOption = null;
     await popupRef.doShow();
   }
 
@@ -403,10 +401,22 @@ export default class MultiSelect extends Vue {
   }
 
   private offsetFocusedOption(offset: number) {
-    if (!this.isPopupOpen || this.visibleOptions.length === 0) {
-      this.focusedOption = -1;
+    if (this.visibleOptions.length === 0) {
+      this.focusedOption = null;
     } else {
-      this.focusedOption = Math.max(0, Math.min(this.visibleOptions.length - 1, this.focusedOption + offset));
+      this.focusedOption = Math.max(0, Math.min(this.visibleOptions.length - 1, (this.focusedOption ?? 0) + offset));
+    }
+  }
+
+  @Watch("focusedOption")
+  private scrollToFocusedOption(focusedOption: number | null) {
+    if (focusedOption === null) {
+      return;
+    }
+    const container = this.$refs.optionsContainer as HTMLElement | undefined;
+    const item = container?.children?.[focusedOption];
+    if (item) {
+      item.scrollIntoView({ block: "nearest" });
     }
   }
 
@@ -452,11 +462,9 @@ export default class MultiSelect extends Vue {
   }
 
   private async filterInputFinished() {
-    if (this.focusedOption === -1) {
-      if (this.processFilter && await this.processFilter(this.filterValue)) {
-        this.filterValue = "";
-      }
-    } else {
+    if (this.processFilter && await this.processFilter(this.filterValue)) {
+      this.filterValue = "";
+    } else if (this.focusedOption !== null) {
       this.selectOption(this.focusedOption);
       this.filterValue = "";
     }
@@ -466,7 +474,7 @@ export default class MultiSelect extends Vue {
 
 // FIXME: This styles can not be `scoped` currently because it breaks MultiSelect userview and ReferenceField.
 // Class renames also breaks them!
-<style lang="scss">
+<style lang="scss" scoped>
   .fade-enter-active,
   .fade-leave-active {
     transition: all 0.1s;
@@ -596,24 +604,10 @@ export default class MultiSelect extends Vue {
     transition: all ease-in 0.2s;
   }
 
-  .select-container__options_list > li.select-container__options_list__option {
-    color: var(--MainTextColor);
-    margin: 2px;
-    padding: 4px 8px;
-    cursor: pointer;
-    line-height: 1rem;
-    word-break: break-all;
-  }
-
-  .select-container__options_list > li.select-container__options_list__option:hover,
   .select-container__options_list__option_active {
-    cursor: pointer;
-    background-color: var(--MainBorderColor);
-    color: var(--MainTextColor);
-  }
-
-  .select-container__options_list__option > span {
-    margin: 0;
+    cursor: pointer !important;
+    background-color: var(--MainBorderColor) !important;
+    color: var(--MainTextColor) !important;
   }
 
   div.select-container__options__actions {
@@ -645,6 +639,14 @@ export default class MultiSelect extends Vue {
     align-self: center;
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
+
+    margin: 2px;
+    line-height: 1rem;
+
+    &.has-links {
+      /* Otherwise it's sometimes tricky to click/tap inside. */
+      padding-right: 5px;
+    }
   }
 
   .single-value_open {

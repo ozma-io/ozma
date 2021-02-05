@@ -52,9 +52,9 @@
 
     <div
       ref="tableContainer"
+      v-infinite-scroll="updateShowLength"
+      infinite-scroll-disabled="noMoreRows"
       class="tabl"
-      @scroll="updateShowLength"
-      @resize="updateShowLength"
     >
       <div
         v-if="uv.emptyRow !== null"
@@ -176,7 +176,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
+import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
 import { Moment, default as moment } from "moment";
@@ -950,12 +950,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   @Watch("uv")
   protected uvChanged() {
     this.init();
-    this.updateShowLength();
     this.updateRows();
   }
 
   protected mounted() {
-    this.updateShowLength();
     (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", () => {
       this.removeCellEditing();
     });
@@ -1174,7 +1172,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
         this.isTree = true;
       }
       this.sortRows();
-      this.updateShowLength();
     }
   }
 
@@ -1460,20 +1457,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
+  get noMoreRows() {
+    return this.showLength >= (this.uv.rows?.length ?? 0);
+  }
+
   private updateShowLength() {
-    const tableContainer = this.$refs.tableContainer as Element | undefined;
-    // Component may still be unmounted
-    if (tableContainer === undefined) {
-      return;
-    }
-    // + 1 is needed because of rare cases like that:
-    // top 974.4000244140625, client height 690, scroll height 1665
-    if (tableContainer.scrollTop + tableContainer.clientHeight + 1 >= tableContainer.scrollHeight
-     && this.showLength < this.rowPositions.length
-    ) {
-      this.showLength = Math.min(this.showLength + showStep, this.uv.rows?.length ?? 0);
-      Vue.nextTick(() => this.updateShowLength());
-    }
+    this.showLength = Math.min(this.showLength + showStep, this.uv.rows?.length ?? 0);
   }
 
   get existingRows(): IShownRow[] {

@@ -36,6 +36,12 @@ export default class BaseEntriesView extends Vue {
     return null;
   }
 
+  get moreEntriesAvailable(): boolean {
+    const node = this.newEntries?.get(this.entriesSearch);
+    const ret = !(node && ((node.status === "ok" && node.limit === null) || node.status === "error"));
+    return ret;
+  }
+
   protected destroyed() {
     if (this.pendingEntity !== null) {
       this.removeEntriesConsumer({ ref: this.pendingEntity, reference: this.uid });
