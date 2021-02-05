@@ -78,6 +78,23 @@
           {{ action.name }}
         </button>
       </template>
+      <template #qrcode-button>
+        <b-input-group-append
+          v-if="qrcodeInput"
+        >
+          <b-button
+            variant="outline-info"
+            class="with-material-icon"
+          >
+            <i
+              class="material-icons qr_code"
+              @click="openQRCodeScanner()"
+            >
+              qr_code_2
+            </i>
+          </b-button>
+        </b-input-group-append>
+      </template>
     </MultiSelect>
     <div
       v-else
@@ -88,6 +105,11 @@
         style="border-color: rgba(0, 0, 0, 0.5); border-right-color: transparent;"
       />
     </div>
+    <QRCodeScanner
+      v-if="wasOpenedQRCodeScanner"
+      :open-scanner="isQRCodeScanner"
+      @update:scanResult="processQRCode"
+    />
   </span>
 </template>
 
@@ -104,7 +126,7 @@ import { IQuery } from "@/state/query";
 import { attrToLinkRef, IAttrToLinkOpts, Link } from "@/links";
 import type { IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema, ICombinedValue, valueToPunnedText } from "@/user_views/combined";
-import { mapMaybe } from "@/utils";
+import { mapMaybe, nextRender } from "@/utils";
 import { RowId, ValueType } from "ozma-api";
 import { equalEntityRef } from "@/values";
 
@@ -124,6 +146,7 @@ export type ReferenceSelectOption = ISelectOption<IReferenceValue>;
   components: {
     MultiSelect,
     SelectUserView,
+    QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
   },
 })
 export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
@@ -138,10 +161,20 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Prop({ type: Array, default: () => [] }) selectViews!: IReferenceSelectAction[];
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
   @Prop({ type: Object }) linkAttr!: unknown | undefined;
+  @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
 
   private selectedView: IQuery | null = null;
   private limit = 0;
   private search = "";
+  private wasOpenedQRCodeScanner = false;
+  private isQRCodeScanner = false;
+
+  private openQRCodeScanner() {
+    this.wasOpenedQRCodeScanner = true;
+    void nextRender().then(() => {
+      this.isQRCodeScanner = !this.isQRCodeScanner;
+    });
+  }
 
   get entriesEntity() {
     return this.referenceEntity;

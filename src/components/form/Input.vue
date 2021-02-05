@@ -25,7 +25,6 @@
             'unfocused': !focused,
             'error': error,
             'cell-edit': isCellEdit,
-            'with-qr-code': qrcodeInput,
           }
         ]"
         :style="{ backgroundColor, textAlign }"
@@ -50,27 +49,7 @@
         @input="updateInputCellEdit"
         @focus="onFocus"
       />
-      <b-input-group-append
-        v-if="qrcodeInput"
-      >
-        <b-button
-          variant="outline-info"
-          class="with-material-icon"
-        >
-          <i
-            class="material-icons qr_code"
-            @click="openQRCodeScanner = !openQRCodeScanner"
-          >
-            qr_code_2
-          </i>
-        </b-button>
-      </b-input-group-append>
     </b-input-group>
-
-    <QRCodeScanner
-      :open-scanner="openQRCodeScanner"
-      @update:scanResult="updateInputCellEdit"
-    />
   </fragment>
 </template>
 
@@ -78,10 +57,9 @@
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { valueIsNull } from "@/values";
 import Textarea from "@/components/form/Textarea.vue";
-import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
 
 @Component({
-  components: { Textarea, QRCodeScanner },
+  components: { Textarea },
 })
 export default class Input extends Vue {
   @Prop({ type: String }) label!: string;
@@ -98,13 +76,11 @@ export default class Input extends Vue {
   // FIXME: remove this and style parent nodes instead.
   // Perhaps we need "autosize" prop instead?
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
-  @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: String, default: "left" }) textAlign!: string;
 
   private focused = false;
   private maxInputWidth = 0;
-  private openQRCodeScanner = false;
 
   private get isEmpty(): boolean {
     return valueIsNull(this.value);

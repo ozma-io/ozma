@@ -147,6 +147,7 @@
               @keydown.enter="filterInputFinished"
               @focus="onFilterInputFocus"
             />
+            <slot name="qrcode-button" />
           </b-input-group>
           <div
             ref="optionsContainer"
@@ -198,6 +199,7 @@
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { replaceHtmlLinks } from "@/utils";
 import Popper from "vue-popperjs";
+
 /* import "vue-popperjs/dist/vue-popper.css"; */
 
 export interface ISelectOption<T> {

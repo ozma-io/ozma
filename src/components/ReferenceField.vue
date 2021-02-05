@@ -14,6 +14,7 @@
       :uv-args="uvArgs"
       :link-attr="linkAttr"
       :select-views="selectViews"
+      :qrcode-input="qrcodeInput"
       @update:value="$emit('update:value', $event)"
       @focus="$emit('focus')"
       @goto="$emit('goto', $event)"
@@ -50,6 +51,7 @@ export default class ReferenceField extends Vue {
   @Prop({ type: Number }) height!: number | undefined;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
+  @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
 }
 </script>
 
