@@ -54,7 +54,7 @@
       >
         <!-- eslint-enable vue/no-deprecated-slot-attribute -->
         <i class="material-icons select-prepend-icon">
-          {{ prependIcon }}
+          {{ isPopupOpen ? "expand_less" : "expand_more" }}
         </i>
         <div
           :class="[
@@ -123,22 +123,6 @@
             >clear</i>
           </b-button>
         </b-input-group-append>
-
-        <!--
-        <input
-          v-if="showClearOptions"
-          type="button"
-          class="material-icons material-button append-button close-button input-button"
-          value="close"
-          @click.stop="unselectAll"
-        >
-        <input
-          v-if="!disabled"
-          type="button"
-          class="material-icons input-button"
-          :value="isPopupOpen ? 'expand_less' : 'expand_more'"
-        >
-        -->
       </div>
 
       <div class="popper multiselect-popper border rounded overflow-hidden shadow">
@@ -250,7 +234,6 @@ export default class MultiSelect extends Vue {
   @Prop({ type: Boolean, default: false }) showFilter!: boolean;
   @Prop({ type: Boolean, default: false }) moreOptionsAvailable!: boolean;
   @Prop({ type: Function }) processFilter!: (_: string) => Promise<boolean> | undefined;
-  @Prop({ type: String, default: "" }) icon!: string;
 
   private filterValue = "";
   // Option, currently focused in a popup.
@@ -267,12 +250,6 @@ export default class MultiSelect extends Vue {
       index,
       labelHtml: replaceHtmlLinks(option.label),
     }));
-  }
-
-  private get prependIcon(): string {
-    return this.icon
-      ? this.icon
-      : "expand_more";
   }
 
   get lowerFilterValue() {
@@ -676,11 +653,6 @@ export default class MultiSelect extends Vue {
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
     max-width: 95%;
-
-    &:hover .remove-value,
-    &:hover ::v-deep .open-modal-button {
-      opacity: 1;
-    }
   }
 
   .one-of-many-value,
@@ -692,6 +664,11 @@ export default class MultiSelect extends Vue {
     padding: 2px 5px;
     line-height: 1rem;
     word-break: break-all;
+
+    &:hover .remove-value,
+    &:hover ::v-deep .open-modal-button {
+      opacity: 1;
+    }
 
     &.has-links {
       ::v-deep span {
