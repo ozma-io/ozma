@@ -51,7 +51,7 @@
           >
             <input
               type="button"
-              class="material-icons reference__open_modal"
+              class="material-icons material-button rounded-circle md-18 open-modal-button"
               :value="iconValue(select.option.value.link.target)"
             >
           </FunLink>
@@ -67,12 +67,12 @@
           v-for="(action, index) in selectViews"
           :key="index"
           type="button"
-          class="reference__new_modal__button"
+          class="new-value-button"
           @click="selectedView = action.query"
         >
           <input
             type="button"
-            class="material-icons reference__open_modal"
+            class="material-icons open-modal-button"
             value="add"
           >
           {{ action.name }}
@@ -373,16 +373,17 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     text-decoration: underline;
   }
 
-  .reference__open_modal {
+  .open-modal-button {
     border: none;
     background: none;
     padding: 0;
     margin: 0 10px 0 0;
-    color: var(--MainBorderTextColor);
+    color: var(--MainTextColor);
+    opacity: 0.3;
   }
 
-  .reference__new_modal__button {
-    color: var(--MainBorderTextColor);
+  .new-value-button {
+    color: var(--MainTextColor);
     display: flex;
     align-items: center;
     width: 100%;
