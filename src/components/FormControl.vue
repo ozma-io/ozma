@@ -158,7 +158,7 @@
           :is-disabled="isDisabled"
           :background-color="cellColor"
           @update:actions="actions = $event"
-          @update:buttons="buttons = $event"
+          @update:buttons="panelButtons = $event"
           @focus="iSlot.onFocus"
           @update="updateValue($event)"
           @goto="$emit('goto', $event)"
@@ -171,9 +171,30 @@
           v-if="usedCaption"
           :cols="isMultiline ? 12 : 4"
         >
+          <div v-if="inputType.name == 'empty_userview'">
+            <div class="nested-menu">
+              <label
+                v-b-tooltip.click.blur.bottom.noninteractive
+                class="input_label"
+                :title="title"
+              >
+                {{ title }}
+              </label>
+              <ActionsMenu
+                menu-align="right"
+                :actions="[]"
+              />
+            </div>
+            <div class="empty_userview_text">
+              {{ $t('data_will_load_after_save') }}
+            </div>
+          </div>
           <HeaderPanel
+            v-else-if="inputType.name === 'userview'"
             :title="usedCaption"
-            :header="header"
+            :actions="actions"
+            :buttons="buttons"
+            :is-enable-filter="enableFilter"
             :view="inputType"
             @update:filterString="filterString = $event"
             @goto="$emit('goto', $event)"
@@ -215,7 +236,6 @@ import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
 import { PanelButton } from "@/components/ButtonsPanel.vue";
-import type { INestedEmptyHeader, INestedHeader, Header } from "@/components/panels/HeaderPanel.vue";
 
 interface ITextType {
   name: "text";
@@ -357,24 +377,6 @@ export default class FormControl extends Vue {
   private filterString = "";
   private title = "";
   private enableFilter = false;
-
-  get header(): Header {
-    const nestedHeader: INestedHeader = {
-      name: "nested",
-      actions: this.actions,
-      buttons: this.panelButtons,
-      isEnableFilter: this.enableFilter,
-    };
-
-    const nestedEmptyHeader: INestedEmptyHeader = {
-      name: "nested-empty",
-    };
-    if (this.inputType.name === "userview") {
-      return nestedHeader;
-    }
-
-    return nestedEmptyHeader;
-  }
 
   get isNullable() {
     return this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable;

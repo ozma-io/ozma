@@ -1,38 +1,3 @@
-<i18n>
-    {
-        "en": {
-            "data_will_load_after_save": "(Data will load after save)"
-        },
-        "ru": {
-            "data_will_load_after_save": "(Данные загрузятся после сохранения)"
-        }
-    }
-</i18n>
-
-<template>
-  <div v-if="header.name==='nested-empty'">
-    <div class="nested-menu">
-      <label
-        v-b-tooltip.click.blur.bottom.noninteractive
-        class="input_label"
-        :title="title"
-      >
-        {{ title }}
-      </label>
-      <ActionsMenu
-        menu-align="right"
-        :actions="[]"
-      />
-    </div>
-    <div class="empty_userview_text">
-      {{ $t('data_will_load_after_save') }}
-    </div>
-  </div>
-  <div
-    v-else-if="header.name==='nested' || header.name==='modal'"
-    class="nested-menu"
-  >
-    <label
       v-b-tooltip.click.blur.bottom.noninteractive
       class="input_label"
       :title="title"
@@ -40,19 +5,19 @@
       {{ title }}
     </label>
     <ButtonsPanel
-      :buttons="header.buttons"
+      :buttons="buttons"
       @goto="$emit('goto', $event)"
     >
       <template #search-panel>
         <SearchPanel
-          v-if="header.isEnableFilter"
+          v-if="isEnableFilter"
           @update:filterString="$emit('update:filterString', $event)"
         />
       </template>
       <template #actions-menu>
         <ActionsMenu
-          :actions="header.actions"
-          :buttons="header.buttons"
+          :actions="actions"
+          :buttons="buttons"
           menu-align="right"
           @goto="$emit('goto', $event)"
         />
@@ -62,12 +27,6 @@
         >fullscreen</i>
       </template>
     </ButtonsPanel>
-  </div>
-  <div
-    v-else
-    class="input_label__container"
-  >
-    <label class="input_label_single">{{ title }}</label>
   </div>
 </template>
 
@@ -80,26 +39,6 @@ import { router } from "@/modules";
 import { PanelButton } from "@/components/ButtonsPanel.vue";
 import SearchPanel from "@/components/SearchPanel.vue";
 
-export interface INestedEmptyHeader {
-  name: "nested-empty";
-}
-
-export interface INestedHeader {
-  name: "nested";
-  actions: Action[];
-  buttons: PanelButton[];
-  isEnableFilter: boolean;
-}
-
-export interface IModalHeader {
-  name: "modal";
-  actions: Action[];
-  buttons: PanelButton[];
-  isEnableFilter: boolean;
-}
-
-export type Header = INestedHeader | INestedEmptyHeader | IModalHeader;
-
 @Component({
   components: {
     SearchPanel,
@@ -107,7 +46,9 @@ export type Header = INestedHeader | INestedEmptyHeader | IModalHeader;
 })
 export default class HeaderPanel extends Vue {
   @Prop({ type: String, required: true }) title!: string;
-  @Prop({ type: Object, required: true }) header!: Header;
+  @Prop({ type: Array, required: true }) actions!: Action[];
+  @Prop({ type: Array, required: true }) buttons!: PanelButton[];
+  @Prop({ type: Boolean, required: true }) isEnableFilter!: boolean;
   @Prop({ type: Object, default: null }) view!: IUserViewType;
 
   private openFullscreen() {

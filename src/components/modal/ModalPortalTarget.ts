@@ -4,12 +4,12 @@ import { PortalTarget } from "portal-vue";
 
 import { IModalTab } from "@/components/modal/types";
 import Modal from "@/components/modal/Modal.vue";
-import type { Header } from "@/components/panels/HeaderPanel.vue";
+import { PanelButton } from "@/components/ButtonsPanel.vue";
 
 interface IInternalModalTab extends IModalTab {
   tab: any;
   autofocus: boolean;
-  header: Header;
+  buttons: PanelButton[];
 }
 
 @Component
@@ -37,17 +37,17 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
   private get modalTabs(): IInternalModalTab[] {
     return this.passengers.map((node, index) => {
       const modalPortal: any = node.context!.$children[0];
-      const modalHeader: any = ("header" in modalPortal.$slots)
-        ? modalPortal.$slots["header"][0]
-        : undefined;
       const order: number = modalPortal.order;
       const autofocus: boolean = modalPortal.autofocus;
+      const modalButtons: any = ("buttons" in modalPortal.$slots)
+        ? modalPortal.$slots["buttons"][0]
+        : undefined;
       return {
+        buttons: modalButtons,
         content: node,
         order,
         tab: modalPortal,
         autofocus,
-        header: modalHeader,
       };
     }).sort((a, b) => a.order - b.order);
   }

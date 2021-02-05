@@ -21,7 +21,9 @@
     <template #header>
       <HeaderPanel
         :title="title"
-        :header="header"
+        :actions="actions"
+        :buttons="panelButtons"
+        :is-enable-filter="enableFilter"
         :view="view"
         @update:filterString="filterString = $event"
         @goto="$emit('goto', $event)"
@@ -78,7 +80,6 @@ import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/st
 import ModalPortal from "@/components/modal/ModalPortal";
 import { router } from "@/modules";
 import { PanelButton } from "@/components/ButtonsPanel.vue";
-import type { IModalHeader } from "@/components/panels/HeaderPanel.vue";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { convertToWords } from "@/utils";
 import { ISelectionRef } from "./BaseUserView";
@@ -100,15 +101,6 @@ export default class ModalUserView extends Vue {
   private panelButtons: PanelButton[] = [];
   private enableFilter = false;
   private filterString = "";
-
-  get header(): IModalHeader {
-    return {
-      name: "modal",
-      actions: this.extraActions,
-      buttons: this.panelButtons,
-      isEnableFilter: this.enableFilter,
-    };
-  }
 
   get actions() {
     const actions: Action[] = [];
