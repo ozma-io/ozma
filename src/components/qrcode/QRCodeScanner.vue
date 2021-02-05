@@ -249,8 +249,12 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
           this.modalShow = false;
         }
 
-        const rusultContent = { ...this.currentContent, value: this.entries[Number(this.currentContent.id)] };
-        this.result.push(rusultContent);
+        if (this.entries[Number(this.currentContent.id)] !== undefined) {
+          const rusultContent = { ...this.currentContent, value: this.entries[Number(this.currentContent.id)] };
+          this.result.push(rusultContent);
+        } else {
+          this.error = this.$t("error_qrcode_is_inappropriate").toString();
+        }
       } else {
         this.entry = { entity: this.currentContent.entity };
       }

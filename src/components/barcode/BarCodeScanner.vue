@@ -29,8 +29,8 @@
       <strong>{{ $t('scan_result') }}:</strong>
       <ol>
         <li
-          v-for="value in barCodeResult"
-          :key="value"
+          v-for="(value, i) in barCodeResult"
+          :key="i"
         >
           {{ value }}
         </li>
@@ -38,8 +38,8 @@
 
       <ol>
         <li
-          v-for="value in qrCodeResult"
-          :key="value.id"
+          v-for="(value, i) in qrCodeResult"
+          :key="i"
         >
           {{ value.value }}
         </li>
@@ -56,7 +56,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { Component, Prop, Watch } from "vue-property-decorator";
 import BarCode from "@/components/barcode/BarCode.vue";
 import { mixins } from "vue-class-component";
 import BaseEntriesView from "@/components/BaseEntriesView";
@@ -68,7 +68,7 @@ export interface IQRResultContent extends IQRCode {
 }
 
 @Component({ components: { BarCode } })
-export default class BarCodeScanner  extends mixins(BaseEntriesView) {
+export default class BarCodeScanner extends mixins(BaseEntriesView) {
   @Prop({ type: Boolean, default: false }) openScanner!: boolean;
 
   modalShow = false;
@@ -96,8 +96,10 @@ export default class BarCodeScanner  extends mixins(BaseEntriesView) {
   private changeCurrentQRCodeContent() {
     if (this.currentQRCode !== null) {
       if (this.entry !== null) {
-        const rusultContent = { ...this.currentQRCode, value: this.entries[Number(this.currentQRCode.id)] };
-        this.qrCodeResult.push(rusultContent);
+        if (this.entries[Number(this.currentQRCode.id)] !== undefined) {
+          const rusultContent = { ...this.currentQRCode, value: this.entries[Number(this.currentQRCode.id)] };
+          this.qrCodeResult.push(rusultContent);
+        }
       } else {
         this.entry = { entity: this.currentQRCode.entity };
       }
@@ -120,8 +122,8 @@ export default class BarCodeScanner  extends mixins(BaseEntriesView) {
 
   private sendList() {
     this.$bvModal.hide("barcode-scanner-modal");
-    this.$emit("selectFromQRScanner", this.qrCodeResult);
-    this.$emit("selectBarCode", this.barCodeResult);
+    this.$emit("select-qrcode", this.qrCodeResult);
+    this.$emit("select-barcode", this.barCodeResult);
     this.clearList();
   }
 
