@@ -567,6 +567,7 @@ export default class MultiSelect extends Vue {
     width: 100%;
     border: 1px solid #ced4da;
     border-radius: 0.2rem;
+    cursor: pointer;
 
     .clear-options-button {
       border-bottom-left-radius: 0;
