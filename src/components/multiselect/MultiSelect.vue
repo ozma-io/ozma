@@ -675,6 +675,11 @@ export default class MultiSelect extends Vue {
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
     max-width: 95%;
+
+    &:hover .remove-value,
+    &:hover ::v-deep .open-modal-button {
+      opacity: 1;
+    }
   }
 
   .one-of-many-value,
@@ -686,6 +691,13 @@ export default class MultiSelect extends Vue {
     padding: 2px 5px;
     line-height: 1rem;
     word-break: break-all;
+
+    &.has-links {
+      ::v-deep span {
+        /* Otherwise it's sometimes tricky to click/tap inside if entire value is url/tel/mail. */
+        margin-right: 2rem;
+      }
+    }
   }
 
   .single-value {
@@ -693,11 +705,6 @@ export default class MultiSelect extends Vue {
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
     line-height: 1rem;
-
-    &.has-links {
-      /* Otherwise it's sometimes tricky to click/tap inside. */
-      padding-right: 5px;
-    }
   }
 
   .options-list {
@@ -724,7 +731,8 @@ export default class MultiSelect extends Vue {
     padding: 0;
     margin: 0 0 0 5px;
     font-size: inherit;
-    color: var(--MainTextColorLight);
+    color: var(--MainTextColor);
+    opacity: 0.3;
   }
 
   .one-of-many-value:hover,
