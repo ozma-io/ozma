@@ -319,6 +319,7 @@ export default class Calendar extends Vue {
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColorLight);
     border-right-width: 0;
+    cursor: pointer;
   }
 
   .calendar-input {

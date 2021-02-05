@@ -34,6 +34,7 @@
       show-filter
       :more-options-available="moreEntriesAvailable"
       :process-filter="f => processFilter(f)"
+      :icon="icon"
       @update:value="updateValue"
       @add-value="addValue"
       @remove-value="removeValue"
@@ -51,7 +52,7 @@
           >
             <input
               type="button"
-              class="material-icons reference__open_modal"
+              class="material-icons md-18 reference__open_modal"
               :value="iconValue(select.option.value.link.target)"
             >
           </FunLink>
@@ -162,6 +163,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
   @Prop({ type: Object }) linkAttr!: unknown | undefined;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
+  @Prop({ type: String, default: "" }) icon!: string;
 
   private selectedView: IQuery | null = null;
   private limit = 0;

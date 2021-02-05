@@ -15,6 +15,7 @@
       :link-attr="linkAttr"
       :select-views="selectViews"
       :qrcode-input="qrcodeInput"
+      icon="link"
       @update:value="$emit('update:value', $event)"
       @focus="$emit('focus')"
       @goto="$emit('goto', $event)"

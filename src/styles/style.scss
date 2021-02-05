@@ -128,6 +128,10 @@ button:not(.btn) {
     display: flex !important;
     align-items: center !important;
   }
+
+  .material-icons {
+    line-height: 0.875rem;
+  }
 }
 
 input.disabled {

@@ -53,67 +53,92 @@
         ]"
       >
         <!-- eslint-enable vue/no-deprecated-slot-attribute -->
-        <span
-          v-if="valuesLength === 0"
-          :style="listValueStyle"
-          class="empty-message-text"
-        >
-          {{ $t('empty_message') }}
-        </span>
-
+        <i class="material-icons select-prepend-icon">
+          {{ prependIcon }}
+        </i>
         <div
-          v-else
           :class="[
-            'selected-values',
+            'values-container',
             {
-              'fixed-height': height !== undefined,
-            }
+              'fixed-height': height !== undefined && !isPopupOpen && !single,
+            },
           ]"
-          :style="containerContentStyle"
         >
           <span
-            v-for="(option, index) in selectedOptions"
-            :key="index"
-            :class="[
-              single ? 'single-value' : 'one-of-many-value',
-              {
-                'has-links': option.label !== option.labelHtml,
-              },
-            ]"
+            v-if="valuesLength === 0"
             :style="listValueStyle"
-            @click.stop
+            class="empty-message-text"
           >
-            <slot
-              name="option"
-              :option="option"
-            >
-              <!-- eslint-disable vue/no-v-html -->
-              <span v-html="option.labelHtml" />
-              <!-- eslint-enable vue/no-v-html -->
-            </slot>
-            <input
-              v-if="showUnselectOption"
-              type="button"
-              class="material-icons material-button remove-value"
-              value="close"
-              @click="unselectOption(index)"
-            >
+            {{ $t('empty_message') }}
           </span>
+
+          <div
+            v-else
+            :class="[
+              'selected-values',
+              {
+                'fixed-height': height !== undefined,
+              }
+            ]"
+            :style="containerContentStyle"
+          >
+            <span
+              v-for="(option, index) in selectedOptions"
+              :key="index"
+              :class="[
+                single ? 'single-value' : 'one-of-many-value',
+                {
+                  'has-links': option.label !== option.labelHtml,
+                },
+              ]"
+              :style="listValueStyle"
+            >
+              <slot
+                name="option"
+                :option="option"
+              >
+                <!-- eslint-disable vue/no-v-html -->
+                <span v-html="option.labelHtml" />
+                <!-- eslint-enable vue/no-v-html -->
+              </slot>
+              <input
+                v-if="showUnselectOption"
+                type="button"
+                class="material-icons material-button remove-value rounded-circle"
+                value="close"
+                @click="unselectOption(index)"
+              >
+            </span>
+          </div>
         </div>
 
+        <b-input-group-append v-if="showClearOptions">
+          <b-button
+            class="button with-material-icon clear-options-button"
+            variant="outline-secondary"
+            @click.stop="unselectAll"
+          >
+            <i
+              class="material-icons"
+            >clear</i>
+          </b-button>
+        </b-input-group-append>
+
+        <!--
         <input
-          v-if="!disabled"
+          v-if="showClearOptions"
           type="button"
-          class="material-icons select-container__chevron"
-          :value="isPopupOpen ? 'expand_less' : 'expand_more'"
-        >
-        <input
-          v-if="showUnselectOption"
-          type="button"
-          class="material-icons material-button close-button select-container__chevron"
+          class="material-icons material-button append-button close-button input-button"
           value="close"
           @click.stop="unselectAll"
         >
+        <input
+          v-if="!disabled"
+          type="button"
+          class="material-icons input-button"
+          :value="isPopupOpen ? 'expand_less' : 'expand_more'"
+        >
+        -->
       </div>
 
       <div class="popper multiselect-popper border rounded overflow-hidden shadow">
@@ -127,7 +152,7 @@
           >
             <b-input-group-prepend>
               <b-input-group-text
-                class="with-material-icon prepend-icon"
+                class="with-material-icon filter-prepend-icon"
                 variant="outline-secondary"
               >
                 <i class="material-icons"> search </i>
@@ -154,7 +179,7 @@
             v-infinite-scroll="loadMore"
             infinite-scroll-distance="10"
             infinite-scroll-disabled="noMoreOptions"
-            class="select-container__options_list"
+            class="options-list"
             :style="optionsListStyle"
           >
             <span
@@ -164,7 +189,7 @@
                 'single-value',
                 {
                   'has-links': option.label !== option.labelHtml,
-                  'select-container__options_list__option_active': focusedOption === option.index,
+                  'value-focused': focusedOption === option.index,
                 },
               ]"
               :style="listValueStyle"
@@ -225,6 +250,7 @@ export default class MultiSelect extends Vue {
   @Prop({ type: Boolean, default: false }) showFilter!: boolean;
   @Prop({ type: Boolean, default: false }) moreOptionsAvailable!: boolean;
   @Prop({ type: Function }) processFilter!: (_: string) => Promise<boolean> | undefined;
+  @Prop({ type: String, default: "" }) icon!: string;
 
   private filterValue = "";
   // Option, currently focused in a popup.
@@ -241,6 +267,12 @@ export default class MultiSelect extends Vue {
       index,
       labelHtml: replaceHtmlLinks(option.label),
     }));
+  }
+
+  private get prependIcon(): string {
+    return this.icon
+      ? this.icon
+      : "expand_more";
   }
 
   get lowerFilterValue() {
@@ -326,6 +358,10 @@ export default class MultiSelect extends Vue {
   }
 
   get showUnselectOption() {
+    return !this.disabled && !this.single;
+  }
+
+  get showClearOptions() {
     return this.selectedOptions.length > 0 && !this.disabled && !(this.required && this.selectedOptions.length <= 1);
   }
 
@@ -500,7 +536,17 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  .prepend-icon {
+  .select-prepend-icon {
+    color: var(--MainTextColorLight);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 4px;
+    margin-right: -1px;
+    cursor: pointer;
+  }
+
+  .filter-prepend-icon {
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColorLight);
     border-right-width: 0;
@@ -512,7 +558,7 @@ export default class MultiSelect extends Vue {
     cursor: pointer;
     align-self: center;
     align-items: center;
-    color: var(--MainTextColor);
+    color: var(--MainTextColorLight);
   }
 
   .select-container {
@@ -521,8 +567,24 @@ export default class MultiSelect extends Vue {
     width: 100%;
     border: 1px solid #ced4da;
     border-radius: 0.2rem;
-    padding: 0.15rem 0.5rem;
-    padding-left: 4px;
+
+    .clear-options-button {
+      border-bottom-left-radius: 0;
+      border-top-left-radius: 0;
+      opacity: 0.3;
+      border: none;
+    }
+
+    &:hover .clear-options-button {
+      opacity: 1;
+    }
+  }
+
+  .values-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    padding: 0.25rem 0.5rem;
 
     &.fixed-height {
       box-shadow: inset -5px -5px 8px 5px rgba(0, 0, 0, 0.25);
@@ -563,7 +625,7 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  .select-container__chevron {
+  .input-button {
     display: flex;
     justify-content: center;
     margin-left: auto;
@@ -575,6 +637,7 @@ export default class MultiSelect extends Vue {
     color: var(--MainTextColor);
     opacity: 0.2;
     transition: opacity 0.1s;
+    font-size: 21px;
 
     .select-container:hover &,
     .select-container:focus-within & {
@@ -595,16 +658,7 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  .select-container__options_list {
-    padding: 0;
-    margin: 0;
-    max-height: 250px;
-    overflow-x: hidden;
-    text-align: left;
-    transition: all ease-in 0.2s;
-  }
-
-  .select-container__options_list__option_active {
+  .value-focused {
     cursor: pointer !important;
     background-color: var(--MainBorderColor) !important;
     color: var(--MainTextColor) !important;
@@ -617,10 +671,9 @@ export default class MultiSelect extends Vue {
   }
 
   .one-of-many-value {
-    margin: 2px;
+    margin: 3px;
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
-    word-break: break-all;
     max-width: 95%;
   }
 
@@ -630,16 +683,15 @@ export default class MultiSelect extends Vue {
     align-items: center;
     color: var(--MainTextColor);
     border-radius: 1rem;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     padding: 2px 5px;
     line-height: 1rem;
+    word-break: break-all;
   }
 
   .single-value {
     align-self: center;
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
-    margin: 2px;
     line-height: 1rem;
 
     &.has-links {
@@ -648,8 +700,22 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  .single-value_open {
-    color: gray;
+  .options-list {
+    padding: 0;
+    margin: 0;
+    max-height: 250px;
+    overflow-x: hidden;
+    text-align: left;
+    transition: all ease-in 0.2s;
+
+    .single-value {
+      margin: 3px;
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+  }
+
+  .append-button {
+    padding: 0 4px;
   }
 
   .one-of-many-value > input.remove-value {
@@ -658,13 +724,12 @@ export default class MultiSelect extends Vue {
     padding: 0;
     margin: 0 0 0 5px;
     font-size: inherit;
-    color: var(--MainTextColor);
+    color: var(--MainTextColorLight);
   }
 
   .one-of-many-value:hover,
   .one-of-many-value:hover > input.remove-value {
     cursor: pointer;
-    background-color: var(--MainBorderColor);
   }
 
   .clear_all_button {
