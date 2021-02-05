@@ -391,7 +391,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
       this.$emit("update:bodyStyle", `
         @media print {
             @page {
-                size: portrait;
+                size: landscape;
             }
         }
       `);
@@ -461,5 +461,11 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
 
     /* background-color: var(--MainBackgroundColor); */
     background-color: #f8f9fa;
+  }
+
+  @media print {
+    .view-form {
+      background-color: white;
+    }
   }
 </style>
