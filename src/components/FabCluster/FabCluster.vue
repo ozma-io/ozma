@@ -1,5 +1,5 @@
 <template>
-  <div class="fab-container">
+  <div class="fab-container d-print-none">
     <CommsButton />
   </div>
 </template>

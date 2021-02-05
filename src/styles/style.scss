@@ -66,6 +66,18 @@ body {
     color-adjust: exact;
     background-color: white !important;
   }
+
+  $sizes: "sm", "md", "lg", "xl";
+
+  @for $i from 1 through 12 {
+    @each $size in $sizes {
+      .col-#{$size}-#{$i} {
+        width: #{percentage(round($i*8.33)/100)} !important;
+        max-width: #{percentage(round($i*8.33)/100)} !important;
+        float: left;
+      }
+    }
+  }
 }
 
 // Works like `no-gutters` for Bootstrap's `.row`.
