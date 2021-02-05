@@ -25,23 +25,25 @@
     <BarCode
       @scanned="onScanned"
     />
-    <div v-if="result.length > 0" class="decode-result">
+    <div v-if="barCodeResult.length > 0 || qrCodeResult.length > 0" class="decode-result">
       <strong>{{ $t('scan_result') }}:</strong>
       <ol>
         <li
-          v-for="value in result"
+          v-for="value in barCodeResult"
           :key="value"
         >
           {{ value }}
         </li>
       </ol>
-      <b-button
-        block
-        variant="info"
-        @click="clearList"
-      >
-        {{ $t('clear') }}
-      </b-button>
+
+      <ol>
+        <li
+          v-for="value in qrCodeResult"
+          :key="value.id"
+        >
+          {{ value.value }}
+        </li>
+      </ol>
       <b-button
         block
         variant="success"
@@ -56,31 +58,76 @@
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import BarCode from "@/components/barcode/BarCode.vue";
+import { mixins } from "vue-class-component";
+import BaseEntriesView from "@/components/BaseEntriesView";
+import { IEntriesRef } from "@/state/entries";
+import { IQRCode, parseQRCode } from "@/components/qrcode/QRCode.vue";
+
+export interface IQRResultContent extends IQRCode {
+  value: string;
+}
 
 @Component({ components: { BarCode } })
-export default class BarCodeScanner extends Vue {
+export default class BarCodeScanner  extends mixins(BaseEntriesView) {
   @Prop({ type: Boolean, default: false }) openScanner!: boolean;
 
   modalShow = false;
-  result: Array<string> = [];
+  barCodeResult: Array<string> = [];
+  qrCodeResult: Array<IQRResultContent> = [];
+  entry: IEntriesRef | null = null;
+  currentQRCode: IQRCode | null = null;
+  entries: Record<string, string> = {};
+
+  get entriesEntity() {
+    return this.entry;
+  }
+
+  @Watch("currentEntries")
+  private changeCurrentEntries() {
+    if (this.currentEntries !== null) {
+      Object.entries(this.currentEntries).forEach(([id, name]) => {
+        this.entries[id] = name;
+      });
+    }
+    this.changeCurrentQRCodeContent();
+  }
+
+  @Watch("currentQRCode", { deep: true, immediate: true })
+  private changeCurrentQRCodeContent() {
+    if (this.currentQRCode !== null) {
+      if (this.entry !== null) {
+        const rusultContent = { ...this.currentQRCode, value: this.entries[Number(this.currentQRCode.id)] };
+        this.qrCodeResult.push(rusultContent);
+      } else {
+        this.entry = { entity: this.currentQRCode.entity };
+      }
+    }
+  }
 
   @Watch("openScanner")
   private toggleOpenScanner() {
     this.modalShow = !this.modalShow;
   }
 
-  private onScanned(code: string) {
-    this.result.push(code);
+  private onScanned(content: string) {
+    const parsedContent = parseQRCode(content);
+    if (parsedContent) {
+      this.currentQRCode = parsedContent;
+    } else {
+      this.barCodeResult.push(content);
+    }
   }
 
   private sendList() {
     this.$bvModal.hide("barcode-scanner-modal");
-    this.$emit("select", this.result);
-    this.result = [];
+    this.$emit("selectFromQRScanner", this.qrCodeResult);
+    this.$emit("selectBarCode", this.barCodeResult);
+    this.clearList();
   }
 
   private clearList() {
-    this.result = [];
+    this.barCodeResult = [];
+    this.qrCodeResult = [];
   }
 }
 </script>

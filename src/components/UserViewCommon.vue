@@ -44,7 +44,8 @@
     />
     <BarCodeScanner
       :open-scanner="openBarCodeScanner"
-      @select="selectFromBarScanner($event)"
+      @selectBarCode="selectFromBarScanner($event)"
+      @selectQRCode="selectFromQRScanner($event)"
     />
   </span>
 </template>
