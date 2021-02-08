@@ -448,7 +448,9 @@ export default class MultiSelect extends Vue {
     if (filterInput !== undefined) {
       filterInput.focus();
     }
-    void this.closePopup();
+    if (this.single) {
+      void this.closePopup();
+    }
   }
 
   private unselectOption(index: number) {
