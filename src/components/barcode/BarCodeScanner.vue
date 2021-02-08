@@ -94,16 +94,14 @@ export default class BarCodeScanner extends mixins(BaseEntriesView) {
 
     if (parsedContent) {
       currentCode = parsedContent;
+    } else if (!isNaN(Number(content))) {
+      currentCode = {
+        entity: this.entity.entity,
+        id: Number(content),
+      };
     } else {
-      if (!isNaN(Number(content))) {
-        currentCode = {
-          entity: this.entity.entity,
-          id: Number(content),
-        }; 
-      } else {
-        this.makeToast(this.$t("unknown_code").toString());
-        return;
-      }
+      this.makeToast(this.$t("unknown_code").toString());
+      return;
     }
 
     if (!equalEntityRef(currentCode.entity, this.entity.entity)) {
