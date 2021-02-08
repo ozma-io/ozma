@@ -7,7 +7,8 @@
       "paste_data": "Paste data",
       "error": "Error",
       "no_record_found":"No record found with this id",
-      "error_qrcode_is_inappropriate" : "ERROR: QRCode is inappropriate"
+      "error_qrcode_is_inappropriate" : "ERROR: QRCode is inappropriate",
+      "unknown_code": "Unknown code"
     },
     "ru": {
       "scan_result": "Результат сканирования",
@@ -16,7 +17,8 @@
       "paste_data": "Вставить данные",
       "error": "Ошибка",
       "no_record_found":"Не найдена запись с данным id",
-      "error_qrcode_is_inappropriate" : "ОШИБКА: QRCode не соответствует назначению"
+      "error_qrcode_is_inappropriate" : "ОШИБКА: QRCode не соответствует назначению",
+      "unknown_code": "Неизвестный код"
     }
   }
 </i18n>
@@ -87,26 +89,31 @@ export default class BarCodeScanner extends mixins(BaseEntriesView) {
       return;
     }
 
-    let currentQRCode: IQRCode | null = null;
+    let currentCode: IQRCode | null = null;
     const parsedContent = parseQRCode(content);
 
     if (parsedContent) {
-      currentQRCode = parsedContent;
+      currentCode = parsedContent;
     } else {
-      currentQRCode = {
-        entity: this.entity.entity,
-        id: Number(content),
-      };
+      if (!isNaN(Number(content))) {
+        currentCode = {
+          entity: this.entity.entity,
+          id: Number(content),
+        }; 
+      } else {
+        this.makeToast(this.$t("unknown_code").toString());
+        return;
+      }
     }
 
-    if (!equalEntityRef(currentQRCode.entity, this.entity!.entity)) {
+    if (!equalEntityRef(currentCode.entity, this.entity.entity)) {
       this.makeToast(this.$t("error_qrcode_is_inappropriate").toString());
       return;
     }
 
-    const entry = await this.fetchOneEntry(currentQRCode.id);
+    const entry = await this.fetchOneEntry(currentCode.id);
     if (entry !== undefined) {
-      this.result.push({ ...currentQRCode, value: entry });
+      this.result.push({ ...currentCode, value: entry });
     } else {
       this.makeToast(this.$t("no_record_found").toString());
     }

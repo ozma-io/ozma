@@ -200,7 +200,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   }
 
   get entriesEntity() {
-    if (this.entity == undefined) {
+    if (this.entity === undefined) {
       return null;
     }
 
@@ -256,7 +256,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
 
       // MultiInput
       if (this.entity) {
-        if (!equalEntityRef(this.currentContent.entity, this.entity!.entity)) {
+        if (!equalEntityRef(this.currentContent.entity, this.entity.entity)) {
           this.error = this.$t("error_qrcode_is_inappropriate").toString();
           return;
         }
