@@ -60,7 +60,7 @@ import BarCode from "@/components/barcode/BarCode.vue";
 import { mixins } from "vue-class-component";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import { IQRCode, parseQRCode } from "@/components/qrcode/QRCode.vue";
-import { IEntriesRef } from "@/state/entries";
+import type { IEntriesRef } from "@/state/entries";
 import { equalEntityRef } from "@/values";
 
 export interface IQRResultContent extends IQRCode {
@@ -70,14 +70,10 @@ export interface IQRResultContent extends IQRCode {
 @Component({ components: { BarCode } })
 export default class BarCodeScanner extends mixins(BaseEntriesView) {
   @Prop({ type: Boolean, default: false }) openScanner!: boolean;
-  @Prop({ type: Object }) entity!: IEntriesRef | null;
+  @Prop({ type: Object, required: true }) entity!: IEntriesRef;
 
   modalShow = false;
   result: Array<IQRResultContent> = [];
-
-  get entriesEntity() {
-    return this.entity;
-  }
 
   @Watch("openScanner")
   private toggleOpenScanner() {
@@ -85,10 +81,6 @@ export default class BarCodeScanner extends mixins(BaseEntriesView) {
   }
 
   private async onScanned(content: string) {
-    if (this.entity === null) {
-      return;
-    }
-
     let currentCode: IQRCode | null = null;
     const parsedContent = parseQRCode(content);
 
@@ -109,7 +101,7 @@ export default class BarCodeScanner extends mixins(BaseEntriesView) {
       return;
     }
 
-    const entry = await this.fetchOneEntry(currentCode.id);
+    const entry = await this.fetchSingleEntry(this.entity, currentCode.id);
     if (entry !== undefined) {
       this.result.push({ ...currentCode, value: entry });
     } else {
@@ -119,7 +111,7 @@ export default class BarCodeScanner extends mixins(BaseEntriesView) {
 
   private sendList() {
     this.$bvModal.hide("barcode-scanner-modal");
-    this.$emit("select", this.result, "scan_barcode");
+    this.$emit("select", this.result);
     this.result = [];
   }
 

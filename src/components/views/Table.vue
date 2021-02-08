@@ -52,9 +52,8 @@
 
     <div
       ref="tableContainer"
-      v-infinite-scroll="updateShowLength"
-      infinite-scroll-disabled="noMoreRows"
       class="tabl"
+      infinite-wrapper
     >
       <div
         v-if="uv.emptyRow !== null"
@@ -159,8 +158,23 @@
           />
         </tbody>
       </table>
+      <infinite-loading
+        v-if="!noMoreRows"
+        spinner="spiral"
+        @infinite="updateShowLength"
+      >
+        <template #no-results>
+          <span />
+        </template>
+        <template #no-more>
+          <span />
+        </template>
+        <template #error>
+          <span />
+        </template>
+      </infinite-loading>
       <div
-        v-if="uv.emptyRow !== null"
+        v-if="noMoreRows && uv.emptyRow !== null"
         class="button-container"
       >
         <div
@@ -179,6 +193,7 @@
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
+import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 import { Moment, default as moment } from "moment";
 import * as R from "ramda";
 import { IResultColumnInfo, ValueType, RowId } from "ozma-api";
@@ -834,7 +849,7 @@ interface IShownRow {
 })
 @Component({
   components: {
-    TableRow, Checkbox, TableCellEdit,
+    TableRow, Checkbox, TableCellEdit, InfiniteLoading,
   },
 })
 export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra, ITableRowExtra, ITableViewExtra>>(BaseUserView) {
@@ -1464,8 +1479,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return this.showLength >= (this.uv.rows?.length ?? 0);
   }
 
-  private updateShowLength() {
+  private updateShowLength(ev: StateChanger) {
     this.showLength = Math.min(this.showLength + showStep, this.uv.rows?.length ?? 0);
+    if (this.noMoreRows) {
+      ev.complete();
+    } else {
+      ev.loaded();
+    }
   }
 
   get existingRows(): IShownRow[] {

@@ -79,8 +79,9 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseU
     const fieldType = this.uv.info.columns[this.selectedValueColumn].mainField?.field.fieldType;
     if (fieldType?.type === "reference") {
       return referenceEntriesRef(fieldType);
+    } else {
+      return null;
     }
-    return null;
   }
 
   get selectedValueColumn() {

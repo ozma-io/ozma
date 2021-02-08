@@ -88,7 +88,7 @@ import { linkHandler, ILinkHandlerParams } from "@/links";
 import { IQuery } from "@/state/query";
 import { namespace } from "vuex-class";
 import { IQRCode, parseQRCode } from "@/components/qrcode/QRCode.vue";
-import { IEntriesRef } from "@/state/entries";
+import type { IEntriesRef } from "@/state/entries";
 import { equalEntityRef } from "@/values";
 
 const beep = require("@/resources/beep.mp3");
@@ -108,7 +108,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Prop({ type: Boolean, default: false }) openScanner!: boolean;
   @Prop({ type: Boolean, default: false }) multiScan!: boolean;
   @Prop({ type: Object, default: null }) link!: Link;
-  @Prop({ type: Object }) entity!: IEntriesRef | null;
+  @Prop({ type: Object }) entity!: IEntriesRef;
 
   @query.Action("pushRoot") pushRoot!: (_: IQuery) => Promise<void>;
 
@@ -195,16 +195,8 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
 
   private sendList() {
     this.$bvModal.hide("qrcode-scanner-modal");
-    this.$emit("select", this.result, "scan_qrcode");
+    this.$emit("select", this.result);
     this.result = [];
-  }
-
-  get entriesEntity() {
-    if (this.entity === undefined) {
-      return null;
-    }
-
-    return this.entity;
   }
 
   @Watch("currentContent", { deep: true, immediate: true })
@@ -261,7 +253,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
           return;
         }
 
-        const entry = await this.fetchOneEntry(this.currentContent.id);
+        const entry = await this.fetchSingleEntry(this.entity, this.currentContent.id);
         if (entry !== undefined) {
           const rusultContent = { ...this.currentContent, value: entry };
           this.result.push(rusultContent);

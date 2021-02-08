@@ -5,10 +5,8 @@
             "create_in_modal": "Create referenced entry in modal window",
             "export_to_csv": "Export to .csv",
             "import_from_csv": "Import from .csv",
-            "scan_qrcode": "Scan QR Code",
-            "qrcode_error_not_attr":"Adding data error! Check for the @input_from_qrcode attribute.",
-            "qrcode_error_not_ref":"Adding data error! Make sure that the field you fill out is a link to a table:",
-            "scan_barcode": "Scan Bar Code",
+            "scan_qrcode": "Scan QR code",
+            "scan_barcode": "Scan bar code",
             "remove_selected_rows": "Remove selected entries",
             "error": "Error"
         },
@@ -17,9 +15,7 @@
             "create_in_modal": "Создать связанную запись в окне",
             "export_to_csv": "Экспорт в .csv",
             "import_from_csv": "Импорт из .csv",
-            "scan_qrcode": "QR Code сканер",
-            "qrcode_error_not_attr":"Ошибка добавления данных! Проверьте наличие атрибута @input_from_qrcode.",
-            "qrcode_error_not_ref":"Ошибка добавления данных! Убедитесь что заполняемое поле является ссылкой на таблицу:",
+            "scan_qrcode": "Сканер QR-кодов",
             "scan_barcode": "Сканер штрих-кодов",
             "remove_selected_rows": "Удалить выбранные записи",
             "error": "Ошибка"
@@ -38,15 +34,17 @@
       @close="modalView = null"
     />
     <QRCodeScanner
+      v-if="selectedQRCodeEntity !== null"
       :open-scanner="openQRCodeScanner"
       :entity="selectedQRCodeEntity"
       :multi-scan="true"
-      @select="selectFromScanner(arguments[0], arguments[1])"
+      @select="selectFromScanner(qrCodeColumnIndex, $event)"
     />
     <BarCodeScanner
+      v-if="selectedBarCodeEntity !== null"
       :entity="selectedBarCodeEntity"
       :open-scanner="openBarCodeScanner"
-      @select="selectFromScanner(arguments[0], arguments[1])"
+      @select="selectFromScanner(barCodeColumnIndex, $event)"
     />
   </span>
 </template>
@@ -64,8 +62,7 @@ import SelectUserView from "@/components/SelectUserView.vue";
 import { Action } from "@/components/ActionsMenu.vue";
 import { PanelButton } from "@/components/ButtonsPanel.vue";
 import { attrToLink } from "@/links";
-import QRCodeScanner, { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
-import BarCodeScanner from "@/components/barcode/BarCodeScanner.vue";
+import type { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
 import { ValueRef, valueToPunnedText } from "@/user_views/combined";
 import { referenceEntriesRef } from "@/state/entries";
 
@@ -89,13 +86,17 @@ const csvCell = (str: string): string => {
   return csvstr;
 };
 
-@Component({ components: { SelectUserView, QRCodeScanner, BarCodeScanner } })
+@Component({
+  components: {
+    SelectUserView,
+    QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
+    BarCodeScanner: () => import("@/components/barcode/BarCodeScanner.vue"),
+  },
+})
 export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>>(BaseUserView) {
   modalView: IQuery | null = null;
   openQRCodeScanner = false;
   openBarCodeScanner = false;
-  barCodeColumnIndex = -1;
-  qrCodeColumnIndex = -1;
 
   private exportToCsv() {
     let data = "";
@@ -334,9 +335,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       });
     }
 
-    const qrCodeColumnIndex = this.uv.columnAttributes.findIndex(attrs => attrs["scan_qrcode"]);
-    if (qrCodeColumnIndex > -1) {
-      this.qrCodeColumnIndex = qrCodeColumnIndex;
+    if (this.selectedQRCodeEntity !== null) {
       actions.push({
         icon: "qr_code_2",
         name: this.$t("scan_qrcode").toString(),
@@ -346,9 +345,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       });
     }
 
-    const barCodeColumnIndex = this.uv.columnAttributes.findIndex(attrs => attrs["scan_barcode"]);
-    if (barCodeColumnIndex > -1) {
-      this.barCodeColumnIndex = barCodeColumnIndex;
+    if (this.selectedBarCodeEntity !== null) {
       actions.push({
         icon: "qr_code_scanner",
         name: this.$t("scan_barcode").toString(),
@@ -412,19 +409,32 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     this.modalView = null;
   }
 
-  private selectFromScanner(result: Array<IQRResultContent>, scanner: string) {
+  private selectFromScanner(columnIndex: number, result: IQRResultContent[]) {
     result.forEach(r => {
-      const columnIndex = this.getScannerColumnIndex(scanner);
-      if (columnIndex > -1) {
-        void this.updateValue({ type: "new", column: columnIndex }, r.id);
-      } else {
-        this.makeToast(this.$t("qrcode_error_not_ref").toString() + JSON.stringify(r.entity));
-      }
+      void this.updateValue({ type: "new", column: columnIndex }, r.id);
     });
   }
 
+  get barCodeColumnIndex() {
+    const ret = this.uv.columnAttributes.findIndex(attrs => attrs["scan_barcode"]);
+    if (ret === -1) {
+      return null;
+    } else {
+      return ret;
+    }
+  }
+
+  get qrCodeColumnIndex() {
+    const ret = this.uv.columnAttributes.findIndex(attrs => attrs["scan_qrcode"]);
+    if (ret === -1) {
+      return null;
+    } else {
+      return ret;
+    }
+  }
+
   get selectedBarCodeEntity() {
-    if (this.barCodeColumnIndex > -1) {
+    if (this.barCodeColumnIndex !== null) {
       const fieldType = this.uv.info.columns[this.barCodeColumnIndex].mainField?.field.fieldType;
 
       if (fieldType?.type === "reference") {
@@ -435,7 +445,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   }
 
   get selectedQRCodeEntity() {
-    if (this.qrCodeColumnIndex > -1) {
+    if (this.qrCodeColumnIndex !== null) {
       const fieldType = this.uv.info.columns[this.qrCodeColumnIndex].mainField?.field.fieldType;
 
       if (fieldType?.type === "reference") {
@@ -443,18 +453,6 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       }
     }
     return null;
-  }
-
-  private getScannerColumnIndex(scanner: string) {
-    if (scanner === "scan_barcode") {
-      return this.barCodeColumnIndex;
-    }
-
-    if (scanner === "scan_qrcode") {
-      return this.qrCodeColumnIndex;
-    }
-
-    return -1;
   }
 
   private makeToast(message: string) {

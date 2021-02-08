@@ -32,13 +32,13 @@
       :options-list-height="optionsListHeight"
       :autofocus="autofocus"
       show-filter
-      :more-options-available="moreEntriesAvailable"
+      :loading-state="loadingState"
       :process-filter="f => processFilter(f)"
       @update:value="updateValue"
       @add-value="addValue"
       @remove-value="removeValue"
       @update:filter="updateFilter"
-      @load-more="limit += 20"
+      @load-more="loadMore"
       @focus="$emit('focus')"
     >
       <template #option="select">
@@ -114,11 +114,11 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop } from "vue-property-decorator";
+import { Component, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
-import { ISelectOption, default as MultiSelect } from "@/components/multiselect/MultiSelect.vue";
-import { IEntriesRef } from "@/state/entries";
+import { ISelectOption, default as MultiSelect, LoadingResult, LoadingState } from "@/components/multiselect/MultiSelect.vue";
+import type { IEntriesRef } from "@/state/entries";
 import { parseQRCode } from "@/components/qrcode/QRCode.vue";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import SelectUserView from "@/components/SelectUserView.vue";
@@ -129,6 +129,8 @@ import { currentValue, homeSchema, ICombinedValue, valueToPunnedText } from "@/u
 import { mapMaybe, nextRender } from "@/utils";
 import { RowId, ValueType } from "ozma-api";
 import { equalEntityRef } from "@/values";
+import { CancelledError } from "@/modules";
+import { Debounce } from "vue-debounce-decorator";
 
 export interface IReferenceValue {
   id: RowId;
@@ -157,15 +159,13 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Prop({ type: Number }) height!: number | undefined;
   @Prop({ type: Number }) optionsListHeight!: number | undefined;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  @Prop({ type: Object }) referenceEntity!: IEntriesRef | null;
+  @Prop({ type: Object, required: true }) referenceEntity!: IEntriesRef;
   @Prop({ type: Array, default: () => [] }) selectViews!: IReferenceSelectAction[];
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
   @Prop({ type: Object }) linkAttr!: unknown | undefined;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
 
   private selectedView: IQuery | null = null;
-  private limit = 0;
-  private search = "";
   private wasOpenedQRCodeScanner = false;
   private isQRCodeScanner = false;
 
@@ -176,20 +176,9 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     });
   }
 
-  get entriesEntity() {
-    return this.referenceEntity;
-  }
-
-  get entriesLimit() {
-    return this.limit;
-  }
-
-  get entriesSearch() {
-    return this.search;
-  }
-
-  get testMoreEntriesAvailable() {
-    return this.moreEntriesAvailable;
+  @Watch("referenceEntity", { immediate: true })
+  private referenceEntityChanged(newValue: IEntriesRef) {
+    void this.fetchEntries(newValue, this.requestedSearch, this.requestedLimit);
   }
 
   private findValue(value: ICombinedValue): number | undefined {
@@ -279,7 +268,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   }
 
   private async processId(id: number): Promise<boolean> {
-    const pun = await this.fetchOneEntry(id);
+    const pun = await this.fetchSingleEntry(this.referenceEntity, id);
     if (pun === undefined) {
       return false;
     }
@@ -294,7 +283,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
       return false;
     }
 
-    if (!equalEntityRef(qrcode.entity, this.referenceEntity!.entity)) {
+    if (!equalEntityRef(qrcode.entity, this.referenceEntity.entity)) {
       this.makeToast(this.$t("error_qrcode_is_inappropriate").toString());
       return false;
     }
@@ -312,10 +301,8 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   }
 
   private async processFilter(filterValue: string): Promise<boolean> {
-    if (this.referenceEntity) {
-      if (await this.processQRCode(filterValue)) {
-        return true;
-      }
+    if (await this.processQRCode(filterValue)) {
+      return true;
     }
 
     return this.processRawId(filterValue);
@@ -343,6 +330,18 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     this.setValue(id);
   }
 
+  get loadingState(): LoadingState {
+    if (this.entriesLoadingState.status === "ok") {
+      return { status: "ok", moreAvailable: this.entriesLoadingState.limit !== null };
+    } else if (this.entriesLoadingState.status === "pending") {
+      return { status: "pending" };
+    } else if (this.entriesLoadingState.status === "error") {
+      return { status: "error", message: String(this.entriesLoadingState.error) };
+    } else {
+      throw new Error("Impossible");
+    }
+  }
+
   private updateValue(index: number | null) {
     if (index === null) {
       this.$emit("update:value", null);
@@ -360,9 +359,20 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     this.$emit("remove-index", index);
   }
 
+  private async loadMore(next: (_: LoadingResult) => void) {
+    try {
+      const moreAvailable = await this.fetchEntries(this.referenceEntity, this.requestedSearch, this.requestedLimit + 20);
+      next({ status: "ok", moreAvailable });
+    } catch (e) {
+      if (!(e instanceof CancelledError)) {
+        next({ status: "error", message: String(e) });
+      }
+    }
+  }
+
+  @Debounce(200)
   private updateFilter(filter: string) {
-    this.limit = 20;
-    this.search = filter;
+    void this.fetchEntries(this.referenceEntity, filter, 20);
   }
 }
 </script>

@@ -6,6 +6,7 @@ import R from "ramda";
 import { IRef, ObjectResourceMap, ReferenceName, syncObject, updateObject, waitTimeout } from "@/utils";
 import Api from "@/api";
 import { valueToText, equalEntityRef } from "@/values";
+import { CancelledError } from "@/modules";
 
 // Tree of search requests, ordered by inclusivity.
 
@@ -27,10 +28,11 @@ export interface IUpdateSearchNodeError {
 export interface IUpdateSearchNodePending {
   status: "pending";
   limit: number;
-  pending: Promise<void>;
+  // Returns `moreAvailable`.
+  pending: Promise<boolean>;
 }
 
-type UpdateSearchNode = IUpdateSearchNodeOK | IUpdateSearchNodeError | IUpdateSearchNodePending;
+export type UpdateSearchNode = IUpdateSearchNodeOK | IUpdateSearchNodeError | IUpdateSearchNodePending;
 
 export interface ISearchNodeOK extends ISearchNodeBase, IUpdateSearchNodeOK {
   children: SearchNode[];
@@ -48,7 +50,7 @@ export type SearchNode = ISearchNodeOK | ISearchNodeError | ISearchNodePending;
 export type Entries = Record<RowId, string>;
 
 // Add new node to the search tree.
-const insertSearchNode = (node: SearchNode, search: string, limit: number, pending: Promise<void>): boolean => {
+const insertSearchNode = (node: SearchNode, search: string, limit: number, pending: Promise<boolean>): boolean => {
   if (node.search === search) {
     const newNode: ISearchNodePending = {
       search,
@@ -91,50 +93,65 @@ const getSearchNode = (node: SearchNode, search: string): SearchNode | undefined
   if (node.search === search) {
     return node;
   } else if (search.indexOf(node.search) !== -1) {
-    if (!("children" in node)) return undefined;
-    for (const subnode of node.children) {
-      const ret = getSearchNode(subnode, search);
-      if (ret) {
-        return ret;
+    if ((node.status === "ok" && node.limit === null)) {
+      return node;
+    }
+
+    if ("children" in node) {
+      for (const subnode of node.children) {
+        const ret = getSearchNode(subnode, search);
+        if (ret) {
+          return ret;
+        }
       }
     }
+
     return undefined;
   } else {
     return undefined;
   }
 };
 
-const updateSearchNode = (startNode: SearchNode, search: string, update: UpdateSearchNode) => {
-  const node = getSearchNode(startNode, search);
-  if (!node) {
-    throw new Error("Node not found");
-  }
-  if (node.status !== "pending") {
-    throw new Error("Node is not pending");
-  }
+const updateSearchNode = (node: SearchNode, search: string, update: UpdateSearchNode): boolean => {
+  if (node.search === search) {
+    if (node.status !== "pending") {
+      throw new Error("Node is not pending");
+    }
 
-  let newNode: SearchNode;
-  if (update.status === "error") {
-    newNode = {
-      search,
-      ...update,
-    };
+    let newNode: SearchNode;
+    if (update.status === "error") {
+      newNode = {
+        search,
+        ...update,
+      };
+    } else {
+      newNode = {
+        search,
+        ...update,
+        children: node.children,
+      };
+    }
+    syncObject(node, newNode);
+    return true;
+  } else if (search.indexOf(node.search) !== -1) {
+    if (!("children" in node)) return false;
+    for (const subnode of node.children) {
+      if (updateSearchNode(subnode, search, update)) {
+        return true;
+      }
+    }
+    return false;
   } else {
-    newNode = {
-      search,
-      ...update,
-      children: node.children,
-    };
+    return false;
   }
-  syncObject(node, newNode);
 };
 
 type AwaitEntriesResult =
-  { result: "ok" } |
+  { result: "ok"; moreAvailable: boolean } |
   { result: "error"; error: Error } |
   { result: "need_more"; offset: number } |
   { result: "missing" } |
-  { result: "pending"; pending: Promise<void> };
+  { result: "pending"; pending: Promise<boolean> };
 
 const waitSearchNode = (node: SearchNode, search: string, limit: number): AwaitEntriesResult => {
   if (node.search === search) {
@@ -147,7 +164,7 @@ const waitSearchNode = (node: SearchNode, search: string, limit: number): AwaitE
     }
 
     if (node.limit === null || node.limit >= limit) {
-      return { result: "ok" };
+      return { result: "ok", moreAvailable: node.limit !== null };
     } else {
       return { result: "need_more", offset: node.limit };
     }
@@ -161,7 +178,7 @@ const waitSearchNode = (node: SearchNode, search: string, limit: number): AwaitE
     }
 
     if (node.limit === null) {
-      return { result: "ok" };
+      return { result: "ok", moreAvailable: false };
     } else {
       for (const subnode of node.children) {
         const ret = waitSearchNode(subnode, search, limit);
@@ -188,20 +205,21 @@ export class PartialEntries {
     this.pendingSingleEntries = {};
   }
 
-  insert(search: string, limit: number, pending: Promise<void>) {
+  insert(search: string, limit: number, pending: Promise<boolean>) {
+    const lowerSearch = search.toLowerCase();
     if (this.searchTree === null) {
       this.searchTree = {
         status: "pending",
-        search,
+        search: lowerSearch,
         limit,
         pending,
         children: [],
       };
-    } else if (!insertSearchNode(this.searchTree, search, limit, pending)) {
+    } else if (!insertSearchNode(this.searchTree, lowerSearch, limit, pending)) {
       // Insert phantom empty node.
       const newNode: SearchNode = {
         status: "pending",
-        search,
+        search: lowerSearch,
         limit,
         pending,
         children: [],
@@ -219,7 +237,7 @@ export class PartialEntries {
     if (this.searchTree === null) {
       return undefined;
     } else {
-      return getSearchNode(this.searchTree, search);
+      return getSearchNode(this.searchTree, search.toLowerCase());
     }
   }
 
@@ -227,15 +245,15 @@ export class PartialEntries {
     if (this.searchTree === null) {
       return { result: "missing" };
     } else {
-      return waitSearchNode(this.searchTree, search, limit);
+      return waitSearchNode(this.searchTree, search.toLowerCase(), limit);
     }
   }
 
   update(search: string, update: UpdateSearchNode) {
     if (this.searchTree === null) {
       throw new Error("Search tree must exist");
-    } else {
-      updateSearchNode(this.searchTree, search, update);
+    } else if (!updateSearchNode(this.searchTree, search.toLowerCase(), update)) {
+      throw new Error("Node not found");
     }
   }
 
@@ -338,7 +356,7 @@ const entriesModule: Module<IEntriesState, {}> = {
       const partial = new PartialEntries();
       state.current.entries.createResource(args.ref, args.reference, partial, undefined);
     },
-    insertSearchNode: (state, args: { ref: IEntriesRef; search: string; limit: number; pending: Promise<void> }) => {
+    insertSearchNode: (state, args: { ref: IEntriesRef; search: string; limit: number; pending: Promise<boolean> }) => {
       state.current.getEntries(args.ref)!.insert(args.search, args.limit, args.pending);
     },
     updateSearchNode: (state, args: { ref: IEntriesRef; search: string; update: UpdateSearchNode }) => {
@@ -414,7 +432,7 @@ const entriesModule: Module<IEntriesState, {}> = {
 
         const currPending = state.current.entries.get(ref)?.pendingSingleEntries[id];
         if (currPending !== pending.ref) {
-          throw new Error(`Pending single entry got cancelled, ref ${JSON.stringify(ref)}`);
+          throw new CancelledError(`Pending single entry got cancelled, ref ${JSON.stringify(ref)}`);
         }
 
         if (ret === undefined) {
@@ -435,7 +453,8 @@ const entriesModule: Module<IEntriesState, {}> = {
       return pending.ref;
     },
 
-    getEntries: async (context, args: { reference: ReferenceName; ref: IEntriesRef; search: string; limit: number }): Promise<void> => {
+    // Returns `true` if more entries can be loaded for this `ref` and `search`.
+    getEntries: async (context, args: { reference: ReferenceName; ref: IEntriesRef; search: string; limit: number }): Promise<boolean> => {
       const { state, commit, dispatch } = context;
       const { reference, ref, search, limit } = args;
 
@@ -461,18 +480,18 @@ const entriesModule: Module<IEntriesState, {}> = {
           }
         }
         if (oldCurrent !== state.current) {
-          throw new Error(`Pending entries got cancelled, ref ${JSON.stringify(ref)}`);
+          throw new CancelledError(`Pending entries got cancelled, ref ${JSON.stringify(ref)}`);
         }
         if (data.result === "error") {
           throw data.error;
         } else if (data.result === "ok") {
-          return;
+          return data.moreAvailable;
         } else if (data.result === "need_more") {
           offset = data.offset;
         }
       }
 
-      const pending: IRef<Promise<void>> = {};
+      const pending: IRef<Promise<boolean>> = {};
       pending.ref = (async () => {
         await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
         let update: UpdateSearchNode;
@@ -492,9 +511,14 @@ const entriesModule: Module<IEntriesState, {}> = {
 
         const currNode = state.current.entries.get(ref)?.get(args.search);
         if (currNode?.status !== "pending" || currNode.pending !== pending.ref) {
-          throw new Error(`Pending entries got cancelled, ref ${JSON.stringify(ref)}`);
+          throw new CancelledError(`Pending entries got cancelled, ref ${JSON.stringify(ref)}`);
         }
         commit("updateSearchNode", { ref, search, update });
+        if (update.status === "ok") {
+          return update.limit !== null;
+        } else {
+          throw update.error;
+        }
       })();
       if (oldResource === undefined) {
         // Prefetch entity.
@@ -502,7 +526,7 @@ const entriesModule: Module<IEntriesState, {}> = {
         commit("initPartialEntries", { ref, reference });
       }
       commit("insertSearchNode", { ref, search, limit, pending: pending.ref });
-      await pending.ref;
+      return pending.ref;
     },
   },
 };

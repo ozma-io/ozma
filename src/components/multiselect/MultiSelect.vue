@@ -4,13 +4,17 @@
       "empty_message": "Empty",
       "clear_all": "Clear all",
       "enter_value": "Enter value",
-      "search_placeholder": "Search"
+      "search_placeholder": "Search",
+      "no_results": "No entries",
+      "error": "Error during loading more data: {msg}"
     },
     "ru": {
       "empty_message": "Пусто",
       "clear_all": "Очистить",
       "enter_value": "Введите значение",
-      "search_placeholder": "Поиск"
+      "search_placeholder": "Поиск",
+      "no_results": "Нет записей",
+      "error": "Ошибка при загрузке новых данных: {msg}"
     }
   }
 </i18n>
@@ -160,10 +164,8 @@
           </b-input-group>
           <div
             ref="optionsContainer"
-            v-infinite-scroll="loadMore"
-            infinite-scroll-distance="10"
-            infinite-scroll-disabled="noMoreOptions"
             class="options-list"
+            infinite-wrapper
             :style="optionsListStyle"
           >
             <span
@@ -189,6 +191,23 @@
                 <!-- eslint-enable vue/no-v-html -->
               </slot>
             </span>
+            <infinite-loading
+              ref="infiniteLoading"
+              spinner="spiral"
+              @infinite="loadMore"
+            >
+              <template #no-results>
+                {{ $t("no_results") }}
+              </template>
+              <template #no-more>
+                <span />
+              </template>
+              <template #error>
+                <template v-if="loadingState.status === 'error'">
+                  {{ $t("error", { msg: loadingState.message }) }}
+                </template>
+              </template>
+            </infinite-loading>
           </div>
           <div
             class="select-container__options__actions"
@@ -206,8 +225,9 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { replaceHtmlLinks } from "@/utils";
+import { deepClone, deepEquals, nextRender, replaceHtmlLinks } from "@/utils";
 import Popper from "vue-popperjs";
+import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 
 /* import "vue-popperjs/dist/vue-popper.css"; */
 
@@ -221,7 +241,26 @@ export interface ISelectOptionHtml<T> extends ISelectOption<T> {
   labelHtml: string; // Stores label with links replaced with <a> tags.
 }
 
-@Component({ components: { Popper } })
+export interface IPendingOptions {
+  status: "pending";
+}
+
+export interface ILoadedOptions {
+  status: "ok";
+  moreAvailable: boolean;
+}
+
+export interface IErrorOptions {
+  status: "error";
+  message: string;
+}
+
+export type LoadingState = IPendingOptions | ILoadedOptions | IErrorOptions;
+export type LoadingResult = ILoadedOptions | IErrorOptions;
+
+@Component({
+  components: { Popper, InfiniteLoading },
+})
 export default class MultiSelect extends Vue {
   @Prop({ required: true }) value!: number | number[] | null;
   @Prop({ type: Array, default: () => [] }) options!: ISelectOption<unknown>[];
@@ -229,20 +268,17 @@ export default class MultiSelect extends Vue {
   @Prop({ type: Boolean, default: false }) required!: boolean;
   @Prop({ type: Boolean, default: false }) disabled!: boolean;
   @Prop({ type: Number }) height!: number | undefined;
-  @Prop({ type: Number }) optionsListHeight!: number | undefined;
+  @Prop({ type: Number, default: 200 }) optionsListHeight!: number;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: Boolean, default: false }) showFilter!: boolean;
-  @Prop({ type: Boolean, default: false }) moreOptionsAvailable!: boolean;
+  @Prop({ type: Object, default: (): LoadingState => ({ status: "ok", moreAvailable: false }) }) loadingState!: LoadingState;
   @Prop({ type: Function }) processFilter!: (_: string) => Promise<boolean> | undefined;
 
   private filterValue = "";
   // Option, currently focused in a popup.
   private focusedOption: number | null = null;
   private isPopupOpen = false;
-
-  get noMoreOptions() {
-    return !this.moreOptionsAvailable;
-  }
+  private oldLoadingState: LoadingState = { status: "ok", moreAvailable: false };
 
   get htmlOptions(): ISelectOptionHtml<unknown>[] {
     return this.options.map((option, index) => ({
@@ -271,6 +307,20 @@ export default class MultiSelect extends Vue {
     }
   }
 
+  @Watch("loadingState", { immediate: true })
+  private loadingStateChanged(newValue: LoadingState) {
+    const loader = this.$refs["infiniteLoading"] as InfiniteLoading | undefined;
+    if (!loader) return;
+
+    const oldValue = this.oldLoadingState;
+    this.oldLoadingState = deepClone(newValue);
+
+    // If error or "all entries fetched" status has been reached before, reset the component.
+    if (((oldValue.status === "ok" && !oldValue.moreAvailable) || oldValue.status === "error") && !deepEquals(oldValue, newValue)) {
+      loader.stateChanger.reset();
+    }
+  }
+
   get selectedOptions() {
     if (this.value === null) {
       return [];
@@ -295,8 +345,17 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  private loadMore() {
-    this.$emit("load-more");
+  private loadMore(ev: StateChanger) {
+    this.$emit("load-more", (state: LoadingResult) => {
+      if (state.status === "error") {
+        ev.error();
+      } else {
+        ev.loaded();
+        if (!state.moreAvailable) {
+          ev.complete();
+        }
+      }
+    });
   }
 
   @Watch("disabled")
@@ -350,9 +409,8 @@ export default class MultiSelect extends Vue {
   }
 
   get optionsListStyle() {
-    const height = this.optionsListHeight ? { maxHeight: `${this.optionsListHeight}px` } : { maxHeight: "200px" };
     return {
-      ...height,
+      maxHeight: `${this.optionsListHeight}px`,
     };
   }
 
@@ -382,11 +440,28 @@ export default class MultiSelect extends Vue {
 
   private async onOpenPopup() {
     this.isPopupOpen = true;
+    await nextRender();
+    if (this.loadingState.status === "ok" && this.loadingState.moreAvailable) {
+      this.loadMoreIfNeeded();
+    }
     // On-screen keyboard disturbs if there are not so many options to filter.
-    if (this.$isMobile) return;
+    if (!this.$isMobile) {
+      this.focusInput();
+    }
+  }
 
-    await Vue.nextTick();
-    this.focusInput();
+  private loadMoreIfNeeded() {
+    const container = this.$refs.optionsContainer as HTMLElement | undefined;
+    if (!container) {
+      return;
+    }
+    if (container.clientHeight < this.optionsListHeight) {
+      this.$emit("load-more", (ev: LoadingResult) => {
+        if (ev.status === "ok" && ev.moreAvailable) {
+          this.loadMoreIfNeeded();
+        }
+      });
+    }
   }
 
   private async closePopup() {
@@ -688,7 +763,6 @@ export default class MultiSelect extends Vue {
   .options-list {
     padding: 0;
     margin: 0;
-    max-height: 250px;
     overflow-x: hidden;
     text-align: left;
     transition: all ease-in 0.2s;

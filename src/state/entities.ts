@@ -3,6 +3,7 @@ import { IEntityRef, IEntity } from "ozma-api";
 
 import { IRef, ObjectMap, waitTimeout } from "@/utils";
 import Api from "@/api";
+import { CancelledError } from "@/modules";
 
 // For each entity contains array of all accessible entries (main fields) identified by id
 export type EntityResult = IEntity | Promise<IEntity> | Error;
@@ -85,7 +86,7 @@ const entitiesModule: Module<IEntitiesState, {}> = {
           }, { root: true });
           const currPending = state.current.entities.get(ref);
           if (currPending !== pending.ref) {
-            throw new Error(`Pending entity get cancelled, ref ${JSON.stringify(ref)}`);
+            throw new CancelledError(`Pending entity get cancelled, ref ${JSON.stringify(ref)}`);
           }
           commit("updateEntity", { ref, entity });
           return entity;

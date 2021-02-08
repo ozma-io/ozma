@@ -10,11 +10,6 @@ declare module "v-click-outside" {
   export default vClickOutside;
 }
 
-declare module "vue-infinite-scroll" {
-  const infiniteScroll: any;
-  export default infiniteScroll;
-}
-
 declare module "*.vue" {
   import Vue from "vue";
 

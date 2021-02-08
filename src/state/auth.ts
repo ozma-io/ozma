@@ -6,7 +6,7 @@ import { FunDBError } from "ozma-api";
 import { IRef } from "@/utils";
 import { disableAuth, authClientId, authUrl, developmentMode } from "@/api";
 import * as Utils from "@/utils";
-import { router, getQueryValue } from "@/modules";
+import { router, getQueryValue, CancelledError } from "@/modules";
 
 export class CurrentAuth {
   createdTime: number;
@@ -138,7 +138,7 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
     try {
       const auth = await requestToken(params);
       if (state.pending !== pending.ref) {
-        throw new Error("Pending operation cancelled");
+        throw new CancelledError();
       }
       updateAuth(context, auth);
       startTimeouts(context);

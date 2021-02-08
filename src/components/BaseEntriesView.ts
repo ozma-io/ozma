@@ -6,102 +6,103 @@ import { CurrentEntries, Entries, IEntriesRef } from "@/state/entries";
 
 const entries = namespace("entries");
 
+export interface IPendingEntries {
+  status: "pending";
+}
+
+export interface ILoadedEntries {
+  status: "ok";
+  limit: number | null;
+}
+
+export interface IErrorEntries {
+  status: "error";
+  error: Error;
+}
+
+export type EntriesState = IPendingEntries | ILoadedEntries | IErrorEntries;
+
 @Component
 export default class BaseEntriesView extends Vue {
   @entries.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IEntriesRef; reference: ReferenceName }) => void;
   @entries.State("current") entriesMap!: CurrentEntries;
-  @entries.Action("getEntries") internalGetEntries!: (args: { reference: ReferenceName; ref: IEntriesRef; search: string; limit: number }) => Promise<void>;
-  @entries.Action("getSingleEntry") internalGetSingleEntry!: (args: { reference: ReferenceName; ref: IEntriesRef; id: number}) => Promise<string | undefined>;
+  @entries.Action("getEntries") getEntries!: (args: { reference: ReferenceName; ref: IEntriesRef; search: string; limit: number }) => Promise<boolean>;
+  @entries.Action("getSingleEntry") getSingleEntry!: (args: { reference: ReferenceName; ref: IEntriesRef; id: number}) => Promise<string | undefined>;
 
-  protected currentEntries: Entries | Error | null = null;
-  private pendingEntity: IEntriesRef | null = null;
+  // These are supposed to be read only in children user views!
+  // Keeping them as state values to avoid creating computed properties (which, also, weirdly fail in this case).
+  protected currentEntries: Entries | null = null;
+  protected requestedEntity: IEntriesRef | null = null;
+  protected requestedSearch = "";
+  protected requestedLimit = 0;
 
-  get entriesEntity(): IEntriesRef | null {
-    throw Error("Not implemented");
-  }
-
-  get entriesSearch(): string {
-    return "";
-  }
-
-  get entriesLimit(): number {
-    return 0;
+  get entriesLoadingState(): EntriesState {
+    const node = this.newEntries?.get(this.requestedSearch);
+    return node ?? { status: "pending" };
   }
 
   private get newEntries() {
-    if (this.pendingEntity) {
-      const ret = this.entriesMap.entries.get(this.pendingEntity);
+    if (this.requestedEntity) {
+      const ret = this.entriesMap.entries.get(this.requestedEntity);
       return ret === undefined ? null : ret;
     }
     return null;
   }
 
-  get moreEntriesAvailable(): boolean {
-    const node = this.newEntries?.get(this.entriesSearch);
-    const ret = !(node && ((node.status === "ok" && node.limit === null) || node.status === "error"));
-    return ret;
-  }
-
   protected destroyed() {
-    if (this.pendingEntity !== null) {
-      this.removeEntriesConsumer({ ref: this.pendingEntity, reference: this.uid });
-    }
+    this.freeEntries();
   }
 
   @Watch("newEntries", { immediate: true })
   private updateEntries() {
-    if (this.pendingEntity) {
+    if (this.requestedEntity) {
       if (this.newEntries instanceof Error) {
         this.currentEntries = null;
       } else if (this.newEntries === null) {
-        this.getEntries();
+        void this.getRequestedEntries();
       } else if (!(this.newEntries instanceof Promise)) {
         this.currentEntries = this.newEntries.entries;
       }
     }
   }
 
-  @Watch("entriesEntity", { deep: true, immediate: true })
-  private entityChanged(newEntity: IEntriesRef | null) {
-    if (!deepEquals(this.pendingEntity, newEntity)) {
-      this.currentEntries = null;
-      if (this.pendingEntity !== null) {
-        this.removeEntriesConsumer({ ref: this.pendingEntity, reference: this.uid });
-        this.pendingEntity = null;
-      }
-      this.pendingEntity = deepClone(newEntity);
-      if (newEntity !== null) {
-        this.getEntries();
-      }
-    }
-  }
-
-  @Watch("entriesSearch")
-  private searchChanged(search: string, oldSearch: string) {
-    if (this.pendingEntity !== null && search !== oldSearch) {
-      this.getEntries();
-    }
-  }
-
-  @Watch("entriesLimit")
-  private limitChanged(limit: number, oldLimit: number) {
-    if (this.pendingEntity !== null && limit !== oldLimit) {
-      this.getEntries();
-    }
-  }
-
-  private getEntries() {
-    void this.internalGetEntries({
-      ref: this.pendingEntity!,
+  private getRequestedEntries() {
+    return this.getEntries({
+      ref: this.requestedEntity!,
       reference: this.uid,
-      search: this.entriesSearch,
-      limit: this.entriesLimit,
+      search: this.requestedSearch,
+      limit: this.requestedLimit,
     });
   }
 
-  protected fetchOneEntry(id: number) {
-    return this.internalGetSingleEntry({
-      ref: this.pendingEntity!,
+  private freeEntries() {
+    if (this.requestedEntity !== null) {
+      this.removeEntriesConsumer({ ref: this.requestedEntity, reference: this.uid });
+      this.requestedEntity = null;
+      this.requestedLimit = 0;
+      this.requestedSearch = "";
+      this.currentEntries = null;
+    }
+  }
+
+  // Returns `true`, if more entries are available.
+  protected fetchEntries(entity: IEntriesRef, search: string, limit: number) {
+    if (!deepEquals(this.requestedEntity, entity)) {
+      this.freeEntries();
+      this.requestedEntity = deepClone(entity);
+    }
+    this.requestedSearch = search;
+    this.requestedLimit = limit;
+    return this.getRequestedEntries();
+  }
+
+  protected fetchSingleEntry(entity: IEntriesRef, id: number) {
+    if (!deepEquals(this.requestedEntity, entity)) {
+      this.freeEntries();
+      this.requestedEntity = deepClone(entity);
+    }
+    return this.getSingleEntry({
+      ref: this.requestedEntity!,
       reference: this.uid,
       id,
     });
