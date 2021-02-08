@@ -26,11 +26,8 @@
         @tab-click="switchTab(index)"
         @tab-close="$emit('tab-close', index)"
       >
-        <template v-if="tab.actions" #actions>
-          <ModalContent :nodes="tab.actions" />
-        </template>
-        <template v-if="tab.buttons" #buttons>
-          <ModalContent :nodes="tab.buttons" />
+        <template #header>
+          <ModalContent :nodes="tab.header" />
         </template>
         <i
           class="material-icons material-button mobile_close_button"
