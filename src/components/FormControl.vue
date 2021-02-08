@@ -193,7 +193,7 @@
             v-else-if="inputType.name === 'userview'"
             :title="usedCaption"
             :actions="actions"
-            :buttons="buttons"
+            :buttons="panelButtons"
             :is-enable-filter="enableFilter"
             :view="inputType"
             @update:filterString="filterString = $event"

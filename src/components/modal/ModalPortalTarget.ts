@@ -4,12 +4,11 @@ import { PortalTarget } from "portal-vue";
 
 import { IModalTab } from "@/components/modal/types";
 import Modal from "@/components/modal/Modal.vue";
-import { PanelButton } from "@/components/ButtonsPanel.vue";
 
 interface IInternalModalTab extends IModalTab {
   tab: any;
   autofocus: boolean;
-  buttons: PanelButton[];
+  buttons: any;
 }
 
 @Component

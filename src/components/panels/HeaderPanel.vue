@@ -1,9 +1,6 @@
-      v-b-tooltip.click.blur.bottom.noninteractive
-      class="input_label"
-      :title="title"
-    >
-      {{ title }}
-    </label>
+<template>
+  <div class="nested-menu">
+    <label class="input_label">{{ title }}</label>
     <ButtonsPanel
       :buttons="buttons"
       @goto="$emit('goto', $event)"
