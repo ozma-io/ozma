@@ -12,6 +12,7 @@
       <template #search-panel>
         <SearchPanel
           v-if="enableFilter"
+          :filter-string="filterString"
           @update:filterString="$emit('update:filterString', $event)"
         />
       </template>
@@ -65,6 +66,7 @@ export default class NestedUserViewPanel extends Vue {
   @Prop({ type: Boolean, required: true }) enableFilter!: boolean;
   @Prop({ type: Object, required: true }) inputType!: IType;
   @Prop({ type: Array, required: true }) panelButtons!: PanelButton[];
+  @Prop({ type: String, required: true }) filterString!: string;
 
   private openFullscreen(view: IUserViewType) {
     void router.push(queryLocation(view));

@@ -176,6 +176,7 @@
             :enable-filter="enableFilter"
             :input-type="inputType"
             :panel-buttons="panelButtons"
+            :filter-string="filterString"
             @update:filterString="filterString = $event"
             @goto="$emit('goto', $event)"
           />
