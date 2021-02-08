@@ -135,6 +135,6 @@ export default class BarCodeScanner extends mixins(BaseEntriesView) {
 
 <style scoped>
   .decode-result {
-  word-wrap: break-word;
+    word-wrap: break-word;
   }
 </style>
