@@ -28,7 +28,7 @@
       :background-color="cellColor"
       :text-align="textAlign"
       :modal="$isMobile && (forceModalOnMobile || isMultiline)"
-      :required="!isNullable && inputType.name !== 'select'"
+      :required="!isNullable"
       :empty="currentValueIsNull"
       @close-modal-input="$emit('close-modal-input')"
     >

@@ -31,6 +31,8 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 
 import { ISelectOption, default as MultiSelect } from "@/components/multiselect/MultiSelect.vue";
 
+import { valueIsNull } from "@/values";
+
 @Component({
   components: {
     MultiSelect,
@@ -46,7 +48,7 @@ export default class ValueSelect extends Vue {
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
 
   get selectedValue() {
-    if (this.value === null) {
+    if (valueIsNull(this.value)) {
       return null;
     }
     const idx = this.options.findIndex(opt => opt.value === this.value);
