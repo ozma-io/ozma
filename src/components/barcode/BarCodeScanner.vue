@@ -62,64 +62,64 @@ import { IEntriesRef } from "@/state/entries";
 import { equalEntityRef } from "@/values";
 
 export interface IQRResultContent extends IQRCode {
-value: string;
+  value: string;
 }
 
 @Component({ components: { BarCode } })
 export default class BarCodeScanner extends mixins(BaseEntriesView) {
-@Prop({ type: Boolean, default: false }) openScanner!: boolean;
-@Prop({ type: Object }) entity!: IEntriesRef | null;
+  @Prop({ type: Boolean, default: false }) openScanner!: boolean;
+  @Prop({ type: Object }) entity!: IEntriesRef | null;
 
-modalShow = false;
-result: Array<IQRResultContent> = [];
+  modalShow = false;
+  result: Array<IQRResultContent> = [];
 
-get entriesEntity() {
-  return this.entity;
-}
-
-@Watch("openScanner")
-private toggleOpenScanner() {
-  this.modalShow = !this.modalShow;
-}
-
-private async onScanned(content: string) {
-  if (this.entity === null) {
-    return;
+  get entriesEntity() {
+    return this.entity;
   }
 
-  let currentQRCode: IQRCode | null = null;
-  const parsedContent = parseQRCode(content);
-
-  if (parsedContent) {
-    currentQRCode = parsedContent;
-  } else {
-    currentQRCode = {
-      entity: this.entity.entity,
-      id: Number(content),
-    };
+  @Watch("openScanner")
+  private toggleOpenScanner() {
+    this.modalShow = !this.modalShow;
   }
 
-  if (!equalEntityRef(currentQRCode.entity, this.entity!.entity)) {
-    this.makeToast(this.$t("error_qrcode_is_inappropriate").toString());
-    return;
+  private async onScanned(content: string) {
+    if (this.entity === null) {
+      return;
+    }
+
+    let currentQRCode: IQRCode | null = null;
+    const parsedContent = parseQRCode(content);
+
+    if (parsedContent) {
+      currentQRCode = parsedContent;
+    } else {
+      currentQRCode = {
+        entity: this.entity.entity,
+        id: Number(content),
+      };
+    }
+
+    if (!equalEntityRef(currentQRCode.entity, this.entity!.entity)) {
+      this.makeToast(this.$t("error_qrcode_is_inappropriate").toString());
+      return;
+    }
+
+    const entry = await this.fetchOneEntry(currentQRCode.id);
+    if (entry !== undefined) {
+      this.result.push({ ...currentQRCode, value: entry });
+    } else {
+      this.makeToast(this.$t("no_record_found").toString());
+    }
   }
 
-  const entry = await this.fetchOneEntry(currentQRCode.id);
-  if (entry !== undefined) {
-    this.result.push({ ...currentQRCode, value: entry });
-  } else {
-    this.makeToast(this.$t("no_record_found").toString());
+  private sendList() {
+    this.$bvModal.hide("barcode-scanner-modal");
+    this.$emit("select", this.result, "scan_barcode");
+    this.result = [];
   }
-}
 
-private sendList() {
-  this.$bvModal.hide("barcode-scanner-modal");
-  this.$emit("select", this.result, "scan_barcode");
-  this.result = [];
-}
-
-private makeToast(message: string) {
-  this.$bvToast.toast(message, {
+  private makeToast(message: string) {
+    this.$bvToast.toast(message, {
       title: this.$t("error").toString(),
       variant: "danger",
       solid: true,
