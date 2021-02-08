@@ -160,6 +160,7 @@
       </table>
       <infinite-loading
         v-if="!noMoreRows"
+        ref="infiniteLoading"
         spinner="spiral"
         @infinite="updateShowLength"
       >
@@ -1409,9 +1410,11 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
                     }
                 }
             `);
-      this.showLength = 0;
-    } else {
-      this.showLength = this.uv.rows?.length ?? 0;
+    }
+    this.showLength = 0;
+    const loader = this.$refs["infiniteLoading"] as InfiniteLoading | undefined;
+    if (loader) {
+      loader.stateChanger.reset();
     }
 
     this.$emit("update:enableFilter", this.uv.rows !== null);
