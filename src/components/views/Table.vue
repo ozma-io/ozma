@@ -1394,6 +1394,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
                     }
                 }
             `);
+      this.showLength = 0;
+    } else {
+      this.showLength = this.uv.rows?.length ?? 0;
     }
 
     this.$emit("update:enableFilter", this.uv.rows !== null);
