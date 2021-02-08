@@ -1,7 +1,6 @@
 <template>
   <div v-if="qrcodeContent !== null">
     <qrcode :value="qrcodeContent" :options="{ width: height }" />
-    <span>{{ qrcodeContent }}</span>
   </div>
 </template>
 
