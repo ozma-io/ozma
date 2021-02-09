@@ -234,17 +234,21 @@ export interface ITableValueExtra extends IBaseValueExtra {
   selected: boolean;
 }
 
-export interface ITableRowExtra extends IBaseRowExtra {
-  searchText: string;
+export interface ITableRowTree {
   visible: boolean;
-  shownAsNewRow: boolean;
   parent: number | null;
   level: number | null;
-  arrowDown: boolean | null;
+  arrowDown: boolean;
   children: number[];
+}
+
+export interface ITableRowExtra extends IBaseRowExtra {
+  searchText: string;
+  shownAsNewRow: boolean;
   style: Record<string, unknown> | null;
   height: number | null;
   link: Link | null;
+  tree: ITableRowTree;
 }
 
 export interface IAddedNewRowRef {
@@ -397,17 +401,21 @@ const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLo
 
   const style: Record<string, unknown> = {};
 
-  const extra = {
-    searchText: "",
+  const tree: ITableRowTree = {
     visible: true,
     children: [],
     level: 0,
+    parent: null,
+    arrowDown: false,
+  }
+
+  const extra = {
+    searchText: "",
     height: null as number | null,
     style: null as Record<string, unknown> | null,
-    parent: null,
-    arrowDown: null,
     link: null,
     shownAsNewRow: false,
+    tree: oldLocal !== null ? oldLocal.tree : tree,
   };
 
   const height = Number(getRowAttr("row_height"));
@@ -566,8 +574,8 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
 
         // Init parent
         if (value.value !== null) {
-          row.extra.parent = Number(value.value);
-          row.extra.visible = false;
+          row.extra.tree.parent = Number(value.value);
+          row.extra.tree.visible = oldRow !== null ? oldRow.tree.visible : false;
         }
       }
     }
@@ -1077,13 +1085,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     // Save state.
     if (this.uv.rows[children[0]] !== undefined) {
-      const parent = this.uv.rows[children[0]].extra.parent;
+      const parent = this.uv.rows[children[0]].extra.tree.parent;
       if (!parent) {
         return;
       }
       const parentIndex = this.uv.extra.rowsParentPositions[parent];
       const extra = this.uv.rows[parentIndex].extra;
-      this.uv.rows[parentIndex].extra.arrowDown = visible;
+      this.uv.rows[parentIndex].extra.tree.arrowDown = visible;
       if (visible) {
         this.rowsState[parentIndex] = extra;
       } else {
@@ -1093,8 +1101,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     // Toggle
     children.forEach((child, i) => {
-      if (!visible && this.uv.rows![child].extra.visible) {
-        this.visibleChildren(this.uv.rows![child].extra.children, visible);
+      if (!visible && this.uv.rows![child].extra.tree.visible) {
+        this.visibleChildren(this.uv.rows![child].extra.tree.children, visible);
 
         // Hidden children.
         const childPosition = this.rowPositions.indexOf(child);
@@ -1102,10 +1110,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       }
 
       if (deep) {
-        this.visibleChildren(this.uv.rows![child].extra.children, true, deep);
+        this.visibleChildren(this.uv.rows![child].extra.tree.children, true, deep);
       }
 
-      this.uv.rows![child].extra.visible = visible;
+      this.uv.rows![child].extra.tree.visible = visible;
     });
 
     if (visible) {
@@ -1114,7 +1122,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private displayChildren(children: number[]) {
-    const index = this.uv.rows?.[children[0]].extra.parent ?? null;
+    const index = this.uv.rows?.[children[0]].extra.tree.parent ?? null;
     const parent = index !== null ? this.uv.extra.rowsParentPositions[index] : null;
     if (parent !== null) {
       for (let i = children.length - 1; i >= 0; i--) {
@@ -1129,8 +1137,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private toggleAllTreeChildren(visible: boolean) {
     this.rowPositions.forEach(rowI => {
-      if (this.uv.rows![rowI].extra.children.length > 0 && this.uv.rows![rowI].extra.parent === undefined) {
-        this.visibleChildren(this.uv.rows![rowI].extra.children, visible, true);
+      if (this.uv.rows![rowI].extra.tree.children.length > 0 && this.uv.rows![rowI].extra.tree.parent === undefined) {
+        this.visibleChildren(this.uv.rows![rowI].extra.tree.children, visible, true);
       }
     });
     this.initRowsState();
@@ -1139,33 +1147,36 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private initRowsState() {
     if (this.uv.rows) {
       this.uv.rows.forEach((row, rowI) => {
-        const parentIndex = row.extra.parent ? this.uv.extra.rowsParentPositions[row.extra.parent] : undefined;
+        const parentIndex = row.extra.tree.parent ? this.uv.extra.rowsParentPositions[row.extra.tree.parent] : undefined;
         if (parentIndex !== undefined
         && this.uv.rows![parentIndex] !== undefined
-        && !this.uv.rows![parentIndex].extra.children.includes(rowI)
+        && !this.uv.rows![parentIndex].extra.tree.children.includes(rowI)
         ) {
-          this.uv.rows![parentIndex].extra.children.push(rowI);
+          this.uv.rows![parentIndex].extra.tree.children.push(rowI);
           let level = 0;
           let parent: number | undefined = parentIndex;
           while (parent !== undefined && this.uv.rows![parent] !== undefined && level < 100) {
-            const index: number | undefined = this.uv.rows![parent]?.extra?.parent ?? undefined;
+            const index: number | undefined = this.uv.rows![parent]?.extra?.tree.parent ?? undefined;
             parent = index !== undefined ? this.uv.extra.rowsParentPositions[index] : undefined;
             level++;
           }
-          this.uv.rows![rowI].extra.level = level;
+          this.uv.rows![rowI].extra.tree.level = level;
         }
       });
     }
+
+    /*
     if (!R.isEmpty(this.rowsState)) {
       const sort = R.sortBy(R.compose(R.prop<string, number>("level"), R.prop<any>(1)));
       const sortable = sort(R.toPairs(this.rowsState));
       // Load visible data from rowsState to rows.
       sortable.forEach(item => {
-        this.visibleChildren(item[1].children, true);
+        this.visibleChildren(item[1].tree.children, true);
       });
     } else {
       this.buildRowPositions();
-    }
+    }*/
+
   }
 
   private disableTree() {
@@ -1183,7 +1194,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       if (this.filter.length !== 0) {
         this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.uv.rows![rowI], this.filter));
       } else if (!R.isEmpty(this.uv.extra.rowsParentPositions)) {
-        this.rowPositions = this.rowPositions.filter(rowI => this.uv.rows![rowI].extra.visible);
+        this.rowPositions = this.rowPositions.filter(rowI => this.uv.rows![rowI].extra.tree.visible);
         this.isTree = true;
       }
       this.sortRows();
