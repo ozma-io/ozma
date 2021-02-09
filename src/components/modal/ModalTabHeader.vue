@@ -16,12 +16,10 @@
       home
     </router-link>
     <slot name="header" />
-    <input
-      type="button"
-      value="close"
-      class="material-icons material-button modal__tab_close_button"
+    <i
+      class="material-icons material-button"
       @click.stop="$emit('tab-close')"
-    >
+    >close</i>
   </div>
 </template>
 
