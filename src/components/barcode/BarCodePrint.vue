@@ -16,8 +16,7 @@ export default class BarCodePrint extends Vue {
 
 <style lang="scss" scoped>
   .barcode {
-    /* TODO: remove hardcoded color, */
-    border: 1px solid #ced4da;
+    border: 1px solid var(--MainBorderColor);
     border-radius: 0.2rem;
     overflow: hidden;
   }
