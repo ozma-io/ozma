@@ -34,7 +34,7 @@
       @scanned="onScanned"
     />
     <div v-if="result.length > 0" class="decode-result">
-      <br/>
+
       <b-button
         block
         variant="success"
@@ -129,5 +129,6 @@ export default class BarCodeScanner extends mixins(BaseEntriesView) {
 <style scoped>
   .decode-result {
     word-wrap: break-word;
+    margin-top: 10px;
   }
 </style>
