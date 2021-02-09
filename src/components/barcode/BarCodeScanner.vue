@@ -34,7 +34,6 @@
       @scanned="onScanned"
     />
     <div v-if="result.length > 0" class="decode-result">
-
       <b-button
         block
         variant="success"
