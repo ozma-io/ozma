@@ -1,6 +1,7 @@
-import { ValueType, FieldType, IFieldRef, IEntityRef } from "@/api";
+import { ValueType, FieldType, IFieldRef, IEntityRef } from "ozma-api";
 import moment, { Moment, MomentInput } from "moment";
-import { deepEquals } from "./utils";
+
+import { deepEquals } from "@/utils";
 
 // Date/time is stored as Moment objects in UTC.
 export const dateFormat = "L";

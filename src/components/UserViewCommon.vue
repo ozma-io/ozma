@@ -5,10 +5,8 @@
             "create_in_modal": "Create referenced entry in modal window",
             "export_to_csv": "Export to .csv",
             "import_from_csv": "Import from .csv",
-            "scan_qrcode": "Scan QR Code",
-            "qrcode_error_not_attr":"Adding data error! Check for the @input_from_qrcode attribute.",
-            "qrcode_error_not_ref":"Adding data error! Make sure that the field you fill out is a link to a table:",
-            "scan_barcode": "Scan Bar Code",
+            "scan_qrcode": "Scan QR code",
+            "scan_barcode": "Scan bar code",
             "remove_selected_rows": "Remove selected entries",
             "error": "Error"
         },
@@ -17,9 +15,7 @@
             "create_in_modal": "Создать связанную запись в окне",
             "export_to_csv": "Экспорт в .csv",
             "import_from_csv": "Импорт из .csv",
-            "scan_qrcode": "QR Code сканер",
-            "qrcode_error_not_attr":"Ошибка добавления данных! Проверьте наличие атрибута @input_from_qrcode.",
-            "qrcode_error_not_ref":"Ошибка добавления данных! Убедитесь что заполняемое поле является ссылкой на таблицу:",
+            "scan_qrcode": "Сканер QR-кодов",
             "scan_barcode": "Сканер штрих-кодов",
             "remove_selected_rows": "Удалить выбранные записи",
             "error": "Ошибка"
@@ -38,13 +34,17 @@
       @close="modalView = null"
     />
     <QRCodeScanner
+      v-if="selectedQRCodeEntity !== null"
       :open-scanner="openQRCodeScanner"
+      :entity="selectedQRCodeEntity"
       :multi-scan="true"
-      @select="selectFromQRScanner($event)"
+      @select="selectFromScanner(qrCodeColumnIndex, $event)"
     />
     <BarCodeScanner
+      v-if="selectedBarCodeEntity !== null"
+      :entity="selectedBarCodeEntity"
       :open-scanner="openBarCodeScanner"
-      @select="selectFromBarScanner($event)"
+      @select="selectFromScanner(barCodeColumnIndex, $event)"
     />
   </span>
 </template>
@@ -53,19 +53,18 @@
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import * as R from "ramda";
+import { IEntityRef } from "ozma-api";
 
+import { isMobile, mapMaybe, saveToFile, tryDicts } from "@/utils";
 import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, userViewTitle } from "@/components/BaseUserView";
 import { IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
-
-import { IEntityRef } from "@/api";
 import SelectUserView from "@/components/SelectUserView.vue";
-import { isMobile, mapMaybe, saveToFile, tryDicts } from "@/utils";
 import { Action } from "@/components/ActionsMenu.vue";
 import { PanelButton } from "@/components/ButtonsPanel.vue";
 import { attrToLink } from "@/links";
-import QRCodeScanner, { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
-import BarCodeScanner from "@/components/barcode/BarCodeScanner.vue";
+import type { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
 import { ValueRef, valueToPunnedText } from "@/user_views/combined";
+import { referenceEntriesRef } from "@/state/entries";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -87,7 +86,13 @@ const csvCell = (str: string): string => {
   return csvstr;
 };
 
-@Component({ components: { SelectUserView, QRCodeScanner, BarCodeScanner } })
+@Component({
+  components: {
+    SelectUserView,
+    QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
+    BarCodeScanner: () => import("@/components/barcode/BarCodeScanner.vue"),
+  },
+})
 export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>>(BaseUserView) {
   modalView: IQuery | null = null;
   openQRCodeScanner = false;
@@ -330,7 +335,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       });
     }
 
-    if (this.uv.columnAttributes.find(ca => ca["scan_qrcode"]) !== undefined) {
+    if (this.selectedQRCodeEntity !== null) {
       actions.push({
         icon: "qr_code_2",
         name: this.$t("scan_qrcode").toString(),
@@ -340,7 +345,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       });
     }
 
-    if (this.uv.columnAttributes.find(ca => ca["scan_barcode"]) !== undefined) {
+    if (this.selectedBarCodeEntity !== null) {
       actions.push({
         icon: "qr_code_scanner",
         name: this.$t("scan_barcode").toString(),
@@ -404,32 +409,50 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     this.modalView = null;
   }
 
-  get qrCodeReferenceField(): IXCodeReferenceField | null {
-    const qrCodeReferenceField = mapMaybe((column, columnIndex): IXCodeReferenceField | undefined => {
-      const getColumnAttr = (name: string) => tryDicts(name, this.uv.columnAttributes[columnIndex], this.uv.attributes);
-      const inputFormQRCodeAttr = Boolean(getColumnAttr("input_from_qrcode"));
-      const fieldType = this.uv.info.columns[columnIndex].mainField?.field.fieldType;
-      if (inputFormQRCodeAttr && fieldType !== undefined && fieldType.type === "reference") {
-        return {
-          field: { type: "new", column: columnIndex },
-          entity: fieldType.entity,
-        };
-      }
-      return undefined;
-    }, this.uv.columnAttributes);
-    return qrCodeReferenceField.pop() || null;
+  private selectFromScanner(columnIndex: number, result: IQRResultContent[]) {
+    result.forEach(r => {
+      void this.updateValue({ type: "new", column: columnIndex }, r.id);
+    });
   }
 
-  private selectFromQRScanner(result: Array<IQRResultContent>) {
-    result.forEach(r => {
-      if (this.qrCodeReferenceField == null) {
-        this.makeToast(this.$t("qrcode_error_not_attr").toString());
-      } else if (this.qrCodeReferenceField.entity.schema === r.schema && this.qrCodeReferenceField.entity.name === r.name) {
-        void this.updateValue(this.qrCodeReferenceField.field, r.id);
-      } else {
-        this.makeToast(this.$t("qrcode_error_not_ref").toString() + `{schema: ${r.schema}, name: ${r.name}}`);
+  get barCodeColumnIndex() {
+    const ret = this.uv.columnAttributes.findIndex(attrs => attrs["scan_barcode"]);
+    if (ret === -1) {
+      return null;
+    } else {
+      return ret;
+    }
+  }
+
+  get qrCodeColumnIndex() {
+    const ret = this.uv.columnAttributes.findIndex(attrs => attrs["scan_qrcode"]);
+    if (ret === -1) {
+      return null;
+    } else {
+      return ret;
+    }
+  }
+
+  get selectedBarCodeEntity() {
+    if (this.barCodeColumnIndex !== null) {
+      const fieldType = this.uv.info.columns[this.barCodeColumnIndex].mainField?.field.fieldType;
+
+      if (fieldType?.type === "reference") {
+        return referenceEntriesRef(fieldType);
       }
-    });
+    }
+    return null;
+  }
+
+  get selectedQRCodeEntity() {
+    if (this.qrCodeColumnIndex !== null) {
+      const fieldType = this.uv.info.columns[this.qrCodeColumnIndex].mainField?.field.fieldType;
+
+      if (fieldType?.type === "reference") {
+        return referenceEntriesRef(fieldType);
+      }
+    }
+    return null;
   }
 
   private makeToast(message: string) {
@@ -437,31 +460,6 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       title: this.$t("error").toString(),
       variant: "danger",
       solid: true,
-      noAutoHide: true,
-    });
-  }
-
-  get barCodeReferenceField(): IXCodeReferenceField | null {
-    const barCodeReferenceField = mapMaybe((column, columnIndex): IXCodeReferenceField | undefined => {
-      const getColumnAttr = (name: string) => tryDicts(name, this.uv.columnAttributes[columnIndex], this.uv.attributes);
-      const inputFormQRCodeAttr = Boolean(getColumnAttr("scan_barcode"));
-      const fieldType = this.uv.info.columns[columnIndex].mainField?.field.fieldType;
-      if (inputFormQRCodeAttr && fieldType !== undefined && fieldType.type === "reference") {
-        return {
-          field: { type: "new", column: columnIndex },
-          entity: fieldType.entity,
-        };
-      }
-      return undefined;
-    }, this.uv.columnAttributes);
-    return barCodeReferenceField.pop() || null;
-  }
-
-  private selectFromBarScanner(result: Array<string>) {
-    result.forEach(r => {
-      if (this.barCodeReferenceField !== null) {
-        void this.updateValue(this.barCodeReferenceField.field, r);
-      }
     });
   }
 }

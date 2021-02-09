@@ -117,7 +117,7 @@
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
-import { AttributesMap } from "ozma-api";
+import { AttributesMap, IEntityRef } from "ozma-api";
 
 import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout } from "@/utils";
 import { funappSchema } from "@/api";
@@ -133,7 +133,6 @@ import type { ICombinedUserViewAny, IUserViewArguments } from "@/user_views/comb
 import { CombinedUserView } from "@/user_views/combined";
 import { UserViewError, fetchUserViewData } from "@/user_views/fetch";
 import { baseUserViewHandler } from "@/components/BaseUserView";
-import { IEntityRef } from "ozma-api/src";
 
 const types: RecordSet<string> = {
   "form": null,

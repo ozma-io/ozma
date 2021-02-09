@@ -1,259 +1,62 @@
-<i18n>
-    {
-        "en": {
-            "select_view": "Add in modal window",
-            "follow_reference": "Open in modal window"
-        },
-        "ru": {
-            "select_view": "Создать во вложенном окне",
-            "follow_reference": "Открыть во вложенном окне"
-        }
-    }
-</i18n>
-
 <template>
   <div
     class="reference-field"
     :style="{backgroundColor: backgroundColor}"
   >
-    <!-- Used when user selects an entry -->
-    <SelectUserView
-      v-if="selectedView"
-      :initial-view="selectedView"
-      :select-entity="entry.entity"
-      autofocus
-      @select="selectFromView"
-      @close="selectedView = null"
-    />
-    <MultiSelect
-      v-if="options !== null"
-      ref="control"
-      :value="currentValue"
-      :options="options"
-      :entry="entry"
+    <ReferenceMultiSelect
+      :value="value"
       :height="height"
       single
       :autofocus="autofocus"
-      :dont-open="dontOpen"
-      :required="!isNullable"
-      :disabled="isDisabled"
-      @update:value="$emit('update', $event)"
-      @focus="$emit('focus', $event)"
-    >
-      <template #singleValue="select">
-        <span
-          v-if="select.valueOption.meta && select.valueOption.meta.link"
-          :style="select.listValueStyle"
-          class="single-value"
-        >
-          <FunLink
-            class="single-value__link"
-            :link="select.valueOption.meta.link"
-            @goto="$emit('goto', $event)"
-          >
-            <input
-              type="button"
-              class="material-icons reference__open_modal"
-              :value="iconValue(select.valueOption.meta.link.target)"
-            >
-          </FunLink>
-          <!-- eslint-disable vue/no-v-html -->
-          <span v-html="select.valueOption.labelHtml" />
-          <!-- eslint-enable vue/no-v-html -->
-        </span>
-        <!-- eslint-disable vue/no-v-html -->
-        <span
-          v-else
-          :style="select.listValueStyle"
-          :class="[
-            'single-value',
-            {
-              'has-links': select.valueOption.label !== select.valueOption.labelHtml,
-            }
-          ]"
-          v-html="select.valueOption.labelHtml"
-        />
-        <!-- eslint-enable vue/no-v-html -->
-      </template>
-      <template
-        v-if="!isDisabled"
-        #actions
-      >
-        <button
-          v-for="(action, index) in selectViews"
-          :key="index"
-          type="button"
-          class="reference__new_modal__button"
-          @click="selectedView = action.query"
-        >
-          <input
-            type="button"
-            class="material-icons reference__open_modal"
-            value="add"
-          >
-          {{ action.name }}
-        </button>
-      </template>
-    </MultiSelect>
-    <div
-      v-else
-      class="loading-box h-100 p-1 d-flex justify-content-center align-items-center"
-    >
-      <div
-        class="spinner-border spinner-border-sm"
-        style="border-color: rgba(0, 0, 0, 0.5); border-right-color: transparent;"
-      />
-    </div>
-    <!-- <input
-      v-else
-      ref="control"
-      type="text"
-      :autofocus="autofocus"
-      class="reference_backup_input"
-      :value="currentValue"
-      :disabled="isDisabled"
-      :required="!isNullable"
-      :style="controlStyle"
-      @input="$emit('update', $event.target.value)"
-    > -->
+      :required="!nullable"
+      :disabled="disabled"
+      :reference-entity="referenceEntity"
+      :uv-args="uvArgs"
+      :link-attr="linkAttr"
+      :select-views="selectViews"
+      :qrcode-input="qrcodeInput"
+      @update:value="$emit('update:value', $event)"
+      @focus="$emit('focus')"
+      @goto="$emit('goto', $event)"
+    />
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop } from "vue-property-decorator";
-import { mixins } from "vue-class-component";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { IQuery } from "@/state/query";
-import SelectUserView from "@/components/SelectUserView.vue";
-import MultiSelect, { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 
-import BaseEntriesView from "@/components/BaseEntriesView";
-import { attrToLinkRef } from "@/links";
+import ReferenceMultiSelect, { IReferenceSelectAction } from "@/components/ReferenceMultiSelect.vue";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
-import { currentValue, homeSchema } from "@/user_views/combined";
 import type { IEntriesRef } from "@/state/entries";
 
 const query = namespace("query");
 
-export interface IReferenceSelectAction {
-  name: string;
-  query: IQuery;
-}
-
 @Component({
   components: {
-    SelectUserView,
-    MultiSelect,
+    ReferenceMultiSelect,
   },
 })
-export default class ReferenceField extends mixins(BaseEntriesView) {
+export default class ReferenceField extends Vue {
   @query.Action("addWindow") addWindow!: (queryObj: IQuery) => Promise<void>;
   @Prop({ type: Array, default: () => [] }) selectViews!: IReferenceSelectAction[];
   @Prop({ type: Object, required: true }) value!: ICombinedValue;
-  @Prop({ type: Object, required: true }) entry!: IEntriesRef;
+  @Prop({ type: Object, required: true }) referenceEntity!: IEntriesRef;
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
-  @Prop({ type: Object }) linkedAttr!: any | undefined;
-  @Prop({ type: Boolean, default: false }) isDisabled!: boolean;
-  @Prop({ type: Boolean, default: false }) isNullable!: boolean;
-  @Prop({ type: Boolean, default: false }) dontOpen!: boolean;
+  @Prop({ type: Object }) linkAttr!: any | undefined;
+  @Prop({ type: Boolean, default: false }) disabled!: boolean;
+  @Prop({ type: Boolean, default: false }) nullable!: boolean;
   @Prop({ type: Number }) height!: number | undefined;
-  @Prop({ type: Object }) controlStyle!: any;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
-
-  private selectedView: IQuery | null = null;
-
-  get entriesEntity() {
-    return this.entry;
-  }
-
-  get currentValue() {
-    return currentValue(this.value);
-  }
-
-  get options(): ISelectOption[] | null {
-    if (this.currentEntries === null) {
-      return null;
-    } else {
-      const home = homeSchema(this.uvArgs);
-      const linkOpts = home !== null ? { homeSchema: home } : undefined;
-
-      return Object.entries(this.currentEntries).map(([id, name]) => ({
-        label: name,
-        value: Number(id),
-        meta: {
-          link: attrToLinkRef(this.linkedAttr, id, linkOpts),
-        },
-      }));
-    }
-  }
-
-  private iconValue(target: string) {
-    if (target === "modal-auto" || target === "modal") {
-      return "flip_to_front";
-    } else {
-      return "open_in_new";
-    }
-  }
-
-  private selectFromView(id: number) {
-    this.selectedView = null;
-    this.$emit("update", id);
-  }
+  @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
 }
 </script>
 
 <style lang="scss" scoped>
   .reference-field {
     border-radius: 0.2rem;
-  }
-
-  .reference_backup_input {
-    width: 100%;
-  }
-
-  .form-view {
-    width: 85vw;
-  }
-
-  .single-value {
-    margin: 2px;
-    line-height: 1rem;
-
-    &.has-links {
-      /* Otherwise it's sometimes tricky to click/tap inside. */
-      padding-right: 5px;
-    }
-  }
-
-  .single-value > a,
-  .select-container__options_list__option > a {
-    color: var(--MainTextColor);
-    text-decoration: underline;
-  }
-
-  .single-value__link {
-    display: flex;
-  }
-
-  .reference__open_modal {
-    border: none;
-    background: none;
-    padding: 0;
-    margin: 0 10px 0 0;
-    color: var(--MainBorderTextColor);
-  }
-
-  .reference__new_modal__button {
-    color: var(--MainBorderTextColor);
-    display: flex;
-    align-items: center;
-    width: 100%;
-    background: var(--MainBorderColor);
-  }
-
-  .loading-box {
-    height: 2rem;
   }
 </style>

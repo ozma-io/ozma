@@ -49,7 +49,6 @@ import { mixins } from "vue-class-component";
 import { mapMaybe, tryDicts } from "@/utils";
 import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
-
 import Board from "@/components/kanban/Board.vue";
 import { ICard, ICardCol, isCardTarget } from "@/components/kanban/Card.vue";
 import { IColumn } from "@/components/kanban/Column.vue";
@@ -57,16 +56,15 @@ import Errorbox from "@/components/Errorbox.vue";
 import { attrToLinkSelf, Link } from "@/links";
 import { currentValue, ICombinedRow, ICombinedValue, IExistingValueRef, ValueRef, valueToPunnedText } from "@/user_views/combined";
 import { referenceEntriesRef } from "@/state/entries";
-import { IFieldRef } from "../../api";
-import { attrToQuery } from "../../state/query";
-import BaseEntriesView from "../BaseEntriesView";
+import BaseEntriesView from "@/components/BaseEntriesView";
+import { attrToQuery } from "@/state/query";
 
 interface ICardExtra {
   groupRef: IExistingValueRef;
   orderRef: IExistingValueRef;
 }
 
-type IColumnTitleMap = Record<number, string>;
+type IColumnTitleMap = Record<string, string>;
 
 @UserView()
 @Component({ components: { Board, Errorbox } })
@@ -139,25 +137,20 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       this.uv.attributes["card_create_view"],
       { infoByDefault: true },
     ) || undefined;
-    const groupedColumns = R.groupBy(card => String(R.path(["groupValue"], card)),
-      cards);
-    const filteredColumns = this.columnNames
-      .reduce((acc: object, columTitle: string) => {
-        const column: IColumn[] = R.pathOr([], [columTitle], groupedColumns);
-        return { ...acc, [columTitle]: column };
-      }, {});
+    const groupedColumns = R.groupBy(card => String(card.groupValue), cards);
 
     const sortByOrder = R.sortBy(R.prop("order"));
 
-    const allColumns: IColumn[] = Object.keys(filteredColumns)
+    const allColumns: IColumn[] = this.columnNames
       .map((column: string) => ({
         id: column,
-        title: R.pathOr(column, [column], this.boardTitles),
+        title: this.boardTitles[column] ?? column,
         fieldName,
         orderFieldName,
         createView,
-        cards: this.orderIndex > 0 ? sortByOrder(R.pathOr([], [column], groupedColumns)) : R.pathOr([], [column], groupedColumns),
+        cards: this.orderIndex > 0 ? sortByOrder(groupedColumns[column] ?? []) : (groupedColumns[column] ?? []),
       }));
+
     return R.sortBy(
       (column: IColumn) => this.columnNames!.indexOf(column.id),
       allColumns,
@@ -182,7 +175,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     if (!(this.currentEntries instanceof Error) && this.currentEntries) {
       return this.currentEntries;
     }
-    return this.columnNames!.reduce((acc: { [key: string]: string }, column: string) => ({ ...acc, [column]: String(column) }), {});
+    return Object.fromEntries(this.columnNames!.map((column: string) => [column, String(column)]));
   }
 
   private changeOrder(orderRef: ValueRef, value: number) {
@@ -195,25 +188,18 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
 
   private getCardColumns(values: ICombinedValue[]): ICardCol[] {
     return mapMaybe<ICombinedValue, ICardCol>((value, index) => {
-      const fieldRef = R.path<IFieldRef>(["info", "fieldRef"], value);
+      const fieldRef = value.info?.fieldRef;
       const fieldType = this.uv.info.columns[index].valueType;
       const punnedValue = valueToPunnedText(fieldType, value);
-      const isVisible = R.pathOr<boolean>(
-        true,
-        ["columnAttributes", index, "visible"],
-        this.uv,
-      );
-      const icon = R.path<string>(
-        ["columnAttributes", index, "icon"],
-        this.uv,
-      );
+      const isVisible = Boolean(this.uv.columnAttributes[index]?.["visible"] ?? true);
+      const icon = this.uv.columnAttributes[index]?.["icon"];
       return isVisible ? {
-        fieldName: R.path<string>(["name"], fieldRef),
+        fieldName: fieldRef?.name,
         fieldRef,
         type: "text",
         value: punnedValue,
         size: 12,
-        icon,
+        icon: icon !== undefined ? String(icon) : undefined,
       } : undefined;
     }, values);
   }
@@ -242,8 +228,8 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     if (this.orderIndex !== -1) {
       order = Number(currentValue(row.values[this.orderIndex]));
     }
-    const color = R.path<string>(["attributes", "cell_color"], groupValue);
-    const groupField = R.path<string>(["info", "fieldRef", "name"], groupValue);
+    const color = groupValue.attributes?.["cell_color"];
+    const groupField = groupValue.info?.fieldRef.name;
 
     let cardLink: Link | undefined;
     row.values.forEach((value, colI) => {
@@ -265,7 +251,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       cardLink,
       rows: cardColumns.map(col => [col]),
       style: {
-        color,
+        color: color !== undefined ? String(color) : undefined,
       },
     };
   }

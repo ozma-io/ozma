@@ -53,8 +53,7 @@
     <div
       ref="tableContainer"
       class="tabl"
-      @scroll="updateShowLength"
-      @resize="updateShowLength"
+      infinite-wrapper
     >
       <div
         v-if="uv.emptyRow !== null"
@@ -159,8 +158,23 @@
           />
         </tbody>
       </table>
+      <infinite-loading
+        v-if="!noMoreRows"
+        spinner="spiral"
+        @infinite="updateShowLength"
+      >
+        <template #no-results>
+          <span />
+        </template>
+        <template #no-more>
+          <span />
+        </template>
+        <template #error>
+          <span />
+        </template>
+      </infinite-loading>
       <div
-        v-if="uv.emptyRow !== null"
+        v-if="noMoreRows && uv.emptyRow !== null"
         class="button-container"
       >
         <div
@@ -176,15 +190,16 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
+import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
+import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 import { Moment, default as moment } from "moment";
 import * as R from "ramda";
+import { IResultColumnInfo, ValueType, RowId } from "ozma-api";
 
 import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName } from "@/utils";
 import { valueIsNull } from "@/values";
-import { IResultColumnInfo, ValueType } from "@/api";
 import { UserView } from "@/components";
 import { AddedRowId, AutoSaveLock } from "@/state/staging_changes";
 import { IAttrToQueryOpts } from "@/state/query";
@@ -198,8 +213,7 @@ import {
   IExtendedRow, IExtendedRowCommon, IExtendedRowInfo, IExtendedValue, IRowCommon, IUserViewHandler, RowRef, ValueRef,
   valueToPunnedText,
 } from "@/user_views/combined";
-import { Entries, IEntriesRef, referenceEntriesRef } from "@/state/entries";
-import { RowId } from "ozma-api/src";
+import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 
 export interface IColumn {
   caption: string;
@@ -835,14 +849,14 @@ interface IShownRow {
 })
 @Component({
   components: {
-    TableRow, Checkbox, TableCellEdit,
+    TableRow, Checkbox, TableCellEdit, InfiniteLoading,
   },
 })
 export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra, ITableRowExtra, ITableViewExtra>>(BaseUserView) {
   @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
   @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
   @entries.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IEntriesRef; reference: ReferenceName }) => void;
-  @entries.Action("getEntries") getEntries!: (args: { reference: ReferenceName; ref: IEntriesRef }) => Promise<Entries>;
+  @entries.Mutation("addEntriesConsumer") addEntriesConsumer!: (args: { ref: IEntriesRef; reference: ReferenceName }) => void;
 
   // These two aren't computed properties for performance. They are computed during `init()` and mutated when other values change.
   // If `init()` is called again, their values after recomputation should be equal to those before it.
@@ -951,12 +965,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   @Watch("uv")
   protected uvChanged() {
     this.init();
-    this.updateShowLength();
     this.updateRows();
   }
 
   protected mounted() {
-    this.updateShowLength();
     (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", () => {
       this.removeCellEditing();
     });
@@ -1023,7 +1035,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       if (fieldType !== undefined && fieldType.type === "reference") {
         if (!this.keptEntries.exists(fieldType)) {
           const ref = referenceEntriesRef(fieldType);
-          void this.getEntries({ ref, reference: this.uid });
+          void this.addEntriesConsumer({ ref, reference: this.uid });
           this.keptEntries.insert(ref);
         }
       }
@@ -1175,7 +1187,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
         this.isTree = true;
       }
       this.sortRows();
-      this.updateShowLength();
     }
   }
 
@@ -1461,19 +1472,16 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private updateShowLength() {
-    const tableContainer = this.$refs.tableContainer as Element | undefined;
-    // Component may still be unmounted
-    if (tableContainer === undefined) {
-      return;
-    }
-    // + 1 is needed because of rare cases like that:
-    // top 974.4000244140625, client height 690, scroll height 1665
-    if (tableContainer.scrollTop + tableContainer.clientHeight + 1 >= tableContainer.scrollHeight
-     && this.showLength < this.rowPositions.length
-    ) {
-      this.showLength = Math.min(this.showLength + showStep, this.uv.rows?.length ?? 0);
-      Vue.nextTick(() => this.updateShowLength());
+  get noMoreRows() {
+    return this.showLength >= (this.uv.rows?.length ?? 0);
+  }
+
+  private updateShowLength(ev: StateChanger) {
+    this.showLength = Math.min(this.showLength + showStep, this.uv.rows?.length ?? 0);
+    if (this.noMoreRows) {
+      ev.complete();
+    } else {
+      ev.loaded();
     }
   }
 

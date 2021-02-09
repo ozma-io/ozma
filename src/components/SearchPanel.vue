@@ -72,7 +72,7 @@ import { Debounce } from "vue-debounce-decorator";
 
 @Component
 export default class SearchPanel extends Vue {
-  @Prop({ type: String, default: "" }) filterString!: string;
+  @Prop({ type: String, required: true }) filterString!: string;
 
   private showInput = false;
   private showOpenButton = true;

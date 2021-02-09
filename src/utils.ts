@@ -149,12 +149,16 @@ export const convertString = <T>(value: string, constructor: (_: string) => T, d
   }
 };
 
-export const updateObject = (to: object, from: object) => {
+export const syncObject = (to: object, from: object) => {
+  updateObject(to, from);
   Object.entries(to).forEach(([name, oldValue]) => {
     if (!(name in from)) {
       Vue.delete(to, name);
     }
   });
+};
+
+export const updateObject = (to: object, from: object) => {
   Object.entries(from).forEach(([name, newValue]) => {
     if (!(name in to) || (to as any)[name] !== newValue) {
       Vue.set(to, name, newValue);
@@ -162,16 +166,11 @@ export const updateObject = (to: object, from: object) => {
   });
 };
 
-export const deepUpdateObject = (to: object, from: object) => {
+export const deepSyncObject = (to: object, from: object) => {
   if (to === null || from === null) {
-    throw new Error("deepUpdateObject: expected two objects");
+    throw new Error("deepSyncObject: expected two objects");
   }
 
-  Object.keys(to).forEach(name => {
-    if (!(name in from)) {
-      Vue.delete(to, name);
-    }
-  });
   Object.entries(from).forEach(([name, newValue]) => {
     if (!(name in to)) {
       Vue.set(to, name, newValue);
@@ -179,11 +178,16 @@ export const deepUpdateObject = (to: object, from: object) => {
       const oldValue = (to as any)[name];
       if (oldValue !== newValue) {
         if (typeof oldValue === "object" && oldValue !== null && typeof newValue === "object" && newValue !== null) {
-          deepUpdateObject(oldValue, newValue);
+          deepSyncObject(oldValue, newValue);
         } else {
           Vue.set(to, name, newValue);
         }
       }
+    }
+  });
+  Object.keys(to).forEach(name => {
+    if (!(name in from)) {
+      Vue.delete(to, name);
     }
   });
 };
@@ -243,10 +247,6 @@ export const deepEquals = <T>(a: T, b: T): boolean => {
 
 export const mapMaybe = <A, R>(func: (arg: A, index: number, array: A[]) => R | undefined, arr: A[]): R[] => {
   return arr.map(func).filter(val => val !== undefined) as R[];
-};
-
-export const map2 = <A, B, R>(func: (arg1: A, arg2: B, index: number, array1: A[], array2: B[]) => R, arr1: A[], arr2: B[]): R[] => {
-  return arr1.map((a, i) => func(a, arr2[i], i, arr1, arr2));
 };
 
 // Like JSON.stringify but maintains order of keys in dictionaries.

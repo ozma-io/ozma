@@ -1,7 +1,9 @@
 import { Module } from "vuex";
+import { IViewExprResult } from "ozma-api";
 
 import { IRef, convertString, waitTimeout } from "@/utils";
-import { IViewExprResult, funappSchema, default as Api } from "@/api";
+import { funappSchema, default as Api } from "@/api";
+import { CancelledError } from "@/modules";
 
 const errorKey = "settings";
 
@@ -81,7 +83,7 @@ const settingsModule: Module<ISettingsState, {}> = {
             args: [ref, {}],
           }, { root: true });
           if (state.pending !== pending.ref) {
-            throw new Error("Pending operation cancelled");
+            throw new CancelledError();
           }
           const values = Object.fromEntries(res.result.rows.map(row => {
             const key = row.values[0].value;

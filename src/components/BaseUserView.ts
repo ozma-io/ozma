@@ -1,7 +1,7 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
+import { RowId, IEntityRef, IFieldRef } from "ozma-api";
 
-import { RowId, IEntityRef, IFieldRef } from "@/api";
 import { ErrorKey } from "@/state/errors";
 import type { ScopeName, AddedRowId, CombinedTransactionResult } from "@/state/staging_changes";
 import type {
@@ -46,10 +46,10 @@ export interface IBaseViewExtra {
   selectedRows: ObjectSet<RowRef>;
 }
 
-type IBaseCombinedUserView = ICombinedUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>;
-type IBaseExtendedRow = IExtendedRow<IBaseValueExtra, IBaseRowExtra>;
-type IBaseExtendedRowInfo = IExtendedRowInfo<IBaseRowExtra>;
-type IBaseExtendedAddedRow = IExtendedAddedRow<IBaseValueExtra, IBaseRowExtra>;
+export type IBaseCombinedUserView = ICombinedUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>;
+export type IBaseExtendedRow = IExtendedRow<IBaseValueExtra, IBaseRowExtra>;
+export type IBaseExtendedRowInfo = IExtendedRowInfo<IBaseRowExtra>;
+export type IBaseExtendedAddedRow = IExtendedAddedRow<IBaseValueExtra, IBaseRowExtra>;
 
 export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra> = {
   ...emptyUserViewHandlerFunctions,

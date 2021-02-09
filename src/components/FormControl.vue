@@ -26,7 +26,7 @@
       :background-color="cellColor"
       :text-align="textAlign"
       :modal="$isMobile && (forceModalOnMobile || isMultiline)"
-      :required="!isNullable && inputType.name !== 'select'"
+      :required="!isNullable"
       :empty="currentValueIsNull"
       @close-modal-input="$emit('close-modal-input')"
     >
@@ -40,7 +40,6 @@
           :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
           :required="!isNullable"
-          :qrcode-input="isQRCodeInput"
           :autofocus="autofocus || iSlot.autofocus"
           :text-align="textAlign"
           :background-color="cellColor"
@@ -76,13 +75,12 @@
           @focus="iSlot.onFocus"
           @update:value="updateValue"
         />
-        <MultiSelect
+        <ValueSelect
           v-else-if="inputType.name === 'select'"
           ref="control"
           :value="currentValue"
           :options="inputType.options"
           :height="customHeight"
-          single
           :autofocus="autofocus || iSlot.autofocus"
           :required="!isNullable"
           :disabled="isDisabled"
@@ -128,10 +126,9 @@
         >
         <QRCode
           v-else-if="inputType.name === 'qrcode'"
-          ref="control"
-          :entry="inputType.ref"
+          :id="typeof currentValue === 'number' ? currentValue : undefined"
+          :entity="inputType.ref"
           :height="customHeight"
-          :content="textValue"
         />
         <BarCodePrint
           v-else-if="inputType.name === 'barcode'"
@@ -149,18 +146,18 @@
           :value="value"
           :select-views="inputType.selectViews"
           :height="customHeight"
-          :entry="inputType.ref"
-          :linked-attr="inputType.linkedAttr"
-          :control-style="inputType.style"
+          :reference-entity="inputType.ref"
+          :link-attr="inputType.linkAttr"
           :uv-args="uvArgs"
           :autofocus="autofocus || iSlot.autofocus"
-          :is-nullable="isNullable"
-          :is-disabled="isDisabled"
+          :nullable="isNullable"
+          :disabled="isDisabled"
           :background-color="cellColor"
+          :qrcode-input="isQRCodeInput"
           @update:actions="actions = $event"
           @update:buttons="panelButtons = $event"
           @focus="iSlot.onFocus"
-          @update="updateValue($event)"
+          @update:value="updateValue($event)"
           @goto="$emit('goto', $event)"
         />
       </template>
@@ -193,9 +190,10 @@
             v-else-if="inputType.name === 'userview'"
             :title="usedCaption"
             :actions="actions"
-            :buttons="panelButtons"
-            :is-enable-filter="enableFilter"
-            :view="inputType"
+            :enable-filter="enableFilter"
+            :input-type="inputType"
+            :panel-buttons="panelButtons"
+            :filter-string="filterString"
             @update:filterString="filterString = $event"
             @goto="$emit('goto', $event)"
           />
@@ -225,17 +223,18 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
+import type { AttributesMap, ValueType } from "ozma-api";
 
 import { valueToText, valueIsNull } from "@/values";
-import type { AttributesMap, ValueType } from "@/api";
 import { Action } from "@/components/ActionsMenu.vue";
 import { IQuery, attrToQuerySelf } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
-import { IReferenceSelectAction } from "@/components/ReferenceField.vue";
 import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
 import { PanelButton } from "@/components/ButtonsPanel.vue";
+import { IEntityRef } from "ozma-api/src";
+import { IReferenceSelectAction } from "./ReferenceMultiSelect.vue";
 
 interface ITextType {
   name: "text";
@@ -256,7 +255,7 @@ interface ICodeEditorType {
 
 interface IQRCodeType {
   name: "qrcode";
-  ref: IEntriesRef;
+  ref: IEntityRef;
 }
 
 interface IBarCodeType {
@@ -271,13 +270,13 @@ interface IMarkdownEditorType {
 
 interface ISelectType {
   name: "select";
-  options: ISelectOption[];
+  options: ISelectOption<unknown>[];
 }
 
 interface IReferenceType {
   name: "reference";
   ref: IEntriesRef;
-  linkedAttr?: unknown;
+  linkAttr?: unknown;
   selectViews: IReferenceSelectAction[];
   style?: Record<string, unknown>;
 }
@@ -339,7 +338,7 @@ const multilineTypes = ["markdown", "codeeditor", "textarea", "userview", "empty
   components: {
     CodeEditor: () => import("@/components/editors/CodeEditor.vue"),
     MarkdownEditor: () => import("@/components/editors/MarkdownEditor.vue"),
-    MultiSelect: () => import("@/components/multiselect/MultiSelect.vue"),
+    ValueSelect: () => import("@/components/ValueSelect.vue"),
     Calendar: () => import("@/components/Calendar.vue"),
     ReferenceField: () => import("@/components/ReferenceField.vue"),
     InputSlot: () => import("@/components/form/InputSlot.vue"),
@@ -509,11 +508,23 @@ export default class FormControl extends Vue {
     // `calc` is needed because sizes should be relative to base font size.
     const heightMultilineText = "calc(4em + 12px)";
     const heightCodeEditor = "200px";
+
+    // FIXME: return proper type from backend instead.
+    if (this.value.info?.fieldRef.name === "id") {
+      if (controlAttr === "qrcode") {
+        return { name: "qrcode", ref: this.value.info.fieldRef.entity };
+      }
+
+      if (controlAttr === "barcode") {
+        return { name: "barcode" };
+      }
+    }
+
     if (this.fieldType !== null) {
       switch (this.fieldType.type) {
         case "reference": {
           if (controlAttr === "qrcode") {
-            return { name: "qrcode", ref: referenceEntriesRef(this.fieldType) };
+            return { name: "qrcode", ref: referenceEntriesRef(this.fieldType).entity };
           }
 
           if (controlAttr === "barcode") {
@@ -525,7 +536,7 @@ export default class FormControl extends Vue {
             ref: referenceEntriesRef(this.fieldType),
             selectViews: [],
           };
-          refEntry.linkedAttr = this.attributes["link"];
+          refEntry.linkAttr = this.attributes["link"];
           refEntry.style = this.controlStyle();
 
           const selectView = attrToQuerySelf(this.attributes["select_view"], this.value.info, linkOpts);

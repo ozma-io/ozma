@@ -1,14 +1,13 @@
 import Vue from "vue";
 import { Store } from "vuex";
 import moment, { MomentInput } from "moment";
-import {
-  IExecutedValue, IColumnField, IFieldRef, RowId, AttributesMap, IExecutedRow, SchemaName, EntityName, FieldName, UserViewSource, IResultViewInfo, AttributeName, FieldType, IEntityRef,
-} from "ozma-api";
+import { IExecutedValue, IColumnField, IFieldRef, RowId, AttributesMap, IExecutedRow, SchemaName, EntityName, FieldName, UserViewSource, IResultViewInfo, AttributeName, FieldType, IEntityRef,
+  ValueType } from "ozma-api";
 import { AddedRowId, IAddedEntry, IEntityChanges, IStagingEventHandler, IStagingState } from "@/state/staging_changes";
 import { mapMaybe, tryDicts } from "@/utils";
 import { equalEntityRef, IUpdatedValue, valueFromRaw, valueIsNull, valueToText } from "@/values";
 import { Entries, IEntriesState, referenceEntriesRef } from "@/state/entries";
-import { ValueType } from "ozma-api/src";
+
 import { IEntitiesState } from "../state/entities";
 
 export interface IValueInfo {
@@ -210,7 +209,7 @@ const vueInsertMainRowMapping = (mainRowMapping: IMainRowMapping, id: RowId, row
 const setUpdatedPun = (summaries: Entries, value: ICombinedValue, ref: number) => {
   const pun = summaries[ref];
   if (pun === undefined) {
-    value.pun = String(ref);
+    value.pun = null;
   } else {
     value.pun = pun;
   }
@@ -239,12 +238,8 @@ export const homeSchema = (args: IUserViewArguments): SchemaName | null => {
 };
 
 export const valueToPunnedText = (valueType: ValueType, value: ICombinedValue): string => {
-  if (value.pun !== undefined) {
-    if (value.pun === null) {
-      return "";
-    } else {
-      return value.pun;
-    }
+  if (value.pun !== undefined && value.pun !== null) {
+    return value.pun;
   } else {
     return valueToText(valueType, currentValue(value));
   }
@@ -779,11 +774,11 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     if (summaries) {
       setUpdatedPun(summaries, value, ref);
     } else {
-      value.pun = undefined;
+      value.pun = null;
     }
   }
 
-  // Returns `null` when there's no pun. Returns `undefined` when pun cannot be resolved now.
+  // Sets `null` when there's no pun. Sets `undefined` when pun cannot be resolved now.
   private setOrRequestUpdatedPun<TValue extends ICombinedValue>(value: TValue, fieldType: FieldType, delayedUpdateValue: (nextValue: TValue) => void) {
     const ref = currentValue(value) as number | null;
 
@@ -796,27 +791,25 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
       return;
     }
 
-    let summaries = this.storeEntries.entries.get(fieldType);
+    const summaries = this.storeEntries.entries.get(fieldType);
 
-    if (summaries === undefined) {
-      summaries = this.store.dispatch("entries/getEntries", { ref: referenceEntriesRef(fieldType), reference: "update" }) as Promise<Entries>;
-    }
-
-    if (summaries instanceof Error) {
-      this.setPunFromCache(value, fieldType.entity, ref);
-    } else if (summaries instanceof Promise) {
-      void summaries.then(newSummaries => {
-        if (currentValue(value) !== ref) {
-          return;
-        }
-        setUpdatedPun(newSummaries, value, ref);
-        this.insertEntries(fieldType.entity, newSummaries);
-        delayedUpdateValue(value);
-      });
-      this.setPunFromCache(value, fieldType.entity, ref);
+    if (summaries !== undefined && ref in summaries.entries) {
+      this.insertEntries(fieldType.entity, summaries.entries);
+      setUpdatedPun(summaries.entries, value, ref);
     } else {
-      this.insertEntries(fieldType.entity, summaries);
-      setUpdatedPun(summaries, value, ref);
+      void (async () => {
+        try {
+          const pending = await this.store.dispatch("entries/getSingleEntry", { ref: referenceEntriesRef(fieldType), reference: "update", id: ref }) as string | undefined;
+          if (pending !== undefined) {
+            value.pun = pending;
+          } else {
+            value.pun = null;
+          }
+        } catch (e) {
+          this.setPunFromCache(value, fieldType.entity, ref);
+        }
+        delayedUpdateValue(value);
+      })();
     }
   }
 

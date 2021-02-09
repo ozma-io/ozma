@@ -14,79 +14,21 @@
     fluid
     class="view-form"
   >
-    <MultiSelect
-      v-if="selectedValueIndex"
-      :options="options || []"
-      :value="selectValues"
-      :empty-value="[]"
+    <ReferenceMultiSelect
+      v-if="referenceEntity"
+      :value="selectedValues"
       :disabled="disabled"
       :background-color="backgroundColor"
-      @update:value="onSelectChange"
-    >
-      <template #label="select">
-        <span
-          v-for="(option, index) in select.valueOptions"
-          :key="option.value"
-          :class="[
-            'one-of-many-value',
-            {
-              'has-links': option.label !== option.labelHtml,
-            },
-          ]"
-          :style="select.listValueStyle"
-          @click.stop
-        >
-          <FunLink
-            v-if="option.meta && option.meta.link"
-            :link="option.meta.link"
-            @goto="$emit('goto', $event)"
-          >
-            <input
-              type="button"
-              class="material-icons reference__open_modal"
-              value="open_in_new"
-            >
-          </FunLink>
-          <!-- eslint-disable vue/no-v-html -->
-          <span v-html="option.labelHtml" />
-          <!-- eslint-enable vue/no-v-html -->
-          <input
-            v-if="select.showValueRemove"
-            type="button"
-            class="material-icons material-button remove-value"
-            value="close"
-            @click="select.removeValue(index)"
-          >
-        </span>
-      </template>
-      <template #option="select">
-        <ul
-          ref="optionsList"
-          class="select-container__options_list"
-          :style="select.optionsListStyle"
-        >
-          <li
-            v-for="(option, index) in select.selectedOptions"
-            :key="option.value"
-            :class="[
-              'single-value',
-              'select-container__options_list__option',
-              {
-                'select-container__options_list__option_active': select.selectedOption === index,
-              }
-            ]"
-            @click="select.addOptionToValue(option, $event)"
-          >
-            <!-- eslint-disable vue/no-v-html -->
-            <span v-html="option.label" />
-            <!-- eslint-enable vue/no-v-html -->
-          </li>
-        </ul>
-      </template>
-    </MultiSelect>
+      :link-attr="linkAttr"
+      :reference-entity="referenceEntity"
+      :uv-args="uv.args"
+      @add-value="addValue"
+      @remove-index="removeIndex"
+      @goto="$emit('goto', $event)"
+    />
     <div
-      v-if="!selectedValueIndex"
-      style="color: red;"
+      v-else
+      class="no-select-error"
     >
       {{ $t('no_select_column') }}
     </div>
@@ -96,152 +38,135 @@
 <script lang="ts">
 import { Component, Prop } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-import { namespace } from "vuex-class";
+import { RowId } from "ozma-api";
 
 import { tryDicts, mapMaybe } from "@/utils";
-import { IQuery } from "@/state/query";
 import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
-import BaseEntriesView from "@/components/BaseEntriesView";
-import MultiSelect from "@/components/multiselect/MultiSelect.vue";
-import { attrToLinkRef } from "@/links";
-import { ICombinedRow, IRowCommon, RowRef, ValueRef } from "@/user_views/combined";
+import ReferenceMultiSelect from "@/components/ReferenceMultiSelect.vue";
+import { ICombinedValue } from "@/user_views/combined";
 import { referenceEntriesRef } from "@/state/entries";
+import { AddedRowId } from "@/state/staging_changes";
 
-interface IValueDelta {
-  rowsToRemove: RowRef[];
-  rowsToAdd: IValueDeltaNew[];
+interface ISelectedValueBase {
+  value: ICombinedValue;
 }
 
-interface IValueDeltaNew { ref: ValueRef; value: number }
+interface IExistingSelectedValue extends ISelectedValueBase {
+  type: "existing";
+  id: RowId;
+}
 
-const findValueDelta = (rows: ICombinedRow[], newRows: Record<number, IRowCommon>, value: any[], indexColumn: number): IValueDelta => {
-  const storeValues: Record<string, RowRef> = {};
-  rows.forEach((row, index) => {
-    storeValues[row.values[indexColumn].value as string] = { type: "existing", position: index };
-  });
-  Object.entries(newRows).forEach(([rowId, row]) => {
-    storeValues[row.values[indexColumn].value as string] = { type: "added", id: Number(rowId) };
-  });
-  const selectValues: Record<string, IValueDeltaNew> = value.reduce((acc, vl) => {
-    return { ...acc, [vl]: { ref: { column: indexColumn, type: "new" }, value: vl } };
-  }, {});
+interface IAddedSelectedValue extends ISelectedValueBase {
+  type: "added";
+  addedId: AddedRowId;
+}
 
-  const rowsToAdd = mapMaybe(([id, ref]) => {
-    if (id in storeValues) {
-      return undefined;
-    }
-    return ref;
-  }, Object.entries(selectValues));
-  const rowsToRemove = mapMaybe(([id, ref]) => {
-    if (id in selectValues) {
-      return undefined;
-    }
-    return ref;
-  }, Object.entries(storeValues));
-  return {
-    rowsToAdd,
-    rowsToRemove,
-  };
-};
+interface IUnknownSelectedValue extends ISelectedValueBase {
+  type: "unknown";
+}
 
-const query = namespace("query");
+type SelectedValue = IExistingSelectedValue | IAddedSelectedValue | IUnknownSelectedValue;
 
 @UserView()
 @Component({
-  components: { MultiSelect },
+  components: { ReferenceMultiSelect },
 })
-export default class UserViewMultiSelect extends mixins<EmptyBaseUserView, BaseEntriesView>(BaseUserView, BaseEntriesView) {
-  @query.Action("addWindow") addWindow!: (queryObj: IQuery) => Promise<void>;
+export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseUserView) {
   @Prop({ type: String }) backgroundColor!: string;
 
-  get entriesEntity() {
-    const fieldType = this.uv.info.columns[this.selectedValueIndex].mainField?.field.fieldType;
+  get referenceEntity() {
+    const fieldType = this.uv.info.columns[this.selectedValueColumn].mainField?.field.fieldType;
     if (fieldType?.type === "reference") {
       return referenceEntriesRef(fieldType);
-    }
-    return null;
-  }
-
-  private get selectedValueIndex() {
-    const ret = this.uv.columnAttributes.findIndex(attrs => attrs["select"]);
-    return ret === -1 ? 0 : ret;
-  }
-
-  private onSelectChange(value: any[]) {
-    if (this.uv.rows) {
-      const delta = findValueDelta(this.uv.rows, this.uv.newRows, value, this.selectedValueIndex);
-      delta.rowsToRemove.forEach(row => {
-        this.deleteRow(row);
-      });
-      delta.rowsToAdd.forEach(row => {
-        void this.updateValue(row.ref, row.value);
-      });
-    }
-  }
-
-  private get selectValues() {
-    const existingValues = this.uv.rows ? this.uv.rows.filter(row => !row.deleted)
-      .map(row => row.values[this.selectedValueIndex].value) : [];
-    const addedValues = Object.values(this.uv.newRows)
-      .map(row => row.values[this.selectedValueIndex].value);
-    return [...existingValues, ...addedValues];
-  }
-
-  private get options() {
-    if (!this.entriesEntity) {
-      return null;
-    }
-
-    const getColumnAttr = (name: string) => tryDicts(name, this.uv.columnAttributes[this.selectedValueIndex], this.uv.attributes);
-    const linkedView = getColumnAttr("row_link");
-    const entries = this.entriesMap.getEntries(this.entriesEntity);
-    if (entries) {
-      const options = Object.entries(entries).map(([key, value]) => ({
-        value: Number(key),
-        label: value,
-        meta: {
-          link: attrToLinkRef(linkedView, key),
-        },
-      }));
-      return options;
     } else {
       return null;
     }
   }
 
-  private get disabled() {
-    return !this.uv.info.mainEntity || this.addedLocked || this.options === null;
+  get selectedValueColumn() {
+    const ret = this.uv.columnAttributes.findIndex(attrs => attrs["select"]);
+    return ret === -1 ? 0 : ret;
+  }
+
+  get linkAttr() {
+    const getColumnAttr = (name: string) => tryDicts(name, this.uv.columnAttributes[this.selectedValueColumn], this.uv.attributes);
+    return getColumnAttr("row_link");
+  }
+
+  get selectedValuesWithPosition(): SelectedValue[] {
+    let existingRows: SelectedValue[];
+    if (!this.uv.rows) {
+      existingRows = [];
+    } else {
+      existingRows = mapMaybe(row => {
+        if (row.deleted) {
+          return undefined;
+        }
+        const value = row.values[this.selectedValueColumn];
+        if (row.mainId) {
+          return {
+            type: "existing",
+            id: row.mainId,
+            value,
+          };
+        } else {
+          return {
+            type: "unknown",
+            value,
+          };
+        }
+      }, this.uv.rows);
+    }
+    const addedRows: SelectedValue[] = this.uv.newRowsOrder.map(id => {
+      const row = this.uv.newRows[id];
+      return {
+        type: "added",
+        addedId: id,
+        value: row.values[this.selectedValueColumn],
+      };
+    });
+    return [...existingRows, ...addedRows];
+  }
+
+  get selectedValues(): ICombinedValue[] {
+    return this.selectedValuesWithPosition.map(row => row.value);
+  }
+
+  get disabled() {
+    return !this.uv.info.mainEntity;
+  }
+
+  private async addValue(id: RowId) {
+    await this.updateValue({ type: "new", column: this.selectedValueColumn }, id);
+  }
+
+  private async removeIndex(index: number) {
+    const row = this.selectedValuesWithPosition[index];
+    if (row.type === "existing") {
+      await this.deleteEntry({
+        entityRef: this.uv.info.mainEntity!,
+        id: row.id,
+      });
+    } else if (row.type === "added") {
+      await this.resetAddedEntry({
+        entityRef: this.uv.info.mainEntity!,
+        id: row.addedId,
+      });
+    } else {
+      throw new Error("Impossible");
+    }
   }
 }
 </script>
+
 <style lang="scss" scoped>
   .view-form {
     border-radius: 0.2rem;
     background-color: var(--MainBackgroundColor);
   }
 
-  .one-of-many-value > a,
-  .select-container__options_list__option > a {
-    color: var(--MainTextColor);
-    text-decoration: underline;
-  }
-
-  .single-value,
-  .one-of-many-value {
-    &.has-links {
-      // Otherwise it's sometimes tricky to click/tap inside.
-      padding-right: 5px;
-    }
-  }
-
-  .reference__open_modal {
-    font-size: 20px;
-    vertical-align: middle;
-    border: none;
-    background: none;
-    padding: 0;
-    margin: 2px 10px 2px 0;
-    color: var(--MainTextColor);
+  .no-select-error {
+    color: red;
   }
 </style>

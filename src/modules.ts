@@ -79,3 +79,9 @@ export const getQueryValue = (name: string) => {
     return routerQueryValue(value);
   }
 };
+
+export class CancelledError extends Error {
+  constructor(message?: string) {
+    super(message ?? "Pending operation cancelled");
+  }
+}
