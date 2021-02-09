@@ -2,14 +2,16 @@
   <!-- <a> tags have special behaviour on Safari which breaks animation, hence no-href. -->
   <div
     ref="cardContainer"
-    data-no-dragscroll
     class="card_container"
-    :style="cardStyle"
+    data-no-dragscroll
   >
     <!-- FIXME: either move this to a slot (because this is not a generic kanban anymore),
          or bite the bullet and move kanban to `views/board`. -->
+    <!-- Ternary in `:link` for fix Firefox issue, see: https://github.com/SortableJS/Sortable/issues/1184 -->
     <FunLink
-      :link="data.cardLink"
+      :class="['card_link', { 'dragging': dragging }]"
+      :style="cardStyle"
+      :link="dragging ? null : data.cardLink"
       no-href
       data-no-dragscroll
       @goto="$emit('goto', $event)"
@@ -47,7 +49,13 @@
               {{ col.icon }}
             </span>
             <!-- eslint-disable vue/no-v-html -->
-            <span @click="$event.stopPropagation()" v-html="col.valueHtml" />
+            <!-- TODO: unable to click on string with link, but not on link -->
+            <span
+              v-if="col.valueHtml !== col.value"
+              @click.stop
+              v-html="col.valueHtml"
+            />
+            <span v-else> {{ col.value }} </span>
             <!-- eslint-enable vue/no-v-html -->
           </span>
         </b-col>
@@ -108,7 +116,6 @@ interface ICardHtml extends Omit<ICard, "rows"> {
 }
 
 interface ICardStyle {
-  width?: string;
   backgrondColor?: string;
 }
 
@@ -121,7 +128,6 @@ export class Card extends Vue {
   @Prop({ type: Object, required: true }) data!: ICard;
   @Prop({ type: Boolean, required: false, default: false }) selected!: boolean;
   @Prop({ type: Boolean, required: false, default: false }) dragging!: boolean;
-  @Prop({ type: Number, required: true }) width!: number;
 
   private get dataHtml(): ICardHtml {
     return {
@@ -135,7 +141,6 @@ export class Card extends Vue {
     const color: string | undefined = R.pathOr("white", ["style", "color"], this.data);
     return {
       backgroundColor: color,
-      width: `${this.width - 20}px`,
     };
   }
 }
@@ -143,17 +148,21 @@ export class Card extends Vue {
 export default Card;
 </script>
 
-<style scoped>
-  .card_container {
-    cursor: grab;
+<style lang="scss" scoped>
+  .card_link {
+    display: block;
     border: 1px solid var(--MainBorderColor);
-    border-radius: 3px;
+    border-radius: 0.25rem;
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
     padding: 10px;
     margin-bottom: 15px;
     user-select: none;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+
+    &:not(.dragging) {
+      cursor: pointer;
+    }
   }
 
   .card_row {
@@ -172,18 +181,6 @@ export default Card;
     background-size: contain;
     background-repeat: no-repeat;
     background-position-x: right;
-  }
-
-  .card_open_icon {
-    display: inline;
-    margin-right: 5px;
-    vertical-align: middle;
-    cursor: pointer;
-  }
-
-  .card_select_checkbox {
-    vertical-align: middle;
-    margin-right: 5px;
   }
 
   .card_text {

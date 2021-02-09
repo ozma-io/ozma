@@ -33,7 +33,9 @@ export default Vue.component("FunLink", {
     const link = context.props.link as Link | null;
 
     if (link === null) {
-      return context.children;
+      return createElement("span", {
+        ...context.data,
+      }, context.children);
     }
 
     const emit = (query: IQuery) => {

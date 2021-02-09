@@ -28,22 +28,23 @@
       </div>
     </div>
     <draggable
-      v-dragscroll.y="!$isMobile"
       class="column_body"
       :group="{ name: 'cards', put: true }"
       ghost-class="card_dragging_ghost"
       chosen-class="card_dragging_chosen"
       drag-class="card_dragging_drag"
-      :style="{background: backgroundColor}"
+      :style="{ background: backgroundColor }"
       :force-fallback="true"
       :fallback-on-body="true"
+      :fallback-tolerance="10"
+      :touch-start-threshold="10"
       :delay-on-touch-only="true"
-      :delay="400"
-      :animation="300"
+      :delay="200"
+      :animation="200"
       :list="cards"
       @add="onAdd"
-      @start="onStart"
-      @end="onMove"
+      @start="onDragStart"
+      @end="onDragEnd"
     >
       <Card
         v-for="(card, index) in cards"
@@ -190,50 +191,69 @@ export default class Column extends Vue {
     this.selected = this.selected.filter(val => val !== rowIndex);
   }
 
-  private onStart(event: IVueDraggableEvent) {
+  private onDragStart(event: IVueDraggableEvent) {
+    this.$emit("drag-start");
     this.dragging = true;
   }
 
-  private onMove(event: IVueDraggableEvent) {
+  private getPrevAndNextCardOrders(index: number): [prevCardOrder: number, nextCardOrder: number] {
+    const prevCardIndex = index - 1;
+    const nextCardIndex = index + 1;
+    const getCardOrder = (cardIndex: number, defaultOrder: number) =>
+      R.pathOr<number>(defaultOrder, [cardIndex, "order"], this.cards);
+    const prevCardOrder = prevCardIndex === -1 ? 0 : getCardOrder(prevCardIndex, 0);
+    const nextCardOrder = getCardOrder(nextCardIndex, prevCardOrder + 1);
+
+    return [prevCardOrder, nextCardOrder];
+  }
+
+  private calculateMean(prevCardOrder: number, nextCardOrder: number) {
+    let mean = 0;
+    if (prevCardOrder === 0 && nextCardOrder < 0) {
+      mean = nextCardOrder * 2;
+    } else {
+      mean = (prevCardOrder + nextCardOrder) / 2;
+    }
+    return mean;
+  }
+
+  private getNewCardOrder(index: number): number {
+    const [prevCardOrder, nextCardOrder] = this.getPrevAndNextCardOrders(index);
+    return this.calculateMean(prevCardOrder, nextCardOrder);
+  }
+
+  private onDragEnd(event: IVueDraggableEvent) {
+    if (event.oldDraggableIndex === event.newDraggableIndex
+     && event.from === event.to) return;
+
+    this.$emit("drag-end");
+
     void nextRender().then(() => {
-      this.dragging = false;
     });
 
+    this.dragging = false;
+
     const newCard = this.cards[event.newIndex];
-    // Avoid calling onMove after onAdd event: It should do it on it's own.
-    if (newCard) {
-      const prevCardIndex = event.newIndex - 1;
-      const prevCardOrder = (
-        prevCardIndex > -1
-          ? R.pathOr<number>(0, [event.newIndex - 1, "order"], this.cards)
-          : 0
-      );
-      const nextCardOrder = R.pathOr<number>(prevCardOrder + 1, [event.newIndex + 1, "order"], this.cards);
+    // Avoid calling onDragEnd after onAdd event: It should do it on it's own.
+    if (!newCard) return;
 
-      let mean = 0;
-      if (prevCardOrder === 0 && nextCardOrder < 0) {
-        mean = nextCardOrder * 2;
-      } else {
-        mean = (prevCardOrder + nextCardOrder) / 2;
-      }
-
-      if (this.move && newCard.orderRef) {
-        this.move(newCard.orderRef, mean);
-      }
+    if (this.move && newCard.orderRef) {
+      const order = this.getNewCardOrder(event.newIndex);
+      this.move(newCard.orderRef, order);
     }
   }
 
   private onAdd(event: IVueDraggableEvent) {
     const newCard = this.cards[event.newIndex];
     if (this.add && newCard.groupRef) {
-      this.onMove(event);
+      this.onDragEnd(event);
       this.add(newCard.groupRef, this.id);
     }
   }
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   .column_container {
     color: var(--MainTextColor);
     border: 1px solid var(--MainBorderColor);
@@ -282,8 +302,13 @@ export default class Column extends Vue {
     vertical-align: middle;
   }
 
-  .card_dragging_ghost {
-    background-color: #eee !important;
+  ::v-deep .card_dragging_chosen.card_dragging_ghost {
+    background-color: #ddd !important;
+    border-radius: 0.25rem;
+
+    > .card_link {
+      visibility: hidden;
+    }
   }
 
   .card_dragging_drag {
@@ -308,10 +333,6 @@ export default class Column extends Vue {
     transition: color 0.25s ease;
     background-color: var(--SuccessColor);
     color: var(--MainBackgroundColor);
-  }
-
-  /deep/ .card_dragging_chosen.card_dragging_ghost > span > .card_row {
-    visibility: hidden;
   }
 
   ::-webkit-scrollbar {
