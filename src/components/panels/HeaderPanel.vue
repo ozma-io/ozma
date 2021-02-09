@@ -8,6 +8,7 @@
       <template #search-panel>
         <SearchPanel
           v-if="isEnableFilter"
+          :filter-string="filterString"
           @update:filterString="$emit('update:filterString', $event)"
         />
       </template>
@@ -47,6 +48,7 @@ export default class HeaderPanel extends Vue {
   @Prop({ type: Array, required: true }) buttons!: PanelButton[];
   @Prop({ type: Boolean, required: true }) isEnableFilter!: boolean;
   @Prop({ type: Object, default: null }) view!: IUserViewType;
+  @Prop({ type: String, required: true }) filterString!: string;
 
   private openFullscreen() {
     if (this.view !== null) {
