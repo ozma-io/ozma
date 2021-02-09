@@ -619,7 +619,7 @@ export default class MultiSelect extends Vue {
     display: flex;
     flex-direction: row;
     width: 100%;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--MainBorderColor);
     border-radius: 0.2rem;
     cursor: pointer;
 
