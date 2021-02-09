@@ -567,7 +567,7 @@ const queryModule: Module<IQueryState, {}> = {
     addWindow: async ({ state, commit }, query: IQuery) => {
       commit("addWindow", query);
       try {
-        await router.replace(currentQueryLocation(state.current!));
+        await router.push(currentQueryLocation(state.current!));
       } finally {
         commit("removeResetLock");
       }
