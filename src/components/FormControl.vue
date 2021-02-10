@@ -3,6 +3,7 @@
         "en": {
             "yes": "Yes",
             "no": "No",
+            "boolean_null": "Empty",
             "invalid_uv": "Nested user view rows should be JSON objects with 'ref' and 'args' defined",
             "select_view": "Add in modal window",
             "data_will_load_after_save": "(Data will load after save)"
@@ -10,6 +11,7 @@
         "ru": {
             "yes": "Да",
             "no": "Нет",
+            "boolean_null": "Пусто",
             "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'ref' и 'args'",
             "select_view": "Создать во вложенном окне",
             "data_will_load_after_save": "(Данные загрузятся после сохранения)"
@@ -504,6 +506,9 @@ export default class FormControl extends Vue {
       }
     }
 
+    const booleanOptions = [{ label: this.$t("yes").toString(), value: true }, { label: this.$t("no").toString(), value: false }];
+    const booleanNullableOptions = [...booleanOptions, { label: this.$t("boolean_null").toString(), value: null }];
+
     if (this.fieldType !== null) {
       switch (this.fieldType.type) {
         case "reference": {
@@ -554,7 +559,7 @@ export default class FormControl extends Vue {
         case "bool":
           return {
             name: "select",
-            options: [{ label: this.$t("yes").toString(), value: true }, { label: this.$t("no").toString(), value: false }],
+            options: this.isNullable ? booleanNullableOptions : booleanOptions,
           };
         case "int":
           return { name: "text", type: "number", style: this.controlStyle() };
@@ -577,7 +582,7 @@ export default class FormControl extends Vue {
         case "bool":
           return {
             name: "select",
-            options: [{ label: this.$t("yes").toString(), value: true }, { label: this.$t("no").toString(), value: false }],
+            options: this.isNullable ? booleanNullableOptions : booleanOptions,
           };
         case "int":
           return { name: "text", type: "number", style: this.controlStyle() };

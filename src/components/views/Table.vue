@@ -921,7 +921,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   get editingValue() {
     if (this.editing === null
-     || this.editingBool // Bools are special case because they toggles by double click.
+     || this.editingNonNullableBoolean // Bools are special case because they toggles by double click.
     ) {
       return null;
     } else {
@@ -1232,9 +1232,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     });
   }
 
-  private get editingBool(): boolean {
+  private get editingNonNullableBoolean(): boolean {
     if (this.editing === null) return false;
-    return this.uv.info.columns[this.editing.ref.column].valueType.type === "bool";
+    const valueField = this.uv.getValueByRef(this.editing.ref)?.value.info?.field;
+    if (valueField === null || valueField === undefined) return false;
+    return (valueField.valueType.type === "bool"
+         && valueField.isNullable === false);
   }
 
   @Watch("editing")
@@ -1243,7 +1246,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     const ref = this.editing.ref;
     if (ref.type === "new") return;
 
-    if (this.editingBool) {
+    if (this.editingNonNullableBoolean) {
       const value = this.uv.getValueByRef(ref)!.value.value;
       await this.updateCurrentValue(!value);
       this.removeCellEditing();

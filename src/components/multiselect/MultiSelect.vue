@@ -229,8 +229,6 @@ import { deepClone, deepEquals, nextRender, replaceHtmlLinks } from "@/utils";
 import Popper from "vue-popperjs";
 import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 
-/* import "vue-popperjs/dist/vue-popper.css"; */
-
 export interface ISelectOption<T> {
   label: string;
   value: T;
