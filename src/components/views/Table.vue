@@ -232,6 +232,7 @@ export interface ITableValueExtra extends IBaseValueExtra {
   link: Link | null;
   style: Record<string, unknown> | null;
   selected: boolean;
+  numberFormatter: Intl.NumberFormat | null;
 }
 
 export interface ITableRowExtra extends IBaseRowExtra {
@@ -278,6 +279,13 @@ const showStep = 20;
 const doubleClickTime = 700;
 // FIXME: Use CSS variables to avoid this constant
 const technicalFieldsWidth = 35; // checkbox's and openform's td width
+
+const validNumberFormats = ["auto", "ru", "en"];
+const numberFormatters: Record<string, Intl.NumberFormat> = {
+  "auto": Intl.NumberFormat(),
+  "ru": Intl.NumberFormat("ru-RU"),
+  "en": Intl.NumberFormat("en-US"),
+};
 
 const createColumns = (uv: ICombinedUserViewAny): IColumn[] => {
   const viewAttrs = uv.attributes;
@@ -382,12 +390,18 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
     style["left"] = fixedPosition;
   }
 
+  const numberFormat = getCellAttr("number_format");
+
   const extra = {
     valueText,
     style: null as Record<string, unknown> | null,
+    numberFormatter: null as Intl.NumberFormat | null,
   };
   if (!R.isEmpty(style)) {
     extra.style = style;
+  }
+  if (typeof numberFormat === "string" && validNumberFormats.includes(numberFormat.toLowerCase())) {
+    extra.numberFormatter = numberFormatters[numberFormat.toLowerCase()];
   }
   return extra;
 };

@@ -100,6 +100,9 @@ export default class TableCell extends Vue {
   private isArrowDown = false;
 
   private get localValueTextHtml(): string {
+    if (this.valueType === "int" || this.valueType === "decimal") {
+      return this.value.extra.numberFormatter?.format(this.value.value as any) ?? this.value.extra.valueText;
+    }
     const text: string = typeof this.value.extra.valueText === "string"
       ? this.value.extra.valueText
       : "";
