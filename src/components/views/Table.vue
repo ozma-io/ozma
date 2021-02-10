@@ -46,7 +46,7 @@
         modal-only
         @set-input-height="setInputHeight"
         @update="updateCurrentValue"
-        @close-modal-input="clickOutsideEdit"
+        @close-modal-input="removeCellEditing"
       />
     </table-cell-edit>
 

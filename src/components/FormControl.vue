@@ -138,7 +138,6 @@
           v-else-if="inputType.name === 'barcode'"
           ref="control"
           :content="textValue"
-          @scanned="barCodeScanned"
         />
         <div v-else-if="inputType.name === 'static_text'">
           {{ textValue }}
@@ -428,11 +427,6 @@ export default class FormControl extends Vue {
     this.$emit("set-input-height", value);
   }
 
-  private barCodeScanned(code: string) {
-    this.updateValue(code);
-    this.$emit("close-modal-input");
-  }
-
   get isQRCodeInput() {
     return "qrcode_input" in this.attributes ? this.attributes["qrcode_input"] : false;
   }
@@ -666,6 +660,11 @@ export default class FormControl extends Vue {
   private updateValue(newValue: unknown) {
     if (this.currentValue !== newValue) {
       this.$emit("update", newValue);
+    }
+
+    const closeAfterUpdate: IType["name"][] = ["calendar", "select", "reference"];
+    if (closeAfterUpdate.includes(this.inputType.name)) {
+      this.$emit("close-modal-input");
     }
   }
 }
