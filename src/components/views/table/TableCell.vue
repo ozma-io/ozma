@@ -126,7 +126,7 @@ export default class TableCell extends Vue {
   }
 
   private toggleChildren() {
-    this.$emit("update:visibleChildren", this.tree.children, !this.tree.arrowDown);
+    this.$emit("update:toggleChildren", this.tree.rowIndex, !this.tree.arrowDown);
   }
 
   get iconValue() {

@@ -45,7 +45,7 @@
       :last-fixed-column-index="lastFixedColumnIndex"
       :is-tree="isTree"
       @cell-click="$emit('cell-click', arguments[0], arguments[1])"
-      @update:visibleChildren="$emit('update:visibleChildren', arguments[0], arguments[1])"
+      @update:toggleChildren="$emit('update:toggleChildren', arguments[0], arguments[1])"
       @goto="$emit('goto', $event)"
     />
   </tr>
@@ -72,6 +72,7 @@ export default class TableRow extends Vue {
   @Prop({ type: Boolean, default: false }) notExisting!: boolean;
   @Prop({ type: Boolean, default: false }) isTree!: boolean;
   @Prop({ type: Boolean, default: false }) showLinkColumn!: boolean;
+  @Prop({ type: Number, required: true }) rowIndex!: number;
 
   get lastFixedColumnIndex(): number {
     return this.uv.extra.columns.filter(item => item.fixed).length;
