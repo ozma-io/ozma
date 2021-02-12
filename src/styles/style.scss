@@ -5,6 +5,8 @@ $font-family-sans-serif: var(--Font);
 $font-family-serif: var(--Font);
 $input-color: var(--MainTextColor);
 $input-placeholder-color: var(--MainTextColorLight);
+$border-color: var(--MainBorderColor);
+$input-border-color: var(--MainBorderColor);
 
 @import '../../node_modules/bootstrap/scss/bootstrap';
 @import 'mixins.scss';
@@ -156,9 +158,7 @@ input.with-clear-content-button {
 
 .btn.clear-content-button {
   border-left-width: 0;
-
-  /* TODO: remove hardcoded color. */
-  border-color: rgb(206, 212, 218);
+  border-color: var(--MainBorderColor);
   opacity: 1;
 
   .material-icons {
