@@ -43,9 +43,9 @@
       :column="uv.extra.columns[i]"
       :not-existing="notExisting"
       :last-fixed-column-index="lastFixedColumnIndex"
-      :is-tree="isTree"
+      :show-tree="showTree"
       @cell-click="$emit('cell-click', arguments[0], arguments[1])"
-      @update:toggleChildren="$emit('update:toggleChildren', arguments[0], arguments[1])"
+      @toggle-children="$emit('toggle-children', $event)"
       @goto="$emit('goto', $event)"
     />
   </tr>
@@ -70,7 +70,7 @@ export default class TableRow extends Vue {
   @Prop({ type: Array, required: true }) columnIndexes!: number[];
   @Prop({ type: Object, required: true }) uv!: ITableCombinedUserView;
   @Prop({ type: Boolean, default: false }) notExisting!: boolean;
-  @Prop({ type: Boolean, default: false }) isTree!: boolean;
+  @Prop({ type: Boolean, default: false }) showTree!: boolean;
   @Prop({ type: Boolean, default: false }) showLinkColumn!: boolean;
   @Prop({ type: Number, required: true }) rowIndex!: number;
 

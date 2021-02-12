@@ -9,7 +9,7 @@
                           'selected': value.extra.selected,
                           'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable,
                           'editing_style': value.extra.editing !== undefined,
-                          'tree-branches': column.treeUnfoldColumn && tree.children !== undefined && tree.children.length > 0 && isTree,
+                          'tree-branches': column.treeUnfoldColumn && tree.children !== undefined && tree.children.length > 0 && showTree,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click.stop="$emit('cell-click', columnPosition, $event)"
   >
@@ -42,7 +42,7 @@
           class="checkbox_click-none"
           :checked="value.value"
         />
-        <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueText.length > 0, 'tree': isTree}]">
+        <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueText.length > 0, 'tree': showTree}]">
           <span
             :style="{'margin-left': treeLevel*25+'px'}"
             :class="['display-arrow material-icons', {'down': tree.arrowDown}]"
@@ -51,9 +51,9 @@
           >
             arrow_forward_ios
           </span>
-          <!-- This isTree need for hidden when table filtering from search panel -->
+          <!-- This showTree need for hidden when table filtering from search panel -->
           <span
-            v-if="isTree && treeLevel > 0"
+            v-if="showTree && treeLevel > 0"
             :style="{'margin-left': treeLevel*25 + 20 +'px'}"
             class="hidden-arrow-space"
           />
@@ -93,7 +93,7 @@ export default class TableCell extends Vue {
   @Prop({ type: Number, default: null }) lastFixedColumnIndex!: number;
   @Prop({ type: Number, default: null }) index!: number;
   @Prop({ type: Object, required: true }) tree!: ITableRowTree;
-  @Prop({ type: Boolean, required: true }) isTree!: boolean;
+  @Prop({ type: Boolean, required: true }) showTree!: boolean;
 
   private get localValueTextHtml(): string {
     const text: string = typeof this.value.extra.valueText === "string"
@@ -126,7 +126,7 @@ export default class TableCell extends Vue {
   }
 
   private toggleChildren() {
-    this.$emit("update:toggleChildren", this.tree.rowIndex, !this.tree.arrowDown);
+    this.$emit("toggle-children", !this.tree.arrowDown);
   }
 
   get iconValue() {
