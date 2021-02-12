@@ -4,15 +4,13 @@
             "yes": "Yes",
             "no": "No",
             "invalid_uv": "Nested user view rows should be JSON objects with 'ref' and 'args' defined",
-            "select_view": "Add in modal window",
-            "data_will_load_after_save": "(Data will load after save)"
+            "select_view": "Add in modal window"
         },
         "ru": {
             "yes": "Да",
             "no": "Нет",
             "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'ref' и 'args'",
-            "select_view": "Создать во вложенном окне",
-            "data_will_load_after_save": "(Данные загрузятся после сохранения)"
+            "select_view": "Создать во вложенном окне"
         }
     }
 </i18n>
@@ -157,7 +155,7 @@
           :background-color="cellColor"
           :qrcode-input="isQRCodeInput"
           @update:actions="actions = $event"
-          @update:buttons="buttons = $event"
+          @update:buttons="panelButtons = $event"
           @focus="iSlot.onFocus"
           @update:value="updateValue($event)"
           @goto="$emit('goto', $event)"
@@ -170,12 +168,31 @@
           v-if="usedCaption"
           :cols="isMultiline ? 12 : 4"
         >
-          <NestedUserViewPanel
-            :used-caption="usedCaption"
+          <div v-if="inputType.name == 'empty_userview'">
+            <div class="nested-menu">
+              <label
+                v-b-tooltip.click.blur.bottom.noninteractive
+                class="input_label"
+                :title="title"
+              >
+                {{ title }}
+              </label>
+              <ActionsMenu
+                menu-align="right"
+                :actions="[]"
+              />
+            </div>
+            <div class="empty_userview_text">
+              {{ $t('data_will_load_after_save') }}
+            </div>
+          </div>
+          <HeaderPanel
+            v-else-if="inputType.name === 'userview'"
+            :title="usedCaption"
             :actions="actions"
-            :enable-filter="enableFilter"
-            :input-type="inputType"
-            :panel-buttons="panelButtons"
+            :buttons="panelButtons"
+            :is-enable-filter="enableFilter"
+            :view="inputType"
             :filter-string="filterString"
             @update:filterString="filterString = $event"
             @goto="$emit('goto', $event)"
@@ -274,7 +291,6 @@ export interface IUserViewType extends IQuery {
 
 interface IEmptyUserViewType {
   name: "empty_userview";
-  text: string;
 }
 
 interface IErrorType {
@@ -329,7 +345,7 @@ const multilineTypes = ["markdown", "codeeditor", "textarea", "userview", "empty
     Input: () => import("@/components/form/Input.vue"),
     Textarea: () => import("@/components/form/Textarea.vue"),
     NestedUserView: () => import("@/components/NestedUserView.vue"),
-    NestedUserViewPanel: () => import("@/components/panels/NestedUserViewPanel.vue"),
+    HeaderPanel: () => import("@/components/panels/HeaderPanel.vue"),
     QRCode: () => import("@/components/qrcode/QRCode.vue"),
     BarCode: () => import("@/components/barcode/BarCode.vue"),
     BarCodePrint: () => import("@/components/barcode/BarCodePrint.vue"),
@@ -474,7 +490,7 @@ export default class FormControl extends Vue {
     const controlAttr = String(this.attributes["control"]);
     if (controlAttr === "user_view") {
       if (this.currentValue === null || this.currentValue === undefined) {
-        return { name: "empty_userview", text: this.$t("data_will_load_after_save").toString() };
+        return { name: "empty_userview" };
       }
 
       const nestedRef = attrToQuerySelf(this.currentValue, this.value.info, linkOpts);
@@ -624,7 +640,7 @@ export default class FormControl extends Vue {
   }
 
   @Watch("inputType.name")
-  private watchInputType() {
+  private watchInputType(newName: string, oldName: string) {
     // These state values are essentially "backward props", that is, are supposed to be set by child components
     // via `update:` events. This creates a problem: when do we clean these state values? For example, when
     // switched from "user_view" to "text" component type, we can't expect `update:actions` event that will
@@ -634,6 +650,8 @@ export default class FormControl extends Vue {
     // and issues `update:` events as needed. Therefore we only need to focus on switches between components.
     // If we detect a switch we clear all state values and expect the new component to emit `update:` events for
     // values it actually supports.
+
+    if (newName === oldName) return;
 
     this.actions = [];
     this.panelButtons = [];
