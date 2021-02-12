@@ -9,7 +9,7 @@
                           'selected': value.extra.selected,
                           'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable,
                           'editing_style': value.extra.editing !== undefined,
-                          'tree-branches': column.treeUnfoldColumn && children !== undefined && children.length > 0 && isTree,
+                          'tree-branches': column.treeUnfoldColumn && tree.children !== undefined && tree.children.length > 0 && showTree,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click.stop="$emit('cell-click', columnPosition, $event)"
   >
@@ -42,18 +42,18 @@
           class="checkbox_click-none"
           :checked="value.value"
         />
-        <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueText.length > 0, 'tree': isTree}]">
+        <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueText.length > 0, 'tree': showTree}]">
           <span
             :style="{'margin-left': treeLevel*25+'px'}"
-            :class="['display-arrow material-icons', {'down': isArrowDown}]"
+            :class="['display-arrow material-icons', {'down': tree.arrowDown}]"
             @click.stop="toggleChildren"
             @dblclick.stop
           >
             arrow_forward_ios
           </span>
-          <!-- This isTree need for hidden when table filtering from search panel -->
+          <!-- This showTree need for hidden when table filtering from search panel -->
           <span
-            v-if="isTree && treeLevel > 0"
+            v-if="showTree && treeLevel > 0"
             :style="{'margin-left': treeLevel*25 + 20 +'px'}"
             class="hidden-arrow-space"
           />
@@ -74,7 +74,7 @@ import { iconValue } from "@/links";
 import { replaceHtmlLinks } from "@/utils";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
 import CellButtons from "@/components/buttons/CellButtons.vue";
-import type { IColumn, ITableExtendedValue } from "@/components/views/Table.vue";
+import type { IColumn, ITableExtendedValue, ITableRowTree } from "@/components/views/Table.vue";
 
 @Component({
   components: {
@@ -92,12 +92,8 @@ export default class TableCell extends Vue {
   @Prop({ type: String, default: "existing" }) from!: string;
   @Prop({ type: Number, default: null }) lastFixedColumnIndex!: number;
   @Prop({ type: Number, default: null }) index!: number;
-  @Prop({ type: Array, default: [] }) children!: number[];
-  @Prop({ type: Number, required: true }) level!: number;
-  @Prop({ type: Boolean, required: true }) arrowDown!: boolean;
-  @Prop({ type: Boolean, required: true }) isTree!: boolean;
-
-  private isArrowDown = false;
+  @Prop({ type: Object, required: true }) tree!: ITableRowTree;
+  @Prop({ type: Boolean, required: true }) showTree!: boolean;
 
   private get localValueTextHtml(): string {
     const text: string = typeof this.value.extra.valueText === "string"
@@ -118,7 +114,7 @@ export default class TableCell extends Vue {
 
   private get treeLevel() {
     if (this.column.treeUnfoldColumn) {
-      return this.level;
+      return this.tree.level;
     } else {
       return 0;
     }
@@ -130,18 +126,11 @@ export default class TableCell extends Vue {
   }
 
   private toggleChildren() {
-    // FIXME: shouldn't be used like this! `arrowDown` should be fully controlled by a prop.
-    // Remove `isArrowDown`.
-    this.isArrowDown = !this.isArrowDown;
-    this.$emit("update:visibleChildren", this.children, this.isArrowDown);
+    this.$emit("toggle-children", !this.tree.arrowDown);
   }
 
   get iconValue() {
     return this.value.extra.link && "target" in this.value.extra.link ? iconValue(this.value.extra.link.target) : null;
-  }
-
-  mounted() {
-    this.isArrowDown = this.arrowDown;
   }
 }
 </script>
