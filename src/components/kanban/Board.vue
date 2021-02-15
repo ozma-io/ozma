@@ -2,7 +2,7 @@
   <!-- <draggable tag="v-layout" v-model="columns" group="column"> -->
   <div
     v-dragscroll.x="!$isMobile"
-    class="board_container"
+    :class="['board_container', { 'dragging': dragging }]"
   >
     <Column
       v-for="(column, columnIndex) in columns"
@@ -20,6 +20,8 @@
       :add="add"
       :move="move"
       @goto="$emit('goto', $event)"
+      @drag-start="dragging = true"
+      @drag-end="dragging = false"
     />
   </div>
   <!-- </draggable> -->
@@ -46,6 +48,8 @@ export default class Board extends Vue {
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: String, required: false }) cardTarget!: CardTarget;
 
+  private dragging = false;
+
   private getColumnTitle(id: number, title: string) {
     if (this.titles) {
       return this.titles[id] || title;
@@ -55,7 +59,7 @@ export default class Board extends Vue {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   .board_container {
     width: 100%;
     height: 100%;
@@ -63,16 +67,19 @@ export default class Board extends Vue {
     overflow-x: auto;
     display: flex;
     flex-direction: row;
-    max-height: calc(100vh - 56px);
+
+    &.dragging {
+      cursor: grabbing !important;
+    }
   }
 
-  /deep/ .column_container {
+  ::v-deep .column_container {
     border-left: 0;
     border-top: 0;
     border-bottom: 0;
   }
 
-  /deep/ .column_container:last-of-type {
+  ::v-deep .column_container:last-of-type {
     border-right: 0;
   }
 </style>

@@ -34,15 +34,6 @@
       @scanned="onScanned"
     />
     <div v-if="result.length > 0" class="decode-result">
-      <strong>{{ $t('scan_result') }}:</strong>
-      <ol>
-        <li
-          v-for="(value, i) in result"
-          :key="i"
-        >
-          {{ value.value }}
-        </li>
-      </ol>
       <b-button
         block
         variant="success"
@@ -50,6 +41,15 @@
       >
         {{ $t('paste_data') }}
       </b-button>
+      <strong>{{ $t('scan_result') }}:</strong>
+      <ol reversed>
+        <li
+          v-for="(value, i) in result.slice().reverse()"
+          :key="i"
+        >
+          {{ value.value }}
+        </li>
+      </ol>
     </div>
   </b-modal>
 </template>
@@ -128,5 +128,6 @@ export default class BarCodeScanner extends mixins(BaseEntriesView) {
 <style scoped>
   .decode-result {
     word-wrap: break-word;
+    margin-top: 10px;
   }
 </style>

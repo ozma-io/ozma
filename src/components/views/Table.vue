@@ -148,12 +148,13 @@
             :uv="uv"
             :row="row.row"
             :column-indexes="columnIndexes"
-            :is-tree="isTree"
+            :show-tree="showTree"
             :not-existing="row.notExisting"
             :show-link-column="hasLinksColumn"
+            :row-index="rowIndex"
             @select="selectTableRow(rowIndex, $event)"
             @cell-click="clickCell({ ...row.ref, column: arguments[0] }, arguments[1])"
-            @update:visibleChildren="visibleChildren(arguments[0], arguments[1])"
+            @toggle-children="toggleChildren(row, $event)"
             @goto="$emit('goto', $event)"
           />
         </tbody>
@@ -234,17 +235,20 @@ export interface ITableValueExtra extends IBaseValueExtra {
   selected: boolean;
 }
 
+export interface ITableRowTree {
+  parent: number | null;
+  level: number;
+  arrowDown: boolean;
+  children: number[];
+}
+
 export interface ITableRowExtra extends IBaseRowExtra {
   searchText: string;
-  visible: boolean;
   shownAsNewRow: boolean;
-  parent: number | null;
-  level: number | null;
-  arrowDown: boolean | null;
-  children: number[];
   style: Record<string, unknown> | null;
   height: number | null;
   link: Link | null;
+  tree: ITableRowTree | null;
 }
 
 export interface IAddedNewRowRef {
@@ -397,17 +401,24 @@ const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLo
 
   const style: Record<string, unknown> = {};
 
-  const extra = {
-    searchText: "",
-    visible: true,
+  const tree: ITableRowTree = {
     children: [],
     level: 0,
+    parent: null,
+    arrowDown: oldLocal === null ? false : oldLocal.tree!.arrowDown,
+  };
+
+  if (getRowAttr("tree_all_open")) {
+    tree.arrowDown = true;
+  }
+
+  const extra = {
+    searchText: "",
     height: null as number | null,
     style: null as Record<string, unknown> | null,
-    parent: null,
-    arrowDown: null,
     link: null,
     shownAsNewRow: false,
+    tree,
   };
 
   const height = Number(getRowAttr("row_height"));
@@ -434,6 +445,26 @@ const postInitCommonRow = (uv: ITableCombinedUserView, row: ITableExtendedRowCom
     return value.extra.valueText.toLocaleLowerCase();
   });
   row.extra.searchText = "\0".concat(...searchStrings);
+};
+
+const initTreeChildrens = (uv: ITableCombinedUserView) => {
+  uv.rows!.forEach((row, i) => {
+    if (row.extra.tree!.parent) {
+      const parentIndex = uv.extra.rowsParentPositions[row.extra.tree!.parent];
+      uv.rows![parentIndex].extra.tree!.children.push(i);
+
+      let level = 0;
+      let parent: number | undefined = parentIndex;
+      while (parent !== undefined && uv.rows![parent] !== undefined) {
+        const index: number | undefined = uv.rows![parent].extra.tree!.parent ?? undefined;
+        parent = index !== undefined ? uv.extra.rowsParentPositions[index] : undefined;
+        level++;
+      }
+      uv.rows![i].extra.tree!.level = level;
+    }
+  });
+
+  return uv;
 };
 
 const technicalWidth = (uv: ITableCombinedUserView): number => {
@@ -566,8 +597,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
 
         // Init parent
         if (value.value !== null) {
-          row.extra.parent = Number(value.value);
-          row.extra.visible = false;
+          row.extra.tree!.parent = Number(value.value);
         }
       }
     }
@@ -765,17 +795,22 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       selectedValues: new ObjectSet<ValueRef>(),
       columns,
       fixedColumnPositions: {},
-      rowsParentPositions: {},
+      rowsParentPositions: oldView ? oldView.rowsParentPositions : {},
       newRowTopSidePositions,
       newRowBottomSidePositions,
       linkOpts: uv.homeSchema ? { homeSchema: uv.homeSchema } : {},
       sortAsc: oldView?.sortAsc ?? true,
       sortColumn: oldView?.sortColumn ?? null,
       sortOptions: oldView?.sortOptions ?? {},
+      rowPositions: [],
     };
   },
 
   postInitUserView(uv: ITableCombinedUserView) {
+    if (!R.isEmpty(uv.extra.rowsParentPositions)) {
+      uv = initTreeChildrens(uv);
+    }
+
     uv.extra.fixedColumnPositions = fixedColumnPositions(uv);
     Object.entries(uv.extra.fixedColumnPositions).forEach(([colIRaw, position]) => {
       const colI = Number(colIRaw);
@@ -982,13 +1017,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       this.lastSelectedValue = null;
       this.removeCellEditing();
     });
-
-    if (!R.isEmpty(this.uv.extra.rowsParentPositions)
-     && "tree_all_open" in this.uv.attributes
-     && this.uv.attributes.tree_all_open
-    ) {
-      this.toggleAllTreeChildren(true);
-    }
   }
 
   protected destroyed() {
@@ -1016,13 +1044,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       // Filter existing rows when we filter a subset of already filtered ones.
       const newWords = this.currentFilter.filter(newWord => !oldFilter.some(oldWord => oldWord.startsWith(newWord)));
       this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.uv.rows![rowI], newWords));
-    }
-
-    if (this.filter.length === 0) {
-      this.buildRowPositions();
-      this.initRowsState();
-    } else if (this.isTree) {
-      this.disableTree();
     }
   }
 
@@ -1069,108 +1090,75 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     });
   }
 
-  // Toggle visibility of children rows.
-  private visibleChildren(children: number[], visible: boolean, deep = false) {
-    if (!this.uv.rows) {
-      throw new Error("Impossible");
-    }
+  private showTreeChildren(parentIndex: number) {
+    const children = this.uv.rows![parentIndex].extra.tree!.children;
 
-    // Save state.
-    if (this.uv.rows[children[0]] !== undefined) {
-      const parent = this.uv.rows[children[0]].extra.parent;
-      if (!parent) {
-        return;
+    this.uv.rows![parentIndex].extra.tree!.arrowDown = true;
+
+    const parentPosition = this.rowPositions.indexOf(parentIndex);
+    const leftChank = this.rowPositions.splice(0, parentPosition + 1);
+    const rightChank = this.rowPositions;
+    this.rowPositions = leftChank.concat(children, rightChank);
+  }
+
+  private hideTreeChildren(parentIndex: number) {
+    const children = this.uv.rows![parentIndex].extra.tree!.children;
+    this.uv.rows![parentIndex].extra.tree!.arrowDown = false;
+
+    children.forEach(child => {
+      const childPosition = this.rowPositions.indexOf(child);
+      this.rowPositions.splice(childPosition, 1);
+
+      if (this.uv.rows![child].extra.tree!.arrowDown) {
+        this.hideTreeChildren(child);
       }
-      const parentIndex = this.uv.extra.rowsParentPositions[parent];
-      const extra = this.uv.rows[parentIndex].extra;
-      this.uv.rows[parentIndex].extra.arrowDown = visible;
-      if (visible) {
-        this.rowsState[parentIndex] = extra;
-      } else {
-        delete this.rowsState[parentIndex];
-      }
-    }
-
-    // Toggle
-    children.forEach((child, i) => {
-      if (!visible && this.uv.rows![child].extra.visible) {
-        this.visibleChildren(this.uv.rows![child].extra.children, visible);
-
-        // Hidden children.
-        const childPosition = this.rowPositions.indexOf(child);
-        this.rowPositions.splice(childPosition, 1);
-      }
-
-      if (deep) {
-        this.visibleChildren(this.uv.rows![child].extra.children, true, deep);
-      }
-
-      this.uv.rows![child].extra.visible = visible;
     });
+  }
 
+  private toggleChildren(row: IShownRow, visible: boolean) {
     if (visible) {
-      this.displayChildren(children);
+      this.showTreeChildren(Number(row.key));
+    } else {
+      this.hideTreeChildren(Number(row.key));
     }
   }
 
-  private displayChildren(children: number[]) {
-    const index = this.uv.rows?.[children[0]].extra.parent ?? null;
-    const parent = index !== null ? this.uv.extra.rowsParentPositions[index] : null;
-    if (parent !== null) {
-      for (let i = children.length - 1; i >= 0; i--) {
-        if (this.rowPositions.includes(children[i])) {
-          const childPosition = this.rowPositions.indexOf(children[i]);
-          this.rowPositions.splice(childPosition, 1);
-        }
-        this.rowPositions.splice(this.rowPositions.indexOf(parent) + 1, 0, children[i]);
-      }
+  get showTree() {
+    if (!R.isEmpty(this.uv.extra.rowsParentPositions) && this.filter.length === 0) {
+      return true;
     }
+    return false;
   }
 
-  private toggleAllTreeChildren(visible: boolean) {
-    this.rowPositions.forEach(rowI => {
-      if (this.uv.rows![rowI].extra.children.length > 0 && this.uv.rows![rowI].extra.parent === undefined) {
-        this.visibleChildren(this.uv.rows![rowI].extra.children, visible, true);
+  private pushTreeChildrenPositions(parentIndex: number, children: number[]) {
+    let newRowPositions: number[] = [parentIndex];
+
+    children.forEach(child => {
+      const row = this.uv.rows![child].extra.tree!;
+      if (row.arrowDown) {
+        newRowPositions = newRowPositions.concat(this.pushTreeChildrenPositions(child, row.children));
+      } else {
+        newRowPositions.push(child);
       }
     });
-    this.initRowsState();
+    return newRowPositions;
   }
 
-  private initRowsState() {
-    if (this.uv.rows) {
-      this.uv.rows.forEach((row, rowI) => {
-        const parentIndex = row.extra.parent ? this.uv.extra.rowsParentPositions[row.extra.parent] : undefined;
-        if (parentIndex !== undefined
-        && this.uv.rows![parentIndex] !== undefined
-        && !this.uv.rows![parentIndex].extra.children.includes(rowI)
-        ) {
-          this.uv.rows![parentIndex].extra.children.push(rowI);
-          let level = 0;
-          let parent: number | undefined = parentIndex;
-          while (parent !== undefined && this.uv.rows![parent] !== undefined && level < 100) {
-            const index: number | undefined = this.uv.rows![parent]?.extra?.parent ?? undefined;
-            parent = index !== undefined ? this.uv.extra.rowsParentPositions[index] : undefined;
-            level++;
-          }
-          this.uv.rows![rowI].extra.level = level;
-        }
-      });
-    }
-    if (!R.isEmpty(this.rowsState)) {
-      const sort = R.sortBy(R.compose(R.prop<string, number>("level"), R.prop<any>(1)));
-      const sortable = sort(R.toPairs(this.rowsState));
-      // Load visible data from rowsState to rows.
-      sortable.forEach(item => {
-        this.visibleChildren(item[1].children, true);
-      });
-    } else {
-      this.buildRowPositions();
-    }
-  }
+  get initialRowPositions() {
+    const rowPositions = this.uv.rows!.map((row, rowI) => rowI);
 
-  private disableTree() {
-    this.isTree = false;
-    this.buildRowPositions();
+    const topLevelRows = rowPositions.filter(rowI => this.uv.rows![rowI].extra.tree!.parent === null);
+    let newRowPositions: number[] = [];
+    topLevelRows.forEach(rowI => {
+      const row = this.uv.rows![rowI].extra.tree!;
+      if (row.arrowDown) {
+        newRowPositions = newRowPositions.concat(this.pushTreeChildrenPositions(rowI, row.children));
+      } else {
+        newRowPositions.push(rowI);
+      }
+    });
+
+    return newRowPositions;
   }
 
   // Update this.rowsPositions when this.uv.rows has changed.
@@ -1182,9 +1170,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       this.rowPositions = rows.map((row, rowI) => rowI);
       if (this.filter.length !== 0) {
         this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.uv.rows![rowI], this.filter));
-      } else if (!R.isEmpty(this.uv.extra.rowsParentPositions)) {
-        this.rowPositions = this.rowPositions.filter(rowI => this.uv.rows![rowI].extra.visible);
-        this.isTree = true;
+      } else if (this.showTree) {
+        this.rowPositions = this.initialRowPositions;
       }
       this.sortRows();
     }
@@ -1421,7 +1408,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private updateRows() {
     this.buildRowPositions();
-    this.initRowsState();
+    // this.initTree();
   }
 
   /*
