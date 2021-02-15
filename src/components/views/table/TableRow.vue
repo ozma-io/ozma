@@ -47,6 +47,9 @@
       :level="row.extra.level"
       :is-tree="isTree"
       @cell-click="$emit('cell-click', arguments[0], arguments[1])"
+      @cell-mousedown="$emit('cell-mousedown', arguments[0], arguments[1])"
+      @cell-mouseover="$emit('cell-mouseover', arguments[0], arguments[1])"
+      @cell-mouseup="$emit('cell-mouseup', arguments[0], arguments[1])"
       @update:visibleChildren="$emit('update:visibleChildren', arguments[0], arguments[1])"
       @goto="$emit('goto', $event)"
     />

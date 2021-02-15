@@ -59,8 +59,10 @@
               :placeholder="$t('input_placeholder')"
               :value="textValue"
               @input="$emit('update:value', $event)"
-              @keypress.enter="onPressEnter"
+              @keypress.enter.prevent.stop="onPressEnter"
               @focus="onInputFocus"
+              @blur.prevent
+              @keydown.esc.prevent.stop="$emit('blur', $event)"
             />
             <b-input-group-append>
               <b-button
@@ -216,10 +218,11 @@ export default class Calendar extends Vue {
   }
 
   private onPressEnter(event: KeyboardEvent) {
-    event.preventDefault();
     const target = event.target! as HTMLInputElement;
     this.updateValue(moment(target.value, this.usedFormat));
     target.blur();
+    this.$emit("blur");
+    this.$emit("move-selection-next-row", event);
   }
 
   private onInputFocus() {

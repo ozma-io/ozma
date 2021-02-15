@@ -1,6 +1,7 @@
 <template>
   <!-- FIXME: Pls solve these classes -->
   <td
+    ref="cell"
     :style="value.extra.style"
     :class="['table-td', {'fixed-column': column.fixed,
                           'select_fixed': value.extra.selected && column.fixed,
@@ -12,6 +13,9 @@
                           'tree-branches': column.treeUnfoldColumn && children !== undefined && children.length > 0 && isTree,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click.stop="$emit('cell-click', columnPosition, $event)"
+    @mousedown="$emit('cell-mousedown', columnPosition, $event)"
+    @mouseover.self="$emit('cell-mouseover', columnPosition, $event)"
+    @mouseup="$emit('cell-mouseup', columnPosition, $event)"
   >
     <p>
       <template v-if="column.type == 'buttons'">
@@ -140,8 +144,11 @@ export default class TableCell extends Vue {
     return this.value.extra.link && "target" in this.value.extra.link ? iconValue(this.value.extra.link.target) : null;
   }
 
-  mounted() {
+  async mounted() {
     this.isArrowDown = this.arrowDown;
+
+    await this.$nextTick();
+    this.value.extra.htmlElement = this.$refs.cell as HTMLElement;
   }
 }
 </script>
@@ -197,14 +204,14 @@ export default class TableCell extends Vue {
 
   .table-td.selected {
     box-shadow:
-      inset 2px 2px 0 rgb(14, 101, 235),
-      inset -2px -2px 0 rgb(14, 101, 235);
+      inset 2px 2px 0 var(--FocusBorderColor),
+      inset -2px -2px 0 var(--FocusBorderColor);
   }
 
   .table-td.fixed-column.selected {
     box-shadow:
-      inset 2px 2px 0 rgb(14, 101, 235),
-      inset -2px -2px 0 rgb(14, 101, 235);
+      inset 2px 2px 0 var(--FocusBorderColor),
+      inset -2px -2px 0 var(--FocusBorderColor);
   }
 
   .checkbox_click-none {

@@ -254,6 +254,16 @@ export default class TopLevelUserView extends Vue {
     // Listen to the event.
     // eslint-disable-next-line @typescript-eslint/unbound-method
     this.$root.$on("open-qrcode-scanner", this.openQRCodeScanner);
+
+    document.addEventListener("keydown", (event: KeyboardEvent) => {
+      // 83 is code for `s`/`ы` key.
+      if ((event.ctrlKey || event.metaKey) && (event.key === "s" || event.keyCode === 83)) {
+        event.preventDefault();
+        if (!this.changes.isScopeEmpty("root")) {
+          this.saveView();
+        }
+      }
+    });
   }
 
   private openQRCodeScanner(link: Link | null) {

@@ -56,3 +56,17 @@ declare module "vuedraggable" {
 }
 
 declare module "vue-popperjs";
+
+declare module "v-hotkey" {
+  // eslint-disable-next-line
+  import { DirectiveOptions, PluginFunction } from "vue";
+
+  type Plugin = {
+    install: PluginFunction<{ [alias in string]?: number }>;
+    directive: DirectiveOptions;
+  };
+
+  const plugin: Plugin;
+
+  export default plugin;
+}
