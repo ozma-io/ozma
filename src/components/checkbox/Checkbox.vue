@@ -5,7 +5,6 @@
   >
     <span class="checkbox__input">
       <i
-        v-if="!checkedIsNull"
         class="material-icons"
       >{{ checked ? "check_box" : "check_box_outline_blank" }}</i>
     </span>
@@ -20,7 +19,6 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import { valueIsNull } from "@/values";
 
 @Component(
   {
@@ -31,12 +29,8 @@ import { valueIsNull } from "@/values";
   },
 )
 export default class Checkbox extends Vue {
-  @Prop({ default: false, type: Boolean }) checked!: boolean | null;
+  @Prop({ default: false, type: Boolean }) checked!: boolean;
   @Prop({ type: String }) label!: string;
-
-  private get checkedIsNull() {
-    return valueIsNull(this.checked);
-  }
 }
 </script>
 

@@ -38,7 +38,7 @@
       </template>
       <template v-else>
         <Checkbox
-          v-if="valueType === 'bool'"
+          v-if="valueType === 'bool' && !isNull"
           class="checkbox_click-none"
           :checked="value.value"
         />
