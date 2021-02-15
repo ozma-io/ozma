@@ -37,11 +37,13 @@
         </div>
       </template>
       <template v-else>
-        <Checkbox
-          v-if="valueType === 'bool' && !isNull"
-          class="checkbox_click-none"
-          :checked="value.value"
-        />
+        <template v-if="valueType === 'bool'">
+          <Checkbox
+            v-if="!isNull"
+            class="checkbox_click-none"
+            :checked="value.value"
+          />
+        </template>
         <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueText.length > 0, 'tree': isTree}]">
           <span
             :style="{'margin-left': treeLevel*25+'px'}"
