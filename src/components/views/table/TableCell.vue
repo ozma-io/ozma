@@ -32,7 +32,7 @@
             >
           </FunLink>
           <!-- eslint-disable vue/no-v-html -->
-          <span class="reference-text" v-html="localValueTextHtml" />
+          <span class="reference-text" v-html="value.extra.valueText || '&nbsp;'" />
           <!-- eslint-enable -->
         </div>
       </template>
@@ -58,7 +58,7 @@
             class="hidden-arrow-space"
           />
           <!-- eslint-disable vue/no-v-html -->
-          <span class="text" v-html="localValueTextHtml" />
+          <span class="text" v-html="value.extra.valueText || '&nbsp;'" />
           <!-- eslint-enable -->
         </div>
       </template>
@@ -71,7 +71,6 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 
 import { valueIsNull } from "@/values";
 import { iconValue } from "@/links";
-import { replaceHtmlLinks } from "@/utils";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
 import CellButtons from "@/components/buttons/CellButtons.vue";
 import type { IColumn, ITableExtendedValue } from "@/components/views/Table.vue";
@@ -98,18 +97,6 @@ export default class TableCell extends Vue {
   @Prop({ type: Boolean, required: true }) isTree!: boolean;
 
   private isArrowDown = false;
-
-  private get localValueTextHtml(): string {
-    if (this.valueType === "int" || this.valueType === "decimal") {
-      return this.value.extra.numberFormatter?.format(this.value.value as any) ?? this.value.extra.valueText;
-    }
-    const text: string = typeof this.value.extra.valueText === "string"
-      ? this.value.extra.valueText
-      : "";
-    return ((this.valueType === "string") || this.value.extra.link
-      ? replaceHtmlLinks(text)
-      : text) || "&nbsp;";
-  }
 
   private get valueType(): string | null {
     return this.value.info?.field?.valueType.type ?? null;
