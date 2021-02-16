@@ -141,7 +141,7 @@
             </th>
           </tr>
         </thead>
-        <tbody class="table-body">
+        <transition-group tag="tbody" name="fade-2">
           <TableRow
             v-for="(row, rowIndex) in shownRows"
             :key="row.key"
@@ -157,7 +157,7 @@
             @toggle-children="toggleChildren(row, $event)"
             @goto="$emit('goto', $event)"
           />
-        </tbody>
+        </transition-group>
       </table>
       <infinite-loading
         v-if="!noMoreRows"
@@ -1928,5 +1928,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   * {
     user-select: none;
+  }
+
+  .fade-2-move {
+    transition: transform 0.2s;
   }
 </style>
