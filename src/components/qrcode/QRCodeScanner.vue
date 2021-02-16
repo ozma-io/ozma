@@ -158,12 +158,6 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     await this.timeout(1);
     this.turnCameraOn();
 
-    try {
-      window.navigator.vibrate([100, 30, 200]);
-    } catch (e) {
-      console.error(e);
-    }
-
     if (!this.multiScan) {
       this.$emit("update:scanResult", content);
       this.toggleOpenScanner();
