@@ -37,20 +37,19 @@
       v-for="(i, index) in columnIndexes"
       :key="i"
       :value="row.values[i]"
-      :children="row.extra.children"
-      :arrow-down="row.extra.arrowDown === null ? false : row.extra.arrowDown"
+      :tree="row.extra.tree"
       :column-position="i"
       :index="index"
       :column="uv.extra.columns[i]"
       :not-existing="notExisting"
       :last-fixed-column-index="lastFixedColumnIndex"
-      :level="row.extra.level"
-      :is-tree="isTree"
+      :show-tree="showTree"
       @cell-click="$emit('cell-click', arguments[0], arguments[1])"
       @cell-mousedown="$emit('cell-mousedown', arguments[0], arguments[1])"
       @cell-mouseover="$emit('cell-mouseover', arguments[0], arguments[1])"
       @cell-mouseup="$emit('cell-mouseup', arguments[0], arguments[1])"
       @update:visibleChildren="$emit('update:visibleChildren', arguments[0], arguments[1])"
+      @toggle-children="$emit('toggle-children', $event)"
       @goto="$emit('goto', $event)"
     />
   </tr>
@@ -75,8 +74,9 @@ export default class TableRow extends Vue {
   @Prop({ type: Array, required: true }) columnIndexes!: number[];
   @Prop({ type: Object, required: true }) uv!: ITableCombinedUserView;
   @Prop({ type: Boolean, default: false }) notExisting!: boolean;
-  @Prop({ type: Boolean, default: false }) isTree!: boolean;
+  @Prop({ type: Boolean, default: false }) showTree!: boolean;
   @Prop({ type: Boolean, default: false }) showLinkColumn!: boolean;
+  @Prop({ type: Number, required: true }) rowIndex!: number;
 
   get lastFixedColumnIndex(): number {
     return this.uv.extra.columns.filter(item => item.fixed).length;

@@ -8,8 +8,7 @@ import Modal from "@/components/modal/Modal.vue";
 interface IInternalModalTab extends IModalTab {
   tab: any;
   autofocus: boolean;
-  actionsMenu: any;
-  actionsRight: any;
+  header: any;
 }
 
 @Component
@@ -37,23 +36,17 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
   private get modalTabs(): IInternalModalTab[] {
     return this.passengers.map((node, index) => {
       const modalPortal: any = node.context!.$children[0];
-      const modalMenuActions: any = ("actions-menu" in modalPortal.$slots)
-        ? modalPortal.$slots["actions-menu"][0]
-        : undefined;
-      const modalRightActions: any = ("actions-right" in modalPortal.$slots)
-        ? modalPortal.$slots["actions-right"][0]
-        : undefined;
-      const title: string | undefined = modalPortal.tabName;
       const order: number = modalPortal.order;
       const autofocus: boolean = modalPortal.autofocus;
+      const modalHeader: any = ("header" in modalPortal.$slots)
+        ? modalPortal.$slots["header"][0]
+        : undefined;
       return {
-        title: title || String(index),
+        header: modalHeader,
         content: node,
         order,
         tab: modalPortal,
         autofocus,
-        actionsMenu: modalMenuActions,
-        actionsRight: modalRightActions,
       };
     }).sort((a, b) => a.order - b.order);
   }

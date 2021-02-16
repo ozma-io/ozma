@@ -164,6 +164,9 @@ export default class ButtonsPanel extends Vue {
   ul.actions > span > li > span {
     line-height: 1.5rem;
     margin-left: 10px;
+    white-space: nowrap;
+    overflow: hidden !important;
+    text-overflow: ellipsis;
   }
 
   ul.actions {

@@ -47,6 +47,8 @@ declare module "vuedraggable" {
   // Please add types to this interface if something you use is missing.
   export interface IVueDraggableEvent {
     type: "start" | "add" | "remove" | "update" | "end" | "choose" | "unchoose" | "sort" | "filter" | "clone";
+    from: HTMLElement;
+    to: HTMLElement;
     originalEvent: Event;
     newIndex: number;
     oldIndex: number;

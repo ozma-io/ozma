@@ -14,24 +14,21 @@
 <template>
   <ModalPortal
     to="tabbed-modal"
-    :tab-name="title"
     :autofocus="autofocus"
     :view="view"
     @close="$emit('close')"
   >
-    <template #actions-menu>
-      <ActionsMenu
+    <template #header>
+      <HeaderPanel
+        :title="title"
         :actions="actions"
-        menu-align="right"
+        :buttons="panelButtons"
+        :is-enable-filter="enableFilter"
+        :filter-string="filterString"
+        :view="view"
+        @update:filterString="filterString = $event"
         @goto="$emit('goto', $event)"
       />
-    </template>
-
-    <template #actions-right>
-      <i
-        class="material-icons material-button fullscreen-button"
-        @click.stop="openFullscreen"
-      >fullscreen</i>
     </template>
 
     <section class="section-modal">
@@ -42,7 +39,11 @@
           :default-values="view.defaultValues"
           :selection-mode="selectionMode"
           :scope="uid"
+          :filter="filterWords"
+          :filter-string="filterString"
           @update:actions="extraActions = $event"
+          @update:panelButtons="panelButtons = $event"
+          @update:enableFilter="enableFilter = $event"
           @update:title="title = $event"
           @goto="$emit('goto', $event)"
           @goto-previous="$emit('goto-previous')"
@@ -80,11 +81,14 @@ import { queryLocation } from "@/state/query";
 import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/staging_changes";
 import ModalPortal from "@/components/modal/ModalPortal";
 import { router } from "@/modules";
+import { PanelButton } from "@/components/ButtonsPanel.vue";
+import HeaderPanel from "@/components/panels/HeaderPanel.vue";
+import { convertToWords } from "@/utils";
 import { ISelectionRef } from "./BaseUserView";
 
 const staging = namespace("staging");
 
-@Component({ components: { ModalPortal } })
+@Component({ components: { ModalPortal, HeaderPanel } })
 export default class ModalUserView extends Vue {
   @staging.State("current") changes!: CurrentChanges;
   @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<CombinedTransactionResult[]>;
@@ -96,11 +100,22 @@ export default class ModalUserView extends Vue {
 
   private title = "";
   private extraActions: Action[] = [];
+  private panelButtons: PanelButton[] = [];
+  private enableFilter = false;
+  private filterString = "";
 
   get actions() {
     const actions: Action[] = [];
     actions.push(...this.extraActions);
     return actions;
+  }
+
+  get filterWords() {
+    const value = this.filterString;
+    if (value !== "") {
+      return Array.from(new Set(convertToWords(value.toString())));
+    }
+    return [];
   }
 
   private openFullscreen() {

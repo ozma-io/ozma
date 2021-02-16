@@ -10,14 +10,6 @@
     @before-close="beforeClose"
     @opened="$emit('opened')"
   >
-    <template #top-right>
-      <input
-        type="button"
-        value="close"
-        class="material-icons material-button modal__close_button"
-        @click="$emit('close')"
-      >
-    </template>
     <div
       v-if="hasTabs"
       :class="[
@@ -34,19 +26,13 @@
         @tab-click="switchTab(index)"
         @tab-close="$emit('tab-close', index)"
       >
-        <template v-if="tab.actionsMenu" #actions-menu>
-          <ModalContent :nodes="tab.actionsMenu" />
+        <template #header>
+          <ModalContent :nodes="tab.header" />
         </template>
-        <template v-if="tab.actionsRight" #actions-right>
-          <fragment>
-            <ModalContent :nodes="tab.actionsRight" />
-            <i
-              v-if="$isMobile"
-              class="material-icons material-button mobile_close_button"
-              @click="$emit('close')"
-            >close</i>
-          </fragment>
-        </template>
+        <i
+          class="material-icons material-button mobile_close_button"
+          @click="$emit('close')"
+        >close</i>
       </ModalTabHeader>
     </div>
     <div
@@ -181,16 +167,6 @@ export default class Modal extends Vue {
     padding: 0;
   }
 
-  .modal__close_button {
-    border: none;
-    right: 20px;
-    top: 20px;
-    position: absolute;
-    background: white;
-    border-radius: 50%;
-    padding: 5px;
-  }
-
   .modal__content {
     overflow: auto;
     height: 100%;
@@ -209,7 +185,7 @@ export default class Modal extends Vue {
   }
 
   .mobile_close_button {
-    margin-left: 15px;
+    margin-left: 5px;
   }
 </style>
 
