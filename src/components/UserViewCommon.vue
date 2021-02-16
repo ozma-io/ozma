@@ -184,12 +184,9 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
 
       const buttonObj = rawButton as Record<string, unknown>;
 
-      if (typeof buttonObj.name !== "string") {
-        return undefined;
-      }
-
-      const buttonIcon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
-      const position = typeof buttonObj.position === "string" ? buttonObj.position : "left";
+      const name = typeof buttonObj.name === "string" ? buttonObj.name : undefined;
+      const icon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
+      const tooltip = typeof buttonObj.tooltip === "string" ? buttonObj.tooltip : undefined;
       const isMobileButton = buttonObj.is_mobile === true;
 
       if (!isMobile && isMobileButton) {
@@ -199,9 +196,9 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       if ("type" in rawButton) {
         if (String(buttonObj.type) === "scan_qrcode") {
           return {
-            icon: buttonIcon,
-            name: buttonObj.name,
-            position,
+            icon,
+            name,
+            tooltip,
             callback: () => {
               this.openQRCodeScanner = !this.openQRCodeScanner;
             },
@@ -210,9 +207,9 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
 
         if (String(buttonObj.type) === "scan_barcode") {
           return {
-            icon: buttonIcon,
-            name: buttonObj.name,
-            position,
+            icon,
+            name,
+            tooltip,
             callback: () => {
               this.openBarCodeScanner = !this.openBarCodeScanner;
             },
@@ -223,9 +220,9 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       const buttonLink = attrToLink(rawButton, opts);
       if (buttonLink !== null) {
         return {
-          icon: buttonIcon,
-          name: buttonObj.name,
-          position,
+          icon,
+          name,
+          tooltip,
           link: buttonLink,
         };
       }
@@ -254,8 +251,8 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         };
       }, buttonObj.actions);
       return {
-        icon: buttonIcon,
-        name: buttonObj.name,
+        icon: icon,
+        name: name,
         actions,
       };
     }, panelButtons);

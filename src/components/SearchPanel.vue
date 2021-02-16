@@ -13,13 +13,18 @@
   <div
     class="search-wrapper"
   >
-    <transition
-      name="resize-fade"
-      @after-leave="showOpenButton = true"
-    >
+  <transition name="resize-fade">
+    <button
+      ref="searchButton"
+      v-if="showOpenButton"
+      class="material-icons material-button"
+      @click.stop
+      @click.prevent
+    > search
+    </button>
+  </transition>
+  <b-popover :target="() => $refs.searchButton" triggers="focus" placement="bottomleft">
       <b-form
-        v-if="showInput"
-        inline
         @submit.prevent="updateInput"
       >
         <b-input-group
@@ -56,12 +61,7 @@
           </b-input-group-append>
         </b-input-group>
       </b-form>
-    </transition>
-    <i
-      v-if="showOpenButton"
-      class="material-icons material-button"
-      @click="toggleShowInput"
-    >search</i>
+    </b-popover>
   </div>
 </template>
 

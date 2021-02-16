@@ -190,7 +190,7 @@ import { Link } from "@/links";
 
 export interface IAction {
   icon?: string;
-  name: string;
+  name?: string;
   order?: number;
 }
 

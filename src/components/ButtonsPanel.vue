@@ -1,83 +1,58 @@
 <template>
-  <div class="buttons_panel">
+  <div class="buttons_wrapper">
     <ul class="buttons">
       <template v-for="(button, i) in buttons">
+        
         <span
-          v-if="'callback' in button && button.position == 'left'"
+          v-if="'callback' in button"
           :key="i"
           @click="button.callback()"
         >
-          <li>
-            <i :class="['material-icons',{'emoji': getIconType(button.icon) == 'emoji' }]">{{ button.icon || "arrow_right" }}</i>
-            <span>{{ button.name }}</span>
+          <li ref="button" class="material-button">
+            <i v-if="button.icon" :class="['material-icons material-button',{'emoji': getIconType(button.icon) == 'emoji' }]">{{ button.icon }}</i>
+            <span v-if="button.name">{{ button.name }}</span>
           </li>
         </span>
-
+        <b-tooltip v-if="button.tooltip"  :target="()=>$refs.button">{{ button.tooltip }}</b-tooltip>
         <FunLink
-          v-else-if="'link' in button && button.position == 'left'"
+          v-else-if="'link' in button"
           :key="i"
           :link="button.link"
           @goto="$emit('goto', $event)"
         >
-          <li>
-            <i :class="['material-icons',{'emoji': getIconType(button.icon) == 'emoji' }]">{{ button.icon || "arrow_right" }}</i>
-            <span>{{ button.name }}</span>
+          <li :id="'id' + i">
+            <i v-if="button.icon" :class="['material-icons',{'emoji': getIconType(button.icon) == 'emoji' }]">{{ button.icon }}</i>
+            <span v-if="button.name">{{ button.name }}</span>
           </li>
+
         </FunLink>
 
         <span v-else-if="'actions' in button" :key="i">
           <li>
-            <i :class="['material-icons',{'emoji': getIconType(button.icon) == 'emoji' }]">{{ button.icon || "arrow_right" }}</i>
-            <span>{{ button.name }}</span>
-            <ul class="actions">
-              <FunLink
-                v-for="(action, j) in button.actions"
-                :key="j"
-                :link="action.link"
-                @goto="$emit('goto', $event)"
-              >
-                <li v-if="'link' in action" :key="action.name">
-                  <i :class="['material-icons',{'emoji': getIconType(action.icon) == 'emoji' }]">{{ action.icon || "arrow_right" }}</i>
-                  <span>{{ action.name }}</span>
-                </li>
-              </FunLink>
-            </ul>
+            <button ref="button">
+              <i :class="['material-icons',{'emoji': getIconType(button.icon) == 'emoji' }]">{{ button.icon }}</i>
+              <span>{{ button.name }}</span>
+            </button>
+            <b-popover :target="()=>$refs.button" triggers="focus" placement="bottom">
+              <ul class="actions">
+                <FunLink
+                  v-for="(action, j) in button.actions"
+                  :key="j"
+                  :link="action.link"
+                  @goto="$emit('goto', $event)"
+                >
+                  <li v-if="'link' in action" :key="action.name">
+                    <i :class="['material-icons',{'emoji': getIconType(action.icon) == 'emoji' }]">{{ action.icon || "arrow_right" }}</i>
+                    <span>{{ action.name }}</span>
+                  </li>
+                </FunLink>
+              </ul>
+            </b-popover>
           </li>
         </span>
       </template>
     </ul>
     <slot name="search-panel" />
-    <ul class="right-buttons">
-      <template v-for="(button, i) in buttons">
-        <span
-          v-if="'callback' in button && button.position == 'right'"
-          :key="i"
-          @click="button.callback()"
-        >
-          <li
-            v-b-tooltip.hover.d50
-            :title="button.name"
-          >
-            <i :class="['material-icons',{'emoji': getIconType(button.icon) == 'emoji' }]">{{ button.icon || "arrow_right" }}</i>
-          </li>
-        </span>
-
-        <FunLink
-          v-else-if="'link' in button && button.position == 'right'"
-          :key="i"
-          :link="button.link"
-          @goto="$emit('goto', $event)"
-        >
-          <li
-            v-b-tooltip.hover.d50
-            :title="button.name"
-          >
-            <i :class="['material-icons',{'emoji': getIconType(button.icon) == 'emoji' }]">{{ button.icon || "arrow_right" }}</i>
-          </li>
-        </FunLink>
-      </template>
-    </ul>
-    <slot name="actions-menu" />
   </div>
 </template>
 
@@ -88,12 +63,12 @@ import { getIconType } from "@/utils";
 
 export interface IPanelButton { // Default for buttons panel
   icon?: string;
-  name: string;
+  name?: string;
   actions: Action[];
 }
 
 export interface IActionPanelButton {
-  position: string; // left(default) | right
+  tooltip?: string;
 }
 
 export type PanelButton = IPanelButton | IActionPanelButton & Action;
@@ -108,8 +83,9 @@ export default class ButtonsPanel extends Vue {
 }
 </script>
 
-<style scoped>
-  .buttons_panel {
+<style lang="scss" scoped>
+
+  .buttons_wrapper {
     display: flex;
     align-items: center;
   }
@@ -125,121 +101,80 @@ export default class ButtonsPanel extends Vue {
     padding: 0;
   }
 
-  ul.buttons a {
-    text-decoration: none;
-    color: var(--MainTextColor);
-  }
+  ul.buttons {
+    & a {
+      text-decoration: none;
+      color: var(--MainTextColor);
+    }
 
-  ul.buttons > a > li,
-  ul.buttons > span > li {
-    position: relative;
-    display: flex;
-    float: left;
-    border: 1px solid var(--MainBackgroundColor);
-    border-radius: 3px;
-    padding: 3px 5px;
-    margin-top: -3px;
-    margin-right: 10px;
-    cursor: pointer;
-    transition: 0.2s background-color ease-in-out, 0.2s box-shadow ease-in-out, 0.2s border-color ease-in-out;
-  }
+    & > a > li,
+    & > span > li {
+      display: flex;
+      float: left;
+      border-radius: 2px;
+      cursor: pointer;
+      margin: 0 2px;
 
-  ul.buttons > a > li > span,
-  ul.buttons > span > li > span {
-    line-height: 1.5rem;
-    margin-left: 5px;
-  }
+      & span {
+        line-height: 1.5rem;
+        margin: 0 3px;    
+      }
 
-  .search-show + ul.buttons {
-    display: none;
-  }
+      &:hover {
+        background-color: var(--MainHoverBackgroundColor);    
+        box-shadow: 0 0 0 2px var(--MainHoverBackgroundColor);
+      }
 
-  ul.actions > span > li,
-  ul.actions > a > li {
-    display: flex;
-    padding: 5px 15px;
-  }
+      &:active {
+        background-color: var(--MainActiveBackgroundColor);    
+        box-shadow: 0 0 0 2px var(--MainActiveBackgroundColor);
+      }
 
-  ul.actions > a > li > span,
-  ul.actions > span > li > span {
-    line-height: 1.5rem;
-    margin-left: 10px;
-    white-space: nowrap;
-    overflow: hidden !important;
-    text-overflow: ellipsis;
-  }
+      & button {
+        background-color: var(--MainBackgroundColor);    
+        display: flex;
+        border-radius: 2px;
+
+        & span {
+          line-height: 1.5rem;
+          margin: 0 3px;    
+        }        
+
+        &:hover {
+          background-color: var(--MainHoverBackgroundColor);    
+          box-shadow: 0 0 0 2px var(--MainHoverBackgroundColor);
+        }
+
+        &:active {
+          background-color: var(--MainActiveBackgroundColor);    
+          box-shadow: 0 0 0 2px var(--MainActiveBackgroundColor);
+        }
+      }
+    }
+  }  
 
   ul.actions {
-    visibility: hidden;
-    position: absolute;
-    opacity: 0;
-    border: 1px solid var(--MainBorderColor);
-    border-radius: 3px;
-    background-color: var(--MainBackgroundColor);
-    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.3);
-    top: calc(100% + 5px);
-    right: 0;
-    z-index: 1200;
-    transition: 0.2s visibility ease-in-out, 0.2s opacity ease-in-out;
-  }
+    & > span > li,
+    & > a > li {
+      display: flex;
 
-  ul.right-buttons {
-    display: flex;
-  }
+      & > span {
+        line-height: 1.5rem;
+        margin-left: 10px;
+        white-space: nowrap;
+        overflow: hidden !important;
+        text-overflow: ellipsis;
+      }
 
-  ul.right-buttons a {
-    color: var(--MainTextColor);
-  }
+      &:hover {
+        background-color: var(--MainHoverBackgroundColor);    
+      }
 
-  ul.right-buttons > a > li,
-  ul.right-buttons > span > li {
-    line-height: 1rem;
-    margin: 0 1px;
-    padding: 0;
-    position: relative;
-    display: block;
-    float: left;
-    cursor: pointer;
-    border: 1px solid var(--MainBackgroundColor);
-    border-radius: 3px;
-    transition: 0.2s background-color ease-in-out, 0.2s box-shadow ease-in-out, 0.2s border-color ease-in-out;
-  }
-
-  ul.right-buttons > a > li:hover,
-  ul.right-buttons > span > li:hover {
-    border: 1px solid var(--MainBorderColor);
-    background-color: #f9f9fb;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-
-  ul.buttons > a > li:hover,
-  ul.buttons > span > li:hover {
-    border: 1px solid var(--MainBorderColor);
-    background-color: #f9f9fb;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-
-  ul.buttons > span > li:hover ul.actions {
-    opacity: 1;
-    visibility: visible;
-  }
-
-  ul.actions > span > li:hover,
-  ul.actions > a > li:hover {
-    background-color: var(--MainBorderColor);
+    }
   }
 
   .emoji {
-    font-size: 20px;
+    font-size: 18px;
   }
 
-  ul.right-buttons .emoji {
-    padding: 0 2px 6px 2px;
-  }
-
-  @media only screen and (max-width: 900px) {
-    ul.buttons {
-      display: none;
-    }
-  }
 </style>

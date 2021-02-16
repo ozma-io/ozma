@@ -422,9 +422,7 @@ export default class TopLevelUserView extends Vue {
   }
 
   .head-menu {
-    height: 44px;
     display: flex;
-    align-items: center;
     white-space: nowrap;
     background-color: var(--MainBackgroundColor);
     width: 100%;
