@@ -901,8 +901,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private rowsState: Record<number, any> = {};
   private isTree = false;
 
-  private selecting = false;
-
   // Used for Tab-Enter selection moving.
   // Probably need to move to extra.
   private columnDelta = 0;
@@ -1101,13 +1099,19 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private copySelectedCell(event: ClipboardEvent) {
-    this.uv.extra.selectedValues.keys().forEach(key => {
-      event.clipboardData?.setData("text/plain", this.uv.getValueByRef(key)?.value.extra.valueText as string);
-      event.preventDefault();
-    });
+    const valueRef = this.getSelectedCell();
+    if (!valueRef) return;
+
+    event.clipboardData?.setData("text/plain", this.uv.getValueByRef(valueRef)?.value.extra.valueText as string);
+    event.preventDefault();
   }
 
-  private pasteInSelectedCell(event: ClipboardEvent) {
+  private cutSelectedCell(event: ClipboardEvent) {
+    this.copySelectedCell(event);
+    this.clearSelectedCell();
+  }
+
+  private pasteToSelectedCell(event: ClipboardEvent) {
     const valueRef = this.getSelectedCell();
     if (!valueRef) return;
 
@@ -1146,19 +1150,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       this.removeCellEditing();
     });
 
-    /* (this.$refs.tableContainer as HTMLElement).addEventListener("copy", (event: ClipboardEvent) => { */
-    document.addEventListener("copy", (event: ClipboardEvent) => {
-      this.copySelectedCell(event);
-    });
-
-    /* (this.$refs.tableContainer as HTMLElement).addEventListener("paste", (event: ClipboardEvent) => { */
-    document.addEventListener("paste", (event: ClipboardEvent) => {
-      this.pasteInSelectedCell(event);
-    });
-
-    (this.$refs.tableContainer as HTMLElement).addEventListener("mouseup", (event: MouseEvent) => {
-      this.selecting = false;
-    });
+    this.$root.$on("copy", (event: ClipboardEvent) => this.copySelectedCell(event));
+    this.$root.$on("cut", (event: ClipboardEvent) => this.cutSelectedCell(event));
+    this.$root.$on("paste", (event: ClipboardEvent) => this.pasteToSelectedCell(event));
 
     // Deselect cells in this table if cell is selected in another table.
     this.$root.$on("cell-click", () => this.deselectAllCells());

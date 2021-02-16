@@ -13,9 +13,9 @@
                           'tree-branches': column.treeUnfoldColumn && children !== undefined && children.length > 0 && isTree,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click.stop="$emit('cell-click', columnPosition, $event)"
-    @mousedown="$emit('cell-mousedown', columnPosition, $event)"
-    @mouseover.self="$emit('cell-mouseover', columnPosition, $event)"
-    @mouseup="$emit('cell-mouseup', columnPosition, $event)"
+    @mousedown="$emit('cell-mousedown', $event, value)"
+    @mouseover.self="$emit('cell-mouseover', $event, value)"
+    @mouseup="$emit('cell-mouseup', $event, value)"
   >
     <p>
       <template v-if="column.type == 'buttons'">
