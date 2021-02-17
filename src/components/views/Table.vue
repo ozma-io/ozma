@@ -199,7 +199,7 @@ import { Moment, default as moment } from "moment";
 import * as R from "ramda";
 import { IResultColumnInfo, ValueType, RowId } from "ozma-api";
 
-import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName } from "@/utils";
+import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { AddedRowId, AutoSaveLock } from "@/state/staging_changes";
@@ -283,6 +283,13 @@ const doubleClickTime = 700;
 // FIXME: Use CSS variables to avoid this constant
 const technicalFieldsWidth = 35; // checkbox's and openform's td width
 
+const validNumberFormats = ["auto", "ru", "en"];
+const numberFormatters: Record<string, Intl.NumberFormat> = {
+  "auto": Intl.NumberFormat(),
+  "ru": Intl.NumberFormat("ru-RU"),
+  "en": Intl.NumberFormat("en-US"),
+};
+
 const createColumns = (uv: ICombinedUserViewAny): IColumn[] => {
   const viewAttrs = uv.attributes;
   const columns: IColumn[] = [];
@@ -357,19 +364,26 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
   const columnAttrs = uv.columnAttributes[columnIndex];
   const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, uv.attributes);
 
-  const valueText = valueToPunnedText(columnInfo.valueType, value);
-
+  let valueText = valueToPunnedText(columnInfo.valueType, value);
   const style: Record<string, unknown> = {};
+
+  const punOrValueType: ValueType = columnInfo.punType ?? columnInfo.valueType;
+
+  const numberTypes: (ValueType["type"])[] = ["int", "decimal"];
+  if (numberTypes.includes(punOrValueType.type)) {
+    style["text-align"] = "right";
+
+    const numberFormat = getCellAttr("number_format");
+    if (typeof numberFormat === "string" && validNumberFormats.includes(numberFormat.toLowerCase())) {
+      valueText = numberFormatters[numberFormat.toLowerCase()].format(value.value as any);
+    }
+  } else if (punOrValueType.type === "string") {
+    valueText = replaceHtmlLinks(valueText);
+  }
 
   const cellColor = getCellAttr("cell_color");
   if (cellColor !== undefined && cellColor !== null) {
     style["background-color"] = String(cellColor);
-  }
-
-  const textAlignRightTypes: (ValueType["type"])[] = ["int", "decimal"];
-  const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType;
-  if (textAlignRightTypes.includes(punOrValue.type)) {
-    style["text-align"] = "right";
   }
 
   const textAlignAttr = getCellAttr("text_align");

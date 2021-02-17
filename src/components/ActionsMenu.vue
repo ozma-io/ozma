@@ -11,8 +11,17 @@
 
 <template>
   <div
+    :id="uid"
     :class="['actions-menu', {'actions-menu_active': showActions}]"
   >
+    <b-tooltip
+      hover
+      noninteractive
+      :disabled="sortedActions.length !== 0"
+      :target="uid"
+    >
+      {{ $t("no_actions") }}
+    </b-tooltip>
     <input
       v-if="menuAlign == 'left'"
       type="button"
@@ -23,7 +32,6 @@
     >
     <i
       v-else
-      v-b-tooltip.hover.noninteractive
       :class="[
         'material-icons',
         'material-button',
@@ -32,8 +40,6 @@
           'disabled': sortedActions.length === 0,
         },
       ]"
-      :title="$t('no_actions')"
-      :disabled="sortedActions.length !== 0"
       @click="toggleShowActions"
     >{{ titleIcon }}</i>
     <div
