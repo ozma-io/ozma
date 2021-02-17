@@ -47,6 +47,7 @@ import { Component } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
 import { mapMaybe, tryDicts } from "@/utils";
+import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import Board from "@/components/kanban/Board.vue";
@@ -251,7 +252,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       cardLink,
       rows: cardColumns.map(col => [col]),
       style: {
-        color: color !== undefined ? String(color) : undefined,
+        color: valueIsNull(color) ? undefined : String(color),
       },
     };
   }
