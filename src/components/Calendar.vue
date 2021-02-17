@@ -178,6 +178,13 @@ export default class Calendar extends Vue {
     await popupRef.doShow();
   }
 
+  private async closePopup() {
+    const popupRef: any = this.$refs.popup;
+    if (!popupRef) return;
+
+    await popupRef.doClose();
+  }
+
   private async onOpenPopup() {
     this.isPopupOpen = true;
 
@@ -213,6 +220,7 @@ export default class Calendar extends Vue {
     if (this.value === newValue) return;
 
     this.$emit("update:value", newValue);
+    void this.closePopup();
   }
 
   private onPressEnter(event: KeyboardEvent) {

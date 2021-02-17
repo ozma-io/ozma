@@ -3,12 +3,14 @@
         "en": {
             "yes": "Yes",
             "no": "No",
+            "boolean_null": "Empty",
             "invalid_uv": "Nested user view rows should be JSON objects with 'ref' and 'args' defined",
             "select_view": "Add in modal window"
         },
         "ru": {
             "yes": "Да",
             "no": "Нет",
+            "boolean_null": "Пусто",
             "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'ref' и 'args'",
             "select_view": "Создать во вложенном окне"
         }
@@ -134,7 +136,6 @@
           v-else-if="inputType.name === 'barcode'"
           ref="control"
           :content="textValue"
-          @scanned="barCodeScanned"
         />
         <div v-else-if="inputType.name === 'static_text'">
           {{ textValue }}
@@ -442,11 +443,6 @@ export default class FormControl extends Vue {
     this.$emit("set-input-height", value);
   }
 
-  private barCodeScanned(code: string) {
-    this.updateValue(code);
-    this.$emit("close-modal-input");
-  }
-
   get isQRCodeInput() {
     return "qrcode_input" in this.attributes ? this.attributes["qrcode_input"] : false;
   }
@@ -520,6 +516,9 @@ export default class FormControl extends Vue {
       }
     }
 
+    const booleanOptions = [{ label: this.$t("yes").toString(), value: true }, { label: this.$t("no").toString(), value: false }];
+    const booleanNullableOptions = [...booleanOptions, { label: this.$t("boolean_null").toString(), value: null }];
+
     if (this.fieldType !== null) {
       switch (this.fieldType.type) {
         case "reference": {
@@ -570,7 +569,7 @@ export default class FormControl extends Vue {
         case "bool":
           return {
             name: "select",
-            options: [{ label: this.$t("yes").toString(), value: true }, { label: this.$t("no").toString(), value: false }],
+            options: this.isNullable ? booleanNullableOptions : booleanOptions,
           };
         case "int":
           return { name: "text", type: "number", style: this.controlStyle() };
@@ -593,7 +592,7 @@ export default class FormControl extends Vue {
         case "bool":
           return {
             name: "select",
-            options: [{ label: this.$t("yes").toString(), value: true }, { label: this.$t("no").toString(), value: false }],
+            options: this.isNullable ? booleanNullableOptions : booleanOptions,
           };
         case "int":
           return { name: "text", type: "number", style: this.controlStyle() };
@@ -679,6 +678,11 @@ export default class FormControl extends Vue {
   private updateValue(newValue: unknown) {
     if (this.currentValue !== newValue) {
       this.$emit("update", newValue);
+    }
+
+    const closeAfterUpdate: IType["name"][] = ["calendar", "select", "reference"];
+    if (closeAfterUpdate.includes(this.inputType.name)) {
+      this.$emit("close-modal-input");
     }
   }
 }
