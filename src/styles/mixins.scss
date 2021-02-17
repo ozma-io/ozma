@@ -1,4 +1,7 @@
 @mixin material-button {
+  position: block;
+  padding: 0;
+  background-color: inherit;
   transition: background 0.1s;
   border-radius: 4px;
   cursor: pointer;
