@@ -248,7 +248,7 @@ export interface ITableRowExtra extends IBaseRowExtra {
   style: Record<string, unknown> | null;
   height: number | null;
   link: Link | null;
-  tree: ITableRowTree | null;
+  tree: ITableRowTree;
 }
 
 export interface IAddedNewRowRef {
@@ -415,16 +415,14 @@ const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLo
 
   const style: Record<string, unknown> = {};
 
+  const defaultArrow = Boolean(getRowAttr("tree_all_open"));
+
   const tree: ITableRowTree = {
     children: [],
     level: 0,
     parent: null,
-    arrowDown: oldLocal === null ? false : oldLocal.tree!.arrowDown,
+    arrowDown: oldLocal?.tree.arrowDown ?? defaultArrow,
   };
-
-  if (getRowAttr("tree_all_open")) {
-    tree.arrowDown = true;
-  }
 
   const extra = {
     searchText: "",
@@ -461,20 +459,20 @@ const postInitCommonRow = (uv: ITableCombinedUserView, row: ITableExtendedRowCom
   row.extra.searchText = "\0".concat(...searchStrings);
 };
 
-const initTreeChildrens = (uv: ITableCombinedUserView) => {
+const initTreeChildren = (uv: ITableCombinedUserView) => {
   uv.rows!.forEach((row, i) => {
-    if (row.extra.tree!.parent) {
-      const parentIndex = uv.extra.rowsParentPositions[row.extra.tree!.parent];
-      uv.rows![parentIndex].extra.tree!.children.push(i);
+    if (row.extra.tree.parent) {
+      const parentIndex = uv.extra.rowsParentPositions[row.extra.tree.parent];
+      uv.rows![parentIndex].extra.tree.children.push(i);
 
       let level = 0;
       let parent: number | undefined = parentIndex;
       while (parent !== undefined && uv.rows![parent] !== undefined) {
-        const index: number | undefined = uv.rows![parent].extra.tree!.parent ?? undefined;
+        const index: number | undefined = uv.rows![parent].extra.tree.parent ?? undefined;
         parent = index !== undefined ? uv.extra.rowsParentPositions[index] : undefined;
         level++;
       }
-      uv.rows![i].extra.tree!.level = level;
+      uv.rows![i].extra.tree.level = level;
     }
   });
 
@@ -611,7 +609,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
 
         // Init parent
         if (value.value !== null) {
-          row.extra.tree!.parent = Number(value.value);
+          row.extra.tree.parent = Number(value.value);
         }
       }
     }
@@ -822,7 +820,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
 
   postInitUserView(uv: ITableCombinedUserView) {
     if (!R.isEmpty(uv.extra.rowsParentPositions)) {
-      uv = initTreeChildrens(uv);
+      uv = initTreeChildren(uv);
     }
 
     uv.extra.fixedColumnPositions = fixedColumnPositions(uv);
@@ -1105,9 +1103,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private showTreeChildren(parentIndex: number) {
-    const children = this.uv.rows![parentIndex].extra.tree!.children;
+    const children = this.uv.rows![parentIndex].extra.tree.children;
 
-    this.uv.rows![parentIndex].extra.tree!.arrowDown = true;
+    this.uv.rows![parentIndex].extra.tree.arrowDown = true;
 
     const parentPosition = this.rowPositions.indexOf(parentIndex);
     const leftChank = this.rowPositions.splice(0, parentPosition + 1);
@@ -1116,14 +1114,14 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private hideTreeChildren(parentIndex: number) {
-    const children = this.uv.rows![parentIndex].extra.tree!.children;
-    this.uv.rows![parentIndex].extra.tree!.arrowDown = false;
+    const children = this.uv.rows![parentIndex].extra.tree.children;
+    this.uv.rows![parentIndex].extra.tree.arrowDown = false;
 
     children.forEach(child => {
       const childPosition = this.rowPositions.indexOf(child);
       this.rowPositions.splice(childPosition, 1);
 
-      if (this.uv.rows![child].extra.tree!.arrowDown) {
+      if (this.uv.rows![child].extra.tree.arrowDown) {
         this.hideTreeChildren(child);
       }
     });
@@ -1148,7 +1146,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     let newRowPositions: number[] = [parentIndex];
 
     children.forEach(child => {
-      const row = this.uv.rows![child].extra.tree!;
+      const row = this.uv.rows![child].extra.tree;
       if (row.arrowDown) {
         newRowPositions = newRowPositions.concat(this.pushTreeChildrenPositions(child, row.children));
       } else {
@@ -1161,10 +1159,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   get initialRowPositions() {
     const rowPositions = this.uv.rows!.map((row, rowI) => rowI);
 
-    const topLevelRows = rowPositions.filter(rowI => this.uv.rows![rowI].extra.tree!.parent === null);
+    const topLevelRows = rowPositions.filter(rowI => this.uv.rows![rowI].extra.tree.parent === null);
     let newRowPositions: number[] = [];
     topLevelRows.forEach(rowI => {
-      const row = this.uv.rows![rowI].extra.tree!;
+      const row = this.uv.rows![rowI].extra.tree;
       if (row.arrowDown) {
         newRowPositions = newRowPositions.concat(this.pushTreeChildrenPositions(rowI, row.children));
       } else {
