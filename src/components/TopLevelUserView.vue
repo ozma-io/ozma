@@ -255,15 +255,18 @@ export default class TopLevelUserView extends Vue {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     this.$root.$on("open-qrcode-scanner", this.openQRCodeScanner);
 
-    document.addEventListener("keydown", (event: KeyboardEvent) => {
-      // 83 is code for `s`/`ы` key.
-      if ((event.ctrlKey || event.metaKey) && (event.key === "s" || event.keyCode === 83)) {
-        event.preventDefault();
-        if (!this.changes.isScopeEmpty("root")) {
-          this.saveView();
-        }
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    document.addEventListener("keydown", this.onKeydown);
+  }
+
+  private onKeydown(event: KeyboardEvent) {
+    // 83 is code for `s`/`ы` key.
+    if ((event.ctrlKey || event.metaKey) && (event.key === "s" || event.keyCode === 83)) {
+      event.preventDefault();
+      if (!this.changes.isScopeEmpty("root")) {
+        this.saveView();
       }
-    });
+    }
   }
 
   private openQRCodeScanner(link: Link | null) {
@@ -345,6 +348,9 @@ export default class TopLevelUserView extends Vue {
     // Off listen to the event.
     // eslint-disable-next-line @typescript-eslint/unbound-method
     this.$root.$off("open-qrcode-scanner", this.openQRCodeScanner);
+
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    document.removeEventListener("keydown", this.onKeydown);
   }
 
   private saveView() {

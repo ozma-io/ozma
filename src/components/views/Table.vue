@@ -607,7 +607,6 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       }
     }
 
-    const htmlElement = oldValue?.htmlElement ?? null;
     const selected = (oldValue?.selected ?? false) && !row.deleted;
     if (selected) {
       uv.extra.selectedValues.insert({
@@ -621,8 +620,8 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       ...baseExtra,
       ...commonExtra,
       selected,
-      htmlElement,
       link,
+      htmlElement: null,
     };
   },
 
@@ -639,7 +638,6 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     const baseExtra = baseUserViewHandler.createAddedLocalValue(uv, rowId, row, columnIndex, value, oldView, oldRow, oldValue);
     const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
 
-    const htmlElement = oldValue?.htmlElement ?? null;
     const selected = oldValue?.selected ?? false;
     if (selected) {
       uv.extra.selectedValues.insert({
@@ -652,7 +650,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       ...baseExtra,
       ...commonExtra,
       selected,
-      htmlElement,
+      htmlElement: null,
       link: null,
     };
   },
@@ -669,7 +667,6 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     const baseExtra = baseUserViewHandler.createEmptyLocalValue(uv, row, columnIndex, value, oldView, oldRow, oldValue);
     const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
 
-    const htmlElement = oldValue?.htmlElement ?? null;
     const selected = oldValue?.selected ?? false;
     if (selected) {
       uv.extra.selectedValues.insert({
@@ -681,7 +678,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       ...baseExtra,
       ...commonExtra,
       selected,
-      htmlElement,
+      htmlElement: null,
       link: null,
     };
   },
@@ -952,24 +949,21 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       "down": () => this.moveSelection("down"),
       "left": () => this.moveSelection("left"),
       // TODO: make pageup/pagedown movement depend on real page size, not just 5 rows.
-      "pagedown": () => this.moveSelection("up", { step: 5 }),
-      "pageup": () => this.moveSelection("down", { step: 5 }),
+      "pagedown": () => this.moveSelection("down", { step: 5 }),
+      "pageup": () => this.moveSelection("up", { step: 5 }),
     };
   }
 
   // Finds vusual position of selected cell.
   // FIXME: bad performance!
   private getSelectedCellPosition(): { row: number; column: number } | null {
-    if (!this.getSelectedCell()) return null;
+    const valueRef = this.getSelectedCell();
+    if (!valueRef) return null;
 
-    for (const [rowI, row] of this.shownRows.entries()) {
-      for (const [cellI, cell] of row.row.values.entries()) {
-        if (cell.extra.selected) {
-          return { row: rowI, column: this.getVisualColumnIndex(cellI) };
-        }
-      }
-    }
-    return null;
+    const rowWithSelectedCell = this.uv.getRowByRef(valueRef);
+    if (!rowWithSelectedCell) return null;
+    const rowI = this.shownRows.findIndex(row => row.row === rowWithSelectedCell);
+    return { row: rowI, column: this.getVisualColumnIndex(valueRef.column) };
   }
 
   private getSelectedCell(): ValueRef | null {
@@ -1181,24 +1175,32 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   protected mounted() {
-    (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", () => {
-      this.removeCellEditing();
-    });
-
-    this.$root.$on("copy", (event: ClipboardEvent) => this.copySelectedCell(event));
-    this.$root.$on("cut", (event: ClipboardEvent) => this.cutSelectedCell(event));
-    this.$root.$on("paste", (event: ClipboardEvent) => this.pasteToSelectedCell(event));
-
-    // Deselect cells in this table if cell is selected in another table.
-    this.$root.$on("cell-click", () => {
-      this.deselectAllCells();
-      this.lastSelectedRow = null;
-      this.lastSelectedValue = null;
-      this.removeCellEditing();
-    });
+    /* eslint-disable @typescript-eslint/unbound-method */
+    (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", this.removeCellEditing);
+    this.$root.$on("copy", this.copySelectedCell);
+    this.$root.$on("cut", this.cutSelectedCell);
+    this.$root.$on("paste", this.pasteToSelectedCell);
+    this.$root.$on("cell-click", this.onOtherTableClicked);
+    /* eslint-enable @typescript-eslint/unbound-method */
   }
 
-  protected destroyed() {
+  // Deselect cells in this table if cell is selected in another table.
+  private onOtherTableClicked() {
+    this.deselectAllCells();
+    this.lastSelectedRow = null;
+    this.lastSelectedValue = null;
+    this.removeCellEditing();
+  }
+
+  protected beforeUnmount() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", this.removeCellEditing);
+    this.$root.$off("copy", this.copySelectedCell);
+    this.$root.$off("cut", this.cutSelectedCell);
+    this.$root.$off("paste", this.pasteToSelectedCell);
+    this.$root.$off("cell-click", this.onOtherTableClicked);
+    /* eslint-enable @typescript-eslint/unbound-method */
+
     if (this.printListener !== null) {
       window.removeEventListener("beforeprint", this.printListener.printCallback);
       this.printListener.query.removeListener(this.printListener.queryCallback);

@@ -71,7 +71,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
 import { valueIsNull } from "@/values";
 import { iconValue } from "@/links";
@@ -137,7 +137,8 @@ export default class TableCell extends Vue {
     return this.value.extra.link && "target" in this.value.extra.link ? iconValue(this.value.extra.link.target) : null;
   }
 
-  async mounted() {
+  @Watch("value", { immediate: true })
+  private async updateHtmlElement() {
     await this.$nextTick();
     this.value.extra.htmlElement = this.$refs.cell as HTMLElement;
   }
