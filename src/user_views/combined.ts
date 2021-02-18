@@ -456,8 +456,25 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
 
     if (this.rows) {
       const oldViewExtra = oldLocal?.extra ?? null;
+      const mainRowOffsets: Record<RowId, number> | null = (this.info.mainEntity && oldLocal?.info.mainEntity && equalEntityRef(this.info.mainEntity, oldLocal.info.mainEntity)) ? {} : null;
       this.rows.forEach((row, rowI) => {
-        const oldRow = row.oldAddedId === undefined ? oldLocal?.rows?.[rowI] : oldLocal!.newRows[row.oldAddedId];
+        let oldRow: IExtendedRowCommon<ValueT, RowT> | undefined;
+        if (row.oldAddedId !== undefined) {
+          oldRow = oldLocal!.newRows[row.oldAddedId];
+        } else if (mainRowOffsets) {
+          const oldMapping = oldLocal!.mainRowMapping[row.mainId!];
+          if (oldMapping) {
+            const offset = mainRowOffsets[row.mainId!] ?? 0;
+            // We dealt with committed rows in `oldAddedId` branch.
+            const oldRowRef = oldMapping[offset] as IExistingRowRef;
+            if (oldRowRef) {
+              oldRow = oldLocal!.rows![oldRowRef.position];
+              mainRowOffsets[row.mainId!] = offset + 1;
+            }
+          }
+        } else {
+          oldRow = oldLocal?.rows?.[rowI];
+        }
         const oldRowExtra = oldRow?.extra ?? null;
         row.extra = this.handler.createLocalRow(this, rowI, row, oldViewExtra, oldRowExtra);
         row.values.forEach((value, colI) => {
