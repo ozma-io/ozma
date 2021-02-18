@@ -65,7 +65,6 @@
 </template>
 
 <script lang="ts">
-import * as R from "ramda";
 import { Vue, Component, Prop } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { dragscroll } from "vue-dragscroll";
@@ -138,9 +137,9 @@ export class Card extends Vue {
   }
 
   private get cardStyle() {
-    const color: string | undefined = R.pathOr("white", ["style", "color"], this.data);
+    const backgroundColor = this.data?.style?.color ?? "white";
     return {
-      backgroundColor: color,
+      backgroundColor,
     };
   }
 }
@@ -187,10 +186,6 @@ export default Card;
     text-overflow: ellipsis;
     width: 100%;
     display: inline-block;
-
-    /*
-    white-space: nowrap;
-    */
     overflow: hidden;
   }
 

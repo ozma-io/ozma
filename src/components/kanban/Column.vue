@@ -4,9 +4,6 @@
       class="column_header"
       :style="titleStyle"
     >
-      <!-- input type="checkbox"
-                v-model="isAllSelected"
-                class="column_select_checkbox" -->
       <div
         class="column_header__title_block"
       >
@@ -19,11 +16,10 @@
         <span class="column_controls">
           <i
             v-if="createView !== undefined"
-            class="material-icons card_open_icon"
+            class="material-icons new-card-icon"
             style="font-size: 20px;"
             @click="openModal"
           >add</i>
-          <!-- i class="material-icons card_open_icon">more_vert</i -->
         </span>
       </div>
     </div>
@@ -33,7 +29,7 @@
       ghost-class="card_dragging_ghost"
       chosen-class="card_dragging_chosen"
       drag-class="card_dragging_drag"
-      :style="{ background: backgroundColor }"
+      :style="{ width, backgroundColor }"
       :force-fallback="true"
       :fallback-on-body="true"
       :fallback-tolerance="10"
@@ -144,7 +140,7 @@ export default class Column extends Vue {
   private get titleStyle(): IColumnStyle {
     const strWidth = `${this.width}px`;
     return {
-      maxWidth: strWidth,
+      width: strWidth,
       backgroundColor: this.headerColor,
     };
   }
@@ -223,15 +219,15 @@ export default class Column extends Vue {
   }
 
   private onDragEnd(event: IVueDraggableEvent) {
-    if (event.oldDraggableIndex === event.newDraggableIndex
-     && event.from === event.to) return;
-
     this.$emit("drag-end");
 
     void nextRender().then(() => {
     });
 
     this.dragging = false;
+
+    if (event.oldDraggableIndex === event.newDraggableIndex
+     && event.from === event.to) return;
 
     const newCard = this.cards[event.newIndex];
     // Avoid calling onDragEnd after onAdd event: It should do it on it's own.
@@ -318,7 +314,7 @@ export default class Column extends Vue {
     font-size: 14px;
   }
 
-  .card_open_icon {
+  .new-card-icon {
     padding: 2px;
     border-radius: 2px;
     cursor: pointer;
@@ -328,7 +324,7 @@ export default class Column extends Vue {
     transition: color 0.25s ease;
   }
 
-  .card_open_icon:hover {
+  .new-card-icon:hover {
     transition: background-color 0.5s ease;
     transition: color 0.25s ease;
     background-color: var(--SuccessColor);
