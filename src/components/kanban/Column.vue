@@ -72,6 +72,7 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 import draggable from "vuedraggable";
 
 import Card from "@/components/kanban/Card.vue";
+import { nextRender } from "@/utils";
 
 export interface ICard<CardT> {
   key: unknown;
@@ -114,8 +115,11 @@ export default class KanbanColumn extends Vue {
   }
 
   private onDragEnd() {
-    this.dragging = false;
-    this.$emit("drag-end");
+    // On slow browsers `dragging` is unset too fast, which causes disabled links in draggable to be clicked.
+    void nextRender().then(() => {
+      this.dragging = false;
+      this.$emit("drag-end");
+    });
   }
 
   private onChange(event: any) {

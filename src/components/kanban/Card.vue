@@ -9,9 +9,8 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
-import { dragscroll } from "vue-dragscroll";
 
-@Component({ directives: { dragscroll } })
+@Component
 export default class KanbanCard extends Vue {
   // FIXME: Again, specific to our usage of kanban. Can we move this logic to a slot?
   @Prop({ type: String }) backgroundColor!: string | undefined;

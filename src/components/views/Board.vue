@@ -41,8 +41,9 @@
         <!-- Ternary in `:link` for fix Firefox issue, see: https://github.com/SortableJS/Sortable/issues/1184 -->
         <FunLink
           class="card_link"
-          :link="dragging ? null : card.link"
           no-href
+          :link="card.link"
+          :disabled="dragging"
           @goto="$emit('goto', $event)"
         >
           <b-row
@@ -305,6 +306,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     } else if (this.columnsType.type === "enum") {
       return this.columnsType.values.map(name => ({
         title: name,
+        key: name,
         column: {
           group: name,
         },
@@ -313,6 +315,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     } else if (this.columnsType.type === "reference") {
       return this.columnsType.columns.map(col => ({
         title: col.name,
+        key: col.id,
         column: {
           group: col.id,
         },
@@ -357,11 +360,11 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
   }
 
   private async moveCard(columnIndex: number, card: IRowCard, newIndex: number) {
-    const cards = this.columns![columnIndex].cards;
     if (this.orderIndex === null) {
       return;
     }
 
+    const cards = this.columns![columnIndex].cards;
     let order: number;
     if (cards.length === 0) {
       order = 0;

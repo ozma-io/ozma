@@ -5,7 +5,7 @@
   >
     <Column
       v-for="(column, columnIndex) in columns"
-      :key="columnIndex"
+      :key="column.key"
       data-dragscroll
       :title="column.title"
       :cards="column.cards"
@@ -40,6 +40,7 @@ import { ICard, default as Column } from "@/components/kanban/Column.vue";
 
 export interface IColumn<CardT, ColumnT> {
   title: string;
+  key: unknown;
   column: ColumnT;
   cards: ICard<CardT>[];
 }
