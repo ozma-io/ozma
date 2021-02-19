@@ -30,7 +30,8 @@
         </span>
       </div>
     </div>
-    <!-- force-fallback is needed for mobile Firefox. -->
+    <!-- force-fallback is needed for *-class properties to work:
+         https://github.com/SortableJS/Sortable/issues/1268 -->
     <draggable
       class="column_body"
       :group="{ name: $parent.uid, put: true }"
@@ -39,10 +40,10 @@
       drag-class="card_dragging_drag"
       touch-start-threshold="10"
       delay-on-touch-only="true"
+      force-fallback="true"
       delay="200"
       animation="200"
       data-dragscroll
-      :force-fallback="$isMobileFirefox"
       :style="{ width, backgroundColor }"
       :value="cards"
       :disabled="!allowDragging"
