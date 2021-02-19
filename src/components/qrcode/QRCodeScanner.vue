@@ -247,7 +247,8 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
           return;
         }
 
-        const entry = await this.fetchSingleEntry(this.entity, this.currentContent.id);
+        const entries = await this.fetchEntriesByIds(this.entity, [this.currentContent.id]);
+        const entry = entries[this.currentContent.id];
         if (entry !== undefined) {
           const rusultContent = { ...this.currentContent, value: entry };
           this.result.push(rusultContent);

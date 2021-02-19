@@ -121,6 +121,18 @@ export interface IUserViewArguments {
 
 /* Utility functions. */
 
+export const rowKey = (ref: RowRef): unknown => {
+  if (ref.type === "existing") {
+    return ref.position;
+  } else if (ref.type === "added") {
+    return `added-${ref.id}`;
+  } else if (ref.type === "new") {
+    return "new";
+  } else {
+    throw new Error("Impossible");
+  }
+};
+
 // These are not expected to be run after initialization ends, hence we don't use `Vue.set`.
 const insertUpdateMapping = (updateMapping: IUpdateMapping, ref: IFieldRef, id: RowId, valueRef: CommittedValueRef) => {
   let entitiesMapping = updateMapping[ref.entity.schema];
@@ -268,10 +280,10 @@ export interface ICombinedUserView<ValueT, RowT, ViewT> extends IStagingEventHan
   getValueByRef(ref: ValueRef): { value: IExtendedValue<ValueT>; row: IExtendedRowCommon<ValueT, RowT> } | undefined;
   getRowByRef(ref: RowRef): IExtendedRowCommon<ValueT, RowT> | undefined;
 
-  forEachRow(func: (row: IExtendedRowCommon<ValueT, RowT>) => void): void;
-  mapRow<A>(func: (row: IExtendedRowCommon<ValueT, RowT>) => A): A[];
-  forEachVisibleRow(func: (row: IExtendedRowCommon<ValueT, RowT>) => void): void;
-  mapVisibleRow<A>(func: (row: IExtendedRowCommon<ValueT, RowT>) => A): A[];
+  forEachRow(func: (row: IExtendedRowCommon<ValueT, RowT>, ref: RowRef) => void): void;
+  mapRows<A>(func: (row: IExtendedRowCommon<ValueT, RowT>, ref: RowRef) => A): A[];
+  forEachVisibleRow(func: (row: IExtendedRowCommon<ValueT, RowT>, ref: RowRef) => void): void;
+  mapVisibleRows<A>(func: (row: IExtendedRowCommon<ValueT, RowT>, ref: RowRef) => A): A[];
 }
 
 export type ICombinedUserViewT<T> = T extends IUserViewHandler<infer ValueT, infer RowT, infer ViewT> ? ICombinedUserView<ValueT, RowT, ViewT> : never;
@@ -816,7 +828,8 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     } else {
       void (async () => {
         try {
-          const pending = await this.store.dispatch("entries/getSingleEntry", { ref: referenceEntriesRef(fieldType), reference: "update", id: ref }) as string | undefined;
+          const puns = await this.store.dispatch("entries/getEntriesByIds", { ref: referenceEntriesRef(fieldType), reference: "update", ids: [ref] }) as Record<RowId, string>;
+          const pending = puns[ref];
           if (pending !== undefined) {
             value.pun = pending;
           } else {
@@ -1073,58 +1086,94 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     }
   }
 
-  forEachRow(func: (row: IExtendedRowCommon<ValueT, RowT>) => void) {
+  forEachRow(func: (row: IExtendedRowCommon<ValueT, RowT>, ref: RowRef) => void) {
     if (this.rows) {
-      for (const row of this.rows) {
-        func(row);
-      }
+      this.rows.forEach((row, rowI) => {
+        const ref: IExistingRowRef = {
+          type: "existing",
+          position: rowI,
+        };
+        func(row, ref);
+      });
     }
     for (const id of this.newRowsOrder) {
       const row = this.newRows[id];
-      func(row);
+      const ref: IAddedRowRef = {
+        type: "added",
+        id,
+      };
+      func(row, ref);
     }
     if (this.emptyRow !== null) {
-      func(this.emptyRow);
+      func(this.emptyRow, { type: "new" });
     }
   }
 
-  mapRow<A>(func: (row: IExtendedRowCommon<ValueT, RowT>) => A): A[] {
-    const rows = this.rows ? this.rows.map(func) : [];
+  mapRows<A>(func: (row: IExtendedRowCommon<ValueT, RowT>, ref: RowRef) => A): A[] {
+    const rows = this.rows ? this.rows.map((row, rowI) => {
+      const ref: IExistingRowRef = {
+        type: "existing",
+        position: rowI,
+      };
+      return func(row, ref);
+    }) : [];
     const newRows = this.newRowsOrder.map(id => {
       const row = this.newRows[id];
-      return func(row);
+      const ref: IAddedRowRef = {
+        type: "added",
+        id,
+      };
+      return func(row, ref);
     });
-    const emptyRow = this.emptyRow ? [func(this.emptyRow)] : [];
+    const emptyRow = this.emptyRow ? [func(this.emptyRow, { type: "new" })] : [];
     return [...rows, ...newRows, ...emptyRow];
   }
 
-  forEachVisibleRow(func: (row: IExtendedRowCommon<ValueT, RowT>) => void) {
+  forEachVisibleRow(func: (row: IExtendedRowCommon<ValueT, RowT>, ref: RowRef) => void) {
     if (this.rows) {
-      for (const row of this.rows) {
+      this.rows.forEach((row, rowI) => {
         if (!row.deleted) {
-          func(row);
+          const ref: IExistingRowRef = {
+            type: "existing",
+            position: rowI,
+          };
+          func(row, ref);
         }
-      }
+      });
     }
     for (const id of this.newRowsOrder) {
       const row = this.newRows[id];
       if (!row.deleted) {
-        func(row);
+        const ref: IAddedRowRef = {
+          type: "added",
+          id,
+        };
+        func(row, ref);
       }
-    }
-    if (this.emptyRow !== null) {
-      func(this.emptyRow);
     }
   }
 
-  mapVisibleRow<A>(func: (row: IExtendedRowCommon<ValueT, RowT>) => A): A[] {
-    const rows = this.rows ? mapMaybe(row => !row.deleted ? func(row) : undefined, this.rows) : [];
+  mapVisibleRows<A>(func: (row: IExtendedRowCommon<ValueT, RowT>, ref: RowRef) => A): A[] {
+    const rows = this.rows ? mapMaybe((row, rowI) => {
+      if (row.deleted) {
+        return undefined;
+      }
+      const ref: IExistingRowRef = {
+        type: "existing",
+        position: rowI,
+      };
+      return func(row, ref);
+    }, this.rows) : [];
     const newRows = mapMaybe(id => {
       const row = this.newRows[id];
       if (row.deleted) {
         return undefined;
       } else {
-        return func(row);
+        const ref: IAddedRowRef = {
+          type: "added",
+          id,
+        };
+        return func(row, ref);
       }
     }, this.newRowsOrder);
     return [...rows, ...newRows];

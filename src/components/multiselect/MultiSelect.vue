@@ -165,7 +165,7 @@
           <div
             ref="optionsContainer"
             class="options-list"
-            infinite-wrapper
+            data-infinite-wrapper
             :style="optionsListStyle"
           >
             <span

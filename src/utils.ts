@@ -576,8 +576,9 @@ export class ObjectResourceMap<K, V, M=undefined> {
   }
 }
 
-export const isIOS = !!navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform);
-export const isMobile = !!(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+export const isIOS = navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform);
+export const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+export const isMobileFirefox = isMobile && /Firefox/.test(navigator.userAgent);
 
 export const capitalize = (value: string): string => {
   return value.substring(0, 1).toUpperCase() + value.substring(1);

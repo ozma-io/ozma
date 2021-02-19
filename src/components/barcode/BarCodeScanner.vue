@@ -101,7 +101,8 @@ export default class BarCodeScanner extends mixins(BaseEntriesView) {
       return;
     }
 
-    const entry = await this.fetchSingleEntry(this.entity, currentCode.id);
+    const entries = await this.fetchEntriesByIds(this.entity, [currentCode.id]);
+    const entry = entries[currentCode.id];
     if (entry !== undefined) {
       this.result.push({ ...currentCode, value: entry });
     } else {

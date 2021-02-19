@@ -53,7 +53,7 @@
     <div
       ref="tableContainer"
       class="tabl"
-      infinite-wrapper
+      data-infinite-wrapper
     >
       <div
         v-if="uv.emptyRow !== null"

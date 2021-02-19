@@ -1,249 +1,129 @@
 <template>
-  <div class="column_container" :style="style">
+  <div
+    class="column_container"
+    data-dragscroll
+    :style="style"
+  >
     <div
       class="column_header"
       :style="titleStyle"
+      data-dragscroll
     >
       <div
         class="column_header__title_block"
+        data-dragscroll
       >
         <span
           class="column_header__title"
           :title="title"
+          data-dragscroll
         >
           {{ title }} {{ cardCount }}
         </span>
-        <span class="column_controls">
+        <span class="column_controls" data-dragscroll>
           <i
-            v-if="createView !== undefined"
+            v-if="createButton"
             class="material-icons new-card-icon"
             style="font-size: 20px;"
-            @click="openModal"
+            @click="$emit('create')"
           >add</i>
         </span>
       </div>
     </div>
+    <!-- force-fallback is needed for mobile Firefox. -->
     <draggable
       class="column_body"
-      :group="{ name: 'cards', put: true }"
+      :group="{ name: $parent.uid, put: true }"
       ghost-class="card_dragging_ghost"
       chosen-class="card_dragging_chosen"
       drag-class="card_dragging_drag"
+      touch-start-threshold="10"
+      delay-on-touch-only="true"
+      delay="200"
+      animation="200"
+      data-dragscroll
+      :force-fallback="$isMobileFirefox"
       :style="{ width, backgroundColor }"
-      :force-fallback="true"
-      :fallback-on-body="true"
-      :fallback-tolerance="10"
-      :touch-start-threshold="10"
-      :delay-on-touch-only="true"
-      :delay="200"
-      :animation="200"
-      :list="cards"
-      @add="onAdd"
+      :value="cards"
+      :disabled="!allowDragging"
       @start="onDragStart"
       @end="onDragEnd"
+      @change="onChange"
     >
       <Card
-        v-for="(card, index) in cards"
-        :key="index"
-        :data="card"
-        :target="cardTarget"
-        data-no-dragscroll
-        :width="width"
+        v-for="card in cards"
+        :key="card.key"
+        :background-color="card.backgroundColor"
         :dragging="dragging"
-        :selected="isCardSelected(card.groupRef.position)"
-        @goto="$emit('goto', $event)"
-      />
+      >
+        <slot
+          name="card"
+          :dragging="dragging"
+          :card="card.card"
+        />
+      </Card>
     </draggable>
   </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
-import draggable, { IVueDraggableEvent } from "vuedraggable";
-import { dragscroll } from "vue-dragscroll";
-import { namespace } from "vuex-class";
-import * as R from "ramda";
+import draggable from "vuedraggable";
 
 import Card from "@/components/kanban/Card.vue";
-import type { ICard, CardTarget } from "@/components/kanban/Card.vue";
-import { nextRender } from "@/utils";
-import { IQuery } from "@/state/query";
-import { ValueRef } from "@/user_views/combined";
 
-export interface IColumn {
-  id?: any;
-  title: string;
-  createView?: IQuery;
-  fieldName?: string;
-  cards: ICard[];
-}
-
-export interface IColumnStyle {
-  width?: string;
-  minWidth?: string;
-  maxWidth?: string;
-  flex?: number;
+export interface ICard<CardT> {
+  key: unknown;
+  card: CardT;
   backgroundColor?: string;
 }
 
-const query = namespace("query");
-
-@Component({ components: { Card, draggable }, directives: { dragscroll } })
-export default class Column extends Vue {
-  @query.Action("addWindow") addWindow!: (queryObj: IQuery) => Promise<void>;
-  @Prop() id!: any;
-  @Prop({ type: Array, required: true }) cards!: ICard[];
+@Component({ components: { Card, draggable } })
+export default class KanbanColumn extends Vue {
+  @Prop({ type: Array, required: true }) cards!: ICard<unknown>[];
   @Prop({ type: String, required: true }) title!: string;
-  @Prop({ type: String, required: true }) fieldName!: string;
-  @Prop({ type: String, required: true }) orderFieldName!: string;
-  @Prop({ type: Object }) createView!: IQuery | undefined;
-  // FIXME: convert these to events.
-  @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
-  @Prop({ type: Function, required: false }) move!: (ref: ValueRef, value: any) => void;
-  @Prop({ type: Number, required: false, default: 300 }) width!: number;
-  @Prop({ type: String, required: true, default: "none" }) headerColor!: string;
-  @Prop({ type: String, required: true, default: "none" }) backgroundColor!: string;
-  @Prop({ type: String, required: false }) cardTarget!: CardTarget;
+  @Prop({ type: Boolean, default: false }) createButton!: boolean;
+  @Prop({ type: Number, default: 300 }) width!: number;
+  @Prop({ type: String, default: "none" }) headerColor!: string;
+  @Prop({ type: String, default: "none" }) backgroundColor!: string;
+  @Prop({ type: Boolean, default: false }) allowDragging!: string;
 
-  selected: number[] = [];
-  dragging = false;
+  private dragging = false;
 
-  private async openModal() {
-    const modalQuery: IQuery = {
-      args: {
-        ...this.createView!.args,
-      },
-      defaultValues: {
-        ...this.createView!.defaultValues,
-        [this.fieldName]: this.id,
-      },
-      search: "",
-    };
-
-    if (this.orderFieldName.length > 0) {
-      modalQuery.defaultValues[this.orderFieldName] = this.cards[0] && this.cards[0].order ? this.cards[0].order - 1 : 1;
-    }
-
-    await this.addWindow(modalQuery);
-  }
-
-  private isCardSelected(rowIndex: number) {
-    return this.selected.includes(rowIndex);
-  }
-
-  private get style(): IColumnStyle {
+  get style() {
     return {
       width: `${this.width}px`,
     };
   }
 
-  private get titleStyle(): IColumnStyle {
-    const strWidth = `${this.width}px`;
+  get titleStyle() {
     return {
-      width: strWidth,
+      ...this.style,
       backgroundColor: this.headerColor,
     };
   }
 
-  private get cardCount() {
+  get cardCount() {
     return (this.cards.length > 0) ? `(${this.cards.length})` : "";
   }
 
-  private get isAllSelected() {
-    return this.selected.length === this.cards.length;
-  }
-
-  private set isAllSelected(val: boolean) {
-    if (val) {
-      this.selectAll();
-    } else {
-      this.deselectAll();
-    }
-  }
-
-  private onCheckboxClick(event: Event) {
-    event.preventDefault();
-    const target = event.target as HTMLInputElement;
-    if (target.checked) {
-      this.selectAll();
-    } else {
-      this.deselectAll();
-    }
-  }
-
-  private selectAll() {
-    this.selected = this.cards.map(card => R.pathOr(-1, ["groupRef", "position"], card));
-  }
-
-  private deselectAll() {
-    this.selected = [];
-  }
-
-  private onSelect(rowIndex: number) {
-    this.selected = R.uniq([...this.selected, rowIndex]);
-  }
-
-  private onDeselect(rowIndex: number) {
-    this.selected = this.selected.filter(val => val !== rowIndex);
-  }
-
-  private onDragStart(event: IVueDraggableEvent) {
-    this.$emit("drag-start");
+  private onDragStart() {
     this.dragging = true;
+    this.$emit("drag-start");
   }
 
-  private getPrevAndNextCardOrders(index: number): [prevCardOrder: number, nextCardOrder: number] {
-    const prevCardIndex = index - 1;
-    const nextCardIndex = index + 1;
-    const getCardOrder = (cardIndex: number, defaultOrder: number) =>
-      R.pathOr<number>(defaultOrder, [cardIndex, "order"], this.cards);
-    const prevCardOrder = prevCardIndex === -1 ? 0 : getCardOrder(prevCardIndex, 0);
-    const nextCardOrder = getCardOrder(nextCardIndex, prevCardOrder + 1);
-
-    return [prevCardOrder, nextCardOrder];
-  }
-
-  private calculateMean(prevCardOrder: number, nextCardOrder: number) {
-    let mean = 0;
-    if (prevCardOrder === 0 && nextCardOrder < 0) {
-      mean = nextCardOrder * 2;
-    } else {
-      mean = (prevCardOrder + nextCardOrder) / 2;
-    }
-    return mean;
-  }
-
-  private getNewCardOrder(index: number): number {
-    const [prevCardOrder, nextCardOrder] = this.getPrevAndNextCardOrders(index);
-    return this.calculateMean(prevCardOrder, nextCardOrder);
-  }
-
-  private onDragEnd(event: IVueDraggableEvent) {
-    this.$emit("drag-end");
-
-    void nextRender().then(() => {
-    });
-
+  private onDragEnd() {
     this.dragging = false;
-
-    if (event.oldDraggableIndex === event.newDraggableIndex
-     && event.from === event.to) return;
-
-    const newCard = this.cards[event.newIndex];
-    // Avoid calling onDragEnd after onAdd event: It should do it on it's own.
-    if (!newCard) return;
-
-    if (this.move && newCard.orderRef) {
-      const order = this.getNewCardOrder(event.newIndex);
-      this.move(newCard.orderRef, order);
-    }
+    this.$emit("drag-end");
   }
 
-  private onAdd(event: IVueDraggableEvent) {
-    const newCard = this.cards[event.newIndex];
-    if (this.add && newCard.groupRef) {
-      this.onDragEnd(event);
-      this.add(newCard.groupRef, this.id);
+  private onChange(event: any) {
+    if ("added" in event) {
+      this.$emit("add", event.added.element.card, event.added.newIndex);
+    } else if ("moved" in event) {
+      this.$emit("move", event.moved.element.card, event.moved.oldIndex, event.moved.newIndex);
+    } else if ("removed" in event) {
+      this.$emit("remove", event.removed.element.card, event.removed.oldIndex);
     }
   }
 }

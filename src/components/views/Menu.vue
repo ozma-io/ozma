@@ -115,7 +115,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
     if (this.uv.info.columns[0].valueType.type !== "json") {
       return this.$t("invalid_new_menu_value").toString();
     }
-    return this.uv.mapVisibleRow(row => {
+    return this.uv.mapVisibleRows(row => {
       const rawMenu = currentValue(row.values[0]);
       if (rawMenu instanceof Array) {
         return this.convertNewMenuEntries(rawMenu);

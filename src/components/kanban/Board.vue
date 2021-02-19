@@ -1,60 +1,70 @@
 <template>
-  <!-- <draggable tag="v-layout" v-model="columns" group="column"> -->
   <div
-    v-dragscroll.x="!$isMobile"
+    v-dragscroll:nochilddrag.x="!$isMobile"
     :class="['board_container', { 'dragging': dragging }]"
   >
     <Column
       v-for="(column, columnIndex) in columns"
-      :id="column.id"
       :key="columnIndex"
-      :title="getColumnTitle(column.id, column.title)"
-      :field-name="column.fieldName"
-      :order-field-name="column.orderFieldName"
-      :create-view="column.createView"
+      data-dragscroll
+      :title="column.title"
       :cards="column.cards"
-      :card-target="cardTarget"
       :width="columnWidth"
       :header-color="columnHeaderColor"
       :background-color="backgroundColor"
-      :add="add"
-      :move="move"
-      @goto="$emit('goto', $event)"
+      :create-button="createButton"
+      :allow-dragging="allowDragging"
+      @add="onAdd(column, columnIndex, ...arguments)"
+      @move="onMove(column.column, columnIndex, ...arguments)"
+      @remove="onRemove(column.column, columnIndex, ...arguments)"
+      @create="$emit('create', column.column, columnIndex)"
       @drag-start="dragging = true"
       @drag-end="dragging = false"
-    />
+    >
+      <template #card="card">
+        <slot
+          name="card"
+          :column="column.column"
+          v-bind="card"
+        />
+      </template>
+    </Column>
   </div>
-  <!-- </draggable> -->
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
-import draggable from "vuedraggable";
-
-import type { CardTarget } from "@/components/kanban/Card.vue";
-import Column, { IColumn } from "@/components/kanban/Column.vue";
 import { dragscroll } from "vue-dragscroll";
-import { ValueRef } from "@/user_views/combined";
 
-@Component({ components: { Column, draggable }, directives: { dragscroll } })
+import { ICard, default as Column } from "@/components/kanban/Column.vue";
+
+export interface IColumn<CardT, ColumnT> {
+  title: string;
+  column: ColumnT;
+  cards: ICard<CardT>[];
+}
+
+@Component({ components: { Column }, directives: { dragscroll } })
 export default class Board extends Vue {
-  @Prop({ type: Array, required: true }) columns!: IColumn[];
-  // FIXME: convert these to events.
-  @Prop({ type: Function, required: false }) add!: (ref: ValueRef, value: any) => void;
-  @Prop({ type: Function, required: false }) move!: (ref: ValueRef, value: any) => void;
-  @Prop({ type: Object }) titles!: { [key: number]: string } | null;
+  @Prop({ type: Array, required: true }) columns!: IColumn<unknown, unknown>[];
+  @Prop({ type: Boolean, default: false }) createButton!: boolean;
   @Prop({ type: Number }) columnWidth!: number | null;
   @Prop({ type: String }) columnHeaderColor!: string;
   @Prop({ type: String }) backgroundColor!: string;
-  @Prop({ type: String, required: false }) cardTarget!: CardTarget;
+  @Prop({ type: Boolean, default: false }) allowDragging!: string;
 
   private dragging = false;
 
-  private getColumnTitle(id: number, title: string) {
-    if (this.titles) {
-      return this.titles[id] || title;
-    }
-    return title;
+  private onAdd(column: IColumn<unknown, unknown>, columnIndex: number, card: unknown, newIndex: number) {
+    this.$emit("add", column.column, columnIndex, card, newIndex);
+  }
+
+  private onMove(column: IColumn<unknown, unknown>, columnIndex: number, card: unknown, oldIndex: number, newIndex: number) {
+    this.$emit("move", column.column, columnIndex, card, oldIndex, newIndex);
+  }
+
+  private onRemove(column: IColumn<unknown, unknown>, columnIndex: number, card: unknown, oldIndex: number) {
+    this.$emit("remove", column.column, columnIndex, card, oldIndex);
   }
 }
 </script>

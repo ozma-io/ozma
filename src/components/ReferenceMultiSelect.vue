@@ -268,8 +268,8 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   }
 
   private async processId(id: number): Promise<boolean> {
-    const pun = await this.fetchSingleEntry(this.referenceEntity, id);
-    if (pun === undefined) {
+    const puns = await this.fetchEntriesByIds(this.referenceEntity, [id]);
+    if (!(id in puns)) {
       return false;
     }
 

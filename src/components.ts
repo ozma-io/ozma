@@ -1,7 +1,7 @@
 import Component from "vue-class-component";
 import { VueConstructor, default as Vue } from "vue";
 
-import { isMobile } from "@/utils";
+import { isIOS, isMobile, isMobileFirefox } from "@/utils";
 import { IUserViewHandler } from "@/user_views/combined";
 
 /* This defines an attribute, `UserView`, which is used on all user view components.
@@ -46,6 +46,18 @@ export const VueIsMobile = {
         return isMobile;
       },
     });
+
+    Object.defineProperty(Vue.prototype, "$isIOS", {
+      get() {
+        return isIOS;
+      },
+    });
+
+    Object.defineProperty(Vue.prototype, "$isMobileFirefox", {
+      get() {
+        return isMobileFirefox;
+      },
+    });
   },
 };
 
@@ -53,5 +65,7 @@ declare module "vue/types/vue" {
   // eslint-disable-next-line no-shadow
   interface Vue {
     $isMobile: boolean;
+    $isIOS: boolean;
+    $isMobileFirefox: boolean;
   }
 }

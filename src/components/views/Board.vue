@@ -3,16 +3,14 @@
         "en": {
             "view_error": "There are following errors in your view",
             "no_title": "No title",
-            "no_columns": "This query is lacking Columns property of Board attribute",
-            "no_rows": "Board view doesn't support creation mode",
-            "no_group": "This query is lacking BoardGroup attribute on the grouping field"
+            "no_columns": "This query is lacking board_columns attribute",
+            "no_group": "This query is lacking board_group attribute on the grouping field"
         },
         "ru": {
             "view_error": "В вашем представлении следующие ошибки",
             "no_title": "Без заголовка",
-            "no_columns": "В запросе отсутствует параметр Columns у аттрибута Board",
-            "no_rows": "Доска не поддерживает режим создания",
-            "no_group": "В запросе отсутствует аттрибут BoardGroup на поле по которому идёт группировка"
+            "no_columns": "В запросе отсутствует атрибут board_columns",
+            "no_group": "В запросе отсутствует атрибут board_group на поле, по которому идёт группировка"
         }
     }
 </i18n>
@@ -28,16 +26,72 @@
     />
     <Board
       v-else
+      allow-dragging
       :column-width="columnWidth"
       :column-header-color="columnHeaderColor"
       :background-color="backgroundColor"
       :columns="columns"
-      :titles="boardTitles"
-      :add="changeGroup"
-      :move="changeOrder"
-      :card-target="cardTarget"
-      @goto="$emit('goto', $event)"
-    />
+      :create-button="createView !== null"
+      @add="changeGroup"
+      @move="changeOrder"
+      @create="createCard"
+    >
+      <template #card="{ card, dragging }">
+        <!-- <a> tags have special behaviour on Safari which breaks animation, hence no-href. -->
+        <!-- Ternary in `:link` for fix Firefox issue, see: https://github.com/SortableJS/Sortable/issues/1184 -->
+        <FunLink
+          class="card_link"
+          :link="dragging ? null : card.link"
+          no-href
+          @goto="$emit('goto', $event)"
+        >
+          <b-row
+            v-for="(row, rowIndex) in card.rows"
+            :key="rowIndex"
+            data-no-dragscroll
+            class="card_row"
+          >
+            <b-col
+              v-for="(col, colIndex) in row"
+              :key="colIndex"
+              :cols="col.size"
+              data-no-dragscroll
+              class="card_col"
+            >
+              <div
+                v-if="col.type === 'image'"
+                data-no-dragscroll
+                class="card_avatar"
+                :style="{ backgroundImage: `url('${col.url}')` }"
+              />
+              <span
+                v-else
+                data-no-dragscroll
+                class="card_text"
+                :title="col.value"
+              >
+                <span
+                  v-if="col.icon && col.value"
+                  data-no-dragscroll
+                  class="card_icon"
+                >
+                  {{ col.icon }}
+                </span>
+                <!-- eslint-disable vue/no-v-html -->
+                <!-- TODO: unable to click on string with link, but not on link -->
+                <span
+                  v-if="col.valueHtml !== col.value"
+                  @click.stop
+                  v-html="col.valueHtml"
+                />
+                <span v-else> {{ col.value }} </span>
+                <!-- eslint-enable vue/no-v-html -->
+              </span>
+            </b-col>
+          </b-row>
+        </FunLink>
+      </template>
+    </Board>
   </div>
 </template>
 
@@ -45,53 +99,157 @@
 import * as R from "ramda";
 import { Component } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
+import { namespace } from "vuex-class";
+import { RowId } from "ozma-api";
 
-import { mapMaybe, tryDicts } from "@/utils";
+import { mapMaybe, replaceHtmlLinks, tryDicts } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
-import Board from "@/components/kanban/Board.vue";
-import { ICard, ICardCol, isCardTarget } from "@/components/kanban/Card.vue";
-import { IColumn } from "@/components/kanban/Column.vue";
+import Board, { IColumn } from "@/components/kanban/Board.vue";
 import Errorbox from "@/components/Errorbox.vue";
 import { attrToLinkSelf, Link } from "@/links";
-import { currentValue, ICombinedRow, ICombinedValue, IExistingValueRef, ValueRef, valueToPunnedText } from "@/user_views/combined";
-import { referenceEntriesRef } from "@/state/entries";
+import { currentValue, IRowCommon, rowKey, RowRef, valueToPunnedText } from "@/user_views/combined";
+import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import BaseEntriesView from "@/components/BaseEntriesView";
-import { attrToQuery } from "@/state/query";
+import { attrToQuery, IQuery } from "@/state/query";
+import type { ICard } from "@/components/kanban/Column.vue";
 
-interface ICardExtra {
-  groupRef: IExistingValueRef;
-  orderRef: IExistingValueRef;
+interface ICardColumnBase {
+  size: number;
 }
 
-type IColumnTitleMap = Record<string, string>;
+interface ITextCardColumn extends ICardColumnBase {
+  type: "text";
+  icon: string | null;
+  value: string;
+  valueHtml: string;
+}
+
+interface IImageCardColumn extends ICardColumnBase {
+  type: "image";
+  url: string;
+}
+
+type CardColumn = ITextCardColumn | IImageCardColumn;
+
+type CardRow = CardColumn[];
+
+interface IRowCard {
+  group: unknown;
+  order: number | null;
+  ref: RowRef;
+  link: Link | null;
+  rows: CardRow[];
+}
+
+interface IGroupColumn {
+  group: unknown;
+}
+
+interface IEnumColumns {
+  type: "enum";
+  values: string[];
+}
+
+interface IReferenceColumn {
+  id: RowId;
+  name: string;
+}
+
+interface IReferenceColumns {
+  type: "reference";
+  entity: IEntriesRef;
+  columns: IReferenceColumn[];
+}
+
+type BoardColumnsType = IEnumColumns | IReferenceColumns;
+
+const query = namespace("query");
 
 @UserView()
 @Component({ components: { Board, Errorbox } })
 export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntriesView>(BaseUserView, BaseEntriesView) {
-  selectedCards: unknown[] = [];
+  @query.Action("addWindow") addWindow!: (queryObj: IQuery) => Promise<void>;
 
-  get entriesEntity() {
+  get columnsType(): BoardColumnsType | null {
+    if (this.groupIndex === null) {
+      return null;
+    }
     const fieldType = this.uv.info.columns[this.groupIndex].mainField?.field.fieldType;
-    if (fieldType && fieldType.type === "reference") {
-      return referenceEntriesRef(fieldType);
-    }
-    return null;
-  }
+    if (fieldType?.type === "reference") {
+      const rawColumns = this.uv.attributes["board_columns"];
+      if (!rawColumns || !(rawColumns instanceof Array)) {
+        return null;
+      }
+      const entityRef = referenceEntriesRef(fieldType);
+      const requestedColumns: RowId[] = [];
+      const columns = mapMaybe(col => {
+        if (typeof col === "number") {
+          let name = this.currentEntries?.[col];
+          if (name === undefined) {
+            requestedColumns.push(col);
+            name = String(col);
+          }
+          return {
+            id: col,
+            name: String(name),
+          };
+        } else if (typeof col === "object" && col !== null) {
+          const id = col["id"];
+          const name = col["name"];
+          if (typeof id === "number" && name) {
+            return {
+              id,
+              name: String(name),
+            };
+          } else {
+            return undefined;
+          }
+        } else {
+          return undefined;
+        }
+      }, rawColumns);
+      if (requestedColumns.length !== 0) {
+        void this.fetchEntriesByIds(entityRef, requestedColumns);
+      }
 
-  get cardTarget(): string | undefined {
-    const cardTarget = this.uv.attributes["card_target"];
-    if (
-      typeof cardTarget === "string"
-        && isCardTarget(cardTarget)) {
-      return cardTarget;
+      return {
+        type: "reference",
+        entity: entityRef,
+        columns,
+      };
+    } else if (fieldType?.type === "enum") {
+      let values: string[];
+      const rawColumns = this.uv.attributes["board_columns"];
+      if (!rawColumns || !(rawColumns instanceof Array)) {
+        values = fieldType.values;
+      } else {
+        values = mapMaybe(rawCol => {
+          const col = String(rawCol);
+          return fieldType.values.includes(col) ? col : undefined;
+        }, rawColumns);
+      }
+
+      return {
+        type: "enum",
+        values,
+      };
+    } else {
+      const rawColumns = this.uv.attributes["board_columns"];
+      if (!rawColumns || !(rawColumns instanceof Array)) {
+        return null;
+      } else {
+        return {
+          type: "enum",
+          values: rawColumns.map(String),
+        };
+      }
     }
-    return undefined;
   }
 
   get columnWidth(): number | undefined {
-    const width = Number(this.uv.attributes.board_column_width);
+    const width = Number(this.uv.attributes["board_column_width"]);
     if (!isNaN(width)) {
       return width;
     }
@@ -102,67 +260,73 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
   // EXAMPLE @"header_color" = '#fff0f5'
   // Column header background color.
   get columnHeaderColor(): string {
-    return "header_color" in this.uv.attributes ? String(this.uv.attributes.header_color) : "none";
+    return "header_color" in this.uv.attributes ? String(this.uv.attributes["header_color"]) : "none";
   }
 
   get backgroundColor(): string {
-    return "background_color" in this.uv.attributes ? String(this.uv.attributes.background_color) : "none";
+    return "background_color" in this.uv.attributes ? String(this.uv.attributes["background_color"]) : "none";
   }
 
   get groupIndex() {
-    return this.uv.columnAttributes.findIndex(attributes => attributes["board_group"] === true);
+    const ret = this.uv.columnAttributes.findIndex(attributes => attributes["board_group"]);
+    return ret === -1 ? null : ret;
   }
 
   get orderIndex() {
-    return this.uv.columnAttributes.findIndex(attributes => attributes["board_order"] === true);
-  }
-
-  get columnNames(): string[] | null {
-    const rawColumns = this.uv.attributes["board_columns"];
-    if (!rawColumns || !(rawColumns instanceof Array)) {
+    const ret = this.uv.columnAttributes.findIndex(attributes => attributes["board_order"]);
+    if (ret === -1) {
       return null;
     }
-
-    return rawColumns.map(i => String(i));
-  }
-
-  private get columns(): IColumn[] | null {
-    if (!this.uv.rows || !this.columnNames) {
+    const valueType = this.uv.info.columns[ret].valueType;
+    if (valueType.type !== "decimal") {
       return null;
     }
-    // FIXME: this should also map new rows! Use `mapVisibleRows`; maybe we need to add a variant which passes `RowRef`s.
-    const cards = this.uv.rows.map((x, i) => this.makeCardObject(x, i));
-    const fieldName = this.uv.info.columns[this.groupIndex].name;
-    const orderFieldName = this.orderIndex > 0 ? this.uv.info.columns[this.orderIndex].name : "";
-    const createView = attrToQuery(
+    return ret;
+  }
+
+  get createView() {
+    return attrToQuery(
       this.uv.attributes["card_create_view"],
       { infoByDefault: true },
     ) || undefined;
-    const groupedColumns = R.groupBy(card => String(card.groupValue), cards);
-
-    const sortByOrder = R.sortBy(R.prop("order"));
-
-    const allColumns: IColumn[] = this.columnNames
-      .map((column: string) => ({
-        id: column,
-        title: this.boardTitles[column] ?? column,
-        fieldName,
-        orderFieldName,
-        createView,
-        cards: this.orderIndex > 0 ? sortByOrder(groupedColumns[column] ?? []) : (groupedColumns[column] ?? []),
-      }));
-
-    return R.sortBy(
-      (column: IColumn) => this.columnNames!.indexOf(column.id),
-      allColumns,
-    );
   }
 
-  private get errors() {
+  get groupedCards(): Record<string, ICard<IRowCard>[]> {
+    const cards = this.uv.mapVisibleRows((row, ref) => this.makeCard(row, ref));
+    if (this.orderIndex !== null) {
+      cards.sort((a, b) => a.card.order! - b.card.order!);
+    }
+    return R.groupBy(card => String(card.card.group), cards);
+  }
+
+  get columns(): IColumn<IRowCard, IGroupColumn>[] | null {
+    if (!this.columnsType) {
+      return null;
+    } else if (this.columnsType.type === "enum") {
+      return this.columnsType.values.map(name => ({
+        title: name,
+        column: {
+          group: name,
+        },
+        cards: this.groupedCards[name] ?? [],
+      }));
+    } else if (this.columnsType.type === "reference") {
+      return this.columnsType.columns.map(col => ({
+        title: col.name,
+        column: {
+          group: col.id,
+        },
+        cards: this.groupedCards[col.id] ?? [],
+      }));
+    } else {
+      throw new Error("Impossible");
+    }
+  }
+
+  get errors() {
     const messagesArray = [
-      !this.columnNames && this.$t("no_columns"),
-      (this.groupIndex === -1) && this.$t("no_group"),
-      !this.columns && this.$t("no_rows"),
+      !this.columnsType && this.$t("no_columns"),
+      this.groupIndex === null && this.$t("no_group"),
     ].filter(R.identity);
 
     const hasErrors = messagesArray.length > 0;
@@ -172,88 +336,115 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     return hasErrors ? errorString : null;
   }
 
-  private get boardTitles(): IColumnTitleMap {
-    if (!(this.currentEntries instanceof Error) && this.currentEntries) {
-      return this.currentEntries;
-    }
-    return Object.fromEntries(this.columnNames!.map((column: string) => [column, String(column)]));
-  }
-
-  private changeOrder(orderRef: ValueRef, value: number) {
-    void this.updateValue(orderRef, value);
-  }
-
-  private changeGroup(groupRef: ValueRef, value: any, orderRef: ValueRef, orderValue: number) {
-    void this.updateValue(groupRef, value);
-  }
-
-  private getCardColumns(values: ICombinedValue[]): ICardCol[] {
-    return mapMaybe<ICombinedValue, ICardCol>((value, index) => {
-      const fieldRef = value.info?.fieldRef;
-      const fieldType = this.uv.info.columns[index].valueType;
-      const punnedValue = valueToPunnedText(fieldType, value);
-      const isVisible = Boolean(this.uv.columnAttributes[index]?.["visible"] ?? true);
-      const icon = this.uv.columnAttributes[index]?.["icon"];
-      return isVisible ? {
-        fieldName: fieldRef?.name,
-        fieldRef,
-        type: "text",
-        value: punnedValue,
-        size: 12,
-        icon: icon !== undefined ? String(icon) : undefined,
-      } : undefined;
-    }, values);
-  }
-
-  private makeCardObject(row: ICombinedRow, rowIndex: number): ICard {
-    const groupValue = row.values[this.groupIndex];
-    const groupValueType = this.uv.info.columns[this.groupIndex].valueType;
-    const cardColumns: ICardCol[] = this.getCardColumns(row.values);
-
-    const groupRef: ValueRef = {
-      type: "existing",
-      position: rowIndex,
-      column: this.groupIndex,
+  createCard(column: IGroupColumn, columnIndex: number) {
+    const modalQuery: IQuery = {
+      args: {
+        ...this.createView!.args,
+      },
+      defaultValues: {
+        ...this.createView!.defaultValues,
+        [this.uv.info.columns[this.groupIndex!].name]: column.group,
+      },
+      search: "",
     };
-    const orderRef: ValueRef | undefined = this.orderIndex > -1 ? {
-      type: "existing",
-      position: rowIndex,
-      column: this.orderIndex,
-    } : undefined;
 
-    const punnedValue = valueToPunnedText(groupValueType, groupValue);
-    // These two lines are necessary because user can omit BoardOrder attribute
-    // To be replaced with a better ternary version later when we update TS
-    // (should check if orderIndex > -1)
-    let order: number | undefined;
-    if (this.orderIndex !== -1) {
-      order = Number(currentValue(row.values[this.orderIndex]));
+    if (this.orderIndex !== null) {
+      const cards = this.columns![columnIndex].cards;
+      modalQuery.defaultValues[this.uv.info.columns[this.orderIndex].name] = cards.length > 0 ? cards[cards.length - 1].card.order! + 1 : 0;
     }
-    const color = groupValue.attributes?.["cell_color"];
-    const groupField = groupValue.info?.fieldRef.name;
 
-    let cardLink: Link | undefined;
-    row.values.forEach((value, colI) => {
+    void this.addWindow(modalQuery);
+  }
+
+  private async moveCard(columnIndex: number, card: IRowCard, newIndex: number) {
+    const cards = this.columns![columnIndex].cards;
+    if (this.orderIndex === null) {
+      return;
+    }
+
+    let order: number;
+    if (cards.length === 0) {
+      order = 0;
+    } else if (newIndex === 0) {
+      order = cards[0].card.order! - 1;
+    } else if (newIndex >= cards.length) {
+      order = cards[cards.length - 1].card.order! + 1;
+    } else {
+      const prevCard = cards[newIndex - 1];
+      const nextCard = cards[newIndex];
+      order = (prevCard.card.order! + nextCard.card.order!) / 2;
+    }
+
+    const ref = {
+      ...card.ref,
+      column: this.orderIndex,
+    };
+    await this.updateValue(ref, order);
+  }
+
+  changeOrder(column: IGroupColumn, columnIndex: number, card: IRowCard, oldIndex: number, newIndex: number) {
+    void this.moveCard(columnIndex, card, newIndex > oldIndex ? newIndex + 1 : newIndex);
+  }
+
+  changeGroup(newColumn: IGroupColumn, newColumnIndex: number, card: IRowCard, newIndex: number) {
+    const ref = {
+      ...card.ref,
+      column: this.groupIndex!,
+    };
+    void this.moveCard(newColumnIndex, card, newIndex);
+    void this.updateValue(ref, newColumn.group);
+  }
+
+  private makeCard(row: IRowCommon, rowRef: RowRef): ICard<IRowCard> {
+    const viewAttrs = this.uv.attributes;
+    const rowAttrs = row.attributes;
+    const getRowAttr = (name: string) => tryDicts(name, rowAttrs, viewAttrs);
+
+    let link: Link | null = null;
+
+    const columns = mapMaybe((value, colI): CardColumn | undefined => {
+      const info = this.uv.info.columns[colI];
       const columnAttrs = this.uv.columnAttributes[colI];
-      const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, this.uv.attributes);
+      const cellAttrs = value.attributes;
+      const getCellAttr = (name: string) => tryDicts(name, cellAttrs, rowAttrs, columnAttrs, viewAttrs);
+
+      const visible = getCellAttr("visible") ?? (colI !== this.orderIndex && colI !== this.groupIndex);
+      if (!visible) {
+        return undefined;
+      }
+
       const rowLink = attrToLinkSelf(getCellAttr("row_link"), value.info);
       if (rowLink !== null) {
-        cardLink = rowLink;
+        link = rowLink;
       }
-    });
+
+      const punnedValue = valueToPunnedText(info.valueType, value);
+      const icon = getCellAttr("icon");
+      return {
+        type: "text",
+        value: punnedValue,
+        valueHtml: replaceHtmlLinks(punnedValue),
+        size: 12,
+        icon: icon ? String(icon) : null,
+      };
+    }, row.values);
+
+    const group = currentValue(row.values[this.groupIndex!]);
+    const order = this.orderIndex !== null ? Number(currentValue(row.values[this.orderIndex])) : null;
+    const color = getRowAttr("card_color");
+
+    const rowCard: IRowCard = {
+      group,
+      order,
+      link,
+      ref: rowRef,
+      rows: columns.map(col => [col]),
+    };
 
     return {
-      groupRef,
-      groupLabel: punnedValue,
-      groupValue: groupValue.value,
-      groupField,
-      orderRef,
-      order,
-      cardLink,
-      rows: cardColumns.map(col => [col]),
-      style: {
-        color: valueIsNull(color) ? undefined : String(color),
-      },
+      key: rowKey(rowRef),
+      card: rowCard,
+      backgroundColor: valueIsNull(color) ? undefined : String(color),
     };
   }
 }
