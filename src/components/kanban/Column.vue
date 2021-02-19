@@ -179,11 +179,11 @@ export default class KanbanColumn extends Vue {
     vertical-align: middle;
   }
 
-  ::v-deep .card_dragging_chosen.card_dragging_ghost {
+  ::v-deep .card_dragging_ghost {
     background-color: #ddd !important;
     border-radius: 0.25rem;
 
-    > .card_link {
+    > * {
       visibility: hidden;
     }
   }
