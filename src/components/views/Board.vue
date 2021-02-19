@@ -408,14 +408,14 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       const cellAttrs = value.attributes;
       const getCellAttr = (name: string) => tryDicts(name, cellAttrs, rowAttrs, columnAttrs, viewAttrs);
 
-      const visible = getCellAttr("visible") ?? (colI !== this.orderIndex && colI !== this.groupIndex);
-      if (!visible) {
-        return undefined;
-      }
-
       const rowLink = attrToLinkSelf(getCellAttr("row_link"), value.info);
       if (rowLink !== null) {
         link = rowLink;
+      }
+
+      const visible = getCellAttr("visible") ?? (colI !== this.orderIndex && colI !== this.groupIndex);
+      if (!visible) {
+        return undefined;
       }
 
       const punnedValue = valueToPunnedText(info.valueType, value);
