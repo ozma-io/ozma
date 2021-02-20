@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="['card_container', { 'dragging': dragging }]"
+    class="card_container"
     :style="cardStyle"
   >
     <slot />
@@ -14,7 +14,6 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 export default class KanbanCard extends Vue {
   // FIXME: Again, specific to our usage of kanban. Can we move this logic to a slot?
   @Prop({ type: String }) backgroundColor!: string | undefined;
-  @Prop({ type: Boolean, default: false }) dragging!: boolean;
 
   get cardStyle() {
     return {
@@ -35,10 +34,6 @@ export default class KanbanCard extends Vue {
     margin-bottom: 15px;
     user-select: none;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-
-    &:not(.dragging) {
-      cursor: pointer;
-    }
   }
 
   @media screen and (max-width: 700px) {

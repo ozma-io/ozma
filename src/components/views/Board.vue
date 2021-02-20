@@ -36,61 +36,12 @@
       @move="changeOrder"
       @create="createCard"
     >
-      <template #card="{ card, dragging }">
-        <!-- <a> tags have special behaviour on Safari which breaks animation, hence no-href. -->
-        <!-- Ternary in `:link` for fix Firefox issue, see: https://github.com/SortableJS/Sortable/issues/1184 -->
-        <FunLink
-          class="card_link"
-          no-href
-          :link="card.link"
-          :disabled="dragging"
+      <template #card="{ card, dragged }">
+        <RowCard
+          :card="card"
+          :dragged="dragged"
           @goto="$emit('goto', $event)"
-        >
-          <b-row
-            v-for="(row, rowIndex) in card.rows"
-            :key="rowIndex"
-            data-no-dragscroll
-            class="card_row"
-          >
-            <b-col
-              v-for="(col, colIndex) in row"
-              :key="colIndex"
-              :cols="col.size"
-              data-no-dragscroll
-              class="card_col"
-            >
-              <div
-                v-if="col.type === 'image'"
-                data-no-dragscroll
-                class="card_avatar"
-                :style="{ backgroundImage: `url('${col.url}')` }"
-              />
-              <span
-                v-else
-                data-no-dragscroll
-                class="card_text"
-                :title="col.value"
-              >
-                <span
-                  v-if="col.icon && col.value"
-                  data-no-dragscroll
-                  class="card_icon"
-                >
-                  {{ col.icon }}
-                </span>
-                <!-- eslint-disable vue/no-v-html -->
-                <!-- TODO: unable to click on string with link, but not on link -->
-                <span
-                  v-if="col.valueHtml !== col.value"
-                  @click.stop
-                  v-html="col.valueHtml"
-                />
-                <span v-else> {{ col.value }} </span>
-                <!-- eslint-enable vue/no-v-html -->
-              </span>
-            </b-col>
-          </b-row>
-        </FunLink>
+        />
       </template>
     </Board>
   </div>
@@ -115,34 +66,7 @@ import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import { attrToQuery, IQuery } from "@/state/query";
 import type { ICard } from "@/components/kanban/Column.vue";
-
-interface ICardColumnBase {
-  size: number;
-}
-
-interface ITextCardColumn extends ICardColumnBase {
-  type: "text";
-  icon: string | null;
-  value: string;
-  valueHtml: string;
-}
-
-interface IImageCardColumn extends ICardColumnBase {
-  type: "image";
-  url: string;
-}
-
-type CardColumn = ITextCardColumn | IImageCardColumn;
-
-type CardRow = CardColumn[];
-
-interface IRowCard {
-  group: unknown;
-  order: number | null;
-  ref: RowRef;
-  link: Link | null;
-  rows: CardRow[];
-}
+import { IRowCard, default as RowCard, CardColumn } from "@/components/views/board/RowCard.vue";
 
 interface IGroupColumn {
   group: unknown;
@@ -169,7 +93,7 @@ type BoardColumnsType = IEnumColumns | IReferenceColumns;
 const query = namespace("query");
 
 @UserView()
-@Component({ components: { Board, Errorbox } })
+@Component({ components: { Board, Errorbox, RowCard } })
 export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntriesView>(BaseUserView, BaseEntriesView) {
   @query.Action("addWindow") addWindow!: (queryObj: IQuery) => Promise<void>;
 

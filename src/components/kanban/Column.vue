@@ -52,14 +52,13 @@
       @change="onChange"
     >
       <Card
-        v-for="card in cards"
+        v-for="(card, cardIndex) in cards"
         :key="card.key"
         :background-color="card.backgroundColor"
-        :dragging="dragging"
       >
         <slot
           name="card"
-          :dragging="dragging"
+          :dragged="cardIndex === draggedIndex"
           :card="card.card"
         />
       </Card>
@@ -90,7 +89,7 @@ export default class KanbanColumn extends Vue {
   @Prop({ type: String, default: "none" }) backgroundColor!: string;
   @Prop({ type: Boolean, default: false }) allowDragging!: string;
 
-  private dragging = false;
+  private draggedIndex: number | null = null;
 
   get style() {
     return {
@@ -109,15 +108,15 @@ export default class KanbanColumn extends Vue {
     return (this.cards.length > 0) ? `(${this.cards.length})` : "";
   }
 
-  private onDragStart() {
-    this.dragging = true;
-    this.$emit("drag-start");
+  private onDragStart(evt: any) {
+    this.draggedIndex = evt.oldIndex;
+    this.$emit("drag-start", evt.oldIndex);
   }
 
   private onDragEnd() {
     // On slow browsers `dragging` is unset too fast, which causes disabled links in draggable to be clicked.
     void nextRender().then(() => {
-      this.dragging = false;
+      this.draggedIndex = null;
       this.$emit("drag-end");
     });
   }
