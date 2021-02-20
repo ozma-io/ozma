@@ -158,6 +158,7 @@
               @keydown.up="offsetFocusedOption(-1)"
               @keydown.down="offsetFocusedOption(1)"
               @keydown.enter="filterInputFinished"
+              @keydown.esc.prevent.stop="$emit('blur', $event)"
               @focus="onFilterInputFocus"
             />
             <slot name="qrcode-button" />

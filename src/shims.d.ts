@@ -11,6 +11,7 @@ declare module "v-click-outside" {
 }
 
 declare module "*.vue" {
+  // eslint-disable-next-line
   import Vue from "vue";
 
   export default Vue;
@@ -43,3 +44,17 @@ declare module "@chenfengyuan/vue-qrcode";
 declare module "vue-barcode";
 
 declare module "vue-popperjs";
+
+declare module "v-hotkey" {
+  // eslint-disable-next-line
+  import { DirectiveOptions, PluginFunction } from "vue";
+
+  type Plugin = {
+    install: PluginFunction<{ [alias in string]?: number }>;
+    directive: DirectiveOptions;
+  };
+
+  const plugin: Plugin;
+
+  export default plugin;
+}

@@ -19,6 +19,7 @@
 
 <template>
   <div
+    v-hotkey="keymap"
     fluid
     :class="['table-block', {'nested-table-block': !isRoot, 'active_editing': editingValue !== null}]"
   >
@@ -44,6 +45,9 @@
         is-cell-edit
         autofocus
         modal-only
+        @blur="removeCellEditing"
+        @move-selection-next-row="moveSelectionNextRow"
+        @move-selection-next-column="moveSelectionNextColumn"
         @set-input-height="setInputHeight"
         @update="updateCurrentValue"
         @close-modal-input="removeCellEditing"
@@ -233,6 +237,7 @@ export interface ITableValueExtra extends IBaseValueExtra {
   link: Link | null;
   style: Record<string, unknown> | null;
   selected: boolean;
+  htmlElement: HTMLElement | null;
 }
 
 export interface ITableRowTree {
@@ -628,6 +633,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       ...commonExtra,
       selected,
       link,
+      htmlElement: null,
     };
   },
 
@@ -656,6 +662,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       ...baseExtra,
       ...commonExtra,
       selected,
+      htmlElement: null,
       link: null,
     };
   },
@@ -682,7 +689,8 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     return {
       ...baseExtra,
       ...commonExtra,
-      selected: false,
+      selected,
+      htmlElement: null,
       link: null,
     };
   },
@@ -891,6 +899,8 @@ interface IShownRow {
   ref: RowRef;
 }
 
+type MoveDirection = "up" | "right" | "down" | "left";
+
 @UserView({
   handler: tableUserViewHandler,
 })
@@ -934,6 +944,111 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private rowsState: Record<number, any> = {};
   private isTree = false;
+
+  // Used for Tab-Enter selection moving.
+  // Probably need to move to extra.
+  private columnDelta = 0;
+
+  private get keymap() {
+    return {
+      "enter": () => this.onPressEnter(),
+      "tab": () => this.onPressTab(),
+      "shift+tab": () => this.onPressTab(),
+      "esc": () => this.removeCellEditing(),
+      "delete": () => this.clearSelectedCell(),
+      "up": () => this.moveSelection("up"),
+      "right": () => this.moveSelection("right"),
+      "down": () => this.moveSelection("down"),
+      "left": () => this.moveSelection("left"),
+      // TODO: make pageup/pagedown movement depend on real page size, not just 5 rows.
+      "pagedown": () => this.moveSelection("down", { step: 5 }),
+      "pageup": () => this.moveSelection("up", { step: 5 }),
+    };
+  }
+
+  // Finds vusual position of selected cell.
+  // FIXME: bad performance!
+  private getSelectedCellPosition(): { row: number; column: number } | null {
+    const valueRef = this.getSelectedCell();
+    if (!valueRef) return null;
+
+    const rowWithSelectedCell = this.uv.getRowByRef(valueRef);
+    if (!rowWithSelectedCell) return null;
+    const rowI = this.shownRows.findIndex(row => row.row === rowWithSelectedCell);
+    return { row: rowI, column: this.getVisualColumnIndex(valueRef.column) };
+  }
+
+  private getSelectedCell(): ValueRef | null {
+    return this.uv.extra.selectedValues.keys()[0] ?? null;
+  }
+
+  // `columnIndexes` is 'visual index -> state index' mapping, this function do opposite.
+  // 'visual' indexes are as they look in table for a user.
+  // 'state' indexes are as they described in userview query, including ones with `visible = false` and so on.
+  private getVisualColumnIndex(stateIndex: number) {
+    return this.columnIndexes.indexOf(stateIndex);
+  }
+
+  private moveSelection(
+    direction: MoveDirection,
+    options: { step?: number; resetColumnDelta?: boolean } = { step: 1, resetColumnDelta: true },
+  ): boolean {
+    if (options?.resetColumnDelta ?? true) {
+      this.columnDelta = 0;
+    }
+    const oldPosition = this.getSelectedCellPosition();
+    if (!oldPosition) return false;
+    const maxRow = this.shownRows.length - 1;
+    const maxColumn = this.columnIndexes.length - 1;
+
+    /* eslint-disable no-multi-spaces, comma-spacing, key-spacing, space-in-parens */
+    const calcDelta = (decDirection: MoveDirection, incDirection: MoveDirection) =>
+      (options?.step ?? 1) * ((direction === incDirection ? 1 : 0) - (direction === decDirection ? 1 : 0));
+    const rowDelta    = calcDelta("up"  , "down" );
+    const columnDelta = calcDelta("left", "right");
+
+    const newPosition = {
+      row   : R.clamp(0, maxRow   , oldPosition.row    + rowDelta   ),
+      column: R.clamp(0, maxColumn, oldPosition.column + columnDelta),
+    };
+    /* eslint-enable no-multi-spaces, comma-spacing, key-spacing, space-in-parens */
+
+    const valueRef = {
+      ...this.shownRows[newPosition.row].ref,
+      column: this.columnIndexes[newPosition.column],
+    };
+    this.selectCell(valueRef);
+    // TODO: fix scrolling to first row and to first non-fixed columns when there are fixed columns.
+    this.getCellElement(valueRef)?.scrollIntoView({ block: "nearest" });
+
+    return !deepEquals(oldPosition, newPosition);
+  }
+
+  private moveSelectionNextColumn() {
+    const isMoved = this.moveSelection("right", { resetColumnDelta: false });
+    if (isMoved) {
+      this.columnDelta += 1;
+    }
+    this.editSelectedCell();
+  }
+
+  private moveSelectionNextRow() {
+    this.moveSelection("down", { resetColumnDelta: false });
+    this.moveSelection("left", { step: this.columnDelta });
+    this.columnDelta = 0;
+    this.editSelectedCell();
+  }
+
+  private getCellElement(valueRef: ValueRef): HTMLElement | null {
+    return this.uv.getValueByRef(valueRef)?.value.extra.htmlElement ?? null;
+  }
+
+  private editSelectedCell() {
+    const valueRef = this.getSelectedCell();
+    if (!valueRef) return;
+
+    this.cellEditByTarget(valueRef, this.getCellElement(valueRef) as any);
+  }
 
   get columnIndexes() {
     const columns = this.uv.extra.columns.map((column, index) => ({
@@ -1015,23 +1130,89 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.updateRows();
   }
 
-  protected mounted() {
-    (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", () => {
-      this.removeCellEditing();
+  private deselectAllCells() {
+    this.uv.extra.selectedValues.keys().forEach(key => {
+      this.selectValue(key, false);
     });
-
-    // Deselect cells in this table if cell is selected in another table.
-    this.$root.$on("cell-click", () => {
-      this.uv.extra.selectedValues.keys().forEach(key => {
-        this.selectValue(key, false);
-      });
-      this.lastSelectedRow = null;
-      this.lastSelectedValue = null;
-      this.removeCellEditing();
-    });
+    this.lastSelectedRow = null;
+    this.lastSelectedValue = null;
+    this.removeCellEditing();
   }
 
-  protected destroyed() {
+  private copySelectedCell(event: ClipboardEvent) {
+    const valueRef = this.getSelectedCell();
+    if (!valueRef) return;
+
+    event.clipboardData?.setData("text/plain", this.uv.getValueByRef(valueRef)?.value.extra.valueText as string);
+    event.preventDefault();
+  }
+
+  private cutSelectedCell(event: ClipboardEvent) {
+    this.copySelectedCell(event);
+    this.clearSelectedCell();
+  }
+
+  private pasteToSelectedCell(event: ClipboardEvent) {
+    const valueRef = this.getSelectedCell();
+    if (!valueRef) return;
+
+    // FIXME: Some errors on trying to paste on non-editable cells.
+    void this.updateValue(valueRef, event.clipboardData?.getData("text/plain"));
+    event.preventDefault();
+  }
+
+  private clearSelectedCell() {
+    const valueRef = this.getSelectedCell();
+    if (!valueRef) return;
+
+    void this.updateValue(valueRef, "");
+  }
+
+  private onPressEnter() {
+    if (this.editing) {
+      this.removeCellEditing();
+      this.moveSelectionNextRow();
+    } else {
+      this.editSelectedCell();
+    }
+  }
+
+  private onPressTab() {
+    if (this.editing) {
+      this.removeCellEditing();
+      this.moveSelectionNextColumn();
+    } else {
+      this.moveSelection("right");
+    }
+  }
+
+  protected mounted() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", this.removeCellEditing);
+    this.$root.$on("copy", this.copySelectedCell);
+    this.$root.$on("cut", this.cutSelectedCell);
+    this.$root.$on("paste", this.pasteToSelectedCell);
+    this.$root.$on("cell-click", this.onOtherTableClicked);
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  // Deselect cells in this table if cell is selected in another table.
+  private onOtherTableClicked() {
+    this.deselectAllCells();
+    this.lastSelectedRow = null;
+    this.lastSelectedValue = null;
+    this.removeCellEditing();
+  }
+
+  protected beforeUnmount() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", this.removeCellEditing);
+    this.$root.$off("copy", this.copySelectedCell);
+    this.$root.$off("cut", this.cutSelectedCell);
+    this.$root.$off("paste", this.pasteToSelectedCell);
+    this.$root.$off("cell-click", this.onOtherTableClicked);
+    /* eslint-enable @typescript-eslint/unbound-method */
+
     if (this.printListener !== null) {
       window.removeEventListener("beforeprint", this.printListener.printCallback);
       this.printListener.query.removeListener(this.printListener.queryCallback);
@@ -1295,6 +1476,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private clickCell(ref: ValueRef, event: MouseEvent) {
+    this.columnDelta = 0;
     this.removeCellEditing();
     this.updateClickTimer(ref);
     this.cellEditHandler(ref, event.target as HTMLElement);

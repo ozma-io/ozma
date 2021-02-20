@@ -1,6 +1,7 @@
 <template>
   <!-- FIXME: Pls solve these classes -->
   <td
+    ref="cell"
     :style="value.extra.style"
     :class="['table-td', {'fixed-column': column.fixed,
                           'select_fixed': value.extra.selected && column.fixed,
@@ -12,6 +13,9 @@
                           'tree-branches': column.treeUnfoldColumn && tree.children !== undefined && tree.children.length > 0 && showTree,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click.stop="$emit('cell-click', columnPosition, $event)"
+    @mousedown="$emit('cell-mousedown', $event, value)"
+    @mouseover.self="$emit('cell-mouseover', $event, value)"
+    @mouseup="$emit('cell-mouseup', $event, value)"
   >
     <p>
       <template v-if="column.type == 'buttons'">
@@ -69,7 +73,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
 import { valueIsNull } from "@/values";
 import { iconValue } from "@/links";
@@ -123,6 +127,12 @@ export default class TableCell extends Vue {
 
   get iconValue() {
     return this.value.extra.link && "target" in this.value.extra.link ? iconValue(this.value.extra.link.target) : null;
+  }
+
+  @Watch("value", { immediate: true })
+  private async updateHtmlElement() {
+    await this.$nextTick();
+    this.value.extra.htmlElement = this.$refs.cell as HTMLElement;
   }
 }
 </script>
@@ -178,14 +188,14 @@ export default class TableCell extends Vue {
 
   .table-td.selected {
     box-shadow:
-      inset 2px 2px 0 rgb(14, 101, 235),
-      inset -2px -2px 0 rgb(14, 101, 235);
+      inset 2px 2px 0 var(--FocusBorderColor),
+      inset -2px -2px 0 var(--FocusBorderColor);
   }
 
   .table-td.fixed-column.selected {
     box-shadow:
-      inset 2px 2px 0 rgb(14, 101, 235),
-      inset -2px -2px 0 rgb(14, 101, 235);
+      inset 2px 2px 0 var(--FocusBorderColor),
+      inset -2px -2px 0 var(--FocusBorderColor);
   }
 
   .checkbox_click-none {

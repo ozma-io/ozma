@@ -48,6 +48,9 @@
           @input="updateValue"
           @set-input-height="setInputHeight"
           @focus="iSlot.onFocus"
+          @blur="$emit('blur', $event)"
+          @move-selection-next-row="$emit('move-selection-next-row', $event)"
+          @move-selection-next-column="$emit('move-selection-next-column', $event)"
         />
         <Textarea
           v-else-if="inputType.name === 'textarea'"
@@ -62,6 +65,7 @@
           @set-input-height="setInputHeight"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
+          @blur="$emit('blur', $event)"
         />
         <Calendar
           v-else-if="inputType.name === 'calendar'"
@@ -75,6 +79,9 @@
           :required="!isNullable"
           :background-color="cellColor"
           @focus="iSlot.onFocus"
+          @blur="$emit('blur', $event)"
+          @move-selection-next-row="$emit('move-selection-next-row', $event)"
+          @move-selection-next-column="$emit('move-selection-next-column', $event)"
           @update:value="updateValue"
         />
         <ValueSelect
@@ -89,6 +96,7 @@
           :background-color="cellColor"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
+          @blur="$emit('blur', $event)"
         />
         <CodeEditor
           v-else-if="inputType.name === 'codeeditor'"
@@ -101,6 +109,7 @@
           :autofocus="autofocus || iSlot.autofocus"
           :required="!isNullable"
           @update:content="updateValue"
+          @blur="$emit('blur', $event)"
         />
         <MarkdownEditor
           v-else-if="inputType.name === 'markdown'"
@@ -112,6 +121,7 @@
           :autofocus="autofocus || iSlot.autofocus"
           :required="!isNullable"
           @update:content="updateValue"
+          @blur="$emit('blur', $event)"
         />
         <input
           v-else-if="inputType.name === 'check'"
@@ -125,6 +135,7 @@
           :required="!isNullable"
           @input="updateValue($event.target.value)"
           @focus="iSlot.onFocus"
+          @blur="$emit('blur', $event)"
         >
         <QRCode
           v-else-if="inputType.name === 'qrcode'"
@@ -158,6 +169,7 @@
           @update:actions="actions = $event"
           @update:buttons="panelButtons = $event"
           @focus="iSlot.onFocus"
+          @blur="$emit('blur', $event)"
           @update:value="updateValue($event)"
           @goto="$emit('goto', $event)"
         />
