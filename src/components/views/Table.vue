@@ -288,12 +288,15 @@ const doubleClickTime = 700;
 // FIXME: Use CSS variables to avoid this constant
 const technicalFieldsWidth = 35; // checkbox's and openform's td width
 
-const validNumberFormats = ["auto", "ru", "en"];
-const numberFormatters: Record<string, Intl.NumberFormat> = {
-  "auto": Intl.NumberFormat(),
-  "ru": Intl.NumberFormat("ru-RU"),
-  "en": Intl.NumberFormat("en-US"),
-};
+const validNumberFormats = ["auto", "ru", "en"] as const;
+type ValidNumberFormat = typeof validNumberFormats[number];
+const makeMemoKey = (lang: ValidNumberFormat, fractionDigits?: number) => lang + String(fractionDigits);
+const getNumberFormatter = R.memoizeWith(makeMemoKey, (lang: ValidNumberFormat, fractionDigits?: number) => {
+  const locale = lang === "auto" ? undefined : lang;
+  const options = fractionDigits === undefined ? undefined
+    : { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits };
+  return Intl.NumberFormat(locale, options);
+});
 
 const createColumns = (uv: ICombinedUserViewAny): IColumn[] => {
   const viewAttrs = uv.attributes;
@@ -379,8 +382,10 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
     style["text-align"] = "right";
 
     const numberFormat = getCellAttr("number_format");
-    if (typeof numberFormat === "string" && validNumberFormats.includes(numberFormat.toLowerCase())) {
-      valueText = numberFormatters[numberFormat.toLowerCase()].format(value.value as any);
+    if (typeof numberFormat === "string" && validNumberFormats.includes(numberFormat.toLowerCase() as any)) {
+      const fractionDigitsRaw = getCellAttr("fraction_digits");
+      const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
+      valueText = getNumberFormatter(numberFormat.toLowerCase() as any, fractionDigits).format(value.value as any);
     }
   } else if (punOrValueType.type === "string") {
     valueText = replaceHtmlLinks(valueText);
