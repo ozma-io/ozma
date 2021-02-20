@@ -5,14 +5,16 @@
             "save": "Save",
             "restore": "Restore",
             "success": "Success",
-            "drop_others": "Drop other schemas"
+            "drop_others": "Drop other schemas",
+            "skip_preloaded": "Skip preloaded schemas"
         },
         "ru": {
             "schema_name": "Название схемы",
             "save": "Сохранить",
             "restore": "Восстановить",
             "success": "Успех",
-            "drop_others": "Удалить другие схемы"
+            "drop_others": "Удалить другие схемы",
+            "skip_preloaded": "Пропустить системные схемы"
         }
     }
 </i18n>
@@ -52,6 +54,15 @@
       </label>
     </p>
     <p>
+      <input
+        v-model="skipPreloaded"
+        type="checkbox"
+      >
+      <label>
+        {{ $t('skip_preloaded') }}
+      </label>
+    </p>
+    <p>
       {{ lastError }}
     </p>
   </div>
@@ -60,6 +71,7 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { Action } from "vuex-class";
+import type { IRestoreSchemasOptions, ISaveSchemasOptions } from "ozma-api";
 
 import Api from "@/api";
 
@@ -70,13 +82,17 @@ export default class SaveRestoreSchema extends Vue {
   schema = "";
   lastError = "";
   dropOthers = false;
+  skipPreloaded = false;
 
   async saveSchema() {
     try {
-      const schemas = this.schema === "" ? null : [this.schema];
+      const schemas = this.schema === "" ? "all" : [this.schema];
+      const opts: ISaveSchemasOptions = {
+        skipPreloaded: this.skipPreloaded,
+      };
       const res: Blob = await this.callProtectedApi({
         func: Api.saveSchemas,
-        args: [schemas],
+        args: [schemas, opts],
       });
 
       const url = URL.createObjectURL(res);
@@ -107,10 +123,13 @@ export default class SaveRestoreSchema extends Vue {
   async restoreSchemas(event: Event) {
     const files = (event.target as HTMLInputElement).files as FileList;
     const content = files[0];
+    const opts: IRestoreSchemasOptions = {
+      dropOthers: this.dropOthers,
+    };
     try {
       await this.callProtectedApi({
         func: Api.restoreSchemas,
-        args: [this.dropOthers, content],
+        args: [content, opts],
       });
 
       this.lastError = this.$t("success").toString();
