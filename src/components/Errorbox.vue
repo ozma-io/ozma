@@ -1,8 +1,13 @@
 <template>
-  <div class="error_box_container">
-    <span class="error_box_text">
-      {{ message }}
-    </span>
+  <!-- eslint-disable vue/multiline-html-element-content-newline -->
+  <!-- eslint formatting messes with message formatting by `white-space: pre-wrap` -->
+  <div class="errorbox-container">
+    <b-alert
+      show
+      class="errorbox mb-0"
+      variant="danger"
+    >{{ message }}</b-alert>
+    <!-- eslint-enable vue/multiline-html-element-content-newline -->
   </div>
 </template>
 
@@ -16,7 +21,7 @@ export default class Errorbox extends Vue {
 </script>
 
 <style scoped>
-  .error_box_container {
+  .errorbox-container {
     width: 100%;
     height: 100%;
     display: flex;
@@ -25,12 +30,8 @@ export default class Errorbox extends Vue {
     justify-content: center;
   }
 
-  .error_box_text {
-    width: 60%;
-    padding: 5px;
-    background-color: var(--FailColor);
-    color: white;
-    font-size: 1.5rem;
-    border: 1px solid black;
+  .errorbox {
+    width: 100%;
+    white-space: pre-wrap;
   }
 </style>
