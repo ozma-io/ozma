@@ -48,8 +48,8 @@
         :level="level"
         :selection-mode="selectionMode"
         :default-values="defaultValues"
-        @update:actions="extraCommonActions = $event"
         @update:panelButtons="panelButtons = $event"
+        @update:extraButton="extraButton = $event"
       />
       <transition name="fade-1" mode="out-in">
         <component
@@ -127,7 +127,7 @@ import { ICurrentQueryHistory, IQuery } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
 import { Action } from "@/components/ActionsMenu.vue";
 import UserViewCommon from "@/components/UserViewCommon.vue";
-import { PanelButton } from "@/components/ButtonsPanel.vue";
+import type { Button, IButtonGroup } from "@/components/buttons/buttons";
 import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams } from "@/links";
 import type { ICombinedUserViewAny, IUserViewArguments } from "@/user_views/combined";
 import { CombinedUserView } from "@/user_views/combined";
@@ -246,9 +246,8 @@ export default class UserView extends Vue {
   // Use this user view to select and return an entry.
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
 
-  private panelButtons: PanelButton[] = [];
-  private extraActions: Action[] = [];
-  private extraCommonActions: Action[] = [];
+  private panelButtons: Button[] = [];
+  private extraButton: Button = { type:"empty" } ;
   // Old user view is shown while new component for uv is loaded.
   private state: UserViewLoadingState = loadingState;
   private pendingArgs: IUserViewArguments | null = null;
@@ -271,9 +270,8 @@ export default class UserView extends Vue {
     }
   }
 
-  get actions() {
-    const actions = [...this.extraCommonActions, ...this.extraActions];
-
+  get buttons() {
+    const buttons: Button[] = [];
     if (this.state.state === "error" || (this.state.state === "show" && !this.state.uv.attributes["hide_default_actions"])) {
       const args = this.state.state === "show" ? this.state.uv.args : this.state.args;
       if (args.source.type === "named") {
@@ -295,20 +293,29 @@ export default class UserView extends Vue {
           search: "",
         };
 
-        actions.push({
+        buttons.push({
           icon: "code",
-          name: this.$t("edit_view").toString(),
+          title: this.$t("edit_view").toString(),
           link: { query: editQuery, target: "modal-auto", type: "query" },
+          type: "link",
         });
       }
     }
-
-    return actions;
+    return buttons;
   }
 
   @Watch("panelButtons", { deep: true, immediate: true })
   private pushPanelButtons() {
     this.$emit("update:panelButtons", this.panelButtons);
+  }
+
+  @Watch("extraButton")
+  private pushExtraButton() {
+    const button = this.extraButton; 
+    if (button.type === "button-group") {
+      button.buttons.push(...this.buttons);
+    }
+    this.$emit("update:extraButton", button);
   }
 
   private reloadIfRoot() {
@@ -444,8 +451,6 @@ export default class UserView extends Vue {
     }
 
     this.state = loadingState;
-    this.extraActions = [];
-    this.extraCommonActions = [];
     this.$emit("update:statusLine", "");
     this.$emit("update:enableFilter", false);
     this.$emit("update:bodyStyle", "");
@@ -485,10 +490,10 @@ export default class UserView extends Vue {
     }
   }
 
-  @Watch("actions", { deep: true, immediate: true })
-  private pushActions() {
-    this.$emit("update:actions", this.actions);
-  }
+  // @Watch("actions", { deep: true, immediate: true })
+  // private pushActions() {
+  //   this.$emit("update:actions", this.actions);
+  // }
 
   private destroyed() {
     if (this.state.state === "show") {

@@ -190,7 +190,7 @@
             v-else-if="inputType.name === 'userview'"
             :title="usedCaption"
             :actions="actions"
-            :buttons="panelButtons"
+            :panel-buttons="panelButtons"
             :is-enable-filter="enableFilter"
             :view="inputType"
             :filter-string="filterString"

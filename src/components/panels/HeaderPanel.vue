@@ -2,7 +2,8 @@
   <div class="nested-menu">
     <label class="input_label">{{ title }}</label>
     <ButtonsPanel
-      :buttons="buttons"
+      :buttons="panelButtons"
+      :extra-button="extraButton"
       @goto="$emit('goto', $event)"
     >
       <template #search-panel>
@@ -34,7 +35,7 @@ import { Action } from "@/components/ActionsMenu.vue";
 import type { IUserViewType } from "@/components/FormControl.vue";
 import { queryLocation } from "@/state/query";
 import { router } from "@/modules";
-import { PanelButton } from "@/components/ButtonsPanel.vue";
+import type { Button } from "@/components/buttons/buttons";
 import SearchPanel from "@/components/SearchPanel.vue";
 
 @Component({
@@ -45,7 +46,8 @@ import SearchPanel from "@/components/SearchPanel.vue";
 export default class HeaderPanel extends Vue {
   @Prop({ type: String, required: true }) title!: string;
   @Prop({ type: Array, required: true }) actions!: Action[];
-  @Prop({ type: Array, required: true }) buttons!: PanelButton[];
+  @Prop({ type: Array, required: true }) panelButtons!: Button[];
+  @Prop({ type: Object, required: true }) extraButton!: Button;
   @Prop({ type: Boolean, required: true }) isEnableFilter!: boolean;
   @Prop({ type: Object, default: null }) view!: IUserViewType;
   @Prop({ type: String, required: true }) filterString!: string;

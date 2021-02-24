@@ -1629,7 +1629,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   /* таблица поверх блока отключения редактирования */
   table.edit_active {
     position: relative;
-    z-index: 1000;
+    // z-index: 1000; Overrides the dropdown menu of buttons when editing
   }
 
   .tabl {

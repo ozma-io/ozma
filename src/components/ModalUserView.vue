@@ -22,7 +22,8 @@
       <HeaderPanel
         :title="title"
         :actions="actions"
-        :buttons="panelButtons"
+        :panel-buttons="panelButtons"
+        :extra-button="extraButton"
         :is-enable-filter="enableFilter"
         :filter-string="filterString"
         :view="view"
@@ -43,6 +44,7 @@
           :filter-string="filterString"
           @update:actions="extraActions = $event"
           @update:panelButtons="panelButtons = $event"
+          @update:extraButton="extraButton = $event"
           @update:enableFilter="enableFilter = $event"
           @update:title="title = $event"
           @goto="$emit('goto', $event)"
@@ -81,7 +83,7 @@ import { queryLocation } from "@/state/query";
 import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/staging_changes";
 import ModalPortal from "@/components/modal/ModalPortal";
 import { router } from "@/modules";
-import { PanelButton } from "@/components/ButtonsPanel.vue";
+import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { convertToWords } from "@/utils";
 import { ISelectionRef } from "./BaseUserView";
@@ -100,7 +102,9 @@ export default class ModalUserView extends Vue {
 
   private title = "";
   private extraActions: Action[] = [];
-  private panelButtons: PanelButton[] = [];
+  private panelButtons: Button[] = [];
+  private extraButton: Button = {type:"empty"};
+
   private enableFilter = false;
   private filterString = "";
 

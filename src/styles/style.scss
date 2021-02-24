@@ -130,6 +130,7 @@ button:not(.btn) {
 
 .material-icons {
   user-select: none;
+  line-height: 1.3rem;
 
   &.material-button {
     @include material-button;
@@ -147,6 +148,12 @@ button:not(.btn) {
   .material-icons {
     line-height: 0.875rem;
   }
+}
+
+.emoji {
+  font-size: 1.15rem;
+  line-height: 1.3rem;
+  width: 1.5rem;
 }
 
 input.disabled {
@@ -221,6 +228,6 @@ $input-focus-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
   }
 }
 
-.emoji-icon {
-  font-size: 18px;
+.lh-05 {
+  line-height: 0.5rem;
 }

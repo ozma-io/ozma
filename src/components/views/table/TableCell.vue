@@ -158,11 +158,10 @@ export default class TableCell extends Vue {
       ::v-deep .checkbox {
         .material-icons {
           position: relative;
-          top: -3px;
         }
       }
 
-      ::v-deep ul.actions {
+      ::v-deep .buttons {
         > span {
           pointer-events: all;
           cursor: pointer;

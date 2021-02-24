@@ -11,7 +11,7 @@ import { setHeadTitle } from "@/elements";
 import UserView from "@/components/UserView.vue";
 import FunLink from "@/components/FunLink";
 import ActionsMenu from "@/components/ActionsMenu.vue";
-import ButtonsPanel from "@/components/ButtonsPanel.vue";
+import ButtonsPanel from "@/components/panels/ButtonsPanel.vue";
 import FormControl from "@/components/FormControl.vue";
 import { VueIsMobile } from "@/components";
 import App from "@/App.vue";

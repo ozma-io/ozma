@@ -57,20 +57,24 @@
       </b-form>
     </div>
  
-    <button
+    <b-button
       v-if="localFilterString.length === 0"
       slot="reference"
-      class="material-icons material-button"
+      variant="light" 
+      class="btn-sm lh-05 p-1"
       @click.prevent
-    > search
-    </button>
-    <button
+    > 
+      <span class="material-icons">search</span> 
+    </b-button>
+    <b-button
       v-else
       slot="reference"
-      class="material-icons material-button search-button-active"
+      variant="light" 
+      class="btn-sm lh-05 p-1 active"
       @click.prevent
-    > saved_search
-    </button>
+    > 
+      <span class="material-icons">saved_search</span> 
+    </b-button>
   </popper>
 </template>
 <script lang="ts">
@@ -116,7 +120,7 @@ export default class SearchPanel extends Vue {
     border-radius: 0.2rem;
   }
 
-  .search-button-active {
+  .active {
     background-color: var(--WarningBackColor) !important;
   }
 </style>

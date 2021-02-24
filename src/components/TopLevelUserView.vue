@@ -87,21 +87,14 @@
         </span>
         <ButtonsPanel
           :buttons="panelButtons"
-          @goto="$emit('goto', $event)"
+          :extra-button="extraButton"
+          @goto="pushRoot"
         >
           <template #search-panel>
             <SearchPanel
               v-if="enableFilter"
               :filter-string="query.root.search"
               @update:filterString="replaceRootSearch($event)"
-            />
-          </template>
-          <template #actions-menu>
-            <ActionsMenu
-              :actions="extraActions"
-              :buttons="panelButtons"
-              menu-align="right"
-              @goto="pushRoot"
             />
           </template>
         </ButtonsPanel>
@@ -119,6 +112,7 @@
           @goto="pushRoot"
           @goto-previous="gotoPreviousRoot"
           @update:panelButtons="panelButtons = $event"
+          @update:extraButton="extraButton = $event"
           @update:actions="extraActions = $event"
           @update:statusLine="statusLine = $event"
           @update:enableFilter="enableFilter = $event"
@@ -194,7 +188,6 @@ import { setHeadTitle } from "@/elements";
 import { ErrorKey } from "@/state/errors";
 import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/staging_changes";
 import { Action } from "@/components/ActionsMenu.vue";
-import { PanelButton } from "@/components/ButtonsPanel.vue";
 import ModalUserView from "@/components/ModalUserView.vue";
 import SearchPanel from "@/components/SearchPanel.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
@@ -202,6 +195,7 @@ import { CurrentAuth, getAuthedLink, INoAuth } from "@/state/auth";
 import { IQuery, ICurrentQueryHistory } from "@/state/query";
 import { convertToWords, nextRender } from "@/utils";
 import { Link } from "@/links";
+import type { Button } from "@/components/buttons/buttons";
 
 const auth = namespace("auth");
 const staging = namespace("staging");
@@ -233,12 +227,13 @@ export default class TopLevelUserView extends Vue {
   @errors.Mutation("removeError") removeError!: (params: { key: ErrorKey; index: number }) => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
 
-  private panelButtons: PanelButton[] = [];
-  private extraActions: Action[] = [];
   private statusLine = "";
   private enableFilter = false;
   private styleNode: HTMLStyleElement;
   private title = "";
+
+  private panelButtons: Button[] = [];
+  private extraButton: Button = {type:"empty"};
 
   private wasOpenedQRCodeScanner = false;
   private isOpenQRCodeScanner = false;
@@ -424,9 +419,10 @@ export default class TopLevelUserView extends Vue {
   .head-menu {
     display: flex;
     white-space: nowrap;
+    align-items: center;
     background-color: var(--MainBackgroundColor);
     width: 100%;
-    padding: 5px 10px;
+    padding: 2px 10px;
     z-index: 999;
     border-bottom: 1px solid var(--MainBorderColor);
   }
