@@ -234,6 +234,7 @@ export interface IColumn {
 export interface ITableValueExtra extends IBaseValueExtra {
   // FIXME: is this still needed? We could drop it and use computed properties in TableRows instead.
   valueText: string;
+  valueFormatted: string;
   link: Link | null;
   style: Record<string, unknown> | null;
   selected: boolean;
@@ -372,7 +373,8 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
   const columnAttrs = uv.columnAttributes[columnIndex];
   const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, uv.attributes);
 
-  let valueText = valueToPunnedText(columnInfo.valueType, value);
+  const valueText = valueToPunnedText(columnInfo.valueType, value);
+  let valueFormatted = valueText;
   const style: Record<string, unknown> = {};
 
   const punOrValueType: ValueType = columnInfo.punType ?? columnInfo.valueType;
@@ -385,10 +387,10 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
     if (typeof numberFormat === "string" && validNumberFormats.includes(numberFormat.toLowerCase() as any)) {
       const fractionDigitsRaw = getCellAttr("fraction_digits");
       const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
-      valueText = getNumberFormatter(numberFormat.toLowerCase() as any, fractionDigits).format(value.value as any);
+      valueFormatted = getNumberFormatter(numberFormat.toLowerCase() as any, fractionDigits).format(value.value as any);
     }
   } else if (punOrValueType.type === "string") {
-    valueText = replaceHtmlLinks(valueText);
+    valueFormatted = replaceHtmlLinks(valueText);
   }
 
   const cellColor = getCellAttr("cell_color");
@@ -412,6 +414,7 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
 
   const extra = {
     valueText,
+    valueFormatted,
     style: null as Record<string, unknown> | null,
   };
   if (!R.isEmpty(style)) {
@@ -460,6 +463,8 @@ const updateCommonValue = (uv: ITableCombinedUserView, row: ITableExtendedRowCom
   const columnInfo = uv.info.columns[columnIndex];
 
   value.extra.valueText = valueToPunnedText(columnInfo.valueType, value);
+  // TODO: after paste and before save value is unformatted.
+  value.extra.valueFormatted = valueToPunnedText(columnInfo.valueType, value);
 };
 
 const postInitCommonRow = (uv: ITableCombinedUserView, row: ITableExtendedRowCommon) => {
@@ -1145,6 +1150,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private copySelectedCell(event: ClipboardEvent) {
+    if (this.editing) return;
     const valueRef = this.getSelectedCell();
     if (!valueRef) return;
 
@@ -1391,9 +1397,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private removeCellEditing() {
-    if (this.editing === null) {
-      return;
-    }
+    if (this.editing === null) return;
 
     void this.removeAutoSaveLock(this.editing.lock);
     this.editing = null;

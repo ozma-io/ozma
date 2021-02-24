@@ -23,7 +23,7 @@
           :value="value"
         />
       </template>
-      <template v-else-if="value.extra.link !== null && value.extra.valueText.length > 0">
+      <template v-else-if="value.extra.link !== null && value.extra.valueFormatted.length > 0">
         <div class="selectable">
           <FunLink
             :link="value.extra.link"
@@ -36,7 +36,7 @@
             >
           </FunLink>
           <!-- eslint-disable vue/no-v-html -->
-          <span class="reference-text" v-html="value.extra.valueText || '&nbsp;'" />
+          <span class="reference-text" v-html="value.extra.valueFormatted || '&nbsp;'" />
           <!-- eslint-enable -->
         </div>
       </template>
@@ -48,7 +48,7 @@
             :checked="value.value"
           />
         </template>
-        <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueText.length > 0, 'tree': showTree}]">
+        <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueFormatted.length > 0, 'tree': showTree}]">
           <span
             :style="{'margin-left': treeLevel*25+'px'}"
             :class="['display-arrow material-icons', {'down': tree.arrowDown}]"
@@ -64,7 +64,7 @@
             class="hidden-arrow-space"
           />
           <!-- eslint-disable vue/no-v-html -->
-          <span class="text" v-html="value.extra.valueText || '&nbsp;'" />
+          <span class="text" v-html="value.extra.valueFormatted || '&nbsp;'" />
           <!-- eslint-enable -->
         </div>
       </template>
