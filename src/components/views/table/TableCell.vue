@@ -31,7 +31,7 @@
           >
             <input
               type="button"
-              class="material-icons reference-open-modal"
+              class="material-icons reference-open-modal md-18"
               :value="iconValue"
             >
           </FunLink>
@@ -143,7 +143,7 @@ export default class TableCell extends Vue {
     float: left;
     padding: 0 5px;
     border: 1px solid var(--MainBorderColor);
-    border-radius: 5px;
+    border-radius: 1rem;
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
     width: 100%;
@@ -239,7 +239,6 @@ export default class TableCell extends Vue {
   .reference-open-modal {
     pointer-events: auto !important;
     left: 0;
-    top: -3px;
     position: absolute;
     border: none;
     background: none;
