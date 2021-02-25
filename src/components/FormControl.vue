@@ -136,6 +136,10 @@
           :content="textValue"
           @scanned="barCodeScanned"
         />
+        <CellButtons
+          v-else-if="inputType.name === 'buttons'"
+          :value="value"
+        />
         <div v-else-if="inputType.name === 'static_text'">
           {{ textValue }}
         </div>
@@ -312,6 +316,10 @@ interface IStaticImageType {
   name: "static_image";
 }
 
+interface IButtonsType {
+  name: "buttons";
+}
+
 export type IType =
   ITextType
   | ITextAreaType
@@ -327,7 +335,8 @@ export type IType =
   | IStaticTextType
   | IStaticImageType
   | IQRCodeType
-  | IBarCodeType;
+  | IBarCodeType
+  | IButtonsType;
 
 const staging = namespace("staging");
 
@@ -349,6 +358,7 @@ const multilineTypes = ["markdown", "codeeditor", "textarea", "userview", "empty
     QRCode: () => import("@/components/qrcode/QRCode.vue"),
     BarCode: () => import("@/components/barcode/BarCode.vue"),
     BarCodePrint: () => import("@/components/barcode/BarCodePrint.vue"),
+    CellButtons: () => import("@/components/buttons/CellButtons.vue"),
   },
 })
 export default class FormControl extends Vue {
@@ -504,6 +514,8 @@ export default class FormControl extends Vue {
       return { name: "static_text" };
     } else if (controlAttr === "static_image") {
       return { name: "static_image" };
+    } else if (controlAttr === "buttons") {
+      return { name: "buttons" };
     }
     // `calc` is needed because sizes should be relative to base font size.
     const heightMultilineText = "calc(4em + 12px)";

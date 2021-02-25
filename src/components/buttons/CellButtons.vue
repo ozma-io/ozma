@@ -3,7 +3,7 @@
     <ButtonItem 
       v-for="(button, i) in buttons"
       :key="i"
-      class="text-decoration-none m-1"
+      class="text-decoration-none mr-1"
       :button="button"
       :is-button="true"
       @goto="$emit('goto', $event)"

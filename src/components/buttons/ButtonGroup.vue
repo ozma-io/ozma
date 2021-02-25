@@ -6,9 +6,12 @@
     toggle-class="d-flex align-items-center p-1"
     variant="light" 
     :no-caret="!button.title"
+    v-b-tooltip.hover
+    :title="button.tooltip"
   >
     <template #button-content>
       <ButtonContent 
+        
         :button="button" 
         :is-button="true" 
       />
