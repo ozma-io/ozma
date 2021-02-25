@@ -98,7 +98,7 @@
     </MultiSelect>
     <div
       v-else
-      class="loading-box h-100 p-1 d-flex justify-content-center align-items-center"
+      class="loading-box border rounded p-1 d-flex justify-content-center align-items-center"
     >
       <div
         class="spinner-border spinner-border-sm"
