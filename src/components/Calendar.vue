@@ -43,14 +43,6 @@
             class="focus-entire"
             size="sm"
           >
-            <b-input-group-prepend>
-              <b-input-group-text
-                class="with-material-icon prepend-icon"
-                :style="{ backgroundColor }"
-              >
-                <i class="material-icons">event</i>
-              </b-input-group-text>
-            </b-input-group-prepend>
             <b-input
               ref="control"
               type="text"
@@ -75,6 +67,13 @@
                   class="material-icons"
                 >clear</i>
               </b-button>
+
+              <b-input-group-text
+                class="with-material-icon calendar-icon"
+                :style="{ backgroundColor }"
+              >
+                <i class="material-icons">event</i>
+              </b-input-group-text>
             </b-input-group-append>
           </b-input-group>
         </div>
@@ -326,15 +325,15 @@ export default class Calendar extends Vue {
     }
   }
 
-  .prepend-icon {
+  .calendar-icon {
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColorLight);
-    border-right-width: 0;
+    border-left-width: 0;
     cursor: pointer;
   }
 
   .calendar-input {
-    border-left-width: 0;
+    border-right-width: 0;
   }
 
   .calendar-container {
