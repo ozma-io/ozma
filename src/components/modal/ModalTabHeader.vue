@@ -16,10 +16,13 @@
       home
     </router-link>
     <slot name="header" />
-    <i
-      class="material-icons material-button"
+    <b-button
+      variant="light" 
+      class="btn-sm lh-0-5 p-1"
       @click.stop="$emit('tab-close')"
-    >close</i>
+    > 
+      <span class="material-icons">close</span> 
+    </b-button>
   </div>
 </template>
 

@@ -1,26 +1,24 @@
 <template>
-  <div class="d-flex">
-    <span class="d-flex align-items-center">
-      <template v-for="(button, i) in buttons">
-        
-        <ButtonGroup
-          v-if="button.type === 'button-group'" 
-          :key="i"
-           class="mr-1"
-          :button = "button" 
-          @goto="$emit('goto', $event)"
-        />
-        <ButtonItem
-          v-else 
-          :key="i"
-          class="text-decoration-none mr-1"
-          :button="button"
-          :is-button="true"
-          @goto="$emit('goto', $event)"
-        /> 
+  <div class="d-flex align-items-center">
+    <template v-for="(button, i) in buttons">
+      
+      <ButtonGroup
+        v-if="button.type === 'button-group'" 
+        :key="i"
+          class="mr-1"
+        :button = "button" 
+        @goto="$emit('goto', $event)"
+      />
+      <ButtonItem
+        v-else 
+        :key="i"
+        class="text-decoration-none mr-1"
+        :button="button"
+        :is-button="true"
+        @goto="$emit('goto', $event)"
+      /> 
 
-      </template>
-    </span>
+    </template>
     <slot 
       class="mr-1"
       name="search-panel"

@@ -12,18 +12,13 @@
           :filter-string="filterString"
           @update:filterString="$emit('update:filterString', $event)"
         />
-      </template>
-      <template #actions-menu>
-        <ActionsMenu
-          :actions="actions"
-          :buttons="buttons"
-          menu-align="right"
-          @goto="$emit('goto', $event)"
-        />
-        <i
-          class="material-icons material-button fullscreen_button"
+        <b-button
+          variant="light" 
+          class="btn-sm lh-0-5 p-1"
           @click.stop="openFullscreen()"
-        >fullscreen</i>
+        > 
+          <span class="material-icons">fullscreen</span> 
+        </b-button>
       </template>
     </ButtonsPanel>
   </div>
