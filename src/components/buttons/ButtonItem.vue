@@ -30,7 +30,7 @@
   >
     <ButtonView 
       :button="button"
-      :is-button="isButton"
+      :show-caption="showCaption"
     />
   </span>
 
@@ -39,7 +39,7 @@
   >
     <ButtonView 
       :button="button"
-      :is-button="isButton"
+      :show-caption="showCaption"
     />
     <input
       v-visible="false"

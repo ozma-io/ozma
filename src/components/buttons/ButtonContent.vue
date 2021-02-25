@@ -16,7 +16,7 @@ import { getIconType } from "@/utils";
 @Component
 export default class ButtonView extends Vue {
   @Prop({ type: Object, required: true }) button!: Button;
-  @Prop({ type: Boolean, required: true }) isButton!: boolean;
+  @Prop({ type: Boolean, default: false }) showCaption!: boolean;
 
   private getIconType(str: string | undefined | null) {
     return getIconType(str);

@@ -11,9 +11,8 @@
   >
     <template #button-content>
       <ButtonContent 
-        
         :button="button" 
-        :is-button="true" 
+        :show-caption="true" 
       />
     </template>
     

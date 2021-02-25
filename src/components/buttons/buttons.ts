@@ -1,6 +1,7 @@
 import { RawLocation } from "vue-router";
 import { Link, IAttrToLinkOpts, attrToLink } from "@/links";
 import { mapMaybe, isMobile } from "@/utils";
+import { button } from "@storybook/addon-knobs";
 
 export interface IButton {
   icon?: string;
@@ -38,6 +39,11 @@ export interface IButtonGroup extends IButton {
   type: "button-group";
 }
 
+export interface IButtonDispaly {
+  button: Button;
+  display: "all" | "mobile" | "desktop" | "hidden";
+}
+
 export type Button = ILocationButton | ILinkButton | ICallbackButton | IUploadFileButton | IButtonGroup | IEmptyButton;
 
 export const attrToButtons = (buttonsAttr: unknown[], opts?: IAttrToLinkOpts, isExtraButton = false): Button[] => {
@@ -59,8 +65,8 @@ export const attrToButtons = (buttonsAttr: unknown[], opts?: IAttrToLinkOpts, is
       return undefined;
     }
 
-    // @display = "all" | "mobile" | "desktop"
-    const display = typeof buttonObj.display === "string" ? buttonObj.display : "desktop";
+    // @display = "all" | "mobile" | "desktop" | "hidden"
+    const display = typeof buttonObj.display === "string" ? buttonObj.display : "hidden";
 
     if (isMobile && !isExtraButton) {
       if (display === "desktop") {
