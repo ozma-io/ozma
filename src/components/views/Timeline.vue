@@ -1,13 +1,13 @@
 <i18n>
   {
     "en": {
-      "view_error": "There are following errors in userview",
+      "view_error": "There are following errors in user view",
       "no_datetime": "The query is lacking timeline_datetime attribute",
       "datetime_wrong_type": "timeline_datetime attribute is not on value with datetime type",
       "send": "Send"
     },
     "ru": {
-      "view_error": "В представлении следующие ошибки",
+      "view_error": "В отображении следующие ошибки",
       "no_datetime": "В запросе отсутствует атрибут timeline_datetime",
       "datetime_wrong_type": "Атрибут timeline_datetime должен быть указан для значения с типом datetime",
       "send": "Отправить"

@@ -1,13 +1,13 @@
 <i18n>
     {
         "en": {
-            "view_error": "There are following errors in userview",
+            "view_error": "There are following errors in user view",
             "no_title": "No title",
             "no_columns": "This query is lacking board_columns attribute",
             "no_group": "This query is lacking board_group attribute on the grouping field"
         },
         "ru": {
-            "view_error": "В представлении следующие ошибки",
+            "view_error": "В отбражении следующие ошибки",
             "no_title": "Без заголовка",
             "no_columns": "В запросе отсутствует атрибут board_columns",
             "no_group": "В запросе отсутствует атрибут board_group на поле, по которому идёт группировка"
