@@ -439,6 +439,7 @@ export default class MultiSelect extends Vue {
 
   private async onOpenPopup() {
     this.isPopupOpen = true;
+    this.$emit("focus");
     await nextRender();
     if (this.loadingState.status === "ok" && this.loadingState.moreAvailable) {
       this.loadMoreIfNeeded();

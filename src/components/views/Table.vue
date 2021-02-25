@@ -1146,7 +1146,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     });
     this.lastSelectedRow = null;
     this.lastSelectedValue = null;
-    this.removeCellEditing();
   }
 
   private copySelectedCell(event: ClipboardEvent) {
@@ -1197,31 +1196,34 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  protected mounted() {
-    /* eslint-disable @typescript-eslint/unbound-method */
-    (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", this.removeCellEditing);
-    this.$root.$on("copy", this.copySelectedCell);
-    this.$root.$on("cut", this.cutSelectedCell);
-    this.$root.$on("paste", this.pasteToSelectedCell);
-    this.$root.$on("cell-click", this.onOtherTableClicked);
-    /* eslint-enable @typescript-eslint/unbound-method */
-  }
-
-  // Deselect cells in this table if cell is selected in another table.
   private onOtherTableClicked() {
     this.deselectAllCells();
-    this.lastSelectedRow = null;
-    this.lastSelectedValue = null;
     this.removeCellEditing();
   }
 
-  protected beforeUnmount() {
+  private get rootEvents(): [name: string, callback: (event: ClipboardEvent) => void][] {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    return [
+      ["copy", this.copySelectedCell],
+      ["cut", this.cutSelectedCell],
+      ["paste", this.pasteToSelectedCell],
+      ["cell-click", this.onOtherTableClicked],
+      ["form-input-focused", this.deselectAllCells],
+    ];
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  protected mounted() {
     /* eslint-disable @typescript-eslint/unbound-method */
     (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", this.removeCellEditing);
-    this.$root.$off("copy", this.copySelectedCell);
-    this.$root.$off("cut", this.cutSelectedCell);
-    this.$root.$off("paste", this.pasteToSelectedCell);
-    this.$root.$off("cell-click", this.onOtherTableClicked);
+    this.rootEvents.forEach(([name, callback]) => this.$root.$on(name, callback));
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  protected beforeDestroy() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    (this.$refs.tableContainer as HTMLElement).removeEventListener("scroll", this.removeCellEditing);
+    this.rootEvents.forEach(([name, callback]) => this.$root.$off(name, callback));
     /* eslint-enable @typescript-eslint/unbound-method */
 
     if (this.printListener !== null) {
