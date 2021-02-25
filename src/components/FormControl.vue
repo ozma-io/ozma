@@ -195,6 +195,7 @@
             :title="usedCaption"
             :actions="actions"
             :panel-buttons="panelButtons"
+            :extra-button="extraButton"
             :is-enable-filter="enableFilter"
             :view="inputType"
             :filter-string="filterString"
@@ -213,6 +214,7 @@
               :filter-string="filterString"
               @update:actions="actions = $event"
               @update:panelButtons="panelButtons = $event"
+              @update:extraButton="extraButton = $event"
               @update:enableFilter="enableFilter = $event"
               @update:title="updateTitle"
               @goto="$emit('goto', $event)"
@@ -236,7 +238,7 @@ import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
-import { PanelButton } from "@/components/ButtonsPanel.vue";
+import type { Button } from "@/components/buttons/buttons";
 import { IEntityRef } from "ozma-api/src";
 import { IReferenceSelectAction } from "./ReferenceMultiSelect.vue";
 
@@ -381,7 +383,8 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
 
   private actions: Action[] = [];
-  private panelButtons: PanelButton[] = [];
+  private panelButtons: Button[] = [];
+  private extraButton: Button = {type:"empty"};
   private codeEditorKey = 0;
   private filterString = "";
   private title = "";
@@ -667,6 +670,7 @@ export default class FormControl extends Vue {
 
     this.actions = [];
     this.panelButtons = [];
+    this.extraButton = {type:"empty"};
     this.title = "";
     this.filterString = "";
     this.enableFilter = false;
