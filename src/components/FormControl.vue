@@ -31,6 +31,7 @@
       :required="!isNullable"
       :empty="currentValueIsNull"
       @close-modal-input="$emit('close-modal-input')"
+      @focus="onFocus"
     >
       <template #default="iSlot">
         <template v-if="inputType.name === 'error'">
@@ -695,6 +696,12 @@ export default class FormControl extends Vue {
     const closeAfterUpdate: IType["name"][] = ["calendar", "select", "reference"];
     if (closeAfterUpdate.includes(this.inputType.name)) {
       this.$emit("close-modal-input");
+    }
+  }
+
+  private onFocus() {
+    if (!this.isCellEdit) {
+      this.$root.$emit("form-input-focused");
     }
   }
 }

@@ -28,7 +28,7 @@
         <div class="input_modal__input_group">
           <div>
             <slot
-              :onFocus="emptyHandler"
+              :onFocus="onModalFocus"
               modal
               :autofocus="isModalOpen"
             />
@@ -138,10 +138,15 @@ export default class InputSlot extends Vue {
     this.$emit("close-modal-input");
   }
 
+  private onModalFocus() {
+    this.$emit("focus");
+  }
+
   private onNonmodalFocus() {
     if (this.modal) {
       this.isModalOpen = true;
     }
+    this.$emit("focus");
   }
 
   private closeModal() {

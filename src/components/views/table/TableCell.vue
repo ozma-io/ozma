@@ -23,7 +23,7 @@
           :value="value"
         />
       </template>
-      <template v-else-if="value.extra.link !== null && value.extra.valueText.length > 0">
+      <template v-else-if="value.extra.link !== null && value.extra.valueFormatted.length > 0">
         <div class="selectable">
           <FunLink
             :link="value.extra.link"
@@ -31,12 +31,12 @@
           >
             <input
               type="button"
-              class="material-icons reference-open-modal"
+              class="material-icons reference-open-modal md-18"
               :value="iconValue"
             >
           </FunLink>
           <!-- eslint-disable vue/no-v-html -->
-          <span class="reference-text" v-html="value.extra.valueText || '&nbsp;'" />
+          <span class="reference-text" v-html="value.extra.valueFormatted || '&nbsp;'" />
           <!-- eslint-enable -->
         </div>
       </template>
@@ -48,7 +48,7 @@
             :checked="value.value"
           />
         </template>
-        <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueText.length > 0, 'tree': showTree}]">
+        <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueFormatted.length > 0, 'tree': showTree}]">
           <span
             :style="{'margin-left': treeLevel*25+'px'}"
             :class="['display-arrow material-icons', {'down': tree.arrowDown}]"
@@ -64,7 +64,7 @@
             class="hidden-arrow-space"
           />
           <!-- eslint-disable vue/no-v-html -->
-          <span class="text" v-html="value.extra.valueText || '&nbsp;'" />
+          <span class="text" v-html="value.extra.valueFormatted || '&nbsp;'" />
           <!-- eslint-enable -->
         </div>
       </template>
@@ -143,7 +143,7 @@ export default class TableCell extends Vue {
     float: left;
     padding: 0 5px;
     border: 1px solid var(--MainBorderColor);
-    border-radius: 5px;
+    border-radius: 1rem;
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
     width: 100%;
@@ -239,7 +239,6 @@ export default class TableCell extends Vue {
   .reference-open-modal {
     pointer-events: auto !important;
     left: 0;
-    top: -3px;
     position: absolute;
     border: none;
     background: none;
