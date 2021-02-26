@@ -902,7 +902,7 @@ const isEmptyRow = (row: IRowCommon) => {
   return row.values.every(cell => valueIsNull(cell.rawValue) || cell.info === null);
 };
 
-const parseClipboard = (event: ClipboardEvent): number | null | undefined => {
+const parseFromClipboard = (event: ClipboardEvent): number | null | undefined => {
   const serialized = event.clipboardData?.getData("text/html");
   if (serialized === undefined) return undefined;
 
@@ -915,6 +915,16 @@ const parseClipboard = (event: ClipboardEvent): number | null | undefined => {
     }
   }
   return undefined;
+};
+
+const serializeToClipboard = (event: ClipboardEvent, value: unknown, valueText: string): void => {
+  const valueJson = JSON.stringify(value);
+  const span = document.createElement("span");
+  span.setAttribute("data-ozma-value", valueJson);
+  span.textContent = valueText;
+  const valueXml = (new XMLSerializer()).serializeToString(span);
+
+  event.clipboardData?.setData("text/html", valueXml);
 };
 
 interface ITableEditing {
@@ -1183,13 +1193,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     const sourceColumnType = this.uv.info.columns[valueRef.column].mainField?.field.fieldType.type;
     if (sourceColumnType === "reference") {
-      const valueJson = JSON.stringify(value.value);
-      const span = document.createElement("span");
-      span.setAttribute("data-ozma-value", valueJson);
-      span.textContent = valueText;
-      const valueXml = (new XMLSerializer()).serializeToString(span);
-
-      event.clipboardData?.setData("text/html", valueXml);
+      serializeToClipboard(event, value.value, valueText);
     }
   }
 
@@ -1216,7 +1220,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     const targetColumnType = this.uv.info.columns[valueRef.column].mainField?.field.fieldType.type;
     if (targetColumnType === "reference") {
-      const parsed = parseClipboard(event);
+      const parsed = parseFromClipboard(event);
       if (parsed !== undefined) {
         void this.updateValue(valueRef, parsed);
       } else {
