@@ -1,12 +1,12 @@
 import { RawLocation } from "vue-router";
 import { Link, IAttrToLinkOpts, attrToLink } from "@/links";
 import { mapMaybe, isMobile } from "@/utils";
-import { button } from "@storybook/addon-knobs";
 
 export interface IButton {
   icon?: string;
-  title?: string;
+  name?: string;
   tooltip?: string;
+  display?: string;
   backgroundColor?: string;
 }
 
@@ -39,14 +39,13 @@ export interface IButtonGroup extends IButton {
   type: "button-group";
 }
 
-export interface IButtonDispaly {
-  button: Button;
-  display: "all" | "mobile" | "desktop" | "hidden";
-}
-
 export type Button = ILocationButton | ILinkButton | ICallbackButton | IUploadFileButton | IButtonGroup | IEmptyButton;
 
-export const attrToButtons = (buttonsAttr: unknown[], opts?: IAttrToLinkOpts, isExtraButton = false): Button[] => {
+export const attrToButtons = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): Button[] => {
+  if (!Array.isArray(buttonsAttr)) {
+    return [];
+  }
+
   return mapMaybe((rawButton: unknown) => {
 
     if (typeof rawButton !== "object" || rawButton === null) {
@@ -57,48 +56,25 @@ export const attrToButtons = (buttonsAttr: unknown[], opts?: IAttrToLinkOpts, is
     // but TypeScript doesn't support advanced type witnesses like that.
     const buttonObj = rawButton as Record<string, unknown>;
 
-    const title = typeof buttonObj.title === "string" ? buttonObj.title : undefined;
+    const name = typeof buttonObj.name === "string" ? buttonObj.name : undefined;
     const icon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
     const tooltip = typeof buttonObj.tooltip === "string" ? buttonObj.tooltip : undefined;
+    const display = typeof buttonObj.display === "string" ? buttonObj.display : undefined;
+    const backgroundColor = typeof buttonObj.backgroundColor === "string" ? buttonObj.backgroundColor : undefined 
 
     if (buttonObj.visible === false) {
       return undefined;
     }
 
-    // @display = "all" | "mobile" | "desktop" | "hidden"
-    const display = typeof buttonObj.display === "string" ? buttonObj.display : "hidden";
-
-    if (isMobile && !isExtraButton) {
-      if (display === "desktop") {
-        return undefined;
-      }
-    }
-    if (isMobile && isExtraButton) {
-      if (display === "all" || display === "mobile") {
-        return undefined;
-      }
-    }
-    if (!isMobile && !isExtraButton) {
-      if (display === "mobile") {
-        return undefined;
-      }
-    }
-    if (!isMobile && isExtraButton) {
-      if (display === "all" || display === "desktop") {
-        return undefined;
-      }
-    }
-
-    const backgroundColor = typeof buttonObj.backgroundColor === "string" ? buttonObj.backgroundColor : undefined 
-
     const link = attrToLink(buttonObj, opts);
     if (link !== null) {
       return {
-        title,
+        name,
         icon,
         tooltip,
         backgroundColor,
         link,
+        display,
         type: "link",
       }
     }
@@ -106,11 +82,12 @@ export const attrToButtons = (buttonsAttr: unknown[], opts?: IAttrToLinkOpts, is
     if (Array.isArray(buttonObj.buttons)) {
       const buttons = attrToButtons(buttonObj.buttons, opts);
       return {
-        title,
+        name,
         icon,
         tooltip,
         backgroundColor,
         buttons,
+        display,
         type: "button-group",
       }
     }
@@ -120,4 +97,36 @@ export const attrToButtons = (buttonsAttr: unknown[], opts?: IAttrToLinkOpts, is
     }
 
   }, buttonsAttr)
+}
+
+export const buttonsToPanelButtons = (buttons: Button[]): Button[] => {
+  let panelButtons: Button[] = [];
+  const extraButton: Button = {
+    icon: "more_vert",  
+    type: "button-group", 
+    buttons: []
+  };
+
+  buttons.forEach(button => {
+
+    if (button.display === undefined) {
+      extraButton.buttons.push(button);
+
+    } else if (isMobile && button.display === "mobile") {
+      panelButtons.push(button);
+
+    } else if (!isMobile && button.display === "desktop") {
+      panelButtons.push(button);
+
+    } else if (button.display === "all") {
+      panelButtons.push(button);
+    
+    } else {
+      extraButton.buttons.push(button);
+      
+    }
+  });
+
+  panelButtons.push(extraButton);
+  return panelButtons;
 }

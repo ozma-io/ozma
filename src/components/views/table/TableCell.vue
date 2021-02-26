@@ -15,8 +15,9 @@
   >
     <p>
       <template v-if="column.type == 'buttons'">
-        <CellButtons
-          :value="value"
+        <ButtonsPanel
+          :buttons="buttons"
+          @goto="$emit('goto', $event)"
         />
       </template>
       <template v-else-if="value.extra.link !== null && value.extra.valueText.length > 0">
@@ -73,13 +74,12 @@ import { valueIsNull } from "@/values";
 import { iconValue } from "@/links";
 import { replaceHtmlLinks } from "@/utils";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
-import CellButtons from "@/components/buttons/CellButtons.vue";
+import { attrToButtons } from "@/components/buttons/buttons";
 import type { IColumn, ITableExtendedValue, ITableRowTree } from "@/components/views/Table.vue";
 
 @Component({
   components: {
     Checkbox,
-    CellButtons,
   },
 })
 export default class TableCell extends Vue {
@@ -117,6 +117,12 @@ export default class TableCell extends Vue {
       return this.tree.level;
     } else {
       return 0;
+    }
+  }
+
+  get buttons () {
+    if (this.column.type == 'buttons'){
+      return attrToButtons(this.value.value);
     }
   }
 
@@ -161,11 +167,9 @@ export default class TableCell extends Vue {
         }
       }
 
-      ::v-deep .buttons {
-        > span {
-          pointer-events: all;
-          cursor: pointer;
-        }
+      ::v-deep button {
+        pointer-events: all;
+        cursor: pointer;
       }
 
       ::v-deep a {

@@ -193,13 +193,11 @@
           <HeaderPanel
             v-else-if="inputType.name === 'userview'"
             :title="usedCaption"
-            :actions="actions"
             :panel-buttons="panelButtons"
-            :extra-button="extraButton"
             :is-enable-filter="enableFilter"
             :view="inputType"
             :filter-string="filterString"
-            @update:filterString="filterString = $event"
+            @update:filter-string="filterString = $event"
             @goto="$emit('goto', $event)"
           />
         </b-col>

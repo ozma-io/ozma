@@ -61,7 +61,7 @@
       v-if="localFilterString.length === 0"
       slot="reference"
       variant="light" 
-      class="btn-sm lh-0-5 p-1"
+      class="btn-sm lh-0-5 p-0-5"
       @click.prevent
     > 
       <span class="material-icons">search</span> 
@@ -70,7 +70,7 @@
       v-else
       slot="reference"
       variant="light" 
-      class="btn-sm lh-0-5 p-1 active"
+      class="btn-sm lh-0-5 p-0-5 active"
       @click.prevent
     > 
       <span class="material-icons">saved_search</span> 

@@ -9,7 +9,7 @@
   >
     <ButtonView 
       :button="button"
-      :is-button="isButton"
+      :show-caption="showCaption"
     />
   </router-link>
 
@@ -20,7 +20,7 @@
   >
     <ButtonView 
       :button="button"
-      :is-button="isButton"
+      :show-caption="showCaption"
     />
   </FunLink>
 
@@ -63,7 +63,7 @@ import type { Button } from "@/components/buttons/buttons";
 })
 export default class ButtonItem extends Vue {
   @Prop({ type: Object, required: true }) button!: Button;
-  @Prop({ type: Boolean, required: true }) isButton!: Button;
+  @Prop({ type: Boolean, default: false }) showCaption!: Button;
 
   private uploadFile(input: HTMLInputElement, next: (file: File) => void) {
     const files = input.files as FileList;

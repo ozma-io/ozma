@@ -1,10 +1,10 @@
 <template>
   <fragment>
     <span v-if="button.icon"  :class="[getIconType(button.icon) === 'emoji' ? 'emoji':'material-icons']">{{ button.icon }}</span>
-    <span v-else-if="!isButton" v-visible="false" class="material-icons">arrow_right</span>
+    <span v-else-if="showCaption" v-visible="false" class="material-icons">arrow_right</span>
 
-    <span v-if="button.title"  class="mx-1 text-nowrap">{{ button.title }}</span>
-    <span v-else-if="!isButton" class="mx-1 text-nowrap" >{{ button.tooltip }}</span>
+    <span v-if="button.name"  class="mx-1 text-nowrap">{{ button.name }}</span>
+    <span v-else-if="showCaption" class="mx-1 text-nowrap" >{{ button.tooltip }}</span>
   </fragment>
 </template>
 

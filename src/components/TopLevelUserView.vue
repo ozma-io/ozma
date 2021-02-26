@@ -55,50 +55,41 @@
     </template>
 
     <div :class="'userview-upper-div'">
-      <div class="head-menu">
-        <input
-          v-if="!isMainView"
-          type="button"
-          value="arrow_back"
-          class="head-menu_back-button material-icons material-button"
-          @click="$router.go(-1)"
-        >
-        <router-link
-          v-if="!isMainView"
-          :to="{ name: 'main' }"
-          class="head-menu_main-menu-button material-icons material-button"
-        >
-          home
-        </router-link>
-        <ActionsMenu
-          :actions="actions"
-          @goto="pushRoot"
-        />
-        <!-- TODO: Make better tooltips for long userview titles.
-             (Without `tabindex` and `:focus { outline: none; }`) -->
-        <span
-          v-if="!!title"
-          v-b-tooltip.click.blur.bottom.noninteractive
-          class="head-menu_title"
-          tabindex="0"
-          :title="title"
-        >
-          {{ title }}
-        </span>
-        <ButtonsPanel
-          :buttons="panelButtons"
-          :extra-button="extraButton"
-          @goto="pushRoot"
-        >
-          <template #search-panel>
-            <SearchPanel
-              v-if="enableFilter"
-              :filter-string="query.root.search"
-              @update:filterString="replaceRootSearch($event)"
-            />
-          </template>
-        </ButtonsPanel>
-      </div>
+      <HeaderPanel
+        :title="title"
+        :panelButtons="panelButtons"
+        :is-enable-filter="enableFilter"
+        :filter-string="query.root.search"
+        @update:filterString="filterString = $event"
+        @goto="$emit('goto', $event)"
+      >
+        <template #main-buttons>
+          <b-button
+            v-if="!isMainView"
+            variant="light" 
+            class="btn-sm lh-0-5 p-0-5"
+            @click="$router.go(-1)"
+          > 
+            <span class="material-icons">arrow_back</span> 
+          </b-button>
+          <router-link
+            v-if="!isMainView"
+            :to="{ name: 'main' }"
+          >
+            <b-button
+              variant="light" 
+              class="btn-sm lh-0-5 p-0-5"
+            > 
+              <span class="material-icons">home</span> 
+            </b-button>
+          </router-link>
+          <ActionsMenu
+            :actions="actions"
+            @goto="pushRoot"
+          />
+        </template>
+
+      </HeaderPanel>
       <div
         class="userview-div"
       >
@@ -112,8 +103,6 @@
           @goto="pushRoot"
           @goto-previous="gotoPreviousRoot"
           @update:panelButtons="panelButtons = $event"
-          @update:extraButton="extraButton = $event"
-          @update:actions="extraActions = $event"
           @update:statusLine="statusLine = $event"
           @update:enableFilter="enableFilter = $event"
           @update:bodyStyle="styleNode.innerHTML = $event"
@@ -189,13 +178,13 @@ import { ErrorKey } from "@/state/errors";
 import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/staging_changes";
 import { Action } from "@/components/ActionsMenu.vue";
 import ModalUserView from "@/components/ModalUserView.vue";
-import SearchPanel from "@/components/SearchPanel.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { CurrentAuth, getAuthedLink, INoAuth } from "@/state/auth";
 import { IQuery, ICurrentQueryHistory } from "@/state/query";
 import { convertToWords, nextRender } from "@/utils";
 import { Link } from "@/links";
 import type { Button } from "@/components/buttons/buttons";
+import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 
 const auth = namespace("auth");
 const staging = namespace("staging");
@@ -204,10 +193,10 @@ const query = namespace("query");
 const errors = namespace("errors");
 
 @Component({ components: {
-  SearchPanel,
   ModalUserView,
   ProgressBar,
   QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
+  HeaderPanel,
 } })
 export default class TopLevelUserView extends Vue {
   @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
@@ -233,7 +222,6 @@ export default class TopLevelUserView extends Vue {
   private title = "";
 
   private panelButtons: Button[] = [];
-  private extraButton: Button = {type:"empty"};
 
   private wasOpenedQRCodeScanner = false;
   private isOpenQRCodeScanner = false;

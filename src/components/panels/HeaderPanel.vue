@@ -1,9 +1,18 @@
 <template>
   <div class="nested-menu">
-    <label class="input_label">{{ title }}</label>
+    <div class="d-flex align-items-center">
+      <slot name="main-buttons" />
+      <label 
+        class="input_label"
+        v-b-tooltip.click.blur.bottom.noninteractive
+        :title="title"
+      >
+        {{ title }}
+      </label>
+    </div>
+
     <ButtonsPanel
-      :buttons="panelButtons"
-      :extra-button="extraButton"
+      :buttons="buttons"
       @goto="$emit('goto', $event)"
     >
       <template #search-panel>
@@ -13,8 +22,9 @@
           @update:filterString="$emit('update:filterString', $event)"
         />
         <b-button
+          v-if="view !== null"
           variant="light" 
-          class="btn-sm lh-0-5 p-1"
+          class="btn-sm lh-0-5 p-0-5"
           @click.stop="openFullscreen()"
         > 
           <span class="material-icons">fullscreen</span> 
@@ -31,6 +41,7 @@ import type { IUserViewType } from "@/components/FormControl.vue";
 import { queryLocation } from "@/state/query";
 import { router } from "@/modules";
 import type { Button } from "@/components/buttons/buttons";
+import { buttonsToPanelButtons } from "@/components/buttons/buttons";
 import SearchPanel from "@/components/SearchPanel.vue";
 
 @Component({
@@ -40,12 +51,14 @@ import SearchPanel from "@/components/SearchPanel.vue";
 })
 export default class HeaderPanel extends Vue {
   @Prop({ type: String, required: true }) title!: string;
-  @Prop({ type: Array, required: true }) actions!: Action[];
   @Prop({ type: Array, required: true }) panelButtons!: Button[];
-  @Prop({ type: Object, required: true }) extraButton!: Button;
   @Prop({ type: Boolean, required: true }) isEnableFilter!: boolean;
   @Prop({ type: Object, default: null }) view!: IUserViewType;
   @Prop({ type: String, required: true }) filterString!: string;
+
+  get buttons() {
+    return buttonsToPanelButtons(this.panelButtons);
+  }
 
   private openFullscreen() {
     if (this.view !== null) {
@@ -64,13 +77,13 @@ export default class HeaderPanel extends Vue {
   }
 
   .input_label {
-    margin-bottom: 0;
-    color: var(--MainTextColor);
+    margin: 1px 2px 0;
+    margin-right: auto;
     font-weight: 600;
     font-size: 1.25em;
+    color: var(--MainTextColor);
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: pre;
   }
 
   .fullscreen_button {

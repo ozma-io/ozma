@@ -5,7 +5,6 @@
       :key="i"
       class="text-decoration-none mr-1"
       :button="button"
-      :is-button="true"
       @goto="$emit('goto', $event)"
     />
   </div>
@@ -28,9 +27,6 @@ export default class CellButtons extends Vue {
   @Prop({ type: Object, required: true }) value!: ICombinedValue;
 
   get buttons(): Button[] {
-    if (!Array.isArray(this.value.value)) {
-      return [];
-    }
     return attrToButtons(this.value.value);
   }
 }

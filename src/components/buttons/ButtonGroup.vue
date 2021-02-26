@@ -3,16 +3,15 @@
     right 
     size="sm"
     menu-class="shadow border rounded p-0 "
-    toggle-class="d-flex align-items-center p-1"
+    toggle-class="d-flex align-items-center p-0-5"
     variant="light" 
-    :no-caret="!button.title"
-    v-b-tooltip.hover
+    :no-caret="!button.name"
+    v-b-tooltip.hover.noninteractive
     :title="button.tooltip"
   >
     <template #button-content>
       <ButtonContent 
         :button="button" 
-        :show-caption="true" 
       />
     </template>
     
@@ -23,7 +22,7 @@
         class="d-flex text-decoration-none"
         :key="index"
         :button="button"
-        :is-button="false"
+        show-caption 
         @goto="$emit('goto', $event)"
       />
     </template>
@@ -47,3 +46,6 @@ export default class ButtonsPanel extends Vue {
   @Prop({ type: Object, required: true }) button!: Button;
 }
 </script>
+
+<style lang="scss" scoped>
+</style>

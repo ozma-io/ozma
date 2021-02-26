@@ -165,10 +165,6 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   get panelButtons(): Button[] {
     const panelButtons = this.uv.attributes["panel_buttons"];
 
-    if (!Array.isArray(panelButtons)) {
-      return [];
-    }
-
     const opts: IAttrToQueryOpts = {
       homeSchema: this.uv.homeSchema ?? undefined,
     };
@@ -176,37 +172,14 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     return attrToButtons(panelButtons, opts);
   }
 
-  get extraPanelButtons(): Button[] {
-    const panelButtons = this.uv.attributes["panel_buttons"];
-
-    if (!Array.isArray(panelButtons)) {
-      return [];
-    }
-
-    const opts: IAttrToQueryOpts = {
-      homeSchema: this.uv.homeSchema ?? undefined,
-    };
-
-    return attrToButtons(panelButtons, opts, true);
+  get buttons() {
+    console.log("this.panelButtons->", this.panelButtons);
+    return [...this.staticButtons, ...this.selectionButtons, ...this.panelButtons];
   }
 
-  @Watch("panelButtons", { deep: true, immediate: true })
+  @Watch("buttons", { deep: true, immediate: true })
   private pushPanelButtons() {
-    this.$emit("update:panelButtons", this.panelButtons);
-  }
-
-  get extraButton() {
-    const extraButton: Button = {
-      icon: "more_vert", 
-      buttons: [...this.staticButtons, ...this.selectionButtons, ...this.extraPanelButtons],
-      type: "button-group",
-    }
-    return extraButton;
-  }
-
-  @Watch("extraButton", { deep: true, immediate: true })
-  private pushExtraButton() {
-    this.$emit("update:extraButton", this.extraButton);
+    this.$emit("update:panelButtons", this.buttons);
   }
 
   /**
@@ -218,40 +191,17 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   }
 
   get staticButtons(): Button[] {
-    const buttons: Button[] = [];
-
-    /*
+    
     const extraActions = this.uv.attributes["extra_actions"];
-    if (Array.isArray(extraActions)) {
-      const opts: IAttrToQueryOpts = {
-        homeSchema: this.uv.homeSchema ?? undefined,
-      };
-      extraActions.forEach((rawAction: unknown) => {
-        const link = attrToLink(rawAction, opts);
-        if (link === null) {
-          return;
-        }
-        // `rawAction` at this point is guaranteed to be `Record<string, unknown>`,
-        // but TypeScript doesn't support advanced type witnesses like that.
-        const actionObj = rawAction as Record<string, unknown>;
-        if (typeof actionObj.name !== "string") {
-          return;
-        }
-
-        const icon = typeof actionObj.icon === "string" ? actionObj.icon : undefined;
-        actions.push({
-          icon,
-          name: actionObj.name,
-          order: -10,
-          link,
-        });
-      });
+    const extraActionsButtons = attrToButtons(extraActions); 
+    if (extraActionsButtons.length > 0) {
+      console.warn("@extra_actions attribute deprecated,  will be deleted future.");
     }
-    */
+    const buttons: Button[] = extraActionsButtons;
 
     if (this.creationLink !== null) {
       buttons.push({ 
-        title: this.$t("create").toString(), 
+        name: this.$t("create").toString(), 
         link: this.creationLink,
         type: "link",
       });
@@ -260,7 +210,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     const modalReferenceField = this.modalReferenceField;
     if (modalReferenceField) {
       buttons.push({
-        title: this.$t("create_in_modal").toString(),
+        name: this.$t("create_in_modal").toString(),
         callback: () => {
           this.modalView = modalReferenceField.uv;
         },
@@ -271,7 +221,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     if (typeof this.uv.info.mainEntity === "object" && this.showDefaultActions) {
       buttons.push({
         icon: "import_export",
-        title: this.$t("import_from_csv").toString(),
+        name: this.$t("import_from_csv").toString(),
         uploadFile: file => this.importFromCsv(file),
         type: "upload-file",
       });
@@ -281,7 +231,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     if (this.uv.attributes["export_to_csv"] || "__export_to_csv" in this.$route.query) {
       buttons.push({
         icon: "import_export",
-        title: this.$t("export_to_csv").toString(),
+        name: this.$t("export_to_csv").toString(),
         callback: () => this.exportToCsv(),
         type: "callback",
       });
@@ -290,7 +240,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     if (this.selectedQRCodeEntity !== null) {
       buttons.push({
         icon: "qr_code_2",
-        title: this.$t("scan_qrcode").toString(),
+        name: this.$t("scan_qrcode").toString(),
         callback: () => {
           this.openQRCodeScanner = !this.openQRCodeScanner;
         },
@@ -301,7 +251,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     if (this.selectedBarCodeEntity !== null) {
       buttons.push({
         icon: "qr_code_scanner",
-        title: this.$t("scan_barcode").toString(),
+        name: this.$t("scan_barcode").toString(),
         callback: () => {
           this.openBarCodeScanner = !this.openBarCodeScanner;
         },
@@ -318,7 +268,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       buttons.push(
         { 
           icon: "delete_sweep", 
-          title: this.$t("remove_selected_rows").toString(), 
+          name: this.$t("remove_selected_rows").toString(), 
           callback: () => this.removeSelectedRows(),
           type: "callback",
         });

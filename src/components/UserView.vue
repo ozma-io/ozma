@@ -49,7 +49,6 @@
         :selection-mode="selectionMode"
         :default-values="defaultValues"
         @update:panelButtons="panelButtons = $event"
-        @update:extraButton="extraButton = $event"
       />
       <transition name="fade-1" mode="out-in">
         <component
@@ -67,7 +66,6 @@
           @goto="$emit('goto', $event)"
           @goto-previous="$emit('goto-previous')"
           @select="$emit('select', $event)"
-          @update:actions="extraActions = $event"
           @update:statusLine="$emit('update:statusLine', $event)"
           @update:enableFilter="$emit('update:enableFilter', $event)"
           @update:bodyStyle="$emit('update:bodyStyle', $event)"
@@ -247,7 +245,6 @@ export default class UserView extends Vue {
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
 
   private panelButtons: Button[] = [];
-  private extraButton: Button = { type:"empty" } ;
   // Old user view is shown while new component for uv is loaded.
   private state: UserViewLoadingState = loadingState;
   private pendingArgs: IUserViewArguments | null = null;
@@ -295,7 +292,7 @@ export default class UserView extends Vue {
 
         buttons.push({
           icon: "code",
-          title: this.$t("edit_view").toString(),
+          name: this.$t("edit_view").toString(),
           link: { query: editQuery, target: "modal-auto", type: "query" },
           type: "link",
         });
@@ -304,18 +301,13 @@ export default class UserView extends Vue {
     return buttons;
   }
 
-  @Watch("panelButtons", { deep: true, immediate: true })
-  private pushPanelButtons() {
-    this.$emit("update:panelButtons", this.panelButtons);
+  get uvPanelButtons () {
+    return [...this.buttons, ...this.panelButtons];
   }
 
-  @Watch("extraButton")
-  private pushExtraButton() {
-    const button = this.extraButton; 
-    if (button.type === "button-group") {
-      button.buttons.push(...this.buttons);
-    }
-    this.$emit("update:extraButton", button);
+  @Watch("uvPanelButtons", { deep: true, immediate: true })
+  private pushPanelButtons() {
+    this.$emit("update:panelButtons", this.uvPanelButtons);
   }
 
   private reloadIfRoot() {
