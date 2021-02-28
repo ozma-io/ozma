@@ -2,11 +2,16 @@
   <VueModal
     :width="modalWidth"
     :height="modalHeight"
+    :min-width="200"
+    :min-height="100"
+    :pivot-y="0.8"
     :name="uid"
     :classes="[
       'v--modal',
       { 'is-mobile': $isMobile }
     ]"
+    :resizable="!$isMobile"
+    :draggable="$isMobile ? false : '.modal__tab_headers'"
     @before-close="beforeClose"
     @opened="$emit('opened')"
   >
@@ -194,7 +199,6 @@ export default class Modal extends Vue {
     It's their naming so don't touch this
     if you refactor styles */
   .v--modal-box.v--modal {
-    top: 5% !important;
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
     border-radius: 3px;
