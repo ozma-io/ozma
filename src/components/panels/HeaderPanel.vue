@@ -36,7 +36,6 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import { Action } from "@/components/ActionsMenu.vue";
 import type { IUserViewType } from "@/components/FormControl.vue";
 import { queryLocation } from "@/state/query";
 import { router } from "@/modules";

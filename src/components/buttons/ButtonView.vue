@@ -1,15 +1,24 @@
 <template>
   <b-button
-    :block="showCaption"
-    :squared="showCaption"
-    :class="['d-flex p-0-5',{'btn-sm': !showCaption}]"
+    variant="light" 
+    v-if="showCaption"
+    class="d-flex list-group-item list-group-item-action"
+  >
+    <ButtonContent 
+      :button="button"
+      showCaption
+    />
+  </b-button>
+
+  <b-button
+    v-else
+    class="d-flex p-0-5 btn-sm mr-1"
     variant="light" 
     v-b-tooltip.hover.noninteractive
     :title="button.tooltip"
   >
     <ButtonContent 
       :button="button"
-      :show-caption="showCaption"
     />
   </b-button>
 </template>

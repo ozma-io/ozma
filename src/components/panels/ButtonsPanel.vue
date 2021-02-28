@@ -1,11 +1,11 @@
 <template>
-  <div :class="['d-flex align-items-center', {'flex-wrap':buttons[buttons.length-1].icon !== 'more_vert'}]">
+  <div :class="['d-flex align-items-center', {'flex-wrap':buttons[buttons.length-1].icon !== 'more_vert'}]" >
     <template v-for="(button, i) in buttons">
       
       <ButtonGroup
         v-if="button.type === 'button-group'" 
         :key="i"
-        :button = "button" 
+        :button="button" 
         @goto="$emit('goto', $event)"
       />
       <ButtonItem
