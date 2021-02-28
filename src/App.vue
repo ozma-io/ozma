@@ -45,6 +45,7 @@ import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import FabCluster from "@/components/FabCluster/FabCluster.vue";
 import AlertBanner from "@/components/AlertBanner.vue";
 import { ErrorKey } from "@/state/errors";
+import { bootstrapVariants } from "@/utils";
 
 const settings = namespace("settings");
 const auth = namespace("auth");
@@ -167,9 +168,8 @@ export default class App extends Vue {
   }
 
   private get bannerVariant() {
-    const validVariants = ["primary", "secondary", "success", "danger", "warning", "info", "light", "dark"];
     const variant = this.settings.getEntry("banner_variant", String, "info");
-    return validVariants.includes(variant)
+    return bootstrapVariants.includes(variant as any)
       ? variant
       : "info";
   }
