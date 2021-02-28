@@ -111,7 +111,8 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
       if (hasBadge) {
         if (hasBadgeObject) {
           badge = entry.badge as Badge;
-          if (badge.color === undefined && !bootstrapVariants.includes(badge.variant)) {
+          const badgeVariant = entry.variant as any;
+          if (badge.color === undefined && !bootstrapVariants.includes(badgeVariant)) {
             badge.variant = "danger";
           }
         } else {
