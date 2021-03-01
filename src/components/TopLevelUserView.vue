@@ -60,13 +60,13 @@
           v-if="!isMainView"
           type="button"
           value="arrow_back"
-          class="head-menu_back-button material-icons material-button"
+          class="head-menu_back-button material-icons material-button rounded-circle"
           @click="$router.go(-1)"
         >
         <router-link
           v-if="!isMainView"
           :to="{ name: 'main' }"
-          class="head-menu_main-menu-button material-icons material-button"
+          class="head-menu_main-menu-button material-icons material-button rounded-circle"
         >
           home
         </router-link>

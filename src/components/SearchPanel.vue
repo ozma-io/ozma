@@ -59,7 +59,7 @@
     </transition>
     <i
       v-if="showOpenButton"
-      class="material-icons material-button"
+      class="material-icons material-button rounded-circle"
       @click="toggleShowInput"
     >search</i>
   </div>

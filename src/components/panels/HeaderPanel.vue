@@ -20,7 +20,7 @@
           @goto="$emit('goto', $event)"
         />
         <i
-          class="material-icons material-button fullscreen_button"
+          class="material-icons material-button fullscreen_button rounded-circle"
           @click.stop="openFullscreen()"
         >fullscreen</i>
       </template>

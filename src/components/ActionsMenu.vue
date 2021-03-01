@@ -25,7 +25,7 @@
     <input
       v-if="menuAlign == 'left'"
       type="button"
-      class="actions-menu_actions-button material-icons material-button"
+      class="actions-menu_actions-button material-icons material-button rounded-circle"
       :value="titleIcon"
       :disabled="sortedActions.length === 0"
       @click="toggleShowActions"
@@ -36,6 +36,7 @@
         'material-icons',
         'material-button',
         'right-actions-menu-button',
+        'rounded-circle',
         {
           'disabled': sortedActions.length === 0,
         },

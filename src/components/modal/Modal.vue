@@ -30,7 +30,7 @@
           <ModalContent :nodes="tab.header" />
         </template>
         <i
-          class="material-icons material-button mobile_close_button"
+          class="material-icons material-button rounded-circle mobile_close_button"
           @click="$emit('close')"
         >close</i>
       </ModalTabHeader>
