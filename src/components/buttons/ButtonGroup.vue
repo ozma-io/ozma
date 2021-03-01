@@ -4,38 +4,38 @@
     :visible-arrow="false"
     :options="{
       placement: listItem ? 'left-start' : 'bottom-end',
-      modifiers: { 
+      modifiers: {
         offset: { offset: '0, 5px' },
         // Nested poppers cannot appear outside the parent element if overflow is enabled.
         preventOverflow: { enabled: !listItem },
-        hide: { enabled: !listItem }, 
+        hide: { enabled: !listItem },
       }
     }"
   >
     <div class="popper shadow">
       <b-list-group>
-        <template 
+        <template
           v-for="(button, index) in button.buttons"
         >
           <ButtonGroup
-            v-if="button.type === 'button-group'" 
+            v-if="button.type === 'button-group'"
             :key="index"
-            :button="button" 
+            :button="button"
             list-item
             @goto="$emit('goto', $event)"
           />
           <ButtonItem
-            v-else 
+            v-else
             :key="index"
             class="d-flex text-decoration-none"
             :button="button"
             list-item
             @goto="$emit('goto', $event)"
-          /> 
+          />
         </template>
       </b-list-group>
     </div>
-     <ButtonView 
+    <ButtonView
       slot="reference"
       :list-item="listItem"
       :button="button"
@@ -44,7 +44,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { Component, Vue, Prop } from "vue-property-decorator";
 
 import type { Button } from "@/components/buttons/buttons";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
@@ -53,13 +53,13 @@ import ButtonView from "@/components/buttons/ButtonView.vue";
 
 import Popper from "vue-popperjs";
 
-@Component({ 
+@Component({
   components: {
     ButtonItem,
     ButtonContent,
     ButtonView,
     Popper,
-  } 
+  },
 })
 export default class ButtonsPanel extends Vue {
   @Prop({ type: Object, required: true }) button!: Button;

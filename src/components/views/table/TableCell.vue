@@ -14,7 +14,7 @@
     @click.stop="$emit('cell-click', columnPosition, $event)"
   >
     <p>
-      <template v-if="column.type == 'buttons'">
+      <template v-if="column.type == 'buttons' && buttons.length > 0">
         <ButtonsPanel
           :buttons="buttons"
           @goto="$emit('goto', $event)"
@@ -120,9 +120,11 @@ export default class TableCell extends Vue {
     }
   }
 
-  get buttons () {
-    if (this.column.type == 'buttons'){
+  get buttons() {
+    if (this.column.type === "buttons") {
       return attrToButtons(this.value.value);
+    } else {
+      return [];
     }
   }
 

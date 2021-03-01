@@ -57,7 +57,7 @@
     <div :class="'userview-upper-div'">
       <HeaderPanel
         :title="title"
-        :panelButtons="panelButtons"
+        :panel-buttons="panelButtons"
         :is-enable-filter="enableFilter"
         :filter-string="query.root.search"
         @update:filterString="filterString = $event"
@@ -66,29 +66,28 @@
         <template #main-buttons>
           <b-button
             v-if="!isMainView"
-            variant="light" 
+            variant="light"
             class="btn-sm lh-0-5 p-0-5"
             @click="$router.go(-1)"
-          > 
-            <span class="material-icons">arrow_back</span> 
+          >
+            <span class="material-icons">arrow_back</span>
           </b-button>
           <router-link
             v-if="!isMainView"
             :to="{ name: 'main' }"
           >
             <b-button
-              variant="light" 
+              variant="light"
               class="btn-sm lh-0-5 p-0-5"
-            > 
-              <span class="material-icons">home</span> 
+            >
+              <span class="material-icons">home</span>
             </b-button>
           </router-link>
           <ButtonGroup
-            :button="burgerButton" 
+            :button="burgerButton"
             @goto="$emit('goto', $event)"
           />
         </template>
-
       </HeaderPanel>
       <div
         class="userview-div"
@@ -137,7 +136,7 @@
           :title="$t('save')"
           @click="saveView"
         >
-           <input
+          <input
             v-if="errors.length > 0"
             type="button"
             class="material-icons"
@@ -328,8 +327,7 @@ export default class TopLevelUserView extends Vue {
     if (this.currentAuth?.token) {
       if (Api.developmentMode) {
         const currentAuth = this.currentAuth;
-        buttons.push({ 
-          icon: "link",
+        buttons.push({ icon: "link",
           name: this.$t("authed_link").toString(),
           callback: () => {
             const link = getAuthedLink(currentAuth);
@@ -347,7 +345,7 @@ export default class TopLevelUserView extends Vue {
       icon: "menu",
       buttons,
       type: "button-group",
-    }
+    };
 
     return burgerButton;
   }

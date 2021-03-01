@@ -124,7 +124,7 @@ import type { AddedRowId, CombinedTransactionResult, ICombinedInsertEntityResult
 import { ICurrentQueryHistory, IQuery } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
 import UserViewCommon from "@/components/UserViewCommon.vue";
-import type { Button, IButtonGroup } from "@/components/buttons/buttons";
+import type { Button } from "@/components/buttons/buttons";
 import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams } from "@/links";
 import type { ICombinedUserViewAny, IUserViewArguments } from "@/user_views/combined";
 import { CombinedUserView } from "@/user_views/combined";
@@ -302,8 +302,8 @@ export default class UserView extends Vue {
     return buttons;
   }
 
-  get uvPanelButtons () {
-    return [...this.extraButtons, ...this.panelButtons,  ...this.buttons];
+  get uvPanelButtons() {
+    return [...this.extraButtons, ...this.panelButtons, ...this.buttons];
   }
 
   @Watch("uvPanelButtons", { deep: true, immediate: true })

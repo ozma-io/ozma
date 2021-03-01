@@ -403,7 +403,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     const deleteRef = this.useDeleteAction;
     if (deleteRef !== null) {
       buttons.push(
-        { icon: "delete_outline", name: this.$t("delete").toString(), callback: () => this.confirmDelete(deleteRef), type : "callback" },
+        { icon: "delete_outline", name: this.$t("delete").toString(), callback: () => this.confirmDelete(deleteRef), type: "callback" },
       );
     }
     return buttons;

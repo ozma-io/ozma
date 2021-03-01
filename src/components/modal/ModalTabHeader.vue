@@ -4,29 +4,29 @@
     @click="$emit('tab-click')"
   >
     <b-button
-      variant="light" 
+      variant="light"
       class="btn-sm lh-0-5 p-0-5"
       @click="$router.go(-1)"
-    > 
-      <span class="material-icons">arrow_back</span> 
+    >
+      <span class="material-icons">arrow_back</span>
     </b-button>
     <router-link
       :to="{ name: 'main' }"
     >
       <b-button
-        variant="light" 
+        variant="light"
         class="btn-sm lh-0-5 p-0-5"
-      > 
-        <span class="material-icons">home</span> 
+      >
+        <span class="material-icons">home</span>
       </b-button>
     </router-link>
     <slot name="header" />
     <b-button
-      variant="light" 
+      variant="light"
       class="btn-sm lh-0-5 p-0-5"
       @click.stop="$emit('tab-close')"
-    > 
-      <span class="material-icons">close</span> 
+    >
+      <span class="material-icons">close</span>
     </b-button>
   </div>
 </template>

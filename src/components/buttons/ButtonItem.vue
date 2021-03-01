@@ -7,7 +7,7 @@
     v-else-if="button.type === 'location'"
     :to="button.location"
   >
-    <ButtonView 
+    <ButtonView
       :button="button"
       :list-item="listItem"
     />
@@ -18,7 +18,7 @@
     :link="button.link"
     @goto="$emit('goto', $event)"
   >
-    <ButtonView 
+    <ButtonView
       :button="button"
       :list-item="listItem"
     />
@@ -28,7 +28,7 @@
     v-else-if="button.type === 'callback'"
     @click="button.callback()"
   >
-    <ButtonView 
+    <ButtonView
       :button="button"
       :list-item="listItem"
     />
@@ -38,7 +38,7 @@
     v-else-if="button.type === 'upload-file'"
     class="m-0"
   >
-    <ButtonView 
+    <ButtonView
       :button="button"
       :list-item="listItem"
     />
@@ -57,10 +57,10 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import ButtonView from "@/components/buttons/ButtonView.vue";
 import type { Button } from "@/components/buttons/buttons";
 
-@Component({ 
+@Component({
   components: {
     ButtonView,
-  } 
+  },
 })
 export default class ButtonItem extends Vue {
   @Prop({ type: Object, required: true }) button!: Button;

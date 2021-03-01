@@ -47,11 +47,10 @@ export const attrToButtons = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): But
   }
 
   return mapMaybe((rawButton: unknown) => {
-
     if (typeof rawButton !== "object" || rawButton === null) {
       return undefined;
     }
-    
+
     // `buttonsAttr` at this point is guaranteed to be `Record<string, unknown>`,
     // but TypeScript doesn't support advanced type witnesses like that.
     const buttonObj = rawButton as Record<string, unknown>;
@@ -60,7 +59,7 @@ export const attrToButtons = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): But
     const icon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
     const tooltip = typeof buttonObj.tooltip === "string" ? buttonObj.tooltip : undefined;
     const display = typeof buttonObj.display === "string" ? buttonObj.display : undefined;
-    const backgroundColor = typeof buttonObj.backgroundColor === "string" ? buttonObj.backgroundColor : undefined 
+    const backgroundColor = typeof buttonObj.backgroundColor === "string" ? buttonObj.backgroundColor : undefined;
 
     if (buttonObj.visible === false) {
       return undefined;
@@ -76,7 +75,7 @@ export const attrToButtons = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): But
         link,
         display,
         type: "link",
-      }
+      };
     }
 
     if (Array.isArray(buttonObj.buttons)) {
@@ -89,46 +88,37 @@ export const attrToButtons = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): But
         buttons,
         display,
         type: "button-group",
-      }
+      };
     }
-
-    console.log("buttonObj", buttonObj);
 
     return {
       type: "empty",
-    }
-
-  }, buttonsAttr)
-}
+    };
+  }, buttonsAttr);
+};
 
 export const buttonsToPanelButtons = (buttons: Button[]): Button[] => {
-  let panelButtons: Button[] = [];
+  const panelButtons: Button[] = [];
   const extraButton: Button = {
-    icon: "more_vert",  
-    type: "button-group", 
-    buttons: []
+    icon: "more_vert",
+    type: "button-group",
+    buttons: [],
   };
 
   buttons.forEach(button => {
-
     if (button.display === undefined) {
       extraButton.buttons.push(button);
-
     } else if (isMobile && button.display === "mobile") {
       panelButtons.push(button);
-
     } else if (!isMobile && button.display === "desktop") {
       panelButtons.push(button);
-
     } else if (button.display === "all") {
       panelButtons.push(button);
-    
     } else {
       extraButton.buttons.push(button);
-      
     }
   });
 
   panelButtons.push(extraButton);
   return panelButtons;
-}
+};

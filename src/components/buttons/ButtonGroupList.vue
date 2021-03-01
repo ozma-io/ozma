@@ -3,41 +3,41 @@
     trigger="clickToToggle"
     :options="{
       placement: 'right',
-      modifiers: { 
+      modifiers: {
         offset: { offset: '0,10px' },
         preventOverflow: { boundariesElement: 'window'}
       }
     }"
   >
     <div class="popper">
-      <template 
+      <template
         v-for="(button, index) in button.buttons"
       >
         <ButtonGroupList
-          v-if="button.type === 'button-group'" 
+          v-if="button.type === 'button-group'"
           :key="index"
-          :button="button" 
+          :button="button"
           @goto="$emit('goto', $event)"
         />
         <ButtonItem
-          v-else 
+          v-else
           :key="index"
           class="d-flex text-decoration-none"
           :button="button"
           list-item
           @goto="$emit('goto', $event)"
-        /> 
+        />
       </template>
     </div>
- 
+
     <b-button
       slot="reference"
       block
       squared
       class="d-flex p-0-5"
-      variant="light" 
+      variant="light"
     >
-      <ButtonContent 
+      <ButtonContent
         :button="button"
         list-item
       />
@@ -54,12 +54,12 @@ import ButtonView from "@/components/buttons/ButtonContent.vue";
 
 import Popper from "vue-popperjs";
 
-@Component({ 
+@Component({
   components: {
     Popper,
     ButtonItem,
     ButtonView,
-  } 
+  },
 })
 export default class ButtonsPanel extends Vue {
   @Prop({ type: Object, required: true }) button!: Button;

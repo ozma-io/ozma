@@ -1,6 +1,6 @@
 <template>
   <div class="buttons d-flex flex-wrap">
-    <ButtonItem 
+    <ButtonItem
       v-for="(button, i) in buttons"
       :key="i"
       class="text-decoration-none mr-1"
@@ -20,10 +20,10 @@ import ButtonItem from "@/components/buttons/ButtonItem.vue";
 
 import { currentValue } from "@/user_views/combined";
 
-@Component({ 
+@Component({
   components: {
     ButtonItem,
-  } 
+  },
 })
 export default class CellButtons extends Vue {
   @Prop({ type: Object, required: true }) value!: ICombinedValue;

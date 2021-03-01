@@ -1,23 +1,23 @@
 <template>
   <li
-    variant="light" 
     v-if="listItem"
+    variant="light"
     class="d-flex list-group-item list-group-item-action p-2"
   >
-    <ButtonContent 
+    <ButtonContent
       :button="button"
-      listItem
+      list-item
     />
   </li>
 
   <b-button
     v-else
-    class="d-flex p-0-5 btn-sm mr-1"
-    variant="light" 
     v-b-tooltip.hover.noninteractive
+    class="d-flex p-0-5 btn-sm mr-1"
+    variant="light"
     :title="button.tooltip"
   >
-    <ButtonContent 
+    <ButtonContent
       :button="button"
     />
   </b-button>
@@ -28,10 +28,10 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import type { Button } from "@/components/buttons/buttons";
 import ButtonContent from "@/components/buttons/ButtonContent.vue";
 
-@Component({ 
+@Component({
   components: {
     ButtonContent,
-  } 
+  },
 })
 export default class ButtonView extends Vue {
   @Prop({ type: Object, required: true }) button!: Button;

@@ -56,30 +56,29 @@
         </b-input-group>
       </b-form>
     </div>
- 
     <b-button
       v-if="localFilterString.length === 0"
       slot="reference"
-      variant="light" 
+      variant="light"
       class="btn-sm lh-0-5 p-0-5"
       @click.prevent
-    > 
-      <span class="material-icons">search</span> 
+    >
+      <span class="material-icons">search</span>
     </b-button>
     <b-button
       v-else
       slot="reference"
-      variant="light" 
+      variant="light"
       class="btn-sm lh-0-5 p-0-5 active"
       @click.prevent
-    > 
-      <span class="material-icons">saved_search</span> 
+    >
+      <span class="material-icons">saved_search</span>
     </b-button>
   </popper>
 </template>
 <script lang="ts">
 
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import { Debounce } from "vue-debounce-decorator";
 import Popper from "vue-popperjs";
 
@@ -109,7 +108,7 @@ export default class SearchPanel extends Vue {
   }
 
   private setFocusOnField() {
-      this.$nextTick(() => (this.$refs.searchInput as HTMLElement).focus());
+    this.$nextTick(() => (this.$refs.searchInput as HTMLElement).focus());
   }
 }
 

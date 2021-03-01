@@ -2,9 +2,9 @@
   <div class="header-panel p-1">
     <div class="d-flex align-items-center">
       <slot name="main-buttons" />
-      <label 
-        class="input_label"
+      <label
         v-b-tooltip.click.blur.bottom.noninteractive
+        class="input_label"
         :title="title"
       >
         {{ title }}
@@ -23,11 +23,11 @@
         />
         <b-button
           v-if="view !== null"
-          variant="light" 
+          variant="light"
           class="btn-sm lh-0-5 p-0-5"
           @click.stop="openFullscreen()"
-        > 
-          <span class="material-icons">fullscreen</span> 
+        >
+          <span class="material-icons">fullscreen</span>
         </b-button>
       </template>
     </ButtonsPanel>

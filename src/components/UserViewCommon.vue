@@ -66,7 +66,6 @@ import { referenceEntriesRef } from "@/state/entries";
 import type { Button } from "@/components/buttons/buttons";
 import { attrToButtons } from "@/components/buttons/buttons";
 
-
 interface IModalReferenceField {
   field: ValueRef;
   uv: IQuery;
@@ -190,18 +189,17 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   }
 
   get staticButtons(): Button[] {
-    
     const extraActions = this.uv.attributes["extra_actions"];
-    const extraActionsButtons = attrToButtons(extraActions); 
+    const extraActionsButtons = attrToButtons(extraActions);
     if (extraActionsButtons.length > 0) {
       console.warn("@extra_actions attribute deprecated,  will be deleted future.");
     }
     const buttons: Button[] = extraActionsButtons;
 
     if (this.creationLink !== null) {
-      buttons.push({ 
+      buttons.push({
         icon: "add",
-        name: this.$t("create").toString(), 
+        name: this.$t("create").toString(),
         link: this.creationLink,
         type: "link",
       });
@@ -266,12 +264,13 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     const buttons: Button[] = [];
     if (this.uv.info.mainEntity && this.uv.extra.selectedRows.length > 0) {
       buttons.push(
-        { 
-          icon: "delete_sweep", 
-          name: this.$t("remove_selected_rows").toString(), 
+        {
+          icon: "delete_sweep",
+          name: this.$t("remove_selected_rows").toString(),
           callback: () => this.removeSelectedRows(),
           type: "callback",
-        });
+        },
+      );
     }
     return buttons;
   }
