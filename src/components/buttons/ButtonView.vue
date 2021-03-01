@@ -40,8 +40,8 @@ export default class ButtonView extends Vue {
 </script>
 
 <style lang="scss" scoped>
- .list-group-item {
-   cursor: pointer;
-   text-align: left;
- }
+  .list-group-item {
+    cursor: pointer;
+    text-align: left;
+  }
 </style>

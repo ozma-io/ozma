@@ -1589,7 +1589,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
       > .label {
         padding-left: 2px;
-
       }
     }
   }
