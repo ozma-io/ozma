@@ -3,7 +3,7 @@
     <template v-for="(button, i) in buttons">
       
       <ButtonGroup
-        v-if="button.type === 'button-group'" 
+        v-if="button.type === 'button-group' && button.buttons.length > 0" 
         :key="i"
         :button="button" 
         @goto="$emit('goto', $event)"

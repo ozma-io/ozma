@@ -24,7 +24,7 @@
           :key="index"
           class="d-flex text-decoration-none"
           :button="button"
-          show-caption
+          list-item
           @goto="$emit('goto', $event)"
         /> 
       </template>
@@ -39,7 +39,7 @@
     >
       <ButtonContent 
         :button="button"
-        show-caption
+        list-item
       />
     </b-button>
   </popper>

@@ -2,10 +2,13 @@
   <popper
     trigger="clickToToggle"
     :options="{
-      placement: showCaption ? 'left' : 'bottom',
+      placement: listItem ? 'left-start' : 'bottom-end',
       modifiers: { 
         offset: { offset: '10px,10px' },
-        preventOverflow: { enabled: !showCaption }, 
+
+        // Nested poppers cannot appear outside the parent element if overflow is enabled.
+        preventOverflow: { enabled: !listItem },
+        hide: { enabled: !listItem }, 
       }
     }"
   >
@@ -18,7 +21,7 @@
             v-if="button.type === 'button-group'" 
             :key="index"
             :button="button" 
-            show-caption
+            list-item
             @goto="$emit('goto', $event)"
           />
           <ButtonItem
@@ -26,7 +29,7 @@
             :key="index"
             class="d-flex text-decoration-none"
             :button="button"
-            show-caption
+            list-item
             @goto="$emit('goto', $event)"
           /> 
         </template>
@@ -34,7 +37,7 @@
     </div>
      <ButtonView 
       slot="reference"
-      :show-caption="showCaption"
+      :list-item="listItem"
       :button="button"
     />
   </popper>
@@ -60,6 +63,6 @@ import Popper from "vue-popperjs";
 })
 export default class ButtonsPanel extends Vue {
   @Prop({ type: Object, required: true }) button!: Button;
-  @Prop({ type: Boolean, default: false }) showCaption!: boolean;
+  @Prop({ type: Boolean, default: false }) listItem!: boolean;
 }
 </script>

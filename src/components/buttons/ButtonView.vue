@@ -1,14 +1,14 @@
 <template>
-  <b-button
+  <li
     variant="light" 
-    v-if="showCaption"
-    class="d-flex list-group-item list-group-item-action"
+    v-if="listItem"
+    class="d-flex list-group-item list-group-item-action p-2"
   >
     <ButtonContent 
       :button="button"
-      showCaption
+      listItem
     />
-  </b-button>
+  </li>
 
   <b-button
     v-else
@@ -35,6 +35,12 @@ import ButtonContent from "@/components/buttons/ButtonContent.vue";
 })
 export default class ButtonView extends Vue {
   @Prop({ type: Object, required: true }) button!: Button;
-  @Prop({ type: Boolean, default: false }) showCaption!: boolean;
+  @Prop({ type: Boolean, default: false }) listItem!: boolean;
 }
 </script>
+
+<style lang="scss" scoped>
+ .list-group-item {
+   cursor: pointer;
+ }
+</style>

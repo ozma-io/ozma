@@ -1,10 +1,12 @@
 <template>
   <fragment>
     <span v-if="button.icon"  :class="[getIconType(button.icon) === 'emoji' ? 'emoji':'material-icons']">{{ button.icon }}</span>
-    <span v-else-if="showCaption" v-visible="false" class="material-icons">arrow_right</span>
+    <span v-else-if="listItem" v-visible="false" class="material-icons">arrow_right</span>
 
-    <span v-if="button.name"  class="mx-1 text-nowrap">{{ button.name }}</span>
-    <span v-else-if="showCaption" class="mx-1 text-nowrap" >{{ button.tooltip }}</span>
+    <span v-if="button.name"  :class="['text-nowrap mx-1', {'mx-2' : listItem}]">{{ button.name }}</span>
+    <span v-else-if="listItem" :class="['text-nowrap mx-1', {'mx-2' : listItem}]" >{{ button.tooltip }}</span>
+    
+    <span v-if="button.name && button.type == 'button-group'" class="material-icons">arrow_drop_down</span>
   </fragment>
 </template>
 
@@ -16,7 +18,7 @@ import { getIconType } from "@/utils";
 @Component
 export default class ButtonView extends Vue {
   @Prop({ type: Object, required: true }) button!: Button;
-  @Prop({ type: Boolean, default: false }) showCaption!: boolean;
+  @Prop({ type: Boolean, default: false }) listItem!: boolean;
 
   private getIconType(str: string | undefined | null) {
     return getIconType(str);

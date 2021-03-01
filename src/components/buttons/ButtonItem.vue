@@ -9,7 +9,7 @@
   >
     <ButtonView 
       :button="button"
-      :show-caption="showCaption"
+      :list-item="listItem"
     />
   </router-link>
 
@@ -20,7 +20,7 @@
   >
     <ButtonView 
       :button="button"
-      :show-caption="showCaption"
+      :list-item="listItem"
     />
   </FunLink>
 
@@ -30,16 +30,17 @@
   >
     <ButtonView 
       :button="button"
-      :show-caption="showCaption"
+      :list-item="listItem"
     />
   </span>
 
   <label
     v-else-if="button.type === 'upload-file'"
+    class="m-0"
   >
     <ButtonView 
       :button="button"
-      :show-caption="showCaption"
+      :list-item="listItem"
     />
     <input
       v-visible="false"
@@ -63,7 +64,7 @@ import type { Button } from "@/components/buttons/buttons";
 })
 export default class ButtonItem extends Vue {
   @Prop({ type: Object, required: true }) button!: Button;
-  @Prop({ type: Boolean, default: false }) showCaption!: Button;
+  @Prop({ type: Boolean, default: false }) listItem!: Button;
 
   private uploadFile(input: HTMLInputElement, next: (file: File) => void) {
     const files = input.files as FileList;

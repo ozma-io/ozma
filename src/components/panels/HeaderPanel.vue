@@ -1,5 +1,5 @@
 <template>
-  <div class="nested-menu">
+  <div class="header-panel p-1">
     <div class="d-flex align-items-center">
       <slot name="main-buttons" />
       <label 
@@ -69,7 +69,8 @@ export default class HeaderPanel extends Vue {
 </script>
 
 <style scoped>
-  .nested-menu {
+  .header-panel {
+    width: 100%;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
