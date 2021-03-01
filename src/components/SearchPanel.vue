@@ -56,6 +56,7 @@
         </b-input-group>
       </b-form>
     </div>
+    <!-- eslint-disable vue/no-deprecated-slot-attribute -->
     <b-button
       v-if="localFilterString.length === 0"
       slot="reference"
@@ -65,6 +66,7 @@
     >
       <span class="material-icons">search</span>
     </b-button>
+    <!-- eslint-disable vue/no-deprecated-slot-attribute -->
     <b-button
       v-else
       slot="reference"

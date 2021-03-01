@@ -35,6 +35,7 @@
         </template>
       </b-list-group>
     </div>
+    <!-- eslint-disable vue/no-deprecated-slot-attribute -->
     <ButtonView
       slot="reference"
       :list-item="listItem"
