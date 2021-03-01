@@ -183,6 +183,7 @@ export default class Modal extends Vue {
     display: flex;
     flex-direction: row;
   }
+
   .modal__tab_headers {
     width: 100%;
     display: flex;

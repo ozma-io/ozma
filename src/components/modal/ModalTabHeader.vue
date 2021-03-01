@@ -64,7 +64,7 @@ export default class ModalTabHeader extends Vue {
 
     &:not(.selected) {
       /* TODO: remove hardcoded color */
-      background-color: #cfcfcf;
+      background-color: #eaeaea;
     }
   }
 
