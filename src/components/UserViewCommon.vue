@@ -173,7 +173,6 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   }
 
   get buttons() {
-    console.log("this.panelButtons->", this.panelButtons);
     return [...this.staticButtons, ...this.selectionButtons, ...this.panelButtons];
   }
 
@@ -201,6 +200,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
 
     if (this.creationLink !== null) {
       buttons.push({ 
+        icon: "add",
         name: this.$t("create").toString(), 
         link: this.creationLink,
         type: "link",

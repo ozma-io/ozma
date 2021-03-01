@@ -398,12 +398,12 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     }
   }
 
-  get buttons() {
+  get extraButtons() {
     const buttons: Button[] = [];
     const deleteRef = this.useDeleteAction;
     if (deleteRef !== null) {
       buttons.push(
-        { name: this.$t("delete").toString(), callback: () => this.confirmDelete(deleteRef), type : "callback" },
+        { icon: "delete_outline", name: this.$t("delete").toString(), callback: () => this.confirmDelete(deleteRef), type : "callback" },
       );
     }
     return buttons;
@@ -419,9 +419,9 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     this.deletedOne = true;
   }
 
-  @Watch("buttons", { deep: true, immediate: true })
-  private updatebuttons() {
-    this.$emit("update:buttons", this.buttons);
+  @Watch("extraButtons", { deep: true, immediate: true })
+  private updateExtraButtons() {
+    this.$emit("update:extraButtons", this.extraButtons);
   }
 
   private created() {

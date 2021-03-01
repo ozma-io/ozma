@@ -15,14 +15,6 @@
           :filter-string="filterString"
           @update:filterString="$emit('update:filterString', $event)"
         />
-      </template>
-      <template #actions-menu>
-        <ActionsMenu
-          :actions="actions"
-          :buttons="panelButtons"
-          menu-align="right"
-          @goto="$emit('goto', $event)"
-        />
         <i
           class="material-icons material-button fullscreen_button"
           @click.stop="openFullscreen(inputType)"
@@ -33,10 +25,6 @@
   <div v-else-if="inputType.name == 'empty_userview'">
     <div class="nested-menu">
       <label class="input_label">{{ usedCaption }}</label>
-      <ActionsMenu
-        :actions="[]"
-        menu-align="right"
-      />
     </div>
     <div class="empty_userview_text">
       {{ inputType.text }}
@@ -49,11 +37,9 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import { Action } from "@/components/ActionsMenu.vue";
 import type { IType, IUserViewType } from "@/components/FormControl.vue";
 import { queryLocation } from "@/state/query";
 import { router } from "@/modules";
-import { PanelButton } from "@/components/ButtonsPanel.vue";
 
 @Component({
   components: {
@@ -62,10 +48,8 @@ import { PanelButton } from "@/components/ButtonsPanel.vue";
 })
 export default class NestedUserViewPanel extends Vue {
   @Prop({ type: String, required: true }) usedCaption!: string;
-  @Prop({ type: Array, required: true }) actions!: Action[];
   @Prop({ type: Boolean, required: true }) enableFilter!: boolean;
   @Prop({ type: Object, required: true }) inputType!: IType;
-  @Prop({ type: Array, required: true }) panelButtons!: PanelButton[];
   @Prop({ type: String, required: true }) filterString!: string;
 
   private openFullscreen(view: IUserViewType) {

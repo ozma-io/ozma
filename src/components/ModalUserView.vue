@@ -21,9 +21,7 @@
     <template #header>
       <HeaderPanel
         :title="title"
-        :actions="actions"
         :panel-buttons="panelButtons"
-        :extra-button="extraButton"
         :is-enable-filter="enableFilter"
         :filter-string="filterString"
         :view="view"
@@ -42,9 +40,7 @@
           :scope="uid"
           :filter="filterWords"
           :filter-string="filterString"
-          @update:actions="extraActions = $event"
           @update:panelButtons="panelButtons = $event"
-          @update:extraButton="extraButton = $event"
           @update:enableFilter="enableFilter = $event"
           @update:title="title = $event"
           @goto="$emit('goto', $event)"
@@ -77,7 +73,6 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import { Action } from "@/components/ActionsMenu.vue";
 import type { IQuery } from "@/state/query";
 import { queryLocation } from "@/state/query";
 import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/staging_changes";
@@ -101,18 +96,10 @@ export default class ModalUserView extends Vue {
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
 
   private title = "";
-  private extraActions: Action[] = [];
   private panelButtons: Button[] = [];
-  private extraButton: Button = {type:"empty"};
 
   private enableFilter = false;
   private filterString = "";
-
-  get actions() {
-    const actions: Action[] = [];
-    actions.push(...this.extraActions);
-    return actions;
-  }
 
   get filterWords() {
     const value = this.filterString;

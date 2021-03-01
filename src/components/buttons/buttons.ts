@@ -92,6 +92,8 @@ export const attrToButtons = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): But
       }
     }
 
+    console.log("buttonObj", buttonObj);
+
     return {
       type: "empty",
     }

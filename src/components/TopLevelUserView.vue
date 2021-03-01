@@ -83,9 +83,9 @@
               <span class="material-icons">home</span> 
             </b-button>
           </router-link>
-          <ActionsMenu
-            :actions="actions"
-            @goto="pushRoot"
+          <ButtonGroup
+            :button="burgerButton" 
+            @goto="$emit('goto', $event)"
           />
         </template>
 
@@ -137,7 +137,7 @@
           :title="$t('save')"
           @click="saveView"
         >
-          <input
+           <input
             v-if="errors.length > 0"
             type="button"
             class="material-icons"
@@ -176,7 +176,6 @@ import * as Api from "@/api";
 import { setHeadTitle } from "@/elements";
 import { ErrorKey } from "@/state/errors";
 import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/staging_changes";
-import { Action } from "@/components/ActionsMenu.vue";
 import ModalUserView from "@/components/ModalUserView.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { CurrentAuth, getAuthedLink, INoAuth } from "@/state/auth";
@@ -324,25 +323,33 @@ export default class TopLevelUserView extends Vue {
     void this.submitChanges({ scope: "root", errorOnIncomplete: true });
   }
 
-  get actions() {
-    const actions: Action[] = [];
+  get burgerButton() {
+    const buttons: Button[] = [];
     if (this.currentAuth?.token) {
       if (Api.developmentMode) {
         const currentAuth = this.currentAuth;
-        actions.push({ icon: "link",
+        buttons.push({ 
+          icon: "link",
           name: this.$t("authed_link").toString(),
-          order: 1000,
           callback: () => {
             const link = getAuthedLink(currentAuth);
             void navigator.clipboard.writeText(link);
-          } });
+          },
+          type: "callback" });
       }
-      actions.push({ icon: "perm_identity", name: this.$t("account").toString(), order: 1000, link: { href: Api.accountUrl, type: "href" } });
-      actions.push({ icon: "exit_to_app", name: this.$t("logout").toString(), order: 1000, callback: this.logout });
+      buttons.push({ icon: "perm_identity", name: this.$t("account").toString(), type: "link", link: { href: Api.accountUrl, type: "href" } });
+      buttons.push({ icon: "exit_to_app", name: this.$t("logout").toString(), type: "callback", callback: this.logout });
     } else {
-      actions.push({ icon: "login", name: this.$t("login").toString(), order: 1000, callback: this.login });
+      buttons.push({ icon: "login", name: this.$t("login").toString(), type: "callback", callback: this.login });
     }
-    return actions;
+
+    const burgerButton: Button = {
+      icon: "menu",
+      buttons,
+      type: "button-group",
+    }
+
+    return burgerButton;
   }
 
   get isMainView() {

@@ -66,7 +66,6 @@
           @goto="$emit('goto', $event)"
           @goto-previous="$emit('goto-previous')"
           @select="$emit('select', $event)"
-          @update:buttons="$emit('update:buttons', $event)"
           @update:statusLine="$emit('update:statusLine', $event)"
           @update:enableFilter="$emit('update:enableFilter', $event)"
           @update:bodyStyle="$emit('update:bodyStyle', $event)"
@@ -124,7 +123,6 @@ import { equalEntityRef } from "@/values";
 import type { AddedRowId, CombinedTransactionResult, ICombinedInsertEntityResult, IStagingEventHandler, ScopeName, StagingKey } from "@/state/staging_changes";
 import { ICurrentQueryHistory, IQuery } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
-import { Action } from "@/components/ActionsMenu.vue";
 import UserViewCommon from "@/components/UserViewCommon.vue";
 import type { Button, IButtonGroup } from "@/components/buttons/buttons";
 import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams } from "@/links";
@@ -246,6 +244,8 @@ export default class UserView extends Vue {
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
 
   private panelButtons: Button[] = [];
+  private extraButtons: Button[] = [];
+
   // Old user view is shown while new component for uv is loaded.
   private state: UserViewLoadingState = loadingState;
   private pendingArgs: IUserViewArguments | null = null;
@@ -303,7 +303,7 @@ export default class UserView extends Vue {
   }
 
   get uvPanelButtons () {
-    return [...this.buttons, ...this.panelButtons];
+    return [...this.extraButtons, ...this.panelButtons,  ...this.buttons];
   }
 
   @Watch("uvPanelButtons", { deep: true, immediate: true })
@@ -444,6 +444,7 @@ export default class UserView extends Vue {
     }
 
     this.state = loadingState;
+    this.extraButtons = [];
     this.$emit("update:statusLine", "");
     this.$emit("update:enableFilter", false);
     this.$emit("update:bodyStyle", "");

@@ -18,6 +18,8 @@ import type { Button } from "@/components/buttons/buttons";
 import { attrToButtons } from "@/components/buttons/buttons";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 
+import { currentValue } from "@/user_views/combined";
+
 @Component({ 
   components: {
     ButtonItem,
@@ -27,7 +29,7 @@ export default class CellButtons extends Vue {
   @Prop({ type: Object, required: true }) value!: ICombinedValue;
 
   get buttons(): Button[] {
-    return attrToButtons(this.value.value);
+    return attrToButtons(currentValue(this.value));
   }
 }
 </script>

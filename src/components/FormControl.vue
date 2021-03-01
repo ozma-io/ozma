@@ -181,10 +181,6 @@
               >
                 {{ title }}
               </label>
-              <ActionsMenu
-                menu-align="right"
-                :actions="[]"
-              />
             </div>
             <div class="empty_userview_text">
               {{ $t('data_will_load_after_save') }}
@@ -210,9 +206,7 @@
               :scope="scope"
               :level="level + 1"
               :filter-string="filterString"
-              @update:actions="actions = $event"
               @update:panelButtons="panelButtons = $event"
-              @update:extraButton="extraButton = $event"
               @update:enableFilter="enableFilter = $event"
               @update:title="updateTitle"
               @goto="$emit('goto', $event)"
@@ -230,7 +224,6 @@ import { namespace } from "vuex-class";
 import type { AttributesMap, ValueType } from "ozma-api";
 
 import { valueToText, valueIsNull } from "@/values";
-import { Action } from "@/components/ActionsMenu.vue";
 import { IQuery, attrToQuerySelf } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
@@ -380,9 +373,7 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
 
-  private actions: Action[] = [];
   private panelButtons: Button[] = [];
-  private extraButton: Button = {type:"empty"};
   private codeEditorKey = 0;
   private filterString = "";
   private title = "";
@@ -666,9 +657,7 @@ export default class FormControl extends Vue {
 
     if (newName === oldName) return;
 
-    this.actions = [];
     this.panelButtons = [];
-    this.extraButton = {type:"empty"};
     this.title = "";
     this.filterString = "";
     this.enableFilter = false;
