@@ -1,6 +1,7 @@
 <template>
   <!-- FIXME: Pls solve these classes -->
   <td
+    ref="cell"
     :style="value.extra.style"
     :class="['table-td', {'fixed-column': column.fixed,
                           'select_fixed': value.extra.selected && column.fixed,
@@ -12,6 +13,9 @@
                           'tree-branches': column.treeUnfoldColumn && tree.children !== undefined && tree.children.length > 0 && showTree,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click.stop="$emit('cell-click', columnPosition, $event)"
+    @mousedown="$emit('cell-mousedown', $event, value)"
+    @mouseover.self="$emit('cell-mouseover', $event, value)"
+    @mouseup="$emit('cell-mouseup', $event, value)"
   >
     <p>
       <template v-if="column.type == 'buttons' && buttons.length > 0">
@@ -20,7 +24,7 @@
           @goto="$emit('goto', $event)"
         />
       </template>
-      <template v-else-if="value.extra.link !== null && value.extra.valueText.length > 0">
+      <template v-else-if="value.extra.link !== null && value.extra.valueFormatted.length > 0">
         <div class="selectable">
           <FunLink
             :link="value.extra.link"
@@ -28,22 +32,24 @@
           >
             <input
               type="button"
-              class="material-icons reference-open-modal"
+              class="material-icons reference-open-modal md-18"
               :value="iconValue"
             >
           </FunLink>
           <!-- eslint-disable vue/no-v-html -->
-          <span class="reference-text" v-html="localValueTextHtml" />
+          <span class="reference-text" v-html="value.extra.valueFormatted || '&nbsp;'" />
           <!-- eslint-enable -->
         </div>
       </template>
       <template v-else>
-        <Checkbox
-          v-if="valueType === 'bool'"
-          class="checkbox_click-none"
-          :checked="value.value"
-        />
-        <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueText.length > 0, 'tree': showTree}]">
+        <template v-if="valueType === 'bool'">
+          <Checkbox
+            v-if="!isNull"
+            class="checkbox_click-none"
+            :checked="value.value"
+          />
+        </template>
+        <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueFormatted.length > 0, 'tree': showTree}]">
           <span
             :style="{'margin-left': treeLevel*25+'px'}"
             :class="['display-arrow material-icons', {'down': tree.arrowDown}]"
@@ -59,7 +65,7 @@
             class="hidden-arrow-space"
           />
           <!-- eslint-disable vue/no-v-html -->
-          <span class="text" v-html="localValueTextHtml" />
+          <span class="text" v-html="value.extra.valueFormatted || '&nbsp;'" />
           <!-- eslint-enable -->
         </div>
       </template>
@@ -68,11 +74,10 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
 import { valueIsNull } from "@/values";
 import { iconValue } from "@/links";
-import { replaceHtmlLinks } from "@/utils";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
 import { attrToButtons } from "@/components/buttons/buttons";
 import type { IColumn, ITableExtendedValue, ITableRowTree } from "@/components/views/Table.vue";
@@ -94,15 +99,6 @@ export default class TableCell extends Vue {
   @Prop({ type: Number, default: null }) index!: number;
   @Prop({ type: Object, required: true }) tree!: ITableRowTree;
   @Prop({ type: Boolean, required: true }) showTree!: boolean;
-
-  private get localValueTextHtml(): string {
-    const text: string = typeof this.value.extra.valueText === "string"
-      ? this.value.extra.valueText
-      : "";
-    return ((this.valueType === "string") || this.value.extra.link
-      ? replaceHtmlLinks(text)
-      : text) || "&nbsp;";
-  }
 
   private get valueType(): string | null {
     return this.value.info?.field?.valueType.type ?? null;
@@ -140,6 +136,12 @@ export default class TableCell extends Vue {
   get iconValue() {
     return this.value.extra.link && "target" in this.value.extra.link ? iconValue(this.value.extra.link.target) : null;
   }
+
+  @Watch("value", { immediate: true })
+  private async updateHtmlElement() {
+    await this.$nextTick();
+    this.value.extra.htmlElement = this.$refs.cell as HTMLElement;
+  }
 }
 </script>
 
@@ -149,7 +151,7 @@ export default class TableCell extends Vue {
     float: left;
     padding: 0 5px;
     border: 1px solid var(--MainBorderColor);
-    border-radius: 5px;
+    border-radius: 1rem;
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
     width: 100%;
@@ -191,14 +193,14 @@ export default class TableCell extends Vue {
 
   .table-td.selected {
     box-shadow:
-      inset 2px 2px 0 rgb(14, 101, 235),
-      inset -2px -2px 0 rgb(14, 101, 235);
+      inset 2px 2px 0 var(--FocusBorderColor),
+      inset -2px -2px 0 var(--FocusBorderColor);
   }
 
   .table-td.fixed-column.selected {
     box-shadow:
-      inset 2px 2px 0 rgb(14, 101, 235),
-      inset -2px -2px 0 rgb(14, 101, 235);
+      inset 2px 2px 0 var(--FocusBorderColor),
+      inset -2px -2px 0 var(--FocusBorderColor);
   }
 
   .checkbox_click-none {
@@ -242,7 +244,6 @@ export default class TableCell extends Vue {
   .reference-open-modal {
     pointer-events: auto !important;
     left: 0;
-    top: -3px;
     position: absolute;
     border: none;
     background: none;

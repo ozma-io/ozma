@@ -57,9 +57,6 @@
         ]"
       >
         <!-- eslint-enable vue/no-deprecated-slot-attribute -->
-        <i class="material-icons select-prepend-icon">
-          {{ isPopupOpen ? "expand_less" : "expand_more" }}
-        </i>
         <div
           :class="[
             'values-container',
@@ -116,8 +113,9 @@
           </div>
         </div>
 
-        <b-input-group-append v-if="showClearOptions">
+        <b-input-group-append>
           <b-button
+            v-if="showClearOptions"
             class="button with-material-icon clear-options-button"
             variant="outline-secondary"
             @click.stop="unselectAll"
@@ -126,6 +124,14 @@
               class="material-icons"
             >clear</i>
           </b-button>
+
+          <b-input-group-text
+            class="with-material-icon select-icon"
+          >
+            <i class="material-icons">
+              {{ isPopupOpen ? "expand_less" : "expand_more" }}
+            </i>
+          </b-input-group-text>
         </b-input-group-append>
       </div>
 
@@ -138,14 +144,6 @@
             size="sm"
             class="focus-entire filter-group"
           >
-            <b-input-group-prepend>
-              <b-input-group-text
-                class="with-material-icon filter-prepend-icon"
-                variant="outline-secondary"
-              >
-                <i class="material-icons"> search </i>
-              </b-input-group-text>
-            </b-input-group-prepend>
             <b-input
               ref="filterInput"
               v-model="filterValue"
@@ -158,14 +156,23 @@
               @keydown.up="offsetFocusedOption(-1)"
               @keydown.down="offsetFocusedOption(1)"
               @keydown.enter="filterInputFinished"
+              @keydown.esc.prevent.stop="$emit('blur', $event)"
               @focus="onFilterInputFocus"
             />
+            <b-input-group-append>
+              <b-input-group-text
+                class="with-material-icon filter-icon"
+                variant="outline-secondary"
+              >
+                <i class="material-icons"> search </i>
+              </b-input-group-text>
+            </b-input-group-append>
             <slot name="qrcode-button" />
           </b-input-group>
           <div
             ref="optionsContainer"
             class="options-list"
-            infinite-wrapper
+            data-infinite-wrapper
             :style="optionsListStyle"
           >
             <span
@@ -228,8 +235,6 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { deepClone, deepEquals, nextRender, replaceHtmlLinks } from "@/utils";
 import Popper from "vue-popperjs";
 import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
-
-/* import "vue-popperjs/dist/vue-popper.css"; */
 
 export interface ISelectOption<T> {
   label: string;
@@ -440,6 +445,7 @@ export default class MultiSelect extends Vue {
 
   private async onOpenPopup() {
     this.isPopupOpen = true;
+    this.$emit("focus");
     await nextRender();
     if (this.loadingState.status === "ok" && this.loadingState.moreAvailable) {
       this.loadMoreIfNeeded();
@@ -590,20 +596,10 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  .select-prepend-icon {
-    color: var(--MainTextColorLight);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0 4px;
-    margin-right: -1px;
-    cursor: pointer;
-  }
-
-  .filter-prepend-icon {
+  .filter-icon {
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColorLight);
-    border-right-width: 0;
+    border-left-width: 0;
   }
 
   .empty-message-text {
@@ -624,14 +620,21 @@ export default class MultiSelect extends Vue {
     cursor: pointer;
 
     .clear-options-button {
-      border-bottom-left-radius: 0;
-      border-top-left-radius: 0;
+      border-radius: 0;
       opacity: 0.3;
       border: none;
     }
 
     &:hover .clear-options-button {
       opacity: 1;
+    }
+
+    .select-icon {
+      border: none;
+      background-color: transparent;
+      color: var(--MainTextColorLight);
+      border-right-width: 0;
+      cursor: pointer;
     }
   }
 
@@ -672,7 +675,7 @@ export default class MultiSelect extends Vue {
     width: auto;
 
     .filter-input {
-      border-left-width: 0;
+      border-right-width: 0;
     }
 
     .filter-input:focus {

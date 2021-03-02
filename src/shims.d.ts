@@ -11,6 +11,7 @@ declare module "v-click-outside" {
 }
 
 declare module "*.vue" {
+  // eslint-disable-next-line
   import Vue from "vue";
 
   export default Vue;
@@ -42,19 +43,18 @@ declare module "vue-qrcode-reader";
 declare module "@chenfengyuan/vue-qrcode";
 declare module "vue-barcode";
 
-declare module "vuedraggable" {
-  // It lists only properties that are used or are of use for the board.
-  // Please add types to this interface if something you use is missing.
-  export interface IVueDraggableEvent {
-    type: "start" | "add" | "remove" | "update" | "end" | "choose" | "unchoose" | "sort" | "filter" | "clone";
-    from: HTMLElement;
-    to: HTMLElement;
-    originalEvent: Event;
-    newIndex: number;
-    oldIndex: number;
-    oldDraggableIndex: number;
-    newDraggableIndex: number;
-  }
-}
-
 declare module "vue-popperjs";
+
+declare module "v-hotkey" {
+  // eslint-disable-next-line
+  import { DirectiveOptions, PluginFunction } from "vue";
+
+  type Plugin = {
+    install: PluginFunction<{ [alias in string]?: number }>;
+    directive: DirectiveOptions;
+  };
+
+  const plugin: Plugin;
+
+  export default plugin;
+}

@@ -46,6 +46,8 @@ body {
   background-color: var(--MainBackgroundColor);
   -webkit-text-size-adjust: none;
 
+  --FocusBorderColor: #{$input-focus-border-color};
+
   div#app {
     height: 100%;
     display: flex;
@@ -166,6 +168,7 @@ input.with-clear-content-button {
 
 .btn.clear-content-button {
   border-left-width: 0;
+  border-right-width: 0;
   border-color: var(--MainBorderColor);
   opacity: 1;
 

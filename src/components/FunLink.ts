@@ -28,6 +28,7 @@ export default Vue.component("FunLink", {
   props: {
     link: { type: Object, default: null },
     noHref: { type: Boolean, default: false },
+    disabled: { type: Boolean, default: false },
   },
   render: (createElement, context) => {
     const link = context.props.link as Link | null;
@@ -56,7 +57,7 @@ export default Vue.component("FunLink", {
     const { handler, href } = linkHandler(linkHandlerParams);
 
     const onHandlers = { click: (e: MouseEvent) => {
-      if (!redirectClick(e, href === null)) {
+      if (!redirectClick(e, href === null) || context.props.disabled) {
         return;
       }
       vueEmit(context, "click");

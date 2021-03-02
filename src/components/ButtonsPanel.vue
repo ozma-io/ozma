@@ -125,6 +125,10 @@ export default class ButtonsPanel extends Vue {
     padding: 0;
   }
 
+  ul.buttons {
+    display: flex;
+  }
+
   ul.buttons a {
     text-decoration: none;
     color: var(--MainTextColor);
@@ -148,6 +152,7 @@ export default class ButtonsPanel extends Vue {
   ul.buttons > span > li > span {
     line-height: 1.5rem;
     margin-left: 5px;
+    white-space: pre;
   }
 
   .search-show + ul.buttons {

@@ -36,7 +36,9 @@
         @keydown.enter.prevent
         @input="updateInput"
         @focus="onFocus"
+        @blur="$emit('blur', $event)"
       />
+      <!-- eslint-disable vue/no-deprecated-v-on-native-modifier -->
       <textarea-autosize
         v-if="isCellEdit"
         ref="controlTextarea"
@@ -45,9 +47,12 @@
         :readonly="disabled"
         rows="1"
         class="input-textarea"
-        @keydown.enter.prevent
         @input="updateInputCellEdit"
         @focus="onFocus"
+        @blur.native="$emit('blur', $event)"
+        @keydown.escape.native.prevent="$emit('blur', $event)"
+        @keydown.enter.native.prevent.stop="onPressEnter"
+        @keydown.tab.native.prevent.stop="onPressTab"
       />
     </b-input-group>
   </fragment>
@@ -84,6 +89,14 @@ export default class Input extends Vue {
 
   private get isEmpty(): boolean {
     return valueIsNull(this.value);
+  }
+
+  private onPressEnter(event: KeyboardEvent) {
+    this.$emit("move-selection-next-row", event);
+  }
+
+  private onPressTab(event: KeyboardEvent) {
+    this.$emit("move-selection-next-column", event);
   }
 
   private mounted() {

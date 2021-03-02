@@ -195,7 +195,7 @@ const waitSearchNode = (node: SearchNode, search: string, limit: number): AwaitE
 
 export class PartialEntries {
   searchTree: SearchNode | null;
-  pendingSingleEntries: Record<RowId, Promise<string | undefined>>;
+  pendingSingleEntries: Record<RowId, Promise<Entries> | null>;
   // Entries (main fields) identified by id.
   entries: Entries;
 
@@ -257,7 +257,7 @@ export class PartialEntries {
     }
   }
 
-  addPendingSingleEntry(id: number, pending: Promise<string | void>) {
+  updatePendingSingleEntry(id: number, pending: Promise<Entries> | null) {
     void Vue.set(this.pendingSingleEntries, id, pending);
   }
 
@@ -330,20 +330,18 @@ const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEnt
   };
 };
 
-const fetchSingleEntry = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, id: number): Promise<string | undefined> => {
-  const query = `{ $id int }: SELECT __main FROM "${ref.entity.schema}"."${ref.entity.name}" WHERE id = $id`;
+const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, ids: RowId[]): Promise<Record<RowId, string>> => {
+  const query = `{ $ids array(int) }: SELECT id, __main FROM "${ref.entity.schema}"."${ref.entity.name}" WHERE id = ANY ($ids)`;
   const res = await context.dispatch("callProtectedApi", {
     func: Api.getAnonymousUserView.bind(Api),
-    args: [query, { id }],
+    args: [query, { ids }],
   }, { root: true }) as IViewExprResult;
   const mainType = res.info.columns[0].valueType;
-  const row = res.result.rows[0];
-  if (!row) {
-    return undefined;
-  } else {
-    const main = valueToText(mainType, row.values[0].value);
-    return main;
-  }
+  return Object.fromEntries(res.result.rows.map(row => {
+    const id = row.values[0].value;
+    const pun = row.values[1].value;
+    return [id, valueToText(mainType, pun)];
+  }));
 };
 
 const entriesModule: Module<IEntriesState, {}> = {
@@ -368,8 +366,8 @@ const entriesModule: Module<IEntriesState, {}> = {
     addSingleEntry: (state, args: { ref: IEntriesRef; id: number; main: string }) => {
       state.current.getEntries(args.ref)!.addSingleEntry(args.id, args.main);
     },
-    addPendingSingleEntry: (state, args: { ref: IEntriesRef; id: number; pending: Promise<string | undefined> }) => {
-      state.current.getEntries(args.ref)!.addPendingSingleEntry(args.id, args.pending);
+    updatePendingSingleEntry: (state, args: { ref: IEntriesRef; id: number; pending: Promise<Entries> | null }) => {
+      state.current.getEntries(args.ref)!.updatePendingSingleEntry(args.id, args.pending);
     },
     removePendingSingleEntry: (state, args: { ref: IEntriesRef; id: number }) => {
       state.current.getEntries(args.ref)!.removePendingSingleEntry(args.id);
@@ -404,53 +402,86 @@ const entriesModule: Module<IEntriesState, {}> = {
       },
     },
 
-    getSingleEntry: (context, args: { reference: ReferenceName; ref: IEntriesRef; id: number }): Promise<string | undefined> => {
+    getEntriesByIds: (context, args: { reference: ReferenceName; ref: IEntriesRef; ids: RowId[] }): Promise<Entries> => {
       const { state, commit, dispatch } = context;
-      const { reference, ref, id } = args;
+      const { reference, ref, ids } = args;
       const oldCurrent = state.current;
       const oldResource = oldCurrent.entries.getResource(ref);
 
+      const result: Record<RowId, string> = {};
+      const awaitedIds: [RowId, Promise<Entries>][] = [];
+
+      let requestedIds: RowId[];
       if (oldResource !== undefined) {
         if (!(reference in oldResource.refs)) {
           commit("addEntriesConsumer", { ref, reference });
         }
         const partial = oldResource.value;
-        const existingValue = partial.entries[id];
-        if (existingValue !== undefined) {
-          return Promise.resolve(existingValue);
+        requestedIds = [];
+        for (const id of ids) {
+          const existingValue = partial.entries[id];
+          if (existingValue !== undefined) {
+            result[id] = existingValue;
+            continue;
+          }
+          const existingPending = partial.pendingSingleEntries[id];
+          if (existingPending !== undefined) {
+            if (existingPending !== null) {
+              awaitedIds.push([id, existingPending]);
+            }
+            continue;
+          }
+          requestedIds.push(id);
         }
-        const existingPending = partial.pendingSingleEntries[id];
-        if (existingPending !== undefined) {
-          return existingPending;
+      } else {
+        requestedIds = ids;
+      }
+
+      if (requestedIds.length !== 0) {
+        const pending: IRef<Promise<Record<RowId, string>>> = {};
+        pending.ref = (async () => {
+          await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
+          const puns = await fetchEntriesByIds(context, ref, requestedIds);
+
+          for (const id of requestedIds) {
+            const pun = puns[id];
+            const currPending = state.current.entries.get(ref)?.pendingSingleEntries[id];
+            if (currPending !== pending.ref) {
+              console.warn(`Pending operation cancelled, requested ids ${requestedIds}`);
+              continue;
+            }
+
+            if (pun === undefined) {
+              commit("updatePendingSingleEntry", { ref, reference, id, pending: null });
+              continue;
+            }
+
+            commit("addSingleEntry", { ref, id, main: pun });
+            commit("removePendingSingleEntry", { ref, id });
+          }
+
+          return puns;
+        })();
+        if (oldResource === undefined) {
+          // Prefetch entity.
+          void dispatch("entities/getEntity", ref.entity, { root: true });
+          commit("initPartialEntries", { ref, reference });
+        }
+        for (const id of requestedIds) {
+          awaitedIds.push([id, pending.ref]);
+          commit("updatePendingSingleEntry", { ref, reference, id, pending: pending.ref });
         }
       }
 
-      const pending: IRef<Promise<string | undefined>> = {};
-      pending.ref = (async () => {
-        await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
-        const ret = await fetchSingleEntry(context, ref, id);
-
-        const currPending = state.current.entries.get(ref)?.pendingSingleEntries[id];
-        if (currPending !== pending.ref) {
-          throw new CancelledError(`Pending single entry got cancelled, ref ${JSON.stringify(ref)}`);
-        }
-
-        if (ret === undefined) {
-          // We don't remove ourselves from pending single entries, so that we won't try to fetch it anymore.
-          return undefined;
-        }
-
-        commit("addSingleEntry", { ref, id, main: ret });
-        commit("removePendingSingleEntry", { ref, id });
-        return ret;
-      })();
-      if (oldResource === undefined) {
-        // Prefetch entity.
-        void dispatch("entities/getEntity", ref.entity, { root: true });
-        commit("initPartialEntries", { ref, reference });
-      }
-      commit("addPendingSingleEntry", { ref, reference, id, pending: pending.ref });
-      return pending.ref;
+      return Promise.all(awaitedIds.map(([id, promise]) => promise)).then(newEntries => {
+        awaitedIds.forEach(([id, promise], idI) => {
+          const pun = newEntries[idI][id];
+          if (pun !== undefined) {
+            result[id] = pun;
+          }
+        });
+        return result;
+      });
     },
 
     // Returns `true` if more entries can be loaded for this `ref` and `search`.

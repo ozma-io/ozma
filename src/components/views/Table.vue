@@ -19,6 +19,7 @@
 
 <template>
   <div
+    v-hotkey="keymap"
     fluid
     :class="['table-block', {'nested-table-block': !isRoot, 'active_editing': editingValue !== null}]"
   >
@@ -44,16 +45,19 @@
         is-cell-edit
         autofocus
         modal-only
+        @blur="removeCellEditing"
+        @move-selection-next-row="moveSelectionNextRow"
+        @move-selection-next-column="moveSelectionNextColumn"
         @set-input-height="setInputHeight"
         @update="updateCurrentValue"
-        @close-modal-input="clickOutsideEdit"
+        @close-modal-input="removeCellEditing"
       />
     </table-cell-edit>
 
     <div
       ref="tableContainer"
       class="tabl"
-      infinite-wrapper
+      data-infinite-wrapper
     >
       <div
         v-if="uv.emptyRow !== null"
@@ -141,7 +145,7 @@
             </th>
           </tr>
         </thead>
-        <tbody class="table-body">
+        <transition-group tag="tbody" name="fade-2">
           <TableRow
             v-for="(row, rowIndex) in shownRows"
             :key="row.key"
@@ -157,7 +161,7 @@
             @toggle-children="toggleChildren(row, $event)"
             @goto="$emit('goto', $event)"
           />
-        </tbody>
+        </transition-group>
       </table>
       <infinite-loading
         v-if="!noMoreRows"
@@ -199,7 +203,7 @@ import { Moment, default as moment } from "moment";
 import * as R from "ramda";
 import { IResultColumnInfo, ValueType, RowId } from "ozma-api";
 
-import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName } from "@/utils";
+import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { AddedRowId, AutoSaveLock } from "@/state/staging_changes";
@@ -230,9 +234,11 @@ export interface IColumn {
 export interface ITableValueExtra extends IBaseValueExtra {
   // FIXME: is this still needed? We could drop it and use computed properties in TableRows instead.
   valueText: string;
+  valueFormatted: string;
   link: Link | null;
   style: Record<string, unknown> | null;
   selected: boolean;
+  htmlElement: HTMLElement | null;
 }
 
 export interface ITableRowTree {
@@ -248,7 +254,7 @@ export interface ITableRowExtra extends IBaseRowExtra {
   style: Record<string, unknown> | null;
   height: number | null;
   link: Link | null;
-  tree: ITableRowTree | null;
+  tree: ITableRowTree;
 }
 
 export interface IAddedNewRowRef {
@@ -282,6 +288,16 @@ const showStep = 20;
 const doubleClickTime = 700;
 // FIXME: Use CSS variables to avoid this constant
 const technicalFieldsWidth = 35; // checkbox's and openform's td width
+
+const validNumberFormats = ["auto", "ru", "en"] as const;
+type ValidNumberFormat = typeof validNumberFormats[number];
+const makeMemoKey = (lang: ValidNumberFormat, fractionDigits?: number) => lang + String(fractionDigits);
+const getNumberFormatter = R.memoizeWith(makeMemoKey, (lang: ValidNumberFormat, fractionDigits?: number) => {
+  const locale = lang === "auto" ? undefined : lang;
+  const options = fractionDigits === undefined ? undefined
+    : { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits };
+  return Intl.NumberFormat(locale, options);
+});
 
 const createColumns = (uv: ICombinedUserViewAny): IColumn[] => {
   const viewAttrs = uv.attributes;
@@ -358,18 +374,28 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
   const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, uv.attributes);
 
   const valueText = valueToPunnedText(columnInfo.valueType, value);
-
+  let valueFormatted = valueText;
   const style: Record<string, unknown> = {};
+
+  const punOrValueType: ValueType = columnInfo.punType ?? columnInfo.valueType;
+
+  const numberTypes: (ValueType["type"])[] = ["int", "decimal"];
+  if (numberTypes.includes(punOrValueType.type)) {
+    style["text-align"] = "right";
+
+    const numberFormat = getCellAttr("number_format");
+    if (typeof numberFormat === "string" && validNumberFormats.includes(numberFormat.toLowerCase() as any)) {
+      const fractionDigitsRaw = getCellAttr("fraction_digits");
+      const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
+      valueFormatted = getNumberFormatter(numberFormat.toLowerCase() as any, fractionDigits).format(value.value as any);
+    }
+  } else if (punOrValueType.type === "string") {
+    valueFormatted = replaceHtmlLinks(valueText);
+  }
 
   const cellColor = getCellAttr("cell_color");
   if (cellColor !== undefined && cellColor !== null) {
     style["background-color"] = String(cellColor);
-  }
-
-  const textAlignRightTypes: (ValueType["type"])[] = ["int", "decimal"];
-  const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType;
-  if (textAlignRightTypes.includes(punOrValue.type)) {
-    style["text-align"] = "right";
   }
 
   const textAlignAttr = getCellAttr("text_align");
@@ -388,6 +414,7 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
 
   const extra = {
     valueText,
+    valueFormatted,
     style: null as Record<string, unknown> | null,
   };
   if (!R.isEmpty(style)) {
@@ -401,16 +428,14 @@ const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLo
 
   const style: Record<string, unknown> = {};
 
+  const defaultArrow = Boolean(getRowAttr("tree_all_open"));
+
   const tree: ITableRowTree = {
     children: [],
     level: 0,
     parent: null,
-    arrowDown: oldLocal === null ? false : oldLocal.tree!.arrowDown,
+    arrowDown: oldLocal?.tree.arrowDown ?? defaultArrow,
   };
-
-  if (getRowAttr("tree_all_open")) {
-    tree.arrowDown = true;
-  }
 
   const extra = {
     searchText: "",
@@ -438,6 +463,8 @@ const updateCommonValue = (uv: ITableCombinedUserView, row: ITableExtendedRowCom
   const columnInfo = uv.info.columns[columnIndex];
 
   value.extra.valueText = valueToPunnedText(columnInfo.valueType, value);
+  // TODO: after paste and before save value is unformatted.
+  value.extra.valueFormatted = valueToPunnedText(columnInfo.valueType, value);
 };
 
 const postInitCommonRow = (uv: ITableCombinedUserView, row: ITableExtendedRowCommon) => {
@@ -447,20 +474,20 @@ const postInitCommonRow = (uv: ITableCombinedUserView, row: ITableExtendedRowCom
   row.extra.searchText = "\0".concat(...searchStrings);
 };
 
-const initTreeChildrens = (uv: ITableCombinedUserView) => {
+const initTreeChildren = (uv: ITableCombinedUserView) => {
   uv.rows!.forEach((row, i) => {
-    if (row.extra.tree!.parent) {
-      const parentIndex = uv.extra.rowsParentPositions[row.extra.tree!.parent];
-      uv.rows![parentIndex].extra.tree!.children.push(i);
+    if (row.extra.tree.parent) {
+      const parentIndex = uv.extra.rowsParentPositions[row.extra.tree.parent];
+      uv.rows![parentIndex].extra.tree.children.push(i);
 
       let level = 0;
       let parent: number | undefined = parentIndex;
       while (parent !== undefined && uv.rows![parent] !== undefined) {
-        const index: number | undefined = uv.rows![parent].extra.tree!.parent ?? undefined;
+        const index: number | undefined = uv.rows![parent].extra.tree.parent ?? undefined;
         parent = index !== undefined ? uv.extra.rowsParentPositions[index] : undefined;
         level++;
       }
-      uv.rows![i].extra.tree!.level = level;
+      uv.rows![i].extra.tree.level = level;
     }
   });
 
@@ -597,7 +624,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
 
         // Init parent
         if (value.value !== null) {
-          row.extra.tree!.parent = Number(value.value);
+          row.extra.tree.parent = Number(value.value);
         }
       }
     }
@@ -616,6 +643,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       ...commonExtra,
       selected,
       link,
+      htmlElement: null,
     };
   },
 
@@ -644,6 +672,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       ...baseExtra,
       ...commonExtra,
       selected,
+      htmlElement: null,
       link: null,
     };
   },
@@ -670,7 +699,8 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     return {
       ...baseExtra,
       ...commonExtra,
-      selected: false,
+      selected,
+      htmlElement: null,
       link: null,
     };
   },
@@ -808,7 +838,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
 
   postInitUserView(uv: ITableCombinedUserView) {
     if (!R.isEmpty(uv.extra.rowsParentPositions)) {
-      uv = initTreeChildrens(uv);
+      uv = initTreeChildren(uv);
     }
 
     uv.extra.fixedColumnPositions = fixedColumnPositions(uv);
@@ -879,6 +909,8 @@ interface IShownRow {
   ref: RowRef;
 }
 
+type MoveDirection = "up" | "right" | "down" | "left";
+
 @UserView({
   handler: tableUserViewHandler,
 })
@@ -923,6 +955,111 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private rowsState: Record<number, any> = {};
   private isTree = false;
 
+  // Used for Tab-Enter selection moving.
+  // Probably need to move to extra.
+  private columnDelta = 0;
+
+  private get keymap() {
+    return {
+      "enter": () => this.onPressEnter(),
+      "tab": () => this.onPressTab(),
+      "shift+tab": () => this.onPressTab(),
+      "esc": () => this.removeCellEditing(),
+      "delete": () => this.clearSelectedCell(),
+      "up": () => this.moveSelection("up"),
+      "right": () => this.moveSelection("right"),
+      "down": () => this.moveSelection("down"),
+      "left": () => this.moveSelection("left"),
+      // TODO: make pageup/pagedown movement depend on real page size, not just 5 rows.
+      "pagedown": () => this.moveSelection("down", { step: 5 }),
+      "pageup": () => this.moveSelection("up", { step: 5 }),
+    };
+  }
+
+  // Finds vusual position of selected cell.
+  // FIXME: bad performance!
+  private getSelectedCellPosition(): { row: number; column: number } | null {
+    const valueRef = this.getSelectedCell();
+    if (!valueRef) return null;
+
+    const rowWithSelectedCell = this.uv.getRowByRef(valueRef);
+    if (!rowWithSelectedCell) return null;
+    const rowI = this.shownRows.findIndex(row => row.row === rowWithSelectedCell);
+    return { row: rowI, column: this.getVisualColumnIndex(valueRef.column) };
+  }
+
+  private getSelectedCell(): ValueRef | null {
+    return this.uv.extra.selectedValues.keys()[0] ?? null;
+  }
+
+  // `columnIndexes` is 'visual index -> state index' mapping, this function do opposite.
+  // 'visual' indexes are as they look in table for a user.
+  // 'state' indexes are as they described in userview query, including ones with `visible = false` and so on.
+  private getVisualColumnIndex(stateIndex: number) {
+    return this.columnIndexes.indexOf(stateIndex);
+  }
+
+  private moveSelection(
+    direction: MoveDirection,
+    options: { step?: number; resetColumnDelta?: boolean } = { step: 1, resetColumnDelta: true },
+  ): boolean {
+    if (options?.resetColumnDelta ?? true) {
+      this.columnDelta = 0;
+    }
+    const oldPosition = this.getSelectedCellPosition();
+    if (!oldPosition) return false;
+    const maxRow = this.shownRows.length - 1;
+    const maxColumn = this.columnIndexes.length - 1;
+
+    /* eslint-disable no-multi-spaces, comma-spacing, key-spacing, space-in-parens */
+    const calcDelta = (decDirection: MoveDirection, incDirection: MoveDirection) =>
+      (options?.step ?? 1) * ((direction === incDirection ? 1 : 0) - (direction === decDirection ? 1 : 0));
+    const rowDelta    = calcDelta("up"  , "down" );
+    const columnDelta = calcDelta("left", "right");
+
+    const newPosition = {
+      row   : R.clamp(0, maxRow   , oldPosition.row    + rowDelta   ),
+      column: R.clamp(0, maxColumn, oldPosition.column + columnDelta),
+    };
+    /* eslint-enable no-multi-spaces, comma-spacing, key-spacing, space-in-parens */
+
+    const valueRef = {
+      ...this.shownRows[newPosition.row].ref,
+      column: this.columnIndexes[newPosition.column],
+    };
+    this.selectCell(valueRef);
+    // TODO: fix scrolling to first row and to first non-fixed columns when there are fixed columns.
+    this.getCellElement(valueRef)?.scrollIntoView({ block: "nearest" });
+
+    return !deepEquals(oldPosition, newPosition);
+  }
+
+  private moveSelectionNextColumn() {
+    const isMoved = this.moveSelection("right", { resetColumnDelta: false });
+    if (isMoved) {
+      this.columnDelta += 1;
+    }
+    this.editSelectedCell();
+  }
+
+  private moveSelectionNextRow() {
+    this.moveSelection("down", { resetColumnDelta: false });
+    this.moveSelection("left", { step: this.columnDelta });
+    this.columnDelta = 0;
+    this.editSelectedCell();
+  }
+
+  private getCellElement(valueRef: ValueRef): HTMLElement | null {
+    return this.uv.getValueByRef(valueRef)?.value.extra.htmlElement ?? null;
+  }
+
+  private editSelectedCell() {
+    const valueRef = this.getSelectedCell();
+    if (!valueRef) return;
+
+    this.cellEditByTarget(valueRef, this.getCellElement(valueRef) as any);
+  }
+
   get columnIndexes() {
     const columns = this.uv.extra.columns.map((column, index) => ({
       index,
@@ -956,7 +1093,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   get editingValue() {
     if (this.editing === null
-     || this.editingBool // Bools are special case because they toggles by double click.
+     || this.editingNonNullableBoolean // Bools are special case because they toggles by double click.
     ) {
       return null;
     } else {
@@ -1003,23 +1140,92 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.updateRows();
   }
 
-  protected mounted() {
-    (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", () => {
-      this.removeCellEditing();
+  private deselectAllCells() {
+    this.uv.extra.selectedValues.keys().forEach(key => {
+      this.selectValue(key, false);
     });
-
-    // Deselect cells in this table if cell is selected in another table.
-    this.$root.$on("cell-click", () => {
-      this.uv.extra.selectedValues.keys().forEach(key => {
-        this.selectValue(key, false);
-      });
-      this.lastSelectedRow = null;
-      this.lastSelectedValue = null;
-      this.removeCellEditing();
-    });
+    this.lastSelectedRow = null;
+    this.lastSelectedValue = null;
   }
 
-  protected destroyed() {
+  private copySelectedCell(event: ClipboardEvent) {
+    if (this.editing) return;
+    const valueRef = this.getSelectedCell();
+    if (!valueRef) return;
+
+    event.clipboardData?.setData("text/plain", this.uv.getValueByRef(valueRef)?.value.extra.valueText as string);
+    event.preventDefault();
+  }
+
+  private cutSelectedCell(event: ClipboardEvent) {
+    this.copySelectedCell(event);
+    this.clearSelectedCell();
+  }
+
+  private pasteToSelectedCell(event: ClipboardEvent) {
+    const valueRef = this.getSelectedCell();
+    if (!valueRef) return;
+
+    // FIXME: Some errors on trying to paste on non-editable cells.
+    void this.updateValue(valueRef, event.clipboardData?.getData("text/plain"));
+    event.preventDefault();
+  }
+
+  private clearSelectedCell() {
+    const valueRef = this.getSelectedCell();
+    if (!valueRef) return;
+
+    void this.updateValue(valueRef, "");
+  }
+
+  private onPressEnter() {
+    if (this.editing) {
+      this.removeCellEditing();
+      this.moveSelectionNextRow();
+    } else {
+      this.editSelectedCell();
+    }
+  }
+
+  private onPressTab() {
+    if (this.editing) {
+      this.removeCellEditing();
+      this.moveSelectionNextColumn();
+    } else {
+      this.moveSelection("right");
+    }
+  }
+
+  private onOtherTableClicked() {
+    this.deselectAllCells();
+    this.removeCellEditing();
+  }
+
+  private get rootEvents(): [name: string, callback: (event: ClipboardEvent) => void][] {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    return [
+      ["copy", this.copySelectedCell],
+      ["cut", this.cutSelectedCell],
+      ["paste", this.pasteToSelectedCell],
+      ["cell-click", this.onOtherTableClicked],
+      ["form-input-focused", this.deselectAllCells],
+    ];
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  protected mounted() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", this.removeCellEditing);
+    this.rootEvents.forEach(([name, callback]) => this.$root.$on(name, callback));
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  protected beforeDestroy() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    (this.$refs.tableContainer as HTMLElement).removeEventListener("scroll", this.removeCellEditing);
+    this.rootEvents.forEach(([name, callback]) => this.$root.$off(name, callback));
+    /* eslint-enable @typescript-eslint/unbound-method */
+
     if (this.printListener !== null) {
       window.removeEventListener("beforeprint", this.printListener.printCallback);
       this.printListener.query.removeListener(this.printListener.queryCallback);
@@ -1091,9 +1297,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private showTreeChildren(parentIndex: number) {
-    const children = this.uv.rows![parentIndex].extra.tree!.children;
+    const children = this.uv.rows![parentIndex].extra.tree.children;
 
-    this.uv.rows![parentIndex].extra.tree!.arrowDown = true;
+    this.uv.rows![parentIndex].extra.tree.arrowDown = true;
 
     const parentPosition = this.rowPositions.indexOf(parentIndex);
     const leftChank = this.rowPositions.splice(0, parentPosition + 1);
@@ -1102,14 +1308,14 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private hideTreeChildren(parentIndex: number) {
-    const children = this.uv.rows![parentIndex].extra.tree!.children;
-    this.uv.rows![parentIndex].extra.tree!.arrowDown = false;
+    const children = this.uv.rows![parentIndex].extra.tree.children;
+    this.uv.rows![parentIndex].extra.tree.arrowDown = false;
 
     children.forEach(child => {
       const childPosition = this.rowPositions.indexOf(child);
       this.rowPositions.splice(childPosition, 1);
 
-      if (this.uv.rows![child].extra.tree!.arrowDown) {
+      if (this.uv.rows![child].extra.tree.arrowDown) {
         this.hideTreeChildren(child);
       }
     });
@@ -1134,7 +1340,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     let newRowPositions: number[] = [parentIndex];
 
     children.forEach(child => {
-      const row = this.uv.rows![child].extra.tree!;
+      const row = this.uv.rows![child].extra.tree;
       if (row.arrowDown) {
         newRowPositions = newRowPositions.concat(this.pushTreeChildrenPositions(child, row.children));
       } else {
@@ -1147,10 +1353,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   get initialRowPositions() {
     const rowPositions = this.uv.rows!.map((row, rowI) => rowI);
 
-    const topLevelRows = rowPositions.filter(rowI => this.uv.rows![rowI].extra.tree!.parent === null);
+    const topLevelRows = rowPositions.filter(rowI => this.uv.rows![rowI].extra.tree.parent === null);
     let newRowPositions: number[] = [];
     topLevelRows.forEach(rowI => {
-      const row = this.uv.rows![rowI].extra.tree!;
+      const row = this.uv.rows![rowI].extra.tree;
       if (row.arrowDown) {
         newRowPositions = newRowPositions.concat(this.pushTreeChildrenPositions(rowI, row.children));
       } else {
@@ -1193,9 +1399,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private removeCellEditing() {
-    if (this.editing === null) {
-      return;
-    }
+    if (this.editing === null) return;
 
     void this.removeAutoSaveLock(this.editing.lock);
     this.editing = null;
@@ -1219,9 +1423,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     });
   }
 
-  private get editingBool(): boolean {
+  private get editingNonNullableBoolean(): boolean {
     if (this.editing === null) return false;
-    return this.uv.info.columns[this.editing.ref.column].valueType.type === "bool";
+    const valueField = this.uv.getValueByRef(this.editing.ref)?.value.info?.field;
+    if (valueField === null || valueField === undefined) return false;
+    return (valueField.valueType.type === "bool"
+         && valueField.isNullable === false);
   }
 
   @Watch("editing")
@@ -1230,7 +1437,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     const ref = this.editing.ref;
     if (ref.type === "new") return;
 
-    if (this.editingBool) {
+    if (this.editingNonNullableBoolean) {
       const value = this.uv.getValueByRef(ref)!.value.value;
       await this.updateCurrentValue(!value);
       this.removeCellEditing();
@@ -1280,6 +1487,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private clickCell(ref: ValueRef, event: MouseEvent) {
+    this.columnDelta = 0;
     this.removeCellEditing();
     this.updateClickTimer(ref);
     this.cellEditHandler(ref, event.target as HTMLElement);
@@ -1928,5 +2136,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   * {
     user-select: none;
+  }
+
+  .fade-2-move {
+    transition: transform 0.2s;
   }
 </style>

@@ -43,14 +43,6 @@
             class="focus-entire"
             size="sm"
           >
-            <b-input-group-prepend>
-              <b-input-group-text
-                class="with-material-icon prepend-icon"
-                :style="{ backgroundColor }"
-              >
-                <i class="material-icons">event</i>
-              </b-input-group-text>
-            </b-input-group-prepend>
             <b-input
               ref="control"
               type="text"
@@ -59,8 +51,10 @@
               :placeholder="$t('input_placeholder')"
               :value="textValue"
               @input="$emit('update:value', $event)"
-              @keypress.enter="onPressEnter"
+              @keypress.enter.prevent.stop="onPressEnter"
               @focus="onInputFocus"
+              @blur.prevent
+              @keydown.esc.prevent.stop="$emit('blur', $event)"
             />
             <b-input-group-append>
               <b-button
@@ -73,6 +67,13 @@
                   class="material-icons"
                 >clear</i>
               </b-button>
+
+              <b-input-group-text
+                class="with-material-icon calendar-icon"
+                :style="{ backgroundColor }"
+              >
+                <i class="material-icons">event</i>
+              </b-input-group-text>
             </b-input-group-append>
           </b-input-group>
         </div>
@@ -178,6 +179,13 @@ export default class Calendar extends Vue {
     await popupRef.doShow();
   }
 
+  private async closePopup() {
+    const popupRef: any = this.$refs.popup;
+    if (!popupRef) return;
+
+    await popupRef.doClose();
+  }
+
   private async onOpenPopup() {
     this.isPopupOpen = true;
 
@@ -213,13 +221,15 @@ export default class Calendar extends Vue {
     if (this.value === newValue) return;
 
     this.$emit("update:value", newValue);
+    void this.closePopup();
   }
 
   private onPressEnter(event: KeyboardEvent) {
-    event.preventDefault();
     const target = event.target! as HTMLInputElement;
     this.updateValue(moment(target.value, this.usedFormat));
     target.blur();
+    this.$emit("blur");
+    this.$emit("move-selection-next-row", event);
   }
 
   private onInputFocus() {
@@ -315,15 +325,15 @@ export default class Calendar extends Vue {
     }
   }
 
-  .prepend-icon {
+  .calendar-icon {
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColorLight);
-    border-right-width: 0;
+    border-left-width: 0;
     cursor: pointer;
   }
 
   .calendar-input {
-    border-left-width: 0;
+    border-right-width: 0;
   }
 
   .calendar-container {

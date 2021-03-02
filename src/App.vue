@@ -60,6 +60,32 @@ export default class App extends Vue {
 
   created() {
     void this.startAuth();
+
+    /* eslint-disable @typescript-eslint/unbound-method */
+    document.addEventListener("copy", this.onCopy);
+    document.addEventListener("cut", this.onCut);
+    document.addEventListener("paste", this.onPaste);
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  destroyed() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    document.removeEventListener("copy", this.onCopy);
+    document.removeEventListener("cut", this.onCut);
+    document.removeEventListener("paste", this.onPaste);
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  private onCopy(event: ClipboardEvent) {
+    this.$root.$emit("copy", event);
+  }
+
+  private onCut(event: ClipboardEvent) {
+    this.$root.$emit("cut", event);
+  }
+
+  private onPaste(event: ClipboardEvent) {
+    this.$root.$emit("paste", event);
   }
 
   get authErrors() {

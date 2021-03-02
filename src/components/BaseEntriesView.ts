@@ -1,8 +1,9 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import { ReferenceName, deepClone, deepEquals } from "@/utils";
+import { ReferenceName, deepClone, deepEquals, waitTimeout } from "@/utils";
 import { CurrentEntries, Entries, IEntriesRef } from "@/state/entries";
+import { RowId } from "ozma-api";
 
 const entries = namespace("entries");
 
@@ -27,7 +28,7 @@ export default class BaseEntriesView extends Vue {
   @entries.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IEntriesRef; reference: ReferenceName }) => void;
   @entries.State("current") entriesMap!: CurrentEntries;
   @entries.Action("getEntries") getEntries!: (args: { reference: ReferenceName; ref: IEntriesRef; search: string; limit: number }) => Promise<boolean>;
-  @entries.Action("getSingleEntry") getSingleEntry!: (args: { reference: ReferenceName; ref: IEntriesRef; id: number}) => Promise<string | undefined>;
+  @entries.Action("getEntriesByIds") getEntriesByIds!: (args: { reference: ReferenceName; ref: IEntriesRef; ids: RowId[] }) => Promise<Entries>;
 
   // These are supposed to be read only in children user views!
   // Keeping them as state values to avoid creating computed properties (which, also, weirdly fail in this case).
@@ -93,18 +94,23 @@ export default class BaseEntriesView extends Vue {
     }
     this.requestedSearch = search;
     this.requestedLimit = limit;
-    return this.getRequestedEntries();
+    return waitTimeout().then(() => this.getRequestedEntries());
   }
 
-  protected fetchSingleEntry(entity: IEntriesRef, id: number) {
+  protected fetchEntriesByIds(entity: IEntriesRef, ids: number[]) {
     if (!deepEquals(this.requestedEntity, entity)) {
       this.freeEntries();
       this.requestedEntity = deepClone(entity);
     }
-    return this.getSingleEntry({
+    // For an unknown reason, removing this `waitTimeout` results in an infinite
+    // loop when opening a kanban board with reference columns. I'm sure there's
+    // something going on with Vuex here, because even returning immediately from
+    // `gedtEntriesByIds` doesn't help, but returning from this function or adding
+    // this delay does.
+    return waitTimeout().then(() => this.getEntriesByIds({
       ref: this.requestedEntity!,
       reference: this.uid,
-      id,
-    });
+      ids,
+    }));
   }
 }

@@ -3,12 +3,14 @@
         "en": {
             "yes": "Yes",
             "no": "No",
+            "boolean_null": "Empty",
             "invalid_uv": "Nested user view rows should be JSON objects with 'ref' and 'args' defined",
             "select_view": "Add in modal window"
         },
         "ru": {
             "yes": "Да",
             "no": "Нет",
+            "boolean_null": "Пусто",
             "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'ref' и 'args'",
             "select_view": "Создать во вложенном окне"
         }
@@ -29,6 +31,7 @@
       :required="!isNullable"
       :empty="currentValueIsNull"
       @close-modal-input="$emit('close-modal-input')"
+      @focus="onFocus"
     >
       <template #default="iSlot">
         <template v-if="inputType.name === 'error'">
@@ -46,6 +49,9 @@
           @input="updateValue"
           @set-input-height="setInputHeight"
           @focus="iSlot.onFocus"
+          @blur="$emit('blur', $event)"
+          @move-selection-next-row="$emit('move-selection-next-row', $event)"
+          @move-selection-next-column="$emit('move-selection-next-column', $event)"
         />
         <Textarea
           v-else-if="inputType.name === 'textarea'"
@@ -60,6 +66,7 @@
           @set-input-height="setInputHeight"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
+          @blur="$emit('blur', $event)"
         />
         <Calendar
           v-else-if="inputType.name === 'calendar'"
@@ -73,6 +80,9 @@
           :required="!isNullable"
           :background-color="cellColor"
           @focus="iSlot.onFocus"
+          @blur="$emit('blur', $event)"
+          @move-selection-next-row="$emit('move-selection-next-row', $event)"
+          @move-selection-next-column="$emit('move-selection-next-column', $event)"
           @update:value="updateValue"
         />
         <ValueSelect
@@ -87,6 +97,7 @@
           :background-color="cellColor"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
+          @blur="$emit('blur', $event)"
         />
         <CodeEditor
           v-else-if="inputType.name === 'codeeditor'"
@@ -99,6 +110,7 @@
           :autofocus="autofocus || iSlot.autofocus"
           :required="!isNullable"
           @update:content="updateValue"
+          @blur="$emit('blur', $event)"
         />
         <MarkdownEditor
           v-else-if="inputType.name === 'markdown'"
@@ -110,6 +122,7 @@
           :autofocus="autofocus || iSlot.autofocus"
           :required="!isNullable"
           @update:content="updateValue"
+          @blur="$emit('blur', $event)"
         />
         <input
           v-else-if="inputType.name === 'check'"
@@ -123,6 +136,7 @@
           :required="!isNullable"
           @input="updateValue($event.target.value)"
           @focus="iSlot.onFocus"
+          @blur="$emit('blur', $event)"
         >
         <QRCode
           v-else-if="inputType.name === 'qrcode'"
@@ -134,7 +148,6 @@
           v-else-if="inputType.name === 'barcode'"
           ref="control"
           :content="textValue"
-          @scanned="barCodeScanned"
         />
         <CellButtons
           v-else-if="inputType.name === 'buttons'"
@@ -161,6 +174,7 @@
           @update:actions="actions = $event"
           @update:buttons="panelButtons = $event"
           @focus="iSlot.onFocus"
+          @blur="$emit('blur', $event)"
           @update:value="updateValue($event)"
           @goto="$emit('goto', $event)"
         />
@@ -444,11 +458,6 @@ export default class FormControl extends Vue {
     this.$emit("set-input-height", value);
   }
 
-  private barCodeScanned(code: string) {
-    this.updateValue(code);
-    this.$emit("close-modal-input");
-  }
-
   get isQRCodeInput() {
     return "qrcode_input" in this.attributes ? this.attributes["qrcode_input"] : false;
   }
@@ -524,6 +533,9 @@ export default class FormControl extends Vue {
       }
     }
 
+    const booleanOptions = [{ label: this.$t("yes").toString(), value: true }, { label: this.$t("no").toString(), value: false }];
+    const booleanNullableOptions = [...booleanOptions, { label: this.$t("boolean_null").toString(), value: null }];
+
     if (this.fieldType !== null) {
       switch (this.fieldType.type) {
         case "reference": {
@@ -574,7 +586,7 @@ export default class FormControl extends Vue {
         case "bool":
           return {
             name: "select",
-            options: [{ label: this.$t("yes").toString(), value: true }, { label: this.$t("no").toString(), value: false }],
+            options: this.isNullable ? booleanNullableOptions : booleanOptions,
           };
         case "int":
           return { name: "text", type: "number", style: this.controlStyle() };
@@ -597,7 +609,7 @@ export default class FormControl extends Vue {
         case "bool":
           return {
             name: "select",
-            options: [{ label: this.$t("yes").toString(), value: true }, { label: this.$t("no").toString(), value: false }],
+            options: this.isNullable ? booleanNullableOptions : booleanOptions,
           };
         case "int":
           return { name: "text", type: "number", style: this.controlStyle() };
@@ -682,6 +694,17 @@ export default class FormControl extends Vue {
   private updateValue(newValue: unknown) {
     if (this.currentValue !== newValue) {
       this.$emit("update", newValue);
+    }
+
+    const closeAfterUpdate: IType["name"][] = ["calendar", "select", "reference"];
+    if (closeAfterUpdate.includes(this.inputType.name)) {
+      this.$emit("close-modal-input");
+    }
+  }
+
+  private onFocus() {
+    if (!this.isCellEdit) {
+      this.$root.$emit("form-input-focused");
     }
   }
 }
