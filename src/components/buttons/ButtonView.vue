@@ -1,20 +1,20 @@
 <template>
-  <li
+  <b-list-group-item
     v-if="listItem"
-    variant="light"
-    class="d-flex list-group-item list-group-item-action p-2"
+    :variant="button.variant"
+    class="d-flex list-group-item-action p-2"
   >
     <ButtonContent
       :button="button"
       list-item
     />
-  </li>
+  </b-list-group-item>
 
   <b-button
     v-else
     v-b-tooltip.hover.noninteractive
     class="d-flex p-0-5 btn-sm mr-1"
-    variant="light"
+    :variant="button.variant ? button.variant : 'light'"
     :title="button.tooltip"
   >
     <ButtonContent

@@ -7,7 +7,7 @@ export interface IButton {
   name?: string;
   tooltip?: string;
   display?: string;
-  backgroundColor?: string;
+  variant?: string;
 }
 
 export interface IEmptyButton extends IButton {
@@ -59,7 +59,7 @@ export const attrToButtons = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): But
     const icon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
     const tooltip = typeof buttonObj.tooltip === "string" ? buttonObj.tooltip : undefined;
     const display = typeof buttonObj.display === "string" ? buttonObj.display : undefined;
-    const backgroundColor = typeof buttonObj.backgroundColor === "string" ? buttonObj.backgroundColor : undefined;
+    const variant = typeof buttonObj.variant === "string" ? buttonObj.variant : undefined;
 
     if (buttonObj.visible === false) {
       return undefined;
@@ -71,7 +71,7 @@ export const attrToButtons = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): But
         name,
         icon,
         tooltip,
-        backgroundColor,
+        variant,
         link,
         display,
         type: "link",
@@ -84,7 +84,7 @@ export const attrToButtons = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): But
         name,
         icon,
         tooltip,
-        backgroundColor,
+        variant,
         buttons,
         display,
         type: "button-group",

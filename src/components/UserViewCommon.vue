@@ -202,6 +202,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         name: this.$t("create").toString(),
         link: this.creationLink,
         type: "link",
+        variant: "success",
       });
     }
 

@@ -66,6 +66,7 @@
           @goto="$emit('goto', $event)"
           @goto-previous="$emit('goto-previous')"
           @select="$emit('select', $event)"
+          @update:extraButtons="extraButtons = $event"
           @update:statusLine="$emit('update:statusLine', $event)"
           @update:enableFilter="$emit('update:enableFilter', $event)"
           @update:bodyStyle="$emit('update:bodyStyle', $event)"
