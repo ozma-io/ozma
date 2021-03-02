@@ -110,6 +110,7 @@
           :autofocus="autofocus || iSlot.autofocus"
           :required="!isNullable"
           @update:content="updateValue"
+          @focus="iSlot.onFocus"
           @blur="$emit('blur', $event)"
         />
         <MarkdownEditor
@@ -122,6 +123,7 @@
           :autofocus="autofocus || iSlot.autofocus"
           :required="!isNullable"
           @update:content="updateValue"
+          @focus="iSlot.onFocus"
           @blur="$emit('blur', $event)"
         />
         <input
@@ -693,7 +695,7 @@ export default class FormControl extends Vue {
       this.$emit("update", newValue);
     }
 
-    const closeAfterUpdate: IType["name"][] = ["calendar", "select", "reference"];
+    const closeAfterUpdate: IType["name"][] = ["select", "reference"];
     if (closeAfterUpdate.includes(this.inputType.name)) {
       this.$emit("close-modal-input");
     }
