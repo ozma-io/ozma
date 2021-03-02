@@ -508,6 +508,13 @@ export default class UserView extends Vue {
     this.reload();
   }
 
+  @Watch("state.state", { immediate: true })
+  updateIsLoading(newValue: string, oldValue: string) {
+    if (newValue === oldValue) return;
+
+    this.$emit("update:isLoading", newValue === "loading");
+  }
+
   @Watch("title", { immediate: true })
   private updateTitle() {
     this.$emit("update:title", this.title);
