@@ -1944,7 +1944,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     position: sticky; /* фиксация шапки при скроле */
     z-index: 20; /* при скроле таблицы чтобы шапка была видна */
     border-right: 1px solid var(--MainBorderColor);
-    top: 0;
+
+    /* Instead of `0` to fix Safari's bug gap, doesn't needed in normal browsers, but easier to set same for all */
+    top: -1px;
     cursor: pointer;
     color: var(--MainTextColorLight);
     background-color: var(--MainBackgroundColor);
