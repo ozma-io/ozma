@@ -201,7 +201,7 @@
             <infinite-loading
               ref="infiniteLoading"
               spinner="spiral"
-              @infinite="loadMore"
+              @infinite="handleLoadMore"
             >
               <template #no-results>
                 {{ $t("no_results") }}
@@ -350,7 +350,7 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  private loadMore(ev: StateChanger) {
+  private loadMoreWithEvent(ev: StateChanger) {
     this.$emit("load-more", (state: LoadingResult) => {
       if (state.status === "error") {
         ev.error();
@@ -361,6 +361,23 @@ export default class MultiSelect extends Vue {
         }
       }
     });
+  }
+
+  private handleLoadMore(ev: StateChanger) {
+    if (this.loadingState.status === "ok") {
+      if (this.loadingState.moreAvailable) {
+        this.loadMoreWithEvent(ev);
+      } else {
+        if (this.options.length > 0) {
+          ev.loaded();
+        }
+        ev.complete();
+      }
+    } else if (this.loadingState.status === "error") {
+      ev.error();
+    } else {
+      this.loadMoreWithEvent(ev);
+    }
   }
 
   @Watch("disabled")
@@ -448,7 +465,7 @@ export default class MultiSelect extends Vue {
     this.$emit("focus");
     await nextRender();
     if (this.loadingState.status === "ok" && this.loadingState.moreAvailable) {
-      this.loadMoreIfNeeded();
+      this.loadMoreInitially();
     }
     // On-screen keyboard disturbs if there are not so many options to filter.
     if (!this.$isMobile) {
@@ -456,7 +473,7 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  private loadMoreIfNeeded() {
+  private loadMoreInitially() {
     const container = this.$refs.optionsContainer as HTMLElement | undefined;
     if (!container) {
       return;
@@ -464,7 +481,7 @@ export default class MultiSelect extends Vue {
     if (container.clientHeight < this.optionsListHeight) {
       this.$emit("load-more", (ev: LoadingResult) => {
         if (ev.status === "ok" && ev.moreAvailable) {
-          this.loadMoreIfNeeded();
+          this.loadMoreInitially();
         }
       });
     }
