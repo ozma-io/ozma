@@ -221,7 +221,9 @@ export default class Calendar extends Vue {
     if (this.value === newValue) return;
 
     this.$emit("update:value", newValue);
-    void this.closePopup();
+    if (!this.showTime) {
+      void this.closePopup();
+    }
   }
 
   private onPressEnter(event: KeyboardEvent) {
