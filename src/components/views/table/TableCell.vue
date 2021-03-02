@@ -160,7 +160,7 @@ export default class TableCell extends Vue {
       ::v-deep .checkbox {
         .material-icons {
           position: relative;
-          top: -3px;
+          top: -2px;
         }
       }
 
