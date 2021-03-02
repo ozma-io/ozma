@@ -10,15 +10,16 @@
 </i18n>
 
 <template>
-  <popper
-    trigger="clickToToggle"
-    :options="{
-      placement: 'bottom-end',
-      modifiers: { offset: { offset: '0,10px' } }
-    }"
+  <div
+    class="search-wrapper"
   >
-    <div class="popper">
+    <transition
+      name="resize-fade"
+      @after-leave="showOpenButton = true"
+    >
       <b-form
+        v-if="showInput"
+        inline
         @submit.prevent="updateInput"
       >
         <b-input-group
@@ -48,60 +49,53 @@
             <b-button
               class="button with-material-icon"
               variant="secondary"
-              @click="updateInput"
+              @click.prevent="toggleShowInput"
             >
-              <i class="material-icons">search</i>
+              <i class="material-icons">search_off</i>
             </b-button>
           </b-input-group-append>
         </b-input-group>
       </b-form>
-    </div>
-    <!-- eslint-disable vue/no-deprecated-slot-attribute -->
-    <b-button
-      v-if="localFilterString.length === 0"
-      slot="reference"
-      variant="light"
-      class="btn-sm lh-0-5 p-0-5"
-      @click.prevent
-    >
-      <span class="material-icons">search</span>
-    </b-button>
-    <!-- eslint-disable vue/no-deprecated-slot-attribute -->
-    <b-button
-      v-else
-      slot="reference"
-      variant="light"
-      class="btn-sm lh-0-5 p-0-5 active"
-      @click.prevent
-    >
-      <span class="material-icons">saved_search</span>
-    </b-button>
-  </popper>
+    </transition>
+    <i
+      v-if="showOpenButton"
+      class="material-icons material-button"
+      @click="toggleShowInput"
+    >search</i>
+  </div>
 </template>
+
 <script lang="ts">
 
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { Debounce } from "vue-debounce-decorator";
-import Popper from "vue-popperjs";
 
-@Component({
-  components: { Popper },
-})
+@Component
 export default class SearchPanel extends Vue {
   @Prop({ type: String, required: true }) filterString!: string;
 
+  private showInput = false;
+  private showOpenButton = true;
   private localFilterString: string;
 
   constructor() {
     super();
     this.localFilterString = this.filterString;
+    this.showInput = this.filterString !== "";
+    this.showOpenButton = this.filterString === "";
+  }
+
+  private toggleShowInput() {
+    this.showInput = !this.showInput;
+    if (this.showInput === true) {
+      this.showOpenButton = false;
+    }
   }
 
   private updateInput() {
     if (this.localFilterString !== this.filterString) {
       this.$emit("update:filterString", this.localFilterString);
     }
-    this.setFocusOnField();
   }
 
   @Debounce(2000)
@@ -109,19 +103,50 @@ export default class SearchPanel extends Vue {
     this.updateInput();
   }
 
-  private setFocusOnField() {
-    this.$nextTick(() => (this.$refs.searchInput as HTMLElement).focus());
+  @Watch("showInput")
+  private setFocusOnField(newValue: boolean, oldValue: boolean) {
+    if (newValue === oldValue) return;
+
+    if (newValue) {
+      this.$nextTick(() => (this.$refs.searchInput as HTMLElement).focus());
+    } else {
+      this.localFilterString = "";
+      this.updateInput();
+    }
   }
 }
 
 </script>
 <style lang="scss" scoped>
+  .search-wrapper {
+    display: flex;
+    align-items: center;
+    width: auto;
+  }
+
   .input-group {
     background-color: var(--MainBackgroundColor);
     border-radius: 0.2rem;
   }
 
-  .active {
-    background-color: var(--WarningBackColor) !important;
+  .resize-fade-enter-active {
+    transition: all 0.1s;
+  }
+
+  .resize-fade-leave-active {
+    transition: all 0.2s;
+  }
+
+  .resize-fade-enter,
+  .resize-fade-leave-to {
+    opacity: 0.1;
+    width: 100px;
+  }
+
+  .resize-fade-enter-to,
+  .resize-fade-leave {
+    /* TODO: Currently input-group's width is 257px and it's inherits from some Bootstrap rules and it's not very good.
+             Would be cool to make it autiresizeable by text width or something like this. */
+    width: 257px;
   }
 </style>
