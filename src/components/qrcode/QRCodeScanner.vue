@@ -15,7 +15,9 @@
         "error_camera_not_suitable": "ERROR: installed cameras are not suitable",
         "error_stream_not_suppotred": "ERROR: Stream API is not supported in this browser",
         "error_qrcode_is_inappropriate" : "ERROR: QRCode is inappropriate",
-        "no_record_found":"No record found with this id"
+        "no_record_found":"No record found with this id",
+        "unknown_code": "Неизвестный код",
+        "error": "Error"
     },
     "ru": {
         "input_placeholder": "Пусто",
@@ -32,7 +34,9 @@
         "error_camera_not_suitable": "ОШИБКА: установленные камеры не подходят",
         "error_stream_not_suppotred": "ОШИБКА: Stream API не поддерживается в этом браузере",
         "error_qrcode_is_inappropriate" : "ОШИБКА: QRCode не соответствует назначению",
-        "no_record_found":"Не найдена запись с данным id"
+        "no_record_found":"Не найдена запись с данным id",
+        "unknown_code": "Неизвестный код",
+        "error": "Ошибка"
     }
   }
 </i18n>
@@ -43,44 +47,34 @@
     hide-footer
     :title="$t('qrcode_scanner')"
   >
-    <qrcode-stream
-      :camera="camera"
+    <stream-barcode-reader
       @decode="onDecode"
-      @init="onInit"
-    >
-      <div v-if="loading" class="loading-indicator">
-        {{ $t('new_scan') }}
-      </div>
+    />
 
-      <div v-if="error" class="error">
-        {{ error }}
-      </div>
-    </qrcode-stream>
     <div v-if="result.length > 0" class="decode-result">
-      <strong>{{ $t('scan_result') }}:</strong>
-      <ol>
-        <li
-          v-for="(value, i) in result"
-          :key="i"
-        >
-          {{ value.value }}
-        </li>
-      </ol>
       <b-button
-        v-if="multiScan && error.length === 0"
         block
         variant="success"
         @click="sendList"
       >
         {{ $t('paste_data') }}
       </b-button>
+      <strong>{{ $t('scan_result') }}:</strong>
+      <ol reversed>
+        <li
+          v-for="(value, i) in result.slice().reverse()"
+          :key="i"
+        >
+          {{ value.value }}
+        </li>
+      </ol>
     </div>
   </b-modal>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Watch } from "vue-property-decorator";
-import { QrcodeStream } from "vue-qrcode-reader";
+import { StreamBarcodeReader } from "vue-barcode-reader";
 import { mixins } from "vue-class-component";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import type { Link } from "@/links";
@@ -101,7 +95,7 @@ const query = namespace("query");
 
 @Component({
   components: {
-    QrcodeStream,
+    StreamBarcodeReader,
   },
 })
 export default class QRCodeScanner extends mixins(BaseEntriesView) {
@@ -113,78 +107,55 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @query.Action("pushRoot") pushRoot!: (_: IQuery) => Promise<void>;
 
   modalShow = false;
-  camera ="auto";
   result: Array<IQRResultContent> = [];
-  error = "";
-  loading = false;
   currentContent: IQRCode | null = null;
   audio = new Audio(beep);
+  entries:Record<number, string> = [];
 
   @Watch("openScanner")
   private toggleOpenScanner() {
     this.modalShow = !this.modalShow;
     this.currentContent = null;
     this.result = [];
-    this.error = "";
-  }
-
-  async onInit(promise: any) {
-    this.loading = true;
-    try {
-      await promise;
-    } catch (error) {
-      this.error = error.name;
-      if (error.name === "NotAllowedError") {
-        this.error = this.$t("error_access_camera").toString();
-      } else if (error.name === "NotFoundError") {
-        this.error = this.$t("error_no_camera").toString();
-      } else if (error.name === "NotSupportedError") {
-        this.error = this.$t("error_secure_context").toString();
-      } else if (error.name === "NotReadableError") {
-        this.error = this.$t("error_camera_used").toString();
-      } else if (error.name === "OverconstrainedError") {
-        this.error = this.$t("error_camera_not_suitable").toString();
-      } else if (error.name === "StreamApiNotSupportedError") {
-        this.error = this.$t("error_stream_not_suppotred").toString();
-      }
-    } finally {
-      this.loading = false;
-    }
+    this.entries = [];
   }
 
   private async onDecode(content: string) {
     await this.audio.play();
-    this.turnCameraOff();
-    await this.timeout(1);
-    this.turnCameraOn();
 
-    if (!this.multiScan) {
+    if (this.multiScan) {
+      const parsedContent = parseQRCode(content);
+      let currentContent = null;
+
+      if (parsedContent) {
+        currentContent = parsedContent;
+      } else if (!isNaN(Number(content))) {
+        currentContent = {
+          entity: this.entity.entity,
+          id: Number(content),
+        };
+      } else {
+        this.makeToast(this.$t("unknown_code").toString());
+        return;
+      }
+
+      try {
+        this.entries = await this.fetchEntriesByIds(this.entity, [currentContent.id]);
+      } catch (e) {
+        console.warn(e);
+        this.makeToast(this.$t("unknown_code").toString());
+        return;
+      }
+
+      if (this.entries[currentContent.id] !== undefined) {
+        this.currentContent = currentContent;
+      } else {
+        this.makeToast(this.$t("no_record_found").toString());
+      }
+    } else {
       this.$emit("update:scanResult", content);
       this.toggleOpenScanner();
-    } else {
-      this.error = "";
-
-      const parsedContent = parseQRCode(content);
-      if (parsedContent) {
-        this.currentContent = parsedContent;
-      } else {
-        this.error = this.$t("incorrect_format").toString() + " QR code: " + content;
-      }
     }
-  }
-
-  private turnCameraOn() {
-    this.camera = "auto";
-  }
-
-  private turnCameraOff() {
-    this.camera = "off";
-  }
-
-  private timeout(ms: number) {
-    return new Promise(resolve => {
-      window.setTimeout(resolve, ms);
-    });
   }
 
   private sendList() {
@@ -194,7 +165,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   }
 
   @Watch("currentContent", { deep: true, immediate: true })
-  private async changeCurrentContent() {
+  private changeCurrentContent() {
     if (this.currentContent !== null) {
       // Dispatching
       if (this.link) {
@@ -205,7 +176,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
         }
 
         if (!link) {
-          this.error = this.$t("error_qrcode_is_inappropriate").toString();
+          this.makeToast(this.$t("error_qrcode_is_inappropriate").toString());
           return;
         }
 
@@ -243,20 +214,27 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
       // MultiInput
       if (this.entity) {
         if (!equalEntityRef(this.currentContent.entity, this.entity.entity)) {
-          this.error = this.$t("error_qrcode_is_inappropriate").toString();
+          this.makeToast(this.$t("error_qrcode_is_inappropriate").toString());
           return;
         }
 
-        const entries = await this.fetchEntriesByIds(this.entity, [this.currentContent.id]);
-        const entry = entries[this.currentContent.id];
+        const entry = this.entries[this.currentContent.id];
         if (entry !== undefined) {
           const rusultContent = { ...this.currentContent, value: entry };
           this.result.push(rusultContent);
         } else {
-          this.error = this.$t("no_record_found").toString();
+          this.makeToast(this.$t("no_record_found").toString());
         }
       }
     }
+  }
+
+  private makeToast(message: string) {
+    this.$bvToast.toast(message, {
+      title: this.$t("error").toString(),
+      variant: "danger",
+      solid: true,
+    });
   }
 }
 </script>
