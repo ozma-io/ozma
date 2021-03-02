@@ -81,8 +81,7 @@
       </div>
 
       <table
-        :class="['custom-table', 'table', 'table-sm', 'b-table',
-                 {'edit_active': editingValue !== null}]"
+        class="custom-table table table-sm b-table"
       >
         <colgroup>
           <col
@@ -1908,12 +1907,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     display: flex;
     justify-content: center;
     align-items: center;
-  }
-
-  /* таблица поверх блока отключения редактирования */
-  table.edit_active {
-    position: relative;
-    z-index: 1000;
   }
 
   .tabl {
