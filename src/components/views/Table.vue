@@ -1855,13 +1855,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   .button-container {
     width: 100%;
+    position: sticky;
+    left: 0;
 
     .button {
       @include material-button;
 
       width: max-content;
-      position: sticky;
-      left: 0;
       display: flex;
       align-items: center;
       cursor: pointer;
