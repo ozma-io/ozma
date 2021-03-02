@@ -208,6 +208,7 @@
             :is-enable-filter="enableFilter"
             :view="inputType"
             :filter-string="filterString"
+            :is-loading="isUserViewLoading"
             @update:filterString="filterString = $event"
             @goto="$emit('goto', $event)"
           />
@@ -224,6 +225,7 @@
               @update:actions="actions = $event"
               @update:panelButtons="panelButtons = $event"
               @update:enableFilter="enableFilter = $event"
+              @update:isLoading="isUserViewLoading = $event"
               @update:title="updateTitle"
               @goto="$emit('goto', $event)"
             />
@@ -432,6 +434,7 @@ export default class FormControl extends Vue {
   private filterString = "";
   private title = "";
   private enableFilter = false;
+  private isUserViewLoading = true;
 
   get isNullable() {
     return this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable;
