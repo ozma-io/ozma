@@ -37,13 +37,15 @@
       v-if="selectedQRCodeEntity !== null"
       :open-scanner="openQRCodeScanner"
       :entity="selectedQRCodeEntity"
-      :multi-scan="true"
+      multi-scan
       @select="selectFromScanner(qrCodeColumnIndex, $event)"
     />
-    <BarCodeScanner
+    <QRCodeScanner
       v-if="selectedBarCodeEntity !== null"
-      :entity="selectedBarCodeEntity"
       :open-scanner="openBarCodeScanner"
+      :entity="selectedBarCodeEntity"
+      multi-scan
+      text-input
       @select="selectFromScanner(barCodeColumnIndex, $event)"
     />
   </span>
@@ -72,11 +74,6 @@ interface IModalReferenceField {
   entity: IEntityRef;
 }
 
-interface IXCodeReferenceField {
-  field: ValueRef;
-  entity: IEntityRef;
-}
-
 const csvCell = (str: string): string => {
   let csvstr = str.replace(/"/g, `""`);
   if (csvstr.search(/("|;|\n)/g) > 0) {
@@ -90,7 +87,6 @@ const csvCell = (str: string): string => {
   components: {
     SelectUserView,
     QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
-    BarCodeScanner: () => import("@/components/barcode/BarCodeScanner.vue"),
   },
 })
 export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>>(BaseUserView) {

@@ -107,8 +107,9 @@
     </div>
     <QRCodeScanner
       v-if="wasOpenedQRCodeScanner"
+      :entity="referenceEntity"
       :open-scanner="isQRCodeScanner"
-      @update:scanResult="processQRCode"
+      @select="selectFromScanner"
     />
   </span>
 </template>
@@ -119,7 +120,7 @@ import { mixins } from "vue-class-component";
 
 import { ISelectOption, default as MultiSelect, LoadingResult, LoadingState } from "@/components/multiselect/MultiSelect.vue";
 import type { IEntriesRef } from "@/state/entries";
-import { parseQRCode } from "@/components/qrcode/QRCode.vue";
+import { IQRCode, parseQRCode } from "@/components/qrcode/QRCode.vue";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import SelectUserView from "@/components/SelectUserView.vue";
 import { IQuery } from "@/state/query";
@@ -275,6 +276,10 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
 
     this.setValue(id);
     return true;
+  }
+
+  private async selectFromScanner(content: IQRCode): Promise<boolean> {
+    return this.processId(content.id);
   }
 
   private async processQRCode(filterValue: string): Promise<boolean> {
