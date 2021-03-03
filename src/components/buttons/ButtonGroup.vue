@@ -1,11 +1,11 @@
 <template>
   <popper
-    :trigger="listItem ? 'hover' : 'clickToOpen'"
+    trigger="clickToToggle"
     :visible-arrow="false"
     :options="{
-      placement: listItem ? 'left-start' : 'bottom-end',
+      placement: listItem && !$isMobile ? 'left-start' : 'bottom-end',
       modifiers: {
-        offset: { offset: '0, 5px' },
+        offset: { offset: '0, 0' },
         // Nested poppers cannot appear outside the parent element if overflow is enabled.
         preventOverflow: { enabled: !listItem },
         hide: { enabled: !listItem },
