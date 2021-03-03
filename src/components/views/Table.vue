@@ -1562,11 +1562,11 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private clickCell(ref: ValueRef, event: MouseEvent) {
+  private clickCell(ref: ValueRef, element: HTMLElement) {
     this.columnDelta = 0;
     this.removeCellEditing();
     this.updateClickTimer(ref);
-    this.cellEditHandler(ref, event.target as HTMLElement);
+    this.cellEditHandler(ref, element);
   }
 
   private cellEditByTarget(ref: ValueRef, target: HTMLElement) {
