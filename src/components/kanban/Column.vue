@@ -23,8 +23,7 @@
         <span class="column_controls" data-dragscroll>
           <i
             v-if="createButton"
-            class="material-icons new-card-icon"
-            style="font-size: 20px;"
+            class="material-icons md-18 new-card-icon"
             @click="$emit('create')"
           >add</i>
         </span>
@@ -168,7 +167,8 @@ export default class KanbanColumn extends Vue {
   }
 
   .column_body {
-    padding: 15px 10px 0 10px;
+    padding: 0.5rem;
+    padding-bottom: 0;
     overflow-x: hidden;
     height: 100%;
     min-height: 100px;
