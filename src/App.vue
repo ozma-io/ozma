@@ -15,6 +15,7 @@
     :style="styleSettings"
   >
     <AlertBanner
+      v-if="bannerMessage"
       :message="bannerMessage"
       :variant="bannerVariant"
       :styles="bannerStyles"
@@ -127,11 +128,10 @@ export default class App extends Vue {
       "ControlDisableColor": this.settings.getEntry("control_disable_color", String, "#999999"),
 
       // Light Theme, do not remove
-      "MainTextColor": this.settings.getEntry("main_text_color", String, "black"),
+      "MainTextColor": this.settings.getEntry("main_text_color", String, "#292b2c"),
       "MainBackgroundColor": this.settings.getEntry("main_background_color", String, "white"),
-      "MainHoverBackgroundColor": this.settings.getEntry("main_hover_background_color", String, "#efefef"),
-      "MainActiveBackgroundColor": this.settings.getEntry("main_active_background_color", String, "#bcbcbc"),
-      "MainTextColorLight": this.settings.getEntry("main_text_color_light", String, "#68766d"),
+      "SecondaryBackgroundColor": this.settings.getEntry("secondary_background_color", String, "#f8f9fa"),
+      "MainTextColorLight": this.settings.getEntry("main_text_color_light", String, "#6c757d"),
       "MainBorderColor": this.settings.getEntry("main_border_color", String, "#dee2e6"),
       "MainBorderTextColor": this.settings.getEntry("main_border_text_color", String, "#68766d"),
 

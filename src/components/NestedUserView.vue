@@ -9,6 +9,7 @@
     @goto="$emit('goto', $event)"
     @update:enableFilter="$emit('update:enableFilter', $event)"
     @update:title="updateTitle"
+    @update:isLoading="$emit('update:isLoading', $event)"
   />
 </template>
 
@@ -23,6 +24,8 @@ export default class NestedUserView extends Vue {
   @Prop({ type: Number, required: true }) level!: number;
   @Prop({ type: String, required: true }) filterString!: string;
   @Prop({ type: Object, required: true }) defaultValues!: Record<string, unknown>;
+
+  private isLoading = true;
 
   get filterWords() {
     const value = this.filterString;

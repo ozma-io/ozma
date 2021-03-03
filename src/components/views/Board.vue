@@ -1,13 +1,13 @@
 <i18n>
     {
         "en": {
-            "view_error": "There are following errors in your view",
+            "view_error": "There are following errors in user view",
             "no_title": "No title",
             "no_columns": "This query is lacking board_columns attribute",
             "no_group": "This query is lacking board_group attribute on the grouping field"
         },
         "ru": {
-            "view_error": "В вашем представлении следующие ошибки",
+            "view_error": "В отбражении следующие ошибки",
             "no_title": "Без заголовка",
             "no_columns": "В запросе отсутствует атрибут board_columns",
             "no_group": "В запросе отсутствует атрибут board_group на поле, по которому идёт группировка"
@@ -259,7 +259,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     const hasErrors = messagesArray.length > 0;
 
     const errorMessage = this.$t("view_error");
-    const errorString = `${errorMessage}: ${messagesArray.join("; ")}.`;
+    const errorString = `${errorMessage}:\n${messagesArray.join("\n")}.`;
     return hasErrors ? errorString : null;
   }
 

@@ -4,6 +4,10 @@
         "clear": "Clear entries",
         "yes": "Yes",
         "no": "No",
+        "paste_error": "Pasting error",
+        "clear_error": "Clearing error",
+        "cell_non_editable": "Non-editable cell",
+        "paste_no_referencefield_data": "Clipboard has no reference field data",
         "add_entry": "Add entry",
         "add_entry_in_modal": "Add new entry (in modal)"
       },
@@ -11,6 +15,10 @@
         "clear": "Очистить записи",
         "yes": "Да",
         "no": "Нет",
+        "paste_error": "Ошибка при вставке",
+        "clear_error": "Ошибка при очистке поля",
+        "cell_non_editable": "Нередактируемая ячейка",
+        "paste_no_referencefield_data": "В буфере обмена неверная информация для вставки в данное поле",
         "add_entry": "Добавить запись",
         "add_entry_in_modal": "Добавить новую запись (в модале)"
       }
@@ -73,8 +81,7 @@
       </div>
 
       <table
-        :class="['custom-table', 'table', 'table-sm', 'b-table',
-                 {'edit_active': editingValue !== null}]"
+        class="custom-table table table-sm b-table"
       >
         <colgroup>
           <col
@@ -894,6 +901,31 @@ const isEmptyRow = (row: IRowCommon) => {
   return row.values.every(cell => valueIsNull(cell.rawValue) || cell.info === null);
 };
 
+const parseFromClipboard = (event: ClipboardEvent): number | null | undefined => {
+  const serialized = event.clipboardData?.getData("text/html");
+  if (serialized === undefined) return undefined;
+
+  const parsed = (new DOMParser()).parseFromString(serialized, "application/xml");
+  if (parsed.documentElement.nodeName !== "parsererror") {
+    const valueJson = parsed.documentElement.attributes.getNamedItem("data-ozma-value")?.value;
+    if (valueJson !== undefined) {
+      const value = JSON.parse(valueJson) as number | null;
+      return value;
+    }
+  }
+  return undefined;
+};
+
+const serializeToClipboard = (event: ClipboardEvent, value: unknown, valueText: string): void => {
+  const valueJson = JSON.stringify(value);
+  const span = document.createElement("span");
+  span.setAttribute("data-ozma-value", valueJson);
+  span.textContent = valueText;
+  const valueXml = (new XMLSerializer()).serializeToString(span);
+
+  event.clipboardData?.setData("text/html", valueXml);
+};
+
 interface ITableEditing {
   lock: AutoSaveLock;
   ref: ValueRef;
@@ -1152,28 +1184,72 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (this.editing) return;
     const valueRef = this.getSelectedCell();
     if (!valueRef) return;
-
-    event.clipboardData?.setData("text/plain", this.uv.getValueByRef(valueRef)?.value.extra.valueText as string);
     event.preventDefault();
+
+    const value = this.uv.getValueByRef(valueRef)!.value;
+    const valueText = value.extra.valueText;
+    event.clipboardData?.setData("text/plain", valueText);
+
+    const sourceColumnType = this.uv.info.columns[valueRef.column].mainField?.field.fieldType.type;
+    if (sourceColumnType === "reference") {
+      serializeToClipboard(event, value.value, valueText);
+    }
   }
 
   private cutSelectedCell(event: ClipboardEvent) {
+    if (this.editing) return;
     this.copySelectedCell(event);
     this.clearSelectedCell();
   }
 
   private pasteToSelectedCell(event: ClipboardEvent) {
+    if (this.editing) return;
     const valueRef = this.getSelectedCell();
     if (!valueRef) return;
 
-    // FIXME: Some errors on trying to paste on non-editable cells.
-    void this.updateValue(valueRef, event.clipboardData?.getData("text/plain"));
+    const value = this.uv.getValueByRef(valueRef)!.value;
+    if (!value.info || !value.info.field) {
+      this.$bvToast.toast(this.$t("cell_non_editable").toString(), {
+        title: this.$t("paste_error").toString(),
+        variant: "danger",
+        solid: true,
+      });
+      return;
+    }
+
+    const targetColumnType = this.uv.info.columns[valueRef.column].mainField?.field.fieldType.type;
+    if (targetColumnType === "reference") {
+      const parsed = parseFromClipboard(event);
+      if (parsed !== undefined) {
+        void this.updateValue(valueRef, parsed);
+      } else {
+        this.$bvToast.toast(this.$t("paste_no_referencefield_data").toString(), {
+          title: this.$t("paste_error").toString(),
+          variant: "danger",
+          solid: true,
+        });
+      }
+    } else {
+      const sourcePlain = event.clipboardData?.getData("text/plain");
+      void this.updateValue(valueRef, sourcePlain);
+    }
+
     event.preventDefault();
   }
 
   private clearSelectedCell() {
     const valueRef = this.getSelectedCell();
     if (!valueRef) return;
+
+    const value = this.uv.getValueByRef(valueRef)!.value;
+    if (!value.info || !value.info.field) {
+      this.$bvToast.toast(this.$t("cell_non_editable").toString(), {
+        title: this.$t("clear_error").toString(),
+        variant: "danger",
+        solid: true,
+      });
+      return;
+    }
 
     void this.updateValue(valueRef, "");
   }
@@ -1778,13 +1854,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   .button-container {
     width: 100%;
+    position: sticky;
+    left: 0;
 
     .button {
       @include material-button;
 
       width: max-content;
-      position: sticky;
-      left: 0;
       display: flex;
       align-items: center;
       cursor: pointer;
@@ -1833,12 +1909,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     align-items: center;
   }
 
-  /* таблица поверх блока отключения редактирования */
-  table.edit_active {
-    position: relative;
-    z-index: 1000;
-  }
-
   .tabl {
     height: 100%;
     width: 100%; /* на весь экран */
@@ -1867,7 +1937,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     position: sticky; /* фиксация шапки при скроле */
     z-index: 20; /* при скроле таблицы чтобы шапка была видна */
     border-right: 1px solid var(--MainBorderColor);
-    top: 0;
+
+    /* Instead of `0` to fix Safari's bug gap, doesn't needed in normal browsers, but easier to set same for all */
+    top: -1px;
     cursor: pointer;
     color: var(--MainTextColorLight);
     background-color: var(--MainBackgroundColor);

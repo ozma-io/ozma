@@ -106,6 +106,7 @@
           @update:enableFilter="enableFilter = $event"
           @update:bodyStyle="styleNode.innerHTML = $event"
           @update:title="updateTitle"
+          @update:isLoading="isUserViewLoading = $event"
         />
       </div>
     </div>
@@ -218,6 +219,7 @@ export default class TopLevelUserView extends Vue {
   private enableFilter = false;
   private styleNode: HTMLStyleElement;
   private title = "";
+  private isUserViewLoading = true;
 
   private panelButtons: Button[] = [];
 
@@ -463,6 +465,11 @@ export default class TopLevelUserView extends Vue {
     color: var(--MainTextColor);
     overflow: hidden;
     text-overflow: ellipsis;
+
+    &.is-loading {
+      color: var(--MainTextColorLight);
+      opacity: 0.6;
+    }
 
     &:focus {
       outline: none;

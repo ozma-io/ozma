@@ -4,7 +4,12 @@
       <slot name="main-buttons" />
       <label
         v-b-tooltip.click.blur.bottom.noninteractive
-        class="input_label"
+        :class="[
+          'input_label',
+          {
+            'is-loading': isLoading,
+          }
+        ]"
         :title="title"
       >
         {{ title }}
@@ -54,6 +59,7 @@ export default class HeaderPanel extends Vue {
   @Prop({ type: Boolean, required: true }) isEnableFilter!: boolean;
   @Prop({ type: Object, default: null }) view!: IUserViewType;
   @Prop({ type: String, required: true }) filterString!: string;
+  @Prop({ type: Boolean, default: false }) isLoading!: boolean;
 
   get buttons() {
     return buttonsToPanelButtons(this.panelButtons);
@@ -68,12 +74,13 @@ export default class HeaderPanel extends Vue {
 
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   .header-panel {
     width: 100%;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
   }
 
   .input_label {
@@ -84,6 +91,12 @@ export default class HeaderPanel extends Vue {
     color: var(--MainTextColor);
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: pre;
+
+    &.is-loading {
+      color: var(--MainTextColorLight);
+      opacity: 0.6;
+    }
   }
 
   .fullscreen_button {
