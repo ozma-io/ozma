@@ -5,7 +5,7 @@
     :scope="scope"
     :level="level"
     :filter="filterWords"
-    @update:panelButtons="$emit('update:panelButtons', $event)"
+    @update:buttons="$emit('update:buttons', $event)"
     @goto="$emit('goto', $event)"
     @update:enableFilter="$emit('update:enableFilter', $event)"
     @update:title="updateTitle"

@@ -57,7 +57,7 @@
     <div :class="'userview-upper-div'">
       <HeaderPanel
         :title="title"
-        :panel-buttons="panelButtons"
+        :buttons="buttons"
         :is-enable-filter="enableFilter"
         :filter-string="query.root.search"
         @update:filterString="filterString = $event"
@@ -101,7 +101,7 @@
           scope="root"
           @goto="pushRoot"
           @goto-previous="gotoPreviousRoot"
-          @update:panelButtons="panelButtons = $event"
+          @update:buttons="buttons = $event"
           @update:statusLine="statusLine = $event"
           @update:enableFilter="enableFilter = $event"
           @update:bodyStyle="styleNode.innerHTML = $event"
@@ -221,7 +221,7 @@ export default class TopLevelUserView extends Vue {
   private title = "";
   private isUserViewLoading = true;
 
-  private panelButtons: Button[] = [];
+  private buttons: Button[] = [];
 
   private wasOpenedQRCodeScanner = false;
   private isOpenQRCodeScanner = false;

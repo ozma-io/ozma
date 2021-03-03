@@ -161,23 +161,23 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     });
   }
 
-  get panelButtons(): Button[] {
-    const panelButtons = this.uv.attributes["panel_buttons"];
+  get attrButtons(): Button[] {
+    const buttons = this.uv.attributes["panel_buttons"];
 
     const opts: IAttrToQueryOpts = {
       homeSchema: this.uv.homeSchema ?? undefined,
     };
 
-    return attrToButtons(panelButtons, opts);
+    return attrToButtons(buttons, opts);
   }
 
   get buttons() {
-    return [...this.staticButtons, ...this.selectionButtons, ...this.panelButtons];
+    return [...this.staticButtons, ...this.selectionButtons, ...this.attrButtons];
   }
 
   @Watch("buttons", { deep: true, immediate: true })
-  private pushPanelButtons() {
-    this.$emit("update:panelButtons", this.buttons);
+  private pushButtons() {
+    this.$emit("update:buttons", this.buttons);
   }
 
   /**

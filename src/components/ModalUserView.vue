@@ -21,7 +21,7 @@
     <template #header>
       <HeaderPanel
         :title="title"
-        :panel-buttons="panelButtons"
+        :buttons="buttons"
         :is-enable-filter="enableFilter"
         :filter-string="filterString"
         :view="view"
@@ -41,7 +41,7 @@
           :scope="uid"
           :filter="filterWords"
           :filter-string="filterString"
-          @update:panelButtons="panelButtons = $event"
+          @update:buttons="buttons = $event"
           @update:enableFilter="enableFilter = $event"
           @update:isLoading="isUserViewLoading = $event"
           @update:title="title = $event"
@@ -98,7 +98,7 @@ export default class ModalUserView extends Vue {
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
 
   private title = "";
-  private panelButtons: Button[] = [];
+  private buttons: Button[] = [];
 
   private enableFilter = false;
   private filterString = "";

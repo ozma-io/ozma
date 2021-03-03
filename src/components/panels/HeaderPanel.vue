@@ -17,7 +17,7 @@
     </div>
 
     <ButtonsPanel
-      :buttons="buttons"
+      :buttons="headerButtons"
       @goto="$emit('goto', $event)"
     >
       <template #search-panel>
@@ -55,14 +55,14 @@ import SearchPanel from "@/components/SearchPanel.vue";
 })
 export default class HeaderPanel extends Vue {
   @Prop({ type: String, required: true }) title!: string;
-  @Prop({ type: Array, required: true }) panelButtons!: Button[];
+  @Prop({ type: Array, required: true }) buttons!: Button[];
   @Prop({ type: Boolean, required: true }) isEnableFilter!: boolean;
   @Prop({ type: Object, default: null }) view!: IUserViewType;
   @Prop({ type: String, required: true }) filterString!: string;
   @Prop({ type: Boolean, default: false }) isLoading!: boolean;
 
-  get buttons() {
-    return buttonsToPanelButtons(this.panelButtons);
+  get headerButtons() {
+    return buttonsToPanelButtons(this.buttons);
   }
 
   private openFullscreen() {

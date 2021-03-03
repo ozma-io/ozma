@@ -67,3 +67,12 @@ export default class ButtonsPanel extends Vue {
   @Prop({ type: Boolean, default: false }) listItem!: boolean;
 }
 </script>
+
+<style lang="scss" scoped>
+
+  .list-group {
+    max-height: 20rem;
+    overflow-y: auto;
+  }
+
+</style>

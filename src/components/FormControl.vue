@@ -175,7 +175,7 @@
           :background-color="cellColor"
           :qrcode-input="isQRCodeInput"
           @update:actions="actions = $event"
-          @update:buttons="panelButtons = $event"
+          @update:buttons="buttons = $event"
           @focus="iSlot.onFocus"
           @blur="$emit('blur', $event)"
           @update:value="updateValue($event)"
@@ -206,7 +206,7 @@
           <HeaderPanel
             v-else-if="inputType.name === 'userview'"
             :title="usedCaption"
-            :panel-buttons="panelButtons"
+            :buttons="buttons"
             :is-enable-filter="enableFilter"
             :view="inputType"
             :filter-string="filterString"
@@ -224,7 +224,7 @@
               :scope="scope"
               :level="level + 1"
               :filter-string="filterString"
-              @update:panelButtons="panelButtons = $event"
+              @update:buttons="buttons = $event"
               @update:enableFilter="enableFilter = $event"
               @update:isLoading="isUserViewLoading = $event"
               @update:title="updateTitle"
@@ -436,7 +436,7 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
 
-  private panelButtons: Button[] = [];
+  private buttons: Button[] = [];
   private codeEditorKey = 0;
   private filterString = "";
   private title = "";
@@ -720,7 +720,7 @@ export default class FormControl extends Vue {
 
     if (newName === oldName) return;
 
-    this.panelButtons = [];
+    this.buttons = [];
     this.title = "";
     this.filterString = "";
     this.enableFilter = false;

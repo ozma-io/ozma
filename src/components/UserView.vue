@@ -48,7 +48,7 @@
         :level="level"
         :selection-mode="selectionMode"
         :default-values="defaultValues"
-        @update:panelButtons="panelButtons = $event"
+        @update:buttons="uvCommonButtons = $event"
       />
       <transition name="fade-1" mode="out-in">
         <component
@@ -66,7 +66,7 @@
           @goto="$emit('goto', $event)"
           @goto-previous="$emit('goto-previous')"
           @select="$emit('select', $event)"
-          @update:extraButtons="extraButtons = $event"
+          @update:buttons="componentButtons = $event"
           @update:statusLine="$emit('update:statusLine', $event)"
           @update:enableFilter="$emit('update:enableFilter', $event)"
           @update:bodyStyle="$emit('update:bodyStyle', $event)"
@@ -245,8 +245,8 @@ export default class UserView extends Vue {
   // Use this user view to select and return an entry.
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
 
-  private panelButtons: Button[] = [];
-  private extraButtons: Button[] = [];
+  private uvCommonButtons: Button[] = [];
+  private componentButtons: Button[] = [];
 
   // Old user view is shown while new component for uv is loaded.
   private state: UserViewLoadingState = loadingState;
@@ -270,7 +270,7 @@ export default class UserView extends Vue {
     }
   }
 
-  get buttons() {
+  get uvButtons() {
     const buttons: Button[] = [];
     if (this.state.state === "error" || (this.state.state === "show" && !this.state.uv.attributes["hide_default_actions"])) {
       const args = this.state.state === "show" ? this.state.uv.args : this.state.args;
@@ -304,13 +304,13 @@ export default class UserView extends Vue {
     return buttons;
   }
 
-  get uvPanelButtons() {
-    return [...this.extraButtons, ...this.panelButtons, ...this.buttons];
+  get allButtons() {
+    return [ ...this.uvCommonButtons, ...this.uvButtons, ...this.componentButtons ];
   }
 
-  @Watch("uvPanelButtons", { deep: true, immediate: true })
-  private pushPanelButtons() {
-    this.$emit("update:panelButtons", this.uvPanelButtons);
+  @Watch("allButtons", { deep: true, immediate: true })
+  private pushAllButtons() {
+    this.$emit("update:buttons", this.allButtons);
   }
 
   private reloadIfRoot() {
@@ -446,7 +446,7 @@ export default class UserView extends Vue {
     }
 
     this.state = loadingState;
-    this.extraButtons = [];
+    this.componentButtons = [];
     this.$emit("update:statusLine", "");
     this.$emit("update:enableFilter", false);
     this.$emit("update:bodyStyle", "");
@@ -485,11 +485,6 @@ export default class UserView extends Vue {
       return this.$t("unknown_error", { msg: uv.message }).toString();
     }
   }
-
-  // @Watch("actions", { deep: true, immediate: true })
-  // private pushActions() {
-  //   this.$emit("update:actions", this.actions);
-  // }
 
   private destroyed() {
     if (this.state.state === "show") {
