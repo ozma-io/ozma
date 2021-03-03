@@ -149,9 +149,10 @@
           ref="control"
           :content="textValue"
         />
-        <CellButtons
+        <ButtonsPanel
           v-else-if="inputType.name === 'buttons'"
-          :value="value"
+          :buttons="inputType.buttons"
+          @goto="$emit('goto', $event)"
         />
         <div v-else-if="inputType.name === 'static_text'">
           {{ textValue }}
@@ -243,8 +244,10 @@ import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
-import type { Button } from "@/components/buttons/buttons";
 import { IEntityRef } from "ozma-api/src";
+
+import type { Button } from "@/components/buttons/buttons";
+import { attrToButtons } from "@/components/buttons/buttons";
 import { IReferenceSelectAction } from "./ReferenceMultiSelect.vue";
 
 interface ITextType {
@@ -325,6 +328,7 @@ interface IStaticImageType {
 
 interface IButtonsType {
   name: "buttons";
+  buttons: Button[];
 }
 
 export type IType =
@@ -365,7 +369,6 @@ const multilineTypes = ["markdown", "codeeditor", "textarea", "userview", "empty
     QRCode: () => import("@/components/qrcode/QRCode.vue"),
     BarCode: () => import("@/components/barcode/BarCode.vue"),
     BarCodePrint: () => import("@/components/barcode/BarCodePrint.vue"),
-    CellButtons: () => import("@/components/buttons/CellButtons.vue"),
   },
 })
 export default class FormControl extends Vue {
@@ -516,7 +519,8 @@ export default class FormControl extends Vue {
     } else if (controlAttr === "static_image") {
       return { name: "static_image" };
     } else if (controlAttr === "buttons") {
-      return { name: "buttons" };
+      const buttons = attrToButtons(this.currentValue);
+      return { name: "buttons", buttons };
     }
     // `calc` is needed because sizes should be relative to base font size.
     const heightMultilineText = "calc(4em + 12px)";
