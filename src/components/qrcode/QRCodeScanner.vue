@@ -138,7 +138,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
       return;
     }
 
-    let entry = undefined;
+    let entry;
 
     try {
       if (this.entity === undefined) {
