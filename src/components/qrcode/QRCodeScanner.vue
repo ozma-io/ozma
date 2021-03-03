@@ -8,7 +8,8 @@
         "error_qrcode_is_inappropriate" : "ERROR: QRCode is inappropriate",
         "no_record_found":"No record found with this id",
         "unknown_code": "Unknown code",
-        "error": "Error"
+        "error": "Error",
+        "entity_not_initialized": "Entity not initialized"
     },
     "ru": {
         "qrcode_scanner": "Code сканер",
@@ -18,7 +19,8 @@
         "error_qrcode_is_inappropriate" : "ОШИБКА: QRCode не соответствует назначению",
         "no_record_found":"Не найдена запись с данным id",
         "unknown_code": "Неизвестный код",
-        "error": "Ошибка"
+        "error": "Ошибка",
+        "entity_not_initialized": "Сущьность не задана"
     }
   }
 </i18n>
@@ -95,20 +97,18 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Prop({ type: Boolean, default: false }) multiScan!: boolean;
   @Prop({ type: Boolean, default: false }) textInput!: boolean;
   @Prop({ type: Object, default: null }) link!: Link;
-  @Prop({ type: Object }) entity!: IEntriesRef;
+  @Prop({ type: Object, default: undefined }) entity!: IEntriesRef | undefined;
 
   @query.Action("pushRoot") pushRoot!: (_: IQuery) => Promise<void>;
 
   modalShow = false;
   result: Array<IQRResultContent> = [];
   audio = new Audio(beep);
-  entry: string | undefined = undefined;
 
   @Watch("openScanner")
   private toggleOpenScanner() {
     this.modalShow = !this.modalShow;
     this.result = [];
-    this.entry = undefined;
   }
 
   private async onDecode(content: string) {
@@ -120,6 +120,10 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     if (parsedContent) {
       currentContent = parsedContent;
     } else if (!isNaN(Number(content))) {
+      if (this.entity === undefined) {
+        this.makeToast(this.$t("entity_not_initialized").toString());
+        return;
+      }
       currentContent = {
         entity: this.entity.entity,
         id: Number(content),
@@ -134,21 +138,33 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
       return;
     }
 
+    let entry = undefined;
+
     try {
+      if (this.entity === undefined) {
+        this.makeToast(this.$t("entity_not_initialized").toString());
+        return;
+      }
       const entries = await this.fetchEntriesByIds(this.entity, [currentContent.id]);
-      this.entry = entries[currentContent.id];
+      entry = entries[currentContent.id];
     } catch (e) {
       this.makeToast(this.$t("unknown_code").toString());
       return;
     }
 
-    if (this.entry === undefined) {
+    if (entry === undefined) {
       this.makeToast(this.$t("no_record_found").toString());
       return;
     }
 
+    if (!equalEntityRef(currentContent.entity, this.entity.entity)) {
+      this.makeToast(this.$t("error_qrcode_is_inappropriate").toString());
+      return;
+    }
+
     if (this.multiScan) {
-      this.multiInput(currentContent);
+      const rusultContent = { ...currentContent, value: entry };
+      this.result.push(rusultContent);
     } else {
       this.$emit("select", currentContent);
       this.toggleOpenScanner();
@@ -158,15 +174,6 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   private sendList() {
     this.$emit("select", this.result);
     this.toggleOpenScanner();
-  }
-
-  private multiInput(currentContent: IQRCode) {
-    if (!equalEntityRef(currentContent.entity, this.entity.entity)) {
-      this.makeToast(this.$t("error_qrcode_is_inappropriate").toString());
-    } else if (this.entry) {
-      const rusultContent = { ...currentContent, value: this.entry };
-      this.result.push(rusultContent);
-    }
   }
 
   private dispatching(currentContent: IQRCode) {
