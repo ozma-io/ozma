@@ -905,9 +905,9 @@ const parseFromClipboard = (event: ClipboardEvent): number | null | undefined =>
   const serialized = event.clipboardData?.getData("text/html");
   if (serialized === undefined) return undefined;
 
-  const parsed = (new DOMParser()).parseFromString(serialized, "application/xml");
+  const parsed = (new DOMParser()).parseFromString(serialized, "text/html");
   if (parsed.documentElement.nodeName !== "parsererror") {
-    const valueJson = parsed.documentElement.attributes.getNamedItem("data-ozma-value")?.value;
+    const valueJson = parsed.documentElement.querySelector("span")?.attributes.getNamedItem("data-ozma-value")?.value;
     if (valueJson !== undefined) {
       const value = JSON.parse(valueJson) as number | null;
       return value;
