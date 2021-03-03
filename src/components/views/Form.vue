@@ -458,9 +458,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     padding: 5px !important;
     overflow-y: auto;
     overflow-x: hidden;
-
-    /* background-color: var(--MainBackgroundColor); */
-    background-color: #f8f9fa;
+    background-color: var(--SecondaryBackgroundColor);
   }
 
   @media print {

@@ -34,6 +34,7 @@
             @update="localFilterString = $event; debouncedUpdateInput()"
             @change="updateInput"
             @blur="updateInput"
+            @focus="$root.$emit('form-input-focused')"
           />
           <b-input-group-append>
             <b-button

@@ -1,6 +1,13 @@
 <template>
   <div class="nested-menu">
-    <label class="input_label">{{ title }}</label>
+    <label
+      :class="[
+        'input_label',
+        {
+          'is-loading': isLoading,
+        }
+      ]"
+    >{{ title }}</label>
     <ButtonsPanel
       :buttons="buttons"
       @goto="$emit('goto', $event)"
@@ -49,6 +56,7 @@ export default class HeaderPanel extends Vue {
   @Prop({ type: Boolean, required: true }) isEnableFilter!: boolean;
   @Prop({ type: Object, default: null }) view!: IUserViewType;
   @Prop({ type: String, required: true }) filterString!: string;
+  @Prop({ type: Boolean, default: false }) isLoading!: boolean;
 
   private openFullscreen() {
     if (this.view !== null) {
@@ -59,11 +67,12 @@ export default class HeaderPanel extends Vue {
 
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   .nested-menu {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
   }
 
   .input_label {
@@ -74,6 +83,11 @@ export default class HeaderPanel extends Vue {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: pre;
+
+    &.is-loading {
+      color: var(--MainTextColorLight);
+      opacity: 0.6;
+    }
   }
 
   .fullscreen_button {

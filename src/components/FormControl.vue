@@ -112,6 +112,7 @@
           :autofocus="autofocus || iSlot.autofocus"
           :required="!isNullable"
           @update:content="updateValue"
+          @focus="iSlot.onFocus"
           @blur="$emit('blur', $event)"
         />
         <MarkdownEditor
@@ -124,6 +125,7 @@
           :autofocus="autofocus || iSlot.autofocus"
           :required="!isNullable"
           @update:content="updateValue"
+          @focus="iSlot.onFocus"
           @blur="$emit('blur', $event)"
         />
         <input
@@ -210,6 +212,7 @@
             :is-enable-filter="enableFilter"
             :view="inputType"
             :filter-string="filterString"
+            :is-loading="isUserViewLoading"
             @update:filterString="filterString = $event"
             @goto="$emit('goto', $event)"
           />
@@ -226,6 +229,7 @@
               @update:actions="actions = $event"
               @update:panelButtons="panelButtons = $event"
               @update:enableFilter="enableFilter = $event"
+              @update:isLoading="isUserViewLoading = $event"
               @update:title="updateTitle"
               @goto="$emit('goto', $event)"
             />
@@ -250,6 +254,7 @@ import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
 import { PanelButton } from "@/components/ButtonsPanel.vue";
 import { IEntityRef } from "ozma-api/src";
+import FormInputPlaceholder from "@/components/FormInputPlaceholder.vue";
 import { IReferenceSelectAction } from "./ReferenceMultiSelect.vue";
 
 interface ITextType {
@@ -351,20 +356,61 @@ const heightExclusions = ["select", "reference"];
 const multilineTypes = ["markdown", "codeeditor", "textarea", "userview", "empty_userview", "static_image"];
 
 @Component({
+  // Looks ugly and wordy, but due to `import` this can not be generated.
+  // `as any` due to weird typing, see https://github.com/vuejs/vue-class-component/issues/323
   components: {
-    CodeEditor: () => import("@/components/editors/CodeEditor.vue"),
-    MarkdownEditor: () => import("@/components/editors/MarkdownEditor.vue"),
-    ValueSelect: () => import("@/components/ValueSelect.vue"),
-    Calendar: () => import("@/components/Calendar.vue"),
-    ReferenceField: () => import("@/components/ReferenceField.vue"),
-    InputSlot: () => import("@/components/form/InputSlot.vue"),
-    Input: () => import("@/components/form/Input.vue"),
-    Textarea: () => import("@/components/form/Textarea.vue"),
-    NestedUserView: () => import("@/components/NestedUserView.vue"),
-    HeaderPanel: () => import("@/components/panels/HeaderPanel.vue"),
-    QRCode: () => import("@/components/qrcode/QRCode.vue"),
-    BarCode: () => import("@/components/barcode/BarCode.vue"),
-    BarCodePrint: () => import("@/components/barcode/BarCodePrint.vue"),
+    CodeEditor: () => ({
+      component: import("@/components/editors/CodeEditor.vue") as any,
+      loading: FormInputPlaceholder,
+    }),
+    MarkdownEditor: () => ({
+      component: import("@/components/editors/MarkdownEditor.vue") as any,
+      loading: FormInputPlaceholder,
+    }),
+    ValueSelect: () => ({
+      component: import("@/components/ValueSelect.vue") as any,
+      loading: FormInputPlaceholder,
+    }),
+    Calendar: () => ({
+      component: import("@/components/Calendar.vue") as any,
+      loading: FormInputPlaceholder,
+    }),
+    ReferenceField: () => ({
+      component: import("@/components/ReferenceField.vue") as any,
+      loading: FormInputPlaceholder,
+    }),
+    InputSlot: () => ({
+      component: import("@/components/form/InputSlot.vue") as any,
+      // InputSlot require different placeholder, otherwise it looks bad, but I don't want to clutter it.
+    }),
+    Input: () => ({
+      component: import("@/components/form/Input.vue") as any,
+      loading: FormInputPlaceholder,
+    }),
+    Textarea: () => ({
+      component: import("@/components/form/Textarea.vue") as any,
+      loading: FormInputPlaceholder,
+    }),
+    NestedUserView: () => ({
+      component: import("@/components/NestedUserView.vue") as any,
+      loading: FormInputPlaceholder,
+    }),
+    HeaderPanel: () => ({
+      component: import("@/components/panels/HeaderPanel.vue") as any,
+      loading: FormInputPlaceholder,
+    }),
+    QRCode: () => ({
+      component: import("@/components/qrcode/QRCode.vue") as any,
+      loading: FormInputPlaceholder,
+    }),
+    BarCode: () => ({
+      component: import("@/components/barcode/BarCode.vue") as any,
+      loading: FormInputPlaceholder,
+    }),
+    BarCodePrint: () => ({
+      component: import("@/components/barcode/BarCodePrint.vue") as any,
+      loading: FormInputPlaceholder,
+    }),
   },
 })
 export default class FormControl extends Vue {
@@ -392,6 +438,7 @@ export default class FormControl extends Vue {
   private filterString = "";
   private title = "";
   private enableFilter = false;
+  private isUserViewLoading = true;
 
   get isNullable() {
     return this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable;
@@ -695,7 +742,7 @@ export default class FormControl extends Vue {
       this.$emit("update", newValue);
     }
 
-    const closeAfterUpdate: IType["name"][] = ["calendar", "select", "reference"];
+    const closeAfterUpdate: IType["name"][] = ["select", "reference"];
     if (closeAfterUpdate.includes(this.inputType.name)) {
       this.$emit("close-modal-input");
     }

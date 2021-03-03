@@ -26,6 +26,7 @@
         :is-enable-filter="enableFilter"
         :filter-string="filterString"
         :view="view"
+        :is-loading="isUserViewLoading"
         @update:filterString="filterString = $event"
         @goto="$emit('goto', $event)"
       />
@@ -44,6 +45,7 @@
           @update:actions="extraActions = $event"
           @update:panelButtons="panelButtons = $event"
           @update:enableFilter="enableFilter = $event"
+          @update:isLoading="isUserViewLoading = $event"
           @update:title="title = $event"
           @goto="$emit('goto', $event)"
           @goto-previous="$emit('goto-previous')"
@@ -103,6 +105,7 @@ export default class ModalUserView extends Vue {
   private panelButtons: PanelButton[] = [];
   private enableFilter = false;
   private filterString = "";
+  private isUserViewLoading = true;
 
   get actions() {
     const actions: Action[] = [];

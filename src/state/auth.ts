@@ -31,6 +31,10 @@ export class CurrentAuth {
     return this.decodedIdToken["preferred_username"];
   }
 
+  get email() {
+    return this.decodedIdToken["email"];
+  }
+
   get refreshValidFor(): number {
     return Number(this.decodedRefreshToken["exp"]) - Number(this.decodedRefreshToken["iat"]);
   }

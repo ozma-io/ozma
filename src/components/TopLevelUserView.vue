@@ -79,7 +79,12 @@
         <span
           v-if="!!title"
           v-b-tooltip.click.blur.bottom.noninteractive
-          class="head-menu_title"
+          :class="[
+            'head-menu_title',
+            {
+              'is-loading': isUserViewLoading,
+            }
+          ]"
           tabindex="0"
           :title="title"
         >
@@ -124,6 +129,7 @@
           @update:enableFilter="enableFilter = $event"
           @update:bodyStyle="styleNode.innerHTML = $event"
           @update:title="updateTitle"
+          @update:isLoading="isUserViewLoading = $event"
         />
       </div>
     </div>
@@ -239,6 +245,7 @@ export default class TopLevelUserView extends Vue {
   private enableFilter = false;
   private styleNode: HTMLStyleElement;
   private title = "";
+  private isUserViewLoading = true;
 
   private wasOpenedQRCodeScanner = false;
   private isOpenQRCodeScanner = false;
@@ -475,6 +482,11 @@ export default class TopLevelUserView extends Vue {
     color: var(--MainTextColor);
     overflow: hidden;
     text-overflow: ellipsis;
+
+    &.is-loading {
+      color: var(--MainTextColorLight);
+      opacity: 0.6;
+    }
 
     &:focus {
       outline: none;

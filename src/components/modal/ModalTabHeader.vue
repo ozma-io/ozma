@@ -56,7 +56,8 @@ export default class ModalTabHeader extends Vue {
   }
 
   .modal__tab_header.only_tab {
-    cursor: initial;
+    border-color: transparent;
+    cursor: grab;
   }
 
   .modal__tab_header:not(.only_tab) {

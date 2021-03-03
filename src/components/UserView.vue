@@ -140,6 +140,7 @@ const types: RecordSet<string> = {
   "table": null,
   "multi_select": null,
   "board": null,
+  "timeline": null,
 };
 
 const components = Object.fromEntries(Object.keys(types).map(name => {
@@ -505,6 +506,13 @@ export default class UserView extends Vue {
   @Watch("args", { deep: true, immediate: true })
   private argsChanged(newArgs: IUserViewArguments) {
     this.reload();
+  }
+
+  @Watch("state.state", { immediate: true })
+  updateIsLoading(newValue: string, oldValue: string) {
+    if (newValue === oldValue) return;
+
+    this.$emit("update:isLoading", newValue === "loading");
   }
 
   @Watch("title", { immediate: true })
