@@ -305,7 +305,7 @@ export default class UserView extends Vue {
   }
 
   get allButtons() {
-    return [ ...this.uvCommonButtons, ...this.uvButtons, ...this.componentButtons ];
+    return [...this.uvCommonButtons, ...this.uvButtons, ...this.componentButtons];
   }
 
   @Watch("allButtons", { deep: true, immediate: true })
