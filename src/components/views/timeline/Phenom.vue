@@ -85,12 +85,12 @@ export default class Phenom extends Vue {
     } else {
       const isCurrentYear = datetime.isSame(current, "year");
       const year = isCurrentYear ? "" : " YY";
-      return datetime.local().format(this.$t("format", { year }).toString()) ?? "";
+      return datetime.local().format(this.$t("format", { year }).toString());
     }
   }
 
   private get datetimeTooltipText() {
-    return this.phenom.datetime?.local().format(this.$t("format", { year: " YYYY" }).toString()) ?? "";
+    return this.phenom.datetime.local().format(this.$t("format", { year: " YYYY" }).toString());
   }
 
   private get messageText() {
