@@ -1487,7 +1487,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     if (!this.canEditCell(ref)) {
       return;
-    };
+    }
 
     void this.addAutoSaveLock().then(async lock => {
       const value = this.uv.getValueByRef(ref);
@@ -1504,7 +1504,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private canEditCell(ref: ValueRef) {
-    if (this.uv.extra.columns[ref.column].type === "buttons"){
+    if (this.uv.extra.columns[ref.column].type === "buttons") {
       return false;
     }
     return true;
