@@ -19,7 +19,12 @@
     <b v-if="phenom.username" class="username">
       {{ phenom.username }}
     </b>
-    <span v-if="phenom.type === 'message'" class="datetime">
+    <span
+      v-if="phenom.type === 'message'"
+      v-b-tooltip.hover.noninteractive
+      class="datetime"
+      :title="datetimeTooltipText"
+    >
       {{ datetimeText }}
     </span>
     <span
@@ -28,7 +33,12 @@
     >
       {{ eventText }}
     </span>
-    <div v-if="phenom.type === 'event'" class="datetime">
+    <div
+      v-if="phenom.type === 'event'"
+      v-b-tooltip.hover.noninteractive
+      class="datetime"
+      :title="datetimeTooltipText"
+    >
       {{ datetimeText }}
     </div>
     <!-- eslint-disable vue/multiline-html-element-content-newline -->
@@ -66,9 +76,21 @@ export default class Phenom extends Vue {
   @Prop({ type: Object, required: true }) phenom!: IPhenom<IRowPhenom>;
 
   private get datetimeText() {
-    const isCurrentYear = this.phenom.datetime?.isSame(moment(), "year");
-    const year = isCurrentYear ? "" : " YY";
-    return this.phenom.datetime?.local().format(this.$t("format", { year }).toString()) ?? "";
+    const datetime = this.phenom.datetime;
+    const current = moment();
+    const isCurrentDay = datetime.isSame(current, "day");
+
+    if (isCurrentDay) {
+      return datetime.local().fromNow();
+    } else {
+      const isCurrentYear = datetime.isSame(current, "year");
+      const year = isCurrentYear ? "" : " YY";
+      return datetime.local().format(this.$t("format", { year }).toString()) ?? "";
+    }
+  }
+
+  private get datetimeTooltipText() {
+    return this.phenom.datetime?.local().format(this.$t("format", { year: " YYYY" }).toString()) ?? "";
   }
 
   private get messageText() {
