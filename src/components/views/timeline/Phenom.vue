@@ -1,3 +1,14 @@
+<i18n>
+  {
+    "en": {
+      "format": "Do MMM{year} [at] hh:mm A"
+    },
+    "ru": {
+      "format": "Do MMM{year} [в] HH:mm"
+    }
+  }
+</i18n>
+
 <template>
   <li class="phenom">
     <div v-if="phenom.username" class="avatar-container">
@@ -34,7 +45,7 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 import Avatar from "@/components/Avatar.vue";
 import { IRowPhenom } from "@/components/views/Timeline.vue";
-import { Moment } from "moment";
+import moment, { Moment } from "moment";
 
 export const phenomTypes = ["message", "event"] as const;
 export type PhenomType = typeof phenomTypes[number];
@@ -55,7 +66,9 @@ export default class Phenom extends Vue {
   @Prop({ type: Object, required: true }) phenom!: IPhenom<IRowPhenom>;
 
   private get datetimeText() {
-    return this.phenom.datetime?.format("Do MMM YY hh:mm:ss") ?? "";
+    const isCurrentYear = this.phenom.datetime?.isSame(moment(), "year");
+    const year = isCurrentYear ? "" : " YY";
+    return this.phenom.datetime?.local().format(this.$t("format", { year }).toString()) ?? "";
   }
 
   private get messageText() {
