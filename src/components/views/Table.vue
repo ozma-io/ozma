@@ -223,7 +223,7 @@ import { Link, attrToLinkRef, attrToLinkSelf } from "@/links";
 import {
   currentValue, IAddedRow, IAddedRowRef, ICombinedRow, ICombinedUserView, ICombinedUserViewAny, ICombinedValue, IExistingRowRef, IExtendedAddedRow,
   IExtendedRow, IExtendedRowCommon, IExtendedRowInfo, IExtendedValue, IRowCommon, IUserViewHandler, RowRef, ValueRef,
-  valueToPunnedText,
+  valueToPunnedText, CommittedRowRef,
 } from "@/user_views/combined";
 import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 
@@ -252,7 +252,7 @@ export interface ITableRowTree {
   parent: number | null;
   level: number;
   arrowDown: boolean;
-  children: number[];
+  children: CommittedRowRef[];
 }
 
 export interface ITableRowExtra extends IBaseRowExtra {
@@ -485,7 +485,11 @@ const initTreeChildren = (uv: ITableCombinedUserView) => {
   uv.rows!.forEach((row, i) => {
     if (row.extra.tree.parent) {
       const parentIndex = uv.extra.rowsParentPositions[row.extra.tree.parent];
-      uv.rows![parentIndex].extra.tree.children.push(i);
+      const child: IExistingRowRef = {
+        type: "existing",
+        position: i,
+      } ;
+      uv.rows![parentIndex].extra.tree.children.push(child);
 
       let level = 0;
       let parent: number | undefined = parentIndex;
@@ -1347,7 +1351,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private async addNewRowOnPosition(side: IAddedValueMeta["side"]): Promise<void> {
     const rowId = await this.addNewRow({ side });
-
     const firstNotDisabledColumn = this.uv.newRows[rowId].values.findIndex((value, i) => {
       return value.info !== undefined && this.uv.extra.columns[i].visible;
     });
@@ -1372,6 +1375,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     });
   }
 
+  private getChildrenPositions(children: CommittedRowRef[]): number[] {
+    return children.map(child => child.position);
+  }
+
   private showTreeChildren(parentIndex: number) {
     const children = this.uv.rows![parentIndex].extra.tree.children;
 
@@ -1388,7 +1395,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.uv.rows![parentIndex].extra.tree.arrowDown = false;
 
     children.forEach(child => {
-      const childPosition = this.rowPositions.indexOf(child);
+      const childPosition = this.rowPositions.indexOf(child.positon);
       this.rowPositions.splice(childPosition, 1);
 
       if (this.uv.rows![child].extra.tree.arrowDown) {
