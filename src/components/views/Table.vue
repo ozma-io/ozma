@@ -1504,10 +1504,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private canEditCell(ref: ValueRef) {
-    if (this.uv.extra.columns[ref.column].type === "buttons") {
-      return false;
-    }
-    return true;
+    return !(this.uv.extra.columns[ref.column].type === "buttons");
   }
 
   private get editingNonNullableBoolean(): boolean {
