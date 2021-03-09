@@ -45,6 +45,15 @@
         <span class="name">
           {{ entry.name }}
         </span>
+        <b-badge
+          v-if="entry.badge !== undefined && entry.badge.value !== undefined"
+          :class="$isMobile ? 'ml-auto' : 'ml-1'"
+          :style="badgeStyle"
+          pill
+          :variant="entry.badge.variant"
+        >
+          {{ entry.badge.value }}
+        </b-badge>
       </FunLink>
     </template>
   </b-col>
@@ -55,7 +64,13 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 
 import MenuHeading from "@/components/menu/MenuHeading.vue";
 import { Link } from "@/links";
-import { getIconType } from "@/utils";
+import { getIconType, BootstrapVariant } from "@/utils";
+
+export type Badge = {
+  value: unknown;
+  variant?: BootstrapVariant;
+  color?: string;
+};
 
 interface IMenuBase {
   name: string;
@@ -65,6 +80,7 @@ interface IMenuBase {
 export interface IMenuLink extends IMenuBase {
   icon?: string;
   link: Link;
+  badge?: Badge;
 }
 
 export interface IMenuCategory extends IMenuBase {
@@ -93,6 +109,16 @@ export default class MenuEntry extends Vue {
 
   private getIconType(str: string | undefined | null) {
     return getIconType(str);
+  }
+
+  private isMenuLink(entry: MenuValue): entry is IMenuLink {
+    return "link" in entry;
+  }
+
+  private get badgeStyle() {
+    return this.isMenuLink(this.entry) && this.entry?.badge?.color !== undefined
+      ? { backgroundColor: this.entry.badge.color }
+      : null;
   }
 }
 </script>

@@ -696,3 +696,6 @@ export const getIconType = (str: string | null | undefined): IconType => {
     ? "material"
     : "emoji";
 };
+
+export const bootstrapVariants = ["primary", "secondary", "success", "danger", "warning", "info", "light", "dark"] as const;
+export type BootstrapVariant = typeof bootstrapVariants[number];
