@@ -228,7 +228,7 @@ export default class UserViewTimeline extends mixins<EmptyBaseUserView, BaseEntr
       }
     }));
 
-    await this.submitChanges({ errorOnIncomplete: true });
+    await this.submitChanges({ scope: this.scope, errorOnIncomplete: true });
     this.message = "";
   }
 
