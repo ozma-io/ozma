@@ -1,6 +1,6 @@
 <template>
   <div
-    class="card_container"
+    class="card_container shadow-sm"
     :style="cardStyle"
   >
     <slot />
@@ -30,10 +30,8 @@ export default class KanbanCard extends Vue {
     border-radius: 0.25rem;
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
-    padding: 10px;
-    margin-bottom: 15px;
+    margin-bottom: 0.5rem;
     user-select: none;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
 
   @media screen and (max-width: 700px) {

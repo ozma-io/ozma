@@ -2,7 +2,7 @@
   <!-- <a> tags have special behaviour on Safari which breaks animation, hence no-href. -->
   <!-- Ternary in `:link` for fix Firefox issue, see: https://github.com/SortableJS/Sortable/issues/1184 -->
   <FunLink
-    class="card_link"
+    class="card-link"
     no-href
     :link="card.link"
     :disabled="dragged"
@@ -11,32 +11,31 @@
     <b-row
       v-for="(row, rowIndex) in card.rows"
       :key="rowIndex"
-      class="card_row"
+      class="card-row"
     >
       <b-col
         v-for="(col, colIndex) in row"
         :key="colIndex"
         :cols="col.size"
-        class="card_col"
+        class="card-col"
       >
         <div
           v-if="col.type === 'image'"
-          class="card_avatar"
+          class="card-avatar"
           :style="{ backgroundImage: `url('${col.url}')` }"
         />
         <span
           v-else
-          class="card_text"
+          class="card-text"
           :title="col.value"
         >
           <span
             v-if="col.icon && col.value"
-            class="card_icon"
+            class="card-icon"
           >
             {{ col.icon }}
           </span>
           <!-- eslint-disable vue/no-v-html -->
-          <!-- TODO: unable to click on string with link, but not on link -->
           <span
             v-if="col.valueHtml !== col.value"
             @click.stop
@@ -89,3 +88,26 @@ export default class RowCard extends Vue {
   @Prop({ type: Boolean, default: false }) dragged!: boolean;
 }
 </script>
+
+<style lang="scss" scoped>
+  .card-link {
+    padding: 0.5rem;
+    display: block;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .card-row {
+    margin: 0;
+  }
+
+  .card-col {
+    padding: 0;
+  }
+
+  .card-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
