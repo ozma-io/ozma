@@ -207,15 +207,6 @@ export default class TableRow extends Vue {
       z-index: 20; /* поверх обычных ячеек */
     }
 
-    .table-head .fixed-column {
-      position: sticky;
-      z-index: 20;
-      background-color: inherit;
-      box-shadow: 2px 2px 0 var(--MainBorderColor);
-      border-left: 0;
-      padding: 0;
-    }
-
     .table-tr .fixed-column {
       position: sticky;
       z-index: 20;
