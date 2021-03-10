@@ -21,7 +21,8 @@
     <template #header>
       <HeaderPanel
         :title="title"
-        :buttons="buttons"
+        :actions="actions"
+        :buttons="panelButtons"
         :is-enable-filter="enableFilter"
         :filter-string="filterString"
         :view="view"
@@ -41,7 +42,8 @@
           :scope="uid"
           :filter="filterWords"
           :filter-string="filterString"
-          @update:buttons="buttons = $event"
+          @update:actions="extraActions = $event"
+          @update:panelButtons="panelButtons = $event"
           @update:enableFilter="enableFilter = $event"
           @update:isLoading="isUserViewLoading = $event"
           @update:title="title = $event"
@@ -75,12 +77,13 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
+import { Action } from "@/components/ActionsMenu.vue";
 import type { IQuery } from "@/state/query";
 import { queryLocation } from "@/state/query";
 import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/staging_changes";
 import ModalPortal from "@/components/modal/ModalPortal";
 import { router } from "@/modules";
-import type { Button } from "@/components/buttons/buttons";
+import { PanelButton } from "@/components/ButtonsPanel.vue";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { convertToWords } from "@/utils";
 import { ISelectionRef } from "./BaseUserView";
@@ -98,11 +101,17 @@ export default class ModalUserView extends Vue {
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
 
   private title = "";
-  private buttons: Button[] = [];
-
+  private extraActions: Action[] = [];
+  private panelButtons: PanelButton[] = [];
   private enableFilter = false;
   private filterString = "";
   private isUserViewLoading = true;
+
+  get actions() {
+    const actions: Action[] = [];
+    actions.push(...this.extraActions);
+    return actions;
+  }
 
   get filterWords() {
     const value = this.filterString;

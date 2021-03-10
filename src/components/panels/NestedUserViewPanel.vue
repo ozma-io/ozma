@@ -1,20 +1,17 @@
 <template>
-  <div class="nested-menu">
-    <label
-      :class="[
-        'input_label',
-        {
-          'is-loading': isLoading,
-        }
-      ]"
-    >{{ title }}</label>
+  <div
+    v-if="actions.length > 0"
+    class="nested-menu"
+  >
+    <label class="input_label">{{ usedCaption }}</label>
+
     <ButtonsPanel
-      :buttons="buttons"
+      :buttons="panelButtons"
       @goto="$emit('goto', $event)"
     >
       <template #search-panel>
         <SearchPanel
-          v-if="isEnableFilter"
+          v-if="enableFilter"
           :filter-string="filterString"
           @update:filterString="$emit('update:filterString', $event)"
         />
@@ -22,72 +19,77 @@
       <template #actions-menu>
         <ActionsMenu
           :actions="actions"
-          :buttons="buttons"
+          :buttons="panelButtons"
           menu-align="right"
           @goto="$emit('goto', $event)"
         />
         <i
           class="material-icons material-button fullscreen_button rounded-circle"
-          @click.stop="openFullscreen()"
+          @click.stop="openFullscreen(inputType)"
         >fullscreen</i>
       </template>
     </ButtonsPanel>
+  </div>
+  <div v-else-if="inputType.name == 'empty_userview'">
+    <div class="nested-menu">
+      <label class="input_label">{{ usedCaption }}</label>
+      <ActionsMenu
+        :actions="[]"
+        menu-align="right"
+      />
+    </div>
+    <div class="empty_userview_text">
+      {{ inputType.text }}
+    </div>
+  </div>
+  <div v-else class="input_label__container">
+    <label class="input_label_single">{{ usedCaption }}</label>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { Action } from "@/components/ActionsMenu.vue";
-import type { IUserViewType } from "@/components/FormControl.vue";
+import type { IType, IUserViewType } from "@/components/FormControl.vue";
 import { queryLocation } from "@/state/query";
 import { router } from "@/modules";
 import { PanelButton } from "@/components/ButtonsPanel.vue";
-import SearchPanel from "@/components/SearchPanel.vue";
 
 @Component({
   components: {
-    SearchPanel,
+    SearchPanel: () => import("@/components/SearchPanel.vue"),
   },
 })
-export default class HeaderPanel extends Vue {
-  @Prop({ type: String, required: true }) title!: string;
+export default class NestedUserViewPanel extends Vue {
+  @Prop({ type: String, required: true }) usedCaption!: string;
   @Prop({ type: Array, required: true }) actions!: Action[];
-  @Prop({ type: Array, required: true }) buttons!: PanelButton[];
-  @Prop({ type: Boolean, required: true }) isEnableFilter!: boolean;
-  @Prop({ type: Object, default: null }) view!: IUserViewType;
+  @Prop({ type: Boolean, required: true }) enableFilter!: boolean;
+  @Prop({ type: Object, required: true }) inputType!: IType;
+  @Prop({ type: Array, required: true }) panelButtons!: PanelButton[];
   @Prop({ type: String, required: true }) filterString!: string;
-  @Prop({ type: Boolean, default: false }) isLoading!: boolean;
 
-  private openFullscreen() {
-    if (this.view !== null) {
-      void router.push(queryLocation(this.view));
-    }
+  private openFullscreen(view: IUserViewType) {
+    void router.push(queryLocation(view));
   }
 }
 
 </script>
 
-<style lang="scss" scoped>
+<style scoped>
   .nested-menu {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    align-items: center;
   }
 
   .input_label {
-    margin-bottom: 0;
+    margin-bottom: 3px;
     color: var(--MainTextColor);
     font-weight: 600;
     font-size: 1.25em;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: pre;
-
-    &.is-loading {
-      color: var(--MainTextColorLight);
-      opacity: 0.6;
-    }
   }
 
   .fullscreen_button {

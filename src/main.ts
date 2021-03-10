@@ -10,8 +10,8 @@ import { setHeadTitle } from "@/elements";
 
 import UserView from "@/components/UserView.vue";
 import FunLink from "@/components/FunLink";
-import ButtonsPanel from "@/components/panels/ButtonsPanel.vue";
-import ButtonGroup from "@/components/buttons/ButtonGroup.vue";
+import ActionsMenu from "@/components/ActionsMenu.vue";
+import ButtonsPanel from "@/components/ButtonsPanel.vue";
 import FormControl from "@/components/FormControl.vue";
 import { VueIsMobile } from "@/components";
 import App from "@/App.vue";
@@ -48,8 +48,8 @@ Vue.use(TextareaAutosize);
 Vue.use(VueIsMobile);
 
 Vue.component("UserView", UserView);
+Vue.component("ActionsMenu", ActionsMenu);
 Vue.component("ButtonsPanel", ButtonsPanel);
-Vue.component("ButtonGroup", ButtonGroup);
 Vue.component("FormControl", FormControl);
 Vue.component("FunLink", FunLink);
 
