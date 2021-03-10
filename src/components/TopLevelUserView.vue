@@ -60,7 +60,7 @@
         :buttons="buttons"
         :is-enable-filter="enableFilter"
         :filter-string="query.root.search"
-        @update:filterString="filterString = $event"
+        @update:filterString="replaceRootSearch($event)"
         @goto="$emit('goto', $event)"
       >
         <template #main-buttons>
