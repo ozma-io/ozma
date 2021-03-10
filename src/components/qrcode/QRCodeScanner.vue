@@ -20,7 +20,7 @@
         "no_record_found":"Не найдена запись с данным id",
         "unknown_code": "Неизвестный код",
         "error": "Ошибка",
-        "entity_not_initialized": "Сущность не задана"
+        "entity_not_initialized": "Сущьность не задана"
     }
   }
 </i18n>

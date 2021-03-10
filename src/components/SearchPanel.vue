@@ -58,14 +58,11 @@
         </b-input-group>
       </b-form>
     </transition>
-    <b-button
+    <i
       v-if="showOpenButton"
-      class="btn-sm lh-0-5 p-0-5"
-      variant="light"
-      @click.prevent="toggleShowInput"
-    >
-      <i class="material-icons">search</i>
-    </b-button>
+      class="material-icons material-button rounded-circle"
+      @click="toggleShowInput"
+    >search</i>
   </div>
 </template>
 
