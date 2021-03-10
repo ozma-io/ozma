@@ -15,21 +15,24 @@
     @before-close="beforeClose"
     @opened="$emit('opened')"
   >
-    <div class="header-container">
-      <div class="left-buttons">
-        <input
-          type="button"
-          value="arrow_back"
-          class="back-button material-icons material-button rounded-circle"
-          @click="$router.go(-1)"
+    <div class="d-flex align-items-center pl-1">
+      <b-button
+        variant="light"
+        class="btn-sm lh-0-5 p-0-5"
+        @click="$router.go(-1)"
+      >
+        <span class="material-icons">arrow_back</span>
+      </b-button>
+      <router-link
+        :to="{ name: 'main' }"
+      >
+        <b-button
+          variant="light"
+          class="btn-sm lh-0-5 p-0-5"
         >
-        <router-link
-          :to="{ name: 'main' }"
-          class="main-menu-button material-icons material-button rounded-circle"
-        >
-          home
-        </router-link>
-      </div>
+          <span class="material-icons">home</span>
+        </b-button>
+      </router-link>
 
       <div
         v-if="hasTabs"
@@ -184,11 +187,6 @@ export default class Modal extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  .header-container {
-    display: flex;
-    flex-direction: row;
-  }
-
   .modal__tab_headers {
     width: 100%;
     display: flex;
@@ -196,29 +194,6 @@ export default class Modal extends Vue {
 
     &.is-mobile {
       overflow: auto;
-    }
-  }
-
-  .left-buttons {
-    display: flex;
-    flex-direction: row;
-    padding: 5px 0 5px 5px;
-
-    .back-button {
-      padding-top: 3px;
-      padding-bottom: 3px;
-      margin-left: 0 !important;
-    }
-
-    .back-button,
-    .main-menu-button {
-      color: var(--MainTextColor) !important;
-      background-color: transparent;
-      border: none;
-      text-decoration: none;
-      padding: 0;
-      margin-right: 5px;
-      z-index: 1000;
     }
   }
 

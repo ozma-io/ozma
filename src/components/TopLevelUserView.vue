@@ -55,62 +55,40 @@
     </template>
 
     <div :class="'userview-upper-div'">
-      <div class="head-menu">
-        <input
-          v-if="!isMainView"
-          type="button"
-          value="arrow_back"
-          class="head-menu_back-button material-icons material-button rounded-circle"
-          @click="$router.go(-1)"
-        >
-        <router-link
-          v-if="!isMainView"
-          :to="{ name: 'main' }"
-          class="head-menu_main-menu-button material-icons material-button rounded-circle"
-        >
-          home
-        </router-link>
-        <ActionsMenu
-          :actions="actions"
-          @goto="pushRoot"
-        />
-        <!-- TODO: Make better tooltips for long userview titles.
-             (Without `tabindex` and `:focus { outline: none; }`) -->
-        <span
-          v-if="!!title"
-          v-b-tooltip.click.blur.bottom.noninteractive
-          :class="[
-            'head-menu_title',
-            {
-              'is-loading': isUserViewLoading,
-            }
-          ]"
-          tabindex="0"
-          :title="title"
-        >
-          {{ title }}
-        </span>
-        <ButtonsPanel
-          :buttons="panelButtons"
-          @goto="$emit('goto', $event)"
-        >
-          <template #search-panel>
-            <SearchPanel
-              v-if="enableFilter"
-              :filter-string="query.root.search"
-              @update:filterString="replaceRootSearch($event)"
-            />
-          </template>
-          <template #actions-menu>
-            <ActionsMenu
-              :actions="extraActions"
-              :buttons="panelButtons"
-              menu-align="right"
-              @goto="pushRoot"
-            />
-          </template>
-        </ButtonsPanel>
-      </div>
+      <HeaderPanel
+        :title="title"
+        :buttons="buttons"
+        :is-enable-filter="enableFilter"
+        :filter-string="query.root.search"
+        @update:filterString="filterString = $event"
+        @goto="$emit('goto', $event)"
+      >
+        <template #main-buttons>
+          <b-button
+            v-if="!isMainView"
+            variant="light"
+            class="btn-sm lh-0-5 p-0-5"
+            @click="$router.go(-1)"
+          >
+            <span class="material-icons">arrow_back</span>
+          </b-button>
+          <router-link
+            v-if="!isMainView"
+            :to="{ name: 'main' }"
+          >
+            <b-button
+              variant="light"
+              class="btn-sm lh-0-5 p-0-5"
+            >
+              <span class="material-icons">home</span>
+            </b-button>
+          </router-link>
+          <ButtonGroup
+            :button="burgerButton"
+            @goto="$emit('goto', $event)"
+          />
+        </template>
+      </HeaderPanel>
       <div
         class="userview-div"
       >
@@ -123,8 +101,7 @@
           scope="root"
           @goto="pushRoot"
           @goto-previous="gotoPreviousRoot"
-          @update:panelButtons="panelButtons = $event"
-          @update:actions="extraActions = $event"
+          @update:buttons="buttons = $event"
           @update:statusLine="statusLine = $event"
           @update:enableFilter="enableFilter = $event"
           @update:bodyStyle="styleNode.innerHTML = $event"
@@ -199,15 +176,14 @@ import * as Api from "@/api";
 import { setHeadTitle } from "@/elements";
 import { ErrorKey } from "@/state/errors";
 import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/staging_changes";
-import { Action } from "@/components/ActionsMenu.vue";
-import { PanelButton } from "@/components/ButtonsPanel.vue";
 import ModalUserView from "@/components/ModalUserView.vue";
-import SearchPanel from "@/components/SearchPanel.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { CurrentAuth, getAuthedLink, INoAuth } from "@/state/auth";
 import { IQuery, ICurrentQueryHistory } from "@/state/query";
 import { convertToWords, nextRender } from "@/utils";
 import { Link } from "@/links";
+import type { Button } from "@/components/buttons/buttons";
+import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 
 const auth = namespace("auth");
 const staging = namespace("staging");
@@ -216,10 +192,10 @@ const query = namespace("query");
 const errors = namespace("errors");
 
 @Component({ components: {
-  SearchPanel,
   ModalUserView,
   ProgressBar,
   QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
+  HeaderPanel,
 } })
 export default class TopLevelUserView extends Vue {
   @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
@@ -239,13 +215,13 @@ export default class TopLevelUserView extends Vue {
   @errors.Mutation("removeError") removeError!: (params: { key: ErrorKey; index: number }) => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
 
-  private panelButtons: PanelButton[] = [];
-  private extraActions: Action[] = [];
   private statusLine = "";
   private enableFilter = false;
   private styleNode: HTMLStyleElement;
   private title = "";
   private isUserViewLoading = true;
+
+  private buttons: Button[] = [];
 
   private wasOpenedQRCodeScanner = false;
   private isOpenQRCodeScanner = false;
@@ -364,25 +340,32 @@ export default class TopLevelUserView extends Vue {
     void this.submitChanges({ scope: "root", errorOnIncomplete: true });
   }
 
-  get actions() {
-    const actions: Action[] = [];
+  get burgerButton() {
+    const buttons: Button[] = [];
     if (this.currentAuth?.token) {
       if (Api.developmentMode) {
         const currentAuth = this.currentAuth;
-        actions.push({ icon: "link",
+        buttons.push({ icon: "link",
           name: this.$t("authed_link").toString(),
-          order: 1000,
           callback: () => {
             const link = getAuthedLink(currentAuth);
             void navigator.clipboard.writeText(link);
-          } });
+          },
+          type: "callback" });
       }
-      actions.push({ icon: "perm_identity", name: this.$t("account").toString(), order: 1000, link: { href: Api.accountUrl, type: "href" } });
-      actions.push({ icon: "exit_to_app", name: this.$t("logout").toString(), order: 1000, callback: this.logout });
+      buttons.push({ icon: "perm_identity", name: this.$t("account").toString(), type: "link", link: { href: Api.accountUrl, type: "href" } });
+      buttons.push({ icon: "exit_to_app", name: this.$t("logout").toString(), type: "callback", callback: this.logout });
     } else {
-      actions.push({ icon: "login", name: this.$t("login").toString(), order: 1000, callback: this.login });
+      buttons.push({ icon: "login", name: this.$t("login").toString(), type: "callback", callback: this.login });
     }
-    return actions;
+
+    const burgerButton: Button = {
+      icon: "menu",
+      buttons,
+      type: "button-group",
+    };
+
+    return burgerButton;
   }
 
   get isMainView() {
@@ -419,6 +402,7 @@ export default class TopLevelUserView extends Vue {
     width: 100%;
     height: 100%;
     overflow: hidden;
+    border-top: 1px solid var(--MainBorderColor);
   }
 
   .userview-upper-div {
@@ -445,13 +429,12 @@ export default class TopLevelUserView extends Vue {
   }
 
   .head-menu {
-    height: 44px;
     display: flex;
-    align-items: center;
     white-space: nowrap;
+    align-items: center;
     background-color: var(--MainBackgroundColor);
     width: 100%;
-    padding: 5px 10px;
+    padding: 2px 10px;
     z-index: 999;
     border-bottom: 1px solid var(--MainBorderColor);
   }

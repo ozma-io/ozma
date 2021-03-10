@@ -153,6 +153,11 @@
           ref="control"
           :content="textValue"
         />
+        <ButtonsPanel
+          v-else-if="inputType.name === 'buttons'"
+          :buttons="inputType.buttons"
+          @goto="$emit('goto', $event)"
+        />
         <div v-else-if="inputType.name === 'static_text'">
           {{ textValue }}
         </div>
@@ -172,7 +177,7 @@
           :background-color="cellColor"
           :qrcode-input="isQRCodeInput"
           @update:actions="actions = $event"
-          @update:buttons="panelButtons = $event"
+          @update:buttons="buttons = $event"
           @focus="iSlot.onFocus"
           @blur="$emit('blur', $event)"
           @update:value="updateValue($event)"
@@ -195,10 +200,6 @@
               >
                 {{ title }}
               </label>
-              <ActionsMenu
-                menu-align="right"
-                :actions="[]"
-              />
             </div>
             <div class="empty_userview_text">
               {{ $t('data_will_load_after_save') }}
@@ -207,8 +208,7 @@
           <HeaderPanel
             v-else-if="inputType.name === 'userview'"
             :title="usedCaption"
-            :actions="actions"
-            :buttons="panelButtons"
+            :buttons="buttons"
             :is-enable-filter="enableFilter"
             :view="inputType"
             :filter-string="filterString"
@@ -226,8 +226,7 @@
               :scope="scope"
               :level="level + 1"
               :filter-string="filterString"
-              @update:actions="actions = $event"
-              @update:panelButtons="panelButtons = $event"
+              @update:buttons="buttons = $event"
               @update:enableFilter="enableFilter = $event"
               @update:isLoading="isUserViewLoading = $event"
               @update:title="updateTitle"
@@ -246,14 +245,15 @@ import { namespace } from "vuex-class";
 import type { AttributesMap, ValueType } from "ozma-api";
 
 import { valueToText, valueIsNull } from "@/values";
-import { Action } from "@/components/ActionsMenu.vue";
 import { IQuery, attrToQuerySelf } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
-import { PanelButton } from "@/components/ButtonsPanel.vue";
 import { IEntityRef } from "ozma-api/src";
+
+import type { Button } from "@/components/buttons/buttons";
+import { attrToButtons } from "@/components/buttons/buttons";
 import FormInputPlaceholder from "@/components/FormInputPlaceholder.vue";
 import { IReferenceSelectAction } from "./ReferenceMultiSelect.vue";
 
@@ -333,6 +333,11 @@ interface IStaticImageType {
   name: "static_image";
 }
 
+interface IButtonsType {
+  name: "buttons";
+  buttons: Button[];
+}
+
 export type IType =
   ITextType
   | ITextAreaType
@@ -348,7 +353,8 @@ export type IType =
   | IStaticTextType
   | IStaticImageType
   | IQRCodeType
-  | IBarCodeType;
+  | IBarCodeType
+  | IButtonsType;
 
 const staging = namespace("staging");
 
@@ -432,8 +438,7 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
 
-  private actions: Action[] = [];
-  private panelButtons: PanelButton[] = [];
+  private buttons: Button[] = [];
   private codeEditorKey = 0;
   private filterString = "";
   private title = "";
@@ -562,6 +567,9 @@ export default class FormControl extends Vue {
       return { name: "static_text" };
     } else if (controlAttr === "static_image") {
       return { name: "static_image" };
+    } else if (controlAttr === "buttons") {
+      const buttons = attrToButtons(this.currentValue);
+      return { name: "buttons", buttons };
     }
     // `calc` is needed because sizes should be relative to base font size.
     const heightMultilineText = "calc(4em + 12px)";
@@ -714,8 +722,7 @@ export default class FormControl extends Vue {
 
     if (newName === oldName) return;
 
-    this.actions = [];
-    this.panelButtons = [];
+    this.buttons = [];
     this.title = "";
     this.filterString = "";
     this.enableFilter = false;

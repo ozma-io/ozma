@@ -1,15 +1,23 @@
 <template>
-  <div class="nested-menu">
-    <label
-      :class="[
-        'input_label',
-        {
-          'is-loading': isLoading,
-        }
-      ]"
-    >{{ title }}</label>
+  <div class="header-panel p-1">
+    <div class="d-flex align-items-center">
+      <slot name="main-buttons" />
+      <label
+        v-b-tooltip.click.blur.bottom.noninteractive
+        :class="[
+          'input_label',
+          {
+            'is-loading': isLoading,
+          }
+        ]"
+        :title="title"
+      >
+        {{ title }}
+      </label>
+    </div>
+
     <ButtonsPanel
-      :buttons="buttons"
+      :buttons="headerButtons"
       @goto="$emit('goto', $event)"
     >
       <template #search-panel>
@@ -18,18 +26,14 @@
           :filter-string="filterString"
           @update:filterString="$emit('update:filterString', $event)"
         />
-      </template>
-      <template #actions-menu>
-        <ActionsMenu
-          :actions="actions"
-          :buttons="buttons"
-          menu-align="right"
-          @goto="$emit('goto', $event)"
-        />
-        <i
-          class="material-icons material-button fullscreen_button rounded-circle"
+        <b-button
+          v-if="view !== null"
+          variant="light"
+          class="btn-sm lh-0-5 p-0-5"
           @click.stop="openFullscreen()"
-        >fullscreen</i>
+        >
+          <span class="material-icons">fullscreen</span>
+        </b-button>
       </template>
     </ButtonsPanel>
   </div>
@@ -37,11 +41,11 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import { Action } from "@/components/ActionsMenu.vue";
 import type { IUserViewType } from "@/components/FormControl.vue";
 import { queryLocation } from "@/state/query";
 import { router } from "@/modules";
-import { PanelButton } from "@/components/ButtonsPanel.vue";
+import type { Button } from "@/components/buttons/buttons";
+import { buttonsToPanelButtons } from "@/components/buttons/buttons";
 import SearchPanel from "@/components/SearchPanel.vue";
 
 @Component({
@@ -51,12 +55,15 @@ import SearchPanel from "@/components/SearchPanel.vue";
 })
 export default class HeaderPanel extends Vue {
   @Prop({ type: String, required: true }) title!: string;
-  @Prop({ type: Array, required: true }) actions!: Action[];
-  @Prop({ type: Array, required: true }) buttons!: PanelButton[];
+  @Prop({ type: Array, required: true }) buttons!: Button[];
   @Prop({ type: Boolean, required: true }) isEnableFilter!: boolean;
   @Prop({ type: Object, default: null }) view!: IUserViewType;
   @Prop({ type: String, required: true }) filterString!: string;
   @Prop({ type: Boolean, default: false }) isLoading!: boolean;
+
+  get headerButtons() {
+    return buttonsToPanelButtons(this.buttons);
+  }
 
   private openFullscreen() {
     if (this.view !== null) {
@@ -68,7 +75,8 @@ export default class HeaderPanel extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  .nested-menu {
+  .header-panel {
+    width: 100%;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -76,10 +84,11 @@ export default class HeaderPanel extends Vue {
   }
 
   .input_label {
-    margin-bottom: 0;
-    color: var(--MainTextColor);
+    margin: 1px 2px 0;
+    margin-right: auto;
     font-weight: 600;
     font-size: 1.25em;
+    color: var(--MainTextColor);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: pre;
