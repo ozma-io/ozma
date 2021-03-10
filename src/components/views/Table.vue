@@ -285,7 +285,7 @@ export interface ITableViewExtra extends IBaseViewExtra {
   rowsParentPositions: Record<number, number>;
   linkOpts?: IAttrToQueryOpts;
   
-  newRowTreePositions: Record<number, CommittedRowRef>;
+  newRowTreePositions: Record<number, IAddedNewRowRef>;
   newRowTopSidePositions: NewRowRef[];
   newRowBottomSidePositions: NewRowRef[];
   
@@ -593,7 +593,8 @@ const getNewRow = (uv: ITableCombinedUserView, pos: NewRowRef): INewRow => {
 };
 
 interface IAddedValueMeta {
-  side: "top_front" | "top_back" | "bottom_back";
+  side: "top_front" | "top_back" | "bottom_back" | "position";
+  position?: number;
 }
 
 const isAddedValueMeta = (obj: unknown): obj is IAddedValueMeta => {
@@ -601,7 +602,7 @@ const isAddedValueMeta = (obj: unknown): obj is IAddedValueMeta => {
     return false;
   }
   const side = (obj as any).side;
-  return side === "top_front" || side === "top_back" || side === "bottom_back";
+  return side === "top_front" || side === "top_back" || side === "bottom_back" || side === "position";
 };
 
 export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowExtra, ITableViewExtra> = {
@@ -747,12 +748,13 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     const baseExtra = baseUserViewHandler.createAddedLocalRow(uv, rowId, row, oldView, oldRow);
     const commonExtra = createCommonLocalRow(uv, row, oldRow);
 
-    uv.extra.newRowTreePositions[1] = {type:"added", id: rowId};
-
+    console.log("meta", meta);
     const newRef: NewRowRef = {
       type: "added",
       addedId: rowId,
     };
+
+
     if (!uv.extra.newRowTopSidePositions.find(ref => equalNewRowRef(newRef, ref))
       && !uv.extra.newRowBottomSidePositions.find(ref => equalNewRowRef(newRef, ref))
     ) {
@@ -763,6 +765,9 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
         uv.extra.newRowTopSidePositions.push(newRef);
       } else if (side === "bottom_back") {
         uv.extra.newRowBottomSidePositions.push(newRef);
+      } else if (side === "position") {
+        const position = isAddedValueMeta(meta) ? meta.position : undefined;
+        uv.extra.newRowTreePositions[position ?? 0] =  newRef;
       } else {
         throw new Error("Impossible");
       }
@@ -1356,8 +1361,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private async addNewRowOnPosition(side: IAddedValueMeta["side"]): Promise<void> {
-    const rowId = await this.addNewRow({ side });
+  private async addNewRowOnPosition(side: IAddedValueMeta["side"], position?: IAddedValueMeta["position"]): Promise<void> {
+    const rowId = await this.addNewRow({ side: "position", position : 3});
+    this.buildRowPositions();
     const firstNotDisabledColumn = this.uv.newRows[rowId].values.findIndex((value, i) => {
       return value.info !== undefined && this.uv.extra.columns[i].visible;
     });
@@ -1780,7 +1786,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (rows === null) {
       return [];
     } else {
-      return mapMaybe(rowI => {
+
+    let exRows: IShownRow[] =  mapMaybe(rowI => {
         if (rowI.type !== "existing") return undefined;
         const row = rows[rowI.position];
         if (row.deleted || row.extra.shownAsNewRow) {
@@ -1793,6 +1800,28 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
           ref: rowI,
         };
       }, this.rowPositions);
+
+      console.log("newRowTreePositions", this.uv.extra.newRowTreePositions);
+      const rowRef = this.uv.extra.newRowTreePositions[3];
+      if (rowRef) {
+        const row = getNewRow(this.uv, rowRef);
+        console.log("row", row);
+
+        const leftChank = exRows.splice(0, 2);
+        const rightChank = exRows;
+        leftChank.push({
+          key: `${rowRef.type}-${rowRef.addedId}_`,
+          notExisting: true,
+          row: row.row,
+          ref: row.ref,
+        })
+
+        exRows = leftChank.concat(rightChank);
+      }
+
+      console.log("exRows",  exRows);
+
+      return exRows;
     }
   }
 
