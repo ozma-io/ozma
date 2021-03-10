@@ -12,7 +12,7 @@
                           'editing_style': value.extra.editing !== undefined,
                           'tree-branches': column.treeUnfoldColumn && tree.children !== undefined && tree.children.length > 0 && showTree,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
-    @click.capture.stop="$emit('cell-click', columnPosition, $refs.cell)"
+    @click.stop="$emit('cell-click', columnPosition, $refs.cell)"
     @mousedown="$emit('cell-mousedown', $event, value)"
     @mouseover.self="$emit('cell-mouseover', $event, value)"
     @mouseup="$emit('cell-mouseup', $event, value)"
