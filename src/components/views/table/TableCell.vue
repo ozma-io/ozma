@@ -12,7 +12,7 @@
                           'editing_style': value.extra.editing !== undefined,
                           'tree-branches': column.treeUnfoldColumn && tree.children !== undefined && tree.children.length > 0 && showTree,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
-    @click.stop="$emit('cell-click', columnPosition, $event)"
+    @click.capture.stop="$emit('cell-click', columnPosition, $refs.cell)"
     @mousedown="$emit('cell-mousedown', $event, value)"
     @mouseover.self="$emit('cell-mouseover', $event, value)"
     @mouseup="$emit('cell-mouseup', $event, value)"
@@ -32,7 +32,7 @@
           >
             <input
               type="button"
-              class="material-icons reference-open-modal md-18"
+              class="material-icons md-18 reference-open-modal material-button rounded-circle"
               :value="iconValue"
             >
           </FunLink>
@@ -151,7 +151,7 @@ export default class TableCell extends Vue {
     float: left;
     padding: 0 5px;
     border: 1px solid var(--MainBorderColor);
-    border-radius: 1rem;
+    border-radius: 0.6rem;
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
     width: 100%;
@@ -163,7 +163,6 @@ export default class TableCell extends Vue {
 
     > p {
       height: inherit;
-      pointer-events: none;
 
       ::v-deep .checkbox {
         .material-icons {
@@ -172,12 +171,10 @@ export default class TableCell extends Vue {
       }
 
       ::v-deep button {
-        pointer-events: all;
         cursor: pointer;
       }
 
       ::v-deep a {
-        pointer-events: all;
         cursor: pointer;
 
         &:link {
@@ -243,17 +240,14 @@ export default class TableCell extends Vue {
 
   .reference-open-modal {
     pointer-events: auto !important;
-    left: 0;
+    left: 2px;
+    top: -1px;
     position: absolute;
     border: none;
     background: none;
     padding: 0;
     color: var(--MainBorderTextColor);
     cursor: pointer;
-  }
-
-  .reference-open-modal:hover {
-    opacity: 0.7;
   }
 
   span.reference-text {

@@ -1,3 +1,14 @@
+<i18n>
+  {
+    "en": {
+      "format": "Do MMM{year} [at] hh:mm A"
+    },
+    "ru": {
+      "format": "Do MMM{year} [в] HH:mm"
+    }
+  }
+</i18n>
+
 <template>
   <li class="phenom">
     <div v-if="phenom.username" class="avatar-container">
@@ -8,7 +19,12 @@
     <b v-if="phenom.username" class="username">
       {{ phenom.username }}
     </b>
-    <span v-if="phenom.type === 'message'" class="datetime">
+    <span
+      v-if="phenom.type === 'message'"
+      v-b-tooltip.hover.noninteractive
+      class="datetime"
+      :title="datetimeTooltipText"
+    >
       {{ datetimeText }}
     </span>
     <span
@@ -17,7 +33,12 @@
     >
       {{ eventText }}
     </span>
-    <div v-if="phenom.type === 'event'" class="datetime">
+    <div
+      v-if="phenom.type === 'event'"
+      v-b-tooltip.hover.noninteractive
+      class="datetime"
+      :title="datetimeTooltipText"
+    >
       {{ datetimeText }}
     </div>
     <!-- eslint-disable vue/multiline-html-element-content-newline -->
@@ -34,7 +55,7 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 import Avatar from "@/components/Avatar.vue";
 import { IRowPhenom } from "@/components/views/Timeline.vue";
-import { Moment } from "moment";
+import moment, { Moment } from "moment";
 
 export const phenomTypes = ["message", "event"] as const;
 export type PhenomType = typeof phenomTypes[number];
@@ -55,7 +76,21 @@ export default class Phenom extends Vue {
   @Prop({ type: Object, required: true }) phenom!: IPhenom<IRowPhenom>;
 
   private get datetimeText() {
-    return this.phenom.datetime?.format("Do MMM YY hh:mm:ss") ?? "";
+    const datetime = this.phenom.datetime;
+    const current = moment();
+    const isCurrentDay = datetime.isSame(current, "day");
+
+    if (isCurrentDay) {
+      return datetime.local().fromNow();
+    } else {
+      const isCurrentYear = datetime.isSame(current, "year");
+      const year = isCurrentYear ? "" : " YY";
+      return datetime.local().format(this.$t("format", { year }).toString());
+    }
+  }
+
+  private get datetimeTooltipText() {
+    return this.phenom.datetime.local().format(this.$t("format", { year: " YYYY" }).toString());
   }
 
   private get messageText() {

@@ -39,7 +39,7 @@ declare module "vue-input-autowidth" {
 declare module "vue-textarea-autosize";
 
 declare module "vue-dragscroll";
-declare module "vue-qrcode-reader";
+declare module "vue-barcode-reader";
 declare module "@chenfengyuan/vue-qrcode";
 declare module "vue-barcode";
 

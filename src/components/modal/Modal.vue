@@ -15,31 +15,49 @@
     @before-close="beforeClose"
     @opened="$emit('opened')"
   >
-    <div
-      v-if="hasTabs"
-      :class="[
-        'modal__tab_headers',
-        { 'is-mobile': $isMobile },
-      ]"
-    >
-      <ModalTabHeader
-        v-for="(tab, index) in modalTabs"
-        :key="index"
-        :is-active="index === selectedTab"
-        :title="tab.title"
-        :only-tab="modalTabs.length === 1"
-        @tab-click="switchTab(index)"
-        @tab-close="$emit('tab-close', index)"
+    <div class="header-container">
+      <div class="left-buttons">
+        <input
+          type="button"
+          value="arrow_back"
+          class="back-button material-icons material-button rounded-circle"
+          @click="$router.go(-1)"
+        >
+        <router-link
+          :to="{ name: 'main' }"
+          class="main-menu-button material-icons material-button rounded-circle"
+        >
+          home
+        </router-link>
+      </div>
+
+      <div
+        v-if="hasTabs"
+        :class="[
+          'modal__tab_headers',
+          { 'is-mobile': $isMobile },
+        ]"
       >
-        <template #header>
-          <ModalContent :nodes="tab.header" />
-        </template>
-        <i
-          class="material-icons material-button mobile_close_button"
-          @click="$emit('close')"
-        >close</i>
-      </ModalTabHeader>
+        <ModalTabHeader
+          v-for="(tab, index) in modalTabs"
+          :key="index"
+          :is-active="index === selectedTab"
+          :title="tab.title"
+          :only-tab="modalTabs.length === 1"
+          @tab-click="switchTab(index)"
+          @tab-close="$emit('tab-close', index)"
+        >
+          <template #header>
+            <ModalContent :nodes="tab.header" />
+          </template>
+          <i
+            class="material-icons material-button rounded-circle mobile_close_button"
+            @click="$emit('close')"
+          >close</i>
+        </ModalTabHeader>
+      </div>
     </div>
+
     <div
       v-if="hasTabs"
       :class="[
@@ -166,10 +184,42 @@ export default class Modal extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  .modal__tab_headers {
+  .header-container {
     display: flex;
     flex-direction: row;
-    padding: 0;
+  }
+
+  .modal__tab_headers {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+
+    &.is-mobile {
+      overflow: auto;
+    }
+  }
+
+  .left-buttons {
+    display: flex;
+    flex-direction: row;
+    padding: 5px 0 5px 5px;
+
+    .back-button {
+      padding-top: 3px;
+      padding-bottom: 3px;
+      margin-left: 0 !important;
+    }
+
+    .back-button,
+    .main-menu-button {
+      color: var(--MainTextColor) !important;
+      background-color: transparent;
+      border: none;
+      text-decoration: none;
+      padding: 0;
+      margin-right: 5px;
+      z-index: 1000;
+    }
   }
 
   .modal__content {

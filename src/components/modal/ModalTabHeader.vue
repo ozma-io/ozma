@@ -47,23 +47,6 @@ export default class ModalTabHeader extends Vue {
     width: 100%;
   }
 
-  .head-menu_back-button {
-    padding-top: 3px;
-    padding-bottom: 3px;
-    margin-left: 0 !important;
-  }
-
-  .head-menu_back-button,
-  .head-menu_main-menu-button {
-    color: var(--MainTextColor) !important;
-    background: hsla(0, 0%, 100%, 0.3);
-    border: none;
-    text-decoration: none;
-    padding: 0;
-    margin-right: 5px;
-    z-index: 1000;
-  }
-
   .modal__tab_header {
     width: 100%;
     display: flex;
@@ -94,7 +77,6 @@ export default class ModalTabHeader extends Vue {
 
   .modal__tab_header.selected,
   .modal__tab_header:hover {
-    color: var(--MainTextColor);
     border-color: var(--MainBorderColor);
     cursor: pointer;
   }
@@ -102,6 +84,15 @@ export default class ModalTabHeader extends Vue {
   .modal__tab_header.only_tab {
     border-color: transparent;
     cursor: grab;
+  }
+
+  .modal__tab_header:not(.only_tab) {
+    border-left: 1px solid var(--MainBorderColor);
+
+    &:not(.selected) {
+      /* TODO: remove hardcoded color */
+      background-color: #eaeaea;
+    }
   }
 
   .modal__tab_close_button {
