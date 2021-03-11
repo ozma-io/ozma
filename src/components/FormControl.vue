@@ -42,6 +42,7 @@
         <Input
           v-else-if="inputType.name === 'text'"
           :value="currentValue"
+          :qrcode-input="isQRCodeInput"
           :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
           :required="!isNullable"

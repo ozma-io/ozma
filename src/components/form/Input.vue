@@ -54,7 +54,27 @@
         @keydown.enter.native.prevent.stop="onPressEnter"
         @keydown.tab.native.prevent.stop="onPressTab"
       />
+      <b-input-group-append
+        v-if="qrcodeInput"
+      >
+        <b-button
+          variant="outline-info"
+          class="with-material-icon"
+        >
+          <i
+            class="material-icons qr_code"
+            @click="openQRCodeScanner = !openQRCodeScanner"
+          >
+            qr_code_2
+          </i>
+        </b-button>
+      </b-input-group-append>
     </b-input-group>
+    <QRCodeScanner
+      raw
+      :open-scanner="openQRCodeScanner"
+      @select="updateInputCellEdit"
+    />
   </fragment>
 </template>
 
@@ -62,9 +82,10 @@
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { valueIsNull } from "@/values";
 import Textarea from "@/components/form/Textarea.vue";
+import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
 
 @Component({
-  components: { Textarea },
+  components: { Textarea, QRCodeScanner },
 })
 export default class Input extends Vue {
   @Prop({ type: String }) label!: string;
@@ -78,6 +99,7 @@ export default class Input extends Vue {
   @Prop({ type: Boolean, default: true }) inline!: boolean;
   @Prop({ type: String, default: "text" }) type!: string;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
+  @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
   // FIXME: remove this and style parent nodes instead.
   // Perhaps we need "autosize" prop instead?
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
@@ -86,6 +108,7 @@ export default class Input extends Vue {
 
   private focused = false;
   private maxInputWidth = 0;
+  private openQRCodeScanner = false;
 
   private get isEmpty(): boolean {
     return valueIsNull(this.value);

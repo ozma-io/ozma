@@ -143,11 +143,13 @@ button:not(.btn) {
     padding: 0 4px !important;
     display: flex !important;
     align-items: center !important;
+    border: 1px solid var(--MainBorderColor);
   }
 
   .material-icons {
     line-height: 0.875rem;
   }
+
 }
 
 input.disabled {
