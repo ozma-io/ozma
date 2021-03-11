@@ -112,7 +112,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   }
 
   private async onDecode(content: string) {
-    await this.audio.play();
+    // await this.audio.play();
 
     const parsedContent = parseQRCode(content);
     let currentContent = null;
