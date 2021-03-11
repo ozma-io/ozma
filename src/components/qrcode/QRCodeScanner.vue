@@ -96,6 +96,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Prop({ type: Boolean, default: false }) openScanner!: boolean;
   @Prop({ type: Boolean, default: false }) multiScan!: boolean;
   @Prop({ type: Boolean, default: false }) textInput!: boolean;
+  @Prop({ type: Boolean, default: false }) raw!: boolean;
   @Prop({ type: Object, default: null }) link!: Link;
   @Prop({ type: Object, default: undefined }) entity!: IEntriesRef | undefined;
 
@@ -105,14 +106,32 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   result: Array<IQRResultContent> = [];
   audio = new Audio(beep);
 
+  currentContent = "";
+  timer = false;
+  timerDuration = 3000;
+
   @Watch("openScanner")
   private toggleOpenScanner() {
     this.modalShow = !this.modalShow;
     this.result = [];
+    this.timer = false;
+    this.currentContent = "";
   }
 
   private async onDecode(content: string) {
-    // await this.audio.play();
+    if (this.isScanned(content)) return;
+
+    try {
+      await this.audio.play();
+    } catch (err) {
+      console.error(err);
+    }
+
+    if (this.raw) {
+      this.$emit("select", content);
+      this.toggleOpenScanner();
+      return;
+    }
 
     const parsedContent = parseQRCode(content);
     let currentContent = null;
@@ -217,6 +236,27 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     }
 
     this.toggleOpenScanner();
+  }
+
+  private async startTimer() {
+    await this.timeout(this.timerDuration);
+    this.timer = false;
+  }
+
+  private timeout(ms: number) {
+    return new Promise(resolve => {
+      window.setTimeout(resolve, ms);
+    });
+  }
+
+  private isScanned(content: string) {
+    if (this.currentContent === content && this.timer) {
+      return true;
+    }
+    this.currentContent = content;
+    this.timer = true;
+    void this.startTimer();
+    return false;
   }
 
   private makeToast(message: string) {
