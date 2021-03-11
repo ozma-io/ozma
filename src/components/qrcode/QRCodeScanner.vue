@@ -105,31 +105,29 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   modalShow = false;
   result: Array<IQRResultContent> = [];
   audio = new Audio(beep);
-  timeout = 0;
-  currentContent = "";
 
-  timerStep = 100;
-  timerDuration = 2900;
+  currentContent = "";
+  timer = false;
+  timerDuration = 3000;
 
   @Watch("openScanner")
   private toggleOpenScanner() {
     this.modalShow = !this.modalShow;
     this.result = [];
-    this.timeout = 0;
+    this.timer = false;
     this.currentContent = "";
   }
 
   private async onDecode(content: string) {
-
-    if (this.isRescanning(content)) return;
+    if (this.isScanned(content)) return;
 
     try {
       await this.audio.play();
-    } catch(err) {
+    } catch (err) {
       console.error(err);
     }
 
-    if(this.raw){
+    if (this.raw) {
       this.$emit("select", content);
       this.toggleOpenScanner();
       return;
@@ -240,22 +238,24 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     this.toggleOpenScanner();
   }
 
-  private startTimer() {
-    if (this.timeout > 0) {
-      this.timeout = this.timeout - this.timerStep;
-      setTimeout(this.startTimer, this.timerStep);
-    }
+  private async startTimer() {
+    await this.timeout(this.timerDuration);
+    this.timer = false;
   }
 
-  private isRescanning(content: string) {
-    if (this.currentContent === content && this.timeout > 0) {
+  private timeout(ms: number) {
+    return new Promise(resolve => {
+      window.setTimeout(resolve, ms);
+    });
+  }
+
+  private isScanned(content: string) {
+    if (this.currentContent === content && this.timer) {
       return true;
     }
-    if (this.currentContent === content) {
-      this.timeout = this.timerDuration;
-      setTimeout(this.startTimer, this.timerStep);
-    }
     this.currentContent = content;
+    this.timer = true;
+    void this.startTimer();
     return false;
   }
 
