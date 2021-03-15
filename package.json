@@ -23,6 +23,7 @@
     "@types/sanitize-html": "^1.27.0",
     "@types/vfile-message": "^2.0.0",
     "bootstrap-vue": "^2.0.4",
+    "color2k": "^1.2.4",
     "core-js": "^3.4.8",
     "dependencies": "0.0.1",
     "jwt-decode": "^3.1.2",

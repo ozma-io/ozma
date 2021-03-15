@@ -106,7 +106,7 @@
         >
           <div
             class="spinner-border"
-            style="width: 3em; height: 3em; border-color: rgba(0, 0, 0, 0.5); border-right-color: transparent;"
+            style="width: 3em; height: 3em; border-color: var(--default-foregroundDarkerColor, rgba(0, 0, 0, 0.5)); border-right-color: transparent;"
           />
         </div>
       </div>
@@ -600,7 +600,7 @@ export default class UserView extends Vue {
 
     .loading-background {
       padding: 30px;
-      background-color: rgba(240, 240, 240);
+      background-color: var(--default-backgroundDarker2Color, rgba(240, 240, 240));
       cursor: wait;
     }
 

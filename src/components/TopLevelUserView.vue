@@ -57,16 +57,14 @@
     <div :class="'userview-upper-div'">
       <div class="head-menu">
         <input
-          v-if="!isMainView"
           type="button"
           value="arrow_back"
           class="head-menu_back-button material-icons material-button rounded-circle"
           @click="$router.go(-1)"
         >
         <router-link
-          v-if="!isMainView"
           :to="{ name: 'main' }"
-          class="head-menu_main-menu-button material-icons material-button rounded-circle"
+          :class="['head-menu_main-menu-button material-icons material-button rounded-circle', { disabled: isMainView }]"
         >
           home
         </router-link>
@@ -460,12 +458,11 @@ export default class TopLevelUserView extends Vue {
     padding-top: 3px;
     padding-bottom: 3px;
     margin-left: 0 !important;
+    background-color: transparent;
   }
 
   .head-menu_back-button,
   .head-menu_main-menu-button {
-    color: var(--MainTextColor) !important;
-    background: hsla(0, 0%, 100%, 0.3);
     border: none;
     text-decoration: none;
     padding: 0;

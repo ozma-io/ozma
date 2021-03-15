@@ -38,7 +38,7 @@
 import { Component } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
-import { tryDicts, mapMaybe, bootstrapVariants, BootstrapVariant } from "@/utils";
+import { tryDicts, mapMaybe } from "@/utils";
 import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import * as R from "ramda";
@@ -46,6 +46,7 @@ import * as R from "ramda";
 import MenuEntry, { MenuValue, IMenuLink, Badge } from "@/components/views/menu/MenuEntry.vue";
 import { attrToLink, IAttrToLinkOpts } from "@/links";
 import { currentValue, valueToPunnedText } from "@/user_views/combined";
+import { getColorVariables } from "@/utils_colors";
 
 @UserView()
 @Component({ components: { MenuEntry } })
@@ -107,30 +108,28 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
 
       const hasBadgeObject = typeof entry.badge === "object" && entry.badge !== null && "value" in entry.badge;
       const hasBadge = hasBadgeObject || entry["badge_value"] !== undefined;
-      let badge: Badge | undefined;
+      let badge: any;
       if (hasBadge) {
         if (hasBadgeObject) {
           badge = entry.badge as Badge;
           const badgeVariant = entry.variant as any;
-          if (badge.color === undefined && !bootstrapVariants.includes(badgeVariant)) {
-            badge.variant = "danger";
+          if (badge.variant) {
+            badge.colorVariables = getColorVariables("badge", badge.variant);
+            delete badge.variant;
           }
         } else {
           badge = {
             value: undefined,
-            variant: "danger",
+            variant: null,
+            colorVariables: null,
           };
           const badgeValue = entry["badge_value"];
           if (badgeValue !== undefined) {
             badge.value = badgeValue;
           }
-
-          const badgeColor = entry["badge_color"];
           const badgeVariant = entry["badge_variant"];
-          if (badgeColor !== undefined && typeof badgeColor === "string") {
-            badge.color = badgeColor;
-          } else if (badgeVariant !== undefined && bootstrapVariants.includes(badgeVariant as any)) {
-            badge.variant = badgeVariant as BootstrapVariant;
+          if (badgeVariant) {
+            badge.colorVariables = getColorVariables("badge", badgeVariant);
           }
         }
       }

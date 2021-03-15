@@ -72,7 +72,12 @@
               'inline': !label || inline,
             },
           ]"
-          :style="{ backgroundColor: backgroundColor ? backgroundColor : 'var(--MainBackgroundColor)' }"
+          :style="[
+            {
+              backgroundColor: backgroundColor ? backgroundColor : 'var(--input-backgroundColor, var(--MainBackgroundColor))',
+            },
+            colorVariables,
+          ]"
         >
           <div
             v-if="required"
@@ -102,6 +107,7 @@ export default class InputSlot extends Vue {
   // FIXME: remove this and style parent nodes instead.
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
+  @Prop({ type: Object }) colorVariables!: Record<string, unknown> | null;
   @Prop({ type: String, default: "left" }) textAlign!: string;
   @Prop({ type: Boolean, default: false }) modal!: boolean;
   @Prop({ type: Boolean, default: false }) modalOnly!: boolean;
@@ -172,19 +178,12 @@ export default class InputSlot extends Vue {
     margin-bottom: 0;
     overflow: hidden;
     text-overflow: ellipsis;
-    opacity: 0.7;
     white-space: pre;
-    cursor: question;
-    color: var(--MainTextColorLight);
+    color: var(--form-foregroundDarkenColor, var(--MainTextColorLight));
   }
 
   .input_container_cell-edit {
     padding: 0;
-  }
-
-  .input_modal_label {
-    color: var(--MainTextColor);
-    margin: 5px;
   }
 
   .input-slot {
@@ -232,7 +231,7 @@ export default class InputSlot extends Vue {
     position: relative;
     top: 40%;
     padding: 0 5%;
-    background-color: var(--MainBackgroundColor);
+    background-color: var(--table-backgroundColor, var(--MainBackgroundColor));
   }
 
   .input_modal__button__ok,

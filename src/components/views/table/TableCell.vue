@@ -2,7 +2,7 @@
   <!-- FIXME: Pls solve these classes -->
   <td
     ref="cell"
-    :style="value.extra.style"
+    :style="[value.extra.style, value.extra.colorVariables]"
     :class="['table-td', {'fixed-column': column.fixed,
                           'select_fixed': value.extra.selected && column.fixed,
                           'next-after-last-fixed': index === lastFixedColumnIndex,
@@ -13,9 +13,6 @@
                           'tree-branches': column.treeUnfoldColumn && tree.children !== undefined && tree.children.length > 0 && showTree,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click.stop="$emit('cell-click', columnPosition, $refs.cell)"
-    @mousedown="$emit('cell-mousedown', $event, value)"
-    @mouseover.self="$emit('cell-mouseover', $event, value)"
-    @mouseup="$emit('cell-mouseup', $event, value)"
   >
     <p>
       <template v-if="column.type == 'buttons'">
@@ -142,7 +139,7 @@ export default class TableCell extends Vue {
     position: relative;
     float: left;
     padding: 0 5px;
-    border: 1px solid var(--MainBorderColor);
+    border: 1px solid var(--default-borderColor, var(--MainBorderColor));
     border-radius: 0.6rem;
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);

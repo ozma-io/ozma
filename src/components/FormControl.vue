@@ -28,6 +28,7 @@
       :is-cell-edit="isCellEdit"
       :label="usedCaption"
       :background-color="cellColor"
+      :color-variables="colorVariables"
       :text-align="textAlign"
       :modal="$isMobile && (forceModalOnMobile || isMultiline)"
       :required="!isNullable"
@@ -219,7 +220,10 @@
           />
         </b-col>
         <b-col :cols="!isMultiline && usedCaption ? 8 : 12">
-          <div v-if="inputType.name === 'userview'" :style="{ backgroundColor: cellColor, borderRadius: '0.2rem' }">
+          <div
+            v-if="inputType.name === 'userview'"
+            :style="{ backgroundColor: cellColor }"
+          >
             <NestedUserView
               ref="control"
               :args="inputType.args"
@@ -256,6 +260,7 @@ import { currentValue, homeSchema } from "@/user_views/combined";
 import { PanelButton } from "@/components/ButtonsPanel.vue";
 import { IEntityRef } from "ozma-api/src";
 import FormInputPlaceholder from "@/components/FormInputPlaceholder.vue";
+import { getColorVariables } from "@/utils_colors";
 import { IReferenceSelectAction } from "./ReferenceMultiSelect.vue";
 
 interface ITextType {
@@ -524,6 +529,17 @@ export default class FormControl extends Vue {
     return "cell_color" in this.attributes ? String(this.attributes["cell_color"]) : null;
   }
 
+  get colorVariables() {
+    if ("cell_variant" in this.attributes) {
+      return getColorVariables("input", this.attributes["cell_variant"]);
+    } else if (this.cellColor) {
+      console.warn("`cell_color` attribute is deprecated, use `cell_variant` instead.");
+      return getColorVariables("input", { background: this.cellColor });
+    } else {
+      return null;
+    }
+  }
+
   get customHeight() {
     const heightAttr = Number(this.attributes["control_height"]);
     return Number.isNaN(heightAttr) ? null : heightAttr;
@@ -786,22 +802,9 @@ export default class FormControl extends Vue {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: pre;
-    cursor: question;
     color: var(--MainTextColor);
     font-weight: 600;
     font-size: 1.25em;
-  }
-
-  .input_label_single {
-    align-self: center;
-    margin-bottom: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: pre;
-    cursor: question;
-    width: 100%;
-    opacity: 0.7;
-    color: var(--MainTextColorLight);
   }
 
   .empty_userview_text {
