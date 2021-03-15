@@ -44,12 +44,14 @@
       :not-existing="notExisting"
       :last-fixed-column-index="lastFixedColumnIndex"
       :show-tree="showTree"
+      :row-index="rowIndex"
       @cell-click="$emit('cell-click', arguments[0], arguments[1])"
       @cell-mousedown="$emit('cell-mousedown', arguments[0], arguments[1])"
       @cell-mouseover="$emit('cell-mouseover', arguments[0], arguments[1])"
       @cell-mouseup="$emit('cell-mouseup', arguments[0], arguments[1])"
       @update:visibleChildren="$emit('update:visibleChildren', arguments[0], arguments[1])"
       @toggle-children="$emit('toggle-children', $event)"
+      @add-child="$emit('add-child')"
       @goto="$emit('goto', $event)"
     />
   </tr>

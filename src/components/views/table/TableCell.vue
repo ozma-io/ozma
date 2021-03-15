@@ -49,6 +49,11 @@
           />
         </template>
         <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueFormatted.length > 0, 'tree': showTree}]">
+          <span 
+            class="display-arrow add-child"
+            @click.stop="$emit('add-child')"
+            @dblclick.stop
+          > + </span>
           <span
             :style="{'margin-left': treeLevel*25+'px'}"
             :class="['display-arrow material-icons', {'down': tree.arrowDown}]"
@@ -208,6 +213,18 @@ export default class TableCell extends Vue {
 
   .tree-branches .hidden-arrow-space {
     display: none;
+  }
+
+  .add-child {
+    cursor: pointer;
+    pointer-events: auto !important;
+    
+      &:hover {
+        color: white;
+        transition: transform 0.2s;
+        background-color: grey;
+      }
+  
   }
 
   .display-arrow {
