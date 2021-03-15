@@ -284,6 +284,7 @@ export interface ITableViewExtra extends IBaseViewExtra {
   columns: IColumn[];
   fixedColumnPositions: Record<number, string>;
   rowsParentPositions: Record<number, number>;
+  treeParentColumnIdex: number;
   linkOpts?: IAttrToQueryOpts;
   
   newRowTreePositions: Record<number, IAddedNewRowRef>;
@@ -642,6 +643,8 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
         if (value.value !== null) {
           row.extra.tree.parent = Number(value.value);
         }
+
+        uv.extra.treeParentColumnIdex = columnIndex;
       }
     }
 
@@ -1419,9 +1422,14 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     };
 
     const rowId = await this.addNewRow();
+
+    const columnIndex = this.uv.extra.treeParentColumnIdex;
+    console.log(columnIndex);
     
     const row = this.uv.newRows[rowId];
     const newRef: IAddedRowRef = { type: "added", id: rowId };
+
+    await this.updateValue({ type: "added", id:rowId, column: columnIndex }, this.uv.rows![ref.position].mainId);
 
     const parentPosition = this.rowPositions.indexOf(ref);
     const leftChank = this.rowPositions.splice(0, parentPosition + 1);
