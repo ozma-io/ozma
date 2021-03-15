@@ -44,6 +44,7 @@ body {
   overflow: hidden;
   bottom: 0;
   -webkit-text-size-adjust: none;
+
   --FocusBorderColor: #{$input-focus-border-color};
 
   div#app {
