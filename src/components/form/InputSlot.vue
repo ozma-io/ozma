@@ -174,7 +174,6 @@ export default class InputSlot extends Vue {
     text-overflow: ellipsis;
     opacity: 0.7;
     white-space: pre;
-    cursor: question;
     color: var(--MainTextColorLight);
   }
 
