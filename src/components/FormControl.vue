@@ -201,7 +201,7 @@
                 :actions="[]"
               />
             </div>
-            <div class="empty_userview_text border rounded">
+            <div class="empty_userview_text">
               {{ $t('data_will_load_after_save') }}
             </div>
           </div>
@@ -809,7 +809,7 @@ export default class FormControl extends Vue {
   .empty_userview_text {
     opacity: 0.7;
     padding: 0.25rem 0.5rem;
-    border: 1px solid var(--MainBorderColor);
+    border: 1px dashed var(--MainBorderColor);
     border-radius: 0.2rem;
     color: var(--MainTextColorLight);
   }
