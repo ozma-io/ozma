@@ -720,6 +720,7 @@ export default class FormControl extends Vue {
     this.title = "";
     this.filterString = "";
     this.enableFilter = false;
+    this.isUserViewLoading = false;
   }
 
   private mounted() {
