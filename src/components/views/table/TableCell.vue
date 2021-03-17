@@ -175,7 +175,7 @@ export default class TableCell extends Vue {
           top: -2px;
         }
       }
-      
+
       ::v-deep button {
         pointer-events: all;
         cursor: pointer;
@@ -201,7 +201,7 @@ export default class TableCell extends Vue {
         }
       }
     }
-    
+
     & .add-child {
       visibility: hidden;
     }
@@ -241,8 +241,6 @@ export default class TableCell extends Vue {
     right: 0;
     top: 0;
   }
-
-    
 
   .display-arrow {
     display: none;
