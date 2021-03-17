@@ -342,6 +342,7 @@ export default class Calendar extends Vue {
 
   .calendar-input {
     border-right-width: 0;
+    font-size: var(--FontSize) !important;
   }
 
   .popper-inner {

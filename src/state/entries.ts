@@ -311,7 +311,7 @@ export interface IEntriesState {
 }
 
 const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
-  const query = `{ $search string }: SELECT id, __main FROM "${ref.entity.schema}"."${ref.entity.name}" WHERE __main ILIKE $search ORDER BY __main, id`;
+  const query = `{ $search string }: SELECT id, __main AS main FROM "${ref.entity.schema}"."${ref.entity.name}" WHERE (__main :: string) ILIKE $search`;
   const likeSearch = search === "" ? "%" : "%" + search.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_") + "%";
   const chunk: IViewChunk = { offset, limit: limit + 1 };
   const res = await context.dispatch("callProtectedApi", {
@@ -331,7 +331,7 @@ const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEnt
 };
 
 const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, ids: RowId[]): Promise<Record<RowId, string>> => {
-  const query = `{ $ids array(int) }: SELECT id, __main FROM "${ref.entity.schema}"."${ref.entity.name}" WHERE id = ANY ($ids)`;
+  const query = `{ $ids array(int) }: SELECT id, __main AS main FROM "${ref.entity.schema}"."${ref.entity.name}" WHERE id = ANY ($ids)`;
   const res = await context.dispatch("callProtectedApi", {
     func: Api.getAnonymousUserView.bind(Api),
     args: [query, { ids }],

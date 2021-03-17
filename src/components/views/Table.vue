@@ -1845,6 +1845,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return [...this.topRows, ...this.existingRows, ...this.bottomRows];
   }
 
+  // Part of all rows that's currently rendered. This is used to improve loading performance.
   get shownRows() {
     const totalAdded = this.topRows.length + this.bottomRows.length;
     return this.allRows.slice(0, totalAdded + this.showLength);

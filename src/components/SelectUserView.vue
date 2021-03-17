@@ -28,7 +28,7 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { IEntityRef, IEntity } from "ozma-api";
 
-import { equalEntityRef } from "@/values";
+import { inheritedFromEntity } from "@/values";
 import type { IQuery } from "@/state/query";
 import { ErrorKey } from "@/state/errors";
 import { ISelectionRef } from "@/components/BaseUserView";
@@ -56,7 +56,7 @@ export default class SelectUserView extends Vue {
     }
 
     const entityInfo = await this.getEntity(this.selectEntity);
-    if (!(equalEntityRef(this.selectEntity, selection.entity) || entityInfo.children.some(x => equalEntityRef(x.ref, selection.entity)))) {
+    if (!inheritedFromEntity(this.selectEntity, entityInfo, selection.entity)) {
       const message = "Entry from invalid entity selected";
       this.setError({ key: errorKey, error: message });
       throw new Error(message);

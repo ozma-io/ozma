@@ -796,7 +796,7 @@ export default class MultiSelect extends Vue {
     align-self: center;
     border: 1px solid var(--MainBorderColor);
     background-color: var(--MainBackgroundColor);
-    line-height: 1rem;
+    line-height: normal;
   }
 
   .options-list {

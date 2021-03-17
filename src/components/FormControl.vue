@@ -192,10 +192,10 @@
             <div class="nested-menu">
               <label
                 v-b-tooltip.click.blur.bottom.noninteractive
-                class="input_label"
-                :title="title"
+                class="input_label not-loaded"
+                :title="usedCaption"
               >
-                {{ title }}
+                {{ usedCaption }}
               </label>
               <ActionsMenu
                 menu-align="right"
@@ -805,10 +805,17 @@ export default class FormControl extends Vue {
     color: var(--MainTextColor);
     font-weight: 600;
     font-size: 1.25em;
+
+    &.not-loaded {
+      color: var(--MainTextColorLight);
+    }
   }
 
   .empty_userview_text {
     opacity: 0.7;
+    padding: 0.25rem 0.5rem;
+    border: 1px dashed var(--MainBorderColor);
+    border-radius: 0.2rem;
     color: var(--MainTextColorLight);
   }
 
