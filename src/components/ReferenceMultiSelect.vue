@@ -145,6 +145,10 @@ export interface IReferenceSelectAction {
 
 export type ReferenceSelectOption = ISelectOption<IReferenceValue>;
 
+const compareOptions = (a : ReferenceSelectOption, b : ReferenceSelectOption): number => {
+  return a.label.localeCompare(b.label);
+};
+
 @Component({
   components: {
     MultiSelect,
@@ -254,7 +258,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
 
   get options(): ReferenceSelectOption[] | null {
     if (this.valueOptions && this.entriesOptions) {
-      return [...this.valueOptions, ...this.entriesOptions];
+      return [...this.valueOptions, ...this.entriesOptions].sort(compareOptions);
     } else {
       return null;
     }
