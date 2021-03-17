@@ -1,4 +1,4 @@
-import { ValueType, FieldType, IFieldRef, IEntityRef } from "ozma-api";
+import type { ValueType, FieldType, IFieldRef, IEntityRef, IEntity } from "ozma-api";
 import moment, { Moment, MomentInput } from "moment";
 
 import { deepEquals } from "@/utils";
@@ -18,6 +18,14 @@ export const equalEntityRef = (a: IEntityRef, b: IEntityRef) => {
 
 export const equalFieldRef = (a: IFieldRef, b: IFieldRef) => {
   return equalEntityRef(a.entity, b.entity) && a.name === b.name;
+};
+
+export const inheritedFromEntity = (entityRef: IEntityRef, entity: IEntity, otherRef: IEntityRef) => {
+  return equalEntityRef(entityRef, otherRef) || entity.children.some(childRef => equalEntityRef(childRef.ref, otherRef));
+};
+
+export const parentOfEntity = (entityRef: IEntityRef, entity: IEntity, otherRef: IEntityRef) => {
+  return equalEntityRef(entityRef, otherRef) || entity.parents.some(parentRef => equalEntityRef(parentRef, otherRef));
 };
 
 export interface IUpdatedValue {

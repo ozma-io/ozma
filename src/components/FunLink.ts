@@ -43,7 +43,7 @@ export default Vue.component("FunLink", {
       vueEmit(context, "goto", query);
     };
 
-    const openQRCodeScanner = (name:string, qrLink: Link) => {
+    const openQRCodeScanner = (name: string, qrLink: Link) => {
       context.parent.$root.$emit(name, qrLink);
     };
 
