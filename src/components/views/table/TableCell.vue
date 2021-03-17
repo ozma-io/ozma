@@ -161,6 +161,12 @@ export default class TableCell extends Vue {
     word-wrap: break-word;
   }
 
+  .add-child {
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+
   .table-td {
     position: relative;
     touch-action: manipulation;
@@ -234,12 +240,6 @@ export default class TableCell extends Vue {
 
   .tree-branches .hidden-arrow-space {
     display: none;
-  }
-
-  .add-child {
-    position: absolute;
-    right: 0;
-    top: 0;
   }
 
   .display-arrow {
