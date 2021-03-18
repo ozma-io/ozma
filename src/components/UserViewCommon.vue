@@ -66,7 +66,7 @@ import { ValueRef, valueToPunnedText } from "@/user_views/combined";
 import { referenceEntriesRef } from "@/state/entries";
 
 import type { Button } from "@/components/buttons/buttons";
-import { attrToButtons } from "@/components/buttons/buttons";
+import { attrToButtons, attrToButtonsOld } from "@/components/buttons/buttons";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -163,13 +163,18 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   }
 
   get attrButtons(): Button[] {
-    const buttons = this.uv.attributes["panel_buttons"];
-
     const opts: IAttrToQueryOpts = {
       homeSchema: this.uv.homeSchema ?? undefined,
     };
 
-    return attrToButtons(buttons, opts);
+    const panel_buttons = this.uv.attributes["panel_buttons"];
+    const buttons = this.uv.attributes["buttons"];
+    if (panel_buttons) {
+      // Will be deleted
+      return attrToButtonsOld(panel_buttons, opts);
+    } else {
+      return attrToButtons(buttons, opts);
+    }
   }
 
   get buttons() {

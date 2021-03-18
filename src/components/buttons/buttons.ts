@@ -41,7 +41,67 @@ export interface IButtonGroup extends IButton {
 
 export type Button = ILocationButton | ILinkButton | ICallbackButton | IUploadFileButton | IButtonGroup | IEmptyButton;
 
+export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts): Button | undefined => {
+  if (typeof buttonAttr !== "object" || buttonAttr === null) {
+    return undefined;
+  }
+  
+  // `buttonsAttr` at this point is guaranteed to be `Record<string, unknown>`,
+  // but TypeScript doesn't support advanced type witnesses like that.
+  const buttonObj = buttonAttr as Record<string, unknown>;
+
+  const name = typeof buttonObj.name === "string" ? buttonObj.name : undefined;
+  const icon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
+  const tooltip = typeof buttonObj.tooltip === "string" ? buttonObj.tooltip : undefined;
+  const display = typeof buttonObj.display === "string" ? buttonObj.display : undefined;
+  const variant = typeof buttonObj.variant === "string" ? buttonObj.variant : undefined;
+
+  if (buttonObj.visible === false) {
+    return undefined;
+  }
+
+  const link = attrToLink(buttonObj, opts);
+  if (link !== null) {
+    return {
+      name,
+      icon,
+      tooltip,
+      variant,
+      link,
+      display,
+      type: "link",
+    };
+  }
+
+  if (Array.isArray(buttonObj.buttons)) {
+    const buttons = attrToButtons(buttonObj.buttons, opts);
+    return {
+      name,
+      icon,
+      tooltip,
+      variant,
+      buttons,
+      display,
+      type: "button-group",
+    };
+  }
+
+  return {
+    type: "empty",
+  };
+}
+
 export const attrToButtons = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): Button[] => {
+  if (!Array.isArray(buttonsAttr)) {
+    return [];
+  }
+  return mapMaybe((rawButton: unknown) => {
+    return attrToButton(rawButton, opts);
+  }, buttonsAttr);
+};
+
+// Will be deleted
+export const attrToButtonsOld = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): Button[] => {
   if (!Array.isArray(buttonsAttr)) {
     return [];
   }
@@ -61,7 +121,7 @@ export const attrToButtons = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): But
     const display = typeof buttonObj.display === "string" ? buttonObj.display : undefined;
     const variant = typeof buttonObj.variant === "string" ? buttonObj.variant : undefined;
 
-    if (buttonObj.visible === false) {
+    if (buttonObj.visible === false || name === undefined) {
       return undefined;
     }
 
@@ -96,6 +156,7 @@ export const attrToButtons = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): But
     };
   }, buttonsAttr);
 };
+  
 
 export const buttonsToPanelButtons = (buttons: Button[]): Button[] => {
   const panelButtons: Button[] = [];
