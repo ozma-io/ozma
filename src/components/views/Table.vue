@@ -154,7 +154,7 @@
         </thead>
         <transition-group tag="tbody" name="fade-2">
           <TableRow
-            v-for="(row, rowIndex) in allRows"
+            v-for="(row, rowIndex) in shownRows"
             :key="row.key"
             :uv="uv"
             :row="row.row"
@@ -827,6 +827,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
 
   createLocalUserView(uv: ITableCombinedUserView, oldView: ITableViewExtra | null) {
     const baseExtra = baseUserViewHandler.createLocalUserView(uv, oldView);
+    console.log("baseExtra", baseExtra);
     const columns = createColumns(uv);
 
     const disableSelectionColumn = uv.attributes["disable_selection_column"];
@@ -891,11 +892,11 @@ const rowContains = (row: ITableExtendedRowCommon, searchWords: string[]) => {
   return searchWords.every(word => row.extra.searchText.includes(word));
 };
 
-const rowIndicesCompare = (aIndex: CommittedRowRef, bIndex: CommittedRowRef, entries: IShownRow[], sortColumn: number, collator: Intl.Collator) => {
-  const a = entries.find(e => e.ref === aIndex);
-  const b = entries.find(e => e.ref === bIndex);
-  const aValue = a?.row.values[sortColumn].value;
-  const bValue = b?.row.values[sortColumn].value;
+const rowIndicesCompare = (aIndex: CommittedRowRef, bIndex: CommittedRowRef, uv: ITableCombinedUserView, sortColumn: number, collator: Intl.Collator) => {
+  const a = uv.getRowByRef(aIndex);
+  const b = uv.getRowByRef(bIndex);
+  const aValue = a?.values[sortColumn].value;
+  const bValue = b?.values[sortColumn].value;
   if (aValue === null) {
     return 1;
   } else if (bValue === null) {
@@ -1390,8 +1391,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.uv.rows![parentRef.position].extra.tree.arrowDown = true;
 
     const parentPosition = this.rowPositions.indexOf(parentRef);
-    const leftChank = this.rowPositions.splice(0, parentPosition + 1);
-    this.rowPositions = [...leftChank, ...children, ...this.rowPositions];
+    const leftChunk = this.rowPositions.splice(0, parentPosition + 1);
+    this.rowPositions = [...leftChunk, ...children, ...this.rowPositions];
   }
 
   private hideTreeChildren(parent: CommittedRowRef) {
@@ -1418,13 +1419,14 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     const columnIndex = this.uv.extra.treeParentColumnIdex;
 
     this.uv.newRows[rowId].extra.tree.level = this.uv.rows![parentRef.position].extra.tree.level + 1;
+    this.uv.newRows[rowId].extra.tree.parent = parentRef.position;
 
     const newRef: IAddedRowRef = { type: "added", id: rowId };
     await this.updateValue({ type: "added", id: rowId, column: columnIndex }, this.uv.rows![parentRef.position].mainId);
 
     const parentPosition = this.rowPositions.indexOf(parentRef);
-    const leftChank = this.rowPositions.splice(0, parentPosition + 1);
-    this.rowPositions = [...leftChank, newRef, ...this.rowPositions];
+    const leftChunk = this.rowPositions.splice(0, parentPosition + 1);
+    this.rowPositions = [...leftChunk, newRef, ...this.rowPositions];
 
     const children = this.uv.rows![parentRef.position].extra.tree.children;
     this.uv.rows![parentRef.position].extra.tree.children = [newRef, ...children];
@@ -1767,16 +1769,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private sortRows() {
-    // const rows = this.uv.rows!;
-    const rows = this.allRows;
-
     if (this.uv.extra.sortColumn !== null) {
       const sortColumn = this.uv.extra.sortColumn;
       const collator = new Intl.Collator(["en", "ru"], this.uv.extra.sortOptions);
       const sortFunction: (a: CommittedRowRef, b: CommittedRowRef) => number =
         this.uv.extra.sortAsc ?
-          (a, b) => rowIndicesCompare(a, b, rows, sortColumn, collator) :
-          (a, b) => rowIndicesCompare(b, a, rows, sortColumn, collator);
+          (a, b) => rowIndicesCompare(a, b, this.uv, sortColumn, collator) :
+          (a, b) => rowIndicesCompare(b, a, this.uv, sortColumn, collator);
 
       this.rowPositions.sort(sortFunction);
     }
@@ -1862,7 +1861,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   get shownRows() {
-    const totalAdded = this.topRows.length + this.bottomRows.length;
+    const totalAdded = Object.keys(this.uv.newRows).length;
     return this.allRows.slice(0, totalAdded + this.showLength);
   }
 
