@@ -1,8 +1,8 @@
 import { rgba, toRgba, parseToRgba, readableColor, mix } from "color2k";
-import { IViewExprResult } from "ozma-api";
+import { IExecutedValue, IExecutedRow, IViewExprResult } from "ozma-api";
 import { store } from "@/main";
 import { default as Api } from "@/api";
-import R from "ramda";
+import { mapMaybe } from "./utils";
 
 const orNull = <T, F>(func: (arg: T) => F) =>
   (arg: unknown) => {
@@ -55,7 +55,7 @@ const lightenOrDarken = (color: string, amount: number): string => mix(color, re
 export const colorVariantFromRaw = (raw: RawColorVariant): NamedColorVariant => {
   const background = toRgbaOrNull(raw.background) ?? rgba(0, 0, 0, 1);
   const foreground = toRgbaOrNull(raw.foreground) ?? darkenOrLighten(background, 0.8);
-  const border = toRgbaOrNull(raw.border) ?? mix(background, "black", 0.2);
+  const border = toRgbaOrNull(raw.border) ?? mix(background, "black", 0.25);
   const backgroundDarker1 = mix(background, foreground, 0.05);
   const backgroundDarker2 = mix(background, foreground, 0.15);
   const foregroundContrast = readableColor(background);
@@ -102,19 +102,58 @@ export const getColorVariables = (componentName: string, colorVariant: unknown):
   return {};
 };
 
-export const loadColorVariants = async (ref: { schema: string; name: string }) => {
+export const loadThemes = async () => {
+  const ref = { schema: "funapp", name: "table-CapybaraTest-colorThemes" }; // TODO: Move it to system table.
   const res: IViewExprResult = await store.dispatch("callProtectedApi", {
     func: Api.getNamedUserView,
     args: [ref],
   }, { root: true });
-  const columnNames = res.info.columns.map(column => column.name);
-  const rawVariants = res.result.rows.map(row =>
-    Object.fromEntries(columnNames.map((name, index) => ([name, row.values[index].value]))));
-  const requiredColumnNames = ["name", "background"];
-  if (R.intersection(requiredColumnNames, columnNames).length === requiredColumnNames.length) {
-    return rawVariants.map(colorVariantFromRaw as any);
-  } else {
-    console.warn("Table with color variants must have fields: " + requiredColumnNames.join(", "));
+
+  const nameColumnIndex = res.info.columns.findIndex(column => column.name === "name");
+  if (nameColumnIndex === -1) {
+    throw new Error("Table with theme names must have `name` column.");
   }
-  return [];
+
+  return res.result.rows.map(row => row.values[nameColumnIndex].value);
+};
+
+export const getPrefferedTheme = async () => {
+  const availableThemes = await loadThemes();
+  const prefersDarkTheme = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+
+  const storagedTheme = localStorage.getItem("preffered-theme");
+  if (availableThemes.includes(storagedTheme as any)) {
+    return storagedTheme;
+  } else if (prefersDarkTheme && availableThemes.includes("dark")) {
+    return "dark";
+  } else {
+    return "light";
+  }
+};
+
+export const loadColorVariants = async () => {
+  const ref = { schema: "funapp", name: "table-CapybaraTest-colorVariants" }; // TODO: Move it to system table.
+  const res: IViewExprResult = await store.dispatch("callProtectedApi", {
+    func: Api.getNamedUserView,
+    args: [ref],
+  }, { root: true });
+
+  const theme = await getPrefferedTheme();
+
+  const columnNames = res.info.columns.map(column => column.name);
+  const requiredColumnNames = ["name", "background", "theme"] as const;
+  const punOrValue = (value: IExecutedValue) => value.pun ?? value.value;
+  const hasAllRequiredColumns = requiredColumnNames.every(name => columnNames.includes(name));
+  if (hasAllRequiredColumns) {
+    const arrayRowToObject =
+      (row: IExecutedRow) => Object.fromEntries(columnNames.map((name, index) => ([name, punOrValue(row.values[index])])));
+    return mapMaybe(row => {
+      const variant = arrayRowToObject(row);
+      return variant.theme === theme
+        ? colorVariantFromRaw(variant as RawColorVariant)
+        : undefined;
+    }, res.result.rows);
+  } else {
+    throw new Error("Table with color variants must have columns: " + requiredColumnNames.join(", "));
+  }
 };

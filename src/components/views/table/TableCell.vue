@@ -28,7 +28,7 @@
           >
             <input
               type="button"
-              class="material-icons md-18 reference-open-modal material-button rounded-circle"
+              class="material-icons md-18 reference-open-modal rounded-circle"
               :value="iconValue"
             >
           </FunLink>
@@ -135,15 +135,17 @@ export default class TableCell extends Vue {
 </script>
 
 <style lang="scss" scoped>
+  @import "../../../styles/mixins.scss";
+
   .selectable {
     position: relative;
     float: left;
     padding: 0 5px;
-    border: 1px solid var(--default-borderColor, var(--MainBorderColor));
+    background-color: var(--reference-backgroundColor, var(--MainBackgroundColor));
+    border: 1px solid var(--reference-backgroundDarker1Color, var(--MainBorderColor));
+    color: var(--reference-foregroundColor, var(MainTextColor));
     border-radius: 0.6rem;
-    background-color: var(--MainBackgroundColor);
-    color: var(--MainTextColor);
-    width: 100%;
+    max-width: 100%;
     word-wrap: break-word;
   }
 
@@ -231,6 +233,8 @@ export default class TableCell extends Vue {
   }
 
   .reference-open-modal {
+    @include material-button("reference");
+
     pointer-events: auto !important;
     left: 2px;
     top: -1px;
@@ -238,7 +242,6 @@ export default class TableCell extends Vue {
     border: none;
     background: none;
     padding: 0;
-    color: var(--MainBorderTextColor);
     cursor: pointer;
   }
 

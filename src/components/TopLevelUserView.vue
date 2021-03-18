@@ -447,11 +447,12 @@ export default class TopLevelUserView extends Vue {
     display: flex;
     align-items: center;
     white-space: nowrap;
-    background-color: var(--MainBackgroundColor);
+    background-color: var(--interface-backgroundColor, var(--MainBackgroundColor));
+    color: var(--interface-foregroundColor, var(--MainTextColor));
+    border-bottom: 1px solid var(--interface-borderColor, var(--MainBorderColor));
     width: 100%;
     padding: 5px 10px;
     z-index: 999;
-    border-bottom: 1px solid var(--MainBorderColor);
   }
 
   .head-menu_back-button {
@@ -500,8 +501,9 @@ export default class TopLevelUserView extends Vue {
     text-align: right;
     margin-left: -1px !important;
     position: relative;
-    background-color: var(--MainBackgroundColor) !important;
-    border-top: 1px solid var(--MainBorderColor);
+    background-color: var(--interface-backgroundColor, var(--MainBackgroundColor)) !important;
+    color: var(--interface-foregroundColor, var(--MainTextColor));
+    border-top: 1px solid var(--interface-borderColor, var(--MainBorderColor));
     z-index: 500; /* низ страницы */
     display: -webkit-box;
     display: -ms-flexbox;

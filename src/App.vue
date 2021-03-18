@@ -104,12 +104,20 @@ export default class App extends Vue {
   }
 
   private async loadColors() {
-    const variantsRef = this.settings.getEntry("color_variants", String, "");
-    const variantsRefRegex = /"(?<schema>.*)"\."(?<name>.*)"/;
-    const [_, schema, name] = variantsRefRegex.exec(variantsRef) ?? [null, null];
-    if (!schema || !name) return null;
-    const colorVariants = await loadColorVariants({ schema, name });
-    const componentsNames = ["table", "input", "form", "menuEntry", "kanban", "kanbanCard"];
+    const colorVariants = await loadColorVariants();
+    // TODO: genenrating variables for each component is not the best solution, would be cool to fix this.
+    const componentsNames = [
+      "table",
+      "input",
+      "form",
+      "table",
+      "tableCell",
+      "menuEntry",
+      "kanban",
+      "kanbanCard",
+      "interface",
+      "refernece",
+    ];
     this.colorVariables = R.mergeAll([
       ...componentsNames.map(componentName => getColorVariables(componentName, "default")),
       ...colorVariants.map((variant: any) => getColorVariables(variant.name, variant)),

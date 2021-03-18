@@ -461,7 +461,7 @@ const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLo
 
   const colorVariant = getRowAttr("row_variant");
   let colorVariables = null;
-  if (colorVariant !== undefined) {
+  if (colorVariant) {
     colorVariables = getColorVariables("tableCell", colorVariant);
   }
 
@@ -1955,7 +1955,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     border-spacing: 0;
     table-layout: fixed;
     width: 0;
-    border: 1px solid var(--table-borderColor, var(--MainBorderColor));
+    border: 1px solid var(--table-backgroundDarker2Color, var(--MainBorderColor));
+    border-left: none;
     background-color: var(--table-backgroundColor, var(--TableBackColor));
     margin: 0;
     border-radius: 0.2rem;

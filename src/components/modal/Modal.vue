@@ -187,6 +187,9 @@ export default class Modal extends Vue {
   .header-container {
     display: flex;
     flex-direction: row;
+    background-color: var(--interface-backgroundColor, var(--MainBackgroundColor)) !important;
+    color: var(--interface-foregroundColor, var(--MainTextColor));
+    border-top: 1px solid var(--interface-borderColor, var(--MainBorderColor));
   }
 
   .modal__tab_headers {
@@ -225,7 +228,6 @@ export default class Modal extends Vue {
   .modal__content {
     overflow: auto;
     height: 100%;
-    border-top: 1px solid var(--MainBorderColor);
   }
 
   .modal__content ::v-deep .view-form {

@@ -751,8 +751,9 @@ export default class MultiSelect extends Vue {
 
   .value-focused {
     cursor: pointer !important;
-    background-color: var(--default-backgroundDarker1Color, var(--MainBorderColor)) !important;
-    color: var(-default-foregroundColor, var(--MainTextColor)) !important;
+    color: var(--reference-foregroundColor, var(--MainTextColor)) !important;
+    background-color: var(--reference-backgroundDarker1Color, var(--MainTextColorLight)) !important;
+    border: 1px solid var(--reference-backgroundDarker2Color, var(--MainBorderColor)) !important;
   }
 
   div.select-container__options__actions {
@@ -764,8 +765,6 @@ export default class MultiSelect extends Vue {
 
   .one-of-many-value {
     margin: 3px;
-    border: 1px solid var(--MainBorderColor);
-    background-color: var(--MainBackgroundColor);
     max-width: 95%;
   }
 
@@ -773,7 +772,9 @@ export default class MultiSelect extends Vue {
   .single-value {
     display: inline-flex;
     align-items: center;
-    color: var(--MainTextColor);
+    border: 1px solid var(--reference-backgroundDarker1Color, var(--MainBorderColor));
+    background-color: var(--reference-backgroundColor, var(--MainBackgroundColor));
+    color: var(--reference-foregroundColor, var(--MainTextColor));
     border-radius: 1rem;
     padding: 2px 5px;
     line-height: 1rem;
@@ -794,9 +795,6 @@ export default class MultiSelect extends Vue {
 
   .single-value {
     align-self: center;
-    border: 1px solid var(--MainBorderColor);
-    background-color: var(--MainBackgroundColor);
-    line-height: normal;
   }
 
   .options-list {

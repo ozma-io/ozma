@@ -1,27 +1,27 @@
-@mixin material-button {
+@mixin material-button($variant: "default") {
   transition: background 0.1s;
   border-radius: 4px;
   cursor: pointer;
-  color: var(--default-foregroundColor, var(--MainTextColor));
+  color: var(--#{$variant}-foregroundColor, var(--MainTextColor));
 
   &:hover:not(.disabled) {
-    background-color: var(--default-backgroundDarker1Color, #efefef);
-    color: var(--default-foregroundContrastColor, var(--MainTextColor));
+    background-color: var(--#{$variant}-backgroundDarker1Color, #efefef);
+    color: var(--#{$variant}-foregroundContrastColor, var(--MainTextColor));
 
     /* `outline` works wrong for <a> tags at least on Firefox */
-    box-shadow: 0 0 0 2px var(--default-backgroundDarker1Color, #efefef);
+    box-shadow: 0 0 0 2px var(--#{$variant}-backgroundDarker1Color, #efefef);
     transition: background 0s;
   }
 
   &:active:not(.disabled) {
-    background-color: var(--default-backgroundDarker2Color, #bcbcbc);
-    box-shadow: 0 0 0 2px var(--default-backgroundDarker2Color, #bcbcbc);
+    background-color: var(--#{$variant}-backgroundDarker2Color, #bcbcbc);
+    box-shadow: 0 0 0 2px var(--#{$variant}-backgroundDarker2Color, #bcbcbc);
     transition: background 0s;
   }
 
   &.disabled {
     cursor: default;
-    color: var(--default-foregroundDarkerColor, var(--MainTextColorLight));
+    color: var(--#{$variant}-foregroundDarkerColor, var(--MainTextColorLight));
     opacity: 0.7;
   }
 }

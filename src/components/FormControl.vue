@@ -526,11 +526,11 @@ export default class FormControl extends Vue {
   }
 
   get cellColor() {
-    return "cell_color" in this.attributes ? String(this.attributes["cell_color"]) : null;
+    return this.attributes["cell_color"] ? String(this.attributes["cell_color"]) : null;
   }
 
   get colorVariables() {
-    if ("cell_variant" in this.attributes) {
+    if (this.attributes["cell_variant"]) {
       return getColorVariables("input", this.attributes["cell_variant"]);
     } else if (this.cellColor) {
       console.warn("`cell_color` attribute is deprecated, use `cell_variant` instead.");
