@@ -284,7 +284,7 @@ export interface ITableViewExtra extends IBaseViewExtra {
   columns: IColumn[];
   fixedColumnPositions: Record<number, string>;
   rowsParentPositions: Record<number, number>;
-  treeParentColumnIdex: number;
+  treeParentColumnIndex: number;
   linkOpts?: IAttrToQueryOpts;
 
   newRowTopSidePositions: NewRowRef[];
@@ -643,7 +643,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
           row.extra.tree.parent = Number(value.value);
         }
 
-        uv.extra.treeParentColumnIdex = columnIndex;
+        uv.extra.treeParentColumnIndex = columnIndex;
       }
     }
 
@@ -845,7 +845,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       columns,
       fixedColumnPositions: {},
       rowsParentPositions: {},
-      treeParentColumnIdex: 0,
+      treeParentColumnIndex: 0,
       newRowTopSidePositions,
       newRowBottomSidePositions,
       linkOpts: uv.homeSchema ? { homeSchema: uv.homeSchema } : {},
@@ -1415,7 +1415,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       this.showTreeChildren(parentRef);
     }
     const rowId = await this.addNewRow();
-    const columnIndex = this.uv.extra.treeParentColumnIdex;
+    const columnIndex = this.uv.extra.treeParentColumnIndex;
 
     this.uv.newRows[rowId].extra.tree.level = this.uv.rows![parentRef.position].extra.tree.level + 1;
     this.uv.newRows[rowId].extra.tree.parent = parentRef.position;
