@@ -57,16 +57,16 @@ import { mixins } from "vue-class-component";
 import * as R from "ramda";
 import { IEntityRef } from "ozma-api";
 
-import { isMobile, mapMaybe, saveToFile, tryDicts } from "@/utils";
+import { mapMaybe, saveToFile, tryDicts } from "@/utils";
 import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, userViewTitle } from "@/components/BaseUserView";
 import { IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
-import { Action } from "@/components/ActionsMenu.vue";
-import { PanelButton } from "@/components/ButtonsPanel.vue";
-import { attrToLink } from "@/links";
 import type { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
 import { ValueRef, valueToPunnedText } from "@/user_views/combined";
 import { referenceEntriesRef } from "@/state/entries";
+
+import type { Button } from "@/components/buttons/buttons";
+import { attrToButtons } from "@/components/buttons/buttons";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -162,104 +162,23 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     });
   }
 
-  get panelButtons(): PanelButton[] {
-    const panelButtons = this.uv.attributes["panel_buttons"];
-
-    if (!Array.isArray(panelButtons)) {
-      return [];
-    }
+  get attrButtons(): Button[] {
+    const buttons = this.uv.attributes["panel_buttons"];
 
     const opts: IAttrToQueryOpts = {
       homeSchema: this.uv.homeSchema ?? undefined,
     };
 
-    return mapMaybe((rawButton: unknown) => {
-      if (typeof rawButton !== "object" || rawButton === null) {
-        return undefined;
-      }
-
-      const buttonObj = rawButton as Record<string, unknown>;
-
-      if (typeof buttonObj.name !== "string") {
-        return undefined;
-      }
-
-      const buttonIcon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
-      const position = typeof buttonObj.position === "string" ? buttonObj.position : "left";
-      const isMobileButton = buttonObj.is_mobile === true;
-
-      if (!isMobile && isMobileButton) {
-        return undefined;
-      }
-
-      if ("type" in rawButton) {
-        if (String(buttonObj.type) === "scan_qrcode") {
-          return {
-            icon: buttonIcon,
-            name: buttonObj.name,
-            position,
-            callback: () => {
-              this.openQRCodeScanner = !this.openQRCodeScanner;
-            },
-          };
-        }
-
-        if (String(buttonObj.type) === "scan_barcode") {
-          return {
-            icon: buttonIcon,
-            name: buttonObj.name,
-            position,
-            callback: () => {
-              this.openBarCodeScanner = !this.openBarCodeScanner;
-            },
-          };
-        }
-      }
-
-      const buttonLink = attrToLink(rawButton, opts);
-      if (buttonLink !== null) {
-        return {
-          icon: buttonIcon,
-          name: buttonObj.name,
-          position,
-          link: buttonLink,
-        };
-      }
-
-      if (!Array.isArray(buttonObj.actions)) {
-        return undefined;
-      }
-
-      const actions = mapMaybe((rawAction: unknown) => {
-        const link = attrToLink(rawAction, opts);
-        if (link === null) {
-          return undefined;
-        }
-        // `rawAction` at this point is guaranteed to be `Record<string, unknown>`,
-        // but TypeScript doesn't support advanced type witnesses like that.
-        const actionObj = rawAction as Record<string, unknown>;
-        if (typeof actionObj.name !== "string") {
-          return undefined;
-        }
-        const icon = typeof actionObj.icon === "string" ? actionObj.icon : undefined;
-
-        return {
-          icon,
-          name: actionObj.name,
-          link,
-        };
-      }, buttonObj.actions);
-      return {
-        icon: buttonIcon,
-        name: buttonObj.name,
-        actions,
-      };
-    }, panelButtons);
+    return attrToButtons(buttons, opts);
   }
 
-  @Watch("panelButtons", { deep: true, immediate: true })
-  private pushPanelButtons() {
-    this.$emit("update:panelButtons", this.panelButtons);
+  get buttons() {
+    return [...this.staticButtons, ...this.selectionButtons, ...this.attrButtons];
+  }
+
+  @Watch("buttons", { deep: true, immediate: true })
+  private pushButtons() {
+    this.$emit("update:buttons", this.buttons);
   }
 
   /**
@@ -270,98 +189,92 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     return !(this.uv.attributes["hide_default_actions"] === true);
   }
 
-  get staticActions() {
-    const actions: Action[] = [];
-
+  get staticButtons(): Button[] {
     const extraActions = this.uv.attributes["extra_actions"];
-    if (Array.isArray(extraActions)) {
-      const opts: IAttrToQueryOpts = {
-        homeSchema: this.uv.homeSchema ?? undefined,
-      };
-      extraActions.forEach((rawAction: unknown) => {
-        const link = attrToLink(rawAction, opts);
-        if (link === null) {
-          return;
-        }
-        // `rawAction` at this point is guaranteed to be `Record<string, unknown>`,
-        // but TypeScript doesn't support advanced type witnesses like that.
-        const actionObj = rawAction as Record<string, unknown>;
-        if (typeof actionObj.name !== "string") {
-          return;
-        }
-
-        const icon = typeof actionObj.icon === "string" ? actionObj.icon : undefined;
-        actions.push({
-          icon,
-          name: actionObj.name,
-          order: -10,
-          link,
-        });
-      });
+    const extraActionsButtons = attrToButtons(extraActions);
+    if (extraActionsButtons.length > 0) {
+      console.warn("@extra_actions attribute deprecated,  will be deleted future.");
     }
+    const buttons: Button[] = extraActionsButtons;
 
     if (this.creationLink !== null) {
-      actions.push({ name: this.$t("create").toString(), link: this.creationLink });
+      buttons.push({
+        icon: "add",
+        name: this.$t("create").toString(),
+        link: this.creationLink,
+        type: "link",
+        variant: "success",
+      });
     }
 
     const modalReferenceField = this.modalReferenceField;
     if (modalReferenceField) {
-      actions.push({
+      buttons.push({
         name: this.$t("create_in_modal").toString(),
         callback: () => {
           this.modalView = modalReferenceField.uv;
         },
+        type: "callback",
       });
     }
 
     if (typeof this.uv.info.mainEntity === "object" && this.showDefaultActions) {
-      actions.push({
+      buttons.push({
         icon: "import_export",
         name: this.$t("import_from_csv").toString(),
         uploadFile: file => this.importFromCsv(file),
+        type: "upload-file",
       });
     }
 
     // FIXME: workaround until we have proper role-based permissions for this.
     if (this.uv.attributes["export_to_csv"] || "__export_to_csv" in this.$route.query) {
-      actions.push({
+      buttons.push({
         icon: "import_export",
         name: this.$t("export_to_csv").toString(),
         callback: () => this.exportToCsv(),
+        type: "callback",
       });
     }
 
     if (this.selectedQRCodeEntity !== null) {
-      actions.push({
+      buttons.push({
         icon: "qr_code_2",
         name: this.$t("scan_qrcode").toString(),
         callback: () => {
           this.openQRCodeScanner = !this.openQRCodeScanner;
         },
+        type: "callback",
       });
     }
 
     if (this.selectedBarCodeEntity !== null) {
-      actions.push({
+      buttons.push({
         icon: "qr_code_scanner",
         name: this.$t("scan_barcode").toString(),
         callback: () => {
           this.openBarCodeScanner = !this.openBarCodeScanner;
         },
+        type: "callback",
       });
     }
 
-    return actions;
+    return buttons;
   }
 
-  get selectionActions() {
-    const actions: Action[] = [];
+  get selectionButtons() {
+    const buttons: Button[] = [];
     if (this.uv.info.mainEntity && this.uv.extra.selectedRows.length > 0) {
-      actions.push(
-        { icon: "delete_sweep", name: this.$t("remove_selected_rows").toString(), callback: () => this.removeSelectedRows() },
+      buttons.push(
+        {
+          icon: "delete_sweep",
+          name: this.$t("remove_selected_rows").toString(),
+          callback: () => this.removeSelectedRows(),
+          type: "callback",
+        },
       );
     }
-    return actions;
+    return buttons;
   }
 
   private removeSelectedRows() {
@@ -385,15 +298,6 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       return undefined;
     }, this.uv.columnAttributes);
     return modalReferenceField.pop() || null;
-  }
-
-  get actions() {
-    return [...this.staticActions, ...this.selectionActions];
-  }
-
-  @Watch("actions", { deep: true, immediate: true })
-  private pushActions() {
-    this.$emit("update:actions", this.actions);
   }
 
   private selectFromUserView(id: number) {

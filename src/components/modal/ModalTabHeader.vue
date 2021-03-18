@@ -4,10 +4,13 @@
     @click="$emit('tab-click')"
   >
     <slot name="header" />
-    <i
-      class="material-icons material-button rounded-circle"
+    <b-button
+      variant="light"
+      class="btn-sm lh-0-5 p-0-5"
       @click.stop="$emit('tab-close')"
-    >close</i>
+    >
+      <span class="material-icons">close</span>
+    </b-button>
   </div>
 </template>
 
@@ -30,9 +33,15 @@ export default class ModalTabHeader extends Vue {
   .modal__tab_header {
     width: 100%;
     display: flex;
-    padding: 5px;
+    padding: 2px;
     flex: 1 1 auto;
     cursor: pointer;
+    border-top: 1px solid;
+    border-left: 1px solid;
+    border-right: 1px solid;
+    border-color: transparent;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
     align-items: center;
   }
 

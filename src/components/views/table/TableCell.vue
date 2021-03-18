@@ -18,9 +18,10 @@
     @mouseup="$emit('cell-mouseup', $event, value)"
   >
     <p>
-      <template v-if="column.type == 'buttons'">
-        <CellButtons
-          :value="value"
+      <template v-if="column.type == 'buttons' && buttons.length > 0">
+        <ButtonsPanel
+          :buttons="buttons"
+          @goto="$emit('goto', $event)"
         />
       </template>
       <template v-else-if="value.extra.link !== null && value.extra.valueFormatted.length > 0">
@@ -78,13 +79,12 @@ import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { valueIsNull } from "@/values";
 import { iconValue } from "@/links";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
-import CellButtons from "@/components/buttons/CellButtons.vue";
+import { attrToButtons } from "@/components/buttons/buttons";
 import type { IColumn, ITableExtendedValue, ITableRowTree } from "@/components/views/Table.vue";
 
 @Component({
   components: {
     Checkbox,
-    CellButtons,
   },
 })
 export default class TableCell extends Vue {
@@ -113,6 +113,14 @@ export default class TableCell extends Vue {
       return this.tree.level;
     } else {
       return 0;
+    }
+  }
+
+  get buttons() {
+    if (this.column.type === "buttons") {
+      return attrToButtons(this.value.value);
+    } else {
+      return [];
     }
   }
 
@@ -159,14 +167,11 @@ export default class TableCell extends Vue {
       ::v-deep .checkbox {
         .material-icons {
           position: relative;
-          top: -2px;
         }
       }
 
-      ::v-deep ul.actions {
-        > span {
-          cursor: pointer;
-        }
+      ::v-deep button {
+        cursor: pointer;
       }
 
       ::v-deep a {
