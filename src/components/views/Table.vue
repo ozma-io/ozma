@@ -827,7 +827,6 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
 
   createLocalUserView(uv: ITableCombinedUserView, oldView: ITableViewExtra | null) {
     const baseExtra = baseUserViewHandler.createLocalUserView(uv, oldView);
-    console.log("baseExtra", baseExtra);
     const columns = createColumns(uv);
 
     const disableSelectionColumn = uv.attributes["disable_selection_column"];
