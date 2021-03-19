@@ -489,13 +489,12 @@ const postInitCommonRow = (uv: ITableCombinedUserView, row: ITableExtendedRowCom
 
 const initTreeChildren = (uv: ITableCombinedUserView) => {
   uv.rows!.forEach((row, i) => {
-    
-    const addedChildRow = uv.extra.addedRowRefs.find(r => r.type === "added" && r.parent === i);  
+    const addedChildRow = uv.extra.addedRowRefs.find(r => r.type === "added" && r.parent === i);
     if (addedChildRow && addedChildRow.type === "added") {
       const child: IAddedRowRef = {
         type: "added",
-        id:  addedChildRow.addedId,
-      }
+        id: addedChildRow.addedId,
+      };
       uv.rows![i].extra.tree.children.push(child);
     }
 
@@ -768,7 +767,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     const newRef: NewRowRef = {
       type: "added",
       addedId: rowId,
-      parent, 
+      parent,
     };
 
     if (!uv.extra.newRowTopSidePositions.find(ref => equalNewRowRef(newRef, ref))
@@ -850,7 +849,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     const isSelectionColumnEnabled = typeof disableSelectionColumn === "boolean"
       ? !disableSelectionColumn
       : true;
-    
+
     const newRowTopSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowTopSidePositions) : [];
     const newRowBottomSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowBottomSidePositions) : [];
     const addedRowRefs = oldView ? inheritOldRowsPositions(uv, oldView.addedRowRefs) : [];
