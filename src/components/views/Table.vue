@@ -268,6 +268,7 @@ export interface ITableRowExtra extends IBaseRowExtra {
 export interface IAddedNewRowRef {
   type: "added";
   addedId: AddedRowId;
+  parent?: number;
 }
 
 export interface ICommittedNewRowRef {
@@ -289,6 +290,7 @@ export interface ITableViewExtra extends IBaseViewExtra {
 
   newRowTopSidePositions: NewRowRef[];
   newRowBottomSidePositions: NewRowRef[];
+  addedRowRefs: NewRowRef[];
 
   sortColumn: number | null;
   sortAsc: boolean;
@@ -487,6 +489,16 @@ const postInitCommonRow = (uv: ITableCombinedUserView, row: ITableExtendedRowCom
 
 const initTreeChildren = (uv: ITableCombinedUserView) => {
   uv.rows!.forEach((row, i) => {
+    
+    const addedChildRow = uv.extra.addedRowRefs.find(r => r.type === "added" && r.parent === i);  
+    if (addedChildRow && addedChildRow.type === "added") {
+      const child: IAddedRowRef = {
+        type: "added",
+        id:  addedChildRow.addedId,
+      }
+      uv.rows![i].extra.tree.children.push(child);
+    }
+
     if (row.extra.tree.parent) {
       const parentIndex = uv.extra.rowsParentPositions[row.extra.tree.parent];
       const child: IExistingRowRef = {
@@ -540,6 +552,7 @@ const equalNewRowRef = (a: NewRowRef, b: NewRowRef): boolean => {
 const deleteFromPositions = (ref: NewRowRef, extra: ITableViewExtra) => {
   extra.newRowTopSidePositions = extra.newRowTopSidePositions.filter(r => !equalNewRowRef(ref, r));
   extra.newRowBottomSidePositions = extra.newRowBottomSidePositions.filter(r => !equalNewRowRef(ref, r));
+  extra.addedRowRefs = extra.addedRowRefs.filter(r => !equalNewRowRef(ref, r));
 };
 
 const inheritOldRowsPosition = (uv: ITableCombinedUserView, pos: NewRowRef): NewRowRef | null => {
@@ -595,7 +608,7 @@ const getNewRow = (uv: ITableCombinedUserView, pos: NewRowRef): INewRow => {
 
 interface IAddedValueMeta {
   side: "top_front" | "top_back" | "bottom_back" | "position";
-  position?: number;
+  parent?: number;
 }
 
 const isAddedValueMeta = (obj: unknown): obj is IAddedValueMeta => {
@@ -751,9 +764,11 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     const baseExtra = baseUserViewHandler.createAddedLocalRow(uv, rowId, row, oldView, oldRow);
     const commonExtra = createCommonLocalRow(uv, row, oldRow);
 
+    const parent = isAddedValueMeta(meta) ? meta.parent : undefined;
     const newRef: NewRowRef = {
       type: "added",
       addedId: rowId,
+      parent, 
     };
 
     if (!uv.extra.newRowTopSidePositions.find(ref => equalNewRowRef(newRef, ref))
@@ -766,6 +781,8 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
         uv.extra.newRowTopSidePositions.push(newRef);
       } else if (side === "bottom_back") {
         uv.extra.newRowBottomSidePositions.push(newRef);
+      } else if (side === "position") {
+        uv.extra.addedRowRefs.push(newRef);
       }
     }
 
@@ -833,9 +850,10 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     const isSelectionColumnEnabled = typeof disableSelectionColumn === "boolean"
       ? !disableSelectionColumn
       : true;
-
+    
     const newRowTopSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowTopSidePositions) : [];
     const newRowBottomSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowBottomSidePositions) : [];
+    const addedRowRefs = oldView ? inheritOldRowsPositions(uv, oldView.addedRowRefs) : [];
 
     return {
       ...baseExtra,
@@ -852,6 +870,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       sortAsc: oldView?.sortAsc ?? true,
       sortColumn: oldView?.sortColumn ?? null,
       sortOptions: oldView?.sortOptions ?? {},
+      addedRowRefs,
     };
   },
 
@@ -1414,7 +1433,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (!this.uv.rows![parentRef.position].extra.tree.arrowDown) {
       this.showTreeChildren(parentRef);
     }
-    const rowId = await this.addNewRow();
+    const rowId = await this.addNewRow({ side: "position", parent: parentRef.position });
     const columnIndex = this.uv.extra.treeParentColumnIndex;
 
     this.uv.newRows[rowId].extra.tree.level = this.uv.rows![parentRef.position].extra.tree.level + 1;
