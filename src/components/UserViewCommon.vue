@@ -65,8 +65,7 @@ import type { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
 import { ValueRef, valueToPunnedText } from "@/user_views/combined";
 import { referenceEntriesRef } from "@/state/entries";
 
-import type { Button } from "@/components/buttons/buttons";
-import { attrToButtons, attrToButtonsOld } from "@/components/buttons/buttons";
+import { attrToButton, Button, attrToButtons, attrToButtonsOld } from "@/components/buttons/buttons";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -167,11 +166,11 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       homeSchema: this.uv.homeSchema ?? undefined,
     };
 
-    const panel_buttons = this.uv.attributes["panel_buttons"];
+    const panelButtons = this.uv.attributes["panel_buttons"]; // Will be deleted
     const buttons = this.uv.attributes["buttons"];
-    if (panel_buttons) {
-      // Will be deleted
-      return attrToButtonsOld(panel_buttons, opts);
+    if (panelButtons) {
+      console.warn("@panel_buttons attribute deprecated,  will be deleted future.");
+      return attrToButtonsOld(panelButtons, opts); // Will be deleted
     } else {
       return attrToButtons(buttons, opts);
     }
@@ -243,25 +242,57 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     }
 
     if (this.selectedQRCodeEntity !== null) {
-      buttons.push({
-        icon: "qr_code_2",
-        name: this.$t("scan_qrcode").toString(),
-        callback: () => {
-          this.openQRCodeScanner = !this.openQRCodeScanner;
-        },
-        type: "callback",
-      });
+      if (this.qrCodeColumnIndex && typeof this.uv.columnAttributes[this.qrCodeColumnIndex]["scan_qrcode"] === "boolean") {
+        // Will be deleted after migrate from boolean to object attribute
+        buttons.push({
+          icon: "qr_code_2",
+          name: this.$t("scan_qrcode").toString(),
+          callback: () => {
+            this.openQRCodeScanner = !this.openQRCodeScanner;
+          },
+          type: "callback",
+        });
+        console.warn("@scan_qrcode need use buttons params, not boolean");
+      } else if (this.qrCodeButton) {
+        buttons.push({
+          icon: this.qrCodeButton.icon,
+          name: this.qrCodeButton.name,
+          display: this.qrCodeButton.display,
+          tooltip: this.qrCodeButton.tooltip,
+          variant: this.qrCodeButton.variant,
+          callback: () => {
+            this.openQRCodeScanner = !this.openQRCodeScanner;
+          },
+          type: "callback",
+        });
+      }
     }
 
     if (this.selectedBarCodeEntity !== null) {
-      buttons.push({
-        icon: "qr_code_scanner",
-        name: this.$t("scan_barcode").toString(),
-        callback: () => {
-          this.openBarCodeScanner = !this.openBarCodeScanner;
-        },
-        type: "callback",
-      });
+      if (this.barCodeColumnIndex && typeof this.uv.columnAttributes[this.barCodeColumnIndex]["scan_barcode"] === "boolean") {
+        // Will be deleted after migrate from boolean to object attribute
+        buttons.push({
+          icon: "qr_code_scanner",
+          name: this.$t("scan_barcode").toString(),
+          callback: () => {
+            this.openBarCodeScanner = !this.openBarCodeScanner;
+          },
+          type: "callback",
+        });
+        console.warn("@scan_barcode need use buttons params, not boolean");
+      } else if (this.barCodeButton) {
+        buttons.push({
+          icon: this.barCodeButton.icon,
+          name: this.barCodeButton.name,
+          display: this.barCodeButton.display,
+          tooltip: this.barCodeButton.tooltip,
+          variant: this.barCodeButton.variant,
+          callback: () => {
+            this.openBarCodeScanner = !this.openBarCodeScanner;
+          },
+          type: "callback",
+        });
+      }
     }
 
     return buttons;
@@ -318,6 +349,22 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     result.forEach(r => {
       void this.updateValue({ type: "new", column: columnIndex }, r.id);
     });
+  }
+
+  get barCodeButton() {
+    if (this.barCodeColumnIndex) {
+      return attrToButton(this.uv.columnAttributes[this.barCodeColumnIndex]["scan_barcode"]);
+    }
+
+    return null;
+  }
+
+  get qrCodeButton() {
+    if (this.qrCodeColumnIndex) {
+      return attrToButton(this.uv.columnAttributes[this.qrCodeColumnIndex]["scan_qrcode"]);
+    }
+
+    return null;
   }
 
   get barCodeColumnIndex() {

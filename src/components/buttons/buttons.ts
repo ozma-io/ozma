@@ -45,7 +45,7 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts): Butto
   if (typeof buttonAttr !== "object" || buttonAttr === null) {
     return undefined;
   }
-  
+
   // `buttonsAttr` at this point is guaranteed to be `Record<string, unknown>`,
   // but TypeScript doesn't support advanced type witnesses like that.
   const buttonObj = buttonAttr as Record<string, unknown>;
@@ -87,9 +87,14 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts): Butto
   }
 
   return {
+    name,
+    icon,
+    tooltip,
+    variant,
+    display,
     type: "empty",
   };
-}
+};
 
 export const attrToButtons = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): Button[] => {
   if (!Array.isArray(buttonsAttr)) {
@@ -156,7 +161,6 @@ export const attrToButtonsOld = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): 
     };
   }, buttonsAttr);
 };
-  
 
 export const buttonsToPanelButtons = (buttons: Button[]): Button[] => {
   const panelButtons: Button[] = [];
