@@ -105,7 +105,7 @@ export default class ModalUserView extends Vue {
   private panelButtons: PanelButton[] = [];
   private enableFilter = false;
   private filterString = "";
-  private isUserViewLoading = true;
+  private isUserViewLoading = false;
 
   get actions() {
     const actions: Action[] = [];

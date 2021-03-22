@@ -245,7 +245,7 @@ export default class TopLevelUserView extends Vue {
   private enableFilter = false;
   private styleNode: HTMLStyleElement;
   private title = "";
-  private isUserViewLoading = true;
+  private isUserViewLoading = false;
 
   private wasOpenedQRCodeScanner = false;
   private isOpenQRCodeScanner = false;
