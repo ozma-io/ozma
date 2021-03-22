@@ -5,8 +5,6 @@
             "create_in_modal": "Create referenced entry in modal window",
             "export_to_csv": "Export to .csv",
             "import_from_csv": "Import from .csv",
-            "scan_qrcode": "Scan QR code",
-            "scan_barcode": "Scan bar code",
             "remove_selected_rows": "Remove selected entries",
             "error": "Error"
         },
@@ -15,8 +13,6 @@
             "create_in_modal": "Создать связанную запись в окне",
             "export_to_csv": "Экспорт в .csv",
             "import_from_csv": "Импорт из .csv",
-            "scan_qrcode": "Сканер QR-кодов",
-            "scan_barcode": "Сканер штрих-кодов",
             "remove_selected_rows": "Удалить выбранные записи",
             "error": "Ошибка"
         }
@@ -241,58 +237,32 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       });
     }
 
-    if (this.selectedQRCodeEntity !== null) {
-      if (this.qrCodeColumnIndex && typeof this.uv.columnAttributes[this.qrCodeColumnIndex]["scan_qrcode"] === "boolean") {
-        // Will be deleted after migrate from boolean to object attribute
-        buttons.push({
-          icon: "qr_code_2",
-          name: this.$t("scan_qrcode").toString(),
-          callback: () => {
-            this.openQRCodeScanner = !this.openQRCodeScanner;
-          },
-          type: "callback",
-        });
-        console.warn("@scan_qrcode need use buttons params, not boolean");
-      } else if (this.qrCodeButton) {
-        buttons.push({
-          icon: this.qrCodeButton.icon,
-          name: this.qrCodeButton.name,
-          display: this.qrCodeButton.display,
-          tooltip: this.qrCodeButton.tooltip,
-          variant: this.qrCodeButton.variant,
-          callback: () => {
-            this.openQRCodeScanner = !this.openQRCodeScanner;
-          },
-          type: "callback",
-        });
-      }
+    if (this.selectedQRCodeEntity !== null && this.qrCodeButton) {
+      buttons.push({
+        icon: this.qrCodeButton.icon,
+        name: this.qrCodeButton.name,
+        display: this.qrCodeButton.display,
+        tooltip: this.qrCodeButton.tooltip,
+        variant: this.qrCodeButton.variant,
+        callback: () => {
+          this.openQRCodeScanner = !this.openQRCodeScanner;
+        },
+        type: "callback",
+      });
     }
 
-    if (this.selectedBarCodeEntity !== null) {
-      if (this.barCodeColumnIndex && typeof this.uv.columnAttributes[this.barCodeColumnIndex]["scan_barcode"] === "boolean") {
-        // Will be deleted after migrate from boolean to object attribute
-        buttons.push({
-          icon: "qr_code_scanner",
-          name: this.$t("scan_barcode").toString(),
-          callback: () => {
-            this.openBarCodeScanner = !this.openBarCodeScanner;
-          },
-          type: "callback",
-        });
-        console.warn("@scan_barcode need use buttons params, not boolean");
-      } else if (this.barCodeButton) {
-        buttons.push({
-          icon: this.barCodeButton.icon,
-          name: this.barCodeButton.name,
-          display: this.barCodeButton.display,
-          tooltip: this.barCodeButton.tooltip,
-          variant: this.barCodeButton.variant,
-          callback: () => {
-            this.openBarCodeScanner = !this.openBarCodeScanner;
-          },
-          type: "callback",
-        });
-      }
+    if (this.selectedBarCodeEntity !== null && this.barCodeButton) {
+      buttons.push({
+        icon: this.barCodeButton.icon,
+        name: this.barCodeButton.name,
+        display: this.barCodeButton.display,
+        tooltip: this.barCodeButton.tooltip,
+        variant: this.barCodeButton.variant,
+        callback: () => {
+          this.openBarCodeScanner = !this.openBarCodeScanner;
+        },
+        type: "callback",
+      });
     }
 
     return buttons;
@@ -353,7 +323,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
 
   get barCodeButton() {
     if (this.barCodeColumnIndex) {
-      return attrToButton(this.uv.columnAttributes[this.barCodeColumnIndex]["scan_barcode"]);
+      return attrToButton(this.uv.columnAttributes[this.barCodeColumnIndex]["barcode_text_input"]);
     }
 
     return null;
@@ -361,14 +331,14 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
 
   get qrCodeButton() {
     if (this.qrCodeColumnIndex) {
-      return attrToButton(this.uv.columnAttributes[this.qrCodeColumnIndex]["scan_qrcode"]);
+      return attrToButton(this.uv.columnAttributes[this.qrCodeColumnIndex]["barcode_camera_input"]);
     }
 
     return null;
   }
 
   get barCodeColumnIndex() {
-    const ret = this.uv.columnAttributes.findIndex(attrs => attrs["scan_barcode"]);
+    const ret = this.uv.columnAttributes.findIndex(attrs => attrs["barcode_text_input"]);
     if (ret === -1) {
       return null;
     } else {
@@ -377,7 +347,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   }
 
   get qrCodeColumnIndex() {
-    const ret = this.uv.columnAttributes.findIndex(attrs => attrs["scan_qrcode"]);
+    const ret = this.uv.columnAttributes.findIndex(attrs => attrs["barcode_camera_input"]);
     if (ret === -1) {
       return null;
     } else {

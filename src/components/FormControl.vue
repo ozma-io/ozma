@@ -512,7 +512,7 @@ export default class FormControl extends Vue {
   }
 
   get isQRCodeInput() {
-    return "qrcode_input" in this.attributes ? this.attributes["qrcode_input"] : false;
+    return "barcode_camera_input" in this.attributes ? this.attributes["barcode_camera_input"] : false;
   }
 
   get textAlign() {
