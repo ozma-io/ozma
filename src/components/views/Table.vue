@@ -500,6 +500,8 @@ const initTreeChildren = (uv: ITableCombinedUserView) => {
 
     if (row.extra.tree.parent) {
       const parentIndex = uv.extra.rowsParentPositions[row.extra.tree.parent];
+      if (!uv.rows![parentIndex]) return;
+
       const child: IExistingRowRef = {
         type: "existing",
         position: i,
@@ -1706,12 +1708,24 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       const [from, to] = this.lastSelectedRow <= pos ? [this.lastSelectedRow, pos] : [pos, this.lastSelectedRow];
       for (let i = from; i <= to; i++) {
         this.selectRow(this.allRows[i].ref, prevSelected);
+        this.selectChildrenRows(this.allRows[i].row, prevSelected);
       }
     } else {
       this.selectRow(row.ref, !row.row.extra.selected);
+      this.selectChildrenRows(row.row, row.row.extra.selected);
     }
 
     this.lastSelectedRow = pos;
+  }
+
+  private selectChildrenRows(row: ITableExtendedRowCommon, selected: boolean) {
+    row.extra.tree.children.forEach(child => {
+      const childRow = this.uv.getRowByRef(child);
+      if (childRow && childRow?.extra.tree.children.length > 0) {
+        this.selectChildrenRows(childRow, selected);
+      }
+      this.selectRow(child, selected);
+    });
   }
 
   private selectAllRows() {
