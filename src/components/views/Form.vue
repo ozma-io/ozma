@@ -349,7 +349,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     const formButtons = this.uv.attributes["form_buttons"];
     if (formButtons !== undefined && Array.isArray(formButtons)) {
       console.warn("@form_buttons attribute deprecated,  will be deleted future.");
-      
+
       formButtons.forEach((buttons, i) => {
         const blockAttr = Number(buttons["form_block"]);
         const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr;
