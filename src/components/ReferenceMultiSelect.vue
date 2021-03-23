@@ -67,7 +67,7 @@
           v-for="(action, index) in selectViews"
           :key="index"
           type="button"
-          class="new-value-button"
+          class="material-button action-button"
           @click="selectedView = action.query"
         >
           <input
@@ -397,16 +397,16 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     background: none;
     padding: 0;
     margin: 0 10px 0 0;
-    color: var(--MainTextColor);
+    color: var(--input-foregroundColor, var(--default-foregroundColor, var(--MainTextColor)));
     opacity: 0.3;
   }
 
-  .new-value-button {
-    color: var(--MainTextColor);
+  .action-button {
+    border-radius: 0;
     display: flex;
     align-items: center;
     width: 100%;
-    background: var(--MainBorderColor);
+    background: var(--input-backgroundColor, var(--default-backgroundColor, var(--MainBorderColor)));
   }
 
   .loading-box {

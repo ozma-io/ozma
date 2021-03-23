@@ -13,5 +13,6 @@ export default class FormInputPlaceholder extends Vue {}
   .placeholder {
     min-height: 30px;
     height: 100%;
+    border-color: var(--input-borderColor);
   }
 </style>

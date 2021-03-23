@@ -6,7 +6,6 @@
   >
     <div
       class="column_header"
-      :style="titleStyle"
       data-dragscroll
     >
       <div
@@ -23,7 +22,7 @@
         <span class="column_controls" data-dragscroll>
           <i
             v-if="createButton"
-            class="material-icons md-18 new-card-icon"
+            class="material-icons material-button rounded-circle new-card-icon"
             @click="$emit('create')"
           >add</i>
         </span>
@@ -43,7 +42,7 @@
       delay="200"
       animation="200"
       data-dragscroll
-      :style="{ width, backgroundColor }"
+      :style="[{ width }, colorVariables]"
       :value="cards"
       :disabled="!allowDragging"
       @start="onDragStart"
@@ -54,6 +53,7 @@
         v-for="(card, cardIndex) in cards"
         :key="card.key"
         :background-color="card.backgroundColor"
+        :color-variables="card.colorVariables"
       >
         <slot
           name="card"
@@ -76,6 +76,7 @@ export interface ICard<CardT> {
   key: unknown;
   card: CardT;
   backgroundColor?: string;
+  colorVariables: Record<string, string>;
 }
 
 @Component({ components: { Card, draggable } })
@@ -84,7 +85,8 @@ export default class KanbanColumn extends Vue {
   @Prop({ type: String, required: true }) title!: string;
   @Prop({ type: Boolean, default: false }) createButton!: boolean;
   @Prop({ type: Number, default: 300 }) width!: number;
-  @Prop({ type: String, default: "none" }) headerColor!: string;
+  @Prop({ type: Object }) colorVariables!: Record<string, string>;
+  /* @Prop({ type: String, default: "none" }) headerColor!: string; */
   @Prop({ type: String, default: "none" }) backgroundColor!: string;
   @Prop({ type: Boolean, default: false }) allowDragging!: string;
 
@@ -93,13 +95,6 @@ export default class KanbanColumn extends Vue {
   get style() {
     return {
       width: `${this.width}px`,
-    };
-  }
-
-  get titleStyle() {
-    return {
-      ...this.style,
-      backgroundColor: this.headerColor,
     };
   }
 
@@ -134,25 +129,25 @@ export default class KanbanColumn extends Vue {
 
 <style lang="scss" scoped>
   .column_container {
-    color: var(--MainTextColor);
-    border: 1px solid var(--MainBorderColor);
-    box-sizing: content-box;
+    margin-right: 0.25rem;
+    margin-left: 0.25rem;
     display: flex;
     flex-direction: column;
+    background-color: var(--kanban-backgroundDarker1Color, var(--default-backgroundDarker1Color));
+    color: var(--MainTextColor);
+    border-radius: 0.2rem;
   }
 
   .column_header {
-    border-bottom: 1px solid var(--MainBorderColor);
-    border-top: 1px solid var(--MainBorderColor);
-    padding: 10px 10px 10px 12px;
+    padding: 0.5rem;
     display: flex;
-    opacity: 0.5;
-    min-height: 44px;
   }
 
   .column_header__title_block {
-    display: flex;
     width: 100%;
+    display: flex;
+    align-items: center;
+    color: var(--kanban-foregroundColor, var(--MainTextColor));
   }
 
   .column_header__title {
@@ -167,7 +162,7 @@ export default class KanbanColumn extends Vue {
   }
 
   .column_body {
-    padding: 0.5rem;
+    padding: 0.4rem;
     padding-bottom: 0;
     overflow-x: hidden;
     height: 100%;
@@ -183,8 +178,9 @@ export default class KanbanColumn extends Vue {
   }
 
   ::v-deep .card_dragging_ghost {
-    background-color: #ddd !important;
+    background-color: var(--kanban-backgroundDarker2Color, #ddd) !important;
     border-radius: 0.25rem;
+    border-width: 0;
 
     > * {
       visibility: hidden;
@@ -196,23 +192,6 @@ export default class KanbanColumn extends Vue {
     transform: rotate(3deg);
     box-shadow: 0 10px 10px -10px;
     font-size: 14px;
-  }
-
-  .new-card-icon {
-    padding: 2px;
-    border-radius: 2px;
-    cursor: pointer;
-    background-color: initial;
-    color: initial;
-    transition: background-color 0.5s ease;
-    transition: color 0.25s ease;
-  }
-
-  .new-card-icon:hover {
-    transition: background-color 0.5s ease;
-    transition: color 0.25s ease;
-    background-color: var(--SuccessColor);
-    color: var(--MainBackgroundColor);
   }
 
   ::-webkit-scrollbar {

@@ -1,6 +1,6 @@
 <template>
   <tr
-    :style="row.extra.style"
+    :style="[row.extra.style, row.extra.colorVariables]"
     :class="['table-tr',
              row.extra.selected ? 'selected' : 'none_selected']"
   >
@@ -21,11 +21,12 @@
         'openform-cells',
         {
           'without-selection-cell': !uv.extra.isSelectionColumnEnabled,
+          'has-link': row.extra.link,
         }
       ]"
     >
       <FunLink
-        v-if="row.extra.link !== undefined"
+        v-if="row.extra.link"
         :link="row.extra.link"
         class="icon-link"
         @goto="$emit('goto', $event)"
@@ -50,6 +51,7 @@
       @cell-mouseup="$emit('cell-mouseup', arguments[0], arguments[1])"
       @update:visibleChildren="$emit('update:visibleChildren', arguments[0], arguments[1])"
       @toggle-children="$emit('toggle-children', $event)"
+      @add-child="$emit('add-child')"
       @goto="$emit('goto', $event)"
     />
   </tr>
@@ -110,10 +112,10 @@ export default class TableRow extends Vue {
   .checkbox-cells {
     position: relative;
     cursor: pointer;
-    color: var(--MainTextColorLight);
+    color: var(--table-backgroundDarker1Color, var(--MainTextColorLight));
 
     &:hover {
-      color: var(--MainTextColor);
+      color: var(--tableCell-foregroundColor, var(--table-foregroundColor, var(--MainTextColor)));
     }
   }
 
@@ -124,7 +126,7 @@ export default class TableRow extends Vue {
   }
 
   .table-tr {
-    background-color: white; /* probably should be moved to settings */
+    background-color: var(--table-backgroundColor);
     height: 100%;
   }
 
@@ -134,16 +136,17 @@ export default class TableRow extends Vue {
   }
 
   td {
-    border-right: 1px solid var(--MainBorderColor);
+    border-right: 1px solid var(--table-backgroundDarker1Color, var(--MainBorderColor));
+    color: var(--tableCell-foregroundColor, var(--table-foregroundColor, var(--TableTextColor)));
+    background-color: var(--tableCell-backgroundColor, var(--table-backgroundColor, var(--MainBackgroundColor)));
+    vertical-align: top;
     overflow: hidden;
-    color: var(--TableTextColor);
     text-overflow: ellipsis;
     white-space: nowrap;
-    vertical-align: top;
   }
 
   .selected td {
-    background: #efefef;
+    background-color: var(--table-backgroundDarker1Color, #efefef);
   }
 
   .table-tr > td:last-child {
@@ -186,7 +189,17 @@ export default class TableRow extends Vue {
   .openform-cells {
     text-align: center;
     width: 100%;
-    border-right: 1px solid var(--MainBorderColor);
+    border-right: 1px solid var(--table-backgroundDarker1Color, var(--MainBorderColor));
+
+    &.has-link:hover {
+      color: var(--tableCell-foregroundColor, var(--table-foregroundColor, var(--MainTextColor)));
+      background-color: var(--tableCell-backgroundDarker1Color, var(--table-backgroundDarker1Color, rgb(239, 239, 239)));
+      transition: background 0s;
+
+      .edit-in-modal-icon {
+        color: var(--tableCell-foregroundColor, var(--table-foregroundColor, var(--MainTextColor)));
+      }
+    }
   }
 
   @media screen and (min-device-width: 813px) and (orientation: landscape) {
@@ -210,12 +223,12 @@ export default class TableRow extends Vue {
     .table-tr .fixed-column {
       position: sticky;
       z-index: 20;
-      background-color: inherit;
-      box-shadow: 1px 0 0 var(--MainBorderColor);
+      background-color: var(--tableCell-backgroundColor, inherit);
+      box-shadow: 1px 0 0 var(--table-backgroundDarker1Color, var(--MainBorderColor));
     }
 
     .table-tr.selected .fixed-column {
-      background-color: #efefef;
+      background-color: var(--table-backgroundDarker1Color, #efefef);
     }
   }
 </style>

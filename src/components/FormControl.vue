@@ -28,6 +28,7 @@
       :is-cell-edit="isCellEdit"
       :label="usedCaption"
       :background-color="cellColor"
+      :color-variables="colorVariables"
       :text-align="textAlign"
       :modal="$isMobile && (forceModalOnMobile || isMultiline)"
       :required="!isNullable"
@@ -219,7 +220,10 @@
           />
         </b-col>
         <b-col :cols="!isMultiline && usedCaption ? 8 : 12">
-          <div v-if="inputType.name === 'userview'" :style="{ backgroundColor: cellColor, borderRadius: '0.2rem' }">
+          <div
+            v-if="inputType.name === 'userview'"
+            :style="{ backgroundColor: cellColor }"
+          >
             <NestedUserView
               ref="control"
               :args="inputType.args"
@@ -256,6 +260,7 @@ import { IEntityRef } from "ozma-api/src";
 import type { Button } from "@/components/buttons/buttons";
 import { attrToButtons } from "@/components/buttons/buttons";
 import FormInputPlaceholder from "@/components/FormInputPlaceholder.vue";
+import { getColorVariables } from "@/utils_colors";
 import { IReferenceSelectAction } from "./ReferenceMultiSelect.vue";
 
 interface ITextType {
@@ -444,7 +449,7 @@ export default class FormControl extends Vue {
   private filterString = "";
   private title = "";
   private enableFilter = false;
-  private isUserViewLoading = true;
+  private isUserViewLoading = false;
 
   get isNullable() {
     return this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable;
@@ -526,7 +531,18 @@ export default class FormControl extends Vue {
   }
 
   get cellColor() {
-    return "cell_color" in this.attributes ? String(this.attributes["cell_color"]) : null;
+    return this.attributes["cell_color"] ? String(this.attributes["cell_color"]) : null;
+  }
+
+  get colorVariables() {
+    if (this.attributes["cell_variant"]) {
+      return getColorVariables("input", this.attributes["cell_variant"]);
+    } else if (this.cellColor) {
+      console.warn("`cell_color` attribute is deprecated, use `cell_variant` instead.");
+      return getColorVariables("input", { background: this.cellColor });
+    } else {
+      return null;
+    }
   }
 
   get customHeight() {
@@ -727,6 +743,7 @@ export default class FormControl extends Vue {
     this.title = "";
     this.filterString = "";
     this.enableFilter = false;
+    this.isUserViewLoading = false;
   }
 
   private mounted() {
@@ -800,17 +817,6 @@ export default class FormControl extends Vue {
     &.not-loaded {
       color: var(--MainTextColorLight);
     }
-  }
-
-  .input_label_single {
-    align-self: center;
-    margin-bottom: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: pre;
-    width: 100%;
-    opacity: 0.7;
-    color: var(--MainTextColorLight);
   }
 
   .empty_userview_text {

@@ -12,13 +12,12 @@
 <template>
   <div
     id="app"
-    :style="styleSettings"
+    :style="[styleSettings, colorVariables]"
   >
     <AlertBanner
       v-if="bannerMessage"
       :message="bannerMessage"
-      :variant="bannerVariant"
-      :styles="bannerStyles"
+      :color-variables="bannerColorVariables"
       @banner-close="onBannerClose"
     />
     <ModalPortalTarget
@@ -39,6 +38,7 @@
 </template>
 
 <script lang="ts">
+import R from "ramda";
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { CurrentSettings } from "@/state/settings";
@@ -46,7 +46,7 @@ import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import FabCluster from "@/components/FabCluster/FabCluster.vue";
 import AlertBanner from "@/components/AlertBanner.vue";
 import { ErrorKey } from "@/state/errors";
-import { bootstrapVariants } from "@/utils";
+import { getColorVariables, loadColorVariants } from "@/utils_colors";
 
 const settings = namespace("settings");
 const auth = namespace("auth");
@@ -59,6 +59,7 @@ export default class App extends Vue {
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
+  private colorVariables: any = null;
 
   created() {
     void this.startAuth();
@@ -99,6 +100,30 @@ export default class App extends Vue {
     const rawAutoSaveTimeout = Number(this.settings.getEntry("auto_save_timeout", String, "3"));
     const autoSaveTimeout = Number.isNaN(rawAutoSaveTimeout) ? null : rawAutoSaveTimeout * 1000;
     this.setAutoSaveTimeout(autoSaveTimeout);
+    void this.loadColors();
+  }
+
+  private async loadColors() {
+    const colorVariants = await loadColorVariants();
+    // TODO: genenrating variables for each component is not the best solution, would be cool to fix this.
+    const componentsNames = [
+      "table",
+      "input",
+      "form",
+      "table",
+      "tableCell",
+      "menuEntry",
+      "kanban",
+      "kanbanCard",
+      "interface",
+      "refernece",
+    ];
+    this.colorVariables = R.mergeAll([
+      ...componentsNames.map(componentName => getColorVariables(componentName, "default")),
+      ...colorVariants.map((variant: any) => getColorVariables(variant.name, variant)),
+    ]);
+
+    return Promise.resolve();
   }
 
   private get fontSize(): number {
@@ -129,11 +154,11 @@ export default class App extends Vue {
       "ControlDisableColor": this.settings.getEntry("control_disable_color", String, "#999999"),
 
       // Light Theme, do not remove
-      "MainTextColor": this.settings.getEntry("main_text_color", String, "#292b2c"),
-      "MainBackgroundColor": this.settings.getEntry("main_background_color", String, "white"),
+      "OldMainTextColor": this.settings.getEntry("main_text_color", String, "#292b2c"),
+      "OldMainBackgroundColor": this.settings.getEntry("main_background_color", String, "white"),
       "SecondaryBackgroundColor": this.settings.getEntry("secondary_background_color", String, "#f8f9fa"),
-      "MainTextColorLight": this.settings.getEntry("main_text_color_light", String, "#6c757d"),
-      "MainBorderColor": this.settings.getEntry("main_border_color", String, "#dee2e6"),
+      "OldMainTextColorLight": this.settings.getEntry("main_text_color_light", String, "#6c757d"),
+      "OldMainBorderColor": this.settings.getEntry("main_border_color", String, "#dee2e6"),
       "MainBorderTextColor": this.settings.getEntry("main_border_text_color", String, "#68766d"),
 
       // Dark Theme, do not remove
@@ -169,18 +194,30 @@ export default class App extends Vue {
     localStorage.setItem("viewed-banner-message", this.bannerMessage);
   }
 
-  private get bannerVariant() {
-    const variant = this.settings.getEntry("banner_variant", String, "info");
-    return bootstrapVariants.includes(variant as any)
-      ? variant
-      : "info";
-  }
+  private get bannerColorVariables() {
+    const variant = this.settings.getEntry("banner_variant", String, null);
+    if (variant) {
+      try {
+        const parsed = JSON.parse(variant);
+        return getColorVariables("banner", parsed);
+      } catch {
+        return getColorVariables("banner", variant);
+      }
+    }
 
-  private get bannerStyles() {
-    return {
-      background: this.settings.getEntry("banner_background_color", String, ""),
-      color: this.settings.getEntry("banner_text_color", String, ""),
-    };
+    return null;
   }
 }
 </script>
+
+<style lang="scss" scoped>
+  #app {
+    --MainTextColor: var(--default-foregroundColor, var(--OldMainTextColor)) !important;
+    --MainTextColorLight: var(--default-foregroundDarkerColor, var(--OldMainTextColorLight)) !important;
+    --MainBackgroundColor: var(--default-backgroundColor, var(--OldMainBackgroundColor)) !important;
+    --MainBorderColor: var(--default-borderColor, var(--OldMainBorderColor)) !important;
+
+    background-color: var(--default-backgroundColor, var(--MainBackgroundColor));
+    color: var(--default-foregroundColor, var(--MainTextColor));
+  }
+</style>

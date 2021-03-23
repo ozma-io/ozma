@@ -219,7 +219,7 @@ export default class TopLevelUserView extends Vue {
   private enableFilter = false;
   private styleNode: HTMLStyleElement;
   private title = "";
-  private isUserViewLoading = true;
+  private isUserViewLoading = false;
 
   private buttons: Button[] = [];
 
@@ -431,24 +431,23 @@ export default class TopLevelUserView extends Vue {
   .head-menu {
     display: flex;
     white-space: nowrap;
-    align-items: center;
-    background-color: var(--MainBackgroundColor);
+    background-color: var(--interface-backgroundColor, var(--MainBackgroundColor));
+    color: var(--interface-foregroundColor, var(--MainTextColor));
+    border-bottom: 1px solid var(--interface-borderColor, var(--MainBorderColor));
     width: 100%;
     padding: 2px 10px;
     z-index: 999;
-    border-bottom: 1px solid var(--MainBorderColor);
   }
 
   .head-menu_back-button {
     padding-top: 3px;
     padding-bottom: 3px;
     margin-left: 0 !important;
+    background-color: transparent;
   }
 
   .head-menu_back-button,
   .head-menu_main-menu-button {
-    color: var(--MainTextColor) !important;
-    background: hsla(0, 0%, 100%, 0.3);
     border: none;
     text-decoration: none;
     padding: 0;
@@ -486,8 +485,9 @@ export default class TopLevelUserView extends Vue {
     text-align: right;
     margin-left: -1px !important;
     position: relative;
-    background-color: var(--MainBackgroundColor) !important;
-    border-top: 1px solid var(--MainBorderColor);
+    background-color: var(--interface-backgroundColor, var(--MainBackgroundColor)) !important;
+    color: var(--interface-foregroundColor, var(--MainTextColor));
+    border-top: 1px solid var(--interface-borderColor, var(--MainBorderColor));
     z-index: 500; /* низ страницы */
     display: -webkit-box;
     display: -ms-flexbox;

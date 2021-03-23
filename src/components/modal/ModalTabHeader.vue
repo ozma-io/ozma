@@ -35,14 +35,6 @@ export default class ModalTabHeader extends Vue {
     display: flex;
     padding: 2px;
     flex: 1 1 auto;
-    cursor: pointer;
-    border-top: 1px solid;
-    border-left: 1px solid;
-    border-right: 1px solid;
-    border-color: transparent;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    align-items: center;
   }
 
   .modal__tab_header_title {
@@ -71,10 +63,11 @@ export default class ModalTabHeader extends Vue {
 
   .modal__tab_header:not(.only_tab) {
     border-left: 1px solid var(--MainBorderColor);
+    cursor: grab;
 
     &:not(.selected) {
-      /* TODO: remove hardcoded color */
-      background-color: #eaeaea;
+      background-color: var(--default-borderColor, #eaeaea);
+      cursor: pointer;
     }
   }
 

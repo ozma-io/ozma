@@ -1,9 +1,8 @@
 <template>
   <b-alert
     :show="messageHtml !== ''"
-    class="mb-0"
-    :style="styles"
-    :variant="variant"
+    class="custom-alert mb-0"
+    :style="colorVariables"
     dismissible
     @dismissed="$emit('banner-close')"
   >
@@ -26,27 +25,21 @@ const sanitizeSettings = {
 
 const sanitize = (message: string) => sanitizeHtml(message, sanitizeSettings);
 
-const anchorRegex = /<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1>(.*)<\/a>/;
-// Adds Bootstrap's class on links.
-const modifyLinks = (html: string) => html.replace(anchorRegex, "<a href='$2' class='alert-link'>$3</a>");
-
 @Component
 export default class AlertBanner extends Vue {
   @Prop({ type: String, required: true }) message!: string;
-  @Prop({ type: String, required: true }) variant!: string;
-  @Prop({ type: Object, required: true }) styles!: string;
-
-  private useBootstrapLinkStyles() {
-    return Object.entries(this.styles).every(([_, value]) => value === "");
-  }
+  @Prop({ type: Object, required: true }) colorVariables!: Record<string, unknown> | null;
 
   private get messageHtml() {
-    let messageHtml = sanitize(this.message);
-    if (this.useBootstrapLinkStyles()) {
-      messageHtml = modifyLinks(messageHtml);
-    }
-
-    return messageHtml;
+    return sanitize(this.message);
   }
 }
 </script>
+
+<style lang="scss" scoped>
+  .custom-alert {
+    background-color: var(--banner-backgroundColor, #bee5eb);
+    color: var(--banner-foregroundColor, #0c5460);
+    border-color: var(--banner-borderColor, #bee5eb);
+  }
+</style>

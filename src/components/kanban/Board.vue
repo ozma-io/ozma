@@ -10,6 +10,7 @@
       :title="column.title"
       :cards="column.cards"
       :width="columnWidth"
+      :color-variables="column.colorVariables"
       :header-color="columnHeaderColor"
       :background-color="backgroundColor"
       :create-button="createButton"
@@ -74,6 +75,7 @@ export default class Board extends Vue {
   .board_container {
     width: 100%;
     height: 100%;
+    padding: 0.5rem;
     overflow-y: hidden;
     overflow-x: auto;
     display: flex;
@@ -88,9 +90,5 @@ export default class Board extends Vue {
     border-left: 0;
     border-top: 0;
     border-bottom: 0;
-  }
-
-  ::v-deep .column_container:last-of-type {
-    border-right: 0;
   }
 </style>

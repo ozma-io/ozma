@@ -200,7 +200,6 @@ export default class Modal extends Vue {
   .modal__content {
     overflow: auto;
     height: 100%;
-    border-top: 1px solid var(--MainBorderColor);
   }
 
   .modal__content ::v-deep .view-form {
@@ -226,7 +225,7 @@ export default class Modal extends Vue {
   .v--modal-box.v--modal {
     background-color: var(--MainBackgroundColor);
     color: var(--MainTextColor);
-    border-radius: 3px;
+    border-radius: 0.5rem;
     border: 1px solid var(--MainBorderColor);
     display: flex;
     flex-flow: column nowrap;

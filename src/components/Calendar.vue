@@ -1,10 +1,14 @@
 <i18n>
 {
     "en": {
-        "input_placeholder": "Empty"
+        "input_placeholder": "Empty",
+        "today": "Today",
+        "now": "Now"
     },
     "ru": {
-        "input_placeholder": "Пусто"
+        "input_placeholder": "Пусто",
+        "today": "Сегодня",
+        "now": "Сейчас"
     }
 }
 </i18n>
@@ -80,16 +84,16 @@
       </div>
 
       <div class="popper border rounded overflow-hidden shadow">
-        <div class="calendar-container">
+        <div class="popper-inner">
           <div
-            :class="['days', {'mr-2': showTime}]"
+            :class="['days']"
           >
             <DatePicker
               :value="dateValue"
               @update:value="updateDate"
             />
-            <button class="today" @click="setDateToday($event)">
-              Today
+            <button class="today material-button" @click="setDateToday($event)">
+              {{ $t("today").toString() }}
             </button>
           </div>
 
@@ -104,10 +108,10 @@
             />
             <button
               v-if="showTime"
-              class="now"
+              class="now material-button"
               @click="setTimeNow($event)"
             >
-              Now
+              {{ $t("now").toString() }}
             </button>
           </div>
         </div>
@@ -321,6 +325,7 @@ export default class Calendar extends Vue {
     width: 100%;
     position: relative;
     z-index: 30;
+    border-radius: 0.2rem;
 
     &.is-open {
       z-index: 31; /* To be above other components with popups */
@@ -328,10 +333,11 @@ export default class Calendar extends Vue {
   }
 
   .calendar-icon {
-    background-color: var(--MainBackgroundColor);
-    color: var(--MainTextColorLight);
-    border-left-width: 0;
+    background-color: var(--input-backgroundColor, var(--MainBackgroundColor));
+    color: var(--input-foregroundDarkerColor, var(--MainTextColorLight));
     cursor: pointer;
+    border: 1px solid var(--input-borderColor);
+    border-left-width: 0;
   }
 
   .calendar-input {
@@ -339,37 +345,24 @@ export default class Calendar extends Vue {
     font-size: var(--FontSize) !important;
   }
 
-  .calendar-container {
+  .popper-inner {
     display: flex;
-    background-color: var(--MainBackgroundColor);
-    color: var(--MainTextColor);
-    border: 1px solid var(--MainBorderColor);
   }
 
   .main-input {
     display: flex;
     flex-direction: row;
+    border-radius: 0.25rem;
+    background-color: var(--input-backgroundColor, var(--MainBackgroundColor));
+    color: var(--input-foregroundColor, var(--MainTextColor));
+
+    ::v-deep .form-control {
+      background-color: var(--input-backgroundColor, var(--MainBackgroundColor));
+    }
   }
 
   .main-input__trigger {
     display: inline-block;
-  }
-
-  .main-input__trigger_button {
-    color: var(--ButtonTextColor) !important;
-    background: hsla(0, 0%, 100%, 0.3);
-    line-height: 100%;
-    border: none;
-    border-left: 0;
-    text-decoration: none;
-    padding-left: 5px;
-    padding-right: 5px;
-    z-index: 1000; /* панель наверху */
-    padding-bottom: 4px;
-    padding-top: 1px !important;
-    border-radius: 0 !important;
-    font-size: 1.4em !important;
-    height: 100%;
   }
 
   .days {
@@ -390,12 +383,7 @@ export default class Calendar extends Vue {
 
   .today,
   .now {
-    margin-top: 10px;
-  }
-
-  @media screen and (max-device-width: 480px) {
-    .calendar-container__open {
-      flex-direction: column;
-    }
+    background: var(--default-backgroundColor, var(--MainBorderColor));
+    border-radius: 0;
   }
 </style>
