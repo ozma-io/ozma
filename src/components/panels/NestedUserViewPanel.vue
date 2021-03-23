@@ -98,12 +98,4 @@ export default class NestedUserViewPanel extends Vue {
     cursor: pointer;
     color: var(--MainTextColor);
   }
-
-  @media screen and (max-aspect-ratio: 13/9) {
-    @media screen and (max-device-width: 480px) {
-      .input_label {
-        max-width: 150px;
-      }
-    }
-  }
 </style>
