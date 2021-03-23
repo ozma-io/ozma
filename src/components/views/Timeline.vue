@@ -252,7 +252,7 @@ export default class UserViewTimeline extends mixins<EmptyBaseUserView, BaseEntr
 
 <style lang="scss" scoped>
   .timeline-background {
-    background-color: var(--SecondaryBackgroundColor);
+    background-color: var(--default-backgroundDarker1Color, var(--SecondaryBackgroundColor));
   }
 
   .timeline {
@@ -265,6 +265,8 @@ export default class UserViewTimeline extends mixins<EmptyBaseUserView, BaseEntr
 
     .textarea {
       height: 3rem;
+      background-color: var(--input-backgroundColor, --MainBackgroundColor);
+      color: var(--input-foregroundColor, --MainTextColor);
     }
   }
 

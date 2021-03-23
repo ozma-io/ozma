@@ -3,10 +3,10 @@ $enable-shadows: false;
 $enable-gradients: false;
 $font-family-sans-serif: var(--Font);
 $font-family-serif: var(--Font);
-$input-color: var(--MainTextColor);
-$input-placeholder-color: var(--MainTextColorLight);
+$input-color: var(--input-foregroundColor, var(--MainTextColor));
+$input-placeholder-color: var(--input-foregroundDarkerColor, var(--MainTextColorLight));
 $border-color: var(--MainBorderColor);
-$input-border-color: var(--MainBorderColor);
+$input-border-color: var(--input-borderColor, $border-color);
 
 @import '../../node_modules/bootstrap/scss/bootstrap';
 @import 'mixins.scss';
@@ -43,7 +43,6 @@ body {
   position: absolute;
   overflow: hidden;
   bottom: 0;
-  background-color: var(--MainBackgroundColor);
   -webkit-text-size-adjust: none;
 
   --FocusBorderColor: #{$input-focus-border-color};
@@ -131,10 +130,10 @@ button:not(.btn) {
 
 .material-icons {
   user-select: none;
+}
 
-  &.material-button {
-    @include material-button;
-  }
+.material-button {
+  @include material-button;
 }
 
 .with-material-icon {
@@ -162,7 +161,8 @@ input.with-clear-content-button {
 .btn.clear-content-button {
   border-left-width: 0;
   border-right-width: 0;
-  border-color: var(--MainBorderColor);
+  border-color: $input-border-color;
+  color: var(--input-foregroundDarkerColor, var(--MainTextColorLight));
   opacity: 1;
 
   .material-icons {
@@ -176,13 +176,23 @@ input.with-clear-content-button {
   }
 
   .clear-content-button:not(.disabled) .material-icons {
-    opacity: 0.3;
+    opacity: 0.5;
   }
 
-  &:hover,
-  &:focus-within {
-    .clear-content-button:not(.disabled) .material-icons {
+  .clear-content-button:not(.disabled):hover {
+    background-color: var(--input-backgroundDarker1Color, rgb(239, 239, 239));
+
+    .material-icons {
       opacity: 1;
+      color: var(--input-foregroundDarkerColor, var(--MainTextColor));
+    }
+  }
+
+  .clear-content-button:not(.disabled):active {
+    background-color: var(--input-backgroundDarker2Color, rgb(239, 239, 239));
+
+    .material-icons {
+      color: var(--input-foregroundDarkerColor, var(--MainTextColor));
     }
   }
 }
@@ -215,6 +225,8 @@ $input-focus-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 .popper {
   min-width: 100px;
   padding: 0;
+  background-color: var(--default-backgroundColor);
+  color: var(--default-foregroundColor);
 
   &[x-placement^="bottom"],
   &[x-placement^="right"],

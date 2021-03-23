@@ -109,5 +109,6 @@ export default class RowCard extends Vue {
     display: block;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: var(--kanbanCard-foregroundColor);
   }
 </style>

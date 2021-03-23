@@ -29,7 +29,7 @@
   <div
     v-hotkey="keymap"
     fluid
-    :class="['table-block', {'nested-table-block': !isRoot, 'active_editing': editingValue !== null}]"
+    :class="['table-block', { 'nested': !isRoot, 'active_editing': editingValue !== null }]"
   >
     <table-cell-edit
       v-if="editingValue"
@@ -81,7 +81,7 @@
       </div>
 
       <table
-        class="custom-table table table-sm b-table"
+        class="custom-table table table-sm"
       >
         <colgroup>
           <col
@@ -227,6 +227,7 @@ import {
   valueToPunnedText, CommittedRowRef,
 } from "@/user_views/combined";
 import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
+import { getColorVariables } from "@/utils_colors";
 
 export interface IColumn {
   caption: string;
@@ -245,6 +246,7 @@ export interface ITableValueExtra extends IBaseValueExtra {
   valueFormatted: string;
   link: Link | null;
   style: Record<string, unknown> | null;
+  colorVariables: Record<string, unknown> | null;
   selected: boolean;
   htmlElement: HTMLElement | null;
 }
@@ -260,6 +262,7 @@ export interface ITableRowExtra extends IBaseRowExtra {
   searchText: string;
   shownAsNewRow: boolean;
   style: Record<string, unknown> | null;
+  colorVariables: Record<string, unknown> | null;
   height: number | null;
   link: Link | null;
   tree: ITableRowTree;
@@ -425,10 +428,22 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
     style["left"] = fixedPosition;
   }
 
+  const colorVariant = getCellAttr("cell_variant");
+  let colorVariables = null;
+  if (colorVariant) {
+    colorVariables = getColorVariables("tableCell", colorVariant);
+  // TODO: Not sure, but getting attribute by `getCellAttr` may have performance issues on big tables with uv-wide `cell_color`.
+  /* } else if (cellColor) { */
+  } else if (value.attributes?.["cell_color"]) {
+    console.warn("`cell_color` attribute is deprecated, use `cell_variant` or `row_variant` instead.");
+    colorVariables = getColorVariables("tableCell", { background: String(cellColor) });
+  }
+
   const extra = {
     valueText,
     valueFormatted,
     style: null as Record<string, unknown> | null,
+    colorVariables,
   };
   if (!R.isEmpty(style)) {
     extra.style = style;
@@ -450,10 +465,17 @@ const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLo
     arrowDown: oldLocal?.tree.arrowDown ?? defaultArrow,
   };
 
+  const colorVariant = getRowAttr("row_variant");
+  let colorVariables = null;
+  if (colorVariant) {
+    colorVariables = getColorVariables("tableCell", colorVariant);
+  }
+
   const extra = {
     searchText: "",
     height: null as number | null,
     style: null as Record<string, unknown> | null,
+    colorVariables,
     link: null,
     shownAsNewRow: false,
     tree,
@@ -1934,7 +1956,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   table,
   th,
   td {
-    border: 1px solid var(--MainBackgroundColor);
+    border: 1px solid var(--table-borderColor, var(--MainBorderColor));
   }
 
   .button-container {
@@ -1949,11 +1971,11 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       display: flex;
       align-items: center;
       cursor: pointer;
-      color: var(--MainTextColorLight);
       padding: 3px 6px;
+      color: var(--table-foregroundDarkerColor);
 
       &:hover {
-        color: var(--MainTextColor);
+        color: var(--table-foregoundColor);
       }
 
       > .label {
@@ -1962,24 +1984,27 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
+  .table {
+    /* Bootstrap's colors was overrided in style.css and there they overrided again */
+    --MainBorderColor: var(--table-backgroundDarker1Color);
+  }
+
   .table-block {
     width: 100%;
     margin: 0;
     position: relative;
     height: 100%;
-    background: var(--MainBackgroundColor);
+    background-color: var(--table-backgroundDarker1Color, var(--MainBackgroundColor));
+
+    &.nested {
+      border: 1px solid var(--input-borderColor, var(--form-borderColor, var(--default-borderColor, var(--MainBorderColor))));
+      border-radius: 0.2rem;
+      overflow: hidden;
+    }
   }
 
   .data-col {
     max-width: 100vw !important;
-  }
-
-  .form_background {
-    padding: 50px;
-    box-sizing: border-box;
-    box-shadow: 0 0 10px 5px var(--MainBorderColor);
-    background: var(--MainBackgroundColor);
-    width: 40%;
   }
 
   .edit_container {
@@ -2006,9 +2031,14 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     border-spacing: 0;
     table-layout: fixed;
     width: 0;
-    border: 1px solid var(--MainBorderColor);
-    background-color: var(--TableBackColor);
+    border: 1px solid var(--table-backgroundDarker2Color, var(--MainBorderColor));
+    border-left: none;
+    background-color: var(--table-backgroundColor, var(--TableBackColor));
     margin: 0;
+    border-radius: 0.2rem;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    overflow: hidden;
   }
 
   .table-th {
@@ -2017,21 +2047,21 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     max-width: 50px !important;
     overflow: hidden;
     white-space: nowrap;
-    box-shadow: 0 2px 0 var(--MainBorderColor);
+    box-shadow: 0 2px 0 var(--table-backgroundDarker1Color, var(--MainBorderColor));
     text-overflow: ellipsis;
     position: sticky; /* фиксация шапки при скроле */
     z-index: 20; /* при скроле таблицы чтобы шапка была видна */
-    border-right: 1px solid var(--MainBorderColor);
+    border-right: 1px solid var(--table-backgroundDarker1Color, var(--MainBorderColor));
 
     /* Instead of `0` to fix Safari's bug gap, doesn't needed in normal browsers, but easier to set same for all */
     top: -1px;
     cursor: pointer;
     color: var(--MainTextColorLight);
-    background-color: var(--MainBackgroundColor);
+    background-color: var(--table-backgroundColor, var(--MainBackgroundColor));
   }
 
   .td-moz {
-    box-shadow: -1px 2px 0 var(--MainBorderColor);
+    box-shadow: -1px 2px 0 var(--table-BorderColor, var(--MainBorderColor));
   }
 
   .table-th:last-child {
@@ -2044,13 +2074,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   th.fixed-column {
     z-index: 25; /* поверх обычных столбцов */
-    box-shadow: 0 2px 0 var(--MainBorderColor);
+    box-shadow: 0 2px 0 var(--table-BorderColor, var(--MainBorderColor));
     position: sticky;
 
     &.checkbox-cells {
       box-shadow:
-        0 2px 0 var(--MainBorderColor),
-        1px 0 0 var(--MainBorderColor);
+        0 2px 0 var(--table-BorderColor, var(--MainBorderColor)),
+        1px 0 0 var(--table-BorderColor, var(--MainBorderColor));
     }
   }
 
@@ -2067,12 +2097,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   .table-th_span {
     justify-content: center;
-  }
-
-  .nested-table-block {
-    border: 1px solid var(--MainBorderColor);
-    border-radius: 4px;
-    overflow: hidden;
   }
 
   @media screen and (max-device-width: 650px) {
@@ -2092,10 +2116,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       position: sticky !important;
       justify-content: flex-start;
       z-index: 100000; /* чтобы FormControl был поверх других таблиц, когда их несколько на странице */
-    }
-
-    .form_background {
-      width: 80%;
     }
   }
 
@@ -2139,53 +2159,15 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  div.form-control-panel {
-    position: fixed;
-    z-index: 2000; /* FormControl поверх таблицы */
-    background-color: var(--MenuColor);
-    display: block;
-    align-items: center;
-    padding: 20px;
-  }
-
   @media screen and (max-device-width: 480px) {
     .edit_container {
       align-items: flex-start;
     }
-
-    div.form-control-panel {
-      margin-top: 15%;
-    }
-
-    div.form-control-panel > div.select-container {
-      width: calc(100vw - 44px) !important;
-
-      /* padding 20px and left 2px */
-    }
-
-    div.form-control-panel > div.select-container > select.form-control-panel_select {
-      width: 100%;
-    }
-
-    div.form-control-panel > div.select-container::after {
-      position: relative;
-      left: 0;
-    }
-  }
-
-  div.form-control-panel > div.select-container {
-    width: 300px;
-  }
-
-  div.form-control-panel > pre {
-    min-width: 600px;
-    height: 200px !important;
-    margin-bottom: 0;
   }
 
   ::v-deep .checkbox-cells {
     text-align: center;
-    color: var(--MainTextColorLight);
+    color: var(--tableCell-foregroundDarkerColor, var(--table-foregroundDarkerColor, var(--MainTextColorLight)));
     padding: 0;
     transition: background 0.1s;
 
@@ -2200,8 +2182,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
 
     &:hover {
-      color: var(--MainTextColor);
-      background-color: rgb(239, 239, 239);
+      color: var(--tableCell-foregroundColor, var(--table-foregroundColor, var(--MainTextColor)));
+      background-color: var(--tableCell-backgroundDarker1Color, var(--table-backgroundDarker1Color, rgb(239, 239, 239)));
       transition: background 0s;
     }
   }
@@ -2221,7 +2203,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     .add-in-modal-icon {
       position: relative;
       top: 3px;
-      color: var(--MainTextColorLight);
+      color: var(--tableCell-foregroundDarkerColor, var(--table-foregroundDarkerColor, var(--MainTextColorLight)));
+    }
+
+    .edit-in-modal-icon {
+      position: relative;
+      top: 5px;
+      color: var(--tableCell-foregroundDarkerColor, var(--table-foregroundDarkerColor, var(--MainTextColorLight)));
     }
 
     &.table-th {
@@ -2232,19 +2220,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       }
     }
 
-    .edit-in-modal-icon {
-      position: relative;
-      top: 5px;
-      color: var(--MainTextColorLight);
-    }
-
     > a {
       display: block;
       text-decoration: none;
 
       &:hover {
         .add-in-modal-icon {
-          color: var(--MainTextColor);
+          color: var(--tableCell-foregroundColor, var(--table-foregroundColor, var(--MainTextColor)));
         }
       }
     }
@@ -2264,17 +2246,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     > span > i {
       position: absolute;
-      top: 5px;
-      left: 5px;
-    }
-
-    &:hover {
-      background-color: rgb(239, 239, 239);
-      transition: background 0s;
-
-      .edit-in-modal-icon {
-        color: var(--MainTextColor);
-      }
     }
   }
 

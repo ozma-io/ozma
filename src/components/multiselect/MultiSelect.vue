@@ -116,7 +116,7 @@
         <b-input-group-append>
           <b-button
             v-if="showClearOptions"
-            class="button with-material-icon clear-options-button"
+            class="button with-material-icon clear-content-button clear-options-button"
             variant="outline-secondary"
             @click.stop="unselectAll"
           >
@@ -614,8 +614,8 @@ export default class MultiSelect extends Vue {
   }
 
   .filter-icon {
-    background-color: var(--MainBackgroundColor);
-    color: var(--MainTextColorLight);
+    background-color: var(--input-backgroundColor, var(--MainBackgroundColor));
+    color: var(--input-foregroundColor, var(--MainTextColorLight));
     border-left-width: 0;
   }
 
@@ -625,31 +625,46 @@ export default class MultiSelect extends Vue {
     cursor: pointer;
     align-self: center;
     align-items: center;
-    color: var(--MainTextColorLight);
+    color: var(--input-foregroundDarkerColor, var(--MainTextColorLight));
   }
 
   .select-container {
     display: flex;
     flex-direction: row;
     width: 100%;
-    border: 1px solid var(--MainBorderColor);
+    border: 1px solid var(--input-borderColor, var(--MainBorderColor));
+    background: var(--input-backgroundColor, var(--default-backgroundColor, var(--MainBackgroundColor)));
+    color: var(--input-foregroundColor, var(--default-foregroundColor, var(--MainTextColor)));
     border-radius: 0.2rem;
     cursor: pointer;
 
     .clear-options-button {
-      border-radius: 0;
-      opacity: 0.3;
       border: none;
-    }
+      border-radius: 0;
+      border-width: 0;
+      opacity: 0.5;
 
-    &:hover .clear-options-button {
-      opacity: 1;
+      &:hover {
+        opacity: 1;
+        background-color: var(--input-backgroundDarker1Color, rgb(239, 239, 239));
+        color: var(--input-foregroundDarkerColor, var(--MainTextColor));
+      }
+
+      &:focus {
+        /* Maybe bad for accessibily, but tried to mimic Bootstrap's "b-input-group-append" style here */
+        box-shadow: none;
+      }
+
+      &:active {
+        background-color: var(--input-backgroundDarker2Color, rgb(239, 239, 239));
+        color: var(--input-foregroundDarkerColor, var(--MainTextColor));
+      }
     }
 
     .select-icon {
       border: none;
       background-color: transparent;
-      color: var(--MainTextColorLight);
+      color: var(--input-foregroundDarkerColor, var(--MainTextColorLight));
       border-right-width: 0;
       cursor: pointer;
     }
@@ -693,6 +708,8 @@ export default class MultiSelect extends Vue {
 
     .filter-input {
       border-right-width: 0;
+      background-color: var(--input-backgroundColor);
+      color: var(--input-foregroundColor);
     }
 
     .filter-input:focus {
@@ -728,27 +745,26 @@ export default class MultiSelect extends Vue {
       position: relative;
       z-index: 1001;
       width: 100%;
-      background: white;
       list-style: none;
     }
   }
 
   .value-focused {
     cursor: pointer !important;
-    background-color: var(--MainBorderColor) !important;
-    color: var(--MainTextColor) !important;
+    color: var(--reference-foregroundColor, var(--MainTextColor)) !important;
+    background-color: var(--reference-backgroundDarker1Color, var(--MainTextColorLight)) !important;
+    border: 1px solid var(--reference-backgroundDarker2Color, var(--MainBorderColor)) !important;
   }
 
   div.select-container__options__actions {
     bottom: 0;
     padding: 0;
     color: red;
+    border-top: 1px solid var(--default-borderColor);
   }
 
   .one-of-many-value {
     margin: 3px;
-    border: 1px solid var(--MainBorderColor);
-    background-color: var(--MainBackgroundColor);
     max-width: 95%;
   }
 
@@ -756,7 +772,9 @@ export default class MultiSelect extends Vue {
   .single-value {
     display: inline-flex;
     align-items: center;
-    color: var(--MainTextColor);
+    border: 1px solid var(--reference-backgroundDarker1Color, var(--MainBorderColor));
+    background-color: var(--reference-backgroundColor, var(--MainBackgroundColor));
+    color: var(--reference-foregroundColor, var(--MainTextColor));
     border-radius: 1rem;
     padding: 2px 5px;
     line-height: 1rem;
@@ -777,9 +795,6 @@ export default class MultiSelect extends Vue {
 
   .single-value {
     align-self: center;
-    border: 1px solid var(--MainBorderColor);
-    background-color: var(--MainBackgroundColor);
-    line-height: normal;
   }
 
   .options-list {

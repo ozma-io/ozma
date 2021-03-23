@@ -57,16 +57,14 @@
     <div :class="'userview-upper-div'">
       <div class="head-menu">
         <input
-          v-if="!isMainView"
           type="button"
           value="arrow_back"
           class="head-menu_back-button material-icons material-button rounded-circle"
           @click="$router.go(-1)"
         >
         <router-link
-          v-if="!isMainView"
           :to="{ name: 'main' }"
-          class="head-menu_main-menu-button material-icons material-button rounded-circle"
+          :class="['head-menu_main-menu-button material-icons material-button rounded-circle', { disabled: isMainView }]"
         >
           home
         </router-link>
@@ -449,23 +447,23 @@ export default class TopLevelUserView extends Vue {
     display: flex;
     align-items: center;
     white-space: nowrap;
-    background-color: var(--MainBackgroundColor);
+    background-color: var(--interface-backgroundColor, var(--MainBackgroundColor));
+    color: var(--interface-foregroundColor, var(--MainTextColor));
+    border-bottom: 1px solid var(--interface-borderColor, var(--MainBorderColor));
     width: 100%;
     padding: 5px 10px;
     z-index: 999;
-    border-bottom: 1px solid var(--MainBorderColor);
   }
 
   .head-menu_back-button {
     padding-top: 3px;
     padding-bottom: 3px;
     margin-left: 0 !important;
+    background-color: transparent;
   }
 
   .head-menu_back-button,
   .head-menu_main-menu-button {
-    color: var(--MainTextColor) !important;
-    background: hsla(0, 0%, 100%, 0.3);
     border: none;
     text-decoration: none;
     padding: 0;
@@ -503,8 +501,9 @@ export default class TopLevelUserView extends Vue {
     text-align: right;
     margin-left: -1px !important;
     position: relative;
-    background-color: var(--MainBackgroundColor) !important;
-    border-top: 1px solid var(--MainBorderColor);
+    background-color: var(--interface-backgroundColor, var(--MainBackgroundColor)) !important;
+    color: var(--interface-foregroundColor, var(--MainTextColor));
+    border-top: 1px solid var(--interface-borderColor, var(--MainBorderColor));
     z-index: 500; /* низ страницы */
     display: -webkit-box;
     display: -ms-flexbox;

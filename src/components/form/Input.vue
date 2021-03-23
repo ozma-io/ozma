@@ -200,6 +200,16 @@ export default class Input extends Vue {
 </script>
 
 <style lang="scss" scoped>
+  ::v-deep .form-control {
+    background-color: transparent;
+    color: var(--input-foregroundColor, --MainTextColor);
+
+    &.disabled {
+      background-color: rgba(0, 0, 0, 0.2);
+      color: var(--input-foregroundDarkerColor, --MainTextColorLight);
+    }
+  }
+
   .input-textarea {
     padding: 3px;
     border: none;

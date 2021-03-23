@@ -2,7 +2,7 @@
   <!-- FIXME: Pls solve these classes -->
   <td
     ref="cell"
-    :style="value.extra.style"
+    :style="[value.extra.style, value.extra.colorVariables]"
     :class="['table-td', {'fixed-column': column.fixed,
                           'select_fixed': value.extra.selected && column.fixed,
                           'next-after-last-fixed': index === lastFixedColumnIndex,
@@ -13,9 +13,6 @@
                           'tree-branches': column.treeUnfoldColumn && tree.children !== undefined && tree.children.length > 0 && showTree,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click.stop="$emit('cell-click', columnPosition, $refs.cell)"
-    @mousedown="$emit('cell-mousedown', $event, value)"
-    @mouseover.self="$emit('cell-mouseover', $event, value)"
-    @mouseup="$emit('cell-mouseup', $event, value)"
   >
     <p>
       <template v-if="column.type == 'buttons'">
@@ -31,7 +28,7 @@
           >
             <input
               type="button"
-              class="material-icons md-18 reference-open-modal material-button rounded-circle"
+              class="material-icons md-18 reference-open-modal rounded-circle"
               :value="iconValue"
             >
           </FunLink>
@@ -149,15 +146,17 @@ export default class TableCell extends Vue {
 </script>
 
 <style lang="scss" scoped>
+  @import "../../../styles/mixins.scss";
+
   .selectable {
     position: relative;
     float: left;
     padding: 0 5px;
-    border: 1px solid var(--MainBorderColor);
+    background-color: var(--reference-backgroundColor, var(--MainBackgroundColor));
+    border: 1px solid var(--reference-backgroundDarker1Color, var(--MainBorderColor));
+    color: var(--reference-foregroundColor, var(MainTextColor));
     border-radius: 0.6rem;
-    background-color: var(--MainBackgroundColor);
-    color: var(--MainTextColor);
-    width: 100%;
+    max-width: 100%;
     word-wrap: break-word;
   }
 
@@ -266,6 +265,8 @@ export default class TableCell extends Vue {
   }
 
   .reference-open-modal {
+    @include material-button("reference");
+
     pointer-events: auto !important;
     left: 2px;
     top: -1px;
@@ -273,7 +274,6 @@ export default class TableCell extends Vue {
     border: none;
     background: none;
     padding: 0;
-    color: var(--MainBorderTextColor);
     cursor: pointer;
   }
 

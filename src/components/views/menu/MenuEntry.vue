@@ -1,6 +1,7 @@
 <template>
   <b-col
     :sm="entry.size || 12"
+    :style="colorVariables"
   >
     <template v-if="entry.content">
       <div
@@ -47,8 +48,8 @@
         </span>
         <b-badge
           v-if="entry.badge !== undefined && entry.badge.value !== undefined"
-          :class="$isMobile ? 'ml-auto' : 'ml-1'"
-          :style="badgeStyle"
+          :class="['custom-badge', $isMobile ? 'ml-auto' : 'ml-1']"
+          :style="[badgeStyle, entry.badge.colorVariables]"
           pill
           :variant="entry.badge.variant"
         >
@@ -64,11 +65,11 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 
 import MenuHeading from "@/components/menu/MenuHeading.vue";
 import { Link } from "@/links";
-import { getIconType, BootstrapVariant } from "@/utils";
+import { getIconType } from "@/utils";
 
 export type Badge = {
   value: unknown;
-  variant?: BootstrapVariant;
+  colorVariables: Record<string, unknown> | null;
   color?: string;
 };
 
@@ -105,6 +106,11 @@ export default class MenuEntry extends Vue {
     }
     const fontSize = initialSize;
     return { fontSize: `${fontSize}px` };
+  }
+
+  private get colorVariables() {
+    /* return getColorVariables("menuEntry", { backgroundColor: "pink", color: "green" }); */
+    return {};
   }
 
   private getIconType(str: string | undefined | null) {
@@ -160,15 +166,17 @@ export default class MenuEntry extends Vue {
     max-width: 100%;
     display: flex;
     align-items: center;
-    color: var(--MainTextColor);
+    color: var(--menuEntry-foregroundColor, var(--MainTextColor));
     margin-bottom: 5px;
     text-decoration: none;
+    background-color: var(--menuEntry-backgroundColor, transparent);
+    border-color: var(--menuEntry-borderColor, var(--MainBorderColor));
 
     .icon {
       user-select: none;
 
       &.no-icon {
-        color: var(--MainBorderColor);
+        color: var(--menuEntry-foregroundDarkerColor, var(--MainBorderColor));
       }
 
       &.emoji {
@@ -189,6 +197,11 @@ export default class MenuEntry extends Vue {
   .menu_category_title {
     color: #000;
     font-weight: bold;
+  }
+
+  .custom-badge {
+    background-color: var(--badge-backgroundColor, #dc3545);
+    color: var(--badge-foregroundColor, white);
   }
 
   @media (max-width: 600px) {

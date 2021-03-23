@@ -1,5 +1,5 @@
 <template>
-  <div v-if="qrcodeContent !== null" class="border rounded">
+  <div v-if="qrcodeContent !== null" class="rounded">
     <qrcode :value="qrcodeContent" :options="{ width: height }" />
   </div>
 </template>
