@@ -1,16 +1,18 @@
 <template>
   <div
-    :class="['modal__tab_header', {'selected': isActive, 'only_tab': onlyTab}]"
+    :class="['modal__tab_header align-items-center', {'selected': isActive, 'only_tab': onlyTab}]"
     @click="$emit('tab-click')"
   >
     <slot name="header" />
-    <b-button
-      variant="light"
-      class="btn-sm lh-0-5 p-0-5"
-      @click.stop="$emit('tab-close')"
-    >
-      <span class="material-icons">close</span>
-    </b-button>
+    <div>
+      <b-button
+        variant="light"
+        class="btn-sm lh-0-5 p-0-5"
+        @click.stop="$emit('tab-close')"
+      >
+        <span class="material-icons">close</span>
+      </b-button>
+    </div>
   </div>
 </template>
 

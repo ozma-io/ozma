@@ -106,6 +106,7 @@ export const attrToButtons = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): But
 };
 
 // Will be deleted
+// The difference with this function is that it does not display buttons if the name is empty.
 export const attrToButtonsOld = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): Button[] => {
   if (!Array.isArray(buttonsAttr)) {
     return [];
