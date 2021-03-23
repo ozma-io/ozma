@@ -49,6 +49,16 @@
           />
         </template>
         <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueFormatted.length > 0, 'tree': showTree}]">
+          <b-btn
+            v-if="column.treeUnfoldColumn && !notExisting"
+            variant="light"
+            class="add-child"
+            size="sm"
+            @click.stop="$emit('add-child')"
+            @dblclick.stop
+          >
+            +
+          </b-btn>
           <span
             :style="{'margin-left': treeLevel*25+'px'}"
             :class="['display-arrow material-icons', {'down': tree.arrowDown}]"
@@ -99,6 +109,7 @@ export default class TableCell extends Vue {
   @Prop({ type: Number, default: null }) index!: number;
   @Prop({ type: Object, required: true }) tree!: ITableRowTree;
   @Prop({ type: Boolean, required: true }) showTree!: boolean;
+  @Prop({ type: Boolean, default: false }) notExisting!: boolean;
 
   private get valueType(): string | null {
     return this.value.info?.field?.valueType.type ?? null;
@@ -150,7 +161,14 @@ export default class TableCell extends Vue {
     word-wrap: break-word;
   }
 
+  .add-child {
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+
   .table-td {
+    position: relative;
     touch-action: manipulation;
 
     > p {
@@ -161,6 +179,11 @@ export default class TableCell extends Vue {
           position: relative;
           top: -2px;
         }
+      }
+
+      ::v-deep button {
+        pointer-events: all;
+        cursor: pointer;
       }
 
       ::v-deep ul.actions {
@@ -180,6 +203,15 @@ export default class TableCell extends Vue {
           color: #551a8b !important;
         }
       }
+    }
+
+    & .add-child {
+      visibility: hidden;
+    }
+
+    &:hover .add-child {
+      transition: 0.2s;
+      visibility: visible;
     }
   }
 

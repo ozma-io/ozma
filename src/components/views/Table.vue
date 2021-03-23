@@ -165,7 +165,8 @@
             :row-index="rowIndex"
             @select="selectTableRow(rowIndex, $event)"
             @cell-click="clickCell({ ...row.ref, column: arguments[0] }, arguments[1])"
-            @toggle-children="toggleChildren(row, $event)"
+            @toggle-children="toggleChildren(row.ref, $event)"
+            @add-child="addChild(row.ref)"
             @goto="$emit('goto', $event)"
           />
         </transition-group>
@@ -223,7 +224,7 @@ import { Link, attrToLinkRef, attrToLinkSelf } from "@/links";
 import {
   currentValue, IAddedRow, IAddedRowRef, ICombinedRow, ICombinedUserView, ICombinedUserViewAny, ICombinedValue, IExistingRowRef, IExtendedAddedRow,
   IExtendedRow, IExtendedRowCommon, IExtendedRowInfo, IExtendedValue, IRowCommon, IUserViewHandler, RowRef, ValueRef,
-  valueToPunnedText,
+  valueToPunnedText, CommittedRowRef,
 } from "@/user_views/combined";
 import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 
@@ -252,7 +253,7 @@ export interface ITableRowTree {
   parent: number | null;
   level: number;
   arrowDown: boolean;
-  children: number[];
+  children: CommittedRowRef[];
 }
 
 export interface ITableRowExtra extends IBaseRowExtra {
@@ -267,6 +268,7 @@ export interface ITableRowExtra extends IBaseRowExtra {
 export interface IAddedNewRowRef {
   type: "added";
   addedId: AddedRowId;
+  parent?: number;
 }
 
 export interface ICommittedNewRowRef {
@@ -283,9 +285,13 @@ export interface ITableViewExtra extends IBaseViewExtra {
   columns: IColumn[];
   fixedColumnPositions: Record<number, string>;
   rowsParentPositions: Record<number, number>;
+  treeParentColumnIndex: number;
   linkOpts?: IAttrToQueryOpts;
+
   newRowTopSidePositions: NewRowRef[];
   newRowBottomSidePositions: NewRowRef[];
+  addedRowRefs: NewRowRef[];
+
   sortColumn: number | null;
   sortAsc: boolean;
   sortOptions: Intl.CollatorOptions;
@@ -483,9 +489,24 @@ const postInitCommonRow = (uv: ITableCombinedUserView, row: ITableExtendedRowCom
 
 const initTreeChildren = (uv: ITableCombinedUserView) => {
   uv.rows!.forEach((row, i) => {
+    const addedChildRow = uv.extra.addedRowRefs.find(r => r.type === "added" && r.parent === i);
+    if (addedChildRow && addedChildRow.type === "added") {
+      const child: IAddedRowRef = {
+        type: "added",
+        id: addedChildRow.addedId,
+      };
+      uv.rows![i].extra.tree.children.push(child);
+    }
+
     if (row.extra.tree.parent) {
       const parentIndex = uv.extra.rowsParentPositions[row.extra.tree.parent];
-      uv.rows![parentIndex].extra.tree.children.push(i);
+      if (!uv.rows![parentIndex]) return;
+
+      const child: IExistingRowRef = {
+        type: "existing",
+        position: i,
+      };
+      uv.rows![parentIndex].extra.tree.children.push(child);
 
       let level = 0;
       let parent: number | undefined = parentIndex;
@@ -532,6 +553,7 @@ const equalNewRowRef = (a: NewRowRef, b: NewRowRef): boolean => {
 const deleteFromPositions = (ref: NewRowRef, extra: ITableViewExtra) => {
   extra.newRowTopSidePositions = extra.newRowTopSidePositions.filter(r => !equalNewRowRef(ref, r));
   extra.newRowBottomSidePositions = extra.newRowBottomSidePositions.filter(r => !equalNewRowRef(ref, r));
+  extra.addedRowRefs = extra.addedRowRefs.filter(r => !equalNewRowRef(ref, r));
 };
 
 const inheritOldRowsPosition = (uv: ITableCombinedUserView, pos: NewRowRef): NewRowRef | null => {
@@ -586,7 +608,8 @@ const getNewRow = (uv: ITableCombinedUserView, pos: NewRowRef): INewRow => {
 };
 
 interface IAddedValueMeta {
-  side: "top_front" | "top_back" | "bottom_back";
+  side: "top_front" | "top_back" | "bottom_back" | "position";
+  parent?: number;
 }
 
 const isAddedValueMeta = (obj: unknown): obj is IAddedValueMeta => {
@@ -594,7 +617,7 @@ const isAddedValueMeta = (obj: unknown): obj is IAddedValueMeta => {
     return false;
   }
   const side = (obj as any).side;
-  return side === "top_front" || side === "top_back" || side === "bottom_back";
+  return side === "top_front" || side === "top_back" || side === "bottom_back" || side === "position";
 };
 
 export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowExtra, ITableViewExtra> = {
@@ -633,6 +656,8 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
         if (value.value !== null) {
           row.extra.tree.parent = Number(value.value);
         }
+
+        uv.extra.treeParentColumnIndex = columnIndex;
       }
     }
 
@@ -739,24 +764,29 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
   createAddedLocalRow(uv: ITableCombinedUserView, rowId: AddedRowId, row: IAddedRow, oldView: ITableViewExtra | null, oldRow: ITableRowExtra | null, meta?: unknown) {
     const baseExtra = baseUserViewHandler.createAddedLocalRow(uv, rowId, row, oldView, oldRow);
     const commonExtra = createCommonLocalRow(uv, row, oldRow);
+
+    const parent = isAddedValueMeta(meta) ? meta.parent : undefined;
     const newRef: NewRowRef = {
       type: "added",
       addedId: rowId,
+      parent,
     };
+
     if (!uv.extra.newRowTopSidePositions.find(ref => equalNewRowRef(newRef, ref))
       && !uv.extra.newRowBottomSidePositions.find(ref => equalNewRowRef(newRef, ref))
     ) {
-      const side = isAddedValueMeta(meta) ? meta.side : "top_back";
+      const side = isAddedValueMeta(meta) ? meta.side : null;
       if (side === "top_front") {
         uv.extra.newRowTopSidePositions.splice(0, 0, newRef);
       } else if (side === "top_back") {
         uv.extra.newRowTopSidePositions.push(newRef);
       } else if (side === "bottom_back") {
         uv.extra.newRowBottomSidePositions.push(newRef);
-      } else {
-        throw new Error("Impossible");
+      } else if (side === "position") {
+        uv.extra.addedRowRefs.push(newRef);
       }
     }
+
     return {
       ...commonExtra,
       ...baseExtra,
@@ -824,6 +854,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
 
     const newRowTopSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowTopSidePositions) : [];
     const newRowBottomSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowBottomSidePositions) : [];
+    const addedRowRefs = oldView ? inheritOldRowsPositions(uv, oldView.addedRowRefs) : [];
 
     return {
       ...baseExtra,
@@ -832,14 +863,15 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       selectedValues: new ObjectSet<ValueRef>(),
       columns,
       fixedColumnPositions: {},
-      rowsParentPositions: oldView ? oldView.rowsParentPositions : {},
+      rowsParentPositions: {},
+      treeParentColumnIndex: 0,
       newRowTopSidePositions,
       newRowBottomSidePositions,
       linkOpts: uv.homeSchema ? { homeSchema: uv.homeSchema } : {},
       sortAsc: oldView?.sortAsc ?? true,
       sortColumn: oldView?.sortColumn ?? null,
       sortOptions: oldView?.sortOptions ?? {},
-      rowPositions: [],
+      addedRowRefs,
     };
   },
 
@@ -879,11 +911,11 @@ const rowContains = (row: ITableExtendedRowCommon, searchWords: string[]) => {
   return searchWords.every(word => row.extra.searchText.includes(word));
 };
 
-const rowIndicesCompare = (aIndex: number, bIndex: number, entries: IRowCommon[], sortColumn: number, collator: Intl.Collator) => {
-  const a = entries[aIndex];
-  const b = entries[bIndex];
-  const aValue = a.values[sortColumn].value;
-  const bValue = b.values[sortColumn].value;
+const rowIndicesCompare = (aIndex: CommittedRowRef, bIndex: CommittedRowRef, uv: ITableCombinedUserView, sortColumn: number, collator: Intl.Collator) => {
+  const a = uv.getRowByRef(aIndex);
+  const b = uv.getRowByRef(bIndex);
+  const aValue = a?.values[sortColumn].value;
+  const bValue = b?.values[sortColumn].value;
   if (aValue === null) {
     return 1;
   } else if (bValue === null) {
@@ -960,7 +992,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   // These two aren't computed properties for performance. They are computed during `init()` and mutated when other values change.
   // If `init()` is called again, their values after recomputation should be equal to those before it.
   private currentFilter: string[] = [];
-  private rowPositions: number[] = [];
+  private rowPositions: CommittedRowRef[] = [];
   private showLength = 0;
   private lastSelectedRow: number | null = null;
   private lastSelectedValue: ValueRef | null = null;
@@ -1325,7 +1357,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     } else {
       // Filter existing rows when we filter a subset of already filtered ones.
       const newWords = this.currentFilter.filter(newWord => !oldFilter.some(oldWord => oldWord.startsWith(newWord)));
-      this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.uv.rows![rowI], newWords));
+      this.rowPositions = this.rowPositions.filter(rowI => rowI.type === "existing" && rowContains(this.uv.rows![rowI.position], newWords));
     }
   }
 
@@ -1347,7 +1379,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private async addNewRowOnPosition(side: IAddedValueMeta["side"]): Promise<void> {
     const rowId = await this.addNewRow({ side });
-
     const firstNotDisabledColumn = this.uv.newRows[rowId].values.findIndex((value, i) => {
       return value.info !== undefined && this.uv.extra.columns[i].visible;
     });
@@ -1372,36 +1403,59 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     });
   }
 
-  private showTreeChildren(parentIndex: number) {
-    const children = this.uv.rows![parentIndex].extra.tree.children;
+  private showTreeChildren(parentRef: CommittedRowRef) {
+    if (parentRef.type !== "existing") return;
+    const children = this.uv.rows![parentRef.position].extra.tree.children;
 
-    this.uv.rows![parentIndex].extra.tree.arrowDown = true;
+    this.uv.rows![parentRef.position].extra.tree.arrowDown = true;
 
-    const parentPosition = this.rowPositions.indexOf(parentIndex);
-    const leftChank = this.rowPositions.splice(0, parentPosition + 1);
-    const rightChank = this.rowPositions;
-    this.rowPositions = leftChank.concat(children, rightChank);
+    const parentPosition = this.rowPositions.indexOf(parentRef);
+    const leftChunk = this.rowPositions.splice(0, parentPosition + 1);
+    this.rowPositions = [...leftChunk, ...children, ...this.rowPositions];
   }
 
-  private hideTreeChildren(parentIndex: number) {
-    const children = this.uv.rows![parentIndex].extra.tree.children;
-    this.uv.rows![parentIndex].extra.tree.arrowDown = false;
+  private hideTreeChildren(parent: CommittedRowRef) {
+    if (parent.type !== "existing") return;
+    const children = this.uv.rows![parent.position].extra.tree.children;
+    this.uv.rows![parent.position].extra.tree.arrowDown = false;
 
     children.forEach(child => {
       const childPosition = this.rowPositions.indexOf(child);
       this.rowPositions.splice(childPosition, 1);
-
-      if (this.uv.rows![child].extra.tree.arrowDown) {
+      if (child.type === "existing" && this.uv.rows![child.position].extra.tree.arrowDown) {
         this.hideTreeChildren(child);
       }
     });
   }
 
-  private toggleChildren(row: IShownRow, visible: boolean) {
+  private async addChild(parentRef: CommittedRowRef) {
+    if (parentRef.type !== "existing") return;
+
+    if (!this.uv.rows![parentRef.position].extra.tree.arrowDown) {
+      this.showTreeChildren(parentRef);
+    }
+    const rowId = await this.addNewRow({ side: "position", parent: parentRef.position });
+    const columnIndex = this.uv.extra.treeParentColumnIndex;
+
+    this.uv.newRows[rowId].extra.tree.level = this.uv.rows![parentRef.position].extra.tree.level + 1;
+    this.uv.newRows[rowId].extra.tree.parent = parentRef.position;
+
+    const newRef: IAddedRowRef = { type: "added", id: rowId };
+    await this.updateValue({ type: "added", id: rowId, column: columnIndex }, this.uv.rows![parentRef.position].mainId);
+
+    const parentPosition = this.rowPositions.indexOf(parentRef);
+    const leftChunk = this.rowPositions.splice(0, parentPosition + 1);
+    this.rowPositions = [...leftChunk, newRef, ...this.rowPositions];
+
+    const children = this.uv.rows![parentRef.position].extra.tree.children;
+    this.uv.rows![parentRef.position].extra.tree.children = [newRef, ...children];
+  }
+
+  private toggleChildren(ref: CommittedRowRef, visible: boolean) {
     if (visible) {
-      this.showTreeChildren(Number(row.key));
+      this.showTreeChildren(ref);
     } else {
-      this.hideTreeChildren(Number(row.key));
+      this.hideTreeChildren(ref);
     }
   }
 
@@ -1412,12 +1466,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return false;
   }
 
-  private pushTreeChildrenPositions(parentIndex: number, children: number[]) {
-    let newRowPositions: number[] = [parentIndex];
+  private pushTreeChildrenPositions(parentRef: CommittedRowRef, children: CommittedRowRef[]) {
+    let newRowPositions: CommittedRowRef[] = [parentRef];
 
     children.forEach(child => {
-      const row = this.uv.rows![child].extra.tree;
-      if (row.arrowDown) {
+      if (child.type === "existing" && this.uv.rows![child.position].extra.tree.arrowDown) {
+        const row = this.uv.rows![child.position].extra.tree;
         newRowPositions = newRowPositions.concat(this.pushTreeChildrenPositions(child, row.children));
       } else {
         newRowPositions.push(child);
@@ -1428,18 +1482,17 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   get initialRowPositions() {
     const rowPositions = this.uv.rows!.map((row, rowI) => rowI);
-
     const topLevelRows = rowPositions.filter(rowI => this.uv.rows![rowI].extra.tree.parent === null);
-    let newRowPositions: number[] = [];
+    let newRowPositions: CommittedRowRef[] = [];
     topLevelRows.forEach(rowI => {
       const row = this.uv.rows![rowI].extra.tree;
+      const rowRef: IExistingRowRef = { type: "existing", position: rowI };
       if (row.arrowDown) {
-        newRowPositions = newRowPositions.concat(this.pushTreeChildrenPositions(rowI, row.children));
+        newRowPositions = newRowPositions.concat(this.pushTreeChildrenPositions(rowRef, row.children));
       } else {
-        newRowPositions.push(rowI);
+        newRowPositions.push(rowRef);
       }
     });
-
     return newRowPositions;
   }
 
@@ -1449,9 +1502,14 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (rows === null) {
       this.rowPositions = [];
     } else {
-      this.rowPositions = rows.map((row, rowI) => rowI);
+      this.rowPositions = rows.map((row, rowI) => {
+        return {
+          type: "existing",
+          position: rowI,
+        };
+      });
       if (this.filter.length !== 0) {
-        this.rowPositions = this.rowPositions.filter(rowI => rowContains(this.uv.rows![rowI], this.filter));
+        this.rowPositions = this.rowPositions.filter(rowI => rowI.type === "existing" && rowContains(rows[rowI.position], this.filter));
       } else if (this.showTree) {
         this.rowPositions = this.initialRowPositions;
       }
@@ -1658,12 +1716,24 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       const [from, to] = this.lastSelectedRow <= pos ? [this.lastSelectedRow, pos] : [pos, this.lastSelectedRow];
       for (let i = from; i <= to; i++) {
         this.selectRow(this.allRows[i].ref, prevSelected);
+        this.selectChildrenRows(this.allRows[i].row, prevSelected);
       }
     } else {
       this.selectRow(row.ref, !row.row.extra.selected);
+      this.selectChildrenRows(row.row, row.row.extra.selected);
     }
 
     this.lastSelectedRow = pos;
+  }
+
+  private selectChildrenRows(row: ITableExtendedRowCommon, selected: boolean) {
+    row.extra.tree.children.forEach(child => {
+      const childRow = this.uv.getRowByRef(child);
+      if (childRow && childRow?.extra.tree.children.length > 0) {
+        this.selectChildrenRows(childRow, selected);
+      }
+      this.selectRow(child, selected);
+    });
   }
 
   private selectAllRows() {
@@ -1738,15 +1808,14 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private sortRows() {
-    const rows = this.uv.rows!;
-
     if (this.uv.extra.sortColumn !== null) {
       const sortColumn = this.uv.extra.sortColumn;
       const collator = new Intl.Collator(["en", "ru"], this.uv.extra.sortOptions);
-      const sortFunction: (a: number, b: number) => number =
+      const sortFunction: (a: CommittedRowRef, b: CommittedRowRef) => number =
         this.uv.extra.sortAsc ?
-          (a, b) => rowIndicesCompare(a, b, rows, sortColumn, collator) :
-          (a, b) => rowIndicesCompare(b, a, rows, sortColumn, collator);
+          (a, b) => rowIndicesCompare(a, b, this.uv, sortColumn, collator) :
+          (a, b) => rowIndicesCompare(b, a, this.uv, sortColumn, collator);
+
       this.rowPositions.sort(sortFunction);
     }
   }
@@ -1770,19 +1839,26 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       return [];
     } else {
       return mapMaybe(rowI => {
-        const row = rows[rowI];
-        if (row.deleted || row.extra.shownAsNewRow) {
-          return undefined;
+        if (rowI.type === "existing") {
+          const row = rows[rowI.position];
+          if (row.deleted || row.extra.shownAsNewRow) {
+            return undefined;
+          }
+          return {
+            key: String(rowI.position),
+            notExisting: false,
+            row,
+            ref: rowI,
+          };
+        } else {
+          const row = this.uv.newRows[rowI.id];
+          return !row ? undefined : {
+            key: `${rowI.type}-${rowI.id}`,
+            row,
+            notExisting: true,
+            ref: rowI,
+          };
         }
-        return {
-          key: String(rowI),
-          notExisting: false,
-          row,
-          ref: {
-            type: "existing",
-            position: rowI,
-          },
-        };
       }, this.rowPositions);
     }
   }
@@ -1825,7 +1901,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   // Part of all rows that's currently rendered. This is used to improve loading performance.
   get shownRows() {
-    const totalAdded = this.topRows.length + this.bottomRows.length;
+    const totalAdded = Object.keys(this.uv.newRows).length;
     return this.allRows.slice(0, totalAdded + this.showLength);
   }
 
