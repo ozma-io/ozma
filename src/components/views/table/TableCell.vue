@@ -47,7 +47,7 @@
         </template>
         <div v-else :class="['cell-text', {selectable: (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueFormatted.length > 0, 'tree': showTree}]">
           <b-btn
-            v-if="column.treeUnfoldColumn && !notExisting"
+            v-if="showTree && column.treeUnfoldColumn && !notExisting"
             variant="light"
             class="add-child"
             size="sm"
