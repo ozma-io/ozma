@@ -188,7 +188,7 @@
         </template>
       </infinite-loading>
       <div
-        v-if="uv.emptyRow !== null"
+        v-if="noMoreRows && uv.emptyRow !== null"
         class="button-container"
       >
         <div
