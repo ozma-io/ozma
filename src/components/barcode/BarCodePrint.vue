@@ -1,6 +1,6 @@
 <template>
-  <barcode 
-    class="barcode" 
+  <barcode
+    class="barcode"
     :value="content"
     :format="format"
   >
@@ -16,7 +16,6 @@ import VueBarcode from "vue-barcode";
 export default class BarCodePrint extends Vue {
   @Prop({ type: String, default: "" }) content!: string;
   @Prop({ type: String, default: "CODE128" }) format!: string;
-  
 }
 </script>
 
