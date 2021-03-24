@@ -157,9 +157,7 @@ export const attrToButtonsOld = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): 
       };
     }
 
-    return {
-      type: "empty",
-    };
+    return undefined;
   }, buttonsAttr);
 };
 
