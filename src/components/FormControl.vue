@@ -154,6 +154,7 @@
           v-else-if="inputType.name === 'barcode'"
           ref="control"
           :content="textValue"
+          :format="inputType.format"
         />
         <div v-else-if="inputType.name === 'static_text'">
           {{ textValue }}
@@ -287,6 +288,7 @@ interface IQRCodeType {
 
 interface IBarCodeType {
   name: "barcode";
+  format?: string;
 }
 
 interface IMarkdownEditorType {
@@ -591,7 +593,7 @@ export default class FormControl extends Vue {
       }
 
       if (controlAttr === "barcode") {
-        return { name: "barcode" };
+        return { name: "barcode", format: this.attributes["format"] ? String(this.attributes["format"]) : undefined };
       }
     }
 
@@ -606,7 +608,7 @@ export default class FormControl extends Vue {
           }
 
           if (controlAttr === "barcode") {
-            return { name: "barcode" };
+            return { name: "barcode", format: this.attributes["format"] ? String(this.attributes["format"]) : undefined };
           }
 
           const refEntry: IReferenceType = {
