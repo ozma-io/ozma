@@ -5,6 +5,7 @@
             "no": "No",
             "boolean_null": "Empty",
             "invalid_uv": "Nested user view rows should be JSON objects with 'ref' and 'args' defined",
+            "iframe_no_iframe_src": "Iframe requires `iframe_src` or `iframe_srcdoc` attribute",
             "data_will_load_after_save": "Data will load after save",
             "select_view": "Add in modal window"
         },
@@ -13,6 +14,7 @@
             "no": "Нет",
             "boolean_null": "Пусто",
             "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'ref' и 'args'",
+            "iframe_no_iframe_src": "Для Iframe необходим атрибут `iframe_src` или `iframe_srcdoc`",
             "data_will_load_after_save": "Данные загрузятся после сохранения",
             "select_view": "Создать во вложенном окне"
         }
@@ -37,9 +39,10 @@
       @focus="onFocus"
     >
       <template #default="iSlot">
-        <template v-if="inputType.name === 'error'">
-          {{ inputType.text }}
-        </template>
+        <Errorbox
+          v-if="inputType.name === 'error'"
+          :message="inputType.text"
+        />
         <Input
           v-else-if="inputType.name === 'text'"
           :value="currentValue"
@@ -154,6 +157,13 @@
           v-else-if="inputType.name === 'barcode'"
           ref="control"
           :content="textValue"
+        />
+        <IframeControl
+          v-else-if="inputType.name === 'iframe'"
+          :src="inputType.src"
+          :srcdoc="inputType.srcdoc"
+          :value="currentValue"
+          :height="customHeight"
         />
         <div v-else-if="inputType.name === 'static_text'">
           {{ textValue }}
@@ -289,6 +299,16 @@ interface IBarCodeType {
   name: "barcode";
 }
 
+type IIframeType =
+  | {
+    name: "iframe";
+    src: string;
+  }
+  | {
+    name: "iframe";
+    srcdoc: string;
+  };
+
 interface IMarkdownEditorType {
   name: "markdown";
   editType: string;
@@ -340,7 +360,7 @@ interface IStaticImageType {
 }
 
 export type IType =
-  ITextType
+  | ITextType
   | ITextAreaType
   | ICodeEditorType
   | IMarkdownEditorType
@@ -354,12 +374,15 @@ export type IType =
   | IStaticTextType
   | IStaticImageType
   | IQRCodeType
+  | IIframeType
   | IBarCodeType;
 
 const staging = namespace("staging");
 
-const heightExclusions = ["select", "reference"];
-const multilineTypes = ["markdown", "codeeditor", "textarea", "userview", "empty_userview", "static_image"];
+const heightExclusions: IType["name"][] =
+  ["select", "reference"];
+const multilineTypes: IType["name"][] =
+  ["markdown", "codeeditor", "textarea", "userview", "empty_userview", "static_image", "iframe"];
 
 @Component({
   // Looks ugly and wordy, but due to `import` this can not be generated.
@@ -417,6 +440,14 @@ const multilineTypes = ["markdown", "codeeditor", "textarea", "userview", "empty
       component: import("@/components/barcode/BarCodePrint.vue") as any,
       loading: FormInputPlaceholder,
     }),
+    IframeControl: () => ({
+      component: import("@/components/IframeControl.vue") as any,
+      loading: FormInputPlaceholder,
+    }),
+    Errorbox: () => ({
+      component: import("@/components/Errorbox.vue") as any,
+      loading: FormInputPlaceholder,
+    }),
   },
 })
 export default class FormControl extends Vue {
@@ -444,7 +475,7 @@ export default class FormControl extends Vue {
   private filterString = "";
   private title = "";
   private enableFilter = false;
-  private isUserViewLoading = false;
+  private isUserViewLoading = true;
 
   get isNullable() {
     return this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable;
@@ -582,7 +613,7 @@ export default class FormControl extends Vue {
     }
     // `calc` is needed because sizes should be relative to base font size.
     const heightMultilineText = "calc(4em + 12px)";
-    const heightCodeEditor = "200px";
+    const heightCodeEditor = "var(--editor-height, 10rem)";
 
     // FIXME: return proper type from backend instead.
     if (this.value.info?.fieldRef.name === "id") {
@@ -592,6 +623,18 @@ export default class FormControl extends Vue {
 
       if (controlAttr === "barcode") {
         return { name: "barcode" };
+      }
+    }
+
+    if (controlAttr === "iframe") {
+      const srcdoc = this.attributes["iframe_srcdoc"];
+      const src = this.attributes["iframe_src"];
+      if (typeof srcdoc === "string") {
+        return { name: "iframe", srcdoc };
+      } else if (typeof src === "string") {
+        return { name: "iframe", src };
+      } else {
+        return { name: "error", text: this.$t("iframe_no_iframe_src").toString() };
       }
     }
 
