@@ -62,8 +62,7 @@ export default class IframeControl extends Vue {
       if (event.data.name === "changeHeight" && typeof event.data?.payload === "number") {
         this.requestedHeight = event.data.payload;
       }
-
-    })
+    });
   }
 
   private sendMessage(message: MessageToIframe) {
