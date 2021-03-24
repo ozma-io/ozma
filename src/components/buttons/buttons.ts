@@ -107,6 +107,8 @@ export const attrToButtons = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): But
 
 // Will be deleted
 // The difference with this function is that it does not display buttons if the name is empty.
+// And buttons was be name actions.
+// Display is new params.
 export const attrToButtonsOld = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): Button[] => {
   if (!Array.isArray(buttonsAttr)) {
     return [];
@@ -124,7 +126,7 @@ export const attrToButtonsOld = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): 
     const name = typeof buttonObj.name === "string" ? buttonObj.name : undefined;
     const icon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
     const tooltip = typeof buttonObj.tooltip === "string" ? buttonObj.tooltip : undefined;
-    const display = typeof buttonObj.display === "string" ? buttonObj.display : undefined;
+    const display = typeof buttonObj.display === "string" ? buttonObj.display : "desktop";
     const variant = typeof buttonObj.variant === "string" ? buttonObj.variant : undefined;
 
     if (buttonObj.visible === false || name === undefined) {
@@ -144,8 +146,8 @@ export const attrToButtonsOld = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): 
       };
     }
 
-    if (Array.isArray(buttonObj.buttons)) {
-      const buttons = attrToButtons(buttonObj.buttons, opts);
+    if (Array.isArray(buttonObj.actions)) {
+      const buttons = attrToButtons(buttonObj.actions, opts);
       return {
         name,
         icon,
