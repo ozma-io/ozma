@@ -97,12 +97,12 @@ import { AttributesMap, IResultColumnInfo } from "ozma-api";
 import { tryDicts, mapMaybe } from "@/utils";
 import { AddedRowId } from "@/state/staging_changes";
 import { UserView } from "@/components";
-import { Action } from "@/components/ActionsMenu.vue";
 import BaseUserView, { baseUserViewHandler, IBaseRowExtra, IBaseValueExtra, IBaseViewExtra } from "@/components/BaseUserView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
 import { attrToLink, Link } from "@/links";
 import { IAddedRow, ICombinedRow, ICombinedUserView, ICombinedValue, IExtendedRowCommon, IExtendedRowInfo, IRowCommon, IUserViewHandler, RowRef } from "@/user_views/combined";
 import { GridElement, IGridInput, IGridSection } from "@/components/form/FormGrid.vue";
+import type { Button } from "@/components/buttons/buttons";
 
 export interface IButtonAction {
   name: string;
@@ -348,6 +348,8 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
      */
     const formButtons = this.uv.attributes["form_buttons"];
     if (formButtons !== undefined && Array.isArray(formButtons)) {
+      console.warn("@form_buttons attribute deprecated,  will be deleted future.");
+
       formButtons.forEach((buttons, i) => {
         const blockAttr = Number(buttons["form_block"]);
         const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr;
@@ -398,15 +400,19 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     }
   }
 
-  get actions() {
-    const actions: Action[] = [];
+  get buttons() {
+    const buttons: Button[] = [];
     const deleteRef = this.useDeleteAction;
     if (deleteRef !== null) {
-      actions.push(
-        { name: this.$t("delete").toString(), callback: () => this.confirmDelete(deleteRef) },
-      );
+      buttons.push({
+        icon: "delete_outline",
+        name: this.$t("delete").toString(),
+        callback: () => this.confirmDelete(deleteRef),
+        variant: "danger",
+        type: "callback",
+      });
     }
-    return actions;
+    return buttons;
   }
 
   private confirmDelete(ref: RowRef) {
@@ -419,9 +425,9 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     this.deletedOne = true;
   }
 
-  @Watch("actions", { deep: true, immediate: true })
-  private updateActions() {
-    this.$emit("update:actions", this.actions);
+  @Watch("buttons", { deep: true, immediate: true })
+  private updateButtons() {
+    this.$emit("update:buttons", this.buttons);
   }
 
   private created() {
