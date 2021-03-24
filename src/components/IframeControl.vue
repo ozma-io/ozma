@@ -32,7 +32,7 @@ export type MessageFromIframe =
     name: "ready";
   }
   | {
-    name: "resizeHeight";
+    name: "changeHeight";
     payload: number;
   };
 
@@ -59,7 +59,7 @@ export default class IframeControl extends Vue {
         this.sendValue();
       }
 
-      if (event.data.name === "resizeHeight" && typeof event.data?.payload === "number") {
+      if (event.data.name === "changeHeight" && typeof event.data?.payload === "number") {
         this.requestedHeight = event.data.payload;
       }
 
