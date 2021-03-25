@@ -118,7 +118,14 @@ export default class App extends Vue {
       "interface",
       "refernece",
     ];
+
+    const background = this.styleSettings["--OldMainBackgroundColor"];
+    const foreground = this.styleSettings["--OldMainTextColor"];
+    const border = this.styleSettings["--OldMainBorderColor"];
+    const defaultVariant = getColorVariables("default", { background, foreground, border });
+
     this.colorVariables = R.mergeAll([
+      defaultVariant,
       ...componentsNames.map(componentName => getColorVariables(componentName, "default")),
       ...colorVariants.map((variant: any) => getColorVariables(variant.name, variant)),
     ]);
