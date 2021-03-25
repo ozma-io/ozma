@@ -103,7 +103,7 @@ export const getColorVariables = (componentName: string, colorVariant: unknown):
 };
 
 export const loadThemes = async () => {
-  const ref = { schema: "funapp", name: "table-CapybaraTest-colorThemes" }; // TODO: Move it to system table.
+  const ref = { schema: "funapp", name: "color_themes" };
   const res: IViewExprResult = await store.dispatch("callProtectedApi", {
     func: Api.getNamedUserView,
     args: [ref],
@@ -117,11 +117,11 @@ export const loadThemes = async () => {
   return res.result.rows.map(row => row.values[nameColumnIndex].value);
 };
 
-export const getPrefferedTheme = async () => {
+export const getPreferredTheme = async () => {
   const availableThemes = await loadThemes();
   const prefersDarkTheme = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
 
-  const storagedTheme = localStorage.getItem("preffered-theme");
+  const storagedTheme = localStorage.getItem("preferredTheme");
   if (availableThemes.includes(storagedTheme as any)) {
     return storagedTheme;
   } else if (prefersDarkTheme && availableThemes.includes("dark")) {
@@ -132,16 +132,16 @@ export const getPrefferedTheme = async () => {
 };
 
 export const loadColorVariants = async () => {
-  const ref = { schema: "funapp", name: "table-CapybaraTest-colorVariants" }; // TODO: Move it to system table.
+  const ref = { schema: "funapp", name: "color_variants" };
   const res: IViewExprResult = await store.dispatch("callProtectedApi", {
     func: Api.getNamedUserView,
     args: [ref],
   }, { root: true });
 
-  const theme = await getPrefferedTheme();
+  const theme = await getPreferredTheme();
 
   const columnNames = res.info.columns.map(column => column.name);
-  const requiredColumnNames = ["name", "background", "theme"] as const;
+  const requiredColumnNames = ["name", "background", "theme_id"] as const;
   const punOrValue = (value: IExecutedValue) => value.pun ?? value.value;
   const hasAllRequiredColumns = requiredColumnNames.every(name => columnNames.includes(name));
   if (hasAllRequiredColumns) {
@@ -149,7 +149,7 @@ export const loadColorVariants = async () => {
       (row: IExecutedRow) => Object.fromEntries(columnNames.map((name, index) => ([name, punOrValue(row.values[index])])));
     return mapMaybe(row => {
       const variant = arrayRowToObject(row);
-      return variant.theme === theme
+      return variant.theme_id === theme
         ? colorVariantFromRaw(variant as RawColorVariant)
         : undefined;
     }, res.result.rows);
