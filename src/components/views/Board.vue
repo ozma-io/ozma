@@ -376,10 +376,10 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     const variant = getRowAttr("card_variant");
     let colorVariables: any;
     if (!valueIsNull(variant)) {
-      colorVariables = getColorVariables("card", variant);
+      colorVariables = getColorVariables("kanbanCard", variant);
     } else if (!valueIsNull(color)) {
       console.warn("`card_color` is deprecated, use `card_variant` instead.");
-      colorVariables = getColorVariables("card", { background: String(color) });
+      colorVariables = getColorVariables("kanbanCard", { background: String(color) });
     }
 
     const rowCard: IRowCard = {
