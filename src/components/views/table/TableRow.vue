@@ -112,10 +112,10 @@ export default class TableRow extends Vue {
   .checkbox-cells {
     position: relative;
     cursor: pointer;
-    color: var(--table-backgroundDarker1Color, var(--MainTextColorLight));
+    color: var(--table-backgroundDarker1Color);
 
     &:hover {
-      color: var(--tableCell-foregroundColor, var(--table-foregroundColor, var(--MainTextColor)));
+      color: var(--tableCell-foregroundColor, var(--table-foregroundColor));
     }
   }
 
@@ -136,9 +136,9 @@ export default class TableRow extends Vue {
   }
 
   td {
-    border-right: 1px solid var(--table-backgroundDarker1Color, var(--MainBorderColor));
-    color: var(--tableCell-foregroundColor, var(--table-foregroundColor, var(--TableTextColor)));
-    background-color: var(--tableCell-backgroundColor, var(--table-backgroundColor, var(--MainBackgroundColor)));
+    border-right: 1px solid var(--table-backgroundDarker1Color);
+    color: var(--tableCell-foregroundColor, var(--table-foregroundColor));
+    background-color: var(--tableCell-backgroundColor, var(--table-backgroundColor));
     vertical-align: top;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -146,7 +146,7 @@ export default class TableRow extends Vue {
   }
 
   .selected td {
-    background-color: var(--table-backgroundDarker1Color, #efefef);
+    background-color: var(--table-backgroundDarker1Color);
   }
 
   .table-tr > td:last-child {
@@ -189,15 +189,15 @@ export default class TableRow extends Vue {
   .openform-cells {
     text-align: center;
     width: 100%;
-    border-right: 1px solid var(--table-backgroundDarker1Color, var(--MainBorderColor));
+    border-right: 1px solid var(--table-backgroundDarker1Color);
 
     &.has-link:hover {
-      color: var(--tableCell-foregroundColor, var(--table-foregroundColor, var(--MainTextColor)));
-      background-color: var(--tableCell-backgroundDarker1Color, var(--table-backgroundDarker1Color, rgb(239, 239, 239)));
+      color: var(--tableCell-foregroundColor, var(--table-foregroundColor));
+      background-color: var(--tableCell-backgroundDarker1Color, var(--table-backgroundDarker1Color));
       transition: background 0s;
 
       .edit-in-modal-icon {
-        color: var(--tableCell-foregroundColor, var(--table-foregroundColor, var(--MainTextColor)));
+        color: var(--tableCell-foregroundColor, var(--table-foregroundColor));
       }
     }
   }
@@ -224,11 +224,11 @@ export default class TableRow extends Vue {
       position: sticky;
       z-index: 20;
       background-color: var(--tableCell-backgroundColor, inherit);
-      box-shadow: 1px 0 0 var(--table-backgroundDarker1Color, var(--MainBorderColor));
+      box-shadow: 1px 0 0 var(--table-backgroundDarker1Color);
     }
 
     .table-tr.selected .fixed-column {
-      background-color: var(--table-backgroundDarker1Color, #efefef);
+      background-color: var(--table-backgroundDarker1Color);
     }
   }
 </style>

@@ -432,9 +432,9 @@ export default class TopLevelUserView extends Vue {
   .head-menu {
     display: flex;
     white-space: nowrap;
-    background-color: var(--interface-backgroundColor, var(--MainBackgroundColor));
-    color: var(--interface-foregroundColor, var(--MainTextColor));
-    border-bottom: 1px solid var(--interface-borderColor, var(--MainBorderColor));
+    background-color: var(--interface-backgroundColor);
+    color: var(--interface-foregroundColor);
+    border-bottom: 1px solid var(--interface-borderColor);
     width: 100%;
     padding: 2px 10px;
     z-index: 999;
@@ -486,9 +486,9 @@ export default class TopLevelUserView extends Vue {
     text-align: right;
     margin-left: -1px !important;
     position: relative;
-    background-color: var(--interface-backgroundColor, var(--MainBackgroundColor)) !important;
-    color: var(--interface-foregroundColor, var(--MainTextColor));
-    border-top: 1px solid var(--interface-borderColor, var(--MainBorderColor));
+    background-color: var(--interface-backgroundColor) !important;
+    color: var(--interface-foregroundColor);
+    border-top: 1px solid var(--interface-borderColor);
     z-index: 500; /* низ страницы */
     display: -webkit-box;
     display: -ms-flexbox;

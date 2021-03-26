@@ -614,8 +614,8 @@ export default class MultiSelect extends Vue {
   }
 
   .filter-icon {
-    background-color: var(--input-backgroundColor, var(--MainBackgroundColor));
-    color: var(--input-foregroundColor, var(--MainTextColorLight));
+    background-color: var(--input-backgroundColor);
+    color: var(--input-foregroundColor);
     border-left-width: 0;
   }
 
@@ -625,16 +625,16 @@ export default class MultiSelect extends Vue {
     cursor: pointer;
     align-self: center;
     align-items: center;
-    color: var(--input-foregroundDarkerColor, var(--MainTextColorLight));
+    color: var(--input-foregroundDarkerColor);
   }
 
   .select-container {
     display: flex;
     flex-direction: row;
     width: 100%;
-    border: 1px solid var(--input-borderColor, var(--MainBorderColor));
-    background: var(--input-backgroundColor, var(--default-backgroundColor, var(--MainBackgroundColor)));
-    color: var(--input-foregroundColor, var(--default-foregroundColor, var(--MainTextColor)));
+    border: 1px solid var(--input-borderColor);
+    background: var(--input-backgroundColor, var(--default-backgroundColor));
+    color: var(--input-foregroundColor, var(--default-foregroundColor));
     border-radius: 0.2rem;
     cursor: pointer;
 
@@ -646,8 +646,8 @@ export default class MultiSelect extends Vue {
 
       &:hover {
         opacity: 1;
-        background-color: var(--input-backgroundDarker1Color, rgb(239, 239, 239));
-        color: var(--input-foregroundDarkerColor, var(--MainTextColor));
+        background-color: var(--input-backgroundDarker1Color);
+        color: var(--input-foregroundDarkerColor);
       }
 
       &:focus {
@@ -656,15 +656,15 @@ export default class MultiSelect extends Vue {
       }
 
       &:active {
-        background-color: var(--input-backgroundDarker2Color, rgb(239, 239, 239));
-        color: var(--input-foregroundDarkerColor, var(--MainTextColor));
+        background-color: var(--input-backgroundDarker2Color);
+        color: var(--input-foregroundDarkerColor);
       }
     }
 
     .select-icon {
       border: none;
       background-color: transparent;
-      color: var(--input-foregroundDarkerColor, var(--MainTextColorLight));
+      color: var(--input-foregroundDarkerColor);
       border-right-width: 0;
       cursor: pointer;
     }
@@ -751,9 +751,9 @@ export default class MultiSelect extends Vue {
 
   .value-focused {
     cursor: pointer !important;
-    color: var(--reference-foregroundColor, var(--MainTextColor)) !important;
-    background-color: var(--reference-backgroundDarker1Color, var(--MainTextColorLight)) !important;
-    border: 1px solid var(--reference-backgroundDarker2Color, var(--MainBorderColor)) !important;
+    color: var(--reference-foregroundColor) !important;
+    background-color: var(--reference-backgroundDarker1Color) !important;
+    border: 1px solid var(--reference-backgroundDarker2Color) !important;
   }
 
   div.select-container__options__actions {
@@ -772,9 +772,9 @@ export default class MultiSelect extends Vue {
   .single-value {
     display: inline-flex;
     align-items: center;
-    border: 1px solid var(--reference-backgroundDarker1Color, var(--MainBorderColor));
-    background-color: var(--reference-backgroundColor, var(--MainBackgroundColor));
-    color: var(--reference-foregroundColor, var(--MainTextColor));
+    border: 1px solid var(--reference-backgroundDarker1Color);
+    background-color: var(--reference-backgroundColor);
+    color: var(--reference-foregroundColor);
     border-radius: 1rem;
     padding: 2px 5px;
     line-height: 1rem;

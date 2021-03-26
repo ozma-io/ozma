@@ -1,11 +1,11 @@
 @mixin material-button($variant: "default") {
   transition: background 0.1s;
   cursor: pointer;
-  color: var(--#{$variant}-foregroundColor, var(--MainTextColor));
+  color: var(--#{$variant}-foregroundColor);
 
   &:hover:not(.disabled) {
     background-color: var(--#{$variant}-backgroundDarker1Color, #efefef);
-    color: var(--#{$variant}-foregroundContrastColor, var(--MainTextColor));
+    color: var(--#{$variant}-foregroundContrastColor);
 
     /* `outline` works wrong for <a> tags at least on Firefox */
     box-shadow: 0 0 0 2px var(--#{$variant}-backgroundDarker1Color, #efefef);
@@ -20,7 +20,7 @@
 
   &.disabled {
     cursor: default;
-    color: var(--#{$variant}-foregroundDarkerColor, var(--MainTextColorLight));
+    color: var(--#{$variant}-foregroundDarkerColor);
     opacity: 0.7;
   }
 }

@@ -1956,7 +1956,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   table,
   th,
   td {
-    border: 1px solid var(--table-borderColor, var(--MainBorderColor));
+    border: 1px solid var(--table-borderColor);
   }
 
   .button-container {
@@ -1994,10 +1994,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     margin: 0;
     position: relative;
     height: 100%;
-    background-color: var(--table-backgroundDarker1Color, var(--MainBackgroundColor));
+    background-color: var(--table-backgroundDarker1Color);
 
     &.nested {
-      border: 1px solid var(--input-borderColor, var(--form-borderColor, var(--default-borderColor, var(--MainBorderColor))));
+      border: 1px solid var(--input-borderColor, var(--form-borderColor, var(--default-borderColor)));
       border-radius: 0.2rem;
       overflow: hidden;
     }
@@ -2031,9 +2031,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     border-spacing: 0;
     table-layout: fixed;
     width: 0;
-    border: 1px solid var(--table-backgroundDarker2Color, var(--MainBorderColor));
+    border: 1px solid var(--table-backgroundDarker2Color);
     border-left: none;
-    background-color: var(--table-backgroundColor, var(--TableBackColor));
+    background-color: var(--table-backgroundColor);
     margin: 0;
     border-radius: 0.2rem;
     border-top-left-radius: 0;
@@ -2047,21 +2047,21 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     max-width: 50px !important;
     overflow: hidden;
     white-space: nowrap;
-    box-shadow: 0 2px 0 var(--table-backgroundDarker1Color, var(--MainBorderColor));
+    box-shadow: 0 2px 0 var(--table-backgroundDarker1Color);
     text-overflow: ellipsis;
     position: sticky; /* фиксация шапки при скроле */
     z-index: 20; /* при скроле таблицы чтобы шапка была видна */
-    border-right: 1px solid var(--table-backgroundDarker1Color, var(--MainBorderColor));
+    border-right: 1px solid var(--table-backgroundDarker1Color);
 
     /* Instead of `0` to fix Safari's bug gap, doesn't needed in normal browsers, but easier to set same for all */
     top: -1px;
     cursor: pointer;
     color: var(--MainTextColorLight);
-    background-color: var(--table-backgroundColor, var(--MainBackgroundColor));
+    background-color: var(--table-backgroundColor);
   }
 
   .td-moz {
-    box-shadow: -1px 2px 0 var(--table-BorderColor, var(--MainBorderColor));
+    box-shadow: -1px 2px 0 var(--table-BorderColor);
   }
 
   .table-th:last-child {
@@ -2074,13 +2074,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   th.fixed-column {
     z-index: 25; /* поверх обычных столбцов */
-    box-shadow: 0 2px 0 var(--table-BorderColor, var(--MainBorderColor));
+    box-shadow: 0 2px 0 var(--table-BorderColor);
     position: sticky;
 
     &.checkbox-cells {
       box-shadow:
-        0 2px 0 var(--table-BorderColor, var(--MainBorderColor)),
-        1px 0 0 var(--table-BorderColor, var(--MainBorderColor));
+        0 2px 0 var(--table-BorderColor),
+        1px 0 0 var(--table-BorderColor);
     }
   }
 
@@ -2167,7 +2167,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   ::v-deep .checkbox-cells {
     text-align: center;
-    color: var(--tableCell-foregroundDarkerColor, var(--table-foregroundDarkerColor, var(--MainTextColorLight)));
+    color: var(--tableCell-foregroundDarkerColor, var(--table-foregroundDarkerColor));
     padding: 0;
     transition: background 0.1s;
 
@@ -2182,8 +2182,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
 
     &:hover {
-      color: var(--tableCell-foregroundColor, var(--table-foregroundColor, var(--MainTextColor)));
-      background-color: var(--tableCell-backgroundDarker1Color, var(--table-backgroundDarker1Color, rgb(239, 239, 239)));
+      color: var(--tableCell-foregroundColor, var(--table-foregroundColor));
+      background-color: var(--tableCell-backgroundDarker1Color, var(--table-backgroundDarker1Color));
       transition: background 0s;
     }
   }
@@ -2203,13 +2203,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     .add-in-modal-icon {
       position: relative;
       top: 3px;
-      color: var(--tableCell-foregroundDarkerColor, var(--table-foregroundDarkerColor, var(--MainTextColorLight)));
+      color: var(--tableCell-foregroundDarkerColor, var(--table-foregroundDarkerColor));
     }
 
     .edit-in-modal-icon {
       position: relative;
       top: 5px;
-      color: var(--tableCell-foregroundDarkerColor, var(--table-foregroundDarkerColor, var(--MainTextColorLight)));
+      color: var(--tableCell-foregroundDarkerColor, var(--table-foregroundDarkerColor));
     }
 
     &.table-th {
@@ -2226,7 +2226,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
       &:hover {
         .add-in-modal-icon {
-          color: var(--tableCell-foregroundColor, var(--table-foregroundColor, var(--MainTextColor)));
+          color: var(--tableCell-foregroundColor, var(--table-foregroundColor));
         }
       }
     }
