@@ -371,10 +371,6 @@ export default class Calendar extends Vue {
     justify-content: space-between;
   }
 
-  .mr-1 {
-    margin-right: 10px;
-  }
-
   .time {
     display: inline-flex;
     flex-direction: column;

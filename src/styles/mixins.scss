@@ -1,6 +1,5 @@
 @mixin material-button($variant: "default") {
   transition: background 0.1s;
-  border-radius: 4px;
   cursor: pointer;
   color: var(--#{$variant}-foregroundColor, var(--MainTextColor));
 

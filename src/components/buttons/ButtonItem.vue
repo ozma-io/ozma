@@ -5,6 +5,7 @@
   <!-- Passing v-on:click to v-bind doesn't seem to work, hence this ugly solution -->
   <router-link
     v-else-if="button.type === 'location'"
+    class="text-decoration-none"
     :to="button.location"
   >
     <ButtonView

@@ -67,18 +67,19 @@
           <b-button
             v-if="!isMainView"
             variant="light"
-            class="btn-sm lh-0-5 p-0-5"
+            class="button-only-icon mr-1"
             @click="$router.go(-1)"
           >
             <span class="material-icons">arrow_back</span>
           </b-button>
           <router-link
             v-if="!isMainView"
+            class="text-decoration-none"
             :to="{ name: 'main' }"
           >
             <b-button
               variant="light"
-              class="btn-sm lh-0-5 p-0-5"
+              class="button-only-icon mr-1"
             >
               <span class="material-icons">home</span>
             </b-button>

@@ -101,6 +101,11 @@ export default class App extends Vue {
     const autoSaveTimeout = Number.isNaN(rawAutoSaveTimeout) ? null : rawAutoSaveTimeout * 1000;
     this.setAutoSaveTimeout(autoSaveTimeout);
     void this.loadColors();
+
+    const html = document.querySelector("html");
+    if (html) {
+      html.style.fontSize = `${this.fontSize}px`;
+    }
   }
 
   private async loadColors() {

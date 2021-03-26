@@ -27,7 +27,7 @@
             'cell-edit': isCellEdit,
           }
         ]"
-        :style="{ backgroundColor, textAlign }"
+        :style="{ textAlign }"
         autocomplete="off"
         :type="type"
         :value="value"

@@ -38,7 +38,7 @@
             'icon',
             {
               'no-icon': !entry.icon,
-              'emoji': getIconType(entry.icon) === 'emoji',
+              'emoji-icon': getIconType(entry.icon) === 'emoji',
             }]"
         >
           {{ entry.icon || "chevron_right" }}
@@ -179,7 +179,7 @@ export default class MenuEntry extends Vue {
         color: var(--menuEntry-foregroundDarkerColor, var(--MainBorderColor));
       }
 
-      &.emoji {
+      &.emoji-icon {
         font-family: initial;
       }
     }

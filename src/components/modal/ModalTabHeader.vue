@@ -7,7 +7,7 @@
     <div>
       <b-button
         variant="light"
-        class="btn-sm lh-0-5 p-0-5"
+        class="button-only-icon"
         @click.stop="$emit('tab-close')"
       >
         <span class="material-icons">close</span>

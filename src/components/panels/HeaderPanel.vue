@@ -1,6 +1,6 @@
 <template>
-  <div class="header-panel p-1">
-    <div class="d-flex align-items-center">
+  <div class="header-panel">
+    <div class="d-flex align-items-center overflow-hidden">
       <slot name="main-buttons" />
       <label
         v-b-tooltip.click.blur.bottom.noninteractive
@@ -11,9 +11,7 @@
           }
         ]"
         :title="title"
-      >
-        {{ title }}
-      </label>
+      >{{ title }}</label>
     </div>
 
     <ButtonsPanel
@@ -29,7 +27,7 @@
         <b-button
           v-if="view !== null"
           variant="light"
-          class="btn-sm lh-0-5 p-0-5"
+          class="button-only-icon"
           @click.stop="openFullscreen()"
         >
           <span class="material-icons">fullscreen</span>
@@ -77,6 +75,7 @@ export default class HeaderPanel extends Vue {
 <style lang="scss" scoped>
   .header-panel {
     width: 100%;
+    padding: 0.125rem;
     display: flex;
     flex-direction: row;
     justify-content: space-between;

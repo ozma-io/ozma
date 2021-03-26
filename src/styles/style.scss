@@ -24,7 +24,7 @@ html {
 
 * {
   margin: 0;
-  font-size: var(--FontSize);
+  // font-size: var(--FontSize);
   min-width: none !important;
 }
 
@@ -117,11 +117,18 @@ button:not(.btn) {
   }
 }
 
+/* 24px is material icons best size and 14px is default font size */
+// $icon-size: (24px / 14px) + rem;
+@function icon-size($base-size: 24px) {
+  @return ($base-size / 14px) + rem;
+}
+
 /* Source: https://google.github.io/material-design-icons/ */
-.material-icons.md-18 { font-size: 18px; }
-.material-icons.md-24 { font-size: 24px; }
-.material-icons.md-36 { font-size: 36px; }
-.material-icons.md-48 { font-size: 48px; }
+.material-icons,
+.material-icons.md-24 { font-size: icon-size(); }
+.material-icons.md-18 { font-size: icon-size(18px); }
+.material-icons.md-36 { font-size: icon-size(36px); }
+.material-icons.md-48 { font-size: icon-size(48px); }
 
 .material-icons.md-dark { color: rgba(0, 0, 0, 0.54); }
 .material-icons.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
@@ -131,11 +138,43 @@ button:not(.btn) {
 
 .material-icons {
   user-select: none;
-  line-height: 1.3rem;
 }
 
 .material-button {
   @include material-button;
+}
+
+.button-only-icon,
+.button-only-caption,
+.button-icon-caption {
+  width: 100%;
+  padding: 0.125rem;
+  display: flex;
+}
+
+.button-only-icon {
+  width: auto;
+  border-radius: 50%;
+  line-height: 0;
+}
+
+.button-icon-caption {
+  .icon {
+    position: absolute;
+    line-height: 0;
+    width: 1em;
+    height: 1em;
+    transform: translateY(50%);
+  }
+
+  .button-caption {
+    margin-left: 2rem;
+  }
+}
+
+.emoji-icon {
+  font-size: icon-size();
+  line-height: 1;
 }
 
 .with-material-icon {
@@ -152,14 +191,9 @@ button:not(.btn) {
   }
 }
 
-.emoji {
-  font-size: 1.15rem;
-  line-height: 1.3rem;
-  width: 1.5rem;
-}
-
 input.disabled {
   cursor: not-allowed;
+  opacity: 1; /* Fix Safari styles */
 }
 
 input.with-clear-content-button {

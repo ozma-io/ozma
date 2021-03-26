@@ -13,7 +13,7 @@
   <b-button
     v-else
     v-b-tooltip.hover.noninteractive
-    class="d-flex p-0-5 btn-sm mr-1"
+    :class="buttonClass"
     :variant="button.variant ? button.variant : 'light'"
     :title="button.tooltip"
   >
@@ -36,6 +36,14 @@ import ButtonContent from "@/components/buttons/ButtonContent.vue";
 export default class ButtonView extends Vue {
   @Prop({ type: Object, required: true }) button!: Button;
   @Prop({ type: Boolean, default: false }) listItem!: boolean;
+
+  private get buttonClass() {
+    return !this.button.name
+      ? "button-only-icon"
+      : this.button.icon
+        ? "button-icon-caption"
+        : "button-only-caption";
+  }
 }
 </script>
 

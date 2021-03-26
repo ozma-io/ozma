@@ -1,16 +1,32 @@
 <template>
   <fragment>
-    <span v-if="button.icon" :class="[getIconType(button.icon) === 'emoji' ? 'emoji':'material-icons']">{{ button.icon }}</span>
+    <span
+      v-if="button.icon"
+      :class="[
+        'icon',
+        {
+          'emoji-icon': iconType === 'emoji',
+          'material-icons': iconType === 'material',
+        },
+      ]"
+    >{{ button.icon }}</span>
+    <!--
     <span
       v-else-if="listItem"
       v-visible="false"
       class="material-icons"
     >arrow_right</span>
+    -->
 
-    <span v-if="button.name" :class="[listItem ? 'mx-2' : 'mx-1  text-nowrap']">{{ button.name }}</span>
-    <span v-else-if="listItem" :class="[listItem ? 'mx-2' : 'mx-1  text-nowrap']">{{ button.tooltip }}</span>
+    <span
+      v-if="button.name || listItem"
+      :class="[listItem ? 'mx-2' : 'button-caption']"
+    >{{ button.name || button.tooltip }}</span>
 
-    <span v-if="button.name && button.type == 'button-group'" class="material-icons">arrow_drop_down</span>
+    <span
+      v-if="button.name && button.type == 'button-group'"
+      class="material-icons md-18"
+    >arrow_drop_down</span>
   </fragment>
 </template>
 
@@ -24,8 +40,8 @@ export default class ButtonView extends Vue {
   @Prop({ type: Object, required: true }) button!: Button;
   @Prop({ type: Boolean, default: false }) listItem!: boolean;
 
-  private getIconType(str: string | undefined | null) {
-    return getIconType(str);
+  private get iconType() {
+    return getIconType(this.button.icon);
   }
 }
 </script>
