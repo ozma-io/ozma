@@ -200,7 +200,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     if (this.creationLink !== null) {
       buttons.push({
         icon: "add",
-        name: this.$t("create").toString(),
+        caption: this.$t("create").toString(),
         link: this.creationLink,
         type: "link",
         variant: "success",
@@ -210,7 +210,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     const modalReferenceField = this.modalReferenceField;
     if (modalReferenceField) {
       buttons.push({
-        name: this.$t("create_in_modal").toString(),
+        caption: this.$t("create_in_modal").toString(),
         callback: () => {
           this.modalView = modalReferenceField.uv;
         },
@@ -221,7 +221,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     if (typeof this.uv.info.mainEntity === "object" && this.showDefaultActions) {
       buttons.push({
         icon: "import_export",
-        name: this.$t("import_from_csv").toString(),
+        caption: this.$t("import_from_csv").toString(),
         uploadFile: file => this.importFromCsv(file),
         type: "upload-file",
       });
@@ -231,7 +231,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     if (this.uv.attributes["export_to_csv"] || "__export_to_csv" in this.$route.query) {
       buttons.push({
         icon: "import_export",
-        name: this.$t("export_to_csv").toString(),
+        caption: this.$t("export_to_csv").toString(),
         callback: () => this.exportToCsv(),
         type: "callback",
       });
@@ -240,7 +240,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     if (this.selectedQRCodeEntity !== null && this.qrCodeButton) {
       buttons.push({
         icon: this.qrCodeButton.icon,
-        name: this.qrCodeButton.name,
+        caption: this.qrCodeButton.caption,
         display: this.qrCodeButton.display,
         tooltip: this.qrCodeButton.tooltip,
         variant: this.qrCodeButton.variant,
@@ -254,7 +254,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     if (this.selectedBarCodeEntity !== null && this.barCodeButton) {
       buttons.push({
         icon: this.barCodeButton.icon,
-        name: this.barCodeButton.name,
+        caption: this.barCodeButton.caption,
         display: this.barCodeButton.display,
         tooltip: this.barCodeButton.tooltip,
         variant: this.barCodeButton.variant,
@@ -274,7 +274,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       buttons.push(
         {
           icon: "delete_sweep",
-          name: this.$t("remove_selected_rows").toString(),
+          caption: this.$t("remove_selected_rows").toString(),
           callback: () => this.removeSelectedRows(),
           type: "callback",
         },

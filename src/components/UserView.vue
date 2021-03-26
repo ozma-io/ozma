@@ -295,7 +295,7 @@ export default class UserView extends Vue {
 
         buttons.push({
           icon: "code",
-          name: this.$t("edit_view").toString(),
+          caption: this.$t("edit_view").toString(),
           link: { query: editQuery, target: "modal-auto", type: "query" },
           type: "link",
         });

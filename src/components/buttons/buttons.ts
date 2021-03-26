@@ -4,7 +4,7 @@ import { mapMaybe, isMobile } from "@/utils";
 
 export interface IButton {
   icon?: string;
-  name?: string;
+  caption?: string;
   tooltip?: string;
   display?: string;
   variant?: string;
@@ -50,7 +50,7 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts): Butto
   // but TypeScript doesn't support advanced type witnesses like that.
   const buttonObj = buttonAttr as Record<string, unknown>;
 
-  const name = typeof buttonObj.name === "string" ? buttonObj.name : undefined;
+  const caption = typeof buttonObj.caption === "string" ? buttonObj.caption : undefined;
   const icon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
   const tooltip = typeof buttonObj.tooltip === "string" ? buttonObj.tooltip : undefined;
   const display = typeof buttonObj.display === "string" ? buttonObj.display : undefined;
@@ -63,7 +63,7 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts): Butto
   const link = attrToLink(buttonObj, opts);
   if (link !== null) {
     return {
-      name,
+      caption,
       icon,
       tooltip,
       variant,
@@ -76,7 +76,7 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts): Butto
   if (Array.isArray(buttonObj.buttons)) {
     const buttons = attrToButtons(buttonObj.buttons, opts);
     return {
-      name,
+      caption,
       icon,
       tooltip,
       variant,
@@ -87,7 +87,7 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts): Butto
   }
 
   return {
-    name,
+    caption,
     icon,
     tooltip,
     variant,
