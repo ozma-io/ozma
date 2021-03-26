@@ -154,8 +154,6 @@ export default class TableCell extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  @import "../../../styles/mixins.scss";
-
   .selectable {
     position: relative;
     float: left;

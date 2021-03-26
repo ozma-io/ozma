@@ -130,8 +130,6 @@ export default class MenuEntry extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  @import "../../../styles/mixins.scss";
-
   .menu_category_block {
     margin-top: 10px;
     margin-bottom: 40px;

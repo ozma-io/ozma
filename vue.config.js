@@ -69,4 +69,13 @@ module.exports = {
         .loader("@intlify/vue-i18n-loader")
         .end();
   },
+
+  
+  css: {
+    loaderOptions: {
+      sass: {
+        additionalData: `@import "~@/styles/mixins.scss";`
+      }
+    }
+  },
 }

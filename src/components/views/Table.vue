@@ -1944,8 +1944,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 </script>
 
 <style lang="scss" scoped>
-  @import "../../styles/mixins.scss";
-
   /* Current Z layout:
    * Form control          (2000)
    * Disable-edit block    (500)

@@ -9,7 +9,6 @@ $border-color: var(--MainBorderColor);
 $input-border-color: var(--input-borderColor, $border-color);
 
 @import '../../node_modules/bootstrap/scss/bootstrap';
-@import 'mixins.scss';
 
 /*
  *общие настройки
