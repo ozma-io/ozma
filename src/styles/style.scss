@@ -3,8 +3,8 @@ $enable-shadows: false;
 $enable-gradients: false;
 $font-family-sans-serif: var(--Font);
 $font-family-serif: var(--Font);
-$input-color: var(--input-foregroundColor, var(--MainTextColor));
-$input-placeholder-color: var(--input-foregroundDarkerColor, var(--MainTextColorLight));
+$input-color: var(--input-foregroundColor);
+$input-placeholder-color: var(--input-foregroundDarkerColor);
 $border-color: var(--MainBorderColor);
 $input-border-color: var(--input-borderColor, $border-color);
 
@@ -225,7 +225,7 @@ input.with-clear-content-button {
 
     .material-icons {
       opacity: 1;
-      color: var(--input-foregroundDarkerColor, var(--MainTextColor));
+      color: var(--input-foregroundDarkerColor);
     }
   }
 
@@ -233,7 +233,7 @@ input.with-clear-content-button {
     background-color: var(--input-backgroundDarker2Color, rgb(239, 239, 239));
 
     .material-icons {
-      color: var(--input-foregroundDarkerColor, var(--MainTextColor));
+      color: var(--input-foregroundDarkerColor);
     }
   }
 }

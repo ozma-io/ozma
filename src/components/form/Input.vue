@@ -202,11 +202,11 @@ export default class Input extends Vue {
 <style lang="scss" scoped>
   ::v-deep .form-control {
     background-color: transparent;
-    color: var(--input-foregroundColor, --MainTextColor);
+    color: var(--input-foregroundColor);
 
     &.disabled {
       background-color: rgba(0, 0, 0, 0.2);
-      color: var(--input-foregroundDarkerColor, --MainTextColorLight);
+      color: var(--input-foregroundDarkerColor);
     }
   }
 

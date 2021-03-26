@@ -164,17 +164,17 @@ export default class MenuEntry extends Vue {
     max-width: 100%;
     display: flex;
     align-items: center;
-    color: var(--menuEntry-foregroundColor, var(--MainTextColor));
+    color: var(--menuEntry-foregroundColor);
     margin-bottom: 5px;
     text-decoration: none;
     background-color: var(--menuEntry-backgroundColor, transparent);
-    border-color: var(--menuEntry-borderColor, var(--MainBorderColor));
+    border-color: var(--menuEntry-borderColor);
 
     .icon {
       user-select: none;
 
       &.no-icon {
-        color: var(--menuEntry-foregroundDarkerColor, var(--MainBorderColor));
+        color: var(--menuEntry-foregroundDarkerColor);
       }
 
       &.emoji-icon {

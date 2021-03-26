@@ -27,10 +27,10 @@ export default class KanbanCard extends Vue {
 <style lang="scss" scoped>
   .card_container {
     display: block;
-    border: 1px solid var(--kanbanCard-borderColor, var(--MainBorderColor));
+    border: 1px solid var(--kanbanCard-borderColor);
     border-radius: 0.25rem;
-    background-color: var(--kanbanCard-backgroundColor, var(--MainBackgroundColor));
-    color: var(--kanbanCard-foregroundColor, var(--MainTextColor));
+    background-color: var(--kanbanCard-backgroundColor);
+    color: var(--kanbanCard-foregroundColor);
     margin-bottom: 0.4rem;
     user-select: none;
   }

@@ -493,17 +493,9 @@ export default class TopLevelUserView extends Vue {
     display: -webkit-box;
     display: -ms-flexbox;
     display: flex;
-    -webkit-box-orient: horizontal;
-    -webkit-box-direction: normal;
-    -ms-flex-direction: row;
     flex-direction: row;
-    -ms-flex-wrap: nowrap;
     flex-wrap: nowrap;
-    -webkit-box-align: center;
-    -ms-flex-align: center;
     align-items: center;
-    -webkit-box-pack: justify;
-    -ms-flex-pack: justify;
     justify-content: space-between;
   }
 
@@ -520,26 +512,6 @@ export default class TopLevelUserView extends Vue {
 
   .custom-warning {
     float: right;
-  }
-
-  .custom-danger {
-    background-color: var(--FailColor);
-    float: left;
-    overflow-x: auto;
-    overflow-y: hidden;
-    width: 100%;
-    text-align: left;
-    display: flex !important;
-    align-items: center;
-    height: 100%;
-    color: var(--StateTextColor);
-    padding-left: 15px !important;
-    margin-right: 15px !important;
-    border-radius: 3px !important;
-  }
-
-  .custom-success {
-    background-color: var(--SuccessBackColor);
   }
 
   .error {

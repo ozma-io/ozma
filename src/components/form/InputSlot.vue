@@ -74,7 +74,7 @@
           ]"
           :style="[
             {
-              backgroundColor: backgroundColor ? backgroundColor : 'var(--input-backgroundColor, var(--MainBackgroundColor))',
+              backgroundColor: backgroundColor ? backgroundColor : 'var(--input-backgroundColor)',
             },
             colorVariables,
           ]"

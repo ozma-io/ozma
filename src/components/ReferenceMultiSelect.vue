@@ -397,7 +397,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     background: none;
     padding: 0;
     margin: 0 10px 0 0;
-    color: var(--input-foregroundColor, var(--default-foregroundColor, var(--MainTextColor)));
+    color: var(--input-foregroundColor, var(--default-foregroundColor));
     opacity: 0.3;
   }
 
@@ -406,7 +406,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     display: flex;
     align-items: center;
     width: 100%;
-    background: var(--input-backgroundColor, var(--default-backgroundColor, var(--MainBorderColor)));
+    background: var(--input-backgroundColor, var(--default-backgroundColor));
   }
 
   .loading-box {

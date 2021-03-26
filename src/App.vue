@@ -229,7 +229,7 @@ export default class App extends Vue {
     --MainBackgroundColor: var(--default-backgroundColor, var(--OldMainBackgroundColor)) !important;
     --MainBorderColor: var(--default-borderColor, var(--OldMainBorderColor)) !important;
 
-    background-color: var(--default-backgroundColor, var(--MainBackgroundColor));
-    color: var(--default-foregroundColor, var(--MainTextColor));
+    background-color: var(--default-backgroundColor);
+    color: var(--default-foregroundColor);
   }
 </style>

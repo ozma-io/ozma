@@ -333,10 +333,10 @@ export default class Calendar extends Vue {
   }
 
   .calendar-icon {
-    background-color: var(--input-backgroundColor, var(--MainBackgroundColor));
-    color: var(--input-foregroundDarkerColor, var(--MainTextColorLight));
-    cursor: pointer;
+    background-color: var(--input-backgroundColor);
+    color: var(--input-foregroundDarkerColor);
     border: 1px solid var(--input-borderColor);
+    cursor: pointer;
     border-left-width: 0;
   }
 
@@ -353,11 +353,11 @@ export default class Calendar extends Vue {
     display: flex;
     flex-direction: row;
     border-radius: 0.25rem;
-    background-color: var(--input-backgroundColor, var(--MainBackgroundColor));
-    color: var(--input-foregroundColor, var(--MainTextColor));
+    background-color: var(--input-backgroundColor);
+    color: var(--input-foregroundColor);
 
     ::v-deep .form-control {
-      background-color: var(--input-backgroundColor, var(--MainBackgroundColor));
+      background-color: var(--input-backgroundColor);
     }
   }
 
@@ -379,7 +379,7 @@ export default class Calendar extends Vue {
 
   .today,
   .now {
-    background: var(--default-backgroundColor, var(--MainBorderColor));
+    background: var(--default-backgroundColor);
     border-radius: 0;
   }
 </style>

@@ -24,3 +24,9 @@
     opacity: 0.7;
   }
 }
+
+@mixin common-variant($name) {
+  background-color: var(--#{$name}-backgroundColor);
+  color: var(--#{$name}-foregroundColor);
+  border-color: var(--#{$name}-borderColor);
+}
