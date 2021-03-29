@@ -95,6 +95,7 @@ export default class KanbanColumn extends Vue {
   get style() {
     return {
       width: `${this.width}px`,
+      minWidth: `${this.width}px`,
     };
   }
 
