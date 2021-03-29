@@ -6,6 +6,7 @@
             "loading": "Now loading",
             "save": "Save",
             "account": "Account",
+            "theme": "Theme",
             "login": "Login",
             "logout": "Logout",
             "auth_error": "Authentication error: {msg}",
@@ -23,6 +24,7 @@
             "loading": "Загрузка данных",
             "save": "Сохранить",
             "account": "Профиль",
+            "theme": "Тема",
             "login": "Войти",
             "logout": "Выйти",
             "auth_error": "Ошибка авторизации: {msg}",
@@ -185,6 +187,7 @@ import { convertToWords, nextRender } from "@/utils";
 import { Link } from "@/links";
 import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
+import { CurrentSettings } from "@/state/settings";
 
 const auth = namespace("auth");
 const staging = namespace("staging");
@@ -215,6 +218,9 @@ export default class TopLevelUserView extends Vue {
   @query.Action("pushWindow") pushWindow!: (_: { index: number; query: IQuery }) => Promise<void>;
   @errors.Mutation("removeError") removeError!: (params: { key: ErrorKey; index: number }) => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
+  @settings.State("current") currentSettings!: CurrentSettings;
+  @settings.State("currentTheme") currentTheme!: string;
+  @settings.Action("setTheme") setTheme!: (theme: string) => Promise<void>;
 
   private statusLine = "";
   private enableFilter = false;
@@ -223,6 +229,7 @@ export default class TopLevelUserView extends Vue {
   private isUserViewLoading = false;
 
   private buttons: Button[] = [];
+  private themeButtons: Button[] = [];
 
   private wasOpenedQRCodeScanner = false;
   private isOpenQRCodeScanner = false;
@@ -241,6 +248,14 @@ export default class TopLevelUserView extends Vue {
 
     // eslint-disable-next-line @typescript-eslint/unbound-method
     document.addEventListener("keydown", this.onKeydown);
+
+    void this.loadThemeButtons();
+  }
+
+  @Watch("currentSettings")
+  private loadThemeButtons() {
+    const themes = this.currentSettings.themes;
+    this.themeButtons = themes.map(theme => ({ name: theme, type: "callback", callback: () => this.setTheme(theme) }));
   }
 
   private onKeydown(event: KeyboardEvent) {
@@ -344,6 +359,9 @@ export default class TopLevelUserView extends Vue {
   get burgerButton() {
     const buttons: Button[] = [];
     if (this.currentAuth?.token) {
+      if (this.themeButtons.length > 0) {
+        buttons.push({ icon: "palette", name: this.$t("theme").toString(), type: "button-group", buttons: this.themeButtons });
+      }
       if (Api.developmentMode) {
         const currentAuth = this.currentAuth;
         buttons.push({ icon: "link",

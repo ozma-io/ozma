@@ -2,10 +2,11 @@
   <b-list-group-item
     v-if="listItem"
     :variant="button.variant"
-    class="d-flex list-group-item-action p-2"
+    class="d-flex list-group-item-action p-1"
   >
     <ButtonContent
       :button="button"
+      :phantom-icon="phantomIcon"
       list-item
     />
   </b-list-group-item>
@@ -36,6 +37,7 @@ import ButtonContent from "@/components/buttons/ButtonContent.vue";
 export default class ButtonView extends Vue {
   @Prop({ type: Object, required: true }) button!: Button;
   @Prop({ type: Boolean, default: false }) listItem!: boolean;
+  @Prop({ type: Boolean, default: false }) phantomIcon!: boolean;
 
   private get buttonClass() {
     return !this.button.name

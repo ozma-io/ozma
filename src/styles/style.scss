@@ -146,15 +146,22 @@ button:not(.btn) {
 .button-only-icon,
 .button-only-caption,
 .button-icon-caption {
+  @include material-button("button");
+
   width: 100%;
-  padding: 0.125rem;
+  padding: 0.2rem;
   display: flex;
+  align-items: center;
 }
 
+// FIXME: Buttons not round only in Chrome.
 .button-only-icon {
   width: auto;
   border-radius: 50%;
-  line-height: 0;
+
+  // Circle buttons a little taller than recangular ones, so we need to compensate it.
+  // But current value for this is just almost random.
+  margin: -0.1rem 0;
 }
 
 .button-icon-caption {

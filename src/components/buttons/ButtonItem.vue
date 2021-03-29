@@ -11,6 +11,7 @@
     <ButtonView
       :button="button"
       :list-item="listItem"
+      :phantom-icon="listItemHasRightMargin"
     />
   </router-link>
 
@@ -18,20 +19,23 @@
     v-else-if="button.type === 'link'"
     :link="button.link"
     @goto="$emit('goto', $event)"
+    @click="onClick"
   >
     <ButtonView
       :button="button"
       :list-item="listItem"
+      :phantom-icon="listItemHasRightMargin"
     />
   </FunLink>
 
   <span
     v-else-if="button.type === 'callback'"
-    @click="button.callback()"
+    @click="onClick"
   >
     <ButtonView
       :button="button"
       :list-item="listItem"
+      :phantom-icon="listItemHasRightMargin"
     />
   </span>
 
@@ -42,6 +46,7 @@
     <ButtonView
       :button="button"
       :list-item="listItem"
+      :phantom-icon="listItemHasRightMargin"
     />
     <input
       v-visible="false"
@@ -65,11 +70,20 @@ import type { Button } from "@/components/buttons/buttons";
 })
 export default class ButtonItem extends Vue {
   @Prop({ type: Object, required: true }) button!: Button;
-  @Prop({ type: Boolean, default: false }) listItem!: Button;
+  @Prop({ type: Boolean, default: false }) listItem!: boolean;
+  @Prop({ type: Boolean, default: false }) listItemHasRightMargin!: boolean;
 
   private uploadFile(input: HTMLInputElement, next: (file: File) => void) {
     const files = input.files as FileList;
     next(files[0]);
+  }
+
+  private onClick() {
+    this.$emit("button-click");
+
+    if (this.button.type === "callback") {
+      this.button.callback();
+    }
   }
 }
 </script>

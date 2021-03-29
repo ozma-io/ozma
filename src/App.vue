@@ -46,7 +46,7 @@ import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import FabCluster from "@/components/FabCluster/FabCluster.vue";
 import AlertBanner from "@/components/AlertBanner.vue";
 import { ErrorKey } from "@/state/errors";
-import { getColorVariables, loadColorVariants } from "@/utils_colors";
+import { getColorVariables } from "@/utils_colors";
 
 const settings = namespace("settings");
 const auth = namespace("auth");
@@ -56,9 +56,11 @@ const staging = namespace("staging");
 @Component({ components: { ModalPortalTarget, FabCluster, AlertBanner } })
 export default class App extends Vue {
   @settings.State("current") settings!: CurrentSettings;
+  @settings.State("currentTheme") currentTheme!: string;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
+
   private colorVariables: any = null;
 
   created() {
@@ -100,16 +102,18 @@ export default class App extends Vue {
     const rawAutoSaveTimeout = Number(this.settings.getEntry("auto_save_timeout", String, "3"));
     const autoSaveTimeout = Number.isNaN(rawAutoSaveTimeout) ? null : rawAutoSaveTimeout * 1000;
     this.setAutoSaveTimeout(autoSaveTimeout);
-    void this.loadColors();
 
     const html = document.querySelector("html");
     if (html) {
       html.style.fontSize = `${this.fontSize}px`;
     }
+
+    this.loadColors();
   }
 
-  private async loadColors() {
-    const colorVariants = await loadColorVariants();
+  @Watch("currentTheme", { immediate: true })
+  private loadColors() {
+    const colorVariants = this.settings.colorVariants.filter(variant => variant.theme === this.currentTheme);
     // TODO: genenrating variables for each component is not the best solution, would be cool to fix this.
     const componentsNames = [
       "table",
@@ -122,6 +126,7 @@ export default class App extends Vue {
       "kanbanCard",
       "interface",
       "refernece",
+      "button",
     ];
 
     const background = this.styleSettings["--OldMainBackgroundColor"];
@@ -134,8 +139,6 @@ export default class App extends Vue {
       ...componentsNames.map(componentName => getColorVariables(componentName, "default")),
       ...colorVariants.map((variant: any) => getColorVariables(variant.name, variant)),
     ]);
-
-    return Promise.resolve();
   }
 
   private get fontSize(): number {

@@ -1,6 +1,6 @@
 <template>
   <div class="header-panel">
-    <div class="d-flex align-items-center overflow-hidden">
+    <div class="left-part d-flex align-items-center">
       <slot name="main-buttons" />
       <label
         v-b-tooltip.click.blur.bottom.noninteractive
@@ -79,7 +79,11 @@ export default class HeaderPanel extends Vue {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    align-items: center;
+    align-items: stretch;
+  }
+
+  .left-part {
+    overflow: hidden;
   }
 
   .input_label {

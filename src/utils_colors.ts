@@ -2,7 +2,6 @@ import { rgba, toRgba, parseToRgba, readableColor, mix } from "color2k";
 import { IExecutedValue, IExecutedRow, IViewExprResult } from "ozma-api";
 import { store } from "@/main";
 import { default as Api } from "@/api";
-import { mapMaybe } from "./utils";
 
 const orNull = <T, F>(func: (arg: T) => F) =>
   (arg: unknown) => {
@@ -33,14 +32,16 @@ export type VariantKey = typeof variantKeys[number];
 
 export type NamedColorVariant = {
   name: string;
+  theme: string;
 } & {
   [key in VariantKey]: Color;
 };
 
 export type RawColorVariant = {
-  name: unknown;
+  name: string;
+  "theme_id"?: string;
 } & {
-  [key in VariantKey]?: unknown;
+  [key in VariantKey]?: string;
 };
 
 export type InlineColorVariant = {
@@ -61,7 +62,8 @@ export const colorVariantFromRaw = (raw: RawColorVariant): NamedColorVariant => 
   const foregroundContrast = readableColor(background);
   const foregroundDarker = mix(foreground, background, 0.5);
   return {
-    name: String(raw.name),
+    name: raw.name,
+    theme: raw.theme_id ?? "no_theme",
     foreground,
     foregroundContrast,
     foregroundDarker,
@@ -110,26 +112,23 @@ export const loadThemes = async () => {
   }, { root: true });
 
   const nameColumnIndex = res.info.columns.findIndex(column => column.name === "name");
-  if (nameColumnIndex === -1) {
-    throw new Error("Table with theme names must have `name` column.");
-  }
-
-  return res.result.rows.map(row => row.values[nameColumnIndex].value);
+  return res.result.rows.map(row => row.values[nameColumnIndex].value as string);
 };
 
-export const getPreferredTheme = async () => {
-  const availableThemes = await loadThemes();
+export const getPreferredTheme = (themes: string[]) => {
   const prefersDarkTheme = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
 
   const storagedTheme = localStorage.getItem("preferredTheme");
-  if (availableThemes.includes(storagedTheme as any)) {
+  if (themes.includes(storagedTheme as any)) {
     return storagedTheme;
-  } else if (prefersDarkTheme && availableThemes.includes("dark")) {
+  } else if (prefersDarkTheme && themes.includes("dark")) {
     return "dark";
   } else {
     return "light";
   }
 };
+
+const punOrValue = (value: IExecutedValue) => value.pun ?? value.value;
 
 export const loadColorVariants = async () => {
   const ref = { schema: "funapp", name: "color_variants" };
@@ -138,22 +137,8 @@ export const loadColorVariants = async () => {
     args: [ref],
   }, { root: true });
 
-  const theme = await getPreferredTheme();
-
   const columnNames = res.info.columns.map(column => column.name);
-  const requiredColumnNames = ["name", "background", "theme_id"] as const;
-  const punOrValue = (value: IExecutedValue) => value.pun ?? value.value;
-  const hasAllRequiredColumns = requiredColumnNames.every(name => columnNames.includes(name));
-  if (hasAllRequiredColumns) {
-    const arrayRowToObject =
-      (row: IExecutedRow) => Object.fromEntries(columnNames.map((name, index) => ([name, punOrValue(row.values[index])])));
-    return mapMaybe(row => {
-      const variant = arrayRowToObject(row);
-      return variant.theme_id === theme
-        ? colorVariantFromRaw(variant as RawColorVariant)
-        : undefined;
-    }, res.result.rows);
-  } else {
-    throw new Error("Table with color variants must have columns: " + requiredColumnNames.join(", "));
-  }
+  const arrayRowToObject =
+    (row: IExecutedRow) => Object.fromEntries(columnNames.map((name, index) => ([name, punOrValue(row.values[index])])));
+  return (res.result.rows.map(arrayRowToObject) as RawColorVariant[]).map(colorVariantFromRaw);
 };

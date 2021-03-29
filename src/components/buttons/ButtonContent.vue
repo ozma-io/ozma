@@ -10,13 +10,11 @@
         },
       ]"
     >{{ button.icon }}</span>
-    <!--
     <span
-      v-else-if="listItem"
+      v-else-if="listItem && phantomIcon"
       v-visible="false"
       class="material-icons"
     >arrow_right</span>
-    -->
 
     <span
       v-if="button.name || listItem"
@@ -25,7 +23,7 @@
 
     <span
       v-if="button.name && button.type == 'button-group'"
-      class="material-icons md-18"
+      class="material-icons ml-auto"
     >arrow_drop_down</span>
   </fragment>
 </template>
@@ -36,9 +34,10 @@ import type { Button } from "@/components/buttons/buttons";
 import { getIconType } from "@/utils";
 
 @Component
-export default class ButtonView extends Vue {
+export default class ButtonContent extends Vue {
   @Prop({ type: Object, required: true }) button!: Button;
   @Prop({ type: Boolean, default: false }) listItem!: boolean;
+  @Prop({ type: Boolean, default: false }) phantomIcon!: boolean;
 
   private get iconType() {
     return getIconType(this.button.icon);

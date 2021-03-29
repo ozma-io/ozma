@@ -1957,6 +1957,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     border: 1px solid var(--table-borderColor);
   }
 
+  ::v-deep .table-td {
+    padding: 0.15rem;
+  }
+
   .button-container {
     width: 100%;
     position: sticky;
@@ -2003,18 +2007,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   .data-col {
     max-width: 100vw !important;
-  }
-
-  .edit_container {
-    width: 100vw;
-    height: 100vh;
-    z-index: 10000;
-    position: fixed;
-    top: calc(1.5em + 6px);
-    left: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
   }
 
   .tabl {
@@ -2154,12 +2146,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     td ::v-deep a {
       text-decoration: none !important;
-    }
-  }
-
-  @media screen and (max-device-width: 480px) {
-    .edit_container {
-      align-items: flex-start;
     }
   }
 
