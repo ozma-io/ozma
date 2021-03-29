@@ -15,6 +15,7 @@
     v-else
     v-b-tooltip.hover.noninteractive
     :class="buttonClass"
+    :style="button.colorVariables"
     :variant="button.variant ? button.variant : 'light'"
     :title="button.tooltip"
   >

@@ -1,13 +1,15 @@
 import { RawLocation } from "vue-router";
 import { Link, IAttrToLinkOpts, attrToLink } from "@/links";
 import { mapMaybe, isMobile } from "@/utils";
+import { getColorVariables } from "@/utils_colors";
 
 export interface IButton {
   icon?: string;
   name?: string;
   tooltip?: string;
   display?: string;
-  variant?: string;
+  variant?: unknown;
+  colorVariables?: Record<string, string>;
 }
 
 export interface IEmptyButton extends IButton {
@@ -54,7 +56,11 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts): Butto
   const icon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
   const tooltip = typeof buttonObj.tooltip === "string" ? buttonObj.tooltip : undefined;
   const display = typeof buttonObj.display === "string" ? buttonObj.display : undefined;
-  const variant = typeof buttonObj.variant === "string" ? buttonObj.variant : undefined;
+  const variant = buttonObj.variant ?? undefined;
+  let colorVariables;
+  if (variant) {
+    colorVariables = getColorVariables("button", variant);
+  }
 
   if (buttonObj.visible === false) {
     return undefined;
@@ -67,6 +73,7 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts): Butto
       icon,
       tooltip,
       variant,
+      colorVariables,
       link,
       display,
       type: "link",
@@ -80,6 +87,7 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts): Butto
       icon,
       tooltip,
       variant,
+      colorVariables,
       buttons,
       display,
       type: "button-group",
@@ -91,6 +99,7 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts): Butto
     icon,
     tooltip,
     variant,
+    colorVariables,
     display,
     type: "empty",
   };
@@ -127,7 +136,11 @@ export const attrToButtonsOld = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): 
     const icon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
     const tooltip = typeof buttonObj.tooltip === "string" ? buttonObj.tooltip : undefined;
     const display = typeof buttonObj.display === "string" ? buttonObj.display : "desktop";
-    const variant = typeof buttonObj.variant === "string" ? buttonObj.variant : undefined;
+    const variant = buttonObj.variant ?? undefined;
+    let colorVariables;
+    if (variant) {
+      colorVariables = getColorVariables("button", variant);
+    }
 
     if (buttonObj.visible === false || name === undefined) {
       return undefined;
@@ -140,6 +153,7 @@ export const attrToButtonsOld = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): 
         icon,
         tooltip,
         variant,
+        colorVariables,
         link,
         display,
         type: "link",
@@ -153,6 +167,7 @@ export const attrToButtonsOld = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): 
         icon,
         tooltip,
         variant,
+        colorVariables,
         buttons,
         display,
         type: "button-group",

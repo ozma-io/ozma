@@ -1,6 +1,9 @@
 <template>
   <div class="header-panel">
-    <div class="left-part d-flex align-items-center">
+    <div
+      class="left-part d-flex align-items-center"
+      :style="buttonVariables"
+    >
       <slot name="main-buttons" />
       <label
         v-b-tooltip.click.blur.bottom.noninteractive
@@ -28,6 +31,7 @@
           v-if="view !== null"
           variant="light"
           class="button-only-icon"
+          :style="buttonVariables"
           @click.stop="openFullscreen()"
         >
           <span class="material-icons">fullscreen</span>
@@ -45,6 +49,7 @@ import { router } from "@/modules";
 import type { Button } from "@/components/buttons/buttons";
 import { buttonsToPanelButtons } from "@/components/buttons/buttons";
 import SearchPanel from "@/components/SearchPanel.vue";
+import { getVariantColorVariables } from "@/utils_colors";
 
 @Component({
   components: {
@@ -61,6 +66,10 @@ export default class HeaderPanel extends Vue {
 
   get headerButtons() {
     return buttonsToPanelButtons(this.buttons);
+  }
+
+  get buttonVariables() {
+    return getVariantColorVariables("button", "interfaceButton");
   }
 
   private openFullscreen() {
@@ -80,6 +89,9 @@ export default class HeaderPanel extends Vue {
     flex-direction: row;
     justify-content: space-between;
     align-items: stretch;
+    background-color: var(--interface-backgroundColor);
+    color: var(--interface-foregroundColor);
+    border-bottom: 1px solid var(--interface-borderColor);
   }
 
   .left-part {

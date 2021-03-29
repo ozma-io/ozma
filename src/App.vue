@@ -113,7 +113,10 @@ export default class App extends Vue {
 
   @Watch("currentTheme", { immediate: true })
   private loadColors() {
-    const colorVariants = this.settings.colorVariants.filter(variant => variant.theme === this.currentTheme);
+    const lightColorVariants = this.settings.colorVariants.filter(variant => variant.theme === "light");
+    const colorVariants = this.currentTheme !== "light"
+      ? this.settings.colorVariants.filter(variant => variant.theme === this.currentTheme)
+      : [];
     // TODO: genenrating variables for each component is not the best solution, would be cool to fix this.
     const componentsNames = [
       "table",
@@ -137,6 +140,7 @@ export default class App extends Vue {
     this.colorVariables = R.mergeAll([
       defaultVariant,
       ...componentsNames.map(componentName => getColorVariables(componentName, "default")),
+      ...lightColorVariants.map((variant: any) => getColorVariables(variant.name, variant)),
       ...colorVariants.map((variant: any) => getColorVariables(variant.name, variant)),
     ]);
   }

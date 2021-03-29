@@ -23,7 +23,7 @@
 
     <span
       v-if="button.name && button.type == 'button-group'"
-      class="material-icons ml-auto"
+      class="material-icons ml-auto dropdown-icon"
     >arrow_drop_down</span>
   </fragment>
 </template>
@@ -44,3 +44,9 @@ export default class ButtonContent extends Vue {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+  .dropdown-icon {
+    margin: -0.1rem 0;
+  }
+</style>
