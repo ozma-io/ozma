@@ -14,7 +14,10 @@
 </i18n>
 
 <template>
-  <div :class="['menu_container', { 'menu_container__centered': isCentered }]">
+  <div
+    :class="['menu_container', { 'menu_container__centered': isCentered }]"
+    :style="menuEntryVariables"
+  >
     <b-container>
       <b-row :class="[{ 'justify-content-center': isCentered }]">
         <b-col v-if="typeof entriesOrError === 'string'" cols="12">
@@ -46,7 +49,7 @@ import * as R from "ramda";
 import MenuEntry, { MenuValue, IMenuLink, Badge } from "@/components/views/menu/MenuEntry.vue";
 import { attrToLink, IAttrToLinkOpts } from "@/links";
 import { currentValue, valueToPunnedText } from "@/user_views/combined";
-import { getColorVariables } from "@/utils_colors";
+import { getColorVariables, getVariantColorVariables } from "@/utils_colors";
 
 @UserView()
 @Component({ components: { MenuEntry } })
@@ -220,6 +223,10 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
     } else {
       return this.$t("invalid_menu").toString();
     }
+  }
+
+  get menuEntryVariables() {
+    return getVariantColorVariables("button", "menuEntry");
   }
 }
 </script>
