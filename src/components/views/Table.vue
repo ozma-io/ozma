@@ -797,7 +797,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     if (!uv.extra.newRowTopSidePositions.find(ref => equalNewRowRef(newRef, ref))
       && !uv.extra.newRowBottomSidePositions.find(ref => equalNewRowRef(newRef, ref))
     ) {
-      const side = isAddedValueMeta(meta) ? meta.side : null;
+      const side = isAddedValueMeta(meta) ? meta.side : "top_back";
       if (side === "top_front") {
         uv.extra.newRowTopSidePositions.splice(0, 0, newRef);
       } else if (side === "top_back") {
