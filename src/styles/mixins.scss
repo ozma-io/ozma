@@ -10,9 +10,6 @@
     background-color: var(--#{$variant}-backgroundDarker1Color) !important;
     border-color: var(--#{$variant}-borderColor) !important;
     color: var(--#{$variant}-foregroundContrastColor) !important;
-
-    /* `outline` works wrong for <a> tags at least on Firefox */
-    // box-shadow: 0 0 0 2px var(--#{$variant}-backgroundDarker1Color);
     transition: background 0s;
   }
 
@@ -24,7 +21,6 @@
     background-color: var(--#{$variant}-backgroundDarker2Color) !important;
     border-color: var(--#{$variant}-borderColor) !important;
     color: var(--#{$variant}-foregroundContrastColor);
-    // box-shadow: 0 0 0 2px var(--#{$variant}-backgroundDarker2Color);
     transition: background 0s;
   }
 
