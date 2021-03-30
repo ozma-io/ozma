@@ -482,7 +482,7 @@ export default class FormControl extends Vue {
   private filterString = "";
   private title = "";
   private enableFilter = false;
-  private isUserViewLoading = true;
+  private isUserViewLoading = false;
 
   get isNullable() {
     return this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable;
