@@ -136,10 +136,16 @@ export default class App extends Vue {
     const foreground = this.styleSettings["--OldMainTextColor"];
     const border = this.styleSettings["--OldMainBorderColor"];
     const defaultVariant = getColorVariables("default", { background, foreground, border });
+    // I want borderless menuEntries by default, but they are using button variant. Probably TODO borderless buttons.
+    const menuEntryVariant = getColorVariables("menuEntry", {
+      background,
+      border: background,
+    });
 
     this.colorVariables = R.mergeAll([
       defaultVariant,
       ...componentsNames.map(componentName => getColorVariables(componentName, "default")),
+      menuEntryVariant,
       ...lightColorVariants.map((variant: any) => getColorVariables(variant.name, variant)),
       ...colorVariants.map((variant: any) => getColorVariables(variant.name, variant)),
     ]);
