@@ -20,10 +20,17 @@
       :color-variables="bannerColorVariables"
       @banner-close="onBannerClose"
     />
+
     <ModalPortalTarget
+      v-if="isReadonlyDemoInstance"
       name="tabbed-modal"
       multiple
     />
+
+    <ReadonlyDemoInstanceModal
+      ref="readonlyDemoInstanceModal"
+    />
+
     <template v-if="authErrors.length > 0">
       <span
         v-for="error in authErrors"
@@ -33,6 +40,7 @@
       </span>
     </template>
     <router-view v-else />
+
     <FabCluster />
   </div>
 </template>
@@ -41,19 +49,23 @@
 import R from "ramda";
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
+
 import { CurrentSettings } from "@/state/settings";
 import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import FabCluster from "@/components/FabCluster/FabCluster.vue";
 import AlertBanner from "@/components/AlertBanner.vue";
+import ReadonlyDemoInstanceModal from "@/components/ReadonlyDemoInstanceModal.vue";
 import { ErrorKey } from "@/state/errors";
 import { getColorVariables, loadColorVariants } from "@/utils_colors";
+import { eventBus } from "@/main";
+import { isReadonlyDemoInstance } from "@/api";
 
 const settings = namespace("settings");
 const auth = namespace("auth");
 const errors = namespace("errors");
 const staging = namespace("staging");
 
-@Component({ components: { ModalPortalTarget, FabCluster, AlertBanner } })
+@Component({ components: { ModalPortalTarget, FabCluster, AlertBanner, ReadonlyDemoInstanceModal } })
 export default class App extends Vue {
   @settings.State("current") settings!: CurrentSettings;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
@@ -68,6 +80,8 @@ export default class App extends Vue {
     document.addEventListener("copy", this.onCopy);
     document.addEventListener("cut", this.onCut);
     document.addEventListener("paste", this.onPaste);
+
+    eventBus.on("showReadonlyDemoModal", this.showDemoModal);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
@@ -76,6 +90,8 @@ export default class App extends Vue {
     document.removeEventListener("copy", this.onCopy);
     document.removeEventListener("cut", this.onCut);
     document.removeEventListener("paste", this.onPaste);
+
+    eventBus.off("showReadonlyDemoModal", this.showDemoModal);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
@@ -91,8 +107,16 @@ export default class App extends Vue {
     this.$root.$emit("paste", event);
   }
 
+  private get isReadonlyDemoInstance() {
+    return isReadonlyDemoInstance;
+  }
+
   get authErrors() {
     return this.rawErrors["auth"] || [];
+  }
+
+  private showDemoModal() {
+    (this.$refs.readonlyDemoInstanceModal as ReadonlyDemoInstanceModal).show();
   }
 
   @Watch("settings")

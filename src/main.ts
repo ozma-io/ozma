@@ -4,6 +4,7 @@ Vue.config.devtools = process.env["NODE_ENV"] !== "production";
 Vue.config.performance = process.env["NODE_ENV"] !== "production";
 
 import Vuex from "vuex";
+import mitt from "mitt";
 
 import * as Modules from "@/modules";
 import { setHeadTitle } from "@/elements";
@@ -28,6 +29,8 @@ import errorsModule from "@/state/errors";
 import reloadModule from "@/state/reload";
 
 import "@/styles/style.scss";
+
+export const eventBus = mitt();
 
 export const store = new Vuex.Store({
   // Big performance hog on dev!

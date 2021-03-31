@@ -6,6 +6,8 @@ const instancesHost = hostnameParts.length >= 2 ? hostnameParts[hostnameParts.le
 const apiUrl = String(__API_URL__);
 export const developmentMode = Boolean(__DEVELOPMENT_MODE__);
 export const disableAuth = Boolean(__DISABLE_AUTH__);
+const readonlyDemoInstanceName = "localhost";
+export const isReadonlyDemoInstance = instanceName === readonlyDemoInstanceName;
 
 export const authOrigin = String(__API_AUTH_URL__);
 export const authUrlBase = `${authOrigin}${String(__API_AUTH_URL_BASE__)}`;
