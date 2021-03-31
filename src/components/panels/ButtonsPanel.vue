@@ -1,5 +1,12 @@
 <template>
-  <div :class="['d-flex align-items-center', {'flex-wrap':buttons[buttons.length-1].icon !== 'more_vert'}]">
+  <div
+    :class="[
+      'd-flex align-items-center',
+      {
+        'flex-wrap': wrapButtons,
+      }
+    ]"
+  >
     <template v-for="(button, i) in buttons">
       <ButtonGroup
         v-if="button.type === 'button-group' && button.buttons.length > 0"
@@ -34,5 +41,10 @@ import ButtonGroup from "@/components/buttons/ButtonGroup.vue";
 })
 export default class ButtonsPanel extends Vue {
   @Prop({ type: Array, required: true }) buttons!: Button[];
+
+  // Is true in TableCells and probably somewhere else.
+  private get wrapButtons() {
+    return this.buttons?.[this.buttons.length - 1]?.icon !== "more_vert";
+  }
 }
 </script>
