@@ -41,7 +41,7 @@ export default class ButtonView extends Vue {
   @Prop({ type: Boolean, default: false }) phantomIcon!: boolean;
 
   private get buttonClass() {
-    return !this.button.name
+    return !this.button.caption
       ? "button-only-icon"
       : this.button.icon
         ? "button-icon-caption"

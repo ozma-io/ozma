@@ -1,0 +1,27 @@
+{
+    "dir": "ltr",
+    "lang": "Russian",
+    "name": "ozma.io",
+    "short_name": "ozma.io",
+    "scope": "/",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#ffffff",
+    "description": "This is a constructor business information system: customer tracking, task control, and management accounting in the form that you need",
+    "orientation": "any",
+    "related_applications": [],
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "/public/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/public/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "display": "standalone"
+}

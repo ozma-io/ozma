@@ -255,7 +255,7 @@ export default class TopLevelUserView extends Vue {
   @Watch("currentSettings")
   private loadThemeButtons() {
     const themes = this.currentSettings.themes;
-    this.themeButtons = themes.map(theme => ({ name: theme, type: "callback", callback: () => this.setTheme(theme) }));
+    this.themeButtons = themes.map(theme => ({ caption: theme, type: "callback", callback: () => this.setTheme(theme) }));
   }
 
   private onKeydown(event: KeyboardEvent) {
@@ -360,22 +360,22 @@ export default class TopLevelUserView extends Vue {
     const buttons: Button[] = [];
     if (this.currentAuth?.token) {
       if (this.themeButtons.length > 0) {
-        buttons.push({ icon: "palette", name: this.$t("theme").toString(), type: "button-group", buttons: this.themeButtons });
+        buttons.push({ icon: "palette", caption: this.$t("theme").toString(), type: "button-group", buttons: this.themeButtons });
       }
       if (Api.developmentMode) {
         const currentAuth = this.currentAuth;
         buttons.push({ icon: "link",
-          name: this.$t("authed_link").toString(),
+          caption: this.$t("authed_link").toString(),
           callback: () => {
             const link = getAuthedLink(currentAuth);
             void navigator.clipboard.writeText(link);
           },
           type: "callback" });
       }
-      buttons.push({ icon: "perm_identity", name: this.$t("account").toString(), type: "link", link: { href: Api.accountUrl, type: "href" } });
-      buttons.push({ icon: "exit_to_app", name: this.$t("logout").toString(), type: "callback", callback: this.logout });
+      buttons.push({ icon: "perm_identity", caption: this.$t("account").toString(), type: "link", link: { href: Api.accountUrl, type: "href" } });
+      buttons.push({ icon: "exit_to_app", caption: this.$t("logout").toString(), type: "callback", callback: this.logout });
     } else {
-      buttons.push({ icon: "login", name: this.$t("login").toString(), type: "callback", callback: this.login });
+      buttons.push({ icon: "login", caption: this.$t("login").toString(), type: "callback", callback: this.login });
     }
 
     const burgerButton: Button = {

@@ -17,12 +17,12 @@
     >arrow_right</span>
 
     <span
-      v-if="button.name || listItem"
+      v-if="button.caption || listItem"
       :class="[listItem ? 'mx-2' : 'button-caption']"
-    >{{ button.name || button.tooltip }}</span>
+    >{{ button.caption || button.tooltip }}</span>
 
     <span
-      v-if="button.name && button.type == 'button-group'"
+      v-if="button.caption && button.type == 'button-group'"
       class="material-icons ml-auto dropdown-icon"
     >arrow_drop_down</span>
   </fragment>

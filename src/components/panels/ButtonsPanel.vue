@@ -3,7 +3,7 @@
     :class="[
       'd-flex align-items-center',
       {
-        'flex-wrap': buttons[buttons.length-1].icon !== 'more_vert',
+        'flex-wrap': wrapButtons,
       },
     ]"
   >
@@ -47,6 +47,11 @@ import ButtonGroup from "@/components/buttons/ButtonGroup.vue";
 })
 export default class ButtonsPanel extends Vue {
   @Prop({ type: Array, required: true }) buttons!: Button[];
+
+  // Is true in TableCells and probably somewhere else.
+  private get wrapButtons() {
+    return this.buttons?.[this.buttons.length - 1]?.icon !== "more_vert";
+  }
 }
 </script>
 
