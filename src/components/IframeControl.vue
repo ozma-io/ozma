@@ -51,18 +51,28 @@ export default class IframeControl extends Vue {
 
   private requestedHeight: number | null = null;
 
-  private mounted() {
-    window.addEventListener("message", event => {
-      if (event.source !== (this.$refs.iframe as HTMLIFrameElement)?.contentWindow) return;
+  private iframeEventHandler(event: MessageEvent<any>) {
+    if (event.source !== (this.$refs.iframe as HTMLIFrameElement)?.contentWindow) return;
 
-      if (event.data.name === "ready") {
-        this.sendValue();
-      }
+    if (event.data.name === "ready") {
+      this.sendValue();
+    }
 
-      if (event.data.name === "changeHeight" && typeof event.data?.payload === "number") {
-        this.requestedHeight = event.data.payload;
-      }
-    });
+    if (event.data.name === "changeHeight" && typeof event.data?.payload === "number") {
+      this.requestedHeight = event.data.payload;
+    }
+  }
+
+  private created() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    window.addEventListener("message", this.iframeEventHandler);
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  private destroyed() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    window.removeEventListener("message", this.iframeEventHandler);
+    /* eslint-enable @typescript-eslint/unbound-method */
   }
 
   private sendMessage(message: MessageToIframe) {
