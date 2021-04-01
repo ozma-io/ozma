@@ -4,6 +4,7 @@ declare const __API_AUTH_URL_BASE__: string | undefined;
 declare const __AUTH_CLIENT_ID__: string | undefined;
 declare const __DISABLE_AUTH__: boolean;
 declare const __DEVELOPMENT_MODE__: boolean;
+declare const __READ_ONLY_INSTANCE_NAME__: string | undefined;
 
 declare module "v-click-outside" {
   const vClickOutside: any;
