@@ -4,14 +4,23 @@ import { IViewExprResult } from "ozma-api";
 import { IRef, convertString, waitTimeout } from "@/utils";
 import { funappSchema, default as Api } from "@/api";
 import { CancelledError } from "@/modules";
+import { loadColorVariants, loadThemes, NamedColorVariant, getPreferredTheme } from "@/utils_colors";
 
 const errorKey = "settings";
 
 export class CurrentSettings {
   settings: Record<string, string>;
+  themes: string[];
+  colorVariants: NamedColorVariant[];
 
-  constructor(settings: Record<string, string>) {
+  constructor(
+    settings: Record<string, string>,
+    themes: string[] = [],
+    colorVariants: NamedColorVariant[] = [],
+  ) {
     this.settings = settings;
+    this.themes = themes;
+    this.colorVariants = colorVariants;
   }
 
   getEntry<T>(name: string, constructor: (_: string) => T, defValue: T): T {
@@ -27,6 +36,7 @@ export class CurrentSettings {
 export interface ISettingsState {
   current: CurrentSettings;
   pending: Promise<CurrentSettings> | null;
+  currentTheme: string;
 }
 
 const settingsModule: Module<ISettingsState, {}> = {
@@ -34,6 +44,7 @@ const settingsModule: Module<ISettingsState, {}> = {
   state: {
     current: new CurrentSettings({}),
     pending: null,
+    currentTheme: "light",
   },
   mutations: {
     setSettings: (state, settings: CurrentSettings) => {
@@ -46,6 +57,9 @@ const settingsModule: Module<ISettingsState, {}> = {
     clearSettings: state => {
       state.current = new CurrentSettings({});
       state.pending = null;
+    },
+    setTheme: (state, theme: string) => {
+      state.currentTheme = theme;
     },
   },
   actions: {
@@ -61,7 +75,10 @@ const settingsModule: Module<ISettingsState, {}> = {
         await dispatch("getSettings");
       },
     },
-
+    setTheme: ({ commit }, theme: string) => {
+      localStorage.setItem("preferredTheme", theme);
+      commit("setTheme", theme);
+    },
     setError: ({ commit }, error: string) => {
       commit("errors/setError", { key: errorKey, error }, { root: true });
       commit("setPending", null);
@@ -90,9 +107,14 @@ const settingsModule: Module<ISettingsState, {}> = {
             const value = row.values[1].value;
             return [key, value];
           }));
-          const settings = new CurrentSettings(values);
+          const themes = await loadThemes();
+          const colorVariants = await loadColorVariants();
+          const currentTheme = getPreferredTheme(themes);
+          const settings = new CurrentSettings(values, themes, colorVariants);
           commit("setSettings", settings);
+          commit("setTheme", currentTheme);
           commit("errors/resetErrors", errorKey, { root: true });
+
           return settings;
         } catch (e) {
           if (state.pending === pending.ref) {

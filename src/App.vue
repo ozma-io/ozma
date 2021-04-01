@@ -54,7 +54,7 @@ import { CurrentSettings } from "@/state/settings";
 import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import FabCluster from "@/components/FabCluster/FabCluster.vue";
 import { ErrorKey } from "@/state/errors";
-import { getColorVariables, loadColorVariants } from "@/utils_colors";
+import { getColorVariables } from "@/utils_colors";
 import { eventBus } from "@/main";
 import { isReadonlyDemoInstance } from "@/api";
 
@@ -75,9 +75,11 @@ const staging = namespace("staging");
 } })
 export default class App extends Vue {
   @settings.State("current") settings!: CurrentSettings;
+  @settings.State("currentTheme") currentTheme!: string;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
+
   private colorVariables: any = null;
 
   created() {
@@ -131,11 +133,22 @@ export default class App extends Vue {
     const rawAutoSaveTimeout = Number(this.settings.getEntry("auto_save_timeout", String, "3"));
     const autoSaveTimeout = Number.isNaN(rawAutoSaveTimeout) ? null : rawAutoSaveTimeout * 1000;
     this.setAutoSaveTimeout(autoSaveTimeout);
-    void this.loadColors();
+
+    const html = document.querySelector("html");
+    if (html) {
+      // `rem` in CSS is calculated only from `font-size` on `<html>`.
+      html.style.fontSize = `${this.fontSize}px`;
+    }
+
+    this.loadColors();
   }
 
-  private async loadColors() {
-    const colorVariants = await loadColorVariants();
+  @Watch("currentTheme", { immediate: true })
+  private loadColors() {
+    const lightColorVariants = this.settings.colorVariants.filter(variant => variant.theme === "light");
+    const colorVariants = this.currentTheme !== "light"
+      ? this.settings.colorVariants.filter(variant => variant.theme === this.currentTheme)
+      : [];
     // TODO: genenrating variables for each component is not the best solution, would be cool to fix this.
     const componentsNames = [
       "table",
@@ -148,20 +161,26 @@ export default class App extends Vue {
       "kanbanCard",
       "interface",
       "refernece",
+      "button",
     ];
 
     const background = this.styleSettings["--OldMainBackgroundColor"];
     const foreground = this.styleSettings["--OldMainTextColor"];
     const border = this.styleSettings["--OldMainBorderColor"];
     const defaultVariant = getColorVariables("default", { background, foreground, border });
+    // I want borderless menuEntries by default, but they are using button variant. Probably TODO borderless buttons.
+    const menuEntryVariant = getColorVariables("menuEntry", {
+      background,
+      border: background,
+    });
 
     this.colorVariables = R.mergeAll([
       defaultVariant,
       ...componentsNames.map(componentName => getColorVariables(componentName, "default")),
+      menuEntryVariant,
+      ...lightColorVariants.map((variant: any) => getColorVariables(variant.name, variant)),
       ...colorVariants.map((variant: any) => getColorVariables(variant.name, variant)),
     ]);
-
-    return Promise.resolve();
   }
 
   private get fontSize(): number {
@@ -255,7 +274,7 @@ export default class App extends Vue {
     --MainBackgroundColor: var(--default-backgroundColor, var(--OldMainBackgroundColor)) !important;
     --MainBorderColor: var(--default-borderColor, var(--OldMainBorderColor)) !important;
 
-    background-color: var(--default-backgroundColor, var(--MainBackgroundColor));
-    color: var(--default-foregroundColor, var(--MainTextColor));
+    background-color: var(--default-backgroundColor);
+    color: var(--default-foregroundColor);
   }
 </style>

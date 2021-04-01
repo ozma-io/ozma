@@ -18,17 +18,18 @@
     <div class="d-flex align-items-center pl-1">
       <b-button
         variant="light"
-        class="btn-sm lh-0-5 p-0-5"
+        class="button-only-icon"
         @click="$router.go(-1)"
       >
         <span class="material-icons">arrow_back</span>
       </b-button>
       <router-link
         :to="{ name: 'main' }"
+        class="text-decoration-none"
       >
         <b-button
           variant="light"
-          class="btn-sm lh-0-5 p-0-5"
+          class="button-only-icon"
         >
           <span class="material-icons">home</span>
         </b-button>

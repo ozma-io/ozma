@@ -4,20 +4,26 @@
       'd-flex align-items-center',
       {
         'flex-wrap': wrapButtons,
-      }
+      },
     ]"
   >
     <template v-for="(button, i) in buttons">
       <ButtonGroup
         v-if="button.type === 'button-group' && button.buttons.length > 0"
         :key="i"
+        class="button-group"
         :button="button"
         @goto="$emit('goto', $event)"
       />
       <ButtonItem
         v-else
         :key="i"
-        class="text-decoration-none mr-1"
+        :class="[
+          'button-item text-decoration-none',
+          {
+            'flex-grow-1': button.name,
+          },
+        ]"
         :button="button"
         @goto="$emit('goto', $event)"
       />
@@ -48,3 +54,10 @@ export default class ButtonsPanel extends Vue {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+  .button-group,
+  .button-item {
+    margin: 0.1rem;
+  }
+</style>

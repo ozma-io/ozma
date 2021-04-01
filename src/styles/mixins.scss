@@ -1,27 +1,38 @@
 @mixin material-button($variant: "default") {
   transition: background 0.1s;
-  border-radius: 4px;
   cursor: pointer;
-  color: var(--#{$variant}-foregroundColor, var(--MainTextColor));
+  background-color: var(--#{$variant}-backgroundColor);
+  border: 1px solid var(--#{$variant}-borderColor);
+  color: var(--#{$variant}-foregroundColor);
 
+  &:focus:not(.disabled),
   &:hover:not(.disabled) {
-    background-color: var(--#{$variant}-backgroundDarker1Color, #efefef);
-    color: var(--#{$variant}-foregroundContrastColor, var(--MainTextColor));
-
-    /* `outline` works wrong for <a> tags at least on Firefox */
-    box-shadow: 0 0 0 2px var(--#{$variant}-backgroundDarker1Color, #efefef);
+    background-color: var(--#{$variant}-backgroundDarker1Color) !important;
+    border-color: var(--#{$variant}-borderColor) !important;
+    color: var(--#{$variant}-foregroundContrastColor) !important;
     transition: background 0s;
   }
 
+  &:focus:not(.disabled) {
+    box-shadow: 0 0 0 0.2rem var(--#{$variant}-foregroundDarkerColor) !important;
+  }
+
   &:active:not(.disabled) {
-    background-color: var(--#{$variant}-backgroundDarker2Color, #bcbcbc);
-    box-shadow: 0 0 0 2px var(--#{$variant}-backgroundDarker2Color, #bcbcbc);
+    background-color: var(--#{$variant}-backgroundDarker2Color) !important;
+    border-color: var(--#{$variant}-borderColor) !important;
+    color: var(--#{$variant}-foregroundContrastColor);
     transition: background 0s;
   }
 
   &.disabled {
     cursor: default;
-    color: var(--#{$variant}-foregroundDarkerColor, var(--MainTextColorLight));
+    color: var(--#{$variant}-foregroundDarkerColor);
     opacity: 0.7;
   }
+}
+
+@mixin common-variant($name) {
+  background-color: var(--#{$name}-backgroundColor);
+  color: var(--#{$name}-foregroundColor);
+  border-color: var(--#{$name}-borderColor);
 }

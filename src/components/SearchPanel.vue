@@ -60,7 +60,7 @@
     </transition>
     <b-button
       v-if="showOpenButton"
-      class="btn-sm lh-0-5 p-0-5"
+      class="button-only-icon"
       variant="light"
       @click.prevent="toggleShowInput"
     >

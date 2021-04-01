@@ -119,11 +119,11 @@ export default class Phenom extends Vue {
 
     .username {
       font-weight: bold;
-      color: var(--default-foregroundColor, var(--MainTextColor));
+      color: var(--default-foregroundColor);
     }
 
     .datetime {
-      color: var(--default-foregroundDarkerColor, var(--MainTextColorLight));
+      color: var(--default-foregroundDarkerColor);
       font-size: 0.8rem;
     }
 
@@ -134,7 +134,7 @@ export default class Phenom extends Vue {
     .message-text {
       margin-top: 0.25rem;
       padding: 0.25rem 0.5rem;
-      background-color: var(--default-backgroundColor, var(--MainBackgroundColor));
+      background-color: var(--default-backgroundColor);
       white-space: pre-wrap;
       overflow-wrap: break-word;
     }

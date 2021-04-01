@@ -74,7 +74,7 @@
           ]"
           :style="[
             {
-              backgroundColor: backgroundColor ? backgroundColor : 'var(--input-backgroundColor, var(--MainBackgroundColor))',
+              backgroundColor: backgroundColor ? backgroundColor : 'var(--input-backgroundColor)',
             },
             colorVariables,
           ]"
@@ -179,7 +179,7 @@ export default class InputSlot extends Vue {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: pre;
-    color: var(--form-foregroundDarkenColor, var(--MainTextColorLight));
+    color: var(--form-foregroundDarkenColor);
   }
 
   .input_container_cell-edit {
@@ -231,7 +231,7 @@ export default class InputSlot extends Vue {
     position: relative;
     top: 40%;
     padding: 0 5%;
-    background-color: var(--table-backgroundColor, var(--MainBackgroundColor));
+    background-color: var(--table-backgroundColor);
   }
 
   .input_modal__button__ok,

@@ -1,9 +1,10 @@
 <template>
   <popper
+    ref="popup"
     trigger="clickToToggle"
     :visible-arrow="false"
     :options="{
-      placement: listItem && !$isMobile ? 'left-start' : 'bottom-end',
+      placement: (listItem && !$isMobile) ? 'left-start' : 'bottom-end',
       modifiers: {
         offset: { offset: '0, 0' },
         // Nested poppers cannot appear outside the parent element if overflow is enabled.
@@ -23,6 +24,7 @@
             :button="button"
             list-item
             @goto="$emit('goto', $event)"
+            @button-click="onClick"
           />
           <ButtonItem
             v-else
@@ -30,7 +32,9 @@
             class="d-flex text-decoration-none"
             :button="button"
             list-item
+            :list-item-has-right-margin="someButtonHasIcon"
             @goto="$emit('goto', $event)"
+            @button-click="onClick"
           />
         </template>
       </b-list-group>
@@ -47,9 +51,8 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 
-import type { Button } from "@/components/buttons/buttons";
+import type { IButtonGroup } from "@/components/buttons/buttons";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
-import ButtonContent from "@/components/buttons/ButtonContent.vue";
 import ButtonView from "@/components/buttons/ButtonView.vue";
 
 import Popper from "vue-popperjs";
@@ -57,21 +60,40 @@ import Popper from "vue-popperjs";
 @Component({
   components: {
     ButtonItem,
-    ButtonContent,
     ButtonView,
     Popper,
   },
 })
 export default class ButtonsPanel extends Vue {
-  @Prop({ type: Object, required: true }) button!: Button;
+  @Prop({ type: Object, required: true }) button!: IButtonGroup;
   @Prop({ type: Boolean, default: false }) listItem!: boolean;
+
+  private async closeGroup() {
+    const popupRef: any = this.$refs.popup;
+    if (!popupRef) return;
+
+    await popupRef.doClose();
+  }
+
+  private onClick() {
+    this.$emit("button-click");
+
+    void this.closeGroup();
+  }
+
+  private get someButtonHasIcon() {
+    return this.button.buttons.some(button => button.icon);
+  }
 }
 </script>
 
 <style lang="scss" scoped>
+  .popper {
+    border: none;
+  }
 
   .list-group {
-    max-height: 20rem;
+    max-height: 60vh;
     overflow-y: auto;
   }
 

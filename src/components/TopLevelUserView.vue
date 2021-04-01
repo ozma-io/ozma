@@ -6,6 +6,7 @@
             "loading": "Now loading",
             "save": "Save",
             "account": "Account",
+            "theme": "Theme",
             "login": "Login",
             "logout": "Logout",
             "auth_error": "Authentication error: {msg}",
@@ -23,6 +24,7 @@
             "loading": "Загрузка данных",
             "save": "Сохранить",
             "account": "Профиль",
+            "theme": "Тема",
             "login": "Войти",
             "logout": "Выйти",
             "auth_error": "Ошибка авторизации: {msg}",
@@ -67,18 +69,19 @@
           <b-button
             v-if="!isMainView"
             variant="light"
-            class="btn-sm lh-0-5 p-0-5"
+            class="button-only-icon mr-1"
             @click="$router.go(-1)"
           >
             <span class="material-icons">arrow_back</span>
           </b-button>
           <router-link
             v-if="!isMainView"
+            class="text-decoration-none"
             :to="{ name: 'main' }"
           >
             <b-button
               variant="light"
-              class="btn-sm lh-0-5 p-0-5"
+              class="button-only-icon mr-1"
             >
               <span class="material-icons">home</span>
             </b-button>
@@ -184,6 +187,7 @@ import { convertToWords, nextRender } from "@/utils";
 import { Link } from "@/links";
 import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
+import { CurrentSettings } from "@/state/settings";
 
 const auth = namespace("auth");
 const staging = namespace("staging");
@@ -214,6 +218,9 @@ export default class TopLevelUserView extends Vue {
   @query.Action("pushWindow") pushWindow!: (_: { index: number; query: IQuery }) => Promise<void>;
   @errors.Mutation("removeError") removeError!: (params: { key: ErrorKey; index: number }) => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
+  @settings.State("current") currentSettings!: CurrentSettings;
+  @settings.State("currentTheme") currentTheme!: string;
+  @settings.Action("setTheme") setTheme!: (theme: string) => Promise<void>;
 
   private statusLine = "";
   private enableFilter = false;
@@ -222,6 +229,7 @@ export default class TopLevelUserView extends Vue {
   private isUserViewLoading = false;
 
   private buttons: Button[] = [];
+  private themeButtons: Button[] = [];
 
   private wasOpenedQRCodeScanner = false;
   private isOpenQRCodeScanner = false;
@@ -240,6 +248,14 @@ export default class TopLevelUserView extends Vue {
 
     // eslint-disable-next-line @typescript-eslint/unbound-method
     document.addEventListener("keydown", this.onKeydown);
+
+    void this.loadThemeButtons();
+  }
+
+  @Watch("currentSettings")
+  private loadThemeButtons() {
+    const themes = this.currentSettings.themes;
+    this.themeButtons = themes.map(theme => ({ caption: theme, type: "callback", callback: () => this.setTheme(theme) }));
   }
 
   private onKeydown(event: KeyboardEvent) {
@@ -343,6 +359,9 @@ export default class TopLevelUserView extends Vue {
   get burgerButton() {
     const buttons: Button[] = [];
     if (this.currentAuth?.token) {
+      if (this.themeButtons.length > 0) {
+        buttons.push({ icon: "palette", caption: this.$t("theme").toString(), type: "button-group", buttons: this.themeButtons });
+      }
       if (Api.developmentMode) {
         const currentAuth = this.currentAuth;
         buttons.push({ icon: "link",
@@ -431,9 +450,9 @@ export default class TopLevelUserView extends Vue {
   .head-menu {
     display: flex;
     white-space: nowrap;
-    background-color: var(--interface-backgroundColor, var(--MainBackgroundColor));
-    color: var(--interface-foregroundColor, var(--MainTextColor));
-    border-bottom: 1px solid var(--interface-borderColor, var(--MainBorderColor));
+    background-color: var(--interface-backgroundColor);
+    color: var(--interface-foregroundColor);
+    border-bottom: 1px solid var(--interface-borderColor);
     width: 100%;
     padding: 2px 10px;
     z-index: 999;
@@ -485,24 +504,16 @@ export default class TopLevelUserView extends Vue {
     text-align: right;
     margin-left: -1px !important;
     position: relative;
-    background-color: var(--interface-backgroundColor, var(--MainBackgroundColor)) !important;
-    color: var(--interface-foregroundColor, var(--MainTextColor));
-    border-top: 1px solid var(--interface-borderColor, var(--MainBorderColor));
+    background-color: var(--interface-backgroundColor) !important;
+    color: var(--interface-foregroundColor);
+    border-top: 1px solid var(--interface-borderColor);
     z-index: 500; /* низ страницы */
     display: -webkit-box;
     display: -ms-flexbox;
     display: flex;
-    -webkit-box-orient: horizontal;
-    -webkit-box-direction: normal;
-    -ms-flex-direction: row;
     flex-direction: row;
-    -ms-flex-wrap: nowrap;
     flex-wrap: nowrap;
-    -webkit-box-align: center;
-    -ms-flex-align: center;
     align-items: center;
-    -webkit-box-pack: justify;
-    -ms-flex-pack: justify;
     justify-content: space-between;
   }
 
@@ -519,26 +530,6 @@ export default class TopLevelUserView extends Vue {
 
   .custom-warning {
     float: right;
-  }
-
-  .custom-danger {
-    background-color: var(--FailColor);
-    float: left;
-    overflow-x: auto;
-    overflow-y: hidden;
-    width: 100%;
-    text-align: left;
-    display: flex !important;
-    align-items: center;
-    height: 100%;
-    color: var(--StateTextColor);
-    padding-left: 15px !important;
-    margin-right: 15px !important;
-    border-radius: 3px !important;
-  }
-
-  .custom-success {
-    background-color: var(--SuccessBackColor);
   }
 
   .error {

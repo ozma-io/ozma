@@ -15,7 +15,7 @@
     @click.stop="$emit('cell-click', columnPosition, $refs.cell)"
   >
     <p>
-      <template v-if="column.type == 'buttons' && buttons.length > 0">
+      <template v-if="column.type == 'buttons'">
         <ButtonsPanel
           :buttons="buttons"
           @goto="$emit('goto', $event)"
@@ -163,15 +163,13 @@ export default class TableCell extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  @import "../../../styles/mixins.scss";
-
   .selectable {
     position: relative;
     float: left;
     padding: 0 5px;
-    background-color: var(--reference-backgroundColor, var(--MainBackgroundColor));
-    border: 1px solid var(--reference-backgroundDarker1Color, var(--MainBorderColor));
-    color: var(--reference-foregroundColor, var(MainTextColor));
+    background-color: var(--reference-backgroundColor);
+    border: 1px solid var(--reference-backgroundDarker1Color);
+    color: var(--reference-foregroundColor);
     border-radius: 0.6rem;
     max-width: 100%;
     word-wrap: break-word;
@@ -297,13 +295,13 @@ export default class TableCell extends Vue {
     padding-left: 20px;
     display: block;
     white-space: normal;
-    line-height: 1rem;
+    line-height: 1.2rem;
   }
 
   .cell-text {
     overflow: hidden;
     white-space: break-spaces;
-    line-height: 1rem;
+    line-height: 1.2rem;
   }
 
   .cell-text.tree {
@@ -319,4 +317,12 @@ export default class TableCell extends Vue {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+
+  /* Why do we need this now... */
+  @media screen and (max-width: 1020px) {
+    .fixed-column {
+      left: 0 !important;
+    }
+  }
+
 </style>

@@ -148,7 +148,7 @@ export default class KanbanColumn extends Vue {
     width: 100%;
     display: flex;
     align-items: center;
-    color: var(--kanban-foregroundColor, var(--MainTextColor));
+    color: var(--kanban-foregroundColor);
   }
 
   .column_header__title {

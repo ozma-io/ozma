@@ -38,7 +38,7 @@
             'icon',
             {
               'no-icon': !entry.icon,
-              'emoji': getIconType(entry.icon) === 'emoji',
+              'emoji-icon': getIconType(entry.icon) === 'emoji',
             }]"
         >
           {{ entry.icon || "chevron_right" }}
@@ -130,8 +130,6 @@ export default class MenuEntry extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  @import "../../../styles/mixins.scss";
-
   .menu_category_block {
     margin-top: 10px;
     margin-bottom: 40px;
@@ -166,20 +164,20 @@ export default class MenuEntry extends Vue {
     max-width: 100%;
     display: flex;
     align-items: center;
-    color: var(--menuEntry-foregroundColor, var(--MainTextColor));
+    color: var(--menuEntry-foregroundColor);
     margin-bottom: 5px;
     text-decoration: none;
     background-color: var(--menuEntry-backgroundColor, transparent);
-    border-color: var(--menuEntry-borderColor, var(--MainBorderColor));
+    border-color: var(--menuEntry-borderColor);
 
     .icon {
       user-select: none;
 
       &.no-icon {
-        color: var(--menuEntry-foregroundDarkerColor, var(--MainBorderColor));
+        color: var(--menuEntry-foregroundDarkerColor);
       }
 
-      &.emoji {
+      &.emoji-icon {
         font-family: initial;
       }
     }
