@@ -54,7 +54,7 @@ import { CurrentSettings } from "@/state/settings";
 import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import FabCluster from "@/components/FabCluster/FabCluster.vue";
 import { ErrorKey } from "@/state/errors";
-import { getColorVariables, loadColorVariants } from "@/utils_colors";
+import { getColorVariables } from "@/utils_colors";
 import { eventBus } from "@/main";
 import { isReadonlyDemoInstance } from "@/api";
 
