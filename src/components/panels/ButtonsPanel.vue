@@ -21,7 +21,7 @@
         :class="[
           'button-item text-decoration-none',
           {
-            'flex-grow-1': button.name,
+            'flex-grow-1': button.caption,
           },
         ]"
         :button="button"
