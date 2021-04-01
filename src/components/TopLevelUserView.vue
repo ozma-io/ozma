@@ -346,17 +346,17 @@ export default class TopLevelUserView extends Vue {
       if (Api.developmentMode) {
         const currentAuth = this.currentAuth;
         buttons.push({ icon: "link",
-          name: this.$t("authed_link").toString(),
+          caption: this.$t("authed_link").toString(),
           callback: () => {
             const link = getAuthedLink(currentAuth);
             void navigator.clipboard.writeText(link);
           },
           type: "callback" });
       }
-      buttons.push({ icon: "perm_identity", name: this.$t("account").toString(), type: "link", link: { href: Api.accountUrl, type: "href" } });
-      buttons.push({ icon: "exit_to_app", name: this.$t("logout").toString(), type: "callback", callback: this.logout });
+      buttons.push({ icon: "perm_identity", caption: this.$t("account").toString(), type: "link", link: { href: Api.accountUrl, type: "href" } });
+      buttons.push({ icon: "exit_to_app", caption: this.$t("logout").toString(), type: "callback", callback: this.logout });
     } else {
-      buttons.push({ icon: "login", name: this.$t("login").toString(), type: "callback", callback: this.login });
+      buttons.push({ icon: "login", caption: this.$t("login").toString(), type: "callback", callback: this.login });
     }
 
     const burgerButton: Button = {

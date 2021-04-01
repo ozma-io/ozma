@@ -7,10 +7,10 @@
       class="material-icons"
     >arrow_right</span>
 
-    <span v-if="button.name" :class="[listItem ? 'mx-2' : 'mx-1  text-nowrap']">{{ button.name }}</span>
+    <span v-if="button.caption" :class="[listItem ? 'mx-2' : 'mx-1  text-nowrap']">{{ button.caption }}</span>
     <span v-else-if="listItem" :class="[listItem ? 'mx-2' : 'mx-1  text-nowrap']">{{ button.tooltip }}</span>
 
-    <span v-if="button.name && button.type == 'button-group'" class="material-icons">arrow_drop_down</span>
+    <span v-if="button.caption && button.type == 'button-group'" class="material-icons">arrow_drop_down</span>
   </fragment>
 </template>
 
