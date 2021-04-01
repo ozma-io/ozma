@@ -53,8 +53,6 @@ import { namespace } from "vuex-class";
 import { CurrentSettings } from "@/state/settings";
 import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import FabCluster from "@/components/FabCluster/FabCluster.vue";
-import AlertBanner from "@/components/AlertBanner.vue";
-import ReadonlyDemoInstanceModal from "@/components/ReadonlyDemoInstanceModal.vue";
 import { ErrorKey } from "@/state/errors";
 import { getColorVariables, loadColorVariants } from "@/utils_colors";
 import { eventBus } from "@/main";
@@ -65,7 +63,16 @@ const auth = namespace("auth");
 const errors = namespace("errors");
 const staging = namespace("staging");
 
-@Component({ components: { ModalPortalTarget, FabCluster, AlertBanner, ReadonlyDemoInstanceModal } })
+@Component({ components: {
+  ModalPortalTarget,
+  FabCluster,
+  AlertBanner: () => ({
+    component: import("@/components/AlertBanner.vue") as any,
+  }),
+  ReadonlyDemoInstanceModal: () => ({
+    component: import("@/components/ReadonlyDemoInstanceModal.vue") as any,
+  }),
+} })
 export default class App extends Vue {
   @settings.State("current") settings!: CurrentSettings;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
@@ -116,7 +123,7 @@ export default class App extends Vue {
   }
 
   private showDemoModal() {
-    (this.$refs.readonlyDemoInstanceModal as ReadonlyDemoInstanceModal).show();
+    (this.$refs?.readonlyDemoInstanceModal as any)?.show();
   }
 
   @Watch("settings")
