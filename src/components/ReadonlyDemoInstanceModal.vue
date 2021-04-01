@@ -1,5 +1,6 @@
 <template>
   <VueModal
+    adaptive
     :min-width="300"
     :min-height="200"
     height="auto"
@@ -56,6 +57,10 @@ export default class ReadonlyDemoInstanceModal extends Vue {
   }
 
   ::v-deep {
+    .v--modal-box {
+      max-height: 80% !important;
+    }
+
     .modal-enter-active,
     .modal-leave-active {
       transition: all 0.8s cubic-bezier(0.68, -0.55, 0.26, 1.55);
@@ -78,6 +83,7 @@ export default class ReadonlyDemoInstanceModal extends Vue {
     display: flex;
     flex-flow: column;
     align-items: center;
+    overflow-y: auto;
   }
 
   .demo-icon {

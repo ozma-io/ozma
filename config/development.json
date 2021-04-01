@@ -1,4 +1,4 @@
-{
+ {
   "__API_URL__": "'https://dev.api-dev.ozma-dev.org'",
   "__API_AUTH_URL__": "'https://account-dev.ozma.io'",
   "__API_AUTH_URL_BASE__": "'/auth/realms/default'",

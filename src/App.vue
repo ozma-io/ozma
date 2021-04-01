@@ -22,12 +22,12 @@
     />
 
     <ModalPortalTarget
-      v-if="isReadonlyDemoInstance"
       name="tabbed-modal"
       multiple
     />
 
     <ReadonlyDemoInstanceModal
+      v-if="isReadonlyDemoInstance"
       ref="readonlyDemoInstanceModal"
     />
 
