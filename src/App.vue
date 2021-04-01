@@ -160,7 +160,7 @@ export default class App extends Vue {
       "kanban",
       "kanbanCard",
       "interface",
-      "refernece",
+      "reference",
       "button",
     ];
 

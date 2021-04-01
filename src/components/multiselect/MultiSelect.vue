@@ -753,7 +753,7 @@ export default class MultiSelect extends Vue {
     cursor: pointer !important;
     color: var(--reference-foregroundColor) !important;
     background-color: var(--reference-backgroundDarker1Color) !important;
-    border: 1px solid var(--reference-backgroundDarker2Color) !important;
+    border: 1px solid var(--reference-borderColor) !important;
   }
 
   div.select-container__options__actions {
@@ -772,7 +772,7 @@ export default class MultiSelect extends Vue {
   .single-value {
     display: inline-flex;
     align-items: center;
-    border: 1px solid var(--reference-backgroundDarker1Color);
+    border: 1px solid var(--reference-borderColor);
     background-color: var(--reference-backgroundColor);
     color: var(--reference-foregroundColor);
     border-radius: 1rem;
