@@ -139,6 +139,7 @@ const types: RecordSet<string> = {
   "multi_select": null,
   "board": null,
   "timeline": null,
+  "iframe": null,
 };
 
 const components = Object.fromEntries(Object.keys(types).map(name => {

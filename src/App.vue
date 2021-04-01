@@ -20,10 +20,17 @@
       :color-variables="bannerColorVariables"
       @banner-close="onBannerClose"
     />
+
     <ModalPortalTarget
       name="tabbed-modal"
       multiple
     />
+
+    <ReadonlyDemoInstanceModal
+      v-if="isReadonlyDemoInstance"
+      ref="readonlyDemoInstanceModal"
+    />
+
     <template v-if="authErrors.length > 0">
       <span
         v-for="error in authErrors"
@@ -33,6 +40,7 @@
       </span>
     </template>
     <router-view v-else />
+
     <FabCluster />
   </div>
 </template>
@@ -41,19 +49,30 @@
 import R from "ramda";
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
+
 import { CurrentSettings } from "@/state/settings";
 import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import FabCluster from "@/components/FabCluster/FabCluster.vue";
-import AlertBanner from "@/components/AlertBanner.vue";
 import { ErrorKey } from "@/state/errors";
-import { getColorVariables } from "@/utils_colors";
+import { getColorVariables, loadColorVariants } from "@/utils_colors";
+import { eventBus } from "@/main";
+import { isReadonlyDemoInstance } from "@/api";
 
 const settings = namespace("settings");
 const auth = namespace("auth");
 const errors = namespace("errors");
 const staging = namespace("staging");
 
-@Component({ components: { ModalPortalTarget, FabCluster, AlertBanner } })
+@Component({ components: {
+  ModalPortalTarget,
+  FabCluster,
+  AlertBanner: () => ({
+    component: import("@/components/AlertBanner.vue") as any,
+  }),
+  ReadonlyDemoInstanceModal: () => ({
+    component: import("@/components/ReadonlyDemoInstanceModal.vue") as any,
+  }),
+} })
 export default class App extends Vue {
   @settings.State("current") settings!: CurrentSettings;
   @settings.State("currentTheme") currentTheme!: string;
@@ -70,6 +89,8 @@ export default class App extends Vue {
     document.addEventListener("copy", this.onCopy);
     document.addEventListener("cut", this.onCut);
     document.addEventListener("paste", this.onPaste);
+
+    eventBus.on("showReadonlyDemoModal", this.showDemoModal);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
@@ -78,6 +99,8 @@ export default class App extends Vue {
     document.removeEventListener("copy", this.onCopy);
     document.removeEventListener("cut", this.onCut);
     document.removeEventListener("paste", this.onPaste);
+
+    eventBus.off("showReadonlyDemoModal", this.showDemoModal);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
@@ -93,8 +116,16 @@ export default class App extends Vue {
     this.$root.$emit("paste", event);
   }
 
+  private get isReadonlyDemoInstance() {
+    return isReadonlyDemoInstance;
+  }
+
   get authErrors() {
     return this.rawErrors["auth"] || [];
+  }
+
+  private showDemoModal() {
+    (this.$refs?.readonlyDemoInstanceModal as any)?.show();
   }
 
   @Watch("settings")
@@ -105,6 +136,7 @@ export default class App extends Vue {
 
     const html = document.querySelector("html");
     if (html) {
+      // `rem` in CSS is calculated only from `font-size` on `<html>`.
       html.style.fontSize = `${this.fontSize}px`;
     }
 

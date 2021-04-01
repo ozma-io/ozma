@@ -12,8 +12,9 @@
       top: `${coords.y}px`,
       left: `${coords.x}px`,
       height: height ? `${height}px` : 'auto',
+      '--editor-height': height ? `${height}px` : 'auto',
       minHeight: minHeight ? `${minHeight}px` : 'auto',
-      width: width ? `${width}px` : '200px'
+      width: width ? `${width}px` : '200px',
     }"
   >
     <slot />

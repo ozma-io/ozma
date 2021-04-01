@@ -15,6 +15,8 @@ import { IAttrToQueryOpts } from "@/state/query";
 
 import { attrToLink } from "@/links";
 import { emptyUserViewHandlerFunctions } from "@/user_views/trivial";
+import { eventBus } from "@/main";
+import { isReadonlyDemoInstance } from "@/api";
 
 export interface ISelectionRef {
   entity: IEntityRef;
@@ -316,6 +318,11 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
   }
 
   async updateValue(ref: ValueRef, rawValue: unknown): Promise<ValueRef> {
+    if (isReadonlyDemoInstance) {
+      eventBus.emit("showReadonlyDemoModal");
+      return ref;
+    }
+
     const value = this.uv.getValueByRef(ref)!;
     if (ref.type === "added") {
       // FIXME: throws error `updateInfo is undefined` when user tries to edit disabled cell.

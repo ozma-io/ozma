@@ -36,6 +36,7 @@
       v-click-outside="clickOutsideEdit"
       :width="editParams.width"
       :min-height="editParams.minHeight"
+      :height="editParams.height"
       :is-last-fixed-cell="isSelectedLastFixedCell"
       :coords="editCoords"
     >
@@ -426,6 +427,10 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
   const fixedPosition = uv.extra.fixedColumnPositions[columnIndex];
   if (fixedPosition !== undefined) {
     style["left"] = fixedPosition;
+  }
+
+  if (getCellAttr("text_type") === "codeeditor") {
+    style["font-family"] = "monospace";
   }
 
   const colorVariant = getCellAttr("cell_variant");

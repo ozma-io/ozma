@@ -1,6 +1,6 @@
 <template>
   <tr
-    :style="[row.extra.style, row.extra.colorVariables]"
+    :style="[row.extra.style, row.extra.colorVariables, style]"
     :class="['table-tr',
              row.extra.selected ? 'selected' : 'none_selected']"
   >
@@ -83,6 +83,12 @@ export default class TableRow extends Vue {
   get lastFixedColumnIndex(): number {
     return this.uv.extra.columns.filter(item => item.fixed).length;
   }
+
+  private get style() {
+    return this.row.extra.height
+      ? { "--max-height": `${this.row.extra.height}px` }
+      : null;
+  }
 }
 </script>
 
@@ -155,7 +161,7 @@ export default class TableRow extends Vue {
 
   td ::v-deep p,
   td ::v-deep a {
-    max-height: 154px;
+    max-height: var(--max-height, 10rem);
     overflow-y: auto;
   }
 
