@@ -15,11 +15,21 @@
     />
   </router-link>
 
+  <span
+    v-else-if="button.type === 'link' && button.link.type === 'action' && isReadonlyDemoInstance"
+    @click="onClickLinkReadonlyDemoInstance"
+  >
+    <ButtonView
+      :button="button"
+      :list-item="listItem"
+      :phantom-icon="listItemHasRightMargin"
+    />
+  </span>
   <FunLink
     v-else-if="button.type === 'link'"
     :link="button.link"
     @goto="$emit('goto', $event)"
-    @click="onClick"
+    @click="onClickLink"
   >
     <ButtonView
       :button="button"
@@ -30,7 +40,7 @@
 
   <span
     v-else-if="button.type === 'callback'"
-    @click="onClick"
+    @click="onClickCallback"
   >
     <ButtonView
       :button="button"
@@ -62,6 +72,8 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 
 import ButtonView from "@/components/buttons/ButtonView.vue";
 import type { Button } from "@/components/buttons/buttons";
+import { isReadonlyDemoInstance } from "@/api";
+import { eventBus } from "@/main";
 
 @Component({
   components: {
@@ -78,7 +90,19 @@ export default class ButtonItem extends Vue {
     next(files[0]);
   }
 
-  private onClick() {
+  private get isReadonlyDemoInstance() {
+    return isReadonlyDemoInstance;
+  }
+
+  private onClickLinkReadonlyDemoInstance() {
+    eventBus.emit("showReadonlyDemoModal");
+  }
+
+  private onClickLink() {
+    this.$emit("button-click");
+  }
+
+  private onClickCallback() {
     this.$emit("button-click");
 
     if (this.button.type === "callback") {

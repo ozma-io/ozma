@@ -237,6 +237,11 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
   }
 
   deleteRow(ref: RowRef) {
+    if (isReadonlyDemoInstance) {
+      eventBus.emit("showReadonlyDemoModal");
+      return;
+    }
+
     if (!this.uv.info.mainEntity) {
       throw new Error("View doesn't have a main entity");
     }
@@ -288,6 +293,11 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
   }
 
   async addNewRow(meta?: unknown): Promise<number> {
+    if (isReadonlyDemoInstance) {
+      eventBus.emit("showReadonlyDemoModal");
+      return -1;
+    }
+
     const entity = this.uv.info.mainEntity;
     if (!entity) {
       throw new Error("View doesn't have a main entity");
