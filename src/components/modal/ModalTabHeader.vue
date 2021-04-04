@@ -1,18 +1,23 @@
 <template>
   <div
-    :class="['modal__tab_header align-items-center', {'selected': isActive, 'only_tab': onlyTab}]"
+    :class="[
+      'modal__tab_header align-items-center',
+      {
+        'selected': isActive,
+        'only_tab': onlyTab,
+        'is-mobile': $isMobile,
+      }
+    ]"
     @click="$emit('tab-click')"
   >
     <slot name="header" />
-    <div>
-      <b-button
-        variant="light"
-        class="button-only-icon"
-        @click.stop="$emit('tab-close')"
-      >
-        <span class="material-icons">close</span>
-      </b-button>
-    </div>
+    <b-button
+      variant="light"
+      class="button-only-icon"
+      @click.stop="$emit('tab-close')"
+    >
+      <span class="material-icons">close</span>
+    </b-button>
   </div>
 </template>
 
@@ -37,6 +42,11 @@ export default class ModalTabHeader extends Vue {
     display: flex;
     padding: 2px;
     flex: 1 1 auto;
+    overflow-x: hidden;
+
+    &.is-mobile {
+      min-width: 80%;
+    }
   }
 
   .modal__tab_header_title {

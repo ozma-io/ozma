@@ -1,5 +1,12 @@
 <template>
-  <div class="header-panel">
+  <div
+    :class="[
+      'header-panel',
+      {
+        'is-root': isRoot,
+      },
+    ]"
+  >
     <div
       class="left-part d-flex align-items-center"
       :style="buttonVariables"
@@ -63,6 +70,7 @@ export default class HeaderPanel extends Vue {
   @Prop({ type: Object, default: null }) view!: IUserViewType;
   @Prop({ type: String, required: true }) filterString!: string;
   @Prop({ type: Boolean, default: false }) isLoading!: boolean;
+  @Prop({ type: Boolean, default: false }) isRoot!: boolean; // Is it TopLevelUserView's header or current tab of modal.
 
   get headerButtons() {
     return buttonsToPanelButtons(this.buttons);
@@ -83,15 +91,19 @@ export default class HeaderPanel extends Vue {
 
 <style lang="scss" scoped>
   .header-panel {
-    width: 100%;
+    flex-grow: 1;
     padding: 0.125rem;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: stretch;
-    background-color: var(--interface-backgroundColor);
-    color: var(--interface-foregroundColor);
-    border-bottom: 1px solid var(--interface-borderColor);
+    overflow-x: hidden;
+
+    &.is-root {
+      background-color: var(--interface-backgroundColor);
+      color: var(--interface-foregroundColor);
+      border-bottom: 1px solid var(--interface-borderColor);
+    }
   }
 
   .left-part {

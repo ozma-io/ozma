@@ -54,10 +54,6 @@
           <template #header>
             <ModalContent :nodes="tab.header" />
           </template>
-          <i
-            class="material-icons material-button rounded-circle mobile_close_button"
-            @click="$emit('close')"
-          >close</i>
         </ModalTabHeader>
       </div>
     </div>
@@ -192,6 +188,7 @@ export default class Modal extends Vue {
     width: 100%;
     display: flex;
     flex-direction: row;
+    overflow-x: hidden;
 
     &.is-mobile {
       overflow: auto;
