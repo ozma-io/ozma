@@ -36,18 +36,6 @@
           :filter-string="filterString"
           @update:filterString="$emit('update:filterString', $event)"
         />
-        <!--
-        <ButtonItem :button="fullscreenButton" />
-        <b-button
-          v-if="view !== null"
-          variant="light"
-          class="button-only-icon"
-          :style="buttonVariables"
-          @click.stop="openFullscreen()"
-        >
-          <span class="material-icons">fullscreen</span>
-        </b-button>
-        -->
       </template>
     </ButtonsPanel>
   </div>
@@ -118,7 +106,6 @@ export default class HeaderPanel extends Vue {
     overflow-x: hidden;
 
     &.is-root {
-      padding: 0 0.25rem;
       background-color: var(--interface-backgroundColor);
       color: var(--interface-foregroundColor);
       border-bottom: 1px solid var(--interface-borderColor);
@@ -132,12 +119,12 @@ export default class HeaderPanel extends Vue {
       /* Looks like it should be a padding, but due to `overflow-hidden` mechanic it must be margin,
          see https://foobartel.com/tilrs/overflow-x-and-borders */
       margin: 0.25rem;
-      margin-left: 0;
       flex-shrink: 0;
     }
   }
 
   ::v-deep .buttons-panel {
+    margin-right: 0.25rem;
     flex-shrink: 0;
   }
 
