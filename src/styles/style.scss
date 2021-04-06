@@ -200,7 +200,10 @@ button:not(.btn) {
 
 input.disabled {
   cursor: not-allowed;
-  opacity: 1; /* Fix Safari styles */
+
+  /* Fixes for Safari */
+  opacity: 1;
+  -webkit-text-fill-color: var(--input-foregroundColor);
 }
 
 input.with-clear-content-button {
