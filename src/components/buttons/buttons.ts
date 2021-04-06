@@ -9,6 +9,7 @@ export interface IButton {
   tooltip?: string;
   display?: string;
   variant?: unknown;
+  disabled?: boolean;
   colorVariables?: Record<string, string>;
 }
 
@@ -60,8 +61,16 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts): Butto
   const tooltip = typeof buttonObj.tooltip === "string" ? buttonObj.tooltip : undefined;
   const display = typeof buttonObj.display === "string" ? buttonObj.display : undefined;
   const variant = buttonObj.variant ?? undefined;
+  const variables = buttonObj.colorVariables ?? undefined;
   let colorVariables;
-  if (variant) {
+  if (typeof variables === "object"
+   && variables !== null
+   && Object.keys(variables).every(key => typeof key === "string")
+   && Object.values(variables).every(values => typeof values === "string")
+  ) {
+    colorVariables = variables as Record<string, string>;
+  }
+  if (!colorVariables && variant) {
     colorVariables = getColorVariables("button", variant);
   }
 
@@ -185,6 +194,8 @@ export const buttonsToPanelButtons = (buttons: Button[]): Button[] => {
   const panelButtons: Button[] = [];
   const extraButton: Button = {
     icon: "more_vert",
+    variant: "interfaceButton",
+    colorVariables: getColorVariables("button", "interfaceButton"),
     type: "button-group",
     buttons: [],
   };

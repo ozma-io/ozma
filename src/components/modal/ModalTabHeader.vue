@@ -11,23 +11,30 @@
     @click="$emit('tab-click')"
   >
     <slot name="header" />
-    <b-button
-      variant="light"
-      class="button-only-icon"
-      @click.stop="$emit('tab-close')"
-    >
-      <span class="material-icons">close</span>
-    </b-button>
+    <ButtonItem :button="closeButton" />
   </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
+import ButtonItem from "@/components/buttons/ButtonItem.vue";
+import { Button } from "@/components/buttons/buttons";
+import { getColorVariables } from "@/utils_colors";
 
-@Component
+@Component({ components: { ButtonItem } })
 export default class ModalTabHeader extends Vue {
   @Prop({ type: Boolean, default: false }) isActive!: boolean;
   @Prop({ type: Boolean, default: false }) onlyTab!: boolean;
+
+  private get closeButton(): Button {
+    return {
+      type: "callback",
+      icon: "close",
+      variant: "interfaceButton",
+      colorVariables: getColorVariables("button", "interfaceButton"),
+      callback: () => this.$emit("tab-close"),
+    };
+  }
 }
 </script>
 

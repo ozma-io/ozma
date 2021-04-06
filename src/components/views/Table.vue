@@ -72,13 +72,7 @@
         v-if="uv.emptyRow !== null"
         class="button-container"
       >
-        <div
-          class="button"
-          @click="addNewRowOnPosition('top_front')"
-        >
-          <i class="material-icons">add</i>
-          <span class="label">{{ this.$t('add_entry').toString() }}</span>
-        </div>
+        <ButtonItem :button="topAddButton" />
       </div>
 
       <table
@@ -191,13 +185,7 @@
         v-if="noMoreRows && uv.emptyRow !== null"
         class="button-container"
       >
-        <div
-          class="button"
-          @click="addNewRowOnPosition('bottom_back')"
-        >
-          <i class="material-icons">add</i>
-          <span class="label">{{ this.$t('add_entry').toString() }}</span>
-        </div>
+        <ButtonItem :button="bottomAddButton" />
       </div>
     </div>
   </div>
@@ -229,6 +217,8 @@ import {
 } from "@/user_views/combined";
 import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import { getColorVariables } from "@/utils_colors";
+import ButtonItem from "@/components/buttons/ButtonItem.vue";
+import { Button } from "../buttons/buttons";
 
 export interface IColumn {
   caption: string;
@@ -1007,7 +997,7 @@ type MoveDirection = "up" | "right" | "down" | "left";
 })
 @Component({
   components: {
-    TableRow, Checkbox, TableCellEdit, InfiniteLoading,
+    TableRow, Checkbox, TableCellEdit, InfiniteLoading, ButtonItem,
   },
 })
 export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra, ITableRowExtra, ITableViewExtra>>(BaseUserView) {
@@ -1064,6 +1054,28 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       // TODO: make pageup/pagedown movement depend on real page size, not just 5 rows.
       "pagedown": () => this.moveSelection("down", { step: 5 }),
       "pageup": () => this.moveSelection("up", { step: 5 }),
+    };
+  }
+
+  private get topAddButton(): Button {
+    return {
+      type: "callback",
+      icon: "add",
+      variant: "interfaceButton",
+      colorVariables: getColorVariables("button", "interfaceButton"),
+      caption: this.$t("add_entry").toString(),
+      callback: () => this.addNewRowOnPosition("top_front"),
+    };
+  }
+
+  private get bottomAddButton(): Button {
+    return {
+      type: "callback",
+      icon: "add",
+      variant: "interfaceButton",
+      colorVariables: getColorVariables("button", "interfaceButton"),
+      caption: this.$t("add_entry").toString(),
+      callback: () => this.addNewRowOnPosition("bottom_back"),
     };
   }
 
@@ -2236,6 +2248,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     > span > i {
       position: absolute;
     }
+  }
+
+  ::v-deep .button-element {
+    margin: 0.125rem;
   }
 
   .checkbox-col,

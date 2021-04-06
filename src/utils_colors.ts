@@ -104,6 +104,20 @@ export const getColorVariables = (componentName: string, colorVariant: unknown):
   return {};
 };
 
+export const inheritColorVariables = (componentName: string, parentName: string, overloads: Partial<Record<VariantKey, string>>) => {
+  // TODO: Refactor this mess.
+  const variables = getColorVariables(componentName, parentName);
+  const newVariables = Object.entries(overloads).reduce((curr, [key, value]) => {
+    curr[`--${componentName}-${key}Color`] = value as string;
+    return curr;
+  }, {} as Record<string, string>);
+
+  return {
+    ...variables,
+    ...newVariables,
+  };
+};
+
 export const loadThemes = async () => {
   const ref = { schema: "funapp", name: "color_themes" };
   const res: IViewExprResult = await store.dispatch("callProtectedApi", {

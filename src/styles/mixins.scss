@@ -25,8 +25,10 @@
   }
 
   &.disabled {
-    cursor: default;
-    color: var(--#{$variant}-foregroundDarkerColor);
+    cursor: not-allowed;
+    color: var(--#{$variant}-foregroundDarkerColor) !important;
+    background-color: var(--#{$variant}-backgroundColor) !important;
+    border-color: var(--#{$variant}-backgroundColor) !important;
     opacity: 0.7;
   }
 }
