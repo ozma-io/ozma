@@ -231,7 +231,7 @@ export default class TopLevelUserView extends Vue {
         icon: "home",
         variant: "interfaceButton",
         colorVariables: getColorVariables("button", "interfaceButton"),
-        callback: () => this.$router.push("main"),
+        callback: () => this.$router.push({ name: "main" }),
         disabled: this.isMainView,
       },
       this.burgerButton,
