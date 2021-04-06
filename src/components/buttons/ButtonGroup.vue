@@ -8,7 +8,7 @@
       modifiers: {
         offset: { offset: '0, 0' },
         // Nested poppers cannot appear outside the parent element if overflow is enabled.
-        preventOverflow: { enabled: !listItem },
+        preventOverflow: { enabled: !listItem, boundariesElement: 'viewport' },
         hide: { enabled: !listItem },
       }
     }"

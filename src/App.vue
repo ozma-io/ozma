@@ -54,7 +54,7 @@ import { CurrentSettings } from "@/state/settings";
 import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import FabCluster from "@/components/FabCluster/FabCluster.vue";
 import { ErrorKey } from "@/state/errors";
-import { getColorVariables } from "@/utils_colors";
+import { getColorVariables, inheritColorVariables } from "@/utils_colors";
 import { eventBus } from "@/main";
 import { isReadonlyDemoInstance } from "@/api";
 
@@ -167,17 +167,30 @@ export default class App extends Vue {
     const background = this.styleSettings["--OldMainBackgroundColor"];
     const foreground = this.styleSettings["--OldMainTextColor"];
     const border = this.styleSettings["--OldMainBorderColor"];
-    const defaultVariant = getColorVariables("default", { background, foreground, border });
-    // I want borderless menuEntries by default, but they are using button variant. Probably TODO borderless buttons.
-    const menuEntryVariant = getColorVariables("menuEntry", {
-      background,
-      border: background,
-    });
+    const defaultVariables = getColorVariables("default", { background, foreground, border });
+    const menuEntryVariables = inheritColorVariables(
+      "menuEntry",
+      "deafault",
+      {
+        background: "rgba(0, 0, 0, 0)",
+        border: "rgba(0, 0, 0, 0)",
+      },
+    );
+
+    const interfaceButtonVariables = inheritColorVariables(
+      "interfaceButton",
+      "interface",
+      {
+        background: "rgba(0, 0, 0, 0)",
+        border: "rgba(0, 0, 0, 0)",
+      },
+    );
 
     this.colorVariables = R.mergeAll([
-      defaultVariant,
+      defaultVariables,
       ...componentsNames.map(componentName => getColorVariables(componentName, "default")),
-      menuEntryVariant,
+      menuEntryVariables,
+      interfaceButtonVariables,
       ...lightColorVariants.map((variant: any) => getColorVariables(variant.name, variant)),
       ...colorVariants.map((variant: any) => getColorVariables(variant.name, variant)),
     ]);

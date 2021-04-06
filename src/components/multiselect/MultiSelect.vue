@@ -633,8 +633,8 @@ export default class MultiSelect extends Vue {
     flex-direction: row;
     width: 100%;
     border: 1px solid var(--input-borderColor);
-    background: var(--input-backgroundColor, var(--default-backgroundColor));
-    color: var(--input-foregroundColor, var(--default-foregroundColor));
+    background: var(--input-backgroundColor);
+    color: var(--input-foregroundColor);
     border-radius: 0.2rem;
     cursor: pointer;
 

@@ -1,8 +1,9 @@
 <template>
   <b-list-group-item
     v-if="listItem"
-    :variant="button.variant"
     class="d-flex list-group-item-action p-1"
+    :variant="button.variant"
+    :disabled="button.disabled"
   >
     <ButtonContent
       :button="button"
@@ -16,8 +17,9 @@
     v-b-tooltip.hover.noninteractive
     :class="buttonClass"
     :style="button.colorVariables"
-    :variant="button.variant ? button.variant : 'light'"
+    variant="light"
     :title="button.tooltip"
+    :disabled="button.disabled"
   >
     <ButtonContent
       :button="button"

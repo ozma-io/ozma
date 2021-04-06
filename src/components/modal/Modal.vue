@@ -15,25 +15,12 @@
     @before-close="beforeClose"
     @opened="$emit('opened')"
   >
-    <div class="d-flex align-items-center pl-1">
-      <b-button
-        variant="light"
-        class="button-only-icon"
-        @click="$router.go(-1)"
-      >
-        <span class="material-icons">arrow_back</span>
-      </b-button>
-      <router-link
-        :to="{ name: 'main' }"
-        class="text-decoration-none"
-      >
-        <b-button
-          variant="light"
-          class="button-only-icon"
-        >
-          <span class="material-icons">home</span>
-        </b-button>
-      </router-link>
+    <div class="header d-flex align-items-center">
+      <ButtonsPanel
+        class="main-buttons"
+        :buttons="mainButtons"
+        @goto="$emit('goto', $event)"
+      />
 
       <div
         v-if="hasTabs"
@@ -54,10 +41,6 @@
           <template #header>
             <ModalContent :nodes="tab.header" />
           </template>
-          <i
-            class="material-icons material-button rounded-circle mobile_close_button"
-            @click="$emit('close')"
-          >close</i>
         </ModalTabHeader>
       </div>
     </div>
@@ -106,6 +89,8 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import ModalContent from "@/components/modal/ModalContent";
 import ModalTabHeader from "@/components/modal/ModalTabHeader.vue";
 import { IModalTab } from "@/components/modal/types";
+import { getColorVariables } from "@/utils_colors";
+import { Button } from "../buttons/buttons";
 
 @Component({ components: { ModalContent, ModalTabHeader } })
 export default class Modal extends Vue {
@@ -164,6 +149,25 @@ export default class Modal extends Vue {
     }
   }
 
+  private get mainButtons(): Button[] {
+    return [
+      {
+        type: "callback",
+        icon: "arrow_back",
+        variant: "interfaceButton",
+        colorVariables: getColorVariables("button", "interfaceButton"),
+        callback: () => this.$router.go(-1),
+      },
+      {
+        type: "callback",
+        icon: "home",
+        variant: "interfaceButton",
+        colorVariables: getColorVariables("button", "interfaceButton"),
+        callback: () => this.$router.push("main"),
+      },
+    ];
+  }
+
   // Used on mobile to display editing inputs
   private get hasTabs(): boolean {
     return this.modalTabs !== undefined;
@@ -188,14 +192,25 @@ export default class Modal extends Vue {
 </script>
 
 <style lang="scss" scoped>
+  .header {
+    border-bottom: 1px solid var(--interface-borderColor);
+  }
+
   .modal__tab_headers {
     width: 100%;
     display: flex;
     flex-direction: row;
+    overflow-x: hidden;
 
     &.is-mobile {
       overflow: auto;
     }
+  }
+
+  .main-buttons {
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+    flex-shrink: 0;
   }
 
   .modal__content {
