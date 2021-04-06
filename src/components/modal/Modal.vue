@@ -163,7 +163,7 @@ export default class Modal extends Vue {
         icon: "home",
         variant: "interfaceButton",
         colorVariables: getColorVariables("button", "interfaceButton"),
-        callback: () => this.$router.push("main"),
+        callback: () => this.$router.push({ name: "main" }),
       },
     ];
   }

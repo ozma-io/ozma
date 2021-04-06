@@ -142,6 +142,8 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseU
   }
 
   private async removeIndex(index: number) {
+    console.log(index)
+    console.log(JSON.parse(JSON.stringify(this.selectedValuesWithPosition)));
     const row = this.selectedValuesWithPosition[index];
     if (row.type === "existing") {
       await this.deleteEntry({
