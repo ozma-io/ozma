@@ -143,6 +143,20 @@ button:not(.btn) {
   @include material-button;
 }
 
+.list-group-item-action {
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+
+  .icon {
+    line-height: 0;
+  }
+
+  .button-caption {
+    margin-left: 0.5rem;
+  }
+}
+
 .button-only-icon,
 .button-only-caption,
 .button-icon-caption {

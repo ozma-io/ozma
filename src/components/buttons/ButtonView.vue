@@ -1,7 +1,7 @@
 <template>
   <b-list-group-item
     v-if="listItem"
-    class="d-flex list-group-item-action p-1"
+    class="list-group-item-action"
     :variant="button.variant"
     :disabled="button.disabled"
   >
