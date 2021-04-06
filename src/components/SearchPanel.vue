@@ -66,7 +66,7 @@
       @click.prevent="toggleShowInput"
     >
       <span class="icon material-icons">search</span>
-      <span><wbr></span>
+      <span>&#8203;</span>
     </b-button>
   </div>
 </template>

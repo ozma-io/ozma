@@ -28,7 +28,7 @@
 
     <span
       v-if="!button.caption"
-    ><wbr></span>
+    >&#8203;</span>
   </fragment>
 </template>
 

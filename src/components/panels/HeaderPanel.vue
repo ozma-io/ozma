@@ -126,7 +126,7 @@ export default class HeaderPanel extends Vue {
   }
 
   .left-part {
-    overflow-x: hidden;
+    overflow: hidden;
 
     > .main-buttons {
       /* Looks like it should be a padding, but due to `overflow-hidden` mechanic it must be margin,
