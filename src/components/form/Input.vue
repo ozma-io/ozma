@@ -210,7 +210,7 @@ export default class Input extends Vue {
   }
 
   .input-textarea {
-    padding: 3px;
+    padding: 0.15rem 0.1rem; /* Loosely matches .table-td padding */
     border: none;
     resize: none;
     width: 100%;
@@ -219,7 +219,7 @@ export default class Input extends Vue {
     max-height: 165px;
     background: white;
     text-align: inherit;
-    line-height: 1rem;
+    line-height: 1.2rem;
   }
 
   .input-textarea:focus {

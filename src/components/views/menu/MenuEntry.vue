@@ -131,15 +131,17 @@ export default class MenuEntry extends Vue {
 
 <style lang="scss" scoped>
   .menu_category_block {
-    margin-top: 10px;
-    margin-bottom: 40px;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
 
     &.is-mobile {
       margin: 0;
+      margin-bottom: 1rem;
     }
 
     @media (max-width: 575.98px) {
       margin: 0;
+      margin-bottom: 1rem;
     }
   }
 
