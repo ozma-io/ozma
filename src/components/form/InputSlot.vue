@@ -3,14 +3,14 @@
     "en": {
         "ok": "OK",
         "cancel": "Cancel",
-        "disabled_field": "Non-editable field",
+        "readonly_field": "Read-only field",
         "required_field": "Required field"
 
         },
     "ru": {
         "ok": "ОК",
         "cancel": "Отмена",
-        "disabled_field": "Нередактируемое поле",
+        "readonly_field": "Поле только для чтения",
         "required_field": "Обязательное поле"
         }
     }
@@ -91,7 +91,7 @@
             v-if="disabled"
             v-b-tooltip.hover.bottom.noninteractive
             class="disabled-indicator"
-            :title="$t('disabled_field')"
+            :title="$t('readonly_field')"
           >
             <span class="material-icons">edit_off</span>
           </div>
