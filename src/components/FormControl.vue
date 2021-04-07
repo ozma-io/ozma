@@ -34,6 +34,7 @@
       :text-align="textAlign"
       :modal="$isMobile && (forceModalOnMobile || isMultiline)"
       :required="!isNullable"
+      :disabled="isDisabled"
       :empty="currentValueIsNull"
       @close-modal-input="$emit('close-modal-input')"
       @focus="onFocus"

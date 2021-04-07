@@ -20,7 +20,7 @@
         :class="[
           'input-field',
           {
-            'disabled': disabled,
+            'readonly': disabled,
             'focused': focused,
             'unfocused': !focused,
             'error': error,
@@ -32,7 +32,7 @@
         :type="type"
         :value="value"
         :placeholder="$t('input_placeholder')"
-        :disabled="disabled"
+        :readonly="disabled"
         @keydown.enter.prevent
         @input="updateInput"
         @focus="onFocus"
@@ -204,9 +204,8 @@ export default class Input extends Vue {
     background-color: transparent;
     color: var(--input-foregroundColor);
 
-    &.disabled {
-      background-color: rgba(0, 0, 0, 0.2);
-      color: var(--input-foregroundDarkerColor);
+    &.readonly {
+      cursor: not-allowed;
     }
   }
 

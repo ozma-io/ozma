@@ -3,12 +3,14 @@
     "en": {
         "ok": "OK",
         "cancel": "Cancel",
+        "disabled_field": "Non-editable field",
         "required_field": "Required field"
 
         },
     "ru": {
         "ok": "ОК",
         "cancel": "Отмена",
+        "disabled_field": "Нередактируемое поле",
         "required_field": "Обязательное поле"
         }
     }
@@ -85,6 +87,14 @@
             class="required-indicator"
             :title="$t('required_field')"
           />
+          <div
+            v-if="disabled"
+            v-b-tooltip.hover.bottom.noninteractive
+            class="disabled-indicator"
+            :title="$t('disabled_field')"
+          >
+            <span class="material-icons">edit_off</span>
+          </div>
           <slot
             :onFocus="onNonmodalFocus"
           />
@@ -112,6 +122,7 @@ export default class InputSlot extends Vue {
   @Prop({ type: Boolean, default: false }) modal!: boolean;
   @Prop({ type: Boolean, default: false }) modalOnly!: boolean;
   @Prop({ type: Boolean, default: false }) required!: boolean;
+  @Prop({ type: Boolean, default: false }) disabled!: boolean;
   @Prop({ type: Boolean, required: true }) empty!: boolean;
 
   private focused = false;
@@ -189,6 +200,31 @@ export default class InputSlot extends Vue {
   .input-slot {
     position: relative;
     border-radius: 0.2rem;
+
+    .disabled-indicator {
+      height: 1.5rem;
+      width: 1.5rem;
+      border-radius: 50%;
+      position: absolute;
+      z-index: 10;
+      transition: background-color 0.1s;
+      color: rgba(0, 0, 0, 0.3);
+
+      .material-icons {
+        font-size: 1.5rem;
+      }
+    }
+
+    &.inline .disabled-indicator {
+      left: -1.75rem;
+      top: 0.25rem;
+    }
+
+    &:not(.inline) .required-indicator {
+      left: unset;
+      top: -1.5rem;
+      right: 0.5rem;
+    }
 
     &.required {
       > .required-indicator {
