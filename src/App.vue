@@ -170,7 +170,7 @@ export default class App extends Vue {
     const defaultVariables = getColorVariables("default", { background, foreground, border });
     const menuEntryVariables = inheritColorVariables(
       "menuEntry",
-      "deafault",
+      "default",
       {
         background: "rgba(0, 0, 0, 0)",
         border: "rgba(0, 0, 0, 0)",

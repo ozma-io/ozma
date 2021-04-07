@@ -301,6 +301,7 @@ export default class TableCell extends Vue {
   .cell-text {
     overflow: hidden;
     white-space: break-spaces;
+    word-break: break-all;
     line-height: 1.2rem;
   }
 

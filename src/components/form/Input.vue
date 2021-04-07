@@ -217,9 +217,11 @@ export default class Input extends Vue {
     display: block;
     overflow: auto !important;
     max-height: 165px;
-    background: white;
     text-align: inherit;
     line-height: 1.2rem;
+    color: var(--input-foregroundColor);
+    background-color: var(--input-backgroundColor);
+    border-color: var(--input-borderColor);
   }
 
   .input-textarea:focus {
