@@ -220,10 +220,10 @@ export default class InputSlot extends Vue {
       top: 0.25rem;
     }
 
-    &:not(.inline) .required-indicator {
+    &:not(.inline) .disabled-indicator {
       left: unset;
-      top: -1.5rem;
-      right: 0.5rem;
+      top: -1.75rem;
+      right: 0.25rem;
     }
 
     &.required {

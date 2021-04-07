@@ -388,10 +388,12 @@ export type IType =
 
 const staging = namespace("staging");
 
-const heightExclusions: IType["name"][] =
-  ["select", "reference"];
-const multilineTypes: IType["name"][] =
-  ["markdown", "codeeditor", "textarea", "userview", "empty_userview", "static_image", "iframe"];
+const heightExclusions: Set<IType["name"]> =
+  new Set(["select", "reference"]);
+const multilineTypes: Set<IType["name"]> =
+  new Set(["markdown", "codeeditor", "textarea", "userview", "empty_userview", "static_image", "iframe"]);
+const disableableTypes: Set<IType["name"]> =
+  new Set(["text", "textarea", "markdown", "codeeditor", "reference", "select", "check"]);
 
 @Component({
   // Looks ugly and wordy, but due to `import` this can not be generated.
@@ -504,7 +506,8 @@ export default class FormControl extends Vue {
   }
 
   get isDisabled() {
-    return this.locked || this.value.info === undefined || this.value.info.field === null;
+    const disableable = disableableTypes.has(this.inputType.name);
+    return disableable && (this.locked || this.value.info === undefined || this.value.info.field === null);
   }
 
   // Textual representation of `currentValue`.
@@ -513,7 +516,7 @@ export default class FormControl extends Vue {
   }
 
   get isMultiline() {
-    return multilineTypes.includes(this.inputType.name);
+    return multilineTypes.has(this.inputType.name);
   }
 
   // Priority of captions:
@@ -536,7 +539,7 @@ export default class FormControl extends Vue {
       return {};
     }
 
-    const excludeHeight = heightExclusions.includes(this.inputType.name);
+    const excludeHeight = heightExclusions.has(this.inputType.name);
     const isHeightOnPanel = !this.isMultiline;
     const height = isHeightOnPanel ? { height: `${this.customHeight}px` } : {};
     return !excludeHeight ? { ...height, maxHeight: "initial" } : {};
