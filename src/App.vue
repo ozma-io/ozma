@@ -224,11 +224,11 @@ export default class App extends Vue {
       "ControlDisableColor": this.settings.getEntry("control_disable_color", String, "#999999"),
 
       // Light Theme, do not remove
-      "OldMainTextColor": this.settings.getEntry("main_text_color", String, "#292b2c"),
+      "OldMainTextColor": this.settings.getEntry("main_text_color", String, "#rgba(51, 51, 51, 1)"),
       "OldMainBackgroundColor": this.settings.getEntry("main_background_color", String, "white"),
       "SecondaryBackgroundColor": this.settings.getEntry("secondary_background_color", String, "#f8f9fa"),
-      "OldMainTextColorLight": this.settings.getEntry("main_text_color_light", String, "#6c757d"),
-      "OldMainBorderColor": this.settings.getEntry("main_border_color", String, "#dee2e6"),
+      "OldMainTextColorLight": this.settings.getEntry("main_text_color_light", String, "rgba(153, 153, 153, 1)"),
+      "OldMainBorderColor": this.settings.getEntry("main_border_color", String, "rgb(204, 204, 204)"),
       "MainBorderTextColor": this.settings.getEntry("main_border_text_color", String, "#68766d"),
 
       // Dark Theme, do not remove
