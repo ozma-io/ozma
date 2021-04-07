@@ -14,7 +14,7 @@
         <slot name="main-buttons" />
       </div>
       <label
-        v-b-tooltip.click.blur.bottom.noninteractive
+        v-b-tooltip.click.blur.bottom.noninteractive.viewport
         :class="[
           'input_label',
           {

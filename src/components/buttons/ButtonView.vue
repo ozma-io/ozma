@@ -14,7 +14,7 @@
 
   <b-button
     v-else
-    v-b-tooltip.hover.noninteractive
+    v-b-tooltip.hover.noninteractive.viewport
     :class="buttonClass"
     :style="button.colorVariables"
     variant="light"
