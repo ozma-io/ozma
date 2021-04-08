@@ -568,7 +568,9 @@ export default class FormControl extends Vue {
   }
 
   get cellColor() {
-    return this.attributes["cell_color"] ? String(this.attributes["cell_color"]) : null;
+    if (this.attributes["cell_color"]) return String(this.attributes["cell_color"]);
+    else if (this.attributes["control"] === "buttons") return "transparent";
+    else return null;
   }
 
   get colorVariables() {
