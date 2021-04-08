@@ -305,6 +305,10 @@ export default class TableCell extends Vue {
     line-height: 1.2rem;
   }
 
+  .text {
+    width: 100%;
+  }
+
   .cell-text.tree {
     display: flex;
     align-self: center;
