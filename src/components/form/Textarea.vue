@@ -10,6 +10,7 @@
 </i18n>
 <template>
   <fragment>
+    <!-- eslint-disable vue/no-deprecated-v-on-native-modifier -->
     <textarea-autosize
       v-if="isCellEdit"
       ref="controlTextarea"

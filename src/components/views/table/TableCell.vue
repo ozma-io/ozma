@@ -179,6 +179,7 @@ export default class TableCell extends Vue {
       @include material-button("reference");
 
       margin-right: 0.25rem;
+      flex-shrink: 0;
       border: none;
       display: flex;
       opacity: 0.3;
