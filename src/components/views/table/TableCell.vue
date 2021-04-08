@@ -24,6 +24,7 @@
       <template v-else-if="value.extra.link !== null && value.extra.valueFormatted.length > 0">
         <div class="selectable">
           <FunLink
+            class="selectable-link rounded-circle"
             :link="value.extra.link"
             @goto="$emit('goto', $event)"
           >
@@ -164,15 +165,28 @@ export default class TableCell extends Vue {
 
 <style lang="scss" scoped>
   .selectable {
-    position: relative;
-    float: left;
-    padding: 0 5px;
+    padding: 0.1rem 0.25rem;
+    display: inline-flex;
+    align-items: center;
     background-color: var(--reference-backgroundColor);
     border: 1px solid var(--reference-borderColor);
     color: var(--reference-foregroundColor);
-    border-radius: 0.6rem;
+    border-radius: 1rem;
     max-width: 100%;
     word-wrap: break-word;
+
+    .selectable-link {
+      @include material-button("reference");
+
+      margin-right: 0.25rem;
+      border: none;
+      display: flex;
+      opacity: 0.3;
+    }
+
+    &:hover .selectable-link {
+      opacity: 1;
+    }
   }
 
   .add-child {
@@ -282,20 +296,16 @@ export default class TableCell extends Vue {
     @include material-button("reference");
 
     pointer-events: auto !important;
-    left: 2px;
-    top: -1px;
-    position: absolute;
     border: none;
     background: none;
     padding: 0;
-    cursor: pointer;
   }
 
   span.reference-text {
-    padding-left: 20px;
+    margin: 0 0.25rem;
     display: block;
     white-space: normal;
-    line-height: 1.2rem;
+    line-height: 1rem;
   }
 
   .cell-text {

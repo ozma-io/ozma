@@ -51,12 +51,16 @@
           >
             <input
               type="button"
-              class="material-icons material-button rounded-circle md-18 open-modal-button"
+              class="material-icons rounded-circle md-18 open-modal-button"
               :value="iconValue(select.option.value.link.target)"
             >
           </FunLink>
+
+          <!-- Hack to maintain min-heigth when there are no icons -->
+          <span class="phantom-icon md-18">&#8203;</span>
+
           <!-- eslint-disable vue/no-v-html -->
-          <span v-html="select.option.labelHtml" />
+          <span class="value-text" v-html="select.option.labelHtml" />
           <!-- eslint-enable vue/no-v-html -->
         </fragment>
       </template>
@@ -72,7 +76,7 @@
         >
           <input
             type="button"
-            class="material-icons open-modal-button"
+            class="material-icons md-18 open-modal-button rounded-circle"
             value="add"
           >
           {{ action.name }}
@@ -390,15 +394,25 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   .single-value__link {
     display: flex;
     text-decoration: underline;
+    margin-right: 0.25rem;
   }
 
   .open-modal-button {
+    @include material-button("reference");
+
     border: none;
-    background: none;
     padding: 0;
-    margin: 0 10px 0 0;
-    color: var(--input-foregroundColor, var(--default-foregroundColor));
+    margin: 0;
     opacity: 0.3;
+  }
+
+  .phantom-icon {
+    margin: 0 !important;
+    line-height: 1;
+  }
+
+  .value-text {
+    margin: 0 0.25rem;
   }
 
   .action-button {
