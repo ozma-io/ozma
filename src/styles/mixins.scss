@@ -38,3 +38,9 @@
   color: var(--#{$name}-foregroundColor);
   border-color: var(--#{$name}-borderColor);
 }
+
+/* 24px is material icons best size and 14px is default font size */
+// $icon-size: (24px / 14px) + rem;
+@function icon-size($base-size: 24px) {
+  @return ($base-size / 14px) + rem;
+}
