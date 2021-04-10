@@ -86,6 +86,7 @@
           :show-time="inputType.showTime"
           :time-step="inputType.timeStep ? inputType.timeStep : undefined"
           :required="!isNullable"
+          :disabled="isDisabled"
           :background-color="cellColor"
           @focus="iSlot.onFocus"
           @blur="$emit('blur', $event)"
@@ -393,7 +394,7 @@ const heightExclusions: Set<IType["name"]> =
 const multilineTypes: Set<IType["name"]> =
   new Set(["markdown", "codeeditor", "textarea", "userview", "empty_userview", "static_image", "iframe"]);
 const disableableTypes: Set<IType["name"]> =
-  new Set(["text", "textarea", "markdown", "codeeditor", "reference", "select", "check"]);
+  new Set(["text", "textarea", "markdown", "codeeditor", "reference", "select", "check", "calendar"]);
 
 @Component({
   // Looks ugly and wordy, but due to `import` this can not be generated.

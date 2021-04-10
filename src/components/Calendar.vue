@@ -54,6 +54,7 @@
               :style="{ backgroundColor }"
               :placeholder="$t('input_placeholder')"
               :value="textValue"
+              :disabled="disabled"
               @input="$emit('update:value', $event)"
               @keypress.enter.prevent.stop="onPressEnter"
               @focus="onInputFocus"
@@ -62,6 +63,7 @@
             />
             <b-input-group-append>
               <b-button
+                v-if="!disabled"
                 :disabled="!value"
                 class="button with-material-icon clear-content-button"
                 variant="outline-secondary"
@@ -137,6 +139,7 @@ export default class Calendar extends Vue {
   @Prop() value!: Moment | string | undefined | null;
   @Prop({ type: Boolean }) error!: boolean;
   @Prop({ type: Boolean }) required!: boolean;
+  @Prop({ type: Boolean, default: false }) disabled!: boolean;
   @Prop({ default: true, type: Boolean }) showTime!: boolean;
   @Prop({ type: String }) format!: string | undefined;
   @Prop({ type: Number }) timeStep!: number | undefined;
@@ -177,6 +180,7 @@ export default class Calendar extends Vue {
   }
 
   private async openPopup() {
+    if (this.disabled) return;
     const popupRef: any = this.$refs.popup;
     if (!popupRef) return;
 
