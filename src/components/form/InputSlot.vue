@@ -90,7 +90,12 @@
           <div
             v-if="disabled"
             v-b-tooltip.hover.bottom.noninteractive
-            class="disabled-indicator"
+            :class="[
+              'disabled-indicator',
+              {
+                'is-cell-edit': isCellEdit,
+              },
+            ]"
             :title="$t('readonly_field')"
           >
             <span class="material-icons">edit_off</span>
@@ -201,23 +206,47 @@ export default class InputSlot extends Vue {
     position: relative;
     border-radius: 0.2rem;
 
+    $indicator-size: (18px / 14px) * 1rem;
+    $indicator-padding: 0.2rem;
+
     .disabled-indicator {
-      height: 1.5rem;
-      width: 1.5rem;
-      border-radius: 50%;
+      height: $indicator-size;
+      width: $indicator-size;
       position: absolute;
       z-index: 10;
+      padding: $indicator-padding;
+      color: var(--default-foregroundDarkerColor);
       transition: background-color 0.1s;
-      color: rgba(0, 0, 0, 0.3);
+
+      &.is-cell-edit {
+        height: $indicator-size + $indicator-padding * 2;
+        width: $indicator-size + $indicator-padding * 2;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: var(--input-backgroundColor);
+        border: 1px solid var(--input-borderColor);
+        border-right-color: var(--input-backgroundColor);
+        border-top-left-radius: 50%;
+        border-bottom-left-radius: 50%;
+        z-index: 31;
+      }
 
       .material-icons {
-        font-size: 1.5rem;
+        font-size: $indicator-size;
       }
     }
 
     &.inline .disabled-indicator {
-      left: -1.75rem;
-      top: 0.25rem;
+      left: -1 * ($indicator-size  + $indicator-padding);
+      top: $indicator-size / 4;
+
+      &.is-cell-edit {
+        /* False-positive */
+        /* stylelint-disable-next-line */
+        left: calc(#{-1 * ($indicator-size + $indicator-padding * 2)} + 1px);
+        top: 0;
+      }
     }
 
     &:not(.inline) .disabled-indicator {
