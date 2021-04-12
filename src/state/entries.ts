@@ -1,5 +1,5 @@
 import { ActionContext, Module } from "vuex";
-import { IReferenceFieldType, RowId, IViewExprResult, IReferenceEntity, IViewChunk } from "ozma-api";
+import { IReferenceFieldType, RowId, IViewExprResult, IReferenceEntity, IQueryChunk } from "ozma-api";
 import Vue from "vue";
 import R from "ramda";
 
@@ -313,7 +313,7 @@ export interface IEntriesState {
 const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
   const query = `{ $search string }: SELECT id, __main AS main FROM "${ref.entity.schema}"."${ref.entity.name}" WHERE (__main :: string) ILIKE $search`;
   const likeSearch = search === "" ? "%" : "%" + search.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_") + "%";
-  const chunk: IViewChunk = { offset, limit: limit + 1 };
+  const chunk: IQueryChunk = { offset, limit: limit + 1 };
   const res = await context.dispatch("callProtectedApi", {
     func: Api.getAnonymousUserView.bind(Api),
     args: [query, { search: likeSearch }, chunk],
