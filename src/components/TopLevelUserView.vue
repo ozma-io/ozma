@@ -375,7 +375,7 @@ export default class TopLevelUserView extends Vue {
           },
           type: "callback" });
       }
-      buttons.push({ icon: "perm_identity", caption: this.$t("account").toString(), type: "link", link: { href: Api.accountUrl, type: "href" } });
+      buttons.push({ icon: "perm_identity", caption: this.$t("account").toString(), type: "link", link: { href: Api.accountUrl, type: "href", target: "_self" } });
       buttons.push({ icon: "exit_to_app", caption: this.$t("logout").toString(), type: "callback", callback: this.logout });
     } else {
       buttons.push({ icon: "login", caption: this.$t("login").toString(), type: "callback", callback: this.login });

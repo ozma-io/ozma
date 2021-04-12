@@ -6,9 +6,13 @@ import { Store } from "vuex";
 import { router } from "@/modules";
 import { IValueInfo } from "@/user_views/combined";
 
+export const hrefTargetTypes = ["_top", "_blank", "_self", "_parent"] as const;
+export type HrefTargetType = typeof hrefTargetTypes[number];
+
 export interface IHrefLink {
   href: string;
   type: "href";
+  target: HrefTargetType;
 }
 
 export type TargetType = "top" | "root" | "modal" | "blank" | "modal-auto";
@@ -132,7 +136,9 @@ export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | 
 
   const href = linkedAttrObj["href"];
   if (typeof href === "string") {
-    return { href, type: "href" };
+    const targetRaw = "_" + linkedAttrObj["target"];
+    const target = hrefTargetTypes.includes(targetRaw as any) ? targetRaw as HrefTargetType : "_self";
+    return { href, type: "href", target };
   }
 
   const action = attrToActionLink(linkedAttrObj, opts);
@@ -230,10 +236,18 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
     href = router.resolve(queryLocation(query)).href;
   } else if (params.link.type === "href") {
     const curHref = params.link.href;
-    handler = async () => {
-      await gotoHref(curHref);
-    };
-    href = curHref;
+
+    if (params.link.target === "_blank") {
+      handler = () => {
+        window.open(curHref, "_blank");
+        return new Promise(() => {});
+      };
+    } else {
+      handler = async () => {
+        await gotoHref(curHref);
+      };
+      href = curHref;
+    }
   } else if (params.link.type === "action") {
     const action = params.link.action;
     const args = params.link.args;
