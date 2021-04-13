@@ -122,8 +122,10 @@
                 @goto="$emit('goto', $event)"
               >
                 <i
-                  v-b-tooltip.hover.right.noninteractive
-                  :title="$t('add_entry_in_modal')"
+                  v-b-tooltip.hover.right.noninteractive="{
+                    title: $t('add_entry_in_modal').toString(),
+                    disabled: $isMobile,
+                  }"
                   class="material-icons add-in-modal-icon"
                 >add_box</i>
               </FunLink>
