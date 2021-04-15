@@ -2,17 +2,24 @@
   {
     "en": {
       "view_error": "There are following errors in user view",
+      "markup_not_found": "Markup not found",
       "no_code_name": "`iframe_name` attribute required"
     },
     "ru": {
       "view_error": "В отображении следующие ошибки",
+      "markup_not_found": "",
       "no_code_name": "Необходимо указать атрибут `iframe_name`"
     }
   }
 </i18n>
 
 <template>
+  <Errorbox
+    v-if="markup === undefined"
+    :message="$t('markup_not_found')"
+  />
   <div
+    v-else
     class="iframe-container"
     :style="style"
   >
@@ -20,7 +27,7 @@
       ref="iframe"
       class="iframe"
       sandbox="allow-scripts allow-top-navigation"
-      :srcdoc="srcdoc"
+      :srcdoc="markup !== null ? markup : srcdoc"
       :src="src"
     />
   </div>
@@ -28,6 +35,11 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
+import { Action } from "vuex-class";
+import { IViewExprResult } from "ozma-api";
+
+import Api from "@/api";
+import Errorbox from "@/components/Errorbox.vue";
 
 export type MessageFromIframe =
   | {
@@ -44,14 +56,39 @@ export type MessageToIframe =
     payload: any;
   };
 
-@Component
+@Component({ components: { Errorbox } })
 export default class IframeControl extends Vue {
   @Prop({ type: String, default: null }) src!: string | null;
   @Prop({ type: String, default: null }) srcdoc!: string | null;
+  @Prop({ type: String, default: null }) markupName!: string | null;
   @Prop({ required: true }) value!: unknown;
   @Prop({ type: Number }) height!: number;
 
+  @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
+
   private requestedHeight: number | null = null;
+  private markup: string | null | undefined = null; // `undefined` here means that markup is not found.
+
+  @Watch("markupName", { immediate: true })
+  private async loadMarkup() {
+    if (this.markupName === null) return;
+
+    /* const query = `SELECT markup FROM "funapp"."iframe_markups" WHERE name = '${this.markupName}'`; */
+    const query = `SELECT code FROM "CapybaraTest"."iframes" WHERE name = '${this.markupName}'`;
+    const res = await this.callProtectedApi({
+      func: Api.getAnonymousUserView.bind(Api),
+      args: [query],
+    }) as IViewExprResult;
+    this.markup = res.result.rows[0]?.values[0].value as string | undefined;
+  }
+
+  @Watch("src")
+  @Watch("srcdoc")
+  private watchValue(newValue: string | null, oldValue: string | null) {
+    if (newValue !== oldValue && newValue !== null) {
+      this.markup = null;
+    }
+  }
 
   private iframeEventHandler(event: MessageEvent<any>) {
     if (event.source !== (this.$refs.iframe as HTMLIFrameElement)?.contentWindow) return;

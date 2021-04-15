@@ -170,6 +170,7 @@
           v-else-if="inputType.name === 'iframe'"
           :src="inputType.src"
           :srcdoc="inputType.srcdoc"
+          :markup-name="inputType.markupName"
           :value="currentValue"
           :height="customHeight"
         />
@@ -259,7 +260,6 @@
 
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
-import { namespace } from "vuex-class";
 import type { AttributesMap, ValueType } from "ozma-api";
 
 import { valueToText, valueIsNull } from "@/values";
@@ -268,7 +268,7 @@ import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
-import { IEntityRef } from "ozma-api/src";
+import { IEntityRef } from "ozma-api";
 
 import type { Button } from "@/components/buttons/buttons";
 import { attrToButtons } from "@/components/buttons/buttons";
@@ -311,6 +311,10 @@ type IIframeType =
   | {
     name: "iframe";
     srcdoc: string;
+  }
+  | {
+    name: "iframe";
+    markupName: string;
   };
 
 interface IMarkdownEditorType {
@@ -386,8 +390,6 @@ export type IType =
   | IIframeType
   | IBarCodeType
   | IButtonsType;
-
-const staging = namespace("staging");
 
 const heightExclusions: Set<IType["name"]> =
   new Set(["select", "reference"]);
@@ -482,7 +484,6 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
 
   private buttons: Button[] = [];
-  private codeEditorKey = 0;
   private filterString = "";
   private title = "";
   private enableFilter = false;
@@ -644,9 +645,12 @@ export default class FormControl extends Vue {
     }
 
     if (controlAttr === "iframe") {
-      const srcdoc = this.attributes["iframe_srcdoc"];
+      const markupName = this.attributes["iframe_markup_name"];
+      const srcdoc = this.attributes["iframe_markup"] ?? this.attributes["iframe_srcdoc"];
       const src = this.attributes["iframe_src"];
-      if (typeof srcdoc === "string") {
+      if (typeof markupName === "string") {
+        return { name: "iframe", markupName };
+      } else if (typeof srcdoc === "string") {
         return { name: "iframe", srcdoc };
       } else if (typeof src === "string") {
         return { name: "iframe", src };
