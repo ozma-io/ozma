@@ -5,7 +5,7 @@
             "no": "No",
             "boolean_null": "Empty",
             "invalid_uv": "Nested user view rows should be JSON objects with 'ref' and 'args' defined",
-            "iframe_no_iframe_src": "Iframe requires `iframe_src` or `iframe_srcdoc` attribute",
+            "iframe_no_markup": "Iframe requires `iframe_markup_name`, `iframe_src` or `iframe_srcdoc` attribute",
             "data_will_load_after_save": "Data will load after save",
             "select_view": "Add in modal window"
         },
@@ -14,7 +14,7 @@
             "no": "Нет",
             "boolean_null": "Пусто",
             "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'ref' и 'args'",
-            "iframe_no_iframe_src": "Для Iframe необходим атрибут `iframe_src` или `iframe_srcdoc`",
+            "iframe_no_markup": "Для Iframe необходим атрибут `iframe_markup_name`, `iframe_src` или `iframe_srcdoc`",
             "data_will_load_after_save": "Данные загрузятся после сохранения",
             "select_view": "Создать во вложенном окне"
         }
@@ -655,7 +655,7 @@ export default class FormControl extends Vue {
       } else if (typeof src === "string") {
         return { name: "iframe", src };
       } else {
-        return { name: "error", text: this.$t("iframe_no_iframe_src").toString() };
+        return { name: "error", text: this.$t("iframe_no_markup").toString() };
       }
     }
 
