@@ -7,7 +7,7 @@
     },
     "ru": {
       "view_error": "В отображении следующие ошибки",
-      "markup_not_found": "",
+      "markup_not_found": "Разметка не найдена",
       "no_code_name": "Необходимо указать атрибут `iframe_name`"
     }
   }
