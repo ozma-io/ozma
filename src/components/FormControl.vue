@@ -535,6 +535,7 @@ export default class FormControl extends Vue {
     }
   }
 
+  // FIXME unused function.
   get controlPanelStyle() {
     if (this.customHeight === null) {
       return {};

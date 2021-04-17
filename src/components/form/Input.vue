@@ -11,10 +11,10 @@
 <template>
   <fragment>
     <b-input-group
+      v-if="!isCellEdit"
       size="sm"
     >
       <b-input
-        v-if="!isCellEdit"
         :id="id"
         ref="control"
         :class="[
@@ -38,7 +38,14 @@
         @focus="onFocus"
         @blur="$emit('blur', $event)"
       />
-      <!-- eslint-disable vue/no-deprecated-v-on-native-modifier -->
+      <b-input-group-append
+        v-if="qrcodeInput"
+      >
+        <ButtonItem :button="qrCodeButton" />
+      </b-input-group-append>
+    </b-input-group>
+    <!-- eslint-disable vue/no-deprecated-v-on-native-modifier -->
+    <div class="textarea-container">
       <textarea-autosize
         v-if="isCellEdit"
         ref="controlTextarea"
@@ -54,22 +61,8 @@
         @keydown.enter.native.prevent.stop="onPressEnter"
         @keydown.tab.native.prevent.stop="onPressTab"
       />
-      <b-input-group-append
-        v-if="qrcodeInput"
-      >
-        <b-button
-          variant="outline-info"
-          class="with-material-icon"
-        >
-          <i
-            class="material-icons qr_code"
-            @click="openQRCodeScanner = !openQRCodeScanner"
-          >
-            qr_code_2
-          </i>
-        </b-button>
-      </b-input-group-append>
-    </b-input-group>
+      <ButtonItem v-if="isCellEdit && qrcodeInput" :button="qrCodeButton" />
+    </div>
     <QRCodeScanner
       raw
       :open-scanner="openQRCodeScanner"
@@ -83,9 +76,12 @@ import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { valueIsNull } from "@/values";
 import Textarea from "@/components/form/Textarea.vue";
 import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
+import ButtonItem from "@/components/buttons/ButtonItem.vue";
+import { Button } from "@/components/buttons/buttons";
+import { getColorVariables } from "@/utils_colors";
 
 @Component({
-  components: { Textarea, QRCodeScanner },
+  components: { Textarea, QRCodeScanner, ButtonItem },
 })
 export default class Input extends Vue {
   @Prop({ type: String }) label!: string;
@@ -112,6 +108,18 @@ export default class Input extends Vue {
 
   private get isEmpty(): boolean {
     return valueIsNull(this.value);
+  }
+
+  private get qrCodeButton(): Button {
+    return {
+      type: "callback",
+      icon: "qr_code_2",
+      variant: "outline-info",
+      colorVariables: getColorVariables("button", "outline-info"),
+      callback: () => {
+        this.openQRCodeScanner = !this.openQRCodeScanner;
+      },
+    };
   }
 
   private onPressEnter(event: KeyboardEvent) {
@@ -207,6 +215,12 @@ export default class Input extends Vue {
     &.readonly {
       cursor: not-allowed;
     }
+  }
+
+  .textarea-container {
+    display: flex;
+    flex-direction: row;
+    
   }
 
   .input-textarea {
