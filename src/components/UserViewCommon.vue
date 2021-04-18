@@ -30,16 +30,18 @@
       @close="modalView = null"
     />
     <QRCodeScanner
-      v-if="selectedQRCodeEntity !== null"
+      v-if="selectedQRCodeReference !== null"
       :open-scanner="openQRCodeScanner"
-      :entity="selectedQRCodeEntity"
+      :reference-entity="selectedQRCodeReference.referenceEntity"
+      :field="selectedQRCodeReference.field"
       multi-scan
       @select="selectFromScanner(qrCodeColumnIndex, $event)"
     />
     <QRCodeScanner
-      v-if="selectedBarCodeEntity !== null"
+      v-if="selectedBarCodeReference !== null"
       :open-scanner="openBarCodeScanner"
-      :entity="selectedBarCodeEntity"
+      :reference-entity="openBarCodeScanner.referenceEntity"
+      :field="openBarCodeScanner.field"
       multi-scan
       text-input
       @select="selectFromScanner(barCodeColumnIndex, $event)"
@@ -59,7 +61,7 @@ import { IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
 import type { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
 import { ValueRef, valueToPunnedText } from "@/user_views/combined";
-import { referenceEntriesRef } from "@/state/entries";
+import { getReferenceInfo } from "@/state/entries";
 
 import { attrToButton, Button, attrToButtons, attrToButtonsOld } from "@/components/buttons/buttons";
 
@@ -237,7 +239,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       });
     }
 
-    if (this.selectedQRCodeEntity !== null && this.qrCodeButton) {
+    if (this.selectedQRCodeReference !== null && this.qrCodeButton) {
       buttons.push({
         icon: this.qrCodeButton.icon,
         caption: this.qrCodeButton.caption,
@@ -251,7 +253,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       });
     }
 
-    if (this.selectedBarCodeEntity !== null && this.barCodeButton) {
+    if (this.selectedBarCodeReference !== null && this.barCodeButton) {
       buttons.push({
         icon: this.barCodeButton.icon,
         caption: this.barCodeButton.caption,
@@ -355,26 +357,18 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     }
   }
 
-  get selectedBarCodeEntity() {
-    if (this.barCodeColumnIndex !== null) {
-      const fieldType = this.uv.info.columns[this.barCodeColumnIndex].mainField?.field.fieldType;
-
-      if (fieldType?.type === "reference") {
-        return referenceEntriesRef(fieldType);
-      }
+  get selectedBarCodeReference() {
+    if (this.barCodeColumnIndex === null) {
+      return null;
     }
-    return null;
+    return getReferenceInfo(this.uv, this.barCodeColumnIndex);
   }
 
-  get selectedQRCodeEntity() {
-    if (this.qrCodeColumnIndex !== null) {
-      const fieldType = this.uv.info.columns[this.qrCodeColumnIndex].mainField?.field.fieldType;
-
-      if (fieldType?.type === "reference") {
-        return referenceEntriesRef(fieldType);
-      }
+  get selectedQRCodeReference() {
+    if (this.qrCodeColumnIndex === null) {
+      return null;
     }
-    return null;
+    return getReferenceInfo(this.uv, this.qrCodeColumnIndex);
   }
 
   private makeToast(message: string) {

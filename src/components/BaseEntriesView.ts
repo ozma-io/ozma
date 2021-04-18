@@ -2,8 +2,8 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { ReferenceName, deepClone, deepEquals, waitTimeout } from "@/utils";
-import { CurrentEntries, Entries, IEntriesRef } from "@/state/entries";
-import { RowId } from "ozma-api";
+import { CurrentEntries, Entries } from "@/state/entries";
+import { IFieldRef, RowId } from "ozma-api";
 
 const entries = namespace("entries");
 
@@ -25,15 +25,15 @@ export type EntriesState = IPendingEntries | ILoadedEntries | IErrorEntries;
 
 @Component
 export default class BaseEntriesView extends Vue {
-  @entries.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IEntriesRef; reference: ReferenceName }) => void;
+  @entries.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IFieldRef; reference: ReferenceName }) => void;
   @entries.State("current") entriesMap!: CurrentEntries;
-  @entries.Action("getEntries") getEntries!: (args: { reference: ReferenceName; ref: IEntriesRef; search: string; limit: number }) => Promise<boolean>;
-  @entries.Action("getEntriesByIds") getEntriesByIds!: (args: { reference: ReferenceName; ref: IEntriesRef; ids: RowId[] }) => Promise<Entries>;
+  @entries.Action("getEntries") getEntries!: (args: { reference: ReferenceName; ref: IFieldRef; search: string; limit: number }) => Promise<boolean>;
+  @entries.Action("getEntriesByIds") getEntriesByIds!: (args: { reference: ReferenceName; ref: IFieldRef; ids: RowId[] }) => Promise<Entries>;
 
   // These are supposed to be read only in children user views!
   // Keeping them as state values to avoid creating computed properties (which, also, weirdly fail in this case).
   protected currentEntries: Entries | null = null;
-  protected requestedEntity: IEntriesRef | null = null;
+  protected requestedEntity: IFieldRef | null = null;
   protected requestedSearch = "";
   protected requestedLimit = 0;
 
@@ -87,7 +87,7 @@ export default class BaseEntriesView extends Vue {
   }
 
   // Returns `true`, if more entries are available.
-  protected fetchEntries(entity: IEntriesRef, search: string, limit: number) {
+  protected fetchEntries(entity: IFieldRef, search: string, limit: number) {
     if (!deepEquals(this.requestedEntity, entity)) {
       this.freeEntries();
       this.requestedEntity = deepClone(entity);
@@ -97,7 +97,7 @@ export default class BaseEntriesView extends Vue {
     return waitTimeout().then(() => this.getRequestedEntries());
   }
 
-  protected fetchEntriesByIds(entity: IEntriesRef, ids: number[]) {
+  protected fetchEntriesByIds(entity: IFieldRef, ids: number[]) {
     if (!deepEquals(this.requestedEntity, entity)) {
       this.freeEntries();
       this.requestedEntity = deepClone(entity);

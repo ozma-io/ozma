@@ -1,12 +1,13 @@
 import { ActionContext, Module } from "vuex";
-import { IReferenceFieldType, RowId, IViewExprResult, IReferenceEntity, IQueryChunk } from "ozma-api";
+import { RowId, IQueryChunk, IFieldRef, IEntityRef, IChunkWhere, IDomainValuesResult } from "ozma-api";
 import Vue from "vue";
 import R from "ramda";
 
 import { IRef, ObjectResourceMap, ReferenceName, syncObject, updateObject, waitTimeout } from "@/utils";
 import Api from "@/api";
-import { valueToText, equalEntityRef } from "@/values";
+import { valueToText } from "@/values";
 import { CancelledError } from "@/modules";
+import { ICombinedUserViewAny } from "@/user_views/combined";
 
 // Tree of search requests, ordered by inclusivity.
 
@@ -274,20 +275,11 @@ export class PartialEntries {
   }
 }
 
-export type IEntriesRef = IReferenceEntity;
-
-export const equalEntriesRef = (a: IEntriesRef, b: IEntriesRef): boolean => {
-  return equalEntityRef(a.entity, b.entity) && a.where === b.where;
-};
-
-export const referenceEntriesRef = (r: IReferenceFieldType): IEntriesRef => {
-  return { entity: r.entity, where: r.where };
-};
-
 export class CurrentEntries {
-  entries = new ObjectResourceMap<IEntriesRef, PartialEntries>();
+  // We refer to entries by the field that references to them.
+  entries = new ObjectResourceMap<IFieldRef, PartialEntries>();
 
-  getEntriesOrError(ref: IEntriesRef) {
+  getEntriesOrError(ref: IFieldRef) {
     const entries = this.entries.get(ref);
     if (entries === undefined || entries instanceof Promise) {
       return undefined;
@@ -296,7 +288,7 @@ export class CurrentEntries {
     }
   }
 
-  getEntries(ref: IEntriesRef) {
+  getEntries(ref: IFieldRef) {
     const entity = this.getEntriesOrError(ref);
     if (entity instanceof Error) {
       return undefined;
@@ -310,38 +302,74 @@ export interface IEntriesState {
   current: CurrentEntries;
 }
 
-const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
-  const query = `{ $search string }: SELECT id, __main AS main FROM "${ref.entity.schema}"."${ref.entity.name}" WHERE (__main :: string) ILIKE $search`;
+const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IFieldRef, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
   const likeSearch = search === "" ? "%" : "%" + search.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_") + "%";
-  const chunk: IQueryChunk = { offset, limit: limit + 1 };
+  const where: IChunkWhere = {
+    expression: "(pun :: string) ILIKE $search",
+    arguments: {
+      search: {
+        type: "string",
+        value: likeSearch,
+      },
+    },
+  };
+  const chunk: IQueryChunk = {
+    offset,
+    limit: limit + 1,
+    where,
+  };
+
   const res = await context.dispatch("callProtectedApi", {
-    func: Api.getAnonymousUserView.bind(Api),
-    args: [query, { search: likeSearch }, chunk],
-  }, { root: true }) as IViewExprResult;
-  const mainType = res.info.columns[1].valueType;
-  const entries = Object.fromEntries(res.result.rows.map<[number, string]>(row => {
-    const id = row.values[0].value as number;
-    const main = valueToText(mainType, row.values[1].value);
-    return [id, main];
+    func: Api.getDomainValues.bind(Api),
+    args: [ref, undefined, chunk],
+  }, { root: true }) as IDomainValuesResult;
+  const entries = Object.fromEntries(res.values.map<[number, string]>(row => {
+    const main = valueToText(res.punType, row.pun);
+    return [Number(row.value), main];
   }));
   return {
     entries,
-    complete: res.result.rows.length <= limit,
+    complete: res.values.length <= limit,
   };
 };
 
-const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, ids: RowId[]): Promise<Record<RowId, string>> => {
-  const query = `{ $ids array(int) }: SELECT id, __main AS main FROM "${ref.entity.schema}"."${ref.entity.name}" WHERE id = ANY ($ids)`;
+const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref: IFieldRef, ids: RowId[]): Promise<Record<RowId, string>> => {
+  const where: IChunkWhere = {
+    expression: "value = ANY ($ids)",
+    arguments: {
+      ids: {
+        type: "array(int)",
+        value: ids,
+      },
+    },
+  };
+  const chunk: IQueryChunk = {
+    where,
+  };
+
   const res = await context.dispatch("callProtectedApi", {
-    func: Api.getAnonymousUserView.bind(Api),
-    args: [query, { ids }],
-  }, { root: true }) as IViewExprResult;
-  const mainType = res.info.columns[0].valueType;
-  return Object.fromEntries(res.result.rows.map(row => {
-    const id = row.values[0].value;
-    const pun = row.values[1].value;
-    return [id, valueToText(mainType, pun)];
+    func: Api.getDomainValues.bind(Api),
+    args: [ref, undefined, chunk],
+  }, { root: true }) as IDomainValuesResult;
+  return Object.fromEntries(res.values.map<[number, string]>(row => {
+    const main = valueToText(res.punType, row.pun);
+    return [Number(row.value), main];
   }));
+};
+
+export const getReferenceInfo = (uv: ICombinedUserViewAny, columnI: number): { referenceEntity: IEntityRef; field: IFieldRef } | null => {
+  const mainField = uv.info.columns[columnI].mainField;
+  if (!mainField || mainField.field.fieldType.type !== "reference") {
+    return null;
+  } else {
+    return {
+      referenceEntity: mainField.field.fieldType.entity,
+      field: {
+        entity: uv.info.mainEntity!,
+        name: mainField.name,
+      },
+    };
+  }
 };
 
 const entriesModule: Module<IEntriesState, {}> = {
@@ -350,29 +378,29 @@ const entriesModule: Module<IEntriesState, {}> = {
     current: new CurrentEntries(),
   },
   mutations: {
-    initPartialEntries: (state, args: { ref: IEntriesRef; reference: ReferenceName }) => {
+    initPartialEntries: (state, args: { ref: IFieldRef; reference: ReferenceName }) => {
       const partial = new PartialEntries();
       state.current.entries.createResource(args.ref, args.reference, partial, undefined);
     },
-    insertSearchNode: (state, args: { ref: IEntriesRef; search: string; limit: number; pending: Promise<boolean> }) => {
+    insertSearchNode: (state, args: { ref: IFieldRef; search: string; limit: number; pending: Promise<boolean> }) => {
       state.current.getEntries(args.ref)!.insert(args.search, args.limit, args.pending);
     },
-    updateSearchNode: (state, args: { ref: IEntriesRef; search: string; update: UpdateSearchNode }) => {
+    updateSearchNode: (state, args: { ref: IFieldRef; search: string; update: UpdateSearchNode }) => {
       state.current.getEntries(args.ref)!.update(args.search, args.update);
     },
-    addEntries: (state, args: { ref: IEntriesRef; entries: Entries }) => {
+    addEntries: (state, args: { ref: IFieldRef; entries: Entries }) => {
       state.current.getEntries(args.ref)!.addEntries(args.entries);
     },
-    addSingleEntry: (state, args: { ref: IEntriesRef; id: number; main: string }) => {
+    addSingleEntry: (state, args: { ref: IFieldRef; id: number; main: string }) => {
       state.current.getEntries(args.ref)!.addSingleEntry(args.id, args.main);
     },
-    updatePendingSingleEntry: (state, args: { ref: IEntriesRef; id: number; pending: Promise<Entries> | null }) => {
+    updatePendingSingleEntry: (state, args: { ref: IFieldRef; id: number; pending: Promise<Entries> | null }) => {
       state.current.getEntries(args.ref)!.updatePendingSingleEntry(args.id, args.pending);
     },
-    removePendingSingleEntry: (state, args: { ref: IEntriesRef; id: number }) => {
+    removePendingSingleEntry: (state, args: { ref: IFieldRef; id: number }) => {
       state.current.getEntries(args.ref)!.removePendingSingleEntry(args.id);
     },
-    addEntriesConsumer: (state, { ref, reference }: { ref: IEntriesRef; reference: ReferenceName }) => {
+    addEntriesConsumer: (state, { ref, reference }: { ref: IFieldRef; reference: ReferenceName }) => {
       const oldResource = state.current.entries.getResource(ref);
       if (oldResource) {
         state.current.entries.addReference(ref, reference, undefined);
@@ -381,7 +409,7 @@ const entriesModule: Module<IEntriesState, {}> = {
         state.current.entries.createResource(ref, reference, partial, undefined);
       }
     },
-    removeEntriesConsumer: (state, { ref, reference }: { ref: IEntriesRef; reference: ReferenceName }) => {
+    removeEntriesConsumer: (state, { ref, reference }: { ref: IFieldRef; reference: ReferenceName }) => {
       state.current.entries.removeReference(ref, reference);
     },
     clear: state => {
@@ -402,7 +430,7 @@ const entriesModule: Module<IEntriesState, {}> = {
       },
     },
 
-    getEntriesByIds: (context, args: { reference: ReferenceName; ref: IEntriesRef; ids: RowId[] }): Promise<Entries> => {
+    getEntriesByIds: (context, args: { reference: ReferenceName; ref: IFieldRef; ids: RowId[] }): Promise<Entries> => {
       const { state, commit, dispatch } = context;
       const { reference, ref, ids } = args;
       const oldCurrent = state.current;
@@ -485,7 +513,7 @@ const entriesModule: Module<IEntriesState, {}> = {
     },
 
     // Returns `true` if more entries can be loaded for this `ref` and `search`.
-    getEntries: async (context, args: { reference: ReferenceName; ref: IEntriesRef; search: string; limit: number }): Promise<boolean> => {
+    getEntries: async (context, args: { reference: ReferenceName; ref: IFieldRef; search: string; limit: number }): Promise<boolean> => {
       const { state, commit, dispatch } = context;
       const { reference, ref, search, limit } = args;
 

@@ -53,7 +53,7 @@ import * as R from "ramda";
 import { Component } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
-import { RowId } from "ozma-api";
+import { IFieldRef, RowId } from "ozma-api";
 
 import { mapMaybe, replaceHtmlLinks, tryDicts } from "@/utils";
 import { valueIsNull } from "@/values";
@@ -63,7 +63,6 @@ import Board, { IColumn } from "@/components/kanban/Board.vue";
 import Errorbox from "@/components/Errorbox.vue";
 import { attrToLinkSelf, Link } from "@/links";
 import { currentValue, IRowCommon, rowKey, RowRef, valueToPunnedText } from "@/user_views/combined";
-import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import { attrToQuery, IQuery } from "@/state/query";
 import type { ICard } from "@/components/kanban/Column.vue";
@@ -86,7 +85,7 @@ interface IReferenceColumn {
 
 interface IReferenceColumns {
   type: "reference";
-  entity: IEntriesRef;
+  field: IFieldRef;
   columns: IReferenceColumn[];
 }
 
@@ -103,13 +102,17 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     if (this.groupIndex === null) {
       return null;
     }
-    const fieldType = this.uv.info.columns[this.groupIndex].mainField?.field.fieldType;
+    const mainField = this.uv.info.columns[this.groupIndex].mainField;
+    const fieldType = mainField?.field.fieldType;
     if (fieldType?.type === "reference") {
       const rawColumns = this.uv.attributes["board_columns"];
       if (!rawColumns || !(rawColumns instanceof Array)) {
         return null;
       }
-      const entityRef = referenceEntriesRef(fieldType);
+      const fieldRef = {
+        entity: this.uv.info.mainEntity!,
+        name: mainField!.name,
+      };
       const requestedColumns: RowId[] = [];
       const columns = mapMaybe(col => {
         if (typeof col === "number") {
@@ -138,12 +141,12 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
         }
       }, rawColumns);
       if (requestedColumns.length !== 0) {
-        void this.fetchEntriesByIds(entityRef, requestedColumns);
+        void this.fetchEntriesByIds(fieldRef, requestedColumns);
       }
 
       return {
         type: "reference",
-        entity: entityRef,
+        field: fieldRef,
         columns,
       };
     } else if (fieldType?.type === "enum") {

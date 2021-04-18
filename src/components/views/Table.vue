@@ -198,7 +198,7 @@ import { namespace } from "vuex-class";
 import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 import { Moment, default as moment } from "moment";
 import * as R from "ramda";
-import { IResultColumnInfo, ValueType, RowId } from "ozma-api";
+import { IResultColumnInfo, ValueType, RowId, IFieldRef } from "ozma-api";
 
 import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks } from "@/utils";
 import { valueIsNull } from "@/values";
@@ -215,7 +215,6 @@ import {
   IExtendedRow, IExtendedRowCommon, IExtendedRowInfo, IExtendedValue, IRowCommon, IUserViewHandler, RowRef, ValueRef,
   valueToPunnedText, CommittedRowRef,
 } from "@/user_views/combined";
-import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import { getColorVariables } from "@/utils_colors";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import { Button } from "../buttons/buttons";
@@ -1003,8 +1002,8 @@ type MoveDirection = "up" | "right" | "down" | "left";
 export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra, ITableRowExtra, ITableViewExtra>>(BaseUserView) {
   @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
   @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
-  @entries.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IEntriesRef; reference: ReferenceName }) => void;
-  @entries.Mutation("addEntriesConsumer") addEntriesConsumer!: (args: { ref: IEntriesRef; reference: ReferenceName }) => void;
+  @entries.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IFieldRef; reference: ReferenceName }) => void;
+  @entries.Mutation("addEntriesConsumer") addEntriesConsumer!: (args: { ref: IFieldRef; reference: ReferenceName }) => void;
 
   // These two aren't computed properties for performance. They are computed during `init()` and mutated when other values change.
   // If `init()` is called again, their values after recomputation should be equal to those before it.
@@ -1029,7 +1028,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     minHeight: 0,
   };
   // Keep references to entries used for editing once, so we don't re-request them.
-  private keptEntries = new ObjectSet<IEntriesRef>();
+  private keptEntries = new ObjectSet<IFieldRef>();
 
   private cellEditHeight = 0;
 
@@ -1405,12 +1404,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (this.editingValue === null) {
       this.removeCellEditing();
     } else {
-      const fieldType = this.editingValue.value.info?.field?.fieldType;
-      if (fieldType !== undefined && fieldType.type === "reference") {
-        if (!this.keptEntries.exists(fieldType)) {
-          const ref = referenceEntriesRef(fieldType);
-          void this.addEntriesConsumer({ ref, reference: this.uid });
-          this.keptEntries.insert(ref);
+      const info = this.editingValue.value.info;
+      const fieldType = info?.field?.fieldType;
+      if (fieldType?.type === "reference") {
+        if (!this.keptEntries.exists(info!.fieldRef)) {
+          void this.addEntriesConsumer({ ref: info!.fieldRef, reference: this.uid });
+          this.keptEntries.insert(info!.fieldRef);
         }
       }
     }

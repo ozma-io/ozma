@@ -145,7 +145,7 @@
     <QRCodeScanner
       v-if="wasOpenedQRCodeScanner"
       :open-scanner="isOpenQRCodeScanner"
-      :multi-scan="true"
+      multi-scan
       :link="currentQRCodeLink"
     />
   </div>
