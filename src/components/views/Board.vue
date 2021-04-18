@@ -53,7 +53,7 @@ import * as R from "ramda";
 import { Component } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
-import { IFieldRef, RowId } from "ozma-api";
+import { RowId } from "ozma-api";
 
 import { mapMaybe, replaceHtmlLinks, tryDicts } from "@/utils";
 import { valueIsNull } from "@/values";
@@ -68,6 +68,7 @@ import { attrToQuery, IQuery } from "@/state/query";
 import type { ICard } from "@/components/kanban/Column.vue";
 import { IRowCard, default as RowCard, CardColumn } from "@/components/views/board/RowCard.vue";
 import { getColorVariables } from "@/utils_colors";
+import { IEntriesRef } from "@/state/entries";
 
 interface IGroupColumn {
   group: unknown;
@@ -85,7 +86,7 @@ interface IReferenceColumn {
 
 interface IReferenceColumns {
   type: "reference";
-  field: IFieldRef;
+  entries: IEntriesRef;
   columns: IReferenceColumn[];
 }
 
@@ -109,9 +110,12 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       if (!rawColumns || !(rawColumns instanceof Array)) {
         return null;
       }
-      const fieldRef = {
-        entity: this.uv.info.mainEntity!,
-        name: mainField!.name,
+      const entriesRef = {
+        field: {
+          entity: this.uv.info.mainEntity!,
+          name: mainField!.name,
+        },
+        rowId: null,
       };
       const requestedColumns: RowId[] = [];
       const columns = mapMaybe(col => {
@@ -141,12 +145,12 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
         }
       }, rawColumns);
       if (requestedColumns.length !== 0) {
-        void this.fetchEntriesByIds(fieldRef, requestedColumns);
+        void this.fetchEntriesByIds(entriesRef, requestedColumns);
       }
 
       return {
         type: "reference",
-        field: fieldRef,
+        entries: entriesRef,
         columns,
       };
     } else if (fieldType?.type === "enum") {

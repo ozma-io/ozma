@@ -112,7 +112,7 @@
     <QRCodeScanner
       v-if="wasOpenedQRCodeScanner"
       :reference-entity="referenceEntity"
-      :field="field"
+      :entries="entries"
       :open-scanner="isQRCodeScanner"
       @select="selectFromScanner"
     />
@@ -132,10 +132,11 @@ import { attrToLinkRef, IAttrToLinkOpts, Link } from "@/links";
 import type { IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema, ICombinedValue, valueToPunnedText } from "@/user_views/combined";
 import { mapMaybe, nextRender } from "@/utils";
-import type { IEntityRef, IFieldRef, RowId, ValueType } from "ozma-api";
+import type { IEntityRef, RowId, ValueType } from "ozma-api";
 import { equalEntityRef } from "@/values";
 import { CancelledError } from "@/modules";
 import { Debounce } from "vue-debounce-decorator";
+import type { IEntriesRef } from "@/state/entries";
 
 export interface IReferenceValue {
   id: RowId;
@@ -168,7 +169,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Prop({ type: Number }) height!: number | undefined;
   @Prop({ type: Number }) optionsListHeight!: number | undefined;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  @Prop({ type: Object, required: true }) field!: IFieldRef;
+  @Prop({ type: Object, required: true }) entries!: IEntriesRef;
   @Prop({ type: Object, required: true }) referenceEntity!: IEntityRef;
   @Prop({ type: Array, default: () => [] }) selectViews!: IReferenceSelectAction[];
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
@@ -186,8 +187,8 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     });
   }
 
-  @Watch("referenceEntity", { immediate: true })
-  private referenceEntityChanged(newValue: IFieldRef) {
+  @Watch("entries", { immediate: true })
+  private entriesRefChanged(newValue: IEntriesRef) {
     void this.fetchEntries(newValue, this.requestedSearch, this.requestedLimit);
   }
 
@@ -278,7 +279,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   }
 
   private async processId(id: number): Promise<boolean> {
-    const puns = await this.fetchEntriesByIds(this.field, [id]);
+    const puns = await this.fetchEntriesByIds(this.entries, [id]);
     if (!(id in puns)) {
       return false;
     }
@@ -375,7 +376,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
 
   private async loadMore(next: (_: LoadingResult) => void) {
     try {
-      const moreAvailable = await this.fetchEntries(this.field, this.requestedSearch, this.requestedLimit + 20);
+      const moreAvailable = await this.fetchEntries(this.entries, this.requestedSearch, this.requestedLimit + 20);
       next({ status: "ok", moreAvailable });
     } catch (e) {
       if (!(e instanceof CancelledError)) {
@@ -386,7 +387,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
 
   @Debounce(200)
   private updateFilter(filter: string) {
-    void this.fetchEntries(this.field, filter, 20);
+    void this.fetchEntries(this.entries, filter, 20);
   }
 }
 </script>

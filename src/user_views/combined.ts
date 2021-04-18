@@ -820,7 +820,12 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
       return;
     }
 
-    const summaries = this.storeEntries.entries.get(value.info!.fieldRef);
+    const entriesRef = {
+      field: value.info!.fieldRef,
+      rowId: null,
+    };
+
+    const summaries = this.storeEntries.entries.get(entriesRef);
 
     if (summaries !== undefined && ref in summaries.entries) {
       this.insertEntries(fieldType.entity, summaries.entries);
@@ -828,7 +833,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     } else {
       void (async () => {
         try {
-          const puns = await this.store.dispatch("entries/getEntriesByIds", { ref: value.info!.fieldRef, reference: "update", ids: [ref] }) as Record<RowId, string>;
+          const puns = await this.store.dispatch("entries/getEntriesByIds", { ref: entriesRef, reference: "update", ids: [ref] }) as Record<RowId, string>;
           const pending = puns[ref];
           if (pending !== undefined) {
             value.pun = pending;

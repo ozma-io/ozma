@@ -66,7 +66,7 @@ import { Component, Prop, Watch } from "vue-property-decorator";
 import { StreamBarcodeReader } from "vue-barcode-reader";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
-import type { IEntity, IEntityRef, IFieldRef } from "ozma-api";
+import type { IEntity, IEntityRef } from "ozma-api";
 
 import type { Link } from "@/links";
 import { linkHandler, ILinkHandlerParams } from "@/links";
@@ -75,6 +75,7 @@ import { IQuery } from "@/state/query";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import BarCode from "@/components/barcode/BarCode.vue";
 import { IQRCode, parseQRCode } from "@/components/qrcode/QRCode.vue";
+import { IEntriesRef } from "@/state/entries";
 
 const beep = require("@/resources/beep.mp3");
 
@@ -100,7 +101,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Prop({ type: Boolean, default: false }) textInput!: boolean;
   @Prop({ type: Boolean, default: false }) raw!: boolean;
   @Prop({ type: Object }) link!: Link | undefined;
-  @Prop({ type: Object }) field!: IFieldRef | undefined;
+  @Prop({ type: Object }) entries!: IEntriesRef | undefined;
   @Prop({ type: Object }) referenceEntity!: IEntityRef | undefined;
 
   modalShow = false;
@@ -161,11 +162,11 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     let entry;
 
     try {
-      if (this.referenceEntity === undefined || this.field === undefined) {
+      if (this.referenceEntity === undefined || this.entries === undefined) {
         this.makeToast(this.$t("entity_not_initialized").toString());
         return;
       }
-      const entries = await this.fetchEntriesByIds(this.field, [currentContent.id]);
+      const entries = await this.fetchEntriesByIds(this.entries, [currentContent.id]);
       entry = entries[currentContent.id];
     } catch (e) {
       this.makeToast(this.$t("unknown_code").toString());

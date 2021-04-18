@@ -10,7 +10,7 @@
       :autofocus="autofocus"
       :required="!nullable"
       :disabled="disabled"
-      :field="value.info.fieldRef"
+      :entries="entriesRef"
       :reference-entity="referenceEntity"
       :uv-args="uvArgs"
       :link-attr="linkAttr"
@@ -32,6 +32,7 @@ import { IQuery } from "@/state/query";
 
 import ReferenceMultiSelect, { IReferenceSelectAction } from "@/components/ReferenceMultiSelect.vue";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
+import { IEntriesRef } from "@/state/entries";
 
 const query = namespace("query");
 
@@ -53,6 +54,13 @@ export default class ReferenceField extends Vue {
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
+
+  get entriesRef(): IEntriesRef {
+    return {
+      field: this.value.info!.fieldRef,
+      rowId: this.value.info!.id ?? null,
+    }
+  }
 }
 </script>
 

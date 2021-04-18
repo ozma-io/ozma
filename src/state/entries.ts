@@ -5,7 +5,7 @@ import R from "ramda";
 
 import { IRef, ObjectResourceMap, ReferenceName, syncObject, updateObject, waitTimeout } from "@/utils";
 import Api from "@/api";
-import { valueToText } from "@/values";
+import { equalFieldRef, valueToText } from "@/values";
 import { CancelledError } from "@/modules";
 import { ICombinedUserViewAny } from "@/user_views/combined";
 
@@ -275,11 +275,20 @@ export class PartialEntries {
   }
 }
 
+export interface IEntriesRef {
+  field: IFieldRef;
+  rowId: RowId | null;
+}
+
+export const equalEntriesRef = (a: IEntriesRef, b: IEntriesRef) => {
+  return equalFieldRef(a.field, b.field) && a.rowId === b.rowId;
+};
+
 export class CurrentEntries {
   // We refer to entries by the field that references to them.
-  entries = new ObjectResourceMap<IFieldRef, PartialEntries>();
+  entries = new ObjectResourceMap<IEntriesRef, PartialEntries>();
 
-  getEntriesOrError(ref: IFieldRef) {
+  getEntriesOrError(ref: IEntriesRef) {
     const entries = this.entries.get(ref);
     if (entries === undefined || entries instanceof Promise) {
       return undefined;
@@ -288,7 +297,7 @@ export class CurrentEntries {
     }
   }
 
-  getEntries(ref: IFieldRef) {
+  getEntries(ref: IEntriesRef) {
     const entity = this.getEntriesOrError(ref);
     if (entity instanceof Error) {
       return undefined;
@@ -302,7 +311,7 @@ export interface IEntriesState {
   current: CurrentEntries;
 }
 
-const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IFieldRef, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
+const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
   const likeSearch = search === "" ? "%" : "%" + search.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_") + "%";
   const where: IChunkWhere = {
     expression: "(pun :: string) ILIKE $search",
@@ -321,7 +330,7 @@ const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IFie
 
   const res = await context.dispatch("callProtectedApi", {
     func: Api.getDomainValues.bind(Api),
-    args: [ref, undefined, chunk],
+    args: [ref.field, ref.rowId ?? undefined, chunk],
   }, { root: true }) as IDomainValuesResult;
   const entries = Object.fromEntries(res.values.map<[number, string]>(row => {
     const main = valueToText(res.punType, row.pun);
@@ -333,7 +342,7 @@ const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IFie
   };
 };
 
-const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref: IFieldRef, ids: RowId[]): Promise<Record<RowId, string>> => {
+const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, ids: RowId[]): Promise<Record<RowId, string>> => {
   const where: IChunkWhere = {
     expression: "value = ANY ($ids)",
     arguments: {
@@ -349,7 +358,7 @@ const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref:
 
   const res = await context.dispatch("callProtectedApi", {
     func: Api.getDomainValues.bind(Api),
-    args: [ref, undefined, chunk],
+    args: [ref.field, ref.rowId ?? undefined, chunk],
   }, { root: true }) as IDomainValuesResult;
   return Object.fromEntries(res.values.map<[number, string]>(row => {
     const main = valueToText(res.punType, row.pun);
@@ -357,16 +366,19 @@ const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref:
   }));
 };
 
-export const getReferenceInfo = (uv: ICombinedUserViewAny, columnI: number): { referenceEntity: IEntityRef; field: IFieldRef } | null => {
+export const getReferenceInfo = (uv: ICombinedUserViewAny, columnI: number, rowId: number | null): { referenceEntity: IEntityRef; entries: IEntriesRef } | null => {
   const mainField = uv.info.columns[columnI].mainField;
   if (!mainField || mainField.field.fieldType.type !== "reference") {
     return null;
   } else {
     return {
       referenceEntity: mainField.field.fieldType.entity,
-      field: {
-        entity: uv.info.mainEntity!,
-        name: mainField.name,
+      entries: {
+        field: {
+          entity: uv.info.mainEntity!,
+          name: mainField.name,
+        },
+        rowId,
       },
     };
   }
@@ -378,29 +390,29 @@ const entriesModule: Module<IEntriesState, {}> = {
     current: new CurrentEntries(),
   },
   mutations: {
-    initPartialEntries: (state, args: { ref: IFieldRef; reference: ReferenceName }) => {
+    initPartialEntries: (state, args: { ref: IEntriesRef; reference: ReferenceName }) => {
       const partial = new PartialEntries();
       state.current.entries.createResource(args.ref, args.reference, partial, undefined);
     },
-    insertSearchNode: (state, args: { ref: IFieldRef; search: string; limit: number; pending: Promise<boolean> }) => {
+    insertSearchNode: (state, args: { ref: IEntriesRef; search: string; limit: number; pending: Promise<boolean> }) => {
       state.current.getEntries(args.ref)!.insert(args.search, args.limit, args.pending);
     },
-    updateSearchNode: (state, args: { ref: IFieldRef; search: string; update: UpdateSearchNode }) => {
+    updateSearchNode: (state, args: { ref: IEntriesRef; search: string; update: UpdateSearchNode }) => {
       state.current.getEntries(args.ref)!.update(args.search, args.update);
     },
-    addEntries: (state, args: { ref: IFieldRef; entries: Entries }) => {
+    addEntries: (state, args: { ref: IEntriesRef; entries: Entries }) => {
       state.current.getEntries(args.ref)!.addEntries(args.entries);
     },
-    addSingleEntry: (state, args: { ref: IFieldRef; id: number; main: string }) => {
+    addSingleEntry: (state, args: { ref: IEntriesRef; id: number; main: string }) => {
       state.current.getEntries(args.ref)!.addSingleEntry(args.id, args.main);
     },
-    updatePendingSingleEntry: (state, args: { ref: IFieldRef; id: number; pending: Promise<Entries> | null }) => {
+    updatePendingSingleEntry: (state, args: { ref: IEntriesRef; id: number; pending: Promise<Entries> | null }) => {
       state.current.getEntries(args.ref)!.updatePendingSingleEntry(args.id, args.pending);
     },
-    removePendingSingleEntry: (state, args: { ref: IFieldRef; id: number }) => {
+    removePendingSingleEntry: (state, args: { ref: IEntriesRef; id: number }) => {
       state.current.getEntries(args.ref)!.removePendingSingleEntry(args.id);
     },
-    addEntriesConsumer: (state, { ref, reference }: { ref: IFieldRef; reference: ReferenceName }) => {
+    addEntriesConsumer: (state, { ref, reference }: { ref: IEntriesRef; reference: ReferenceName }) => {
       const oldResource = state.current.entries.getResource(ref);
       if (oldResource) {
         state.current.entries.addReference(ref, reference, undefined);
@@ -409,7 +421,7 @@ const entriesModule: Module<IEntriesState, {}> = {
         state.current.entries.createResource(ref, reference, partial, undefined);
       }
     },
-    removeEntriesConsumer: (state, { ref, reference }: { ref: IFieldRef; reference: ReferenceName }) => {
+    removeEntriesConsumer: (state, { ref, reference }: { ref: IEntriesRef; reference: ReferenceName }) => {
       state.current.entries.removeReference(ref, reference);
     },
     clear: state => {
@@ -430,7 +442,7 @@ const entriesModule: Module<IEntriesState, {}> = {
       },
     },
 
-    getEntriesByIds: (context, args: { reference: ReferenceName; ref: IFieldRef; ids: RowId[] }): Promise<Entries> => {
+    getEntriesByIds: (context, args: { reference: ReferenceName; ref: IEntriesRef; ids: RowId[] }): Promise<Entries> => {
       const { state, commit, dispatch } = context;
       const { reference, ref, ids } = args;
       const oldCurrent = state.current;
@@ -492,7 +504,7 @@ const entriesModule: Module<IEntriesState, {}> = {
         })();
         if (oldResource === undefined) {
           // Prefetch entity.
-          void dispatch("entities/getEntity", ref.entity, { root: true });
+          void dispatch("entities/getEntity", ref.field.entity, { root: true });
           commit("initPartialEntries", { ref, reference });
         }
         for (const id of requestedIds) {
@@ -513,7 +525,7 @@ const entriesModule: Module<IEntriesState, {}> = {
     },
 
     // Returns `true` if more entries can be loaded for this `ref` and `search`.
-    getEntries: async (context, args: { reference: ReferenceName; ref: IFieldRef; search: string; limit: number }): Promise<boolean> => {
+    getEntries: async (context, args: { reference: ReferenceName; ref: IEntriesRef; search: string; limit: number }): Promise<boolean> => {
       const { state, commit, dispatch } = context;
       const { reference, ref, search, limit } = args;
 
@@ -581,7 +593,7 @@ const entriesModule: Module<IEntriesState, {}> = {
       })();
       if (oldResource === undefined) {
         // Prefetch entity.
-        void dispatch("entities/getEntity", ref.entity, { root: true });
+        void dispatch("entities/getEntity", ref.field.entity, { root: true });
         commit("initPartialEntries", { ref, reference });
       }
       commit("insertSearchNode", { ref, search, limit, pending: pending.ref });

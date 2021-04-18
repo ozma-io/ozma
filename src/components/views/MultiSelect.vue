@@ -20,7 +20,7 @@
       :disabled="disabled"
       :background-color="backgroundColor"
       :link-attr="linkAttr"
-      :field="reference.field"
+      :entries="reference.entries"
       :reference-entity="reference.referenceEntity"
       :uv-args="uv.args"
       @add-value="addValue"
@@ -77,7 +77,7 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseU
   @Prop({ type: String }) backgroundColor!: string;
 
   get reference() {
-    return getReferenceInfo(this.uv, this.selectedValueColumn);
+    return getReferenceInfo(this.uv, this.selectedValueColumn, null);
   }
 
   get selectedValueColumn() {

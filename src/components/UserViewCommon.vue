@@ -33,7 +33,7 @@
       v-if="selectedQRCodeReference !== null"
       :open-scanner="openQRCodeScanner"
       :reference-entity="selectedQRCodeReference.referenceEntity"
-      :field="selectedQRCodeReference.field"
+      :entries="selectedQRCodeReference.entries"
       multi-scan
       @select="selectFromScanner(qrCodeColumnIndex, $event)"
     />
@@ -41,7 +41,7 @@
       v-if="selectedBarCodeReference !== null"
       :open-scanner="openBarCodeScanner"
       :reference-entity="openBarCodeScanner.referenceEntity"
-      :field="openBarCodeScanner.field"
+      :entries="openBarCodeScanner.entries"
       multi-scan
       text-input
       @select="selectFromScanner(barCodeColumnIndex, $event)"
@@ -361,14 +361,14 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     if (this.barCodeColumnIndex === null) {
       return null;
     }
-    return getReferenceInfo(this.uv, this.barCodeColumnIndex);
+    return getReferenceInfo(this.uv, this.barCodeColumnIndex, null);
   }
 
   get selectedQRCodeReference() {
     if (this.qrCodeColumnIndex === null) {
       return null;
     }
-    return getReferenceInfo(this.uv, this.qrCodeColumnIndex);
+    return getReferenceInfo(this.uv, this.qrCodeColumnIndex, null);
   }
 
   private makeToast(message: string) {
