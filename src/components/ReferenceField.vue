@@ -59,7 +59,7 @@ export default class ReferenceField extends Vue {
     return {
       field: this.value.info!.fieldRef,
       rowId: this.value.info!.id ?? null,
-    }
+    };
   }
 }
 </script>
