@@ -220,7 +220,6 @@ export default class Input extends Vue {
   .textarea-container {
     display: flex;
     flex-direction: row;
-    
   }
 
   .input-textarea {
