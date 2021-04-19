@@ -16,6 +16,8 @@
             "select_user_view_error": "Failed to select an entry: {msg}",
             "base_user_view_error": "Failed to perform an operation: {msg}",
             "error": "Error",
+            "light_theme": "light",
+            "dark_theme": "dark",
             "authed_link": "Copy link with authorization"
         },
         "ru": {
@@ -34,6 +36,8 @@
             "select_user_view_error": "Ошибка выбора записи: {msg}",
             "base_user_view_error": "Ошибка выполнения операции: {msg}",
             "error": "Ошибка",
+            "light_theme": "светлая",
+            "dark_theme": "тёмная",
             "authed_link": "Скопировать ссылку с авторизацией"
         }
     }
@@ -258,7 +262,9 @@ export default class TopLevelUserView extends Vue {
   @Watch("currentSettings")
   private loadThemeButtons() {
     const themes = this.currentSettings.themes;
-    this.themeButtons = themes.map(theme => ({ caption: theme, type: "callback", callback: () => this.setTheme(theme) }));
+    const translate = (themeName: string) =>
+      (themeName === "light" || themeName === "dark") ? this.$t(themeName + "_theme").toString() : themeName;
+    this.themeButtons = themes.map(theme => ({ caption: translate(theme), type: "callback", callback: () => this.setTheme(theme) }));
   }
 
   private onKeydown(event: KeyboardEvent) {
