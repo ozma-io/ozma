@@ -12,11 +12,13 @@
 </i18n>
 
 <template>
-  <div class="iframe-container">
+  <div
+    class="iframe-container"
+    :style="style"
+  >
     <iframe
       ref="iframe"
       class="iframe"
-      :style="style"
       sandbox="allow-scripts allow-top-navigation"
       :srcdoc="srcdoc"
       :src="src"
@@ -59,6 +61,8 @@ export default class IframeControl extends Vue {
     }
 
     if (event.data.name === "changeHeight" && typeof event.data?.payload === "number") {
+      /* TODO FIXME: When height is set as iframe's `document.body.clientHeight`,
+         there are overflow and scrollbar in Firefox but not in Chrome or Safari. */
       this.requestedHeight = event.data.payload;
     }
   }
@@ -105,6 +109,9 @@ export default class IframeControl extends Vue {
 
   .iframe {
     width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
     border: none;
   }
 </style>

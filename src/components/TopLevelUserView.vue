@@ -62,32 +62,13 @@
         :buttons="buttons"
         :is-enable-filter="enableFilter"
         :filter-string="query.root.search"
+        is-root
         @update:filterString="replaceRootSearch($event)"
         @goto="$emit('goto', $event)"
       >
         <template #main-buttons>
-          <b-button
-            v-if="!isMainView"
-            variant="light"
-            class="button-only-icon mr-1"
-            @click="$router.go(-1)"
-          >
-            <span class="material-icons">arrow_back</span>
-          </b-button>
-          <router-link
-            v-if="!isMainView"
-            class="text-decoration-none"
-            :to="{ name: 'main' }"
-          >
-            <b-button
-              variant="light"
-              class="button-only-icon mr-1"
-            >
-              <span class="material-icons">home</span>
-            </b-button>
-          </router-link>
-          <ButtonGroup
-            :button="burgerButton"
+          <ButtonsPanel
+            :buttons="mainButtons"
             @goto="$emit('goto', $event)"
           />
         </template>
@@ -164,7 +145,7 @@
     <QRCodeScanner
       v-if="wasOpenedQRCodeScanner"
       :open-scanner="isOpenQRCodeScanner"
-      :multi-scan="true"
+      multi-scan
       :link="currentQRCodeLink"
     />
   </div>
@@ -188,6 +169,7 @@ import { Link } from "@/links";
 import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { CurrentSettings } from "@/state/settings";
+import { getColorVariables } from "@/utils_colors";
 
 const auth = namespace("auth");
 const staging = namespace("staging");
@@ -234,6 +216,27 @@ export default class TopLevelUserView extends Vue {
   private wasOpenedQRCodeScanner = false;
   private isOpenQRCodeScanner = false;
   private currentQRCodeLink: Link | null = null;
+
+  private get mainButtons(): Button[] {
+    return [
+      {
+        type: "callback",
+        icon: "arrow_back",
+        variant: "interfaceButton",
+        colorVariables: getColorVariables("button", "interfaceButton"), // FIXME TODO: Manual settings of `colorVariables` is ugly, unsafe and stupid, refactor this.
+        callback: () => this.$router.go(-1),
+      },
+      {
+        type: "location",
+        icon: "home",
+        variant: "interfaceButton",
+        colorVariables: getColorVariables("button", "interfaceButton"),
+        location: { name: "main" },
+        disabled: this.isMainView,
+      },
+      this.burgerButton,
+    ];
+  }
 
   constructor() {
     super();
@@ -358,10 +361,12 @@ export default class TopLevelUserView extends Vue {
 
   get burgerButton() {
     const buttons: Button[] = [];
+
+    if (this.themeButtons.length > 0) {
+      buttons.push({ icon: "palette", caption: this.$t("theme").toString(), type: "button-group", buttons: this.themeButtons });
+    }
+
     if (this.currentAuth?.token) {
-      if (this.themeButtons.length > 0) {
-        buttons.push({ icon: "palette", caption: this.$t("theme").toString(), type: "button-group", buttons: this.themeButtons });
-      }
       if (Api.developmentMode) {
         const currentAuth = this.currentAuth;
         buttons.push({ icon: "link",
@@ -372,7 +377,7 @@ export default class TopLevelUserView extends Vue {
           },
           type: "callback" });
       }
-      buttons.push({ icon: "perm_identity", caption: this.$t("account").toString(), type: "link", link: { href: Api.accountUrl, type: "href" } });
+      buttons.push({ icon: "perm_identity", caption: this.$t("account").toString(), type: "link", link: { href: Api.accountUrl, type: "href", target: "_self" } });
       buttons.push({ icon: "exit_to_app", caption: this.$t("logout").toString(), type: "callback", callback: this.logout });
     } else {
       buttons.push({ icon: "login", caption: this.$t("login").toString(), type: "callback", callback: this.login });
@@ -380,6 +385,8 @@ export default class TopLevelUserView extends Vue {
 
     const burgerButton: Button = {
       icon: "menu",
+      variant: "interfaceButton",
+      colorVariables: getColorVariables("button", "interfaceButton"),
       buttons,
       type: "button-group",
     };
@@ -421,7 +428,6 @@ export default class TopLevelUserView extends Vue {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    border-top: 1px solid var(--MainBorderColor);
   }
 
   .userview-upper-div {

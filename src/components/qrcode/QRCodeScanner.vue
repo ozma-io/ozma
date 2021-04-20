@@ -72,10 +72,10 @@ import type { Link } from "@/links";
 import { linkHandler, ILinkHandlerParams } from "@/links";
 import { inheritedFromEntity } from "@/values";
 import { IQuery } from "@/state/query";
-import type { IEntriesRef } from "@/state/entries";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import BarCode from "@/components/barcode/BarCode.vue";
 import { IQRCode, parseQRCode } from "@/components/qrcode/QRCode.vue";
+import { IEntriesRef } from "@/state/entries";
 
 const beep = require("@/resources/beep.mp3");
 
@@ -93,15 +93,16 @@ const entities = namespace("entities");
   },
 })
 export default class QRCodeScanner extends mixins(BaseEntriesView) {
+  @query.Action("pushRoot") pushRoot!: (_: IQuery) => Promise<void>;
+  @entities.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
+
   @Prop({ type: Boolean, default: false }) openScanner!: boolean;
   @Prop({ type: Boolean, default: false }) multiScan!: boolean;
   @Prop({ type: Boolean, default: false }) textInput!: boolean;
   @Prop({ type: Boolean, default: false }) raw!: boolean;
-  @Prop({ type: Object, default: null }) link!: Link;
-  @Prop({ type: Object, default: undefined }) entity!: IEntriesRef | undefined;
-
-  @query.Action("pushRoot") pushRoot!: (_: IQuery) => Promise<void>;
-  @entities.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
+  @Prop({ type: Object }) link!: Link | undefined;
+  @Prop({ type: Object }) entries!: IEntriesRef | undefined;
+  @Prop({ type: Object }) referenceEntity!: IEntityRef | undefined;
 
   modalShow = false;
   result: Array<IQRResultContent> = [];
@@ -140,12 +141,12 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     if (parsedContent) {
       currentContent = parsedContent;
     } else if (!isNaN(Number(content))) {
-      if (this.entity === undefined) {
+      if (this.referenceEntity === undefined) {
         this.makeToast(this.$t("entity_not_initialized").toString());
         return;
       }
       currentContent = {
-        entity: this.entity.entity,
+        entity: this.referenceEntity,
         id: Number(content),
       };
     } else {
@@ -161,11 +162,11 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     let entry;
 
     try {
-      if (this.entity === undefined) {
+      if (this.referenceEntity === undefined || this.entries === undefined) {
         this.makeToast(this.$t("entity_not_initialized").toString());
         return;
       }
-      const entries = await this.fetchEntriesByIds(this.entity, [currentContent.id]);
+      const entries = await this.fetchEntriesByIds(this.entries, [currentContent.id]);
       entry = entries[currentContent.id];
     } catch (e) {
       this.makeToast(this.$t("unknown_code").toString());
@@ -177,8 +178,8 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
       return;
     }
 
-    const currentEntity = await this.getEntity(this.entity.entity);
-    if (!inheritedFromEntity(this.entity.entity, currentEntity, currentContent.entity)) {
+    const currentEntity = await this.getEntity(this.referenceEntity);
+    if (!inheritedFromEntity(this.referenceEntity, currentEntity, currentContent.entity)) {
       this.makeToast(this.$t("error_qrcode_is_inappropriate").toString());
       return;
     }
@@ -198,6 +199,10 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   }
 
   private async dispatchByContent(currentContent: IQRCode) {
+    if (!this.link) {
+      throw new Error("Impossible");
+    }
+
     let link: Link | undefined;
 
     if ("links" in this.link) {

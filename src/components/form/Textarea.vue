@@ -10,6 +10,7 @@
 </i18n>
 <template>
   <fragment>
+    <!-- eslint-disable vue/no-deprecated-v-on-native-modifier -->
     <textarea-autosize
       v-if="isCellEdit"
       ref="controlTextarea"
@@ -23,6 +24,7 @@
         'textarea_field__desktop': !$isMobile,
       }]"
       @keydown.enter.prevent
+      @keydown.escape.native.prevent="$emit('blur', $event)"
       @input="updateInput"
     />
     <div
@@ -171,6 +173,9 @@ export default class Textarea extends Vue {
     z-index: 2;
     order: 2;
     flex: 2;
+    color: var(--input-foregroundColor);
+    background-color: var(--input-backgroundColor);
+    border-color: var(--input-borderColor);
   }
 
   .textarea-container {
@@ -179,7 +184,9 @@ export default class Textarea extends Vue {
     }
 
     .textarea-field {
-      background-color: rgba(0, 0, 0, 0);
+      color: var(--input-foregroundColor);
+      background-color: var(--input-backgroundColor);
+      border-color: var(--input-borderColor);
     }
   }
 
@@ -189,18 +196,11 @@ export default class Textarea extends Vue {
 
   .textarea_field:hover {
     overflow-y: auto;
-    background-color: var(--CellSelectColor);
   }
 
   .textarea_field:focus {
     outline: none;
     width: 100%;
-    background-color: var(--CellSelectColor);
-  }
-
-  .textarea_field__desktop {
-    padding: 5px;
-    border: 1px solid var(--MainBorderColor);
   }
 
   .textarea_field__desktop:focus {
@@ -212,14 +212,14 @@ export default class Textarea extends Vue {
   .textarea-field_cell-edit {
     border: none;
     text-align: inherit;
-  }
 
-  .textarea-field_cell-edit:focus {
-    border: none;
-  }
+    &:focus {
+      border: none;
+    }
 
-  .textarea-field_cell-edit:hover {
-    border: none;
+    &:hover {
+      border: none;
+    }
   }
 
   .textarea_field__disabled {

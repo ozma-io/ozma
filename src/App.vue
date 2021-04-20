@@ -54,7 +54,7 @@ import { CurrentSettings } from "@/state/settings";
 import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import FabCluster from "@/components/FabCluster/FabCluster.vue";
 import { ErrorKey } from "@/state/errors";
-import { getColorVariables } from "@/utils_colors";
+import { getColorVariables, inheritColorVariables } from "@/utils_colors";
 import { eventBus } from "@/main";
 import { isReadonlyDemoInstance } from "@/api";
 
@@ -167,17 +167,30 @@ export default class App extends Vue {
     const background = this.styleSettings["--OldMainBackgroundColor"];
     const foreground = this.styleSettings["--OldMainTextColor"];
     const border = this.styleSettings["--OldMainBorderColor"];
-    const defaultVariant = getColorVariables("default", { background, foreground, border });
-    // I want borderless menuEntries by default, but they are using button variant. Probably TODO borderless buttons.
-    const menuEntryVariant = getColorVariables("menuEntry", {
-      background,
-      border: background,
-    });
+    const defaultVariables = getColorVariables("default", { background, foreground, border });
+    const menuEntryVariables = inheritColorVariables(
+      "menuEntry",
+      "default",
+      {
+        background: "rgba(0, 0, 0, 0)",
+        border: "rgba(0, 0, 0, 0)",
+      },
+    );
+
+    const interfaceButtonVariables = inheritColorVariables(
+      "interfaceButton",
+      "interface",
+      {
+        background: "rgba(0, 0, 0, 0)",
+        border: "rgba(0, 0, 0, 0)",
+      },
+    );
 
     this.colorVariables = R.mergeAll([
-      defaultVariant,
+      defaultVariables,
       ...componentsNames.map(componentName => getColorVariables(componentName, "default")),
-      menuEntryVariant,
+      menuEntryVariables,
+      interfaceButtonVariables,
       ...lightColorVariants.map((variant: any) => getColorVariables(variant.name, variant)),
       ...colorVariants.map((variant: any) => getColorVariables(variant.name, variant)),
     ]);
@@ -211,11 +224,11 @@ export default class App extends Vue {
       "ControlDisableColor": this.settings.getEntry("control_disable_color", String, "#999999"),
 
       // Light Theme, do not remove
-      "OldMainTextColor": this.settings.getEntry("main_text_color", String, "#292b2c"),
+      "OldMainTextColor": this.settings.getEntry("main_text_color", String, "#rgba(51, 51, 51, 1)"),
       "OldMainBackgroundColor": this.settings.getEntry("main_background_color", String, "white"),
       "SecondaryBackgroundColor": this.settings.getEntry("secondary_background_color", String, "#f8f9fa"),
-      "OldMainTextColorLight": this.settings.getEntry("main_text_color_light", String, "#6c757d"),
-      "OldMainBorderColor": this.settings.getEntry("main_border_color", String, "#dee2e6"),
+      "OldMainTextColorLight": this.settings.getEntry("main_text_color_light", String, "rgba(153, 153, 153, 1)"),
+      "OldMainBorderColor": this.settings.getEntry("main_border_color", String, "rgb(204, 204, 204)"),
       "MainBorderTextColor": this.settings.getEntry("main_border_text_color", String, "#68766d"),
 
       // Dark Theme, do not remove

@@ -25,8 +25,10 @@
   }
 
   &.disabled {
-    cursor: default;
-    color: var(--#{$variant}-foregroundDarkerColor);
+    cursor: not-allowed;
+    color: var(--#{$variant}-foregroundDarkerColor) !important;
+    background-color: var(--#{$variant}-backgroundColor) !important;
+    border-color: var(--#{$variant}-backgroundColor) !important;
     opacity: 0.7;
   }
 }
@@ -35,4 +37,10 @@
   background-color: var(--#{$name}-backgroundColor);
   color: var(--#{$name}-foregroundColor);
   border-color: var(--#{$name}-borderColor);
+}
+
+/* 24px is material icons best size and 14px is default font size */
+// $icon-size: (24px / 14px) + rem;
+@function icon-size($base-size: 24px) {
+  @return ($base-size / 14px) + rem;
 }

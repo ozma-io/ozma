@@ -3,12 +3,14 @@
     "en": {
         "ok": "OK",
         "cancel": "Cancel",
+        "readonly_field": "Read-only field",
         "required_field": "Required field"
 
         },
     "ru": {
         "ok": "ОК",
         "cancel": "Отмена",
+        "readonly_field": "Поле только для чтения",
         "required_field": "Обязательное поле"
         }
     }
@@ -80,11 +82,35 @@
           ]"
         >
           <div
-            v-if="required"
-            v-b-tooltip.hover.bottom.noninteractive
-            class="required-indicator"
-            :title="$t('required_field')"
-          />
+            v-if="required || disabled"
+            :class="[
+              'indicator-container',
+              {
+                'cell-edit': isCellEdit,
+                'required': required,
+                'inline': !label || inline,
+              },
+            ]"
+            :title="$t(required ? 'required_field' : 'readonly_field')"
+          >
+            <div
+              v-if="required"
+              :class="[
+                'required-indicator',
+                {
+                  'empty': empty,
+                },
+              ]"
+            />
+
+            <div
+              v-if="disabled"
+              class="disabled-indicator"
+            >
+              <span class="material-icons">edit_off</span>
+            </div>
+          </div>
+
           <slot
             :onFocus="onNonmodalFocus"
           />
@@ -112,6 +138,7 @@ export default class InputSlot extends Vue {
   @Prop({ type: Boolean, default: false }) modal!: boolean;
   @Prop({ type: Boolean, default: false }) modalOnly!: boolean;
   @Prop({ type: Boolean, default: false }) required!: boolean;
+  @Prop({ type: Boolean, default: false }) disabled!: boolean;
   @Prop({ type: Boolean, required: true }) empty!: boolean;
 
   private focused = false;
@@ -190,30 +217,68 @@ export default class InputSlot extends Vue {
     position: relative;
     border-radius: 0.2rem;
 
-    &.required {
-      > .required-indicator {
-        height: 1rem;
-        width: 1rem;
-        background-color: rgba(0, 0, 0, 0.05);
-        border-radius: 50%;
-        position: absolute;
-        left: -1.5rem;
-        top: 0.5rem;
-        z-index: 10;
-        transition: background-color 0.1s;
-      }
+    .indicator-container {
+      $indicator-size: (18px / 14px) * 1rem; /* 14px is preferred font size and 18px is like in `.md-18` */
+      $indicator-padding: 0.2rem;
 
-      &:not(.inline) {
-        > .required-indicator {
-          left: unset;
-          top: -1.5rem;
-          right: 0.5rem;
+      position: absolute;
+      height: $indicator-size + $indicator-padding * 2;
+      width: $indicator-size + $indicator-padding * 2;
+      padding: $indicator-padding;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 31;
+
+      &.inline {
+        left: -1 * ($indicator-size  + 2 * $indicator-padding);
+        top: $indicator-size / 4;
+
+        &.cell-edit {
+          /* False-positive */
+          /* stylelint-disable-next-line */
+          left: calc(#{-1 * ($indicator-size + 2 * $indicator-padding)} + 1px);
+          top: 0;
         }
       }
 
-      &.empty {
-        > .required-indicator {
+      &:not(.inline):not(.cell-edit) {
+        left: unset;
+        top: -1.75rem;
+        right: 0.25rem;
+      }
+
+      &.cell-edit {
+        background-color: var(--input-backgroundColor);
+        border: 1px solid var(--input-borderColor);
+        border-right-color: var(--input-backgroundColor);
+        border-top-left-radius: 50%;
+        border-bottom-left-radius: 50%;
+      }
+
+      .required-indicator {
+        position: absolute;
+        height: 1rem;
+        width: 1rem;
+        border-radius: 50%;
+        background-color: var(--input-foregroundColor);
+        opacity: 0.05;
+        transition:
+          background-color 0.1s,
+          opacity 0.1s;
+
+        &.empty {
           background-color: rgba(255, 120, 100, 0.9);
+          opacity: 1;
+        }
+      }
+
+      .disabled-indicator {
+        line-height: 1;
+
+        .material-icons {
+          color: var(--default-foregroundDarkerColor);
+          font-size: $indicator-size;
         }
       }
     }

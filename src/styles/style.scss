@@ -116,24 +116,12 @@ button:not(.btn) {
   }
 }
 
-/* 24px is material icons best size and 14px is default font size */
-// $icon-size: (24px / 14px) + rem;
-@function icon-size($base-size: 24px) {
-  @return ($base-size / 14px) + rem;
-}
-
 /* Source: https://google.github.io/material-design-icons/ */
 .material-icons,
-.material-icons.md-24 { font-size: icon-size(); }
-.material-icons.md-18 { font-size: icon-size(18px); }
-.material-icons.md-36 { font-size: icon-size(36px); }
-.material-icons.md-48 { font-size: icon-size(48px); }
-
-.material-icons.md-dark { color: rgba(0, 0, 0, 0.54); }
-.material-icons.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
-
-.material-icons.md-light { color: rgba(255, 255, 255, 1); }
-.material-icons.md-light.md-inactive { color: rgba(255, 255, 255, 0.3); }
+.md-24 { font-size: icon-size(); }
+.md-18 { font-size: icon-size(18px); }
+.md-36 { font-size: icon-size(36px); }
+.md-48 { font-size: icon-size(48px); }
 
 .material-icons {
   user-select: none;
@@ -143,38 +131,38 @@ button:not(.btn) {
   @include material-button;
 }
 
+.list-group-item-action {
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+
+  .icon {
+    line-height: 0;
+  }
+
+  .button-caption {
+    margin-left: 0.25rem;
+  }
+}
+
 .button-only-icon,
 .button-only-caption,
 .button-icon-caption {
   @include material-button("button");
 
-  width: 100%;
   padding: 0.2rem;
   display: flex;
   align-items: center;
 }
 
-// FIXME: Buttons not round only in Chrome.
-.button-only-icon {
-  width: auto;
-  border-radius: 50%;
-
-  // Circle buttons a little taller than recangular ones, so we need to compensate it.
-  // But current value for this is just almost random.
-  margin: -0.1rem 0;
-}
-
+.button-only-icon,
 .button-icon-caption {
   .icon {
-    position: absolute;
     line-height: 0;
-    width: 1em;
-    height: 1em;
-    transform: translateY(50%);
   }
 
   .button-caption {
-    margin-left: 2rem;
+    margin-left: 0.2rem;
   }
 }
 
@@ -199,7 +187,10 @@ button:not(.btn) {
 
 input.disabled {
   cursor: not-allowed;
-  opacity: 1; /* Fix Safari styles */
+
+  /* Fixes for Safari */
+  opacity: 1;
+  -webkit-text-fill-color: var(--input-foregroundColor);
 }
 
 input.with-clear-content-button {

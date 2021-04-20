@@ -105,7 +105,7 @@
               <input
                 v-if="showUnselectOption"
                 type="button"
-                class="material-icons material-button remove-value rounded-circle"
+                class="material-icons md-18 material-button remove-value rounded-circle"
                 value="close"
                 @click="unselectOption(index)"
               >
@@ -633,8 +633,8 @@ export default class MultiSelect extends Vue {
     flex-direction: row;
     width: 100%;
     border: 1px solid var(--input-borderColor);
-    background: var(--input-backgroundColor, var(--default-backgroundColor));
-    color: var(--input-foregroundColor, var(--default-foregroundColor));
+    background: var(--input-backgroundColor);
+    color: var(--input-foregroundColor);
     border-radius: 0.2rem;
     cursor: pointer;
 
@@ -696,6 +696,7 @@ export default class MultiSelect extends Vue {
     cursor: pointer;
     align-content: center;
     overflow-x: auto;
+    line-height: 1;
 
     &.fixed-height {
       overflow: hidden;
@@ -776,7 +777,7 @@ export default class MultiSelect extends Vue {
     background-color: var(--reference-backgroundColor);
     color: var(--reference-foregroundColor);
     border-radius: 1rem;
-    padding: 2px 5px;
+    padding: 0.25rem 0.5rem;
     line-height: 1rem;
     word-break: break-all;
 
@@ -811,16 +812,17 @@ export default class MultiSelect extends Vue {
   }
 
   .append-button {
-    padding: 0 4px;
+    padding: 0 0.259em;
   }
 
   .one-of-many-value > input.remove-value {
+    @include material-button("reference");
+
     background: none;
     border: none;
     padding: 0;
-    margin: 0 0 0 5px;
-    font-size: inherit;
-    color: var(--MainTextColor);
+    margin: 0;
+    margin-left: 0.25rem;
     opacity: 0.3;
   }
 

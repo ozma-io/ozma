@@ -3,7 +3,6 @@
     :class="[
       'table-cell-edit',
       'border',
-      'shadow-lg',
       {
         'table-cell-edit_last-fixed': isLastFixedCell
       }
@@ -47,13 +46,15 @@ export default class TableCellEdit extends Vue {
 
 <style scoped>
   .table-cell-edit {
-    background: #fff;
+    background: transparent;
+    height: auto !important; /* TODO: So do we need `height` in `:style` at all? */
     position: fixed;
     top: 0;
     z-index: 9999;
-  }
 
-  .table-cell-edit_last-fixed {
-    padding: 2px 2px 0 2px;
+    /* First shadow is as `shadow-lg` */
+    box-shadow:
+      0 1rem 3rem rgba(0, 0, 0, 0.175),
+      0 0 0 0.2rem var(--FocusBorderColor);
   }
 </style>

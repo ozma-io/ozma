@@ -1,3 +1,14 @@
+<i18n>
+    {
+        "en": {
+            "add_child_tooplip": "Add child row"
+        },
+        "ru": {
+            "add_child_tooplip": "Добавить строку-потомка"
+        }
+    }
+</i18n>
+
 <template>
   <!-- FIXME: Pls solve these classes -->
   <td
@@ -10,7 +21,7 @@
                           'selected': value.extra.selected,
                           'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable,
                           'editing_style': value.extra.editing !== undefined,
-                          'tree-branches': column.treeUnfoldColumn && tree.children !== undefined && tree.children.length > 0 && showTree,
+                          'tree-has-children': treeHasChildren,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click.stop="$emit('cell-click', columnPosition, $refs.cell)"
   >
@@ -24,6 +35,7 @@
       <template v-else-if="value.extra.link !== null && value.extra.valueFormatted.length > 0">
         <div class="selectable">
           <FunLink
+            class="selectable-link rounded-circle"
             :link="value.extra.link"
             @goto="$emit('goto', $event)"
           >
@@ -52,34 +64,36 @@
             'cell-text',
             {
               'selectable': (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueFormatted.length > 0,
-              'tree': showTree,
+              'tree': showTree && column.treeUnfoldColumn && !notExisting,
             }
           ]"
         >
-          <b-btn
-            v-if="showTree && column.treeUnfoldColumn && !notExisting"
-            variant="light"
+          <ButtonItem
+            v-if="isTreeCell"
             class="add-child"
-            size="sm"
-            @click.stop="$emit('add-child')"
-            @dblclick.stop
-          >
-            +
-          </b-btn>
-          <span
-            :style="{'margin-left': treeLevel*25+'px'}"
-            :class="['display-arrow material-icons', {'down': tree.arrowDown}]"
-            @click.stop="toggleChildren"
-            @dblclick.stop
-          >
-            arrow_forward_ios
-          </span>
-          <!-- This showTree need for hidden when table filtering from search panel -->
-          <span
-            v-if="showTree && treeLevel > 0"
-            :style="{'margin-left': treeLevel*25 + 20 +'px'}"
-            class="hidden-arrow-space"
+            :button="addChildButton"
           />
+
+          <span
+            v-if="isTreeCell"
+            class="tree-level-circles"
+          >
+            <span
+              v-for="index in (treeLevel + (treeHasChildren ? 0 : 1))"
+              :key="index"
+              class="tree-level-circle"
+            />
+
+            <span
+              v-if="treeHasChildren"
+              :class="['tree-toggle-expand material-icons', { 'down': tree.arrowDown }]"
+              @click.stop="toggleChildren"
+              @dblclick.stop
+            >
+              chevron_right
+            </span>
+          </span>
+
           <!-- eslint-disable vue/no-v-html -->
           <span class="text" v-html="value.extra.valueFormatted || '&nbsp;'" />
           <!-- eslint-enable -->
@@ -95,12 +109,15 @@ import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { valueIsNull } from "@/values";
 import { iconValue } from "@/links";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
-import { attrToButtons } from "@/components/buttons/buttons";
+import { attrToButtons, Button } from "@/components/buttons/buttons";
+import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import type { IColumn, ITableExtendedValue, ITableRowTree } from "@/components/views/Table.vue";
+import { getColorVariables } from "@/utils_colors";
 
 @Component({
   components: {
     Checkbox,
+    ButtonItem,
   },
 })
 export default class TableCell extends Vue {
@@ -133,12 +150,35 @@ export default class TableCell extends Vue {
     }
   }
 
+  private get isTreeCell() {
+    return this.showTree
+        && this.column.treeUnfoldColumn
+        && !this.notExisting;
+  }
+
+  private get treeHasChildren() {
+    return this.isTreeCell
+        && this.tree.children !== undefined
+        && this.tree.children.length > 0;
+  }
+
   get buttons() {
     if (this.column.type === "buttons") {
       return attrToButtons(this.value.value);
     } else {
       return [];
     }
+  }
+
+  private get addChildButton(): Button {
+    return {
+      type: "callback",
+      icon: "add",
+      tooltip: this.$t("add_child_tooplip").toString(),
+      variant: "interfaceButton",
+      colorVariables: getColorVariables("button", "interfaceButton"),
+      callback: () => this.$emit("add-child"),
+    };
   }
 
   get isNull() {
@@ -164,21 +204,51 @@ export default class TableCell extends Vue {
 
 <style lang="scss" scoped>
   .selectable {
-    position: relative;
-    float: left;
-    padding: 0 5px;
+    padding: 0.1rem 0.25rem;
+    display: inline-flex;
+    align-items: center;
     background-color: var(--reference-backgroundColor);
     border: 1px solid var(--reference-borderColor);
     color: var(--reference-foregroundColor);
-    border-radius: 0.6rem;
+    border-radius: 1rem;
     max-width: 100%;
     word-wrap: break-word;
+
+    .selectable-link {
+      @include material-button("reference");
+
+      margin-right: 0.25rem;
+      flex-shrink: 0;
+      border: none;
+      display: flex;
+      opacity: 0.3;
+    }
+
+    &:hover .selectable-link {
+      opacity: 1;
+    }
   }
 
   .add-child {
     position: absolute;
     right: 0;
-    top: 0;
+    bottom: 0;
+  }
+
+  .tree-level-circles {
+    display: flex;
+    align-items: center;
+  }
+
+  .tree-level-circle {
+    font-size: icon-size();
+    display: inline-block;
+    width: 0.333em;
+    height: 0.333em;
+    margin: 0.333em;
+    border-radius: 0.333em;
+    background-color: var(--tableCell-foregroundColor);
+    opacity: 0.05;
   }
 
   .table-td {
@@ -218,13 +288,15 @@ export default class TableCell extends Vue {
       }
     }
 
-    & .add-child {
-      visibility: hidden;
+    .add-child {
+      /* We use this instead of `visibility: hidden`, to be able expand by single tap on Iphones,
+         see https://habr.com/en/post/212959/ for details */
+      opacity: 0.0001;
     }
 
+    &.selected .add-child,
     &:hover .add-child {
-      transition: 0.2s;
-      visibility: visible;
+      opacity: 1;
     }
   }
 
@@ -244,37 +316,18 @@ export default class TableCell extends Vue {
     pointer-events: none;
   }
 
-  .hidden-arrow-space {
-    display: inline-block;
-  }
-
-  .tree-branches .hidden-arrow-space {
-    display: none;
-  }
-
-  .display-arrow {
-    display: none;
-  }
-
-  .tree-branches .display-arrow {
-    display: inline-block;
-  }
-
-  .display-arrow.material-icons {
+  .tree-toggle-expand.material-icons {
     cursor: pointer;
     pointer-events: auto !important;
-    padding-right: 5px;
-    font-size: inherit;
-    transform-origin: 30% 50%;
     transition: transform 0.2s;
-    overflow: hidden;
+    opacity: 0.3;
   }
 
-  .display-arrow.material-icons:hover {
-    opacity: 0.7;
+  .tree-toggle-expand.material-icons:hover {
+    opacity: 1;
   }
 
-  .display-arrow.material-icons.down {
+  .tree-toggle-expand.material-icons.down {
     transform: rotate(90deg);
   }
 
@@ -282,26 +335,27 @@ export default class TableCell extends Vue {
     @include material-button("reference");
 
     pointer-events: auto !important;
-    left: 2px;
-    top: -1px;
-    position: absolute;
     border: none;
     background: none;
     padding: 0;
-    cursor: pointer;
   }
 
   span.reference-text {
-    padding-left: 20px;
+    margin: 0 0.25rem;
     display: block;
     white-space: normal;
-    line-height: 1.2rem;
+    line-height: 1rem;
   }
 
   .cell-text {
     overflow: hidden;
     white-space: break-spaces;
+    word-break: break-word;
     line-height: 1.2rem;
+  }
+
+  .text {
+    width: 100%;
   }
 
   .cell-text.tree {
@@ -311,18 +365,10 @@ export default class TableCell extends Vue {
     justify-content: flex-begin;
   }
 
-  .hidden-arrow-space + .text {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
   /* Why do we need this now... */
   @media screen and (max-width: 1020px) {
     .fixed-column {
       left: 0 !important;
     }
   }
-
 </style>

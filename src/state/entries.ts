@@ -1,12 +1,13 @@
 import { ActionContext, Module } from "vuex";
-import { IReferenceFieldType, RowId, IViewExprResult, IReferenceEntity, IViewChunk } from "ozma-api";
+import { RowId, IQueryChunk, IFieldRef, IEntityRef, IChunkWhere, IDomainValuesResult } from "ozma-api";
 import Vue from "vue";
 import R from "ramda";
 
 import { IRef, ObjectResourceMap, ReferenceName, syncObject, updateObject, waitTimeout } from "@/utils";
 import Api from "@/api";
-import { valueToText, equalEntityRef } from "@/values";
+import { equalFieldRef, valueToText } from "@/values";
 import { CancelledError } from "@/modules";
+import { ICombinedUserViewAny } from "@/user_views/combined";
 
 // Tree of search requests, ordered by inclusivity.
 
@@ -274,17 +275,17 @@ export class PartialEntries {
   }
 }
 
-export type IEntriesRef = IReferenceEntity;
+export interface IEntriesRef {
+  field: IFieldRef;
+  rowId: RowId | null;
+}
 
-export const equalEntriesRef = (a: IEntriesRef, b: IEntriesRef): boolean => {
-  return equalEntityRef(a.entity, b.entity) && a.where === b.where;
-};
-
-export const referenceEntriesRef = (r: IReferenceFieldType): IEntriesRef => {
-  return { entity: r.entity, where: r.where };
+export const equalEntriesRef = (a: IEntriesRef, b: IEntriesRef) => {
+  return equalFieldRef(a.field, b.field) && a.rowId === b.rowId;
 };
 
 export class CurrentEntries {
+  // We refer to entries by the field that references to them.
   entries = new ObjectResourceMap<IEntriesRef, PartialEntries>();
 
   getEntriesOrError(ref: IEntriesRef) {
@@ -311,37 +312,76 @@ export interface IEntriesState {
 }
 
 const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
-  const query = `{ $search string }: SELECT id, __main AS main FROM "${ref.entity.schema}"."${ref.entity.name}" WHERE (__main :: string) ILIKE $search`;
   const likeSearch = search === "" ? "%" : "%" + search.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_") + "%";
-  const chunk: IViewChunk = { offset, limit: limit + 1 };
+  const where: IChunkWhere = {
+    expression: "(pun :: string) ILIKE $search",
+    arguments: {
+      search: {
+        type: "string",
+        value: likeSearch,
+      },
+    },
+  };
+  const chunk: IQueryChunk = {
+    offset,
+    limit: limit + 1,
+    where,
+  };
+
   const res = await context.dispatch("callProtectedApi", {
-    func: Api.getAnonymousUserView.bind(Api),
-    args: [query, { search: likeSearch }, chunk],
-  }, { root: true }) as IViewExprResult;
-  const mainType = res.info.columns[1].valueType;
-  const entries = Object.fromEntries(res.result.rows.map<[number, string]>(row => {
-    const id = row.values[0].value as number;
-    const main = valueToText(mainType, row.values[1].value);
-    return [id, main];
+    func: Api.getDomainValues.bind(Api),
+    args: [ref.field, ref.rowId ?? undefined, chunk],
+  }, { root: true }) as IDomainValuesResult;
+  const entries = Object.fromEntries(res.values.map<[number, string]>(row => {
+    const main = valueToText(res.punType, row.pun);
+    return [Number(row.value), main];
   }));
   return {
     entries,
-    complete: res.result.rows.length <= limit,
+    complete: res.values.length <= limit,
   };
 };
 
 const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, ids: RowId[]): Promise<Record<RowId, string>> => {
-  const query = `{ $ids array(int) }: SELECT id, __main AS main FROM "${ref.entity.schema}"."${ref.entity.name}" WHERE id = ANY ($ids)`;
+  const where: IChunkWhere = {
+    expression: "value = ANY ($ids)",
+    arguments: {
+      ids: {
+        type: "array(int)",
+        value: ids,
+      },
+    },
+  };
+  const chunk: IQueryChunk = {
+    where,
+  };
+
   const res = await context.dispatch("callProtectedApi", {
-    func: Api.getAnonymousUserView.bind(Api),
-    args: [query, { ids }],
-  }, { root: true }) as IViewExprResult;
-  const mainType = res.info.columns[0].valueType;
-  return Object.fromEntries(res.result.rows.map(row => {
-    const id = row.values[0].value;
-    const pun = row.values[1].value;
-    return [id, valueToText(mainType, pun)];
+    func: Api.getDomainValues.bind(Api),
+    args: [ref.field, ref.rowId ?? undefined, chunk],
+  }, { root: true }) as IDomainValuesResult;
+  return Object.fromEntries(res.values.map<[number, string]>(row => {
+    const main = valueToText(res.punType, row.pun);
+    return [Number(row.value), main];
   }));
+};
+
+export const getReferenceInfo = (uv: ICombinedUserViewAny, columnI: number, rowId: number | null): { referenceEntity: IEntityRef; entries: IEntriesRef } | null => {
+  const mainField = uv.info.columns[columnI].mainField;
+  if (!mainField || mainField.field.fieldType.type !== "reference") {
+    return null;
+  } else {
+    return {
+      referenceEntity: mainField.field.fieldType.entity,
+      entries: {
+        field: {
+          entity: uv.info.mainEntity!,
+          name: mainField.name,
+        },
+        rowId,
+      },
+    };
+  }
 };
 
 const entriesModule: Module<IEntriesState, {}> = {
@@ -464,7 +504,7 @@ const entriesModule: Module<IEntriesState, {}> = {
         })();
         if (oldResource === undefined) {
           // Prefetch entity.
-          void dispatch("entities/getEntity", ref.entity, { root: true });
+          void dispatch("entities/getEntity", ref.field.entity, { root: true });
           commit("initPartialEntries", { ref, reference });
         }
         for (const id of requestedIds) {
@@ -553,7 +593,7 @@ const entriesModule: Module<IEntriesState, {}> = {
       })();
       if (oldResource === undefined) {
         // Prefetch entity.
-        void dispatch("entities/getEntity", ref.entity, { root: true });
+        void dispatch("entities/getEntity", ref.field.entity, { root: true });
         commit("initPartialEntries", { ref, reference });
       }
       commit("insertSearchNode", { ref, search, limit, pending: pending.ref });

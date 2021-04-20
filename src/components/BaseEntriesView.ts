@@ -33,7 +33,7 @@ export default class BaseEntriesView extends Vue {
   // These are supposed to be read only in children user views!
   // Keeping them as state values to avoid creating computed properties (which, also, weirdly fail in this case).
   protected currentEntries: Entries | null = null;
-  protected requestedEntity: IEntriesRef | null = null;
+  protected requestedEntriesRef: IEntriesRef | null = null;
   protected requestedSearch = "";
   protected requestedLimit = 0;
 
@@ -43,8 +43,8 @@ export default class BaseEntriesView extends Vue {
   }
 
   private get newEntries() {
-    if (this.requestedEntity) {
-      const ret = this.entriesMap.entries.get(this.requestedEntity);
+    if (this.requestedEntriesRef) {
+      const ret = this.entriesMap.entries.get(this.requestedEntriesRef);
       return ret === undefined ? null : ret;
     }
     return null;
@@ -56,7 +56,7 @@ export default class BaseEntriesView extends Vue {
 
   @Watch("newEntries", { immediate: true })
   private updateEntries() {
-    if (this.requestedEntity) {
+    if (this.requestedEntriesRef) {
       if (this.newEntries instanceof Error) {
         this.currentEntries = null;
       } else if (this.newEntries === null) {
@@ -69,7 +69,7 @@ export default class BaseEntriesView extends Vue {
 
   private getRequestedEntries() {
     return this.getEntries({
-      ref: this.requestedEntity!,
+      ref: this.requestedEntriesRef!,
       reference: this.uid,
       search: this.requestedSearch,
       limit: this.requestedLimit,
@@ -77,9 +77,9 @@ export default class BaseEntriesView extends Vue {
   }
 
   private freeEntries() {
-    if (this.requestedEntity !== null) {
-      this.removeEntriesConsumer({ ref: this.requestedEntity, reference: this.uid });
-      this.requestedEntity = null;
+    if (this.requestedEntriesRef !== null) {
+      this.removeEntriesConsumer({ ref: this.requestedEntriesRef, reference: this.uid });
+      this.requestedEntriesRef = null;
       this.requestedLimit = 0;
       this.requestedSearch = "";
       this.currentEntries = null;
@@ -88,9 +88,9 @@ export default class BaseEntriesView extends Vue {
 
   // Returns `true`, if more entries are available.
   protected fetchEntries(entity: IEntriesRef, search: string, limit: number) {
-    if (!deepEquals(this.requestedEntity, entity)) {
+    if (!deepEquals(this.requestedEntriesRef, entity)) {
       this.freeEntries();
-      this.requestedEntity = deepClone(entity);
+      this.requestedEntriesRef = deepClone(entity);
     }
     this.requestedSearch = search;
     this.requestedLimit = limit;
@@ -98,9 +98,9 @@ export default class BaseEntriesView extends Vue {
   }
 
   protected fetchEntriesByIds(entity: IEntriesRef, ids: number[]) {
-    if (!deepEquals(this.requestedEntity, entity)) {
+    if (!deepEquals(this.requestedEntriesRef, entity)) {
       this.freeEntries();
-      this.requestedEntity = deepClone(entity);
+      this.requestedEntriesRef = deepClone(entity);
     }
     // For an unknown reason, removing this `waitTimeout` results in an infinite
     // loop when opening a kanban board with reference columns. I'm sure there's
@@ -108,7 +108,7 @@ export default class BaseEntriesView extends Vue {
     // `gedtEntriesByIds` doesn't help, but returning from this function or adding
     // this delay does.
     return waitTimeout().then(() => this.getEntriesByIds({
-      ref: this.requestedEntity!,
+      ref: this.requestedEntriesRef!,
       reference: this.uid,
       ids,
     }));

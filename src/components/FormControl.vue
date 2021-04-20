@@ -34,6 +34,7 @@
       :text-align="textAlign"
       :modal="$isMobile && (forceModalOnMobile || isMultiline)"
       :required="!isNullable"
+      :disabled="isDisabled"
       :empty="currentValueIsNull"
       @close-modal-input="$emit('close-modal-input')"
       @focus="onFocus"
@@ -85,6 +86,7 @@
           :show-time="inputType.showTime"
           :time-step="inputType.timeStep ? inputType.timeStep : undefined"
           :required="!isNullable"
+          :disabled="isDisabled"
           :background-color="cellColor"
           @focus="iSlot.onFocus"
           @blur="$emit('blur', $event)"
@@ -206,8 +208,10 @@
         >
           <div v-if="inputType.name == 'empty_userview'">
             <div class="nested-menu">
+              <!-- `tabindex` is required for closing tooltip on blur -->
               <label
                 v-b-tooltip.click.blur.bottom.noninteractive
+                tabindex="0"
                 class="input_label not-loaded"
                 :title="usedCaption"
               >
@@ -258,12 +262,11 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
-import type { AttributesMap, ValueType } from "ozma-api";
+import type { AttributesMap, IFieldRef, ValueType } from "ozma-api";
 
 import { valueToText, valueIsNull } from "@/values";
 import { IQuery, attrToQuerySelf } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
-import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
 import { IEntityRef } from "ozma-api/src";
@@ -324,7 +327,7 @@ interface ISelectType {
 
 interface IReferenceType {
   name: "reference";
-  ref: IEntriesRef;
+  ref: IFieldRef;
   linkAttr?: unknown;
   selectViews: IReferenceSelectAction[];
   style?: Record<string, unknown>;
@@ -387,10 +390,12 @@ export type IType =
 
 const staging = namespace("staging");
 
-const heightExclusions: IType["name"][] =
-  ["select", "reference"];
-const multilineTypes: IType["name"][] =
-  ["markdown", "codeeditor", "textarea", "userview", "empty_userview", "static_image", "iframe"];
+const heightExclusions: Set<IType["name"]> =
+  new Set(["select", "reference"]);
+const multilineTypes: Set<IType["name"]> =
+  new Set(["markdown", "codeeditor", "textarea", "userview", "empty_userview", "static_image", "iframe"]);
+const disableableTypes: Set<IType["name"]> =
+  new Set(["text", "textarea", "markdown", "codeeditor", "reference", "select", "check", "calendar"]);
 
 @Component({
   // Looks ugly and wordy, but due to `import` this can not be generated.
@@ -503,7 +508,8 @@ export default class FormControl extends Vue {
   }
 
   get isDisabled() {
-    return this.locked || this.value.info === undefined || this.value.info.field === null;
+    const disableable = disableableTypes.has(this.inputType.name);
+    return disableable && (this.locked || this.value.info === undefined || this.value.info.field === null);
   }
 
   // Textual representation of `currentValue`.
@@ -512,7 +518,7 @@ export default class FormControl extends Vue {
   }
 
   get isMultiline() {
-    return multilineTypes.includes(this.inputType.name);
+    return multilineTypes.has(this.inputType.name);
   }
 
   // Priority of captions:
@@ -530,12 +536,13 @@ export default class FormControl extends Vue {
     }
   }
 
+  // FIXME unused function.
   get controlPanelStyle() {
     if (this.customHeight === null) {
       return {};
     }
 
-    const excludeHeight = heightExclusions.includes(this.inputType.name);
+    const excludeHeight = heightExclusions.has(this.inputType.name);
     const isHeightOnPanel = !this.isMultiline;
     const height = isHeightOnPanel ? { height: `${this.customHeight}px` } : {};
     return !excludeHeight ? { ...height, maxHeight: "initial" } : {};
@@ -564,7 +571,9 @@ export default class FormControl extends Vue {
   }
 
   get cellColor() {
-    return this.attributes["cell_color"] ? String(this.attributes["cell_color"]) : null;
+    if (this.attributes["cell_color"]) return String(this.attributes["cell_color"]);
+    else if (this.attributes["control"] === "buttons") return "transparent";
+    else return null;
   }
 
   get colorVariables() {
@@ -655,7 +664,7 @@ export default class FormControl extends Vue {
       switch (this.fieldType.type) {
         case "reference": {
           if (controlAttr === "qrcode") {
-            return { name: "qrcode", ref: referenceEntriesRef(this.fieldType).entity };
+            return { name: "qrcode", ref: this.fieldType.entity };
           }
 
           if (controlAttr === "barcode") {
@@ -664,7 +673,7 @@ export default class FormControl extends Vue {
 
           const refEntry: IReferenceType = {
             name: "reference",
-            ref: referenceEntriesRef(this.fieldType),
+            ref: this.value.info!.fieldRef,
             selectViews: [],
           };
           refEntry.linkAttr = this.attributes["link"];

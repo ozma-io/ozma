@@ -85,7 +85,7 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: un
 
   if (valueIsNull(value)) {
     return isNullable ? null : undefined;
-  } else if (fieldType.type === "string" || fieldType.type === "enum" || fieldType.type === "interval") {
+  } else if (fieldType.type === "string" || fieldType.type === "enum" || fieldType.type === "interval" || fieldType.type === "uuid") {
     // Remove whitespaces
     return typeof value === "string" ? value : undefined;
   } else if (fieldType.type === "bool") {

@@ -1,8 +1,10 @@
 <template>
   <b-list-group-item
     v-if="listItem"
+    class="list-group-item-action"
     :variant="button.variant"
-    class="d-flex list-group-item-action p-1"
+    :disabled="button.disabled"
+    @click="$emit('click')"
   >
     <ButtonContent
       :button="button"
@@ -13,11 +15,13 @@
 
   <b-button
     v-else
-    v-b-tooltip.hover.noninteractive
+    v-b-tooltip.hover.noninteractive.viewport
     :class="buttonClass"
     :style="button.colorVariables"
-    :variant="button.variant ? button.variant : 'light'"
+    variant="light"
     :title="button.tooltip"
+    :disabled="button.disabled"
+    @click="$emit('click')"
   >
     <ButtonContent
       :button="button"

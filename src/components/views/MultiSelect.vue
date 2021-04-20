@@ -15,12 +15,13 @@
     class="view-form"
   >
     <ReferenceMultiSelect
-      v-if="referenceEntity"
+      v-if="reference"
       :value="selectedValues"
       :disabled="disabled"
       :background-color="backgroundColor"
       :link-attr="linkAttr"
-      :reference-entity="referenceEntity"
+      :entries="reference.entries"
+      :reference-entity="reference.referenceEntity"
       :uv-args="uv.args"
       @add-value="addValue"
       @remove-index="removeIndex"
@@ -45,8 +46,8 @@ import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import ReferenceMultiSelect from "@/components/ReferenceMultiSelect.vue";
 import { ICombinedValue } from "@/user_views/combined";
-import { referenceEntriesRef } from "@/state/entries";
 import { AddedRowId } from "@/state/staging_changes";
+import { getReferenceInfo } from "@/state/entries";
 
 interface ISelectedValueBase {
   value: ICombinedValue;
@@ -75,13 +76,8 @@ type SelectedValue = IExistingSelectedValue | IAddedSelectedValue | IUnknownSele
 export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseUserView) {
   @Prop({ type: String }) backgroundColor!: string;
 
-  get referenceEntity() {
-    const fieldType = this.uv.info.columns[this.selectedValueColumn].mainField?.field.fieldType;
-    if (fieldType?.type === "reference") {
-      return referenceEntriesRef(fieldType);
-    } else {
-      return null;
-    }
+  get reference() {
+    return getReferenceInfo(this.uv, this.selectedValueColumn, null);
   }
 
   get selectedValueColumn() {

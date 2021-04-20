@@ -58,13 +58,15 @@
         </b-input-group>
       </b-form>
     </transition>
+
     <b-button
       v-if="showOpenButton"
-      class="button-only-icon"
+      class="open-search-button button-only-icon"
       variant="light"
       @click.prevent="toggleShowInput"
     >
-      <i class="material-icons">search</i>
+      <span class="icon material-icons">search</span>
+      <span>&#8203;</span>
     </b-button>
   </div>
 </template>
@@ -126,6 +128,11 @@ export default class SearchPanel extends Vue {
     display: flex;
     align-items: center;
     width: auto;
+  }
+
+  .open-search-button {
+    --button-backgroundColor: transparent;
+    --button-borderColor: transparent;
   }
 
   .input-group {

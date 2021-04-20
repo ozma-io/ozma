@@ -131,15 +131,17 @@ export default class MenuEntry extends Vue {
 
 <style lang="scss" scoped>
   .menu_category_block {
-    margin-top: 10px;
-    margin-bottom: 40px;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
 
     &.is-mobile {
       margin: 0;
+      margin-bottom: 1rem;
     }
 
     @media (max-width: 575.98px) {
       margin: 0;
+      margin-bottom: 1rem;
     }
   }
 
@@ -162,10 +164,11 @@ export default class MenuEntry extends Vue {
 
     width: 100%;
     max-width: 100%;
+    border-radius: 0.25rem;
     display: flex;
     align-items: center;
     color: var(--menuEntry-foregroundColor);
-    margin-bottom: 5px;
+    margin-bottom: 0.25rem;
     text-decoration: none;
     background-color: var(--menuEntry-backgroundColor, transparent);
     border-color: var(--menuEntry-borderColor);

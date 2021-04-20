@@ -1,5 +1,5 @@
 <template>
-  <div v-if="qrcodeContent !== null" class="rounded">
+  <div v-if="qrcodeContent !== null" class="qrcode-container rounded">
     <qrcode :value="qrcodeContent" :options="{ width: height }" />
   </div>
 </template>
@@ -70,3 +70,10 @@ export default class QRCode extends Vue {
 }
 
 </script>
+
+<style lang="scss" scoped>
+  .qrcode-container {
+    border: 1px solid var(--input-borderColor);
+    overflow: hidden;
+  }
+</style>

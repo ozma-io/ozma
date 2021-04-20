@@ -56,7 +56,7 @@ const lightenOrDarken = (color: string, amount: number): string => mix(color, re
 export const colorVariantFromRaw = (raw: RawColorVariant): NamedColorVariant => {
   const background = toRgbaOrNull(raw.background) ?? rgba(0, 0, 0, 1);
   const foreground = toRgbaOrNull(raw.foreground) ?? darkenOrLighten(background, 0.8);
-  const border = toRgbaOrNull(raw.border) ?? mix(background, "black", 0.25);
+  const border = toRgbaOrNull(raw.border) ?? mix(background, "black", 0.2);
   const backgroundDarker1 = mix(background, foreground, 0.05);
   const backgroundDarker2 = mix(background, foreground, 0.15);
   const foregroundContrast = readableColor(background);
@@ -102,6 +102,20 @@ export const getColorVariables = (componentName: string, colorVariant: unknown):
   }
 
   return {};
+};
+
+export const inheritColorVariables = (componentName: string, parentName: string, overloads: Partial<Record<VariantKey, string>>) => {
+  // TODO: Refactor this mess.
+  const variables = getColorVariables(componentName, parentName);
+  const newVariables = Object.entries(overloads).reduce((curr, [key, value]) => {
+    curr[`--${componentName}-${key}Color`] = value as string;
+    return curr;
+  }, {} as Record<string, string>);
+
+  return {
+    ...variables,
+    ...newVariables,
+  };
 };
 
 export const loadThemes = async () => {
