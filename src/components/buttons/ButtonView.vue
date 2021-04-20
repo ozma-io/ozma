@@ -4,6 +4,7 @@
     class="list-group-item-action"
     :variant="button.variant"
     :disabled="button.disabled"
+    @click="$emit('click')"
   >
     <ButtonContent
       :button="button"
