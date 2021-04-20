@@ -141,7 +141,7 @@ button:not(.btn) {
   }
 
   .button-caption {
-    margin-left: 0.5rem;
+    margin-left: 0.25rem;
   }
 }
 
@@ -150,7 +150,6 @@ button:not(.btn) {
 .button-icon-caption {
   @include material-button("button");
 
-  width: 100%;
   padding: 0.2rem;
   display: flex;
   align-items: center;
@@ -163,7 +162,7 @@ button:not(.btn) {
   }
 
   .button-caption {
-    margin-left: 0.5rem;
+    margin-left: 0.2rem;
   }
 }
 

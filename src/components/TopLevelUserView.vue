@@ -145,7 +145,7 @@
     <QRCodeScanner
       v-if="wasOpenedQRCodeScanner"
       :open-scanner="isOpenQRCodeScanner"
-      :multi-scan="true"
+      multi-scan
       :link="currentQRCodeLink"
     />
   </div>
@@ -361,10 +361,12 @@ export default class TopLevelUserView extends Vue {
 
   get burgerButton() {
     const buttons: Button[] = [];
+
+    if (this.themeButtons.length > 0) {
+      buttons.push({ icon: "palette", caption: this.$t("theme").toString(), type: "button-group", buttons: this.themeButtons });
+    }
+
     if (this.currentAuth?.token) {
-      if (this.themeButtons.length > 0) {
-        buttons.push({ icon: "palette", caption: this.$t("theme").toString(), type: "button-group", buttons: this.themeButtons });
-      }
       if (Api.developmentMode) {
         const currentAuth = this.currentAuth;
         buttons.push({ icon: "link",

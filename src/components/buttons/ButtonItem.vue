@@ -28,16 +28,13 @@
     />
   </FunLink>
 
-  <span
+  <ButtonView
     v-else-if="button.type === 'callback'"
+    :button="button"
+    :list-item="listItem"
+    :phantom-icon="listItemHasRightMargin"
     @click="onClick"
-  >
-    <ButtonView
-      :button="button"
-      :list-item="listItem"
-      :phantom-icon="listItemHasRightMargin"
-    />
-  </span>
+  />
 
   <label
     v-else-if="button.type === 'upload-file'"

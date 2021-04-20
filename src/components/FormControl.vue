@@ -209,8 +209,10 @@
         >
           <div v-if="inputType.name == 'empty_userview'">
             <div class="nested-menu">
+              <!-- `tabindex` is required for closing tooltip on blur -->
               <label
                 v-b-tooltip.click.blur.bottom.noninteractive
+                tabindex="0"
                 class="input_label not-loaded"
                 :title="usedCaption"
               >
@@ -260,12 +262,11 @@
 
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
-import type { AttributesMap, ValueType } from "ozma-api";
+import type { AttributesMap, IFieldRef, ValueType } from "ozma-api";
 
 import { valueToText, valueIsNull } from "@/values";
 import { IQuery, attrToQuerySelf } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
-import { IEntriesRef, referenceEntriesRef } from "@/state/entries";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
 import { IEntityRef } from "ozma-api";
@@ -330,7 +331,7 @@ interface ISelectType {
 
 interface IReferenceType {
   name: "reference";
-  ref: IEntriesRef;
+  ref: IFieldRef;
   linkAttr?: unknown;
   selectViews: IReferenceSelectAction[];
   style?: Record<string, unknown>;
@@ -536,6 +537,7 @@ export default class FormControl extends Vue {
     }
   }
 
+  // FIXME unused function.
   get controlPanelStyle() {
     if (this.customHeight === null) {
       return {};
@@ -666,7 +668,7 @@ export default class FormControl extends Vue {
       switch (this.fieldType.type) {
         case "reference": {
           if (controlAttr === "qrcode") {
-            return { name: "qrcode", ref: referenceEntriesRef(this.fieldType).entity };
+            return { name: "qrcode", ref: this.fieldType.entity };
           }
 
           if (controlAttr === "barcode") {
@@ -675,7 +677,7 @@ export default class FormControl extends Vue {
 
           const refEntry: IReferenceType = {
             name: "reference",
-            ref: referenceEntriesRef(this.fieldType),
+            ref: this.value.info!.fieldRef,
             selectViews: [],
           };
           refEntry.linkAttr = this.attributes["link"];

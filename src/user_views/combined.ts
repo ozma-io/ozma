@@ -6,7 +6,7 @@ import { IExecutedValue, IColumnField, IFieldRef, RowId, AttributesMap, IExecute
 import { AddedRowId, IAddedEntry, IEntityChanges, IStagingEventHandler, IStagingState } from "@/state/staging_changes";
 import { mapMaybe, tryDicts } from "@/utils";
 import { equalEntityRef, IUpdatedValue, valueFromRaw, valueIsNull, valueToText } from "@/values";
-import { Entries, IEntriesState, referenceEntriesRef } from "@/state/entries";
+import { Entries, IEntriesState } from "@/state/entries";
 
 import { IEntitiesState } from "../state/entities";
 
@@ -820,7 +820,12 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
       return;
     }
 
-    const summaries = this.storeEntries.entries.get(fieldType);
+    const entriesRef = {
+      field: value.info!.fieldRef,
+      rowId: null,
+    };
+
+    const summaries = this.storeEntries.entries.get(entriesRef);
 
     if (summaries !== undefined && ref in summaries.entries) {
       this.insertEntries(fieldType.entity, summaries.entries);
@@ -828,7 +833,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     } else {
       void (async () => {
         try {
-          const puns = await this.store.dispatch("entries/getEntriesByIds", { ref: referenceEntriesRef(fieldType), reference: "update", ids: [ref] }) as Record<RowId, string>;
+          const puns = await this.store.dispatch("entries/getEntriesByIds", { ref: entriesRef, reference: "update", ids: [ref] }) as Record<RowId, string>;
           const pending = puns[ref];
           if (pending !== undefined) {
             value.pun = pending;
