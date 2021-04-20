@@ -122,8 +122,10 @@
                 @goto="$emit('goto', $event)"
               >
                 <i
-                  v-b-tooltip.hover.right.noninteractive
-                  :title="$t('add_entry_in_modal')"
+                  v-b-tooltip.hover.right.noninteractive="{
+                    title: $t('add_entry_in_modal').toString(),
+                    disabled: $isMobile,
+                  }"
                   class="material-icons add-in-modal-icon"
                 >add_box</i>
               </FunLink>
@@ -2084,9 +2086,19 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     position: sticky;
 
     &.checkbox-cells {
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      line-height: 1;
       box-shadow:
         0 2px 0 var(--table-BorderColor),
         1px 0 0 var(--table-BorderColor);
+
+      ::v-deep .checkbox__input {
+        display: block;
+        line-height: 0;
+      }
     }
   }
 
@@ -2172,8 +2184,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     transition: background 0.1s;
 
     &.table-th .material-icons {
-      top: 9px;
-      left: 5px;
+      position: static;
     }
 
     .table-td_span .material-icons {

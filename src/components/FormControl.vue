@@ -208,8 +208,10 @@
         >
           <div v-if="inputType.name == 'empty_userview'">
             <div class="nested-menu">
+              <!-- `tabindex` is required for closing tooltip on blur -->
               <label
                 v-b-tooltip.click.blur.bottom.noninteractive
+                tabindex="0"
                 class="input_label not-loaded"
                 :title="usedCaption"
               >

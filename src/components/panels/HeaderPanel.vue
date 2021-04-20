@@ -13,8 +13,10 @@
       <div v-if="$slots['main-buttons']" class="main-buttons">
         <slot name="main-buttons" />
       </div>
+      <!-- `tabindex` is required for closing tooltip on blur -->
       <label
         v-b-tooltip.click.blur.bottom.noninteractive.viewport
+        tabindex="0"
         :class="[
           'input_label',
           {
