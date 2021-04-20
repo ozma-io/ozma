@@ -73,10 +73,10 @@ export default class IframeControl extends Vue {
   private async loadMarkup() {
     if (this.markupName === null) return;
 
-    const query = `SELECT markup FROM "funapp"."iframe_markups" WHERE name = '${this.markupName}'`;
+    const ref = { schema: "funapp", name: "iframe_markup_by_name" };
     const res = await this.callProtectedApi({
-      func: Api.getAnonymousUserView.bind(Api),
-      args: [query],
+      func: Api.getNamedUserView.bind(Api),
+      args: [ref, { "name": this.markupName }],
     }) as IViewExprResult;
     this.markup = res.result.rows[0]?.values[0].value as string | undefined;
   }
