@@ -23,7 +23,7 @@
                           'editing_style': value.extra.editing !== undefined,
                           'tree-has-children': treeHasChildren,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
-    @click.stop="$emit('cell-click', columnPosition, $refs.cell)"
+    @click="$emit('cell-click', columnPosition, $refs.cell)"
   >
     <p>
       <template v-if="column.type == 'buttons'">
