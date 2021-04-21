@@ -2087,7 +2087,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     &.checkbox-cells {
       height: 100%;
-      display: flex;
+      width: 100%;
+      display: inline-flex;
       justify-content: center;
       align-items: center;
       line-height: 1;
