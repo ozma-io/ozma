@@ -7,6 +7,10 @@
             "save": "Save (Ctrl+S)",
             "saved": "All changes saved",
             "show_errors": "Show errors",
+            "clear_changes": "Clear all changes",
+            "clear_changes_confirm": "Clear all changes after last save?",
+            "clear_changes_ok": "Clear",
+            "cancel": "Cancel",
             "account": "Account",
             "theme": "Theme",
             "contacts": "Contacts",
@@ -28,6 +32,10 @@
             "save": "Сохранить (Ctrl+S)",
             "saved": "Все изменения сохранены",
             "show_errors": "Показать ошибки",
+            "clear_changes": "Сбросить все изменения",
+            "clear_changes_confirm": "Сбросить все изменения с последнего сохранения?",
+            "clear_changes_ok": "Сбросить",
+            "cancel": "Отмена",
             "account": "Профиль",
             "theme": "Тема",
             "contacts": "Контакты",
@@ -117,6 +125,24 @@
         },
       ]"
     >
+      <transition name="fade-2">
+        <button
+          v-if="errors.length > 0"
+          v-b-tooltip.hover.right.noninteractive="{
+            title: $t('clear_changes').toString(),
+            disabled: $isMobile,
+          }"
+          class="save-cluster-button reset-changes-button shadow"
+          @click="resetChanges"
+        >
+          <span
+            class="material-icons md-36"
+          >
+            clear
+          </span>
+        </button>
+      </transition>
+
       <transition name="fade-2">
         <button
           v-if="errors.length > 0"
@@ -233,6 +259,7 @@ export default class TopLevelUserView extends Vue {
   @query.Action("closeWindow") closeWindow!: (_: number) => Promise<void>;
   @query.Action("pushWindow") pushWindow!: (_: { index: number; query: IQuery }) => Promise<void>;
   @errors.Mutation("removeError") removeError!: (params: { key: ErrorKey; index: number }) => void;
+  @errors.Mutation("reset") resetErrors!: () => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @settings.State("current") currentSettings!: CurrentSettings;
   @settings.State("currentTheme") currentTheme!: string;
@@ -433,6 +460,18 @@ export default class TopLevelUserView extends Vue {
 
     // eslint-disable-next-line @typescript-eslint/unbound-method
     document.removeEventListener("keydown", this.onKeydown);
+  }
+
+  private resetChanges() {
+    this.$bvModal.msgBoxConfirm(this.$t("clear_changes_confirm").toString(), {
+      okTitle: this.$t("clear_changes_ok").toString(),
+      cancelTitle: this.$t("cancel").toString(),
+      okVariant: "danger",
+      cancelVariant: "outline-secondary",
+    }).then(this.clearChanges)
+      .then(this.resetErrors)
+      .catch(err => {
+      });
   }
 
   private async saveView() {
@@ -658,6 +697,7 @@ export default class TopLevelUserView extends Vue {
     color: var(--default-backgroundDarker2Color);
   }
 
+  .reset-changes-button,
   .show-errors-button {
     height: 3rem;
     width: 3rem;

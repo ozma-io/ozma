@@ -529,7 +529,7 @@ export default class FormControl extends Vue {
   get usedCaption(): string {
     if (this.forceCaption) {
       return this.caption;
-    } else if (this.inputType.name === "static_text" || this.inputType.name === "static_image" || this.title !== "") {
+    } else if (this.inputType.name === "buttons" || this.inputType.name === "static_text" || this.inputType.name === "static_image" || this.title !== "") {
       return this.title;
     } else {
       return this.caption;
