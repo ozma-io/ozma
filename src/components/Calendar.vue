@@ -127,7 +127,7 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import moment, { Moment } from "moment";
 
 import DatePicker from "@/components/calendar/DatePicker.vue";
-import TimePicker from "@/components/calendar/TimePicker.vue";
+import TimePicker, { ITime } from "@/components/calendar/TimePicker.vue";
 import Popper from "vue-popperjs";
 
 @Component({
@@ -143,6 +143,7 @@ export default class Calendar extends Vue {
   @Prop({ default: true, type: Boolean }) showTime!: boolean;
   @Prop({ type: String }) format!: string | undefined;
   @Prop({ type: Number }) timeStep!: number | undefined;
+  @Prop({ type: Number }) timeDefault!: ITime | undefined;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   // FIXME: remove this and style parent nodes instead.
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
@@ -265,7 +266,11 @@ export default class Calendar extends Vue {
   }
 
   private updatePart(mutate: (m: Moment) => void) {
-    const newValue = this.dateValue.isValid() ? this.dateValue.clone() : moment.utc().millisecond(0);
+    const defaultHours = this.timeDefault?.hour ?? 9;
+    const defaultMinutes = this.timeDefault?.min ?? 0;
+    const newValue = this.dateValue.isValid()
+      ? this.dateValue.clone().local()
+      : moment().hours(defaultHours).minutes(defaultMinutes).milliseconds(0);
     mutate(newValue.local());
     this.updateValue(newValue);
   }

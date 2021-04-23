@@ -85,6 +85,7 @@
           :is-cell-edit="isCellEdit"
           :show-time="inputType.showTime"
           :time-step="inputType.timeStep ? inputType.timeStep : undefined"
+          :time-default="inputType.timeDefault ? inputType.timeDefault : undefined"
           :required="!isNullable"
           :disabled="isDisabled"
           :background-color="cellColor"
@@ -276,6 +277,7 @@ import { attrToButtons } from "@/components/buttons/buttons";
 import FormInputPlaceholder from "@/components/FormInputPlaceholder.vue";
 import { getColorVariables } from "@/utils_colors";
 import { IReferenceSelectAction } from "./ReferenceMultiSelect.vue";
+import { ITime } from "./calendar/TimePicker.vue";
 
 interface ITextType {
   name: "text";
@@ -354,6 +356,7 @@ interface ICalendarType {
   name: "calendar";
   showTime: boolean;
   timeStep: number | null;
+  timeDefault: ITime | null;
 }
 
 interface IStaticTextType {
@@ -396,6 +399,16 @@ const multilineTypes: Set<IType["name"]> =
   new Set(["markdown", "codeeditor", "textarea", "userview", "empty_userview", "static_image", "iframe"]);
 const disableableTypes: Set<IType["name"]> =
   new Set(["text", "textarea", "markdown", "codeeditor", "reference", "select", "check", "calendar"]);
+
+const parseTime = (raw: string): ITime | null => {
+  const [_, hours, mins] = /^([0-9]|0[0-9]|1[0-9]|2[0-3]):([0-9]|[0-5][0-9])$/.exec(raw) ?? [];
+  return (hours !== undefined && mins !== undefined)
+    ? {
+      hour: Number(hours),
+      min: Number(mins),
+    }
+    : null;
+};
 
 @Component({
   // Looks ugly and wordy, but due to `import` this can not be generated.
@@ -716,10 +729,13 @@ export default class FormControl extends Vue {
           return { name: "text", type: "number", style: this.controlStyle() };
         // FIXME: Fix calendar field.
         case "date":
-          return { name: "calendar", showTime: false, timeStep: null };
+          return { name: "calendar", showTime: false, timeStep: null, timeDefault: null };
         case "datetime": {
-          const timeStep = Number(this.attributes["time_step"]);
-          return { name: "calendar", showTime: true, timeStep: Number.isNaN(timeStep) ? null : timeStep };
+          const timeStepRaw = Number(this.attributes["time_step"]);
+          const timeStep = Number.isNaN(timeStepRaw) ? null : timeStepRaw;
+          const timeDefaultRaw = this.attributes["time_default"];
+          const timeDefault = (typeof timeDefaultRaw === "string") ? parseTime(timeDefaultRaw) : null;
+          return { name: "calendar", showTime: true, timeStep, timeDefault };
         }
         case "json":
           return {
@@ -738,10 +754,13 @@ export default class FormControl extends Vue {
         case "int":
           return { name: "text", type: "number", style: this.controlStyle() };
         case "date":
-          return { name: "calendar", showTime: false, timeStep: null };
+          return { name: "calendar", showTime: false, timeStep: null, timeDefault: null };
         case "datetime": {
-          const timeStep = Number(this.attributes["time_step"]);
-          return { name: "calendar", showTime: true, timeStep: Number.isNaN(timeStep) ? null : timeStep };
+          const timeStepRaw = Number(this.attributes["time_step"]);
+          const timeStep = Number.isNaN(timeStepRaw) ? null : timeStepRaw;
+          const timeDefaultRaw = this.attributes["time_default"];
+          const timeDefault = (typeof timeDefaultRaw === "string") ? parseTime(timeDefaultRaw) : null;
+          return { name: "calendar", showTime: true, timeStep, timeDefault };
         }
         case "json":
           return {
