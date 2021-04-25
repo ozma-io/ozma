@@ -1,4 +1,4 @@
-import { UserViewErrorType, IViewInfoResult, IViewExprResult, FunDBError } from "ozma-api";
+import { UserViewErrorType, IViewInfoResult, IQueryChunk, IViewExprResult, FunDBError } from "ozma-api";
 import { Store } from "vuex";
 
 import Api from "@/api";
@@ -17,6 +17,10 @@ export class UserViewError extends Error {
   }
 }
 
+const defaultChunk: IQueryChunk = {
+  limit: 5000,
+};
+
 export const fetchUserViewData = async (store: Store<any>, args: IUserViewArguments): Promise<ICombinedUserViewDataParams> => {
   try {
     if (args.source.type === "named") {
@@ -33,14 +37,9 @@ export const fetchUserViewData = async (store: Store<any>, args: IUserViewArgume
           rows: null,
         };
       } else {
-        let uvArgs = args.args;
-        // Development hack.
-        if (process.env.NODE_ENV !== "production" && window.location.search.includes("__force_recompile")) {
-          uvArgs = { ...args.args, "__force_recompile": true };
-        }
         const res: IViewExprResult = await store.dispatch("callProtectedApi", {
           func: Api.getNamedUserView.bind(Api),
-          args: [args.source.ref, uvArgs],
+          args: [args.source.ref, args.args, defaultChunk],
         }, { root: true });
         return {
           args,
@@ -54,13 +53,9 @@ export const fetchUserViewData = async (store: Store<any>, args: IUserViewArgume
       if (args.args === null) {
         throw new Error("Getting information about anonymous views is not supported");
       } else {
-        let uvArgs = args.args;
-        if (process.env.NODE_ENV !== "production" && window.location.search.includes("__force_recompile")) {
-          uvArgs = { ...args.args, "__force_recompile": true };
-        }
         const res: IViewExprResult = await store.dispatch("callProtectedApi", {
           func: Api.getAnonymousUserView.bind(Api),
-          args: [args.source.query, uvArgs],
+          args: [args.source.query, args.args, defaultChunk],
         }, { root: true });
         return {
           args,
