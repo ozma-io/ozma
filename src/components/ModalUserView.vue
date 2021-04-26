@@ -1,10 +1,18 @@
 <i18n>
     {
         "en": {
+            "error": "Error",
+            "saved": "All changes saved",
+            "show_errors": "Show errors",
+            "staging_error": "Error while submitting changes: {msg}",
             "save_scoped": "Save scoped",
             "save_and_select_scoped": "Save and select"
         },
         "ru": {
+            "error": "Ошибка",
+            "saved": "Все изменения сохранены",
+            "show_errors": "Показать ошибки",
+            "staging_error": "Ошибка сохранения изменений: {msg}",
             "save_scoped": "Сохранить вложенное",
             "save_and_select_scoped": "Сохранить и выбрать"
         }
@@ -50,22 +58,71 @@
           @select="$emit('select', $event)"
         />
       </div>
+
       <div
-        v-if="!changes.isScopeEmpty(uid)"
-        :class="['selection_view_save__container', { 'is_mobile': $isMobile }]"
+        :class="[
+          'save-cluster',
+          {
+            'is-mobile': $isMobile,
+          },
+        ]"
       >
-        <button
-          type="button"
-          class="selection_view_save__button"
-          :title="$t(selectionMode ? 'save_and_select_scoped' : 'save_scoped')"
-          @click="saveView"
-        >
-          <input
-            type="button"
-            class="material-icons"
-            value="save"
+        <transition name="fade-2">
+          <button
+            v-if="errors.length > 0"
+            v-b-tooltip.hover.right.noninteractive="{
+              title: $t('show_errors').toString(),
+              disabled: $isMobile,
+            }"
+            class="save-cluster-button show-errors-button shadow"
+            @click="makeErrorToast"
           >
-        </button>
+            <span
+              class="material-icons md-36"
+            >
+              help_outline
+            </span>
+          </button>
+        </transition>
+
+        <!-- TODO: everything related to save button here is almost copypaste from TopLevelUserView, it's bad, fix it somehow please -->
+        <transition name="fade-2" mode="out-in">
+          <div
+            v-if="!changes.isScopeEmpty(uid) && isSaving"
+            class="saving-spinner spinner-border"
+          />
+          <button
+            v-else-if="!changes.isScopeEmpty(uid)"
+            v-b-tooltip.hover.right.noninteractive="{
+              title: $t(selectionMode ? 'save_and_select_scoped' : 'save_scoped').toString(),
+              disabled: $isMobile,
+            }"
+            :class="['save-cluster-button save-button shadow', {
+              'save': !changes.isScopeEmpty(uid),
+            }]"
+            @click="saveView"
+          >
+            <span
+              class="material-icons md-36"
+            >
+              save
+            </span>
+          </button>
+          <div
+            v-else-if="savedRecently.show"
+            v-b-tooltip.hover.right.noninteractive="{
+              title: $t('saved').toString(),
+              disabled: $isMobile,
+            }"
+            class="save-cluster-indicator"
+          >
+            <span
+              class="material-icons md-36"
+            >
+              cloud_done
+            </span>
+          </div>
+        </transition>
       </div>
     </section>
   </ModalPortal>
@@ -83,15 +140,20 @@ import { router } from "@/modules";
 import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { convertToWords } from "@/utils";
+import { ErrorKey } from "@/state/errors";
 import { ISelectionRef } from "./BaseUserView";
 
 const staging = namespace("staging");
+const errors = namespace("errors");
+const auth = namespace("auth");
 
 @Component({ components: { ModalPortal, HeaderPanel } })
 export default class ModalUserView extends Vue {
+  @auth.State("protectedCalls") protectedCalls!: number;
   @staging.State("current") changes!: CurrentChanges;
   @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<CombinedTransactionResult[]>;
   @staging.Action("clearAdded") clearAdded!: (_: { scope?: ScopeName; onlyUntouched?: boolean }) => Promise<void>;
+  @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
   @Prop({ type: Object, required: true }) view!: IQuery;
@@ -103,6 +165,33 @@ export default class ModalUserView extends Vue {
   private enableFilter = false;
   private filterString = "";
   private isUserViewLoading = false;
+
+  private savedRecently: { show: boolean; timeoutId: NodeJS.Timeout | null } = {
+    show: false,
+    timeoutId: null,
+  };
+
+  private get isSaving(): boolean {
+    return this.protectedCalls > 0;
+  }
+
+  get errors() {
+    return Object.entries(this.rawErrors).flatMap(([key, keyErrors]) => keyErrors.map(error => {
+      return this.$t(`${key}_error`, { msg: error });
+    }));
+  }
+
+  private makeErrorToast() {
+    this.$bvToast.hide();
+    this.errors.forEach(error => {
+      this.$bvToast.toast(error.toString(), {
+        title: this.$t("error").toString(),
+        variant: "danger",
+        solid: true,
+        autoHideDelay: 10000,
+      });
+    });
+  }
 
   get filterWords() {
     const value = this.filterString;
@@ -127,6 +216,18 @@ export default class ModalUserView extends Vue {
         } as ISelectionRef);
       }
     }
+
+    if (this.errors.length === 0) {
+      this.$bvToast.hide();
+    }
+
+    if (this.savedRecently.timeoutId !== null) {
+      clearTimeout(this.savedRecently.timeoutId);
+    }
+    this.savedRecently.show = true;
+    this.savedRecently.timeoutId = setTimeout(() => {
+      this.savedRecently.show = false;
+    }, 5000);
   }
 
   private destroyed() {
@@ -136,14 +237,6 @@ export default class ModalUserView extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  .selection_view_save__container {
-    width: 100%;
-    display: flex;
-    z-index: 1000;
-    justify-content: flex-end;
-    padding: 10px;
-  }
-
   .section-modal {
     height: 100%;
     position: relative;
@@ -157,24 +250,65 @@ export default class ModalUserView extends Vue {
     height: 100%;
   }
 
-  .selection_view_save__button {
-    height: fit-content;
-    background-color: var(--WarningColor);
-    color: var(--StateTextColor);
-    padding: 5px;
-    border-radius: 3px;
-    animation: color-change-2x 2s linear infinite alternate both;
-    display: flex;
-    justify-content: center;
-  }
-
-  .selection_view_save__button > input {
-    background: none;
-    border: none;
-    padding: 0 20px;
-  }
-
   .fullscreen-button {
     cursor: pointer;
+  }
+
+  .save-cluster {
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    &.is-mobile {
+      bottom: 1rem;
+      right: 1rem;
+    }
+  }
+
+  .save-cluster-button {
+    height: 4rem;
+    width: 4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+  }
+
+  .save-cluster-indicator {
+    height: 4rem;
+    width: 4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    color: var(--default-backgroundDarker2Color);
+  }
+
+  .show-errors-button {
+    height: 3rem;
+    width: 3rem;
+    margin-bottom: 0.5rem;
+    background-color: #dc354533;
+    color: #dc3545cc;
+  }
+
+  .save-button {
+    color: var(--StateTextColor);
+
+    &.save {
+      background-color: #97d777;
+    }
+  }
+
+  .saving-spinner {
+    height: 4rem;
+    width: 4rem;
+    border-color: #97d777;
+    border-right-color: transparent;
+    border-width: 0.5rem;
+    opacity: 0.5;
   }
 </style>

@@ -16,17 +16,8 @@ export default class FabCluster extends Vue {
 <style scoped>
   .fab-container {
     position: fixed;
-    bottom: 50px;
-    right: 20px;
+    bottom: 0;
+    right: 2rem;
     z-index: 700;
-  }
-
-  @media screen and (max-aspect-ratio: 13/9) {
-    @media screen and (max-device-width: 480px) {
-      .fab-container {
-        bottom: 20px;
-        right: 20px;
-      }
-    }
   }
 </style>

@@ -41,7 +41,9 @@
     </template>
     <router-view v-else />
 
+    <!--
     <FabCluster />
+    -->
   </div>
 </template>
 
