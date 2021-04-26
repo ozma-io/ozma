@@ -300,7 +300,11 @@ const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: 
     }
 
     if (args !== null && !name.includes("__")) {
-      args[name] = JSON.parse(val);
+      try {
+        args[name] = JSON.parse(val);
+      } catch {
+        console.warn(`Unparsed query argument: ${name}=${val}`);
+      }
     }
   });
 
