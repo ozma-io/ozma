@@ -23,8 +23,6 @@
             "select_user_view_error": "Failed to select an entry: {msg}",
             "base_user_view_error": "Failed to perform an operation: {msg}",
             "error": "Error",
-            "light_theme": "light",
-            "dark_theme": "dark",
             "authed_link": "Copy link with authorization"
         },
         "ru": {
@@ -50,8 +48,6 @@
             "select_user_view_error": "Ошибка выбора записи: {msg}",
             "base_user_view_error": "Ошибка выполнения операции: {msg}",
             "error": "Ошибка",
-            "light_theme": "светлая",
-            "dark_theme": "тёмная",
             "authed_link": "Скопировать ссылку с авторизацией"
         }
     }
@@ -232,7 +228,7 @@ import { Link } from "@/links";
 import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { CurrentSettings } from "@/state/settings";
-import { getColorVariables } from "@/utils_colors";
+import { getColorVariables, Theme } from "@/utils_colors";
 import { ISocialLinks } from "./CommunicationsButton.vue";
 
 const auth = namespace("auth");
@@ -326,15 +322,15 @@ export default class TopLevelUserView extends Vue {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     document.addEventListener("keydown", this.onKeydown);
 
-    void this.loadThemeButtons();
+    void this.loadBurgerButtons();
   }
 
   @Watch("currentSettings")
-  private loadThemeButtons() {
+  private loadBurgerButtons() {
     const themes = this.currentSettings.themes;
-    const translate = (themeName: string) =>
-      (themeName === "light" || themeName === "dark") ? this.$t(themeName + "_theme").toString() : themeName;
-    this.themeButtons = themes.map(theme => ({ caption: translate(theme), type: "callback", callback: () => this.setTheme(theme) }));
+    const locale = this.$i18n.locale;
+    const translate = (theme: Theme) => (typeof theme.localized?.[locale] === "string") ? theme.localized[locale] : theme.name;
+    this.themeButtons = themes.map(theme => ({ caption: translate(theme), type: "callback", callback: () => this.setTheme(theme.name) }));
 
     this.communicationButtons = [
       this.communicationStrings.email
@@ -363,6 +359,7 @@ export default class TopLevelUserView extends Vue {
         : undefined,
     ].filter(R.identity) as Button[];
   }
+
   private get communicationStrings(): ISocialLinks {
     return {
       telegram: this.currentSettings.getEntry("instance_help_telegram", String, undefined),

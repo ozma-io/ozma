@@ -118,7 +118,8 @@ export const inheritColorVariables = (componentName: string, parentName: string,
   };
 };
 
-export const loadThemes = async () => {
+export type Theme = { name: string; localized: Record<string, undefined> | null };
+export const loadThemes = async (): Promise<Theme[]> => {
   const ref = { schema: "funapp", name: "color_themes" };
   const res: IViewExprResult = await store.dispatch("callProtectedApi", {
     func: Api.getNamedUserView,
@@ -126,19 +127,24 @@ export const loadThemes = async () => {
   }, { root: true });
 
   const nameColumnIndex = res.info.columns.findIndex(column => column.name === "name");
-  return res.result.rows.map(row => row.values[nameColumnIndex].value as string);
+  const localizedNameColumnIndex = res.info.columns.findIndex(column => column.name === "localized_name");
+  return res.result.rows.map(row => ({
+    name: row.values[nameColumnIndex].value as string,
+    localized: row.values[localizedNameColumnIndex].value as Record<string, undefined>,
+  }));
 };
 
-export const getPreferredTheme = (themes: string[]) => {
+export const getPreferredTheme = (themes: Theme[]): Theme => {
   const prefersDarkTheme = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
 
   const storagedTheme = localStorage.getItem("preferredTheme");
   if (themes.includes(storagedTheme as any)) {
-    return storagedTheme;
-  } else if (prefersDarkTheme && themes.includes("dark")) {
-    return "dark";
+    return themes.find(theme => theme.name === storagedTheme) as Theme;
+  } else if (prefersDarkTheme && themes.map(theme => theme.name).includes("dark")) {
+    return themes.find(theme => theme.name === "dark") as Theme;
   } else {
-    return "light";
+    const lightTheme = themes.find(theme => theme.name === "light");
+    return lightTheme ?? { name: "light", localized: null };
   }
 };
 
