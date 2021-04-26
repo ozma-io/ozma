@@ -6,8 +6,9 @@
         "no": "No",
         "paste_error": "Pasting error",
         "clear_error": "Clearing error",
-        "cell_non_editable": "Non-editable cell",
+        "read_only_cell": "Read-only cell",
         "paste_no_referencefield_data": "Clipboard has no reference field data",
+        "paste_error_too_many_columns": "Clipboard has too many columns",
         "add_entry": "Add entry",
         "add_entry_in_modal": "Add new entry (in modal)"
       },
@@ -17,8 +18,9 @@
         "no": "Нет",
         "paste_error": "Ошибка при вставке",
         "clear_error": "Ошибка при очистке поля",
-        "cell_non_editable": "Нередактируемая ячейка",
+        "read_only_cell": "Ячейка только для чтения",
         "paste_no_referencefield_data": "В буфере обмена неверная информация для вставки в данное поле",
+        "paste_error_too_many_columns": "В буфере обмена слишком много столбцов",
         "add_entry": "Добавить запись",
         "add_entry_in_modal": "Добавить новую запись (в модале)"
       }
@@ -202,7 +204,7 @@ import { Moment, default as moment } from "moment";
 import * as R from "ramda";
 import { IResultColumnInfo, ValueType, RowId, IFieldRef } from "ozma-api";
 
-import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks } from "@/utils";
+import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, parseSpreadsheet } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { AddedRowId, AutoSaveLock } from "@/state/staging_changes";
@@ -1274,20 +1276,27 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.clearSelectedCell();
   }
 
-  private pasteToSelectedCell(event: ClipboardEvent) {
-    if (this.editing) return;
-    const valueRef = this.getSelectedCell();
-    if (!valueRef) return;
-
+  private valueIsReadOnly(valueRef: ValueRef, throwToastOnReadOnly = false): boolean {
     const value = this.uv.getValueByRef(valueRef)!.value;
     if (!value.info || !value.info.field) {
-      this.$bvToast.toast(this.$t("cell_non_editable").toString(), {
-        title: this.$t("paste_error").toString(),
-        variant: "danger",
-        solid: true,
-      });
-      return;
+      if (throwToastOnReadOnly) {
+        this.$bvToast.toast(this.$t("read_only_cell").toString(), {
+          title: this.$t("paste_error").toString(),
+          variant: "danger",
+          solid: true,
+        });
+      }
+      return true;
     }
+    return false;
+  }
+
+  private async pasteToSelectedCell(event: ClipboardEvent) {
+    if (this.editing) return;
+    let valueRef = this.getSelectedCell();
+    if (!valueRef) return;
+
+    if (this.valueIsReadOnly(valueRef, true)) return;
 
     const targetColumnType = this.uv.info.columns[valueRef.column].mainField?.field.fieldType.type;
     if (targetColumnType === "reference") {
@@ -1303,7 +1312,48 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       }
     } else {
       const sourcePlain = event.clipboardData?.getData("text/plain");
-      void this.updateValue(valueRef, sourcePlain);
+      if (typeof sourcePlain === "string") {
+        const parsed = parseSpreadsheet(sourcePlain);
+        const initialValueRef = valueRef;
+        /* eslint-disable no-await-in-loop */
+        for (const [rowIndex, row] of parsed.entries()) {
+          let counter = 0;
+          for (const [cellIndex, cell] of row.entries()) {
+            valueRef = this.getSelectedCell() as ValueRef;
+
+            if (this.valueIsReadOnly(valueRef, true)) return;
+
+            await this.updateValue(valueRef, cell);
+            if (cellIndex < row.length - 1) {
+              const edgeReached = !this.moveSelection("right");
+              if (edgeReached) {
+                this.$bvToast.toast(this.$t("paste_error_too_many_columns").toString(), {
+                  title: this.$t("paste_error").toString(),
+                  variant: "danger",
+                  solid: true,
+                });
+                return;
+              }
+              counter++;
+            }
+          }
+
+          while (counter !== 0) {
+            counter--;
+            this.moveSelection("left");
+          }
+
+          if (rowIndex < parsed.length - 1) {
+            const bottomReached = !this.moveSelection("down");
+            if (bottomReached) {
+              await this.addNewRowOnPosition("bottom_back");
+              this.moveSelection("down");
+            }
+          }
+        }
+        this.deselectAllCells();
+        this.selectValue(initialValueRef);
+      }
     }
 
     event.preventDefault();
@@ -1315,7 +1365,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     const value = this.uv.getValueByRef(valueRef)!.value;
     if (!value.info || !value.info.field) {
-      this.$bvToast.toast(this.$t("cell_non_editable").toString(), {
+      this.$bvToast.toast(this.$t("read_only_cell").toString(), {
         title: this.$t("clear_error").toString(),
         variant: "danger",
         solid: true,
@@ -1707,7 +1757,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private selectValue(ref: ValueRef, selectedStatus: boolean) {
+  private selectValue(ref: ValueRef, selectedStatus = true) {
     const cell = this.uv.getValueByRef(ref);
     if (!cell) {
       return;

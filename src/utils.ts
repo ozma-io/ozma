@@ -699,3 +699,71 @@ export const getIconType = (str: string | null | undefined): IconType => {
 
 export const bootstrapVariants = ["primary", "secondary", "success", "danger", "warning", "info", "light", "dark"] as const;
 export type BootstrapVariant = typeof bootstrapVariants[number];
+
+/* Modified from https://github.com/warpech/sheetclip/blob/master/sheetclip.js */
+const countQuotes = (str: string) => str.split(`"`).length - 1;
+export const parseSpreadsheet = (str: string): string[][] => {
+  let r;
+  let rlen;
+  const rows: any = str.split("\n");
+  const arr: any = [];
+  let a = 0;
+  let c;
+  let clen;
+  let multiline;
+  let last;
+  if (rows.length > 1 && rows[rows.length - 1] === "") {
+    rows.pop();
+  }
+  for (r = 0, rlen = rows.length; r < rlen; r += 1) {
+    rows[r] = rows[r].split("\t");
+    for (c = 0, clen = rows[r].length; c < clen; c += 1) {
+      if (!arr[a]) {
+        arr[a] = [];
+      }
+      if (multiline && c === 0) {
+        last = arr[a].length - 1;
+        arr[a][last] = arr[a][last] + "\n" + rows[r][0];
+        if (multiline && (countQuotes(rows[r][0]) & 1)) { // `& 1` is a bitwise way of performing mod 2.
+          multiline = false;
+          arr[a][last] = arr[a][last].substring(0, arr[a][last].length - 1).replace(/""/g, `"`);
+        }
+      } else if (c === clen - 1 && rows[r][c].indexOf(`"`) === 0 && (countQuotes(rows[r][c]) & 1)) {
+        arr[a].push(rows[r][c].substring(1).replace(/""/g, `"`));
+        multiline = true;
+      } else {
+        arr[a].push(rows[r][c].replace(/""/g, `"`));
+        multiline = false;
+      }
+    }
+    if (!multiline) {
+      a += 1;
+    }
+  }
+  return arr;
+};
+export const stringifyToSpreadsheet = (arr: string[][]): string => {
+  let str = "";
+  let val;
+  for (let r = 0, rlen = arr.length; r < rlen; r += 1) {
+    for (let c = 0, clen = arr[r].length; c < clen; c += 1) {
+      if (c > 0) {
+        str += "\t";
+      }
+      val = arr[r][c];
+      if (typeof val === "string") {
+        if (val.indexOf("\n") > -1) {
+          str += `"` + val.replace(/"/g, `""`) + `"`;
+        } else {
+          str += val;
+        }
+      } else if (val === null || val === undefined) {
+        str += "";
+      } else {
+        str += val;
+      }
+    }
+    str += "\n";
+  }
+  return str;
+};
