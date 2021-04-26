@@ -60,6 +60,7 @@
     <template v-if="query !== null">
       <ModalUserView
         v-for="(window, i) in query.windows"
+        ref="modalUserViews"
         :key="window.key"
         is-root
         :view="window.query"
@@ -369,7 +370,14 @@ export default class TopLevelUserView extends Vue {
     // 83 is code for `s`/`ы` key.
     if ((event.ctrlKey || event.metaKey) && (event.key === "s" || event.keyCode === 83)) {
       event.preventDefault();
-      if (!this.changes.isScopeEmpty("root")) {
+
+      let someModalSaved = false;
+      for (const view of this.$refs.modalUserViews as ModalUserView[]) {
+        const isSaved = view.saveViewIfChanged();
+        someModalSaved ||= isSaved;
+      }
+
+      if (!someModalSaved && !this.changes.isScopeEmpty("root")) {
         void this.saveView();
       }
     }

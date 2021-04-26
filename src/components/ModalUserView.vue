@@ -205,6 +205,14 @@ export default class ModalUserView extends Vue {
     void router.push(queryLocation(this.view));
   }
 
+  saveViewIfChanged() {
+    if (!this.changes.isScopeEmpty(this.uid)) {
+      void this.saveView();
+      return true;
+    }
+    return false;
+  }
+
   private async saveView() {
     const ops = await this.submitChanges({ scope: this.uid, errorOnIncomplete: true });
     if (ops.length === 1) {
