@@ -10,28 +10,30 @@
     @closed="showOverlay = false"
   >
     <div class="demo-message-container">
-      <i class="material-icons demo-icon">monetization_on</i>
+      <i class="material-icons demo-icon">waving_hand</i>
       <h1 class="demo-header">
-        Hello.
+        Зарегистрируйтесь,<br>чтобы продолжить
       </h1>
       <span class="demo-message">
-        Buy Ozma, please.
+        Это демо-пример. Чтобы начать вносить изменения,<br>зарегистрируйтесь и мы создадим вам персональную копию.
       </span>
-      <div class="buttons-container mt-5">
+      <div class="buttons-container">
         <b-button
-          class="mb-3"
-          variant="success"
-          href="http://google.com"
+          class="ok-button"
+          variant="primary"
+          href="https://onboard.ozma.io/register?locale=ru&lp=demo-x"
+          target="_blank"
         >
-          Let's do it!
+          Зарегистрироваться
         </b-button>
 
         <b-button
-          variant="secondary"
-          href="http://google.com"
+          class="cancel-button"
+          variant="outline-secondary"
+          @click="hide"
         >
           <a>
-            Hm, no
+            Посмотреть ещё
           </a>
         </b-button>
       </div>
@@ -45,8 +47,12 @@ import { Vue, Component } from "vue-property-decorator";
 @Component
 export default class ReadonlyDemoInstanceModal extends Vue {
   private showOverlay = false;
-  show() {
+  private show() {
     this.$modal.show(this.uid);
+  }
+
+  private hide() {
+    this.$modal.hide(this.uid);
   }
 }
 </script>
@@ -87,12 +93,32 @@ export default class ReadonlyDemoInstanceModal extends Vue {
   }
 
   .demo-icon {
+    margin-top: 1rem;
+    margin-bottom: 2rem;
     font-size: 5rem;
     line-height: 6rem;
+    color: var(--default-foregroundDarkerColor);
+  }
+
+  .demo-header {
+    margin-bottom: 1rem;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  .demo-message {
+    text-align: center;
   }
 
   .buttons-container {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
     display: flex;
     flex-flow: column;
+  }
+
+  .ok-button {
+    margin-bottom: 1.5rem;
+    font-weight: bold;
   }
 </style>

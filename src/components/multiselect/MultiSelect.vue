@@ -380,6 +380,11 @@ export default class MultiSelect extends Vue {
     }
   }
 
+  @Watch("options")
+  private updatePopupPosition() {
+    void nextRender().then(() => (this.$refs.popup as any)?.updatePopper());
+  }
+
   @Watch("disabled")
   private disabledChanged() {
     if (this.disabled) {

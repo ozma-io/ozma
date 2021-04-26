@@ -111,28 +111,6 @@
             </div>
           </div>
 
-          <!--
-          <div
-            v-if="required"
-            v-b-tooltip.hover.bottom.noninteractive
-            class="required-indicator"
-            :title="$t('required_field')"
-          />
-          <div
-            v-if="disabled"
-            v-b-tooltip.hover.bottom.noninteractive
-            :class="[
-              'disabled-indicator',
-              {
-                'is-cell-edit': isCellEdit,
-              },
-            ]"
-            :title="$t('readonly_field')"
-          >
-            <span class="material-icons">edit_off</span>
-          </div>
-          -->
-
           <slot
             :onFocus="onNonmodalFocus"
           />

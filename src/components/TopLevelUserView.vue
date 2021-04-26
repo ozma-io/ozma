@@ -4,9 +4,16 @@
             "search_placeholder": "Type to search",
             "pending_changes": "Saving",
             "loading": "Now loading",
-            "save": "Save",
+            "save": "Save (Ctrl+S)",
+            "saved": "All changes saved",
+            "show_errors": "Show errors",
+            "clear_changes": "Clear all changes",
+            "clear_changes_confirm": "Clear all changes after last save?",
+            "clear_changes_ok": "Clear",
+            "cancel": "Cancel",
             "account": "Account",
             "theme": "Theme",
+            "contacts": "Contacts",
             "login": "Login",
             "logout": "Logout",
             "auth_error": "Authentication error: {msg}",
@@ -24,9 +31,16 @@
             "search_placeholder": "Поиск",
             "pending_changes": "Сохраняется",
             "loading": "Загрузка данных",
-            "save": "Сохранить",
+            "save": "Сохранить (Ctrl+S)",
+            "saved": "Все изменения сохранены",
+            "show_errors": "Показать ошибки",
+            "clear_changes": "Сбросить все изменения",
+            "clear_changes_confirm": "Сбросить все изменения с последнего сохранения?",
+            "clear_changes_ok": "Сбросить",
+            "cancel": "Отмена",
             "account": "Профиль",
             "theme": "Тема",
+            "contacts": "Контакты",
             "login": "Войти",
             "logout": "Выйти",
             "auth_error": "Ошибка авторизации: {msg}",
@@ -105,47 +119,91 @@
       <div class="count-row">
         {{ statusLine }}
       </div>
-      <i
-        v-if="errors.length > 0"
-        class="material-icons"
-        :style="{cursor: 'pointer', color: 'red'}"
-        @click="makeErrorToast"
-      >
-        help_outline
-      </i>
-      <div
-        v-if="!changes.isScopeEmpty('root')"
-        class="error custom-warning"
-      >
+    </nav>
+
+    <div
+      :class="[
+        'save-cluster',
+        {
+          'is-mobile': $isMobile,
+        },
+      ]"
+    >
+      <transition name="fade-2">
         <button
-          :class="['save_button', {
-            'save_button__warning': !changes.isScopeEmpty('root'),
-            'save_button__error': errors.length > 0,
+          v-if="errors.length > 0"
+          v-b-tooltip.hover.right.noninteractive="{
+            title: $t('clear_changes').toString(),
+            disabled: $isMobile,
+          }"
+          class="save-cluster-button reset-changes-button shadow"
+          @click="resetChanges"
+        >
+          <span
+            class="material-icons md-36"
+          >
+            clear
+          </span>
+        </button>
+      </transition>
+
+      <transition name="fade-2">
+        <button
+          v-if="errors.length > 0"
+          v-b-tooltip.hover.right.noninteractive="{
+            title: $t('show_errors').toString(),
+            disabled: $isMobile,
+          }"
+          class="save-cluster-button show-errors-button shadow"
+          @click="makeErrorToast"
+        >
+          <span
+            class="material-icons md-36"
+          >
+            help_outline
+          </span>
+        </button>
+      </transition>
+
+      <transition name="fade-2" mode="out-in">
+        <div
+          v-if="!changes.isScopeEmpty('root') && isSaving"
+          class="saving-spinner spinner-border"
+        />
+        <button
+          v-else-if="!changes.isScopeEmpty('root')"
+          v-b-tooltip.hover.right.noninteractive="{
+            title: $t('save').toString(),
+            disabled: $isMobile,
+          }"
+          :class="['save-cluster-button save-button shadow', {
+            'save': !changes.isScopeEmpty('root'),
           }]"
-          :title="$t('save')"
           @click="saveView"
         >
-          <input
-            v-if="errors.length > 0"
-            type="button"
-            class="material-icons"
-            value="warning"
+          <span
+            class="material-icons md-36"
           >
-          <input
-            v-else-if="!changes.isScopeEmpty('root')"
-            type="button"
-            class="material-icons"
-            value="save"
-          >
-          <input
-            v-else
-            type="button"
-            class="material-icons"
-            value="done"
-          >
+            save
+          </span>
         </button>
-      </div>
-    </nav>
+        <div
+          v-else-if="savedRecently.show"
+          v-b-tooltip.hover.right.noninteractive="{
+            title: $t('saved').toString(),
+            disabled: $isMobile,
+          }"
+          class="save-cluster-indicator"
+        >
+          <span
+            class="material-icons md-36"
+          >
+            cloud_done
+          </span>
+        </div>
+      </transition>
+    </div>
+
     <QRCodeScanner
       v-if="wasOpenedQRCodeScanner"
       :open-scanner="isOpenQRCodeScanner"
@@ -156,6 +214,7 @@
 </template>
 
 <script lang="ts">
+import * as R from "ramda";
 import { Route } from "vue-router";
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
@@ -174,6 +233,7 @@ import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { CurrentSettings } from "@/state/settings";
 import { getColorVariables } from "@/utils_colors";
+import { ISocialLinks } from "./CommunicationsButton.vue";
 
 const auth = namespace("auth");
 const staging = namespace("staging");
@@ -203,6 +263,7 @@ export default class TopLevelUserView extends Vue {
   @query.Action("closeWindow") closeWindow!: (_: number) => Promise<void>;
   @query.Action("pushWindow") pushWindow!: (_: { index: number; query: IQuery }) => Promise<void>;
   @errors.Mutation("removeError") removeError!: (params: { key: ErrorKey; index: number }) => void;
+  @errors.Mutation("reset") resetErrors!: () => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @settings.State("current") currentSettings!: CurrentSettings;
   @settings.State("currentTheme") currentTheme!: string;
@@ -216,10 +277,20 @@ export default class TopLevelUserView extends Vue {
 
   private buttons: Button[] = [];
   private themeButtons: Button[] = [];
+  private communicationButtons: Button[] = [];
+
+  private savedRecently: { show: boolean; timeoutId: NodeJS.Timeout | null } = {
+    show: false,
+    timeoutId: null,
+  };
 
   private wasOpenedQRCodeScanner = false;
   private isOpenQRCodeScanner = false;
   private currentQRCodeLink: Link | null = null;
+
+  private get isSaving(): boolean {
+    return this.protectedCalls > 0;
+  }
 
   private get mainButtons(): Button[] {
     return [
@@ -236,7 +307,6 @@ export default class TopLevelUserView extends Vue {
         variant: "interfaceButton",
         colorVariables: getColorVariables("button", "interfaceButton"),
         location: { name: "main" },
-        disabled: this.isMainView,
       },
       this.burgerButton,
     ];
@@ -265,6 +335,40 @@ export default class TopLevelUserView extends Vue {
     const translate = (themeName: string) =>
       (themeName === "light" || themeName === "dark") ? this.$t(themeName + "_theme").toString() : themeName;
     this.themeButtons = themes.map(theme => ({ caption: translate(theme), type: "callback", callback: () => this.setTheme(theme) }));
+
+    this.communicationButtons = [
+      this.communicationStrings.email
+        ? {
+          caption: "E-mail",
+          icon: "email",
+          type: "link",
+          link: { type: "href", href: "mailto:" + this.communicationStrings.email, target: "_blank" },
+        }
+        : undefined,
+      this.communicationStrings.whatsapp
+        ? {
+          caption: "WhatsApp",
+          icon: "phone",
+          type: "link",
+          link: { type: "href", href: this.communicationStrings.whatsapp, target: "_blank" },
+        }
+        : undefined,
+      this.communicationStrings.telegram
+        ? {
+          caption: "Telegram",
+          icon: "send",
+          type: "link",
+          link: { type: "href", href: this.communicationStrings.telegram, target: "_blank" },
+        }
+        : undefined,
+    ].filter(R.identity) as Button[];
+  }
+  private get communicationStrings(): ISocialLinks {
+    return {
+      telegram: this.currentSettings.getEntry("instance_help_telegram", String, undefined),
+      whatsapp: this.currentSettings.getEntry("instance_help_whatsapp", String, undefined),
+      email: this.currentSettings.getEntry("instance_help_email", String, undefined),
+    };
   }
 
   private onKeydown(event: KeyboardEvent) {
@@ -272,7 +376,7 @@ export default class TopLevelUserView extends Vue {
     if ((event.ctrlKey || event.metaKey) && (event.key === "s" || event.keyCode === 83)) {
       event.preventDefault();
       if (!this.changes.isScopeEmpty("root")) {
-        this.saveView();
+        void this.saveView();
       }
     }
   }
@@ -320,11 +424,13 @@ export default class TopLevelUserView extends Vue {
   }
 
   private makeErrorToast() {
+    this.$bvToast.hide();
     this.errors.forEach(error => {
       this.$bvToast.toast(error.toString(), {
         title: this.$t("error").toString(),
         variant: "danger",
         solid: true,
+        autoHideDelay: 10000,
       });
     });
   }
@@ -361,16 +467,52 @@ export default class TopLevelUserView extends Vue {
     document.removeEventListener("keydown", this.onKeydown);
   }
 
-  private saveView() {
-    void this.submitChanges({ scope: "root", errorOnIncomplete: true });
+  private resetChanges() {
+    this.$bvModal.msgBoxConfirm(this.$t("clear_changes_confirm").toString(), {
+      okTitle: this.$t("clear_changes_ok").toString(),
+      cancelTitle: this.$t("cancel").toString(),
+      okVariant: "danger",
+      cancelVariant: "outline-secondary",
+    }).then(this.clearChanges)
+      .then(this.resetErrors)
+      .catch(err => {
+      });
+  }
+
+  private async saveView() {
+    const submit = await this.submitChanges({ scope: "root", errorOnIncomplete: true });
+
+    if (this.errors.length === 0) {
+      this.$bvToast.hide();
+    }
+
+    if (this.savedRecently.timeoutId !== null) {
+      clearTimeout(this.savedRecently.timeoutId);
+    }
+    this.savedRecently.show = true;
+    this.savedRecently.timeoutId = setTimeout(() => {
+      this.savedRecently.show = false;
+    }, 5000);
   }
 
   get burgerButton() {
     const buttons: Button[] = [];
+
+    if (this.themeButtons.length > 0) {
+      buttons.push({
+        icon: "contacts",
+        caption: this.$t("contacts").toString(),
+        variant: "info",
+        type: "button-group",
+        buttons: this.communicationButtons,
+      });
+    }
+
+    if (this.themeButtons.length > 0) {
+      buttons.push({ icon: "palette", caption: this.$t("theme").toString(), type: "button-group", buttons: this.themeButtons });
+    }
+
     if (this.currentAuth?.token) {
-      if (this.themeButtons.length > 0) {
-        buttons.push({ icon: "palette", caption: this.$t("theme").toString(), type: "button-group", buttons: this.themeButtons });
-      }
       if (Api.developmentMode) {
         const currentAuth = this.currentAuth;
         buttons.push({ icon: "link",
@@ -403,23 +545,12 @@ export default class TopLevelUserView extends Vue {
   }
 
   get bottomBarNeeded() {
-    return this.errors.length > 0 ||
-        !this.changes.isEmpty ||
-        this.statusLine !== "";
+    return this.statusLine !== "";
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  /* Current Z layout:
-
-* Count off all entries     (2000)
-* Footer of page            (1030)
-* Head menu                 (1000)
-* All page without footer   (0)
-
-*/
-
   .main-div {
     padding: 0;
     height: 100%;
@@ -538,65 +669,67 @@ export default class TopLevelUserView extends Vue {
     font-weight: 600;
   }
 
-  .custom-warning {
-    float: right;
+  .save-cluster {
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    &.is-mobile {
+      bottom: 1rem;
+      right: 1rem;
+    }
   }
 
-  .error {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    border-radius: inherit;
-    display: inline-block;
-    position: relative;
-  }
-
-  .save_button {
-    background-color: var(--SuccessColor);
-    color: var(--StateTextColor);
-    padding: 5px;
-    border-radius: 3px;
-    animation: color-change-2x 2s linear infinite alternate both;
+  .save-cluster-button {
+    height: 4rem;
+    width: 4rem;
     display: flex;
     justify-content: center;
+    align-items: center;
+    border-radius: 50%;
   }
 
-  .save_button__warning {
-    background-color: var(--WarningColor);
-    animation: color-change-2x 2s linear infinite alternate both;
+  .save-cluster-indicator {
+    height: 4rem;
+    width: 4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    color: var(--default-backgroundDarker2Color);
   }
 
-  .save_button__error {
-    background-color: var(--FailColor);
-    animation: color-change-2x 2s linear infinite alternate both;
+  .reset-changes-button,
+  .show-errors-button {
+    height: 3rem;
+    width: 3rem;
+    margin-bottom: 0.5rem;
+    background-color: #dc354533;
+    color: #dc3545cc;
   }
 
-  .save_button > input {
-    background: none;
-    border: none;
-    padding: 0 20px;
+  .save-button {
+    color: var(--StateTextColor);
+
+    &.save {
+      background-color: #97d777;
+    }
   }
 
-  .error_button {
-    padding: 0;
-    margin: 0;
-    margin-left: 0;
-    line-height: normal;
-    position: relative;
-    font-size: inherit;
-    background: hsla(0, 0%, 100%, 0.3);
-    color: var(--ButtonTextColor);
-    float: none;
-    vertical-align: unset;
-    border-radius: 0 !important;
+  .saving-spinner {
+    height: 4rem;
+    width: 4rem;
+    border-color: #97d777;
+    border-right-color: transparent;
+    border-width: 0.5rem;
+    opacity: 0.5;
   }
 
   @media screen and (max-aspect-ratio: 13/9) {
     @media screen and (max-device-width: 480px) {
-      .find {
-        display: block;
-      }
-
       .head-menu_back-button,
       .head-menu_main-menu-button {
         text-align: left;

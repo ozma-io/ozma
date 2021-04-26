@@ -272,66 +272,6 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
     margin-left: -15px;
   }
 
-  .submain-menu-block {
-    max-width: 650px !important; /* 450px */
-    display: block;
-    margin: auto;
-    padding: 0;
-    padding-top: 35px;
-    padding-bottom: 35px;
-  }
-
-  .subsubmain-menu-block {
-    width: auto;
-    height: 90%;
-    display: flex;
-
-    /* FIXME: something strange here. This line is superseded. */
-
-    /* align-items: center; /* для разных браузеров */
-    justify-content: center; /* для разных браузеров */
-    flex-direction: column;
-    align-items: flex-start;
-    margin: auto;
-    border: 0;
-    padding: 0;
-    background-color: transparent;
-  }
-
-  .filter-back {
-    margin: 0;
-    padding: 0;
-    display: inline-block;
-    background: var(--MenuColor);
-    margin-right: 2px;
-    margin-bottom: 2px;
-  }
-
-  .filter-back > * {
-    padding-left: 30px;
-  }
-
-  .navigation-sector {
-    margin-bottom: 20px;
-    float: left;
-    clear: left;
-    padding: 0;
-  }
-
-  .navigation-sector-title {
-    padding: 5px;
-    padding-left: 1px;
-    min-height: 18px;
-    width: 100%;
-    height: calc(1.5em + 4px) !important;
-    white-space: nowrap;
-  }
-
-  .navigation-sector-title-head {
-    color: var(--NavigationTextColor) !important;
-    font-weight: bold;
-  }
-
   @media screen and (orientation: portrait) {
     @media screen and (max-width: 575px) {
       .menu_container {
@@ -342,71 +282,6 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
     @media screen and (max-device-width: 480px) {
       .main-menu-block {
         position: relative !important;
-      }
-
-      .submain-menu-block {
-        width: 100% !important;
-        margin-top: 0 !important;
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-      }
-
-      .subsubmain-menu-block {
-        height: auto !important;
-        margin: 0 !important;
-        width: 100% !important;
-      }
-
-      .navigation-sector {
-        margin: 0 !important;
-        width: 100%;
-      }
-
-      .navigation-sector-title {
-        height: 29px !important;
-        margin: 0 !important;
-        padding: 5px !important;
-        background-color: var(--NavigationBackColor);
-        overflow-x: scroll;
-      }
-
-      .navigation-sector-title-head {
-        padding: 0 !important;
-        line-height: normal;
-        color: var(--NavigationTextColor) !important;
-        font-weight: 700;
-      }
-
-      .navigation-sector-body {
-        width: 100% !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        padding: 0 !important;
-        background-color: var(--MenuColor);
-      }
-
-      .filter-back {
-        margin-bottom: 1px !important;
-        width: 100%;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-      }
-
-      .filter-back:first-child {
-        margin-top: 1px !important;
-      }
-
-      .navigation-entry {
-        background: hsla(0, 0%, 100%, 0.3);
-        margin-right: 0 !important;
-        margin-bottom: 1px;
-        width: 100%;
-        text-align: left;
-        opacity: 1;
-      }
-
-      .navigation-entry:last-child {
-        margin-bottom: 0;
       }
     }
   }
