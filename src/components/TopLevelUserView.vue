@@ -232,7 +232,6 @@ export default class TopLevelUserView extends Vue {
         variant: "interfaceButton",
         colorVariables: getColorVariables("button", "interfaceButton"),
         location: { name: "main" },
-        disabled: this.isMainView,
       },
       this.burgerButton,
     ];
