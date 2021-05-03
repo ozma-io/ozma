@@ -5,6 +5,7 @@ Vue.config.performance = process.env["NODE_ENV"] !== "production";
 
 import Vuex from "vuex";
 import mitt from "mitt";
+import VueGmt from "@gtm-support/vue2-gtm"; // TODO: make it load dynamically!
 
 import * as Modules from "@/modules";
 import { setHeadTitle } from "@/elements";
@@ -29,6 +30,7 @@ import errorsModule from "@/state/errors";
 import reloadModule from "@/state/reload";
 
 import "@/styles/style.scss";
+import { isReadonlyDemoInstance } from "./api";
 
 export const eventBus = mitt();
 
@@ -47,6 +49,11 @@ export const store = new Vuex.Store({
   },
 });
 
+if (isReadonlyDemoInstance) {
+  Vue.use(VueGmt, {
+    id: "GTM-5WW7SDT",
+  });
+}
 Vue.use(TextareaAutosize);
 Vue.use(VueIsMobile);
 
