@@ -4,18 +4,18 @@ import { IViewExprResult } from "ozma-api";
 import { IRef, convertString, waitTimeout } from "@/utils";
 import { funappSchema, default as Api } from "@/api";
 import { CancelledError } from "@/modules";
-import { loadColorVariants, loadThemes, NamedColorVariant, getPreferredTheme } from "@/utils_colors";
+import { loadColorVariants, loadThemes, NamedColorVariant, getPreferredTheme, Theme } from "@/utils_colors";
 
 const errorKey = "settings";
 
 export class CurrentSettings {
   settings: Record<string, string>;
-  themes: string[];
+  themes: Theme[];
   colorVariants: NamedColorVariant[];
 
   constructor(
     settings: Record<string, string>,
-    themes: string[] = [],
+    themes: Theme[] = [],
     colorVariants: NamedColorVariant[] = [],
   ) {
     this.settings = settings;
