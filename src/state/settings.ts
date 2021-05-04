@@ -36,7 +36,7 @@ export class CurrentSettings {
 export interface ISettingsState {
   current: CurrentSettings;
   pending: Promise<CurrentSettings> | null;
-  currentTheme: string;
+  currentTheme: Theme;
 }
 
 const settingsModule: Module<ISettingsState, {}> = {
@@ -44,7 +44,7 @@ const settingsModule: Module<ISettingsState, {}> = {
   state: {
     current: new CurrentSettings({}),
     pending: null,
-    currentTheme: "light",
+    currentTheme: { name: "light", localized: null },
   },
   mutations: {
     setSettings: (state, settings: CurrentSettings) => {
@@ -58,7 +58,7 @@ const settingsModule: Module<ISettingsState, {}> = {
       state.current = new CurrentSettings({});
       state.pending = null;
     },
-    setTheme: (state, theme: string) => {
+    setTheme: (state, theme: Theme) => {
       state.currentTheme = theme;
     },
   },
@@ -75,8 +75,8 @@ const settingsModule: Module<ISettingsState, {}> = {
         await dispatch("getSettings");
       },
     },
-    setTheme: ({ commit }, theme: string) => {
-      localStorage.setItem("preferredTheme", theme);
+    setTheme: ({ commit }, theme: Theme) => {
+      localStorage.setItem("preferredTheme", theme.name);
       commit("setTheme", theme);
     },
     setError: ({ commit }, error: string) => {

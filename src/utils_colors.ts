@@ -138,9 +138,10 @@ export const getPreferredTheme = (themes: Theme[]): Theme => {
   const prefersDarkTheme = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
 
   const storagedTheme = localStorage.getItem("preferredTheme");
-  if (themes.includes(storagedTheme as any)) {
+  const themeNames = themes.map(theme => theme.name);
+  if (themeNames.includes(storagedTheme as any)) {
     return themes.find(theme => theme.name === storagedTheme) as Theme;
-  } else if (prefersDarkTheme && themes.map(theme => theme.name).includes("dark")) {
+  } else if (prefersDarkTheme && themeNames.includes("dark")) {
     return themes.find(theme => theme.name === "dark") as Theme;
   } else {
     const lightTheme = themes.find(theme => theme.name === "light");
