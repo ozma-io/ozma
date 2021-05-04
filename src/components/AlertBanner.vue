@@ -19,7 +19,7 @@ import sanitizeHtml from "sanitize-html";
 const sanitizeSettings = {
   allowedTags: ["b", "i", "em", "strong", "a"],
   allowedAttributes: {
-    "a": ["href"],
+    "a": ["href", "target"],
   },
 };
 

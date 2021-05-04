@@ -10,7 +10,7 @@
         "paste_no_referencefield_data": "Clipboard has no reference field data",
         "paste_error_too_many_columns": "Clipboard has too many columns",
         "add_entry": "Add entry",
-        "add_entry_in_modal": "Add new entry (in modal)"
+        "add_entry_in_modal": "Add new entry (in modal window)"
       },
       "ru": {
         "clear": "Очистить записи",
@@ -22,7 +22,7 @@
         "paste_no_referencefield_data": "В буфере обмена неверная информация для вставки в данное поле",
         "paste_error_too_many_columns": "В буфере обмена слишком много столбцов",
         "add_entry": "Добавить запись",
-        "add_entry_in_modal": "Добавить новую запись (в модале)"
+        "add_entry_in_modal": "Добавить новую запись (в модальном окне)"
       }
     }
 </i18n>

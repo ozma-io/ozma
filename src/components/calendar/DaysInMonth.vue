@@ -13,7 +13,7 @@
                {'diff-month': !day.isSame(startValue, 'month')},
                {'curr-day': day.isSame(selectedValue, 'day')},
                {'today': day.isSame(today, 'day')}]"
-      :style="{ gridColumn: day.day() + 1 }"
+      :style="{ gridColumn: day.weekday() + 1 }"
       @click="$emit('update:selectedValue', day)"
     >
       {{ day.date() }}
@@ -34,14 +34,13 @@ export default class DaysInMonth extends Vue {
 
   get days() {
     const startDate = this.startValue.clone().local().startOf("month");
-    const daysNumber = startDate.daysInMonth() + startDate.day();
-    const daysCount = startDate.daysInMonth() + startDate.day();
+    const daysCount = startDate.daysInMonth() + startDate.weekday();
     const totalDaysCount = Utils.roundUp(daysCount, 7);
-    return [...Array(totalDaysCount)].map((_, i) => startDate.clone().add(i - startDate.day(), "day"));
+    return [...Array(totalDaysCount)].map((_, i) => startDate.clone().add(i - startDate.weekday(), "day"));
   }
 
   get weekdays() {
-    return moment.weekdaysMin();
+    return moment.weekdaysMin(true);
   }
 
   get today() {
