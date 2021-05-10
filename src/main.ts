@@ -73,7 +73,7 @@ Modules.router.beforeResolve((to, from, next) => {
   next();
 });
 
-const app = new Vue({
+export const app = new Vue({
   router: Modules.router,
   i18n: Modules.i18n,
   store,

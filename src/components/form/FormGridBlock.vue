@@ -38,10 +38,4 @@ export default class FormGridBlock extends Vue {
   .form_grid_block__column:not(:last-child) {
     margin-bottom: 0.3rem;
   }
-
-  .form_grid_block__sub_column {
-    margin-top: 0;
-    padding-left: 0;
-    padding-right: 0;
-  }
 </style>

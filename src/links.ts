@@ -1,10 +1,12 @@
+import { app } from "@/main";
 import { queryLocation, IQueryState, IQuery, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery, selfIdArgs, refIdArgs } from "@/state/query";
 import { IActionRef } from "ozma-api";
-import { gotoHref } from "@/utils";
+import { gotoHref, randomId, shortLanguage } from "@/utils";
 import { saveAndRunAction } from "@/state/actions";
 import { Store } from "vuex";
 import { router } from "@/modules";
 import { IValueInfo } from "@/user_views/combined";
+import { documentGeneratorUrl, instanceName } from "./api";
 
 export const hrefTargetTypes = ["_top", "_blank", "_self", "_parent"] as const;
 export type HrefTargetType = typeof hrefTargetTypes[number];
@@ -38,11 +40,34 @@ export interface IQRCodeLink {
   type: "qrcode";
 }
 
-export type Link = IHrefLink | IQueryLink | IActionLink | IQRCodeLink;
+export interface IDocumentLink {
+  type: "document";
+  schema: string;
+  template: string;
+  filename: string;
+  instance: string;
+  args: Record<string, unknown>;
+}
+
+export type Link = IHrefLink | IQueryLink | IActionLink | IQRCodeLink | IDocumentLink;
 
 export interface IAttrToLinkOpts extends IAttrToQueryOpts {
   defaultTarget?: TargetType;
 }
+
+const messages: Record<string, Record<string, string>> = {
+  en: {
+    "generation_start_title": "File generation is started",
+    "generation_start_description": "It may take few seconds",
+    "generation_fail": "Error occured while file generation. Try again.",
+  },
+  ru: {
+    "generation_start_title": "Началось создание файла",
+    "generation_start_description": "Это займёт несколько секунд",
+    "generation_fail": "Произошла ошибка при создании файла. Попробуйте снова.",
+  },
+};
+const funI18n = (key: string) => messages[shortLanguage]?.[key];
 
 export const addLinkDefaultArgs = (link: Link, args: Record<string, unknown>) => {
   if ("args" in link) {
@@ -123,6 +148,25 @@ export const attrToQRCodeLink = (linkedAttr: Record<string, unknown>, opts?: IAt
   return qrСodeLink;
 };
 
+export const attrToDocumentLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLinkOpts): IDocumentLink | null => {
+  const schema = linkedAttr["document_schema"];
+  const template = linkedAttr["document_template"];
+  const filename = linkedAttr["document_filename"];
+  const instanceRaw = linkedAttr["document_instance"];
+  const args = attrToRecord(linkedAttr["args"]);
+  if (typeof schema !== "string"
+   || typeof template !== "string"
+   || typeof filename !== "string"
+   || (instanceRaw !== undefined && typeof instanceRaw !== "string")
+   || args === null) {
+    return null;
+  }
+
+  const instance = instanceRaw ?? instanceName;
+
+  return { instance, schema, template, filename, args, type: "document" };
+};
+
 export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | null => {
   if (typeof linkedAttr !== "object" || linkedAttr === null) {
     return null;
@@ -149,6 +193,11 @@ export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | 
   const qrCode = attrToQRCodeLink(linkedAttrObj, opts);
   if (qrCode !== null) {
     return qrCode;
+  }
+
+  const documentLink = attrToDocumentLink(linkedAttrObj, opts);
+  if (documentLink !== null) {
+    return documentLink;
   }
 
   return null;
@@ -191,9 +240,9 @@ export interface ILinkHandler {
 
 export interface ILinkHandlerParams {
   store: Store<any>;
-  goto: ((query: IQuery) => void);
+  goto: (query: IQuery) => void;
   link: Link;
-  openQRCodeScanner: ((name: string, link: Link) => void);
+  openQRCodeScanner: (name: string, link: Link) => void;
 }
 
 export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
@@ -249,8 +298,7 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
       href = curHref;
     }
   } else if (params.link.type === "action") {
-    const action = params.link.action;
-    const args = params.link.args;
+    const { action, args } = params.link;
 
     handler = async () => {
       const ret = await saveAndRunAction(params.store, action, args);
@@ -269,6 +317,52 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
     // eslint-disable-next-line @typescript-eslint/require-await
     handler = async () => {
       params.openQRCodeScanner("open-qrcode-scanner", params.link);
+    };
+  } else if (params.link.type === "document") {
+    const { schema, template, filename, instance, args } = params.link;
+    handler = async () => {
+      const id = randomId();
+      app.$bvToast.toast(funI18n("generation_start_description"), {
+        title: funI18n("generation_start_title"),
+        solid: true,
+        id,
+      });
+
+      const token = params.store.state.auth.current.token;
+      const url = new URL(`${documentGeneratorUrl}/api/${instance}/${schema}/${template}/generate/${filename}.pdf`);
+      url.search = new URLSearchParams(args as any).toString();
+
+      try {
+        const res = await fetch(url.toString(), {
+          method: "GET",
+          redirect: "manual",
+          headers: new Headers({
+            "access_token": token,
+          }),
+        });
+
+        if (res.ok) {
+          const blob = await res.blob();
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.setAttribute("download", filename);
+          a.click();
+          app.$bvToast.hide(id);
+        } else {
+          app.$bvToast.toast(res.statusText, {
+            title: funI18n("generation_fail"),
+            variant: "danger",
+            solid: true,
+          });
+          return;
+        }
+      } catch (e) {
+        app.$bvToast.toast(e, {
+          title: funI18n("generation_fail"),
+          variant: "danger",
+          solid: true,
+        });
+      }
     };
   } else {
     throw new Error("Impossible");
