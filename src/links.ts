@@ -67,7 +67,7 @@ const messages: Record<string, Record<string, string>> = {
     "generation_fail": "Произошла ошибка при создании файла. Попробуйте снова.",
   },
 };
-const funI18n = (key: string) => messages[shortLanguage]?.[key];
+const funI18n = (key: string) => messages[shortLanguage]?.[key]; // TODO: can't access VueI18n here, but this solution looks stupid too.
 
 export const addLinkDefaultArgs = (link: Link, args: Record<string, unknown>) => {
   if ("args" in link) {
