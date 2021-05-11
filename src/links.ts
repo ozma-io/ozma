@@ -329,7 +329,10 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
       });
 
       const token = params.store.state.auth.current.token;
-      const url = new URL(`${documentGeneratorUrl}/api/${instance}/${schema}/${template}/generate/${filename}.pdf`);
+      const extensions = ["pdf", "odt", "html", "txt"];
+      const extensionRegex = `.*\.${extensions.join("|")}\$`;
+      const filenameHasExtension = filename.match(extensionRegex) !== null;
+      const url = new URL(`${documentGeneratorUrl}/api/${instance}/${schema}/${template}/generate/${filename}${filenameHasExtension ? "" : ".pdf"}`);
       url.search = new URLSearchParams(args as any).toString();
 
       try {
@@ -337,7 +340,7 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
           method: "GET",
           redirect: "manual",
           headers: new Headers({
-            "access_token": token,
+            "Authorization": `Bearer ${token}`,
           }),
         });
 
