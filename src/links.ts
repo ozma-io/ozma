@@ -330,8 +330,8 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
 
       const token = params.store.state.auth.current.token;
       const extensions = ["pdf", "odt", "html", "txt"];
-      const extensionRegex = `.*\.${extensions.join("|")}\$`;
-      const filenameHasExtension = filename.match(extensionRegex) !== null;
+      const extensionRegex = `.*.${extensions.join("|")}$`;
+      const filenameHasExtension = (new RegExp(extensionRegex).exec(filename)) !== null;
       const url = new URL(`${documentGeneratorUrl}/api/${instance}/${schema}/${template}/generate/${filename}${filenameHasExtension ? "" : ".pdf"}`);
       url.search = new URLSearchParams(args as any).toString();
 
