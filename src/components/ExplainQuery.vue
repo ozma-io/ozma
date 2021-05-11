@@ -3,11 +3,15 @@
         "en": {
             "schema_name": "Schema name",
             "view_name": "User view name",
+            "role_schema": "Role schema",
+            "role_name": "Role name",
             "explain": "Show plan"
         },
         "ru": {
             "schema_name": "Название схемы",
             "view_name": "Название отображения",
+            "role_schema": "Схема роли",
+            "role_name": "Название роли",
             "explain": "Показать план"
         }
     }
@@ -34,6 +38,24 @@
       </label>
     </p>
     <p>
+      <label>
+        {{ $t('role_schema') }}:
+        <input
+          v-model="roleSchema"
+          :placeholder="$t('role_schema')"
+        >
+      </label>
+    </p>
+    <p>
+      <label>
+        {{ $t('role_name') }}:
+        <input
+          v-model="roleName"
+          :placeholder="$t('role_name')"
+        >
+      </label>
+    </p>
+    <p>
       <button @click="explainView">
         {{ $t('explain') }}
       </button>
@@ -47,7 +69,7 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { Action } from "vuex-class";
-import { IUserViewRef, IViewExplainResult } from "ozma-api";
+import { IEntityRef, IUserViewRef, IViewExplainResult, IUserViewOpts } from "ozma-api";
 
 import Api from "@/api";
 
@@ -57,6 +79,8 @@ export default class ExplainQuery extends Vue {
 
   schema = "";
   view = "";
+  roleSchema = "";
+  roleName = "";
   lastError = "";
 
   async explainView() {
@@ -65,9 +89,16 @@ export default class ExplainQuery extends Vue {
         schema: this.schema,
         name: this.view,
       };
+      if ((this.roleSchema === "") !== (this.roleName === "")) {
+        throw new Error("You should specify both role schema and role name, or none of them");
+      }
+      const roleRef: IEntityRef | undefined = this.roleSchema === "" ? undefined : { schema: this.roleSchema, name: this.roleName };
+      const req: IUserViewOpts = {
+        pretendRole: roleRef,
+      };
       const res: IViewExplainResult = await this.callProtectedApi({
         func: Api.getNamedUserViewExplain,
-        args: [ref],
+        args: [ref, req],
       });
 
       let info = "";

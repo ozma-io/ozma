@@ -1,4 +1,4 @@
-import { UserViewErrorType, IViewInfoResult, IQueryChunk, IViewExprResult, FunDBError } from "ozma-api";
+import { UserViewErrorType, IViewInfoResult, IViewExprResult, FunDBError, IUserViewOpts } from "ozma-api";
 import { Store } from "vuex";
 
 import Api from "@/api";
@@ -17,8 +17,8 @@ export class UserViewError extends Error {
   }
 }
 
-const defaultChunk: IQueryChunk = {
-  limit: 5000,
+const defaultViewOpts: IUserViewOpts = {
+  chunk: { limit: 5000 },
 };
 
 export const fetchUserViewData = async (store: Store<any>, args: IUserViewArguments): Promise<ICombinedUserViewDataParams> => {
@@ -39,7 +39,7 @@ export const fetchUserViewData = async (store: Store<any>, args: IUserViewArgume
       } else {
         const res: IViewExprResult = await store.dispatch("callProtectedApi", {
           func: Api.getNamedUserView.bind(Api),
-          args: [args.source.ref, args.args, defaultChunk],
+          args: [args.source.ref, args.args, defaultViewOpts],
         }, { root: true });
         return {
           args,
@@ -55,7 +55,7 @@ export const fetchUserViewData = async (store: Store<any>, args: IUserViewArgume
       } else {
         const res: IViewExprResult = await store.dispatch("callProtectedApi", {
           func: Api.getAnonymousUserView.bind(Api),
-          args: [args.source.query, args.args, defaultChunk],
+          args: [args.source.query, args.args, defaultViewOpts],
         }, { root: true });
         return {
           args,

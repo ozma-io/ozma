@@ -1,5 +1,5 @@
 import { ActionContext, Module } from "vuex";
-import { RowId, IQueryChunk, IFieldRef, IEntityRef, IChunkWhere, IDomainValuesResult } from "ozma-api";
+import { RowId, IQueryChunk, IFieldRef, IEntityRef, IChunkWhere, IDomainValuesResult, IUserViewOpts } from "ozma-api";
 import Vue from "vue";
 import R from "ramda";
 
@@ -327,10 +327,13 @@ const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEnt
     limit: limit + 1,
     where,
   };
+  const req: IUserViewOpts = {
+    chunk,
+  };
 
   const res = await context.dispatch("callProtectedApi", {
     func: Api.getDomainValues.bind(Api),
-    args: [ref.field, ref.rowId ?? undefined, chunk],
+    args: [ref.field, ref.rowId ?? undefined, req],
   }, { root: true }) as IDomainValuesResult;
   const entries = Object.fromEntries(res.values.map<[number, string]>(row => {
     const main = valueToText(res.punType, row.pun);
@@ -355,10 +358,13 @@ const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref:
   const chunk: IQueryChunk = {
     where,
   };
+  const req: IUserViewOpts = {
+    chunk,
+  };
 
   const res = await context.dispatch("callProtectedApi", {
     func: Api.getDomainValues.bind(Api),
-    args: [ref.field, ref.rowId ?? undefined, chunk],
+    args: [ref.field, ref.rowId ?? undefined, req],
   }, { root: true }) as IDomainValuesResult;
   return Object.fromEntries(res.values.map<[number, string]>(row => {
     const main = valueToText(res.punType, row.pun);
