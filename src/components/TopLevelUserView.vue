@@ -263,8 +263,7 @@ export default class TopLevelUserView extends Vue {
   @errors.Mutation("reset") resetErrors!: () => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @settings.State("current") currentSettings!: CurrentSettings;
-  @settings.State("currentTheme") currentTheme!: string;
-  @settings.Action("setTheme") setTheme!: (theme: string) => Promise<void>;
+  @settings.Action("setTheme") setTheme!: (theme: Theme) => Promise<void>;
 
   private statusLine = "";
   private enableFilter = false;
@@ -331,7 +330,7 @@ export default class TopLevelUserView extends Vue {
     const themes = this.currentSettings.themes;
     const locale = this.$i18n.locale;
     const translate = (theme: Theme) => (typeof theme.localized?.[locale] === "string") ? theme.localized[locale] : theme.name;
-    this.themeButtons = themes.map(theme => ({ caption: translate(theme), type: "callback", callback: () => this.setTheme(theme.name) }));
+    this.themeButtons = themes.map(theme => ({ caption: translate(theme), type: "callback", callback: () => this.setTheme(theme) }));
 
     this.communicationButtons = [
       this.communicationStrings.email

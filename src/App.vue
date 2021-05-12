@@ -57,6 +57,7 @@ import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import FabCluster from "@/components/FabCluster/FabCluster.vue";
 import { ErrorKey } from "@/state/errors";
 import { getColorVariables, inheritColorVariables } from "@/utils_colors";
+import type { Theme } from "@/utils_colors";
 import { eventBus } from "@/main";
 import { isReadonlyDemoInstance } from "@/api";
 
@@ -77,7 +78,7 @@ const staging = namespace("staging");
 } })
 export default class App extends Vue {
   @settings.State("current") settings!: CurrentSettings;
-  @settings.State("currentTheme") currentTheme!: string;
+  @settings.State("currentTheme") currentTheme!: Theme;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
@@ -148,8 +149,8 @@ export default class App extends Vue {
   @Watch("currentTheme", { immediate: true })
   private loadColors() {
     const lightColorVariants = this.settings.colorVariants.filter(variant => variant.theme === "light");
-    const colorVariants = this.currentTheme !== "light"
-      ? this.settings.colorVariants.filter(variant => variant.theme === this.currentTheme)
+    const colorVariants = this.currentTheme.name !== "light"
+      ? this.settings.colorVariants.filter(variant => variant.theme === this.currentTheme.name)
       : [];
     // TODO: genenrating variables for each component is not the best solution, would be cool to fix this.
     const componentsNames = [
