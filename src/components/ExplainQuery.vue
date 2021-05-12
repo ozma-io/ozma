@@ -18,7 +18,7 @@
 </i18n>
 
 <template>
-  <div>
+  <div class="explain">
     <p>
       <label>
         {{ $t('schema_name') }}:
@@ -63,6 +63,28 @@
     <pre>
       {{ lastError }}
     </pre>
+
+    <div v-if="attributesQuery !== ''">
+      Attributes query:
+      <div class="query">
+        {{ attributesQuery }}
+      </div>
+      Attributes plan:
+      <pre class="plan">
+        {{ attributesPlan }}
+      </pre>
+    </div>
+
+    <div v-if="rowsQuery !== ''">
+      Rows query:
+      <div class="query">
+        {{ rowsQuery }}
+      </div>
+      Rows plan:
+      <pre class="plan">
+        {{ rowsPlan }}
+      </pre>
+    </div>
   </div>
 </template>
 
@@ -81,9 +103,20 @@ export default class ExplainQuery extends Vue {
   view = "";
   roleSchema = "";
   roleName = "";
+
   lastError = "";
+  attributesQuery = "";
+  attributesPlan = "";
+  rowsQuery = "";
+  rowsPlan = "";
 
   async explainView() {
+    this.attributesQuery = "";
+    this.attributesPlan = "";
+    this.rowsQuery = "";
+    this.rowsPlan = "";
+    this.lastError = "";
+
     try {
       const ref: IUserViewRef = {
         schema: this.schema,
@@ -101,12 +134,12 @@ export default class ExplainQuery extends Vue {
         args: [ref, req],
       });
 
-      let info = "";
       if (res.attributes) {
-        info += `Attributes query:\n\n${res.attributes.query}\n\nAttributes plan:\n\n${res.attributes.explanation}\n\n\n\n`;
+        this.attributesQuery = res.attributes.query;
+        this.attributesPlan = res.attributes.explanation;
       }
-      info += `Rows query:\n\n${res.rows.query}\n\nRows plan:\n\n${res.rows.explanation}`;
-      this.lastError = info;
+      this.rowsQuery = res.rows.query;
+      this.rowsPlan = res.rows.explanation;
     } catch (e) {
       this.lastError = e.message;
       throw e;
@@ -114,3 +147,18 @@ export default class ExplainQuery extends Vue {
   }
 }
 </script>
+
+<style scoped>
+  .explain {
+    overflow: auto;
+  }
+
+  .query {
+    font-family: monospace;
+  }
+
+  .plan {
+    font-size: 100%;
+    display: inline-block;
+  }
+</style>

@@ -85,6 +85,8 @@ export default class SaveRestoreSchema extends Vue {
   skipPreloaded = false;
 
   async saveSchema() {
+    this.lastError = "";
+
     try {
       const schemas = this.schema === "" ? "all" : [this.schema];
       const opts: ISaveSchemasOptions = {
