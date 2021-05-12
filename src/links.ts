@@ -42,10 +42,8 @@ export interface IQRCodeLink {
 
 export interface IDocumentLink {
   type: "document";
-  schema: string;
-  template: string;
+  template: { schema: string; name: string };
   filename: string;
-  instance: string;
   args: Record<string, unknown>;
 }
 
@@ -148,23 +146,31 @@ export const attrToQRCodeLink = (linkedAttr: Record<string, unknown>, opts?: IAt
   return qrСodeLink;
 };
 
+const extensions = ["pdf", "odt", "html", "txt"];
+const extensionRegex = new RegExp(`.*.${extensions.join("|")}$`);
+const filenameHasExtension = (filename: string): boolean => (extensionRegex.exec(filename)) !== null;
+
 export const attrToDocumentLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLinkOpts): IDocumentLink | null => {
-  const schema = linkedAttr["document_schema"];
-  const template = linkedAttr["document_template"];
-  const filename = linkedAttr["document_filename"];
-  const instanceRaw = linkedAttr["document_instance"];
+  const templateRaw = linkedAttr["document_template"];
+  if (typeof templateRaw !== "object" || templateRaw === null) return null;
+  const templateObj = templateRaw as Record<string, unknown>;
+  const schema = templateObj["schema"];
+  const name = templateObj["name"];
+  const filenameRaw = linkedAttr["filename"];
   const args = attrToRecord(linkedAttr["args"]);
   if (typeof schema !== "string"
-   || typeof template !== "string"
-   || typeof filename !== "string"
-   || (instanceRaw !== undefined && typeof instanceRaw !== "string")
+   || (filenameRaw !== undefined && typeof filenameRaw !== "string")
+   || typeof name !== "string"
    || args === null) {
     return null;
   }
+  const template = { schema, name };
 
-  const instance = instanceRaw ?? instanceName;
+  const filename = filenameRaw === undefined
+    ? `${name}.pdf`
+    : filenameRaw + (filenameHasExtension(filenameRaw) ? "" : ".pdf");
 
-  return { instance, schema, template, filename, args, type: "document" };
+  return { template, filename, args, type: "document" };
 };
 
 export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | null => {
@@ -319,20 +325,18 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
       params.openQRCodeScanner("open-qrcode-scanner", params.link);
     };
   } else if (params.link.type === "document") {
-    const { schema, template, filename, instance, args } = params.link;
+    const { template, filename, args } = params.link;
     handler = async () => {
       const id = randomId();
       app.$bvToast.toast(funI18n("generation_start_description"), {
         title: funI18n("generation_start_title"),
+        noAutoHide: true,
         solid: true,
         id,
       });
 
       const token = params.store.state.auth.current.token;
-      const extensions = ["pdf", "odt", "html", "txt"];
-      const extensionRegex = `.*.${extensions.join("|")}$`;
-      const filenameHasExtension = (new RegExp(extensionRegex).exec(filename)) !== null;
-      const url = new URL(`${documentGeneratorUrl}/api/${instance}/${schema}/${template}/generate/${filename}${filenameHasExtension ? "" : ".pdf"}`);
+      const url = new URL(`${documentGeneratorUrl}/api/${instanceName}/${template.schema}/${template.name}/generate/${filename}`);
       url.search = new URLSearchParams(args as any).toString();
 
       try {
@@ -350,7 +354,6 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
           a.href = URL.createObjectURL(blob);
           a.setAttribute("download", filename);
           a.click();
-          app.$bvToast.hide(id);
         } else {
           app.$bvToast.toast(res.statusText, {
             title: funI18n("generation_fail"),
@@ -365,6 +368,9 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
           variant: "danger",
           solid: true,
         });
+      } finally {
+        await new Promise(resolve => setTimeout(resolve, 100)); // Don't know why it's needed there, but without it toast won't close.
+        app.$bvToast.hide(id);
       }
     };
   } else {
