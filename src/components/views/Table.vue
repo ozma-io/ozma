@@ -2034,23 +2034,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     position: sticky;
     left: 0;
 
-    .button {
-      @include material-button;
-
-      width: max-content;
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-      padding: 3px 6px;
-      color: var(--table-foregroundDarkerColor);
-
-      &:hover {
-        color: var(--table-foregoundColor);
-      }
-
-      > .label {
-        padding-left: 2px;
-      }
+    ::v-deep > button {
+      width: 100%;
     }
   }
 
@@ -2313,6 +2298,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   ::v-deep .button-element {
     margin: 0.125rem;
+
+    > button {
+      width: 100%;
+    }
   }
 
   .checkbox-col,

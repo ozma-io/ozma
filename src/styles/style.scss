@@ -24,7 +24,7 @@ html {
 * {
   margin: 0;
   min-width: none !important;
-  transition: background-color 0.3s, color 0.3s;
+  transition: $color-transition;
 }
 
 /*
@@ -107,7 +107,7 @@ button:not(.btn) {
 @for $i from 1 through 10 {
   .fade-#{$i}-enter-active,
   .fade-#{$i}-leave-active {
-    transition: opacity #{$i / 10}s;
+    transition: opacity #{$i / 10}s, $color-transition;
   }
 
   .fade-#{$i}-enter,
