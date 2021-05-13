@@ -1,10 +1,14 @@
-import { Dispatch, Commit } from "vuex";
+import { Dispatch } from "vuex";
 import { IActionRef, IActionResult } from "ozma-api";
 
 import Api from "@/api";
 import { CombinedTransactionResult } from "@/state/staging_changes";
 
-export const saveAndRunAction = async ({ dispatch }: { dispatch: Dispatch; commit: Commit }, ref: IActionRef, args: Record<string, unknown>): Promise<IActionResult> => {
+export const saveAndRunAction = async (
+  { dispatch }: { dispatch: Dispatch },
+  ref: IActionRef,
+  args: Record<string, unknown>,
+): Promise<IActionResult> => {
   let ret: IActionResult | undefined;
   let reloaded = false;
   try {

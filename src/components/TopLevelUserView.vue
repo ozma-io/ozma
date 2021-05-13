@@ -640,8 +640,8 @@ export default class TopLevelUserView extends Vue {
   }
 
   .fix-bot {
-    padding: 0.4rem;
-    padding-left: 0.75rem;
+    padding: 0.1rem;
+    padding-left: 0.5rem;
     line-height: normal;
     white-space: nowrap;
     overflow-x: auto;

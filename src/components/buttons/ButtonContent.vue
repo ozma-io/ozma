@@ -4,10 +4,7 @@
       v-if="button.icon"
       :class="[
         'icon',
-        {
-          'emoji-icon': iconType === 'emoji',
-          'material-icons': iconType === 'material',
-        },
+        iconType === 'emoji' ? 'emoji-icon' : 'material-icons',
       ]"
     >{{ button.icon }}</span>
     <span

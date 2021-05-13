@@ -51,6 +51,7 @@ export type Link = IHrefLink | IQueryLink | IActionLink | IQRCodeLink | IDocumen
 
 export interface IAttrToLinkOpts extends IAttrToQueryOpts {
   defaultTarget?: TargetType;
+  defaultActionArgs?: Record<string, any>;
 }
 
 const messages: Record<string, Record<string, string>> = {
@@ -100,10 +101,15 @@ export const attrToActionLink = (linkedAttr: Record<string, unknown>, opts?: IAt
     return null;
   }
 
-  const args = attrToRecord(linkedAttr["args"]);
+  let args = attrToRecord(linkedAttr["args"]);
   if (args === null) {
     return null;
   }
+  const addIds = linkedAttr["add_selected_entry_ids"];
+  if (addIds) {
+    args = { ...opts?.defaultActionArgs, ...args };
+  }
+
   return { action, args, type: "action" };
 };
 
