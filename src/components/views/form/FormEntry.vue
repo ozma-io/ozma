@@ -30,6 +30,7 @@
               :force-caption="element.forceCaption"
               :column-info-name="element.columnInfo.name"
               :value="row.values[element.index]"
+              :disabled="row.values[element.index].extra.softDisabled"
               :attributes="row.values[element.index].extra.attributes"
               :type="element.columnInfo.valueType"
               :locked="locked"

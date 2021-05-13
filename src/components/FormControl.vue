@@ -496,6 +496,7 @@ export default class FormControl extends Vue {
   // FIXME: maybe we can get rid of this?
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
+  @Prop({ type: Boolean, default: false }) disabled!: boolean;
 
   private buttons: Button[] = [];
   private filterString = "";
@@ -523,7 +524,7 @@ export default class FormControl extends Vue {
 
   get isDisabled() {
     const disableable = disableableTypes.has(this.inputType.name);
-    return disableable && (this.locked || this.value.info === undefined || this.value.info.field === null);
+    return disableable && (this.disabled || this.locked || this.value.info === undefined || this.value.info.field === null);
   }
 
   // Textual representation of `currentValue`.

@@ -36,6 +36,7 @@ export const userViewTitle = (uv: ICombinedUserViewAny): string | null => {
 // Common extra data for every user view, and its handler.
 
 export interface IBaseValueExtra {
+  softDisabled: boolean; // UI-only edit disabling.
 }
 
 export interface IBaseRowExtra {
@@ -57,19 +58,21 @@ export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtr
   ...emptyUserViewHandlerFunctions,
 
   createLocalValue(uv: IBaseCombinedUserView, rowIndex: number, row: ICombinedRow & IBaseExtendedRowInfo, columnIndex: number, value: ICombinedValue): IBaseValueExtra {
-    if (value.info && tryDicts("selectable", value.attributes, row.attributes, uv.columnAttributes[columnIndex], uv.attributes)) {
+    const getValueAttr = (key: string) => tryDicts(key, value.attributes, row.attributes, uv.columnAttributes[columnIndex], uv.attributes);
+    if (value.info && getValueAttr("selectable")) {
       row.extra.selectionEntry = {
         entity: value.info.fieldRef.entity,
         id: value.info.id!,
       };
     }
-    return {};
+    const softDisabled = !!getValueAttr("soft_disabled");
+    return { softDisabled };
   },
   createAddedLocalValue() {
-    return {};
+    return { softDisabled: false };
   },
   createEmptyLocalValue() {
-    return {};
+    return { softDisabled: false };
   },
 
   createLocalRow(uv: IBaseCombinedUserView, rowIndex: number, row: ICombinedRow, oldView: IBaseViewExtra | null, oldRow: IBaseRowExtra | null) {

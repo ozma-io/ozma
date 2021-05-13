@@ -33,7 +33,7 @@
     fluid
     :class="['table-block', { 'nested': !isRoot, 'active_editing': editingValue !== null }]"
   >
-    <table-cell-edit
+    <TableCellEdit
       v-if="editingValue"
       v-click-outside="clickOutsideEdit"
       :width="editParams.width"
@@ -52,6 +52,7 @@
         :scope="scope"
         :level="level"
         caption=""
+        :disabled="editingValue.value.extra.softDisabled"
         force-caption
         is-cell-edit
         autofocus
@@ -63,7 +64,7 @@
         @update="updateCurrentValue"
         @close-modal-input="removeCellEditing"
       />
-    </table-cell-edit>
+    </TableCellEdit>
 
     <div
       ref="tableContainer"
@@ -1278,7 +1279,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private valueIsReadOnly(valueRef: ValueRef, throwToastOnReadOnly = false): boolean {
     const value = this.uv.getValueByRef(valueRef)!.value;
-    if (!value.info || !value.info.field) {
+    if (!value.info || !value.info.field || value.extra.softDisabled) {
       if (throwToastOnReadOnly) {
         this.$bvToast.toast(this.$t("read_only_cell").toString(), {
           title: this.$t("paste_error").toString(),

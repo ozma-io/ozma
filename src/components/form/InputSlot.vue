@@ -94,7 +94,7 @@
             :title="$t(required ? 'required_field' : 'readonly_field')"
           >
             <div
-              v-if="required"
+              v-if="required && !disabled"
               :class="[
                 'required-indicator',
                 {
