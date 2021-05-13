@@ -101,13 +101,15 @@ export const attrToActionLink = (linkedAttr: Record<string, unknown>, opts?: IAt
     return null;
   }
 
-  const args = attrToRecord(linkedAttr["args"]);
+  let args = attrToRecord(linkedAttr["args"]);
   if (args === null) {
     return null;
   }
-  if (args["ids"] === undefined) {
-    args["ids"] = opts?.defaultActionArgs;
+  const addIds = linkedAttr["add_selected_ids"];
+  if (addIds) {
+    args = { ...opts?.defaultActionArgs, ...args };
   }
+
   return { action, args, type: "action" };
 };
 
