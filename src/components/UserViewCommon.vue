@@ -160,10 +160,8 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     });
   }
 
-  private get selectedRowIds() {
-    if (this.uv.info.mainEntity === undefined
-     || this.uv.extra.selectedRows.length === 0
-    ) return [];
+  private get selectedRowIds(): number[] {
+    if (this.uv.info.mainEntity === undefined) return [];
 
     const rows = this.uv.extra.selectedRows.keys().map((rowRef: RowRef) => this.uv.getRowByRef(rowRef));
     const ids = mapMaybe(row => (row as any)?.mainId ?? undefined, rows); // mainId is guaranteed to exist here.
