@@ -57,13 +57,14 @@ import { IEntityRef } from "ozma-api";
 
 import { mapMaybe, saveToFile, tryDicts } from "@/utils";
 import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, userViewTitle } from "@/components/BaseUserView";
-import { IAttrToQueryOpts, attrToQuery, IQuery } from "@/state/query";
+import { attrToQuery, IQuery } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
 import type { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
-import { ValueRef, valueToPunnedText } from "@/user_views/combined";
+import { RowRef, ValueRef, valueToPunnedText } from "@/user_views/combined";
 import { getReferenceInfo } from "@/state/entries";
 
 import { attrToButton, Button, attrToButtons, attrToButtonsOld } from "@/components/buttons/buttons";
+import { IAttrToLinkOpts } from "@/links";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -159,9 +160,20 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     });
   }
 
+  private get selectedRowIds() {
+    if (this.uv.info.mainEntity === undefined
+     || this.uv.extra.selectedRows.length === 0
+    ) return [];
+
+    const rows = this.uv.extra.selectedRows.keys().map((rowRef: RowRef) => this.uv.getRowByRef(rowRef));
+    const ids = mapMaybe(row => (row as any)?.mainId ?? undefined, rows); // mainId is guaranteed to exist here.
+    return ids;
+  }
+
   get attrButtons(): Button[] {
-    const opts: IAttrToQueryOpts = {
+    const opts: IAttrToLinkOpts = {
       homeSchema: this.uv.homeSchema ?? undefined,
+      defaultActionArgs: { ids: this.selectedRowIds },
     };
 
     const panelButtons = this.uv.attributes["panel_buttons"]; // Will be deleted
