@@ -52,7 +52,6 @@
         :scope="scope"
         :level="level"
         caption=""
-        :disabled="editingValue.value.extra.softDisabled"
         force-caption
         is-cell-edit
         autofocus
@@ -1187,10 +1186,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   get editingLocked() {
-    if (this.editing === null) {
+    if (this.editing === null || this.editingValue === null) {
       return false;
     } else {
-      return this.editing.ref.type !== "existing" && this.addedLocked;
+      return this.editingValue.value.extra.softDisabled || (this.editing.ref.type !== "existing" && this.addedLocked);
     }
   }
 
