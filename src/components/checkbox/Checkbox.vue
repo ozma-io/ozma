@@ -6,7 +6,7 @@
     <span class="checkbox__input">
       <i
         class="material-icons"
-      >{{ checked ? "check_box" : "check_box_outline_blank" }}</i>
+      >{{ indeterminate ? "indeterminate_check_box" : checked ? "check_box" : "check_box_outline_blank" }}</i>
     </span>
     <span
       v-if="label"
@@ -30,6 +30,7 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 )
 export default class Checkbox extends Vue {
   @Prop({ default: false, type: Boolean }) checked!: boolean;
+  @Prop({ default: false, type: Boolean }) indeterminate!: boolean;
   @Prop({ type: String }) label!: string;
 }
 </script>

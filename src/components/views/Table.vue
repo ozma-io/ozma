@@ -103,9 +103,12 @@
             <th
               v-if="uv.extra.isSelectionColumnEnabled"
               class="fixed-column checkbox-cells table-th"
-              @click="selectAllRows"
+              @click="toggleAllRows"
             >
-              <checkbox :checked="selectedAll" />
+              <Checkbox
+                :checked="selectedAll"
+                :indeterminate="!selectedAll && selectedSome"
+              />
             </th>
             <th
               v-if="hasLinksColumn"
@@ -1826,8 +1829,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     });
   }
 
-  private selectAllRows() {
-    this.selectAll(!this.selectedAll);
+  private toggleAllRows() {
+    this.selectAll(!this.selectedSome);
   }
 
   private releaseEntries() {
