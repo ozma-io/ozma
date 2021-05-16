@@ -81,18 +81,12 @@ export default class HeaderPanel extends Vue {
     return this.view === null
       ? null
       : {
-        type: "callback",
+        type: "location",
         variant: "interfaceButton",
         colorVariables: getColorVariables("button", "interfaceButton"),
         icon: "fullscreen",
-        callback: () => this.openFullscreen(),
+        location: queryLocation(this.view),
       };
-  }
-
-  private openFullscreen() {
-    if (this.view !== null) {
-      void router.push(queryLocation(this.view));
-    }
   }
 }
 
