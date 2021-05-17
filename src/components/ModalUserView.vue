@@ -269,6 +269,7 @@ export default class ModalUserView extends Vue {
     display: flex;
     flex-direction: column;
     align-items: center;
+    z-index: 1000;
 
     &.is-mobile {
       bottom: 1rem;
