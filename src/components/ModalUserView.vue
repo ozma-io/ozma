@@ -1,6 +1,7 @@
 <i18n>
     {
         "en": {
+            "new_entry": "New entry",
             "error": "Error",
             "saved": "All changes saved",
             "show_errors": "Show errors",
@@ -9,6 +10,7 @@
             "save_and_select_scoped": "Save and select"
         },
         "ru": {
+            "new_entry": "Новая запись",
             "error": "Ошибка",
             "saved": "Все изменения сохранены",
             "show_errors": "Показать ошибки",
@@ -28,7 +30,7 @@
   >
     <template #header>
       <HeaderPanel
-        :title="title"
+        :title="titleOrNewEntry"
         :buttons="buttons"
         :is-enable-filter="enableFilter"
         :filter-string="filterString"
@@ -191,6 +193,11 @@ export default class ModalUserView extends Vue {
         autoHideDelay: 10000,
       });
     });
+  }
+
+  private get titleOrNewEntry() {
+    const isNewEntry = this.view.args.args === null;
+    return isNewEntry ? this.$t("new_entry").toString() : this.title;
   }
 
   get filterWords() {

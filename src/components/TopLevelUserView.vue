@@ -1,6 +1,7 @@
 <i18n>
     {
         "en": {
+            "new_entry": "New entry",
             "search_placeholder": "Type to search",
             "pending_changes": "Saving",
             "loading": "Now loading",
@@ -26,6 +27,7 @@
             "authed_link": "Copy link with authorization"
         },
         "ru": {
+            "new_entry": "Новая запись",
             "search_placeholder": "Поиск",
             "pending_changes": "Сохраняется",
             "loading": "Загрузка данных",
@@ -73,7 +75,7 @@
 
     <div :class="'userview-upper-div'">
       <HeaderPanel
-        :title="title"
+        :title="titleOrNewEntry"
         :buttons="buttons"
         :is-enable-filter="enableFilter"
         :filter-string="query.root.search"
@@ -286,6 +288,12 @@ export default class TopLevelUserView extends Vue {
 
   private get isSaving(): boolean {
     return this.protectedCalls > 0;
+  }
+
+  private get titleOrNewEntry() {
+    if (this.query === null) return "";
+    const isNewEntry = this.query.root.args.args === null;
+    return isNewEntry ? this.$t("new_entry").toString() : this.title;
   }
 
   private get mainButtons(): Button[] {
