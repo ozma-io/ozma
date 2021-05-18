@@ -686,6 +686,36 @@ export const replaceHtmlLinks = (text: string): string => {
   return sanitized.replace(linksRegex, replaceLink);
 };
 
+export type TextLinkType = "url" | "tel" | "email";
+export type TextLink = { type: TextLinkType; href: string };
+export const findLink = (text: string): TextLink | null => {
+  const urlMatch = urlRegex.exec(text);
+  if (urlMatch) {
+    return {
+      type: "url",
+      href: urlMatch[0],
+    };
+  }
+
+  const telMatch = telRegex.exec(text);
+  if (telMatch) {
+    return {
+      type: "tel",
+      href: "tel:" + telMatch[0],
+    };
+  }
+
+  const emailMatch = emailRegex.exec(text);
+  if (emailMatch) {
+    return {
+      type: "email",
+      href: "mailto:" + emailMatch[0],
+    };
+  }
+
+  return null;
+};
+
 const asciiRegex = /[\p{ASCII}]+/u;
 export const isAscii = (str: string): boolean => asciiRegex.test(str);
 

@@ -25,6 +25,7 @@
       :phantom-icon="listItemHasRightMargin"
     />
   </span>
+
   <FunLink
     v-else-if="button.type === 'link'"
     :link="button.link"

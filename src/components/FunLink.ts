@@ -57,6 +57,10 @@ export default Vue.component("FunLink", {
     const { handler, href } = linkHandler(linkHandlerParams);
 
     const onHandlers = { click: (e: MouseEvent) => {
+      if (context.props.link.target === "_blank") {
+        vueEmit(context, "click");
+        return;
+      }
       if (!redirectClick(e, href === null) || context.props.disabled) {
         return;
       }
@@ -69,6 +73,7 @@ export default Vue.component("FunLink", {
         ...context.data,
         attrs: {
           href,
+          target: context.props.link.target,
         },
         on: onHandlers,
       }, context.children);
