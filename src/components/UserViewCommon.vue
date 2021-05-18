@@ -49,7 +49,7 @@
 
     <transition name="fade-transform">
       <div
-        v-if="selectedSome && selectionButtons !== []"
+        v-if="selectedSome && selectionButtons.length !== 0"
         class="selection-buttons-panel"
       >
         <ButtonsPanel
