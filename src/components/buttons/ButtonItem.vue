@@ -1,10 +1,7 @@
 <template>
-  <hr
-    v-if="button.type === 'empty'"
-  >
   <!-- Passing v-on:click to v-bind doesn't seem to work, hence this ugly solution -->
   <router-link
-    v-else-if="button.type === 'location'"
+    v-if="button.type === 'location'"
     class="text-decoration-none"
     :to="button.location"
   >
@@ -25,6 +22,7 @@
       :phantom-icon="listItemHasRightMargin"
     />
   </span>
+
   <FunLink
     v-else-if="button.type === 'link'"
     :link="button.link"
@@ -62,6 +60,13 @@
       @change="uploadFile($event.target, button.uploadFile)"
     >
   </label>
+
+  <ButtonView
+    v-else
+    :button="button"
+    :list-item="listItem"
+    :phantom-icon="listItemHasRightMargin"
+  />
 </template>
 
 <script lang="ts">

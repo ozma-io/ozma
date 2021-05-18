@@ -58,7 +58,7 @@ export default class ButtonsPanel extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  .button-element:not(:last-child) {
-    margin-right: 0.25rem;
+  .buttons-panel {
+    gap: 0.25rem;
   }
 </style>
