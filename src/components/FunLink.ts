@@ -74,6 +74,7 @@ export default Vue.component("FunLink", {
         attrs: {
           href,
           target: context.props.link.target,
+          rel: "noopener",
         },
         on: onHandlers,
       }, context.children);

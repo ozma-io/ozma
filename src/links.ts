@@ -298,17 +298,10 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
   } else if (params.link.type === "href") {
     const curHref = params.link.href;
 
-    /* if (params.link.target === "_blank") {
-     *   handler = () => {
-     *     window.open(curHref, "_blank");
-     *     return new Promise(() => {});
-     *   };
-     * } else { */
     handler = async () => {
       await gotoHref(curHref);
     };
     href = curHref;
-    // }
   } else if (params.link.type === "action") {
     const { action, args } = params.link;
 
