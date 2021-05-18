@@ -364,7 +364,7 @@ const createColumns = (uv: ICombinedUserViewAny): IColumn[] => {
     };
   });
 
-  if (!isTreeUnfoldColumnSet) {
+  if (!isTreeUnfoldColumnSet && columns[0]) {
     columns[0].treeUnfoldColumn = true;
   }
 
