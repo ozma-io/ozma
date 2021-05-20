@@ -211,13 +211,7 @@ export default class Calendar extends Vue {
     (this.$refs.control as HTMLInputElement)?.focus();
   }
 
-  private mounted() {
-    if (this.autofocus) {
-      void this.onAutofocus(true);
-    }
-  }
-
-  @Watch("autofocus")
+  @Watch("autofocus", { immediate: true })
   private async onAutofocus(autofocus: boolean) {
     if (autofocus) {
       await this.$nextTick();

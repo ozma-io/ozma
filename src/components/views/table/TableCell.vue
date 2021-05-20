@@ -11,6 +11,7 @@
 
 <template>
   <!-- FIXME: Pls solve these classes -->
+  <!-- `.stop` in `@click` fixes calendar popup hiding -->
   <td
     ref="cell"
     :style="[value.extra.style, value.extra.colorVariables]"
@@ -23,7 +24,7 @@
                           'editing_style': value.extra.editing !== undefined,
                           'tree-has-children': treeHasChildren,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
-    @click="$emit('cell-click', columnPosition, $refs.cell)"
+    @click.stop="$emit('cell-click', columnPosition, $refs.cell)"
   >
     <p>
       <template v-if="column.type == 'buttons'">
