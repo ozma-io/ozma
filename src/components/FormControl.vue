@@ -185,7 +185,7 @@
           :value="value"
           :select-views="inputType.selectViews"
           :height="customHeight"
-          :reference-entity="inputType.ref"
+          :reference-entity="fieldType.entity"
           :link-attr="inputType.linkAttr"
           :uv-args="uvArgs"
           :autofocus="autofocus || iSlot.autofocus"
