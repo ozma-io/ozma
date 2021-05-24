@@ -32,7 +32,7 @@
               :value="row.values[element.index]"
               :attributes="row.values[element.index].extra.attributes"
               :type="element.columnInfo.valueType"
-              :locked="locked"
+              :locked="locked || row.values[element.index].extra.softDisabled"
               :uv-args="uv.args"
               :scope="scope"
               :level="level"
