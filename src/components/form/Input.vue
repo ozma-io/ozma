@@ -39,9 +39,10 @@
         @blur="$emit('blur', $event)"
       />
       <b-input-group-append
-        v-if="qrcodeInput"
+        v-if="qrcodeInput || textLink"
       >
-        <ButtonItem :button="qrCodeButton" />
+        <ButtonItem v-if="textLink" :button="textLinkButton" />
+        <ButtonItem v-if="qrcodeInput" :button="qrCodeButton" />
       </b-input-group-append>
     </b-input-group>
     <!-- eslint-disable vue/no-deprecated-v-on-native-modifier -->
@@ -79,6 +80,8 @@ import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import { Button } from "@/components/buttons/buttons";
 import { getColorVariables } from "@/utils_colors";
+import { findLink } from "@/utils";
+import type { TextLink } from "@/utils";
 
 @Component({
   components: { Textarea, QRCodeScanner, ButtonItem },
@@ -128,6 +131,38 @@ export default class Input extends Vue {
 
   private onPressTab(event: KeyboardEvent) {
     this.$emit("move-selection-next-column", event);
+  }
+
+  private get textLink(): TextLink | null {
+    return this.isCellEdit ? null : findLink(this.value);
+  }
+
+  private get textLinkIcon(): string | null {
+    if (this.textLink === null) return null;
+
+    const type = this.textLink.type;
+    /* eslint-disable */
+    return type === "url"   ? "link"
+         : type === "tel"   ? "call"
+         : type === "email" ? "email"
+         :                    "error";
+    /* eslint-enable */
+  }
+
+  private get textLinkButton(): Button | null {
+    if (this.textLink === null) return null;
+
+    return {
+      type: "link",
+      icon: this.textLinkIcon!,
+      link: {
+        type: "href",
+        href: this.textLink.href,
+        target: "_blank",
+      },
+      variant: "outline-primary",
+      colorVariables: getColorVariables("button", "outline-primary"),
+    };
   }
 
   private mounted() {
