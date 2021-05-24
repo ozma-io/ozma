@@ -1,20 +1,20 @@
 import { RawLocation } from "vue-router";
 import { Link, IAttrToLinkOpts, attrToLink } from "@/links";
-import { mapMaybe, isMobile } from "@/utils";
+import { mapMaybe, isMobile, shortLanguage } from "@/utils";
 import { getColorVariables } from "@/utils_colors";
+
+export const buttonDisplays = ["all", "desktop", "mobile", "selectionPanel"] as const;
+export type ButtonDisplay = typeof buttonDisplays[number];
+export const isButtonDisplay = (display: unknown): display is ButtonDisplay => buttonDisplays.includes(display as any);
 
 export interface IButton {
   icon?: string;
   caption?: string;
   tooltip?: string;
-  display?: string;
+  display?: ButtonDisplay;
   variant?: unknown;
   disabled?: boolean;
   colorVariables?: Record<string, string>;
-}
-
-export interface IEmptyButton extends IButton {
-  type: "empty";
 }
 
 export interface ILocationButton extends IButton {
@@ -42,7 +42,23 @@ export interface IButtonGroup extends IButton {
   type: "button-group";
 }
 
-export type Button = ILocationButton | ILinkButton | ICallbackButton | IUploadFileButton | IButtonGroup | IEmptyButton;
+export interface IErrorButton extends IButton {
+  type: "error";
+}
+
+export type Button = ILocationButton | ILinkButton | ICallbackButton | IUploadFileButton | IButtonGroup | IErrorButton;
+
+const messages: Record<string, Record<string, string>> = {
+  en: {
+    "error_button": "<Error>",
+    "computed_attributes": "Computed attributes",
+  },
+  ru: {
+    "error_button": "<Ошибка>",
+    "computed_attributes": "Вычисленные атрибуты",
+  },
+};
+const funI18n = (key: string) => messages[shortLanguage]?.[key]; // TODO: can't access VueI18n here, but this solution looks stupid too.
 
 export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts): Button | undefined => {
   if (typeof buttonAttr !== "object" || buttonAttr === null) {
@@ -59,7 +75,7 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts): Butto
     : typeof buttonObj.name === "string" ? buttonObj.name : undefined;
   const icon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
   const tooltip = typeof buttonObj.tooltip === "string" ? buttonObj.tooltip : undefined;
-  const display = typeof buttonObj.display === "string" ? buttonObj.display : undefined;
+  const display = isButtonDisplay(buttonObj.display) ? buttonObj.display : undefined;
   const variant = buttonObj.variant ?? undefined;
   const variables = buttonObj.colorVariables ?? undefined;
   let colorVariables;
@@ -107,13 +123,13 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts): Butto
   }
 
   return {
-    caption,
-    icon,
-    tooltip,
-    variant,
-    colorVariables,
+    caption: funI18n("error_button"),
+    icon: "error_outline",
+    tooltip: `${funI18n("computed_attributes")}: ${JSON.stringify(buttonObj)}`,
+    variant: "outline-danger",
+    colorVariables: getColorVariables("button", "outline-danger"),
     display,
-    type: "empty",
+    type: "error",
   };
 };
 
@@ -147,7 +163,7 @@ export const attrToButtonsOld = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): 
     const caption = typeof buttonObj.name === "string" ? buttonObj.name : undefined;
     const icon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
     const tooltip = typeof buttonObj.tooltip === "string" ? buttonObj.tooltip : undefined;
-    const display = typeof buttonObj.display === "string" ? buttonObj.display : "desktop";
+    const display = isButtonDisplay(buttonObj.display) ? buttonObj.display : "desktop";
     const variant = buttonObj.variant ?? undefined;
     let colorVariables;
     if (variant) {

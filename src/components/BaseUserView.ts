@@ -239,6 +239,10 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
     return this.uv.extra.selectedRows.length === this.uv.extra.rowCount && this.uv.extra.selectedRows.length > 0;
   }
 
+  get selectedSome(): boolean {
+    return this.uv.extra.selectedRows.length > 0;
+  }
+
   deleteRow(ref: RowRef) {
     if (isReadonlyDemoInstance) {
       eventBus.emit("showReadonlyDemoModal");

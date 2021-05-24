@@ -80,9 +80,7 @@
       {{ state.message }}
     </div>
 
-    <transition
-      name="fade-2"
-    >
+    <transition name="fade-2">
       <div
         v-if="state.state === 'loading'"
         :class="[

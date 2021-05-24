@@ -103,9 +103,12 @@
             <th
               v-if="uv.extra.isSelectionColumnEnabled"
               class="fixed-column checkbox-cells table-th"
-              @click="selectAllRows"
+              @click="toggleAllRows"
             >
-              <checkbox :checked="selectedAll" />
+              <Checkbox
+                :checked="selectedAll"
+                :indeterminate="!selectedAll && selectedSome"
+              />
             </th>
             <th
               v-if="hasLinksColumn"
@@ -1399,13 +1402,20 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.removeCellEditing();
   }
 
-  private get rootEvents(): [name: string, callback: (event: ClipboardEvent) => void][] {
+  private onRowInOtherTableSelected(uid: string) {
+    if (this.uid !== uid) {
+      this.selectAll(false);
+    }
+  }
+
+  private get rootEvents(): [name: string, callback: (event: any) => void][] {
     /* eslint-disable @typescript-eslint/unbound-method */
     return [
       ["copy", this.copySelectedCell],
       ["cut", this.cutSelectedCell],
       ["paste", this.pasteToSelectedCell],
       ["cell-click", this.onOtherTableClicked],
+      ["row-select", this.onRowInOtherTableSelected],
       ["form-input-focused", this.deselectAllCells],
     ];
     /* eslint-enable @typescript-eslint/unbound-method */
@@ -1814,6 +1824,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
 
     this.lastSelectedRow = pos;
+    this.$root.$emit("row-select", this.uid);
   }
 
   private selectChildrenRows(row: ITableExtendedRowCommon, selected: boolean) {
@@ -1826,8 +1837,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     });
   }
 
-  private selectAllRows() {
-    this.selectAll(!this.selectedAll);
+  private toggleAllRows() {
+    this.selectAll(!this.selectedSome);
+    this.$root.$emit("row-select", this.uid);
   }
 
   private releaseEntries() {
@@ -2296,12 +2308,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  ::v-deep .button-element {
-    margin: 0.125rem;
-
-    > button {
-      width: 100%;
-    }
+  ::v-deep .button-element > button {
+    width: 100%;
   }
 
   .checkbox-col,

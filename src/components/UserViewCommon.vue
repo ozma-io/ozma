@@ -46,6 +46,17 @@
       text-input
       @select="selectFromScanner(barCodeColumnIndex, $event)"
     />
+
+    <transition name="fade-transform">
+      <div
+        v-if="selectedSome && selectionButtons.length !== 0"
+        class="selection-buttons-panel"
+      >
+        <ButtonsPanel
+          :buttons="selectionButtons"
+        />
+      </div>
+    </transition>
   </span>
 </template>
 
@@ -62,6 +73,7 @@ import SelectUserView from "@/components/SelectUserView.vue";
 import type { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
 import { RowRef, ValueRef, valueToPunnedText } from "@/user_views/combined";
 import { getReferenceInfo } from "@/state/entries";
+import { getColorVariables } from "@/utils_colors";
 
 import { attrToButton, Button, attrToButtons, attrToButtonsOld } from "@/components/buttons/buttons";
 import { IAttrToLinkOpts } from "@/links";
@@ -185,7 +197,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   }
 
   get buttons() {
-    return [...this.staticButtons, ...this.selectionButtons, ...this.attrButtons];
+    return [...this.staticButtons, ...this.attrButtons.filter(button => button.display !== "selectionPanel")];
   }
 
   @Watch("buttons", { deep: true, immediate: true })
@@ -281,13 +293,16 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   }
 
   get selectionButtons() {
-    const buttons: Button[] = [];
-    if (this.uv.info.mainEntity && this.uv.extra.selectedRows.length > 0) {
+    const buttons = this.attrButtons.filter(button => button.display === "selectionPanel");
+
+    if (this.uv.info.mainEntity) {
       buttons.push(
         {
           icon: "delete_sweep",
           caption: this.$t("remove_selected_rows").toString(),
           callback: () => this.removeSelectedRows(),
+          variant: "danger",
+          colorVariables: getColorVariables("button", "danger"),
           type: "callback",
         },
       );
@@ -390,3 +405,37 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   }
 }
 </script>
+
+<style lang="scss" scoped>
+  .selection-buttons-panel {
+    position: fixed;
+    bottom: 3rem;
+    left: 50%;
+    transform: translate(-50%, 0);
+    padding: 0.5rem;
+    background-color: #0007;
+    border-radius: 0.5rem;
+    z-index: 1000;
+
+    ::v-deep {
+      .buttons-panel {
+        gap: 0.5rem;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+
+  .fade-transform-enter-active,
+  .fade-transform-leave-active {
+    transition: opacity 0.4s, transform 0.4s, $color-transition;
+  }
+
+  .fade-transform-enter,
+  .fade-transform-leave-to {
+    opacity: 0;
+    transform: translate(-50%, 1rem);
+  }
+</style>
