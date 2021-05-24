@@ -2097,6 +2097,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   .table-th {
+    height: 2rem;
     border: 0;
     font-weight: normal;
     max-width: 50px !important;
@@ -2115,10 +2116,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     background-color: var(--table-backgroundColor);
   }
 
-  .td-moz {
-    box-shadow: -1px 2px 0 var(--table-BorderColor);
-  }
-
   .table-th:last-child {
     border-right: none;
   }
@@ -2127,21 +2124,21 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     margin-bottom: 0;
   }
 
+  tr {
+    height: 2rem; /* Fix for Firefox */
+  }
+
   th.fixed-column {
     z-index: 25; /* поверх обычных столбцов */
-    box-shadow: 0 2px 0 var(--table-BorderColor);
     position: sticky;
 
     &.checkbox-cells {
-      height: 100%;
-      width: 100%;
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      line-height: 1;
-      box-shadow:
-        0 2px 0 var(--table-BorderColor),
-        1px 0 0 var(--table-BorderColor);
+      ::v-deep .checkbox {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
 
       ::v-deep .checkbox__input {
         display: block;
@@ -2273,10 +2270,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     &.table-th {
       padding: 0;
-
-      .add-in-modal-icon {
-        top: 2px;
-      }
     }
 
     > a {
@@ -2318,7 +2311,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   thead {
-    line-height: 30px;
+    line-height: 2rem;
   }
 
   *::selection {
