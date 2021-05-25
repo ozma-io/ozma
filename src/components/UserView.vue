@@ -9,6 +9,7 @@
             "unknown_error": "Unknown user view fetch error: {msg}",
             "anonymous_query": "(anonymous query)",
             "edit_view": "Edit user view",
+            "edit_arguments": "Edit user view arguments",
             "new_mode_no_main": "FOR INSERT INTO clause is required for new entry mode.",
             "link_to_nowhere": "This user view was a link which didn't replace it, so there's nothing to show."
         },
@@ -21,6 +22,7 @@
             "unknown_error": "Неизвестная ошибка загрузки представления: {msg}",
             "anonymous_query": "(анонимный запрос)",
             "edit_view": "Редактировать представление",
+            "edit_arguments": "Редактировать аргументы представления",
             "new_mode_no_main": "Для режима создания новой записи должна использоваться конструкция FOR INSERT INTO.",
             "link_to_nowhere": "Это отображение являлось ссылкой, которая его не заменила. Теперь здесь нечего показать."
         }
@@ -50,6 +52,15 @@
         :default-values="defaultValues"
         @update:buttons="uvCommonButtons = $event"
       />
+
+      <transition name="fade-move">
+        <ArgumentsEditor
+          v-if="showArgumentsEditor"
+          @close="showArgumentsEditor = false"
+          @update="updateArguments"
+        />
+      </transition>
+
       <transition name="fade-1" mode="out-in">
         <component
           :is="`UserView${state.componentName}`"
@@ -123,6 +134,7 @@ import type { AddedRowId, CombinedTransactionResult, ICombinedInsertEntityResult
 import { ICurrentQueryHistory, IQuery } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
 import UserViewCommon from "@/components/UserViewCommon.vue";
+import ArgumentsEditor, { Argument } from "@/components/ArgumentsEditor.vue";
 import type { Button } from "@/components/buttons/buttons";
 import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams } from "@/links";
 import type { ICombinedUserViewAny, IUserViewArguments } from "@/user_views/combined";
@@ -223,6 +235,7 @@ const loadingState: IUserViewLoading = { state: "loading" };
  */
 @Component({ components: {
   UserViewCommon,
+  ArgumentsEditor,
   ...components,
 } })
 export default class UserView extends Vue {
@@ -252,6 +265,7 @@ export default class UserView extends Vue {
   private pendingArgs: IUserViewArguments | null = null;
   private nextUv: Promise<void> | null = null;
   private inhibitReload = false;
+  private showArgumentsEditor = false;
 
   private get transitionKey() {
     return this.state.state === "show"
@@ -292,6 +306,18 @@ export default class UserView extends Vue {
           search: "",
         };
 
+        const hasArguments = true; // TODO !!!
+        if (hasArguments) {
+          buttons.push({
+            icon: "edit_note",
+            caption: this.$t("edit_arguments").toString(),
+            callback: () => {
+              this.showArgumentsEditor = true;
+            },
+            type: "callback",
+          });
+        }
+
         buttons.push({
           icon: "code",
           caption: this.$t("edit_view").toString(),
@@ -304,12 +330,19 @@ export default class UserView extends Vue {
   }
 
   get allButtons() {
-    return [...this.uvCommonButtons, ...this.uvButtons, ...this.componentButtons];
+    return [...this.uvCommonButtons, ...this.componentButtons, ...this.uvButtons];
   }
 
   @Watch("allButtons", { deep: true, immediate: true })
   private pushAllButtons() {
     this.$emit("update:buttons", this.allButtons);
+  }
+
+  private updateArguments(argumentList: Argument[]) {
+    // TODO: In nested views this opens view in fullscreen, it's not good, but not such frequent case either, I suppose.
+    const args = Object.fromEntries(argumentList.map(argument => [argument.info.name, argument.value]));
+    const linkQuery: IQuery = { args: { source: this.args.source, args }, defaultValues: {}, search: "" };
+    this.$emit("goto", linkQuery);
   }
 
   private reloadIfRoot() {
@@ -615,5 +648,16 @@ export default class UserView extends Vue {
         transition: opacity 0.05s;
       }
     }
+  }
+
+  .fade-move-enter-active,
+  .fade-move-leave-active {
+    transition: opacity 0.4s, transform 0.4s;
+  }
+
+  .fade-move-enter,
+  .fade-move-leave-to {
+    opacity: 0;
+    transform: translateY(-1rem);
   }
 </style>

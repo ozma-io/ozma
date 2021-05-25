@@ -23,15 +23,9 @@ export default class Errorbox extends Vue {
 <style scoped>
   .errorbox-container {
     width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
   }
 
   .errorbox {
-    width: 100%;
     white-space: pre-wrap;
   }
 </style>

@@ -311,6 +311,43 @@ export interface IEntriesState {
   current: CurrentEntries;
 }
 
+const fetchEntries123 =
+  async (context: ActionContext<IEntriesState, {}>, ref: IEntityRef, search: string, offset: number, limit: number):
+  Promise<{ entries: Entries; complete: boolean }> =>
+{
+  const likeSearch = search === "" ? "%" : "%" + search.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_") + "%";
+  const where: IChunkWhere = {
+    expression: "(pun :: string) ILIKE $search",
+    arguments: {
+      search: {
+        type: "string",
+        value: likeSearch,
+      },
+    },
+  };
+  const chunk: IQueryChunk = {
+    offset,
+    limit: limit + 1,
+    where,
+  };
+  const req: IUserViewOpts = {
+    chunk,
+  };
+
+  const res = await context.dispatch("callProtectedApi", {
+    func: Api.getDomainValues.bind(Api),
+    args: [ref.field, ref.rowId ?? undefined, req],
+  }, { root: true }) as IDomainValuesResult;
+  const entries = Object.fromEntries(res.values.map<[number, string]>(row => {
+    const main = valueToText(res.punType, row.pun);
+    return [Number(row.value), main];
+  }));
+  return {
+    entries,
+    complete: res.values.length <= limit,
+  };
+};
+
 const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
   const likeSearch = search === "" ? "%" : "%" + search.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_") + "%";
   const where: IChunkWhere = {

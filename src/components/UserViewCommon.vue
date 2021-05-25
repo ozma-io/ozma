@@ -244,7 +244,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
 
     if (typeof this.uv.info.mainEntity === "object" && this.showDefaultActions) {
       buttons.push({
-        icon: "import_export",
+        icon: "save_alt",
         caption: this.$t("import_from_csv").toString(),
         uploadFile: file => this.importFromCsv(file),
         type: "upload-file",

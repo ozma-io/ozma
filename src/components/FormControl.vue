@@ -401,6 +401,8 @@ const multilineTypes: Set<IType["name"]> =
   new Set(["markdown", "codeeditor", "textarea", "userview", "empty_userview", "static_image", "iframe"]);
 const disableableTypes: Set<IType["name"]> =
   new Set(["text", "textarea", "markdown", "codeeditor", "reference", "select", "check", "calendar"]);
+const closeAfterUpdate: Set<IType["name"]> =
+  new Set(["select", "reference"]);
 
 const parseTime = (raw: string): ITime | null => {
   const [_, hours, mins] = /^([0-9]|0[0-9]|1[0-9]|2[0-3]):([0-9]|[0-5][0-9])$/.exec(raw) ?? [];
@@ -844,8 +846,7 @@ export default class FormControl extends Vue {
       this.$emit("update", newValue);
     }
 
-    const closeAfterUpdate: IType["name"][] = ["select", "reference"];
-    if (closeAfterUpdate.includes(this.inputType.name)) {
+    if (closeAfterUpdate.has(this.inputType.name)) {
       this.$emit("close-modal-input");
     }
   }
@@ -859,13 +860,6 @@ export default class FormControl extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  /* Current Z layout:
-
-  * Drop-down menu    (1200)
-  * FormControl       (1000)
-
-  */
-
   .fullscreen_button {
     background: none;
     border: none;
