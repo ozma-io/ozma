@@ -46,7 +46,7 @@
         />
         <Input
           v-else-if="inputType.name === 'text'"
-          :value="currentValue"
+          :value="valueFormatted ? valueFormatted : currentValue"
           :qrcode-input="isQRCodeInput"
           :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
@@ -496,6 +496,7 @@ export default class FormControl extends Vue {
   // FIXME: maybe we can get rid of this?
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
+  @Prop() valueFormatted!: string | undefined; // Bigger priority than `currentValue` if defined.
 
   private buttons: Button[] = [];
   private filterString = "";

@@ -1,3 +1,5 @@
+// eslint-disable-next-line
+import * as R from "ramda";
 import moment from "moment";
 import Vue, { RenderContext } from "vue";
 import sanitizeHtml from "sanitize-html";
@@ -797,3 +799,13 @@ export const stringifyToSpreadsheet = (arr: string[][]): string => {
   }
   return str;
 };
+
+export const validNumberFormats = ["auto", "ru", "en"] as const;
+export type ValidNumberFormat = typeof validNumberFormats[number];
+const makeMemoKey = (lang: ValidNumberFormat, fractionDigits?: number) => lang + String(fractionDigits);
+export const getNumberFormatter = R.memoizeWith(makeMemoKey, (lang: ValidNumberFormat, fractionDigits?: number) => {
+  const locale = lang === "auto" ? undefined : lang;
+  const options = fractionDigits === undefined ? undefined
+    : { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits };
+  return Intl.NumberFormat(locale, options);
+});
