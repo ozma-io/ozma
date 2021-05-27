@@ -42,11 +42,16 @@ export interface IButtonGroup extends IButton {
   type: "button-group";
 }
 
+// Used at least for barcode buttons.
+export interface IOtherButton extends IButton {
+  type: "other";
+}
+
 export interface IErrorButton extends IButton {
   type: "error";
 }
 
-export type Button = ILocationButton | ILinkButton | ICallbackButton | IUploadFileButton | IButtonGroup | IErrorButton;
+export type Button = ILocationButton | ILinkButton | ICallbackButton | IUploadFileButton | IButtonGroup | IOtherButton| IErrorButton;
 
 const messages: Record<string, Record<string, string>> = {
   en: {
@@ -60,7 +65,7 @@ const messages: Record<string, Record<string, string>> = {
 };
 const funI18n = (key: string) => messages[shortLanguage]?.[key]; // TODO: can't access VueI18n here, but this solution looks stupid too.
 
-export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts): Button | undefined => {
+export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts, parseAsOtherInsteadError = false): Button | undefined => {
   if (typeof buttonAttr !== "object" || buttonAttr === null) {
     return undefined;
   }
@@ -119,6 +124,18 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts): Butto
       buttons,
       display,
       type: "button-group",
+    };
+  }
+
+  if (parseAsOtherInsteadError) {
+    return {
+      caption,
+      icon,
+      tooltip,
+      variant,
+      colorVariables,
+      display,
+      type: "other",
     };
   }
 

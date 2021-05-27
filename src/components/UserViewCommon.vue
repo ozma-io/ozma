@@ -349,19 +349,15 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   }
 
   get barCodeButton() {
-    if (this.barCodeColumnIndex !== null) {
-      return attrToButton(this.uv.columnAttributes[this.barCodeColumnIndex]["barcode_text_input"]);
-    }
+    if (this.barCodeColumnIndex === null) return null;
 
-    return null;
+    return attrToButton(this.uv.columnAttributes[this.barCodeColumnIndex]["barcode_text_input"], undefined, true);
   }
 
   get qrCodeButton() {
-    if (this.qrCodeColumnIndex !== null) {
-      return attrToButton(this.uv.columnAttributes[this.qrCodeColumnIndex]["barcode_camera_input"]);
-    }
+    if (this.qrCodeColumnIndex === null) return null;
 
-    return null;
+    return attrToButton(this.uv.columnAttributes[this.qrCodeColumnIndex]["barcode_camera_input"], undefined, true);
   }
 
   get barCodeColumnIndex() {
