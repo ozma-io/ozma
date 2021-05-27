@@ -1679,7 +1679,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     const ref = this.editing.ref;
     if (ref.type === "new") return;
 
-    if (this.editingNonNullableBoolean) {
+    if (this.editingNonNullableBoolean && !this.uv.getValueByRef(this.editing.ref)?.value.extra.softDisabled) {
       const value = this.uv.getValueByRef(ref)!.value.value;
       await this.updateCurrentValue(!value);
       this.removeCellEditing();
