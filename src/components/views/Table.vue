@@ -2093,7 +2093,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     border-radius: 0.2rem;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
-    overflow: hidden;
   }
 
   .table-th {
