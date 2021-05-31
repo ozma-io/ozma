@@ -136,10 +136,10 @@ export default class ExplainQuery extends Vue {
 
       if (res.attributes) {
         this.attributesQuery = res.attributes.query;
-        this.attributesPlan = res.attributes.explanation;
+        this.attributesPlan = JSON.stringify(res.attributes.explanation, undefined, 2);
       }
       this.rowsQuery = res.rows.query;
-      this.rowsPlan = res.rows.explanation;
+      this.rowsPlan = JSON.stringify(res.rows.explanation, undefined, 2);
     } catch (e) {
       this.lastError = e.message;
       throw e;
