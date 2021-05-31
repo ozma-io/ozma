@@ -664,7 +664,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, uv.attributes);
 
     const link = value.info?.field?.fieldType.type === "reference" ? attrToLinkRef(getCellAttr("link"), currentValue(value), uv.extra.linkOpts) : null;
-    const currLinkForRow = value.info ? attrToLinkSelf(getCellAttr("row_link"), value.info, uv.extra.linkOpts) : null;
+    const currLinkForRow = attrToLinkSelf(getCellAttr("row_link"), value.info, uv.extra.linkOpts);
     if (currLinkForRow) {
       row.extra.link = currLinkForRow;
       uv.extra.hasRowLinks = true;
@@ -2093,7 +2093,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     border-radius: 0.2rem;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
-    overflow: hidden;
   }
 
   .table-th {
