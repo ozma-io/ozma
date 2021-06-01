@@ -665,7 +665,10 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
 
     const link = value.info?.field?.fieldType.type === "reference" ? attrToLinkRef(getCellAttr("link"), currentValue(value), uv.extra.linkOpts) : null;
     const currLinkForRow = attrToLinkSelf(getCellAttr("row_link"), value.info, uv.extra.linkOpts);
-    if (currLinkForRow) {
+    const hasRowLinkWithId =
+      (row.extra.link?.type === "query" && row.extra.link.query.args.args?.id !== undefined) ||
+      (row.extra.link && "args" in row.extra.link && row.extra.link.args.id !== undefined);
+    if (currLinkForRow && !hasRowLinkWithId) {
       row.extra.link = currLinkForRow;
       uv.extra.hasRowLinks = true;
     }
