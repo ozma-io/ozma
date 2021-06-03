@@ -14,10 +14,12 @@ import { IUserViewHandler } from "@/user_views/combined";
  */
 export interface IUserViewOptions<ValueT, RowT, ViewT, T extends IUserViewHandler<ValueT, RowT, ViewT>> {
   handler?: T;
+  useLazyLoad?: boolean;
 }
 
 export interface IUserViewConstructor<V extends Vue = Vue> extends VueConstructor<V> {
   handler?: IUserViewHandler<any, any, any>;
+  useLazyLoad?: boolean;
 }
 
 export const UserView = <ValueT, RowT, ViewT, T extends IUserViewHandler<ValueT, RowT, ViewT>>(opts?: IUserViewOptions<ValueT, RowT, ViewT, T>) => {
@@ -26,6 +28,10 @@ export const UserView = <ValueT, RowT, ViewT, T extends IUserViewHandler<ValueT,
     if (opts !== undefined) {
       if (opts.handler !== undefined) {
         constructorMut.handler = opts.handler;
+      }
+
+      if (opts.useLazyLoad !== undefined) {
+        constructorMut.useLazyLoad = opts.useLazyLoad;
       }
     }
     return constructor;

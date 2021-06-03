@@ -275,6 +275,7 @@ export interface ICombinedUserView<ValueT, RowT, ViewT> extends IStagingEventHan
   readonly emptyRow: IEmptyRow<ValueT, RowT> | null;
   readonly oldCommittedRows: Record<AddedRowId, RowPosition>;
   readonly entries: Record<SchemaName, Record<EntityName, Entries>>;
+  readonly lazyLoadState: ILazyLoadState | null; // If null, then user view downloads all info at once.
 
   trackAddedEntry(id: AddedRowId, meta?: unknown): void;
   getValueByRef(ref: ValueRef): { value: IExtendedValue<ValueT>; row: IExtendedRowCommon<ValueT, RowT> } | undefined;
@@ -357,13 +358,22 @@ export interface ICombinedUserViewDataParams {
   attributes: Record<AttributeName, unknown>;
   columnAttributes: Record<AttributeName, unknown>[];
   rows: IExecutedRow[] | null;
+  complete: boolean;
 }
 
 export interface ICombinedUserViewParams<T> extends ICombinedUserViewDataParams {
   store: Store<any>;
   defaultRawValues: Record<string, any>;
   oldLocal: ICombinedUserViewT<T> | null;
+  lazyLoadState: ILazyLoadState | null;
   handler: T;
+}
+
+export interface ILazyLoadState {
+  // Actually more like delta between two calls, we fetch with `{ offset: 0, limit: fetchedRowCount + perFetch }`
+  perFetch: number;
+  fetchedRowCount: number;
+  complete: boolean;
 }
 
 // This is a class which maintains separate local extra data for each cell, row and instance of a user view.
@@ -397,6 +407,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
   // are available yet during initialization.
   entries: Record<SchemaName, Record<EntityName, Entries>>;
   handler: T;
+  lazyLoadState: ILazyLoadState | null;
 
   // Warning: it takes ownership of all params and mutates!
   constructor(params: ICombinedUserViewParams<T>) {
@@ -409,6 +420,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     this.columnAttributes = params.columnAttributes;
     this.homeSchema = homeSchema(this.args);
     this.oldCommittedRows = {};
+    this.lazyLoadState = params.lazyLoadState;
 
     this.entries = {};
     if (oldLocal) {
