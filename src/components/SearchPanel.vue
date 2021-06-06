@@ -1,11 +1,9 @@
 <i18n>
     {
         "en": {
-            "not_all_entries_loaded_search": "Search works improperly until all entries are loaded",
             "search_placeholder": "Search"
         },
         "ru": {
-            "not_all_entries_loaded_search": "Поиск будет работать неправильно, пока не будут загружены все записи",
             "search_placeholder": "Поиск"
         }
     }
@@ -28,7 +26,7 @@
           size="sm"
           class="input-group focus-entire"
         >
-          <b-form-input
+          <b-input
             ref="searchInput"
             :value="localFilterString"
             class="search-input form-control with-clear-content-button"
@@ -63,10 +61,6 @@
 
     <b-button
       v-if="showOpenButton"
-      v-b-tooltip.hover.bottom.noninteractive.viewport="{
-        title: $t('not_all_entries_loaded_search').toString(),
-        disabled: $isMobile,
-      }"
       class="open-search-button button-only-icon"
       variant="light"
       @click.prevent="toggleShowInput"
@@ -134,6 +128,20 @@ export default class SearchPanel extends Vue {
     display: flex;
     align-items: center;
     width: auto;
+  }
+
+  .search-input {
+    background-color: var(--input-backgroundColor);
+    color: var(--input-foregroundColor);
+
+    ::placeholder {
+      color: var(--input-foregroundDarkerColor);
+    }
+
+    &:focus {
+      background-color: var(--input-backgroundColor);
+      color: var(--input-foregroundColor);
+    }
   }
 
   .open-search-button {

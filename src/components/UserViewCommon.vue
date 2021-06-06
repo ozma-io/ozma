@@ -5,6 +5,7 @@
             "create_in_modal": "Create referenced entry in modal window",
             "export_to_csv": "Export to .csv",
             "import_from_csv": "Import from .csv",
+            "selected_n_entries": "{n} entries selected",
             "remove_selected_rows": "Remove selected entries",
             "error": "Error"
         },
@@ -13,6 +14,7 @@
             "create_in_modal": "Создать связанную запись в окне",
             "export_to_csv": "Экспорт в .csv",
             "import_from_csv": "Импорт из .csv",
+            "selected_n_entries": "Выбрано {n} записей",
             "remove_selected_rows": "Удалить выбранные записи",
             "error": "Ошибка"
         }
@@ -50,11 +52,18 @@
     <transition name="fade-transform">
       <div
         v-if="selectedSome && selectionButtons.length !== 0"
-        class="selection-buttons-panel"
+        class="selection-buttons-wrapper"
       >
-        <ButtonsPanel
-          :buttons="selectionButtons"
-        />
+        <div class="selection-buttons-label">
+          {{ $t("selected_n_entries", { n: selectedLength }) }}
+        </div>
+        <div
+          class="selection-buttons-panel"
+        >
+          <ButtonsPanel
+            :buttons="selectionButtons"
+          />
+        </div>
       </div>
     </transition>
   </span>
@@ -403,7 +412,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
 </script>
 
 <style lang="scss" scoped>
-  .selection-buttons-panel {
+  .selection-buttons-wrapper {
     position: fixed;
     bottom: 3rem;
     left: 50%;
@@ -412,6 +421,13 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     background-color: #0007;
     border-radius: 0.5rem;
     z-index: 1000;
+
+    .selection-buttons-label {
+      padding: 0.5rem;
+      padding-top: 0;
+      text-align: center;
+      color: white;
+    }
 
     ::v-deep {
       .buttons-panel {

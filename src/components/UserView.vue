@@ -71,6 +71,7 @@
           @update:enableFilter="$emit('update:enableFilter', $event)"
           @update:bodyStyle="$emit('update:bodyStyle', $event)"
           @load-next-chunk="loadNextChunk"
+          @load-all-chunks="loadAllChunks"
         />
       </transition>
     </template>
@@ -126,7 +127,7 @@ import { IUserViewConstructor } from "@/components";
 import UserViewCommon from "@/components/UserViewCommon.vue";
 import type { Button } from "@/components/buttons/buttons";
 import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams } from "@/links";
-import type { ICombinedUserViewAny, ILazyLoadState, IUserViewArguments } from "@/user_views/combined";
+import type { ICombinedUserViewAny, IRowLoadState, IUserViewArguments } from "@/user_views/combined";
 import { CombinedUserView } from "@/user_views/combined";
 import { UserViewError, fetchUserViewData } from "@/user_views/fetch";
 import { baseUserViewHandler } from "@/components/BaseUserView";
@@ -206,8 +207,9 @@ type UserViewLoadingState = IUserViewShow | IUserViewLoading | IUserViewError;
 
 const maxLevel = 4;
 
-export const maxPerFetch = 15;
+export const maxPerFetch = 50;
 export const fetchAllLimit = 5000;
+const getEagerLoadState = (): IRowLoadState => ({ complete: true, perFetch: fetchAllLimit, fetchedRowCount: 0 });
 
 const loadingState: IUserViewLoading = { state: "loading" };
 
@@ -349,12 +351,23 @@ export default class UserView extends Vue {
   }
 
   private loadNextChunk(done: () => void) {
-    if (this.state.state !== "show" || this.state.uv.lazyLoadState === null) return;
+    if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
 
     this.reload({ loadNextChunk: true, done });
   }
 
-  private reload(options?: { differentComponent?: boolean; loadNextChunk?: boolean; done?: () => void }) {
+  private loadAllChunks(done: () => void) {
+    if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
+
+    this.reload({ loadAllChunks: true, done });
+  }
+
+  private reload(options?: {
+    differentComponent?: boolean;
+    loadNextChunk?: boolean;
+    loadAllChunks?: boolean;
+    done?: () => void;
+  }) {
     const args = deepClone(this.args);
     if (this.level >= maxLevel) {
       this.setState({
@@ -376,12 +389,14 @@ export default class UserView extends Vue {
       try {
         let limit: number | undefined;
         if (this.state.state === "show" && !options?.differentComponent) {
-          if (this.state.uv.lazyLoadState === null) {
+          if (this.state.uv.rowLoadState === null) {
             limit = fetchAllLimit;
             allFetched = true;
           } else {
-            const delta = (options?.loadNextChunk ? 1 : 0) * this.state.uv.lazyLoadState.perFetch;
-            limit = this.state.uv.lazyLoadState.fetchedRowCount + delta;
+            const delta = (options?.loadNextChunk ? 1 : 0) * this.state.uv.rowLoadState.perFetch;
+            limit = options?.loadAllChunks === true || this.state.uv.rowLoadState.complete === true
+              ? fetchAllLimit
+              : this.state.uv.rowLoadState.fetchedRowCount + delta;
           }
         } else {
           limit = maxPerFetch;
@@ -407,32 +422,34 @@ export default class UserView extends Vue {
           }
 
           let oldLocal: ICombinedUserViewAny | null = null;
-          let lazyLoadState: ILazyLoadState | null = null;
+          let rowLoadState: IRowLoadState;
           const fetchedRowCount = uvData.rows?.length ?? 0;
           if (this.state.state === "show") {
             if (argsAreCompatible(args, this.state.uv.args) && this.state.componentName === newType.component) {
               oldLocal = this.state.uv;
 
-              if (oldLocal.lazyLoadState) {
-                lazyLoadState = {
+              if (oldLocal.rowLoadState) {
+                rowLoadState = {
                   fetchedRowCount,
-                  perFetch: oldLocal.lazyLoadState.perFetch,
+                  perFetch: oldLocal.rowLoadState.perFetch,
                   complete: uvData.complete,
                 };
               }
             } else {
               void this.resetAllAddedEntries(this.state.uv);
-              lazyLoadState = { fetchedRowCount, perFetch: maxPerFetch, complete: uvData.complete };
+              rowLoadState = { fetchedRowCount, perFetch: maxPerFetch, complete: uvData.complete };
             }
           } else {
-            lazyLoadState = { fetchedRowCount, perFetch: maxPerFetch, complete: uvData.complete };
+            rowLoadState = { fetchedRowCount, perFetch: maxPerFetch, complete: uvData.complete };
           }
+
+          rowLoadState ??= getEagerLoadState();
           const uv = new CombinedUserView({
             store: this.$store,
             defaultRawValues: this.defaultValues,
             oldLocal,
             handler,
-            lazyLoadState,
+            rowLoadState,
             ...uvData,
           });
           this.setStagingHandler({

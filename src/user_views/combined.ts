@@ -275,7 +275,7 @@ export interface ICombinedUserView<ValueT, RowT, ViewT> extends IStagingEventHan
   readonly emptyRow: IEmptyRow<ValueT, RowT> | null;
   readonly oldCommittedRows: Record<AddedRowId, RowPosition>;
   readonly entries: Record<SchemaName, Record<EntityName, Entries>>;
-  readonly lazyLoadState: ILazyLoadState | null; // If null, then user view downloads all info at once.
+  readonly rowLoadState: IRowLoadState;
 
   trackAddedEntry(id: AddedRowId, meta?: unknown): void;
   getValueByRef(ref: ValueRef): { value: IExtendedValue<ValueT>; row: IExtendedRowCommon<ValueT, RowT> } | undefined;
@@ -365,11 +365,11 @@ export interface ICombinedUserViewParams<T> extends ICombinedUserViewDataParams 
   store: Store<any>;
   defaultRawValues: Record<string, any>;
   oldLocal: ICombinedUserViewT<T> | null;
-  lazyLoadState: ILazyLoadState | null;
+  rowLoadState: IRowLoadState;
   handler: T;
 }
 
-export interface ILazyLoadState {
+export interface IRowLoadState {
   // Actually more like delta between two calls, we fetch with `{ offset: 0, limit: fetchedRowCount + perFetch }`
   perFetch: number;
   fetchedRowCount: number;
@@ -407,7 +407,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
   // are available yet during initialization.
   entries: Record<SchemaName, Record<EntityName, Entries>>;
   handler: T;
-  lazyLoadState: ILazyLoadState | null;
+  rowLoadState: IRowLoadState;
 
   // Warning: it takes ownership of all params and mutates!
   constructor(params: ICombinedUserViewParams<T>) {
@@ -420,7 +420,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     this.columnAttributes = params.columnAttributes;
     this.homeSchema = homeSchema(this.args);
     this.oldCommittedRows = {};
-    this.lazyLoadState = params.lazyLoadState;
+    this.rowLoadState = params.rowLoadState;
 
     this.entries = {};
     if (oldLocal) {
