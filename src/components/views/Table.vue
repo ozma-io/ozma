@@ -1129,8 +1129,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private get pageSizes() {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return [];
+
     const defaultSizes = [5, 10, 25, 50];
-    if (this.uv.extra.lazyLoad.type === "pagination" && !defaultSizes.includes(this.uv.extra.lazyLoad.pagination.perPage)) {
+    if (!defaultSizes.includes(this.uv.extra.lazyLoad.pagination.perPage)) {
       return [this.uv.extra.lazyLoad.pagination.perPage, ...defaultSizes].map(num => ({ value: num, text: String(num) }));
     } else {
       return defaultSizes.map(num => ({ value: num, text: String(num) }));
