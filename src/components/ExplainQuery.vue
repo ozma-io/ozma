@@ -5,6 +5,7 @@
             "view_name": "User view name",
             "role_schema": "Role schema",
             "role_name": "Role name",
+            "user_name": "User name",
             "arguments": "Arguments",
             "limit": "Limit",
             "explain": "Show plan"
@@ -14,6 +15,7 @@
             "view_name": "Название отображения",
             "role_schema": "Схема роли",
             "role_name": "Название роли",
+            "user_name": "Имя пользователя",
             "arguments": "Аргументы",
             "limit": "Количество записей",
             "explain": "Показать план"
@@ -38,6 +40,15 @@
         <input
           v-model="view"
           :placeholder="$t('view_name')"
+        >
+      </label>
+    </p>
+    <p>
+      <label>
+        {{ $t('user_name') }}:
+        <input
+          v-model="userName"
+          :placeholder="$t('user_name')"
         >
       </label>
     </p>
@@ -150,6 +161,7 @@ export default class ExplainQuery extends Vue {
 
   schema = "";
   view = "";
+  userName = "";
   roleSchema = "";
   roleName = "";
   analyze = false;
@@ -188,6 +200,7 @@ export default class ExplainQuery extends Vue {
       const chunk: IQueryChunk | undefined = this.limit === "" ? undefined : { limit: Number(this.limit) };
       const opts: IUserViewExplainOpts = {
         chunk,
+        pretendUser: this.userName === "" ? undefined : this.userName,
         pretendRole: roleRef,
         analyze: this.analyze,
         verbose: this.verbose,
