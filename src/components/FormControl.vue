@@ -956,12 +956,6 @@ export default class FormControl extends Vue {
     margin-left: 2px;
   }
 
-  .form-data > .form-control-panel.form-control-panel_editor {
-    height: 100%;
-    width: 100%;
-    max-height: 500px;
-  }
-
   .form-control-panel {
     padding-right: 2px;
     max-width: 60%;

@@ -27,6 +27,7 @@
   <div
     v-hotkey="keymap"
     fluid
+    infinite-wrapper
     :class="[
       'table-block',
       {
@@ -71,7 +72,6 @@
     <div
       ref="tableContainer"
       class="tabl"
-      data-infinite-wrapper
     >
       <div
         v-if="uv.emptyRow !== null"
@@ -102,11 +102,10 @@
           <div class="current-page-wrapper">
             <div class="current-page">
               {{ currentPage }}
+              <span v-if="pagesCount !== null" class="pages-count">{{ "/" + pagesCount }} </span>
             </div>
           </div>
-          <ButtonItem
-            :button="nextPageButton"
-          />
+          <ButtonItem :button="nextPageButton" />
         </div>
       </div>
 
@@ -214,6 +213,7 @@
       </table>
       <infinite-loading
         v-if="useInfiniteScrolling"
+        :force-use-infinite-wrapper="isRoot ? false : '.view-form'"
         spinner="spiral"
         @infinite="infiniteHandler"
       >
@@ -1046,7 +1046,7 @@ interface IShownRow {
 
 const defaultPageSize = 5;
 // Just look at `ITableLazyLoad` to see which type this mess make.
-const lazyLoadSchema =
+export const lazyLoadSchema =
   z.union([
     z.object({
       pagination: z.object({
@@ -1125,7 +1125,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private get useInfiniteScrolling() {
     return this.uv.extra.lazyLoad.type === "infinite_scroll"
       && (!this.uv.rowLoadState.complete
-      || this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength < (this.uv.rows?.length ?? 0));
+      || this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength < this.uv.rowLoadState.fetchedRowCount);
   }
 
   private get pageSizes() {
@@ -1203,6 +1203,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return this.uv.rowLoadState.fetchedRowCount <= shownRowCount;
   }
 
+  private get nextPageRequiresLoading() {
+    if (!this.uv.rows || this.uv.rowLoadState.complete || this.uv.extra.lazyLoad.type !== "pagination") return false;
+
+    const shownRowCount = this.uv.extra.lazyLoad.pagination.perPage * (this.uv.extra.lazyLoad.pagination.currentPage + 2);
+    return this.uv.rowLoadState.fetchedRowCount < shownRowCount;
+  }
+
   private goToFirstPage() {
     if (this.uv.extra.lazyLoad.type !== "pagination") return;
 
@@ -1220,7 +1227,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private goToNextPage() {
     if (this.uv.extra.lazyLoad.type !== "pagination") return;
 
-    if (this.uv.rowLoadState.complete === false && this.onLastPage) {
+    if (this.nextPageRequiresLoading) {
       this.uv.extra.lazyLoad.pagination.loading = true;
       // Currently, it loads next page too early sometimes due to `onLastPage` calculating.
       this.$emit("load-next-chunk", () => {
@@ -1238,6 +1245,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (this.uv.extra.lazyLoad.type !== "pagination") return 0;
 
     return this.uv.extra.lazyLoad.pagination?.currentPage + 1;
+  }
+
+  private get pagesCount(): number | null {
+    if (this.uv.extra.lazyLoad.type !== "pagination" || !this.uv.rowLoadState.complete) return null;
+
+    return Math.ceil(this.uv.rowLoadState.fetchedRowCount / this.uv.extra.lazyLoad.pagination.perPage);
   }
 
   private updatePageSize(newPageSize: number) {
@@ -2220,7 +2233,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return this.uv.rowLoadState.complete ? `${totalAdded + this.existingRows.length}` : "";
   }
 
-  @Watch("statusLine")
+  // FIXME: Broken, fix or delete at all.
+  @Watch("statusLine", { immediate: true })
   private updateStatusLine() {
     this.$emit("update:statusLine", this.statusLine);
   }
@@ -2296,7 +2310,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     align-items: center;
 
     .current-page-wrapper {
-      min-width: 1.5rem;
+      min-width: 3rem; /* To fit at least `99/99` without changing width */
       display: flex;
       justify-content: center;
       align-items: center;
@@ -2309,6 +2323,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
         background-color: var(--default-backgroundDarker1Color);
         border-color: var(--default-borderColor);
       }
+    }
+
+    .pages-count {
+      color: var(--default-foregroundDarkerColor);
     }
   }
 
