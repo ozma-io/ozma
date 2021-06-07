@@ -1229,7 +1229,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     if (this.nextPageRequiresLoading) {
       this.uv.extra.lazyLoad.pagination.loading = true;
-      // Currently, it loads next page too early sometimes due to `onLastPage` calculating.
       this.$emit("load-next-chunk", () => {
         if (this.uv.extra.lazyLoad.type !== "pagination") return;
 
