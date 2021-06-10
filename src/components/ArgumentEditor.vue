@@ -26,12 +26,13 @@
           class="mt-2"
         >
           <FormControl
-            :value="{ value: argument.value, info: argument.info.type.type === 'reference' ? dummyReferenceValueInfo : dummyValueInfo }"
+            :value="{ value: argument.value }"
             :type="argument.info.type"
             :caption="argument.info.name"
-            :scope="'no-scope'"
-            :uv-args="dummyUvArgs"
+            :scope="mockScope"
+            :uv-args="mockUvArgs"
             :level="0"
+            :forced-field-type="argument.info.type"
             @update="update(id, $event)"
           />
         </b-col>
@@ -41,12 +42,14 @@
               <div class="float-right">
                 <b-button
                   class="mr-3"
+                  size="sm"
                   variant="outline-secondary"
                   @click="close"
                 >
                   {{ $t("close") }}
                 </b-button>
                 <b-button
+                  size="sm"
                   variant="primary"
                   @click="apply"
                 >
@@ -65,6 +68,7 @@
 import { Vue, Component } from "vue-property-decorator";
 
 import { FieldType } from "ozma-api";
+import { serializeValue } from "@/state/staging_changes";
 
 export type Parameter = {
   name: string;
@@ -80,7 +84,7 @@ const testArguments: Argument[] = [
   {
     value: 1,
     info: {
-      name: "id",
+      name: "test_int",
       type: { type: "int" },
     },
   },
@@ -98,29 +102,36 @@ const testArguments: Argument[] = [
       type: { type: "string" },
     },
   },
-  /* {
-   *   value: 0,
-   *   info: {
-   *     name: "reference",
-   *     type: { type: "reference", entity: { schema: "IraTest", name: "organizations" } },
-   *   },
-   * }, */
+  {
+    value: 1,
+    info: {
+      name: "id",
+      type: {
+        type: "reference",
+        entity: {
+          schema: "IlyaTest",
+          name: "Primary",
+        },
+      },
+    },
+  },
+  {
+    value: null,
+    info: {
+      name: "date",
+      type: { type: "date" },
+    },
+  },
 ];
 
 @Component
-export default class ArgumentsEditor extends Vue {
+export default class ArgumentEditor extends Vue {
   private argumentList = testArguments;
 
-  private get dummyUvArgs() {
-    return { source: { type: "named", ref: { schema: "dummy", name: "dummy" } }, args: {} };
-  }
+  private mockScope = "mock_scope";
 
-  private get dummyValueInfo() {
-    return { field: { type: "number" }, fieldRef: { name: "dummy", entity: { schema: "dummy", name: "dummy" } } };
-  }
-
-  private get dummyReferenceValueInfo() {
-    return { id: 1, field: { fieldType: { type: "reference", entity: { schema: "IraTest", name: "organizations" } } }, fieldRef: { name: "id", entity: { schema: "IraTest", name: "organizations" } } };
+  private get mockUvArgs() {
+    return { source: { type: "named", ref: { schema: "mock_schema", name: "mock_name" } }, args: {} };
   }
 
   private update(index: number, value: any) {
@@ -128,7 +139,8 @@ export default class ArgumentsEditor extends Vue {
   }
 
   private apply() {
-    this.$emit("update", this.argumentList);
+    const convertedArgs = this.argumentList.map(arg => ({ ...arg, value: serializeValue(arg.info.type, arg.value) }));
+    this.$emit("update", convertedArgs);
   }
 
   private close() {

@@ -200,6 +200,21 @@
           @update:value="updateValue($event)"
           @goto="$emit('goto', $event)"
         />
+        <ArgumentReferenceField
+          v-else-if="inputType.name === 'argument_reference'"
+          ref="control"
+          :value="value"
+          :height="customHeight"
+          :reference-entity="fieldType.entity"
+          :uv-args="uvArgs"
+          :autofocus="autofocus || iSlot.autofocus"
+          :nullable="isNullable"
+          :disabled="isDisabled"
+          @focus="iSlot.onFocus"
+          @blur="$emit('blur', $event)"
+          @update:value="updateValue($event)"
+          @goto="$emit('goto', $event)"
+        />
       </template>
     </InputSlot>
     <template v-if="inputType.name === 'userview' || inputType.name == 'empty_userview'">
@@ -263,7 +278,7 @@
 
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
-import type { AttributesMap, IFieldRef, ValueType } from "ozma-api";
+import type { AttributesMap, FieldType, IFieldRef, ValueType } from "ozma-api";
 
 import { valueToText, valueIsNull } from "@/values";
 import { IQuery, attrToQuerySelf } from "@/state/query";
@@ -339,6 +354,10 @@ interface IReferenceType {
   style?: Record<string, unknown>;
 }
 
+interface IArgumentReferenceType {
+  name: "argument_reference";
+}
+
 interface ICheckType {
   name: "check";
 }
@@ -383,6 +402,7 @@ export type IType =
   | IMarkdownEditorType
   | ISelectType
   | IReferenceType
+  | IArgumentReferenceType
   | ICheckType
   | IUserViewType
   | IEmptyUserViewType
@@ -436,6 +456,10 @@ const parseTime = (raw: string): ITime | null => {
     }),
     ReferenceField: () => ({
       component: import("@/components/ReferenceField.vue") as any,
+      loading: FormInputPlaceholder,
+    }),
+    ArgumentReferenceField: () => ({
+      component: import("@/components/ArgumentReferenceField.vue") as any,
       loading: FormInputPlaceholder,
     }),
     InputSlot: () => ({
@@ -498,6 +522,7 @@ export default class FormControl extends Vue {
   // FIXME: maybe we can get rid of this?
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
+  @Prop({ type: Object, required: false }) forcedFieldType!: FieldType | undefined;
 
   private buttons: Button[] = [];
   private filterString = "";
@@ -525,7 +550,9 @@ export default class FormControl extends Vue {
 
   get isDisabled() {
     const disableable = disableableTypes.has(this.inputType.name);
-    return disableable && (this.locked || this.value.info === undefined || this.value.info.field === null);
+    return !this.forcedFieldType
+      && disableable
+      && (this.locked || this.value.info === undefined || this.value.info.field === null);
   }
 
   // Textual representation of `currentValue`.
@@ -618,7 +645,7 @@ export default class FormControl extends Vue {
   }
 
   get fieldType() {
-    return this.value.info?.field?.fieldType || null;
+    return this.forcedFieldType ?? this.value.info?.field?.fieldType ?? null;
   }
 
   get inputType(): IType {
@@ -690,9 +717,13 @@ export default class FormControl extends Vue {
             return { name: "barcode", format: this.attributes["format"] ? String(this.attributes["format"]) : undefined };
           }
 
+          if (this.value.info === undefined) {
+            return { name: "argument_reference" };
+          }
+
           const refEntry: IReferenceType = {
             name: "reference",
-            ref: this.value.info!.fieldRef,
+            ref: this.value.info.fieldRef,
             selectViews: [],
           };
           refEntry.linkAttr = this.attributes["link"];

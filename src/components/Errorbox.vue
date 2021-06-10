@@ -21,10 +21,6 @@ export default class Errorbox extends Vue {
 </script>
 
 <style scoped>
-  .errorbox-container {
-    width: 100%;
-  }
-
   .errorbox {
     white-space: pre-wrap;
   }

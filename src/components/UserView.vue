@@ -38,6 +38,14 @@
 
 <template>
   <span>
+    <transition name="fade-move">
+      <ArgumentEditor
+        v-if="showArgumentEditor"
+        @close="showArgumentEditor = false"
+        @update="updateArguments"
+      />
+    </transition>
+
     <template
       v-if="state.state === 'show'"
     >
@@ -52,14 +60,6 @@
         :default-values="defaultValues"
         @update:buttons="uvCommonButtons = $event"
       />
-
-      <transition name="fade-move">
-        <ArgumentsEditor
-          v-if="showArgumentsEditor"
-          @close="showArgumentsEditor = false"
-          @update="updateArguments"
-        />
-      </transition>
 
       <transition name="fade-1" mode="out-in">
         <component
@@ -85,12 +85,11 @@
       </transition>
     </template>
 
-    <div
+    <Errorbox
       v-else-if="state.state === 'error'"
-    >
-      {{ state.message }}
-    </div>
-
+      :class="isRoot ? 'm-2' : ''"
+      :message="state.message"
+    />
     <transition name="fade-2">
       <div
         v-if="state.state === 'loading'"
@@ -134,13 +133,14 @@ import type { AddedRowId, CombinedTransactionResult, ICombinedInsertEntityResult
 import { ICurrentQueryHistory, IQuery } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
 import UserViewCommon from "@/components/UserViewCommon.vue";
-import ArgumentsEditor, { Argument } from "@/components/ArgumentsEditor.vue";
+import ArgumentEditor, { Argument } from "@/components/ArgumentEditor.vue";
 import type { Button } from "@/components/buttons/buttons";
 import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams } from "@/links";
 import type { ICombinedUserViewAny, IUserViewArguments } from "@/user_views/combined";
 import { CombinedUserView } from "@/user_views/combined";
 import { UserViewError, fetchUserViewData } from "@/user_views/fetch";
 import { baseUserViewHandler } from "@/components/BaseUserView";
+import Errorbox from "@/components/Errorbox.vue";
 
 const types: RecordSet<string> = {
   "form": null,
@@ -235,7 +235,8 @@ const loadingState: IUserViewLoading = { state: "loading" };
  */
 @Component({ components: {
   UserViewCommon,
-  ArgumentsEditor,
+  ArgumentEditor,
+  Errorbox,
   ...components,
 } })
 export default class UserView extends Vue {
@@ -265,7 +266,7 @@ export default class UserView extends Vue {
   private pendingArgs: IUserViewArguments | null = null;
   private nextUv: Promise<void> | null = null;
   private inhibitReload = false;
-  private showArgumentsEditor = false;
+  private showArgumentEditor = false;
 
   private get transitionKey() {
     return this.state.state === "show"
@@ -312,7 +313,7 @@ export default class UserView extends Vue {
             icon: "edit_note",
             caption: this.$t("edit_arguments").toString(),
             callback: () => {
-              this.showArgumentsEditor = true;
+              this.showArgumentEditor = true;
             },
             type: "callback",
           });
