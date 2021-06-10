@@ -1085,10 +1085,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       variant: "interfaceButton",
       colorVariables: getColorVariables("button", "interfaceButton"),
       caption: this.$t("add_entry").toString(),
-      callback: () => {
+      callback: () =>
         this.addNewRowOnPosition("bottom_back").then(() =>
-          (this.$refs.bottomButtonContainer as Element | undefined)?.scrollIntoView({ block: "nearest" }))
-        },
+          (this.$refs.bottomButtonContainer as Element | undefined)?.scrollIntoView({ block: "nearest" })),
     };
   }
 
