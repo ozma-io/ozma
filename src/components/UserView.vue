@@ -37,7 +37,7 @@
 -->
 
 <template>
-  <span>
+  <div class="userview-wrapper">
     <transition name="fade-move">
       <ArgumentEditor
         v-if="showArgumentEditor"
@@ -118,7 +118,7 @@
         </div>
       </div>
     </transition>
-  </span>
+  </div>
 </template>
 
 <script lang="ts">
@@ -622,6 +622,11 @@ export default class UserView extends Vue {
 </script>
 
 <style lang="scss" scoped>
+  .userview-wrapper {
+    height: 100%;
+    overflow: auto;
+  }
+
   .loading-container {
     min-height: 100px;
     height: 100%;
