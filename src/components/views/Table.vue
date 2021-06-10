@@ -206,6 +206,7 @@ import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 import { Moment, default as moment } from "moment";
 import * as R from "ramda";
 import { IResultColumnInfo, ValueType, RowId, IFieldRef } from "ozma-api";
+import sanitizeHtml from "sanitize-html";
 
 import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, parseSpreadsheet } from "@/utils";
 import { valueIsNull } from "@/values";
@@ -239,8 +240,7 @@ export interface IColumn {
 
 export interface ITableValueExtra extends IBaseValueExtra {
   // FIXME: is this still needed? We could drop it and use computed properties in TableRows instead.
-  valueText: string;
-  valueFormatted: string;
+  valueHtml: string; // Don't forget to sanitize!
   link: Link | null;
   style: Record<string, unknown> | null;
   colorVariables: Record<string, unknown> | null;
@@ -386,8 +386,7 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
   const columnAttrs = uv.columnAttributes[columnIndex];
   const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, uv.attributes);
 
-  const valueText = valueToPunnedText(columnInfo.valueType, value);
-  let valueFormatted = valueText;
+  let valueHtml = valueToPunnedText(columnInfo.valueType, value);
   const style: Record<string, unknown> = {};
 
   const punOrValueType: ValueType = columnInfo.punType ?? columnInfo.valueType;
@@ -400,10 +399,10 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
     if (typeof numberFormat === "string" && validNumberFormats.includes(numberFormat.toLowerCase() as any)) {
       const fractionDigitsRaw = getCellAttr("fraction_digits");
       const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
-      valueFormatted = getNumberFormatter(numberFormat.toLowerCase() as any, fractionDigits).format(value.value as any);
+      valueHtml = getNumberFormatter(numberFormat.toLowerCase() as any, fractionDigits).format(value.value as any);
     }
   } else if (punOrValueType.type === "string") {
-    valueFormatted = replaceHtmlLinks(valueText);
+    valueHtml = replaceHtmlLinks(valueHtml);
   }
 
   const cellColor = getCellAttr("cell_color");
@@ -429,6 +428,12 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
     style["font-family"] = "monospace";
   }
 
+  if (columnInfo.valueType.type === "datetime"
+   && moment.isMoment(value.value)
+   && getCellAttr("show_seconds") === true) {
+    valueHtml = value.value.local().format("L LTS");
+  }
+
   const colorVariant = getCellAttr("cell_variant");
   let colorVariables = null;
   if (colorVariant) {
@@ -441,8 +446,7 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
   }
 
   const extra = {
-    valueText,
-    valueFormatted,
+    valueHtml,
     style: null as Record<string, unknown> | null,
     colorVariables,
   };
@@ -498,14 +502,14 @@ const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLo
 const updateCommonValue = (uv: ITableCombinedUserView, row: ITableExtendedRowCommon, columnIndex: number, value: ITableExtendedValue) => {
   const columnInfo = uv.info.columns[columnIndex];
 
-  value.extra.valueText = valueToPunnedText(columnInfo.valueType, value);
-  // TODO: after paste and before save value is unformatted.
-  value.extra.valueFormatted = valueToPunnedText(columnInfo.valueType, value);
+  const valueHtml = valueToPunnedText(columnInfo.valueType, value);
+  const sanitized = sanitizeHtml(valueHtml, { allowedTags: [], disallowedTagsMode: "escape" });
+  value.extra.valueHtml = sanitized;
 };
 
 const postInitCommonRow = (uv: ITableCombinedUserView, row: ITableExtendedRowCommon) => {
   const searchStrings = row.values.map(value => {
-    return value.extra.valueText.toLocaleLowerCase();
+    return value.extra.valueHtml.toLocaleLowerCase();
   });
   row.extra.searchText = "\0".concat(...searchStrings);
 };
@@ -1267,7 +1271,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     event.preventDefault();
 
     const value = this.uv.getValueByRef(valueRef)!.value;
-    const valueText = value.extra.valueText;
+    const valueText = value.extra.valueHtml;
     event.clipboardData?.setData("text/plain", valueText);
 
     const sourceColumnType = this.uv.info.columns[valueRef.column].mainField?.field.fieldType.type;
