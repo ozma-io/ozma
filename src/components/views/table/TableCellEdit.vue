@@ -3,9 +3,6 @@
     :class="[
       'table-cell-edit',
       'border',
-      {
-        'table-cell-edit_last-fixed': isLastFixedCell
-      }
     ]"
     :style="{
       top: `${coords.y}px`,
@@ -40,7 +37,6 @@ export default class TableCellEdit extends Vue {
   @Prop() width!: number;
   @Prop() height!: number;
   @Prop() minHeight!: number;
-  @Prop({ type: Boolean, default: false }) isLastFixedCell!: boolean;
 }
 </script>
 

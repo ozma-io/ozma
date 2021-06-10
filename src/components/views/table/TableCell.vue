@@ -352,7 +352,7 @@ export default class TableCell extends Vue {
     overflow: hidden;
     white-space: break-spaces;
     word-break: break-word;
-    line-height: 1.2rem;
+    line-height: 1.3rem;
   }
 
   .text {

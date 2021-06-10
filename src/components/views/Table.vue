@@ -39,7 +39,6 @@
       :width="editParams.width"
       :min-height="editParams.minHeight"
       :height="editParams.height"
-      :is-last-fixed-cell="isSelectedLastFixedCell"
       :coords="editCoords"
     >
       <FormControl
@@ -1031,7 +1030,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private clickTimeoutId: NodeJS.Timeout | null = null;
   private isFirefoxBrowser: boolean = isFirefox();
   // FIXME: we should get rid of this.
-  private isSelectedLastFixedCell = false;
   private editCoords: ICellCoords = {
     x: 0,
     y: 0,
@@ -1663,6 +1661,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
         await this.removeAutoSaveLock(lock);
         return;
       }
+      this.getCellElement(ref)?.scrollIntoView({ block: "nearest" });
+      await nextRender(); // `$nextTick` doesn't works fine there.
+      this.setCoordsForEditCell(this.getCellElement(ref)!);
 
       this.editing = { ref, lock };
     });
@@ -1698,8 +1699,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private setCoordsForEditCell(target: HTMLElement) {
-    this.isSelectedLastFixedCell = target.classList.value.includes("next-after-last-fixed");
-
     const bodyRect = document.body.getBoundingClientRect();
     const rect = target.getBoundingClientRect();
 
@@ -1707,12 +1706,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     // If edit window lower than screen, raise the window up.
     // +54px for bottom panel.
-    if (bodyRect.bottom - rect.bottom - 54 < 0) {
-      this.editCoords.y = bodyRect.bottom - this.editParams.height - 54;
-      this.editParams.height += 54;
-    } else {
-      this.editCoords.y = rect.y;
-    }
+    /* if (bodyRect.bottom - rect.bottom - 54 < 0) {
+     *   this.editCoords.y = bodyRect.bottom - this.editParams.height - 54;
+     *   this.editParams.height += 54;
+     * } else {
+     *   this.editCoords.y = rect.y;
+     * } */
+    this.editCoords.y = rect.y;
   }
 
   private updateClickTimer(ref: ValueRef) {
@@ -1748,7 +1748,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private cellEditHandler(ref: ValueRef, target: HTMLElement) {
-    this.setCoordsForEditCell(target);
+    /* this.setCoordsForEditCell(target); */
     this.editParams.width = target.offsetWidth;
     this.editParams.height = target.offsetHeight;
     this.editParams.minHeight = target.offsetHeight;
