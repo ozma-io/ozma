@@ -190,6 +190,7 @@
       </infinite-loading>
       <div
         v-if="noMoreRows && uv.emptyRow !== null"
+        ref="bottomButtonContainer"
         class="button-container"
       >
         <ButtonItem :button="bottomAddButton" />
@@ -1084,7 +1085,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       variant: "interfaceButton",
       colorVariables: getColorVariables("button", "interfaceButton"),
       caption: this.$t("add_entry").toString(),
-      callback: () => this.addNewRowOnPosition("bottom_back"),
+      callback: () =>
+        this.addNewRowOnPosition("bottom_back").then(() =>
+          (this.$refs.bottomButtonContainer as Element | undefined)?.scrollIntoView({ block: "nearest" })),
     };
   }
 
