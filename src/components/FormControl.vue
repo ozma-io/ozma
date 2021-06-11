@@ -997,15 +997,6 @@ export default class FormControl extends Vue {
     vertical-align: top;
   }
 
-  .multilines {
-    overflow-y: auto !important;
-  }
-
-  .singleline {
-    overflow-x: auto !important;
-    max-height: 40px;
-  }
-
   .form-control-panel_select,
   .form-control-panel_checkbox,
   .form-control-panel_textarea {
@@ -1090,5 +1081,9 @@ export default class FormControl extends Vue {
   *:focus {
     border: 0 !important;
     box-shadow: none !important;
+  }
+
+  ::v-deep .button-element > button {
+    width: 100%;
   }
 </style>
