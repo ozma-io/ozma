@@ -1703,15 +1703,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     const rect = target.getBoundingClientRect();
 
     this.editCoords.x = rect.x;
-
-    // If edit window lower than screen, raise the window up.
-    // +54px for bottom panel.
-    /* if (bodyRect.bottom - rect.bottom - 54 < 0) {
-     *   this.editCoords.y = bodyRect.bottom - this.editParams.height - 54;
-     *   this.editParams.height += 54;
-     * } else {
-     *   this.editCoords.y = rect.y;
-     * } */
     this.editCoords.y = rect.y;
   }
 
@@ -1748,7 +1739,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private cellEditHandler(ref: ValueRef, target: HTMLElement) {
-    /* this.setCoordsForEditCell(target); */
     this.editParams.width = target.offsetWidth;
     this.editParams.height = target.offsetHeight;
     this.editParams.minHeight = target.offsetHeight;
