@@ -5,7 +5,7 @@ import { deepEquals } from "@/utils";
 
 // Date/time is stored as Moment objects in UTC.
 export const dateFormat = "L";
-export const dateTimeFormat = "L LTS";
+export const dateTimeFormat = "L LT";
 
 export interface IFieldInfo {
   fieldType: FieldType;

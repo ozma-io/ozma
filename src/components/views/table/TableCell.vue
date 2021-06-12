@@ -33,7 +33,7 @@
           @goto="$emit('goto', $event)"
         />
       </template>
-      <template v-else-if="value.extra.link !== null && value.extra.valueFormatted.length > 0">
+      <template v-else-if="value.extra.link !== null && value.extra.valueHtml.length > 0">
         <div class="selectable">
           <FunLink
             class="selectable-link rounded-circle"
@@ -47,7 +47,7 @@
             >
           </FunLink>
           <!-- eslint-disable vue/no-v-html -->
-          <span class="reference-text" v-html="value.extra.valueFormatted || '&nbsp;'" />
+          <span class="reference-text" v-html="value.extra.valueHtml || '&nbsp;'" />
           <!-- eslint-enable -->
         </div>
       </template>
@@ -64,7 +64,7 @@
           :class="[
             'cell-text',
             {
-              'selectable': (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueFormatted.length > 0,
+              'selectable': (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueHtml.length > 0,
               'tree': showTree && column.treeUnfoldColumn && !notExisting,
             }
           ]"
@@ -96,7 +96,7 @@
           </span>
 
           <!-- eslint-disable vue/no-v-html -->
-          <span class="text" v-html="value.extra.valueFormatted || '&nbsp;'" />
+          <span class="text" v-html="value.extra.valueHtml || '&nbsp;'" />
           <!-- eslint-enable -->
         </div>
       </template>
@@ -352,7 +352,7 @@ export default class TableCell extends Vue {
     overflow: hidden;
     white-space: break-spaces;
     word-break: break-word;
-    line-height: 1.2rem;
+    line-height: 1.3rem;
   }
 
   .text {
