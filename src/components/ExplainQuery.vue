@@ -5,6 +5,9 @@
             "view_name": "User view name",
             "role_schema": "Role schema",
             "role_name": "Role name",
+            "user_name": "User name",
+            "arguments": "Arguments",
+            "limit": "Limit",
             "explain": "Show plan"
         },
         "ru": {
@@ -12,6 +15,9 @@
             "view_name": "Название отображения",
             "role_schema": "Схема роли",
             "role_name": "Название роли",
+            "user_name": "Имя пользователя",
+            "arguments": "Аргументы",
+            "limit": "Количество записей",
             "explain": "Показать план"
         }
     }
@@ -39,6 +45,15 @@
     </p>
     <p>
       <label>
+        {{ $t('user_name') }}:
+        <input
+          v-model="userName"
+          :placeholder="$t('user_name')"
+        >
+      </label>
+    </p>
+    <p>
+      <label>
         {{ $t('role_schema') }}:
         <input
           v-model="roleSchema"
@@ -56,6 +71,51 @@
       </label>
     </p>
     <p>
+      <label>
+        {{ $t('arguments') }}:
+        <input
+          v-model="rawArguments"
+          :placeholder="$t('arguments')"
+        >
+      </label>
+    </p>
+    <p>
+      <label>
+        {{ $t('limit') }}:
+        <input
+          v-model="limit"
+          :placeholder="$t('limit')"
+        >
+      </label>
+    </p>
+    <p>
+      <input
+        v-model="analyze"
+        type="checkbox"
+      >
+      <label>
+        ANALYZE
+      </label>
+    </p>
+    <p>
+      <input
+        v-model="verbose"
+        type="checkbox"
+      >
+      <label>
+        VERBOSE
+      </label>
+    </p>
+    <p>
+      <input
+        v-model="costs"
+        type="checkbox"
+      >
+      <label>
+        COSTS
+      </label>
+    </p>
+    <p>
       <button @click="explainView">
         {{ $t('explain') }}
       </button>
@@ -70,7 +130,7 @@
         {{ attributesQuery }}
       </div>
       Attributes plan:
-      <pre class="plan">
+      <pre class="plan" @click="copyToClipboard(attributesPlan)">
         {{ attributesPlan }}
       </pre>
     </div>
@@ -81,7 +141,7 @@
         {{ rowsQuery }}
       </div>
       Rows plan:
-      <pre class="plan">
+      <pre class="plan" @click="copyToClipboard(rowsPlan)">
         {{ rowsPlan }}
       </pre>
     </div>
@@ -91,7 +151,7 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { Action } from "vuex-class";
-import { IEntityRef, IUserViewRef, IViewExplainResult, IUserViewOpts } from "ozma-api";
+import { IEntityRef, IUserViewRef, IViewExplainResult, IUserViewExplainOpts, ArgumentName, IQueryChunk } from "ozma-api";
 
 import Api from "@/api";
 
@@ -101,14 +161,24 @@ export default class ExplainQuery extends Vue {
 
   schema = "";
   view = "";
+  userName = "";
   roleSchema = "";
   roleName = "";
+  analyze = false;
+  verbose = false;
+  costs = true;
+  rawArguments = "";
+  limit = "";
 
   lastError = "";
   attributesQuery = "";
   attributesPlan = "";
   rowsQuery = "";
   rowsPlan = "";
+
+  async copyToClipboard(str: string) {
+    await navigator.clipboard.writeText(str);
+  }
 
   async explainView() {
     this.attributesQuery = "";
@@ -126,12 +196,19 @@ export default class ExplainQuery extends Vue {
         throw new Error("You should specify both role schema and role name, or none of them");
       }
       const roleRef: IEntityRef | undefined = this.roleSchema === "" ? undefined : { schema: this.roleSchema, name: this.roleName };
-      const req: IUserViewOpts = {
+      const args: Record<ArgumentName, any> | undefined = this.rawArguments === "" ? undefined : JSON.parse(this.rawArguments);
+      const chunk: IQueryChunk | undefined = this.limit === "" ? undefined : { limit: Number(this.limit) };
+      const opts: IUserViewExplainOpts = {
+        chunk,
+        pretendUser: this.userName === "" ? undefined : this.userName,
         pretendRole: roleRef,
+        analyze: this.analyze,
+        verbose: this.verbose,
+        costs: this.costs,
       };
       const res: IViewExplainResult = await this.callProtectedApi({
         func: Api.getNamedUserViewExplain,
-        args: [ref, req],
+        args: [ref, args, opts],
       });
 
       if (res.attributes) {
