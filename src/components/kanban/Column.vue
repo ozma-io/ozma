@@ -1,10 +1,12 @@
 <i18n>
     {
         "en": {
-            "no_cards": "No cards here"
+            "no_cards": "No cards here",
+            "count_tooltip": "Number of cards in column"
         },
         "ru": {
-            "no_cards": "Пустая колонка"
+            "no_cards": "Пустая колонка",
+            "count_tooltip": "Количество карточек в колонке"
         }
     }
 </i18n>
@@ -28,12 +30,19 @@
           :title="title"
           data-dragscroll
         >
-          {{ title }} {{ cardCount }}
+          {{ title }}
         </span>
         <span class="column_controls" data-dragscroll>
+          <span
+            v-b-tooltip.hover.noninteractive
+            class="column_header__count"
+            :title="$t('count_tooltip')"
+          >
+            {{ cardCount }}
+          </span>
           <i
             v-if="createButton"
-            class="material-icons material-button rounded-circle new-card-icon"
+            class="material-icons material-button rounded-circle"
             @click="$emit('create')"
           >add</i>
         </span>
@@ -158,7 +167,7 @@ export default class KanbanColumn extends Vue {
   }
 
   get cardCount() {
-    return (this.cards.length > 0) ? `(${this.cards.length})` : "";
+    return (this.cards.length > 0) ? `${this.cards.length}` : "";
   }
 
   private onDragStart(evt: any) {
@@ -216,6 +225,12 @@ export default class KanbanColumn extends Vue {
     font-weight: bold;
   }
 
+  .column_header__count {
+    color: var(--kanban-foregroundDarkerColor);
+    font-weight: normal;
+    margin-right: 0.5rem;
+  }
+
   .column_select_checkbox {
     vertical-align: middle;
   }
@@ -230,6 +245,8 @@ export default class KanbanColumn extends Vue {
 
   .column_controls {
     margin-left: auto;
+    display: flex;
+    align-items: center;
   }
 
   .column_controls > i {
