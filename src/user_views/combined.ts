@@ -602,8 +602,8 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
         const updatedValue = newValues.values[column.mainField.name];
         if (updatedValue === undefined) {
           const result: ICombinedValue = {
-            value: null,
-            rawValue: "",
+            value: undefined,
+            rawValue: undefined,
             info: updateInfo,
           };
           if (updateInfo.field.fieldType.type === "reference") {
