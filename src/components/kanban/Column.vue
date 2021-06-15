@@ -43,14 +43,14 @@
       animation="200"
       data-dragscroll
       :style="[{ width }, colorVariables]"
-      :value="cards"
+      :value="shownCards"
       :disabled="!allowDragging"
       @start="onDragStart"
       @end="onDragEnd"
       @change="onChange"
     >
       <Card
-        v-for="(card, cardIndex) in cards"
+        v-for="(card, cardIndex) in shownCards"
         :key="card.key"
         :background-color="card.backgroundColor"
         :color-variables="card.colorVariables"
@@ -61,12 +61,32 @@
           :card="card.card"
         />
       </Card>
+
+      <template #footer>
+        <infinite-loading
+          v-if="!allCardsShown"
+          spinner="spiral"
+          :distance="10"
+          @infinite="updateShownCardsLength"
+        >
+          <template #no-results>
+            <span />
+          </template>
+          <template #no-more>
+            <span />
+          </template>
+          <template #error>
+            <span />
+          </template>
+        </infinite-loading>
+      </template>
     </draggable>
   </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
+import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 import draggable from "vuedraggable";
 
 import Card from "@/components/kanban/Card.vue";
@@ -79,7 +99,9 @@ export interface ICard<CardT> {
   colorVariables: Record<string, string>;
 }
 
-@Component({ components: { Card, draggable } })
+const showStep = 10;
+
+@Component({ components: { Card, draggable, InfiniteLoading } })
 export default class KanbanColumn extends Vue {
   @Prop({ type: Array, required: true }) cards!: ICard<unknown>[];
   @Prop({ type: String, required: true }) title!: string;
@@ -91,6 +113,25 @@ export default class KanbanColumn extends Vue {
   @Prop({ type: Boolean, default: false }) allowDragging!: string;
 
   private draggedIndex: number | null = null;
+  private shownCardsLength = 0;
+
+  private updateShownCardsLength(ev: StateChanger) {
+    this.shownCardsLength = Math.min(this.shownCardsLength + showStep, this.cards.length);
+
+    if (this.allCardsShown) {
+      ev.complete();
+    } else {
+      ev.loaded();
+    }
+  }
+
+  private get allCardsShown() {
+    return this.shownCardsLength >= this.cards.length;
+  }
+
+  private get shownCards() {
+    return this.cards.slice(0, this.shownCardsLength);
+  }
 
   get style() {
     return {
