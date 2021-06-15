@@ -1,3 +1,14 @@
+<i18n>
+    {
+        "en": {
+            "no_cards": "No cards here"
+        },
+        "ru": {
+            "no_cards": "Пустая колонка"
+        }
+    }
+</i18n>
+
 <template>
   <div
     class="column_container"
@@ -42,6 +53,7 @@
       delay="200"
       animation="200"
       data-dragscroll
+      draggable=".card_container"
       :style="[{ width }, colorVariables]"
       :value="shownCards"
       :disabled="!allowDragging"
@@ -61,16 +73,21 @@
           :card="card.card"
         />
       </Card>
-
       <template #footer>
-        <infinite-loading
-          v-if="!allCardsShown"
+        <InfiniteLoading
           spinner="spiral"
           :distance="10"
+          :identifier="cards.length"
           @infinite="updateShownCardsLength"
         >
           <template #no-results>
-            <span />
+            <div
+              v-if="cards.length === 0"
+              class="no-card"
+            >
+              {{ $t("no_cards") }}
+            </div>
+            <span v-else />
           </template>
           <template #no-more>
             <span />
@@ -78,7 +95,7 @@
           <template #error>
             <span />
           </template>
-        </infinite-loading>
+        </InfiniteLoading>
       </template>
     </draggable>
   </div>
@@ -118,7 +135,7 @@ export default class KanbanColumn extends Vue {
   private updateShownCardsLength(ev: StateChanger) {
     this.shownCardsLength = Math.min(this.shownCardsLength + showStep, this.cards.length);
 
-    if (this.allCardsShown) {
+    if (this.shownCardsLength >= this.cards.length) {
       ev.complete();
     } else {
       ev.loaded();
@@ -217,6 +234,13 @@ export default class KanbanColumn extends Vue {
 
   .column_controls > i {
     vertical-align: middle;
+  }
+
+  .no-card {
+    padding: 2rem 0;
+    color: var(--kanban-foregroundDarkerColor);
+    border: 1px dashed var(--kanban-foregroundDarkerColor);
+    border-radius: 0.25rem;
   }
 
   ::v-deep .card_dragging_ghost {
