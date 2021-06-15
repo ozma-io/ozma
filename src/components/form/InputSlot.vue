@@ -299,38 +299,21 @@ export default class InputSlot extends Vue {
     background-color: var(--table-backgroundColor);
   }
 
-  .input_modal__button__ok,
-  .input_modal__button__cancel {
+  .input_modal__button__ok {
     outline: none;
     border: 0;
     padding: 10px 18px;
     cursor: pointer;
     color: var(--MainTextColor);
     box-shadow: 0 4px 8px var(--MainBorderColor);
-    background: var(--MainBackgroundColor);
+    background-color: var(--SuccessColor);
     font-weight: 600;
     width: 100%;
     border-radius: 0;
     margin-top: 5px;
   }
 
-  .input_modal__button__ok {
-    background-color: var(--SuccessColor);
-  }
-
-  .input_modal__button__cancel {
-    background-color: var(--FailColor);
-  }
-
   .v--modal-overlay {
     z-index: 1000;
-  }
-
-  .text_align_right {
-    text-align: right;
-  }
-
-  .text_align_left {
-    text-align: left;
   }
 </style>

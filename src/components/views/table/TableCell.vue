@@ -20,9 +20,7 @@
                           'next-after-last-fixed': index === lastFixedColumnIndex,
                           'select': value.extra.selected && !column.fixed,
                           'selected': value.extra.selected,
-                          'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable,
-                          'editing_style': value.extra.editing !== undefined,
-                          'tree-has-children': treeHasChildren,
+                          'required-cell': requiredButEmpty,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click.stop="$emit('cell-click', columnPosition, $refs.cell)"
   >
@@ -141,6 +139,10 @@ export default class TableCell extends Vue {
 
   private get fieldType(): string | null {
     return this.value.info?.field?.fieldType?.type ?? null;
+  }
+
+  private get requiredButEmpty() {
+    return this.isNull && this.value.info?.field?.isNullable === false;
   }
 
   private get treeLevel() {

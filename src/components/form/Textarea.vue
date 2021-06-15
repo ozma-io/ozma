@@ -225,13 +225,4 @@ export default class Textarea extends Vue {
   .textarea_field__disabled {
     cursor: not-allowed;
   }
-
-  .textarea_field__required {
-    background: var(--WarningColor) !important;
-  }
-
-  .textarea_field__error {
-    background: var(--FailColor) !important;
-  }
-
 </style>

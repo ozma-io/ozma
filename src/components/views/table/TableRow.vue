@@ -136,11 +136,6 @@ export default class TableRow extends Vue {
     height: 100%;
   }
 
-  .editing_style {
-    z-index: 200 !important; /* чтобы FormControl(расположен в ячейке) отображался поверх таблицы */
-    overflow: visible !important;
-  }
-
   td {
     border-right: 1px solid var(--table-backgroundDarker1Color);
     color: var(--tableCell-foregroundColor, var(--table-foregroundColor));
@@ -180,12 +175,8 @@ export default class TableRow extends Vue {
   }
 
   /* !importants was used because styles for fixed columns have priority otherwise. */
-  td.required_cell_style {
+  td.required-cell {
     background-color: var(--WarningColor) !important;
-  }
-
-  td.error_style {
-    background-color: var(--FailColor) !important;
   }
 
   td.select {
