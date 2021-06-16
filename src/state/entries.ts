@@ -1,5 +1,5 @@
 import { ActionContext, Module } from "vuex";
-import { RowId, IQueryChunk, IFieldRef, IEntityRef, IChunkWhere, IDomainValuesResult, IUserViewOpts } from "ozma-api";
+import { RowId, IQueryChunk, IFieldRef, IEntityRef, IChunkWhere, IDomainValuesResult, IUserViewOpts, ValueType } from "ozma-api";
 import Vue from "vue";
 import R from "ramda";
 
@@ -49,6 +49,8 @@ export interface ISearchNodePending extends ISearchNodeBase, IUpdateSearchNodePe
 export type SearchNode = ISearchNodeOK | ISearchNodeError | ISearchNodePending;
 
 export type Entries = Record<RowId, string>;
+
+const punToText = (pun: unknown, id: unknown, punType: ValueType) => pun === null ? `${id}` : valueToText(punType, pun);
 
 // Add new node to the search tree.
 const insertSearchNode = (node: SearchNode, search: string, limit: number, pending: Promise<boolean>): boolean => {
@@ -314,7 +316,7 @@ export interface IEntriesState {
 const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
   const likeSearch = search === "" ? "%" : "%" + search.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_") + "%";
   const where: IChunkWhere = {
-    expression: "(pun :: string) ILIKE $search",
+    expression: "(pun :: string) ILIKE $search OR pun IS NULL",
     arguments: {
       search: {
         type: "string",
@@ -336,7 +338,7 @@ const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEnt
     args: [ref.field, ref.rowId ?? undefined, req],
   }, { root: true }) as IDomainValuesResult;
   const entries = Object.fromEntries(res.values.map<[number, string]>(row => {
-    const main = valueToText(res.punType, row.pun);
+    const main = punToText(row.pun, row.value, res.punType);
     return [Number(row.value), main];
   }));
   return {
@@ -347,7 +349,7 @@ const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEnt
 
 const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, ids: RowId[]): Promise<Record<RowId, string>> => {
   const where: IChunkWhere = {
-    expression: "value = ANY ($ids)",
+    expression: "value = ANY ($ids) OR pun IS NULL",
     arguments: {
       ids: {
         type: "array(int)",
@@ -367,7 +369,7 @@ const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref:
     args: [ref.field, ref.rowId ?? undefined, req],
   }, { root: true }) as IDomainValuesResult;
   return Object.fromEntries(res.values.map<[number, string]>(row => {
-    const main = valueToText(res.punType, row.pun);
+    const main = punToText(row.pun, row.value, res.punType);
     return [Number(row.value), main];
   }));
 };

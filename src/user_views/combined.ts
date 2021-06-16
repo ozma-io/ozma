@@ -817,7 +817,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     }
 
     if (valueIsNull(ref)) {
-      value.pun = "";
+      value.pun = String(value.value); // DELETE DIFF
       return;
     }
 
@@ -1040,7 +1040,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
         value.initialValue = value.value;
         if (value.pun !== undefined) {
           if (value.pun === null) {
-            value.pun = "";
+            value.pun = valueToText(columnInfo.valueType, value.value);
           } else {
             value.pun = String(value.pun);
           }
