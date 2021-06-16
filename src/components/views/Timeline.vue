@@ -67,7 +67,6 @@ import { UserView } from "@/components";
 import Errorbox from "@/components/Errorbox.vue";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import Phenom, { IPhenom, PhenomType, isPhenomType } from "@/components/views/timeline/Phenom.vue";
-import BaseEntriesView from "@/components/BaseEntriesView";
 import { mapMaybe, tryDicts } from "@/utils";
 import { ICombinedValue, IRowCommon, RowRef, valueToPunnedText } from "@/user_views/combined";
 import type { ScopeName, CombinedTransactionResult } from "@/state/staging_changes";
@@ -93,7 +92,7 @@ const staging = namespace("staging");
 
 @UserView()
 @Component({ components: { Phenom, Errorbox } })
-export default class UserViewTimeline extends mixins<EmptyBaseUserView, BaseEntriesView>(BaseUserView, BaseEntriesView) {
+export default class UserViewTimeline extends mixins<EmptyBaseUserView>(BaseUserView) {
   @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
   @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<CombinedTransactionResult[]>;
   private message = "";

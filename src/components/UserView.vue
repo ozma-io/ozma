@@ -70,6 +70,8 @@
           @update:statusLine="$emit('update:statusLine', $event)"
           @update:enableFilter="$emit('update:enableFilter', $event)"
           @update:bodyStyle="$emit('update:bodyStyle', $event)"
+          @load-next-chunk="loadNextChunk"
+          @load-all-chunks="loadAllChunks"
         />
       </transition>
     </template>
@@ -114,7 +116,7 @@
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
-import { AttributesMap, IEntityRef } from "ozma-api";
+import { AttributesMap, IEntityRef, IUserViewOpts } from "ozma-api";
 
 import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout } from "@/utils";
 import { funappSchema } from "@/api";
@@ -125,7 +127,7 @@ import { IUserViewConstructor } from "@/components";
 import UserViewCommon from "@/components/UserViewCommon.vue";
 import type { Button } from "@/components/buttons/buttons";
 import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams } from "@/links";
-import type { ICombinedUserViewAny, IUserViewArguments } from "@/user_views/combined";
+import type { ICombinedUserViewAny, IRowLoadState, IUserViewArguments } from "@/user_views/combined";
 import { CombinedUserView } from "@/user_views/combined";
 import { UserViewError, fetchUserViewData } from "@/user_views/fetch";
 import { baseUserViewHandler } from "@/components/BaseUserView";
@@ -204,6 +206,10 @@ const argsAreCompatible = (a: IUserViewArguments, b: IUserViewArguments): boolea
 type UserViewLoadingState = IUserViewShow | IUserViewLoading | IUserViewError;
 
 const maxLevel = 4;
+
+export const maxPerFetch = 50;
+export const fetchAllLimit = 5000;
+const getEagerLoadState = (): IRowLoadState => ({ complete: true, perFetch: fetchAllLimit, fetchedRowCount: 0 });
 
 const loadingState: IUserViewLoading = { state: "loading" };
 
@@ -344,7 +350,24 @@ export default class UserView extends Vue {
     }));
   }
 
-  private reload() {
+  private loadNextChunk(done: () => void) {
+    if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
+
+    this.reload({ loadNextChunk: true, done });
+  }
+
+  private loadAllChunks(done: () => void) {
+    if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
+
+    this.reload({ loadAllChunks: true, done });
+  }
+
+  private reload(options?: {
+    differentComponent?: boolean;
+    loadNextChunk?: boolean;
+    loadAllChunks?: boolean;
+    done?: () => void;
+  }) {
     const args = deepClone(this.args);
     if (this.level >= maxLevel) {
       this.setState({
@@ -359,11 +382,32 @@ export default class UserView extends Vue {
       this.setState(loadingState);
     }
 
+    let allFetched = false;
     const pending: IRef<Promise<void>> = {};
     pending.ref = (async () => {
       await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
       try {
-        const uvData = await fetchUserViewData(this.$store, args);
+        let limit: number | undefined;
+        if (this.state.state === "show" && !options?.differentComponent) {
+          if (this.state.uv.rowLoadState === null) {
+            limit = fetchAllLimit;
+            allFetched = true;
+          } else {
+            const delta = (options?.loadNextChunk ? 1 : 0) * this.state.uv.rowLoadState.perFetch;
+            limit = options?.loadAllChunks === true || this.state.uv.rowLoadState.complete === true
+              ? fetchAllLimit
+              : this.state.uv.rowLoadState.fetchedRowCount + delta;
+          }
+        } else {
+          limit = maxPerFetch;
+        }
+        const opts: IUserViewOpts = {
+          chunk: {
+            limit,
+          },
+        };
+
+        let uvData = await fetchUserViewData(this.$store, args, opts);
         const newType = userViewType(uvData.attributes);
         if (newType.type === "component") {
           const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType.component}.vue`)).default;
@@ -372,19 +416,40 @@ export default class UserView extends Vue {
             return;
           }
           const handler = component.handler ?? baseUserViewHandler;
+
+          if (!allFetched && !component.useLazyLoad) {
+            uvData = await fetchUserViewData(this.$store, args);
+          }
+
           let oldLocal: ICombinedUserViewAny | null = null;
+          let rowLoadState: IRowLoadState;
+          const fetchedRowCount = uvData.rows?.length ?? 0;
           if (this.state.state === "show") {
             if (argsAreCompatible(args, this.state.uv.args) && this.state.componentName === newType.component) {
               oldLocal = this.state.uv;
+
+              if (oldLocal.rowLoadState) {
+                rowLoadState = {
+                  fetchedRowCount,
+                  perFetch: oldLocal.rowLoadState.perFetch,
+                  complete: uvData.complete,
+                };
+              }
             } else {
               void this.resetAllAddedEntries(this.state.uv);
+              rowLoadState = { fetchedRowCount, perFetch: maxPerFetch, complete: uvData.complete };
             }
+          } else {
+            rowLoadState = { fetchedRowCount, perFetch: maxPerFetch, complete: uvData.complete };
           }
+
+          rowLoadState ??= getEagerLoadState();
           const uv = new CombinedUserView({
             store: this.$store,
             defaultRawValues: this.defaultValues,
             oldLocal,
             handler,
+            rowLoadState,
             ...uvData,
           });
           this.setStagingHandler({
@@ -431,6 +496,8 @@ export default class UserView extends Vue {
         }
         throw e;
       }
+
+      options?.done?.();
     })();
     this.nextUv = pending.ref;
   }
@@ -499,7 +566,7 @@ export default class UserView extends Vue {
 
   @Watch("args", { deep: true, immediate: true })
   private argsChanged(newArgs: IUserViewArguments) {
-    this.reload();
+    this.reload({ differentComponent: true });
   }
 
   @Watch("state.state", { immediate: true })

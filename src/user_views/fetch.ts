@@ -21,7 +21,12 @@ const defaultViewOpts: IUserViewOpts = {
   chunk: { limit: 5000 },
 };
 
-export const fetchUserViewData = async (store: Store<any>, args: IUserViewArguments): Promise<ICombinedUserViewDataParams> => {
+export const fetchUserViewData =
+async (
+  store: Store<any>,
+  args: IUserViewArguments,
+  opts: IUserViewOpts = defaultViewOpts,
+): Promise<ICombinedUserViewDataParams> => {
   try {
     if (args.source.type === "named") {
       if (args.args === null) {
@@ -35,18 +40,25 @@ export const fetchUserViewData = async (store: Store<any>, args: IUserViewArgume
           attributes: res.pureAttributes,
           columnAttributes: res.pureColumnAttributes,
           rows: null,
+          complete: true,
         };
       } else {
+        // Increasing `limit` and slicing in `return` just co compute `complete`.
+        const extendedOpts = opts.chunk?.limit !== undefined
+          ? { ...opts, chunk: { ...opts.chunk, limit: opts.chunk.limit + 1 } }
+          : opts;
         const res: IViewExprResult = await store.dispatch("callProtectedApi", {
           func: Api.getNamedUserView.bind(Api),
-          args: [args.source.ref, args.args, defaultViewOpts],
+          args: [args.source.ref, args.args, extendedOpts],
         }, { root: true });
+        const complete = opts.chunk?.limit !== undefined && res.result.rows.length <= opts.chunk.limit;
         return {
           args,
           info: res.info,
           attributes: res.result.attributes,
           columnAttributes: res.result.columnAttributes,
-          rows: res.result.rows,
+          rows: complete ? res.result.rows : res.result.rows.slice(0, -1),
+          complete,
         };
       }
     } else if (args.source.type === "anonymous") {
@@ -55,7 +67,7 @@ export const fetchUserViewData = async (store: Store<any>, args: IUserViewArgume
       } else {
         const res: IViewExprResult = await store.dispatch("callProtectedApi", {
           func: Api.getAnonymousUserView.bind(Api),
-          args: [args.source.query, args.args, defaultViewOpts],
+          args: [args.source.query, args.args, opts],
         }, { root: true });
         return {
           args,
@@ -63,6 +75,7 @@ export const fetchUserViewData = async (store: Store<any>, args: IUserViewArgume
           attributes: res.result.attributes,
           columnAttributes: res.result.columnAttributes,
           rows: res.result.rows,
+          complete: opts.chunk?.limit !== undefined && res.result.rows.length < opts.chunk.limit,
         };
       }
     } else {

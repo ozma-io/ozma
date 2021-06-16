@@ -63,24 +63,24 @@
             v-if="showDelete && row.mainId !== undefined"
             class="delete-block"
           >
-            <input
-              type="button"
-              :value="$t('delete')"
-              class="delete-block_delete-button"
+            <b-button
+              variant="outline-danger"
               @click="$emit('delete')"
             >
+              {{ $t('delete') }}
+            </b-button>
           </div>
 
           <div
             v-if="selectionMode && row.extra.selectionEntry !== undefined"
             class="delete-block"
           >
-            <input
-              type="button"
-              :value="$t('select')"
-              class="delete-block_delete-button"
+            <b-button
+              variant="secondary"
               @click="$emit('select', row.extra.selectionEntry)"
             >
+              {{ $t('select') }}
+            </b-button>
           </div>
         </form>
       </b-col>
@@ -134,46 +134,13 @@ export default class FormEntry extends Vue {
     border-top: 0;
   }
 
-  .form-block {
-    display: inline-block;
-    vertical-align: top;
-    margin: 0 1px;
-  }
-
-  .form-data {
-    margin-top: 7px;
-    color: var(--NavigationTextColor);
-  }
-
   .delete-block {
-    background: var(--MainBorderColor);
     width: max-content;
     display: inline-block;
-    margin-right: 15px;
-    margin-left: 15px;
-  }
-
-  .delete-block_delete-button {
-    background: hsla(0, 0%, 100%, 0.3) !important;
-    padding: 0;
-    padding-left: 7px;
-    padding-right: 7px;
-    line-height: normal;
-    height: calc(1.5em + 4px);
-    border: 0;
-    box-shadow: none;
-    outline: none;
-    color: var(--MainTextColor);
-    border-radius: 0;
   }
 
   @media screen and (max-aspect-ratio: 13/9) {
     @media screen and (max-device-width: 480px) {
-      .form-block {
-        width: 100% !important;
-        display: block;
-      }
-
       .delete-block {
         position: sticky;
         left: 0;
@@ -186,15 +153,6 @@ export default class FormEntry extends Vue {
     @media screen and (max-device-width: 480px) {
       .form-entry {
         width: 100%;
-      }
-
-      .form-data {
-        margin-top: 0 !important;
-        margin-bottom: 15px;
-      }
-
-      .form-block {
-        display: grid;
       }
     }
   }

@@ -1,9 +1,7 @@
 <i18n>
     {
       "en": {
-        "clear": "Clear entries",
-        "yes": "Yes",
-        "no": "No",
+        "not_all_entries_loaded": "Not all entries are loaded",
         "paste_error": "Pasting error",
         "clear_error": "Clearing error",
         "read_only_cell": "Read-only cell",
@@ -13,9 +11,7 @@
         "add_entry_in_modal": "Add new entry (in modal window)"
       },
       "ru": {
-        "clear": "Очистить записи",
-        "yes": "Да",
-        "no": "Нет",
+        "not_all_entries_loaded": "Не все записи загружены",
         "paste_error": "Ошибка при вставке",
         "clear_error": "Ошибка при очистке поля",
         "read_only_cell": "Ячейка только для чтения",
@@ -31,7 +27,15 @@
   <div
     v-hotkey="keymap"
     fluid
-    :class="['table-block', { 'nested': !isRoot, 'active_editing': editingValue !== null }]"
+    infinite-wrapper
+    :class="[
+      'table-block',
+      {
+        'nested': !isRoot,
+        'active-editing': editingValue !== null,
+        'mobile': $isMobile,
+
+      }]"
   >
     <TableCellEdit
       v-if="editingValue"
@@ -67,13 +71,41 @@
     <div
       ref="tableContainer"
       class="tabl"
-      data-infinite-wrapper
     >
       <div
         v-if="uv.emptyRow !== null"
         class="button-container"
       >
         <ButtonItem :button="topAddButton" />
+        <div
+          v-if="uv.extra.lazyLoad.type === 'pagination'"
+          class="pagination"
+        >
+          <b-spinner
+            v-if="uv.extra.lazyLoad.pagination.loading"
+            class="mr-1"
+            small
+            label="Next page is loading"
+          />
+          <div class="select-wrapper">
+            <b-select
+              class="page-select"
+              :value="uv.extra.lazyLoad.pagination.perPage"
+              :options="pageSizes"
+              size="sm"
+              @input="updatePageSize"
+            />
+          </div>
+          <ButtonItem :button="firstPageButton" />
+          <ButtonItem :button="prevPageButton" />
+          <div class="current-page-wrapper">
+            <div class="current-page">
+              {{ currentPage }}
+              <span v-if="pagesCount !== null" class="pages-count">{{ "/" + pagesCount }} </span>
+            </div>
+          </div>
+          <ButtonItem :button="nextPageButton" />
+        </div>
       </div>
 
       <table
@@ -144,7 +176,7 @@
               }]"
               :style="uv.extra.columns[i].style"
               :title="uv.extra.columns[i].caption"
-              @click="updateSort(i)"
+              @click="loadAllRowsAndUpdateSort(i)"
             >
               <span class="table_header__content">
                 {{ uv.extra.columns[i].caption }}
@@ -153,7 +185,10 @@
             </th>
           </tr>
         </thead>
+        <!--
         <transition-group tag="tbody" name="fade-2">
+        -->
+        <tbody>
           <TableRow
             v-for="(row, rowIndex) in shownRows"
             :key="row.key"
@@ -170,12 +205,16 @@
             @add-child="addChild(row.ref)"
             @goto="$emit('goto', $event)"
           />
+        </tbody>
+        <!--
         </transition-group>
+        -->
       </table>
       <infinite-loading
-        v-if="!noMoreRows"
+        v-if="useInfiniteScrolling"
+        :force-use-infinite-wrapper="isRoot ? false : '.view-form'"
         spinner="spiral"
-        @infinite="updateShowLength"
+        @infinite="infiniteHandler"
       >
         <template #no-results>
           <span />
@@ -188,7 +227,7 @@
         </template>
       </infinite-loading>
       <div
-        v-if="noMoreRows && uv.emptyRow !== null"
+        v-if="!useInfiniteScrolling && uv.emptyRow !== null"
         ref="bottomButtonContainer"
         class="button-container"
       >
@@ -205,12 +244,14 @@ import { namespace } from "vuex-class";
 import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 import { Moment, default as moment } from "moment";
 import * as R from "ramda";
+import { z } from "zod";
 import { IResultColumnInfo, ValueType, RowId, IFieldRef } from "ozma-api";
 import sanitizeHtml from "sanitize-html";
 
 import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, parseSpreadsheet } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
+import { maxPerFetch } from "@/components/UserView.vue";
 import { AddedRowId, AutoSaveLock } from "@/state/staging_changes";
 import { IAttrToQueryOpts } from "@/state/query";
 import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, baseUserViewHandler } from "@/components/BaseUserView";
@@ -287,6 +328,7 @@ export interface ITableViewExtra extends IBaseViewExtra {
   rowsParentPositions: Record<number, number>;
   treeParentColumnIndex: number;
   linkOpts?: IAttrToQueryOpts;
+  lazyLoad: ITableLazyLoad;
 
   newRowTopSidePositions: NewRowRef[];
   newRowBottomSidePositions: NewRowRef[];
@@ -297,7 +339,7 @@ export interface ITableViewExtra extends IBaseViewExtra {
   sortOptions: Intl.CollatorOptions;
 }
 
-const showStep = 20;
+const showStep = 3;
 const doubleClickTime = 700;
 // FIXME: Use CSS variables to avoid this constant
 const technicalFieldsWidth = 35; // checkbox's and openform's td width
@@ -882,6 +924,8 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       ? !disableSelectionColumn
       : true;
 
+    const lazyLoad = oldView?.lazyLoad ?? lazyLoadSchema.parse(uv.attributes["lazy_load"]);
+
     const newRowTopSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowTopSidePositions) : [];
     const newRowBottomSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowBottomSidePositions) : [];
     const addedRowRefs = oldView ? inheritOldRowsPositions(uv, oldView.addedRowRefs) : [];
@@ -902,6 +946,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       sortColumn: oldView?.sortColumn ?? null,
       sortOptions: oldView?.sortOptions ?? {},
       addedRowRefs,
+      lazyLoad,
     };
   },
 
@@ -1003,10 +1048,39 @@ interface IShownRow {
   ref: RowRef;
 }
 
+const defaultPageSize = 5;
+// Just look at `ITableLazyLoad` to see which type this mess make.
+export const lazyLoadSchema =
+  z.union([
+    z.object({
+      pagination: z.object({
+        "per_page": z.number(),
+      }),
+    }).transform(obj => ({
+      type: "pagination" as const,
+      pagination: {
+        perPage: R.clamp(0, maxPerFetch, obj.pagination["per_page"]),
+        currentPage: 0,
+        loading: false,
+      },
+    })),
+    z.object({
+      "infinite_scroll": z.literal(true),
+    }).transform(obj => ({
+      type: "infinite_scroll" as const,
+      infiniteScroll: {
+        shownRowsLength: 0,
+      },
+    })),
+  ]).default({ infinite_scroll: true });
+
+type ITableLazyLoad = z.infer<typeof lazyLoadSchema>;
+
 type MoveDirection = "up" | "right" | "down" | "left";
 
 @UserView({
   handler: tableUserViewHandler,
+  useLazyLoad: true,
 })
 @Component({
   components: {
@@ -1023,7 +1097,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   // If `init()` is called again, their values after recomputation should be equal to those before it.
   private currentFilter: string[] = [];
   private rowPositions: CommittedRowRef[] = [];
-  private showLength = 0;
   private lastSelectedRow: number | null = null;
   private lastSelectedValue: ValueRef | null = null;
   private editing: ITableEditing | null = null;
@@ -1052,6 +1125,23 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   // Probably need to move to extra.
   private columnDelta = 0;
 
+  private get useInfiniteScrolling() {
+    return this.uv.extra.lazyLoad.type === "infinite_scroll"
+      && (!this.uv.rowLoadState.complete
+      || this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength < this.uv.rowLoadState.fetchedRowCount);
+  }
+
+  private get pageSizes() {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return [];
+
+    const defaultSizes = [5, 10, 25, 50];
+    if (!defaultSizes.includes(this.uv.extra.lazyLoad.pagination.perPage)) {
+      return [this.uv.extra.lazyLoad.pagination.perPage, ...defaultSizes].map(num => ({ value: num, text: String(num) }));
+    } else {
+      return defaultSizes.map(num => ({ value: num, text: String(num) }));
+    }
+  }
+
   private get keymap() {
     return {
       "enter": () => this.onPressEnter(),
@@ -1069,6 +1159,147 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     };
   }
 
+  private get firstPageButton(): Button | null {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return null;
+
+    return {
+      type: "callback",
+      icon: "skip_previous",
+      variant: "interfaceButton",
+      disabled: this.uv.extra.lazyLoad.pagination.currentPage === 0,
+      colorVariables: getColorVariables("button", "interfaceButton"),
+      callback: () => this.goToFirstPage(),
+    };
+  }
+
+  private get prevPageButton(): Button | null {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return null;
+
+    return {
+      type: "callback",
+      icon: "arrow_left",
+      variant: "interfaceButton",
+      disabled: this.uv.extra.lazyLoad.pagination.currentPage === 0,
+      colorVariables: getColorVariables("button", "interfaceButton"),
+      callback: () => this.goToPrevPage(),
+    };
+  }
+
+  private get nextPageButton(): Button | null {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return null;
+
+    return {
+      type: "callback",
+      icon: "arrow_right",
+      variant: "interfaceButton",
+      disabled: (this.uv.rowLoadState.complete && this.onLastPage)
+        || (this.uv.extra.lazyLoad.type === "pagination" && this.uv.extra.lazyLoad.pagination.loading),
+      colorVariables: getColorVariables("button", "interfaceButton"),
+      callback: () => this.goToNextPage(),
+    };
+  }
+
+  private get onLastPage() {
+    if (!this.uv.rows || this.uv.extra.lazyLoad.type !== "pagination") return false;
+
+    const shownRowCount = this.uv.extra.lazyLoad.pagination.perPage * (this.uv.extra.lazyLoad.pagination.currentPage + 1);
+    return this.uv.rowLoadState.fetchedRowCount <= shownRowCount;
+  }
+
+  private get nextPageRequiresLoading() {
+    if (!this.uv.rows || this.uv.rowLoadState.complete || this.uv.extra.lazyLoad.type !== "pagination") return false;
+
+    const shownRowCount = this.uv.extra.lazyLoad.pagination.perPage * (this.uv.extra.lazyLoad.pagination.currentPage + 2);
+    return this.uv.rowLoadState.fetchedRowCount < shownRowCount;
+  }
+
+  private goToFirstPage() {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return;
+
+    this.uv.extra.lazyLoad.pagination.currentPage = 0;
+  }
+
+  private goToPrevPage() {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return;
+
+    if (this.uv.extra.lazyLoad.pagination.currentPage > 0) {
+      this.uv.extra.lazyLoad.pagination.currentPage--;
+    }
+  }
+
+  private goToNextPage() {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return;
+
+    if (this.nextPageRequiresLoading) {
+      this.uv.extra.lazyLoad.pagination.loading = true;
+      this.$emit("load-next-chunk", () => {
+        if (this.uv.extra.lazyLoad.type !== "pagination") return;
+
+        this.uv.extra.lazyLoad.pagination.loading = false;
+        this.uv.extra.lazyLoad.pagination.currentPage++;
+      });
+    } else {
+      this.uv.extra.lazyLoad.pagination.currentPage++;
+    }
+  }
+
+  private get currentPage() {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return 0;
+
+    return this.uv.extra.lazyLoad.pagination?.currentPage + 1;
+  }
+
+  private get pagesCount(): number | null {
+    if (this.uv.extra.lazyLoad.type !== "pagination" || !this.uv.rowLoadState.complete) return null;
+
+    return Math.ceil(this.uv.rowLoadState.fetchedRowCount / this.uv.extra.lazyLoad.pagination.perPage);
+  }
+
+  private updatePageSize(newPageSize: number) {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return;
+
+    this.uv.extra.lazyLoad.pagination.perPage = newPageSize;
+    this.uv.rowLoadState.perFetch = newPageSize;
+    this.goToFirstPage();
+
+    if (newPageSize > this.uv.rowLoadState.fetchedRowCount && !this.uv.rowLoadState.complete) {
+      this.uv.rowLoadState.fetchedRowCount = 0;
+      this.$emit("load-next-chunk");
+    }
+  }
+
+  // Fires only once (is it?), needed to sync `perFetch` with `perPage` from attribute. TODO: Refactor this?
+  @Watch("uv.extra.lazyLoad", { immediate: true, deep: true })
+  private watchPageSize() {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return;
+
+    this.uv.rowLoadState.perFetch = this.uv.extra.lazyLoad.pagination.perPage;
+  }
+
+  private infiniteHandler(ev: StateChanger) {
+    if (this.uv.extra.lazyLoad.type !== "infinite_scroll") return;
+
+    this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength += showStep;
+
+    if (this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength > this.uv.rowLoadState.fetchedRowCount) {
+      this.$emit("load-next-chunk", (result: boolean) => {
+        if (this.uv.rowLoadState.complete) {
+          ev.complete();
+          if (this.uv.extra.lazyLoad.type !== "infinite_scroll") return;
+
+          this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength = this.uv.rowLoadState.fetchedRowCount;
+        } else {
+          ev.loaded();
+        }
+      });
+    } else if (this.uv.rowLoadState.complete === true
+      && this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength >= this.uv.rowLoadState.fetchedRowCount) {
+      ev.complete();
+    } else {
+      ev.loaded();
+    }
+  }
+
   private get topAddButton(): Button {
     return {
       type: "callback",
@@ -1076,7 +1307,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       variant: "interfaceButton",
       colorVariables: getColorVariables("button", "interfaceButton"),
       caption: this.$t("add_entry").toString(),
-      callback: () => this.addNewRowOnPosition("top_front"),
+      callback: () => this.loadAllRowsAndAddNewRowOnPosition("top_front"),
     };
   }
 
@@ -1088,7 +1319,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       colorVariables: getColorVariables("button", "interfaceButton"),
       caption: this.$t("add_entry").toString(),
       callback: () =>
-        this.addNewRowOnPosition("bottom_back").then(() =>
+        this.loadAllRowsAndAddNewRowOnPosition("bottom_back").then(() =>
           (this.$refs.bottomButtonContainer as Element | undefined)?.scrollIntoView({ block: "nearest" })),
     };
   }
@@ -1235,20 +1466,20 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.currentFilter = this.filter;
     this.init();
 
-    if (this.isTopLevel) {
-      const queryCallback = (mql: MediaQueryListEvent) => {
-        if (mql.matches) {
-          this.showLength = this.uv.rows?.length ?? 0;
-        }
-      };
-      const query = window.matchMedia("print");
-      query.addListener(queryCallback);
-      const printCallback = () => {
-        this.showLength = this.uv.rows?.length ?? 0;
-      };
-      window.addEventListener("beforeprint", printCallback);
-      this.printListener = { query, queryCallback, printCallback };
-    }
+    /* if (this.isTopLevel) {
+     *   const queryCallback = (mql: MediaQueryListEvent) => {
+     *     if (mql.matches) {
+     *       this.shownRowsLength = this.uv.rows?.length ?? 0;
+     *     }
+     *   };
+     *   const query = window.matchMedia("print");
+     *   query.addListener(queryCallback);
+     *   const printCallback = () => {
+     *     this.shownRowsLength = this.uv.rows?.length ?? 0;
+     *   };
+     *   window.addEventListener("beforeprint", printCallback);
+     *   this.printListener = { query, queryCallback, printCallback };
+     * } */
   }
 
   @Watch("uv")
@@ -1452,8 +1683,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.releaseEntries();
   }
 
-  @Watch("filter")
+  @Watch("filter", { immediate: true })
   protected updateFilter() {
+    if (this.filter.length !== 0 && this.uv.rowLoadState.complete === false) {
+      this.$emit("load-all-chunks");
+    }
+
     const oldFilter = this.currentFilter;
     this.currentFilter = this.filter;
 
@@ -1482,6 +1717,16 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
           this.keptEntries.insert(info!.fieldRef);
         }
       }
+    }
+  }
+
+  // TODO: Load all rows is temporary until we can't load rows by ids.
+  private async loadAllRowsAndAddNewRowOnPosition(side: IAddedValueMeta["side"]): Promise<void> {
+    if (!this.uv.rowLoadState.complete) {
+      this.$emit("load-all-chunks", () => this.addNewRowOnPosition(side));
+      return Promise.resolve();
+    } else {
+      return this.addNewRowOnPosition(side);
     }
   }
 
@@ -1869,7 +2114,14 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private updateRows() {
     this.buildRowPositions();
-    // this.initTree();
+  }
+
+  private loadAllRowsAndUpdateSort(sortColumn: number) {
+    if (!this.uv.rowLoadState.complete) {
+      this.$emit("load-all-chunks", () => this.updateSort(sortColumn));
+    } else {
+      this.updateSort(sortColumn);
+    }
   }
 
   /*
@@ -1919,19 +2171,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
           (a, b) => rowIndicesCompare(b, a, this.uv, sortColumn, collator);
 
       this.rowPositions.sort(sortFunction);
-    }
-  }
-
-  get noMoreRows() {
-    return this.showLength >= (this.uv.rows?.length ?? 0);
-  }
-
-  private updateShowLength(ev: StateChanger) {
-    this.showLength = Math.min(this.showLength + showStep, this.uv.rows?.length ?? 0);
-    if (this.noMoreRows) {
-      ev.complete();
-    } else {
-      ev.loaded();
     }
   }
 
@@ -1986,25 +2225,36 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   get statusLine() {
-    const selectedCount = this.uv.extra.selectedRows.length;
-    const selected = (selectedCount > 0) ? `${selectedCount}/` : "";
     const totalAdded = this.topRows.length + this.bottomRows.length;
-    return `${selected}${totalAdded + this.existingRows.length}`;
+    return this.uv.rowLoadState.complete ? `${totalAdded + this.existingRows.length}` : "";
   }
 
-  @Watch("statusLine")
+  // FIXME: Broken, fix or delete at all.
+  @Watch("statusLine", { immediate: true })
   private updateStatusLine() {
     this.$emit("update:statusLine", this.statusLine);
   }
 
   get allRows() {
-    return [...this.topRows, ...this.existingRows, ...this.bottomRows];
+    if (this.uv.extra.lazyLoad.type === "pagination") {
+      const start = this.uv.extra.lazyLoad.pagination.currentPage * this.uv.extra.lazyLoad.pagination.perPage;
+      const end = start + this.uv.extra.lazyLoad.pagination.perPage;
+      const sliced = this.existingRows.slice(start, end);
+      return [...this.topRows, ...sliced, ...this.bottomRows];
+    } else {
+      return [...this.topRows, ...this.existingRows, ...this.bottomRows];
+    }
   }
 
-  // Part of all rows that's currently rendered. This is used to improve loading performance.
   get shownRows() {
-    const totalAdded = Object.keys(this.uv.newRows).length;
-    return this.allRows.slice(0, totalAdded + this.showLength);
+    if (this.uv.extra.lazyLoad.type === "infinite_scroll") {
+      const totalAdded = Object.keys(this.uv.newRows).length;
+      return this.allRows.slice(0, totalAdded + this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength);
+    } else if (this.uv.extra.lazyLoad.type === "pagination") {
+      return this.allRows;
+    } else {
+      throw new Error("Wrong lazyLoad type");
+    }
   }
 
   private async updateCurrentValue(rawValue: unknown) {
@@ -2024,13 +2274,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 </script>
 
 <style lang="scss" scoped>
-  /* Current Z layout:
-   * Form control          (2000)
-   * Disable-edit block    (500)
-   * Table head            (20)
-   * FixedColumn           (25)
-   */
-
   table,
   th,
   td {
@@ -2045,9 +2288,41 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     width: 100%;
     position: sticky;
     left: 0;
+    display: flex;
+    transition: opacity 0.2s;
+
+    .table-block.nested:not(.mobile):not(:hover) & {
+      opacity: 0.1;
+    }
 
     ::v-deep > button {
       width: 100%;
+    }
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .current-page-wrapper {
+      min-width: 3rem; /* To fit at least `99/99` without changing width */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .select-wrapper {
+      width: 4.5rem; /* To fit any option text */
+
+      .page-select {
+        background-color: var(--default-backgroundDarker1Color);
+        border-color: var(--default-borderColor);
+      }
+    }
+
+    .pages-count {
+      color: var(--default-foregroundDarkerColor);
     }
   }
 
@@ -2174,7 +2449,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       height: 100%;
     }
 
-    .active_editing {
+    .active-editing {
       position: sticky !important;
       justify-content: flex-start;
       z-index: 100000; /* чтобы FormControl был поверх других таблиц, когда их несколько на странице */
