@@ -613,9 +613,10 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
 
         const updatedValue = newValues.values[column.mainField.name];
         if (updatedValue === undefined) {
+          const value = updateInfo.field.isNullable ? null : undefined;
           const result: ICombinedValue = {
-            value: null,
-            rawValue: "",
+            value,
+            rawValue: undefined,
             info: updateInfo,
           };
           if (updateInfo.field.fieldType.type === "reference") {
@@ -1051,7 +1052,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
         value.initialValue = value.value;
         if (value.pun !== undefined) {
           if (value.pun === null) {
-            value.pun = "";
+            value.pun = valueToText(columnInfo.valueType, value.value);
           } else {
             value.pun = String(value.pun);
           }
