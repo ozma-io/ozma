@@ -247,8 +247,8 @@ export const deepEquals = <T>(a: T, b: T): boolean => {
   }
 };
 
-export const mapMaybe = <A, R>(func: (arg: A, index: number, array: A[]) => R | undefined, arr: A[]): R[] => {
-  return arr.map(func).filter(val => val !== undefined) as R[];
+export const mapMaybe = <A, B>(func: (arg: A, index: number, array: A[]) => B | undefined, arr: A[]): B[] => {
+  return arr.map(func).filter(val => val !== undefined) as B[];
 };
 
 // Like JSON.stringify but maintains order of keys in dictionaries.
