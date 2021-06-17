@@ -829,7 +829,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     }
 
     if (valueIsNull(ref)) {
-      value.pun = String(value.value); // DELETE DIFF
+      value.pun = "";
       return;
     }
 
