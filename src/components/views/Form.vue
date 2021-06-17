@@ -134,7 +134,7 @@
 <script lang="ts">
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-import { AttributesMap, IResultColumnInfo } from "ozma-api";
+import { AttributesMap, IResultColumnInfo, ValueType } from "ozma-api";
 import { z } from "zod";
 
 import { tryDicts, mapMaybe, validNumberFormats, getNumberFormatter } from "@/utils";
@@ -193,6 +193,7 @@ export interface IFormViewExtra extends IBaseViewExtra {
 export type IFormCombinedUserView = ICombinedUserView<IFormValueExtra, IFormRowExtra, IFormViewExtra>;
 export type IFormExtendedRowInfo = IExtendedRowInfo<IFormRowExtra>;
 export type IFormExtendedRowCommon = IExtendedRowCommon<IFormValueExtra, IFormRowExtra>;
+export const numberTypes: (ValueType["type"])[] = ["int", "decimal"];
 
 const createCommonLocalValue = (uv: IFormCombinedUserView, row: IRowCommon & IFormExtendedRowInfo, columnIndex: number, value: ICombinedValue) => {
   const columnAttrs = uv.columnAttributes[columnIndex];
@@ -206,9 +207,11 @@ const createCommonLocalValue = (uv: IFormCombinedUserView, row: IRowCommon & IFo
 
   let valueFormatted: string | undefined;
   const numberFormat = attributes["number_format"];
+  const isValidFormat = typeof numberFormat === "string" && validNumberFormats.includes(numberFormat.toLowerCase() as any);
   // Formatting  of editable inputs (or input masking) is a huge pain and brings many troubles, so only for read-only inputs.
   const isReadOnly = value.info === undefined || attributes["soft_disabled"];
-  if (isReadOnly && typeof numberFormat === "string" && validNumberFormats.includes(numberFormat.toLowerCase() as any)) {
+  const isNumber = numberTypes.includes(this.uv.info.columns[columnIndex].valueType.type);
+  if (isReadOnly && isNumber && isValidFormat) {
     const fractionDigitsRaw = attributes["fraction_digits"];
     const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
     valueFormatted = getNumberFormatter(numberFormat.toLowerCase() as any, fractionDigits).format(value.value as any);
