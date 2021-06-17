@@ -73,13 +73,13 @@
       class="tabl"
     >
       <div
-        v-if="uv.emptyRow !== null"
+        v-if="uv.emptyRow !== null || uv.extra.lazyLoad.type === 'pagination'"
         class="button-container"
       >
-        <ButtonItem :button="topAddButton" />
+        <ButtonItem v-if="uv.emptyRow !== null" :button="topAddButton" />
         <div
           v-if="uv.extra.lazyLoad.type === 'pagination'"
-          class="pagination"
+          :class="['pagination', { 'ml-auto': uv.emptyRow === null }]"
         >
           <b-spinner
             v-if="uv.extra.lazyLoad.pagination.loading"
