@@ -248,7 +248,7 @@ import { z } from "zod";
 import { IResultColumnInfo, ValueType, RowId, IFieldRef } from "ozma-api";
 import sanitizeHtml from "sanitize-html";
 
-import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, parseSpreadsheet } from "@/utils";
+import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, parseSpreadsheet, validNumberFormats, getNumberFormatter } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { maxPerFetch } from "@/components/UserView.vue";
@@ -343,16 +343,6 @@ const showStep = 3;
 const doubleClickTime = 700;
 // FIXME: Use CSS variables to avoid this constant
 const technicalFieldsWidth = 35; // checkbox's and openform's td width
-
-const validNumberFormats = ["auto", "ru", "en"] as const;
-type ValidNumberFormat = typeof validNumberFormats[number];
-const makeMemoKey = (lang: ValidNumberFormat, fractionDigits?: number) => lang + String(fractionDigits);
-const getNumberFormatter = R.memoizeWith(makeMemoKey, (lang: ValidNumberFormat, fractionDigits?: number) => {
-  const locale = lang === "auto" ? undefined : lang;
-  const options = fractionDigits === undefined ? undefined
-    : { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits };
-  return Intl.NumberFormat(locale, options);
-});
 
 const createColumns = (uv: ICombinedUserViewAny): IColumn[] => {
   const viewAttrs = uv.attributes;

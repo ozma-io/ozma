@@ -137,7 +137,7 @@ import { mixins } from "vue-class-component";
 import { AttributesMap, IResultColumnInfo } from "ozma-api";
 import { z } from "zod";
 
-import { tryDicts, mapMaybe } from "@/utils";
+import { tryDicts, mapMaybe, validNumberFormats, getNumberFormatter } from "@/utils";
 import { AddedRowId } from "@/state/staging_changes";
 import { UserView } from "@/components";
 import BaseUserView, { baseUserViewHandler, IBaseRowExtra, IBaseValueExtra, IBaseViewExtra } from "@/components/BaseUserView";
@@ -177,6 +177,7 @@ export type FormGridElement = GridElement<FormElement>;
 export interface IFormValueExtra extends IBaseValueExtra {
   attributes: AttributesMap;
   visible: boolean;
+  valueFormatted?: string; // Used at least for read-only number inputs.
 }
 
 export type IFormRowExtra = IBaseRowExtra;
@@ -202,9 +203,21 @@ const createCommonLocalValue = (uv: IFormCombinedUserView, row: IRowCommon & IFo
     ...value.attributes,
   };
   const visible = Boolean(attributes["visible"] ?? true);
+
+  let valueFormatted: string | undefined;
+  const numberFormat = attributes["number_format"];
+  // Formatting  of editable inputs (or input masking) is a huge pain and brings many troubles, so only for read-only inputs.
+  const isReadOnly = value.info === undefined || attributes["soft_disabled"];
+  if (isReadOnly && typeof numberFormat === "string" && validNumberFormats.includes(numberFormat.toLowerCase() as any)) {
+    const fractionDigitsRaw = attributes["fraction_digits"];
+    const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
+    valueFormatted = getNumberFormatter(numberFormat.toLowerCase() as any, fractionDigits).format(value.value as any);
+  }
+
   return {
     attributes,
     visible,
+    valueFormatted,
   };
 };
 
