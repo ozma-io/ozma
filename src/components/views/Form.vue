@@ -137,7 +137,7 @@ import { mixins } from "vue-class-component";
 import { AttributesMap, IResultColumnInfo, ValueType } from "ozma-api";
 import { z } from "zod";
 
-import { tryDicts, mapMaybe, validNumberFormats, getNumberFormatter } from "@/utils";
+import { tryDicts, mapMaybe, validNumberFormats, getNumberFormatter, ValidNumberFormat } from "@/utils";
 import { AddedRowId } from "@/state/staging_changes";
 import { UserView } from "@/components";
 import BaseUserView, { baseUserViewHandler, IBaseRowExtra, IBaseValueExtra, IBaseViewExtra } from "@/components/BaseUserView";
@@ -207,14 +207,15 @@ const createCommonLocalValue = (uv: IFormCombinedUserView, row: IRowCommon & IFo
 
   let valueFormatted: string | undefined;
   const numberFormat = attributes["number_format"];
-  const isValidFormat = typeof numberFormat === "string" && validNumberFormats.includes(numberFormat.toLowerCase() as any);
+  const isValidFormat = (format: unknown) : format is ValidNumberFormat =>
+    typeof format === "string" && validNumberFormats.includes(format.toLowerCase() as any);
   // Formatting  of editable inputs (or input masking) is a huge pain and brings many troubles, so only for read-only inputs.
   const isReadOnly = value.info === undefined || attributes["soft_disabled"];
-  const isNumber = numberTypes.includes(this.uv.info.columns[columnIndex].valueType.type);
-  if (isReadOnly && isNumber && isValidFormat) {
+  const isNumber = numberTypes.includes(uv.info.columns[columnIndex].valueType.type);
+  if (isReadOnly && isNumber && isValidFormat(numberFormat)) {
     const fractionDigitsRaw = attributes["fraction_digits"];
     const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
-    valueFormatted = getNumberFormatter(numberFormat.toLowerCase() as any, fractionDigits).format(value.value as any);
+    valueFormatted = getNumberFormatter(numberFormat, fractionDigits).format(value.value as any);
   }
 
   return {
