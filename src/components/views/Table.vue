@@ -1656,7 +1656,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
-  @Watch("showTree")
+  @Watch("showTree", { immediate: true })
   private watchShowTree() {
     if (this.showTree && !this.uv.rowLoadState.complete) {
       this.$emit("load-all-chunks", () => {});
