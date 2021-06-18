@@ -1657,7 +1657,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   @Watch("showTree")
-  private watchUpdateTree() {
+  private watchShowTree() {
     if (this.showTree && !this.uv.rowLoadState.complete) {
       this.$emit("load-all-chunks", () => {});
     }
