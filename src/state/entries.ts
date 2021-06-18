@@ -538,8 +538,10 @@ const entriesModule: Module<IEntriesState, {}> = {
     // Returns `true` if more entries can be loaded for this `ref` and `search`.
     getEntries: async (context, args: { reference: ReferenceName; ref: IEntriesRef; search: string; limit: number }): Promise<boolean> => {
       const { state, commit, dispatch } = context;
-      const { reference, ref, search, limit } = args;
+      const { reference, ref, limit } = args;
 
+      // Trigram indexes don't work for search strings shorter than three symbols, so we just load all entries in that case.
+      const search = args.search.length >= 3 ? args.search : "";
       let offset = 0;
 
       const oldCurrent = state.current;
@@ -552,7 +554,7 @@ const entriesModule: Module<IEntriesState, {}> = {
         const partial = oldResource.value;
         let data: AwaitEntriesResult;
         while (true) {
-          data = partial.wait(args.search, limit);
+          data = partial.wait(search, limit);
           if (data.result === "pending") {
             // We wait and then try again.
             // eslint-disable-next-line no-await-in-loop
@@ -591,7 +593,7 @@ const entriesModule: Module<IEntriesState, {}> = {
           };
         }
 
-        const currNode = state.current.entries.get(ref)?.get(args.search);
+        const currNode = state.current.entries.get(ref)?.get(search);
         if (currNode?.status !== "pending" || currNode.pending !== pending.ref) {
           throw new CancelledError(`Pending entries got cancelled, ref ${JSON.stringify(ref)}`);
         }
