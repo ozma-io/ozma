@@ -1109,7 +1109,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private cellEditHeight = 0;
 
   private rowsState: Record<number, any> = {};
-  private isTree = false;
 
   // Used for Tab-Enter selection moving.
   // Probably need to move to extra.
@@ -1655,6 +1654,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", this.removeCellEditing);
     this.rootEvents.forEach(([name, callback]) => this.$root.$on(name, callback));
     /* eslint-enable @typescript-eslint/unbound-method */
+
+    if (this.showTree && !this.uv.rowLoadState.complete) {
+      this.$emit("load-all-chunks", () => {});
+    }
   }
 
   protected beforeDestroy() {
