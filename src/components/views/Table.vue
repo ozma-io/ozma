@@ -1654,7 +1654,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", this.removeCellEditing);
     this.rootEvents.forEach(([name, callback]) => this.$root.$on(name, callback));
     /* eslint-enable @typescript-eslint/unbound-method */
+  }
 
+  @Watch("showTree")
+  private watchUpdateTree() {
     if (this.showTree && !this.uv.rowLoadState.complete) {
       this.$emit("load-all-chunks", () => {});
     }
