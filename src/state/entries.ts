@@ -315,15 +315,18 @@ export interface IEntriesState {
 
 const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
   const likeSearch = search === "" ? "%" : "%" + search.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_") + "%";
-  const where: IChunkWhere = {
-    expression: "(pun :: string) ILIKE $search OR pun IS NULL",
-    arguments: {
-      search: {
-        type: "string",
-        value: likeSearch,
-      },
-    },
-  };
+  const where: IChunkWhere | undefined =
+    search === ""
+      ? undefined
+      : {
+        expression: "(pun :: string) ILIKE $search",
+        arguments: {
+          search: {
+            type: "string",
+            value: likeSearch,
+          },
+        },
+      };
   const chunk: IQueryChunk = {
     offset,
     limit: limit + 1,
@@ -349,7 +352,7 @@ const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEnt
 
 const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, ids: RowId[]): Promise<Record<RowId, string>> => {
   const where: IChunkWhere = {
-    expression: "value = ANY ($ids) OR pun IS NULL",
+    expression: "value = ANY ($ids)",
     arguments: {
       ids: {
         type: "array(int)",
