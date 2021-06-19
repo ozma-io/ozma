@@ -221,9 +221,10 @@
         @infinite="infiniteHandler"
       >
         <template #no-results>
-          <div class="no-results">
+          <div v-if="allRows.length === 0" class="no-results">
             {{ $t("no_results") }}
           </div>
+          <span v-else />
         </template>
         <template #no-more>
           <span />
