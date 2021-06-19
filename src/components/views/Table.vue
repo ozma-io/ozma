@@ -7,6 +7,7 @@
         "read_only_cell": "Read-only cell",
         "paste_no_referencefield_data": "Clipboard has no reference field data",
         "paste_error_too_many_columns": "Clipboard has too many columns",
+        "no_results": "No entries",
         "add_entry": "Add entry",
         "add_entry_in_modal": "Add new entry (in modal window)"
       },
@@ -17,6 +18,7 @@
         "read_only_cell": "Ячейка только для чтения",
         "paste_no_referencefield_data": "В буфере обмена неверная информация для вставки в данное поле",
         "paste_error_too_many_columns": "В буфере обмена слишком много столбцов",
+        "no_results": "Нет записей",
         "add_entry": "Добавить запись",
         "add_entry_in_modal": "Добавить новую запись (в модальном окне)"
       }
@@ -210,14 +212,18 @@
         </transition-group>
         -->
       </table>
+      <!-- Not sure if there some better value for `identifier`, but without it loading breaks sometimes -->
       <infinite-loading
         v-if="useInfiniteScrolling"
         :force-use-infinite-wrapper="isRoot ? false : '.view-form'"
+        :identifier="existingRows.length"
         spinner="spiral"
         @infinite="infiniteHandler"
       >
         <template #no-results>
-          <span />
+          <div class="no-results">
+            {{ $t("no_results") }}
+          </div>
         </template>
         <template #no-more>
           <span />
@@ -227,7 +233,7 @@
         </template>
       </infinite-loading>
       <div
-        v-if="!useInfiniteScrolling && uv.emptyRow !== null"
+        v-if="uv.emptyRow !== null"
         ref="bottomButtonContainer"
         class="button-container"
       >
@@ -339,7 +345,7 @@ export interface ITableViewExtra extends IBaseViewExtra {
   sortOptions: Intl.CollatorOptions;
 }
 
-const showStep = 3;
+const showStep = 5;
 const doubleClickTime = 700;
 // FIXME: Use CSS variables to avoid this constant
 const technicalFieldsWidth = 35; // checkbox's and openform's td width
@@ -1115,9 +1121,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private columnDelta = 0;
 
   private get useInfiniteScrolling() {
-    return this.uv.extra.lazyLoad.type === "infinite_scroll"
-      && (!this.uv.rowLoadState.complete
-      || this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength < this.uv.rowLoadState.fetchedRowCount);
+    return this.uv.extra.lazyLoad.type === "infinite_scroll";
   }
 
   private get pageSizes() {
@@ -1273,6 +1277,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength > this.uv.rowLoadState.fetchedRowCount) {
       this.$emit("load-next-chunk", (result: boolean) => {
         if (this.uv.rowLoadState.complete) {
+          if (this.uv.rowLoadState.fetchedRowCount !== 0) {
+            ev.loaded();
+          }
           ev.complete();
           if (this.uv.extra.lazyLoad.type !== "infinite_scroll") return;
 
@@ -1283,6 +1290,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       });
     } else if (this.uv.rowLoadState.complete === true
       && this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength >= this.uv.rowLoadState.fetchedRowCount) {
+      if (this.uv.rowLoadState.fetchedRowCount !== 0) {
+        ev.loaded();
+      }
       ev.complete();
     } else {
       ev.loaded();
@@ -1475,6 +1485,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   protected uvChanged() {
     this.init();
     this.updateRows();
+
+    this.updateStatusLine();
+    this.watchShowTree();
   }
 
   private deselectAllCells() {
@@ -2220,12 +2233,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return this.getNewRows(this.uv.extra.newRowBottomSidePositions);
   }
 
+  // FIXME: Broken for trees.
   get statusLine() {
     const totalAdded = this.topRows.length + this.bottomRows.length;
     return this.uv.rowLoadState.complete ? `${totalAdded + this.existingRows.length}` : "";
   }
 
-  // FIXME: Broken, fix or delete at all.
   @Watch("statusLine", { immediate: true })
   private updateStatusLine() {
     this.$emit("update:statusLine", this.statusLine);
@@ -2320,6 +2333,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     .pages-count {
       color: var(--default-foregroundDarkerColor);
     }
+  }
+
+  .no-results {
+    text-align: left;
+    color: var(--default-foregroundDarkerColor);
+    margin-left: 1rem;
   }
 
   .table {
