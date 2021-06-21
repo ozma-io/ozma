@@ -50,6 +50,7 @@
     <template v-if="!(modalOnly && modal)">
       <b-col
         v-if="label"
+        :class="[{ 'pr-0': inline && !(required || disabled) }]"
         :cols="inline ? 4 : 12"
       >
         <div class="input_label__container">

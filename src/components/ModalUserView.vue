@@ -27,6 +27,7 @@
     :autofocus="autofocus"
     :view="view"
     @close="$emit('close')"
+    @go-back-window="$emit('go-back-window')"
   >
     <template #header>
       <HeaderPanel
@@ -61,6 +62,7 @@
         />
       </div>
 
+      <!--
       <div
         :class="[
           'save-cluster',
@@ -87,7 +89,7 @@
           </button>
         </transition>
 
-        <!-- TODO: everything related to save button here is almost copypaste from TopLevelUserView, it's bad, fix it somehow please -->
+        !-- TODO: everything related to save button here is almost copypaste from TopLevelUserView, it's bad, fix it somehow please --
         <transition name="fade-2" mode="out-in">
           <div
             v-if="!changes.isScopeEmpty(uid) && isSaving"
@@ -126,6 +128,7 @@
           </div>
         </transition>
       </div>
+      -->
     </section>
   </ModalPortal>
 </template>

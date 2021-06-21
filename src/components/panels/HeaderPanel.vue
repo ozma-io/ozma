@@ -80,11 +80,15 @@ export default class HeaderPanel extends Vue {
     return this.view === null
       ? null
       : {
-        type: "location",
+        type: "link",
         variant: "interfaceButton",
         colorVariables: getColorVariables("button", "interfaceButton"),
         icon: "fullscreen",
-        location: queryLocation(this.view),
+        link: {
+          type: "query",
+          target: "top",
+          query: this.view,
+        },
       };
   }
 }

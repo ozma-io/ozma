@@ -12,6 +12,7 @@ import { RecordSet, deepClone, mapMaybe, waitTimeout } from "@/utils";
 import { IUpdatedValue, IFieldInfo, valueFromRaw, valueEquals } from "@/values";
 import Api from "@/api";
 import { i18n } from "@/modules";
+import { eventBus } from "@/main";
 
 export type ScopeName = string;
 
@@ -756,6 +757,8 @@ const stagingModule: Module<IStagingState, {}> = {
     },
     submit: async (context, params: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }): Promise<CombinedTransactionResult[]> => {
       const { state, commit, dispatch } = context;
+      if (state.current.isEmpty) return Promise.resolve([]);
+
       if (state.currentSubmit !== null) {
         await state.currentSubmit;
       }
@@ -806,6 +809,7 @@ const stagingModule: Module<IStagingState, {}> = {
         commit("finishSubmit");
         if (!(result instanceof Error)) {
           commit("errors/resetErrors", errorKey, { root: true });
+          eventBus.emit("closeAllToasts");
           const opResults = R.zipWith((op, res) => ({ ...op, ...res } as CombinedTransactionResult), ops, result.results);
           await dispatch("clearUnchanged", opResults);
           return opResults;

@@ -3,6 +3,7 @@ import * as R from "ramda";
 import moment from "moment";
 import Vue, { RenderContext } from "vue";
 import sanitizeHtml from "sanitize-html";
+import { Link } from "./links";
 
 export type Result<A> = A | Error;
 
@@ -809,3 +810,22 @@ export const getNumberFormatter = R.memoizeWith(makeMemoKey, (lang: ValidNumberF
     : { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits };
   return Intl.NumberFormat(locale, options);
 });
+
+export const homeLink: Link = {
+  type: "query",
+  target: "top",
+  query: {
+    args: {
+      source: {
+        type: "named",
+        ref: {
+          schema: "user",
+          name: "main",
+        },
+      },
+      args: {},
+    },
+    defaultValues: {},
+    search: "",
+  },
+};

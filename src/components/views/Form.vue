@@ -32,6 +32,7 @@
       <b-modal
         :id="$id('confirmDelete')"
         lazy
+        centered
         ok-variant="danger"
         :ok-title="$t('ok')"
         :cancel-title="$t('cancel')"

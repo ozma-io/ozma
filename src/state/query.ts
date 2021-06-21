@@ -365,7 +365,7 @@ export const currentQueryLocation = (query: ICurrentQuery): Location => {
         search[`__${i}_${name}`] = JSON.stringify(value);
       });
     } else {
-      search[`__${i}`] = `${args.source.ref.schema}/${args.source.ref.name}/new`;
+      search[`__${i}`] = args.source.ref.schema + "/" + args.source.ref.name + "/new";
     }
     Object.entries(windowQuery.defaultValues).forEach(([name, value]) => {
       search[`__def${i}_${name}`] = JSON.stringify(value);
@@ -395,6 +395,12 @@ const pushHistory = (current: IQueryHistory, newCurrent: IQuery): IQueryHistory 
 
 const replaceHistory = (current: IQueryHistory, newCurrent: IQuery): IQueryHistory => {
   return deepClone({ ...newCurrent, previous: current.previous });
+};
+
+const goBackHistory = (current: IQueryHistory): IQueryHistory => {
+  return current.previous
+    ? deepClone({ ...current.previous })
+    : deepClone(current);
 };
 
 const queryWithHistory = (query: IQuery): IQueryHistory => {
@@ -476,6 +482,25 @@ const queryModule: Module<IQueryState, {}> = {
       state.current!.root.search = search;
       state.resetLocks += 1;
     },
+    goBackRoot: state => {
+      const newCurrent: ICurrentQueryHistory = {
+        root: goBackHistory(state.current!.root),
+        windows: [],
+        selectedWindow: null,
+      };
+      updateCurrent(state, newCurrent);
+      state.resetLocks += 1;
+    },
+    goBackWindow: (state, windowIndex: number) => {
+      if (state.current === null) {
+        throw new Error("No current query");
+      }
+      const window = state.current.windows[windowIndex];
+      if (!window) {
+        throw new Error("Invalid window");
+      }
+      state.resetLocks += 1;
+    },
     addWindow: (state, query: IQuery) => {
       if (state.current === null) {
         throw new Error("No current query");
@@ -539,7 +564,9 @@ const queryModule: Module<IQueryState, {}> = {
       }
       commit("resetRoute", route);
     },
-    pushRoot: async ({ state, commit }, query: IQuery) => {
+    pushRoot: async ({ state, commit, dispatch }, query: IQuery) => {
+      await dispatch("staging/submit", { errorOnIncomplete: true }, { root: true });
+
       commit("pushRoot", query);
       try {
         await router.push(currentQueryLocation(state.current!));
@@ -547,7 +574,9 @@ const queryModule: Module<IQueryState, {}> = {
         commit("removeResetLock");
       }
     },
-    replaceRoot: async ({ state, commit }, query: IQuery) => {
+    replaceRoot: async ({ state, commit, dispatch }, query: IQuery) => {
+      await dispatch("staging/submit", { errorOnIncomplete: true }, { root: true });
+
       commit("replaceRoot", query);
       try {
         await router.replace(currentQueryLocation(state.current!));
@@ -568,7 +597,29 @@ const queryModule: Module<IQueryState, {}> = {
         }
       }
     },
-    addWindow: async ({ state, commit }, query: IQuery) => {
+    goBackRoot: async ({ commit, dispatch }) => {
+      await dispatch("staging/submit", { errorOnIncomplete: true }, { root: true });
+
+      commit("goBackRoot");
+      try {
+        router.go(-1);
+      } finally {
+        commit("removeResetLock");
+      }
+    },
+    goBackWindow: async ({ commit, dispatch }, windowIndex: number) => {
+      await dispatch("staging/submit", { errorOnIncomplete: true }, { root: true });
+
+      commit("goBackWindow", windowIndex);
+      try {
+        router.go(-1);
+      } finally {
+        commit("removeResetLock");
+      }
+    },
+    addWindow: async ({ state, commit, dispatch }, query: IQuery) => {
+      await dispatch("staging/submit", { errorOnIncomplete: true }, { root: true });
+
       commit("addWindow", query);
       try {
         await router.push(currentQueryLocation(state.current!));
@@ -576,7 +627,9 @@ const queryModule: Module<IQueryState, {}> = {
         commit("removeResetLock");
       }
     },
-    closeWindow: async ({ state, commit }, windowIndex: number) => {
+    closeWindow: async ({ state, commit, dispatch }, windowIndex: number) => {
+      await dispatch("staging/submit", { errorOnIncomplete: true }, { root: true });
+
       commit("closeWindow", windowIndex);
       try {
         await router.replace(currentQueryLocation(state.current!));
@@ -592,7 +645,9 @@ const queryModule: Module<IQueryState, {}> = {
         commit("removeResetLock");
       }
     },
-    pushWindow: async ({ state, commit }, args: { index: number; query: IQuery }) => {
+    pushWindow: async ({ state, commit, dispatch }, args: { index: number; query: IQuery }) => {
+      await dispatch("staging/submit", { errorOnIncomplete: true }, { root: true });
+
       commit("pushWindow", args);
       try {
         await router.push(currentQueryLocation(state.current!));
@@ -600,7 +655,9 @@ const queryModule: Module<IQueryState, {}> = {
         commit("removeResetLock");
       }
     },
-    replaceWindow: async ({ state, commit }, args: { index: number; query: IQuery }) => {
+    replaceWindow: async ({ state, commit, dispatch }, args: { index: number; query: IQuery }) => {
+      await dispatch("staging/submit", { errorOnIncomplete: true }, { root: true });
+
       commit("replaceWindow", args);
       try {
         await router.replace(currentQueryLocation(state.current!));
