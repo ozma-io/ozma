@@ -116,7 +116,7 @@
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
-import { AttributesMap, IEntityRef, IUserViewOpts } from "ozma-api";
+import { AttributesMap, IEntityRef, IEntriesRequestOpts } from "ozma-api";
 
 import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout } from "@/utils";
 import { funappSchema } from "@/api";
@@ -401,7 +401,7 @@ export default class UserView extends Vue {
         } else {
           limit = maxPerFetch;
         }
-        const opts: IUserViewOpts = {
+        const opts: IEntriesRequestOpts = {
           chunk: {
             limit,
           },

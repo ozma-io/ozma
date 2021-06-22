@@ -2,21 +2,23 @@
     {
         "en": {
             "schema_name": "Schema name",
-            "view_name": "User view name",
+            "entity_name": "Entity name",
+            "field_name": "Field name",
             "role_schema": "Role schema",
             "role_name": "Role name",
             "user_name": "User name",
-            "arguments": "Arguments",
+            "row_id": "Row ID",
             "limit": "Limit",
             "explain": "Show plan"
         },
         "ru": {
             "schema_name": "Название схемы",
-            "view_name": "Название отображения",
+            "entity_name": "Название сущности",
+            "field_name": "Название поля",
             "role_schema": "Схема роли",
             "role_name": "Название роли",
             "user_name": "Имя пользователя",
-            "arguments": "Аргументы",
+            "row_id": "ID записи",
             "limit": "Количество записей",
             "explain": "Показать план"
         }
@@ -36,10 +38,19 @@
     </p>
     <p>
       <label>
-        {{ $t('view_name') }}:
+        {{ $t('entity_name') }}:
         <input
-          v-model="view"
-          :placeholder="$t('view_name')"
+          v-model="entity"
+          :placeholder="$t('entity_name')"
+        >
+      </label>
+    </p>
+    <p>
+      <label>
+        {{ $t('field_name') }}:
+        <input
+          v-model="field"
+          :placeholder="$t('field_name')"
         >
       </label>
     </p>
@@ -72,10 +83,10 @@
     </p>
     <p>
       <label>
-        {{ $t('arguments') }}:
+        {{ $t('row_id') }}:
         <input
-          v-model="rawArguments"
-          :placeholder="$t('arguments')"
+          v-model="rowId"
+          :placeholder="$t('row_id')"
         >
       </label>
     </p>
@@ -124,17 +135,6 @@
       {{ lastError }}
     </pre>
 
-    <div v-if="attributesQuery !== ''">
-      Attributes query:
-      <div class="query" @click="copyToClipboard(attributesQuery)">
-        {{ attributesQuery }}
-      </div>
-      Attributes plan:
-      <pre class="plan" @click="copyToClipboard(attributesPlan)">
-        {{ attributesPlan }}
-      </pre>
-    </div>
-
     <div v-if="rowsQuery !== ''">
       Rows query:
       <div class="query" @click="copyToClipboard(rowsQuery)">
@@ -151,28 +151,27 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { Action } from "vuex-class";
-import { IEntityRef, IUserViewRef, IViewExplainResult, IEntriesExplainOpts, ArgumentName, IQueryChunk } from "ozma-api";
+import { IEntityRef, IEntriesExplainOpts, IQueryChunk, IFieldRef, IExplainedQuery } from "ozma-api";
 
 import Api from "@/api";
 
 @Component
-export default class ExplainQuery extends Vue {
+export default class ExplainDomains extends Vue {
   @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
 
   schema = "";
-  view = "";
+  entity = "";
+  field = "";
+  rowId = "";
   userName = "";
   roleSchema = "";
   roleName = "";
   analyze = false;
   verbose = false;
   costs = true;
-  rawArguments = "";
   limit = "";
 
   lastError = "";
-  attributesQuery = "";
-  attributesPlan = "";
   rowsQuery = "";
   rowsPlan = "";
 
@@ -181,22 +180,23 @@ export default class ExplainQuery extends Vue {
   }
 
   async explainView() {
-    this.attributesQuery = "";
-    this.attributesPlan = "";
     this.rowsQuery = "";
     this.rowsPlan = "";
     this.lastError = "";
 
     try {
-      const ref: IUserViewRef = {
-        schema: this.schema,
-        name: this.view,
+      const ref: IFieldRef = {
+        entity: {
+          schema: this.schema,
+          name: this.entity,
+        },
+        name: this.field,
       };
       if ((this.roleSchema === "") !== (this.roleName === "")) {
         throw new Error("You should specify both role schema and role name, or none of them");
       }
       const roleRef: IEntityRef | undefined = this.roleSchema === "" ? undefined : { schema: this.roleSchema, name: this.roleName };
-      const args: Record<ArgumentName, any> | undefined = this.rawArguments === "" ? undefined : JSON.parse(this.rawArguments);
+      const rowId: number | undefined = this.rowId === "" ? undefined : Number(this.rowId);
       const chunk: IQueryChunk | undefined = this.limit === "" ? undefined : { limit: Number(this.limit) };
       const opts: IEntriesExplainOpts = {
         chunk,
@@ -206,17 +206,13 @@ export default class ExplainQuery extends Vue {
         verbose: this.verbose,
         costs: this.costs,
       };
-      const res: IViewExplainResult = await this.callProtectedApi({
-        func: Api.getNamedUserViewExplain,
-        args: [ref, args, opts],
+      const res: IExplainedQuery = await this.callProtectedApi({
+        func: Api.getDomainExplain,
+        args: [ref, rowId, opts],
       });
 
-      if (res.attributes) {
-        this.attributesQuery = res.attributes.query;
-        this.attributesPlan = JSON.stringify(res.attributes.explanation, undefined, 2);
-      }
-      this.rowsQuery = res.rows.query;
-      this.rowsPlan = JSON.stringify(res.rows.explanation, undefined, 2);
+      this.rowsQuery = res.query;
+      this.rowsPlan = JSON.stringify(res.explanation, undefined, 2);
     } catch (e) {
       this.lastError = e.message;
       throw e;

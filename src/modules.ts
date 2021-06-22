@@ -15,8 +15,6 @@ import VueHotkey from "v-hotkey";
 import * as Utils from "@/utils";
 import NotFound from "@/components/NotFound.vue";
 import AuthResponse from "@/components/AuthResponse.vue";
-import SaveRestoreSchema from "@/components/SaveRestoreSchema.vue";
-import ExplainQuery from "@/components/ExplainQuery.vue";
 import TopLevelUserView from "@/components/TopLevelUserView.vue";
 
 import "bootstrap/dist/css/bootstrap.css";
@@ -39,8 +37,9 @@ const routes = [
   { path: "/views/:schema/:name", name: "view", component: TopLevelUserView },
   { path: "/views/:schema/:name/new", name: "view_create", component: TopLevelUserView },
   { path: "/auth_response", name: "auth_response", component: AuthResponse },
-  { path: "/save_restore", name: "save_restore", component: SaveRestoreSchema },
-  { path: "/explain", name: "explain", component: ExplainQuery },
+  { path: "/save_restore", name: "save_restore", component: () => import("@/components/SaveRestoreSchema.vue") },
+  { path: "/explain", name: "explain_view", component: () => import("@/components/ExplainQuery.vue") },
+  { path: "/explain_domains", name: "explain_domains", component: () => import("@/components/ExplainDomains.vue") },
   { path: "*", component: NotFound },
 ];
 

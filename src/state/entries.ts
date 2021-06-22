@@ -1,5 +1,5 @@
 import { ActionContext, Module } from "vuex";
-import { RowId, IQueryChunk, IFieldRef, IEntityRef, IChunkWhere, IDomainValuesResult, IUserViewOpts, ValueType } from "ozma-api";
+import { RowId, IQueryChunk, IFieldRef, IEntityRef, IChunkWhere, IDomainValuesResult, IEntriesRequestOpts, ValueType } from "ozma-api";
 import Vue from "vue";
 import R from "ramda";
 
@@ -332,7 +332,7 @@ const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEnt
     limit: limit + 1,
     where,
   };
-  const req: IUserViewOpts = {
+  const req: IEntriesRequestOpts = {
     chunk,
   };
 
@@ -363,7 +363,7 @@ const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref:
   const chunk: IQueryChunk = {
     where,
   };
-  const req: IUserViewOpts = {
+  const req: IEntriesRequestOpts = {
     chunk,
   };
 
