@@ -211,11 +211,12 @@
         </transition-group>
         -->
       </table>
-      <infinite-loading
+      <InfiniteLoading
         v-if="useInfiniteScrolling"
         :force-use-infinite-wrapper="isRoot ? false : '.view-form'"
         :identifier="infiniteIdentifier"
         spinner="spiral"
+        :distance="500"
         @infinite="infiniteHandler"
       >
         <template #no-results>
@@ -230,7 +231,7 @@
         <template #error>
           <span />
         </template>
-      </infinite-loading>
+      </InfiniteLoading>
       <div
         v-if="uv.emptyRow !== null"
         ref="bottomButtonContainer"
@@ -344,7 +345,7 @@ export interface ITableViewExtra extends IBaseViewExtra {
   sortOptions: Intl.CollatorOptions;
 }
 
-const showStep = 5;
+const showStep = 15;
 const doubleClickTime = 700;
 // FIXME: Use CSS variables to avoid this constant
 const technicalFieldsWidth = 35; // checkbox's and openform's td width
@@ -1277,26 +1278,30 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength += showStep;
 
-    if (this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength > this.uv.rowLoadState.fetchedRowCount) {
+    if (!this.uv.rowLoadState.complete
+     && this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength > this.uv.rowLoadState.fetchedRowCount
+    ) {
       this.$emit("load-next-chunk", (result: boolean) => {
         if (this.uv.rowLoadState.complete) {
           if (this.uv.rowLoadState.fetchedRowCount !== 0) {
             ev.loaded();
           }
           ev.complete();
-          if (this.uv.extra.lazyLoad.type !== "infinite_scroll") return;
-
-          this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength = this.uv.rowLoadState.fetchedRowCount;
         } else {
           ev.loaded();
         }
+
+        if (this.uv.extra.lazyLoad.type !== "infinite_scroll") return;
+        this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength = this.uv.rowLoadState.fetchedRowCount;
       });
-    } else if (this.uv.rowLoadState.complete === true
+    } else if (this.uv.rowLoadState.complete
       && this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength >= this.uv.rowLoadState.fetchedRowCount) {
       if (this.uv.rowLoadState.fetchedRowCount !== 0) {
         ev.loaded();
       }
       ev.complete();
+
+      this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength = this.uv.rowLoadState.fetchedRowCount;
     } else {
       ev.loaded();
     }
