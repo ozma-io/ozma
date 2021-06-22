@@ -169,11 +169,10 @@
               </FunLink>
             </th>
             <th
-              v-for="(i, index) in columnIndexes"
+              v-for="i in columnIndexes"
               :key="i"
               :class="['sorting', 'table-th', {
                 'fixed-column' : uv.extra.columns[i].fixed,
-                'th_after-last-fixed': lastFixedColumnIndex === index,
                 'td-moz': isFirefoxBrowser
               }]"
               :style="uv.extra.columns[i].style"
@@ -212,11 +211,10 @@
         </transition-group>
         -->
       </table>
-      <!-- Not sure if there some better value for `identifier`, but without it loading breaks sometimes -->
       <infinite-loading
         v-if="useInfiniteScrolling"
         :force-use-infinite-wrapper="isRoot ? false : '.view-form'"
-        :identifier="existingRows.length"
+        :identifier="infiniteIdentifier"
         spinner="spiral"
         @infinite="infiniteHandler"
       >
@@ -1268,6 +1266,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (this.uv.extra.lazyLoad.type !== "pagination") return;
 
     this.uv.rowLoadState.perFetch = this.uv.extra.lazyLoad.pagination.perPage;
+  }
+
+  private get infiniteIdentifier() {
+    return `${this.uv.rows?.length}${this.existingRows}`;
   }
 
   private infiniteHandler(ev: StateChanger) {
