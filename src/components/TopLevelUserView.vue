@@ -381,11 +381,8 @@ export default class TopLevelUserView extends Vue {
     if ((event.ctrlKey || event.metaKey) && (event.key === "s" || event.keyCode === 83)) {
       event.preventDefault();
 
-      let someModalSaved = false;
-      for (const view of this.$refs.modalUserViews as ModalUserView[]) {
-        const isSaved = view.saveViewIfChanged();
-        someModalSaved ||= isSaved;
-      }
+      const modals = (this.$refs.modalUserViews as ModalUserView[]) ?? [];
+      const someModalSaved = modals.some(view => view.saveViewIfChanged());
 
       if (!someModalSaved && !this.changes.isScopeEmpty("root")) {
         void this.saveView();
