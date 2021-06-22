@@ -72,7 +72,6 @@
 <script lang="ts">
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-import * as R from "ramda";
 import { IEntityRef } from "ozma-api";
 
 import { mapMaybe, saveToFile, tryDicts } from "@/utils";
@@ -161,7 +160,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         await Promise.all(this.uv.info.columns.map((columnInfo, index) => {
           const csvColumnNameRaw = this.uv.columnAttributes[index]?.["csv_column_name"];
           const csvColumnName = typeof csvColumnNameRaw === "string" ? csvColumnNameRaw : null;
-          const csvImportColumnRaw = this.uv.columnAttributes[index]?.["csv_import_column"] // Deprecated attribute.
+          const csvImportColumnRaw = this.uv.columnAttributes[index]?.["csv_import_column"]; // Deprecated attribute.
           const csvImportColumn = typeof csvImportColumnRaw === "string" ? csvImportColumnRaw : null;
 
           const columnName = csvImportColumn ?? csvColumnName ?? columnInfo.name;
