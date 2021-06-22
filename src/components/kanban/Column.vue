@@ -1,3 +1,16 @@
+<i18n>
+    {
+        "en": {
+            "no_cards": "No cards here",
+            "count_tooltip": "Number of cards in column"
+        },
+        "ru": {
+            "no_cards": "Пустая колонка",
+            "count_tooltip": "Количество карточек в колонке"
+        }
+    }
+</i18n>
+
 <template>
   <div
     class="column_container"
@@ -17,12 +30,19 @@
           :title="title"
           data-dragscroll
         >
-          {{ title }} {{ cardCount }}
+          {{ title }}
         </span>
         <span class="column_controls" data-dragscroll>
+          <span
+            v-b-tooltip.hover.noninteractive
+            class="column_header__count"
+            :title="$t('count_tooltip')"
+          >
+            {{ cardCount }}
+          </span>
           <i
             v-if="createButton"
-            class="material-icons material-button rounded-circle new-card-icon"
+            class="material-icons material-button rounded-circle"
             @click="$emit('create')"
           >add</i>
         </span>
@@ -42,15 +62,16 @@
       delay="200"
       animation="200"
       data-dragscroll
+      draggable=".card_container"
       :style="[{ width }, colorVariables]"
-      :value="cards"
+      :value="shownCards"
       :disabled="!allowDragging"
       @start="onDragStart"
       @end="onDragEnd"
       @change="onChange"
     >
       <Card
-        v-for="(card, cardIndex) in cards"
+        v-for="(card, cardIndex) in shownCards"
         :key="card.key"
         :background-color="card.backgroundColor"
         :color-variables="card.colorVariables"
@@ -61,12 +82,37 @@
           :card="card.card"
         />
       </Card>
+      <template #footer>
+        <InfiniteLoading
+          spinner="spiral"
+          :distance="10"
+          :identifier="cards.length"
+          @infinite="updateShownCardsLength"
+        >
+          <template #no-results>
+            <div
+              v-if="cards.length === 0"
+              class="no-card"
+            >
+              {{ $t("no_cards") }}
+            </div>
+            <span v-else />
+          </template>
+          <template #no-more>
+            <span />
+          </template>
+          <template #error>
+            <span />
+          </template>
+        </InfiniteLoading>
+      </template>
     </draggable>
   </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
+import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 import draggable from "vuedraggable";
 
 import Card from "@/components/kanban/Card.vue";
@@ -79,7 +125,9 @@ export interface ICard<CardT> {
   colorVariables: Record<string, string>;
 }
 
-@Component({ components: { Card, draggable } })
+const showStep = 10;
+
+@Component({ components: { Card, draggable, InfiniteLoading } })
 export default class KanbanColumn extends Vue {
   @Prop({ type: Array, required: true }) cards!: ICard<unknown>[];
   @Prop({ type: String, required: true }) title!: string;
@@ -91,6 +139,25 @@ export default class KanbanColumn extends Vue {
   @Prop({ type: Boolean, default: false }) allowDragging!: string;
 
   private draggedIndex: number | null = null;
+  private shownCardsLength = 0;
+
+  private updateShownCardsLength(ev: StateChanger) {
+    this.shownCardsLength = Math.min(this.shownCardsLength + showStep, this.cards.length);
+
+    if (this.shownCardsLength >= this.cards.length) {
+      ev.complete();
+    } else {
+      ev.loaded();
+    }
+  }
+
+  private get allCardsShown() {
+    return this.shownCardsLength >= this.cards.length;
+  }
+
+  private get shownCards() {
+    return this.cards.slice(0, this.shownCardsLength);
+  }
 
   get style() {
     return {
@@ -100,7 +167,7 @@ export default class KanbanColumn extends Vue {
   }
 
   get cardCount() {
-    return (this.cards.length > 0) ? `(${this.cards.length})` : "";
+    return (this.cards.length > 0) ? `${this.cards.length}` : "";
   }
 
   private onDragStart(evt: any) {
@@ -158,6 +225,12 @@ export default class KanbanColumn extends Vue {
     font-weight: bold;
   }
 
+  .column_header__count {
+    color: var(--kanban-foregroundDarkerColor);
+    font-weight: normal;
+    margin-right: 0.5rem;
+  }
+
   .column_select_checkbox {
     vertical-align: middle;
   }
@@ -172,10 +245,19 @@ export default class KanbanColumn extends Vue {
 
   .column_controls {
     margin-left: auto;
+    display: flex;
+    align-items: center;
   }
 
   .column_controls > i {
     vertical-align: middle;
+  }
+
+  .no-card {
+    padding: 2rem 0;
+    color: var(--kanban-foregroundDarkerColor);
+    border: 1px dashed var(--kanban-foregroundDarkerColor);
+    border-radius: 0.25rem;
   }
 
   ::v-deep .card_dragging_ghost {

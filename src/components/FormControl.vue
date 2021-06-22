@@ -46,7 +46,7 @@
         />
         <Input
           v-else-if="inputType.name === 'text'"
-          :value="currentValue"
+          :value="valueFormatted ? valueFormatted : currentValue"
           :qrcode-input="isQRCodeInput"
           :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
@@ -523,6 +523,7 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
   @Prop({ type: Object, required: false }) forcedFieldType!: FieldType | undefined;
+  @Prop() valueFormatted!: string | undefined; // Bigger priority than `currentValue` if defined.
 
   private buttons: Button[] = [];
   private filterString = "";
@@ -981,12 +982,6 @@ export default class FormControl extends Vue {
     margin-left: 2px;
   }
 
-  .form-data > .form-control-panel.form-control-panel_editor {
-    height: 100%;
-    width: 100%;
-    max-height: 500px;
-  }
-
   .form-control-panel {
     padding-right: 2px;
     max-width: 60%;
@@ -1020,15 +1015,6 @@ export default class FormControl extends Vue {
     padding: 0.375rem 0.75rem;
     resize: none;
     vertical-align: top;
-  }
-
-  .multilines {
-    overflow-y: auto !important;
-  }
-
-  .singleline {
-    overflow-x: auto !important;
-    max-height: 40px;
   }
 
   .form-control-panel_select,
@@ -1115,5 +1101,9 @@ export default class FormControl extends Vue {
   *:focus {
     border: 0 !important;
     box-shadow: none !important;
+  }
+
+  ::v-deep .button-element > button {
+    width: 100%;
   }
 </style>

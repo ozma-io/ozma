@@ -20,9 +20,7 @@
                           'next-after-last-fixed': index === lastFixedColumnIndex,
                           'select': value.extra.selected && !column.fixed,
                           'selected': value.extra.selected,
-                          'required_cell_style': isNull && value.info !== undefined && !value.info.field.isNullable,
-                          'editing_style': value.extra.editing !== undefined,
-                          'tree-has-children': treeHasChildren,
+                          'required-cell': requiredButEmpty,
                           'disable_cell': value.info === undefined && from !== 'existing'}]"
     @click.stop="$emit('cell-click', columnPosition, $refs.cell)"
   >
@@ -33,7 +31,7 @@
           @goto="$emit('goto', $event)"
         />
       </template>
-      <template v-else-if="value.extra.link !== null && value.extra.valueFormatted.length > 0">
+      <template v-else-if="value.extra.link !== null && value.extra.valueHtml.length > 0">
         <div class="selectable">
           <FunLink
             class="selectable-link rounded-circle"
@@ -47,7 +45,7 @@
             >
           </FunLink>
           <!-- eslint-disable vue/no-v-html -->
-          <span class="reference-text" v-html="value.extra.valueFormatted || '&nbsp;'" />
+          <span class="reference-text" v-html="value.extra.valueHtml || '&nbsp;'" />
           <!-- eslint-enable -->
         </div>
       </template>
@@ -64,7 +62,7 @@
           :class="[
             'cell-text',
             {
-              'selectable': (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueFormatted.length > 0,
+              'selectable': (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueHtml.length > 0,
               'tree': showTree && column.treeUnfoldColumn && !notExisting,
             }
           ]"
@@ -96,7 +94,7 @@
           </span>
 
           <!-- eslint-disable vue/no-v-html -->
-          <span class="text" v-html="value.extra.valueFormatted || '&nbsp;'" />
+          <span class="text" v-html="value.extra.valueHtml || '&nbsp;'" />
           <!-- eslint-enable -->
         </div>
       </template>
@@ -141,6 +139,10 @@ export default class TableCell extends Vue {
 
   private get fieldType(): string | null {
     return this.value.info?.field?.fieldType?.type ?? null;
+  }
+
+  private get requiredButEmpty() {
+    return this.isNull && this.value.info?.field?.isNullable === false;
   }
 
   private get treeLevel() {
@@ -352,7 +354,7 @@ export default class TableCell extends Vue {
     overflow: hidden;
     white-space: break-spaces;
     word-break: break-word;
-    line-height: 1.2rem;
+    line-height: 1.3rem;
   }
 
   .text {

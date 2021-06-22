@@ -26,7 +26,7 @@
           size="sm"
           class="input-group focus-entire"
         >
-          <b-form-input
+          <b-input
             ref="searchInput"
             :value="localFilterString"
             class="search-input form-control with-clear-content-button"
@@ -128,6 +128,20 @@ export default class SearchPanel extends Vue {
     display: flex;
     align-items: center;
     width: auto;
+  }
+
+  .search-input {
+    background-color: var(--input-backgroundColor);
+    color: var(--input-foregroundColor);
+
+    ::placeholder {
+      color: var(--input-foregroundDarkerColor);
+    }
+
+    &:focus {
+      background-color: var(--input-backgroundColor);
+      color: var(--input-foregroundColor);
+    }
   }
 
   .open-search-button {

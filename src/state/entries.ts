@@ -1,5 +1,5 @@
 import { ActionContext, Module } from "vuex";
-import { RowId, IQueryChunk, IFieldRef, IEntityRef, IChunkWhere, IDomainValuesResult, IUserViewOpts, IViewExprResult } from "ozma-api";
+import { RowId, IQueryChunk, IFieldRef, IEntityRef, IChunkWhere, IDomainValuesResult, IViewExprResult, IEntriesRequestOpts, ValueType } from "ozma-api";
 import Vue from "vue";
 import R from "ramda";
 
@@ -49,6 +49,8 @@ export interface ISearchNodePending extends ISearchNodeBase, IUpdateSearchNodePe
 export type SearchNode = ISearchNodeOK | ISearchNodeError | ISearchNodePending;
 
 export type Entries = Record<RowId, string>;
+
+const punToText = (pun: unknown, id: unknown, punType: ValueType) => pun === null ? `${id}` : valueToText(punType, pun);
 
 // Add new node to the search tree.
 const insertSearchNode = (node: SearchNode, search: string, limit: number, pending: Promise<boolean>): boolean => {
@@ -319,6 +321,18 @@ export interface IEntriesState {
 
 const fetchEntriesByEntity = async (context: ActionContext<IEntriesState, {}>, ref: IEntityRef, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
   const likeSearch = search === "" ? "%" : `%${search.replaceAll(/\\|%|_/g, "\\$&")}%`; // Escape characters.
+  const where: IChunkWhere | undefined =
+    search === ""
+      ? undefined
+      : {
+        expression: "(pun :: string) ILIKE $search",
+        arguments: {
+          search: {
+            type: "string",
+            value: likeSearch,
+          },
+        },
+      };
   // Vim's syntax highlighter breaks by template string here :c
   // eslint-disable-next-line
   const query = '{ $search string }: SELECT id, __main AS main FROM "' + ref.schema + '"."' + ref.name + '" WHERE (__main :: string) ILIKE $search';
@@ -341,22 +355,24 @@ const fetchEntriesByEntity = async (context: ActionContext<IEntriesState, {}>, r
 
 const fetchEntriesByDomain = async (context: ActionContext<IEntriesState, {}>, referencedBy: IReferencedField, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
   const likeSearch = search === "" ? "%" : `%${search.replaceAll(/\\|%|_/g, "\\$&")}%`; // Escape characters.
-
-  const where: IChunkWhere = {
-    expression: "(pun :: string) ILIKE $search",
-    arguments: {
-      search: {
-        type: "string",
-        value: likeSearch,
-      },
-    },
-  };
+  const where: IChunkWhere | undefined =
+    search === ""
+      ? undefined
+      : {
+        expression: "(pun :: string) ILIKE $search",
+        arguments: {
+          search: {
+            type: "string",
+            value: likeSearch,
+          },
+        },
+      };
   const chunk: IQueryChunk = {
     offset,
     limit: limit + 1,
     where,
   };
-  const req: IUserViewOpts = {
+  const req: IEntriesRequestOpts = {
     chunk,
   };
 
@@ -365,7 +381,7 @@ const fetchEntriesByDomain = async (context: ActionContext<IEntriesState, {}>, r
     args: [referencedBy.field, referencedBy.rowId ?? undefined, req],
   }, { root: true }) as IDomainValuesResult;
   const entries = Object.fromEntries(res.values.map<[number, string]>(row => {
-    const main = valueToText(res.punType, row.pun);
+    const main = punToText(row.pun, row.value, res.punType);
     return [Number(row.value), main];
   }));
 
@@ -394,7 +410,7 @@ const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref:
   const chunk: IQueryChunk = {
     where,
   };
-  const req: IUserViewOpts = {
+  const req: IEntriesRequestOpts = {
     chunk,
   };
 
@@ -588,8 +604,10 @@ const entriesModule: Module<IEntriesState, {}> = {
     // Returns `true` if more entries can be loaded for this `ref` and `search`.
     getEntries: async (context, args: { reference: ReferenceName; ref: IEntriesRef; search: string; limit: number }): Promise<boolean> => {
       const { state, commit, dispatch } = context;
-      const { reference, ref, search, limit } = args;
+      const { reference, ref, limit } = args;
 
+      // Trigram indexes don't work for search strings shorter than three symbols, so we just load all entries in that case.
+      const search = args.search.length >= 3 ? args.search : "";
       let offset = 0;
 
       const oldCurrent = state.current;
@@ -602,7 +620,7 @@ const entriesModule: Module<IEntriesState, {}> = {
         const partial = oldResource.value;
         let data: AwaitEntriesResult;
         while (true) {
-          data = partial.wait(args.search, limit);
+          data = partial.wait(search, limit);
           if (data.result === "pending") {
             // We wait and then try again.
             // eslint-disable-next-line no-await-in-loop
@@ -641,7 +659,7 @@ const entriesModule: Module<IEntriesState, {}> = {
           };
         }
 
-        const currNode = state.current.entries.get(ref)?.get(args.search);
+        const currNode = state.current.entries.get(ref)?.get(search);
         if (currNode?.status !== "pending" || currNode.pending !== pending.ref) {
           throw new CancelledError("Pending entries got cancelled, ref " + JSON.stringify(ref));
         }

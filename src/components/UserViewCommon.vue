@@ -5,6 +5,7 @@
             "create_in_modal": "Create referenced entry in modal window",
             "export_to_csv": "Export to .csv",
             "import_from_csv": "Import from .csv",
+            "selected_n_entries": "{n} entries selected",
             "remove_selected_rows": "Remove selected entries",
             "error": "Error"
         },
@@ -13,6 +14,7 @@
             "create_in_modal": "Создать связанную запись в окне",
             "export_to_csv": "Экспорт в .csv",
             "import_from_csv": "Импорт из .csv",
+            "selected_n_entries": "Выбрано {n} записей",
             "remove_selected_rows": "Удалить выбранные записи",
             "error": "Ошибка"
         }
@@ -50,11 +52,18 @@
     <transition name="fade-transform">
       <div
         v-if="selectedSome && selectionButtons.length !== 0"
-        class="selection-buttons-panel"
+        class="selection-buttons-wrapper"
       >
-        <ButtonsPanel
-          :buttons="selectionButtons"
-        />
+        <div class="selection-buttons-label">
+          {{ $t("selected_n_entries", { n: selectedLength }) }}
+        </div>
+        <div
+          class="selection-buttons-panel"
+        >
+          <ButtonsPanel
+            :buttons="selectionButtons"
+          />
+        </div>
       </div>
     </transition>
   </span>
@@ -63,7 +72,6 @@
 <script lang="ts">
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-import * as R from "ramda";
 import { IEntityRef } from "ozma-api";
 
 import { mapMaybe, saveToFile, tryDicts } from "@/utils";
@@ -106,8 +114,10 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
 
   private exportToCsv() {
     let data = "";
-    this.uv.info.columns.forEach(col => {
-      data += csvCell(col.name);
+    this.uv.info.columns.forEach((col, index) => {
+      const csvColumnNameRaw = this.uv.columnAttributes[index]?.["csv_column_name"];
+      const csvColumnName = typeof csvColumnNameRaw === "string" ? csvColumnNameRaw : null;
+      data += csvCell(csvColumnName ?? col.name);
     });
     data += "\n";
     Object.values(this.uv.newRows).forEach(row => {
@@ -148,11 +158,12 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         });
 
         await Promise.all(this.uv.info.columns.map((columnInfo, index) => {
-          const fallbackName: string | null = R.pathOr(
-            null, [index, "csv_import_column"],
-            this.uv.columnAttributes,
-          );
-          const columnName = fallbackName || columnInfo.name;
+          const csvColumnNameRaw = this.uv.columnAttributes[index]?.["csv_column_name"];
+          const csvColumnName = typeof csvColumnNameRaw === "string" ? csvColumnNameRaw : null;
+          const csvImportColumnRaw = this.uv.columnAttributes[index]?.["csv_import_column"]; // Deprecated attribute.
+          const csvImportColumn = typeof csvImportColumnRaw === "string" ? csvImportColumnRaw : null;
+
+          const columnName = csvImportColumn ?? csvColumnName ?? columnInfo.name;
           const currValue = rawRow.data[columnName];
           if (columnInfo.mainField && currValue) {
             return this.setAddedField({
@@ -349,19 +360,15 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   }
 
   get barCodeButton() {
-    if (this.barCodeColumnIndex !== null) {
-      return attrToButton(this.uv.columnAttributes[this.barCodeColumnIndex]["barcode_text_input"]);
-    }
+    if (this.barCodeColumnIndex === null) return null;
 
-    return null;
+    return attrToButton(this.uv.columnAttributes[this.barCodeColumnIndex]["barcode_text_input"], undefined, true);
   }
 
   get qrCodeButton() {
-    if (this.qrCodeColumnIndex !== null) {
-      return attrToButton(this.uv.columnAttributes[this.qrCodeColumnIndex]["barcode_camera_input"]);
-    }
+    if (this.qrCodeColumnIndex === null) return null;
 
-    return null;
+    return attrToButton(this.uv.columnAttributes[this.qrCodeColumnIndex]["barcode_camera_input"], undefined, true);
   }
 
   get barCodeColumnIndex() {
@@ -407,7 +414,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
 </script>
 
 <style lang="scss" scoped>
-  .selection-buttons-panel {
+  .selection-buttons-wrapper {
     position: fixed;
     bottom: 3rem;
     left: 50%;
@@ -416,6 +423,13 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     background-color: #0007;
     border-radius: 0.5rem;
     z-index: 1000;
+
+    .selection-buttons-label {
+      padding: 0.5rem;
+      padding-top: 0;
+      text-align: center;
+      color: white;
+    }
 
     ::v-deep {
       .buttons-panel {

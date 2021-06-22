@@ -115,7 +115,7 @@
       v-if="bottomBarNeeded"
       class="fix-bot"
     >
-      <div class="count-row">
+      <div class="status-line">
         {{ statusLine }}
       </div>
     </nav>
@@ -381,11 +381,8 @@ export default class TopLevelUserView extends Vue {
     if ((event.ctrlKey || event.metaKey) && (event.key === "s" || event.keyCode === 83)) {
       event.preventDefault();
 
-      let someModalSaved = false;
-      for (const view of this.$refs.modalUserViews as ModalUserView[]) {
-        const isSaved = view.saveViewIfChanged();
-        someModalSaved ||= isSaved;
-      }
+      const modals = (this.$refs.modalUserViews as ModalUserView[]) ?? [];
+      const someModalSaved = modals.some(view => view.saveViewIfChanged());
 
       if (!someModalSaved && !this.changes.isScopeEmpty("root")) {
         void this.saveView();
@@ -670,15 +667,14 @@ export default class TopLevelUserView extends Vue {
     justify-content: space-between;
   }
 
-  .count-row {
+  .status-line {
     position: relative;
     bottom: 0;
     z-index: 600; /* кол-во записей внизу */
     line-height: normal;
     float: left;
     margin-left: 5px;
-    color: var(--MainTextColor);
-    font-weight: 600;
+    color: var(--interface-foregroundColor);
   }
 
   .save-cluster {

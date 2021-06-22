@@ -143,10 +143,8 @@ export default class Calendar extends Vue {
   @Prop({ default: true, type: Boolean }) showTime!: boolean;
   @Prop({ type: String }) format!: string | undefined;
   @Prop({ type: Number }) timeStep!: number | undefined;
-  @Prop({ type: Number }) timeDefault!: ITime | undefined;
+  @Prop({ type: Object }) timeDefault!: ITime | undefined;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  // FIXME: remove this and style parent nodes instead.
-  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
 
   private position = false;
@@ -264,7 +262,11 @@ export default class Calendar extends Vue {
     const defaultMinutes = this.timeDefault?.min ?? 0;
     const newValue = this.dateValue.isValid()
       ? this.dateValue.clone().local()
-      : moment().hours(defaultHours).minutes(defaultMinutes).milliseconds(0);
+      : moment()
+        .hours(defaultHours)
+        .minutes(defaultMinutes)
+        .seconds(0)
+        .milliseconds(0);
     mutate(newValue.local());
     this.updateValue(newValue);
   }

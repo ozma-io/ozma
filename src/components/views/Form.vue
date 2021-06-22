@@ -42,6 +42,30 @@
         {{ $t('delete_confirmation') }}
       </b-modal>
 
+      <div
+        v-if="showPagination"
+        class="pagination-wrapper"
+      >
+        <div
+          class="pagination"
+        >
+          <b-spinner
+            v-if="uv.extra.lazyLoad.pagination.loading"
+            class="mr-1"
+            small
+            label="Next page is loading"
+          />
+          <ButtonItem :button="prevPageButton" />
+          <div class="current-page-wrapper">
+            <div class="current-page">
+              {{ uv.extra.lazyLoad.pagination.currentPage + 1 }}
+              <span v-if="pagesCount !== null" class="pages-count">{{ "/" + pagesCount }} </span>
+            </div>
+          </div>
+          <ButtonItem :button="nextPageButton" />
+        </div>
+      </div>
+
       <!-- The first form control is special, it points either to the empty row or to the first added row
            dynamically_. This is as to not lose focus when user starts editing empty row. -->
       <FormEntry
@@ -72,8 +96,9 @@
         @goto="$emit('goto', $event)"
       />
       <FormEntry
-        v-for="rowI in rowPositions"
+        v-for="rowI in shownRowPositions"
         :key="rowI"
+        :class="shownRowPositions.length > 1 ? 'border-bottom p-3' : ''"
         :uv="uv"
         :blocks="gridBlocks"
         :row="uv.rows[rowI]"
@@ -86,6 +111,23 @@
         @goto="$emit('goto', $event)"
         @select="$emit('select', $event)"
       />
+
+      <infinite-loading
+        v-if="useInfiniteScrolling"
+        :force-use-infinite-wrapper="isRoot ? false : '.view-form'"
+        spinner="spiral"
+        @infinite="infiniteHandler"
+      >
+        <template #no-results>
+          <span />
+        </template>
+        <template #no-more>
+          <span />
+        </template>
+        <template #error>
+          <span />
+        </template>
+      </infinite-loading>
     </template>
   </div>
 </template>
@@ -93,9 +135,10 @@
 <script lang="ts">
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-import { AttributesMap, IResultColumnInfo } from "ozma-api";
+import { AttributesMap, IResultColumnInfo, ValueType } from "ozma-api";
+import { z } from "zod";
 
-import { tryDicts, mapMaybe } from "@/utils";
+import { tryDicts, mapMaybe, validNumberFormats, getNumberFormatter, ValidNumberFormat } from "@/utils";
 import { AddedRowId } from "@/state/staging_changes";
 import { UserView } from "@/components";
 import Errorbox from "@/components/Errorbox.vue";
@@ -105,6 +148,10 @@ import { attrToLink, Link } from "@/links";
 import { IAddedRow, ICombinedRow, ICombinedUserView, ICombinedValue, IExtendedRowCommon, IExtendedRowInfo, IRowCommon, IUserViewHandler, RowRef } from "@/user_views/combined";
 import { GridElement, IGridInput, IGridSection } from "@/components/form/FormGrid.vue";
 import type { Button } from "@/components/buttons/buttons";
+import { lazyLoadSchema } from "@/components/views/Table.vue";
+import { getColorVariables } from "@/utils_colors";
+import ButtonItem from "@/components/buttons/ButtonItem.vue";
+import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 
 export interface IButtonAction {
   name: string;
@@ -132,15 +179,23 @@ export type FormGridElement = GridElement<FormElement>;
 export interface IFormValueExtra extends IBaseValueExtra {
   attributes: AttributesMap;
   visible: boolean;
+  valueFormatted?: string; // Used at least for read-only number inputs.
 }
 
 export type IFormRowExtra = IBaseRowExtra;
 
-export type IFormViewExtra = IBaseViewExtra;
+type IFormLazyLoad = z.infer<typeof lazyLoadSchema>;
+
+const showStep = 3;
+
+export interface IFormViewExtra extends IBaseViewExtra {
+  lazyLoad: IFormLazyLoad;
+}
 
 export type IFormCombinedUserView = ICombinedUserView<IFormValueExtra, IFormRowExtra, IFormViewExtra>;
 export type IFormExtendedRowInfo = IExtendedRowInfo<IFormRowExtra>;
 export type IFormExtendedRowCommon = IExtendedRowCommon<IFormValueExtra, IFormRowExtra>;
+export const numberTypes: (ValueType["type"])[] = ["int", "decimal"];
 
 const createCommonLocalValue = (uv: IFormCombinedUserView, row: IRowCommon & IFormExtendedRowInfo, columnIndex: number, value: ICombinedValue) => {
   const columnAttrs = uv.columnAttributes[columnIndex];
@@ -151,14 +206,40 @@ const createCommonLocalValue = (uv: IFormCombinedUserView, row: IRowCommon & IFo
     ...value.attributes,
   };
   const visible = Boolean(attributes["visible"] ?? true);
+
+  let valueFormatted: string | undefined;
+  const numberFormat = attributes["number_format"];
+  const isValidFormat = (format: unknown) : format is ValidNumberFormat =>
+    typeof format === "string" && validNumberFormats.includes(format.toLowerCase() as any);
+  // Formatting  of editable inputs (or input masking) is a huge pain and brings many troubles, so only for read-only inputs.
+  const isReadOnly = value.info === undefined || attributes["soft_disabled"];
+  const isNumber = numberTypes.includes(uv.info.columns[columnIndex].valueType.type);
+  if (isReadOnly && isNumber && isValidFormat(numberFormat)) {
+    const fractionDigitsRaw = attributes["fraction_digits"];
+    const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
+    valueFormatted = getNumberFormatter(numberFormat, fractionDigits).format(value.value as any);
+  }
+
   return {
     attributes,
     visible,
+    valueFormatted,
   };
 };
 
 export const formUserViewHandler: IUserViewHandler<IFormValueExtra, IFormRowExtra, IFormViewExtra> = {
   ...baseUserViewHandler,
+
+  createLocalUserView(uv: IFormCombinedUserView, oldView: IFormViewExtra | null) {
+    const baseExtra = baseUserViewHandler.createLocalUserView(uv, oldView);
+
+    const lazyLoad = oldView?.lazyLoad ?? lazyLoadSchema.parse(uv.attributes["lazy_load"]);
+
+    return {
+      ...baseExtra,
+      lazyLoad,
+    };
+  },
 
   createLocalValue(
     uv: IFormCombinedUserView,
@@ -207,16 +288,125 @@ export const formUserViewHandler: IUserViewHandler<IFormValueExtra, IFormRowExtr
 
 @UserView({
   handler: formUserViewHandler,
+  useLazyLoad: true,
 })
 @Component({
   components: {
     FormEntry,
     Errorbox,
+    ButtonItem,
+    InfiniteLoading,
   },
 })
 export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, IFormRowExtra, IFormViewExtra>>(BaseUserView) {
   private deletedOne = false;
   private toBeDeletedRef: RowRef | null = null;
+
+  private get showPagination() {
+    return this.uv.extra.lazyLoad.type === "pagination"
+      && this.uv.rowLoadState.fetchedRowCount >= this.uv.extra.lazyLoad.pagination.perPage;
+  }
+
+  private get useInfiniteScrolling() {
+    return this.uv.extra.lazyLoad.type === "infinite_scroll"
+      && (!this.uv.rowLoadState.complete
+      || this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength < this.uv.rowLoadState.fetchedRowCount);
+  }
+
+  private get nextPageButton(): Button | null {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return null;
+
+    return {
+      type: "callback",
+      icon: "arrow_right",
+      variant: "interfaceButton",
+      disabled: (this.uv.rowLoadState.complete && this.onLastPage)
+        || (this.uv.extra.lazyLoad.type === "pagination" && this.uv.extra.lazyLoad.pagination.loading),
+      colorVariables: getColorVariables("button", "interfaceButton"),
+      callback: () => this.goToNextPage(),
+    };
+  }
+
+  private get prevPageButton(): Button | null {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return null;
+
+    return {
+      type: "callback",
+      icon: "arrow_left",
+      variant: "interfaceButton",
+      disabled: this.uv.extra.lazyLoad.pagination.currentPage === 0,
+      colorVariables: getColorVariables("button", "interfaceButton"),
+      callback: () => this.goToPrevPage(),
+    };
+  }
+
+  private goToPrevPage() {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return;
+
+    if (this.uv.extra.lazyLoad.pagination.currentPage > 0) {
+      this.uv.extra.lazyLoad.pagination.currentPage--;
+    }
+  }
+
+  private goToNextPage() {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return;
+
+    if (this.nextPageRequiresLoading) {
+      this.uv.extra.lazyLoad.pagination.loading = true;
+      this.$emit("load-next-chunk", () => {
+        if (this.uv.extra.lazyLoad.type !== "pagination") return;
+
+        this.uv.extra.lazyLoad.pagination.loading = false;
+        this.uv.extra.lazyLoad.pagination.currentPage++;
+      });
+    } else {
+      this.uv.extra.lazyLoad.pagination.currentPage++;
+    }
+  }
+
+  private get onLastPage() {
+    if (!this.uv.rows || this.uv.extra.lazyLoad.type !== "pagination") return false;
+
+    const shownRowCount = this.uv.extra.lazyLoad.pagination.perPage * (this.uv.extra.lazyLoad.pagination.currentPage + 1);
+    return this.uv.rowLoadState.fetchedRowCount <= shownRowCount;
+  }
+
+  private get nextPageRequiresLoading() {
+    if (!this.uv.rows || this.uv.rowLoadState.complete || this.uv.extra.lazyLoad.type !== "pagination") return false;
+
+    const shownRowCount = this.uv.extra.lazyLoad.pagination.perPage * (this.uv.extra.lazyLoad.pagination.currentPage + 2);
+    return this.uv.rowLoadState.fetchedRowCount < shownRowCount;
+  }
+
+  private get pagesCount(): number | null {
+    if (this.uv.extra.lazyLoad.type !== "pagination" || !this.uv.rowLoadState.complete) return null;
+
+    return Math.ceil(this.uv.rowLoadState.fetchedRowCount / this.uv.extra.lazyLoad.pagination.perPage);
+  }
+
+  private infiniteHandler(ev: StateChanger) {
+    if (this.uv.extra.lazyLoad.type !== "infinite_scroll") return;
+
+    this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength += showStep;
+
+    if (this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength > this.uv.rowLoadState.fetchedRowCount) {
+      this.$emit("load-next-chunk", (result: boolean) => {
+        if (this.uv.rowLoadState.complete) {
+          ev.complete();
+          if (this.uv.extra.lazyLoad.type !== "infinite_scroll") return;
+
+          this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength = this.uv.rowLoadState.fetchedRowCount;
+        } else {
+          ev.loaded();
+        }
+      });
+    } else if (this.uv.rowLoadState.complete === true
+      && this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength >= this.uv.rowLoadState.fetchedRowCount) {
+      ev.complete();
+    } else {
+      ev.loaded();
+    }
+  }
 
   get firstRow(): { row: IFormExtendedRowCommon; ref: RowRef } | null {
     if (this.uv.newRowsOrder.length === 0 && this.uv.rows === null && this.uv.info.mainEntity !== null) {
@@ -414,10 +604,22 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
       return mapMaybe((row, rowI) => row.deleted ? undefined : rowI, this.uv.rows);
     }
   }
+
+  get shownRowPositions() {
+    if (this.uv.extra.lazyLoad.type === "pagination") {
+      const start = this.uv.extra.lazyLoad.pagination.currentPage * this.uv.extra.lazyLoad.pagination.perPage;
+      const end = start + this.uv.extra.lazyLoad.pagination.perPage;
+      return this.rowPositions.slice(start, end);
+    } else if (this.uv.extra.lazyLoad.type === "infinite_scroll") {
+      return this.rowPositions.slice(0, this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength);
+    } else {
+      throw new Error("Wrong lazyLoad type");
+    }
+  }
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   .view-form {
     min-height: 100% !important;
     padding: 0.6rem !important;
@@ -425,6 +627,28 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     overflow-x: hidden;
     background-color: var(--form-backgroundDarker1Color);
     color: var(--form-foregroundColor);
+  }
+
+  .pagination-wrapper {
+    display: flex;
+    justify-content: flex-end;
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      .current-page-wrapper {
+        min-width: 3rem; /* To fit at least `99/99` without changing width */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .pages-count {
+        color: var(--default-foregroundDarkerColor);
+      }
+    }
   }
 
   @media print {
