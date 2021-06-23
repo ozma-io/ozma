@@ -78,7 +78,10 @@
         v-if="uv.emptyRow !== null || uv.extra.lazyLoad.type === 'pagination'"
         class="button-container"
       >
-        <ButtonItem v-if="uv.emptyRow !== null" :button="topAddButton" />
+        <ButtonItem
+          v-if="uv.emptyRow !== null && !uv.extra.dirtyHackPreventEntireReloads"
+          :button="topAddButton"
+        />
         <div
           v-if="uv.extra.lazyLoad.type === 'pagination'"
           :class="['pagination', { 'ml-auto': uv.emptyRow === null }]"
@@ -233,7 +236,7 @@
         </template>
       </InfiniteLoading>
       <div
-        v-if="uv.emptyRow !== null"
+        v-if="uv.emptyRow !== null && !uv.extra.dirtyHackPreventEntireReloads"
         ref="bottomButtonContainer"
         class="button-container"
       >
@@ -343,6 +346,8 @@ export interface ITableViewExtra extends IBaseViewExtra {
   sortColumn: number | null;
   sortAsc: boolean;
   sortOptions: Intl.CollatorOptions;
+
+  dirtyHackPreventEntireReloads: boolean;
 }
 
 const showStep = 15;
@@ -926,6 +931,11 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     const newRowBottomSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowBottomSidePositions) : [];
     const addedRowRefs = oldView ? inheritOldRowsPositions(uv, oldView.addedRowRefs) : [];
 
+    const dirtyHackPreventEntireReloadsRaw = uv.attributes["dirty_hack_prevent_entire_reloads"];
+    const dirtyHackPreventEntireReloads = typeof dirtyHackPreventEntireReloadsRaw === "boolean"
+      ? dirtyHackPreventEntireReloadsRaw
+      : false;
+
     return {
       ...baseExtra,
       isSelectionColumnEnabled,
@@ -943,6 +953,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       sortOptions: oldView?.sortOptions ?? {},
       addedRowRefs,
       lazyLoad,
+      dirtyHackPreventEntireReloads,
     };
   },
 
@@ -2124,7 +2135,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
             `);
     }
 
-    this.$emit("update:enableFilter", this.uv.rows !== null);
+    this.$emit("update:enableFilter", this.uv.rows !== null && !this.uv.extra.dirtyHackPreventEntireReloads);
 
     this.updateRows();
   }
@@ -2134,6 +2145,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private loadAllRowsAndUpdateSort(sortColumn: number) {
+    if (this.uv.extra.dirtyHackPreventEntireReloads) return;
+
     if (!this.uv.rowLoadState.complete) {
       this.$emit("load-all-chunks", () => this.updateSort(sortColumn));
     } else {
