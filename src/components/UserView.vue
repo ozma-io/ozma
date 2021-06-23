@@ -41,7 +41,8 @@
     <transition name="fade-move">
       <ArgumentEditor
         v-if="showArgumentEditor"
-        :argumentsObj="state.uv.info.arguments"
+        :argument-params="state.uv.info.arguments"
+        :argument-values="state.uv.args.args"
         @close="showArgumentEditor = false"
         @update="updateArguments"
       />

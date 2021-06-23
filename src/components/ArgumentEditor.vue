@@ -20,20 +20,20 @@
     <b-container class="arguments-editor-container pb-2">
       <b-row>
         <b-col
-          v-for="(argument, name, index) in argumentsObj"
+          v-for="(argument, name, index) in argumentParams"
           :key="index"
           :sm="6"
           class="mt-2"
         >
           <FormControl
-            :value="{ value: null }"
+            :value="{ value: values[name] }"
             :type="argument.argType"
             :caption="name"
             :scope="mockScope"
             :uv-args="mockUvArgs"
             :level="0"
             :forced-field-type="argument.argType"
-            @update="update(index, $event)"
+            @update="update(name, $event)"
           />
         </b-col>
         <b-col>
@@ -65,7 +65,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
+import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 
 import { ArgumentName, FieldType, IArgument } from "ozma-api";
 import { serializeValue } from "@/state/staging_changes";
@@ -126,7 +126,15 @@ import { serializeValue } from "@/state/staging_changes";
 
 @Component
 export default class ArgumentEditor extends Vue {
-  @Prop({ type: Object, required: true }) argumentsObj!: Record<ArgumentName, IArgument>;
+  @Prop({ type: Object, required: true }) argumentParams!: Record<ArgumentName, IArgument>;
+  @Prop({ type: Object, required: true }) argumentValues!: Record<string, unknown>;
+
+  private values: Record<string, unknown> = {};
+
+  @Watch("argumentValues", { immediate: true })
+  private syncValues() {
+    this.values = this.argumentValues;
+  }
 
   /* private argumentList = testArguments; */
 
@@ -136,8 +144,8 @@ export default class ArgumentEditor extends Vue {
     return { source: { type: "named", ref: { schema: "mock_schema", name: "mock_name" } }, args: {} };
   }
 
-  private update(index: number, value: any) {
-    /* this.argumentList[index].value = value; */
+  private update(name: string, value: any) {
+    this.values[name] = value;
   }
 
   private apply() {
