@@ -20,20 +20,20 @@
     <b-container class="arguments-editor-container pb-2">
       <b-row>
         <b-col
-          v-for="(argument, id) in argumentList"
-          :key="id"
+          v-for="(argument, name, index) in argumentsObj"
+          :key="index"
           :sm="6"
           class="mt-2"
         >
           <FormControl
-            :value="{ value: argument.value }"
-            :type="argument.info.type"
-            :caption="argument.info.name"
+            :value="{ value: null }"
+            :type="argument.argType"
+            :caption="name"
             :scope="mockScope"
             :uv-args="mockUvArgs"
             :level="0"
-            :forced-field-type="argument.info.type"
-            @update="update(id, $event)"
+            :forced-field-type="argument.argType"
+            @update="update(index, $event)"
           />
         </b-col>
         <b-col>
@@ -65,68 +65,70 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component } from "vue-property-decorator";
+import { Vue, Component, Prop } from "vue-property-decorator";
 
-import { FieldType } from "ozma-api";
+import { ArgumentName, FieldType, IArgument } from "ozma-api";
 import { serializeValue } from "@/state/staging_changes";
 
-export type Parameter = {
-  name: string;
-  type: FieldType;
-};
-
-export type Argument = {
-  value: any;
-  info: Parameter;
-};
-
-const testArguments: Argument[] = [
-  {
-    value: 1,
-    info: {
-      name: "test_int",
-      type: { type: "int" },
-    },
-  },
-  {
-    value: 2,
-    info: {
-      name: "id_2",
-      type: { type: "int" },
-    },
-  },
-  {
-    value: "test",
-    info: {
-      name: "test_string",
-      type: { type: "string" },
-    },
-  },
-  {
-    value: 1,
-    info: {
-      name: "id",
-      type: {
-        type: "reference",
-        entity: {
-          schema: "IlyaTest",
-          name: "Primary",
-        },
-      },
-    },
-  },
-  {
-    value: null,
-    info: {
-      name: "date",
-      type: { type: "date" },
-    },
-  },
-];
+/* export type Parameter = {
+ *   name: string;
+ *   type: FieldType;
+ * };
+ *
+ * export type Argument = {
+ *   value: any;
+ *   info: Parameter;
+ * };
+ *
+ * const testArguments: Argument[] = [
+ *   {
+ *     value: 1,
+ *     info: {
+ *       name: "test_int",
+ *       type: { type: "int" },
+ *     },
+ *   },
+ *   {
+ *     value: 2,
+ *     info: {
+ *       name: "id_2",
+ *       type: { type: "int" },
+ *     },
+ *   },
+ *   {
+ *     value: "test",
+ *     info: {
+ *       name: "test_string",
+ *       type: { type: "string" },
+ *     },
+ *   },
+ *   {
+ *     value: 1,
+ *     info: {
+ *       name: "id",
+ *       type: {
+ *         type: "reference",
+ *         entity: {
+ *           schema: "IlyaTest",
+ *           name: "Primary",
+ *         },
+ *       },
+ *     },
+ *   },
+ *   {
+ *     value: null,
+ *     info: {
+ *       name: "date",
+ *       type: { type: "date" },
+ *     },
+ *   },
+ * ]; */
 
 @Component
 export default class ArgumentEditor extends Vue {
-  private argumentList = testArguments;
+  @Prop({ type: Object, required: true }) argumentsObj!: Record<ArgumentName, IArgument>;
+
+  /* private argumentList = testArguments; */
 
   private mockScope = "mock_scope";
 
@@ -135,12 +137,12 @@ export default class ArgumentEditor extends Vue {
   }
 
   private update(index: number, value: any) {
-    this.argumentList[index].value = value;
+    /* this.argumentList[index].value = value; */
   }
 
   private apply() {
-    const convertedArgs = this.argumentList.map(arg => ({ ...arg, value: serializeValue(arg.info.type, arg.value) }));
-    this.$emit("update", convertedArgs);
+    /* const convertedArgs = this.argumentList.map(arg => ({ ...arg, value: serializeValue(arg.info.type, arg.value) })); */
+    /* this.$emit("update", convertedArgs); */
   }
 
   private close() {

@@ -41,6 +41,7 @@
     <transition name="fade-move">
       <ArgumentEditor
         v-if="showArgumentEditor"
+        :argumentsObj="state.uv.info.arguments"
         @close="showArgumentEditor = false"
         @update="updateArguments"
       />
@@ -313,7 +314,7 @@ export default class UserView extends Vue {
           search: "",
         };
 
-        const hasArguments = true; // TODO !!!
+        const hasArguments = this.state.state === "show"; // TODO !!!
         if (hasArguments) {
           buttons.push({
             icon: "edit_note",
