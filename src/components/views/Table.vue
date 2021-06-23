@@ -1713,6 +1713,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   @Watch("filter", { immediate: true })
   protected updateFilter() {
+    if (this.uv.extra.dirtyHackPreventEntireReloads) return;
+
     if (this.filter.length !== 0 && this.uv.rowLoadState.complete === false) {
       this.$emit("load-all-chunks");
     }
