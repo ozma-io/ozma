@@ -110,12 +110,15 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       if (!rawColumns || !(rawColumns instanceof Array)) {
         return null;
       }
-      const entriesRef = {
-        field: {
-          entity: this.uv.info.mainEntity!,
-          name: mainField!.name,
+      const entriesRef: IEntriesRef = {
+        entity: this.uv.info.mainEntity!,
+        referencedBy: {
+          field: {
+            entity: this.uv.info.mainEntity!,
+            name: mainField!.name,
+          },
+          rowId: null,
         },
-        rowId: null,
       };
       const requestedColumns: RowId[] = [];
       const columns = mapMaybe(col => {

@@ -2373,7 +2373,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     width: 100%;
     margin: 0;
     position: relative;
-    height: 100%;
+    min-height: 100%;
     background-color: var(--table-backgroundDarker1Color);
 
     &.nested {

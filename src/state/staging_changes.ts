@@ -5,7 +5,7 @@ import R from "ramda";
 import {
   ITransaction, ITransactionResult, IEntityRef, IFieldRef, IEntity, RowId, SchemaName, FieldName, EntityName,
   IInsertEntityOp, IUpdateEntityOp, IDeleteEntityOp, IInsertEntityResult, IUpdateEntityResult, IDeleteEntityResult,
-  IColumnField, TransactionOp,
+  TransactionOp, FieldType,
 } from "ozma-api";
 
 import { RecordSet, deepClone, mapMaybe, waitTimeout } from "@/utils";
@@ -326,14 +326,14 @@ const entityChangesToOperations = async (context: ActionContext<IStagingState, {
   return nestedOps.flat(1);
 };
 
-const serializeValue = (fieldInfo: IColumnField, value: Exclude<unknown, undefined>): unknown => {
+export const serializeValue = (fieldType: FieldType, value: Exclude<unknown, undefined>): unknown => {
   if (value === null) {
     return null;
   }
 
-  if (fieldInfo.valueType.type === "date") {
+  if (fieldType.type === "date") {
     return (value as Moment).format("YYYY-MM-DD");
-  } else if (fieldInfo.valueType.type === "datetime") {
+  } else if (fieldType.type === "datetime") {
     return (value as Moment).format(); // ISO 8601
   } else {
     return value;
@@ -341,7 +341,7 @@ const serializeValue = (fieldInfo: IColumnField, value: Exclude<unknown, undefin
 };
 
 const serializeValues = (entityInfo: IEntity, entries: Record<FieldName, unknown>): Record<FieldName, unknown> => {
-  return Object.fromEntries(Object.entries(entries).map(([name, value]) => [name, serializeValue(entityInfo.columnFields[name], value)]));
+  return Object.fromEntries(Object.entries(entries).map(([name, value]) => [name, serializeValue(entityInfo.columnFields[name].fieldType, value)]));
 };
 
 const internalOpToTransactionOp = (op: InternalTransactionOp): TransactionOp => {

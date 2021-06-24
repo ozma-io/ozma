@@ -2,7 +2,7 @@
     {
         "en": {
             "item_not_found": "Record not found",
-            "delete": "Delete",
+            "delete": "Delete record",
             "delete_confirmation": "Are you sure want to delete this record?",
             "ok": "OK",
             "cancel": "Cancel",
@@ -11,7 +11,7 @@
         },
         "ru": {
             "item_not_found": "Запись не найдена",
-            "delete": "Удалить",
+            "delete": "Удалить запись",
             "delete_confirmation": "Вы действительно хотите удалить эту запись?",
             "ok": "ОК",
             "cancel": "Отмена",
@@ -25,9 +25,10 @@
   <div
     class="view-form"
   >
-    <div v-if="rowPositions.length === 0 && firstRow === null">
-      {{ $t('item_not_found') }}
-    </div>
+    <Errorbox
+      v-if="rowPositions.length === 0 && firstRow === null"
+      :message="$t('item_not_found')"
+    />
     <template v-else>
       <b-modal
         :id="$id('confirmDelete')"
@@ -140,6 +141,7 @@ import { z } from "zod";
 import { tryDicts, mapMaybe, validNumberFormats, getNumberFormatter, ValidNumberFormat } from "@/utils";
 import { AddedRowId } from "@/state/staging_changes";
 import { UserView } from "@/components";
+import Errorbox from "@/components/Errorbox.vue";
 import BaseUserView, { baseUserViewHandler, IBaseRowExtra, IBaseValueExtra, IBaseViewExtra } from "@/components/BaseUserView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
 import { attrToLink, Link } from "@/links";
@@ -291,6 +293,7 @@ export const formUserViewHandler: IUserViewHandler<IFormValueExtra, IFormRowExtr
 @Component({
   components: {
     FormEntry,
+    Errorbox,
     ButtonItem,
     InfiniteLoading,
   },
@@ -492,50 +495,6 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
       blocks[block].content.push(element);
     });
 
-    // Add buttons from @form_buttons attributes to blocks
-    /*
-     * EXAMPLE
-     * @"form_buttons" = [{
-     *     form_block : 3,
-     *     actions : [
-     *         {
-     *             name: 'Удалить записи',
-     *             variant: 'danger',
-     *             call_process: { schema: 'foo', name: 'delete', args: {'hello':'world'}},
-     *         },
-     *         {
-     *             name: 'Добавить записи',
-     *             variant: 'success',
-     *             call_process: { schema: 'foo', name: 'add' },
-     *         },
-     *         {
-     *             name: 'Обновить записи',
-     *             variant: 'warning',
-     *             call_process: { schema: 'foo', name: 'update' },
-     *         }
-     *     ]
-     * },
-     * {
-     *     form_block : 4,
-     *     actions : [
-     *         {
-     *             name: 'Удалить записи 1',
-     *             variant: 'danger',
-     *             call_process: { schema: 'foo', name: 'delete' },
-     *         },
-     *         {
-     *             name: 'Добавить записи 1',
-     *             variant: 'success',
-     *             call_process: { schema: 'foo', name: 'add' },
-     *         },
-     *         {
-     *             name: 'Обновить записи 1',
-     *             variant: 'warning',
-     *             call_process: { schema: 'foo', name: 'update' },
-     *         }
-     *     ]
-     * }]
-     */
     const formButtons = this.uv.attributes["form_buttons"];
     if (formButtons !== undefined && Array.isArray(formButtons)) {
       console.warn("@form_buttons attribute deprecated,  will be deleted future.");
@@ -662,7 +621,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
 
 <style lang="scss" scoped>
   .view-form {
-    height: 100% !important;
+    min-height: 100% !important;
     padding: 0.6rem !important;
     overflow-y: auto;
     overflow-x: hidden;

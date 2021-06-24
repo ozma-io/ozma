@@ -1,11 +1,11 @@
 import { ActionContext, Module } from "vuex";
-import { RowId, IQueryChunk, IFieldRef, IEntityRef, IChunkWhere, IDomainValuesResult, IEntriesRequestOpts, ValueType } from "ozma-api";
+import { RowId, IQueryChunk, IFieldRef, IEntityRef, IChunkWhere, IDomainValuesResult, IViewExprResult, IEntriesRequestOpts, ValueType } from "ozma-api";
 import Vue from "vue";
 import R from "ramda";
 
-import { IRef, ObjectResourceMap, ReferenceName, syncObject, updateObject, waitTimeout } from "@/utils";
+import { deepEquals, IRef, ObjectResourceMap, ReferenceName, syncObject, updateObject, waitTimeout } from "@/utils";
 import Api from "@/api";
-import { equalFieldRef, valueToText } from "@/values";
+import { equalEntityRef, valueToText } from "@/values";
 import { CancelledError } from "@/modules";
 import { ICombinedUserViewAny } from "@/user_views/combined";
 
@@ -277,13 +277,19 @@ export class PartialEntries {
   }
 }
 
-export interface IEntriesRef {
+export interface IReferencedField {
   field: IFieldRef;
   rowId: RowId | null;
 }
 
+export interface IEntriesRef {
+  entity: IEntityRef;
+  referencedBy: IReferencedField | null;
+}
+
 export const equalEntriesRef = (a: IEntriesRef, b: IEntriesRef) => {
-  return equalFieldRef(a.field, b.field) && a.rowId === b.rowId;
+  if (!equalEntityRef(a.entity, b.entity)) return false;
+  return deepEquals(a.referencedBy, b.referencedBy);
 };
 
 export class CurrentEntries {
@@ -313,8 +319,42 @@ export interface IEntriesState {
   current: CurrentEntries;
 }
 
-const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
-  const likeSearch = search === "" ? "%" : "%" + search.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_") + "%";
+const fetchEntriesByEntity = async (context: ActionContext<IEntriesState, {}>, ref: IEntityRef, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
+  const likeSearch = search === "" ? "%" : `%${search.replaceAll(/\\|%|_/g, "\\$&")}%`; // Escape characters.
+  const where: IChunkWhere | undefined =
+    search === ""
+      ? undefined
+      : {
+        expression: "(pun :: string) ILIKE $search",
+        arguments: {
+          search: {
+            type: "string",
+            value: likeSearch,
+          },
+        },
+      };
+  // Vim's syntax highlighter breaks by template string here :c
+  // eslint-disable-next-line
+  const query = '{ $search string }: SELECT id, __main AS main FROM "' + ref.schema + '"."' + ref.name + '" WHERE (__main :: string) ILIKE $search';
+  const chunk: IQueryChunk = { offset, limit: limit + 1 };
+  const res = await context.dispatch("callProtectedApi", {
+    func: Api.getAnonymousUserView.bind(Api),
+    args: [query, { search: likeSearch }, { chunk }],
+  }, { root: true }) as IViewExprResult;
+  const mainType = res.info.columns[1].valueType;
+  const entries = Object.fromEntries(res.result.rows.map<[number, string]>(row => {
+    const id = row.values[0].value as number;
+    const main = valueToText(mainType, row.values[1].value);
+    return [id, main];
+  }));
+  return {
+    entries,
+    complete: res.result.rows.length <= limit,
+  };
+};
+
+const fetchEntriesByDomain = async (context: ActionContext<IEntriesState, {}>, referencedBy: IReferencedField, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
+  const likeSearch = search === "" ? "%" : `%${search.replaceAll(/\\|%|_/g, "\\$&")}%`; // Escape characters.
   const where: IChunkWhere | undefined =
     search === ""
       ? undefined
@@ -338,16 +378,23 @@ const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEnt
 
   const res = await context.dispatch("callProtectedApi", {
     func: Api.getDomainValues.bind(Api),
-    args: [ref.field, ref.rowId ?? undefined, req],
+    args: [referencedBy.field, referencedBy.rowId ?? undefined, req],
   }, { root: true }) as IDomainValuesResult;
   const entries = Object.fromEntries(res.values.map<[number, string]>(row => {
     const main = punToText(row.pun, row.value, res.punType);
     return [Number(row.value), main];
   }));
+
   return {
     entries,
     complete: res.values.length <= limit,
   };
+};
+
+const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
+  return ref.referencedBy === null
+    ? fetchEntriesByEntity(context, ref.entity, search, offset, limit)
+    : fetchEntriesByDomain(context, ref.referencedBy, search, offset, limit);
 };
 
 const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, ids: RowId[]): Promise<Record<RowId, string>> => {
@@ -367,14 +414,28 @@ const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref:
     chunk,
   };
 
-  const res = await context.dispatch("callProtectedApi", {
-    func: Api.getDomainValues.bind(Api),
-    args: [ref.field, ref.rowId ?? undefined, req],
-  }, { root: true }) as IDomainValuesResult;
-  return Object.fromEntries(res.values.map<[number, string]>(row => {
-    const main = punToText(row.pun, row.value, res.punType);
-    return [Number(row.value), main];
-  }));
+  if (ref.referencedBy === null) {
+    const query = `{ $ids array(int) }: SELECT id, __main AS main FROM "${ref.entity.schema}"."${ref.entity.name}" WHERE id = ANY ($ids)`;
+    const res = await context.dispatch("callProtectedApi", {
+      func: Api.getAnonymousUserView.bind(Api),
+      args: [query, { ids }],
+    }, { root: true }) as IViewExprResult;
+    const mainType = res.info.columns[0].valueType;
+    return Object.fromEntries(res.result.rows.map(row => {
+      const id = row.values[0].value;
+      const pun = row.values[1].value;
+      return [id, valueToText(mainType, pun)];
+    }));
+  } else {
+    const res = await context.dispatch("callProtectedApi", {
+      func: Api.getDomainValues.bind(Api),
+      args: [ref.referencedBy.field, ref.referencedBy.rowId ?? undefined, req],
+    }, { root: true }) as IDomainValuesResult;
+    return Object.fromEntries(res.values.map<[number, string]>(row => {
+      const main = valueToText(res.punType, row.pun);
+      return [Number(row.value), main];
+    }));
+  }
 };
 
 export const getReferenceInfo = (uv: ICombinedUserViewAny, columnI: number, rowId: number | null): { referenceEntity: IEntityRef; entries: IEntriesRef } | null => {
@@ -385,11 +446,14 @@ export const getReferenceInfo = (uv: ICombinedUserViewAny, columnI: number, rowI
     return {
       referenceEntity: mainField.field.fieldType.entity,
       entries: {
-        field: {
-          entity: uv.info.mainEntity!,
-          name: mainField.name,
+        entity: mainField.field.fieldType.entity,
+        referencedBy: {
+          field: {
+            entity: uv.info.mainEntity!,
+            name: mainField.name,
+          },
+          rowId,
         },
-        rowId,
       },
     };
   }
@@ -515,7 +579,9 @@ const entriesModule: Module<IEntriesState, {}> = {
         })();
         if (oldResource === undefined) {
           // Prefetch entity.
-          void dispatch("entities/getEntity", ref.field.entity, { root: true });
+          if (ref.referencedBy !== null) {
+            void dispatch("entities/getEntity", ref.referencedBy.field.entity, { root: true });
+          }
           commit("initPartialEntries", { ref, reference });
         }
         for (const id of requestedIds) {
@@ -595,7 +661,7 @@ const entriesModule: Module<IEntriesState, {}> = {
 
         const currNode = state.current.entries.get(ref)?.get(search);
         if (currNode?.status !== "pending" || currNode.pending !== pending.ref) {
-          throw new CancelledError(`Pending entries got cancelled, ref ${JSON.stringify(ref)}`);
+          throw new CancelledError("Pending entries got cancelled, ref " + JSON.stringify(ref));
         }
         commit("updateSearchNode", { ref, search, update });
         if (update.status === "ok") {
@@ -606,7 +672,9 @@ const entriesModule: Module<IEntriesState, {}> = {
       })();
       if (oldResource === undefined) {
         // Prefetch entity.
-        void dispatch("entities/getEntity", ref.field.entity, { root: true });
+        if (ref.referencedBy !== null) {
+          void dispatch("entities/getEntity", ref.referencedBy.field.entity, { root: true });
+        }
         commit("initPartialEntries", { ref, reference });
       }
       commit("insertSearchNode", { ref, search, limit, pending: pending.ref });

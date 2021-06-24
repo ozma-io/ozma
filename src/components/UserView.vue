@@ -9,6 +9,7 @@
             "unknown_error": "Unknown user view fetch error: {msg}",
             "anonymous_query": "(anonymous query)",
             "edit_view": "Edit user view",
+            "edit_arguments": "Edit user view arguments",
             "new_mode_no_main": "FOR INSERT INTO clause is required for new entry mode.",
             "link_to_nowhere": "This user view was a link which didn't replace it, so there's nothing to show."
         },
@@ -21,6 +22,7 @@
             "unknown_error": "Неизвестная ошибка загрузки представления: {msg}",
             "anonymous_query": "(анонимный запрос)",
             "edit_view": "Редактировать представление",
+            "edit_arguments": "Редактировать аргументы представления",
             "new_mode_no_main": "Для режима создания новой записи должна использоваться конструкция FOR INSERT INTO.",
             "link_to_nowhere": "Это отображение являлось ссылкой, которая его не заменила. Теперь здесь нечего показать."
         }
@@ -35,7 +37,18 @@
 -->
 
 <template>
-  <span>
+  <div class="userview-wrapper">
+    <transition name="fade-move">
+      <ArgumentEditor
+        v-if="showArgumentEditor && state.state === 'show'"
+        :argument-params="state.uv.info.arguments"
+        :argument-values="state.uv.args.args"
+        :can-be-closed="!(showArgumentEditorAttr === true)"
+        @close="contextMenuShowArgumentEditor = false"
+        @update="updateArguments"
+      />
+    </transition>
+
     <template
       v-if="state.state === 'show'"
     >
@@ -50,6 +63,7 @@
         :default-values="defaultValues"
         @update:buttons="uvCommonButtons = $event"
       />
+
       <transition name="fade-1" mode="out-in">
         <component
           :is="`UserView${state.componentName}`"
@@ -76,12 +90,11 @@
       </transition>
     </template>
 
-    <div
+    <Errorbox
       v-else-if="state.state === 'error'"
-    >
-      {{ state.message }}
-    </div>
-
+      :class="isRoot ? 'm-2' : ''"
+      :message="state.message"
+    />
     <transition name="fade-2">
       <div
         v-if="state.state === 'loading'"
@@ -110,27 +123,30 @@
         </div>
       </div>
     </transition>
-  </span>
+  </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
-import { AttributesMap, IEntityRef, IEntriesRequestOpts } from "ozma-api";
+import { ArgumentName, AttributesMap, IEntityRef, IEntriesRequestOpts } from "ozma-api";
 
-import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout } from "@/utils";
+import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, mapMaybe } from "@/utils";
 import { funappSchema } from "@/api";
 import { equalEntityRef } from "@/values";
-import type { AddedRowId, CombinedTransactionResult, ICombinedInsertEntityResult, IStagingEventHandler, ScopeName, StagingKey } from "@/state/staging_changes";
+import { AddedRowId, CombinedTransactionResult, ICombinedInsertEntityResult, IStagingEventHandler, serializeValue, StagingKey } from "@/state/staging_changes";
+import type { ScopeName } from "@/state/staging_changes";
 import { ICurrentQueryHistory, IQuery } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
 import UserViewCommon from "@/components/UserViewCommon.vue";
+import ArgumentEditor from "@/components/ArgumentEditor.vue";
 import type { Button } from "@/components/buttons/buttons";
 import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams } from "@/links";
 import type { ICombinedUserViewAny, IRowLoadState, IUserViewArguments } from "@/user_views/combined";
 import { CombinedUserView } from "@/user_views/combined";
 import { UserViewError, fetchUserViewData } from "@/user_views/fetch";
 import { baseUserViewHandler } from "@/components/BaseUserView";
+import Errorbox from "@/components/Errorbox.vue";
 
 const types: RecordSet<string> = {
   "form": null,
@@ -229,6 +245,8 @@ const loadingState: IUserViewLoading = { state: "loading" };
  */
 @Component({ components: {
   UserViewCommon,
+  ArgumentEditor,
+  Errorbox,
   ...components,
 } })
 export default class UserView extends Vue {
@@ -265,6 +283,21 @@ export default class UserView extends Vue {
       : "none";
   }
 
+  private contextMenuShowArgumentEditor = false;
+  private get showArgumentEditorAttr(): boolean | undefined {
+    if (this.state.state !== "show") return undefined;
+
+    const showArgumentEditorAttr = this.state.uv.attributes["show_argument_editor"];
+    return showArgumentEditorAttr !== undefined
+      ? Boolean(showArgumentEditorAttr)
+      : undefined;
+  }
+  private get showArgumentEditor() {
+    if (this.state.state !== "show") return false;
+
+    return this.showArgumentEditorAttr || this.contextMenuShowArgumentEditor;
+  }
+
   get title() {
     if (this.state.state === "show" && "title" in this.state.uv.attributes) {
       return String(this.state.uv.attributes["title"]);
@@ -298,6 +331,21 @@ export default class UserView extends Vue {
           search: "",
         };
 
+        if (this.state.state === "show") {
+          const hasArguments = Object.keys(this.state.uv.info.arguments).length !== 0;
+          if (hasArguments && this.state.uv.attributes["show_argument_editor"] !== true) {
+            buttons.push({
+              icon: "edit_note",
+              caption: this.$t("edit_arguments").toString(),
+              variant: this.contextMenuShowArgumentEditor ? "secondary" : undefined,
+              callback: () => {
+                this.contextMenuShowArgumentEditor = !this.contextMenuShowArgumentEditor;
+              },
+              type: "callback",
+            });
+          }
+        }
+
         buttons.push({
           icon: "code",
           caption: this.$t("edit_view").toString(),
@@ -310,12 +358,28 @@ export default class UserView extends Vue {
   }
 
   get allButtons() {
-    return [...this.uvCommonButtons, ...this.uvButtons, ...this.componentButtons];
+    return [...this.uvCommonButtons, ...this.componentButtons, ...this.uvButtons];
   }
 
   @Watch("allButtons", { deep: true, immediate: true })
   private pushAllButtons() {
     this.$emit("update:buttons", this.allButtons);
+  }
+
+  private updateArguments(args: Record<ArgumentName, unknown>) {
+    if (this.state.state !== "show") return;
+
+    const argumentParams = this.state.uv.info.arguments;
+    const serialized = Object.fromEntries(mapMaybe(
+      ([key, value]) =>
+        argumentParams[key] === undefined
+          ? undefined
+          : [key, serializeValue(argumentParams[key].argType, value)],
+      Object.entries(args),
+    ));
+    // TODO: In nested views this opens view in fullscreen, it's not good, but not such frequent case either, I suppose.
+    const linkQuery: IQuery = { args: { source: this.args.source, args: serialized }, defaultValues: {}, search: "" };
+    this.$emit("goto", linkQuery);
   }
 
   private reloadIfRoot() {
@@ -577,8 +641,13 @@ export default class UserView extends Vue {
   }
 
   @Watch("title", { immediate: true })
-  private updateTitle() {
+  private updateTitle(newTitle: string, oldTitle: string) {
     this.$emit("update:title", this.title);
+
+    // It's... bad way to detect uv change, but it works as needed for now. TODO: Make it better.
+    if (newTitle !== oldTitle) {
+      this.contextMenuShowArgumentEditor = false;
+    }
   }
 
   @Watch("submitPromise", { immediate: true })
@@ -655,6 +724,11 @@ export default class UserView extends Vue {
 </script>
 
 <style lang="scss" scoped>
+  .userview-wrapper {
+    height: 100%;
+    overflow: auto;
+  }
+
   .loading-container {
     min-height: 100px;
     height: 100%;
@@ -682,5 +756,16 @@ export default class UserView extends Vue {
         transition: opacity 0.05s;
       }
     }
+  }
+
+  .fade-move-enter-active,
+  .fade-move-leave-active {
+    transition: opacity 0.4s, transform 0.4s;
+  }
+
+  .fade-move-enter,
+  .fade-move-leave-to {
+    opacity: 0;
+    transform: translateY(-1rem);
   }
 </style>
