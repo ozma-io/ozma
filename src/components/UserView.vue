@@ -308,6 +308,18 @@ export default class UserView extends Vue {
     }
   }
 
+  private get toggleArgumentEditorButton(): Button {
+    return {
+      icon: "edit_note",
+      caption: this.$t("edit_arguments").toString(),
+      variant: this.contextMenuShowArgumentEditor ? "secondary" : undefined,
+      callback: () => {
+        this.contextMenuShowArgumentEditor = !this.contextMenuShowArgumentEditor;
+      },
+      type: "callback",
+    };
+  }
+
   get uvButtons() {
     const buttons: Button[] = [];
     if (this.state.state === "error" || (this.state.state === "show" && !this.state.uv.attributes["hide_default_actions"])) {
@@ -334,15 +346,7 @@ export default class UserView extends Vue {
         if (this.state.state === "show") {
           const hasArguments = Object.keys(this.state.uv.info.arguments).length !== 0;
           if (hasArguments && this.state.uv.attributes["show_argument_editor"] !== true) {
-            buttons.push({
-              icon: "edit_note",
-              caption: this.$t("edit_arguments").toString(),
-              variant: this.contextMenuShowArgumentEditor ? "secondary" : undefined,
-              callback: () => {
-                this.contextMenuShowArgumentEditor = !this.contextMenuShowArgumentEditor;
-              },
-              type: "callback",
-            });
+            buttons.push(this.toggleArgumentEditorButton);
           }
         }
 
@@ -372,7 +376,7 @@ export default class UserView extends Vue {
     const argumentParams = this.state.uv.info.arguments;
     const serialized = Object.fromEntries(mapMaybe(
       ([key, value]) =>
-        argumentParams[key] === undefined
+        argumentParams[key] === undefined || (argumentParams[key].optional && value === null)
           ? undefined
           : [key, serializeValue(argumentParams[key].argType, value)],
       Object.entries(args),

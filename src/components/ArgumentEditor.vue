@@ -93,7 +93,7 @@ export default class ArgumentEditor extends Vue {
   private mockUvArgs = { source: { type: "named", ref: { schema: "mock_schema", name: "mock_name" } }, args: {} };
 
   private update(name: string, value: any) {
-    this.values[name] = value;
+    Vue.set(this.values, name, value);
   }
 
   private apply() {
