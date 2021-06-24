@@ -295,6 +295,8 @@ export default class UserView extends Vue {
   private get showArgumentEditor() {
     if (this.state.state !== "show") return false;
 
+    if (Object.keys(this.state.uv.info.arguments).length === 0) return false;
+
     return this.showArgumentEditorAttr || this.contextMenuShowArgumentEditor;
   }
 
