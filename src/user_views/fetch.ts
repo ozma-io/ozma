@@ -1,4 +1,4 @@
-import { UserViewErrorType, IViewInfoResult, IViewExprResult, FunDBError, IUserViewOpts } from "ozma-api";
+import { UserViewErrorType, IViewInfoResult, IViewExprResult, FunDBError, IEntriesRequestOpts } from "ozma-api";
 import { Store } from "vuex";
 
 import Api from "@/api";
@@ -17,7 +17,7 @@ export class UserViewError extends Error {
   }
 }
 
-const defaultViewOpts: IUserViewOpts = {
+const defaultViewOpts: IEntriesRequestOpts = {
   chunk: { limit: 5000 },
 };
 
@@ -25,7 +25,7 @@ export const fetchUserViewData =
 async (
   store: Store<any>,
   args: IUserViewArguments,
-  opts: IUserViewOpts = defaultViewOpts,
+  opts: IEntriesRequestOpts = defaultViewOpts,
 ): Promise<ICombinedUserViewDataParams> => {
   try {
     if (args.source.type === "named") {

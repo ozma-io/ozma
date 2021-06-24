@@ -22,7 +22,7 @@
       @close="selectedView = null"
     />
     <MultiSelect
-      v-if="options !== null"
+      v-if="valueOptions !== null"
       :value="valueIndex"
       :options="options"
       :single="single"
@@ -106,7 +106,7 @@
     >
       <div
         class="spinner-border spinner-border-sm"
-        style="border-color: rgba(0, 0, 0, 0.5); border-right-color: transparent;"
+        style="border-color: var(--input-foregroundDarkerColor); border-right-color: transparent;"
       />
     </div>
     <QRCodeScanner
@@ -175,6 +175,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
   @Prop({ type: Object }) linkAttr!: unknown | undefined;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
+  @Prop({ type: Boolean, default: false }) loadPunOnMount!: boolean;
 
   private selectedView: IQuery | null = null;
   private wasOpenedQRCodeScanner = false;
@@ -185,6 +186,15 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     void nextRender().then(() => {
       this.isQRCodeScanner = !this.isQRCodeScanner;
     });
+  }
+
+  private mounted() {
+    if (!this.loadPunOnMount) return;
+
+    const value = this.value as ICombinedValue;
+    if (!this.single || value.pun || typeof value.value !== "number") return;
+
+    void this.processId(value.value);
   }
 
   @Watch("entries", { immediate: true })
@@ -266,7 +276,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     if (this.valueOptions && this.entriesOptions) {
       return [...this.valueOptions, ...this.entriesOptions].sort(compareOptions);
     } else {
-      return null;
+      return [];
     }
   }
 

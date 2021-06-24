@@ -127,25 +127,18 @@ export default class Textarea extends Vue {
     }, 0);
   }
 
-  private get hasContent(): boolean {
-    return this.value.length > 0;
-  }
-
   private get textareaRows(): number | null {
-    if (this.height) {
-      return null;
-    }
+    if (this.height) return null;
 
     return this.rows;
   }
 
   private get style() {
-    if (this.height) {
-      return {
-        height: `${this.height}px`,
-      };
-    }
-    return null;
+    if (!this.height) return null;
+
+    return {
+      height: `${this.height}px`,
+    };
   }
 
   private onFocus(evt: HTMLInputElement) {

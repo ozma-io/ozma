@@ -114,17 +114,17 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: un
   } else if (fieldType.type === "date") {
     // We use local time for dates.
     const date = moment(value as MomentInput, dateFormat);
-    if (!date.isValid()) {
-      return undefined;
-    } else {
+    if (date.isValid()) {
       return date;
+    } else {
+      return undefined;
     }
   } else if (fieldType.type === "datetime") {
     const date = moment(value as MomentInput, dateTimeFormat).utc();
-    if (!date.isValid()) {
-      return undefined;
-    } else {
+    if (date.isValid()) {
       return date;
+    } else {
+      return undefined;
     }
   } else if (fieldType.type === "decimal") {
     const f = Number(value);

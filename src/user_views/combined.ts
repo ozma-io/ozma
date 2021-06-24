@@ -6,7 +6,7 @@ import { IExecutedValue, IColumnField, IFieldRef, RowId, AttributesMap, IExecute
 import { AddedRowId, IAddedEntry, IEntityChanges, IStagingEventHandler, IStagingState } from "@/state/staging_changes";
 import { mapMaybe, tryDicts } from "@/utils";
 import { equalEntityRef, IUpdatedValue, valueFromRaw, valueIsNull, valueToText } from "@/values";
-import { Entries, IEntriesState } from "@/state/entries";
+import { Entries, IEntriesRef, IEntriesState, IReferencedField } from "@/state/entries";
 
 import { IEntitiesState } from "../state/entities";
 
@@ -552,14 +552,10 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
   updateField(fieldRef: IFieldRef, id: RowId, updatedValue: IUpdatedValue, meta?: unknown) {
     const fieldType = this.storeEntities.getEntity(fieldRef.entity)?.columnFields[fieldRef.name].fieldType;
 
-    if (this.rows === null) {
-      return;
-    }
+    if (this.rows === null) return;
 
     const updatedValues = this.updateMapping[fieldRef.entity.schema]?.[fieldRef.entity.name]?.[id]?.[fieldRef.name];
-    if (updatedValues === undefined) {
-      return;
-    }
+    if (updatedValues === undefined) return;
 
     updatedValues.forEach(valueRef => {
       if (valueRef.type === "existing") {
@@ -669,9 +665,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     Vue.set(newRow, "newId", newId);
 
     newRow.values.forEach((value, colI) => {
-      if (!value.info) {
-        return;
-      }
+      if (!value.info) return;
 
       value.info.id = newId;
       Vue.set(value, "initialValue", value.value);
@@ -822,21 +816,23 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
 
   // Sets `null` when there's no pun. Sets `undefined` when pun cannot be resolved now.
   private setOrRequestUpdatedPun<TValue extends ICombinedValue>(value: TValue, fieldType: FieldType, delayedUpdateValue: (nextValue: TValue) => void) {
-    const ref = currentValue(value) as number | null;
+    if (fieldType.type !== "reference") return;
 
-    if (fieldType.type !== "reference") {
-      return;
-    }
+    const ref = currentValue(value) as number | null;
 
     if (valueIsNull(ref)) {
       value.pun = "";
       return;
     }
 
-    const entriesRef = {
-      field: value.info!.fieldRef,
-      rowId: null,
-    };
+    const entity = fieldType.entity;
+    const referencedBy: IReferencedField | null = value.info?.fieldRef
+      ? {
+        field: value.info.fieldRef,
+        rowId: null,
+      }
+      : null;
+    const entriesRef: IEntriesRef = { entity, referencedBy };
 
     const summaries = this.storeEntries.entries.get(entriesRef);
 
@@ -863,9 +859,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
 
   private makeEmptyRow(defaultRawValues: Record<string, unknown>): IRowCommon | null {
     const eref = this.info.mainEntity;
-    if (!eref) {
-      return null;
-    }
+    if (!eref) return null;
 
     const values = this.info.columns.map((info, colI) => {
       const columnAttrs = this.columnAttributes[colI];
@@ -970,9 +964,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     const updateMapping: IUpdateMapping = {};
     this.rows.forEach((row, rowI) => {
       row.values.forEach((value, colI) => {
-        if (!value.info) {
-          return;
-        }
+        if (!value.info) return;
 
         const valueRef: IExistingValueRef = {
           type: "existing",

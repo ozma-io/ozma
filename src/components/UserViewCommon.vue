@@ -72,7 +72,6 @@
 <script lang="ts">
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-import * as R from "ramda";
 import { IEntityRef } from "ozma-api";
 
 import { mapMaybe, saveToFile, tryDicts } from "@/utils";
@@ -115,8 +114,10 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
 
   private exportToCsv() {
     let data = "";
-    this.uv.info.columns.forEach(col => {
-      data += csvCell(col.name);
+    this.uv.info.columns.forEach((col, index) => {
+      const csvColumnNameRaw = this.uv.columnAttributes[index]?.["csv_column_name"];
+      const csvColumnName = typeof csvColumnNameRaw === "string" ? csvColumnNameRaw : null;
+      data += csvCell(csvColumnName ?? col.name);
     });
     data += "\n";
     Object.values(this.uv.newRows).forEach(row => {
@@ -157,11 +158,12 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         });
 
         await Promise.all(this.uv.info.columns.map((columnInfo, index) => {
-          const fallbackName: string | null = R.pathOr(
-            null, [index, "csv_import_column"],
-            this.uv.columnAttributes,
-          );
-          const columnName = fallbackName || columnInfo.name;
+          const csvColumnNameRaw = this.uv.columnAttributes[index]?.["csv_column_name"];
+          const csvColumnName = typeof csvColumnNameRaw === "string" ? csvColumnNameRaw : null;
+          const csvImportColumnRaw = this.uv.columnAttributes[index]?.["csv_import_column"]; // Deprecated attribute.
+          const csvImportColumn = typeof csvImportColumnRaw === "string" ? csvImportColumnRaw : null;
+
+          const columnName = csvImportColumn ?? csvColumnName ?? columnInfo.name;
           const currValue = rawRow.data[columnName];
           if (columnInfo.mainField && currValue) {
             return this.setAddedField({
@@ -253,7 +255,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
 
     if (typeof this.uv.info.mainEntity === "object" && this.showDefaultActions) {
       buttons.push({
-        icon: "import_export",
+        icon: "file_upload",
         caption: this.$t("import_from_csv").toString(),
         uploadFile: file => this.importFromCsv(file),
         type: "upload-file",
@@ -263,7 +265,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     // FIXME: workaround until we have proper role-based permissions for this.
     if (this.uv.attributes["export_to_csv"] || "__export_to_csv" in this.$route.query) {
       buttons.push({
-        icon: "import_export",
+        icon: "file_download",
         caption: this.$t("export_to_csv").toString(),
         callback: () => this.exportToCsv(),
         type: "callback",

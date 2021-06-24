@@ -229,7 +229,6 @@ export default class InputSlot extends Vue {
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 31;
 
       &.inline {
         left: -1 * ($indicator-size  + 2 * $indicator-padding);

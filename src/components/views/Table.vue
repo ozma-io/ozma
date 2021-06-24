@@ -7,6 +7,7 @@
         "read_only_cell": "Read-only cell",
         "paste_no_referencefield_data": "Clipboard has no reference field data",
         "paste_error_too_many_columns": "Clipboard has too many columns",
+        "no_results": "No entries",
         "add_entry": "Add entry",
         "add_entry_in_modal": "Add new entry (in modal window)"
       },
@@ -17,6 +18,7 @@
         "read_only_cell": "Ячейка только для чтения",
         "paste_no_referencefield_data": "В буфере обмена неверная информация для вставки в данное поле",
         "paste_error_too_many_columns": "В буфере обмена слишком много столбцов",
+        "no_results": "Нет записей",
         "add_entry": "Добавить запись",
         "add_entry_in_modal": "Добавить новую запись (в модальном окне)"
       }
@@ -76,7 +78,10 @@
         v-if="uv.emptyRow !== null || uv.extra.lazyLoad.type === 'pagination'"
         class="button-container"
       >
-        <ButtonItem v-if="uv.emptyRow !== null" :button="topAddButton" />
+        <ButtonItem
+          v-if="uv.emptyRow !== null && !uv.extra.dirtyHackPreventEntireReloads"
+          :button="topAddButton"
+        />
         <div
           v-if="uv.extra.lazyLoad.type === 'pagination'"
           :class="['pagination', { 'ml-auto': uv.emptyRow === null }]"
@@ -167,11 +172,10 @@
               </FunLink>
             </th>
             <th
-              v-for="(i, index) in columnIndexes"
+              v-for="i in columnIndexes"
               :key="i"
               :class="['sorting', 'table-th', {
                 'fixed-column' : uv.extra.columns[i].fixed,
-                'th_after-last-fixed': lastFixedColumnIndex === index,
                 'td-moz': isFirefoxBrowser
               }]"
               :style="uv.extra.columns[i].style"
@@ -210,14 +214,19 @@
         </transition-group>
         -->
       </table>
-      <infinite-loading
+      <InfiniteLoading
         v-if="useInfiniteScrolling"
         :force-use-infinite-wrapper="isRoot ? false : '.view-form'"
+        :identifier="infiniteIdentifier"
         spinner="spiral"
+        :distance="500"
         @infinite="infiniteHandler"
       >
         <template #no-results>
-          <span />
+          <div v-if="allRows.length === 0" class="no-results">
+            {{ $t("no_results") }}
+          </div>
+          <span v-else />
         </template>
         <template #no-more>
           <span />
@@ -225,9 +234,9 @@
         <template #error>
           <span />
         </template>
-      </infinite-loading>
+      </InfiniteLoading>
       <div
-        v-if="!useInfiniteScrolling && uv.emptyRow !== null"
+        v-if="uv.emptyRow !== null && !uv.extra.dirtyHackPreventEntireReloads"
         ref="bottomButtonContainer"
         class="button-container"
       >
@@ -337,9 +346,11 @@ export interface ITableViewExtra extends IBaseViewExtra {
   sortColumn: number | null;
   sortAsc: boolean;
   sortOptions: Intl.CollatorOptions;
+
+  dirtyHackPreventEntireReloads: boolean;
 }
 
-const showStep = 3;
+const showStep = 15;
 const doubleClickTime = 700;
 // FIXME: Use CSS variables to avoid this constant
 const technicalFieldsWidth = 35; // checkbox's and openform's td width
@@ -920,6 +931,11 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     const newRowBottomSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowBottomSidePositions) : [];
     const addedRowRefs = oldView ? inheritOldRowsPositions(uv, oldView.addedRowRefs) : [];
 
+    const dirtyHackPreventEntireReloadsRaw = uv.attributes["dirty_hack_prevent_entire_reloads"];
+    const dirtyHackPreventEntireReloads = typeof dirtyHackPreventEntireReloadsRaw === "boolean"
+      ? dirtyHackPreventEntireReloadsRaw
+      : false;
+
     return {
       ...baseExtra,
       isSelectionColumnEnabled,
@@ -937,6 +953,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       sortOptions: oldView?.sortOptions ?? {},
       addedRowRefs,
       lazyLoad,
+      dirtyHackPreventEntireReloads,
     };
   },
 
@@ -1109,16 +1126,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private cellEditHeight = 0;
 
   private rowsState: Record<number, any> = {};
-  private isTree = false;
 
   // Used for Tab-Enter selection moving.
   // Probably need to move to extra.
   private columnDelta = 0;
 
   private get useInfiniteScrolling() {
-    return this.uv.extra.lazyLoad.type === "infinite_scroll"
-      && (!this.uv.rowLoadState.complete
-      || this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength < this.uv.rowLoadState.fetchedRowCount);
+    return this.uv.extra.lazyLoad.type === "infinite_scroll";
   }
 
   private get pageSizes() {
@@ -1266,25 +1280,39 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.uv.rowLoadState.perFetch = this.uv.extra.lazyLoad.pagination.perPage;
   }
 
+  private get infiniteIdentifier() {
+    return `${this.uv.rows?.length}${this.existingRows}`;
+  }
+
   private infiniteHandler(ev: StateChanger) {
     if (this.uv.extra.lazyLoad.type !== "infinite_scroll") return;
 
     this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength += showStep;
 
-    if (this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength > this.uv.rowLoadState.fetchedRowCount) {
+    if (!this.uv.rowLoadState.complete
+     && this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength > this.uv.rowLoadState.fetchedRowCount
+    ) {
       this.$emit("load-next-chunk", (result: boolean) => {
         if (this.uv.rowLoadState.complete) {
+          if (this.uv.rowLoadState.fetchedRowCount !== 0) {
+            ev.loaded();
+          }
           ev.complete();
-          if (this.uv.extra.lazyLoad.type !== "infinite_scroll") return;
-
-          this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength = this.uv.rowLoadState.fetchedRowCount;
         } else {
           ev.loaded();
         }
+
+        if (this.uv.extra.lazyLoad.type !== "infinite_scroll") return;
+        this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength = this.uv.rowLoadState.fetchedRowCount;
       });
-    } else if (this.uv.rowLoadState.complete === true
+    } else if (this.uv.rowLoadState.complete
       && this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength >= this.uv.rowLoadState.fetchedRowCount) {
+      if (this.uv.rowLoadState.fetchedRowCount !== 0) {
+        ev.loaded();
+      }
       ev.complete();
+
+      this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength = this.uv.rowLoadState.fetchedRowCount;
     } else {
       ev.loaded();
     }
@@ -1476,6 +1504,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   protected uvChanged() {
     this.init();
     this.updateRows();
+
+    this.updateStatusLine();
+    this.watchShowTree();
   }
 
   private deselectAllCells() {
@@ -1657,6 +1688,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
+  @Watch("showTree", { immediate: true })
+  private watchShowTree() {
+    if (this.showTree && !this.uv.rowLoadState.complete) {
+      this.$emit("load-all-chunks", () => {});
+    }
+  }
+
   protected beforeDestroy() {
     /* eslint-disable @typescript-eslint/unbound-method */
     (this.$refs.tableContainer as HTMLElement).removeEventListener("scroll", this.removeCellEditing);
@@ -1675,6 +1713,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   @Watch("filter", { immediate: true })
   protected updateFilter() {
+    if (this.uv.extra.dirtyHackPreventEntireReloads) return;
+
     if (this.filter.length !== 0 && this.uv.rowLoadState.complete === false) {
       this.$emit("load-all-chunks");
     }
@@ -2097,7 +2137,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
             `);
     }
 
-    this.$emit("update:enableFilter", this.uv.rows !== null);
+    this.$emit("update:enableFilter", this.uv.rows !== null && !this.uv.extra.dirtyHackPreventEntireReloads);
 
     this.updateRows();
   }
@@ -2107,6 +2147,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private loadAllRowsAndUpdateSort(sortColumn: number) {
+    if (this.uv.extra.dirtyHackPreventEntireReloads) return;
+
     if (!this.uv.rowLoadState.complete) {
       this.$emit("load-all-chunks", () => this.updateSort(sortColumn));
     } else {
@@ -2214,12 +2256,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return this.getNewRows(this.uv.extra.newRowBottomSidePositions);
   }
 
+  // FIXME: Broken for trees.
   get statusLine() {
     const totalAdded = this.topRows.length + this.bottomRows.length;
     return this.uv.rowLoadState.complete ? `${totalAdded + this.existingRows.length}` : "";
   }
 
-  // FIXME: Broken, fix or delete at all.
   @Watch("statusLine", { immediate: true })
   private updateStatusLine() {
     this.$emit("update:statusLine", this.statusLine);
@@ -2316,6 +2358,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
+  .no-results {
+    text-align: left;
+    color: var(--default-foregroundDarkerColor);
+    margin-left: 1rem;
+  }
+
   .table {
     /* Bootstrap's colors was overrided in style.css and there they overrided again */
     --MainBorderColor: var(--table-backgroundDarker1Color);
@@ -2325,7 +2373,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     width: 100%;
     margin: 0;
     position: relative;
-    height: 100%;
+    min-height: 100%;
     background-color: var(--table-backgroundDarker1Color);
 
     &.nested {

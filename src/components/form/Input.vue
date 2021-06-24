@@ -82,6 +82,7 @@ import { Button } from "@/components/buttons/buttons";
 import { getColorVariables } from "@/utils_colors";
 import { findLink } from "@/utils";
 import type { TextLink } from "@/utils";
+import { Debounce } from "vue-debounce-decorator";
 
 @Component({
   components: { Textarea, QRCodeScanner, ButtonItem },
@@ -108,6 +109,7 @@ export default class Input extends Vue {
   private focused = false;
   private maxInputWidth = 0;
   private openQRCodeScanner = false;
+  private textLink: TextLink | null = null;
 
   private get isEmpty(): boolean {
     return valueIsNull(this.value);
@@ -133,8 +135,13 @@ export default class Input extends Vue {
     this.$emit("move-selection-next-column", event);
   }
 
-  private get textLink(): TextLink | null {
-    return this.isCellEdit ? null : findLink(this.value);
+  @Debounce(1000)
+  private debouncedRecalculateTextLink() {
+    this.recalculateTextLink();
+  }
+
+  private recalculateTextLink() {
+    this.textLink = this.isCellEdit ? null : findLink(this.value);
   }
 
   private get textLinkIcon(): string | null {
@@ -179,10 +186,13 @@ export default class Input extends Vue {
         }
       });
     }
+
+    this.recalculateTextLink();
   }
 
   @Watch("value")
   private onValueUpdate(value: string) {
+    this.debouncedRecalculateTextLink();
     this.setInputHeight();
   }
 
@@ -203,14 +213,6 @@ export default class Input extends Vue {
       return this.maxWidth;
     }
     return 250;
-  }
-
-  private get hasContent(): boolean {
-    if (typeof this.value === "string") {
-      return this.value.length > 0;
-    } else {
-      return !!this.value;
-    }
   }
 
   private onFocus(evt: Event) {

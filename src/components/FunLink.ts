@@ -57,6 +57,8 @@ export default Vue.component("FunLink", {
     const { handler, href } = linkHandler(linkHandlerParams);
 
     const onHandlers = { click: (e: MouseEvent) => {
+      e.stopPropagation();
+
       if (context.props.link.target === "_blank") {
         vueEmit(context, "click");
         return;

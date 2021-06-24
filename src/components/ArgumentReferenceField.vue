@@ -1,12 +1,13 @@
 <template>
   <div
     class="reference-field"
-    :style="{backgroundColor: backgroundColor}"
+    :style="{ backgroundColor: backgroundColor }"
   >
     <ReferenceMultiSelect
       :value="value"
       :height="height"
       single
+      load-pun-on-mount
       :autofocus="autofocus"
       :required="!nullable"
       :disabled="disabled"
@@ -39,7 +40,7 @@ const query = namespace("query");
     ReferenceMultiSelect,
   },
 })
-export default class ReferenceField extends Vue {
+export default class ArgumentReferenceField extends Vue {
   @Prop({ type: Array, default: () => [] }) selectViews!: IReferenceSelectAction[];
   @Prop({ type: Object, required: true }) value!: ICombinedValue;
   @Prop({ type: Object, required: true }) referenceEntity!: IEntityRef;
@@ -52,13 +53,10 @@ export default class ReferenceField extends Vue {
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
 
-  get entriesRef(): IEntriesRef {
+  private get entriesRef(): IEntriesRef {
     return {
       entity: this.referenceEntity,
-      referencedBy: {
-        field: this.value.info!.fieldRef,
-        rowId: this.value.info!.id ?? null,
-      },
+      referencedBy: null,
     };
   }
 }
