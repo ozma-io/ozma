@@ -8,8 +8,8 @@
             "save": "Save (Ctrl+S)",
             "saved": "All changes saved",
             "show_errors": "Show errors",
-            "clear_changes": "Clear all changes",
-            "clear_changes_confirm": "Clear all changes after last save?",
+            "clear_changes": "Reset changes after last save",
+            "clear_changes_confirm": "Reset changes after last save?",
             "clear_changes_ok": "Clear",
             "cancel": "Cancel",
             "account": "Account",
@@ -142,7 +142,7 @@
           <span
             class="material-icons md-36"
           >
-            clear
+            restart_alt
           </span>
         </button>
       </transition>
