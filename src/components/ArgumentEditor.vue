@@ -41,15 +41,14 @@
             <b-col>
               <div class="float-right">
                 <b-button
+                  v-if="canBeClosed"
                   class="mr-3"
-                  size="sm"
                   variant="outline-secondary"
                   @click="close"
                 >
                   {{ $t("close") }}
                 </b-button>
                 <b-button
-                  size="sm"
                   variant="primary"
                   @click="apply"
                 >
@@ -66,91 +65,39 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
+import moment, { MomentInput } from "moment";
 
-import { ArgumentName, FieldType, IArgument } from "ozma-api";
-import { serializeValue } from "@/state/staging_changes";
-
-/* export type Parameter = {
- *   name: string;
- *   type: FieldType;
- * };
- *
- * export type Argument = {
- *   value: any;
- *   info: Parameter;
- * };
- *
- * const testArguments: Argument[] = [
- *   {
- *     value: 1,
- *     info: {
- *       name: "test_int",
- *       type: { type: "int" },
- *     },
- *   },
- *   {
- *     value: 2,
- *     info: {
- *       name: "id_2",
- *       type: { type: "int" },
- *     },
- *   },
- *   {
- *     value: "test",
- *     info: {
- *       name: "test_string",
- *       type: { type: "string" },
- *     },
- *   },
- *   {
- *     value: 1,
- *     info: {
- *       name: "id",
- *       type: {
- *         type: "reference",
- *         entity: {
- *           schema: "IlyaTest",
- *           name: "Primary",
- *         },
- *       },
- *     },
- *   },
- *   {
- *     value: null,
- *     info: {
- *       name: "date",
- *       type: { type: "date" },
- *     },
- *   },
- * ]; */
+import { ArgumentName, IArgument } from "ozma-api";
+import { objectMap } from "@/utils";
 
 @Component
 export default class ArgumentEditor extends Vue {
   @Prop({ type: Object, required: true }) argumentParams!: Record<ArgumentName, IArgument>;
   @Prop({ type: Object, required: true }) argumentValues!: Record<string, unknown>;
+  @Prop({ type: Boolean, default: true }) canBeClosed!: boolean;
 
   private values: Record<string, unknown> = {};
 
   @Watch("argumentValues", { immediate: true })
   private syncValues() {
-    this.values = this.argumentValues;
+    this.values = objectMap((value, key, index) => {
+      if (this.argumentParams[key].argType.type === "date" || this.argumentParams[key].argType.type === "datetime") {
+        return moment(value as MomentInput);
+      }
+      return value;
+    }, this.argumentValues);
   }
-
-  /* private argumentList = testArguments; */
 
   private mockScope = "mock_scope";
 
-  private get mockUvArgs() {
-    return { source: { type: "named", ref: { schema: "mock_schema", name: "mock_name" } }, args: {} };
-  }
+  private mockUvArgs = { source: { type: "named", ref: { schema: "mock_schema", name: "mock_name" } }, args: {} };
 
   private update(name: string, value: any) {
     this.values[name] = value;
   }
 
   private apply() {
-    /* const convertedArgs = this.argumentList.map(arg => ({ ...arg, value: serializeValue(arg.info.type, arg.value) })); */
-    /* this.$emit("update", convertedArgs); */
+    this.$emit("update", this.values);
   }
 
   private close() {

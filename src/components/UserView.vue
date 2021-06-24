@@ -40,10 +40,11 @@
   <div class="userview-wrapper">
     <transition name="fade-move">
       <ArgumentEditor
-        v-if="showArgumentEditor"
+        v-if="showArgumentEditor && state.state === 'show'"
         :argument-params="state.uv.info.arguments"
         :argument-values="state.uv.args.args"
-        @close="showArgumentEditor = false"
+        :can-be-closed="!(showArgumentEditorAttr === true)"
+        @close="contextMenuShowArgumentEditor = false"
         @update="updateArguments"
       />
     </transition>
@@ -128,16 +129,17 @@
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
-import { AttributesMap, IEntityRef, IEntriesRequestOpts } from "ozma-api";
+import { ArgumentName, AttributesMap, IEntityRef, IEntriesRequestOpts } from "ozma-api";
 
-import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout } from "@/utils";
+import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, mapMaybe } from "@/utils";
 import { funappSchema } from "@/api";
 import { equalEntityRef } from "@/values";
-import type { AddedRowId, CombinedTransactionResult, ICombinedInsertEntityResult, IStagingEventHandler, ScopeName, StagingKey } from "@/state/staging_changes";
+import { AddedRowId, CombinedTransactionResult, ICombinedInsertEntityResult, IStagingEventHandler, serializeValue, StagingKey } from "@/state/staging_changes";
+import type { ScopeName } from "@/state/staging_changes";
 import { ICurrentQueryHistory, IQuery } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
 import UserViewCommon from "@/components/UserViewCommon.vue";
-import ArgumentEditor, { Argument } from "@/components/ArgumentEditor.vue";
+import ArgumentEditor from "@/components/ArgumentEditor.vue";
 import type { Button } from "@/components/buttons/buttons";
 import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams } from "@/links";
 import type { ICombinedUserViewAny, IRowLoadState, IUserViewArguments } from "@/user_views/combined";
@@ -274,12 +276,26 @@ export default class UserView extends Vue {
   private pendingArgs: IUserViewArguments | null = null;
   private nextUv: Promise<void> | null = null;
   private inhibitReload = false;
-  private showArgumentEditor = false;
 
   private get transitionKey() {
     return this.state.state === "show"
       ? JSON.stringify(this.state.uv.args.source)
       : "none";
+  }
+
+  private contextMenuShowArgumentEditor = false;
+  private get showArgumentEditorAttr(): boolean | undefined {
+    if (this.state.state !== "show") return undefined;
+
+    const showArgumentEditorAttr = this.state.uv.attributes["show_argument_editor"];
+    return showArgumentEditorAttr !== undefined
+      ? Boolean(showArgumentEditorAttr)
+      : undefined;
+  }
+  private get showArgumentEditor() {
+    if (this.state.state !== "show") return false;
+
+    return this.showArgumentEditorAttr || this.contextMenuShowArgumentEditor;
   }
 
   get title() {
@@ -315,16 +331,19 @@ export default class UserView extends Vue {
           search: "",
         };
 
-        const hasArguments = this.state.state === "show"; // TODO !!!
-        if (hasArguments) {
-          buttons.push({
-            icon: "edit_note",
-            caption: this.$t("edit_arguments").toString(),
-            callback: () => {
-              this.showArgumentEditor = true;
-            },
-            type: "callback",
-          });
+        if (this.state.state === "show") {
+          const hasArguments = Object.keys(this.state.uv.info.arguments).length !== 0;
+          if (hasArguments && this.state.uv.attributes["show_argument_editor"] !== true) {
+            buttons.push({
+              icon: "edit_note",
+              caption: this.$t("edit_arguments").toString(),
+              variant: this.contextMenuShowArgumentEditor ? "secondary" : undefined,
+              callback: () => {
+                this.contextMenuShowArgumentEditor = !this.contextMenuShowArgumentEditor;
+              },
+              type: "callback",
+            });
+          }
         }
 
         buttons.push({
@@ -347,10 +366,19 @@ export default class UserView extends Vue {
     this.$emit("update:buttons", this.allButtons);
   }
 
-  private updateArguments(argumentList: Argument[]) {
+  private updateArguments(args: Record<ArgumentName, unknown>) {
+    if (this.state.state !== "show") return;
+
+    const argumentParams = this.state.uv.info.arguments;
+    const serialized = Object.fromEntries(mapMaybe(
+      ([key, value]) =>
+        argumentParams[key] === undefined
+          ? undefined
+          : [key, serializeValue(argumentParams[key].argType, value)],
+      Object.entries(args),
+    ));
     // TODO: In nested views this opens view in fullscreen, it's not good, but not such frequent case either, I suppose.
-    const args = Object.fromEntries(argumentList.map(argument => [argument.info.name, argument.value]));
-    const linkQuery: IQuery = { args: { source: this.args.source, args }, defaultValues: {}, search: "" };
+    const linkQuery: IQuery = { args: { source: this.args.source, args: serialized }, defaultValues: {}, search: "" };
     this.$emit("goto", linkQuery);
   }
 
@@ -613,8 +641,13 @@ export default class UserView extends Vue {
   }
 
   @Watch("title", { immediate: true })
-  private updateTitle() {
+  private updateTitle(newTitle: string, oldTitle: string) {
     this.$emit("update:title", this.title);
+
+    // It's... bad way to detect uv change, but it works as needed for now. TODO: Make it better.
+    if (newTitle !== oldTitle) {
+      this.contextMenuShowArgumentEditor = false;
+    }
   }
 
   @Watch("submitPromise", { immediate: true })
