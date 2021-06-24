@@ -372,7 +372,7 @@ export default class UserView extends Vue {
     const argumentParams = this.state.uv.info.arguments;
     const serialized = Object.fromEntries(mapMaybe(
       ([key, value]) =>
-        argumentParams[key] === undefined
+        argumentParams[key] === undefined || (argumentParams[key].optional && value === null)
           ? undefined
           : [key, serializeValue(argumentParams[key].argType, value)],
       Object.entries(args),
