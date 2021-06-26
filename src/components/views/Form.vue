@@ -621,7 +621,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
 
 <style lang="scss" scoped>
   .view-form {
-    min-height: 100% !important;
+    height: 100% !important;
     padding: 0.6rem !important;
     overflow-y: auto;
     overflow-x: hidden;
