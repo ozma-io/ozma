@@ -732,7 +732,6 @@ export default class UserView extends Vue {
 <style lang="scss" scoped>
   .userview-wrapper {
     height: 100%;
-    overflow: auto;
   }
 
   .loading-container {
