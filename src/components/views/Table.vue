@@ -216,7 +216,7 @@
       </table>
       <InfiniteLoading
         v-if="useInfiniteScrolling"
-        :force-use-infinite-wrapper="isRoot ? false : '.view-form'"
+        :force-use-infinite-wrapper="isRoot ? '.tabl' : '.view-form'"
         :identifier="infiniteIdentifier"
         spinner="spiral"
         :distance="500"
@@ -2373,7 +2373,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     width: 100%;
     margin: 0;
     position: relative;
-    min-height: 100%;
+    height: 100%;
     background-color: var(--table-backgroundDarker1Color);
 
     &.nested {
