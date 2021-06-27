@@ -50,6 +50,10 @@
     <template v-if="!(modalOnly && modal)">
       <b-col
         v-if="label"
+        :class="{
+          'longer-input-label': !(required || disabled) && inline,
+          'input-label-with-indicator': (required || disabled) && inline,
+        }"
         :cols="inline ? 4 : 12"
       >
         <div class="input_label__container">
@@ -63,7 +67,13 @@
       </b-col>
       <b-col
         :cols="(!!label && inline) ? 8 : 12"
-        :class="['input_container', `text_align_${textAlign}`, {'input_container_cell-edit': isCellEdit}]"
+        :class="[
+          'input_container',
+          `text_align_${textAlign}`,
+          {
+            'input_container_cell-edit': isCellEdit,
+          }
+        ]"
       >
         <div
           :class="[
@@ -192,6 +202,16 @@ export default class InputSlot extends Vue {
 <style lang="scss" scoped>
   .input_slot__row {
     flex-direction: row;
+  }
+
+  .longer-input-label {
+    padding-left: 0;
+    padding-right: 0;
+    transform: translateX(15px);
+  }
+
+  .input-label-with-indicator {
+    padding-right: 5px;
   }
 
   .input_label__container {
