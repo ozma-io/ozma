@@ -79,7 +79,7 @@
         class="button-container"
       >
         <ButtonItem
-          v-if="uv.emptyRow !== null && !uv.extra.dirtyHackPreventEntireReloads"
+          v-if="uv.emptyRow !== null && !uv.extra.softDisabled && !uv.extra.dirtyHackPreventEntireReloads"
           :button="topAddButton"
         />
         <div
@@ -236,7 +236,7 @@
         </template>
       </InfiniteLoading>
       <div
-        v-if="uv.emptyRow !== null && !uv.extra.dirtyHackPreventEntireReloads"
+        v-if="uv.emptyRow !== null && !uv.extra.softDisabled && !uv.extra.dirtyHackPreventEntireReloads"
         ref="bottomButtonContainer"
         class="button-container"
       >
@@ -2110,6 +2110,39 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       }
       this.selectRow(child, selected);
     });
+  }
+
+  selectAll(selectedStatus: boolean) {
+    if (selectedStatus) {
+      Object.entries(this.uv.newRows).forEach(([rowIdRaw, row]) => {
+        const rowId = Number(rowIdRaw);
+        row.extra.selected = true;
+        this.uv.extra.selectedRows.insert({
+          type: "added",
+          id: rowId,
+        });
+      });
+      if (this.existingRows !== null) {
+        this.existingRows.forEach((localRow, rowI) => {
+          const row = this.uv.getRowByRef(localRow.ref);
+          row!.extra.selected = true;
+          this.uv.extra.selectedRows.insert(localRow.ref);
+        });
+      }
+    } else {
+      this.uv.extra.selectedRows.keys().forEach(ref => {
+        if (ref.type === "existing") {
+          this.uv.getRowByRef(ref)!.extra.selected = false;
+          /* this.uv.rows![ref.position].extra.selected = false; */
+          /* console.log(ref.position); */
+        } else if (ref.type === "added") {
+          this.uv.newRows[ref.id].extra.selected = false;
+        } else {
+          throw new Error("Impossible");
+        }
+      });
+      this.uv.extra.selectedRows = new ObjectSet();
+    }
   }
 
   private toggleAllRows() {

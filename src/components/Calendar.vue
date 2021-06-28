@@ -24,7 +24,7 @@
   >
     <popper
       ref="popup"
-      trigger="clickToToggle"
+      :trigger="null"
       transition="fade"
       enter-active-class="fade-enter fade-enter-active"
       leave-active-class="fade-leave fade-leave-active"
@@ -40,6 +40,7 @@
       <div
         slot="reference"
         class="calendar_container"
+        @click="togglePopup"
       >
         <!-- eslint-enable vue/no-deprecated-slot-attribute -->
         <div class="main-input">
@@ -176,6 +177,14 @@ export default class Calendar extends Vue {
 
   get isEmpty(): boolean {
     return !this.value;
+  }
+
+  private async togglePopup() {
+    if (this.isPopupOpen) {
+      await this.closePopup();
+    } else {
+      await this.openPopup();
+    }
   }
 
   private async openPopup() {

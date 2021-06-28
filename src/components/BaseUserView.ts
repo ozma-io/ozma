@@ -47,6 +47,7 @@ export interface IBaseRowExtra {
 export interface IBaseViewExtra {
   rowCount: number;
   selectedRows: ObjectSet<RowRef>;
+  softDisabled: boolean;
 }
 
 export type IBaseCombinedUserView = ICombinedUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>;
@@ -108,10 +109,13 @@ export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtr
     };
   },
 
-  createLocalUserView() {
+  createLocalUserView(uv: IBaseCombinedUserView) {
+    const softDisabled = Boolean(uv.attributes["soft_disabled"]);
+
     return {
       rowCount: 0,
       selectedRows: new ObjectSet<RowRef>(),
+      softDisabled,
     };
   },
 
