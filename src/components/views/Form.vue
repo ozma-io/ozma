@@ -389,20 +389,30 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
 
     this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength += showStep;
 
-    if (this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength > this.uv.rowLoadState.fetchedRowCount) {
+    if (!this.uv.rowLoadState.complete
+     && this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength > this.uv.rowLoadState.fetchedRowCount
+    ) {
       this.$emit("load-next-chunk", (result: boolean) => {
         if (this.uv.rowLoadState.complete) {
+          if (this.uv.rowLoadState.fetchedRowCount !== 0) {
+            ev.loaded();
+          }
           ev.complete();
-          if (this.uv.extra.lazyLoad.type !== "infinite_scroll") return;
-
-          this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength = this.uv.rowLoadState.fetchedRowCount;
         } else {
           ev.loaded();
         }
+
+        if (this.uv.extra.lazyLoad.type !== "infinite_scroll") return;
+        this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength = this.uv.rowLoadState.fetchedRowCount;
       });
-    } else if (this.uv.rowLoadState.complete === true
+    } else if (this.uv.rowLoadState.complete
       && this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength >= this.uv.rowLoadState.fetchedRowCount) {
+      if (this.uv.rowLoadState.fetchedRowCount !== 0) {
+        ev.loaded();
+      }
       ev.complete();
+
+      this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength = this.uv.rowLoadState.fetchedRowCount;
     } else {
       ev.loaded();
     }

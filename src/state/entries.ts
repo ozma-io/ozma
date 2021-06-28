@@ -150,11 +150,11 @@ const updateSearchNode = (node: SearchNode, search: string, update: UpdateSearch
 };
 
 type AwaitEntriesResult =
-  { result: "ok"; moreAvailable: boolean } |
-  { result: "error"; error: Error } |
-  { result: "need_more"; offset: number } |
-  { result: "missing" } |
-  { result: "pending"; pending: Promise<boolean> };
+  | { result: "ok"; moreAvailable: boolean }
+  | { result: "error"; error: Error }
+  | { result: "need_more"; offset: number }
+  | { result: "missing" }
+  | { result: "pending"; pending: Promise<boolean> };
 
 const waitSearchNode = (node: SearchNode, search: string, limit: number): AwaitEntriesResult => {
   if (node.search === search) {

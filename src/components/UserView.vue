@@ -478,13 +478,15 @@ export default class UserView extends Vue {
         };
 
         let uvData = await fetchUserViewData(this.$store, args, opts);
+        if (uvData.rows && uvData.rows.length <= limit) {
+          allFetched = true;
+        }
         const newType = userViewType(uvData.attributes);
         if (newType.type === "component") {
           const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType.component}.vue`)).default;
           // Check we weren't restarted.
-          if (pending.ref !== this.nextUv) {
-            return;
-          }
+          if (pending.ref !== this.nextUv) return;
+
           const handler = component.handler ?? baseUserViewHandler;
 
           if (!allFetched && !component.useLazyLoad) {
