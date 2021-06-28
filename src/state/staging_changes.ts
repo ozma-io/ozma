@@ -495,6 +495,8 @@ const stagingModule: Module<IStagingState, {}> = {
       const entityChanges = state.current.getOrCreateChanges(entityRef);
       const entry = entityChanges.added[id];
       if (entry === undefined) {
+        // Next line is workaround for some compex case with submitting on route change.
+        state.current.cleanupEntity(entityRef, entityChanges);
         return;
       }
       Vue.delete(entityChanges.added, id);

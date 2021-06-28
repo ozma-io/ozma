@@ -46,7 +46,6 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import type { IUserViewType } from "@/components/FormControl.vue";
-import { queryLocation } from "@/state/query";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import type { Button } from "@/components/buttons/buttons";
 import { buttonsToPanelButtons } from "@/components/buttons/buttons";

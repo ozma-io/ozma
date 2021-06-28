@@ -242,12 +242,33 @@ const settings = namespace("settings");
 const query = namespace("query");
 const errors = namespace("errors");
 
-@Component({ components: {
-  ModalUserView,
-  ProgressBar,
-  QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
-  HeaderPanel,
-} })
+@Component({
+  components: {
+    ModalUserView,
+    ProgressBar,
+    QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
+    HeaderPanel,
+  },
+  /* Two hooks below catches only browser navigation buttons,
+   * other ways of changing current page are handled in query module.
+   */
+  async beforeRouteUpdate(to: Route, from: Route, next: any) {
+    try {
+      await (this as TopLevelUserView).submitChanges({ errorOnIncomplete: true });
+      next();
+    } catch (_) {
+      next(false);
+    }
+  },
+  async beforeRouteLeave(to: Route, from: Route, next: any) {
+    try {
+      await (this as TopLevelUserView).submitChanges({ errorOnIncomplete: true });
+      next();
+    } catch (_) {
+      next(false);
+    }
+  },
+})
 export default class TopLevelUserView extends Vue {
   @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
   @auth.State("pending") authPending!: Promise<void> | null;
@@ -306,6 +327,7 @@ export default class TopLevelUserView extends Vue {
         type: "callback",
         icon: "arrow_back",
         variant: "interfaceButton",
+        disabled: !this.query?.root.previous,
         colorVariables: getColorVariables("button", "interfaceButton"), // FIXME TODO: Manual settings of `colorVariables` is ugly, unsafe and stupid, refactor this.
         callback: () => this.goBackRoot(),
       },
