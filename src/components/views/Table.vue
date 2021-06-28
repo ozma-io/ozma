@@ -79,7 +79,7 @@
         class="button-container"
       >
         <ButtonItem
-          v-if="uv.emptyRow !== null && !uv.extra.dirtyHackPreventEntireReloads"
+          v-if="uv.emptyRow !== null && !uv.extra.softDisabled && !uv.extra.dirtyHackPreventEntireReloads"
           :button="topAddButton"
         />
         <div
@@ -236,7 +236,7 @@
         </template>
       </InfiniteLoading>
       <div
-        v-if="uv.emptyRow !== null && !uv.extra.dirtyHackPreventEntireReloads"
+        v-if="uv.emptyRow !== null && !uv.extra.softDisabled && !uv.extra.dirtyHackPreventEntireReloads"
         ref="bottomButtonContainer"
         class="button-container"
       >

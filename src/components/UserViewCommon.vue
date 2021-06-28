@@ -306,7 +306,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   get selectionButtons() {
     const buttons = this.attrButtons.filter(button => button.display === "selectionPanel");
 
-    if (this.uv.info.mainEntity) {
+    if (this.uv.info.mainEntity && !this.uv.extra.softDisabled) {
       buttons.push(
         {
           icon: "delete_sweep",
