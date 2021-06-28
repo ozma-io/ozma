@@ -79,7 +79,7 @@
         class="button-container"
       >
         <ButtonItem
-          v-if="uv.emptyRow !== null && !uv.extra.dirtyHackPreventEntireReloads"
+          v-if="uv.emptyRow !== null && !uv.extra.softDisabled && !uv.extra.dirtyHackPreventEntireReloads"
           :button="topAddButton"
         />
         <div
@@ -216,7 +216,7 @@
       </table>
       <InfiniteLoading
         v-if="useInfiniteScrolling"
-        :force-use-infinite-wrapper="isRoot ? false : '.view-form'"
+        :force-use-infinite-wrapper="isRoot ? '.tabl' : '.view-form'"
         :identifier="infiniteIdentifier"
         spinner="spiral"
         :distance="500"
@@ -236,7 +236,7 @@
         </template>
       </InfiniteLoading>
       <div
-        v-if="uv.emptyRow !== null && !uv.extra.dirtyHackPreventEntireReloads"
+        v-if="uv.emptyRow !== null && !uv.extra.softDisabled && !uv.extra.dirtyHackPreventEntireReloads"
         ref="bottomButtonContainer"
         class="button-container"
       >
@@ -2112,6 +2112,37 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     });
   }
 
+  selectAll(selectedStatus: boolean) {
+    if (selectedStatus) {
+      Object.entries(this.uv.newRows).forEach(([rowIdRaw, row]) => {
+        const rowId = Number(rowIdRaw);
+        row.extra.selected = true;
+        this.uv.extra.selectedRows.insert({
+          type: "added",
+          id: rowId,
+        });
+      });
+      if (this.existingRows !== null) {
+        this.existingRows.forEach((localRow, rowI) => {
+          const row = this.uv.getRowByRef(localRow.ref);
+          row!.extra.selected = true;
+          this.uv.extra.selectedRows.insert(localRow.ref);
+        });
+      }
+    } else {
+      this.uv.extra.selectedRows.keys().forEach(ref => {
+        if (ref.type === "existing") {
+          this.uv.getRowByRef(ref)!.extra.selected = false;
+        } else if (ref.type === "added") {
+          this.uv.newRows[ref.id].extra.selected = false;
+        } else {
+          throw new Error("Impossible");
+        }
+      });
+      this.uv.extra.selectedRows = new ObjectSet();
+    }
+  }
+
   private toggleAllRows() {
     this.selectAll(!this.selectedSome);
     this.$root.$emit("row-select", this.uid);
@@ -2373,7 +2404,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     width: 100%;
     margin: 0;
     position: relative;
-    min-height: 100%;
+    height: 100%;
     background-color: var(--table-backgroundDarker1Color);
 
     &.nested {
