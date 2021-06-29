@@ -28,6 +28,7 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
         /* eslint-disable @typescript-eslint/unbound-method */
         close: this.closeAll,
         "tab-close": this.close,
+        "go-back-window": this.goBackWindow,
         /* eslint-enable @typescript-eslint/unbound-method */
       },
     });
@@ -72,6 +73,11 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
   private close(index: number) {
     const modalPortal = this.passengers[index].context!.$children[0];
     modalPortal.$emit("close");
+  }
+
+  private goBackWindow() {
+    const modalPortal = this.passengers[0].context!.$children[0];
+    modalPortal.$emit("go-back-window");
   }
 
   private closeAll() {

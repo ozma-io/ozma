@@ -85,6 +85,7 @@
 <script lang="ts">
 import * as R from "ramda";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { homeLink } from "@/utils";
 
 import ModalContent from "@/components/modal/ModalContent";
 import ModalTabHeader from "@/components/modal/ModalTabHeader.vue";
@@ -156,14 +157,14 @@ export default class Modal extends Vue {
         icon: "arrow_back",
         variant: "interfaceButton",
         colorVariables: getColorVariables("button", "interfaceButton"),
-        callback: () => this.$router.go(-1),
+        callback: () => this.$emit("go-back-window"),
       },
       {
-        type: "location",
+        type: "link",
         icon: "home",
         variant: "interfaceButton",
         colorVariables: getColorVariables("button", "interfaceButton"),
-        location: { name: "main" },
+        link: homeLink,
       },
     ];
   }

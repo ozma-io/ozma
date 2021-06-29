@@ -8,8 +8,8 @@
             "save": "Save (Ctrl+S)",
             "saved": "All changes saved",
             "show_errors": "Show errors",
-            "clear_changes": "Clear all changes",
-            "clear_changes_confirm": "Clear all changes after last save?",
+            "clear_changes": "Reset changes after last save",
+            "clear_changes_confirm": "Reset changes after last save?",
             "clear_changes_ok": "Clear",
             "cancel": "Cancel",
             "account": "Account",
@@ -68,6 +68,7 @@
         :view="window.query"
         :autofocus="query.selectedWindow === i"
         @close="closeWindow(i)"
+        @go-back-window="goBackWindow(i)"
         @goto-previous="gotoPreviousWindow(i)"
         @goto="pushWindow({index: i, query: $event})"
       />
@@ -130,7 +131,7 @@
     >
       <transition name="fade-2">
         <button
-          v-if="errors.length > 0"
+          v-if="canClearUnsavedChanges"
           v-b-tooltip.hover.right.noninteractive="{
             title: $t('clear_changes').toString(),
             disabled: $isMobile,
@@ -141,7 +142,7 @@
           <span
             class="material-icons md-36"
           >
-            clear
+            restart_alt
           </span>
         </button>
       </transition>
@@ -166,17 +167,17 @@
 
       <transition name="fade-2" mode="out-in">
         <div
-          v-if="!changes.isScopeEmpty('root') && isSaving"
+          v-if="!changes.isEmpty && isSaving"
           class="saving-spinner spinner-border"
         />
         <button
-          v-else-if="!changes.isScopeEmpty('root')"
+          v-else-if="!changes.isEmpty"
           v-b-tooltip.hover.right.noninteractive="{
             title: $t('save').toString(),
             disabled: $isMobile,
           }"
           :class="['save-cluster-button save-button shadow', {
-            'save': !changes.isScopeEmpty('root'),
+            'save': !changes.isEmpty,
           }]"
           @click="saveView"
         >
@@ -219,6 +220,7 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import * as Api from "@/api";
+import { eventBus } from "@/main";
 import { setHeadTitle } from "@/elements";
 import { ErrorKey } from "@/state/errors";
 import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/staging_changes";
@@ -226,7 +228,7 @@ import ModalUserView from "@/components/ModalUserView.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { CurrentAuth, getAuthedLink, INoAuth } from "@/state/auth";
 import { IQuery, ICurrentQueryHistory } from "@/state/query";
-import { convertToWords, nextRender } from "@/utils";
+import { convertToWords, homeLink, nextRender } from "@/utils";
 import { Link } from "@/links";
 import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
@@ -240,12 +242,33 @@ const settings = namespace("settings");
 const query = namespace("query");
 const errors = namespace("errors");
 
-@Component({ components: {
-  ModalUserView,
-  ProgressBar,
-  QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
-  HeaderPanel,
-} })
+@Component({
+  components: {
+    ModalUserView,
+    ProgressBar,
+    QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
+    HeaderPanel,
+  },
+  /* Two hooks below catches only browser navigation buttons,
+   * other ways of changing current page are handled in query module.
+   */
+  async beforeRouteUpdate(to: Route, from: Route, next: any) {
+    try {
+      await (this as TopLevelUserView).submitChanges({ errorOnIncomplete: true });
+      next();
+    } catch (_) {
+      next(false);
+    }
+  },
+  async beforeRouteLeave(to: Route, from: Route, next: any) {
+    try {
+      await (this as TopLevelUserView).submitChanges({ errorOnIncomplete: true });
+      next();
+    } catch (_) {
+      next(false);
+    }
+  },
+})
 export default class TopLevelUserView extends Vue {
   @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
   @auth.State("pending") authPending!: Promise<void> | null;
@@ -261,6 +284,8 @@ export default class TopLevelUserView extends Vue {
   @query.Action("replaceRootSearch") replaceRootSearch!: (_: string) => Promise<void>;
   @query.Action("closeWindow") closeWindow!: (_: number) => Promise<void>;
   @query.Action("pushWindow") pushWindow!: (_: { index: number; query: IQuery }) => Promise<void>;
+  @query.Action("goBackRoot") goBackRoot!: () => Promise<void>;
+  @query.Action("goBackWindow") goBackWindow!: (windowIndex: number) => Promise<void>;
   @errors.Mutation("removeError") removeError!: (params: { key: ErrorKey; index: number }) => void;
   @errors.Mutation("reset") resetErrors!: () => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
@@ -302,15 +327,16 @@ export default class TopLevelUserView extends Vue {
         type: "callback",
         icon: "arrow_back",
         variant: "interfaceButton",
+        disabled: !this.query?.root.previous,
         colorVariables: getColorVariables("button", "interfaceButton"), // FIXME TODO: Manual settings of `colorVariables` is ugly, unsafe and stupid, refactor this.
-        callback: () => this.$router.go(-1),
+        callback: () => this.goBackRoot(),
       },
       {
-        type: "location",
+        type: "link",
         icon: "home",
         variant: "interfaceButton",
         colorVariables: getColorVariables("button", "interfaceButton"),
-        location: { name: "main" },
+        link: homeLink,
       },
       this.burgerButton,
     ];
@@ -323,14 +349,23 @@ export default class TopLevelUserView extends Vue {
   }
 
   mounted() {
-    // Listen to the event.
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+    /* eslint-disable @typescript-eslint/unbound-method */
     this.$root.$on("open-qrcode-scanner", this.openQRCodeScanner);
-
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     document.addEventListener("keydown", this.onKeydown);
+    eventBus.on("closeAllToasts", this.closeAllToasts);
+    /* eslint-enable @typescript-eslint/unbound-method */
 
     void this.loadBurgerButtons();
+  }
+
+  private destroyed() {
+    this.styleNode.remove();
+
+    /* eslint-disable @typescript-eslint/unbound-method */
+    this.$root.$off("open-qrcode-scanner", this.openQRCodeScanner);
+    document.removeEventListener("keydown", this.onKeydown);
+    eventBus.off("closeAllToasts", this.closeAllToasts);
+    /* eslint-enable @typescript-eslint/unbound-method */
   }
 
   @Watch("currentSettings")
@@ -432,6 +467,10 @@ export default class TopLevelUserView extends Vue {
     }
   }
 
+  private closeAllToasts() {
+    this.$bvToast.hide();
+  }
+
   private makeErrorToast() {
     this.$bvToast.hide();
     this.errors.forEach(error => {
@@ -442,6 +481,10 @@ export default class TopLevelUserView extends Vue {
         autoHideDelay: 10000,
       });
     });
+  }
+
+  private get canClearUnsavedChanges() {
+    return this.errors.length !== 0 && !this.changes.isEmpty;
   }
 
   @Watch("$route", { deep: true, immediate: true })
@@ -458,22 +501,11 @@ export default class TopLevelUserView extends Vue {
 
   private updateTitle(title: string) {
     this.title = title;
-    setHeadTitle(`${title} - Ozma`);
+    setHeadTitle(`${title} — Ozma`);
   }
 
   private created() {
     document.head.appendChild(this.styleNode);
-  }
-
-  private destroyed() {
-    this.styleNode.remove();
-
-    // Off listen to the event.
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    this.$root.$off("open-qrcode-scanner", this.openQRCodeScanner);
-
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    document.removeEventListener("keydown", this.onKeydown);
   }
 
   private resetChanges() {
@@ -482,8 +514,10 @@ export default class TopLevelUserView extends Vue {
       cancelTitle: this.$t("cancel").toString(),
       okVariant: "danger",
       cancelVariant: "outline-secondary",
+      centered: true,
     }).then(this.clearChanges)
       .then(this.resetErrors)
+      .then(() => this.closeAllToasts())
       .catch(err => {
       });
   }
@@ -711,13 +745,20 @@ export default class TopLevelUserView extends Vue {
     color: var(--default-backgroundDarker2Color);
   }
 
-  .reset-changes-button,
-  .show-errors-button {
+  .reset-changes-button {
     height: 3rem;
     width: 3rem;
     margin-bottom: 0.5rem;
     background-color: #dc354533;
     color: #dc3545cc;
+  }
+
+  .show-errors-button {
+    height: 3rem;
+    width: 3rem;
+    margin-bottom: 0.5rem;
+    background-color: #6c757d33;
+    color: #6c757dcc;
   }
 
   .save-button {

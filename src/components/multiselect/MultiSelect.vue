@@ -126,7 +126,7 @@
           </b-button>
 
           <b-input-group-text
-            class="with-material-icon select-icon"
+            :class="['with-material-icon select-icon', { 'is-mobile': $isMobile }]"
           >
             <i class="material-icons">
               {{ isPopupOpen ? "expand_less" : "expand_more" }}
@@ -672,6 +672,12 @@ export default class MultiSelect extends Vue {
       color: var(--input-foregroundDarkerColor);
       border-right-width: 0;
       cursor: pointer;
+      display: none;
+
+      .select-container:hover &,
+      .select-container:focus-within & {
+        display: initial;
+      }
     }
   }
 
@@ -833,17 +839,6 @@ export default class MultiSelect extends Vue {
 
   .one-of-many-value:hover,
   .one-of-many-value:hover > input.remove-value {
-    cursor: pointer;
-  }
-
-  .clear_all_button {
-    color: var(--MainTextColor);
-    padding: 5px;
-    font-style: italic;
-  }
-
-  .clear_all_button:hover {
-    text-decoration: underline;
     cursor: pointer;
   }
 </style>

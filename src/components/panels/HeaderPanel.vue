@@ -46,7 +46,6 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import type { IUserViewType } from "@/components/FormControl.vue";
-import { queryLocation } from "@/state/query";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import type { Button } from "@/components/buttons/buttons";
 import { buttonsToPanelButtons } from "@/components/buttons/buttons";
@@ -80,11 +79,15 @@ export default class HeaderPanel extends Vue {
     return this.view === null
       ? null
       : {
-        type: "location",
+        type: "link",
         variant: "interfaceButton",
         colorVariables: getColorVariables("button", "interfaceButton"),
         icon: "fullscreen",
-        location: queryLocation(this.view),
+        link: {
+          type: "query",
+          target: "top",
+          query: this.view,
+        },
       };
   }
 }

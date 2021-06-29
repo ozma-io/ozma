@@ -2133,8 +2133,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       this.uv.extra.selectedRows.keys().forEach(ref => {
         if (ref.type === "existing") {
           this.uv.getRowByRef(ref)!.extra.selected = false;
-          /* this.uv.rows![ref.position].extra.selected = false; */
-          /* console.log(ref.position); */
         } else if (ref.type === "added") {
           this.uv.newRows[ref.id].extra.selected = false;
         } else {
