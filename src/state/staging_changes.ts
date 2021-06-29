@@ -757,9 +757,13 @@ const stagingModule: Module<IStagingState, {}> = {
       context.commit("removeAutoSaveLock", id);
       checkAutoSave(context);
     },
+    submitIfNeeded: async (context, params: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }): Promise<CombinedTransactionResult[]> => {
+      const { state, dispatch } = context;
+      if (state.current.isEmpty) return [];
+      return dispatch("submit", params);
+    },
     submit: async (context, params: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }): Promise<CombinedTransactionResult[]> => {
       const { state, commit, dispatch } = context;
-      if (state.current.isEmpty) return Promise.resolve([]);
 
       if (state.currentSubmit !== null) {
         await state.currentSubmit;
