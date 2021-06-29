@@ -523,7 +523,7 @@ export default class TopLevelUserView extends Vue {
   }
 
   private async saveView() {
-    const submit = await this.submitChanges({ scope: "root", errorOnIncomplete: true });
+    const submit = await this.submitChanges({ errorOnIncomplete: true });
 
     if (this.errors.length === 0) {
       this.$bvToast.hide();
