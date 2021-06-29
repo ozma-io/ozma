@@ -760,7 +760,7 @@ const stagingModule: Module<IStagingState, {}> = {
     submitIfNeeded: async (context, params: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }): Promise<CombinedTransactionResult[]> => {
       const { state, dispatch } = context;
       if (state.current.isEmpty) return [];
-      return await dispatch("submit", params);
+      return dispatch("submit", params);
     },
     submit: async (context, params: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }): Promise<CombinedTransactionResult[]> => {
       const { state, commit, dispatch } = context;
