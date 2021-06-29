@@ -565,7 +565,7 @@ const queryModule: Module<IQueryState, {}> = {
       commit("resetRoute", route);
     },
     pushRoot: async ({ state, commit, dispatch }, query: IQuery) => {
-      await dispatch("staging/submit", { errorOnIncomplete: true }, { root: true });
+      await dispatch("staging/submitIfNeeded", { errorOnIncomplete: true }, { root: true });
 
       commit("pushRoot", query);
       try {
@@ -575,7 +575,7 @@ const queryModule: Module<IQueryState, {}> = {
       }
     },
     replaceRoot: async ({ state, commit, dispatch }, query: IQuery) => {
-      await dispatch("staging/submit", { errorOnIncomplete: true }, { root: true });
+      await dispatch("staging/submitIfNeeded", { errorOnIncomplete: true }, { root: true });
 
       commit("replaceRoot", query);
       try {
@@ -598,7 +598,7 @@ const queryModule: Module<IQueryState, {}> = {
       }
     },
     goBackRoot: async ({ commit, dispatch }) => {
-      await dispatch("staging/submit", { errorOnIncomplete: true }, { root: true });
+      await dispatch("staging/submitIfNeeded", { errorOnIncomplete: true }, { root: true });
 
       commit("goBackRoot");
       try {
@@ -608,7 +608,7 @@ const queryModule: Module<IQueryState, {}> = {
       }
     },
     goBackWindow: async ({ commit, dispatch }, windowIndex: number) => {
-      await dispatch("staging/submit", { errorOnIncomplete: true }, { root: true });
+      await dispatch("staging/submitIfNeeded", { errorOnIncomplete: true }, { root: true });
 
       commit("goBackWindow", windowIndex);
       try {
@@ -618,7 +618,7 @@ const queryModule: Module<IQueryState, {}> = {
       }
     },
     addWindow: async ({ state, commit, dispatch }, query: IQuery) => {
-      await dispatch("staging/submit", { errorOnIncomplete: true }, { root: true });
+      await dispatch("staging/submitIfNeeded", { errorOnIncomplete: true }, { root: true });
 
       commit("addWindow", query);
       try {
@@ -628,7 +628,7 @@ const queryModule: Module<IQueryState, {}> = {
       }
     },
     closeWindow: async ({ state, commit, dispatch }, windowIndex: number) => {
-      await dispatch("staging/submit", { errorOnIncomplete: true }, { root: true });
+      await dispatch("staging/submitIfNeeded", { errorOnIncomplete: true }, { root: true });
 
       commit("closeWindow", windowIndex);
       try {
@@ -646,7 +646,7 @@ const queryModule: Module<IQueryState, {}> = {
       }
     },
     pushWindow: async ({ state, commit, dispatch }, args: { index: number; query: IQuery }) => {
-      await dispatch("staging/submit", { errorOnIncomplete: true }, { root: true });
+      await dispatch("staging/submitIfNeeded", { errorOnIncomplete: true }, { root: true });
 
       commit("pushWindow", args);
       try {
@@ -656,7 +656,7 @@ const queryModule: Module<IQueryState, {}> = {
       }
     },
     replaceWindow: async ({ state, commit, dispatch }, args: { index: number; query: IQuery }) => {
-      await dispatch("staging/submit", { errorOnIncomplete: true }, { root: true });
+      await dispatch("staging/submitIfNeeded", { errorOnIncomplete: true }, { root: true });
 
       commit("replaceWindow", args);
       try {
