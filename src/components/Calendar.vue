@@ -24,6 +24,7 @@
   >
     <popper
       ref="popup"
+      v-click-outside="closePopup"
       :trigger="null"
       transition="fade"
       enter-active-class="fade-enter fade-enter-active"
