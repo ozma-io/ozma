@@ -131,7 +131,7 @@ import { IQuery } from "@/state/query";
 import { attrToLinkRef, IAttrToLinkOpts, Link } from "@/links";
 import type { IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema, ICombinedValue, valueToPunnedText } from "@/user_views/combined";
-import { mapMaybe, nextRender } from "@/utils";
+import { mapMaybe, NeverError, nextRender } from "@/utils";
 import type { IEntityRef, RowId, ValueType } from "ozma-api";
 import { equalEntityRef } from "@/values";
 import { CancelledError } from "@/modules";
@@ -197,7 +197,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     void this.processId(value.value);
   }
 
-  @Watch("entries", { immediate: true })
+  @Watch("entries")
   private entriesRefChanged(newValue: IEntriesRef) {
     void this.fetchEntries(newValue, this.requestedSearch, this.requestedLimit);
   }
@@ -273,11 +273,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   }
 
   get options(): ReferenceSelectOption[] | null {
-    if (this.valueOptions && this.entriesOptions) {
-      return [...this.valueOptions, ...this.entriesOptions].sort(compareOptions);
-    } else {
-      return [];
-    }
+    return [...this.valueOptions ?? [], ...this.entriesOptions ?? []].sort(compareOptions);
   }
 
   private setValue(id: number) {
@@ -356,14 +352,17 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   }
 
   get loadingState(): LoadingState {
-    if (this.entriesLoadingState.status === "ok") {
-      return { status: "ok", moreAvailable: this.entriesLoadingState.limit !== null };
-    } else if (this.entriesLoadingState.status === "pending") {
-      return { status: "pending" };
-    } else if (this.entriesLoadingState.status === "error") {
-      return { status: "error", message: String(this.entriesLoadingState.error) };
-    } else {
-      throw new Error("Impossible");
+    switch (this.entriesLoadingState.status) {
+      case "not_asked":
+        return { status: "ok", moreAvailable: true };
+      case "pending":
+        return { status: "pending" };
+      case "ok":
+        return { status: "ok", moreAvailable: this.entriesLoadingState.limit !== null };
+      case "error":
+        return { status: "error", message: String(this.entriesLoadingState.error) };
+      default:
+        throw new NeverError(this.entriesLoadingState);
     }
   }
 

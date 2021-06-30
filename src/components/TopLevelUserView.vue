@@ -252,17 +252,17 @@ const errors = namespace("errors");
   /* Two hooks below catches only browser navigation buttons,
    * other ways of changing current page are handled in query module.
    */
-  async beforeRouteUpdate(to: Route, from: Route, next: any) {
+  async beforeRouteUpdate(this: TopLevelUserView, to: Route, from: Route, next: any) {
     try {
-      await (this as TopLevelUserView).submitChanges({ errorOnIncomplete: true });
+      await this.submitChanges({ errorOnIncomplete: true });
       next();
     } catch (_) {
       next(false);
     }
   },
-  async beforeRouteLeave(to: Route, from: Route, next: any) {
+  async beforeRouteLeave(this: TopLevelUserView, to: Route, from: Route, next: any) {
     try {
-      await (this as TopLevelUserView).submitChanges({ errorOnIncomplete: true });
+      await this.submitChanges({ errorOnIncomplete: true });
       next();
     } catch (_) {
       next(false);
