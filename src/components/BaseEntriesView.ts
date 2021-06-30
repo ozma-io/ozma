@@ -7,6 +7,10 @@ import { RowId } from "ozma-api";
 
 const entries = namespace("entries");
 
+export interface INotAskedEntries {
+  status: "not_asked";
+}
+
 export interface IPendingEntries {
   status: "pending";
 }
@@ -21,7 +25,7 @@ export interface IErrorEntries {
   error: Error;
 }
 
-export type EntriesState = IPendingEntries | ILoadedEntries | IErrorEntries;
+export type EntriesState = INotAskedEntries | IPendingEntries | ILoadedEntries | IErrorEntries;
 
 @Component
 export default class BaseEntriesView extends Vue {
@@ -39,7 +43,7 @@ export default class BaseEntriesView extends Vue {
 
   get entriesLoadingState(): EntriesState {
     const node = this.newEntries?.get(this.requestedSearch);
-    return node ?? { status: "pending" };
+    return node ?? { status: "not_asked" };
   }
 
   private get newEntries() {
