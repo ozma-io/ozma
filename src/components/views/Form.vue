@@ -597,6 +597,11 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
   @Watch("uv")
   private uvChanged() {
     this.init();
+
+    // FIXME: Entry selection somehow worked without this before.
+    if (this.selectionMode && this.uv.rows?.length === 1) {
+      this.$emit("select", this.uv.rows[0].extra.selectionEntry);
+    }
   }
 
   @Watch("rowPositions")

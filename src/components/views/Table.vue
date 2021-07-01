@@ -1123,6 +1123,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   // Keep references to entries used for editing once, so we don't re-request them.
   private keptEntries = new ObjectSet<IFieldRef>();
 
+  // FIXME: Delete this unused variable and `setInputHeight` function.
   private cellEditHeight = 0;
 
   private rowsState: Record<number, any> = {};
@@ -1251,6 +1252,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (this.uv.extra.lazyLoad.type !== "pagination") return 0;
 
     return this.uv.extra.lazyLoad.pagination?.currentPage + 1;
+  }
+
+  @Watch("currentPage")
+  private updateCurrentPageToParent() {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return;
+
+    this.$emit("update:currentPage", this.currentPage);
   }
 
   private get pagesCount(): number | null {
@@ -1905,19 +1913,20 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     // Fix for case when some cell is being edited and modal opens,
     // otherwise any click on this modal will close the cell editing and modal too.
     // FIXME: rely on CSS-classes for logic is bad thing, fix it someone, please.
-    if ((element?.closest(".v--modal-box") && !this.$el.closest(".v--modal-box"))
-     || (element?.closest(".modal__tab-content") !== this.$el.closest(".modal__tab-content"))
+    if (element === null
+     || (element.closest(".v--modal-box") && !this.$el.closest(".v--modal-box"))
+     || (element.closest(".modal__tab-content") !== this.$el.closest(".modal__tab-content"))
     ) {
       return;
     }
 
     this.removeCellEditing();
-    this.cellEditHeight = 0;
   }
 
   private removeCellEditing() {
     if (this.editing === null) return;
 
+    this.cellEditHeight = 0;
     void this.removeAutoSaveLock(this.editing.lock);
     this.editing = null;
   }

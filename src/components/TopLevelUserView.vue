@@ -109,6 +109,7 @@
           @update:bodyStyle="styleNode.innerHTML = $event"
           @update:title="updateTitle"
           @update:isLoading="isUserViewLoading = $event"
+          @update:paginationPage="replaceRootPage($event)"
         />
       </div>
     </div>
@@ -179,7 +180,7 @@
           :class="['save-cluster-button save-button shadow', {
             'save': !changes.isEmpty,
           }]"
-          @click="saveView"
+          @click.capture.stop="saveView"
         >
           <span
             class="material-icons md-36"
@@ -282,6 +283,7 @@ export default class TopLevelUserView extends Vue {
   @query.Action("resetRoute") resetRoute!: (_: Route) => void;
   @query.Action("pushRoot") pushRoot!: (_: IQuery) => Promise<void>;
   @query.Action("replaceRootSearch") replaceRootSearch!: (_: string) => Promise<void>;
+  @query.Action("replaceRootPage") replaceRootPage!: (_: string) => Promise<void>;
   @query.Action("closeWindow") closeWindow!: (_: number) => Promise<void>;
   @query.Action("pushWindow") pushWindow!: (_: { index: number; query: IQuery }) => Promise<void>;
   @query.Action("goBackRoot") goBackRoot!: () => Promise<void>;
@@ -416,12 +418,7 @@ export default class TopLevelUserView extends Vue {
     if ((event.ctrlKey || event.metaKey) && (event.key === "s" || event.keyCode === 83)) {
       event.preventDefault();
 
-      const modals = (this.$refs.modalUserViews as ModalUserView[]) ?? [];
-      const someModalSaved = modals.some(view => view.saveViewIfChanged());
-
-      if (!someModalSaved && !this.changes.isScopeEmpty("root")) {
-        void this.saveView();
-      }
+      void this.saveView();
     }
   }
 
@@ -522,8 +519,22 @@ export default class TopLevelUserView extends Vue {
       });
   }
 
+  private async saveChanges() {
+    const scopes = Object.keys(this.changes.scopes);
+    const nonRootScopes = scopes.filter(scope => scope !== "root");
+
+    const results: CombinedTransactionResult[] = [];
+    for (const scope of nonRootScopes) {
+      // eslint-disable-next-line no-await-in-loop
+      results.push(...await this.submitChanges({ scope, errorOnIncomplete: true }));
+    }
+
+    results.push(...await this.submitChanges({ scope: "root", errorOnIncomplete: true }));
+    return results;
+  }
+
   private async saveView() {
-    const submit = await this.submitChanges({ errorOnIncomplete: true });
+    await this.saveChanges();
 
     if (this.errors.length === 0) {
       this.$bvToast.hide();

@@ -120,7 +120,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Watch } from "vue-property-decorator";
+import { Component, Prop } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
 import { ISelectOption, default as MultiSelect, LoadingResult, LoadingState } from "@/components/multiselect/MultiSelect.vue";
@@ -197,10 +197,10 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     void this.processId(value.value);
   }
 
-  @Watch("entries")
-  private entriesRefChanged(newValue: IEntriesRef) {
-    void this.fetchEntries(newValue, this.requestedSearch, this.requestedLimit);
-  }
+  /* @Watch("entries")
+   * private entriesRefChanged(newValue: IEntriesRef) {
+   *   void this.fetchEntries(newValue, this.requestedSearch, this.requestedLimit);
+   * } */
 
   private findValue(value: ICombinedValue): number | undefined {
     const currentId = currentValue(value) as number | null | undefined;
@@ -427,11 +427,12 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   }
 
   .action-button {
+    padding: 0.5rem 0.25rem;
     border-radius: 0;
     display: flex;
     align-items: center;
     width: 100%;
-    background: var(--input-backgroundColor, var(--default-backgroundColor));
+    background: var(--default-backgroundColor);
   }
 
   .loading-box {
