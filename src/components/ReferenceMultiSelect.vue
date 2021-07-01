@@ -120,7 +120,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop } from "vue-property-decorator";
+import { Component, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
 import { ISelectOption, default as MultiSelect, LoadingResult, LoadingState } from "@/components/multiselect/MultiSelect.vue";
@@ -188,7 +188,9 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     });
   }
 
-  private mounted() {
+  @Watch("value", { immediate: true })
+  // TODO: Possible unnecessary requests there, check this.
+  private loadPun() {
     if (!this.loadPunOnMount) return;
 
     const value = this.value as ICombinedValue;
