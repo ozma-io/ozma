@@ -119,6 +119,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
           },
           rowId: null,
         },
+        constrainedBy: null,
       };
       const requestedColumns: RowId[] = [];
       const columns = mapMaybe(col => {

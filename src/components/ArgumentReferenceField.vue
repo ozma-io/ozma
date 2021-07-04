@@ -57,6 +57,7 @@ export default class ArgumentReferenceField extends Vue {
     return {
       entity: this.referenceEntity,
       referencedBy: null,
+      constrainedBy: null,
     };
   }
 }
