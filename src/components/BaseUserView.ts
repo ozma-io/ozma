@@ -66,14 +66,20 @@ export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtr
         id: value.info.id!,
       };
     }
-    const softDisabled = !!getValueAttr("soft_disabled");
+    const softDisabled = Boolean(getValueAttr("soft_disabled"));
     return { softDisabled };
   },
-  createAddedLocalValue() {
-    return { softDisabled: false };
+
+  createAddedLocalValue(uv: IBaseCombinedUserView, rowIndex: number, row: ICombinedRow & IBaseExtendedRowInfo, columnIndex: number, value: ICombinedValue) {
+    const getValueAttr = (key: string) => tryDicts(key, value.attributes, row.attributes, uv.columnAttributes[columnIndex], uv.attributes);
+    const softDisabled = Boolean(getValueAttr("soft_disabled"));
+    return { softDisabled };
   },
-  createEmptyLocalValue() {
-    return { softDisabled: false };
+
+  createEmptyLocalValue(uv: IBaseCombinedUserView, row: ICombinedRow & IBaseExtendedRowInfo, columnIndex: number, value: ICombinedValue) {
+    const getValueAttr = (key: string) => tryDicts(key, value.attributes, row.attributes, uv.columnAttributes[columnIndex], uv.attributes);
+    const softDisabled = Boolean(getValueAttr("soft_disabled"));
+    return { softDisabled };
   },
 
   createLocalRow(uv: IBaseCombinedUserView, rowIndex: number, row: ICombinedRow, oldView: IBaseViewExtra | null, oldRow: IBaseRowExtra | null) {
