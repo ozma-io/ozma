@@ -83,9 +83,11 @@
           @update:buttons="componentButtons = $event"
           @update:statusLine="$emit('update:statusLine', $event)"
           @update:enableFilter="$emit('update:enableFilter', $event)"
+          @update:currentPage="$emit('update:currentPage', $event)"
           @update:bodyStyle="$emit('update:bodyStyle', $event)"
           @load-next-chunk="loadNextChunk"
           @load-all-chunks="loadAllChunks"
+          @load-entries="loadEntries"
         />
       </transition>
     </template>
@@ -343,6 +345,7 @@ export default class UserView extends Vue {
             },
           },
           search: "",
+          page: null,
         };
 
         if (this.state.state === "show") {
@@ -384,7 +387,15 @@ export default class UserView extends Vue {
       Object.entries(args),
     ));
     // TODO: In nested views this opens view in fullscreen, it's not good, but not such frequent case either, I suppose.
-    const linkQuery: IQuery = { args: { source: this.args.source, args: serialized }, defaultValues: {}, search: "" };
+    const linkQuery: IQuery = {
+      args: {
+        source: this.args.source,
+        args: serialized,
+      },
+      defaultValues: {},
+      search: "",
+      page: null,
+    };
     this.$emit("goto", linkQuery);
   }
 
@@ -432,10 +443,17 @@ export default class UserView extends Vue {
     this.reload({ loadAllChunks: true, done });
   }
 
+  private loadEntries(limit: number, done: () => void) {
+    if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
+
+    this.reload({ limit, done });
+  }
+
   private reload(options?: {
     differentComponent?: boolean;
     loadNextChunk?: boolean;
     loadAllChunks?: boolean;
+    limit?: number;
     done?: () => void;
   }) {
     const args = deepClone(this.args);
@@ -464,9 +482,12 @@ export default class UserView extends Vue {
             allFetched = true;
           } else {
             const delta = (options?.loadNextChunk ? 1 : 0) * this.state.uv.rowLoadState.perFetch;
-            limit = options?.loadAllChunks === true || this.state.uv.rowLoadState.complete === true
+            const fetchAll = options?.loadAllChunks || this.state.uv.rowLoadState.complete;
+            limit = fetchAll
               ? fetchAllLimit
-              : this.state.uv.rowLoadState.fetchedRowCount + delta;
+              : options?.limit
+                ? options.limit
+                : this.state.uv.rowLoadState.fetchedRowCount + delta;
           }
         } else {
           limit = maxPerFetch;
@@ -697,6 +718,7 @@ export default class UserView extends Vue {
               defaultValues: {},
               args: { source: uv.args.source, args: { id } },
               search: "",
+              page: null,
             },
             target: "root",
             type: "query",

@@ -59,7 +59,7 @@
           <ButtonItem :button="prevPageButton" />
           <div class="current-page-wrapper">
             <div class="current-page">
-              {{ uv.extra.lazyLoad.pagination.currentPage + 1 }}
+              {{ currentVisualPage }}
               <span v-if="pagesCount !== null" class="pages-count">{{ "/" + pagesCount }} </span>
             </div>
           </div>
@@ -138,6 +138,7 @@ import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { AttributesMap, IResultColumnInfo, ValueType } from "ozma-api";
 import { z } from "zod";
+import { namespace } from "vuex-class";
 
 import { tryDicts, mapMaybe, validNumberFormats, getNumberFormatter, ValidNumberFormat } from "@/utils";
 import { AddedRowId } from "@/state/staging_changes";
@@ -146,6 +147,7 @@ import Errorbox from "@/components/Errorbox.vue";
 import BaseUserView, { baseUserViewHandler, IBaseRowExtra, IBaseValueExtra, IBaseViewExtra } from "@/components/BaseUserView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
 import { attrToLink, Link } from "@/links";
+import { ICurrentQueryHistory } from "@/state/query";
 import { IAddedRow, ICombinedRow, ICombinedUserView, ICombinedValue, IExtendedRowCommon, IExtendedRowInfo, IRowCommon, IUserViewHandler, RowRef } from "@/user_views/combined";
 import { GridElement, IGridInput, IGridSection } from "@/components/form/FormGrid.vue";
 import type { Button } from "@/components/buttons/buttons";
@@ -200,7 +202,7 @@ export const numberTypes: (ValueType["type"])[] = ["int", "decimal"];
 
 const createCommonLocalValue = (uv: IFormCombinedUserView, row: IRowCommon & IFormExtendedRowInfo, columnIndex: number, value: ICombinedValue) => {
   const columnAttrs = uv.columnAttributes[columnIndex];
-  const attributes = {
+  const attributes: Record<string, unknown> = {
     ...uv.attributes,
     ...columnAttrs,
     ...row.attributes,
@@ -287,6 +289,8 @@ export const formUserViewHandler: IUserViewHandler<IFormValueExtra, IFormRowExtr
   },
 };
 
+const query = namespace("query");
+
 @UserView({
   handler: formUserViewHandler,
   useLazyLoad: true,
@@ -300,6 +304,7 @@ export const formUserViewHandler: IUserViewHandler<IFormValueExtra, IFormRowExtr
   },
 })
 export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, IFormRowExtra, IFormViewExtra>>(BaseUserView) {
+  @query.State("current") query!: ICurrentQueryHistory | null;
   private deletedOne = false;
   private toBeDeletedRef: RowRef | null = null;
 
@@ -365,6 +370,47 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     }
   }
 
+  private goToPage(page: number) {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return;
+    const { pagination } = this.uv.extra.lazyLoad;
+    const { rowLoadState } = this.uv;
+
+    const requiredRowNumber = (page + 1) * pagination.perPage;
+
+    if (requiredRowNumber <= rowLoadState.fetchedRowCount) {
+      pagination.currentPage = page;
+    } else if (this.uv.rowLoadState.complete) {
+      pagination.currentPage = Math.floor(rowLoadState.fetchedRowCount / pagination.perPage) - 1;
+    } else {
+      pagination.loading = true;
+      this.$emit("load-entries", requiredRowNumber, () => {
+        this.$nextTick(() => {
+          if (requiredRowNumber <= this.uv.rowLoadState.fetchedRowCount) {
+            pagination.currentPage = page;
+          } else {
+            // Not sure why do we need `- 1` here but doesn't need it in tables.
+            pagination.currentPage = Math.floor(this.uv.rowLoadState.fetchedRowCount / pagination.perPage) - 1;
+          }
+          pagination.loading = false;
+        });
+      });
+    }
+  }
+
+  private get currentVisualPage() {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return "0";
+
+    return String(this.uv.extra.lazyLoad.pagination?.currentPage + 1);
+  }
+
+  @Watch("currentVisualPage")
+  private updateCurrentPageToParent() {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return;
+    if (!this.isTopLevel) return;
+
+    this.$emit("update:currentPage", this.uv.extra.lazyLoad.pagination.currentPage);
+  }
+
   private get onLastPage() {
     if (!this.uv.rows || this.uv.extra.lazyLoad.type !== "pagination") return false;
 
@@ -372,11 +418,16 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     return this.uv.rowLoadState.fetchedRowCount <= shownRowCount;
   }
 
-  private get nextPageRequiresLoading() {
+  private pageRequiresLoading(page: number) {
     if (!this.uv.rows || this.uv.rowLoadState.complete || this.uv.extra.lazyLoad.type !== "pagination") return false;
 
-    const shownRowCount = this.uv.extra.lazyLoad.pagination.perPage * (this.uv.extra.lazyLoad.pagination.currentPage + 2);
+    const shownRowCount = this.uv.extra.lazyLoad.pagination.perPage * (page + 2);
     return this.uv.rowLoadState.fetchedRowCount < shownRowCount;
+  }
+
+  private get nextPageRequiresLoading() {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return false;
+    return this.pageRequiresLoading(this.uv.extra.lazyLoad.pagination.currentPage + 1);
   }
 
   private get pagesCount(): number | null {
@@ -601,6 +652,21 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     // FIXME: Entry selection somehow worked without this before.
     if (this.selectionMode && this.uv.rows?.length === 1) {
       this.$emit("select", this.uv.rows[0].extra.selectionEntry);
+    }
+  }
+
+  private get initialPage() {
+    return !this.isRoot || this.query === null || this.query.root.page === null || this.query.root.page < 1
+      ? null
+      : this.query.root.page;
+  }
+
+  @Watch("uv", { immediate: true })
+  private uvInit(newUv: any, oldUv: any) {
+    if (oldUv) return; // Fire method once.
+
+    if (this.initialPage !== null && this.uv.extra.lazyLoad.type === "pagination") {
+      this.goToPage(this.initialPage);
     }
   }
 

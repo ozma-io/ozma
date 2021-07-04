@@ -297,6 +297,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
         [this.uv.info.columns[this.groupIndex!].name]: column.group,
       },
       search: "",
+      page: null,
     };
 
     if (this.orderIndex !== null) {
