@@ -283,8 +283,6 @@ export interface IReferencedField {
   rowId: RowId | null;
 }
 
-// export type EntriesRefType = "domain" | "userview";
-
 export interface IEntriesRef {
   entity: IEntityRef;
   referencedBy: IReferencedField | null;
