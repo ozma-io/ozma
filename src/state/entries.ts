@@ -397,9 +397,23 @@ const fetchEntriesByConstraint = async (context: ActionContext<IEntriesState, {}
   if (query.args.source.type !== "named") {
     throw new Error("Unnamed user views aren't supported");
   }
+  const likeSearch = search === "" ? "%" : `%${search.replaceAll(/\\|%|_/g, "\\$&")}%`; // Escape characters.
+  const where: IChunkWhere | undefined =
+    search === ""
+      ? undefined
+      : {
+        expression: "(name :: string) ILIKE $search",
+        arguments: {
+          search: {
+            type: "string",
+            value: likeSearch,
+          },
+        },
+      };
   const chunk: IQueryChunk = {
     offset,
     limit: limit + 1,
+    where,
   };
   const opts: IEntriesRequestOpts = {
     chunk,
