@@ -105,7 +105,7 @@
           <ButtonItem :button="prevPageButton" />
           <div class="current-page-wrapper">
             <div class="current-page">
-              {{ currentPage }}
+              {{ currentVisualPage }}
               <span v-if="pagesCount !== null" class="pages-count">{{ "/" + pagesCount }} </span>
             </div>
           </div>
@@ -262,7 +262,7 @@ import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { maxPerFetch } from "@/components/UserView.vue";
 import { AddedRowId, AutoSaveLock } from "@/state/staging_changes";
-import { IAttrToQueryOpts } from "@/state/query";
+import { IAttrToQueryOpts, ICurrentQueryHistory } from "@/state/query";
 import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, baseUserViewHandler } from "@/components/BaseUserView";
 import TableRow from "@/components/views/table/TableRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
@@ -1047,6 +1047,7 @@ interface ITableEditing {
 
 const entries = namespace("entries");
 const staging = namespace("staging");
+const query = namespace("query");
 
 interface IShownRow {
   key: string;
@@ -1095,6 +1096,7 @@ type MoveDirection = "up" | "right" | "down" | "left";
   },
 })
 export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra, ITableRowExtra, ITableViewExtra>>(BaseUserView) {
+  @query.State("current") query!: ICurrentQueryHistory | null;
   @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
   @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
   @entries.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IFieldRef; reference: ReferenceName }) => void;
@@ -1211,11 +1213,16 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return this.uv.rowLoadState.fetchedRowCount <= shownRowCount;
   }
 
-  private get nextPageRequiresLoading() {
+  private pageRequiresLoading(page: number) {
     if (!this.uv.rows || this.uv.rowLoadState.complete || this.uv.extra.lazyLoad.type !== "pagination") return false;
 
-    const shownRowCount = this.uv.extra.lazyLoad.pagination.perPage * (this.uv.extra.lazyLoad.pagination.currentPage + 2);
+    const shownRowCount = this.uv.extra.lazyLoad.pagination.perPage * (page + 2);
     return this.uv.rowLoadState.fetchedRowCount < shownRowCount;
+  }
+
+  private get nextPageRequiresLoading() {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return false;
+    return this.pageRequiresLoading(this.uv.extra.lazyLoad.pagination.currentPage + 1);
   }
 
   private goToFirstPage() {
@@ -1248,17 +1255,44 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private get currentPage() {
-    if (this.uv.extra.lazyLoad.type !== "pagination") return 0;
+  private goToPage(page: number) {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return;
+    const { pagination } = this.uv.extra.lazyLoad;
+    const { rowLoadState } = this.uv;
 
-    return this.uv.extra.lazyLoad.pagination?.currentPage + 1;
+    const requiredRowNumber = (page + 1) * pagination.perPage;
+
+    if (requiredRowNumber <= rowLoadState.fetchedRowCount) {
+      pagination.currentPage = page;
+    } else if (this.uv.rowLoadState.complete) {
+      pagination.currentPage = Math.floor(rowLoadState.fetchedRowCount / pagination.perPage);
+    } else {
+      pagination.loading = true;
+      this.$emit("load-entries", requiredRowNumber, () => {
+        this.$nextTick(() => {
+          if (requiredRowNumber <= this.uv.rowLoadState.fetchedRowCount) {
+            pagination.currentPage = page;
+          } else {
+            pagination.currentPage = Math.floor(this.uv.rowLoadState.fetchedRowCount / pagination.perPage);
+          }
+          pagination.loading = false;
+        });
+      });
+    }
   }
 
-  @Watch("currentPage")
+  private get currentVisualPage() {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return "0";
+
+    return String(this.uv.extra.lazyLoad.pagination?.currentPage + 1);
+  }
+
+  @Watch("currentVisualPage")
   private updateCurrentPageToParent() {
     if (this.uv.extra.lazyLoad.type !== "pagination") return;
+    if (!this.isTopLevel) return;
 
-    this.$emit("update:currentPage", this.currentPage);
+    this.$emit("update:currentPage", this.uv.extra.lazyLoad.pagination.currentPage);
   }
 
   private get pagesCount(): number | null {
@@ -1281,12 +1315,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   // Fires only once (is it?), needed to sync `perFetch` with `perPage` from attribute. TODO: Refactor this?
-  @Watch("uv.extra.lazyLoad", { immediate: true, deep: true })
-  private watchPageSize() {
-    if (this.uv.extra.lazyLoad.type !== "pagination") return;
-
-    this.uv.rowLoadState.perFetch = this.uv.extra.lazyLoad.pagination.perPage;
-  }
+  /*   @Watch("uv.extra.lazyLoad", { immediate: true, deep: true })
+   *   private watchPageSize() {
+   *     if (this.uv.extra.lazyLoad.type !== "pagination") return;
+   *
+   *     this.uv.rowLoadState.perFetch = this.uv.extra.lazyLoad.pagination.perPage;
+   *   } */
 
   private get infiniteIdentifier() {
     return `${this.uv.rows?.length}${this.existingRows}`;
@@ -1517,6 +1551,21 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.watchShowTree();
   }
 
+  private get initialPage() {
+    return !this.isRoot || this.query === null || this.query.root.page === null || this.query.root.page < 1
+      ? null
+      : this.query.root.page;
+  }
+
+  @Watch("uv", { immediate: true })
+  private uvInit(newUv: any, oldUv: any) {
+    if (oldUv) return; // Fire method once.
+
+    if (this.initialPage !== null && this.uv.extra.lazyLoad.type === "pagination") {
+      this.goToPage(this.initialPage);
+    }
+  }
+
   private deselectAllCells() {
     this.uv.extra.selectedValues.keys().forEach(key => {
       this.selectValue(key, false);
@@ -1708,6 +1757,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     (this.$refs.tableContainer as HTMLElement).removeEventListener("scroll", this.removeCellEditing);
     this.rootEvents.forEach(([name, callback]) => this.$root.$off(name, callback));
     /* eslint-enable @typescript-eslint/unbound-method */
+
+    if (this.uv.extra.lazyLoad.type === "pagination" && this.isTopLevel) {
+      this.$emit("update:currentPage", null);
+    }
 
     if (this.printListener !== null) {
       window.removeEventListener("beforeprint", this.printListener.printCallback);

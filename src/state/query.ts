@@ -10,6 +10,7 @@ export interface IQuery {
   args: IUserViewArguments;
   defaultValues: Record<string, unknown>;
   search: string;
+  page: number | null;
 }
 
 export interface IAttrToQueryOpts {
@@ -100,6 +101,7 @@ export const attrObjectToQuery = (linkedAttr: unknown, opts?: IAttrToQueryOpts):
       args,
     },
     search: "",
+    page: null,
   };
 };
 
@@ -163,6 +165,10 @@ export const queryLocation = (query: IQuery): Location => {
     search["__q"] = query.search;
   }
 
+  if (query.page !== null && query.page !== 0) {
+    search["__p"] = JSON.stringify(query.page + 1);
+  }
+
   return {
     name: query.args.args !== null ? "view" : "view_create",
     params: query.args.source.ref as any,
@@ -199,6 +205,7 @@ const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: 
   const args: Record<string, unknown> | null = createNew ? null : {};
   const defaultValues: Record<string, unknown> = {};
   let searchString = "";
+  let page: number | null = null;
   const windows: Record<string, IWindowPartialQuery> = {};
   let selectedWindowId: number | null = null;
 
@@ -232,6 +239,14 @@ const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: 
 
     if (name === "__q") {
       searchString = val;
+      return;
+    }
+
+    if (name === "__p") {
+      page = Number(val) - 1;
+      if (Number.isNaN(page)) {
+        page = 0;
+      }
       return;
     }
 
@@ -315,6 +330,7 @@ const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: 
     },
     defaultValues,
     search: searchString,
+    page,
     previous: null,
   };
 
@@ -331,6 +347,7 @@ const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: 
       },
       defaultValues: rawWindow.defaultValues,
       search: rawWindow.search,
+      page: null,
       previous: null,
     };
     return [id, query];
@@ -422,6 +439,12 @@ const updateCurrent = (state: IQueryState, current: ICurrentQueryHistory) => {
   }
 };
 
+const assertCurrentQuery: (query: ICurrentQueryHistory | null) => asserts query is ICurrentQueryHistory = query => {
+  if (query === null) {
+    throw new Error("No current query");
+  }
+};
+
 // While in user_view views we use this module to reduce complete page reloads.
 // Route updates are parsed and existing query is granularly updated.
 // We assume that $router.push/replace are never used outside of this module.
@@ -482,6 +505,10 @@ const queryModule: Module<IQueryState, {}> = {
       state.current!.root.search = search;
       state.resetLocks += 1;
     },
+    replaceRootPage: (state, page: number | null) => {
+      state.current!.root.page = page;
+      state.resetLocks += 1;
+    },
     goBackRoot: state => {
       const newCurrent: ICurrentQueryHistory = {
         root: goBackHistory(state.current!.root),
@@ -492,9 +519,8 @@ const queryModule: Module<IQueryState, {}> = {
       state.resetLocks += 1;
     },
     goBackWindow: (state, windowIndex: number) => {
-      if (state.current === null) {
-        throw new Error("No current query");
-      }
+      assertCurrentQuery(state.current);
+
       const window = state.current.windows[windowIndex];
       if (!window) {
         throw new Error("Invalid window");
@@ -502,17 +528,15 @@ const queryModule: Module<IQueryState, {}> = {
       state.resetLocks += 1;
     },
     addWindow: (state, query: IQuery) => {
-      if (state.current === null) {
-        throw new Error("No current query");
-      }
+      assertCurrentQuery(state.current);
+
       state.current.windows.push({ key: getWindowKey(), query: queryWithHistory(query) });
       state.current.selectedWindow = state.current.windows.length - 1;
       state.resetLocks += 1;
     },
     closeWindow: (state, windowIndex: number) => {
-      if (state.current === null) {
-        throw new Error("No current query");
-      }
+      assertCurrentQuery(state.current);
+
       if (state.current.windows.splice(windowIndex, 1).length > 0) {
         if (state.current.windows.length === 0) {
           state.current.selectedWindow = null;
@@ -523,9 +547,8 @@ const queryModule: Module<IQueryState, {}> = {
       state.resetLocks += 1;
     },
     selectWindow: (state, windowIndex: number) => {
-      if (state.current === null) {
-        throw new Error("No current query");
-      }
+      assertCurrentQuery(state.current);
+
       const window = state.current.windows[windowIndex];
       if (!window) {
         throw new Error("Invalid window");
@@ -534,18 +557,16 @@ const queryModule: Module<IQueryState, {}> = {
       state.resetLocks += 1;
     },
     replaceWindow: (state, { index, query }: { index: number; query: IQuery }) => {
-      if (state.current === null) {
-        throw new Error("No current query");
-      }
+      assertCurrentQuery(state.current);
+
       const window = state.current.windows[index];
       const newQuery = replaceHistory(window.query, query);
       deepSyncObject(window.query, newQuery);
       state.resetLocks += 1;
     },
     pushWindow: (state, { index, query }: { index: number; query: IQuery }) => {
-      if (state.current === null) {
-        throw new Error("No current query");
-      }
+      assertCurrentQuery(state.current);
+
       const window = state.current.windows[index];
       const newQuery = pushHistory(window.query, query);
       deepSyncObject(window.query, newQuery);
@@ -585,11 +606,22 @@ const queryModule: Module<IQueryState, {}> = {
       }
     },
     replaceRootSearch: async ({ state, commit }, search: string) => {
-      if (state.current === null) {
-        throw new Error("No current query");
-      }
+      assertCurrentQuery(state.current);
+
       if (state.current.root.search !== search) {
         commit("replaceRootSearch", search);
+        try {
+          await router.replace(currentQueryLocation(state.current));
+        } finally {
+          commit("removeResetLock");
+        }
+      }
+    },
+    replaceRootPage: async ({ state, commit }, page: number | null) => {
+      assertCurrentQuery(state.current);
+
+      if (state.current.root.page !== page) {
+        commit("replaceRootPage", page);
         try {
           await router.replace(currentQueryLocation(state.current));
         } finally {
@@ -666,9 +698,8 @@ const queryModule: Module<IQueryState, {}> = {
       }
     },
     replaceWindowSearch: async ({ state, commit }, args: { index: number; search: string }) => {
-      if (state.current === null) {
-        throw new Error("No current query");
-      }
+      assertCurrentQuery(state.current);
+
       const window = state.current.windows[args.index];
       if (window.query.search !== args.search) {
         commit("replaceWindowSearch", args);

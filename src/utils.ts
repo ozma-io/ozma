@@ -834,6 +834,7 @@ export const homeLink: Link = {
     },
     defaultValues: {},
     search: "",
+    page: null,
   },
 };
 

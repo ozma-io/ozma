@@ -95,10 +95,10 @@
         class="userview-div"
       >
         <UserView
+          is-root
+          is-top-level
           :args="query.root.args"
           :filter="filterWords"
-          is-top-level
-          is-root
           :default-values="query.root.defaultValues"
           scope="root"
           @goto="pushRoot"
@@ -109,7 +109,7 @@
           @update:bodyStyle="styleNode.innerHTML = $event"
           @update:title="updateTitle"
           @update:isLoading="isUserViewLoading = $event"
-          @update:paginationPage="replaceRootPage($event)"
+          @update:currentPage="replaceRootPage($event)"
         />
       </div>
     </div>
@@ -283,7 +283,7 @@ export default class TopLevelUserView extends Vue {
   @query.Action("resetRoute") resetRoute!: (_: Route) => void;
   @query.Action("pushRoot") pushRoot!: (_: IQuery) => Promise<void>;
   @query.Action("replaceRootSearch") replaceRootSearch!: (_: string) => Promise<void>;
-  @query.Action("replaceRootPage") replaceRootPage!: (_: string) => Promise<void>;
+  @query.Action("replaceRootPage") replaceRootPage!: (_: number) => Promise<void>;
   @query.Action("closeWindow") closeWindow!: (_: number) => Promise<void>;
   @query.Action("pushWindow") pushWindow!: (_: { index: number; query: IQuery }) => Promise<void>;
   @query.Action("goBackRoot") goBackRoot!: () => Promise<void>;
