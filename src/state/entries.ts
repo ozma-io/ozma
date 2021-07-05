@@ -8,6 +8,7 @@ import Api from "@/api";
 import { equalEntityRef, valueToText } from "@/values";
 import { CancelledError } from "@/modules";
 import { ICombinedUserViewAny } from "@/user_views/combined";
+import { IQuery } from "./query";
 
 // Tree of search requests, ordered by inclusivity.
 
@@ -285,6 +286,7 @@ export interface IReferencedField {
 export interface IEntriesRef {
   entity: IEntityRef;
   referencedBy: IReferencedField | null;
+  constrainedBy: IQuery | null;
 }
 
 export const equalEntriesRef = (a: IEntriesRef, b: IEntriesRef) => {
@@ -372,13 +374,13 @@ const fetchEntriesByDomain = async (context: ActionContext<IEntriesState, {}>, r
     limit: limit + 1,
     where,
   };
-  const req: IEntriesRequestOpts = {
+  const opts: IEntriesRequestOpts = {
     chunk,
   };
 
   const res = await context.dispatch("callProtectedApi", {
     func: Api.getDomainValues.bind(Api),
-    args: [referencedBy.field, referencedBy.rowId ?? undefined, req],
+    args: [referencedBy.field, referencedBy.rowId ?? undefined, opts],
   }, { root: true }) as IDomainValuesResult;
   const entries = Object.fromEntries(res.values.map<[number, string]>(row => {
     const main = punToText(row.pun, row.value, res.punType);
@@ -391,10 +393,46 @@ const fetchEntriesByDomain = async (context: ActionContext<IEntriesState, {}>, r
   };
 };
 
+const fetchEntriesByConstraint = async (context: ActionContext<IEntriesState, {}>, query: IQuery, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
+  if (query.args.source.type !== "named") {
+    throw new Error("Unnamed user views aren't supported");
+  }
+  const chunk: IQueryChunk = {
+    offset,
+    limit: limit + 1,
+  };
+  const opts: IEntriesRequestOpts = {
+    chunk,
+  };
+
+  const res = await context.dispatch("callProtectedApi", {
+    func: Api.getNamedUserView.bind(Api),
+    args: [query.args.source.ref, query.args.args, opts],
+  }, { root: true }) as IViewExprResult;
+
+  const idColumnIndex = res.info.columns.findIndex(column => column.name === "id");
+  const nameColumnIndex = res.info.columns.findIndex(column => column.name === "name");
+  if (idColumnIndex === -1 || nameColumnIndex === -1) {
+    throw new Error("User view for reference constraint must have columns `id` and `name`");
+  }
+  const mainType = res.info.columns[nameColumnIndex].valueType;
+  const entries = Object.fromEntries(res.result.rows.map<[number, string]>(row => {
+    const id = row.values[idColumnIndex].value as number;
+    const main = valueToText(mainType, row.values[nameColumnIndex].value);
+    return [id, main];
+  }));
+  return {
+    entries,
+    complete: res.result.rows.length <= limit,
+  };
+};
+
 const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
-  return ref.referencedBy === null
-    ? fetchEntriesByEntity(context, ref.entity, search, offset, limit)
-    : fetchEntriesByDomain(context, ref.referencedBy, search, offset, limit);
+  return ref.constrainedBy
+    ? fetchEntriesByConstraint(context, ref.constrainedBy, search, offset, limit)
+    : ref.referencedBy === null
+      ? fetchEntriesByEntity(context, ref.entity, search, offset, limit)
+      : fetchEntriesByDomain(context, ref.referencedBy, search, offset, limit);
 };
 
 const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, ids: RowId[]): Promise<Record<RowId, string>> => {
@@ -454,6 +492,7 @@ export const getReferenceInfo = (uv: ICombinedUserViewAny, columnI: number, rowI
           },
           rowId,
         },
+        constrainedBy: null,
       },
     };
   }

@@ -186,6 +186,7 @@
           :select-views="inputType.selectViews"
           :height="customHeight"
           :reference-entity="fieldType.entity"
+          :constrained-by="inputType.constrainedBy"
           :link-attr="inputType.linkAttr"
           :uv-args="uvArgs"
           :autofocus="autofocus || iSlot.autofocus"
@@ -281,7 +282,7 @@ import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import type { AttributesMap, FieldType, IFieldRef, ValueType } from "ozma-api";
 
 import { valueToText, valueIsNull } from "@/values";
-import { IQuery, attrToQuerySelf } from "@/state/query";
+import { IQuery, attrToQuerySelf, attrObjectToQuery } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
@@ -349,6 +350,7 @@ interface ISelectType {
 interface IReferenceType {
   name: "reference";
   ref: IFieldRef;
+  constrainedBy: IQuery | null;
   linkAttr?: unknown;
   selectViews: IReferenceSelectAction[];
   style?: Record<string, unknown>;
@@ -722,9 +724,11 @@ export default class FormControl extends Vue {
             return { name: "argument_reference" };
           }
 
+          const constrainedBy = attrObjectToQuery(this.attributes["constraint_view"]);
           const refEntry: IReferenceType = {
             name: "reference",
             ref: this.value.info.fieldRef,
+            constrainedBy,
             selectViews: [],
           };
           refEntry.linkAttr = this.attributes["link"];

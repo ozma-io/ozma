@@ -832,7 +832,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
         rowId: null,
       }
       : null;
-    const entriesRef: IEntriesRef = { entity, referencedBy };
+    const entriesRef: IEntriesRef = { entity, referencedBy, constrainedBy: null };
 
     const summaries = this.storeEntries.entries.get(entriesRef);
 
