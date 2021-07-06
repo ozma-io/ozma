@@ -43,7 +43,7 @@ async (
           complete: true,
         };
       } else {
-        // Increasing `limit` and slicing in `return` just co compute `complete`.
+        // Increasing `limit` to compute `complete`.
         const extendedOpts = opts.chunk?.limit !== undefined
           ? { ...opts, chunk: { ...opts.chunk, limit: opts.chunk.limit + 1 } }
           : opts;
@@ -57,7 +57,7 @@ async (
           info: res.info,
           attributes: res.result.attributes,
           columnAttributes: res.result.columnAttributes,
-          rows: complete ? res.result.rows : res.result.rows.slice(0, -1),
+          rows: complete ? res.result.rows : res.result.rows,
           complete,
         };
       }

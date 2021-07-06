@@ -61,6 +61,7 @@
         :level="level"
         :selection-mode="selectionMode"
         :default-values="defaultValues"
+        @load-all-chunks-limitless="loadAllChunksLimitless"
         @update:buttons="uvCommonButtons = $event"
       />
 
@@ -443,6 +444,12 @@ export default class UserView extends Vue {
     this.reload({ loadAllChunks: true, done });
   }
 
+  private loadAllChunksLimitless(done: () => void) {
+    if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
+
+    this.reload({ loadAllChunksLimitless: true, done });
+  }
+
   private loadEntries(limit: number, done: () => void) {
     if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
 
@@ -452,7 +459,8 @@ export default class UserView extends Vue {
   private reload(options?: {
     differentComponent?: boolean;
     loadNextChunk?: boolean;
-    loadAllChunks?: boolean;
+    loadAllChunks?: boolean; // With `fetchAllLimit`.
+    loadAllChunksLimitless?: boolean; // Load ALL rows.
     limit?: number;
     done?: () => void;
   }) {
@@ -483,11 +491,13 @@ export default class UserView extends Vue {
           } else {
             const delta = (options?.loadNextChunk ? 1 : 0) * this.state.uv.rowLoadState.perFetch;
             const fetchAll = options?.loadAllChunks || this.state.uv.rowLoadState.complete;
-            limit = fetchAll
-              ? fetchAllLimit
-              : options?.limit
-                ? options.limit
-                : this.state.uv.rowLoadState.fetchedRowCount + delta;
+            limit = options?.loadAllChunksLimitless
+              ? undefined
+              : fetchAll
+                ? fetchAllLimit
+                : options?.limit
+                  ? options.limit
+                  : this.state.uv.rowLoadState.fetchedRowCount + delta;
           }
         } else {
           limit = maxPerFetch;
@@ -499,7 +509,7 @@ export default class UserView extends Vue {
         };
 
         let uvData = await fetchUserViewData(this.$store, args, opts);
-        if (uvData.rows && uvData.rows.length < limit) {
+        if (uvData.rows && (limit === undefined || uvData.rows.length < limit)) {
           allFetched = true;
         }
         const newType = userViewType(uvData.attributes);

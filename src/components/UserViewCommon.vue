@@ -112,6 +112,10 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   openQRCodeScanner = false;
   openBarCodeScanner = false;
 
+  private loadAllAndExportToCsv() {
+    this.$emit("load-all-chunks-limitless", () => this.$nextTick(() => this.exportToCsv()));
+  }
+
   private exportToCsv() {
     let data = "";
     this.uv.info.columns.forEach((col, index) => {
@@ -267,7 +271,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       buttons.push({
         icon: "file_download",
         caption: this.$t("export_to_csv").toString(),
-        callback: () => this.exportToCsv(),
+        callback: () => this.loadAllAndExportToCsv(),
         type: "callback",
       });
     }
