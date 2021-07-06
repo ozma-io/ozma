@@ -69,6 +69,7 @@
       />
 
       <b-overlay
+        style="height: 100%;"
         :show="argumentEditorHasChangedValues"
         variant="dark"
         opacity="0.4"
