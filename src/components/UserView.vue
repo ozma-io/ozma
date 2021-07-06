@@ -509,7 +509,7 @@ export default class UserView extends Vue {
         };
 
         let uvData = await fetchUserViewData(this.$store, args, opts);
-        if (uvData.rows && (limit === undefined || uvData.rows.length <= limit)) {
+        if (uvData.rows && (limit === undefined || uvData.rows.length < limit)) {
           allFetched = true;
         }
         const newType = userViewType(uvData.attributes);

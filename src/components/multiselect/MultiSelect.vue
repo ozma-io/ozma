@@ -6,6 +6,7 @@
       "enter_value": "Enter value",
       "search_placeholder": "Search",
       "no_results": "No entries",
+      "no_results_for_filter": "No entries for this filter",
       "error": "Error during loading more data: {msg}"
     },
     "ru": {
@@ -14,6 +15,7 @@
       "enter_value": "Введите значение",
       "search_placeholder": "Поиск",
       "no_results": "Нет записей",
+      "no_results_for_filter": "Нет записей по этому фильтру",
       "error": "Ошибка при загрузке новых данных: {msg}"
     }
   }
@@ -198,6 +200,12 @@
                 <!-- eslint-enable vue/no-v-html -->
               </slot>
             </span>
+            <div
+              v-if="visibleOptions.length === 0 && options.length > 0 && loadingState.status === 'ok'"
+              class="no-results"
+            >
+              {{ $t("no_results_for_filter") }}
+            </div>
             <infinite-loading
               ref="infiniteLoading"
               spinner="spiral"
@@ -355,10 +363,14 @@ export default class MultiSelect extends Vue {
       if (state.status === "error") {
         ev.error();
       } else {
-        ev.loaded();
-        if (!state.moreAvailable) {
-          ev.complete();
-        }
+        this.$nextTick(() => {
+          if (this.options.length > 0) {
+            ev.loaded();
+          }
+          if (!state.moreAvailable) {
+            ev.complete();
+          }
+        });
       }
     });
   }
@@ -633,6 +645,12 @@ export default class MultiSelect extends Vue {
     color: var(--input-foregroundDarkerColor);
   }
 
+  .no-results {
+    color: var(--input-foregroundDarkerColor);
+    padding: 1rem 0;
+    text-align: center;
+  }
+
   .select-container {
     display: flex;
     flex-direction: row;
@@ -725,6 +743,10 @@ export default class MultiSelect extends Vue {
     }
 
     .filter-input:focus {
+      outline: none;
+    }
+
+    &:focus-within {
       outline: none;
     }
   }
