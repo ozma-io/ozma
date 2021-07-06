@@ -525,7 +525,7 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
   @Prop({ type: Object, required: false }) forcedFieldType!: FieldType | undefined;
-  @Prop({ type: Boolean, required: false }) forcedIsNullable!: boolean | undefined;
+  @Prop({ type: Boolean, default: null }) forcedIsNullable!: boolean | null;
   @Prop() valueFormatted!: string | undefined; // Bigger priority than `currentValue` if defined.
 
   private buttons: Button[] = [];
