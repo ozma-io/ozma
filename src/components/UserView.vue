@@ -2,7 +2,7 @@
     {
         "en": {
             "loading": "Now loading",
-            "arguments_changed": "Apply or reset arguments changes to see user view",
+            "arguments_changed": "Apply or reset arguments changes to continue",
             "forbidden": "Sorry, you are not authorized to use this user view. Contact your administrator.",
             "no_instance": "Instance not found.",
             "not_found": "User view not found.",
@@ -153,7 +153,7 @@ import { ArgumentName, AttributesMap, IEntityRef, IEntriesRequestOpts } from "oz
 
 import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, mapMaybe } from "@/utils";
 import { funappSchema } from "@/api";
-import { equalEntityRef } from "@/values";
+import { equalEntityRef, valueIsNull } from "@/values";
 import { AddedRowId, CombinedTransactionResult, ICombinedInsertEntityResult, IStagingEventHandler, serializeValue, StagingKey } from "@/state/staging_changes";
 import type { ScopeName } from "@/state/staging_changes";
 import { ICurrentQueryHistory, IQuery } from "@/state/query";
@@ -400,7 +400,7 @@ export default class UserView extends Vue {
     const argumentParams = this.state.uv.info.arguments;
     const serialized = Object.fromEntries(mapMaybe(
       ([key, value]) =>
-        argumentParams[key] === undefined || (argumentParams[key].optional && value === null)
+        argumentParams[key] === undefined || (argumentParams[key].optional && valueIsNull(value))
           ? undefined
           : [key, serializeValue(argumentParams[key].argType, value)],
       Object.entries(args),
