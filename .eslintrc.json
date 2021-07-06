@@ -112,6 +112,7 @@
     "@typescript-eslint/no-unsafe-member-access": "off",
     "@typescript-eslint/no-unsafe-call": "off",
     "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/no-unnecessary-condition": "warn",
     // Used for `require`-ing resources.
     "@typescript-eslint/no-var-requires": "off",
     "@typescript-eslint/restrict-template-expressions": "off",
