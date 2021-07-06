@@ -252,7 +252,7 @@ export const mapMaybe = <A, B>(func: (arg: A, index: number, array: A[]) => B | 
   return arr.map(func).filter(val => val !== undefined) as B[];
 };
 
-export const objectMap = <A, B>(fn: (value: A, key: string, index: number) => B, obj: Record<string, A>) =>
+export const objectMap = <A, B>(fn: (value: A, key: string, index: number) => B, obj: Record<string, A>): Record<string, B> =>
   Object.fromEntries(
     Object.entries(obj).map(
       ([k, v], i) => [k, fn(v, k, i)],

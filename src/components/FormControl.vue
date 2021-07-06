@@ -525,6 +525,7 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
   @Prop({ type: Object, required: false }) forcedFieldType!: FieldType | undefined;
+  @Prop({ type: Boolean, required: false }) forcedIsNullable!: boolean | undefined;
   @Prop() valueFormatted!: string | undefined; // Bigger priority than `currentValue` if defined.
 
   private buttons: Button[] = [];
@@ -534,7 +535,7 @@ export default class FormControl extends Vue {
   private isUserViewLoading = false;
 
   get isNullable() {
-    return this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable;
+    return this.forcedIsNullable ?? (this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable);
   }
 
   // Current value, can be a raw value (e.g., a string for a `datetime` value) or a validated value.

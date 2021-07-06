@@ -18,6 +18,7 @@
       'popup-container',
       {
         'is-open': isPopupOpen,
+        'disabled': disabled,
 
       }
     ]"
@@ -358,6 +359,13 @@ export default class Calendar extends Vue {
   .calendar-input {
     border-right-width: 0;
     font-size: var(--FontSize) !important;
+  }
+
+  .disabled {
+    .calendar-input,
+    .calendar-icon {
+      cursor: not-allowed;
+    }
   }
 
   .popper-inner {

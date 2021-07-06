@@ -2,6 +2,7 @@
     {
         "en": {
             "loading": "Now loading",
+            "arguments_changed": "Apply or reset arguments changes to see user view",
             "forbidden": "Sorry, you are not authorized to use this user view. Contact your administrator.",
             "no_instance": "Instance not found.",
             "not_found": "User view not found.",
@@ -15,6 +16,7 @@
         },
         "ru": {
             "loading": "Загрузка данных",
+            "arguments_changed": "Примените или сбросьте изменения аргументов, чтобы продолжить",
             "forbidden": "К сожалению у вас нет прав доступа для просмотра этого представления. Свяжитесь с администратором.",
             "no_instance": "База не найдена.",
             "not_found": "Представление не найдено.",
@@ -46,6 +48,7 @@
         :can-be-closed="!(showArgumentEditorAttr === true)"
         @close="contextMenuShowArgumentEditor = false"
         @update="updateArguments"
+        @update:hasChangedValues="argumentEditorHasChangedValues = $event"
       />
     </transition>
 
@@ -65,32 +68,46 @@
         @update:buttons="uvCommonButtons = $event"
       />
 
-      <transition name="fade-1" mode="out-in">
-        <component
-          :is="`UserView${state.componentName}`"
-          ref="userViewRef"
-          :key="transitionKey"
-          :uv="state.uv"
-          :is-root="isRoot"
-          :is-top-level="isTopLevel"
-          :filter="filter"
-          :scope="scope"
-          :level="level"
-          :selection-mode="selectionMode"
-          :default-values="defaultValues"
-          @goto="$emit('goto', $event)"
-          @goto-previous="$emit('goto-previous')"
-          @select="$emit('select', $event)"
-          @update:buttons="componentButtons = $event"
-          @update:statusLine="$emit('update:statusLine', $event)"
-          @update:enableFilter="$emit('update:enableFilter', $event)"
-          @update:currentPage="$emit('update:currentPage', $event)"
-          @update:bodyStyle="$emit('update:bodyStyle', $event)"
-          @load-next-chunk="loadNextChunk"
-          @load-all-chunks="loadAllChunks"
-          @load-entries="loadEntries"
-        />
-      </transition>
+      <b-overlay
+        :show="argumentEditorHasChangedValues"
+        variant="dark"
+        opacity="0.4"
+        blur="5px"
+        rounded="sm"
+        :z-index="100"
+      >
+        <template #overlay>
+          <div class="overlay-text">
+            {{ $t("arguments_changed") }}
+          </div>
+        </template>
+        <transition name="fade-1" mode="out-in">
+          <component
+            :is="`UserView${state.componentName}`"
+            ref="userViewRef"
+            :key="transitionKey"
+            :uv="state.uv"
+            :is-root="isRoot"
+            :is-top-level="isTopLevel"
+            :filter="filter"
+            :scope="scope"
+            :level="level"
+            :selection-mode="selectionMode"
+            :default-values="defaultValues"
+            @goto="$emit('goto', $event)"
+            @goto-previous="$emit('goto-previous')"
+            @select="$emit('select', $event)"
+            @update:buttons="componentButtons = $event"
+            @update:statusLine="$emit('update:statusLine', $event)"
+            @update:enableFilter="$emit('update:enableFilter', $event)"
+            @update:currentPage="$emit('update:currentPage', $event)"
+            @update:bodyStyle="$emit('update:bodyStyle', $event)"
+            @load-next-chunk="loadNextChunk"
+            @load-all-chunks="loadAllChunks"
+            @load-entries="loadEntries"
+          />
+        </transition>
+      </b-overlay>
     </template>
 
     <Errorbox
@@ -279,6 +296,7 @@ export default class UserView extends Vue {
   private pendingArgs: IUserViewArguments | null = null;
   private nextUv: Promise<void> | null = null;
   private inhibitReload = false;
+  private argumentEditorHasChangedValues = false;
 
   private get transitionKey() {
     return this.state.state === "show"
@@ -795,6 +813,13 @@ export default class UserView extends Vue {
         transition: opacity 0.05s;
       }
     }
+  }
+
+  .overlay-text {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    color: white;
+    background-color: #0005;
   }
 
   .fade-move-enter-active,
