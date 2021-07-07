@@ -493,7 +493,7 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
     style: null as Record<string, unknown> | null,
     colorVariables,
   };
-  if (!R.isEmpty(style)) {
+  if (Object.keys(style).length !== 0) {
     extra.style = style;
   }
   return extra;
@@ -535,7 +535,7 @@ const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLo
     extra.height = height;
   }
 
-  if (!R.isEmpty(style)) {
+  if (Object.keys(style).length !== 0) {
     extra.style = style;
   }
 
@@ -1903,10 +1903,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   get showTree() {
-    if (!R.isEmpty(this.uv.extra.rowsParentPositions) && this.filter.length === 0) {
-      return true;
-    }
-    return false;
+    return Object.keys(this.uv.extra.rowsParentPositions).length !== 0 && this.filter.length === 0;
   }
 
   private pushTreeChildrenPositions(parentRef: CommittedRowRef, children: CommittedRowRef[]) {
