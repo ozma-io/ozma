@@ -122,7 +122,7 @@ export default class MenuEntry extends Vue {
   }
 
   private get badgeStyle() {
-    return this.isMenuLink(this.entry) && this.entry?.badge?.color !== undefined
+    return this.isMenuLink(this.entry) && this.entry.badge?.color !== undefined
       ? { backgroundColor: this.entry.badge.color }
       : null;
   }

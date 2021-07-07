@@ -95,9 +95,8 @@ export default class Textarea extends Vue {
         controlTextareaElement.$el.focus();
         this.setCursorPositionEnd(controlTextareaElement.$el);
       } else {
-        const control = this.$refs.control as HTMLInputElement;
-        if (!control) return;
-        control.focus();
+        const control = this.$refs.control as HTMLInputElement | undefined;
+        control?.focus();
       }
     }
   }

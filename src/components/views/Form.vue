@@ -471,7 +471,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
   }
 
   get firstRow(): { row: IFormExtendedRowCommon; ref: RowRef } | null {
-    if (this.uv.newRowsOrder.length === 0 && this.uv.rows === null && this.uv.info.mainEntity !== null) {
+    if (this.uv.newRowsOrder.length === 0 && !this.uv.rows && this.uv.info.mainEntity) {
       return {
         row: this.uv.emptyRow!,
         ref: { type: "new" },

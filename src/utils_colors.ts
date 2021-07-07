@@ -135,7 +135,7 @@ export const loadThemes = async (): Promise<Theme[]> => {
 };
 
 export const getPreferredTheme = (themes: Theme[]): Theme => {
-  const prefersDarkTheme = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+  const prefersDarkTheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
   const storagedTheme = localStorage.getItem("preferredTheme");
   const themeNames = themes.map(theme => theme.name);

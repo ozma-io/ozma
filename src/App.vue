@@ -124,7 +124,7 @@ export default class App extends Vue {
   }
 
   get authErrors() {
-    return this.rawErrors["auth"] || [];
+    return this.rawErrors["auth"] ?? [];
   }
 
   private showDemoModal() {

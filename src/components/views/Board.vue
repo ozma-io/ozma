@@ -55,7 +55,7 @@ import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
 import { RowId } from "ozma-api";
 
-import { mapMaybe, replaceHtmlLinks, tryDicts } from "@/utils";
+import { mapMaybe, NeverError, replaceHtmlLinks, tryDicts } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
@@ -206,7 +206,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
   }
 
   get colorVariables() {
-    const variant = this.uv.attributes?.["kanban_variant"];
+    const variant = this.uv.attributes["kanban_variant"];
     if (variant) {
       return getColorVariables("kanban", variant);
     } else if (this.backgroundColor !== "none") {
@@ -250,28 +250,29 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
   }
 
   get columns(): IColumn<IRowCard, IGroupColumn>[] | null {
-    if (!this.columnsType) {
-      return null;
-    } else if (this.columnsType.type === "enum") {
-      return this.columnsType.values.map(name => ({
-        title: name,
-        key: name,
-        column: {
-          group: name,
-        },
-        cards: this.groupedCards[name] ?? [],
-      }));
-    } else if (this.columnsType.type === "reference") {
-      return this.columnsType.columns.map(col => ({
-        title: col.name,
-        key: col.id,
-        column: {
-          group: col.id,
-        },
-        cards: this.groupedCards[col.id] ?? [],
-      }));
-    } else {
-      throw new Error("Impossible");
+    if (!this.columnsType) return null;
+
+    switch (this.columnsType.type) {
+      case "enum":
+        return this.columnsType.values.map(name => ({
+          title: name,
+          key: name,
+          column: {
+            group: name,
+          },
+          cards: this.groupedCards[name] ?? [],
+        }));
+      case "reference":
+        return this.columnsType.columns.map(col => ({
+          title: col.name,
+          key: col.id,
+          column: {
+            group: col.id,
+          },
+          cards: this.groupedCards[col.id] ?? [],
+        }));
+      default:
+        throw new NeverError(this.columnsType);
     }
   }
 
@@ -279,7 +280,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     const messagesArray = [
       !this.columnsType && this.$t("no_columns"),
       this.groupIndex === null && this.$t("no_group"),
-    ].filter(R.identity);
+    ].filter(v => v);
 
     const hasErrors = messagesArray.length > 0;
 

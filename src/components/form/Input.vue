@@ -205,7 +205,7 @@ export default class Input extends Vue {
   }
 
   private get maxWidth(): number {
-    const controlElement = this.$refs.control as HTMLInputElement;
+    const controlElement = this.$refs.control as HTMLInputElement | undefined;
     if (controlElement) {
       const leftPosition = controlElement.getBoundingClientRect().left;
       const screenWidth = document.documentElement.clientWidth - 15;

@@ -257,7 +257,7 @@ import { z } from "zod";
 import { IResultColumnInfo, ValueType, RowId, IFieldRef } from "ozma-api";
 import sanitizeHtml from "sanitize-html";
 
-import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, parseSpreadsheet, validNumberFormats, getNumberFormatter } from "@/utils";
+import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, parseSpreadsheet, validNumberFormats, getNumberFormatter, NeverError } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { maxPerFetch } from "@/components/UserView.vue";
@@ -458,7 +458,7 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
     style["text-align"] = String(textAlignAttr);
   }
 
-  if (row.extra.height !== undefined) {
+  if (row.extra.height !== null) {
     style["height"] = `${row.extra.height}px`;
   }
 
@@ -493,7 +493,7 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
     style: null as Record<string, unknown> | null,
     colorVariables,
   };
-  if (!R.isEmpty(style)) {
+  if (Object.keys(style).length !== 0) {
     extra.style = style;
   }
   return extra;
@@ -535,7 +535,7 @@ const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLo
     extra.height = height;
   }
 
-  if (!R.isEmpty(style)) {
+  if (Object.keys(style).length !== 0) {
     extra.style = style;
   }
 
@@ -1012,7 +1012,7 @@ const rowIndicesCompare = (aIndex: CommittedRowRef, bIndex: CommittedRowRef, uv:
 };
 
 const isEmptyRow = (row: IRowCommon) => {
-  return row.values.every(cell => valueIsNull(cell.rawValue) || cell.info === null);
+  return row.values.every(cell => valueIsNull(cell.rawValue) || cell.info === undefined);
 };
 
 const parseFromClipboard = (event: ClipboardEvent): number | null | undefined => {
@@ -1199,8 +1199,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       type: "callback",
       icon: "arrow_right",
       variant: "interfaceButton",
-      disabled: (this.uv.rowLoadState.complete && this.onLastPage)
-        || (this.uv.extra.lazyLoad.type === "pagination" && this.uv.extra.lazyLoad.pagination.loading),
+      disabled: (this.uv.rowLoadState.complete && this.onLastPage) || this.uv.extra.lazyLoad.pagination.loading,
       colorVariables: getColorVariables("button", "interfaceButton"),
       callback: () => this.goToNextPage(),
     };
@@ -1284,7 +1283,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private get currentVisualPage() {
     if (this.uv.extra.lazyLoad.type !== "pagination") return "0";
 
-    return String(this.uv.extra.lazyLoad.pagination?.currentPage + 1);
+    return String(this.uv.extra.lazyLoad.pagination.currentPage + 1);
   }
 
   @Watch("currentVisualPage")
@@ -1411,7 +1410,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     direction: MoveDirection,
     options: { step?: number; resetColumnDelta?: boolean } = { step: 1, resetColumnDelta: true },
   ): boolean {
-    if (options?.resetColumnDelta ?? true) {
+    if (options.resetColumnDelta ?? true) {
       this.columnDelta = 0;
     }
     const oldPosition = this.getSelectedCellPosition();
@@ -1421,7 +1420,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     /* eslint-disable no-multi-spaces, comma-spacing, key-spacing, space-in-parens */
     const calcDelta = (decDirection: MoveDirection, incDirection: MoveDirection) =>
-      (options?.step ?? 1) * ((direction === incDirection ? 1 : 0) - (direction === decDirection ? 1 : 0));
+      (options.step ?? 1) * ((direction === incDirection ? 1 : 0) - (direction === decDirection ? 1 : 0));
     const rowDelta    = calcDelta("up"  , "down" );
     const columnDelta = calcDelta("left", "right");
 
@@ -1833,7 +1832,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       const sideName = side === "bottom_back" ? "newRowsBottomSideRef" : "newRowsTopSideRef";
       const newRowsRef = this.$refs[sideName] as TableRow[] | undefined;
       if (newRowsRef === undefined) return;
-      const childRef = newRowsRef?.[newRowsRef.length - 1]?.$children?.[1 + firstNotDisabledDOMColumn].$el;
+      const childRef = newRowsRef[newRowsRef.length - 1]?.$children?.[1 + firstNotDisabledDOMColumn].$el;
       if (childRef === undefined) return;
 
       this.cellEditByTarget(
@@ -1904,10 +1903,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   get showTree() {
-    if (!R.isEmpty(this.uv.extra.rowsParentPositions) && this.filter.length === 0) {
-      return true;
-    }
-    return false;
+    return Object.keys(this.uv.extra.rowsParentPositions).length !== 0 && this.filter.length === 0;
   }
 
   private pushTreeChildrenPositions(parentRef: CommittedRowRef, children: CommittedRowRef[]) {
@@ -2142,7 +2138,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     const row = this.allRows[pos];
 
     // If we are in a selection mode, just emit selected row.
-    if (this.selectionMode && row.ref.type === "existing" && row.row.extra.selectionEntry !== undefined) {
+    if (this.selectionMode && row.ref.type === "existing" && row.row.extra.selectionEntry) {
       this.$emit("select", row.row.extra.selectionEntry);
       return;
     }
@@ -2167,7 +2163,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private selectChildrenRows(row: ITableExtendedRowCommon, selected: boolean) {
     row.extra.tree.children.forEach(child => {
       const childRow = this.uv.getRowByRef(child);
-      if (childRow && childRow?.extra.tree.children.length > 0) {
+      if (childRow && childRow.extra.tree.children.length > 0) {
         this.selectChildrenRows(childRow, selected);
       }
       this.selectRow(child, selected);
@@ -2184,13 +2180,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
           id: rowId,
         });
       });
-      if (this.existingRows !== null) {
-        this.existingRows.forEach((localRow, rowI) => {
-          const row = this.uv.getRowByRef(localRow.ref);
-          row!.extra.selected = true;
-          this.uv.extra.selectedRows.insert(localRow.ref);
-        });
-      }
+
+      this.existingRows.forEach((localRow, rowI) => {
+        const row = this.uv.getRowByRef(localRow.ref);
+        row!.extra.selected = true;
+        this.uv.extra.selectedRows.insert(localRow.ref);
+      });
     } else {
       this.uv.extra.selectedRows.keys().forEach(ref => {
         if (ref.type === "existing") {
@@ -2372,13 +2367,15 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   get shownRows() {
-    if (this.uv.extra.lazyLoad.type === "infinite_scroll") {
-      const totalAdded = Object.keys(this.uv.newRows).length;
-      return this.allRows.slice(0, totalAdded + this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength);
-    } else if (this.uv.extra.lazyLoad.type === "pagination") {
-      return this.allRows;
-    } else {
-      throw new Error("Wrong lazyLoad type");
+    switch (this.uv.extra.lazyLoad.type) {
+      case "infinite_scroll": {
+        const totalAdded = Object.keys(this.uv.newRows).length;
+        return this.allRows.slice(0, totalAdded + this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength);
+      }
+      case "pagination":
+        return this.allRows;
+      default:
+        throw new NeverError(this.uv.extra.lazyLoad);
     }
   }
 

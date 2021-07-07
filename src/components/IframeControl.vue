@@ -90,7 +90,7 @@ export default class IframeControl extends Vue {
   }
 
   private iframeEventHandler(event: MessageEvent<any>) {
-    if (event.source !== (this.$refs.iframe as HTMLIFrameElement)?.contentWindow) return;
+    if (event.source !== (this.$refs.iframe as HTMLIFrameElement | undefined)?.contentWindow) return;
 
     if (event.data.name === "ready") {
       this.sendValue();
@@ -116,7 +116,7 @@ export default class IframeControl extends Vue {
   }
 
   private sendMessage(message: MessageToIframe) {
-    const ref = this.$refs.iframe as HTMLIFrameElement;
+    const ref = this.$refs.iframe as HTMLIFrameElement | undefined;
     ref?.contentWindow?.postMessage(message, "*");
   }
 

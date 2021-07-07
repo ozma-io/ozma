@@ -425,6 +425,8 @@ const disableableTypes: Set<IType["name"]> =
   new Set(["text", "textarea", "markdown", "codeeditor", "reference", "select", "check", "calendar"]);
 const closeAfterUpdate: Set<IType["name"]> =
   new Set(["select", "reference"]);
+const autofocusableTypes: Set<IType["name"]> =
+  new Set(["text", "textarea", "check"]);
 
 const parseTime = (raw: string): ITime | null => {
   const [_, hours, mins] = /^([0-9]|0[0-9]|1[0-9]|2[0-3]):([0-9]|[0-5][0-9])$/.exec(raw) ?? [];
@@ -864,15 +866,10 @@ export default class FormControl extends Vue {
 
   private mounted() {
     if (this.autofocus) {
-      const type = this.inputType;
-      const control = this.$refs["control"];
+      const control = this.$refs["control"] as HTMLElement | undefined;
       if (control) {
-        if (type.name === "text") {
-          (control as HTMLElement).focus();
-        } else if (type.name === "textarea") {
-          (control as HTMLElement).focus();
-        } else if (type.name === "check") {
-          (control as HTMLElement).focus();
+        if (autofocusableTypes.has(this.inputType.name)) {
+          control.focus();
         }
       }
     }
