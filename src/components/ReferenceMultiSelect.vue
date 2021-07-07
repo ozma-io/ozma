@@ -133,7 +133,7 @@ import type { IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema, ICombinedValue, valueToPunnedText } from "@/user_views/combined";
 import { mapMaybe, NeverError, nextRender } from "@/utils";
 import type { IEntityRef, RowId, ValueType } from "ozma-api";
-import { equalEntityRef } from "@/values";
+import { equalEntityRef, valueIsNull } from "@/values";
 import { CancelledError } from "@/modules";
 import { Debounce } from "vue-debounce-decorator";
 import type { IEntriesRef } from "@/state/entries";
@@ -152,6 +152,10 @@ export type ReferenceSelectOption = ISelectOption<IReferenceValue>;
 
 const compareOptions = (a : ReferenceSelectOption, b : ReferenceSelectOption): number => {
   return a.label.localeCompare(b.label);
+};
+
+const valueIsSingle = (value: ICombinedValue | ICombinedValue[] | null): value is ICombinedValue => {
+  return value !== null && "value" in value;
 };
 
 @Component({
@@ -242,7 +246,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
 
   get valueOptions(): ReferenceSelectOption[] | null {
     const valueType: ValueType = { type: "int" };
-    if (this.value === undefined) {
+    if (valueIsSingle(this.value) && valueIsNull(this.value.value)) {
       return [];
     } else {
       const values = this.single ? [this.value as ICombinedValue] : (this.value as ICombinedValue[]);
