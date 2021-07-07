@@ -216,6 +216,7 @@
       </table>
       <InfiniteLoading
         v-if="useInfiniteScrolling"
+        ref="infiniteLoading"
         :force-use-infinite-wrapper="isRoot ? '.tabl' : '.view-form'"
         :identifier="infiniteIdentifier"
         spinner="spiral"
@@ -1548,6 +1549,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     this.updateStatusLine();
     this.watchShowTree();
+
+    (this.$refs["infiniteLoading"] as InfiniteLoading | undefined)?.stateChanger.reset();
   }
 
   private get initialPage() {
