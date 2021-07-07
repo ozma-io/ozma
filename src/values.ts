@@ -80,73 +80,71 @@ const convertArray = (entryType: FieldType, value: unknown[]): unknown[] | undef
   }
 };
 
+const stringToMaybeBool = (str: string) => {
+  const lowercased = str.toLowerCase();
+  switch (lowercased) {
+    case "true": return true;
+    case "false": return false;
+    default: return undefined;
+  }
+};
+
 export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: unknown): unknown => {
   const value = typeof rawValue === "string" ? rawValue.trim() : rawValue;
 
   if (valueIsNull(value)) {
     return isNullable ? null : undefined;
-  } else if (fieldType.type === "string" || fieldType.type === "enum" || fieldType.type === "interval" || fieldType.type === "uuid") {
-    // Remove whitespaces
-    return typeof value === "string" ? value : undefined;
-  } else if (fieldType.type === "bool") {
-    if (typeof value === "boolean") {
-      return value;
-    } else if (typeof value === "string") {
-      const str = value.toLowerCase();
-      if (str === "false") {
-        return false;
-      } else if (str === "true") {
-        return true;
+  }
+
+  switch (fieldType.type) {
+    case "string":
+    case "enum":
+    case "interval":
+    case "uuid":
+      // Remove whitespaces
+      return typeof value === "string" ? value : undefined;
+    case "bool":
+      switch (typeof value) {
+        case "boolean":
+          return value;
+        case "string":
+          return stringToMaybeBool(value);
+        default:
+          return undefined;
+      }
+    case "array":
+      if (value instanceof Array) {
+        return convertArray({ type: fieldType.subtype }, value);
+      } else if (typeof value === "string") {
+        return convertArray({ type: fieldType.subtype }, value.split(","));
       } else {
         return undefined;
       }
-    } else {
-      return undefined;
+    case "date": {
+      // We use local time for dates.
+      const date = moment(value as MomentInput, dateFormat);
+      return date.isValid() ? date : undefined;
     }
-  } else if (fieldType.type === "array") {
-    if (value instanceof Array) {
-      return convertArray({ type: fieldType.subtype }, value);
-    } else if (typeof value === "string") {
-      return convertArray({ type: fieldType.subtype }, value.split(","));
-    } else {
-      return undefined;
+    case "datetime": {
+      const datetime = moment(value as MomentInput, dateTimeFormat).utc();
+      return datetime.isValid() ? datetime : undefined;
     }
-  } else if (fieldType.type === "date") {
-    // We use local time for dates.
-    const date = moment(value as MomentInput, dateFormat);
-    if (date.isValid()) {
-      return date;
-    } else {
-      return undefined;
+    case "decimal": {
+      const decimal = Number(value);
+      return Number.isFinite(decimal) ? decimal : undefined;
     }
-  } else if (fieldType.type === "datetime") {
-    const date = moment(value as MomentInput, dateTimeFormat).utc();
-    if (date.isValid()) {
-      return date;
-    } else {
-      return undefined;
+    case "int":
+    case "reference": {
+      const int = Number(value);
+      return Number.isInteger(int) ? int : undefined;
     }
-  } else if (fieldType.type === "decimal") {
-    const f = Number(value);
-    if (Number.isFinite(f)) {
-      return f;
-    } else {
-      return undefined;
-    }
-  } else if (fieldType.type === "int" || fieldType.type === "reference") {
-    const f = Number(value);
-    if (Number.isInteger(f)) {
-      return f;
-    } else {
-      return undefined;
-    }
-  } else if (fieldType.type === "json") {
-    try {
-      return JSON.parse(String(value));
-    } catch (e) {
-      return undefined;
-    }
-  } else {
-    throw new Error("Invalid field type");
+    case "json":
+      try {
+        return JSON.parse(String(value));
+      } catch (e) {
+        return undefined;
+      }
+    default:
+      throw new Error("Invalid field type");
   }
 };

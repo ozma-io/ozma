@@ -52,7 +52,7 @@ export default class ButtonsPanel extends Vue {
 
   // Is true in TableCells and probably somewhere else.
   private get wrapButtons() {
-    return this.buttons?.[this.buttons.length - 1]?.icon !== "more_vert";
+    return this.buttons[this.buttons.length - 1]?.icon !== "more_vert";
   }
 }
 </script>

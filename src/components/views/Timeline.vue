@@ -57,7 +57,6 @@
 </template>
 
 <script lang="ts">
-import * as R from "ramda";
 import { Component } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import moment, { Moment } from "moment";
@@ -179,7 +178,7 @@ export default class UserViewTimeline extends mixins<EmptyBaseUserView>(BaseUser
   }
 
   private get username() {
-    const currentAuth = this.currentAuth as CurrentAuth;
+    const currentAuth = this.currentAuth as CurrentAuth | null;
     return currentAuth?.username ?? currentAuth?.email ?? "<noname>";
   }
 
@@ -237,7 +236,7 @@ export default class UserViewTimeline extends mixins<EmptyBaseUserView>(BaseUser
     const messagesArray = [
       noDatetime && this.$t("no_datetime"),
       datetimeHasWrongType && this.$t("datetime_wrong_type"),
-    ].filter(R.identity);
+    ].filter(v => v);
 
     const hasErrors = messagesArray.length > 0;
 

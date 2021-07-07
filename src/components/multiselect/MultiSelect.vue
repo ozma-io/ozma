@@ -461,7 +461,7 @@ export default class MultiSelect extends Vue {
   }
 
   private focusInput() {
-    (this.$refs.filterInput as HTMLInputElement)?.focus();
+    (this.$refs.filterInput as HTMLInputElement | undefined)?.focus();
   }
 
   private onFilterInputFocus() {
@@ -559,7 +559,7 @@ export default class MultiSelect extends Vue {
       this.$emit("add-value", index);
     }
     this.filterValue = "";
-    const filterInput = this.$refs.filterInput as HTMLInputElement;
+    const filterInput = this.$refs.filterInput as HTMLInputElement | undefined;
     if (filterInput !== undefined) {
       filterInput.focus();
     }

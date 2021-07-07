@@ -9,7 +9,7 @@ import { loadColorVariants, loadThemes, NamedColorVariant, getPreferredTheme, Th
 const errorKey = "settings";
 
 export class CurrentSettings {
-  settings: Record<string, string>;
+  settings: Partial<Record<string, string>>;
   themes: Theme[];
   colorVariants: NamedColorVariant[];
 

@@ -166,10 +166,8 @@ export default class InputSlot extends Vue {
 
   private onModalOpen() {
     this.$nextTick(() => {
-      if (this.$refs.controlModal) {
-        const control = this.$refs.controlModal as HTMLElement;
-        control.focus();
-      }
+      const control = this.$refs.controlModal as HTMLElement | undefined;
+      control?.focus();
     });
   }
 

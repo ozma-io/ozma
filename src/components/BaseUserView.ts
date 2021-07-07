@@ -10,7 +10,7 @@ import type {
 } from "@/user_views/combined";
 import { RowRef, ValueRef, CombinedUserView, currentValue } from "@/user_views/combined";
 import { equalEntityRef, valueIsNull } from "@/values";
-import { ObjectSet, tryDicts } from "@/utils";
+import { NeverError, ObjectSet, tryDicts } from "@/utils";
 import { IAttrToQueryOpts } from "@/state/query";
 
 import { attrToLink } from "@/links";
@@ -355,46 +355,52 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
     }
 
     const value = this.uv.getValueByRef(ref)!;
-    if (ref.type === "added") {
-      // FIXME: throws error `updateInfo is undefined` when user tries to edit disabled cell.
-      const updateInfo = value.value.info!;
-      if (updateInfo.id === undefined) {
-        await this.setAddedField({
-          fieldRef: updateInfo.fieldRef,
-          id: ref.id,
-          value: rawValue,
-        });
-      } else {
+    switch (ref.type) {
+      case "added": {
+        // FIXME: throws error `updateInfo is undefined` when user tries to edit disabled cell.
+        const updateInfo = value.value.info!;
+        if (updateInfo.id === undefined) {
+          await this.setAddedField({
+            fieldRef: updateInfo.fieldRef,
+            id: ref.id,
+            value: rawValue,
+          });
+        } else {
+          await this.updateField({
+            fieldRef: updateInfo.fieldRef,
+            id: updateInfo.id,
+            value: rawValue,
+          });
+        }
+        return ref;
+      }
+      case "existing": {
+        const updateInfo = value.value.info!;
         await this.updateField({
           fieldRef: updateInfo.fieldRef,
-          id: updateInfo.id,
+          id: updateInfo.id!,
           value: rawValue,
         });
+        return ref;
       }
-      return ref;
-    } else if (ref.type === "existing") {
-      const updateInfo = value.value.info!;
-      await this.updateField({
-        fieldRef: updateInfo.fieldRef,
-        id: updateInfo.id!,
-        value: rawValue,
-      });
-      return ref;
-    } else if (ref.type === "new") {
-      const entity = this.uv.info.mainEntity;
-      if (!entity) {
-        throw new Error("View doesn't have a main entity");
-      }
-      if (this.uv.info.columns[ref.column].mainField === null) {
-        throw new Error("Invalid column number");
-      }
-      if (rawValue === undefined) {
-        throw new Error("Invalid value");
-      }
+      case "new": {
+        const entity = this.uv.info.mainEntity;
+        if (!entity) {
+          throw new Error("View doesn't have a main entity");
+        }
+        if (!this.uv.info.columns[ref.column].mainField) {
+          throw new Error("Invalid column number");
+        }
+        if (rawValue === undefined) {
+          throw new Error("Invalid value");
+        }
 
-      const id = await this.addNewRow();
-      const fieldName = this.uv.info.columns[ref.column].mainField?.name;
-      if (fieldName) {
+        const id = await this.addNewRow();
+        const fieldName = this.uv.info.columns[ref.column].mainField?.name;
+        if (fieldName === undefined) {
+          throw new Error("Column without mainField");
+        }
+
         await this.setAddedField({
           fieldRef: {
             entity,
@@ -404,11 +410,9 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
           value: rawValue,
         });
         return { type: "added", id, column: ref.column };
-      } else {
-        throw new Error("Column without mainField");
       }
-    } else {
-      throw new Error("Impossible");
+      default:
+        throw new NeverError(ref);
     }
   }
 }

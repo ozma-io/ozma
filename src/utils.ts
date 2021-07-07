@@ -169,7 +169,7 @@ export const updateObject = (to: object, from: object) => {
   });
 };
 
-export const deepSyncObject = (to: object, from: object) => {
+export const deepSyncObject = (to: object | null, from: object | null) => {
   if (to === null || from === null) {
     throw new Error("deepSyncObject: expected two objects");
   }
@@ -276,7 +276,7 @@ export const valueSignature = <T>(a: T): string => {
 
 // Object keys should be exactly typed, as per Flow exact object types. Otherwise signatures will be different.
 export class ObjectMap<K, V> {
-  private entriesMap: Record<string, [K, V]> = {};
+  private entriesMap: Partial<Record<string, [K, V]>> = {};
 
   insert(k: K, v: V) {
     const key = valueSignature(k);
@@ -313,7 +313,7 @@ export class ObjectMap<K, V> {
   }
 
   entries() {
-    return Object.values(this.entriesMap);
+    return Object.values(this.entriesMap) as [K, V][];
   }
 
   keys() {
@@ -406,7 +406,7 @@ export interface IResource<M, T> {
 
 // Implements a map with named references which supports removing unreferenced entries.
 export class ResourceMap<V, M=undefined> {
-  private resourcesMap: Record<string, IResource<M, V>> = {};
+  private resourcesMap: Partial<Record<string, IResource<M, V>>> = {};
 
   createResource(key: string, reference: ReferenceName, value: V, meta: M) {
     if (key in this.resourcesMap) {
@@ -491,11 +491,11 @@ export class ResourceMap<V, M=undefined> {
   }
 
   values() {
-    return Object.values(this.resourcesMap).map(res => res.value);
+    return Object.values(this.resourcesMap).map(res => res!.value);
   }
 
   entries() {
-    return Object.entries(this.resourcesMap).map(([name, res]) => [name, res.value]);
+    return Object.entries(this.resourcesMap).map(([name, res]) => [name, res!.value]);
   }
 }
 
@@ -781,31 +781,6 @@ export const parseSpreadsheet = (str: string): string[][] => {
     }
   }
   return arr;
-};
-export const stringifyToSpreadsheet = (arr: string[][]): string => {
-  let str = "";
-  let val;
-  for (let r = 0, rlen = arr.length; r < rlen; r += 1) {
-    for (let c = 0, clen = arr[r].length; c < clen; c += 1) {
-      if (c > 0) {
-        str += "\t";
-      }
-      val = arr[r][c];
-      if (typeof val === "string") {
-        if (val.indexOf("\n") > -1) {
-          str += `"` + val.replace(/"/g, `""`) + `"`;
-        } else {
-          str += val;
-        }
-      } else if (val === null || val === undefined) {
-        str += "";
-      } else {
-        str += val;
-      }
-    }
-    str += "\n";
-  }
-  return str;
 };
 
 export const validNumberFormats = ["auto", "ru", "en"] as const;

@@ -217,7 +217,7 @@ export default class Calendar extends Vue {
   }
 
   private focusInput() {
-    (this.$refs.control as HTMLInputElement)?.focus();
+    (this.$refs.control as HTMLInputElement | undefined)?.focus();
   }
 
   @Watch("autofocus", { immediate: true })

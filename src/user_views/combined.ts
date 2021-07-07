@@ -4,7 +4,7 @@ import moment, { MomentInput } from "moment";
 import { IExecutedValue, IColumnField, IFieldRef, RowId, AttributesMap, IExecutedRow, SchemaName, EntityName, FieldName, UserViewSource, IResultViewInfo, AttributeName, FieldType, IEntityRef,
   ValueType } from "ozma-api";
 import { AddedRowId, IAddedEntry, IEntityChanges, IStagingEventHandler, IStagingState } from "@/state/staging_changes";
-import { mapMaybe, tryDicts } from "@/utils";
+import { mapMaybe, NeverError, tryDicts } from "@/utils";
 import { equalEntityRef, IUpdatedValue, valueFromRaw, valueIsNull, valueToText } from "@/values";
 import { Entries, IEntriesRef, IEntriesState, IReferencedField } from "@/state/entries";
 
@@ -122,14 +122,15 @@ export interface IUserViewArguments {
 /* Utility functions. */
 
 export const rowKey = (ref: RowRef): unknown => {
-  if (ref.type === "existing") {
-    return ref.position;
-  } else if (ref.type === "added") {
-    return `added-${ref.id}`;
-  } else if (ref.type === "new") {
-    return "new";
-  } else {
-    throw new Error("Impossible");
+  switch (ref.type) {
+    case "existing":
+      return ref.position;
+    case "added":
+      return `added-${ref.id}`;
+    case "new":
+      return "new";
+    default:
+      throw new NeverError(ref);
   }
 };
 
