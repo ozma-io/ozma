@@ -40,22 +40,22 @@
 
 <template>
   <div class="userview-wrapper">
-    <transition name="fade-move">
-      <ArgumentEditor
-        v-if="showArgumentEditor && state.state === 'show'"
-        style="z-index: 50;"
-        :argument-params="state.uv.info.arguments"
-        :argument-values="state.uv.args.args"
-        :can-be-closed="!(showArgumentEditorAttr === true)"
-        @close="contextMenuShowArgumentEditor = false"
-        @update="updateArguments"
-        @update:hasChangedValues="argumentEditorHasChangedValues = $event"
-      />
-    </transition>
-
     <template
       v-if="state.state === 'show'"
     >
+      <transition name="fade-move">
+        <ArgumentEditor
+          v-if="showArgumentEditor"
+          ref="argumentEditor"
+          :argument-params="state.uv.info.arguments"
+          :argument-values="state.uv.args.args"
+          :can-be-closed="!(showArgumentEditorAttr === true)"
+          @close="contextMenuShowArgumentEditor = false"
+          @update="updateArguments"
+          @update:hasChangedValues="argumentEditorHasChangedValues = $event"
+        />
+      </transition>
+
       <UserViewCommon
         :uv="state.uv"
         :is-root="isRoot"
@@ -69,6 +69,7 @@
         @update:buttons="uvCommonButtons = $event"
       />
 
+      <!-- `z-index: 30` to work well with popups from ArgumentEditor -->
       <b-overlay
         style="height: 100%;"
         :show="argumentEditorHasChangedValues"
@@ -76,7 +77,7 @@
         opacity="0.4"
         blur="5px"
         rounded="sm"
-        :z-index="100"
+        :z-index="30"
       >
         <template #overlay>
           <div class="overlay-text">
@@ -620,6 +621,7 @@ export default class UserView extends Vue {
         throw e;
       }
 
+      (this.$refs.argumentEditor as ArgumentEditor | undefined)?.reset();
       options?.done?.();
     })();
     this.nextUv = pending.ref;

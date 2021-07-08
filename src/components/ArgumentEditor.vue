@@ -30,6 +30,7 @@
           <FormControl
             :value="{ value: allValues[name] }"
             :type="argument.type"
+            :attributes="argument.extra"
             :caption="argument.caption"
             :scope="mockScope"
             :uv-args="mockUvArgs"
@@ -79,9 +80,10 @@
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import moment, { MomentInput } from "moment";
 
-import { ArgumentName, IArgument } from "ozma-api";
+import { ArgumentName, AttributesMap, FieldType, IArgument } from "ozma-api";
 import { objectMap } from "@/utils";
 import { valueIsNull, valueToText } from "@/values";
+import { attrObjectToQuery, IQuery } from "@/state/query";
 
 const getValue = (parameter: IArgument, value: unknown) => {
   if (parameter.argType.type === "date" || parameter.argType.type === "datetime") {
@@ -89,6 +91,20 @@ const getValue = (parameter: IArgument, value: unknown) => {
   }
   return value;
 };
+
+interface IArgumentExtra {
+  referenceEntriesView?: IQuery;
+}
+
+interface ILocalArgument {
+  value: any;
+  defaultValue: any;
+  caption: string;
+  type: FieldType;
+  isOptional: boolean;
+  extra: AttributesMap;
+
+}
 
 @Component
 export default class ArgumentEditor extends Vue {
@@ -106,17 +122,29 @@ export default class ArgumentEditor extends Vue {
     return Object.keys(this.argumentParams).length > 3;
   }
 
-  private get args() {
+  private get args(): Record<string, ILocalArgument> {
     return objectMap((parameter, name) => {
       const value = getValue(parameter, this.argumentValues[name]) ?? parameter.defaultValue;
       const hasCaption = parameter.attributes["caption"] !== undefined;
       const caption = hasCaption ? valueToText(parameter.attributeTypes["caption"], parameter.attributes["caption"]) : name;
+      const type = parameter.argType;
+      const isOptional = parameter.optional || parameter.defaultValue !== undefined;
+
+      let extra: AttributesMap = {};
+      if (type.type === "reference" && parameter.attributes["entries_view"]) {
+        const referenceEntriesView = attrObjectToQuery(parameter.attributes["entries_view"]);
+        if (referenceEntriesView) {
+          extra = { ...extra, referenceEntriesView };
+        }
+      }
+
       return {
         value,
         defaultValue: parameter.defaultValue,
         caption,
-        type: parameter.argType,
-        isOptional: parameter.optional || parameter.defaultValue !== undefined,
+        type,
+        isOptional,
+        extra: parameter.attributes,
       };
     }, this.argumentParams);
   }
@@ -142,7 +170,8 @@ export default class ArgumentEditor extends Vue {
     Vue.set(this.changedValues, name, typedValue);
   }
 
-  private reset() {
+  // Must be also called outside after save!
+  reset() {
     this.changedValues = {};
   }
 
@@ -157,7 +186,6 @@ export default class ArgumentEditor extends Vue {
   private apply() {
     this.setDefaults();
     this.$emit("update", this.allValues);
-    this.reset();
   }
 
   private close() {

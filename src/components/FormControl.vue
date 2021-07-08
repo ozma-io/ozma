@@ -207,6 +207,7 @@
           :value="value"
           :height="customHeight"
           :reference-entity="fieldType.entity"
+          :constrained-by="inputType.constrainedBy"
           :uv-args="uvArgs"
           :autofocus="autofocus || iSlot.autofocus"
           :nullable="isNullable"
@@ -358,6 +359,7 @@ interface IReferenceType {
 
 interface IArgumentReferenceType {
   name: "argument_reference";
+  constrainedBy: IQuery | null;
 }
 
 interface ICheckType {
@@ -723,11 +725,12 @@ export default class FormControl extends Vue {
             return { name: "barcode", format: this.attributes["format"] ? String(this.attributes["format"]) : undefined };
           }
 
+          // `constraint_view` is deprecated and almost never used, delete it after some time.
+          const constrainedBy = attrObjectToQuery(this.attributes["entries_view"]) ?? attrObjectToQuery(this.attributes["constraint_view"]);
           if (this.value.info === undefined) {
-            return { name: "argument_reference" };
+            return { name: "argument_reference", constrainedBy };
           }
 
-          const constrainedBy = attrObjectToQuery(this.attributes["constraint_view"]);
           const refEntry: IReferenceType = {
             name: "reference",
             ref: this.value.info.fieldRef,
