@@ -43,6 +43,7 @@
     <transition name="fade-move">
       <ArgumentEditor
         v-if="showArgumentEditor && state.state === 'show'"
+        style="z-index: 50;"
         :argument-params="state.uv.info.arguments"
         :argument-values="state.uv.args.args"
         :can-be-closed="!(showArgumentEditorAttr === true)"
