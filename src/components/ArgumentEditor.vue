@@ -130,14 +130,6 @@ export default class ArgumentEditor extends Vue {
       const type = parameter.argType;
       const isOptional = parameter.optional || parameter.defaultValue !== undefined;
 
-      let extra: AttributesMap = {};
-      if (type.type === "reference" && parameter.attributes["entries_view"]) {
-        const referenceEntriesView = attrObjectToQuery(parameter.attributes["entries_view"]);
-        if (referenceEntriesView) {
-          extra = { ...extra, referenceEntriesView };
-        }
-      }
-
       return {
         value,
         defaultValue: parameter.defaultValue,
