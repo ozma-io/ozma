@@ -2416,10 +2416,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     display: flex;
     transition: opacity 0.2s;
 
-    .table-block.nested:not(.mobile):not(:hover) & {
-      opacity: 0.1;
-    }
-
     ::v-deep > button {
       width: 100%;
     }
@@ -2469,11 +2465,11 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     height: 100%;
     background-color: var(--table-backgroundDarker1Color);
 
-    &.nested {
-      border: 1px solid var(--input-borderColor, var(--form-borderColor, var(--default-borderColor)));
-      border-radius: 0.2rem;
-      overflow: hidden;
-    }
+    /* &.nested {
+     *   border: 1px solid var(--input-borderColor, var(--form-borderColor, var(--default-borderColor)));
+     *   border-radius: 0.2rem;
+     *   overflow: hidden;
+     * } */
   }
 
   .data-col {

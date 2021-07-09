@@ -102,12 +102,7 @@ export default class HeaderPanel extends Vue {
     justify-content: space-between;
     align-items: stretch;
     overflow-x: hidden;
-
-    &.is-root {
-      background-color: var(--interface-backgroundColor);
-      color: var(--interface-foregroundColor);
-      border-bottom: 1px solid var(--interface-borderColor);
-    }
+    color: var(--default-foregroundColor);
   }
 
   .left-part {
@@ -140,6 +135,10 @@ export default class HeaderPanel extends Vue {
     &.is-loading {
       color: var(--MainTextColorLight);
       opacity: 0.6;
+    }
+
+    .header-panel:not(.is-root) & {
+      padding-left: 0.25rem;
     }
   }
 

@@ -220,60 +220,53 @@
       </template>
     </InputSlot>
     <template v-if="inputType.name === 'userview' || inputType.name == 'empty_userview'">
-      <b-row>
-        <b-col
-          v-if="usedCaption"
-          :cols="isMultiline ? 12 : 4"
-        >
-          <div v-if="inputType.name == 'empty_userview'">
-            <div class="nested-menu">
-              <!-- `tabindex` is required for closing tooltip on blur -->
-              <label
-                v-b-tooltip.click.blur.bottom.noninteractive
-                tabindex="0"
-                class="input_label not-loaded"
-                :title="usedCaption"
-              >
-                {{ usedCaption }}
-              </label>
-            </div>
-            <div class="empty_userview_text">
-              {{ $t('data_will_load_after_save') }}
-            </div>
+      <div :class="['nested-userview', { 'mobile': $isMobile }]">
+        <div v-if="inputType.name == 'empty_userview'">
+          <div class="nested-menu">
+            <!-- `tabindex` is required for closing tooltip on blur -->
+            <label
+              v-b-tooltip.click.blur.bottom.noninteractive
+              tabindex="0"
+              class="input_label not-loaded"
+              :title="usedCaption"
+            >
+              {{ usedCaption }}
+            </label>
           </div>
-          <HeaderPanel
-            v-else-if="inputType.name === 'userview'"
-            :title="usedCaption"
-            :buttons="buttons"
-            :is-enable-filter="enableFilter"
-            :view="inputType"
+          <div class="empty_userview_text">
+            {{ $t('data_will_load_after_save') }}
+          </div>
+        </div>
+        <HeaderPanel
+          v-else-if="inputType.name === 'userview'"
+          :title="usedCaption"
+          :buttons="buttons"
+          :is-enable-filter="enableFilter"
+          :view="inputType"
+          :filter-string="filterString"
+          :is-loading="isUserViewLoading"
+          @update:filterString="filterString = $event"
+          @goto="$emit('goto', $event)"
+        />
+        <div
+          v-if="inputType.name === 'userview'"
+          :style="{ backgroundColor: cellColor }"
+        >
+          <NestedUserView
+            ref="control"
+            :args="inputType.args"
+            :default-values="inputType.defaultValues"
+            :scope="scope"
+            :level="level + 1"
             :filter-string="filterString"
-            :is-loading="isUserViewLoading"
-            @update:filterString="filterString = $event"
+            @update:buttons="buttons = $event"
+            @update:enableFilter="enableFilter = $event"
+            @update:isLoading="isUserViewLoading = $event"
+            @update:title="updateTitle"
             @goto="$emit('goto', $event)"
           />
-        </b-col>
-        <b-col :cols="!isMultiline && usedCaption ? 8 : 12">
-          <div
-            v-if="inputType.name === 'userview'"
-            :style="{ backgroundColor: cellColor }"
-          >
-            <NestedUserView
-              ref="control"
-              :args="inputType.args"
-              :default-values="inputType.defaultValues"
-              :scope="scope"
-              :level="level + 1"
-              :filter-string="filterString"
-              @update:buttons="buttons = $event"
-              @update:enableFilter="enableFilter = $event"
-              @update:isLoading="isUserViewLoading = $event"
-              @update:title="updateTitle"
-              @goto="$emit('goto', $event)"
-            />
-          </div>
-        </b-col>
-      </b-row>
+        </div>
+      </div>
     </template>
   </fragment>
 </template>
@@ -897,14 +890,6 @@ export default class FormControl extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  .fullscreen_button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    float: right;
-    color: var(--MainTextColor);
-  }
-
   .input_label__container {
     padding: 0;
     display: flex;
@@ -935,19 +920,19 @@ export default class FormControl extends Vue {
     color: var(--MainTextColorLight);
   }
 
-  .actions-menu {
-    width: max-content;
-    display: inline-block;
-  }
+  .nested-userview {
+    margin: 0.25rem 0;
+    border: 1px solid var(--default-borderColor);
+    border-radius: 0.5rem;
+    overflow: hidden;
 
-  .actions-menu_actions-button {
-    border: 0 !important;
-    line-height: normal;
-    padding: 2px;
-    padding-left: 1px;
-    height: 100%;
-    text-align: left;
-    border-radius: 0 !important;
+    &:not(.mobile):not(:hover) ::v-deep {
+      .header-panel .button-element,
+      .button-container,
+      .search-wrapper {
+        opacity: 0.1;
+      }
+    }
   }
 
   .nested-menu {
@@ -964,141 +949,53 @@ export default class FormControl extends Vue {
         outline: none;
       }
     }
-
-    > .actions-menu {
-      width: max-content;
-      display: inline-block;
-    }
-
-    ::v-deep .actions-menu_actions-button {
-      border: 0 !important;
-      line-height: normal;
-      padding: 2px;
-      height: 100%;
-      width: auto;
-      text-align: left;
-      border-radius: 0 !important;
-      margin-right: 0;
-    }
-  }
-
-  .caption-editors {
-    display: inline-block;
-    margin-left: 2px;
-  }
-
-  .form-control-panel {
-    padding-right: 2px;
-    max-width: 60%;
-    max-height: 60%;
-    min-width: 14rem;
-    box-sizing: content-box;
-  }
-
-  .form-control-panel_editor {
-    width: 60%;
-    height: 60%;
-  }
-
-  .form-control-panel_select {
-    border-color: var(--NavigationBackColor);
-    width: 100%;
-    padding: 0.375rem 0.75rem;
-    height: calc(1.5em + 0.75rem + 2px);
   }
 
   .form-control-panel_checkbox {
     border-color: var(--NavigationBackColor);
-  }
-
-  .form-control-panel_textarea {
-    border-color: var(--NavigationBackColor);
-    width: 100%;
-    overflow-y: hidden !important;
-    overflow-x: hidden !important;
-    word-wrap: unset !important;
-    padding: 0.375rem 0.75rem;
-    resize: none;
-    vertical-align: top;
-  }
-
-  .form-control-panel_select,
-  .form-control-panel_checkbox,
-  .form-control-panel_textarea {
     border-radius: 0;
     box-shadow: none;
     -webkit-appearance: none;
     background: white;
   }
 
-  .form-control-panel_select_req,
-  .form-control-panel_checkbox_req,
-  .form-control-panel_textarea_req {
+  .form-control-panel_checkbox_req {
     background-color: var(--WarningColor);
   }
 
-  .form-control-panel_select_error,
-  .form-control-panel_checkbox_error,
-  .form-control-panel_textarea_error {
+  .form-control-panel_checkbox_error {
     background-color: var(--FailColor) !important;
   }
 
-  .form-control-panel_select:focus,
-  .form-control-panel_checkbox:focus,
-  .form-control-panel_textarea:focus {
+  .form-control-panel_checkbox:focus {
     border-color: var(--NavigationBackColor);
     box-shadow: 0 0 0 white;
   }
 
-  .form-control-panel_select:disabled,
-  .form-control-panel_checkbox:disabled,
-  .form-control-panel_textarea:disabled {
+  .form-control-panel_checkbox:disabled {
     background-color: var(--ControlDisableColor);
   }
 
   @media screen and (max-aspect-ratio: 13/9) {
     @media screen and (max-device-width: 480px) {
-      .form-control-panel-hidden {
-        margin-top: 7px;
-        position: sticky;
-      }
-
       .nested-menu {
         z-index: 0; /* чтобы при нажатии на "действия" в подтаблице остальные аналогичные кнопки других подтаблиц были ниже темного блока */
         position: sticky;
-      }
-
-      ::v-deep .nested-menu > .actions-menu .div-with-actions {
-        position: absolute !important;
-        top: 35px;
-        left: -30px;
       }
 
       .nested-menu:hover {
         z-index: 1200; /* меню действий для подтаблиц поверх темного фона */
       }
 
-      .form-control-panel_select,
-      .form-control-panel_checkbox,
-      .form-control-panel_textarea {
+      .form-control-panel_checkbox {
         position: -webkit-sticky;
         position: sticky;
         left: 1px;
         display: block;
       }
 
-      td > .form-control-panel > .form-control-panel_textarea {
-        width: 100%;
-      }
-
       td > div.form-control-panel > pre {
         min-width: 0 !important;
-      }
-
-      .caption-editors {
-        position: sticky;
-        left: 3px;
-        width: max-content;
       }
     }
   }

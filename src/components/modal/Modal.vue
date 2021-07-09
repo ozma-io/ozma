@@ -193,9 +193,9 @@ export default class Modal extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  .header {
-    border-bottom: 1px solid var(--interface-borderColor);
-  }
+  /* .header {
+   *   border-bottom: 1px solid var(--interface-borderColor);
+   * } */
 
   .modal__tab_headers {
     width: 100%;
@@ -240,10 +240,10 @@ export default class Modal extends Vue {
     It's their naming so don't touch this
     if you refactor styles */
   .v--modal-box.v--modal {
-    background-color: var(--MainBackgroundColor);
+    background-color: var(--default-backgroundDarker1Color);
     color: var(--MainTextColor);
     border-radius: 0.5rem;
-    border: 1px solid var(--MainBorderColor);
+    border: 1px solid var(--default-backgroundBorderColor);
     display: flex;
     flex-flow: column nowrap;
     flex-grow: 1;

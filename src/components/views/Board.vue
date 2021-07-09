@@ -416,7 +416,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
 <style lang="scss" scoped>
   .view_kanban {
     height: 100%;
-    background-color: var(--kanban-backgroundColor, var(--default-backgroundColor));
+    background-color: var(--kanban-backgroundDarker2Color, var(--default-backgroundDarker2Color));
 
     &.nested {
       border: 1px solid var(--input-borderColor, var(--form-borderColor, var(--default-borderColor)));

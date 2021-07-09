@@ -628,67 +628,6 @@ export default class TopLevelUserView extends Vue {
     z-index: 0; /* вся страница, кроме низа */
   }
 
-  @media print {
-    .head-menu {
-      display: none !important;
-    }
-  }
-
-  @media screen and (max-aspect-ratio: 13/9) {
-    @media screen and (max-device-width: 480px) {
-      .head-menu {
-        width: 100%;
-      }
-    }
-  }
-
-  .head-menu {
-    display: flex;
-    white-space: nowrap;
-    background-color: var(--interface-backgroundColor);
-    color: var(--interface-foregroundColor);
-    border-bottom: 1px solid var(--interface-borderColor);
-    width: 100%;
-    padding: 2px 10px;
-    z-index: 999;
-  }
-
-  .head-menu_back-button {
-    padding-top: 3px;
-    padding-bottom: 3px;
-    margin-left: 0 !important;
-    background-color: transparent;
-  }
-
-  .head-menu_back-button,
-  .head-menu_main-menu-button {
-    border: none;
-    text-decoration: none;
-    padding: 0;
-    margin-right: 5px;
-    position: relative;
-    z-index: 1000;
-  }
-
-  .head-menu_title {
-    margin: 1px 2px 0;
-    margin-right: auto;
-    font-weight: 600;
-    font-size: 1.25em;
-    color: var(--MainTextColor);
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    &.is-loading {
-      color: var(--MainTextColorLight);
-      opacity: 0.6;
-    }
-
-    &:focus {
-      outline: none;
-    }
-  }
-
   .fix-bot {
     padding: 0.1rem;
     padding-left: 0.5rem;

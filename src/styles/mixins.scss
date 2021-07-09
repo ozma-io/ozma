@@ -1,7 +1,7 @@
 $color-transition: background-color 0.3s, color 0.3s;
 
 @mixin material-button($variant: "default") {
-  transition: background 0.1s, $color-transition;
+  transition: background 0.1s, opacity 0.2s, $color-transition;
   cursor: pointer;
   background-color: var(--#{$variant}-backgroundColor);
   border: 1px solid var(--#{$variant}-borderColor);
@@ -12,7 +12,7 @@ $color-transition: background-color 0.3s, color 0.3s;
     background-color: var(--#{$variant}-backgroundDarker1Color) !important;
     border-color: var(--#{$variant}-borderColor) !important;
     color: var(--#{$variant}-foregroundContrastColor) !important;
-    transition: background 0s, $color-transition;
+    transition: background 0s, opacity 0.2s, $color-transition;
   }
 
   &:focus:not(.disabled) {
@@ -23,7 +23,7 @@ $color-transition: background-color 0.3s, color 0.3s;
     background-color: var(--#{$variant}-backgroundDarker2Color) !important;
     border-color: var(--#{$variant}-borderColor) !important;
     color: var(--#{$variant}-foregroundContrastColor);
-    transition: $color-transition, background 0s, $color-transition;
+    transition: $color-transition, background 0s, opacity 0.2s;
   }
 
   &.disabled {
