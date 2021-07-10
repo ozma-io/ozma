@@ -41,8 +41,12 @@
       :disabled="disabled"
       :visible-arrow="false"
       :options="{
-        placement: 'bottom',
-        modifiers: { offset: { offset: '0,0px' } },
+        placement: 'bottom-start',
+        positionFixed: true,
+        modifiers: {
+          offset: { offset: '0,0px' },
+          preventOverflow: { escapeWithReference: true, boundariesElement: 'viewport' },
+        },
       }"
       @show="onOpenPopup"
       @hide="onClosePopup"
@@ -144,7 +148,7 @@
           <b-input-group
             v-if="!disabled && showFilter"
             size="sm"
-            class="focus-entire filter-group"
+            class="filter-group"
           >
             <b-input
               ref="filterInput"
@@ -155,8 +159,8 @@
               class="filter-input"
               :placeholder="$t('search_placeholder')"
               @keydown.backspace="onBackspace"
-              @keydown.up="offsetFocusedOption(-1)"
-              @keydown.down="offsetFocusedOption(1)"
+              @keydown.up="offsetHoveredOption(-1)"
+              @keydown.down="offsetHoveredOption(1)"
               @keydown.enter="filterInputFinished"
               @keydown.esc.prevent.stop="$emit('blur', $event)"
               @focus="onFilterInputFocus"
@@ -177,29 +181,31 @@
             data-infinite-wrapper
             :style="optionsListStyle"
           >
-            <span
+            <div
               v-for="(option, index) in visibleOptions"
               :key="index"
               :class="[
-                'single-value',
+                'option-wrapper',
                 {
                   'has-links': option.label !== option.labelHtml,
-                  'value-focused': focusedOption === option.index,
+                  'hovered-value': hoveredOpinionIndex === index,
                 },
               ]"
               :style="listValueStyle"
-              @mouseover="focusedOption = option.index"
+              @mouseover="hoveredOpinionIndex = option.index"
               @click="selectOption(option.index)"
             >
-              <slot
-                name="option"
-                :option="option"
-              >
-                <!-- eslint-disable vue/no-v-html -->
-                <span v-html="option.labelHtml" />
-                <!-- eslint-enable vue/no-v-html -->
-              </slot>
-            </span>
+              <div class="single-value">
+                <slot
+                  name="option"
+                  :option="option"
+                >
+                  <!-- eslint-disable vue/no-v-html -->
+                  <span v-html="option.labelHtml" />
+                  <!-- eslint-enable vue/no-v-html -->
+                </slot>
+              </div>
+            </div>
             <div
               v-if="visibleOptions.length === 0 && options.length > 0 && loadingState.status === 'ok'"
               class="no-results"
@@ -281,7 +287,7 @@ export default class MultiSelect extends Vue {
   @Prop({ type: Boolean, default: false }) required!: boolean;
   @Prop({ type: Boolean, default: false }) disabled!: boolean;
   @Prop({ type: Number }) height!: number | undefined;
-  @Prop({ type: Number, default: 200 }) optionsListHeight!: number;
+  @Prop({ type: Number, default: 350 }) optionsListHeight!: number;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: Boolean, default: false }) showFilter!: boolean;
   @Prop({ type: Object, default: (): LoadingState => ({ status: "ok", moreAvailable: false }) }) loadingState!: LoadingState;
@@ -289,7 +295,7 @@ export default class MultiSelect extends Vue {
 
   private filterValue = "";
   // Option, currently focused in a popup.
-  private focusedOption: number | null = null;
+  private hoveredOpinionIndex: number | null = null;
   private isPopupOpen = false;
   private oldLoadingState: LoadingState = { status: "ok", moreAvailable: false };
 
@@ -407,6 +413,8 @@ export default class MultiSelect extends Vue {
   @Watch("filterValue")
   private emitFilterValue() {
     this.$emit("update:filter", this.filterValue);
+
+    (this.$refs["infiniteLoading"] as InfiniteLoading | undefined)?.stateChanger.reset();
   }
 
   @Watch("autofocus")
@@ -473,7 +481,7 @@ export default class MultiSelect extends Vue {
     const popupRef: any = this.$refs.popup;
     if (!popupRef) return;
 
-    this.focusedOption = null;
+    this.hoveredOpinionIndex = null;
     await popupRef.doShow();
   }
 
@@ -525,26 +533,26 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  @Watch("visibleOptions")
+  @Watch("visibleOptions", { immediate: true })
   private visibleOptionsUpdated() {
-    this.offsetFocusedOption(0);
+    this.offsetHoveredOption(0);
   }
 
-  private offsetFocusedOption(offset: number) {
+  private offsetHoveredOption(offset: number) {
     if (this.visibleOptions.length === 0) {
-      this.focusedOption = null;
+      this.hoveredOpinionIndex = null;
     } else {
-      this.focusedOption = Math.max(0, Math.min(this.visibleOptions.length - 1, (this.focusedOption ?? 0) + offset));
+      this.hoveredOpinionIndex = Math.max(0, Math.min(this.visibleOptions.length - 1, (this.hoveredOpinionIndex ?? 0) + offset));
     }
   }
 
-  @Watch("focusedOption")
-  private scrollToFocusedOption(focusedOption: number | null) {
-    if (focusedOption === null) {
+  @Watch("hoveredOpinionIndex")
+  private scrollToHoveredOption(hoveredOpinionIndex: number | null) {
+    if (hoveredOpinionIndex === null) {
       return;
     }
     const container = this.$refs.optionsContainer as HTMLElement | undefined;
-    const item = container?.children?.[focusedOption];
+    const item = container?.children?.[hoveredOpinionIndex];
     if (item) {
       item.scrollIntoView({ block: "nearest" });
     }
@@ -596,8 +604,8 @@ export default class MultiSelect extends Vue {
   private async filterInputFinished() {
     if (this.processFilter && await this.processFilter(this.filterValue)) {
       this.filterValue = "";
-    } else if (this.focusedOption !== null) {
-      this.selectOption(this.focusedOption);
+    } else if (this.hoveredOpinionIndex !== null) {
+      this.selectOption(this.hoveredOpinionIndex);
       this.filterValue = "";
     }
   }
@@ -631,8 +639,8 @@ export default class MultiSelect extends Vue {
   }
 
   .filter-icon {
-    background-color: var(--input-backgroundColor);
-    color: var(--input-foregroundColor);
+    background-color: var(--default-backgroundColor);
+    color: var(--default-foregroundColor);
     border-left-width: 0;
   }
 
@@ -738,12 +746,19 @@ export default class MultiSelect extends Vue {
 
     .filter-input {
       border-right-width: 0;
-      background-color: var(--input-backgroundColor);
-      color: var(--input-foregroundColor);
-    }
+      background-color: var(--default-backgroundColor);
+      color: var(--default-foregroundColor);
+      border-color: var(--default-borderColor);
 
-    .filter-input:focus {
-      outline: none;
+      &::placeholder {
+        color: var(--default-foregroundDarkerColor);
+      }
+
+      &:focus {
+        border-color: var(--default-borderColor);
+        box-shadow: none;
+        outline: none;
+      }
     }
 
     &:focus-within {
@@ -772,22 +787,20 @@ export default class MultiSelect extends Vue {
   }
 
   .multiselect-popper {
-    max-width: calc(100% + 2px);
-    width: calc(100% + 2px);
+    max-width: 98%;
+    width: 25rem;
 
     .select-container__options_container {
       position: relative;
       z-index: 1001;
-      width: 100%;
       list-style: none;
     }
   }
 
-  .value-focused {
+  .hovered-value {
     cursor: pointer !important;
     color: var(--reference-foregroundColor) !important;
     background-color: var(--reference-backgroundDarker1Color) !important;
-    border: 1px solid var(--reference-borderColor) !important;
   }
 
   div.select-container__options__actions {
@@ -812,36 +825,23 @@ export default class MultiSelect extends Vue {
     border-radius: 1rem;
     padding: 0.25rem 0.5rem;
     line-height: 1rem;
-    word-break: break-all;
+    word-break: break-word;
 
     &:hover .remove-value,
     &:hover ::v-deep .open-modal-button {
       opacity: 1;
     }
-
-    &.has-links {
-      ::v-deep span {
-        /* Otherwise it's sometimes tricky to click/tap inside if entire value is url/tel/mail. */
-        margin-right: 2rem;
-      }
-    }
-  }
-
-  .single-value {
-    align-self: center;
   }
 
   .options-list {
-    padding: 0;
-    margin: 0;
-    overflow-x: hidden;
-    text-align: left;
-    transition: all ease-in 0.2s;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
 
-    .single-value {
-      margin: 3px;
-      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    }
+  .option-wrapper {
+    padding: 0.15rem 0.25rem;
+    text-align: start;
   }
 
   .append-button {

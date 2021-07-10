@@ -182,6 +182,7 @@
         <ReferenceField
           v-else-if="inputType.name === 'reference'"
           ref="control"
+          :is-cell-edit="isCellEdit"
           :value="value"
           :select-views="inputType.selectViews"
           :height="customHeight"
@@ -913,8 +914,9 @@ export default class FormControl extends Vue {
   }
 
   .empty_userview_text {
-    opacity: 0.7;
+    margin: 0.5rem;
     padding: 0.25rem 0.5rem;
+    opacity: 0.7;
     border: 1px dashed var(--MainBorderColor);
     border-radius: 0.2rem;
     color: var(--MainTextColorLight);

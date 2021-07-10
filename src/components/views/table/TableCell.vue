@@ -346,8 +346,9 @@ export default class TableCell extends Vue {
   span.reference-text {
     margin: 0 0.25rem;
     display: block;
-    white-space: normal;
     line-height: 1rem;
+    white-space: normal;
+    word-break: break-word;
   }
 
   .cell-text {

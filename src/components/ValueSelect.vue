@@ -16,6 +16,7 @@
     :value="selectedValue"
     :options="options"
     single
+    show-filter
     :required="required"
     :disabled="disabled"
     :height="height"

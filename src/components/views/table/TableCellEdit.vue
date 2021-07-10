@@ -42,7 +42,7 @@ export default class TableCellEdit extends Vue {
 
 <style scoped>
   .table-cell-edit {
-    background: transparent;
+    background: var(--input-backgroundColor);
     height: auto !important; /* TODO: So do we need `height` in `:style` at all? */
     position: fixed;
     top: 0;

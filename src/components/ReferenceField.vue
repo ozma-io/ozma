@@ -1,7 +1,7 @@
 <template>
   <div
     class="reference-field"
-    :style="{backgroundColor: backgroundColor}"
+    :style="{ backgroundColor: backgroundColor, minWidth: isCellEdit ? '25rem' : undefined}"
   >
     <ReferenceMultiSelect
       :value="value"
@@ -46,6 +46,7 @@ export default class ReferenceField extends Vue {
   @Prop({ type: Object, required: true }) referenceEntity!: IEntityRef;
   @Prop({ type: Object, default: null }) constrainedBy!: IQuery | null;
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
+  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: Object }) linkAttr!: any | undefined;
   @Prop({ type: Boolean, default: false }) disabled!: boolean;
   @Prop({ type: Boolean, default: false }) nullable!: boolean;

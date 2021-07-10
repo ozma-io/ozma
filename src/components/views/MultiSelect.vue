@@ -1,39 +1,32 @@
 <i18n>
   {
     "en": {
-      "no_select_column": "Please identify selectable column using \"Select\" = True attribute on desired column."
+      "no_select_column": "Please identify selectable column using `select = true` attribute on desired column."
     },
     "ru": {
-      "no_select_column": "Пожалуйста, обозначьте колонку для выбора через аттрибут \"Select\" = True на желаемой колонке."
+      "no_select_column": "Пожалуйста, обозначьте колонку для выбора через аттрибут `select = true` на желаемой колонке."
     }
   }
 </i18n>
 
 <template>
-  <div
-    fluid
-    class="view-form"
-  >
-    <ReferenceMultiSelect
-      v-if="reference"
-      :value="selectedValues"
-      :disabled="disabled"
-      :background-color="backgroundColor"
-      :link-attr="linkAttr"
-      :entries="reference.entries"
-      :reference-entity="reference.referenceEntity"
-      :uv-args="uv.args"
-      @add-value="addValue"
-      @remove-index="removeIndex"
-      @goto="$emit('goto', $event)"
-    />
-    <div
-      v-else
-      class="no-select-error"
-    >
-      {{ $t('no_select_column') }}
-    </div>
-  </div>
+  <ReferenceMultiSelect
+    v-if="reference"
+    :value="selectedValues"
+    :disabled="disabled"
+    :background-color="backgroundColor"
+    :link-attr="linkAttr"
+    :entries="reference.entries"
+    :reference-entity="reference.referenceEntity"
+    :uv-args="uv.args"
+    @add-value="addValue"
+    @remove-index="removeIndex"
+    @goto="$emit('goto', $event)"
+  />
+  <Errorbox
+    v-else
+    :message="$t('no_select_column')"
+  />
 </template>
 
 <script lang="ts">
@@ -48,6 +41,7 @@ import ReferenceMultiSelect from "@/components/ReferenceMultiSelect.vue";
 import { ICombinedValue } from "@/user_views/combined";
 import { AddedRowId } from "@/state/staging_changes";
 import { getReferenceInfo } from "@/state/entries";
+import Errorbox from "@/components/Errorbox.vue";
 
 interface ISelectedValueBase {
   value: ICombinedValue;
@@ -71,7 +65,7 @@ type SelectedValue = IExistingSelectedValue | IAddedSelectedValue | IUnknownSele
 
 @UserView()
 @Component({
-  components: { ReferenceMultiSelect },
+  components: { ReferenceMultiSelect, Errorbox },
 })
 export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseUserView) {
   @Prop({ type: String }) backgroundColor!: string;
@@ -155,14 +149,3 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseU
   }
 }
 </script>
-
-<style lang="scss" scoped>
-  .view-form {
-    border-radius: 0.2rem;
-    background-color: var(--MainBackgroundColor);
-  }
-
-  .no-select-error {
-    color: red;
-  }
-</style>
