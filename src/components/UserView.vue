@@ -72,7 +72,7 @@
       <!-- `z-index: 30` to work well with popups from ArgumentEditor -->
       <b-overlay
         style="height: 100%;"
-        :show="argumentEditorHasChangedValues"
+        :show="showArgumentEditor && argumentEditorHasChangedValues"
         variant="dark"
         opacity="0.4"
         blur="5px"
@@ -707,6 +707,8 @@ export default class UserView extends Vue {
 
     // It's... bad way to detect uv change, but it works as needed for now. TODO: Make it better.
     if (newTitle !== oldTitle) {
+      (this.$refs.argumentEditor as ArgumentEditor | undefined)?.reset();
+      this.argumentEditorHasChangedValues = false;
       this.contextMenuShowArgumentEditor = false;
     }
   }

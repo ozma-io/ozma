@@ -83,7 +83,7 @@ import moment, { MomentInput } from "moment";
 import { ArgumentName, AttributesMap, FieldType, IArgument } from "ozma-api";
 import { objectMap } from "@/utils";
 import { valueIsNull, valueToText } from "@/values";
-import { attrObjectToQuery, IQuery } from "@/state/query";
+import { IQuery } from "@/state/query";
 
 const getValue = (parameter: IArgument, value: unknown) => {
   if (parameter.argType.type === "date" || parameter.argType.type === "datetime") {
@@ -129,14 +129,6 @@ export default class ArgumentEditor extends Vue {
       const caption = hasCaption ? valueToText(parameter.attributeTypes["caption"], parameter.attributes["caption"]) : name;
       const type = parameter.argType;
       const isOptional = parameter.optional || parameter.defaultValue !== undefined;
-
-      let extra: AttributesMap = {};
-      if (type.type === "reference" && parameter.attributes["entries_view"]) {
-        const referenceEntriesView = attrObjectToQuery(parameter.attributes["entries_view"]);
-        if (referenceEntriesView) {
-          extra = { ...extra, referenceEntriesView };
-        }
-      }
 
       return {
         value,
