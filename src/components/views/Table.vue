@@ -75,16 +75,16 @@
       class="tabl"
     >
       <div
-        v-if="uv.emptyRow !== null || uv.extra.lazyLoad.type === 'pagination'"
+        v-if="uv.info.mainEntity || uv.extra.lazyLoad.type === 'pagination'"
         class="button-container"
       >
         <ButtonItem
-          v-if="uv.emptyRow !== null && !uv.extra.softDisabled && !uv.extra.dirtyHackPreventEntireReloads"
+          v-if="uv.info.mainEntity && !uv.extra.softDisabled && !uv.extra.dirtyHackPreventEntireReloads"
           :button="topAddButton"
         />
         <div
           v-if="uv.extra.lazyLoad.type === 'pagination'"
-          :class="['pagination', { 'ml-auto': uv.emptyRow === null }]"
+          :class="['pagination', { 'ml-auto': !uv.info.mainEntity }]"
         >
           <b-spinner
             v-if="uv.extra.lazyLoad.pagination.loading"
@@ -237,7 +237,7 @@
         </template>
       </InfiniteLoading>
       <div
-        v-if="uv.emptyRow !== null && !uv.extra.softDisabled && !uv.extra.dirtyHackPreventEntireReloads"
+        v-if="uv.info.mainEntity && !uv.extra.softDisabled && !uv.extra.dirtyHackPreventEntireReloads"
         ref="bottomButtonContainer"
         class="button-container"
       >

@@ -68,7 +68,7 @@
           ]"
         >
           <ButtonItem
-            v-if="isTreeCell"
+            v-if="isTreeCell && showAddChild"
             class="add-child"
             :button="addChildButton"
           />
@@ -131,6 +131,7 @@ export default class TableCell extends Vue {
   @Prop({ type: Number, default: null }) index!: number;
   @Prop({ type: Object, required: true }) tree!: ITableRowTree;
   @Prop({ type: Boolean, required: true }) showTree!: boolean;
+  @Prop({ type: Boolean, required: true }) showAddChild!: boolean;
   @Prop({ type: Boolean, default: false }) notExisting!: boolean;
 
   private get valueType(): string | null {
