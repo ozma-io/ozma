@@ -600,8 +600,10 @@ export default class MultiSelect extends Vue {
     if (this.single) {
       this.$emit("update:value", null);
     } else {
-      for (const index of this.value as number[]) {
-        this.$emit("remove-value", index);
+      for (const [index, _] of this.selectedOptions.entries()) {
+        // Because options are removed one-by-one we need to reverse indexes there.
+        // Maybe we need to rewrite it to something index-independed.
+        this.$emit("remove-value", this.selectedOptions.length - index - 1);
       }
     }
   }
