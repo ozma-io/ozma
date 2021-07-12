@@ -45,6 +45,7 @@
       :not-existing="notExisting"
       :last-fixed-column-index="lastFixedColumnIndex"
       :show-tree="showTree"
+      :show-add-child="uv.info.mainEntity !== undefined"
       @cell-click="$emit('cell-click', arguments[0], arguments[1])"
       @cell-mousedown="$emit('cell-mousedown', arguments[0], arguments[1])"
       @cell-mouseover="$emit('cell-mouseover', arguments[0], arguments[1])"
