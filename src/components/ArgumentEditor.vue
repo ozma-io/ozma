@@ -83,7 +83,7 @@ import moment, { MomentInput } from "moment";
 import { ArgumentName, AttributesMap, FieldType, IArgument } from "ozma-api";
 import { objectMap } from "@/utils";
 import { valueIsNull, valueToText } from "@/values";
-import { attrObjectToQuery, IQuery } from "@/state/query";
+import { IQuery } from "@/state/query";
 
 const getValue = (parameter: IArgument, value: unknown) => {
   if (parameter.argType.type === "date" || parameter.argType.type === "datetime") {
