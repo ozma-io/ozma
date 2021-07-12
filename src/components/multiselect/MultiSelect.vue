@@ -7,6 +7,7 @@
       "search_placeholder": "Search",
       "no_results": "No entries",
       "no_results_for_filter": "No entries for this filter",
+      "trigram_tooltip": "Enter at least 3 characters to load more options",
       "error": "Error during loading more data: {msg}"
     },
     "ru": {
@@ -16,6 +17,7 @@
       "search_placeholder": "Поиск",
       "no_results": "Нет записей",
       "no_results_for_filter": "Нет записей по этому фильтру",
+      "trigram_tooltip": "Введите как минимум 3 символа, чтобы загрузить ещё опции",
       "error": "Ошибка при загрузке новых данных: {msg}"
     }
   }
@@ -179,8 +181,16 @@
             ref="optionsContainer"
             class="options-list"
             data-infinite-wrapper
+            infinite-wrapper
             :style="optionsListStyle"
           >
+            <div
+              v-if="visibleOptions.length === 0 && options.length > 0 && loadingState.status === 'ok'"
+              class="popup-message"
+            >
+              {{ $t("no_results_for_filter") }}
+            </div>
+
             <div
               v-for="(option, index) in visibleOptions"
               :key="index"
@@ -192,7 +202,7 @@
                 },
               ]"
               :style="listValueStyle"
-              @mouseover="hoveredOpinionIndex = option.index"
+              @mouseover="hoveredOpinionIndex = index"
               @click="selectOption(option.index)"
             >
               <div class="single-value">
@@ -206,16 +216,13 @@
                 </slot>
               </div>
             </div>
-            <div
-              v-if="visibleOptions.length === 0 && options.length > 0 && loadingState.status === 'ok'"
-              class="no-results"
-            >
-              {{ $t("no_results_for_filter") }}
-            </div>
+
             <infinite-loading
+              v-if="useInfiniteScrolling"
               ref="infiniteLoading"
               spinner="spiral"
-              @infinite="handleLoadMore"
+              force-use-infinite-wrapper
+              @infinite="infiniteHandler"
             >
               <template #no-results>
                 {{ $t("no_results") }}
@@ -229,6 +236,9 @@
                 </template>
               </template>
             </infinite-loading>
+            <div v-else-if="!(loadingState.status === 'ok' && !loadingState.moreAvailable)" class="popup-message">
+              {{ $t("trigram_tooltip") }}
+            </div>
           </div>
           <div
             class="select-container__options__actions"
@@ -246,7 +256,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { deepClone, deepEquals, nextRender, replaceHtmlLinks } from "@/utils";
+import { deepClone, deepEquals, NeverError, nextRender, replaceHtmlLinks } from "@/utils";
 import Popper from "vue-popperjs";
 import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 
@@ -294,10 +304,14 @@ export default class MultiSelect extends Vue {
   @Prop({ type: Function }) processFilter!: (_: string) => Promise<boolean> | undefined;
 
   private filterValue = "";
-  // Option, currently focused in a popup.
   private hoveredOpinionIndex: number | null = null;
   private isPopupOpen = false;
   private oldLoadingState: LoadingState = { status: "ok", moreAvailable: false };
+
+  // Due to trigram indexes require at least 3 symbols.
+  private get useInfiniteScrolling() {
+    return this.filterValue.length === 0 || this.filterValue.length >= 3;
+  }
 
   get htmlOptions(): ISelectOptionHtml<unknown>[] {
     return this.options.map((option, index) => ({
@@ -368,37 +382,44 @@ export default class MultiSelect extends Vue {
     this.$emit("load-more", (state: LoadingResult) => {
       if (state.status === "error") {
         ev.error();
+      } else if (state.status === "ok") {
+        ev.loaded();
+        if (!state.moreAvailable) {
+          ev.complete();
+        }
       } else {
-        this.$nextTick(() => {
-          if (this.options.length > 0) {
-            ev.loaded();
-          }
-          if (!state.moreAvailable) {
-            ev.complete();
-          }
-        });
+        throw new NeverError(state);
       }
     });
   }
 
-  private handleLoadMore(ev: StateChanger) {
-    if (this.loadingState.status === "ok") {
-      if (this.loadingState.moreAvailable) {
-        this.loadMoreWithEvent(ev);
-      } else {
+  private infiniteHandler(ev: StateChanger) {
+    if (this.loadingState.status === "ok" && !this.loadingState.moreAvailable) {
+      ev.loaded();
+      ev.complete();
+      return;
+    }
+
+    this.$emit("load-more", (state: LoadingResult) => {
+      if (state.status === "error") {
+        ev.error();
+      } else if (state.status === "ok") {
         if (this.options.length > 0) {
           ev.loaded();
         }
-        ev.complete();
+        if (!state.moreAvailable) {
+          ev.complete();
+        }
+        if (this.options.length === 0 && state.moreAvailable) {
+          ev.loaded();
+        }
+      } else {
+        throw new NeverError(state);
       }
-    } else if (this.loadingState.status === "error") {
-      ev.error();
-    } else {
-      this.loadMoreWithEvent(ev);
-    }
+    });
   }
 
-  @Watch("options")
+  @Watch("visibleOptions")
   private updatePopupPosition() {
     void nextRender().then(() => (this.$refs.popup as any)?.updatePopper());
   }
@@ -414,7 +435,9 @@ export default class MultiSelect extends Vue {
   private emitFilterValue() {
     this.$emit("update:filter", this.filterValue);
 
-    (this.$refs["infiniteLoading"] as InfiniteLoading | undefined)?.stateChanger.reset();
+    if (this.loadingState.status === "ok") {
+      (this.$refs["infiniteLoading"] as InfiniteLoading | undefined)?.stateChanger.reset();
+    }
   }
 
   @Watch("autofocus")
@@ -489,26 +512,11 @@ export default class MultiSelect extends Vue {
     this.isPopupOpen = true;
     this.$emit("focus");
     await nextRender();
-    if (this.loadingState.status === "ok" && this.loadingState.moreAvailable) {
-      this.loadMoreInitially();
-    }
+    (this.$refs["infiniteLoading"] as InfiniteLoading | undefined)?.stateChanger.reset();
+
     // On-screen keyboard disturbs if there are not so many options to filter.
     if (!this.$isMobile) {
       this.focusInput();
-    }
-  }
-
-  private loadMoreInitially() {
-    const container = this.$refs.optionsContainer as HTMLElement | undefined;
-    if (!container) {
-      return;
-    }
-    if (container.clientHeight < this.optionsListHeight) {
-      this.$emit("load-more", (ev: LoadingResult) => {
-        if (ev.status === "ok" && ev.moreAvailable) {
-          this.loadMoreInitially();
-        }
-      });
     }
   }
 
@@ -548,14 +556,11 @@ export default class MultiSelect extends Vue {
 
   @Watch("hoveredOpinionIndex")
   private scrollToHoveredOption(hoveredOpinionIndex: number | null) {
-    if (hoveredOpinionIndex === null) {
-      return;
-    }
+    if (hoveredOpinionIndex === null) return;
+
     const container = this.$refs.optionsContainer as HTMLElement | undefined;
     const item = container?.children?.[hoveredOpinionIndex];
-    if (item) {
-      item.scrollIntoView({ block: "nearest" });
-    }
+    item?.scrollIntoView({ block: "nearest" });
   }
 
   private selectOption(index: number) {
@@ -653,7 +658,7 @@ export default class MultiSelect extends Vue {
     color: var(--input-foregroundDarkerColor);
   }
 
-  .no-results {
+  .popup-message {
     color: var(--input-foregroundDarkerColor);
     padding: 1rem 0;
     text-align: center;
@@ -842,10 +847,6 @@ export default class MultiSelect extends Vue {
   .option-wrapper {
     padding: 0.15rem 0.25rem;
     text-align: start;
-  }
-
-  .append-button {
-    padding: 0 0.259em;
   }
 
   .one-of-many-value > input.remove-value {

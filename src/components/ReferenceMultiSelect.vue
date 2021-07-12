@@ -373,11 +373,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   }
 
   private updateValue(index: number | null) {
-    if (index === null) {
-      this.$emit("update:value", null);
-    } else {
-      this.$emit("update:value", this.options![index].value.id);
-    }
+    this.$emit("update:value", index === null ? null : this.options![index].value.id);
   }
 
   private addValue(index: number) {

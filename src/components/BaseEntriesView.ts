@@ -43,7 +43,7 @@ export default class BaseEntriesView extends Vue {
 
   get entriesLoadingState(): EntriesState {
     const node = this.newEntries?.get(this.requestedSearch);
-    return node ?? { status: "not_asked" };
+    return node ?? { status: "pending" };
   }
 
   private get newEntries() {

@@ -1742,8 +1742,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   protected mounted() {
     /* eslint-disable @typescript-eslint/unbound-method */
-    /* (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", this.removeCellEditing); */
-    window.addEventListener("scroll", this.removeCellEditing, true);
+    (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", this.removeCellEditing);
+    /* window.addEventListener("scroll", this.removeCellEditing, true); */
     this.rootEvents.forEach(([name, callback]) => this.$root.$on(name, callback));
     /* eslint-enable @typescript-eslint/unbound-method */
   }
@@ -1757,8 +1757,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   protected beforeDestroy() {
     /* eslint-disable @typescript-eslint/unbound-method */
-    /* (this.$refs.tableContainer as HTMLElement).removeEventListener("scroll", this.removeCellEditing); */
-    window.removeEventListener("scroll", this.removeCellEditing);
+    (this.$refs.tableContainer as HTMLElement).removeEventListener("scroll", this.removeCellEditing);
+    /* window.removeEventListener("scroll", this.removeCellEditing); */
     this.rootEvents.forEach(([name, callback]) => this.$root.$off(name, callback));
     /* eslint-enable @typescript-eslint/unbound-method */
 

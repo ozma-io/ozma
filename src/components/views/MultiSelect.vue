@@ -10,23 +10,25 @@
 </i18n>
 
 <template>
-  <ReferenceMultiSelect
-    v-if="reference"
-    :value="selectedValues"
-    :disabled="disabled"
-    :background-color="backgroundColor"
-    :link-attr="linkAttr"
-    :entries="reference.entries"
-    :reference-entity="reference.referenceEntity"
-    :uv-args="uv.args"
-    @add-value="addValue"
-    @remove-index="removeIndex"
-    @goto="$emit('goto', $event)"
-  />
-  <Errorbox
-    v-else
-    :message="$t('no_select_column')"
-  />
+  <div class="view-wrapper">
+    <ReferenceMultiSelect
+      v-if="reference"
+      :value="selectedValues"
+      :disabled="disabled"
+      :background-color="backgroundColor"
+      :link-attr="linkAttr"
+      :entries="reference.entries"
+      :reference-entity="reference.referenceEntity"
+      :uv-args="uv.args"
+      @add-value="addValue"
+      @remove-index="removeIndex"
+      @goto="$emit('goto', $event)"
+    />
+    <Errorbox
+      v-else
+      :message="$t('no_select_column')"
+    />
+  </div>
 </template>
 
 <script lang="ts">
@@ -149,3 +151,13 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseU
   }
 }
 </script>
+
+<style lang="scss" scoped>
+  .view-wrapper {
+    padding: 0.25rem;
+
+    ::v-deep .select-container {
+      border-radius: 0.3rem;
+    }
+  }
+</style>
