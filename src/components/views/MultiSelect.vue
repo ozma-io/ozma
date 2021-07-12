@@ -17,7 +17,7 @@
       :disabled="disabled"
       :background-color="backgroundColor"
       :link-attr="linkAttr"
-      :entries="reference.entries"
+      :entries="entriesRef"
       :reference-entity="reference.referenceEntity"
       :uv-args="uv.args"
       @add-value="addValue"
@@ -44,6 +44,7 @@ import { ICombinedValue } from "@/user_views/combined";
 import { AddedRowId } from "@/state/staging_changes";
 import { getReferenceInfo } from "@/state/entries";
 import Errorbox from "@/components/Errorbox.vue";
+import { attrObjectToQuery } from "@/state/query";
 
 interface ISelectedValueBase {
   value: ICombinedValue;
@@ -74,6 +75,18 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseU
 
   get reference() {
     return getReferenceInfo(this.uv, this.selectedValueColumn, null);
+  }
+
+  get entriesRef() {
+    const entriesRef = this.reference?.entries;
+    if (!entriesRef) return undefined;
+
+    const entriesView = attrObjectToQuery(this.uv.attributes["entries_view"]);
+    if (entriesView) {
+      return { ...entriesRef, constrainedBy: entriesView };
+    } else {
+      return entriesRef;
+    }
   }
 
   get selectedValueColumn() {
