@@ -116,14 +116,6 @@ export default class Textarea extends Vue {
 
   private updateInput(value: string) {
     this.$emit("update:value", value);
-    this.setInputHeight();
-  }
-
-  private setInputHeight() {
-    const controlTextareaElement = this.$refs.controlTextarea as any;
-    setTimeout(() => {
-      this.$emit("set-input-height", controlTextareaElement.$el.clientHeight);
-    }, 0);
   }
 
   private get textareaRows(): number | null {

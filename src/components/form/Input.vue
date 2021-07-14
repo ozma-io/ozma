@@ -21,8 +21,6 @@
           'input-field',
           {
             'readonly': disabled,
-            'focused': focused,
-            'unfocused': !focused,
             'error': error,
             'cell-edit': isCellEdit,
           }
@@ -55,7 +53,7 @@
         :readonly="disabled"
         rows="1"
         class="input-textarea"
-        @input="updateInputCellEdit"
+        @input="updateInput"
         @focus="onFocus"
         @blur.native="$emit('blur', $event)"
         @keydown.escape.native.prevent="$emit('blur', $event)"
@@ -67,7 +65,7 @@
     <QRCodeScanner
       raw
       :open-scanner="openQRCodeScanner"
-      @select="updateInputCellEdit"
+      @select="updateInput"
     />
   </fragment>
 </template>
@@ -106,7 +104,6 @@ export default class Input extends Vue {
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: String, default: "left" }) textAlign!: string;
 
-  private focused = false;
   private maxInputWidth = 0;
   private openQRCodeScanner = false;
   private textLink: TextLink | null = null;
@@ -173,16 +170,14 @@ export default class Input extends Vue {
   }
 
   private mounted() {
-    const controlElement = this.$refs.control as HTMLInputElement;
     if (this.autofocus) {
       void Vue.nextTick().then(() => {
         if (this.isCellEdit) {
           const controlTextareaElement = this.$refs.controlTextarea as any;
           controlTextareaElement.$el.focus();
           this.setCursorPositionEnd(controlTextareaElement.$el);
-          this.setInputHeight();
         } else {
-          controlElement.focus();
+          (this.$refs.control as HTMLInputElement | undefined)?.focus();
         }
       });
     }
@@ -193,53 +188,34 @@ export default class Input extends Vue {
   @Watch("value")
   private onValueUpdate(value: string) {
     this.debouncedRecalculateTextLink();
-    this.setInputHeight();
   }
 
   @Watch("autofocus")
   private onAutofocus(autofocus: boolean) {
     if (autofocus) {
-      const control = this.$refs.control as HTMLInputElement | undefined;
-      control?.focus();
+      (this.$refs.control as HTMLInputElement | undefined)?.focus();
     }
-  }
-
-  private get maxWidth(): number {
-    const controlElement = this.$refs.control as HTMLInputElement | undefined;
-    if (controlElement) {
-      const leftPosition = controlElement.getBoundingClientRect().left;
-      const screenWidth = document.documentElement.clientWidth - 15;
-      const maxWidth = screenWidth - leftPosition;
-      return this.maxWidth;
-    }
-    return 250;
   }
 
   private onFocus(evt: Event) {
     this.$emit("focus", evt);
-    this.focused = true;
   }
 
   private setCursorPositionEnd(controlElement: HTMLInputElement) {
-    if (controlElement) {
-      controlElement.selectionStart = this.value ? this.value.length : 0;
+    if (!controlElement) return;
+
+    let selectionStart = 0;
+    if (typeof this.value === "string") {
+      selectionStart = this.value.length;
     }
+    if (typeof this.value === "number") {
+      selectionStart = String(this.value).length;
+    }
+    controlElement.selectionStart = selectionStart;
   }
 
   private updateInput(value: string) {
     this.$emit("input", value);
-    this.setInputHeight();
-  }
-
-  private updateInputCellEdit(value: string) {
-    this.$emit("input", value);
-  }
-
-  private setInputHeight() {
-    if (this.$refs.controlTextarea) {
-      const controlTextareaElement = this.$refs.controlTextarea as any;
-      this.$emit("set-input-height", controlTextareaElement.$el.clientHeight);
-    }
   }
 }
 </script>

@@ -55,7 +55,6 @@
           :text-align="textAlign"
           :background-color="cellColor"
           @input="updateValue"
-          @set-input-height="setInputHeight"
           @focus="iSlot.onFocus"
           @blur="$emit('blur', $event)"
           @move-selection-next-row="$emit('move-selection-next-row', $event)"
@@ -71,7 +70,6 @@
           :autofocus="autofocus || iSlot.autofocus"
           :text-align="textAlign"
           :background-color="cellColor"
-          @set-input-height="setInputHeight"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
           @blur="$emit('blur', $event)"
@@ -104,6 +102,7 @@
           :autofocus="autofocus || iSlot.autofocus"
           :required="!isNullable"
           :disabled="isDisabled"
+          :is-cell-edit="isCellEdit"
           :background-color="cellColor"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
@@ -597,12 +596,8 @@ export default class FormControl extends Vue {
     this.title = title ?? this.caption;
   }
 
-  private setInputHeight(value: number) {
-    this.$emit("set-input-height", value);
-  }
-
   get isQRCodeInput() {
-    return "barcode_camera_input" in this.attributes ? this.attributes["barcode_camera_input"] : false;
+    return Boolean(this.attributes["barcode_camera_input"]);
   }
 
   get textAlign() {
