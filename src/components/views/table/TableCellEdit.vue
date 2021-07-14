@@ -1,16 +1,16 @@
 <template>
   <div
+    ref="cellEdit"
     :class="[
       'table-cell-edit',
       'border',
     ]"
     :style="{
-      top: `${coords.y}px`,
-      left: `${coords.x}px`,
-      height: height ? `${height}px` : 'auto',
+      top: `${cellCoords.y}px`,
+      left: `${cellCoords.x}px`,
       '--editor-height': height ? `${height}px` : 'auto',
       minHeight: minHeight ? `${minHeight}px` : 'auto',
-      width: width ? `${width}px` : '200px',
+      minWidth: width ? `${width}px` : '200px',
     }"
   >
     <slot />
@@ -37,13 +37,36 @@ export default class TableCellEdit extends Vue {
   @Prop() width!: number;
   @Prop() height!: number;
   @Prop() minHeight!: number;
+
+  private movedCellCoords: ICellCoords | null = null;
+
+  private mounted() {
+    const cellRect = (this.$refs["cellEdit"] as HTMLElement).getBoundingClientRect();
+    const viewportRect = document.querySelector(".userview-div")?.getBoundingClientRect();
+    if (!viewportRect) {
+      throw Error("Can't find `.userview-div` selector");
+    }
+
+    const offsetX = cellRect.right > viewportRect.right ? cellRect.right - viewportRect.right : 0;
+    const offsetY = cellRect.bottom > viewportRect.bottom ? cellRect.bottom - viewportRect.bottom : 0;
+
+    this.movedCellCoords = {
+      x: cellRect.x - offsetX,
+      y: cellRect.y - offsetY,
+    };
+  }
+
+  private get cellCoords(): ICellCoords {
+    return this.movedCellCoords ?? this.coords;
+  }
 }
 </script>
 
 <style scoped>
   .table-cell-edit {
     background: var(--input-backgroundColor);
-    height: auto !important; /* TODO: So do we need `height` in `:style` at all? */
+    height: auto !important;
+    width: auto;
     position: fixed;
     top: 0;
     z-index: 9999;

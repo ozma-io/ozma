@@ -45,7 +45,7 @@
       :width="editParams.width"
       :min-height="editParams.minHeight"
       :height="editParams.height"
-      :coords="editCoords"
+      :coords="editCellCoords"
     >
       <FormControl
         :value="editingValue.value"
@@ -64,7 +64,6 @@
         @blur="removeCellEditing"
         @move-selection-next-row="moveSelectionNextRow"
         @move-selection-next-column="moveSelectionNextColumn"
-        @set-input-height="setInputHeight"
         @update="updateCurrentValue"
         @close-modal-input="removeCellEditing"
       />
@@ -1113,11 +1112,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private printListener: { query: MediaQueryList; queryCallback: (mql: MediaQueryListEvent) => void; printCallback: () => void } | null = null;
   private clickTimeoutId: NodeJS.Timeout | null = null;
   private isFirefoxBrowser: boolean = isFirefox();
-  // FIXME: we should get rid of this.
-  private editCoords: ICellCoords = {
-    x: 0,
-    y: 0,
-  };
   private editParams: IEditParams = {
     height: 0,
     width: 0,
@@ -1125,9 +1119,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   };
   // Keep references to entries used for editing once, so we don't re-request them.
   private keptEntries = new ObjectSet<IFieldRef>();
-
-  // FIXME: Delete this unused variable and `setInputHeight` function.
-  private cellEditHeight = 0;
 
   private rowsState: Record<number, any> = {};
 
@@ -1980,7 +1971,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private removeCellEditing() {
     if (this.editing === null) return;
 
-    this.cellEditHeight = 0;
     void this.removeAutoSaveLock(this.editing.lock);
     this.editing = null;
   }
@@ -1989,9 +1979,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private setCellEditing(ref: ValueRef) {
     this.removeCellEditing();
 
-    if (!this.canEditCell(ref)) {
-      return;
-    }
+    if (!this.canEditCell(ref)) return;
 
     void this.addAutoSaveLock().then(async lock => {
       const value = this.uv.getValueByRef(ref);
@@ -2003,9 +1991,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
         return;
       }
       this.getCellElement(ref)?.scrollIntoView({ block: "nearest" });
-      await nextRender(); // `$nextTick` doesn't works fine there.
-      this.setCoordsForEditCell(this.getCellElement(ref)!);
-
       this.editing = { ref, lock };
     });
   }
@@ -2035,16 +2020,14 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private setInputHeight(value: number) {
-    this.cellEditHeight = value;
-  }
+  private get editCellCoords(): ICellCoords | null {
+    if (!this.editing) return null;
+    const cellElement = this.getCellElement(this.editing.ref);
+    if (!cellElement) return null;
 
-  private setCoordsForEditCell(target: HTMLElement) {
-    const bodyRect = document.body.getBoundingClientRect();
-    const rect = target.getBoundingClientRect();
-
-    this.editCoords.x = rect.x;
-    this.editCoords.y = rect.y;
+    const cellRect = cellElement.getBoundingClientRect();
+    const { x, y } = cellRect;
+    return { x, y };
   }
 
   private updateClickTimer(ref: ValueRef) {

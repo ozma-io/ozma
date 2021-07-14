@@ -22,6 +22,7 @@
 
       }
     ]"
+    :style="{ minWidth: isCellEdit ? '15rem' : undefined}"
   >
     <popper
       ref="popup"
@@ -149,6 +150,7 @@ export default class Calendar extends Vue {
   @Prop({ type: Object }) timeDefault!: ITime | undefined;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
+  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
 
   private position = false;
   private isPopupOpen = false;

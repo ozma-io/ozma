@@ -13,6 +13,7 @@
 
 <template>
   <MultiSelect
+    :style="{ minWidth: isCellEdit ? '25rem' : undefined}"
     :value="selectedValue"
     :options="options"
     single
@@ -47,6 +48,7 @@ export default class ValueSelect extends Vue {
   @Prop({ type: Number }) height!: number | undefined;
   @Prop({ type: Number }) optionsListHeight!: number | undefined;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
+  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
 
   get selectedValue() {
     if (valueIsNull(this.value)) {
