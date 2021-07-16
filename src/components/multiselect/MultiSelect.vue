@@ -297,7 +297,7 @@ export default class MultiSelect extends Vue {
   @Prop({ type: Boolean, default: false }) required!: boolean;
   @Prop({ type: Boolean, default: false }) disabled!: boolean;
   @Prop({ type: Number }) height!: number | undefined;
-  @Prop({ type: Number, default: 350 }) optionsListHeight!: number;
+  @Prop({ type: Number, default: 250 }) optionsListHeight!: number;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: Boolean, default: false }) showFilter!: boolean;
   @Prop({ type: Object, default: (): LoadingState => ({ status: "ok", moreAvailable: false }) }) loadingState!: LoadingState;
