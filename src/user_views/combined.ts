@@ -1049,7 +1049,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
           } else {
             Vue.set(value, "pun", String(value.pun));
           }
-          value.initialPun = value.pun;
+          value.initialPun = value.pun!;
         }
 
         const entityChanges = this.storeChanges.changesForEntity(field.ref.entity);
