@@ -224,7 +224,7 @@ const setUpdatedPun = (summaries: Entries, value: ICombinedValue, ref: number) =
   if (pun === undefined) {
     value.pun = null;
   } else {
-    value.pun = pun;
+    Vue.set(value, "pun", pun);
   }
 };
 
@@ -846,9 +846,9 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
           const puns = await this.store.dispatch("entries/getEntriesByIds", { ref: entriesRef, reference: "update", ids: [ref] }) as Record<RowId, string>;
           const pending = puns[ref];
           if (pending !== undefined) {
-            value.pun = pending;
+            Vue.set(value, "pun", pending);
           } else {
-            value.pun = null;
+            Vue.set(value, "pun", null);
           }
         } catch (e) {
           this.setPunFromCache(value, fieldType.entity, ref);
@@ -1045,9 +1045,9 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
         value.initialValue = value.value;
         if (value.pun !== undefined) {
           if (value.pun === null) {
-            value.pun = valueToText(columnInfo.valueType, value.value);
+            Vue.set(value, "pun", valueToText(columnInfo.valueType, value.value));
           } else {
-            value.pun = String(value.pun);
+            Vue.set(value, "pun", String(value.pun));
           }
           value.initialPun = value.pun;
         }
