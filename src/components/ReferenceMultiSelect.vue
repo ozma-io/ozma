@@ -37,6 +37,7 @@
       @update:value="updateValue"
       @add-value="addValue"
       @remove-value="removeValue"
+      @clear-values="$emit('clear-values')"
       @update:filter="updateFilter"
       @load-more="loadMore"
       @focus="$emit('focus')"
@@ -136,7 +137,7 @@ import type { IEntityRef, RowId, ValueType } from "ozma-api";
 import { equalEntityRef, valueIsNull } from "@/values";
 import { CancelledError } from "@/modules";
 import { Debounce } from "vue-debounce-decorator";
-import type { IEntriesRef } from "@/state/entries";
+import type { EntriesRef } from "@/state/entries";
 
 export interface IReferenceValue {
   id: RowId;
@@ -173,7 +174,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Prop({ type: Number }) height!: number | undefined;
   @Prop({ type: Number }) optionsListHeight!: number | undefined;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  @Prop({ type: Object, required: true }) entries!: IEntriesRef;
+  @Prop({ type: Object, required: true }) entries!: EntriesRef;
   @Prop({ type: Object, required: true }) referenceEntity!: IEntityRef;
   @Prop({ type: Array, default: () => [] }) selectViews!: IReferenceSelectAction[];
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
@@ -197,14 +198,21 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   private loadPun() {
     if (!this.loadPunOnMount) return;
 
-    const value = this.value as ICombinedValue;
-    if (!this.single || value.pun || typeof value.value !== "number") return;
+    if (this.single) {
+      const value = this.value as ICombinedValue;
+      if (value.pun || typeof value.value !== "number") return;
 
-    void this.processId(value.value);
+      void this.processId(value.value);
+    } else {
+      const values = this.value as ICombinedValue[];
+      if (values.every(v => v.pun)) return;
+
+      void this.processIds(values.map(v => v.value as number));
+    }
   }
 
   /* @Watch("entries")
-   * private entriesRefChanged(newValue: IEntriesRef) {
+   * private entriesRefChanged(newValue: EntriesRef) {
    *   void this.fetchEntries(newValue, this.requestedSearch, this.requestedLimit);
    * } */
 
@@ -246,7 +254,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
 
   get valueOptions(): ReferenceSelectOption[] | null {
     const valueType: ValueType = { type: "int" };
-    if (valueIsSingle(this.value) && valueIsNull(this.value.value)) {
+    if (valueIsNull(this.value) || (valueIsSingle(this.value) && valueIsNull(this.value.value))) {
       return [];
     } else {
       const values = this.single ? [this.value as ICombinedValue] : (this.value as ICombinedValue[]);
@@ -298,6 +306,10 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
 
     this.setValue(id);
     return true;
+  }
+
+  private async processIds(ids: number[]): Promise<void> {
+    const puns = await this.fetchEntriesByIds(this.entries, ids);
   }
 
   private async selectFromScanner(content: IQRCode): Promise<boolean> {

@@ -56,7 +56,7 @@ export default class ValueSelect extends Vue {
     }
     const idx = this.options.findIndex(opt => opt.value === this.value);
     if (idx === -1) {
-      throw new Error("Impossible");
+      throw new Error("Can't find selected option in options array");
     }
     return idx;
   }

@@ -75,7 +75,7 @@ import { IQuery } from "@/state/query";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import BarCode from "@/components/barcode/BarCode.vue";
 import { IQRCode, parseQRCode } from "@/components/qrcode/QRCode.vue";
-import { IEntriesRef } from "@/state/entries";
+import { EntriesRef } from "@/state/entries";
 
 const beep = require("@/resources/beep.mp3");
 
@@ -101,7 +101,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Prop({ type: Boolean, default: false }) textInput!: boolean;
   @Prop({ type: Boolean, default: false }) raw!: boolean;
   @Prop({ type: Object }) link!: Link | undefined;
-  @Prop({ type: Object }) entries!: IEntriesRef | undefined;
+  @Prop({ type: Object }) entries!: EntriesRef | undefined;
   @Prop({ type: Object }) referenceEntity!: IEntityRef | undefined;
 
   modalShow = false;

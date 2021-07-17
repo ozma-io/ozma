@@ -68,7 +68,7 @@ import { attrToQuery, IQuery } from "@/state/query";
 import type { ICard } from "@/components/kanban/Column.vue";
 import { IRowCard, default as RowCard, CardColumn } from "@/components/views/board/RowCard.vue";
 import { getColorVariables } from "@/utils_colors";
-import { IEntriesRef } from "@/state/entries";
+import { EntriesRef } from "@/state/entries";
 
 interface IGroupColumn {
   group: unknown;
@@ -86,7 +86,7 @@ interface IReferenceColumn {
 
 interface IReferenceColumns {
   type: "reference";
-  entries: IEntriesRef;
+  entries: EntriesRef;
   columns: IReferenceColumn[];
 }
 
@@ -110,7 +110,8 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       if (!rawColumns || !(rawColumns instanceof Array)) {
         return null;
       }
-      const entriesRef: IEntriesRef = {
+      const entriesRef: EntriesRef = {
+        fetchBy: "domain",
         entity: this.uv.info.mainEntity!,
         referencedBy: {
           field: {
@@ -119,7 +120,6 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
           },
           rowId: null,
         },
-        constrainedBy: null,
       };
       const requestedColumns: RowId[] = [];
       const columns = mapMaybe(col => {

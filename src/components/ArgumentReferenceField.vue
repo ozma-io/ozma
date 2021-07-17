@@ -31,7 +31,7 @@ import type { IEntityRef } from "ozma-api";
 
 import ReferenceMultiSelect, { IReferenceSelectAction } from "@/components/ReferenceMultiSelect.vue";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
-import { IEntriesRef } from "@/state/entries";
+import { EntriesRef } from "@/state/entries";
 import { IQuery } from "@/state/query";
 
 const query = namespace("query");
@@ -46,7 +46,7 @@ export default class ArgumentReferenceField extends Vue {
   @Prop({ type: Object, required: true }) value!: ICombinedValue;
   @Prop({ type: Object, required: true }) referenceEntity!: IEntityRef;
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
-  @Prop({ type: Object, default: null }) constrainedBy!: IQuery | null;
+  @Prop({ type: Object, default: null }) optionsView!: IQuery | null;
   @Prop({ type: Object }) linkAttr!: any | undefined;
   @Prop({ type: Boolean, default: false }) disabled!: boolean;
   @Prop({ type: Boolean, default: false }) nullable!: boolean;
@@ -55,12 +55,16 @@ export default class ArgumentReferenceField extends Vue {
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
 
-  private get entriesRef(): IEntriesRef {
-    return {
-      entity: this.referenceEntity,
-      referencedBy: null,
-      constrainedBy: this.constrainedBy,
-    };
+  private get entriesRef(): EntriesRef {
+    return this.optionsView
+      ? {
+        fetchBy: "options_view",
+        optionsView: this.optionsView,
+      }
+      : {
+        fetchBy: "entity",
+        entity: this.referenceEntity,
+      };
   }
 }
 </script>

@@ -42,11 +42,13 @@ import "@toast-ui/editor/dist/i18n/ru-ru";
 
 type EditorType = Vue & { invoke: (name: string, ...args: any) => any };
 
+export type MarkdownEditType = "markdown" | "wysiwyg";
+
 @Component({ components: { Editor, Viewer } })
 export default class MarkdownEditor extends Vue {
   @Prop({ type: String }) content!: string;
   @Prop({ type: Number }) height!: number;
-  @Prop({ type: String, default: "markdown" }) editType!: string;
+  @Prop({ type: String, default: "markdown" }) editType!: MarkdownEditType;
   @Prop({ default: false }) readOnly!: boolean;
   // TODO: implement.
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;

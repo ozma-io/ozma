@@ -8,7 +8,9 @@
       "no_results": "No entries",
       "no_results_for_filter": "No entries for this filter",
       "trigram_tooltip": "Enter at least 3 characters to load more options",
-      "error": "Error during loading more data: {msg}"
+      "values_error": "Error in select field",
+      "not_all_values_found_in_options" : "Not all values found in options",
+      "loading_error": "Error during loading more data: {msg}"
     },
     "ru": {
       "empty_message": "Пусто",
@@ -18,7 +20,9 @@
       "no_results": "Нет записей",
       "no_results_for_filter": "Нет записей по этому фильтру",
       "trigram_tooltip": "Введите как минимум 3 символа, чтобы загрузить ещё опции",
-      "error": "Ошибка при загрузке новых данных: {msg}"
+      "values_error": "Ошибка в поле выбора",
+      "not_all_values_found_in_options" : "Не все значения найдены в опциях",
+      "loading_error": "Ошибка при загрузке новых данных: {msg}"
     }
   }
 </i18n>
@@ -43,10 +47,8 @@
       :disabled="disabled"
       :visible-arrow="false"
       :options="{
-        placement: 'bottom-start',
         positionFixed: true,
         modifiers: {
-          offset: { offset: '0,0px' },
           preventOverflow: { escapeWithReference: true, boundariesElement: 'viewport' },
         },
       }"
@@ -115,7 +117,7 @@
                 type="button"
                 class="material-icons md-18 material-button remove-value rounded-circle"
                 value="close"
-                @click="unselectOption(index)"
+                @click.stop="unselectOption(index)"
               >
             </span>
           </div>
@@ -232,7 +234,7 @@
               </template>
               <template #error>
                 <template v-if="loadingState.status === 'error'">
-                  {{ $t("error", { msg: loadingState.message }) }}
+                  {{ $t("loading_error", { msg: loadingState.message }) }}
                 </template>
               </template>
             </infinite-loading>
@@ -354,21 +356,24 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  get selectedOptions() {
+  get selectedOptions(): ISelectOptionHtml<unknown>[] {
     if (this.value === null) {
       return [];
     } else if (this.single) {
       return [this.htmlOptions[this.value as number]];
     } else {
-      return (this.value as number[]).map(i => this.htmlOptions[i]);
-    }
-  }
-
-  get selectedOption() {
-    if (this.selectedOptions.length > 0) {
-      return this.selectedOptions[0];
-    } else {
-      return null;
+      const values = this.value as number[];
+      const options = values.map(i => this.htmlOptions[i]);
+      if (options.some(option => option === undefined)) {
+        this.$bvToast.toast(this.$t("not_all_values_found_in_options").toString(), {
+          title: this.$t("values_error").toString(),
+          variant: "danger",
+          solid: true,
+        });
+        return options.filter(o => o !== undefined);
+      } else {
+        return options;
+      }
     }
   }
 
@@ -606,6 +611,10 @@ export default class MultiSelect extends Vue {
         this.$emit("remove-value", this.selectedOptions.length - index - 1);
       }
     }
+
+    // In theory we can remove all values one-by-one by code above,
+    // but I faced some troubles with this approach in <ArrayReferenceField>, so for this case there are direct event.
+    this.$emit("clear-values");
   }
 
   private async filterInputFinished() {
@@ -720,10 +729,6 @@ export default class MultiSelect extends Vue {
     width: 100%;
     padding: 0.25rem 0.5rem;
 
-    &.fixed-height {
-      box-shadow: inset -5px -5px 8px 5px rgba(0, 0, 0, 0.25);
-    }
-
     &:focus-within {
       /* TODO: Move this to one file! */
       $input-focus-border-color: #80bdff;
@@ -737,6 +742,10 @@ export default class MultiSelect extends Vue {
 
   .selected-values {
     width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25rem;
     cursor: pointer;
     align-content: center;
     overflow-x: auto;
@@ -818,7 +827,6 @@ export default class MultiSelect extends Vue {
   }
 
   .one-of-many-value {
-    margin: 3px;
     max-width: 95%;
   }
 
