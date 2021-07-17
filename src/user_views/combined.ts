@@ -6,7 +6,7 @@ import { IExecutedValue, IColumnField, IFieldRef, RowId, AttributesMap, IExecute
 import { AddedRowId, IAddedEntry, IEntityChanges, IStagingEventHandler, IStagingState } from "@/state/staging_changes";
 import { mapMaybe, NeverError, tryDicts } from "@/utils";
 import { equalEntityRef, IUpdatedValue, valueFromRaw, valueIsNull, valueToText } from "@/values";
-import { Entries, IEntriesRef, IEntriesState, IReferencedField } from "@/state/entries";
+import { Entries, EntriesRef, IEntriesState, IReferencedField } from "@/state/entries";
 
 import { IEntitiesState } from "../state/entities";
 
@@ -833,7 +833,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
         rowId: null,
       }
       : null;
-    const entriesRef: IEntriesRef = { entity, referencedBy, constrainedBy: null };
+    const entriesRef: EntriesRef = referencedBy ? { fetchBy: "domain", entity, referencedBy } : { fetchBy: "entity", entity };
 
     const summaries = this.storeEntries.entries.get(entriesRef);
 

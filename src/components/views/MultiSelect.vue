@@ -4,7 +4,7 @@
       "no_select_column": "Please identify selectable column using `select = true` attribute on desired column."
     },
     "ru": {
-      "no_select_column": "Пожалуйста, обозначьте колонку для выбора через аттрибут `select = true` на желаемой колонке."
+      "no_select_column": "Пожалуйста, обозначьте колонку для выбора через атрибут `select = true` на желаемой колонке."
     }
   }
 </i18n>
@@ -81,9 +81,9 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseU
     const entriesRef = this.reference?.entries;
     if (!entriesRef) return undefined;
 
-    const entriesView = attrObjectToQuery(this.uv.attributes["entries_view"]);
-    if (entriesView) {
-      return { ...entriesRef, constrainedBy: entriesView };
+    const optionsView = attrObjectToQuery(this.uv.attributes["options_view"]);
+    if (optionsView) {
+      return { ...entriesRef, optionsView };
     } else {
       return entriesRef;
     }

@@ -3,9 +3,9 @@ import { RowId, IQueryChunk, IFieldRef, IEntityRef, IChunkWhere, IDomainValuesRe
 import Vue from "vue";
 import R from "ramda";
 
-import { deepEquals, IRef, ObjectResourceMap, ReferenceName, syncObject, updateObject, waitTimeout } from "@/utils";
+import { IRef, NeverError, ObjectResourceMap, ReferenceName, syncObject, updateObject, waitTimeout } from "@/utils";
 import Api from "@/api";
-import { equalEntityRef, valueToText } from "@/values";
+import { valueToText } from "@/values";
 import { CancelledError } from "@/modules";
 import { ICombinedUserViewAny } from "@/user_views/combined";
 import { IQuery } from "./query";
@@ -283,22 +283,28 @@ export interface IReferencedField {
   rowId: RowId | null;
 }
 
-export interface IEntriesRef {
+export interface IEntriesRefByDomain {
+  fetchBy: "domain";
   entity: IEntityRef;
-  referencedBy: IReferencedField | null;
-  constrainedBy: IQuery | null;
+  referencedBy: IReferencedField;
 }
-
-export const equalEntriesRef = (a: IEntriesRef, b: IEntriesRef) => {
-  if (!equalEntityRef(a.entity, b.entity)) return false;
-  return deepEquals(a.referencedBy, b.referencedBy);
-};
+export interface IEntriesRefByEntity {
+  fetchBy: "entity";
+  entity: IEntityRef;
+}
+export interface IEntriesRefByOptionsView {
+  fetchBy: "options_view";
+  optionsView: IQuery;
+}
+export type EntriesRef =
+  | IEntriesRefByDomain
+  | IEntriesRefByEntity
+  | IEntriesRefByOptionsView;
 
 export class CurrentEntries {
-  // We refer to entries by the field that references to them.
-  entries = new ObjectResourceMap<IEntriesRef, PartialEntries>();
+  entries = new ObjectResourceMap<EntriesRef, PartialEntries>();
 
-  getEntriesOrError(ref: IEntriesRef) {
+  getEntriesOrError(ref: EntriesRef) {
     const entries = this.entries.get(ref);
     if (entries === undefined || entries instanceof Promise) {
       return undefined;
@@ -307,7 +313,7 @@ export class CurrentEntries {
     }
   }
 
-  getEntries(ref: IEntriesRef) {
+  getEntries(ref: EntriesRef) {
     const entity = this.getEntriesOrError(ref);
     if (entity instanceof Error) {
       return undefined;
@@ -327,7 +333,7 @@ const fetchEntriesByEntity = async (context: ActionContext<IEntriesState, {}>, r
     search === ""
       ? undefined
       : {
-        expression: "(pun :: string) ILIKE $search",
+        expression: "(__main :: string) ILIKE $search",
         arguments: {
           search: {
             type: "string",
@@ -335,10 +341,9 @@ const fetchEntriesByEntity = async (context: ActionContext<IEntriesState, {}>, r
           },
         },
       };
-  // Vim's syntax highlighter breaks by template string here :c
-  // eslint-disable-next-line
-  const query = '{ $search string }: SELECT id, __main AS main FROM "' + ref.schema + '"."' + ref.name + '" WHERE (__main :: string) ILIKE $search';
-  const chunk: IQueryChunk = { offset, limit: limit + 1 };
+  const view = `"${ref.schema}"."${ref.name}"`;
+  const query = `{ $search string }: SELECT id, __main AS main FROM ${view}`;
+  const chunk: IQueryChunk = { offset, limit: limit + 1, where };
   const res = await context.dispatch("callProtectedApi", {
     func: Api.getAnonymousUserView.bind(Api),
     args: [query, { search: likeSearch }, { chunk }],
@@ -393,8 +398,8 @@ const fetchEntriesByDomain = async (context: ActionContext<IEntriesState, {}>, r
   };
 };
 
-const fetchEntriesByConstraint = async (context: ActionContext<IEntriesState, {}>, query: IQuery, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
-  if (query.args.source.type !== "named") {
+const fetchEntriesByOptionsView = async (context: ActionContext<IEntriesState, {}>, optionsView: IQuery, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
+  if (optionsView.args.source.type !== "named") {
     throw new Error("Unnamed user views aren't supported");
   }
   const likeSearch = search === "" ? "%" : `%${search.replaceAll(/\\|%|_/g, "\\$&")}%`; // Escape characters.
@@ -421,7 +426,7 @@ const fetchEntriesByConstraint = async (context: ActionContext<IEntriesState, {}
 
   const res = await context.dispatch("callProtectedApi", {
     func: Api.getNamedUserView.bind(Api),
-    args: [query.args.source.ref, query.args.args, opts],
+    args: [optionsView.args.source.ref, optionsView.args.args, opts],
   }, { root: true }) as IViewExprResult;
 
   const idColumnIndex = res.info.columns.findIndex(column => column.name === "id");
@@ -441,15 +446,20 @@ const fetchEntriesByConstraint = async (context: ActionContext<IEntriesState, {}
   };
 };
 
-const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
-  return ref.constrainedBy
-    ? fetchEntriesByConstraint(context, ref.constrainedBy, search, offset, limit)
-    : ref.referencedBy === null
-      ? fetchEntriesByEntity(context, ref.entity, search, offset, limit)
-      : fetchEntriesByDomain(context, ref.referencedBy, search, offset, limit);
+const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: EntriesRef, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
+  switch (ref.fetchBy) {
+    case "domain":
+      return fetchEntriesByDomain(context, ref.referencedBy, search, offset, limit);
+    case "entity":
+      return fetchEntriesByEntity(context, ref.entity, search, offset, limit);
+    case "options_view":
+      return fetchEntriesByOptionsView(context, ref.optionsView, search, offset, limit);
+    default:
+      throw new NeverError(ref);
+  }
 };
 
-const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref: IEntriesRef, ids: RowId[]): Promise<Record<RowId, string>> => {
+const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref: EntriesRef, ids: RowId[]): Promise<Record<RowId, string>> => {
   const where: IChunkWhere = {
     expression: "value = ANY ($ids)",
     arguments: {
@@ -466,31 +476,60 @@ const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref:
     chunk,
   };
 
-  if (ref.referencedBy === null) {
-    const query = `{ $ids array(int) }: SELECT id, __main AS main FROM "${ref.entity.schema}"."${ref.entity.name}" WHERE id = ANY ($ids)`;
-    const res = await context.dispatch("callProtectedApi", {
-      func: Api.getAnonymousUserView.bind(Api),
-      args: [query, { ids }],
-    }, { root: true }) as IViewExprResult;
-    const mainType = res.info.columns[0].valueType;
-    return Object.fromEntries(res.result.rows.map(row => {
-      const id = row.values[0].value;
-      const pun = row.values[1].value;
-      return [id, valueToText(mainType, pun)];
-    }));
-  } else {
-    const res = await context.dispatch("callProtectedApi", {
-      func: Api.getDomainValues.bind(Api),
-      args: [ref.referencedBy.field, ref.referencedBy.rowId ?? undefined, req],
-    }, { root: true }) as IDomainValuesResult;
-    return Object.fromEntries(res.values.map<[number, string]>(row => {
-      const main = valueToText(res.punType, row.pun);
-      return [Number(row.value), main];
-    }));
+  switch (ref.fetchBy) {
+    case "domain": {
+      const res = await context.dispatch("callProtectedApi", {
+        func: Api.getDomainValues.bind(Api),
+        args: [ref.referencedBy.field, ref.referencedBy.rowId ?? undefined, req],
+      }, { root: true }) as IDomainValuesResult;
+
+      return Object.fromEntries(res.values.map<[number, string]>(row => {
+        const main = valueToText(res.punType, row.pun);
+        return [Number(row.value), main];
+      }));
+    }
+    case "entity": {
+      const { schema, name } = ref.entity;
+      const view = `"${schema}"."${name}"`;
+      const query = `{ $ids array(int) }: SELECT id, __main AS main FROM ${view} WHERE id = ANY ($ids)`;
+      const res = await context.dispatch("callProtectedApi", {
+        func: Api.getAnonymousUserView.bind(Api),
+        args: [query, { ids }],
+      }, { root: true }) as IViewExprResult;
+      const mainType = res.info.columns[0].valueType;
+
+      return Object.fromEntries(res.result.rows.map(row => {
+        const id = row.values[0].value;
+        const pun = row.values[1].value;
+        return [id, valueToText(mainType, pun)];
+      }));
+    }
+    case "options_view": {
+      if (ref.optionsView.args.source.type === "anonymous") {
+        throw new Error("Anonymous options_view is not supported");
+      }
+      const res = await context.dispatch("callProtectedApi", {
+        func: Api.getNamedUserView.bind(Api),
+        args: [ref.optionsView.args.source.ref, ref.optionsView.args.args],
+      }, { root: true }) as IViewExprResult;
+      const idColumnIndex = res.info.columns.findIndex(column => column.name === "value" || column.name === "id"); // "id" is deprecated.
+      const nameColumnIndex = res.info.columns.findIndex(column => column.name === "pun" || column.name === "name"); // "name" is deprecated.
+      if (idColumnIndex === -1 || nameColumnIndex === -1) {
+        throw new Error("User view for reference constraint must have columns `value` and `pun`");
+      }
+      const mainType = res.info.columns[nameColumnIndex].valueType;
+      return Object.fromEntries(res.result.rows.map<[number, string]>(row => {
+        const id = row.values[idColumnIndex].value as number;
+        const main = valueToText(mainType, row.values[nameColumnIndex].value);
+        return [id, main];
+      }));
+    }
+    default:
+      throw new NeverError(ref);
   }
 };
 
-export const getReferenceInfo = (uv: ICombinedUserViewAny, columnI: number, rowId: number | null): { referenceEntity: IEntityRef; entries: IEntriesRef } | null => {
+export const getReferenceInfo = (uv: ICombinedUserViewAny, columnI: number, rowId: number | null): { referenceEntity: IEntityRef; entries: IEntriesRefByDomain } | null => {
   const mainField = uv.info.columns[columnI].mainField;
   if (!mainField || mainField.field.fieldType.type !== "reference") {
     return null;
@@ -498,6 +537,7 @@ export const getReferenceInfo = (uv: ICombinedUserViewAny, columnI: number, rowI
     return {
       referenceEntity: mainField.field.fieldType.entity,
       entries: {
+        fetchBy: "domain",
         entity: mainField.field.fieldType.entity,
         referencedBy: {
           field: {
@@ -506,7 +546,6 @@ export const getReferenceInfo = (uv: ICombinedUserViewAny, columnI: number, rowI
           },
           rowId,
         },
-        constrainedBy: null,
       },
     };
   }
@@ -518,29 +557,29 @@ const entriesModule: Module<IEntriesState, {}> = {
     current: new CurrentEntries(),
   },
   mutations: {
-    initPartialEntries: (state, args: { ref: IEntriesRef; reference: ReferenceName }) => {
+    initPartialEntries: (state, args: { ref: EntriesRef; reference: ReferenceName }) => {
       const partial = new PartialEntries();
       state.current.entries.createResource(args.ref, args.reference, partial, undefined);
     },
-    insertSearchNode: (state, args: { ref: IEntriesRef; search: string; limit: number; pending: Promise<boolean> }) => {
+    insertSearchNode: (state, args: { ref: EntriesRef; search: string; limit: number; pending: Promise<boolean> }) => {
       state.current.getEntries(args.ref)!.insert(args.search, args.limit, args.pending);
     },
-    updateSearchNode: (state, args: { ref: IEntriesRef; search: string; update: UpdateSearchNode }) => {
+    updateSearchNode: (state, args: { ref: EntriesRef; search: string; update: UpdateSearchNode }) => {
       state.current.getEntries(args.ref)!.update(args.search, args.update);
     },
-    addEntries: (state, args: { ref: IEntriesRef; entries: Entries }) => {
+    addEntries: (state, args: { ref: EntriesRef; entries: Entries }) => {
       state.current.getEntries(args.ref)!.addEntries(args.entries);
     },
-    addSingleEntry: (state, args: { ref: IEntriesRef; id: number; main: string }) => {
+    addSingleEntry: (state, args: { ref: EntriesRef; id: number; main: string }) => {
       state.current.getEntries(args.ref)!.addSingleEntry(args.id, args.main);
     },
-    updatePendingSingleEntry: (state, args: { ref: IEntriesRef; id: number; pending: Promise<Entries> | null }) => {
+    updatePendingSingleEntry: (state, args: { ref: EntriesRef; id: number; pending: Promise<Entries> | null }) => {
       state.current.getEntries(args.ref)!.updatePendingSingleEntry(args.id, args.pending);
     },
-    removePendingSingleEntry: (state, args: { ref: IEntriesRef; id: number }) => {
+    removePendingSingleEntry: (state, args: { ref: EntriesRef; id: number }) => {
       state.current.getEntries(args.ref)!.removePendingSingleEntry(args.id);
     },
-    addEntriesConsumer: (state, { ref, reference }: { ref: IEntriesRef; reference: ReferenceName }) => {
+    addEntriesConsumer: (state, { ref, reference }: { ref: EntriesRef; reference: ReferenceName }) => {
       const oldResource = state.current.entries.getResource(ref);
       if (oldResource) {
         state.current.entries.addReference(ref, reference, undefined);
@@ -549,7 +588,7 @@ const entriesModule: Module<IEntriesState, {}> = {
         state.current.entries.createResource(ref, reference, partial, undefined);
       }
     },
-    removeEntriesConsumer: (state, { ref, reference }: { ref: IEntriesRef; reference: ReferenceName }) => {
+    removeEntriesConsumer: (state, { ref, reference }: { ref: EntriesRef; reference: ReferenceName }) => {
       state.current.entries.removeReference(ref, reference);
     },
     clear: state => {
@@ -570,7 +609,7 @@ const entriesModule: Module<IEntriesState, {}> = {
       },
     },
 
-    getEntriesByIds: (context, args: { reference: ReferenceName; ref: IEntriesRef; ids: RowId[] }): Promise<Entries> => {
+    getEntriesByIds: (context, args: { reference: ReferenceName; ref: EntriesRef; ids: RowId[] }): Promise<Entries> => {
       const { state, commit, dispatch } = context;
       const { reference, ref, ids } = args;
       const oldCurrent = state.current;
@@ -632,7 +671,7 @@ const entriesModule: Module<IEntriesState, {}> = {
         })();
         if (oldResource === undefined) {
           // Prefetch entity.
-          if (ref.referencedBy !== null) {
+          if (ref.fetchBy === "domain" && ref.referencedBy !== null) {
             void dispatch("entities/getEntity", ref.referencedBy.field.entity, { root: true });
           }
           commit("initPartialEntries", { ref, reference });
@@ -655,7 +694,7 @@ const entriesModule: Module<IEntriesState, {}> = {
     },
 
     // Returns `true` if more entries can be loaded for this `ref` and `search`.
-    getEntries: async (context, args: { reference: ReferenceName; ref: IEntriesRef; search: string; limit: number }): Promise<boolean> => {
+    getEntries: async (context, args: { reference: ReferenceName; ref: EntriesRef; search: string; limit: number }): Promise<boolean> => {
       const { state, commit, dispatch } = context;
       const { reference, ref, limit } = args;
 
@@ -725,7 +764,7 @@ const entriesModule: Module<IEntriesState, {}> = {
       })();
       if (oldResource === undefined) {
         // Prefetch entity.
-        if (ref.referencedBy !== null) {
+        if (ref.fetchBy === "domain" && ref.referencedBy !== null) {
           void dispatch("entities/getEntity", ref.referencedBy.field.entity, { root: true });
         }
         commit("initPartialEntries", { ref, reference });

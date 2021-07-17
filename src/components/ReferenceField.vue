@@ -30,7 +30,7 @@ import type { IEntityRef } from "ozma-api";
 
 import ReferenceMultiSelect, { IReferenceSelectAction } from "@/components/ReferenceMultiSelect.vue";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
-import { IEntriesRef } from "@/state/entries";
+import { EntriesRef } from "@/state/entries";
 import { IQuery } from "@/state/query";
 
 const query = namespace("query");
@@ -44,7 +44,7 @@ export default class ReferenceField extends Vue {
   @Prop({ type: Array, default: () => [] }) selectViews!: IReferenceSelectAction[];
   @Prop({ type: Object, required: true }) value!: ICombinedValue;
   @Prop({ type: Object, required: true }) referenceEntity!: IEntityRef;
-  @Prop({ type: Object, default: null }) constrainedBy!: IQuery | null;
+  @Prop({ type: Object, default: null }) optionsView!: IQuery | null;
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: Object }) linkAttr!: any | undefined;
@@ -55,15 +55,20 @@ export default class ReferenceField extends Vue {
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
 
-  get entriesRef(): IEntriesRef {
-    return {
-      entity: this.referenceEntity,
-      referencedBy: {
-        field: this.value.info!.fieldRef,
-        rowId: this.value.info!.id ?? null,
-      },
-      constrainedBy: this.constrainedBy,
-    };
+  get entriesRef(): EntriesRef {
+    return this.optionsView
+      ? {
+        fetchBy: "options_view",
+        optionsView: this.optionsView,
+      }
+      : {
+        fetchBy: "domain",
+        entity: this.referenceEntity,
+        referencedBy: {
+          field: this.value.info!.fieldRef,
+          rowId: this.value.info!.id ?? null,
+        },
+      };
   }
 }
 </script>

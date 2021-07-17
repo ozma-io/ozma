@@ -108,6 +108,21 @@
           @focus="iSlot.onFocus"
           @blur="$emit('blur', $event)"
         />
+        <ArrayReferenceField
+          v-else-if="inputType.name === 'array_select'"
+          ref="control"
+          :value="currentValue"
+          :options-view="inputType.optionsView"
+          :height="customHeight"
+          :autofocus="autofocus || iSlot.autofocus"
+          :required="!isNullable"
+          :disabled="isDisabled"
+          :background-color="cellColor"
+          :uv-args="uvArgs"
+          @update:value="updateValue"
+          @focus="iSlot.onFocus"
+          @blur="$emit('blur', $event)"
+        />
         <CodeEditor
           v-else-if="inputType.name === 'codeeditor'"
           ref="control"
@@ -186,7 +201,7 @@
           :select-views="inputType.selectViews"
           :height="customHeight"
           :reference-entity="fieldType.entity"
-          :constrained-by="inputType.constrainedBy"
+          :options-view="inputType.optionsView"
           :link-attr="inputType.linkAttr"
           :uv-args="uvArgs"
           :autofocus="autofocus || iSlot.autofocus"
@@ -207,7 +222,7 @@
           :value="value"
           :height="customHeight"
           :reference-entity="fieldType.entity"
-          :constrained-by="inputType.constrainedBy"
+          :options-view="inputType.optionsView"
           :uv-args="uvArgs"
           :autofocus="autofocus || iSlot.autofocus"
           :nullable="isNullable"
@@ -282,12 +297,13 @@ import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
 import { IEntityRef } from "ozma-api";
 
+import { getColorVariables } from "@/utils_colors";
 import type { Button } from "@/components/buttons/buttons";
 import { attrToButtons } from "@/components/buttons/buttons";
 import FormInputPlaceholder from "@/components/FormInputPlaceholder.vue";
-import { getColorVariables } from "@/utils_colors";
-import { IReferenceSelectAction } from "./ReferenceMultiSelect.vue";
-import { ITime } from "./calendar/TimePicker.vue";
+import type { MarkdownEditType } from "@/components/editors/MarkdownEditor.vue";
+import { IReferenceSelectAction } from "@/components/ReferenceMultiSelect.vue";
+import { ITime } from "@/components/calendar/TimePicker.vue";
 
 interface ITextType {
   name: "text";
@@ -332,7 +348,7 @@ type IIframeType =
 
 interface IMarkdownEditorType {
   name: "markdown";
-  editType: string;
+  editType: MarkdownEditType;
   style: Record<string, unknown>;
 }
 
@@ -341,10 +357,15 @@ interface ISelectType {
   options: ISelectOption<unknown>[];
 }
 
+interface IArrayReferenceFieldType {
+  name: "array_select";
+  optionsView: IQuery;
+}
+
 interface IReferenceType {
   name: "reference";
   ref: IFieldRef;
-  constrainedBy: IQuery | null;
+  optionsView: IQuery | null;
   linkAttr?: unknown;
   selectViews: IReferenceSelectAction[];
   style?: Record<string, unknown>;
@@ -352,7 +373,7 @@ interface IReferenceType {
 
 interface IArgumentReferenceType {
   name: "argument_reference";
-  constrainedBy: IQuery | null;
+  optionsView: IQuery | null;
 }
 
 interface ICheckType {
@@ -398,6 +419,7 @@ export type IType =
   | ICodeEditorType
   | IMarkdownEditorType
   | ISelectType
+  | IArrayReferenceFieldType
   | IReferenceType
   | IArgumentReferenceType
   | ICheckType
@@ -412,8 +434,6 @@ export type IType =
   | IBarCodeType
   | IButtonsType;
 
-const heightExclusions: Set<IType["name"]> =
-  new Set(["select", "reference"]);
 const multilineTypes: Set<IType["name"]> =
   new Set(["markdown", "codeeditor", "textarea", "userview", "empty_userview", "static_image", "iframe"]);
 const disableableTypes: Set<IType["name"]> =
@@ -447,6 +467,10 @@ const parseTime = (raw: string): ITime | null => {
     }),
     ValueSelect: () => ({
       component: import("@/components/ValueSelect.vue") as any,
+      loading: FormInputPlaceholder,
+    }),
+    ArrayReferenceField: () => ({
+      component: import("@/components/ArrayReferenceField.vue") as any,
       loading: FormInputPlaceholder,
     }),
     Calendar: () => ({
@@ -580,18 +604,6 @@ export default class FormControl extends Vue {
     }
   }
 
-  // FIXME unused function.
-  get controlPanelStyle() {
-    if (this.customHeight === null) {
-      return {};
-    }
-
-    const excludeHeight = heightExclusions.has(this.inputType.name);
-    const isHeightOnPanel = !this.isMultiline;
-    const height = isHeightOnPanel ? { height: `${this.customHeight}px` } : {};
-    return !excludeHeight ? { ...height, maxHeight: "initial" } : {};
-  }
-
   private updateTitle(title: string | null) {
     this.title = title ?? this.caption;
   }
@@ -714,16 +726,18 @@ export default class FormControl extends Vue {
             return { name: "barcode", format: this.attributes["format"] ? String(this.attributes["format"]) : undefined };
           }
 
-          // `constraint_view` is deprecated and almost never used, delete it after some time.
-          const constrainedBy = attrObjectToQuery(this.attributes["entries_view"]) ?? attrObjectToQuery(this.attributes["constraint_view"]);
+          // `constraint_view` and `entries_view` are deprecated and almost never used, delete it after some time.
+          const optionsView = attrObjectToQuery(this.attributes["options_view"])
+            ?? attrObjectToQuery(this.attributes["entries_view"])
+            ?? attrObjectToQuery(this.attributes["constraint_view"]);
           if (this.value.info === undefined) {
-            return { name: "argument_reference", constrainedBy };
+            return { name: "argument_reference", optionsView };
           }
 
           const refEntry: IReferenceType = {
             name: "reference",
             ref: this.value.info.fieldRef,
-            constrainedBy,
+            optionsView,
             selectViews: [],
           };
           refEntry.linkAttr = this.attributes["link"];
@@ -762,6 +776,17 @@ export default class FormControl extends Vue {
             name: "select",
             options: this.isNullable ? booleanNullableOptions : booleanOptions,
           };
+        case "array": {
+          const optionsView = attrObjectToQuery(this.attributes["options_view"]);
+          if (optionsView !== null) {
+            return {
+              name: "array_select",
+              optionsView,
+            };
+          } else {
+            return { name: "text", type: "text", style: {} };
+          }
+        }
         case "int":
           return { name: "text", type: "number", style: this.controlStyle() };
         // FIXME: Fix calendar field.
@@ -819,15 +844,10 @@ export default class FormControl extends Vue {
           style: this.controlStyle(heightCodeEditor),
         };
       case "markdown":
-        return {
-          name: "markdown",
-          editType: "markdown",
-          style: this.controlStyle(heightMultilineText),
-        };
       case "wysiwyg":
         return {
           name: "markdown",
-          editType: "wysiwyg",
+          editType: this.textType,
           style: this.controlStyle(heightMultilineText),
         };
       default:
