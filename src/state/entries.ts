@@ -429,10 +429,10 @@ const fetchEntriesByOptionsView = async (context: ActionContext<IEntriesState, {
     args: [optionsView.args.source.ref, optionsView.args.args, opts],
   }, { root: true }) as IViewExprResult;
 
-  const idColumnIndex = res.info.columns.findIndex(column => column.name === "id");
-  const nameColumnIndex = res.info.columns.findIndex(column => column.name === "name");
+  const idColumnIndex = res.info.columns.findIndex(column => column.name === "value" || column.name === "id"); // "id" is deprecated.
+  const nameColumnIndex = res.info.columns.findIndex(column => column.name === "pun" || column.name === "name"); // "name" is deprecated.
   if (idColumnIndex === -1 || nameColumnIndex === -1) {
-    throw new Error("User view for reference constraint must have columns `id` and `name`");
+    throw new Error("User view for reference constraint must have columns `value` and `pun`");
   }
   const mainType = res.info.columns[nameColumnIndex].valueType;
   const entries = Object.fromEntries(res.result.rows.map<[number, string]>(row => {
