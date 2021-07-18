@@ -460,24 +460,21 @@ const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: Entr
 };
 
 const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref: EntriesRef, ids: RowId[]): Promise<Record<RowId, string>> => {
-  const where: IChunkWhere = {
-    expression: "value = ANY ($ids)",
-    arguments: {
-      ids: {
-        type: "array(int)",
-        value: ids,
-      },
-    },
-  };
-  const chunk: IQueryChunk = {
-    where,
-  };
-  const req: IEntriesRequestOpts = {
-    chunk,
-  };
-
   switch (ref.fetchBy) {
     case "domain": {
+      const where: IChunkWhere = {
+        expression: "value = ANY ($ids)",
+        arguments: {
+          ids: {
+            type: "array(int)",
+            value: ids,
+          },
+        },
+      };
+      const req: IEntriesRequestOpts = {
+        chunk: { where },
+      };
+
       const res = await context.dispatch("callProtectedApi", {
         func: Api.getDomainValues.bind(Api),
         args: [ref.referencedBy.field, ref.referencedBy.rowId ?? undefined, req],
@@ -508,9 +505,22 @@ const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref:
       if (ref.optionsView.args.source.type === "anonymous") {
         throw new Error("Anonymous options_view is not supported");
       }
+      const where: IChunkWhere = {
+        expression: "value = ANY ($ids)",
+        arguments: {
+          ids: {
+            type: "array(int)",
+            value: ids,
+          },
+        },
+      };
+      const req: IEntriesRequestOpts = {
+        chunk: { where },
+      };
+
       const res = await context.dispatch("callProtectedApi", {
         func: Api.getNamedUserView.bind(Api),
-        args: [ref.optionsView.args.source.ref, ref.optionsView.args.args],
+        args: [ref.optionsView.args.source.ref, ref.optionsView.args.args, req],
       }, { root: true }) as IViewExprResult;
       const idColumnIndex = res.info.columns.findIndex(column => column.name === "value" || column.name === "id"); // "id" is deprecated.
       const nameColumnIndex = res.info.columns.findIndex(column => column.name === "pun" || column.name === "name"); // "name" is deprecated.
