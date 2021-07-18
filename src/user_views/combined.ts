@@ -222,7 +222,7 @@ const vueInsertMainRowMapping = (mainRowMapping: IMainRowMapping, id: RowId, row
 const setUpdatedPun = (summaries: Entries, value: ICombinedValue, ref: number) => {
   const pun = summaries[ref];
   if (pun === undefined) {
-    value.pun = null;
+    Vue.set(value, "pun", null);
   } else {
     Vue.set(value, "pun", pun);
   }
@@ -233,10 +233,10 @@ const clearUpdatedValue = (value: ICombinedValue) => {
   value.value = value.initialValue;
   if ("pun" in value) {
     console.assert(value.initialPun !== undefined);
-    value.pun = value.initialPun;
+    Vue.set(value, "pun", value.initialPun);
   }
   if ("rawValue" in value) {
-    value.rawValue = value.value;
+    Vue.set(value, "rawValue", value.value);
   }
 };
 
@@ -811,7 +811,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     if (summaries) {
       setUpdatedPun(summaries, value, ref);
     } else {
-      value.pun = null;
+      Vue.set(value, "pun", null);
     }
   }
 
@@ -822,7 +822,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     const ref = currentValue(value) as number | null;
 
     if (valueIsNull(ref)) {
-      value.pun = "";
+      Vue.set(value, "pun", null);
       return;
     }
 
