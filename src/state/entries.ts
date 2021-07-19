@@ -561,7 +561,7 @@ const showNotFoundIdsError = (notFoundIds: number[]) => {
 // `ids` may contain ids which are not presented in options_view now, so we may fallback to entity to get at least something.
 const fetchEntriesByOptionsViewOrEntityByIds = async (context: ActionContext<IEntriesState, {}>, optionsView: IQuery, entity: IEntityRef | null, ids: RowId[]) => {
   const optionsViewEntries = await fetchEntriesByOptionsViewByIds(context, optionsView, ids);
-  const optionsViewEntriesIds = Object.keys(optionsViewEntries).map(Number.parseInt);
+  const optionsViewEntriesIds = Object.keys(optionsViewEntries).map(key => Number.parseInt(key, 10));
   if (ids.length === optionsViewEntriesIds.length) {
     return optionsViewEntries;
   } else {
@@ -574,7 +574,7 @@ const fetchEntriesByOptionsViewOrEntityByIds = async (context: ActionContext<IEn
     if (optionsViewEntriesIds.length + Object.keys(entityEntries).length === ids.length) {
       return { ...optionsViewEntries, ...entityEntries };
     } else {
-      const foundIds = [...optionsViewEntriesIds, ...Object.keys(entityEntries).map(Number.parseInt)];
+      const foundIds = [...optionsViewEntriesIds, ...Object.keys(entityEntries).map(key => Number.parseInt(key, 10))];
       const notFoundIds = R.difference(ids, foundIds);
       // TODO: In-place error would be better than toast.
       showNotFoundIdsError(notFoundIds);
