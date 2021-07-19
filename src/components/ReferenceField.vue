@@ -60,6 +60,7 @@ export default class ReferenceField extends Vue {
       ? {
         fetchBy: "options_view",
         optionsView: this.optionsView,
+        referencedTo: this.referenceEntity,
       }
       : {
         fetchBy: "domain",

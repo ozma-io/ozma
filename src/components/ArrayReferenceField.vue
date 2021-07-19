@@ -38,6 +38,7 @@ import { valueIsNull } from "@/values";
 import { EntriesRef } from "@/state/entries";
 import type { IQuery } from "@/state/query";
 import type { IUserViewArguments } from "@/user_views/combined";
+import { IEntityRef } from "ozma-api";
 
 @Component({
   components: {
@@ -47,6 +48,7 @@ import type { IUserViewArguments } from "@/user_views/combined";
 export default class ArrayReferenceField extends Vue {
   @Prop({ required: true }) value!: unknown[] | null;
   @Prop({ type: Object, default: null }) optionsView!: IQuery;
+  @Prop({ type: Object, default: null }) referenceEntity!: IEntityRef | null;
   @Prop({ type: Boolean, default: false }) required!: boolean;
   @Prop({ type: Boolean, default: false }) disabled!: boolean;
   @Prop({ type: Number }) height!: number | undefined;
@@ -58,6 +60,7 @@ export default class ArrayReferenceField extends Vue {
     return {
       fetchBy: "options_view",
       optionsView: this.optionsView,
+      referencedTo: this.referenceEntity,
     };
   }
 
