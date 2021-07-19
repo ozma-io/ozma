@@ -3,7 +3,8 @@ import { RowId, IQueryChunk, IFieldRef, IEntityRef, IChunkWhere, IDomainValuesRe
 import Vue from "vue";
 import R from "ramda";
 
-import { IRef, NeverError, ObjectResourceMap, ReferenceName, syncObject, updateObject, waitTimeout } from "@/utils";
+import { app } from "@/main";
+import { IRef, NeverError, ObjectResourceMap, ReferenceName, syncObject, updateObject, waitTimeout, shortLanguage } from "@/utils";
 import Api from "@/api";
 import { valueToText } from "@/values";
 import { CancelledError } from "@/modules";
@@ -52,6 +53,18 @@ export type SearchNode = ISearchNodeOK | ISearchNodeError | ISearchNodePending;
 export type Entries = Record<RowId, string>;
 
 const punToText = (pun: unknown, id: unknown, punType: ValueType) => pun === null ? `${id}` : valueToText(punType, pun);
+
+const messages: Record<string, Record<string, string>> = {
+  en: {
+    "not_all_values_found_in_options": "Not all references were found in `options_view` or `referenced_entity`",
+    "not_found": "Not found",
+  },
+  ru: {
+    "not_all_values_found_in_options": "Не все значения-отношения были найдены в `options_view` или `referenced_entity`",
+    "not_found": "Не найдены",
+  },
+};
+const funI18n = (key: string) => messages[shortLanguage]?.[key]; // TODO: can't access VueI18n here, but this solution looks stupid too.
 
 // Add new node to the search tree.
 const insertSearchNode = (node: SearchNode, search: string, limit: number, pending: Promise<boolean>): boolean => {
@@ -295,6 +308,7 @@ export interface IEntriesRefByEntity {
 export interface IEntriesRefByOptionsView {
   fetchBy: "options_view";
   optionsView: IQuery;
+  referencedTo: IEntityRef | null;
 }
 export type EntriesRef =
   | IEntriesRefByDomain
@@ -459,81 +473,126 @@ const fetchEntries = async (context: ActionContext<IEntriesState, {}>, ref: Entr
   }
 };
 
+const fetchEntriesByDomainByIds = async (context: ActionContext<IEntriesState, {}>, referencedBy: IReferencedField, ids: RowId[]): Promise<Record<string, string>> => {
+  const where: IChunkWhere = {
+    expression: "value = ANY ($ids)",
+    arguments: {
+      ids: {
+        type: "array(int)",
+        value: ids,
+      },
+    },
+  };
+  const req: IEntriesRequestOpts = {
+    chunk: { where },
+  };
+
+  const res = await context.dispatch("callProtectedApi", {
+    func: Api.getDomainValues.bind(Api),
+    args: [referencedBy.field, referencedBy.rowId ?? undefined, req],
+  }, { root: true }) as IDomainValuesResult;
+
+  return Object.fromEntries(res.values.map<[number, string]>(row => {
+    const main = valueToText(res.punType, row.pun);
+    return [Number(row.value), main];
+  }));
+};
+
+const fetchEntriesByEntityByIds = async (context: ActionContext<IEntriesState, {}>, entity: IEntityRef, ids: RowId[]): Promise<Record<string, string>> => {
+  const { schema, name } = entity;
+  const view = `"${schema}"."${name}"`;
+  const query = `{ $ids array(int) }: SELECT id, __main AS main FROM ${view} WHERE id = ANY ($ids)`;
+  const res = await context.dispatch("callProtectedApi", {
+    func: Api.getAnonymousUserView.bind(Api),
+    args: [query, { ids }],
+  }, { root: true }) as IViewExprResult;
+  const mainType = res.info.columns[0].valueType;
+
+  return Object.fromEntries(res.result.rows.map(row => {
+    const id = row.values[0].value;
+    const pun = row.values[1].value;
+    return [id, valueToText(mainType, pun)];
+  }));
+};
+
+const fetchEntriesByOptionsViewByIds = async (context: ActionContext<IEntriesState, {}>, optionsView: IQuery, ids: RowId[]): Promise<Record<string, string>> => {
+  if (optionsView.args.source.type === "anonymous") {
+    throw new Error("Anonymous options_view is not supported");
+  }
+  const where: IChunkWhere = {
+    expression: "id = ANY ($ids)",
+    arguments: {
+      ids: {
+        type: "array(int)",
+        value: ids,
+      },
+    },
+  };
+  const req: IEntriesRequestOpts = {
+    chunk: { where },
+  };
+
+  const res = await context.dispatch("callProtectedApi", {
+    func: Api.getNamedUserView.bind(Api),
+    args: [optionsView.args.source.ref, optionsView.args.args, req],
+  }, { root: true }) as IViewExprResult;
+  const idColumnIndex = res.info.columns.findIndex(column => column.name === "value" || column.name === "id"); // "id" is deprecated.
+  const nameColumnIndex = res.info.columns.findIndex(column => column.name === "pun" || column.name === "name"); // "name" is deprecated.
+  if (idColumnIndex === -1 || nameColumnIndex === -1) {
+    throw new Error("User view for reference constraint must have columns `value` and `pun`");
+  }
+  const mainType = res.info.columns[nameColumnIndex].valueType;
+  return Object.fromEntries(res.result.rows.map<[number, string]>(row => {
+    const id = row.values[idColumnIndex].value as number;
+    const main = valueToText(mainType, row.values[nameColumnIndex].value);
+    return [id, main];
+  }));
+};
+
+const showNotFoundIdsError = (notFoundIds: number[]) => {
+  const message = `${funI18n("not_found")}: ${notFoundIds}`;
+  app.$bvToast.toast(message, {
+    title: funI18n("not_all_values_found_in_options"),
+    variant: "danger",
+    solid: true,
+  });
+};
+
+// `ids` may contain ids which are not presented in options_view now, so we may fallback to entity to get at least something.
+const fetchEntriesByOptionsViewOrEntityByIds = async (context: ActionContext<IEntriesState, {}>, optionsView: IQuery, entity: IEntityRef | null, ids: RowId[]) => {
+  const optionsViewEntries = await fetchEntriesByOptionsViewByIds(context, optionsView, ids);
+  const optionsViewEntriesIds = Object.keys(optionsViewEntries).map(Number.parseInt);
+  if (ids.length === optionsViewEntriesIds.length) {
+    return optionsViewEntries;
+  } else {
+    let entityEntries: Record<string, string> = {};
+    if (entity) {
+      const notFoundInOptionsViewIds = R.difference(ids, optionsViewEntriesIds);
+      entityEntries = await fetchEntriesByEntityByIds(context, entity, notFoundInOptionsViewIds);
+    }
+
+    if (optionsViewEntriesIds.length + Object.keys(entityEntries).length === ids.length) {
+      return { ...optionsViewEntries, ...entityEntries };
+    } else {
+      const foundIds = [...optionsViewEntriesIds, ...Object.keys(entityEntries).map(Number.parseInt)];
+      const notFoundIds = R.difference(ids, foundIds);
+      // TODO: In-place error would be better than toast.
+      showNotFoundIdsError(notFoundIds);
+
+      const notFoundEntries = Object.fromEntries(notFoundIds.map(id => [id, String(id)]));
+      return { ...optionsViewEntries, ...entityEntries, ...notFoundEntries };
+    }
+  }
+};
+
 const fetchEntriesByIds = async (context: ActionContext<IEntriesState, {}>, ref: EntriesRef, ids: RowId[]): Promise<Record<RowId, string>> => {
   switch (ref.fetchBy) {
-    case "domain": {
-      const where: IChunkWhere = {
-        expression: "value = ANY ($ids)",
-        arguments: {
-          ids: {
-            type: "array(int)",
-            value: ids,
-          },
-        },
-      };
-      const req: IEntriesRequestOpts = {
-        chunk: { where },
-      };
-
-      const res = await context.dispatch("callProtectedApi", {
-        func: Api.getDomainValues.bind(Api),
-        args: [ref.referencedBy.field, ref.referencedBy.rowId ?? undefined, req],
-      }, { root: true }) as IDomainValuesResult;
-
-      return Object.fromEntries(res.values.map<[number, string]>(row => {
-        const main = valueToText(res.punType, row.pun);
-        return [Number(row.value), main];
-      }));
-    }
-    case "entity": {
-      const { schema, name } = ref.entity;
-      const view = `"${schema}"."${name}"`;
-      const query = `{ $ids array(int) }: SELECT id, __main AS main FROM ${view} WHERE id = ANY ($ids)`;
-      const res = await context.dispatch("callProtectedApi", {
-        func: Api.getAnonymousUserView.bind(Api),
-        args: [query, { ids }],
-      }, { root: true }) as IViewExprResult;
-      const mainType = res.info.columns[0].valueType;
-
-      return Object.fromEntries(res.result.rows.map(row => {
-        const id = row.values[0].value;
-        const pun = row.values[1].value;
-        return [id, valueToText(mainType, pun)];
-      }));
-    }
-    case "options_view": {
-      if (ref.optionsView.args.source.type === "anonymous") {
-        throw new Error("Anonymous options_view is not supported");
-      }
-      const where: IChunkWhere = {
-        expression: "id = ANY ($ids)",
-        arguments: {
-          ids: {
-            type: "array(int)",
-            value: ids,
-          },
-        },
-      };
-      const req: IEntriesRequestOpts = {
-        chunk: { where },
-      };
-
-      const res = await context.dispatch("callProtectedApi", {
-        func: Api.getNamedUserView.bind(Api),
-        args: [ref.optionsView.args.source.ref, ref.optionsView.args.args, req],
-      }, { root: true }) as IViewExprResult;
-      const idColumnIndex = res.info.columns.findIndex(column => column.name === "value" || column.name === "id"); // "id" is deprecated.
-      const nameColumnIndex = res.info.columns.findIndex(column => column.name === "pun" || column.name === "name"); // "name" is deprecated.
-      if (idColumnIndex === -1 || nameColumnIndex === -1) {
-        throw new Error("User view for reference constraint must have columns `value` and `pun`");
-      }
-      const mainType = res.info.columns[nameColumnIndex].valueType;
-      return Object.fromEntries(res.result.rows.map<[number, string]>(row => {
-        const id = row.values[idColumnIndex].value as number;
-        const main = valueToText(mainType, row.values[nameColumnIndex].value);
-        return [id, main];
-      }));
-    }
+    case "domain":
+      return fetchEntriesByDomainByIds(context, ref.referencedBy, ids);
+    case "entity":
+      return fetchEntriesByEntityByIds(context, ref.entity, ids);
+    case "options_view":
+      return fetchEntriesByOptionsViewOrEntityByIds(context, ref.optionsView, ref.referencedTo, ids);
     default:
       throw new NeverError(ref);
   }

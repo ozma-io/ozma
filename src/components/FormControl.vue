@@ -113,6 +113,7 @@
           ref="control"
           :value="currentValue"
           :options-view="inputType.optionsView"
+          :reference-entity="inputType.entity"
           :height="customHeight"
           :autofocus="autofocus || iSlot.autofocus"
           :required="!isNullable"
@@ -289,6 +290,7 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import type { AttributesMap, FieldType, IFieldRef, ValueType } from "ozma-api";
+import { z } from "zod";
 
 import { valueToText, valueIsNull } from "@/values";
 import { IQuery, attrToQuerySelf, attrObjectToQuery } from "@/state/query";
@@ -360,6 +362,7 @@ interface ISelectType {
 interface IArrayReferenceFieldType {
   name: "array_select";
   optionsView: IQuery;
+  entity: IEntityRef | null;
 }
 
 interface IReferenceType {
@@ -452,6 +455,16 @@ const parseTime = (raw: string): ITime | null => {
     }
     : null;
 };
+
+export const entityRefSchema =
+  z.object({
+    schema: z.string(),
+    name: z.string(),
+  });
+
+// Must be the same as `IEntityRef`!
+// We can force it with TypeScript magic but it's very cumbersome and unnecessary.
+type IEntityRefSchema = z.infer<typeof entityRefSchema>;
 
 @Component({
   // Looks ugly and wordy, but due to `import` this can not be generated.
@@ -778,10 +791,12 @@ export default class FormControl extends Vue {
           };
         case "array": {
           const optionsView = attrObjectToQuery(this.attributes["options_view"]);
+          const wrappedReferencedEntity = entityRefSchema.safeParse(this.attributes["referenced_entity"]);
           if (optionsView !== null) {
             return {
               name: "array_select",
               optionsView,
+              entity: wrappedReferencedEntity.success ? wrappedReferencedEntity.data : null,
             };
           } else {
             return { name: "text", type: "text", style: {} };
