@@ -671,16 +671,20 @@ export const convertToWords = (str: string) => {
 // In all regexes capturing groups replaced to non-capturing (`(` -> `(?:`).
 // Source: https://emailregex.com/
 const emailRegex = /(?:(?:[^<>(?:)[\]\\.,;:\s@"]+(?:\.[^<>(?:)[\]\\.,;:\s@"]+)*)|(?:".+"))@(?:(?:\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(?:(?:[a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/;
+// const emailRegex = /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+// const emailRegex = /[^\s@,.]+@[^\s@,.]+\.[^\s@,.]+/;
 // Source: https://qna.habr.com/answer?answer_id=852265
 const telRegex = /\+(?:[- _(?:):=+]?\d[- _(?:):=+]?){10,14}/;
 const telRemoveFormating = (tel: string) => "+" + tel.replace(/\D/g, "");
 // Source: https://stackoverflow.com/a/3809435
 const urlRegex = /https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9(?:)]{1,6}\b(?:[-a-zA-Z0-9(?:)@:%_+.~#?&//=]*)/;
 const linksRegex =
-  new RegExp(`(?:^|\\s|,)(?:\
-(${emailRegex.source})|\
-(${telRegex.source})|\
-(${urlRegex.source}))(?:$|\\s|,|\\.|;)`, "gm");
+  new RegExp(`\
+(?:(${emailRegex.source})|(${telRegex.source})|(${urlRegex.source}))\
+`, "gm");
+// Regexp above was wrapped in this two parts, but I dont remember why and it works better without, but I would like to keep these lines here for now.
+// (?:^|\\s|,)\
+// (?:$|\\s|,|\\.|;)
 const replaceLink = (match: string, email: string, tel: string, url: string) => {
   const prefix =
     email ? "mailto:" :
