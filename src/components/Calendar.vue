@@ -242,7 +242,7 @@ export default class Calendar extends Vue {
 
   private onPressEnter(event: KeyboardEvent) {
     const target = event.target! as HTMLInputElement;
-    this.updateValue(moment(target.value, this.usedFormat));
+    this.updateValue(target.value === "" ? null : moment(target.value, this.usedFormat));
     target.blur();
     this.$emit("blur");
     this.$emit("move-selection-next-row", event);

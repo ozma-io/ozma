@@ -16,7 +16,7 @@
 <template>
   <div
     class="arguments-editor"
-    @keyup.enter="apply"
+    @keyup.enter="applyIfChanged"
     @keyup.escape="close"
   >
     <b-container :fluid="hasManyArguments" class="arguments-editor-container pb-2">
@@ -78,7 +78,8 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import moment, { MomentInput } from "moment";
+import moment, { Moment, MomentInput } from "moment";
+import * as R from "ramda";
 
 import { ArgumentName, AttributesMap, FieldType, IArgument } from "ozma-api";
 import { objectMap } from "@/utils";
@@ -86,7 +87,7 @@ import { valueIsNull, valueToText } from "@/values";
 import { IQuery } from "@/state/query";
 
 const getValue = (parameter: IArgument, value: unknown) => {
-  if (parameter.argType.type === "date" || parameter.argType.type === "datetime") {
+  if (!valueIsNull(value) && (parameter.argType.type === "date" || parameter.argType.type === "datetime")) {
     return moment(value as MomentInput);
   }
   return value;
@@ -154,12 +155,53 @@ export default class ArgumentEditor extends Vue {
 
   private mockUvArgs = { source: { type: "named", ref: { schema: "mock_schema", name: "mock_name" } }, args: {} };
 
+  // Use this instead of `Vue.set(this.changedValues, namee, newValue)`
+  private changeValue(name: string, newValue: any) {
+    const oldValue = this.args[name].value;
+    if (valueIsNull(oldValue) && valueIsNull(newValue)) {
+      Vue.delete(this.changedValues, name);
+    } else {
+      const type = this.argumentParams[name].argType.type;
+      switch (type) {
+        case "date":
+        case "datetime":
+          if (moment.isMoment(oldValue) && moment.isMoment(newValue) && (oldValue as Moment).isSame(newValue)) {
+            Vue.delete(this.changedValues, name);
+            return;
+          }
+          break;
+        case "array":
+          if (R.equals(newValue, oldValue)) {
+            Vue.delete(this.changedValues, name);
+            return;
+          }
+        default:
+          if (newValue === oldValue) {
+            Vue.delete(this.changedValues, name);
+            return;
+          }
+      }
+      Vue.set(this.changedValues, name, newValue);
+    }
+  }
+
   private update(name: string, value: any) {
-    const type = this.argumentParams[name].argType.type;
-    const typedValue = (type === "int" || type === "decimal")
-      ? Number(value)
-      : value;
-    Vue.set(this.changedValues, name, typedValue);
+    if (valueIsNull(value)) {
+      this.changeValue(name, null);
+    } else {
+      switch (this.argumentParams[name].argType.type) {
+        case "int":
+        case "decimal": {
+          const maybeNumber = Number(value);
+          if (Number.isFinite(maybeNumber)) {
+            this.changeValue(name, maybeNumber);
+          }
+          break;
+        }
+        default:
+          this.changeValue(name, value);
+      }
+    }
   }
 
   // Must be also called outside after save!
@@ -172,6 +214,12 @@ export default class ArgumentEditor extends Vue {
       if (valueIsNull(this.allValues[name]) && !valueIsNull(arg.defaultValue)) {
         this.update(name, arg.defaultValue);
       }
+    }
+  }
+
+  private applyIfChanged() {
+    if (this.hasChanges && !this.someRequiredFieldsAreEmpty) {
+      this.apply();
     }
   }
 
