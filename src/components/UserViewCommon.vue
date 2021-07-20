@@ -72,7 +72,8 @@
 <script lang="ts">
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-import { IEntityRef } from "ozma-api";
+import { IEntityRef, IInsertEntityOp, ITransaction } from "ozma-api";
+import { Action, namespace } from "vuex-class";
 
 import { mapMaybe, saveToFile, tryDicts } from "@/utils";
 import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, userViewTitle } from "@/components/BaseUserView";
@@ -85,6 +86,10 @@ import { getColorVariables } from "@/utils_colors";
 
 import { attrToButton, Button, attrToButtons, attrToButtonsOld } from "@/components/buttons/buttons";
 import { IAttrToLinkOpts } from "@/links";
+import { valueFromRaw } from "@/values";
+import { ErrorKey } from "@/state/errors";
+
+import Api from "@/api";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -101,6 +106,8 @@ const csvCell = (str: string): string => {
   return csvstr;
 };
 
+const errors = namespace("errors");
+
 @Component({
   components: {
     SelectUserView,
@@ -108,6 +115,10 @@ const csvCell = (str: string): string => {
   },
 })
 export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>>(BaseUserView) {
+  @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
+  @Action("reload") reload!: () => Promise<void>;
+  @errors.Mutation("setError") setError!: (_: { key: ErrorKey; error: string }) => void;
+
   modalView: IQuery | null = null;
   openQRCodeScanner = false;
   openBarCodeScanner = false;
@@ -149,40 +160,72 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     // @ts-ignore
     const Papa = await import("papaparse");
 
-    const info = this.uv.info;
-    const entityRef = info.mainEntity!;
-    Papa.parse(file, {
-      worker: true,
+    const entityRef = this.uv.info.mainEntity!;
+    const emptyRow = Object.fromEntries(mapMaybe((value, colI) => {
+      if (value.value === undefined || value.value === null) {
+        return undefined;
+      }
+      const col = this.uv.info.columns[colI];
+      return [col.mainField!.name, value.value];
+    }, this.uv.emptyRow!.values));
+    const columnNames = Object.fromEntries(mapMaybe((info, colI) => {
+      if (!info.mainField) {
+        return undefined;
+      }
+
+      const csvColumnNameRaw = this.uv.columnAttributes[colI]?.["csv_column_name"];
+      const csvColumnName = typeof csvColumnNameRaw === "string" ? csvColumnNameRaw : null;
+      const csvImportColumnRaw = this.uv.columnAttributes[colI]?.["csv_import_column"]; // Deprecated attribute.
+      const csvImportColumn = typeof csvImportColumnRaw === "string" ? csvImportColumnRaw : null;
+
+      const columnName = csvImportColumn ?? csvColumnName ?? info.name;
+      return [columnName, info.mainField];
+    }, this.uv.info.columns));
+
+    const operations: IInsertEntityOp[] = [];
+
+    await Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      step: async (rawRow: { data: Record<string, string> }) => {
-        const id = await this.addEntry({
-          scope: this.scope,
-          entityRef,
-        });
-
-        await Promise.all(this.uv.info.columns.map((columnInfo, index) => {
-          const csvColumnNameRaw = this.uv.columnAttributes[index]?.["csv_column_name"];
-          const csvColumnName = typeof csvColumnNameRaw === "string" ? csvColumnNameRaw : null;
-          const csvImportColumnRaw = this.uv.columnAttributes[index]?.["csv_import_column"]; // Deprecated attribute.
-          const csvImportColumn = typeof csvImportColumnRaw === "string" ? csvImportColumnRaw : null;
-
-          const columnName = csvImportColumn ?? csvColumnName ?? columnInfo.name;
-          const currValue = rawRow.data[columnName];
-          if (columnInfo.mainField && currValue) {
-            return this.setAddedField({
-              fieldRef: {
-                entity: entityRef,
-                name: columnInfo.mainField.name,
-              },
-              id,
-              value: currValue,
-            });
-          } else {
-            return Promise.resolve();
+      step: (rawRow: { data: Record<string, string> }) => {
+        try {
+          const row = { ...emptyRow };
+          for (const [columnName, rawValue] of Object.entries(rawRow.data)) {
+            const mainField = columnNames[columnName];
+            if (mainField) {
+              const value = valueFromRaw(mainField.field, rawValue);
+              if (value === undefined) {
+                throw new Error(`Failed to validate value ${rawValue} for field ${mainField.name}`);
+              }
+              if (value !== null) {
+                row[mainField.name] = value;
+              }
+            }
           }
-        }));
-        this.uv.trackAddedEntry(id);
+          operations.push({
+            type: "insert",
+            entity: entityRef,
+            entries: row,
+          });
+        } catch (e) {
+          this.setError({ key: "import_csv", error: e.message });
+          throw e;
+        }
+      },
+      complete: async () => {
+        try {
+          const transaction: ITransaction = {
+            operations,
+          };
+          await this.callProtectedApi({
+            func: Api.runTransaction,
+            args: [transaction],
+          });
+          await this.reload();
+        } catch (e) {
+          this.setError({ key: "import_csv", error: e.message });
+          throw e;
+        }
       },
     });
   }
