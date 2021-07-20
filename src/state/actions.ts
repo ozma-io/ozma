@@ -31,15 +31,11 @@ export const saveAndRunAction = async (
           args: [ref, args],
         }, { root: true });
       } catch (e) {
-        const errorPrefix = "Error: Failed to run action: Unhandled exception ";
-        if (String(e).includes(errorPrefix, 0)) {
-          const error = String(e).replace(errorPrefix, "");
-          app.$bvToast.toast(error, {
-            title: funI18n("exception_in_action"),
-            variant: "danger",
-            solid: true,
-          });
-        }
+        app.$bvToast.toast(String(e), {
+          title: funI18n("exception_in_action"),
+          variant: "danger",
+          solid: true,
+        });
 
         throw e;
       }
