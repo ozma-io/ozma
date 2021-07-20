@@ -184,7 +184,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
 
     const operations: IInsertEntityOp[] = [];
 
-    await Papa.parse(file, {
+    Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       step: (rawRow: { data: Record<string, string> }) => {
