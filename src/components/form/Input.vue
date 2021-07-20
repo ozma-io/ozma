@@ -72,7 +72,6 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import { valueIsNull } from "@/values";
 import Textarea from "@/components/form/Textarea.vue";
 import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
@@ -107,10 +106,6 @@ export default class Input extends Vue {
   private maxInputWidth = 0;
   private openQRCodeScanner = false;
   private textLink: TextLink | null = null;
-
-  private get isEmpty(): boolean {
-    return valueIsNull(this.value);
-  }
 
   private get qrCodeButton(): Button {
     return {

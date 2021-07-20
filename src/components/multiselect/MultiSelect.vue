@@ -47,6 +47,7 @@
       :disabled="disabled"
       :visible-arrow="false"
       :options="{
+        placement: 'bottom-start',
         positionFixed: true,
         modifiers: {
           preventOverflow: { escapeWithReference: true, boundariesElement: 'viewport' },
@@ -747,9 +748,6 @@ export default class MultiSelect extends Vue {
     flex-wrap: wrap;
     gap: 0.25rem;
     cursor: pointer;
-    align-content: center;
-    overflow-x: auto;
-    line-height: 1;
 
     &.fixed-height {
       overflow: hidden;
