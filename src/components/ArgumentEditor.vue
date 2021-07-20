@@ -78,7 +78,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import moment, { Moment, MomentInput } from "moment";
+import moment, { MomentInput } from "moment";
 import * as R from "ramda";
 
 import { ArgumentName, AttributesMap, FieldType, IArgument } from "ozma-api";
@@ -165,7 +165,7 @@ export default class ArgumentEditor extends Vue {
       switch (type) {
         case "date":
         case "datetime":
-          if (moment.isMoment(oldValue) && moment.isMoment(newValue) && (oldValue as Moment).isSame(newValue)) {
+          if (moment.isMoment(oldValue) && moment.isMoment(newValue) && oldValue.isSame(newValue)) {
             Vue.delete(this.changedValues, name);
             return;
           }
@@ -175,6 +175,7 @@ export default class ArgumentEditor extends Vue {
             Vue.delete(this.changedValues, name);
             return;
           }
+          break;
         default:
           if (newValue === oldValue) {
             Vue.delete(this.changedValues, name);
