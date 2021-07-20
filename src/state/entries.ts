@@ -520,7 +520,7 @@ const fetchEntriesByOptionsViewByIds = async (context: ActionContext<IEntriesSta
     throw new Error("Anonymous options_view is not supported");
   }
   const where: IChunkWhere = {
-    expression: "id = ANY ($ids)",
+    expression: "value = ANY ($ids)",
     arguments: {
       ids: {
         type: "array(int)",
