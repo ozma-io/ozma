@@ -10,18 +10,13 @@
       'v--modal',
       { 'is-mobile': $isMobile }
     ]"
+    transition="fade-move"
     :resizable="!$isMobile"
     :draggable="$isMobile ? false : '.modal__tab_headers'"
     @before-close="beforeClose"
     @opened="$emit('opened')"
   >
     <div class="header d-flex align-items-center">
-      <ButtonsPanel
-        class="main-buttons"
-        :buttons="mainButtons"
-        @goto="$emit('goto', $event)"
-      />
-
       <div
         v-if="hasTabs"
         :class="[
@@ -101,6 +96,7 @@ export default class Modal extends Vue {
   @Prop({ type: String }) width!: string;
   @Prop({ type: String }) height!: string;
   @Prop({ type: Number, default: 0 }) startingTab!: number;
+  @Prop({ type: Array, default: () => [] }) mainButtons!: Button[];
 
   private selectedTab = 0;
 
@@ -150,25 +146,6 @@ export default class Modal extends Vue {
     }
   }
 
-  private get mainButtons(): Button[] {
-    return [
-      {
-        type: "callback",
-        icon: "arrow_back",
-        variant: "interfaceButton",
-        colorVariables: getColorVariables("button", "interfaceButton"),
-        callback: () => this.$emit("go-back-window"),
-      },
-      {
-        type: "link",
-        icon: "home",
-        variant: "interfaceButton",
-        colorVariables: getColorVariables("button", "interfaceButton"),
-        link: homeLink,
-      },
-    ];
-  }
-
   // Used on mobile to display editing inputs
   private get hasTabs(): boolean {
     return this.modalTabs !== undefined;
@@ -208,12 +185,6 @@ export default class Modal extends Vue {
     }
   }
 
-  .main-buttons {
-    margin-left: 0.25rem;
-    margin-right: 0.25rem;
-    flex-shrink: 0;
-  }
-
   .modal__content {
     overflow: auto;
     height: 100%;
@@ -229,10 +200,6 @@ export default class Modal extends Vue {
     padding: 0;
     overflow: hidden;
   }
-
-  .mobile_close_button {
-    margin-left: 5px;
-  }
 </style>
 
 <style lang="scss">
@@ -242,19 +209,21 @@ export default class Modal extends Vue {
   .v--modal-box.v--modal {
     background-color: var(--default-backgroundDarker1Color);
     color: var(--MainTextColor);
-    border-radius: 0.5rem;
-    border: 1px solid var(--default-backgroundBorderColor);
+    border-radius: 1rem;
     display: flex;
     flex-flow: column nowrap;
     flex-grow: 1;
 
     &.is-mobile {
-      border: none;
-      top: auto !important;
+      position: absolute;
 
-      /* VueModal writes :height prop in element's inline style,
+      /* VueModal writes these styles in element's inline style,
         so !important is required */
-      height: 100% !important;
+      top: auto !important;
+      bottom: 0 !important;
+      height: calc(100% - 2.5rem) !important;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
     }
   }
 
@@ -275,5 +244,16 @@ export default class Modal extends Vue {
     &.is-mobile {
       height: 100%;
     }
+  }
+
+  .fade-move-enter-active,
+  .fade-move-leave-active {
+    transition: opacity 0.4s, transform 0.4s;
+  }
+
+  .fade-move-enter,
+  .fade-move-leave-to {
+    opacity: 0;
+    transform: translateY(5rem);
   }
 </style>
