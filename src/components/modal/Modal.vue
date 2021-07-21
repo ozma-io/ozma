@@ -80,12 +80,10 @@
 <script lang="ts">
 import * as R from "ramda";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { homeLink } from "@/utils";
 
 import ModalContent from "@/components/modal/ModalContent";
 import ModalTabHeader from "@/components/modal/ModalTabHeader.vue";
 import { IModalTab } from "@/components/modal/types";
-import { getColorVariables } from "@/utils_colors";
 import { Button } from "../buttons/buttons";
 
 @Component({ components: { ModalContent, ModalTabHeader } })
