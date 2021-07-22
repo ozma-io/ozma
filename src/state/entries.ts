@@ -421,7 +421,7 @@ const fetchEntriesByOptionsView = async (context: ActionContext<IEntriesState, {
     search === ""
       ? undefined
       : {
-        expression: "(name :: string) ILIKE $search",
+        expression: "(pun :: string) ILIKE $search",
         arguments: {
           search: {
             type: "string",
