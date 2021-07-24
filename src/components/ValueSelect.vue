@@ -15,6 +15,7 @@
   <MultiSelect
     :style="{ minWidth: isCellEdit ? '25rem' : undefined}"
     :value="selectedValue"
+    :label="label"
     :options="options"
     single
     show-filter
@@ -49,6 +50,7 @@ export default class ValueSelect extends Vue {
   @Prop({ type: Number }) optionsListHeight!: number | undefined;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
+  @Prop({ type: String, default: null }) label!: string | null;
 
   get selectedValue() {
     if (valueIsNull(this.value)) {

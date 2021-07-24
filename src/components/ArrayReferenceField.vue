@@ -14,6 +14,7 @@
 <template>
   <ReferenceMultiSelect
     :value="values"
+    :label="label"
     load-pun-on-mount
     :entries="entriesRef"
     :reference-entity="{}"
@@ -55,6 +56,7 @@ export default class ArrayReferenceField extends Vue {
   @Prop({ type: Number }) optionsListHeight!: number | undefined;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
+  @Prop({ type: String, default: null }) label!: string | null;
 
   private get entriesRef(): EntriesRef {
     return {
