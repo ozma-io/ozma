@@ -660,10 +660,8 @@ export default class MultiSelect extends Vue {
   }
 
   .select-container {
-    /* height: 100%; */
     height: auto;
     max-height: 100%;
-    /* max-height: min(100%, 11rem); */
     width: 100%;
     display: flex;
     flex-direction: row;
