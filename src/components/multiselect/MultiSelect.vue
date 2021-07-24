@@ -38,115 +38,101 @@
     ]"
     @keydown.tab="closePopup"
   >
-    <popper
+    <InputPopup
       ref="popup"
+      :label="label"
       trigger="clickToToggle"
       transition="fade"
       enter-active-class="fade-enter fade-enter-active"
       leave-active-class="fade-leave fade-leave-active"
       :disabled="disabled"
       :visible-arrow="false"
-      :options="{
+      :popper-options="{
         placement: 'bottom-start',
         positionFixed: true,
         modifiers: {
           preventOverflow: { escapeWithReference: true, boundariesElement: 'viewport' },
         },
       }"
-      @show="onOpenPopup"
-      @hide="onClosePopup"
+      @update:showContent="isPopupOpen = $event"
+      @popup-opened="onOpenPopup"
+      @popup-closed="onClosePopup"
     >
-      <!-- eslint-disable vue/no-deprecated-slot-attribute -->
-      <!-- TODO: Find or make not deprecated popper.js wrapper -->
-      <div
-        slot="reference"
-        :class="[
-          'select-container',
-          {
-            'fixed-height': height !== undefined && !isPopupOpen && !single,
-          },
-        ]"
-      >
-        <!-- eslint-enable vue/no-deprecated-slot-attribute -->
+      <template #default="{ mode, isOpen }">
         <div
-          :class="[
-            'values-container',
-            {
-              'fixed-height': height !== undefined && !isPopupOpen && !single,
-            },
-          ]"
+          class="select-container"
         >
-          <span
-            v-if="valuesLength === 0"
-            :style="listValueStyle"
-            class="empty-message-text"
-          >
-            {{ $t('empty_message') }}
-          </span>
-
           <div
-            v-else
-            :class="[
-              'selected-values',
-              {
-                'fixed-height': height !== undefined,
-              }
-            ]"
-            :style="containerContentStyle"
+            class="values-container"
           >
             <span
-              v-for="(option, index) in selectedOptions"
-              :key="index"
-              :class="[
-                single ? 'single-value' : 'one-of-many-value',
-                {
-                  'has-links': option.label !== option.labelHtml,
-                },
-              ]"
+              v-if="valuesLength === 0"
               :style="listValueStyle"
+              class="empty-message-text"
             >
-              <slot
-                name="option"
-                :option="option"
-              >
-                <!-- eslint-disable vue/no-v-html -->
-                <span v-html="option.labelHtml" />
-                <!-- eslint-enable vue/no-v-html -->
-              </slot>
-              <input
-                v-if="showUnselectOption"
-                type="button"
-                class="material-icons md-18 material-button remove-value rounded-circle"
-                value="close"
-                @click.stop="unselectOption(index)"
-              >
+              {{ $t('empty_message') }}
             </span>
+
+            <div
+              v-else
+              class="selected-values"
+              :style="containerContentStyle"
+            >
+              <span
+                v-for="(option, index) in selectedOptions"
+                :key="index"
+                :class="[
+                  single ? 'single-value' : 'one-of-many-value',
+                  {
+                    'has-links': option.label !== option.labelHtml,
+                  },
+                ]"
+                :style="listValueStyle"
+              >
+                <slot
+                  name="option"
+                  :option="option"
+                >
+                  <!-- eslint-disable vue/no-v-html -->
+                  <span v-html="option.labelHtml" />
+                  <!-- eslint-enable vue/no-v-html -->
+                </slot>
+                <input
+                  v-if="showUnselectOption"
+                  type="button"
+                  class="material-icons md-14 material-button remove-value rounded-circle"
+                  value="close"
+                  @click.stop="unselectOption(index)"
+                >
+              </span>
+            </div>
           </div>
+
+          <b-input-group-append>
+            <b-button
+              v-if="showClearOptions && !(mode === 'modal' && !isOpen)"
+              class="button with-material-icon clear-content-button clear-options-button"
+              variant="outline-secondary"
+              @click.stop="unselectAll"
+            >
+              <i
+                class="material-icons"
+              >clear</i>
+            </b-button>
+
+            <b-input-group-text
+              v-if="!(mode === 'modal' && isOpen)"
+              :class="['with-material-icon select-icon', { 'is-mobile': $isMobile }]"
+            >
+              <i class="material-icons">
+                {{ isPopupOpen ? "expand_less" : "expand_more" }}
+              </i>
+            </b-input-group-text>
+          </b-input-group-append>
         </div>
+      </template>
 
-        <b-input-group-append>
-          <b-button
-            v-if="showClearOptions"
-            class="button with-material-icon clear-content-button clear-options-button"
-            variant="outline-secondary"
-            @click.stop="unselectAll"
-          >
-            <i
-              class="material-icons"
-            >clear</i>
-          </b-button>
-
-          <b-input-group-text
-            :class="['with-material-icon select-icon', { 'is-mobile': $isMobile }]"
-          >
-            <i class="material-icons">
-              {{ isPopupOpen ? "expand_less" : "expand_more" }}
-            </i>
-          </b-input-group-text>
-        </b-input-group-append>
-      </div>
-
-      <div class="popper multiselect-popper border rounded overflow-hidden shadow">
+      <template #inner>
         <div
           class="select-container__options_container overflow-hidden"
         >
@@ -183,8 +169,6 @@
           <div
             ref="optionsContainer"
             class="options-list"
-            data-infinite-wrapper
-            infinite-wrapper
             :style="optionsListStyle"
           >
             <div
@@ -224,7 +208,6 @@
               v-if="useInfiniteScrolling"
               ref="infiniteLoading"
               spinner="spiral"
-              force-use-infinite-wrapper
               @infinite="infiniteHandler"
             >
               <template #no-results>
@@ -244,6 +227,7 @@
             </div>
           </div>
           <div
+            v-if="$slots['actions']"
             class="select-container__options__actions"
             @click="closePopup"
           >
@@ -252,16 +236,18 @@
             />
           </div>
         </div>
-      </div>
-    </popper>
+      </template>
+    </InputPopup>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { deepClone, deepEquals, NeverError, nextRender, replaceHtmlLinks } from "@/utils";
-import Popper from "vue-popperjs";
 import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
+import Popper from "vue-popperjs";
+
+import { deepClone, deepEquals, NeverError, nextRender, replaceHtmlLinks } from "@/utils";
+import InputPopup from "@/components/InputPopup.vue";
 
 export interface ISelectOption<T> {
   label: string;
@@ -291,7 +277,7 @@ export type LoadingState = IPendingOptions | ILoadedOptions | IErrorOptions;
 export type LoadingResult = ILoadedOptions | IErrorOptions;
 
 @Component({
-  components: { Popper, InfiniteLoading },
+  components: { Popper, InfiniteLoading, InputPopup },
 })
 export default class MultiSelect extends Vue {
   @Prop({ required: true }) value!: number | number[] | null;
@@ -305,6 +291,7 @@ export default class MultiSelect extends Vue {
   @Prop({ type: Boolean, default: false }) showFilter!: boolean;
   @Prop({ type: Object, default: (): LoadingState => ({ status: "ok", moreAvailable: false }) }) loadingState!: LoadingState;
   @Prop({ type: Function }) processFilter!: (_: string) => Promise<boolean> | undefined;
+  @Prop({ type: String, default: null }) label!: string | null;
 
   private filterValue = "";
   private hoveredOpinionIndex: number | null = null;
@@ -427,7 +414,7 @@ export default class MultiSelect extends Vue {
 
   @Watch("visibleOptions")
   private updatePopupPosition() {
-    void nextRender().then(() => (this.$refs.popup as any)?.updatePopper());
+    void nextRender().then(() => (this.$refs.popup as InputPopup | undefined)?.updatePopper());
   }
 
   @Watch("disabled")
@@ -486,7 +473,7 @@ export default class MultiSelect extends Vue {
 
   get optionsListStyle() {
     return {
-      maxHeight: `${this.optionsListHeight}px`,
+      /* maxHeight: `${this.optionsListHeight}px`, */
     };
   }
 
@@ -505,13 +492,11 @@ export default class MultiSelect extends Vue {
     this.$emit("focus");
   }
 
-  private async openPopup() {
+  private openPopup() {
     if (this.disabled) return;
-    const popupRef: any = this.$refs.popup;
-    if (!popupRef) return;
 
     this.hoveredOpinionIndex = null;
-    await popupRef.doShow();
+    void (this.$refs.popup as InputPopup | undefined)?.openPopup();
   }
 
   private async onOpenPopup() {
@@ -526,12 +511,10 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  private async closePopup() {
+  private closePopup() {
     if (this.disabled) return;
-    const popupRef: any = this.$refs.popup;
-    if (!popupRef) return;
 
-    await popupRef.doClose();
+    void (this.$refs.popup as InputPopup | undefined)?.closePopup();
   }
 
   private onClosePopup() {
@@ -539,11 +522,11 @@ export default class MultiSelect extends Vue {
     this.filterValue = "";
   }
 
-  private async togglePopup() {
+  private togglePopup() {
     if (this.isPopupOpen) {
-      await this.closePopup();
+      this.closePopup();
     } else {
-      await this.openPopup();
+      this.openPopup();
     }
   }
 
@@ -677,9 +660,10 @@ export default class MultiSelect extends Vue {
   }
 
   .select-container {
+    max-height: 11rem;
+    width: 100%;
     display: flex;
     flex-direction: row;
-    width: 100%;
     border: 1px solid var(--input-borderColor);
     background: var(--input-backgroundColor);
     color: var(--input-foregroundColor);
@@ -747,15 +731,12 @@ export default class MultiSelect extends Vue {
     flex-direction: row;
     flex-wrap: wrap;
     gap: 0.25rem;
+    overflow-y: auto;
     cursor: pointer;
-
-    &.fixed-height {
-      overflow: hidden;
-    }
   }
 
   .filter-group {
-    margin: 5px;
+    padding: 0.25rem 0;
     width: auto;
 
     .filter-input {
@@ -800,15 +781,11 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  .multiselect-popper {
-    max-width: 98%;
-    width: 25rem;
-
-    .select-container__options_container {
-      position: relative;
-      z-index: 1001;
-      list-style: none;
-    }
+  .select-container__options_container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    z-index: 1001;
   }
 
   .hovered-value {
@@ -818,10 +795,10 @@ export default class MultiSelect extends Vue {
   }
 
   div.select-container__options__actions {
+    border-top: 1px solid var(--default-borderColor);
     bottom: 0;
     padding: 0;
     color: red;
-    border-top: 1px solid var(--default-borderColor);
   }
 
   .one-of-many-value {

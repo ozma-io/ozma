@@ -318,6 +318,6 @@ export default class App extends Vue {
     left: 0.25rem;
     background-color: var(--default-backgroundDarker1Color);
     border-radius: 0.25rem;
-    z-index: 9999;
+    z-index: 1000;
   }
 </style>

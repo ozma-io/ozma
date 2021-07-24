@@ -5,6 +5,7 @@
   >
     <ReferenceMultiSelect
       :value="value"
+      :label="label"
       :height="height"
       single
       :autofocus="autofocus"
@@ -54,6 +55,7 @@ export default class ReferenceField extends Vue {
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
+  @Prop({ type: String, default: null }) label!: string | null;
 
   get entriesRef(): EntriesRef {
     return this.optionsView

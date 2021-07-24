@@ -11,7 +11,9 @@
     @click="$emit('tab-click')"
   >
     <slot name="header" />
+    <!--
     <ButtonItem :button="closeButton" />
+    -->
   </div>
 </template>
 
