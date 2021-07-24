@@ -160,7 +160,7 @@ export const convertParsedRows = (info: IResultViewInfo, rows: IExecutedRow[]) =
       });
     }
   });
-}
+};
 
 export const serializeValue = (fieldType: FieldType, value: Exclude<unknown, undefined>): unknown => {
   if (value === null) {

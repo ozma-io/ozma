@@ -1,6 +1,5 @@
 import Vue from "vue";
 import { Store } from "vuex";
-import moment, { MomentInput } from "moment";
 import { IExecutedValue, IColumnField, IFieldRef, RowId, AttributesMap, IExecutedRow, SchemaName, EntityName, FieldName, UserViewSource, IResultViewInfo, AttributeName, FieldType, IEntityRef,
   ValueType } from "ozma-api";
 import { AddedRowId, IAddedEntry, IEntityChanges, IStagingEventHandler, IStagingState } from "@/state/staging_changes";

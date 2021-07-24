@@ -1,11 +1,10 @@
 import Vue from "vue";
 import { Module, ActionContext } from "vuex";
-import { Moment } from "moment";
 import R from "ramda";
 import {
   ITransaction, ITransactionResult, IEntityRef, IFieldRef, IEntity, RowId, SchemaName, FieldName, EntityName,
   IInsertEntityOp, IUpdateEntityOp, IDeleteEntityOp, IInsertEntityResult, IUpdateEntityResult, IDeleteEntityResult,
-  TransactionOp, FieldType,
+  TransactionOp,
 } from "ozma-api";
 
 import { RecordSet, deepClone, mapMaybe, waitTimeout } from "@/utils";
