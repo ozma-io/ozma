@@ -1,4 +1,4 @@
-import type { ValueType, FieldType, IFieldRef, IEntityRef, IEntity } from "ozma-api";
+import type { ValueType, FieldType, IFieldRef, IEntityRef, IEntity, IExecutedRow, IResultViewInfo } from "ozma-api";
 import moment, { Moment, MomentInput } from "moment";
 
 import { deepEquals } from "@/utils";
@@ -146,5 +146,32 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: un
       }
     default:
       throw new Error("Invalid field type");
+  }
+};
+
+export const convertParsedRows = (info: IResultViewInfo, rows: IExecutedRow[]) => {
+  info.columns.forEach((columnInfo, colI) => {
+    if (columnInfo.valueType.type === "datetime" || columnInfo.valueType.type === "date") {
+      rows.forEach(row => {
+        const cell = row.values[colI];
+        if (cell.value) {
+          cell.value = moment.utc(cell.value as MomentInput);
+        }
+      });
+    }
+  });
+}
+
+export const serializeValue = (fieldType: FieldType, value: Exclude<unknown, undefined>): unknown => {
+  if (value === null) {
+    return null;
+  }
+
+  if (fieldType.type === "date") {
+    return (value as Moment).format("YYYY-MM-DD");
+  } else if (fieldType.type === "datetime") {
+    return (value as Moment).format(); // ISO 8601
+  } else {
+    return value;
   }
 };

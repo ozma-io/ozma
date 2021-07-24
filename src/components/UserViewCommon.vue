@@ -72,7 +72,7 @@
 <script lang="ts">
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-import { IEntityRef, IInsertEntityOp, ITransaction } from "ozma-api";
+import { IEntityRef, IEntriesRequestOpts, IInsertEntityOp, ITransaction } from "ozma-api";
 import { Action, namespace } from "vuex-class";
 
 import { mapMaybe, saveToFile, tryDicts } from "@/utils";
@@ -80,16 +80,17 @@ import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, userViewT
 import { attrToQuery, IQuery } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
 import type { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
-import { RowRef, ValueRef, valueToPunnedText } from "@/user_views/combined";
+import { ICommonUserViewData, RowRef, ValueRef } from "@/user_views/combined";
 import { getReferenceInfo } from "@/state/entries";
 import { getColorVariables } from "@/utils_colors";
 
 import { attrToButton, Button, attrToButtons, attrToButtonsOld } from "@/components/buttons/buttons";
 import { IAttrToLinkOpts } from "@/links";
-import { valueFromRaw } from "@/values";
+import { convertParsedRows, serializeValue, valueFromRaw, valueToText } from "@/values";
 import { ErrorKey } from "@/state/errors";
 
 import Api from "@/api";
+import { fetchUserViewData } from "@/user_views/fetch";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -98,12 +99,17 @@ interface IModalReferenceField {
 }
 
 const csvCell = (str: string): string => {
-  let csvstr = str.replace(/"/g, `""`);
-  if (csvstr.search(/("|;|\n)/g) > 0) {
-    csvstr = `"${csvstr}"`;
+  let csvstr: string;
+  if (str.search(/("|,|;|\n)/g) > 0) {
+    csvstr = `"${str.replace(/"/g, `""`)}"`;
+  } else {
+    csvstr = str;
   }
-  csvstr += ";";
   return csvstr;
+};
+
+const csvExportOpts: IEntriesRequestOpts = {
+  chunk: { limit: 10000 },
 };
 
 const errors = namespace("errors");
@@ -123,37 +129,50 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   openQRCodeScanner = false;
   openBarCodeScanner = false;
 
-  private loadAllAndExportToCsv() {
-    this.$emit("load-all-chunks-limitless", () => this.$nextTick(() => this.exportToCsv()));
-  }
+  private async exportToCsv() {
+    try {
+      let data: ICommonUserViewData;
+      if (this.uv.rowLoadState.complete) {
+        data = this.uv;
+      } else {
+        const fetched = await fetchUserViewData(this.$store, this.uv.args, csvExportOpts);
+        // Always a full user view with rows.
+        if (!fetched.complete) {
+          throw new Error("Too many entries to export");
+        }
+        convertParsedRows(fetched.info, fetched.rows!);
+        data = fetched;
+      }
 
-  private exportToCsv() {
-    let data = "";
-    this.uv.info.columns.forEach((col, index) => {
-      const csvColumnNameRaw = this.uv.columnAttributes[index]?.["csv_column_name"];
-      const csvColumnName = typeof csvColumnNameRaw === "string" ? csvColumnNameRaw : null;
-      data += csvCell(csvColumnName ?? col.name);
-    });
-    data += "\n";
-    Object.values(this.uv.newRows).forEach(row => {
-      row.values.forEach((cell, colI) => {
-        const info = this.uv.info.columns[colI];
-        data += csvCell(valueToPunnedText(info.valueType, cell));
+      let output = "";
+
+      data.info.columns.forEach((col, index) => {
+        const csvColumnNameRaw = data.columnAttributes[index]["csv_column_name"] ?? data.attributes["csv_column_name"];
+        const csvColumnName = typeof csvColumnNameRaw === "string" ? csvColumnNameRaw : null;
+        output += csvCell(csvColumnName ?? col.name);
+        if (index < data.info.columns.length - 1) {
+          output += ",";
+        }
       });
-      data += "\n";
-    });
-    if (this.uv.rows !== null) {
-      this.uv.rows.forEach(row => {
+      output += "\n";
+
+      data.rows!.forEach(row => {
         row.values.forEach((cell, colI) => {
           const info = this.uv.info.columns[colI];
-          data += csvCell(valueToPunnedText(info.valueType, cell));
+          output += csvCell(valueToText(info.valueType, cell.value));
+          if (colI < row.values.length - 1) {
+            output += ",";
+          }
         });
-        data += "\n";
+        output += "\n";
       });
-    }
 
-    const title = userViewTitle(this.uv) ?? "unnamed";
-    saveToFile(`${title}.csv`, "text/csv", data);
+      const title = userViewTitle(this.uv) ?? "unnamed";
+      saveToFile(`${title}.csv`, "text/csv", output);
+    } catch (e) {
+      this.setError({ key: "export_csv", error: e.message });
+      throw e;
+    }
   }
 
   private async importFromCsv(file: File) {
@@ -198,7 +217,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
                 throw new Error(`Failed to validate value ${rawValue} for field ${mainField.name}`);
               }
               if (value !== null) {
-                row[mainField.name] = value;
+                row[mainField.name] = serializeValue(mainField.field.fieldType, value);
               }
             }
           }
@@ -310,11 +329,11 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     }
 
     // FIXME: workaround until we have proper role-based permissions for this.
-    if (this.uv.attributes["export_to_csv"] || "__export_to_csv" in this.$route.query) {
+    if (this.uv.rows !== null && (this.uv.attributes["export_to_csv"] || "__export_to_csv" in this.$route.query)) {
       buttons.push({
         icon: "file_download",
         caption: this.$t("export_to_csv").toString(),
-        callback: () => this.loadAllAndExportToCsv(),
+        callback: () => this.exportToCsv(),
         type: "callback",
       });
     }

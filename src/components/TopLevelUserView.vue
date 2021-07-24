@@ -434,7 +434,12 @@ export default class TopLevelUserView extends Vue {
 
   get errors() {
     return Object.entries(this.rawErrors).flatMap(([key, keyErrors]) => keyErrors.map(error => {
-      return this.$t(`${key}_error`, { msg: error });
+      const translationKey = `${key}_error`;
+      if (this.$te(translationKey)) {
+        return this.$t(translationKey, { msg: error });
+      } else {
+        return error;
+      }
     }));
   }
 

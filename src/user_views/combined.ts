@@ -5,7 +5,7 @@ import { IExecutedValue, IColumnField, IFieldRef, RowId, AttributesMap, IExecute
   ValueType } from "ozma-api";
 import { AddedRowId, IAddedEntry, IEntityChanges, IStagingEventHandler, IStagingState } from "@/state/staging_changes";
 import { mapMaybe, NeverError, tryDicts } from "@/utils";
-import { equalEntityRef, IUpdatedValue, valueFromRaw, valueIsNull, valueToText } from "@/values";
+import { convertParsedRows, equalEntityRef, IUpdatedValue, valueFromRaw, valueIsNull, valueToText } from "@/values";
 import { Entries, EntriesRef, IEntriesState, IReferencedField } from "@/state/entries";
 
 import { IEntitiesState } from "../state/entities";
@@ -258,12 +258,16 @@ export const valueToPunnedText = (valueType: ValueType, value: ICombinedValue): 
   }
 };
 
-export interface ICombinedUserView<ValueT, RowT, ViewT> extends IStagingEventHandler {
-  readonly args: IUserViewArguments;
+export interface ICommonUserViewData {
+  args: IUserViewArguments;
+  info: IResultViewInfo;
+  attributes: Record<AttributeName, unknown>;
+  columnAttributes: Record<AttributeName, unknown>[];
+  rows: IExecutedRow[] | null;
+}
+
+export interface ICombinedUserView<ValueT, RowT, ViewT> extends IStagingEventHandler, ICommonUserViewData {
   readonly homeSchema: SchemaName | null;
-  readonly info: IResultViewInfo;
-  readonly attributes: Record<AttributeName, unknown>;
-  readonly columnAttributes: Record<AttributeName, unknown>[];
   readonly rows: IExtendedRow<ValueT, RowT>[] | null;
   // Rows added by user, not yet committed to the database.
   readonly newRows: Record<AddedRowId, IExtendedAddedRow<ValueT, RowT>>;
@@ -353,12 +357,7 @@ export interface IUserViewHandler<ValueT, RowT, ViewT> {
   commitAddedRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IExtendedAddedRow<ValueT, RowT>): void;
 }
 
-export interface ICombinedUserViewDataParams {
-  args: IUserViewArguments;
-  info: IResultViewInfo;
-  attributes: Record<AttributeName, unknown>;
-  columnAttributes: Record<AttributeName, unknown>[];
-  rows: IExecutedRow[] | null;
+export interface ICombinedUserViewDataParams extends ICommonUserViewData {
   complete: boolean;
 }
 
@@ -984,17 +983,8 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
 
     const mainChanges = info.mainEntity ? this.storeChanges.changesForEntity(info.mainEntity) : null;
 
-    // First step - convert values by type
-    info.columns.forEach((columnInfo, colI) => {
-      if (columnInfo.valueType.type === "datetime" || columnInfo.valueType.type === "date") {
-        rows.forEach(row => {
-          const cell = row.values[colI];
-          if (cell.value) {
-            cell.value = moment.utc(cell.value as MomentInput);
-          }
-        });
-      }
-    });
+    // First step - convert values by type.
+    convertParsedRows(info, rows);
 
     // Second step - massage values into expected shape.
     rows.forEach((rawRow, rowI) => {

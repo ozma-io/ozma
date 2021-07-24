@@ -9,7 +9,7 @@ import {
 } from "ozma-api";
 
 import { RecordSet, deepClone, mapMaybe, waitTimeout } from "@/utils";
-import { IUpdatedValue, IFieldInfo, valueFromRaw, valueEquals } from "@/values";
+import { IUpdatedValue, IFieldInfo, valueFromRaw, valueEquals, serializeValue } from "@/values";
 import Api from "@/api";
 import { i18n } from "@/modules";
 import { eventBus } from "@/main";
@@ -325,20 +325,6 @@ const entityChangesToOperations = async (context: ActionContext<IStagingState, {
     return ret.flat(1);
   }));
   return nestedOps.flat(1);
-};
-
-export const serializeValue = (fieldType: FieldType, value: Exclude<unknown, undefined>): unknown => {
-  if (value === null) {
-    return null;
-  }
-
-  if (fieldType.type === "date") {
-    return (value as Moment).format("YYYY-MM-DD");
-  } else if (fieldType.type === "datetime") {
-    return (value as Moment).format(); // ISO 8601
-  } else {
-    return value;
-  }
 };
 
 const serializeValues = (entityInfo: IEntity, entries: Record<FieldName, unknown>): Record<FieldName, unknown> => {
