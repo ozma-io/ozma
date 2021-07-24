@@ -148,11 +148,12 @@ export default class InputPopup extends Vue {
   }
 
   .modal-field-slot {
-    flex: 0 1 auto;
+    flex: 1 1 40%;
+    height: 0;
   }
 
   .modal-inner-slot {
-    flex: 2;
+    flex: 1 1 60%;
     height: 0;
   }
 
