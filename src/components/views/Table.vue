@@ -430,6 +430,9 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
   const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, uv.attributes);
 
   let valueHtml = valueToPunnedText(columnInfo.valueType, value);
+  if (valueHtml.length > 1000) {
+    valueHtml = valueHtml.slice(0, 1000) + "...";
+  }
   const style: Record<string, unknown> = {};
 
   const punOrValueType: ValueType = columnInfo.punType ?? columnInfo.valueType;
