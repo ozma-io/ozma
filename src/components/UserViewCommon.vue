@@ -99,13 +99,7 @@ interface IModalReferenceField {
 }
 
 const csvCell = (str: string): string => {
-  let csvStr: string;
-  if (str.search(/[",;\t\r\n ]/g) > 0) {
-    csvStr = `"${str.replace(/"/g, `""`)}"`;
-  } else {
-    csvStr = str;
-  }
-  return csvStr;
+  return `"${str.replace(/"/g, `""`)}"`;
 };
 
 const csvSeparator = "\t";
