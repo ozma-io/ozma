@@ -644,7 +644,7 @@ export const getEndianness = (): Endianness => {
   }
 };
 
-export const getBOMMarker = (endianness: Endianness): ArrayBuffer => {
+export const getBOM = (endianness: Endianness): ArrayBuffer => {
   const buf = new ArrayBuffer(2);
   const view = new Uint8Array(buf);
   if (endianness === "le") {
@@ -657,8 +657,17 @@ export const getBOMMarker = (endianness: Endianness): ArrayBuffer => {
   return buf;
 };
 
+export const getUTF8BOM = (): ArrayBuffer => {
+  const buf = new ArrayBuffer(3);
+  const view = new Uint8Array(buf);
+  view[0] = 0xEF;
+  view[1] = 0xBB;
+  view[2] = 0xBF;
+  return buf;
+}
+
 // Encodes in platform-native endianness.
-export const encodeUTF16 = (str: string) => {
+export const encodeUTF16 = (str: string): Uint16Array => {
   const buf = new ArrayBuffer(2 * str.length);
   const view = new Uint16Array(buf);
   for (let i = 0; i < str.length; i++) {
@@ -666,6 +675,29 @@ export const encodeUTF16 = (str: string) => {
   }
   return view;
 };
+
+export const encodeUTF16LE = (str: string): Uint16Array => {
+  const ret = encodeUTF16(str);
+  if (getEndianness() === "be") {
+    swapUint16Endianness(ret);
+  }
+  return ret;
+}
+
+export const encodeUTF16BE = (str: string): Uint16Array => {
+  const ret = encodeUTF16(str);
+  if (getEndianness() === "le") {
+    swapUint16Endianness(ret);
+  }
+  return ret;
+}
+
+export const swapUint16Endianness = (view: Uint16Array) => {
+  for (let i = 0; i < view.length; i++) {
+    const word = view[i];
+    view[i] = (word >> 8) | (word << 8);
+  }
+}
 
 export const saveToFile = (name: string, data: BlobPart[], options?: BlobPropertyBag) => {
   const element = document.createElement("a");

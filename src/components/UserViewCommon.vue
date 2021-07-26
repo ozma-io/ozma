@@ -75,7 +75,7 @@ import { mixins } from "vue-class-component";
 import { IEntityRef, IEntriesRequestOpts, IInsertEntityOp, ITransaction } from "ozma-api";
 import { Action, namespace } from "vuex-class";
 
-import { encodeUTF16, getBOMMarker, getEndianness, mapMaybe, saveToFile, tryDicts } from "@/utils";
+import { encodeUTF16LE, getBOM, mapMaybe, saveToFile, tryDicts } from "@/utils";
 import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, userViewTitle } from "@/components/BaseUserView";
 import { attrToQuery, IQuery } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
@@ -99,14 +99,16 @@ interface IModalReferenceField {
 }
 
 const csvCell = (str: string): string => {
-  let csvstr: string;
-  if (str.search(/("|,|;|\n)/g) > 0) {
-    csvstr = `"${str.replace(/"/g, `""`)}"`;
+  let csvStr: string;
+  if (str.search(/[",;\t\r\n ]/g) > 0) {
+    csvStr = `"${str.replace(/"/g, `""`)}"`;
   } else {
-    csvstr = str;
+    csvStr = str;
   }
-  return csvstr;
+  return csvStr;
 };
+
+const csvSeparator = "\t";
 
 const csvExportOpts: IEntriesRequestOpts = {
   chunk: { limit: 10000 },
@@ -130,6 +132,20 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   openBarCodeScanner = false;
 
   private async exportToCsv() {
+    // Gods do I hate Excel:
+    //
+    // *. It doens't open CSV files in UTF-8 encoding automatically. You need to specify BOM;
+    // *. By default it uses _region-specific_ field separator. You need to specify it as say `sep=,\n` in the beginning of the file for it to work;
+    // *. BUT! BOM and field separator specifiers don't work together -- Excel forgets encoding!;
+    // *. BUT again: Excel can autodetect tabs and _only_ tabs as field separators automatically without a field separator specifier;
+    // *. BUT some versions of Excel fail to do this unless you use UTF16-LE (and only LE).
+    //
+    // So we need to specifically use `\t` separator and UTF16-LE with BOM. Then it works in:
+    // *. LibreOffice (which actually happily eats any compliant CSV file);
+    // *. Excel Online
+    // *. Google Docs
+    // *. (untested) Excel for Mac
+    // I'd like the reader to think about benefits of open standards and avoidance of vendor lock-ins right here, right now.
     try {
       let data: ICommonUserViewData;
       if (this.uv.rowLoadState.complete) {
@@ -144,15 +160,14 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         data = fetched;
       }
 
-      // Add Excel-specific separator metadata.
-      let output = "\"sep=,\"\n";
+      let output = "";
 
       data.info.columns.forEach((col, index) => {
         const csvColumnNameRaw = data.columnAttributes[index]["csv_column_name"] ?? data.attributes["csv_column_name"];
         const csvColumnName = typeof csvColumnNameRaw === "string" ? csvColumnNameRaw : null;
         output += csvCell(csvColumnName ?? col.name);
         if (index < data.info.columns.length - 1) {
-          output += ",";
+          output += csvSeparator;
         }
       });
       output += "\n";
@@ -162,16 +177,16 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
           const info = this.uv.info.columns[colI];
           output += csvCell(valueToText(info.valueType, cell.value));
           if (colI < row.values.length - 1) {
-            output += ",";
+            output += csvSeparator;
           }
         });
         output += "\n";
       });
 
       const title = userViewTitle(this.uv) ?? "unnamed";
-      // We encode the file to UTF-16, because Excel doesn't read it otherwise.
-      const encoded = [getBOMMarker(getEndianness()), encodeUTF16(output)];
-      saveToFile(`${title}.csv`, encoded, { type: "text/csv;charset=utf-16" + getEndianness() });
+      const bom = getBOM("le");
+      const encoded = [bom, encodeUTF16LE(output)];
+      saveToFile(`${title}.csv`, encoded, { type: "text/csv;charset=utf-16le" });
     } catch (e) {
       this.setError({ key: "export_csv", error: e.message });
       throw e;
