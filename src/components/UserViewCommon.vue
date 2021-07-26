@@ -75,7 +75,7 @@ import { mixins } from "vue-class-component";
 import { IEntityRef, IEntriesRequestOpts, IInsertEntityOp, ITransaction } from "ozma-api";
 import { Action, namespace } from "vuex-class";
 
-import { mapMaybe, saveToFile, tryDicts } from "@/utils";
+import { encodeUTF16, getBOMMarker, getEndianness, mapMaybe, saveToFile, tryDicts } from "@/utils";
 import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, userViewTitle } from "@/components/BaseUserView";
 import { attrToQuery, IQuery } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
@@ -144,8 +144,8 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         data = fetched;
       }
 
-      // Add UTF-8 BOM and Excel-specific separator metadata.
-      let output = "\xEF\xBB\xBF\"sep=,\"\n";
+      // Add Excel-specific separator metadata.
+      let output = "\"sep=,\"\n";
 
       data.info.columns.forEach((col, index) => {
         const csvColumnNameRaw = data.columnAttributes[index]["csv_column_name"] ?? data.attributes["csv_column_name"];
@@ -169,7 +169,9 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       });
 
       const title = userViewTitle(this.uv) ?? "unnamed";
-      saveToFile(`${title}.csv`, "text/csv", output);
+      // We encode the file to UTF-16, because Excel doesn't read it otherwise.
+      const encoded = [getBOMMarker(getEndianness()), encodeUTF16(output)];
+      saveToFile(`${title}.csv`, encoded, { type: "text/csv;charset=utf-16" + getEndianness() });
     } catch (e) {
       this.setError({ key: "export_csv", error: e.message });
       throw e;

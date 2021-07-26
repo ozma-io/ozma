@@ -593,16 +593,20 @@ export const capitalize = (value: string): string => {
   return value.substring(0, 1).toUpperCase() + value.substring(1);
 };
 
+let maybeCanvas: HTMLCanvasElement | undefined;
+
 export const getTextWidth = (text: string, font: string): number => {
   // re-use canvas object for better performance
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d");
-  if (context) {
-    context.font = font;
-    const metrics = context.measureText(text);
-    return metrics.width;
+  if (!maybeCanvas) {
+    maybeCanvas = document.createElement("canvas");
   }
-  return 0;
+  const context = maybeCanvas.getContext("2d");
+  if (!context) {
+    throw new Error("Failed to create canvas context");
+  }
+  context.font = font;
+  const metrics = context.measureText(text);
+  return metrics.width;
 };
 
 export const pascalToSnake = (str: string) => {
@@ -616,9 +620,58 @@ export const snakeToPascal = (str: string) => {
   }).join("");
 };
 
-export const saveToFile = (name: string, mime: string, data: string) => {
+type Endianness = "le" | "be";
+
+let maybeEndianness: Endianness | undefined;
+
+export const getEndianness = (): Endianness => {
+  if (maybeEndianness) {
+    return maybeEndianness;
+  } else {
+    const arrayBuffer = new ArrayBuffer(2);
+    const uint8Array = new Uint8Array(arrayBuffer);
+    const uint16array = new Uint16Array(arrayBuffer);
+    uint8Array[0] = 0x01;
+    uint8Array[1] = 0x02;
+    if (uint16array[0] === 0x0201) {
+      maybeEndianness = "le";
+    } else if (uint16array[0] === 0x0102) {
+      maybeEndianness = "be";
+    } else {
+      throw new Error("Something crazy just happened");
+    }
+    return maybeEndianness;
+  }
+};
+
+export const getBOMMarker = (endianness: Endianness): ArrayBuffer => {
+  const buf = new ArrayBuffer(2);
+  const view = new Uint8Array(buf);
+  if (endianness === "le") {
+    view[0] = 0xFF;
+    view[1] = 0xFE;
+  } else {
+    view[0] = 0xFE;
+    view[1] = 0xFF;
+  }
+  return buf;
+};
+
+// Encodes in platform-native endianness.
+export const encodeUTF16 = (str: string) => {
+  const buf = new ArrayBuffer(2 * str.length);
+  const view = new Uint16Array(buf);
+  for (let i = 0; i < str.length; i++) {
+    view[i] = str.charCodeAt(i);
+  }
+  return view;
+};
+
+export const saveToFile = (name: string, data: BlobPart[], options?: BlobPropertyBag) => {
   const element = document.createElement("a");
-  element.setAttribute("href", `data:${mime};charset=utf-8,` + encodeURIComponent("\uFEFF" + data));
+  const blob = new Blob(data, options);
+  const url = URL.createObjectURL(blob);
+  element.setAttribute("href", url);
   element.setAttribute("download", name);
   element.style.display = "none";
 
