@@ -144,7 +144,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         data = fetched;
       }
 
-      let output = "";
+      let output = "sep=,\n";
 
       data.info.columns.forEach((col, index) => {
         const csvColumnNameRaw = data.columnAttributes[index]["csv_column_name"] ?? data.attributes["csv_column_name"];
