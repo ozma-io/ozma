@@ -175,7 +175,9 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       data.rows!.forEach(row => {
         row.values.forEach((cell, colI) => {
           const info = this.uv.info.columns[colI];
-          output += csvCell(valueToText(info.valueType, cell.value));
+          // This makes export non-reversible, because we don't export reference IDs. Some clients ask for main fields in these columns though.
+          const value = cell.pun !== undefined ? valueToText(info.punType!, cell.pun) : valueToText(info.valueType, cell.value);
+          output += csvCell(value);
           if (colI < row.values.length - 1) {
             output += csvSeparator;
           }
