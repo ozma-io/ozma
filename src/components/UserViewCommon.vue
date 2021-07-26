@@ -134,7 +134,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   private async exportToCsv() {
     // Gods do I hate Excel:
     //
-    // *. It doens't open CSV files in UTF-8 encoding automatically. You need to specify BOM;
+    // *. It doesn't open CSV files in UTF-8 encoding automatically. You need to specify BOM;
     // *. By default it uses _region-specific_ field separator. You need to specify it as say `sep=,\n` in the beginning of the file for it to work;
     // *. BUT! BOM and field separator specifiers don't work together -- Excel forgets encoding!;
     // *. BUT again: Excel can autodetect tabs and _only_ tabs as field separators automatically without a field separator specifier;
@@ -145,7 +145,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     // *. Excel Online
     // *. Google Docs
     // *. (untested) Excel for Mac
-    // I'd like the reader to think about benefits of open standards and avoidance of vendor lock-ins right here, right now.
+    // I'd like the reader to think long and hard about benefits of open standards and avoidance of vendor lock-ins right here, right now.
     try {
       let data: ICommonUserViewData;
       if (this.uv.rowLoadState.complete) {
