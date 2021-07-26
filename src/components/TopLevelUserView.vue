@@ -85,9 +85,7 @@
         @goto="$emit('goto', $event)"
       >
         <template #main-buttons>
-          <!-- Now used only for space reserving, real buttons are pushed in <App> -->
           <ButtonsPanel
-            v-visible="false"
             :buttons="mainButtons"
             @goto="$emit('goto', $event)"
           />
@@ -331,10 +329,9 @@ export default class TopLevelUserView extends Vue {
         type: "callback",
         icon: "arrow_back",
         variant: "interfaceButton",
+        disabled: !this.query?.root.previous,
         colorVariables: getColorVariables("button", "interfaceButton"), // FIXME TODO: Manual settings of `colorVariables` is ugly, unsafe and stupid, refactor this.
-        /* disabled: !this.query?.root.previous, */
-        /* callback: () => this.goBackRoot(), */
-        callback: () => this.$router.go(-1),
+        callback: () => this.goBackRoot(),
       },
       {
         type: "link",
@@ -345,11 +342,6 @@ export default class TopLevelUserView extends Vue {
       },
       this.burgerButton,
     ];
-  }
-
-  @Watch("mainButtons")
-  private pushMainButtons() {
-    eventBus.emit("updateMainButtons", this.mainButtons);
   }
 
   constructor() {

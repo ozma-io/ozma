@@ -1,13 +1,15 @@
 <i18n>
     {
     "en": {
-        "ok": "Done",
+        "ok": "OK",
+        "cancel": "Cancel",
         "readonly_field": "Read-only field",
         "required_field": "Required field"
 
         },
     "ru": {
-        "ok": "Готово",
+        "ok": "ОК",
+        "cancel": "Отмена",
         "readonly_field": "Поле только для чтения",
         "required_field": "Обязательное поле"
         }
@@ -24,13 +26,7 @@
       @opened="onModalOpen"
       @close="onModalClose"
     >
-      <div class="modal-content">
-        <div class="header">
-          <div v-if="label" class="label">
-            {{ label }}
-          </div>
-        </div>
-
+      <template #content>
         <div class="input_modal__input_group">
           <div>
             <slot
@@ -39,17 +35,17 @@
               :autofocus="isModalOpen"
             />
           </div>
-          <div class="ok-button-wrapper">
-            <b-button
-              block
-              variant="outline-primary"
+          <div class="input_modal__button_container">
+            <button
+              type="button"
+              class="input_modal__button__ok"
               @click="closeModal"
             >
               {{ $t('ok') }}
-            </b-button>
+            </button>
           </div>
         </div>
-      </div>
+      </template>
     </Modal>
     <template v-if="!(modalOnly && modal)">
       <b-col
@@ -169,6 +165,13 @@ export default class InputSlot extends Vue {
   }
 
   private onModalOpen() {
+    this.$nextTick(() => {
+      const control = this.$refs.controlModal as HTMLElement | undefined;
+      control?.focus();
+    });
+  }
+
+  private emptyHandler() {
   }
 
   private onModalClose() {
@@ -195,22 +198,6 @@ export default class InputSlot extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  .modal-content {
-    background-color: var(--default-backgroundDarker1Color);
-  }
-
-  .header {
-    margin-bottom: 0.25rem;
-  }
-
-  .label {
-    font-size: 1.5rem;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
   .input_slot__row {
     flex-direction: row;
   }
@@ -242,10 +229,6 @@ export default class InputSlot extends Vue {
 
   .input_container_cell-edit {
     padding: 0;
-  }
-
-  .ok-button-wrapper {
-    padding: 1rem 0;
   }
 
   .input-slot {

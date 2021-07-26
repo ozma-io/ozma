@@ -21,14 +21,6 @@
       @banner-close="onBannerClose"
     />
 
-    <div class="main-buttons-wrapper">
-      <ButtonsPanel
-        class="main-buttons"
-        :buttons="mainButtons"
-        @goto="$emit('goto', $event)"
-      />
-    </div>
-
     <ModalPortalTarget
       name="tabbed-modal"
       multiple
@@ -68,7 +60,6 @@ import { getColorVariables, inheritColorVariables } from "@/utils_colors";
 import type { Theme } from "@/utils_colors";
 import { eventBus } from "@/main";
 import { isReadonlyDemoInstance } from "@/api";
-import { Button } from "./components/buttons/buttons";
 
 const settings = namespace("settings");
 const auth = namespace("auth");
@@ -103,7 +94,6 @@ export default class App extends Vue {
     document.addEventListener("paste", this.onPaste);
 
     eventBus.on("showReadonlyDemoModal", this.showDemoModal);
-    eventBus.on("updateMainButtons", this.updateMainButtons);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
@@ -114,7 +104,6 @@ export default class App extends Vue {
     document.removeEventListener("paste", this.onPaste);
 
     eventBus.off("showReadonlyDemoModal", this.showDemoModal);
-    eventBus.off("updateMainButtons", this.updateMainButtons);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
@@ -128,13 +117,6 @@ export default class App extends Vue {
 
   private onPaste(event: ClipboardEvent) {
     this.$root.$emit("paste", event);
-  }
-
-  private mainButtons: Button[] = [];
-  private updateMainButtons(mainButtons?: Button[]) {
-    if (!mainButtons) return;
-
-    this.mainButtons = mainButtons;
   }
 
   private get isReadonlyDemoInstance() {
@@ -310,14 +292,5 @@ export default class App extends Vue {
 
     background-color: var(--default-backgroundDarker1Color);
     color: var(--default-foregroundColor);
-  }
-
-  .main-buttons-wrapper {
-    position: fixed;
-    top: 0.25rem;
-    left: 0.25rem;
-    background-color: var(--default-backgroundDarker1Color);
-    border-radius: 0.25rem;
-    z-index: 1000;
   }
 </style>
