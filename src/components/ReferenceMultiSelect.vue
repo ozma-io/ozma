@@ -24,7 +24,6 @@
     <MultiSelect
       v-if="valueOptions !== null"
       :value="valueIndex"
-      :label="label"
       :options="options"
       :single="single"
       :required="required"
@@ -53,15 +52,13 @@
           >
             <input
               type="button"
-              class="material-icons rounded-circle md-14 open-modal-button"
+              class="material-icons rounded-circle md-18 open-modal-button"
               :value="iconValue(select.option.value.link.target)"
             >
           </FunLink>
 
           <!-- Hack to maintain min-heigth when there are no icons -->
-          <!--
           <span class="phantom-icon md-18">&#8203;</span>
-          -->
 
           <!-- eslint-disable vue/no-v-html -->
           <span class="value-text" v-html="select.option.labelHtml" />
@@ -184,7 +181,6 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Prop({ type: Object }) linkAttr!: unknown | undefined;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
   @Prop({ type: Boolean, default: false }) loadPunOnMount!: boolean;
-  @Prop({ type: String, default: null }) label!: string | null;
 
   private selectedView: IQuery | null = null;
   private wasOpenedQRCodeScanner = false;

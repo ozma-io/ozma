@@ -8,22 +8,20 @@
     :name="uid"
     :classes="[
       'v--modal',
-      {
-        'is-mobile': $isMobile,
-        'is-nested': isNestedModal,
-      }
+      { 'is-mobile': $isMobile }
     ]"
-    transition="fade-move"
     :resizable="!$isMobile"
     :draggable="$isMobile ? false : '.modal__tab_headers'"
     @before-close="beforeClose"
     @opened="$emit('opened')"
   >
-    <div v-if="$isMobile" class="close-button-wrapper">
-      <span class="material-icons">close</span>
-    </div>
-
     <div class="header d-flex align-items-center">
+      <ButtonsPanel
+        class="main-buttons"
+        :buttons="mainButtons"
+        @goto="$emit('goto', $event)"
+      />
+
       <div
         v-if="hasTabs"
         :class="[
@@ -79,18 +77,20 @@
         }
       ]"
     >
-      <slot />
+      <slot name="content" />
     </div>
   </VueModal>
 </template>
 
 <script lang="ts">
 import * as R from "ramda";
-import { Component, InjectReactive, Prop, ProvideReactive, Vue, Watch } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { homeLink } from "@/utils";
 
 import ModalContent from "@/components/modal/ModalContent";
 import ModalTabHeader from "@/components/modal/ModalTabHeader.vue";
 import { IModalTab } from "@/components/modal/types";
+import { getColorVariables } from "@/utils_colors";
 import { Button } from "../buttons/buttons";
 
 @Component({ components: { ModalContent, ModalTabHeader } })
@@ -101,11 +101,6 @@ export default class Modal extends Vue {
   @Prop({ type: String }) width!: string;
   @Prop({ type: String }) height!: string;
   @Prop({ type: Number, default: 0 }) startingTab!: number;
-  @Prop({ type: Array, default: () => [] }) mainButtons!: Button[];
-
-  // `isNestedModal` is undefined in root modal and `true` in nested.
-  @InjectReactive() isNestedModal!: true | undefined;
-  @ProvideReactive("isNestedModal") provideIsNestedModal = true;
 
   private selectedTab = 0;
 
@@ -155,6 +150,25 @@ export default class Modal extends Vue {
     }
   }
 
+  private get mainButtons(): Button[] {
+    return [
+      {
+        type: "callback",
+        icon: "arrow_back",
+        variant: "interfaceButton",
+        colorVariables: getColorVariables("button", "interfaceButton"),
+        callback: () => this.$emit("go-back-window"),
+      },
+      {
+        type: "link",
+        icon: "home",
+        variant: "interfaceButton",
+        colorVariables: getColorVariables("button", "interfaceButton"),
+        link: homeLink,
+      },
+    ];
+  }
+
   // Used on mobile to display editing inputs
   private get hasTabs(): boolean {
     return this.modalTabs !== undefined;
@@ -179,16 +193,9 @@ export default class Modal extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  .close-button-wrapper {
-    position: fixed;
-    top: 0.25rem;
-    right: 0.25rem;
-    padding: 0.15rem;
-    background-color: var(--default-backgroundDarker1Color);
-    line-height: 0;
-    border-radius: 10rem;
-    pointer-events: none;
-  }
+  /* .header {
+   *   border-bottom: 1px solid var(--interface-borderColor);
+   * } */
 
   .modal__tab_headers {
     width: 100%;
@@ -199,6 +206,12 @@ export default class Modal extends Vue {
     &.is-mobile {
       overflow: auto;
     }
+  }
+
+  .main-buttons {
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+    flex-shrink: 0;
   }
 
   .modal__content {
@@ -216,6 +229,10 @@ export default class Modal extends Vue {
     padding: 0;
     overflow: hidden;
   }
+
+  .mobile_close_button {
+    margin-left: 5px;
+  }
 </style>
 
 <style lang="scss">
@@ -225,25 +242,19 @@ export default class Modal extends Vue {
   .v--modal-box.v--modal {
     background-color: var(--default-backgroundDarker1Color);
     color: var(--MainTextColor);
-    border-radius: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--default-backgroundBorderColor);
     display: flex;
     flex-flow: column nowrap;
     flex-grow: 1;
 
     &.is-mobile {
-      position: absolute;
-
-      /* VueModal writes these styles in element's inline style,
-        so !important is required */
+      border: none;
       top: auto !important;
-      bottom: 0 !important;
-      height: calc(100% - 2.5rem) !important;
-      border-bottom-left-radius: 0;
-      border-bottom-right-radius: 0;
 
-      &.is-nested {
-        height: calc(100% - 5rem) !important;
-      }
+      /* VueModal writes :height prop in element's inline style,
+        so !important is required */
+      height: 100% !important;
     }
   }
 
@@ -264,16 +275,5 @@ export default class Modal extends Vue {
     &.is-mobile {
       height: 100%;
     }
-  }
-
-  .fade-move-enter-active,
-  .fade-move-leave-active {
-    transition: opacity 0.4s, transform 0.4s;
-  }
-
-  .fade-move-enter,
-  .fade-move-leave-to {
-    opacity: 0;
-    transform: translateY(5rem);
   }
 </style>
