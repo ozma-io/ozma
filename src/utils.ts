@@ -664,7 +664,7 @@ export const getUTF8BOM = (): ArrayBuffer => {
   view[1] = 0xBB;
   view[2] = 0xBF;
   return buf;
-}
+};
 
 // Encodes in platform-native endianness.
 export const encodeUTF16 = (str: string): Uint16Array => {
@@ -682,7 +682,7 @@ export const encodeUTF16LE = (str: string): Uint16Array => {
     swapUint16Endianness(ret);
   }
   return ret;
-}
+};
 
 export const encodeUTF16BE = (str: string): Uint16Array => {
   const ret = encodeUTF16(str);
@@ -690,14 +690,14 @@ export const encodeUTF16BE = (str: string): Uint16Array => {
     swapUint16Endianness(ret);
   }
   return ret;
-}
+};
 
 export const swapUint16Endianness = (view: Uint16Array) => {
   for (let i = 0; i < view.length; i++) {
     const word = view[i];
     view[i] = (word >> 8) | (word << 8);
   }
-}
+};
 
 export const saveToFile = (name: string, data: BlobPart[], options?: BlobPropertyBag) => {
   const element = document.createElement("a");
