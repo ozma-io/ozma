@@ -144,7 +144,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         data = fetched;
       }
 
-      # Add UTF-8 BOM and Excel-specific separator metadata.
+      // Add UTF-8 BOM and Excel-specific separator metadata.
       let output = "\xEF\xBB\xBF\"sep=,\"\n";
 
       data.info.columns.forEach((col, index) => {
