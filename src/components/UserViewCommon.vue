@@ -144,7 +144,8 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         data = fetched;
       }
 
-      let output = "\"sep=,\"\n";
+      # Add UTF-8 BOM and Excel-specific separator metadata.
+      let output = "\xEF\xBB\xBF\"sep=,\"\n";
 
       data.info.columns.forEach((col, index) => {
         const csvColumnNameRaw = data.columnAttributes[index]["csv_column_name"] ?? data.attributes["csv_column_name"];
