@@ -4,8 +4,9 @@ import moment, { Moment, MomentInput } from "moment";
 import { deepEquals } from "@/utils";
 
 // Date/time is stored as Moment objects in UTC.
-export const dateFormat = "L";
-export const dateTimeFormat = "L LT";
+export const localDateFormat = "L";
+export const dateFormat = "YYYY-MM-DD";
+export const localDateTimeFormat = "L LT";
 
 export interface IFieldInfo {
   fieldType: FieldType;
@@ -42,9 +43,9 @@ export const valueToText = (valueType: ValueType, value: unknown): string => {
   } else if (value === undefined || value === null) {
     return "";
   } else if (valueType.type === "date") {
-    return (value as Moment).format(dateFormat);
+    return (value as Moment).format(localDateFormat);
   } else if (valueType.type === "datetime") {
-    return (value as Moment).local().format(dateTimeFormat);
+    return (value as Moment).local().format(localDateTimeFormat);
   } else if (valueType.type === "json") {
     return JSON.stringify(value);
   } else {
@@ -122,12 +123,34 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: un
       }
     case "date": {
       // We use local time for dates.
-      const date = moment(value as MomentInput, dateFormat);
-      return date.isValid() ? date : undefined;
+      {
+        const date = moment(value as MomentInput, dateFormat, true);
+        if (date.isValid()) {
+          return date;
+        }
+      }
+      {
+        const date = moment(value as MomentInput, localDateFormat, true);
+        if (date.isValid()) {
+          return date;
+        }
+      }
+      return undefined;
     }
     case "datetime": {
-      const datetime = moment(value as MomentInput, dateTimeFormat).utc();
-      return datetime.isValid() ? datetime : undefined;
+      {
+        const dateTime = moment(value as MomentInput, true);
+        if (dateTime.isValid()) {
+          return dateTime.utc();
+        }
+      }
+      {
+        const dateTime = moment(value as MomentInput, localDateFormat, true);
+        if (dateTime.isValid()) {
+          return dateTime.utc();
+        }
+      }
+      return undefined;
     }
     case "decimal": {
       const decimal = Number(value);
@@ -168,7 +191,7 @@ export const serializeValue = (fieldType: FieldType, value: Exclude<unknown, und
   }
 
   if (fieldType.type === "date") {
-    return (value as Moment).format("YYYY-MM-DD");
+    return (value as Moment).format(dateFormat);
   } else if (fieldType.type === "datetime") {
     return (value as Moment).format(); // ISO 8601
   } else {

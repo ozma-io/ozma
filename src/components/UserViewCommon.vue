@@ -218,7 +218,14 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       const csvImportColumn = typeof csvImportColumnRaw === "string" ? csvImportColumnRaw : null;
 
       const columnName = csvImportColumn ?? csvColumnName ?? info.name;
-      return [columnName, info.mainField];
+      const mainField = {
+        name: info.mainField.name,
+        field: {
+          fieldType: info.mainField.field.fieldType,
+          isNullable: info.mainField.field.isNullable || info.mainField.field.defaultValue !== undefined,
+        },
+      };
+      return [columnName, mainField];
     }, this.uv.info.columns));
 
     const operations: IInsertEntityOp[] = [];
@@ -234,7 +241,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
             if (mainField) {
               const value = valueFromRaw(mainField.field, rawValue);
               if (value === undefined) {
-                throw new Error(`Failed to validate value ${rawValue} for field ${mainField.name}`);
+                throw new Error(`Failed to validate value "${rawValue}" for field ${mainField.name} at row ${operations.length + 1}`);
               }
               if (value !== null) {
                 row[mainField.name] = serializeValue(mainField.field.fieldType, value);
