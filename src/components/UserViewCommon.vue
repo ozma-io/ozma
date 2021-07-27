@@ -132,9 +132,10 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     // *. By default it uses _region-specific_ field separator. You need to specify it as say `sep=,\n` in the beginning of the file for it to work;
     // *. BUT! BOM and field separator specifiers don't work together -- Excel forgets encoding!;
     // *. BUT again: Excel can autodetect tabs and _only_ tabs as field separators automatically without a field separator specifier;
-    // *. BUT some versions of Excel fail to do this unless you use UTF16-LE (and only LE).
+    // *. BUT some versions of Excel fail to do this unless you use UTF16-LE (and only LE);
+    // *. This autodetection also works reliably only if all cells are quoted (likely because it stumbles on some symbol that gives no problems to anything else).
     //
-    // So we need to specifically use `\t` separator and UTF16-LE with BOM. Then it works in:
+    // So we need to specifically use `\t` separator, UTF16-LE with BOM and all cells should be quoted. Then it works in:
     // *. LibreOffice (which actually happily eats any compliant CSV file);
     // *. Excel Online
     // *. Google Docs
