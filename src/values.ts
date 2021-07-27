@@ -145,7 +145,7 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: un
         }
       }
       {
-        const dateTime = moment(value as MomentInput, localDateFormat, true);
+        const dateTime = moment(value as MomentInput, localDateTimeFormat, true);
         if (dateTime.isValid()) {
           return dateTime.utc();
         }
