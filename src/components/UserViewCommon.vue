@@ -108,6 +108,8 @@ const csvExportOpts: IEntriesRequestOpts = {
   chunk: { limit: 10000 },
 };
 
+const csvImportChunk = 500;
+
 const errors = namespace("errors");
 
 @Component({
@@ -193,6 +195,8 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   private async importFromCsv(file: File) {
     // @ts-ignore
     const Papa = await import("papaparse");
+    const streaming = Boolean(this.uv.attributes["csv_import_streaming"]);
+    const skipEmptyRows = Boolean(this.uv.attributes["csv_import_skip_empty_rows"] ?? true);
 
     const entityRef = this.uv.info.mainEntity!;
     const emptyRow = Object.fromEntries(mapMaybe((value, colI) => {
@@ -223,13 +227,41 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       return [columnName, mainField];
     }, this.uv.info.columns));
 
-    const operations: IInsertEntityOp[] = [];
+    let operations: IInsertEntityOp[] = [];
+    let previousSubmit: Promise<void> = Promise.resolve();
+    const submitOperations = () => {
+      const prev = previousSubmit;
+      previousSubmit = (async () => {
+        await prev;
+        if (operations.length === 0) {
+          return;
+        }
+
+        try {
+          const transaction: ITransaction = {
+            operations,
+          };
+          await this.callProtectedApi({
+            func: Api.runTransaction,
+            args: [transaction],
+          });
+          operations = [];
+        } catch (e) {
+          this.setError({ key: "import_csv", error: e.message });
+          throw e;
+        }
+      })();
+      return previousSubmit;
+    };
 
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       step: (rawRow: { data: Record<string, string> }) => {
         try {
+          if (skipEmptyRows && Object.values(rawRow.data).every(x => x === "")) {
+            return;
+          }
           const row = { ...emptyRow };
           for (const [columnName, rawValue] of Object.entries(rawRow.data)) {
             const mainField = columnNames[columnName];
@@ -252,21 +284,13 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
           this.setError({ key: "import_csv", error: e.message });
           throw e;
         }
+        if (streaming && operations.length >= csvImportChunk) {
+          void submitOperations();
+        }
       },
       complete: async () => {
-        try {
-          const transaction: ITransaction = {
-            operations,
-          };
-          await this.callProtectedApi({
-            func: Api.runTransaction,
-            args: [transaction],
-          });
-          await this.reload();
-        } catch (e) {
-          this.setError({ key: "import_csv", error: e.message });
-          throw e;
-        }
+        await submitOperations();
+        await this.reload();
       },
     });
   }
