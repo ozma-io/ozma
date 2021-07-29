@@ -347,7 +347,7 @@ const fetchEntriesByEntity = async (context: ActionContext<IEntriesState, {}>, r
     search === ""
       ? undefined
       : {
-        expression: "(__main :: string) ILIKE $search",
+        expression: "main ILIKE $search",
         arguments: {
           search: {
             type: "string",
@@ -356,7 +356,7 @@ const fetchEntriesByEntity = async (context: ActionContext<IEntriesState, {}>, r
         },
       };
   const view = `"${ref.schema}"."${ref.name}"`;
-  const query = `{ $search string }: SELECT id, __main AS main FROM ${view}`;
+  const query = `SELECT id, __main :: string AS main FROM ${view}`;
   const chunk: IQueryChunk = { offset, limit: limit + 1, where };
   const res = await context.dispatch("callProtectedApi", {
     func: Api.getAnonymousUserView.bind(Api),
