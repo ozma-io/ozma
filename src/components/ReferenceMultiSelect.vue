@@ -17,6 +17,7 @@
       v-if="selectedView"
       :initial-view="selectedView"
       :select-entity="referenceEntity"
+      :parent-scope="scope"
       autofocus
       @select="selectFromView"
       @close="selectedView = null"
@@ -138,6 +139,7 @@ import { equalEntityRef, valueIsNull } from "@/values";
 import { CancelledError } from "@/modules";
 import { Debounce } from "vue-debounce-decorator";
 import type { EntriesRef } from "@/state/entries";
+import type { ScopeName } from "@/state/staging_changes";
 
 export interface IReferenceValue {
   id: RowId;
@@ -181,6 +183,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Prop({ type: Object }) linkAttr!: unknown | undefined;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
   @Prop({ type: Boolean, default: false }) loadPunOnMount!: boolean;
+  @Prop({ type: String, default: "no_scope" }) scope!: ScopeName;
 
   private selectedView: IQuery | null = null;
   private wasOpenedQRCodeScanner = false;

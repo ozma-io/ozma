@@ -84,6 +84,7 @@ type InternalTransactionOp = IInternalInsertEntityOp | IInternalUpdateEntityOp |
 
 export interface IScope {
   addedCount: number;
+  locked: boolean; // Locked scope can't be submitted until unlocked.
 }
 
 export class CurrentChanges {
@@ -381,6 +382,18 @@ const stagingModule: Module<IStagingState, {}> = {
       state.currentSubmit = null;
     },
 
+    lockScope: (state, scope: ScopeName) => {
+      if (!state.current.scopes[scope]) return;
+
+      state.current.scopes[scope] = { ...state.current.scopes[scope], locked: true };
+    },
+
+    unlockScope: (state, scope: ScopeName) => {
+      if (!state.current.scopes[scope]) return;
+
+      state.current.scopes[scope] = { ...state.current.scopes[scope], locked: false };
+    },
+
     updateField: (state, params: { fieldRef: IFieldRef; id: RowId; value: unknown; fieldInfo: IFieldInfo }) => {
       const { fieldRef, id, value, fieldInfo } = params;
 
@@ -413,6 +426,7 @@ const stagingModule: Module<IStagingState, {}> = {
       if (scopeInfo === undefined) {
         scopeInfo = {
           addedCount: 0,
+          locked: false,
         };
         Vue.set(state.current.scopes, scope, scopeInfo);
       }
@@ -750,11 +764,16 @@ const stagingModule: Module<IStagingState, {}> = {
     submit: async (context, params: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }): Promise<CombinedTransactionResult[]> => {
       const { state, commit, dispatch } = context;
 
+      if (params.scope && state.current.scopes[params.scope]?.locked) {
+        return [];
+      }
+
       if (state.currentSubmit !== null) {
         await state.currentSubmit;
       }
 
       commit("errors/resetErrors", errorKey, { root: true });
+
       let ops: InternalTransactionOp[];
       try {
         ops = await entityChangesToOperations(context, params.scope ?? null, params.errorOnIncomplete ?? false);
