@@ -5,6 +5,7 @@
   >
     <ReferenceMultiSelect
       :value="value"
+      :label="label"
       :height="height"
       single
       load-pun-on-mount
@@ -54,6 +55,7 @@ export default class ArgumentReferenceField extends Vue {
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
+  @Prop({ type: String, default: null }) label!: string | null;
 
   private get entriesRef(): EntriesRef {
     return this.optionsView

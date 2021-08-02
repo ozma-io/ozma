@@ -28,7 +28,7 @@ export default class CodeEditor extends Vue {
   get options(): monaco.editor.IStandaloneEditorConstructionOptions {
     const fontSize = this.settings.getEntry("font_size", Number, 14);
 
-    return {
+    const options: monaco.editor.IStandaloneEditorConstructionOptions = {
       language: this.language,
       readOnly: this.readOnly,
       automaticLayout: true,
@@ -36,6 +36,17 @@ export default class CodeEditor extends Vue {
       scrollbar: { useShadows: false },
       fontSize,
     };
+
+    const mobileOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
+      minimap: { enabled: false },
+      lineNumbers: "off",
+      glyphMargin: false,
+      folding: false,
+      lineDecorationsWidth: 0,
+      lineNumbersMinChars: 0,
+    };
+
+    return this.$isMobile ? { ...options, ...mobileOptions } : options;
   }
 
   @Watch("options")
