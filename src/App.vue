@@ -316,6 +316,7 @@ export default class App extends Vue {
 
   .app-container {
     position: relative;
+    height: 100%;
   }
 
   .main-buttons-wrapper {
