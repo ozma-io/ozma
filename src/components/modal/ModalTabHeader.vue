@@ -11,7 +11,7 @@
     @click="$emit('tab-click')"
   >
     <slot name="header" />
-    <ButtonItem :button="closeButton" />
+    <ButtonItem v-if="!onlyTab" :button="closeButton" />
   </div>
 </template>
 
