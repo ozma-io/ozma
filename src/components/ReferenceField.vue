@@ -16,6 +16,7 @@
       :link-attr="linkAttr"
       :select-views="selectViews"
       :qrcode-input="qrcodeInput"
+      :scope="scope"
       @update:value="$emit('update:value', $event)"
       @focus="$emit('focus')"
       @goto="$emit('goto', $event)"
@@ -32,6 +33,7 @@ import ReferenceMultiSelect, { IReferenceSelectAction } from "@/components/Refer
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { EntriesRef } from "@/state/entries";
 import { IQuery } from "@/state/query";
+import type { ScopeName } from "@/state/staging_changes";
 
 const query = namespace("query");
 
@@ -54,6 +56,7 @@ export default class ReferenceField extends Vue {
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
+  @Prop({ type: String, required: true }) scope!: ScopeName;
 
   get entriesRef(): EntriesRef {
     return this.optionsView

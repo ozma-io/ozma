@@ -526,15 +526,11 @@ export default class TopLevelUserView extends Vue {
 
   private async saveChanges() {
     const scopes = Object.keys(this.changes.scopes);
-    const nonRootScopes = scopes.filter(scope => scope !== "root");
-
     const results: CombinedTransactionResult[] = [];
-    for (const scope of nonRootScopes) {
+    for (const scope of scopes) {
       // eslint-disable-next-line no-await-in-loop
       results.push(...await this.submitChanges({ scope, errorOnIncomplete: true }));
     }
-
-    results.push(...await this.submitChanges({ scope: "root", errorOnIncomplete: true }));
     return results;
   }
 

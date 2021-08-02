@@ -28,6 +28,7 @@
       :select-view="modalView"
       :entity="modalReferenceField.entity"
       autofocus
+      :parent-scope="scope"
       @select="selectFromUserView($event)"
       @close="modalView = null"
     />
@@ -453,7 +454,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       }
       return undefined;
     }, this.uv.columnAttributes);
-    return modalReferenceField.pop() || null;
+    return modalReferenceField.pop() ?? null;
   }
 
   private selectFromUserView(id: number) {

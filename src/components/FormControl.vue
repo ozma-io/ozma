@@ -210,6 +210,7 @@
           :disabled="isDisabled"
           :background-color="cellColor"
           :qrcode-input="isQRCodeInput"
+          :scope="scope"
           @update:actions="actions = $event"
           @update:buttons="buttons = $event"
           @focus="iSlot.onFocus"

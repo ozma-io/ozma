@@ -33,8 +33,10 @@ import type { IQuery } from "@/state/query";
 import { ErrorKey } from "@/state/errors";
 import { ISelectionRef } from "@/components/BaseUserView";
 import ModalUserView from "@/components/ModalUserView.vue";
+import type { ScopeName } from "@/state/staging_changes";
 
 const entities = namespace("entities");
+const staging = namespace("staging");
 const errors = namespace("errors");
 
 const errorKey = "modal_user_view";
@@ -44,9 +46,12 @@ export default class SelectUserView extends Vue {
   @entities.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
   @errors.Mutation("setError") setError!: (args: { key: ErrorKey; error: string }) => void;
   @errors.Mutation("resetErrors") resetErrors!: (key: ErrorKey) => void;
+  @staging.Mutation("lockScope") lockScope!: (scope: ScopeName) => void;
+  @staging.Mutation("unlockScope") unlockScope!: (scope: ScopeName) => void;
   @Prop({ type: Object }) selectEntity!: IEntityRef | undefined;
   @Prop({ type: Object, required: true }) initialView!: IQuery;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
+  @Prop({ type: String, required: true }) parentScope!: ScopeName;
 
   private currentView: IQuery = this.initialView;
 
@@ -67,8 +72,13 @@ export default class SelectUserView extends Vue {
     this.$emit("select", selection.id);
   }
 
+  private mounted() {
+    this.lockScope(this.parentScope);
+  }
+
   private destroyed() {
     this.resetErrors(errorKey);
+    this.unlockScope(this.parentScope);
   }
 
   private goto(query: IQuery) {
