@@ -80,6 +80,7 @@
         <ButtonItem
           v-if="uv.info.mainEntity && !uv.extra.softDisabled && !uv.extra.dirtyHackPreventEntireReloads"
           :button="topAddButton"
+          align-right
         />
         <div
           v-if="uv.extra.lazyLoad.type === 'pagination'"
@@ -240,7 +241,10 @@
         ref="bottomButtonContainer"
         class="button-container"
       >
-        <ButtonItem :button="bottomAddButton" />
+        <ButtonItem
+          :button="bottomAddButton"
+          align-right
+        />
       </div>
     </div>
   </div>
