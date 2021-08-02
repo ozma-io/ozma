@@ -314,10 +314,11 @@ export default class App extends Vue {
 
   .main-buttons-wrapper {
     position: fixed;
-    top: 0.25rem;
-    left: 0.25rem;
+    top: 0;
+    left: 0;
+    padding: 0.25rem;
     background-color: var(--default-backgroundDarker1Color);
-    border-radius: 0.25rem;
+    border-bottom-right-radius: 0.25rem;
     z-index: 1000;
   }
 </style>

@@ -24,6 +24,13 @@
     </div>
 
     <div class="header d-flex align-items-center">
+      <ButtonsPanel
+        v-if="!$isMobile"
+        class="main-buttons"
+        :buttons="mainButtons"
+        @goto="$emit('goto', $event)"
+      />
+
       <div
         v-if="hasTabs"
         :class="[
@@ -91,6 +98,8 @@ import { Component, InjectReactive, Prop, ProvideReactive, Vue, Watch } from "vu
 import ModalContent from "@/components/modal/ModalContent";
 import ModalTabHeader from "@/components/modal/ModalTabHeader.vue";
 import { IModalTab } from "@/components/modal/types";
+import { getColorVariables } from "@/utils_colors";
+import { homeLink } from "@/utils";
 import { Button } from "../buttons/buttons";
 
 @Component({ components: { ModalContent, ModalTabHeader } })
@@ -101,7 +110,6 @@ export default class Modal extends Vue {
   @Prop({ type: String }) width!: string;
   @Prop({ type: String }) height!: string;
   @Prop({ type: Number, default: 0 }) startingTab!: number;
-  @Prop({ type: Array, default: () => [] }) mainButtons!: Button[];
 
   // `isNestedModal` is undefined in root modal and `true` in nested.
   @InjectReactive() isNestedModal!: true | undefined;
@@ -139,6 +147,25 @@ export default class Modal extends Vue {
         this.selectedTab >= this.modalTabs.length) {
       this.selectedTab = this.modalTabs.length - 1;
     }
+  }
+
+  private get mainButtons(): Button[] {
+    return [
+      {
+        type: "callback",
+        icon: "arrow_back",
+        variant: "interfaceButton",
+        colorVariables: getColorVariables("button", "interfaceButton"),
+        callback: () => this.$emit("go-back-window"),
+      },
+      {
+        type: "link",
+        icon: "home",
+        variant: "interfaceButton",
+        colorVariables: getColorVariables("button", "interfaceButton"),
+        link: homeLink,
+      },
+    ];
   }
 
   // Event is not typed for vue-js-modal
@@ -179,6 +206,12 @@ export default class Modal extends Vue {
 </script>
 
 <style lang="scss" scoped>
+  .main-buttons {
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+    flex-shrink: 0;
+  }
+
   .close-button-wrapper {
     position: fixed;
     top: 0.25rem;
@@ -237,12 +270,12 @@ export default class Modal extends Vue {
         so !important is required */
       top: auto !important;
       bottom: 0 !important;
-      height: calc(100% - 2.5rem) !important;
+      height: calc(100% - 3rem) !important;
       border-bottom-left-radius: 0;
       border-bottom-right-radius: 0;
 
       &.is-nested {
-        height: calc(100% - 5rem) !important;
+        height: calc(100% - 6rem) !important;
       }
     }
   }
