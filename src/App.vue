@@ -21,33 +21,35 @@
       @banner-close="onBannerClose"
     />
 
-    <div class="main-buttons-wrapper">
-      <ButtonsPanel
-        class="main-buttons"
-        :buttons="mainButtons"
-        @goto="$emit('goto', $event)"
+    <div class="app-container">
+      <div class="main-buttons-wrapper">
+        <ButtonsPanel
+          class="main-buttons"
+          :buttons="mainButtons"
+          @goto="$emit('goto', $event)"
+        />
+      </div>
+
+      <ModalPortalTarget
+        name="tabbed-modal"
+        multiple
       />
+
+      <ReadonlyDemoInstanceModal
+        v-if="isReadonlyDemoInstance"
+        ref="readonlyDemoInstanceModal"
+      />
+
+      <template v-if="authErrors.length > 0">
+        <span
+          v-for="error in authErrors"
+          :key="error"
+        >
+          {{ $t('auth_error', { msg: error }) }}
+        </span>
+      </template>
+      <router-view v-else />
     </div>
-
-    <ModalPortalTarget
-      name="tabbed-modal"
-      multiple
-    />
-
-    <ReadonlyDemoInstanceModal
-      v-if="isReadonlyDemoInstance"
-      ref="readonlyDemoInstanceModal"
-    />
-
-    <template v-if="authErrors.length > 0">
-      <span
-        v-for="error in authErrors"
-        :key="error"
-      >
-        {{ $t('auth_error', { msg: error }) }}
-      </span>
-    </template>
-    <router-view v-else />
 
     <!--
     <FabCluster />
@@ -312,8 +314,13 @@ export default class App extends Vue {
     color: var(--default-foregroundColor);
   }
 
+  .app-container {
+    position: relative;
+    height: 100%;
+  }
+
   .main-buttons-wrapper {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     padding: 0.25rem;

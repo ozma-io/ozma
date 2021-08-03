@@ -83,9 +83,6 @@
                 :key="index"
                 :class="[
                   single ? 'single-value' : 'one-of-many-value',
-                  {
-                    'has-links': option.label !== option.labelHtml,
-                  },
                 ]"
                 :style="listValueStyle"
               >
@@ -184,7 +181,6 @@
               :class="[
                 'option-wrapper',
                 {
-                  'has-links': option.label !== option.labelHtml,
                   'hovered-value': hoveredOpinionIndex === index,
                 },
               ]"

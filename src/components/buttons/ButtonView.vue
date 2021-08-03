@@ -16,7 +16,7 @@
   <b-button
     v-else
     v-b-tooltip.hover.noninteractive.viewport
-    :class="buttonClass"
+    :class="[alignRight ? '' : 'd-flex justify-content-center', buttonClass]"
     :style="button.colorVariables"
     variant="light"
     :title="button.tooltip"
@@ -43,6 +43,7 @@ export default class ButtonView extends Vue {
   @Prop({ type: Object, required: true }) button!: Button;
   @Prop({ type: Boolean, default: false }) listItem!: boolean;
   @Prop({ type: Boolean, default: false }) phantomIcon!: boolean;
+  @Prop({ type: Boolean, default: false }) alignRight!: boolean;
 
   private get buttonClass() {
     return !this.button.caption

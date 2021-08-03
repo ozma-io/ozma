@@ -27,6 +27,7 @@
     <p>
       <template v-if="column.type == 'buttons'">
         <ButtonsPanel
+          class="cell-buttons-panel"
           :buttons="buttons"
           @goto="$emit('goto', $event)"
         />
@@ -368,6 +369,10 @@ export default class TableCell extends Vue {
     align-self: center;
     align-items: center;
     justify-content: flex-begin;
+  }
+
+  .cell-buttons-panel {
+    flex-wrap: wrap;
   }
 
   /* Why do we need this now... */

@@ -296,18 +296,28 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     });
   }
 
-  private get selectedRowIds(): number[] {
-    if (this.uv.info.mainEntity === undefined) return [];
+  private get selectedRowIds(): any[] | null {
+    const columnIndex = this.uv.columnAttributes.findIndex(attributes => attributes["entry_id"]);
 
-    const rows = this.uv.extra.selectedRows.keys().map((rowRef: RowRef) => this.uv.getRowByRef(rowRef));
-    const ids = mapMaybe(row => (row as any)?.mainId ?? undefined, rows); // mainId is guaranteed to exist here.
-    return ids;
+    if (columnIndex === -1 && this.uv.info.mainEntity) {
+      const rows = this.uv.extra.selectedRows.keys().map((rowRef: RowRef) => this.uv.getRowByRef(rowRef));
+      const ids = mapMaybe(row => (row as any)?.mainId ?? undefined, rows); // mainId is guaranteed to exist here.
+      return ids;
+    }
+
+    if (columnIndex !== -1) {
+      const rows = this.uv.extra.selectedRows.keys().map((rowRef: RowRef) => this.uv.getRowByRef(rowRef));
+      const ids = rows.map(row => row?.values[columnIndex].value);
+      return ids;
+    }
+
+    return null;
   }
 
   get attrButtons(): Button[] {
     const opts: IAttrToLinkOpts = {
       homeSchema: this.uv.homeSchema ?? undefined,
-      defaultActionArgs: { ids: this.selectedRowIds },
+      defaultActionArgs: { ids: this.selectedRowIds ?? undefined },
     };
 
     const panelButtons = this.uv.attributes["panel_buttons"]; // Will be deleted

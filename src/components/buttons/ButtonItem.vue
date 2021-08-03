@@ -9,6 +9,7 @@
       :button="button"
       :list-item="listItem"
       :phantom-icon="listItemHasRightMargin"
+      :align-right="alignRight"
     />
   </router-link>
 
@@ -20,6 +21,7 @@
       :button="button"
       :list-item="listItem"
       :phantom-icon="listItemHasRightMargin"
+      :align-right="alignRight"
     />
   </span>
 
@@ -33,6 +35,7 @@
       :button="button"
       :list-item="listItem"
       :phantom-icon="listItemHasRightMargin"
+      :align-right="alignRight"
     />
   </FunLink>
 
@@ -41,6 +44,7 @@
     :button="button"
     :list-item="listItem"
     :phantom-icon="listItemHasRightMargin"
+    :align-right="alignRight"
     @click="onClickCallback"
   />
 
@@ -52,6 +56,7 @@
       :button="button"
       :list-item="listItem"
       :phantom-icon="listItemHasRightMargin"
+      :align-right="alignRight"
     />
     <input
       v-visible="false"
@@ -66,6 +71,7 @@
     :button="button"
     :list-item="listItem"
     :phantom-icon="listItemHasRightMargin"
+    :align-right="alignRight"
   />
 </template>
 
@@ -86,6 +92,7 @@ export default class ButtonItem extends Vue {
   @Prop({ type: Object, required: true }) button!: Button;
   @Prop({ type: Boolean, default: false }) listItem!: boolean;
   @Prop({ type: Boolean, default: false }) listItemHasRightMargin!: boolean;
+  @Prop({ type: Boolean, default: false }) alignRight!: boolean;
 
   private uploadFile(input: HTMLInputElement, next: (file: File) => void) {
     const files = input.files as FileList;

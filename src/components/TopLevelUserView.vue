@@ -539,6 +539,9 @@ export default class TopLevelUserView extends Vue {
       // eslint-disable-next-line no-await-in-loop
       results.push(...await this.submitChanges({ scope, errorOnIncomplete: true }));
     }
+    if (scopes.length === 0) {
+      results.push(...await this.submitChanges({ errorOnIncomplete: true }));
+    }
     return results;
   }
 
