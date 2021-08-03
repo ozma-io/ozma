@@ -154,7 +154,7 @@ import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { ArgumentName, AttributesMap, IEntityRef, IEntriesRequestOpts } from "ozma-api";
 
-import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, mapMaybe } from "@/utils";
+import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, mapMaybe, NeverError } from "@/utils";
 import { funappSchema } from "@/api";
 import { equalEntityRef, serializeValue, valueIsNull } from "@/values";
 import { AddedRowId, CombinedTransactionResult, ICombinedInsertEntityResult, IStagingEventHandler, StagingKey } from "@/state/staging_changes";
@@ -593,6 +593,7 @@ export default class UserView extends Vue {
             goto: target => this.$emit("goto", target),
             openQRCodeScanner: (name, link) => this.$root.$emit(name, link),
             link: newType.link,
+            replaceInsteadPush: true,
           };
           const handler = linkHandler(linkHandlerParams);
           await handler.handler();
@@ -607,7 +608,7 @@ export default class UserView extends Vue {
             this.nextUv = null;
           }
         } else {
-          throw new Error("Impossible");
+          throw new NeverError(newType);
         }
       } catch (e) {
         if (pending.ref === this.nextUv) {

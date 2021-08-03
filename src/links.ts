@@ -252,11 +252,13 @@ export interface ILinkHandler {
   href: string | null;
 }
 
+// TODO: Messy typing, maybe refactor this?
 export interface ILinkHandlerParams {
   store: Store<any>;
   goto: (query: IQuery) => void;
   link: Link;
   openQRCodeScanner: (name: string, link: Link) => void;
+  replaceInsteadPush?: boolean;
 }
 
 export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
@@ -270,10 +272,11 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
         await params.store.dispatch("query/addWindow", query);
       };
     } else if (params.link.target === "root") {
-      // eslint-disable-next-line @typescript-eslint/require-await
-      handler = async () => {
-        params.goto(query);
-      };
+      /* eslint-disable @typescript-eslint/require-await */
+      handler = params.replaceInsteadPush
+        ? async () => params.store.dispatch("query/replaceRoot", query)
+        : async () => params.goto(query);
+      /* eslint-enable @typescript-eslint/require-await */
     } else if (params.link.target === "top") {
       handler = async () => {
         await params.store.dispatch("query/pushRoot", query);
