@@ -546,7 +546,6 @@ export default class TopLevelUserView extends Vue {
   }
 
   private async saveView() {
-    console.log("save");
     await this.saveChanges();
 
     if (this.errors.length === 0) {

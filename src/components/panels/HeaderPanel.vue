@@ -27,19 +27,21 @@
       >{{ title }}</label>
     </div>
 
-    <ButtonsPanel
-      :buttons="headerButtons"
-      @goto="$emit('goto', $event)"
-    >
-      <template #search-panel>
-        <SearchPanel
-          v-if="isEnableFilter"
-          class="search-panel"
-          :filter-string="filterString"
-          @update:filterString="$emit('update:filterString', $event)"
-        />
-      </template>
-    </ButtonsPanel>
+    <div class="right-part">
+      <ButtonsPanel
+        :buttons="headerButtons"
+        @goto="$emit('goto', $event)"
+      >
+        <template #search-panel>
+          <SearchPanel
+            v-if="isEnableFilter"
+            class="search-panel"
+            :filter-string="filterString"
+            @update:filterString="$emit('update:filterString', $event)"
+          />
+        </template>
+      </ButtonsPanel>
+    </div>
   </div>
 </template>
 
@@ -107,11 +109,22 @@ export default class HeaderPanel extends Vue {
 
   .left-part {
     overflow: hidden;
+    flex: 1 0 13rem;
 
     > .main-buttons {
       /* Looks like it should be a padding, but due to `overflow-hidden` mechanic it must be margin,
          see https://foobartel.com/tilrs/overflow-x-and-borders */
       margin: 0.25rem;
+      flex-shrink: 0;
+    }
+  }
+
+  .right-part {
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: flex;
+
+    ::v-deep .button-element {
       flex-shrink: 0;
     }
   }
