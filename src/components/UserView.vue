@@ -47,6 +47,7 @@
         <ArgumentEditor
           v-if="showArgumentEditor"
           ref="argumentEditor"
+          class="userview-argument-editor"
           :argument-params="state.uv.info.arguments"
           :argument-values="state.uv.args.args"
           :can-be-closed="!(showArgumentEditorAttr === true)"
@@ -71,7 +72,7 @@
 
       <!-- `z-index: 30` to work well with popups from ArgumentEditor -->
       <b-overlay
-        style="height: 100%;"
+        class="userview-overlay"
         :show="showArgumentEditor && argumentEditorHasChangedValues"
         variant="dark"
         opacity="0.4"
@@ -790,6 +791,14 @@ export default class UserView extends Vue {
 <style lang="scss" scoped>
   .userview-wrapper {
     height: 100%;
+  }
+
+  .userview-argument-editor {
+    flex: 0 0;
+  }
+
+  .userview-overlay {
+    flex: 1 1;
   }
 
   .loading-container {

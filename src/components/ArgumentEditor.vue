@@ -43,10 +43,9 @@
         <b-col>
           <b-row class="mt-2">
             <b-col>
-              <div class="float-right">
+              <div class="buttons">
                 <b-button
                   v-if="canBeClosed"
-                  class="mr-3"
                   variant="outline-secondary"
                   @click="close"
                 >
@@ -54,7 +53,6 @@
                 </b-button>
                 <b-button
                   variant="outline-danger"
-                  class="mr-3"
                   :disabled="!hasChanges"
                   @click="reset"
                 >
@@ -250,5 +248,11 @@ export default class ArgumentEditor extends Vue {
 
   .arguments-editor-container {
     border-bottom: 1px solid var(--default-backgroundDarker2Color);
+  }
+
+  .buttons {
+    float: right;
+    display: flex;
+    gap: 0.5rem;
   }
 </style>
