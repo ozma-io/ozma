@@ -103,7 +103,6 @@ export default class Input extends Vue {
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: String, default: "left" }) textAlign!: string;
 
-  private maxInputWidth = 0;
   private openQRCodeScanner = false;
   private textLink: TextLink | null = null;
 

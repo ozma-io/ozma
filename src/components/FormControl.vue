@@ -74,6 +74,18 @@
           @focus="iSlot.onFocus"
           @blur="$emit('blur', $event)"
         />
+        <ArrayInput
+          v-else-if="inputType.name === 'array'"
+          :value="currentValue"
+          :is-cell-edit="isCellEdit"
+          :disabled="isDisabled"
+          :autofocus="autofocus || iSlot.autofocus"
+          @update:value="updateValue"
+          @focus="iSlot.onFocus"
+          @blur="$emit('blur', $event)"
+          @move-selection-next-row="$emit('move-selection-next-row', $event)"
+          @move-selection-next-column="$emit('move-selection-next-column', $event)"
+        />
         <Calendar
           v-else-if="inputType.name === 'calendar'"
           ref="control"
@@ -364,6 +376,10 @@ interface ISelectType {
   options: ISelectOption<unknown>[];
 }
 
+interface IArrayType {
+  name: "array";
+}
+
 interface IArrayReferenceFieldType {
   name: "array_select";
   optionsView: IQuery;
@@ -424,6 +440,7 @@ interface IButtonsType {
 export type IType =
   | ITextType
   | ITextAreaType
+  | IArrayType
   | ICodeEditorType
   | IMarkdownEditorType
   | ISelectType
@@ -513,6 +530,10 @@ type IEntityRefSchema = z.infer<typeof entityRefSchema>;
     }),
     Textarea: () => ({
       component: import("@/components/form/Textarea.vue") as any,
+      loading: FormInputPlaceholder,
+    }),
+    ArrayInput: () => ({
+      component: import("@/components/form/ArrayInput.vue") as any,
       loading: FormInputPlaceholder,
     }),
     NestedUserView: () => ({
@@ -804,7 +825,7 @@ export default class FormControl extends Vue {
               entity: wrappedReferencedEntity.success ? wrappedReferencedEntity.data : null,
             };
           } else {
-            return { name: "text", type: "text", style: {} };
+            return { name: "array" };
           }
         }
         case "int":
