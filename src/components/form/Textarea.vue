@@ -31,7 +31,6 @@
       v-else
       :class="['textarea-container', {
         'required': required && isEmpty,
-        'error': error,
         'custom-height': height !== null,
       }]"
     >
@@ -40,7 +39,6 @@
         ref="control"
         class="textarea-field"
         size="sm"
-        :type="type"
         :style="style"
         :value="value"
         :required="required"
@@ -48,7 +46,6 @@
         :disabled="disabled"
         :rows="textareaRows"
         @focus="onFocus"
-        @blur="onBlur"
         @input="$emit('update:value', $event)"
       />
     </div>
@@ -62,28 +59,17 @@ import { valueIsNull } from "@/values";
 
 @Component
 export default class Textarea extends Vue {
-  @Prop({ type: String }) label!: string;
   @Prop({ type: String }) value!: string;
-  @Prop({ type: Boolean }) error!: boolean;
   @Prop({ type: Boolean }) required!: boolean;
-  @Prop({ type: String }) warning!: string;
   @Prop({ type: Number }) height!: number;
   @Prop({ type: Boolean }) disabled!: boolean;
   @Prop({ type: Number, default: 5 }) rows!: number;
-  @Prop({ type: Boolean, default: true }) inline!: boolean;
-  @Prop({ type: String, default: "text" }) type!: string;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   // FIXME: remove this and style parent nodes instead.
   // Perhaps we need "autosize" prop instead?
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
 
-  private focused = false;
-  private modalValue: string = this.value;
-  private isModalOpen = false;
-
   private mounted() {
-    const control = this.$refs.control as HTMLInputElement;
-
     void Vue.nextTick().then(() => this.updateAutofocus());
   }
 
@@ -134,14 +120,7 @@ export default class Textarea extends Vue {
 
   private onFocus(evt: HTMLInputElement) {
     this.setCursorPositionEnd(evt);
-    if (!this.$isMobile) {
-      this.focused = true;
-    }
     this.$emit("focus", evt);
-  }
-
-  private onBlur(evt: HTMLInputElement) {
-    this.focused = false;
   }
 
   private setCursorPositionEnd(controlElement: HTMLInputElement) {

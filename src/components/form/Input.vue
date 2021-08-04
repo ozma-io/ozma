@@ -15,14 +15,12 @@
       size="sm"
     >
       <b-input
-        :id="id"
+        :id="inputId"
         ref="control"
         :class="[
           'input-field',
           {
             'readonly': disabled,
-            'error': error,
-            'cell-edit': isCellEdit,
           }
         ]"
         :style="{ textAlign }"
@@ -85,15 +83,8 @@ import { Debounce } from "vue-debounce-decorator";
   components: { Textarea, QRCodeScanner, ButtonItem },
 })
 export default class Input extends Vue {
-  @Prop({ type: String }) label!: string;
   @Prop() value!: any;
-  @Prop({ type: Boolean }) error!: boolean;
-  @Prop({ type: Boolean }) required!: boolean;
-  @Prop({ type: String }) warning!: string;
-  @Prop({ type: Number }) height!: number;
   @Prop({ type: Boolean }) disabled!: boolean;
-  @Prop({ type: String }) id!: string;
-  @Prop({ type: Boolean, default: true }) inline!: boolean;
   @Prop({ type: String, default: "text" }) type!: string;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
@@ -116,6 +107,10 @@ export default class Input extends Vue {
         this.openQRCodeScanner = !this.openQRCodeScanner;
       },
     };
+  }
+
+  private get inputId(): string {
+    return `${this.uid}-input`;
   }
 
   private onPressEnter(event: KeyboardEvent) {

@@ -155,7 +155,6 @@ export default class InputSlot extends Vue {
   @Prop({ type: Boolean, default: false }) disabled!: boolean;
   @Prop({ type: Boolean, required: true }) empty!: boolean;
 
-  private focused = false;
   private isModalOpen = false;
 
   private created() {
@@ -188,7 +187,6 @@ export default class InputSlot extends Vue {
   }
 
   private closeModal() {
-    this.focused = false;
     this.isModalOpen = false;
   }
 }
