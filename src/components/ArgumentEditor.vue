@@ -40,34 +40,30 @@
             @update="update(name, $event)"
           />
         </b-col>
-        <b-col>
-          <b-row class="mt-2">
-            <b-col>
-              <div class="buttons">
-                <b-button
-                  v-if="canBeClosed"
-                  variant="outline-secondary"
-                  @click="close"
-                >
-                  {{ $t("close") }}
-                </b-button>
-                <b-button
-                  variant="outline-danger"
-                  :disabled="!hasChanges"
-                  @click="reset"
-                >
-                  {{ $t("reset") }}
-                </b-button>
-                <b-button
-                  variant="primary"
-                  :disabled="!hasChanges || someRequiredFieldsAreEmpty"
-                  @click="apply"
-                >
-                  {{ $t("apply") }}
-                </b-button>
-              </div>
-            </b-col>
-          </b-row>
+        <b-col class="align-self-end">
+          <div class="buttons">
+            <b-button
+              v-if="canBeClosed"
+              variant="outline-secondary"
+              @click="close"
+            >
+              {{ $t("close") }}
+            </b-button>
+            <b-button
+              variant="outline-danger"
+              :disabled="!hasChanges"
+              @click="reset"
+            >
+              {{ $t("reset") }}
+            </b-button>
+            <b-button
+              variant="primary"
+              :disabled="!hasChanges || someRequiredFieldsAreEmpty"
+              @click="apply"
+            >
+              {{ $t("apply") }}
+            </b-button>
+          </div>
         </b-col>
       </b-row>
     </b-container>

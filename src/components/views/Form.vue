@@ -115,7 +115,7 @@
 
       <infinite-loading
         v-if="useInfiniteScrolling"
-        :force-use-infinite-wrapper="isRoot ? false : '.view-form'"
+        force-use-infinite-wrapper
         spinner="spiral"
         @infinite="infiniteHandler"
       >
@@ -703,7 +703,6 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
 
 <style lang="scss" scoped>
   .view-form {
-    height: 100% !important;
     padding: 0.6rem !important;
     overflow-y: auto;
     overflow-x: hidden;
