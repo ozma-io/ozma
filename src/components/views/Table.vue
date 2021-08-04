@@ -29,7 +29,6 @@
   <div
     v-hotkey="keymap"
     fluid
-    infinite-wrapper
     :class="[
       'table-block',
       {
@@ -217,7 +216,7 @@
       <InfiniteLoading
         v-if="useInfiniteScrolling"
         ref="infiniteLoading"
-        :force-use-infinite-wrapper="isRoot ? '.tabl' : '.view-form'"
+        force-use-infinite-wrapper
         :identifier="infiniteIdentifier"
         spinner="spiral"
         :distance="500"
@@ -2472,7 +2471,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     height: 100%;
     width: 100%; /* на весь экран */
     padding: 0;
-    overflow: auto; /* чтобы скролить таблицу в том числе на мобилке */
   }
 
   .custom-table {
