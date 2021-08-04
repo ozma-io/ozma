@@ -148,12 +148,12 @@ export default class InputPopup extends Vue {
   }
 
   .modal-field-slot {
-    flex: 1 1 40%;
-    height: 0;
+    flex: 0 0 auto;
+    max-height: 20%; /* Euristic number to fit everything on mobiles with opened keyboard */
   }
 
   .modal-inner-slot {
-    flex: 1 1 60%;
+    flex: 1 1;
     height: 0;
   }
 
