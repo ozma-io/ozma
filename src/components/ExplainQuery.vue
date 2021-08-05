@@ -227,6 +227,7 @@ export default class ExplainQuery extends Vue {
 
 <style scoped>
   .explain {
+    height: 100%;
     overflow: auto;
   }
 
