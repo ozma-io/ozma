@@ -223,6 +223,7 @@ export default class ExplainDomains extends Vue {
 
 <style scoped>
   .explain {
+    height: 100%;
     overflow: auto;
   }
 
