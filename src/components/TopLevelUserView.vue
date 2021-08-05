@@ -95,7 +95,6 @@
       </HeaderPanel>
       <div
         class="userview-div"
-        infinite-wrapper
       >
         <UserView
           is-root

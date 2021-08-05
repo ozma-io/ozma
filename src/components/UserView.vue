@@ -39,7 +39,9 @@
 -->
 
 <template>
-  <div class="userview-wrapper">
+  <div
+    class="userview-wrapper"
+  >
     <template
       v-if="state.state === 'show'"
     >
@@ -79,6 +81,7 @@
         blur="5px"
         rounded="sm"
         :z-index="30"
+        :infinite-wrapper="isRoot"
       >
         <template #overlay>
           <div class="overlay-text">
@@ -792,14 +795,18 @@ export default class UserView extends Vue {
 <style lang="scss" scoped>
   .userview-wrapper {
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
   }
 
   .userview-argument-editor {
-    flex: 0 0;
+    flex: 0 0 auto;
   }
 
   .userview-overlay {
     flex: 1 1;
+    overflow-x: auto;
   }
 
   .loading-container {

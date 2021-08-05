@@ -5,8 +5,8 @@
             "create_in_modal": "Create referenced entry in modal window",
             "export_to_csv": "Export to .csv",
             "import_from_csv": "Import from .csv",
-            "selected_n_entries": "{n} entries selected",
-            "remove_selected_rows": "Remove selected entries",
+            "selected_n_entries": "{n} out of {loaded} entries are selected",
+            "remove_selected_rows": "Delete selected entries",
             "error": "Error"
         },
         "ru": {
@@ -14,7 +14,7 @@
             "create_in_modal": "Создать связанную запись в окне",
             "export_to_csv": "Экспорт в .csv",
             "import_from_csv": "Импорт из .csv",
-            "selected_n_entries": "Выбрано {n} записей",
+            "selected_n_entries": "Выбрано {n} из {loaded} записей",
             "remove_selected_rows": "Удалить выбранные записи",
             "error": "Ошибка"
         }
@@ -56,7 +56,7 @@
         class="selection-buttons-wrapper"
       >
         <div class="selection-buttons-label">
-          {{ $t("selected_n_entries", { n: selectedLength }) }}
+          {{ $t("selected_n_entries", { n: selectedLength, loaded: loadedRowsCount }) }}
         </div>
         <div
           class="selection-buttons-panel"
@@ -294,6 +294,10 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         await this.reload();
       },
     });
+  }
+
+  private get loadedRowsCount(): string {
+    return `${this.uv.rowLoadState.fetchedRowCount}${this.uv.rowLoadState.complete ? "" : "+"}`;
   }
 
   private get selectedRowIds(): any[] | null {
@@ -543,7 +547,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     left: 50%;
     transform: translate(-50%, 0);
     padding: 0.5rem;
-    background-color: #0007;
+    background-color: #000a;
     border-radius: 0.5rem;
     z-index: 1000;
 

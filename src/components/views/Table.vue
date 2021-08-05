@@ -2453,14 +2453,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     width: 100%;
     margin: 0;
     position: relative;
-    height: 100%;
     background-color: var(--table-backgroundDarker1Color);
-
-    /* &.nested {
-     *   border: 1px solid var(--input-borderColor, var(--form-borderColor, var(--default-borderColor)));
-     *   border-radius: 0.2rem;
-     *   overflow: hidden;
-     * } */
   }
 
   .data-col {
@@ -2468,8 +2461,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   .tabl {
-    height: 100%;
-    width: 100%; /* на весь экран */
+    width: 100%;
     padding: 0;
   }
 

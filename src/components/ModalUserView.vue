@@ -45,7 +45,6 @@
     <section class="section-modal">
       <div
         class="view-container"
-        infinite-wrapper
       >
         <UserView
           :is-root="isRoot"
