@@ -27,8 +27,13 @@
 
 <template>
   <div
+    ref="tableContainer"
     v-hotkey="keymap"
-    fluid
+    :style="{
+      /* In wide tables `table-block` had width of screen, while its parent and childs had right bigger width.
+         This behavior messed with 'Add new row' buttons and pagination, and I was unable to fix this in pure CSS, so JS solution here. */
+      width: `${tableWidth}px`
+    }"
     :class="[
       'table-block',
       {
@@ -69,182 +74,190 @@
     </TableCellEdit>
 
     <div
-      ref="tableContainer"
-      class="tabl"
+      v-if="uv.extra.lazyLoad.type === 'pagination'"
+      class="pagination-wrapper"
+      :style="{
+        // It's very bad, but I was unable to do this without JS.
+        right: `${(tableWidth || 0) - (parentWidth || 0) - (parentScrollLeft || 0) + 5}px`,
+      }"
     >
       <div
-        v-if="uv.info.mainEntity || uv.extra.lazyLoad.type === 'pagination'"
-        class="button-container"
+        :class="['pagination', { 'ml-auto': !uv.info.mainEntity }]"
+        :style="{ top: `${parentScrollTop > 30 ? 2.5 : 0}rem` }"
       >
-        <ButtonItem
-          v-if="uv.info.mainEntity && !uv.extra.softDisabled && !uv.extra.dirtyHackPreventEntireReloads"
-          :button="topAddButton"
-          align-right
+        <b-spinner
+          v-if="uv.extra.lazyLoad.pagination.loading"
+          class="mr-1"
+          small
+          label="Next page is loading"
         />
-        <div
-          v-if="uv.extra.lazyLoad.type === 'pagination'"
-          :class="['pagination', { 'ml-auto': !uv.info.mainEntity }]"
-        >
-          <b-spinner
-            v-if="uv.extra.lazyLoad.pagination.loading"
-            class="mr-1"
-            small
-            label="Next page is loading"
+        <div class="select-wrapper">
+          <b-select
+            class="page-select"
+            :value="uv.extra.lazyLoad.pagination.perPage"
+            :options="pageSizes"
+            size="sm"
+            @input="updatePageSize"
           />
-          <div class="select-wrapper">
-            <b-select
-              class="page-select"
-              :value="uv.extra.lazyLoad.pagination.perPage"
-              :options="pageSizes"
-              size="sm"
-              @input="updatePageSize"
-            />
-          </div>
-          <ButtonItem :button="firstPageButton" />
-          <ButtonItem :button="prevPageButton" />
-          <div class="current-page-wrapper">
-            <div class="current-page">
-              {{ currentVisualPage }}
-              <span v-if="pagesCount !== null" class="pages-count">{{ "/" + pagesCount }} </span>
-            </div>
-          </div>
-          <ButtonItem :button="nextPageButton" />
         </div>
+        <ButtonItem :button="firstPageButton" />
+        <ButtonItem :button="prevPageButton" />
+        <div class="current-page-wrapper">
+          <div class="current-page">
+            {{ currentVisualPage }}
+            <span v-if="pagesCount !== null" class="pages-count">{{ "/" + pagesCount }} </span>
+          </div>
+        </div>
+        <ButtonItem :button="nextPageButton" />
       </div>
+    </div>
 
-      <table
-        class="custom-table table table-sm"
+    <div
+      v-if="uv.info.mainEntity || uv.extra.lazyLoad.type === 'pagination'"
+      class="button-container"
+      :style="{ width: `${parentWidth - 20}px` }"
+    >
+      <ButtonItem
+        v-if="uv.info.mainEntity && !uv.extra.softDisabled && !uv.extra.dirtyHackPreventEntireReloads"
+        :button="topAddButton"
+        align-right
+      />
+    </div>
+
+    <table
+      ref="table"
+      class="custom-table table table-sm"
+    >
+      <colgroup>
+        <col
+          v-if="uv.extra.isSelectionColumnEnabled"
+          class="checkbox-col"
+        >
+        <col
+          v-if="hasLinksColumn"
+          class="open-form-col"
+        >
+        <col
+          v-for="i in columnIndexes"
+          :key="i"
+          class="data-col"
+          :style="uv.extra.columns[i].style"
+        >
+      </colgroup>
+      <thead
+        class="table-head"
       >
-        <colgroup>
-          <col
+        <tr>
+          <th
             v-if="uv.extra.isSelectionColumnEnabled"
-            class="checkbox-col"
-          > <!-- Checkbox column -->
-          <col
+            class="fixed-column checkbox-cells table-th"
+            @click="toggleAllRows"
+          >
+            <Checkbox
+              :checked="selectedAll"
+              :indeterminate="!selectedAll && selectedSome"
+            />
+          </th>
+          <th
             v-if="hasLinksColumn"
-            class="open-form-col"
-          > <!-- Row link column -->
-          <col
+            :class="[
+              'table-th',
+              'fixed-column',
+              'openform-cells',
+              {
+                'without-selection-cell': !uv.extra.isSelectionColumnEnabled,
+              }
+            ]"
+          >
+            <FunLink
+              v-if="creationLink"
+              :link="creationLink"
+              @goto="$emit('goto', $event)"
+            >
+              <i
+                v-b-tooltip.hover.right.noninteractive="{
+                  title: $t('add_entry_in_modal').toString(),
+                  disabled: $isMobile,
+                }"
+                class="material-icons add-in-modal-icon"
+              >add_box</i>
+            </FunLink>
+          </th>
+          <th
             v-for="i in columnIndexes"
             :key="i"
-            class="data-col"
+            :class="['sorting', 'table-th', {
+              'fixed-column' : uv.extra.columns[i].fixed,
+              'td-moz': isFirefoxBrowser
+            }]"
             :style="uv.extra.columns[i].style"
+            :title="uv.extra.columns[i].caption"
+            @click="loadAllRowsAndUpdateSort(i)"
           >
-        </colgroup>
-        <thead
-          class="table-head"
-        >
-          <tr>
-            <th
-              v-if="uv.extra.isSelectionColumnEnabled"
-              class="fixed-column checkbox-cells table-th"
-              @click="toggleAllRows"
-            >
-              <Checkbox
-                :checked="selectedAll"
-                :indeterminate="!selectedAll && selectedSome"
-              />
-            </th>
-            <th
-              v-if="hasLinksColumn"
-              :class="[
-                'table-th',
-                'fixed-column',
-                'openform-cells',
-                {
-                  'without-selection-cell': !uv.extra.isSelectionColumnEnabled,
-                }
-              ]"
-            >
-              <FunLink
-                v-if="creationLink"
-                :link="creationLink"
-                @goto="$emit('goto', $event)"
-              >
-                <i
-                  v-b-tooltip.hover.right.noninteractive="{
-                    title: $t('add_entry_in_modal').toString(),
-                    disabled: $isMobile,
-                  }"
-                  class="material-icons add-in-modal-icon"
-                >add_box</i>
-              </FunLink>
-            </th>
-            <th
-              v-for="i in columnIndexes"
-              :key="i"
-              :class="['sorting', 'table-th', {
-                'fixed-column' : uv.extra.columns[i].fixed,
-                'td-moz': isFirefoxBrowser
-              }]"
-              :style="uv.extra.columns[i].style"
-              :title="uv.extra.columns[i].caption"
-              @click="loadAllRowsAndUpdateSort(i)"
-            >
-              <span class="table_header__content">
-                {{ uv.extra.columns[i].caption }}
-              </span>
-              <span v-if="uv.extra.sortColumn === i">{{ uv.extra.sortAsc ? "▲" : "▼" }}</span>
-            </th>
-          </tr>
-        </thead>
-        <!--
+            <span class="table_header__content">
+              {{ uv.extra.columns[i].caption }}
+            </span>
+            <span v-if="uv.extra.sortColumn === i">{{ uv.extra.sortAsc ? "▲" : "▼" }}</span>
+          </th>
+        </tr>
+      </thead>
+      <!--
         <transition-group tag="tbody" name="fade-2">
         -->
-        <tbody>
-          <TableRow
-            v-for="(row, rowIndex) in shownRows"
-            :key="row.key"
-            :uv="uv"
-            :row="row.row"
-            :column-indexes="columnIndexes"
-            :show-tree="showTree"
-            :not-existing="row.notExisting"
-            :show-link-column="hasLinksColumn"
-            :row-index="rowIndex"
-            @select="selectTableRow(rowIndex, $event)"
-            @cell-click="clickCell({ ...row.ref, column: arguments[0] }, arguments[1])"
-            @toggle-children="toggleChildren(row.ref, $event)"
-            @add-child="addChild(row.ref)"
-            @goto="$emit('goto', $event)"
-          />
-        </tbody>
-        <!--
+      <tbody>
+        <TableRow
+          v-for="(row, rowIndex) in shownRows"
+          :key="row.key"
+          :uv="uv"
+          :row="row.row"
+          :column-indexes="columnIndexes"
+          :show-tree="showTree"
+          :not-existing="row.notExisting"
+          :show-link-column="hasLinksColumn"
+          :row-index="rowIndex"
+          @select="selectTableRow(rowIndex, $event)"
+          @cell-click="clickCell({ ...row.ref, column: arguments[0] }, arguments[1])"
+          @toggle-children="toggleChildren(row.ref, $event)"
+          @add-child="addChild(row.ref)"
+          @goto="$emit('goto', $event)"
+        />
+      </tbody>
+      <!--
         </transition-group>
         -->
-      </table>
-      <InfiniteLoading
-        v-if="useInfiniteScrolling"
-        ref="infiniteLoading"
-        force-use-infinite-wrapper
-        :identifier="infiniteIdentifier"
-        spinner="spiral"
-        :distance="500"
-        @infinite="infiniteHandler"
-      >
-        <template #no-results>
-          <div v-if="allRows.length === 0" class="no-results">
-            {{ $t("no_results") }}
-          </div>
-          <span v-else />
-        </template>
-        <template #no-more>
-          <span />
-        </template>
-        <template #error>
-          <span />
-        </template>
-      </InfiniteLoading>
-      <div
-        v-if="uv.info.mainEntity && !uv.extra.softDisabled && !uv.extra.dirtyHackPreventEntireReloads"
-        ref="bottomButtonContainer"
-        class="button-container"
-      >
-        <ButtonItem
-          :button="bottomAddButton"
-          align-right
-        />
-      </div>
+    </table>
+    <InfiniteLoading
+      v-if="useInfiniteScrolling"
+      ref="infiniteLoading"
+      force-use-infinite-wrapper
+      :identifier="infiniteIdentifier"
+      spinner="spiral"
+      :distance="500"
+      @infinite="infiniteHandler"
+    >
+      <template #no-results>
+        <div v-if="allRows.length === 0" class="no-results">
+          {{ $t("no_results") }}
+        </div>
+        <span v-else />
+      </template>
+      <template #no-more>
+        <span />
+      </template>
+      <template #error>
+        <span />
+      </template>
+    </InfiniteLoading>
+    <div
+      v-if="uv.info.mainEntity && !uv.extra.softDisabled && !uv.extra.dirtyHackPreventEntireReloads"
+      ref="bottomButtonContainer"
+      class="button-container"
+      :style="{ width: `${parentWidth - 20}px` }"
+    >
+      <ButtonItem
+        :button="bottomAddButton"
+        align-right
+      />
     </div>
   </div>
 </template>
@@ -1737,11 +1750,48 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
+  /* Actually table does't change its width for now,
+   * but ResizeObserver rather than one-time-calculation seems like more robust solution.  */
+  private tableWidthObserver: ResizeObserver | null = null;
+  private tableWidth: number | null = null;
+
+  private parentWidthObserver: ResizeObserver | null = null;
+  private parentWidth: number | null = null;
+  private parentScrollLeft: number | null = null;
+  private parentScrollTop: number | null = null;
+
+  private onTableResize() {
+    this.tableWidth = (this.$refs["table"] as HTMLElement | undefined)?.offsetWidth ?? null;
+  }
+
+  private onParentResize() {
+    const parentElement = this.$el.parentElement;
+    this.parentWidth = parentElement?.offsetWidth ?? null;
+  }
+
+  private onParentScroll() {
+    const parentElement = this.$el.parentElement;
+    this.parentScrollLeft = parentElement?.scrollLeft ?? null;
+    this.parentScrollTop = parentElement?.scrollTop ?? null;
+  }
+
   protected mounted() {
     /* eslint-disable @typescript-eslint/unbound-method */
     (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", this.removeCellEditing);
     /* window.addEventListener("scroll", this.removeCellEditing, true); */
     this.rootEvents.forEach(([name, callback]) => this.$root.$on(name, callback));
+    if (this.$refs["table"]) {
+      this.tableWidthObserver = new ResizeObserver(this.onTableResize);
+      this.tableWidthObserver.observe(this.$refs["table"] as HTMLElement);
+      this.tableWidthObserver = new ResizeObserver(this.onTableResize);
+    }
+    const parentElement = this.$el.parentElement;
+    if (parentElement) {
+      parentElement.addEventListener("scroll", this.onParentScroll);
+      this.onParentScroll();
+      this.parentWidthObserver = new ResizeObserver(this.onParentResize);
+      this.parentWidthObserver.observe(parentElement);
+    }
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
@@ -1757,6 +1807,14 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     (this.$refs.tableContainer as HTMLElement).removeEventListener("scroll", this.removeCellEditing);
     /* window.removeEventListener("scroll", this.removeCellEditing); */
     this.rootEvents.forEach(([name, callback]) => this.$root.$off(name, callback));
+    if (this.$refs["table"]) {
+      this.tableWidthObserver?.unobserve(this.$refs["table"] as HTMLElement);
+    }
+    const parentElement = this.$el.parentElement;
+    if (parentElement) {
+      this.tableWidthObserver?.unobserve(parentElement);
+      parentElement.removeEventListener("scroll", this.onParentScroll);
+    }
     /* eslint-enable @typescript-eslint/unbound-method */
 
     if (this.uv.extra.lazyLoad.type === "pagination" && this.isTopLevel) {
@@ -2401,7 +2459,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   .button-container {
-    width: 100%;
     position: sticky;
     left: 0;
     display: flex;
@@ -2412,10 +2469,23 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
+  .pagination-wrapper {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: fit-content;
+    z-index: 9999;
+  }
+
   .pagination {
+    position: sticky;
+    top: 0;
+    right: 0;
     display: flex;
     justify-content: center;
     align-items: center;
+    background-color: var(--default-backgroundDarker1Color);
 
     .current-page-wrapper {
       min-width: 3rem; /* To fit at least `99/99` without changing width */
@@ -2450,8 +2520,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   .table-block {
-    width: 100%;
-    margin: 0;
     position: relative;
     background-color: var(--table-backgroundDarker1Color);
   }
@@ -2461,7 +2529,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   .tabl {
-    width: 100%;
+    /* width: 100%; */
     padding: 0;
   }
 
@@ -2595,7 +2663,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
 
     .custom-table {
-      max-width: 100% !important;
+      /* max-width: 100% !important; */
       page-break-inside: auto;
       border-spacing: 0;
     }
