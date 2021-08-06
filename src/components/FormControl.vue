@@ -74,13 +74,15 @@
           @focus="iSlot.onFocus"
           @blur="$emit('blur', $event)"
         />
-        <ArrayInput
+        <Input
           v-else-if="inputType.name === 'array'"
-          :value="currentValue"
+          :value="textValue"
           :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
+          :required="!isNullable"
           :autofocus="autofocus || iSlot.autofocus"
-          @update:value="updateValue"
+          :background-color="cellColor"
+          @input="updateValue"
           @focus="iSlot.onFocus"
           @blur="$emit('blur', $event)"
           @move-selection-next-row="$emit('move-selection-next-row', $event)"
@@ -530,10 +532,6 @@ type IEntityRefSchema = z.infer<typeof entityRefSchema>;
     }),
     Textarea: () => ({
       component: import("@/components/form/Textarea.vue") as any,
-      loading: FormInputPlaceholder,
-    }),
-    ArrayInput: () => ({
-      component: import("@/components/form/ArrayInput.vue") as any,
       loading: FormInputPlaceholder,
     }),
     NestedUserView: () => ({
