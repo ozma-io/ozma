@@ -204,7 +204,9 @@ export default class Input extends Vue {
   }
 
   private updateInput(value: string) {
-    this.$emit("input", value);
+    if (this.value !== value) {
+      this.$emit("input", value);
+    }
   }
 }
 </script>
