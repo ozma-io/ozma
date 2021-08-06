@@ -806,6 +806,7 @@ export default class UserView extends Vue {
 
   .userview-overlay {
     flex: 1 1;
+    width: 100%;
     overflow-x: auto;
   }
 

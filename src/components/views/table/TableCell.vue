@@ -374,11 +374,4 @@ export default class TableCell extends Vue {
   .cell-buttons-panel {
     flex-wrap: wrap;
   }
-
-  /* Why do we need this now... */
-  @media screen and (max-width: 1020px) {
-    .fixed-column {
-      left: 0 !important;
-    }
-  }
 </style>

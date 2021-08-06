@@ -59,7 +59,7 @@
       :class="[
         'modal__content',
         {
-          'modal__content__fullscreen': fullscreen,
+          'modal__content__fullscreen': fullscreen || $isMobile,
           'is-mobile': $isMobile,
         }
       ]"
@@ -81,7 +81,7 @@
       :class="[
         'modal__content',
         {
-          'modal__content__fullscreen': fullscreen,
+          'modal__content__fullscreen': fullscreen || $isMobile,
           'is-mobile': $isMobile,
         }
       ]"
@@ -188,9 +188,11 @@ export default class Modal extends Vue {
   }
 
   private get modalWidth(): string {
-    return (this.fullscreen || this.$isMobile)
-      ? "100%"
-      : this.width;
+    return this.$isMobile && this.fullscreen
+      ? window.innerWidth > 512 ? `512px` : "100%"
+      : this.$isMobile
+        ? "100%"
+        : this.fullscreen ? "100%" : this.width;
   }
 
   private get modalHeight(): string {
