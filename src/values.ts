@@ -104,7 +104,7 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: un
     case "enum":
     case "interval":
     case "uuid":
-      // Remove whitespaces
+      // Remove whitespaces.
       return typeof value === "string" ? value : undefined;
     case "bool":
       switch (typeof value) {
@@ -117,9 +117,9 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: un
       }
     case "array":
       if (value instanceof Array) {
-        return convertArray({ type: fieldType.subtype }, value);
+        return convertArray(fieldType.subtype, value);
       } else if (typeof value === "string") {
-        return convertArray({ type: fieldType.subtype }, value.split(","));
+        return convertArray(fieldType.subtype, value.split(","));
       } else {
         return undefined;
       }
@@ -170,7 +170,7 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: un
         return undefined;
       }
     default:
-      throw new Error("Invalid field type");
+      throw new Error(`Invalid field type ${(fieldType as any).type}`);
   }
 };
 
