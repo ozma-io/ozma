@@ -122,6 +122,11 @@
         :button="topAddButton"
         align-right
       />
+
+      <!-- Required to reserve vertical space above table for pagination-panel when there are no add-new-row button -->
+      <b-button v-if="uv.extra.lazyLoad.type === 'pagination' && !uv.info.mainEntity" v-visible="false">
+        Space reserver
+      </b-button>
     </div>
 
     <table
