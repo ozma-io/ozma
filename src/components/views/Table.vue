@@ -2481,6 +2481,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     height: 100%;
     width: fit-content;
     z-index: 9999;
+    pointer-events: none;
   }
 
   .pagination {
@@ -2491,6 +2492,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     justify-content: center;
     align-items: center;
     background-color: var(--default-backgroundDarker1Color);
+    pointer-events: all;
 
     .current-page-wrapper {
       min-width: 3rem; /* To fit at least `99/99` without changing width */
