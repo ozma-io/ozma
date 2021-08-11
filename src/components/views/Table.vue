@@ -124,6 +124,11 @@
         :button="topAddButton"
         align-right
       />
+
+      <!-- Required to reserve vertical space above table for pagination-panel when there are no add-new-row button -->
+      <b-button v-if="uv.extra.lazyLoad.type === 'pagination' && !uv.info.mainEntity" v-visible="false">
+        Space reserver
+      </b-button>
     </div>
 
     <table
@@ -2473,6 +2478,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     height: 100%;
     width: fit-content;
     z-index: 9999;
+    pointer-events: none;
   }
 
   .pagination {
@@ -2483,6 +2489,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     justify-content: center;
     align-items: center;
     background-color: var(--default-backgroundDarker1Color);
+    pointer-events: all;
 
     .current-page-wrapper {
       min-width: 3rem; /* To fit at least `99/99` without changing width */

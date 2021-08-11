@@ -1,6 +1,6 @@
 <template>
   <b-col
-    :sm="entry.size || 12"
+    :md="entry.size || 12"
   >
     <template v-if="entry.content">
       <div
