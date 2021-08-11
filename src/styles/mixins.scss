@@ -46,3 +46,26 @@ $color-transition: background-color 0.3s, color 0.3s;
 @function icon-size($base-size: 24px) {
   @return ($base-size / 14px) + rem;
 }
+
+@mixin variant-to-local($local-name) {
+  /* stylelint-disable value-keyword-case */
+  $keys: foregroundColor,
+    foregroundDarkerColor,
+    foregroundContrastColor,
+    backgroundColor,
+    backgroundDarker1Color,
+    backgroundDarker2Color,
+    borderColor;
+
+  .#{$local-name}-local-variant {
+    @each $key in $keys {
+      @if $local-name == default {
+        --#{$local-name}-#{$key}: var(--#{$key});
+      }
+
+      @else {
+        --#{$local-name}-#{$key}: var(--#{$key}, var(--default-#{$key}));
+      }
+    }
+  }
+}

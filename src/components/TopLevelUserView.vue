@@ -14,7 +14,7 @@
             "cancel": "Cancel",
             "account": "Account",
             "theme": "Theme",
-            "contacts": "Contacts",
+            "contacts": "Support",
             "login": "Login",
             "logout": "Logout",
             "auth_error": "Authentication error: {msg}",
@@ -40,7 +40,7 @@
             "cancel": "Отмена",
             "account": "Профиль",
             "theme": "Тема",
-            "contacts": "Контакты",
+            "contacts": "Помощь",
             "login": "Войти",
             "logout": "Выйти",
             "auth_error": "Ошибка авторизации: {msg}",
@@ -236,7 +236,8 @@ import { Link } from "@/links";
 import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { CurrentSettings } from "@/state/settings";
-import { getColorVariables, Theme } from "@/utils_colors";
+import type { FullThemeName, ThemeName } from "@/utils_colors";
+import { interfaceButtonVariant, defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
 import { ISocialLinks } from "./CommunicationsButton.vue";
 
 const auth = namespace("auth");
@@ -294,7 +295,7 @@ export default class TopLevelUserView extends Vue {
   @errors.Mutation("reset") resetErrors!: () => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @settings.State("current") currentSettings!: CurrentSettings;
-  @settings.Action("setTheme") setTheme!: (theme: Theme) => Promise<void>;
+  @settings.Action("setCurrentTheme") setCurrentTheme!: (theme: ThemeName) => Promise<void>;
 
   private statusLine = "";
   private enableFilter = false;
@@ -330,8 +331,7 @@ export default class TopLevelUserView extends Vue {
       {
         type: "callback",
         icon: "arrow_back",
-        variant: "interfaceButton",
-        colorVariables: getColorVariables("button", "interfaceButton"), // FIXME TODO: Manual settings of `colorVariables` is ugly, unsafe and stupid, refactor this.
+        variant: interfaceButtonVariant,
         /* disabled: !this.query?.root.previous, */
         /* callback: () => this.goBackRoot(), */
         callback: () => this.$router.go(-1),
@@ -339,8 +339,7 @@ export default class TopLevelUserView extends Vue {
       {
         type: "link",
         icon: "home",
-        variant: "interfaceButton",
-        colorVariables: getColorVariables("button", "interfaceButton"),
+        variant: interfaceButtonVariant,
         link: homeLink,
       },
       this.burgerButton,
@@ -381,17 +380,24 @@ export default class TopLevelUserView extends Vue {
   @Watch("currentSettings")
   private loadBurgerButtons() {
     const themes = this.currentSettings.themes;
+    const themeNames = themes.map(theme => theme.themeName);
     const locale = this.$i18n.locale;
-    const translate = (theme: Theme) => (typeof theme.localized?.[locale] === "string") ? theme.localized[locale] : theme.name;
-    this.themeButtons = themes.map(theme => ({ caption: translate(theme), type: "callback", callback: () => this.setTheme(theme) }));
+    const translate = (theme: FullThemeName) => (typeof theme.localized?.[locale] === "string") ? theme.localized[locale] : theme.name;
+    this.themeButtons = themeNames.map(themeName => ({
+      caption: translate(themeName),
+      variant: defaultVariantAttribute,
+      type: "callback",
+      callback: () => this.setCurrentTheme(themeName.name),
+    }));
 
-    this.communicationButtons = [
+    this.communicationButtons = ([
       this.communicationStrings.email
         ? {
           caption: "E-mail",
           icon: "email",
           type: "link",
           link: { type: "href", href: "mailto:" + this.communicationStrings.email, target: "_blank" },
+          variant: defaultVariantAttribute,
         }
         : undefined,
       this.communicationStrings.whatsapp
@@ -400,6 +406,7 @@ export default class TopLevelUserView extends Vue {
           icon: "phone",
           type: "link",
           link: { type: "href", href: this.communicationStrings.whatsapp, target: "_blank" },
+          variant: defaultVariantAttribute,
         }
         : undefined,
       this.communicationStrings.telegram
@@ -408,9 +415,10 @@ export default class TopLevelUserView extends Vue {
           icon: "send",
           type: "link",
           link: { type: "href", href: this.communicationStrings.telegram, target: "_blank" },
+          variant: defaultVariantAttribute,
         }
         : undefined,
-    ].filter(R.identity) as Button[];
+    ] as (Button | undefined)[]).filter(R.identity) as Button[];
   }
 
   private get communicationStrings(): ISocialLinks {
@@ -566,16 +574,22 @@ export default class TopLevelUserView extends Vue {
 
     if (this.themeButtons.length > 0) {
       buttons.push({
-        icon: "contacts",
+        icon: "contact_support",
         caption: this.$t("contacts").toString(),
-        variant: "info",
+        variant: bootstrapVariantAttribute("info"),
         type: "button-group",
         buttons: this.communicationButtons,
       });
     }
 
     if (this.themeButtons.length > 0) {
-      buttons.push({ icon: "palette", caption: this.$t("theme").toString(), type: "button-group", buttons: this.themeButtons });
+      buttons.push({
+        icon: "palette",
+        caption: this.$t("theme").toString(),
+        type: "button-group",
+        buttons: this.themeButtons,
+        variant: defaultVariantAttribute,
+      });
     }
 
     if (this.currentAuth?.token) {
@@ -587,18 +601,36 @@ export default class TopLevelUserView extends Vue {
             const link = getAuthedLink(currentAuth);
             void navigator.clipboard.writeText(link);
           },
+          variant: defaultVariantAttribute,
           type: "callback" });
       }
-      buttons.push({ icon: "perm_identity", caption: this.$t("account").toString(), type: "link", link: { href: Api.accountUrl, type: "href", target: "_self" } });
-      buttons.push({ icon: "exit_to_app", caption: this.$t("logout").toString(), type: "callback", callback: this.logout });
+      buttons.push({
+        icon: "perm_identity",
+        caption: this.$t("account").toString(),
+        type: "link",
+        link: { href: Api.accountUrl, type: "href", target: "_self" },
+        variant: defaultVariantAttribute,
+      });
+      buttons.push({
+        icon: "exit_to_app",
+        caption: this.$t("logout").toString(),
+        type: "callback",
+        callback: this.logout,
+        variant: defaultVariantAttribute,
+      });
     } else {
-      buttons.push({ icon: "login", caption: this.$t("login").toString(), type: "callback", callback: this.login });
+      buttons.push({
+        icon: "login",
+        caption: this.$t("login").toString(),
+        type: "callback",
+        callback: this.login,
+        variant: defaultVariantAttribute,
+      });
     }
 
     const burgerButton: Button = {
       icon: "menu",
-      variant: "interfaceButton",
-      colorVariables: getColorVariables("button", "interfaceButton"),
+      variant: interfaceButtonVariant,
       buttons,
       type: "button-group",
     };

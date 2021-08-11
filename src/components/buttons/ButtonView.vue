@@ -2,7 +2,7 @@
   <b-list-group-item
     v-if="listItem"
     class="list-group-item-action"
-    :variant="button.variant"
+    :variant="listItemVariant"
     :disabled="button.disabled"
     @click="$emit('click')"
   >
@@ -16,8 +16,8 @@
   <b-button
     v-else
     v-b-tooltip.hover.noninteractive.viewport
-    :class="[alignRight ? '' : 'd-flex justify-content-center', buttonClass]"
-    :style="button.colorVariables"
+    :class="[variantClassName, 'button-local-variant', alignRight ? '' : 'd-flex justify-content-center', buttonClass]"
+    :style="variantVariables"
     variant="light"
     :title="button.tooltip"
     :disabled="button.disabled"
@@ -33,6 +33,7 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 import type { Button } from "@/components/buttons/buttons";
 import ButtonContent from "@/components/buttons/ButtonContent.vue";
+import { getColorVariantAttributeClassName, getColorVariantAttributeVariables } from "@/utils_colors";
 
 @Component({
   components: {
@@ -52,10 +53,25 @@ export default class ButtonView extends Vue {
         ? "button-icon-caption"
         : "button-only-caption";
   }
+
+  private get variantClassName(): string | null {
+    return getColorVariantAttributeClassName(this.button.variant);
+  }
+
+  // TODO: support our variants for list item.
+  private get listItemVariant(): string {
+    return this.button.variant.type === "existing" ? this.button.variant.className : "light";
+  }
+
+  private get variantVariables(): Record<string, string> | null {
+    return getColorVariantAttributeVariables(this.button.variant);
+  }
 }
 </script>
 
 <style lang="scss" scoped>
+  @include variant-to-local("button");
+
   .list-group-item {
     cursor: pointer;
     text-align: left;

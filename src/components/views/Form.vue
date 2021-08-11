@@ -141,6 +141,7 @@ import { z } from "zod";
 import { namespace } from "vuex-class";
 
 import { tryDicts, mapMaybe, validNumberFormats, getNumberFormatter, ValidNumberFormat } from "@/utils";
+import { interfaceButtonVariant, bootstrapVariantAttribute } from "@/utils_colors";
 import { AddedRowId } from "@/state/staging_changes";
 import { UserView } from "@/components";
 import Errorbox from "@/components/Errorbox.vue";
@@ -152,7 +153,6 @@ import { IAddedRow, ICombinedRow, ICombinedUserView, ICombinedValue, IExtendedRo
 import { GridElement, IGridInput, IGridSection } from "@/components/form/FormGrid.vue";
 import type { Button } from "@/components/buttons/buttons";
 import { lazyLoadSchema } from "@/components/views/Table.vue";
-import { getColorVariables } from "@/utils_colors";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 
@@ -325,10 +325,9 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     return {
       type: "callback",
       icon: "arrow_right",
-      variant: "interfaceButton",
+      variant: interfaceButtonVariant,
       disabled: (this.uv.rowLoadState.complete && this.onLastPage)
         || (this.uv.extra.lazyLoad.type === "pagination" && this.uv.extra.lazyLoad.pagination.loading),
-      colorVariables: getColorVariables("button", "interfaceButton"),
       callback: () => this.goToNextPage(),
     };
   }
@@ -339,9 +338,8 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     return {
       type: "callback",
       icon: "arrow_left",
-      variant: "interfaceButton",
+      variant: interfaceButtonVariant,
       disabled: this.uv.extra.lazyLoad.pagination.currentPage === 0,
-      colorVariables: getColorVariables("button", "interfaceButton"),
       callback: () => this.goToPrevPage(),
     };
   }
@@ -619,7 +617,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
         icon: "delete_outline",
         caption: this.$t("delete").toString(),
         callback: () => this.confirmDelete(deleteRef),
-        variant: "danger",
+        variant: bootstrapVariantAttribute("danger"),
         type: "callback",
       });
     }

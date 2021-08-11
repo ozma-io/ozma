@@ -19,7 +19,7 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import { Button } from "@/components/buttons/buttons";
-import { getColorVariables } from "@/utils_colors";
+import { interfaceButtonVariant } from "@/utils_colors";
 
 @Component({ components: { ButtonItem } })
 export default class ModalTabHeader extends Vue {
@@ -30,8 +30,7 @@ export default class ModalTabHeader extends Vue {
     return {
       type: "callback",
       icon: "close",
-      variant: "interfaceButton",
-      colorVariables: getColorVariables("button", "interfaceButton"),
+      variant: interfaceButtonVariant,
       callback: () => this.$emit("tab-close"),
     };
   }

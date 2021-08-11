@@ -18,7 +18,7 @@
 <template>
   <div
     fluid
-    :class="[ 'view_kanban', { 'nested': !isRoot } ]"
+    :class="[ 'kanban-variant', 'kanban-local-variant', 'view_kanban', { 'nested': !isRoot } ]"
     :style="colorVariables"
   >
     <Errorbox
@@ -67,8 +67,8 @@ import BaseEntriesView from "@/components/BaseEntriesView";
 import { attrToQuery, IQuery } from "@/state/query";
 import type { ICard } from "@/components/kanban/Column.vue";
 import { IRowCard, default as RowCard, CardColumn } from "@/components/views/board/RowCard.vue";
-import { getColorVariables } from "@/utils_colors";
 import { EntriesRef } from "@/state/entries";
+import { colorVariantFromAttribute } from "@/utils_colors";
 
 interface IGroupColumn {
   group: unknown;
@@ -208,12 +208,12 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
   get colorVariables() {
     const variant = this.uv.attributes["kanban_variant"];
     if (variant) {
-      return getColorVariables("kanban", variant);
+      return colorVariantFromAttribute(variant);
     } else if (this.backgroundColor !== "none") {
-      console.warn("`background_color` is deprecated, use `kanban_variant` instead.");
-      return getColorVariables("kanban", { background: this.backgroundColor });
+      /* console.warn("`background_color` is deprecated, use `kanban_variant` instead."); */
+      return colorVariantFromAttribute({ background: this.backgroundColor });
     } else {
-      return null;
+      return colorVariantFromAttribute(null);
     }
   }
 
@@ -387,12 +387,14 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     const order = this.orderIndex !== null ? Number(currentValue(row.values[this.orderIndex])) : null;
     const color = getRowAttr("card_color");
     const variant = getRowAttr("card_variant");
-    let colorVariables: any;
+    let colorVariant: any;
     if (!valueIsNull(variant)) {
-      colorVariables = getColorVariables("kanbanCard", variant);
+      colorVariant = colorVariantFromAttribute(variant);
     } else if (!valueIsNull(color)) {
-      console.warn("`card_color` is deprecated, use `card_variant` instead.");
-      colorVariables = getColorVariables("kanbanCard", { background: String(color) });
+      /* console.warn("`card_color` is deprecated, use `card_variant` instead."); */
+      colorVariant = colorVariantFromAttribute({ background: color });
+    } else {
+      colorVariant = colorVariantFromAttribute(null);
     }
 
     const rowCard: IRowCard = {
@@ -407,19 +409,21 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       key: rowKey(rowRef),
       card: rowCard,
       backgroundColor: valueIsNull(color) ? undefined : String(color),
-      colorVariables,
+      colorVariant,
     };
   }
 }
 </script>
 
 <style lang="scss" scoped>
+  @include variant-to-local("kanban");
+
   .view_kanban {
     height: 100%;
     background-color: var(--kanban-backgroundDarker2Color, var(--default-backgroundDarker2Color));
 
     &.nested {
-      border: 1px solid var(--input-borderColor, var(--form-borderColor, var(--default-borderColor)));
+      border: 1px solid var(--cell-borderColor, var(--form-borderColor, var(--default-borderColor)));
       border-radius: 0.2rem;
       overflow: hidden;
     }

@@ -30,12 +30,14 @@
     ref="tableContainer"
     v-hotkey="keymap"
     :style="{
-      /* In wide tables `table-block` had width of screen, while its parent and childs had right bigger width.
+      /* In wide tables `table-block` had width of screen, while its parent and childs had correct bigger width.
          This behavior messed with 'Add new row' buttons and pagination, and I was unable to fix this in pure CSS, so JS solution here. */
       width: `${tableWidth}px`
     }"
     :class="[
       'table-block',
+      'default-variant',
+      'table-local-variant',
       {
         'nested': !isRoot,
         'active-editing': editingValue !== null,
@@ -294,7 +296,8 @@ import {
   IExtendedRow, IExtendedRowCommon, IExtendedRowInfo, IExtendedValue, IRowCommon, IUserViewHandler, RowRef, ValueRef,
   valueToPunnedText, CommittedRowRef,
 } from "@/user_views/combined";
-import { getColorVariables } from "@/utils_colors";
+import { colorVariantFromAttribute, interfaceButtonVariant } from "@/utils_colors";
+import type { ColorVariantAttribute } from "@/utils_colors";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import { Button } from "../buttons/buttons";
 
@@ -314,7 +317,7 @@ export interface ITableValueExtra extends IBaseValueExtra {
   valueHtml: string; // Don't forget to sanitize!
   link: Link | null;
   style: Record<string, unknown> | null;
-  colorVariables: Record<string, unknown> | null;
+  colorVariant: ColorVariantAttribute;
   selected: boolean;
   htmlElement: HTMLElement | null;
 }
@@ -501,21 +504,20 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
     valueHtml = value.value.local().format("L LTS");
   }
 
-  const colorVariant = getCellAttr("cell_variant");
-  let colorVariables = null;
-  if (colorVariant) {
-    colorVariables = getColorVariables("tableCell", colorVariant);
-  // TODO: Not sure, but getting attribute by `getCellAttr` may have performance issues on big tables with uv-wide `cell_color`.
-  /* } else if (cellColor) { */
-  } else if (value.attributes?.["cell_color"]) {
-    console.warn("`cell_color` attribute is deprecated, use `cell_variant` or `row_variant` instead.");
-    colorVariables = getColorVariables("tableCell", { background: String(cellColor) });
+  const colorVariantAttribute = getCellAttr("cell_variant");
+  let colorVariant: ColorVariantAttribute;
+  if (colorVariantAttribute) {
+    colorVariant = colorVariantFromAttribute(colorVariantAttribute);
+  } else if (cellColor) {
+    colorVariant = colorVariantFromAttribute({ background: String(cellColor) });
+  } else {
+    colorVariant = { type: "existing", className: "default-variant" };
   }
 
   const extra = {
     valueHtml,
     style: null as Record<string, unknown> | null,
-    colorVariables,
+    colorVariant,
   };
   if (Object.keys(style).length !== 0) {
     extra.style = style;
@@ -537,11 +539,8 @@ const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLo
     arrowDown: oldLocal?.tree.arrowDown ?? defaultArrow,
   };
 
-  const colorVariant = getRowAttr("row_variant");
-  let colorVariables = null;
-  if (colorVariant) {
-    colorVariables = getColorVariables("tableCell", colorVariant);
-  }
+  /* const colorVariant = getRowAttr("row_variant"); */
+  const colorVariables = null;
 
   const extra = {
     searchText: "",
@@ -1188,9 +1187,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return {
       type: "callback",
       icon: "skip_previous",
-      variant: "interfaceButton",
+      variant: interfaceButtonVariant,
       disabled: this.uv.extra.lazyLoad.pagination.currentPage === 0,
-      colorVariables: getColorVariables("button", "interfaceButton"),
       callback: () => this.goToFirstPage(),
     };
   }
@@ -1201,9 +1199,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return {
       type: "callback",
       icon: "arrow_left",
-      variant: "interfaceButton",
+      variant: interfaceButtonVariant,
       disabled: this.uv.extra.lazyLoad.pagination.currentPage === 0,
-      colorVariables: getColorVariables("button", "interfaceButton"),
       callback: () => this.goToPrevPage(),
     };
   }
@@ -1214,9 +1211,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return {
       type: "callback",
       icon: "arrow_right",
-      variant: "interfaceButton",
+      variant: interfaceButtonVariant,
       disabled: (this.uv.rowLoadState.complete && this.onLastPage) || this.uv.extra.lazyLoad.pagination.loading,
-      colorVariables: getColorVariables("button", "interfaceButton"),
       callback: () => this.goToNextPage(),
     };
   }
@@ -1379,8 +1375,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return {
       type: "callback",
       icon: "add",
-      variant: "interfaceButton",
-      colorVariables: getColorVariables("button", "interfaceButton"),
+      variant: interfaceButtonVariant,
       caption: this.$t("add_entry").toString(),
       callback: () => this.loadAllRowsAndAddNewRowOnPosition("top_front"),
     };
@@ -1390,8 +1385,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return {
       type: "callback",
       icon: "add",
-      variant: "interfaceButton",
-      colorVariables: getColorVariables("button", "interfaceButton"),
+      variant: interfaceButtonVariant,
       caption: this.$t("add_entry").toString(),
       callback: () =>
         this.loadAllRowsAndAddNewRowOnPosition("bottom_back").then(() =>
@@ -2453,6 +2447,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 </script>
 
 <style lang="scss" scoped>
+  @include variant-to-local("table");
+  @include variant-to-local("default");
+
   table,
   th,
   td {
@@ -2682,7 +2679,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   ::v-deep .checkbox-cells {
     text-align: center;
-    color: var(--tableCell-foregroundDarkerColor, var(--table-foregroundDarkerColor));
+    color: var(--cell-foregroundDarkerColor, var(--table-foregroundDarkerColor));
     padding: 0;
     transition: background 0.1s;
 
@@ -2696,8 +2693,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
 
     &:hover {
-      color: var(--tableCell-foregroundColor, var(--table-foregroundColor));
-      background-color: var(--tableCell-backgroundDarker1Color, var(--table-backgroundDarker1Color));
+      color: var(--cell-foregroundColor, var(--table-foregroundColor));
+      background-color: var(--cell-backgroundDarker1Color, var(--table-backgroundDarker1Color));
       transition: background 0s;
     }
   }
@@ -2717,13 +2714,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     .add-in-modal-icon {
       position: relative;
       top: 3px;
-      color: var(--tableCell-foregroundDarkerColor, var(--table-foregroundDarkerColor));
+      color: var(--cell-foregroundDarkerColor, var(--table-foregroundDarkerColor));
     }
 
     .edit-in-modal-icon {
       position: relative;
       top: 5px;
-      color: var(--tableCell-foregroundDarkerColor, var(--table-foregroundDarkerColor));
+      color: var(--cell-foregroundDarkerColor, var(--table-foregroundDarkerColor));
     }
 
     &.table-th {
@@ -2736,7 +2733,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
       &:hover {
         .add-in-modal-icon {
-          color: var(--tableCell-foregroundColor, var(--table-foregroundColor));
+          color: var(--cell-foregroundColor, var(--table-foregroundColor));
         }
       }
     }

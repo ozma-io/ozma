@@ -131,16 +131,16 @@ export default class SearchPanel extends Vue {
   }
 
   .search-input {
-    background-color: var(--input-backgroundColor);
-    color: var(--input-foregroundColor);
+    background-color: var(--cell-backgroundColor);
+    color: var(--cell-foregroundColor);
 
     ::placeholder {
-      color: var(--input-foregroundDarkerColor);
+      color: var(--cell-foregroundDarkerColor);
     }
 
     &:focus {
-      background-color: var(--input-backgroundColor);
-      color: var(--input-foregroundColor);
+      background-color: var(--cell-backgroundColor);
+      color: var(--cell-foregroundColor);
     }
   }
 

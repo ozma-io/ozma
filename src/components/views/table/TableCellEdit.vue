@@ -64,7 +64,7 @@ export default class TableCellEdit extends Vue {
 
 <style scoped>
   .table-cell-edit {
-    background: var(--input-backgroundColor);
+    background: var(--cell-backgroundColor);
     height: auto !important;
     width: auto;
     position: fixed;

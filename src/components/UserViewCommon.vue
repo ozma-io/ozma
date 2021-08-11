@@ -77,13 +77,13 @@ import { IEntityRef, IEntriesRequestOpts, IInsertEntityOp, ITransaction } from "
 import { Action, namespace } from "vuex-class";
 
 import { encodeUTF16LE, getBOM, mapMaybe, saveToFile, tryDicts } from "@/utils";
+import { defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
 import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, userViewTitle } from "@/components/BaseUserView";
 import { attrToQuery, IQuery } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
 import type { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
 import { ICommonUserViewData, RowRef, ValueRef } from "@/user_views/combined";
 import { getReferenceInfo } from "@/state/entries";
-import { getColorVariables } from "@/utils_colors";
 
 import { attrToButton, Button, attrToButtons, attrToButtonsOld } from "@/components/buttons/buttons";
 import { IAttrToLinkOpts } from "@/links";
@@ -365,7 +365,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         caption: this.$t("create").toString(),
         link: this.creationLink,
         type: "link",
-        variant: "success",
+        variant: bootstrapVariantAttribute("success"),
       });
     }
 
@@ -377,6 +377,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
           this.modalView = modalReferenceField.uv;
         },
         type: "callback",
+        variant: defaultVariantAttribute,
       });
     }
 
@@ -386,6 +387,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         caption: this.$t("import_from_csv").toString(),
         uploadFile: file => this.importFromCsv(file),
         type: "upload-file",
+        variant: defaultVariantAttribute,
       });
     }
 
@@ -396,6 +398,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         caption: this.$t("export_to_csv").toString(),
         callback: () => this.exportToCsv(),
         type: "callback",
+        variant: defaultVariantAttribute,
       });
     }
 
@@ -439,8 +442,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
           icon: "delete_sweep",
           caption: this.$t("remove_selected_rows").toString(),
           callback: () => this.removeSelectedRows(),
-          variant: "danger",
-          colorVariables: getColorVariables("button", "danger"),
+          variant: bootstrapVariantAttribute("danger"),
           type: "callback",
         },
       );

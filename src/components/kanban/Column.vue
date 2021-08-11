@@ -74,7 +74,7 @@
         v-for="(card, cardIndex) in shownCards"
         :key="card.key"
         :background-color="card.backgroundColor"
-        :color-variables="card.colorVariables"
+        :color-variant-attribute="card.colorVariant"
       >
         <slot
           name="card"
@@ -117,12 +117,13 @@ import draggable from "vuedraggable";
 
 import Card from "@/components/kanban/Card.vue";
 import { nextRender } from "@/utils";
+import type { ColorVariantAttribute } from "@/utils_colors";
 
 export interface ICard<CardT> {
   key: unknown;
   card: CardT;
   backgroundColor?: string;
-  colorVariables: Record<string, string>;
+  colorVariant: ColorVariantAttribute;
 }
 
 const showStep = 10;

@@ -136,9 +136,9 @@ export default class Textarea extends Vue {
     z-index: 2;
     order: 2;
     flex: 2;
-    color: var(--input-foregroundColor);
-    background-color: var(--input-backgroundColor);
-    border-color: var(--input-borderColor);
+    color: var(--cell-foregroundColor);
+    background-color: var(--cell-backgroundColor);
+    border-color: var(--cell-borderColor);
   }
 
   .textarea-container {
@@ -147,9 +147,9 @@ export default class Textarea extends Vue {
     }
 
     .textarea-field {
-      color: var(--input-foregroundColor);
-      background-color: var(--input-backgroundColor);
-      border-color: var(--input-borderColor);
+      color: var(--cell-foregroundColor);
+      background-color: var(--cell-backgroundColor);
+      border-color: var(--cell-borderColor);
     }
   }
 

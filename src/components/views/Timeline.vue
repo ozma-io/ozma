@@ -263,8 +263,8 @@ export default class UserViewTimeline extends mixins<EmptyBaseUserView>(BaseUser
 
     .textarea {
       height: 3rem;
-      background-color: var(--input-backgroundColor);
-      color: var(--input-foregroundColor);
+      background-color: var(--cell-backgroundColor);
+      color: var(--cell-foregroundColor);
     }
   }
 

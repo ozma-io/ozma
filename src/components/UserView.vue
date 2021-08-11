@@ -159,6 +159,7 @@ import { namespace } from "vuex-class";
 import { ArgumentName, AttributesMap, IEntityRef, IEntriesRequestOpts } from "ozma-api";
 
 import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, mapMaybe, NeverError } from "@/utils";
+import { defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
 import { funappSchema } from "@/api";
 import { equalEntityRef, serializeValue, valueIsNull } from "@/values";
 import { AddedRowId, CombinedTransactionResult, ICombinedInsertEntityResult, IStagingEventHandler, StagingKey } from "@/state/staging_changes";
@@ -342,7 +343,7 @@ export default class UserView extends Vue {
     return {
       icon: "edit_note",
       caption: this.$t("edit_arguments").toString(),
-      variant: this.contextMenuShowArgumentEditor ? "secondary" : undefined,
+      variant: this.contextMenuShowArgumentEditor ? bootstrapVariantAttribute("secondary") : defaultVariantAttribute,
       callback: () => {
         this.contextMenuShowArgumentEditor = !this.contextMenuShowArgumentEditor;
       },
@@ -384,6 +385,7 @@ export default class UserView extends Vue {
         buttons.push({
           icon: "code",
           caption: this.$t("edit_view").toString(),
+          variant: defaultVariantAttribute,
           link: { query: editQuery, target: "modal-auto", type: "query" },
           type: "link",
         });

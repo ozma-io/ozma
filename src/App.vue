@@ -13,6 +13,7 @@
   <div
     id="app"
     :style="[styleSettings, colorVariables]"
+    class="default-variant default-local-variant"
   >
     <AlertBanner
       v-if="bannerMessage"
@@ -58,7 +59,6 @@
 </template>
 
 <script lang="ts">
-import R from "ramda";
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
@@ -66,8 +66,8 @@ import { CurrentSettings } from "@/state/settings";
 import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import FabCluster from "@/components/FabCluster/FabCluster.vue";
 import { ErrorKey } from "@/state/errors";
-import { getColorVariables, inheritColorVariables } from "@/utils_colors";
-import type { Theme } from "@/utils_colors";
+import { colorVariantsToCssRules, bootstrapColorVariants, colorVariantFromRaw, transparentVariant } from "@/utils_colors";
+import type { ThemeName } from "@/utils_colors";
 import { eventBus } from "@/main";
 import { isReadonlyDemoInstance } from "@/api";
 import { Button } from "./components/buttons/buttons";
@@ -89,7 +89,7 @@ const staging = namespace("staging");
 } })
 export default class App extends Vue {
   @settings.State("current") settings!: CurrentSettings;
-  @settings.State("currentTheme") currentTheme!: Theme;
+  @settings.State("currentTheme") currentTheme!: ThemeName;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
@@ -168,55 +168,36 @@ export default class App extends Vue {
 
   @Watch("currentTheme", { immediate: true })
   private loadColors() {
-    const lightColorVariants = this.settings.colorVariants.filter(variant => variant.theme === "light");
-    const colorVariants = this.currentTheme.name !== "light"
-      ? this.settings.colorVariants.filter(variant => variant.theme === this.currentTheme.name)
-      : [];
-    // TODO: genenrating variables for each component is not the best solution, would be cool to fix this.
-    const componentsNames = [
-      "table",
-      "input",
-      "form",
-      "table",
-      "tableCell",
-      "menuEntry",
-      "kanban",
-      "kanbanCard",
-      "interface",
-      "reference",
-      "button",
-    ];
+    const currentTheme = this.settings.themes.find(theme => theme.themeName.name === this.currentTheme);
 
     const background = this.styleSettings["--OldMainBackgroundColor"];
     const foreground = this.styleSettings["--OldMainTextColor"];
     const border = this.styleSettings["--OldMainBorderColor"];
-    const defaultVariables = getColorVariables("default", { background, foreground, border });
-    const menuEntryVariables = inheritColorVariables(
-      "menuEntry",
-      "default",
-      {
-        background: "rgba(0, 0, 0, 0)",
-        border: "rgba(0, 0, 0, 0)",
-      },
-    );
+    const oldDefaultVariant = colorVariantFromRaw({ background, foreground, border });
+    const defaultVariant = currentTheme?.colorVariants["default"] ?? oldDefaultVariant;
+    const interfaceButton = {
+      ...transparentVariant,
+      foreground: defaultVariant.foreground,
+      foregroundContrast: defaultVariant.foregroundContrast,
+      foregroundDarker: defaultVariant.foregroundDarker,
+    };
+    const defaultColorVariants = {
+      "default": defaultVariant,
+      interfaceButton,
+    };
+    const colorVariants = { ...bootstrapColorVariants, ...defaultColorVariants, ...currentTheme?.colorVariants };
+    const rules = colorVariantsToCssRules(colorVariants);
+    const sheet = (document.getElementById("theme-styles") as any)?.sheet as CSSStyleSheet | undefined;
+    if (sheet) {
+      while (sheet.cssRules.length > 0) {
+        sheet.deleteRule(0);
+      }
 
-    const interfaceButtonVariables = inheritColorVariables(
-      "interfaceButton",
-      "interface",
-      {
-        background: "rgba(0, 0, 0, 0)",
-        border: "rgba(0, 0, 0, 0)",
-      },
-    );
-
-    this.colorVariables = R.mergeAll([
-      defaultVariables,
-      ...componentsNames.map(componentName => getColorVariables(componentName, "default")),
-      menuEntryVariables,
-      interfaceButtonVariables,
-      ...lightColorVariants.map((variant: any) => getColorVariables(variant.name, variant)),
-      ...colorVariants.map((variant: any) => getColorVariables(variant.name, variant)),
-    ]);
+      for (const rule of rules) {
+        sheet.insertRule(rule);
+      }
+    }
+    /* console.log(sheet); */
   }
 
   private get fontSize(): number {
@@ -288,16 +269,17 @@ export default class App extends Vue {
   }
 
   private get bannerColorVariables() {
-    const variant = this.settings.getEntry("banner_variant", String, null);
-    if (variant) {
-      try {
-        const parsed = JSON.parse(variant);
-        return getColorVariables("banner", parsed);
-      } catch {
-        return getColorVariables("banner", variant);
-      }
-    }
-
+    // TODO FIXME
+    /*     const variant = this.settings.getEntry("banner_variant", String, null);
+ *     if (variant) {
+ *       try {
+ *         const parsed = JSON.parse(variant);
+ *         return getColorVariables("banner", parsed);
+ *       } catch {
+ *         return getColorVariables("banner", variant);
+ *       }
+ *     }
+ *  */
     return null;
   }
 }
@@ -305,14 +287,16 @@ export default class App extends Vue {
 
 <style lang="scss" scoped>
   #app {
-    --MainTextColor: var(--default-foregroundColor, var(--OldMainTextColor)) !important;
-    --MainTextColorLight: var(--default-foregroundDarkerColor, var(--OldMainTextColorLight)) !important;
-    --MainBackgroundColor: var(--default-backgroundColor, var(--OldMainBackgroundColor)) !important;
-    --MainBorderColor: var(--default-borderColor, var(--OldMainBorderColor)) !important;
+    --MainTextColor: var(--foregroundColor, var(--OldMainTextColor)) !important;
+    --MainTextColorLight: var(--foregroundDarkerColor, var(--OldMainTextColorLight)) !important;
+    --MainBackgroundColor: var(--backgroundColor, var(--OldMainBackgroundColor)) !important;
+    --MainBorderColor: var(--borderColor, var(--OldMainBorderColor)) !important;
 
-    background-color: var(--default-backgroundDarker1Color);
-    color: var(--default-foregroundColor);
+    background-color: var(--backgroundDarker1Color);
+    color: var(--foregroundColor);
   }
+
+  @include variant-to-local("default");
 
   .app-container {
     position: relative;
@@ -324,7 +308,7 @@ export default class App extends Vue {
     top: 0;
     left: 0;
     padding: 0.2rem;
-    background-color: var(--default-backgroundDarker1Color);
+    background-color: var(--backgroundDarker1Color);
     border-bottom-right-radius: 0.25rem;
     z-index: 1000;
   }

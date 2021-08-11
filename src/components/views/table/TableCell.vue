@@ -14,17 +14,24 @@
   <!-- `.stop` in `@click` fixes calendar popup hiding -->
   <td
     ref="cell"
-    :style="[value.extra.style, value.extra.colorVariables]"
-    :class="['table-td', {'fixed-column': column.fixed,
-                          'select_fixed': value.extra.selected && column.fixed,
-                          'next-after-last-fixed': index === lastFixedColumnIndex,
-                          'select': value.extra.selected && !column.fixed,
-                          'selected': value.extra.selected,
-                          'required-cell': requiredButEmpty,
-                          'disable_cell': value.info === undefined && from !== 'existing'}]"
+    :style="[value.extra.style, variantVariables]"
+    :class="[
+      'table-td',
+      variantClassName,
+      'cell-local-variant',
+      {
+        'fixed-column': column.fixed,
+        'select_fixed': value.extra.selected && column.fixed,
+        'next-after-last-fixed': index === lastFixedColumnIndex,
+        'select': value.extra.selected && !column.fixed,
+        'selected': value.extra.selected,
+        'required-cell': requiredButEmpty,
+        'disable_cell': value.info === undefined && from !== 'existing'
+      }
+    ]"
     @click.stop="$emit('cell-click', columnPosition, $refs.cell)"
   >
-    <p>
+    <p class="default-variant">
       <template v-if="column.type == 'buttons'">
         <ButtonsPanel
           class="cell-buttons-panel"
@@ -33,9 +40,9 @@
         />
       </template>
       <template v-else-if="value.extra.link !== null && value.extra.valueHtml.length > 0">
-        <div class="selectable">
+        <div class="option option-variant option-local-variant">
           <FunLink
-            class="selectable-link rounded-circle"
+            class="option-link rounded-circle"
             :link="value.extra.link"
             @goto="$emit('goto', $event)"
           >
@@ -62,8 +69,10 @@
           v-else
           :class="[
             'cell-text',
+            'option-variant',
+            'option-local-variant',
             {
-              'selectable': (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueHtml.length > 0,
+              'option': (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueHtml.length > 0,
               'tree': showTree && column.treeUnfoldColumn && !notExisting,
             }
           ]"
@@ -112,7 +121,7 @@ import Checkbox from "@/components/checkbox/Checkbox.vue";
 import { attrToButtons, Button } from "@/components/buttons/buttons";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import type { IColumn, ITableExtendedValue, ITableRowTree } from "@/components/views/Table.vue";
-import { getColorVariables } from "@/utils_colors";
+import { getColorVariantAttributeClassName, getColorVariantAttributeVariables, interfaceButtonVariant } from "@/utils_colors";
 
 @Component({
   components: {
@@ -145,6 +154,14 @@ export default class TableCell extends Vue {
 
   private get requiredButEmpty() {
     return this.isNull && this.value.info?.field?.isNullable === false;
+  }
+
+  private get variantClassName(): string | null {
+    return getColorVariantAttributeClassName(this.value.extra.colorVariant);
+  }
+
+  private get variantVariables(): Record<string, string> | null {
+    return getColorVariantAttributeVariables(this.value.extra.colorVariant);
   }
 
   private get treeLevel() {
@@ -180,8 +197,7 @@ export default class TableCell extends Vue {
       type: "callback",
       icon: "add",
       tooltip: this.$t("add_child_tooplip").toString(),
-      variant: "interfaceButton",
-      colorVariables: getColorVariables("button", "interfaceButton"),
+      variant: interfaceButtonVariant,
       callback: () => this.$emit("add-child"),
     };
   }
@@ -208,18 +224,21 @@ export default class TableCell extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  .selectable {
+  @include variant-to-local("cell");
+  @include variant-to-local("option");
+
+  .option {
     padding: 0.1rem 0.25rem;
     display: inline-flex;
     align-items: center;
-    background-color: var(--reference-backgroundColor);
-    border: 1px solid var(--reference-borderColor);
-    color: var(--reference-foregroundColor);
+    background-color: var(--option-backgroundColor);
+    border: 1px solid var(--option-borderColor);
+    color: var(--option-foregroundColor);
     border-radius: 1rem;
     max-width: 100%;
     word-wrap: break-word;
 
-    .selectable-link {
+    .option-link {
       @include material-button("reference");
 
       margin-right: 0.25rem;
@@ -229,7 +248,7 @@ export default class TableCell extends Vue {
       opacity: 0.3;
     }
 
-    &:hover .selectable-link {
+    &:hover .option-link {
       opacity: 1;
     }
   }
@@ -252,7 +271,7 @@ export default class TableCell extends Vue {
     height: 0.333em;
     margin: 0.333em;
     border-radius: 0.333em;
-    background-color: var(--tableCell-foregroundColor);
+    background-color: var(--cell-foregroundColor);
     opacity: 0.05;
   }
 
@@ -337,7 +356,7 @@ export default class TableCell extends Vue {
   }
 
   .reference-open-modal {
-    @include material-button("reference");
+    @include material-button("option");
 
     pointer-events: auto !important;
     border: none;
