@@ -5,15 +5,16 @@ import { mapMaybe, isMobile, shortLanguage } from "@/utils";
 export const buttonDisplays = ["all", "desktop", "mobile", "selectionPanel"] as const;
 export type ButtonDisplay = typeof buttonDisplays[number];
 export const isButtonDisplay = (display: unknown): display is ButtonDisplay => buttonDisplays.includes(display as any);
+import type { ColorVariantAttribute } from "@/utils_colors";
+import { colorVariantFromAttribute, interfaceButtonVariant } from "@/utils_colors";
 
 export interface IButton {
   icon?: string;
   caption?: string;
   tooltip?: string;
   display?: ButtonDisplay;
-  variant?: unknown;
   disabled?: boolean;
-  colorVariables?: Record<string, string>;
+  variant: ColorVariantAttribute;
 }
 
 export interface ILocationButton extends IButton {
@@ -50,7 +51,7 @@ export interface IErrorButton extends IButton {
   type: "error";
 }
 
-export type Button = ILocationButton | ILinkButton | ICallbackButton | IUploadFileButton | IButtonGroup | IOtherButton| IErrorButton;
+export type Button = ILocationButton | ILinkButton | ICallbackButton | IUploadFileButton | IButtonGroup | IOtherButton | IErrorButton;
 
 const messages: Record<string, Record<string, string>> = {
   en: {
@@ -80,19 +81,7 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts, parseA
   const icon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
   const tooltip = typeof buttonObj.tooltip === "string" ? buttonObj.tooltip : undefined;
   const display = isButtonDisplay(buttonObj.display) ? buttonObj.display : undefined;
-  const variant = buttonObj.variant ?? undefined;
-  const variables = buttonObj.colorVariables ?? undefined;
-  let colorVariables;
-  if (typeof variables === "object"
-   && variables !== null
-   && Object.keys(variables).every(key => typeof key === "string")
-   && Object.values(variables).every(values => typeof values === "string")
-  ) {
-    colorVariables = variables as Record<string, string>;
-  }
-  if (!colorVariables && variant) {
-    // colorVariables = getColorVariables("button", variant);
-  }
+  const variant = colorVariantFromAttribute(buttonObj.variant);
 
   if (buttonObj.visible === false) {
     return undefined;
@@ -105,7 +94,6 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts, parseA
       icon,
       tooltip,
       variant,
-      colorVariables,
       link,
       display,
       type: "link",
@@ -119,7 +107,6 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts, parseA
       icon,
       tooltip,
       variant,
-      colorVariables,
       buttons,
       display,
       type: "button-group",
@@ -132,7 +119,6 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts, parseA
       icon,
       tooltip,
       variant,
-      colorVariables,
       display,
       type: "other",
     };
@@ -142,7 +128,7 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts, parseA
     caption: funI18n("error_button"),
     icon: "error_outline",
     tooltip: `${funI18n("computed_attributes")}: ${JSON.stringify(buttonObj)}`,
-    variant: "outline-danger",
+    variant: { type: "existing", className: "outline-danger" },
     display,
     type: "error",
   };
@@ -179,11 +165,7 @@ export const attrToButtonsOld = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): 
     const icon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
     const tooltip = typeof buttonObj.tooltip === "string" ? buttonObj.tooltip : undefined;
     const display = isButtonDisplay(buttonObj.display) ? buttonObj.display : "desktop";
-    const variant = buttonObj.variant ?? undefined;
-    let colorVariables;
-    if (variant) {
-      // colorVariables = getColorVariables("button", variant);
-    }
+    const variant = colorVariantFromAttribute(buttonObj.variant);
 
     if (buttonObj.visible === false || caption === undefined) {
       return undefined;
@@ -196,7 +178,6 @@ export const attrToButtonsOld = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): 
         icon,
         tooltip,
         variant,
-        colorVariables,
         link,
         display,
         type: "link",
@@ -210,7 +191,6 @@ export const attrToButtonsOld = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): 
         icon,
         tooltip,
         variant,
-        colorVariables,
         buttons,
         display,
         type: "button-group",
@@ -225,7 +205,7 @@ export const buttonsToPanelButtons = (buttons: Button[]): Button[] => {
   const panelButtons: Button[] = [];
   const extraButton: Button = {
     icon: "more_vert",
-    variant: "interfaceButton",
+    variant: interfaceButtonVariant,
     type: "button-group",
     buttons: [],
   };

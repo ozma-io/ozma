@@ -77,8 +77,6 @@ export const colorVariantFromRaw = (raw: RawColorVariant): ColorVariant => {
   };
 };
 
-export const transparentVariant = Object.fromEntries(variantKeys.map(key => [key, "transparent"])) as ColorVariant;
-
 const rawSimpleBootstrapColorVariants: Record<SimpleBootstrapVariantName, RawColorVariant> = {
   primary: { foreground: "#e8e6e3", background: "#007bff" },
   secondary: { foreground: "#e8e6e3", background: "#6c757d" },
@@ -97,6 +95,12 @@ const rawOutlineBootstrapColorVariants: Record<OutlineBootstrapVariantName, RawC
 const rawBootstrapColorVariants = { ...rawSimpleBootstrapColorVariants, ...rawOutlineBootstrapColorVariants };
 export const bootstrapColorVariants: Record<BootstrapVariantName, ColorVariant> =
   objectMap(value => colorVariantFromRaw({ ...value }), rawBootstrapColorVariants);
+
+export const transparentVariant = Object.fromEntries(variantKeys.map(key => [key, "transparent"])) as ColorVariant;
+
+export const defaultVariantAttribute: ColorVariantAttribute = ({ type: "existing", className: "default" }) as const;
+export const interfaceButtonVariant: ColorVariantAttribute = ({ type: "existing", className: "interfaceButton" }) as const;
+export const bootstrapVariantAttribute = (name: BootstrapVariantName) => ({ type: "existing", className: name }) as const;
 
 const loadFullThemeNames = async (): Promise<FullThemeName[]> => {
   const ref = { schema: "funapp", name: "color_themes" };
@@ -143,7 +147,7 @@ export const loadThemes = async (): Promise<Theme[]> => {
 };
 
 const colorVariantPropToCssVariableEntry = (variantKey: VariantKey, color: string): [ColorVariantCssVariableName, string] =>
-  [`--${variantKey}Color` as ColorVariantCssVariableName, color];
+  [`--${variantKey}Color` as const, color];
 
 const colorVariantPropToCssVariable = (variantKey: VariantKey, color: string) => {
   const [name, _] = colorVariantPropToCssVariableEntry(variantKey, color);
@@ -157,24 +161,25 @@ export const colorVariantToCssVariables = (variant: ColorVariant): ColorVariantC
   return variables;
 };
 
-export type ColorVariantClassName = `${string}-variant`;
+export type ColorVariantClassName = string;
+export type ColorVariantFullClassName = `${string}-variant`;
 
 export type ColorVariantAttribute =
   | { type: "existing"; className: ColorVariantClassName }
-  | { type: "custom"; variables: ColorVariantCssVariables };
+  | { type: "inline"; variables: ColorVariantCssVariables };
 
 export const colorVariantFromAttribute = (attribute: unknown): ColorVariantAttribute =>
   typeof attribute === "string"
-    ? { type: "existing", className: `${attribute}-variant` as ColorVariantClassName }
+    ? { type: "existing", className: `${attribute}` }
     : typeof attribute === "object" && attribute !== null
-      ? { type: "custom", variables: colorVariantToCssVariables(colorVariantFromRaw(attribute)) }
-      : { type: "existing", className: "default-variant" };
+      ? { type: "inline", variables: colorVariantToCssVariables(colorVariantFromRaw(attribute)) }
+      : { type: "existing", className: "default" };
 
-export const getColorVariantAttributeClassName = (attribute: ColorVariantAttribute): ColorVariantClassName | null =>
-  attribute.type === "existing" ? attribute.className : null;
+export const getColorVariantAttributeClassName = (attribute: ColorVariantAttribute): ColorVariantFullClassName | null =>
+  attribute.type === "existing" ? `${attribute.className}-variant` as const : null;
 
 export const getColorVariantAttributeVariables = (attribute: ColorVariantAttribute): ColorVariantCssVariables | null =>
-  attribute.type === "custom" ? attribute.variables : null;
+  attribute.type === "inline" ? attribute.variables : null;
 
 const colorVariantToCssRule = (variantName: string, variant: ColorVariant): string => {
   const variables = (Object.entries(variant) as [VariantKey, string][])

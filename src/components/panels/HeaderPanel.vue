@@ -52,6 +52,7 @@ import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import type { Button } from "@/components/buttons/buttons";
 import { buttonsToPanelButtons } from "@/components/buttons/buttons";
 import SearchPanel from "@/components/SearchPanel.vue";
+import { interfaceButtonVariant } from "@/utils_colors";
 
 @Component({
   components: {
@@ -81,7 +82,7 @@ export default class HeaderPanel extends Vue {
       ? null
       : {
         type: "link",
-        variant: "interfaceButton",
+        variant: interfaceButtonVariant,
         icon: "fullscreen",
         link: {
           type: "query",

@@ -76,6 +76,7 @@ import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import { Button } from "@/components/buttons/buttons";
 import { findLink } from "@/utils";
 import type { TextLink } from "@/utils";
+import { bootstrapVariantAttribute } from "@/utils_colors";
 import { Debounce } from "vue-debounce-decorator";
 
 @Component({
@@ -100,7 +101,7 @@ export default class Input extends Vue {
     return {
       type: "callback",
       icon: "qr_code_2",
-      variant: "outline-info",
+      variant: bootstrapVariantAttribute("outline-info"),
       callback: () => {
         this.openQRCodeScanner = !this.openQRCodeScanner;
       },
@@ -151,7 +152,7 @@ export default class Input extends Vue {
         href: this.textLink.href,
         target: "_blank",
       },
-      variant: "outline-primary",
+      variant: bootstrapVariantAttribute("outline-primary"),
     };
   }
 

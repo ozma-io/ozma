@@ -121,7 +121,7 @@ import Checkbox from "@/components/checkbox/Checkbox.vue";
 import { attrToButtons, Button } from "@/components/buttons/buttons";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import type { IColumn, ITableExtendedValue, ITableRowTree } from "@/components/views/Table.vue";
-import { getColorVariantAttributeClassName, getColorVariantAttributeVariables } from "@/utils_colors";
+import { getColorVariantAttributeClassName, getColorVariantAttributeVariables, interfaceButtonVariant } from "@/utils_colors";
 
 @Component({
   components: {
@@ -197,7 +197,7 @@ export default class TableCell extends Vue {
       type: "callback",
       icon: "add",
       tooltip: this.$t("add_child_tooplip").toString(),
-      variant: "interfaceButton",
+      variant: interfaceButtonVariant,
       callback: () => this.$emit("add-child"),
     };
   }

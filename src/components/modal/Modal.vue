@@ -99,6 +99,7 @@ import ModalContent from "@/components/modal/ModalContent";
 import ModalTabHeader from "@/components/modal/ModalTabHeader.vue";
 import { IModalTab } from "@/components/modal/types";
 import { homeLink } from "@/utils";
+import { interfaceButtonVariant } from "@/utils_colors";
 import { Button } from "../buttons/buttons";
 
 @Component({ components: { ModalContent, ModalTabHeader } })
@@ -153,13 +154,13 @@ export default class Modal extends Vue {
       {
         type: "callback",
         icon: "arrow_back",
-        variant: "interfaceButton",
+        variant: interfaceButtonVariant,
         callback: () => this.$emit("go-back-window"),
       },
       {
         type: "link",
         icon: "home",
-        variant: "interfaceButton",
+        variant: interfaceButtonVariant,
         link: homeLink,
       },
     ];

@@ -291,7 +291,7 @@ import {
   IExtendedRow, IExtendedRowCommon, IExtendedRowInfo, IExtendedValue, IRowCommon, IUserViewHandler, RowRef, ValueRef,
   valueToPunnedText, CommittedRowRef,
 } from "@/user_views/combined";
-import { colorVariantFromAttribute } from "@/utils_colors";
+import { colorVariantFromAttribute, interfaceButtonVariant } from "@/utils_colors";
 import type { ColorVariantAttribute } from "@/utils_colors";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import { Button } from "../buttons/buttons";
@@ -312,7 +312,6 @@ export interface ITableValueExtra extends IBaseValueExtra {
   valueHtml: string; // Don't forget to sanitize!
   link: Link | null;
   style: Record<string, unknown> | null;
-  /* colorVariables: Record<string, unknown> | null; */
   colorVariant: ColorVariantAttribute;
   selected: boolean;
   htmlElement: HTMLElement | null;
@@ -513,7 +512,6 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
   const extra = {
     valueHtml,
     style: null as Record<string, unknown> | null,
-    /* colorVariables, */
     colorVariant,
   };
   if (Object.keys(style).length !== 0) {
@@ -1184,7 +1182,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return {
       type: "callback",
       icon: "skip_previous",
-      variant: "interfaceButton",
+      variant: interfaceButtonVariant,
       disabled: this.uv.extra.lazyLoad.pagination.currentPage === 0,
       callback: () => this.goToFirstPage(),
     };
@@ -1196,7 +1194,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return {
       type: "callback",
       icon: "arrow_left",
-      variant: "interfaceButton",
+      variant: interfaceButtonVariant,
       disabled: this.uv.extra.lazyLoad.pagination.currentPage === 0,
       callback: () => this.goToPrevPage(),
     };
@@ -1208,7 +1206,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return {
       type: "callback",
       icon: "arrow_right",
-      variant: "interfaceButton",
+      variant: interfaceButtonVariant,
       disabled: (this.uv.rowLoadState.complete && this.onLastPage) || this.uv.extra.lazyLoad.pagination.loading,
       callback: () => this.goToNextPage(),
     };
@@ -1372,7 +1370,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return {
       type: "callback",
       icon: "add",
-      variant: "interfaceButton",
+      variant: interfaceButtonVariant,
       caption: this.$t("add_entry").toString(),
       callback: () => this.loadAllRowsAndAddNewRowOnPosition("top_front"),
     };
@@ -1382,7 +1380,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return {
       type: "callback",
       icon: "add",
-      variant: "interfaceButton",
+      variant: interfaceButtonVariant,
       caption: this.$t("add_entry").toString(),
       callback: () =>
         this.loadAllRowsAndAddNewRowOnPosition("bottom_back").then(() =>

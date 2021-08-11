@@ -141,6 +141,7 @@ import { z } from "zod";
 import { namespace } from "vuex-class";
 
 import { tryDicts, mapMaybe, validNumberFormats, getNumberFormatter, ValidNumberFormat } from "@/utils";
+import { interfaceButtonVariant, bootstrapVariantAttribute } from "@/utils_colors";
 import { AddedRowId } from "@/state/staging_changes";
 import { UserView } from "@/components";
 import Errorbox from "@/components/Errorbox.vue";
@@ -324,7 +325,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     return {
       type: "callback",
       icon: "arrow_right",
-      variant: "interfaceButton",
+      variant: interfaceButtonVariant,
       disabled: (this.uv.rowLoadState.complete && this.onLastPage)
         || (this.uv.extra.lazyLoad.type === "pagination" && this.uv.extra.lazyLoad.pagination.loading),
       callback: () => this.goToNextPage(),
@@ -337,7 +338,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     return {
       type: "callback",
       icon: "arrow_left",
-      variant: "interfaceButton",
+      variant: interfaceButtonVariant,
       disabled: this.uv.extra.lazyLoad.pagination.currentPage === 0,
       callback: () => this.goToPrevPage(),
     };
@@ -616,7 +617,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
         icon: "delete_outline",
         caption: this.$t("delete").toString(),
         callback: () => this.confirmDelete(deleteRef),
-        variant: "danger",
+        variant: bootstrapVariantAttribute("danger"),
         type: "callback",
       });
     }
