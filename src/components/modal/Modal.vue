@@ -98,7 +98,6 @@ import { Component, InjectReactive, Prop, ProvideReactive, Vue, Watch } from "vu
 import ModalContent from "@/components/modal/ModalContent";
 import ModalTabHeader from "@/components/modal/ModalTabHeader.vue";
 import { IModalTab } from "@/components/modal/types";
-import { getColorVariables } from "@/utils_colors";
 import { homeLink } from "@/utils";
 import { Button } from "../buttons/buttons";
 
@@ -155,14 +154,12 @@ export default class Modal extends Vue {
         type: "callback",
         icon: "arrow_back",
         variant: "interfaceButton",
-        colorVariables: getColorVariables("button", "interfaceButton"),
         callback: () => this.$emit("go-back-window"),
       },
       {
         type: "link",
         icon: "home",
         variant: "interfaceButton",
-        colorVariables: getColorVariables("button", "interfaceButton"),
         link: homeLink,
       },
     ];

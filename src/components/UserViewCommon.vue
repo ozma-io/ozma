@@ -83,7 +83,6 @@ import SelectUserView from "@/components/SelectUserView.vue";
 import type { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
 import { ICommonUserViewData, RowRef, ValueRef } from "@/user_views/combined";
 import { getReferenceInfo } from "@/state/entries";
-import { getColorVariables } from "@/utils_colors";
 
 import { attrToButton, Button, attrToButtons, attrToButtonsOld } from "@/components/buttons/buttons";
 import { IAttrToLinkOpts } from "@/links";
@@ -440,7 +439,6 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
           caption: this.$t("remove_selected_rows").toString(),
           callback: () => this.removeSelectedRows(),
           variant: "danger",
-          colorVariables: getColorVariables("button", "danger"),
           type: "callback",
         },
       );

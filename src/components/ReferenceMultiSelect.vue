@@ -111,7 +111,7 @@
     >
       <div
         class="spinner-border spinner-border-sm"
-        style="border-color: var(--input-foregroundDarkerColor); border-right-color: transparent;"
+        style="border-color: var(--cell-foregroundDarkerColor); border-right-color: transparent;"
       />
     </div>
     <QRCodeScanner
@@ -441,10 +441,6 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   .phantom-icon {
     margin: 0 !important;
     line-height: 1;
-  }
-
-  .value-text {
-    margin: 0 0.25rem;
   }
 
   .action-button {

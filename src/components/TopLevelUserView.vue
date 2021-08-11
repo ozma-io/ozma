@@ -236,7 +236,7 @@ import { Link } from "@/links";
 import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { CurrentSettings } from "@/state/settings";
-import { getColorVariables, Theme } from "@/utils_colors";
+import { FullThemeName, ThemeName } from "@/utils_colors";
 import { ISocialLinks } from "./CommunicationsButton.vue";
 
 const auth = namespace("auth");
@@ -294,7 +294,7 @@ export default class TopLevelUserView extends Vue {
   @errors.Mutation("reset") resetErrors!: () => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @settings.State("current") currentSettings!: CurrentSettings;
-  @settings.Action("setTheme") setTheme!: (theme: Theme) => Promise<void>;
+  @settings.Action("setCurrentTheme") setCurrentTheme!: (theme: ThemeName) => Promise<void>;
 
   private statusLine = "";
   private enableFilter = false;
@@ -331,7 +331,6 @@ export default class TopLevelUserView extends Vue {
         type: "callback",
         icon: "arrow_back",
         variant: "interfaceButton",
-        colorVariables: getColorVariables("button", "interfaceButton"), // FIXME TODO: Manual settings of `colorVariables` is ugly, unsafe and stupid, refactor this.
         /* disabled: !this.query?.root.previous, */
         /* callback: () => this.goBackRoot(), */
         callback: () => this.$router.go(-1),
@@ -340,7 +339,6 @@ export default class TopLevelUserView extends Vue {
         type: "link",
         icon: "home",
         variant: "interfaceButton",
-        colorVariables: getColorVariables("button", "interfaceButton"),
         link: homeLink,
       },
       this.burgerButton,
@@ -381,9 +379,10 @@ export default class TopLevelUserView extends Vue {
   @Watch("currentSettings")
   private loadBurgerButtons() {
     const themes = this.currentSettings.themes;
+    const themeNames = themes.map(theme => theme.themeName);
     const locale = this.$i18n.locale;
-    const translate = (theme: Theme) => (typeof theme.localized?.[locale] === "string") ? theme.localized[locale] : theme.name;
-    this.themeButtons = themes.map(theme => ({ caption: translate(theme), type: "callback", callback: () => this.setTheme(theme) }));
+    const translate = (theme: FullThemeName) => (typeof theme.localized?.[locale] === "string") ? theme.localized[locale] : theme.name;
+    this.themeButtons = themeNames.map(themeName => ({ caption: translate(themeName), type: "callback", callback: () => this.setCurrentTheme(themeName.name) }));
 
     this.communicationButtons = [
       this.communicationStrings.email
@@ -598,7 +597,6 @@ export default class TopLevelUserView extends Vue {
     const burgerButton: Button = {
       icon: "menu",
       variant: "interfaceButton",
-      colorVariables: getColorVariables("button", "interfaceButton"),
       buttons,
       type: "button-group",
     };

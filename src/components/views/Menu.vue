@@ -49,7 +49,6 @@ import * as R from "ramda";
 import MenuEntry, { MenuValue, IMenuLink, Badge } from "@/components/views/menu/MenuEntry.vue";
 import { attrToLink, IAttrToLinkOpts } from "@/links";
 import { currentValue, valueToPunnedText } from "@/user_views/combined";
-import { getColorVariables, getVariantColorVariables } from "@/utils_colors";
 
 @UserView()
 @Component({ components: { MenuEntry } })
@@ -117,7 +116,6 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
           badge = entry.badge as Badge;
           const badgeVariant = entry.variant as any;
           if (badge.variant) {
-            badge.colorVariables = getColorVariables("badge", badge.variant);
             delete badge.variant;
           }
         } else {
@@ -132,7 +130,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
           }
           const badgeVariant = entry["badge_variant"];
           if (badgeVariant) {
-            badge.colorVariables = getColorVariables("badge", badgeVariant);
+            // TODO FIXME
           }
         }
       }
@@ -226,7 +224,8 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
   }
 
   get menuEntryVariables() {
-    return getVariantColorVariables("button", "menuEntry");
+    /* return getVariantColorVariables("button", "menuEntry"); */
+    return null;
   }
 }
 </script>

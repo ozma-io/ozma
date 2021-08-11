@@ -31,6 +31,8 @@
   <div
     :class="[
       'popup-container',
+      'option-variant',
+      'option-local-variant',
       {
         'is-open': isPopupOpen,
 
@@ -609,6 +611,8 @@ export default class MultiSelect extends Vue {
 </script>
 
 <style lang="scss" scoped>
+  @include variant-to-local("option");
+
   .fade-enter-active,
   .fade-leave-active {
     transition: all 0.1s;
@@ -646,11 +650,11 @@ export default class MultiSelect extends Vue {
     cursor: pointer;
     align-self: center;
     align-items: center;
-    color: var(--input-foregroundDarkerColor);
+    color: var(--cell-foregroundDarkerColor);
   }
 
   .popup-message {
-    color: var(--input-foregroundDarkerColor);
+    color: var(--cell-foregroundDarkerColor);
     padding: 1rem 0;
     text-align: center;
   }
@@ -661,9 +665,9 @@ export default class MultiSelect extends Vue {
     width: 100%;
     display: flex;
     flex-direction: row;
-    border: 1px solid var(--input-borderColor);
-    background: var(--input-backgroundColor);
-    color: var(--input-foregroundColor);
+    border: 1px solid var(--cell-borderColor);
+    background: var(--cell-backgroundColor);
+    color: var(--cell-foregroundColor);
     border-radius: 0.2rem;
     cursor: pointer;
 
@@ -675,8 +679,8 @@ export default class MultiSelect extends Vue {
 
       &:hover {
         opacity: 1;
-        background-color: var(--input-backgroundDarker1Color);
-        color: var(--input-foregroundDarkerColor);
+        background-color: var(--cell-backgroundDarker1Color);
+        color: var(--cell-foregroundDarkerColor);
       }
 
       &:focus {
@@ -685,15 +689,15 @@ export default class MultiSelect extends Vue {
       }
 
       &:active {
-        background-color: var(--input-backgroundDarker2Color);
-        color: var(--input-foregroundDarkerColor);
+        background-color: var(--cell-backgroundDarker2Color);
+        color: var(--cell-foregroundDarkerColor);
       }
     }
 
     .select-icon {
       border: none;
       background-color: transparent;
-      color: var(--input-foregroundDarkerColor);
+      color: var(--cell-foregroundDarkerColor);
       border-right-width: 0;
       cursor: pointer;
       display: none;
@@ -788,8 +792,8 @@ export default class MultiSelect extends Vue {
 
   .hovered-value {
     cursor: pointer !important;
-    color: var(--reference-foregroundColor) !important;
-    background-color: var(--reference-backgroundDarker1Color) !important;
+    color: var(--option-foregroundColor) !important;
+    background-color: var(--option-backgroundDarker1Color) !important;
   }
 
   div.select-container__options__actions {
@@ -807,11 +811,11 @@ export default class MultiSelect extends Vue {
   .single-value {
     display: inline-flex;
     align-items: center;
-    border: 1px solid var(--reference-borderColor);
-    background-color: var(--reference-backgroundColor);
-    color: var(--reference-foregroundColor);
+    border: 1px solid var(--option-borderColor);
+    background-color: var(--option-backgroundColor);
+    color: var(--option-foregroundColor);
     border-radius: 1rem;
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem 0.75rem;
     line-height: 1rem;
     word-break: break-word;
 

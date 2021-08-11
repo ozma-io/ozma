@@ -3,10 +3,10 @@ $enable-shadows: false;
 $enable-gradients: false;
 $font-family-sans-serif: var(--Font);
 $font-family-serif: var(--Font);
-$input-color: var(--input-foregroundColor);
-$input-placeholder-color: var(--input-foregroundDarkerColor);
+$input-color: var(--cell-foregroundColor);
+$input-placeholder-color: var(--cell-foregroundDarkerColor);
 $border-color: var(--MainBorderColor);
-$input-border-color: var(--input-borderColor, $border-color);
+$input-border-color: var(--cell-borderColor, $border-color);
 
 @import '../../node_modules/bootstrap/scss/bootstrap';
 
@@ -191,7 +191,7 @@ input.disabled {
 
   /* Fixes for Safari */
   opacity: 1;
-  -webkit-text-fill-color: var(--input-foregroundColor);
+  -webkit-text-fill-color: var(--cell-foregroundColor);
 }
 
 input.with-clear-content-button {
@@ -202,7 +202,7 @@ input.with-clear-content-button {
   border-left-width: 0;
   border-right-width: 0;
   border-color: $input-border-color;
-  color: var(--input-foregroundDarkerColor, var(--MainTextColorLight));
+  color: var(--cell-foregroundDarkerColor, var(--MainTextColorLight));
   opacity: 1;
 
   .material-icons {
@@ -220,19 +220,19 @@ input.with-clear-content-button {
   }
 
   .clear-content-button:not(.disabled):hover {
-    background-color: var(--input-backgroundDarker1Color, rgb(239, 239, 239));
+    background-color: var(--cell-backgroundDarker1Color, rgb(239, 239, 239));
 
     .material-icons {
       opacity: 1;
-      color: var(--input-foregroundDarkerColor);
+      color: var(--cell-foregroundDarkerColor);
     }
   }
 
   .clear-content-button:not(.disabled):active {
-    background-color: var(--input-backgroundDarker2Color, rgb(239, 239, 239));
+    background-color: var(--cell-backgroundDarker2Color, rgb(239, 239, 239));
 
     .material-icons {
-      color: var(--input-foregroundDarkerColor);
+      color: var(--cell-foregroundDarkerColor);
     }
   }
 }

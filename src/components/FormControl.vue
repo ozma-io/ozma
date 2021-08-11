@@ -30,7 +30,7 @@
       :is-cell-edit="isCellEdit"
       :label="usedCaption"
       :background-color="cellColor"
-      :color-variables="colorVariables"
+      :color-variant-attribute="colorVarinatAttribute"
       :text-align="textAlign"
       :modal="$isMobile && (forceModalOnMobile || isMultiline)"
       :required="!isNullable"
@@ -318,7 +318,8 @@ import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
 import { IEntityRef } from "ozma-api";
 
-import { getColorVariables } from "@/utils_colors";
+import { colorVariantFromAttribute } from "@/utils_colors";
+import type { ColorVariantAttribute } from "@/utils_colors";
 import type { Button } from "@/components/buttons/buttons";
 import { attrToButtons } from "@/components/buttons/buttons";
 import FormInputPlaceholder from "@/components/FormInputPlaceholder.vue";
@@ -665,14 +666,13 @@ export default class FormControl extends Vue {
     else return null;
   }
 
-  get colorVariables() {
+  private get colorVarinatAttribute(): ColorVariantAttribute {
     if (this.attributes["cell_variant"]) {
-      return getColorVariables("input", this.attributes["cell_variant"]);
+      return colorVariantFromAttribute(this.attributes["cell_variant"]);
     } else if (this.cellColor) {
-      console.warn("`cell_color` attribute is deprecated, use `cell_variant` instead.");
-      return getColorVariables("input", { background: this.cellColor });
+      return colorVariantFromAttribute({ background: this.cellColor });
     } else {
-      return null;
+      return { type: "existing", className: "default-variant" };
     }
   }
 

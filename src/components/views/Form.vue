@@ -152,7 +152,6 @@ import { IAddedRow, ICombinedRow, ICombinedUserView, ICombinedValue, IExtendedRo
 import { GridElement, IGridInput, IGridSection } from "@/components/form/FormGrid.vue";
 import type { Button } from "@/components/buttons/buttons";
 import { lazyLoadSchema } from "@/components/views/Table.vue";
-import { getColorVariables } from "@/utils_colors";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 
@@ -328,7 +327,6 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
       variant: "interfaceButton",
       disabled: (this.uv.rowLoadState.complete && this.onLastPage)
         || (this.uv.extra.lazyLoad.type === "pagination" && this.uv.extra.lazyLoad.pagination.loading),
-      colorVariables: getColorVariables("button", "interfaceButton"),
       callback: () => this.goToNextPage(),
     };
   }
@@ -341,7 +339,6 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
       icon: "arrow_left",
       variant: "interfaceButton",
       disabled: this.uv.extra.lazyLoad.pagination.currentPage === 0,
-      colorVariables: getColorVariables("button", "interfaceButton"),
       callback: () => this.goToPrevPage(),
     };
   }

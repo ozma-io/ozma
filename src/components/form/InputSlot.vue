@@ -15,7 +15,7 @@
 </i18n>
 <template>
   <b-row
-    :class="{'input_slot__row': inline, 'input-slot_cell-edit': isCellEdit}"
+    :class="[variantClassName, 'cell-local-variant', {'input_slot__row': inline, 'input-slot_cell-edit': isCellEdit}]"
   >
     <Modal
       v-if="modal"
@@ -82,6 +82,8 @@
         <div
           :class="[
             'input-slot',
+            variantClassName,
+            'cell-local-variant',
             {
               'required': required,
               'empty': empty,
@@ -89,10 +91,10 @@
             },
           ]"
           :style="[
+            variantVariables,
             {
-              backgroundColor: backgroundColor ? backgroundColor : 'var(--input-backgroundColor)',
+              backgroundColor: backgroundColor ? backgroundColor : 'var(--cell-backgroundColor)',
             },
-            colorVariables,
           ]"
         >
           <div
@@ -139,6 +141,8 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 
 import Modal from "@/components/modal/Modal.vue";
 import Input from "@/components/form/Input.vue";
+import type { ColorVariantAttribute } from "@/utils_colors";
+import { getColorVariantAttributeClassName, getColorVariantAttributeVariables } from "@/utils_colors";
 
 @Component({ components: { Modal, Input } })
 export default class InputSlot extends Vue {
@@ -147,7 +151,8 @@ export default class InputSlot extends Vue {
   // FIXME: remove this and style parent nodes instead.
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
-  @Prop({ type: Object }) colorVariables!: Record<string, unknown> | null;
+  /* @Prop({ type: Object }) colorVariables!: Record<string, unknown> | null; */
+  @Prop({ type: Object }) colorVariantAttribute!: ColorVariantAttribute;
   @Prop({ type: String, default: "left" }) textAlign!: string;
   @Prop({ type: Boolean, default: false }) modal!: boolean;
   @Prop({ type: Boolean, default: false }) modalOnly!: boolean;
@@ -161,6 +166,14 @@ export default class InputSlot extends Vue {
     if (this.modalOnly && this.modal) {
       this.isModalOpen = true;
     }
+  }
+
+  private get variantClassName(): string | null {
+    return getColorVariantAttributeClassName(this.colorVariantAttribute);
+  }
+
+  private get variantVariables(): Record<string, string> | null {
+    return getColorVariantAttributeVariables(this.colorVariantAttribute);
   }
 
   private get inputName(): string {
@@ -193,6 +206,8 @@ export default class InputSlot extends Vue {
 </script>
 
 <style lang="scss" scoped>
+  @include variant-to-local("cell");
+
   .modal-content {
     background-color: var(--default-backgroundDarker1Color);
   }
@@ -281,9 +296,9 @@ export default class InputSlot extends Vue {
       }
 
       &.cell-edit {
-        background-color: var(--input-backgroundColor);
-        border: 1px solid var(--input-borderColor);
-        border-right-color: var(--input-backgroundColor);
+        background-color: var(--cell-backgroundColor);
+        border: 1px solid var(--cell-borderColor);
+        border-right-color: var(--cell-backgroundColor);
         border-top-left-radius: 50%;
         border-bottom-left-radius: 50%;
       }
@@ -293,7 +308,7 @@ export default class InputSlot extends Vue {
         height: 1rem;
         width: 1rem;
         border-radius: 50%;
-        background-color: var(--input-foregroundColor);
+        background-color: var(--cell-foregroundColor);
         opacity: 0.05;
         transition:
           background-color 0.1s,

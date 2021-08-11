@@ -74,7 +74,6 @@ import Textarea from "@/components/form/Textarea.vue";
 import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import { Button } from "@/components/buttons/buttons";
-import { getColorVariables } from "@/utils_colors";
 import { findLink } from "@/utils";
 import type { TextLink } from "@/utils";
 import { Debounce } from "vue-debounce-decorator";
@@ -102,7 +101,6 @@ export default class Input extends Vue {
       type: "callback",
       icon: "qr_code_2",
       variant: "outline-info",
-      colorVariables: getColorVariables("button", "outline-info"),
       callback: () => {
         this.openQRCodeScanner = !this.openQRCodeScanner;
       },
@@ -154,7 +152,6 @@ export default class Input extends Vue {
         target: "_blank",
       },
       variant: "outline-primary",
-      colorVariables: getColorVariables("button", "outline-primary"),
     };
   }
 
@@ -214,7 +211,7 @@ export default class Input extends Vue {
 <style lang="scss" scoped>
   ::v-deep .form-control {
     background-color: transparent;
-    color: var(--input-foregroundColor);
+    color: var(--cell-foregroundColor);
 
     &.readonly {
       cursor: not-allowed;
@@ -236,9 +233,9 @@ export default class Input extends Vue {
     max-height: 165px;
     text-align: inherit;
     line-height: 1.2rem;
-    color: var(--input-foregroundColor);
-    background-color: var(--input-backgroundColor);
-    border-color: var(--input-borderColor);
+    color: var(--cell-foregroundColor);
+    background-color: var(--cell-backgroundColor);
+    border-color: var(--cell-borderColor);
   }
 
   .input-textarea:focus {

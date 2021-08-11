@@ -1,12 +1,13 @@
 <template>
   <b-col
     :sm="entry.size || 12"
-    :style="colorVariables"
   >
     <template v-if="entry.content">
       <div
         :class="[
           'menu_category_block',
+          'default-variant',
+          'menuEntry-local-variant',
           {
             'is-mobile': $isMobile,
           },
@@ -108,11 +109,6 @@ export default class MenuEntry extends Vue {
     return { fontSize: `${fontSize}px` };
   }
 
-  private get colorVariables() {
-    /* return getColorVariables("menuEntry", { backgroundColor: "pink", color: "green" }); */
-    return {};
-  }
-
   private getIconType(str: string | undefined | null) {
     return getIconType(str);
   }
@@ -130,6 +126,8 @@ export default class MenuEntry extends Vue {
 </script>
 
 <style lang="scss" scoped>
+  @include variant-to-local("menuEntry");
+
   .menu_category_block {
     margin-top: 1rem;
     margin-bottom: 2rem;
@@ -160,7 +158,7 @@ export default class MenuEntry extends Vue {
   }
 
   .menu-entry {
-    @include material-button;
+    @include material-button("menuEntry");
 
     width: 100%;
     max-width: 100%;
@@ -170,8 +168,8 @@ export default class MenuEntry extends Vue {
     color: var(--menuEntry-foregroundColor);
     margin-bottom: 0.25rem;
     text-decoration: none;
-    background-color: var(--menuEntry-backgroundColor, transparent);
-    border-color: var(--menuEntry-borderColor);
+    background: transparent;
+    border-color: transparent;
 
     .icon {
       user-select: none;

@@ -16,7 +16,7 @@
   <b-button
     v-else
     v-b-tooltip.hover.noninteractive.viewport
-    :class="[alignRight ? '' : 'd-flex justify-content-center', buttonClass]"
+    :class="[button.variant + '-variant', 'button-local-variant', alignRight ? '' : 'd-flex justify-content-center', buttonClass]"
     :style="button.colorVariables"
     variant="light"
     :title="button.tooltip"
@@ -56,6 +56,8 @@ export default class ButtonView extends Vue {
 </script>
 
 <style lang="scss" scoped>
+  @include variant-to-local("button");
+
   .list-group-item {
     cursor: pointer;
     text-align: left;

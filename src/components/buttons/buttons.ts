@@ -1,7 +1,6 @@
 import { RawLocation } from "vue-router";
 import { Link, IAttrToLinkOpts, attrToLink } from "@/links";
 import { mapMaybe, isMobile, shortLanguage } from "@/utils";
-import { getColorVariables } from "@/utils_colors";
 
 export const buttonDisplays = ["all", "desktop", "mobile", "selectionPanel"] as const;
 export type ButtonDisplay = typeof buttonDisplays[number];
@@ -92,7 +91,7 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts, parseA
     colorVariables = variables as Record<string, string>;
   }
   if (!colorVariables && variant) {
-    colorVariables = getColorVariables("button", variant);
+    // colorVariables = getColorVariables("button", variant);
   }
 
   if (buttonObj.visible === false) {
@@ -144,7 +143,6 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts, parseA
     icon: "error_outline",
     tooltip: `${funI18n("computed_attributes")}: ${JSON.stringify(buttonObj)}`,
     variant: "outline-danger",
-    colorVariables: getColorVariables("button", "outline-danger"),
     display,
     type: "error",
   };
@@ -184,7 +182,7 @@ export const attrToButtonsOld = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): 
     const variant = buttonObj.variant ?? undefined;
     let colorVariables;
     if (variant) {
-      colorVariables = getColorVariables("button", variant);
+      // colorVariables = getColorVariables("button", variant);
     }
 
     if (buttonObj.visible === false || caption === undefined) {
@@ -228,7 +226,6 @@ export const buttonsToPanelButtons = (buttons: Button[]): Button[] => {
   const extraButton: Button = {
     icon: "more_vert",
     variant: "interfaceButton",
-    colorVariables: getColorVariables("button", "interfaceButton"),
     type: "button-group",
     buttons: [],
   };

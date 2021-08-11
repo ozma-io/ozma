@@ -73,7 +73,7 @@ export default class QRCode extends Vue {
 
 <style lang="scss" scoped>
   .qrcode-container {
-    border: 1px solid var(--input-borderColor);
+    border: 1px solid var(--cell-borderColor);
     overflow: hidden;
   }
 </style>
