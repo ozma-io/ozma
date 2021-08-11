@@ -430,7 +430,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   }
 
   .open-modal-button {
-    @include material-button("reference");
+    @include material-button("option");
 
     border: none;
     padding: 0;

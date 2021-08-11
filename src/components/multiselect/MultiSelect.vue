@@ -31,8 +31,6 @@
   <div
     :class="[
       'popup-container',
-      'option-variant',
-      'option-local-variant',
       {
         'is-open': isPopupOpen,
 
@@ -65,7 +63,7 @@
           class="select-container"
         >
           <div
-            class="values-container"
+            class="default-variant values-container"
           >
             <span
               v-if="valuesLength === 0"
@@ -84,6 +82,8 @@
                 v-for="(option, index) in selectedOptions"
                 :key="index"
                 :class="[
+                  'option-variant',
+                  'option-local-variant',
                   single ? 'single-value' : 'one-of-many-value',
                 ]"
                 :style="listValueStyle"
@@ -190,7 +190,7 @@
               @mouseover="hoveredOpinionIndex = index"
               @click="selectOption(option.index)"
             >
-              <div class="single-value">
+              <div class="option-variant option-local-variant single-value">
                 <slot
                   name="option"
                   :option="option"
