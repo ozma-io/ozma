@@ -2223,16 +2223,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   selectAll(selectedStatus: boolean) {
     if (selectedStatus) {
-      Object.entries(this.uv.newRows).forEach(([rowIdRaw, row]) => {
-        const rowId = Number(rowIdRaw);
-        row.extra.selected = true;
-        this.uv.extra.selectedRows.insert({
-          type: "added",
-          id: rowId,
-        });
-      });
-
-      this.existingRows.forEach((localRow, rowI) => {
+      this.allRows.forEach((localRow, rowI) => {
         const row = this.uv.getRowByRef(localRow.ref);
         row!.extra.selected = true;
         this.uv.extra.selectedRows.insert(localRow.ref);

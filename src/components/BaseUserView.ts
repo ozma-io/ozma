@@ -219,6 +219,7 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
           id: rowId,
         });
       });
+
       if (this.uv.rows !== null) {
         this.uv.rows.forEach((localRow, rowI) => {
           const row = this.uv.rows![rowI];
