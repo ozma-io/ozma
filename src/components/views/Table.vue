@@ -420,7 +420,8 @@ const createColumns = (uv: ICombinedUserViewAny): IColumn[] => {
       isTreeUnfoldColumnSet = true;
     }
 
-    const type = String(getColumnAttr("column_type"));
+    // "column_type" is old version, but "control" is consistent with forms.
+    const type = String(getColumnAttr("control") ?? getColumnAttr("column_type"));
 
     columns[i] = {
       caption,
