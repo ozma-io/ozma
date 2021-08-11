@@ -2455,6 +2455,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     position: sticky;
     left: 0;
     display: flex;
+    padding: 0.25rem;
     transition: opacity 0.2s;
 
     ::v-deep > button {
