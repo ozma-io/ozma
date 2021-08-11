@@ -1,6 +1,6 @@
 <template>
   <b-col
-    :sm="entry.size || 12"
+    :md="entry.size || 12"
     :style="colorVariables"
   >
     <template v-if="entry.content">
