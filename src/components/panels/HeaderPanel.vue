@@ -129,7 +129,7 @@ export default class HeaderPanel extends Vue {
   }
 
   ::v-deep .buttons-panel {
-    margin: 0.25rem;
+    margin: 0 0.25rem;
     flex-shrink: 0;
   }
 
