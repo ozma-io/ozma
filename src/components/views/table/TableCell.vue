@@ -260,6 +260,7 @@ export default class TableCell extends Vue {
   }
 
   .tree-level-circles {
+    height: 1rem;
     display: flex;
     align-items: center;
   }
@@ -344,6 +345,7 @@ export default class TableCell extends Vue {
     cursor: pointer;
     pointer-events: auto !important;
     transition: transform 0.2s;
+    line-height: 1rem;
     opacity: 0.3;
   }
 

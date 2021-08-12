@@ -2,6 +2,8 @@
   <div
     ref="cellEdit"
     :class="[
+      'cell-variant',
+      'cell-local-variant',
       'table-cell-edit',
       'border',
     ]"
@@ -62,7 +64,9 @@ export default class TableCellEdit extends Vue {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+  @include variant-to-local("cell");
+
   .table-cell-edit {
     background: var(--cell-backgroundColor);
     height: auto !important;

@@ -40,7 +40,7 @@
             @update="update(name, $event)"
           />
         </b-col>
-        <b-col class="align-self-end">
+        <b-col class="mt-2 align-self-end">
           <div class="buttons">
             <b-button
               v-if="canBeClosed"

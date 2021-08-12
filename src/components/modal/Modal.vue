@@ -1,3 +1,14 @@
+<i18n>
+    {
+        "en": {
+            "click_anywhere": "You can click anywhere outside of modal window to close it"
+        },
+        "ru": {
+            "click_anywhere": "Для закрытия модального окна можно нажать в любое место за его пределами"
+        }
+    }
+</i18n>
+
 <template>
   <VueModal
     :width="modalWidth"
@@ -19,9 +30,23 @@
     @before-close="beforeClose"
     @opened="$emit('opened')"
   >
-    <div v-if="$isMobile" class="close-button-wrapper">
+    <div v-if="$isMobile" class="mobile-close-button-wrapper">
       <span class="material-icons">close</span>
     </div>
+
+    <!-- eslint-disable vue/no-deprecated-slot-attribute -->
+    <div v-else slot="top-right">
+      <div
+        v-b-tooltip.hover.left.noninteractive="{
+          title: $t('click_anywhere').toString(),
+        }"
+        class="desktop-close-button-wrapper"
+        @click="$emit('close')"
+      >
+        <span class="material-icons">close</span>
+      </div>
+    </div>
+    <!-- eslint-enable vue/no-deprecated-slot-attribute -->
 
     <div class="header d-flex align-items-center">
       <ButtonsPanel
@@ -212,7 +237,7 @@ export default class Modal extends Vue {
     flex-shrink: 0;
   }
 
-  .close-button-wrapper {
+  .mobile-close-button-wrapper {
     position: fixed;
     top: 0.25rem;
     right: 0.25rem;
@@ -221,6 +246,13 @@ export default class Modal extends Vue {
     line-height: 0;
     border-radius: 10rem;
     pointer-events: none;
+  }
+
+  .desktop-close-button-wrapper {
+    background-color: var(--default-backgroundDarker1Color);
+    padding: 0.5rem;
+    line-height: 0;
+    border-radius: 10rem;
   }
 
   .modal__tab_headers {
@@ -278,6 +310,11 @@ export default class Modal extends Vue {
         height: calc(100% - 6rem) !important;
       }
     }
+  }
+
+  .v--modal-top-right {
+    top: 2rem;
+    right: 2rem;
   }
 
   .v--modal-overlay {

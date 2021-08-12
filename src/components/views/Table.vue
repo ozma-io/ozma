@@ -420,7 +420,8 @@ const createColumns = (uv: ICombinedUserViewAny): IColumn[] => {
       isTreeUnfoldColumnSet = true;
     }
 
-    const type = String(getColumnAttr("column_type"));
+    // "column_type" is old version, but "control" is consistent with forms.
+    const type = String(getColumnAttr("control") ?? getColumnAttr("column_type"));
 
     columns[i] = {
       caption,
@@ -2223,16 +2224,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   selectAll(selectedStatus: boolean) {
     if (selectedStatus) {
-      Object.entries(this.uv.newRows).forEach(([rowIdRaw, row]) => {
-        const rowId = Number(rowIdRaw);
-        row.extra.selected = true;
-        this.uv.extra.selectedRows.insert({
-          type: "added",
-          id: rowId,
-        });
-      });
-
-      this.existingRows.forEach((localRow, rowI) => {
+      this.allRows.forEach((localRow, rowI) => {
         const row = this.uv.getRowByRef(localRow.ref);
         row!.extra.selected = true;
         this.uv.extra.selectedRows.insert(localRow.ref);
@@ -2464,6 +2456,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     position: sticky;
     left: 0;
     display: flex;
+    padding: 0.25rem;
     transition: opacity 0.2s;
 
     ::v-deep > button {
