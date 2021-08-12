@@ -167,7 +167,7 @@
           </b-input-group>
           <div
             ref="optionsContainer"
-            class="options-list"
+            class="default-variant options-list"
             :style="optionsListStyle"
           >
             <div
@@ -738,7 +738,7 @@ export default class MultiSelect extends Vue {
   }
 
   .filter-group {
-    padding: 0.25rem 0;
+    padding: 0.25rem;
     width: auto;
 
     .filter-input {
