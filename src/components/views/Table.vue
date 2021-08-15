@@ -1,7 +1,9 @@
 <i18n>
     {
       "en": {
-        "not_all_entries_loaded": "Not all entries are loaded",
+        "cut": "Cut",
+        "copy": "Copy",
+        "paste": "Paste",
         "paste_error": "Pasting error",
         "clear_error": "Clearing error",
         "read_only_cell": "Read-only cell",
@@ -12,7 +14,9 @@
         "add_entry_in_modal": "Add new entry (in modal window)"
       },
       "ru": {
-        "not_all_entries_loaded": "Не все записи загружены",
+        "cut": "Вырезать",
+        "copy": "Копировать",
+        "paste": "Вставить",
         "paste_error": "Ошибка при вставке",
         "clear_error": "Ошибка при очистке поля",
         "read_only_cell": "Ячейка только для чтения",
@@ -74,6 +78,33 @@
         @close-modal-input="removeCellEditing"
       />
     </TableCellEdit>
+
+    <popper
+      v-if="cellContextMenu"
+      ref="contextMenuPopup"
+      v-click-outside="closeCellContextMenu"
+      force-show
+      :trigger="null"
+      :reference="cellContextMenu.reference"
+      transition="fade"
+      enter-active-class="fade-enter fade-enter-active"
+      leave-active-class="fade-leave fade-leave-active"
+      :visible-arrow="false"
+      :options="{
+        placement: 'bottom-start',
+        positionFixed: true,
+        modifiers: { offset: { offset: 0 } },
+      }"
+    >
+      <div class="popper border rounded overflow-hidden shadow">
+        <div class="context-menu-wrapper">
+          <ButtonList
+            :buttons="cellContextMenu.buttons"
+            @button-click="closeCellContextMenu"
+          />
+        </div>
+      </div>
+    </popper>
 
     <div
       v-if="uv.extra.lazyLoad.type === 'pagination'"
@@ -224,6 +255,7 @@
           :row-index="rowIndex"
           @select="selectTableRow(rowIndex, $event)"
           @cell-click="clickCell({ ...row.ref, column: arguments[0] }, arguments[1])"
+          @cell-contextmenu="openCellContextMenu({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
           @toggle-children="toggleChildren(row.ref, $event)"
           @add-child="addChild(row.ref)"
           @goto="$emit('goto', $event)"
@@ -279,6 +311,7 @@ import * as R from "ramda";
 import { z } from "zod";
 import { IResultColumnInfo, ValueType, RowId, IFieldRef } from "ozma-api";
 import sanitizeHtml from "sanitize-html";
+import Popper from "vue-popperjs";
 
 import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, parseSpreadsheet, validNumberFormats, getNumberFormatter, NeverError } from "@/utils";
 import { valueIsNull } from "@/values";
@@ -296,9 +329,10 @@ import {
   IExtendedRow, IExtendedRowCommon, IExtendedRowInfo, IExtendedValue, IRowCommon, IUserViewHandler, RowRef, ValueRef,
   valueToPunnedText, CommittedRowRef,
 } from "@/user_views/combined";
-import { colorVariantFromAttribute, interfaceButtonVariant } from "@/utils_colors";
+import { colorVariantFromAttribute, interfaceButtonVariant, defaultVariantAttribute } from "@/utils_colors";
 import type { ColorVariantAttribute } from "@/utils_colors";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
+import ButtonList from "@/components/buttons/ButtonList.vue";
 import { Button } from "../buttons/buttons";
 
 export interface IColumn {
@@ -1110,13 +1144,28 @@ type ITableLazyLoad = z.infer<typeof lazyLoadSchema>;
 
 type MoveDirection = "up" | "right" | "down" | "left";
 
+type ReferenceForPopper = {
+  clientWidth: number;
+  clientHeight: number;
+  getBoundingClientRect: () => DOMRect;
+  /* Popper.js supports virtual refereneces,
+   * but used wrapper tries to remove events even on them, which make no sence,
+   * but it's easier to pass dummy method to it for now */
+  removeEventListener: () => void;
+};
+
+type CellContextMenuData = {
+  reference: ReferenceForPopper;
+  buttons: Button[];
+};
+
 @UserView({
   handler: tableUserViewHandler,
   useLazyLoad: true,
 })
 @Component({
   components: {
-    TableRow, Checkbox, TableCellEdit, InfiniteLoading, ButtonItem,
+    TableRow, Checkbox, TableCellEdit, InfiniteLoading, ButtonItem, ButtonList, Popper,
   },
 })
 export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra, ITableRowExtra, ITableViewExtra>>(BaseUserView) {
@@ -1149,6 +1198,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   // Used for Tab-Enter selection moving.
   // Probably need to move to extra.
   private columnDelta = 0;
+
+  private cellContextMenu: CellContextMenuData | null = null;
 
   private get useInfiniteScrolling() {
     return this.uv.extra.lazyLoad.type === "infinite_scroll";
@@ -2114,11 +2165,70 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
+  private closeCellContextMenu() {
+    this.cellContextMenu = null;
+  }
+
+  private async openCellContextMenu(ref: ValueRef, element: HTMLElement, event: any) {
+    const tableRef = (this.$refs["tableContainer"] as HTMLElement | undefined);
+    if (!tableRef) throw new Error("Can't find `tableContainer` ref");
+
+    this.selectCell(ref);
+    this.closeCellContextMenu();
+
+    await this.$nextTick();
+
+    this.cellContextMenu = {
+      reference: {
+        clientWidth: 1,
+        clientHeight: 1,
+        getBoundingClientRect: () => new DOMRect(event.clientX, event.clientY, 1, 1),
+        removeEventListener: () => {},
+      },
+      buttons: this.getButtonsForContextMenu(ref),
+    };
+  }
+
+  private getButtonsForContextMenu(ref: ValueRef): Button[] {
+    return [
+      {
+        type: "callback",
+        icon: "content_cut",
+        caption: this.$t("cut").toString(),
+        variant: defaultVariantAttribute,
+        callback: () => {
+          console.log("test 1");
+        },
+      },
+      {
+        type: "callback",
+        icon: "content_copy",
+        caption: this.$t("copy").toString(),
+        variant: defaultVariantAttribute,
+        callback: () => {
+          console.log("test 2");
+        },
+      },
+      {
+        type: "callback",
+        icon: "content_paste",
+        caption: this.$t("paste").toString(),
+        variant: defaultVariantAttribute,
+        callback: () => {
+          console.log("test 3");
+        },
+      },
+    ];
+  }
+
   private clickCell(ref: ValueRef, element: HTMLElement) {
     this.columnDelta = 0;
     this.removeCellEditing();
     this.updateClickTimer(ref);
     this.cellEditHandler(ref, element);
+
+    // `v-click-outside` somehow doesn't triggers on cell clicks, so close context menu there too.
+    this.closeCellContextMenu();
   }
 
   private cellEditByTarget(ref: ValueRef, target: HTMLElement) {
@@ -2462,6 +2572,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     ::v-deep > button {
       width: 100%;
     }
+  }
+
+  .context-menu-wrapper {
+    min-width: 10rem;
+    background-color: var(--default-backgroundColor);
+    z-index: 25;
   }
 
   .pagination-wrapper {

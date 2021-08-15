@@ -15,30 +15,7 @@
     }"
   >
     <div class="popper shadow">
-      <b-list-group>
-        <template
-          v-for="(button, index) in button.buttons"
-        >
-          <ButtonGroup
-            v-if="button.type === 'button-group'"
-            :key="index"
-            :button="button"
-            list-item
-            @goto="$emit('goto', $event)"
-            @button-click="onClick"
-          />
-          <ButtonItem
-            v-else
-            :key="index"
-            class="d-flex text-decoration-none"
-            :button="button"
-            list-item
-            :list-item-has-right-margin="someButtonHasIcon"
-            @goto="$emit('goto', $event)"
-            @button-click="onClick"
-          />
-        </template>
-      </b-list-group>
+      <ButtonList :buttons="button.buttons" />
     </div>
     <!-- eslint-disable vue/no-deprecated-slot-attribute -->
     <ButtonView
@@ -55,6 +32,7 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import type { IButtonGroup } from "@/components/buttons/buttons";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import ButtonView from "@/components/buttons/ButtonView.vue";
+import ButtonList from "@/components/buttons/ButtonList.vue";
 
 import Popper from "vue-popperjs";
 
@@ -62,6 +40,7 @@ import Popper from "vue-popperjs";
   components: {
     ButtonItem,
     ButtonView,
+    ButtonList,
     Popper,
   },
 })

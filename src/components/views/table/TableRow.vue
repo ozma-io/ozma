@@ -47,6 +47,7 @@
       :show-tree="showTree"
       :show-add-child="uv.info.mainEntity !== undefined"
       @cell-click="$emit('cell-click', arguments[0], arguments[1])"
+      @cell-contextmenu="$emit('cell-contextmenu', arguments[0], arguments[1], arguments[2])"
       @cell-mousedown="$emit('cell-mousedown', arguments[0], arguments[1])"
       @cell-mouseover="$emit('cell-mouseover', arguments[0], arguments[1])"
       @cell-mouseup="$emit('cell-mouseup', arguments[0], arguments[1])"
