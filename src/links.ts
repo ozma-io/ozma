@@ -6,6 +6,7 @@ import { saveAndRunAction } from "@/state/actions";
 import { Store } from "vuex";
 import { router } from "@/modules";
 import { IValueInfo } from "@/user_views/combined";
+import { documentGeneratorUrl, instanceName } from "@/api";
 
 export const hrefTargetTypes = ["_top", "_blank", "_self", "_parent"] as const;
 export type HrefTargetType = typeof hrefTargetTypes[number];
