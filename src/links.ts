@@ -340,7 +340,8 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
       });
 
       const token = params.store.state.auth.current.token;
-      const url = new URL(`${documentGeneratorUrl}/api/${instanceName}/${template.schema}/${template.name}/generate/${filename}`);
+      const escapedFilename = encodeURIComponent(filename);
+      const url = new URL(`${documentGeneratorUrl}/api/${instanceName}/${template.schema}/${template.name}/generate/${escapedFilename}`);
       url.search = new URLSearchParams(args as any).toString();
 
       try {
