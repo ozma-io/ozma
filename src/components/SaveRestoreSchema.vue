@@ -4,7 +4,11 @@
             "schema_name": "Schema name",
             "save": "Save",
             "restore": "Restore",
+            "save_schema": "Save schema",
+            "restore_schema": "Restore schema",
             "success": "Success",
+            "error": "Error",
+            "from_file": "From file",
             "drop_others": "Drop other schemas",
             "skip_preloaded": "Skip preloaded schemas"
         },
@@ -12,7 +16,11 @@
             "schema_name": "Название схемы",
             "save": "Сохранить",
             "restore": "Восстановить",
+            "save_schema": "Сохранить схему",
+            "restore_schema": "Восстановить схему",
             "success": "Успех",
+            "error": "Ошибка",
+            "from_file": "Из файла",
             "drop_others": "Удалить другие схемы",
             "skip_preloaded": "Пропустить системные схемы"
         }
@@ -20,52 +28,62 @@
 </i18n>
 
 <template>
-  <div>
-    <p>
-      <label>
-        {{ $t('schema_name') }}:
-        <input
-          v-model="schema"
-          :placeholder="$t('schema_name')"
+  <b-container class="mt-5">
+    <b-row>
+      <b-col cols="12" md="6">
+        <h4>{{ $t("save_schema") }}</h4>
+
+        <b-form-group
+          id="schema-name-group"
+          :label="$t('schema_name').toString()"
+          label-for="schema-name"
         >
-      </label>
-    </p>
-    <p>
-      <button @click="saveSchema">
-        {{ $t('save') }}
-      </button>
-    </p>
-    <p>
-      <label>
-        {{ $t('restore') }}
-        <input
-          type="file"
-          @change="restoreSchemas"
+          <b-input
+            id="schema-name"
+            v-model="schema"
+          />
+        </b-form-group>
+
+        <b-form-checkbox
+          id="skip-preloaded"
+          v-model="skipPreloaded"
+          name="skip-preloaded"
         >
-      </label>
-    </p>
-    <p>
-      <input
-        v-model="dropOthers"
-        type="checkbox"
-      >
-      <label>
-        {{ $t('drop_others') }}
-      </label>
-    </p>
-    <p>
-      <input
-        v-model="skipPreloaded"
-        type="checkbox"
-      >
-      <label>
-        {{ $t('skip_preloaded') }}
-      </label>
-    </p>
-    <p>
-      {{ lastError }}
-    </p>
-  </div>
+          {{ $t('skip_preloaded') }}
+        </b-form-checkbox>
+
+        <div class="d-flex flex-row-reverse mb-3">
+          <b-button variant="success" @click="saveSchema">
+            {{ $t('save') }}
+          </b-button>
+        </div>
+      </b-col>
+
+      <b-col cols="12" md="6">
+        <h4>{{ $t("restore_schema") }}</h4>
+
+        <b-form-group :label="$t('from_file').toString()">
+          <b-form-file
+            v-model="fileForRestore"
+          />
+        </b-form-group>
+
+        <b-form-checkbox
+          id="drop-others"
+          v-model="dropOthers"
+          name="drop-others"
+        >
+          {{ $t('drop_others') }}
+        </b-form-checkbox>
+
+        <div class="d-flex flex-row-reverse mb-3">
+          <b-button variant="success" @click="restoreSchemas">
+            {{ $t('restore') }}
+          </b-button>
+        </div>
+      </b-col>
+    </b-row>
+  </b-container>
 </template>
 
 <script lang="ts">
@@ -80,13 +98,11 @@ export default class SaveRestoreSchema extends Vue {
   @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
 
   schema = "";
-  lastError = "";
+  fileForRestore: File | null = null;
   dropOthers = false;
   skipPreloaded = false;
 
   async saveSchema() {
-    this.lastError = "";
-
     try {
       const schemas = this.schema === "" ? "all" : [this.schema];
       const opts: ISaveSchemasOptions = {
@@ -115,30 +131,52 @@ export default class SaveRestoreSchema extends Vue {
         URL.revokeObjectURL(url);
       }
 
-      this.lastError = this.$t("success").toString();
+      this.$bvToast.toast(this.$t("success").toString(), {
+        variant: "success",
+        solid: true,
+        autoHideDelay: 2500,
+      });
     } catch (e) {
-      this.lastError = e.message;
+      this.$bvToast.toast(e.message, {
+        title: this.$t("error").toString(),
+        variant: "danger",
+        solid: true,
+        autoHideDelay: 10000,
+      });
       throw e;
     }
   }
 
-  async restoreSchemas(event: Event) {
-    const files = (event.target as HTMLInputElement).files as FileList;
-    const content = files[0];
+  async restoreSchemas() {
+    if (!this.fileForRestore) return;
+
     const opts: IRestoreSchemasOptions = {
       dropOthers: this.dropOthers,
     };
     try {
       await this.callProtectedApi({
         func: Api.restoreSchemas,
-        args: [content, opts],
+        args: [this.fileForRestore, opts],
       });
 
-      this.lastError = this.$t("success").toString();
+      this.$bvToast.toast(this.$t("success").toString(), {
+        variant: "success",
+        solid: true,
+        autoHideDelay: 2500,
+      });
     } catch (e) {
-      this.lastError = e.message;
+      this.$bvToast.toast(e.message, {
+        title: this.$t("error").toString(),
+        variant: "danger",
+        solid: true,
+        autoHideDelay: 10000,
+      });
       throw e;
     }
   }
 }
 </script>
+
+<style lang="scss" scoped>
+  @include variant-to-local("cell");
+</style>

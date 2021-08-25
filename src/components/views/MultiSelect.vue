@@ -10,7 +10,7 @@
 </i18n>
 
 <template>
-  <div class="view-wrapper">
+  <div class="view-wrapper cell-variant cell-local-variant">
     <ReferenceMultiSelect
       v-if="reference"
       :value="selectedValues"
@@ -166,11 +166,14 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseU
 </script>
 
 <style lang="scss" scoped>
+  @include variant-to-local("cell");
+
   .view-wrapper {
     padding: 0.25rem;
 
     ::v-deep .select-container {
       border-radius: 0.3rem;
+      background-color: var(--cell-backgroundColor);
     }
   }
 </style>
