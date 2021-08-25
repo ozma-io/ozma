@@ -269,7 +269,7 @@
             </label>
           </div>
           <div class="empty_userview_text">
-            {{ $t('data_will_load_after_save') }}
+            {{ $t("data_will_load_after_save") }}
           </div>
         </div>
         <HeaderPanel
