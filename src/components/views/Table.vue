@@ -1503,7 +1503,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return { row: rowI, column: this.getVisualColumnIndex(ref.column) };
   }
 
-  private getSelectedCell(): ValueRef | null {
+  private get selectedCell(): ValueRef | null {
     return this.uv.extra.selectedValues.keys()[0] ?? null;
   }
 
@@ -1532,7 +1532,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (options.resetColumnDelta ?? true) {
       this.columnDelta = 0;
     }
-    const selectedCell = this.getSelectedCell();
+    const selectedCell = this.selectedCell;
     if (!selectedCell) return false;
     const oldPosition = this.getCellVisualPosition(selectedCell);
     if (!oldPosition) return false;
@@ -1580,7 +1580,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private editSelectedCell() {
-    const valueRef = this.getSelectedCell();
+    const valueRef = this.selectedCell;
     if (!valueRef) return;
 
     this.cellEditByTarget(valueRef, this.getCellElement(valueRef) as any);
@@ -1699,7 +1699,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private copySelectedCell(event: ClipboardEvent) {
     if (this.editing) return;
-    const valueRef = this.getSelectedCell();
+    const valueRef = this.selectedCell;
     if (!valueRef) return;
     event.preventDefault();
 
@@ -1736,6 +1736,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private async pasteClipboardToSelectedCells(event: ClipboardEvent) {
     if (this.editing) return;
+    if (!this.selectedCell) return;
     event.preventDefault();
 
     const parseResult = parseFromClipboard(event);
@@ -1765,14 +1766,14 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private async pasteManyCellsToSelectedCell(event: ClipboardEvent, values: string[][]) {
     if (this.editing) return;
-    let valueRef = this.getSelectedCell();
+    let valueRef = this.selectedCell;
     if (!valueRef) return;
 
     const initialValueRef = valueRef;
     for (const [rowIndex, row] of values.entries()) {
       let counter = 0;
       for (const [cellIndex, cell] of row.entries()) {
-        valueRef = this.getSelectedCell() as ValueRef;
+        valueRef = this.selectedCell as ValueRef;
 
         if (this.valueIsReadOnly(valueRef, true)) return;
 
