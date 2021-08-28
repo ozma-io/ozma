@@ -11,7 +11,11 @@
         "paste_error_too_many_columns": "Clipboard has too many columns",
         "no_results": "No entries",
         "add_entry": "Add entry",
-        "add_entry_in_modal": "Add new entry (in modal window)"
+        "add_entry_in_modal": "Add new entry (in modal window)",
+        "ok": "OK",
+        "contextmenu_cut_tooltip": "Use Ctrl+X to cut selected cell",
+        "contextmenu_copy_tooltip": "Use Ctrl+C to copy selected cell",
+        "contextmenu_paste_tooltip": "Use Ctrl+P to paste to selected cell"
       },
       "ru": {
         "cut": "Вырезать",
@@ -24,7 +28,11 @@
         "paste_error_too_many_columns": "В буфере обмена слишком много столбцов",
         "no_results": "Нет записей",
         "add_entry": "Добавить запись",
-        "add_entry_in_modal": "Добавить новую запись (в модальном окне)"
+        "add_entry_in_modal": "Добавить новую запись (в модальном окне)",
+        "ok": "Продолжить",
+        "contextmenu_cut_tooltip": "Нажмите Ctrl+X, чтобы вырезать выделенную ячейку",
+        "contextmenu_copy_tooltip": "Нажмите Ctrl+C, чтобы скопировать выделенную ячейку",
+        "contextmenu_paste_tooltip": "Нажмите Ctrl+P, чтобы вставить в выделенную ячейку"
       }
     }
 </i18n>
@@ -2259,28 +2267,37 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       {
         type: "callback",
         icon: "content_cut",
-        caption: this.$t("cut").toString(),
+        caption: this.$t("cut").toString() + " (Ctrl+X)",
         variant: defaultVariantAttribute,
         callback: () => {
-          console.log("test 1");
+          void this.$bvModal.msgBoxOk(this.$t("contextmenu_cut_tooltip").toString(), {
+            okTitle: this.$t("ok").toString(),
+            centered: true,
+          });
         },
       },
       {
         type: "callback",
         icon: "content_copy",
-        caption: this.$t("copy").toString(),
+        caption: this.$t("copy").toString() + " (Ctrl+C)",
         variant: defaultVariantAttribute,
         callback: () => {
-          console.log("test 2");
+          void this.$bvModal.msgBoxOk(this.$t("contextmenu_copy_tooltip").toString(), {
+            okTitle: this.$t("ok").toString(),
+            centered: true,
+          });
         },
       },
       {
         type: "callback",
         icon: "content_paste",
-        caption: this.$t("paste").toString(),
+        caption: this.$t("paste").toString() + " (Ctrl+P)",
         variant: defaultVariantAttribute,
         callback: () => {
-          console.log("test 3");
+          void this.$bvModal.msgBoxOk(this.$t("contextmenu_paste_tooltip").toString(), {
+            okTitle: this.$t("ok").toString(),
+            centered: true,
+          });
         },
       },
     ];
