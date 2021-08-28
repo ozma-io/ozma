@@ -50,6 +50,7 @@
       @cell-mousedown="$emit('cell-mousedown', arguments[0], arguments[1], arguments[2])"
       @cell-mouseover="$emit('cell-mouseover', arguments[0], arguments[1], arguments[2])"
       @cell-mouseup="$emit('cell-mouseup', arguments[0], arguments[1], arguments[2])"
+      @cell-contextmenu="$emit('cell-contextmenu', arguments[0], arguments[1], arguments[2])"
       @update:visibleChildren="$emit('update:visibleChildren', arguments[0], arguments[1])"
       @toggle-children="$emit('toggle-children', $event)"
       @add-child="$emit('add-child')"

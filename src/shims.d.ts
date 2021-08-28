@@ -48,6 +48,8 @@ declare module "vue-barcode";
 
 declare module "vue-popperjs";
 
+declare module "vue2-hammer";
+
 declare module "v-hotkey" {
   // eslint-disable-next-line
   import { DirectiveOptions, PluginFunction } from "vue";

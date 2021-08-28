@@ -1,10 +1,12 @@
 <template>
+  <!-- Cathing `contextmenu` event there for context menu in tables, it doesn't work in other places, don't know why -->
   <b-list-group-item
     v-if="listItem"
     class="list-group-item-action"
     :variant="listItemVariant"
     :disabled="button.disabled"
     @click="$emit('click')"
+    @contextmenu.capture.stop.prevent
   >
     <ButtonContent
       :button="button"

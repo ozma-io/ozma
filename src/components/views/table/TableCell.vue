@@ -12,6 +12,7 @@
 <template>
   <!-- FIXME: Pls solve these classes -->
   <!-- `.stop` in `@click` fixes calendar popup hiding -->
+  <!-- TODO: `@contextmenu` doesn't work on IOS --->
   <td
     ref="cell"
     :style="[value.extra.style, variantVariables]"
@@ -33,6 +34,7 @@
     @mousedown.stop="$emit('cell-mousedown', columnPosition, $refs.cell, $event)"
     @mouseover.stop="$emit('cell-mouseover', columnPosition, $refs.cell, $event)"
     @mouseup.stop="$emit('cell-mouseup', columnPosition, $refs.cell, $event)"
+    @contextmenu.prevent="$emit('cell-contextmenu', columnPosition, $refs.cell, $event)"
   >
     <div v-if="value.extra.selected" class="selection-overlay" />
     <p class="default-variant">
@@ -232,7 +234,7 @@ export default class TableCell extends Vue {
   @include variant-to-local("option");
 
   .option {
-    padding: 0.1rem 0.25rem;
+    padding: 0.1rem 0.5rem;
     display: inline-flex;
     align-items: center;
     background-color: var(--option-backgroundColor);
