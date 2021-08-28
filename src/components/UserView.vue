@@ -12,6 +12,7 @@
             "edit_view": "Edit user view",
             "edit_arguments": "Edit user view arguments",
             "new_mode_no_main": "FOR INSERT INTO clause is required for new entry mode.",
+            "empty_userview": "Empty userview",
             "link_to_nowhere": "This user view was a link which didn't replace it, so there's nothing to show."
         },
         "ru": {
@@ -26,6 +27,7 @@
             "edit_view": "Редактировать представление",
             "edit_arguments": "Редактировать аргументы представления",
             "new_mode_no_main": "Для режима создания новой записи должна использоваться конструкция FOR INSERT INTO.",
+            "empty_userview": "Пустое представление",
             "link_to_nowhere": "Это отображение являлось ссылкой, которая его не заменила. Теперь здесь нечего показать."
         }
     }
@@ -89,8 +91,13 @@
           </div>
         </template>
         <transition name="fade-1" mode="out-in">
+          <!-- Don't know why there are one row in empty userview -->
+          <div v-if="completelyEmptyUserView" class="empty-userview">
+            {{ $t("empty_userview") }}
+          </div>
           <component
             :is="`UserView${state.componentName}`"
+            v-else
             ref="userViewRef"
             :key="transitionKey"
             :uv="state.uv"
@@ -310,6 +317,14 @@ export default class UserView extends Vue {
     return this.state.state === "show"
       ? JSON.stringify(this.state.uv.args.source)
       : "none";
+  }
+
+  private get completelyEmptyUserView() {
+    return this.state.state === "show"
+      && this.state.componentName === "Table"
+      && this.state.uv.info.columns.length === 0
+      && this.state.uv.rows !== null
+      && this.state.uv.rows.length <= 1;
   }
 
   private contextMenuShowArgumentEditor = false;
@@ -846,6 +861,15 @@ export default class UserView extends Vue {
     border-radius: 0.5rem;
     color: white;
     background-color: #0005;
+  }
+
+  .empty-userview {
+    margin: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    opacity: 0.7;
+    border: 1px solid var(--MainBorderColor);
+    border-radius: 0.2rem;
+    color: var(--MainTextColor);
   }
 
   .fade-move-enter-active,

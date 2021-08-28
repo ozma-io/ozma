@@ -1,12 +1,12 @@
 import { app } from "@/main";
 import { queryLocation, IQueryState, IQuery, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery, selfIdArgs, refIdArgs } from "@/state/query";
 import { IActionRef } from "ozma-api";
-import { gotoHref, randomId, shortLanguage } from "@/utils";
+import { gotoHref, httpStatusTexts, randomId, shortLanguage } from "@/utils";
 import { saveAndRunAction } from "@/state/actions";
 import { Store } from "vuex";
 import { router } from "@/modules";
 import { IValueInfo } from "@/user_views/combined";
-import { documentGeneratorUrl, instanceName } from "./api";
+import { documentGeneratorUrl, instanceName } from "@/api";
 
 export const hrefTargetTypes = ["_top", "_blank", "_self", "_parent"] as const;
 export type HrefTargetType = typeof hrefTargetTypes[number];
@@ -340,7 +340,8 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
       });
 
       const token = params.store.state.auth.current.token;
-      const url = new URL(`${documentGeneratorUrl}/api/${instanceName}/${template.schema}/${template.name}/generate/${filename}`);
+      const escapedFilename = encodeURIComponent(filename);
+      const url = new URL(`${documentGeneratorUrl}/api/${instanceName}/${template.schema}/${template.name}/generate/${escapedFilename}`);
       url.search = new URLSearchParams(args as any).toString();
 
       try {
@@ -359,7 +360,15 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
           a.setAttribute("download", filename);
           a.click();
         } else {
-          app.$bvToast.toast(res.statusText, {
+          const body = await res.text();
+          const status = String(res.status);
+          const statusText: string = httpStatusTexts[status]; // HTTP/2 doesn't have meaningful `res.statusText`.
+          const errorTooltip =
+            status === "500" ? "Maybe something is wrong with arguments"
+              : status === "404" ? body
+                : "";
+          const error = `${statusText} (${errorTooltip})`;
+          app.$bvToast.toast(error, {
             title: funI18n("generation_fail"),
             variant: "danger",
             solid: true,

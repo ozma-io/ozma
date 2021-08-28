@@ -30,9 +30,13 @@
         'disable_cell': value.info === undefined && from !== 'existing'
       }
     ]"
-    @click.stop="$emit('cell-click', columnPosition, $refs.cell)"
+    @click.stop="$emit('cell-click', columnPosition, $refs.cell, $event)"
+    @mousedown.stop="$emit('cell-mousedown', columnPosition, $refs.cell, $event)"
+    @mouseover.stop="$emit('cell-mouseover', columnPosition, $refs.cell, $event)"
+    @mouseup.stop="$emit('cell-mouseup', columnPosition, $refs.cell, $event)"
     @contextmenu.prevent="$emit('cell-contextmenu', columnPosition, $refs.cell, $event)"
   >
+    <div v-if="value.extra.selected" class="selection-overlay" />
     <p class="default-variant">
       <template v-if="column.type == 'buttons'">
         <ButtonsPanel
@@ -278,6 +282,21 @@ export default class TableCell extends Vue {
     opacity: 0.05;
   }
 
+  .selection-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: var(--FocusBorderColor);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  /* .table-td.selected {
+   *   box-shadow:
+   *     inset 2px 2px 0 var(--FocusBorderColor),
+   *     inset -2px -2px 0 var(--FocusBorderColor);
+   * } */
+
   .table-td {
     position: relative;
     touch-action: manipulation;
@@ -325,18 +344,6 @@ export default class TableCell extends Vue {
     &:hover .add-child {
       opacity: 1;
     }
-  }
-
-  .table-td.selected {
-    box-shadow:
-      inset 2px 2px 0 var(--FocusBorderColor),
-      inset -2px -2px 0 var(--FocusBorderColor);
-  }
-
-  .table-td.fixed-column.selected {
-    box-shadow:
-      inset 2px 2px 0 var(--FocusBorderColor),
-      inset -2px -2px 0 var(--FocusBorderColor);
   }
 
   .checkbox_click-none {
