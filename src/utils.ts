@@ -872,6 +872,32 @@ export const parseSpreadsheet = (str: string): string[][] => {
   return arr;
 };
 
+export const stringifySpreadsheet = (arr: string[][]) => {
+  let str = "";
+  let val;
+  for (let r = 0, rlen = arr.length; r < rlen; r += 1) {
+    for (let c = 0, clen = arr[r].length; c < clen; c += 1) {
+      if (c > 0) {
+        str += "\t";
+      }
+      val = arr[r][c];
+      if (typeof val === "string") {
+        if (val.indexOf("\n") > -1) {
+          str += "\"" + val.replace(/"/g, "\"\"") + "\"";
+        } else {
+          str += val;
+        }
+      } else if (val === null || val === undefined) {
+        str += "";
+      } else {
+        str += val;
+      }
+    }
+    str += "\n";
+  }
+  return str;
+};
+
 export const validNumberFormats = ["auto", "ru", "en"] as const;
 export type ValidNumberFormat = typeof validNumberFormats[number];
 const makeMemoKey = (lang: ValidNumberFormat, fractionDigits?: number) => lang + String(fractionDigits);

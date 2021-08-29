@@ -5,10 +5,12 @@
         "copy": "Copy",
         "paste": "Paste",
         "paste_error": "Pasting error",
+        "copy_error": "Copying error",
         "clear_error": "Clearing error",
         "read_only_cell": "Read-only cell",
         "paste_no_referencefield_data": "Clipboard has no reference field data",
         "paste_error_too_many_columns": "Clipboard has too many columns",
+        "non_rectangular_copy": "Only rectangular selections on copying are supported",
         "no_results": "No entries",
         "add_entry": "Add entry",
         "add_entry_in_modal": "Add new entry (in modal window)",
@@ -22,10 +24,12 @@
         "copy": "Копировать",
         "paste": "Вставить",
         "paste_error": "Ошибка при вставке",
+        "copy_error": "Ошибка при копировании",
         "clear_error": "Ошибка при очистке поля",
         "read_only_cell": "Ячейка только для чтения",
         "paste_no_referencefield_data": "В буфере обмена неверная информация для вставки в данное поле",
         "paste_error_too_many_columns": "В буфере обмена слишком много столбцов",
+        "non_rectangular_copy": "При копировании поддерживаются только прямоугольные выделения",
         "no_results": "Нет записей",
         "add_entry": "Добавить запись",
         "add_entry_in_modal": "Добавить новую запись (в модальном окне)",
@@ -325,7 +329,7 @@ import { IResultColumnInfo, ValueType, RowId, IFieldRef } from "ozma-api";
 import sanitizeHtml from "sanitize-html";
 import Popper from "vue-popperjs";
 
-import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, parseSpreadsheet, validNumberFormats, getNumberFormatter, NeverError } from "@/utils";
+import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, parseSpreadsheet, stringifySpreadsheet, validNumberFormats, getNumberFormatter, NeverError } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { maxPerFetch } from "@/components/UserView.vue";
@@ -1697,6 +1701,27 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     /* this.$root.$emit("cell-click"); */
   }
 
+  private copySelectedCells(event: ClipboardEvent) {
+    if (this.editing) return;
+    if (!this.selectedCell) return;
+    event.preventDefault();
+
+    const positions = this.selectedCells.map(cell => this.getCellVisualPosition(cell) as VisualPosition);
+    const grouped = Object.values(R.groupBy(cell => String(cell.row), positions));
+    const isRectangular = grouped.every(row => row.length === grouped[0].length);
+
+    if (isRectangular) {
+      const cells = grouped.map(row => row.map(pos => this.uv.getValueByRef(this.getValueRefByVisualPosition(pos))!.value.extra.valueHtml));
+      event.clipboardData?.setData("text/plain", stringifySpreadsheet(cells));
+    } else {
+      this.$bvToast.toast(this.$t("non_rectangular_copy").toString(), {
+        title: this.$t("copy_error").toString(),
+        variant: "warning",
+        solid: true,
+      });
+    }
+  }
+
   private copySelectedCell(event: ClipboardEvent) {
     if (this.editing) return;
     const valueRef = this.selectedCell;
@@ -1865,7 +1890,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private get rootEvents(): [name: string, callback: (event: any) => void][] {
     /* eslint-disable @typescript-eslint/unbound-method */
     return [
-      ["copy", this.copySelectedCell],
+      ["copy", this.copySelectedCells],
       ["cut", this.cutSelectedCell],
       ["paste", this.pasteClipboardToSelectedCells],
       ["cell-click", this.onOtherTableClicked],
