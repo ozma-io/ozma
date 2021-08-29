@@ -1710,8 +1710,16 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     const grouped = Object.values(R.groupBy(cell => String(cell.row), positions));
     const isRectangular = grouped.every(row => row.length === grouped[0].length);
 
+    const sanitizeSettings = {
+      allowedTags: [],
+    };
+
+    const sanitize = (message: string) => sanitizeHtml(message, sanitizeSettings);
+    const cellTextByVisualPosition = (pos: VisualPosition) =>
+      sanitize(this.uv.getValueByRef(this.getValueRefByVisualPosition(pos))!.value.extra.valueHtml);
+
     if (isRectangular) {
-      const cells = grouped.map(row => row.map(pos => this.uv.getValueByRef(this.getValueRefByVisualPosition(pos))!.value.extra.valueHtml));
+      const cells = grouped.map(row => row.map(cellTextByVisualPosition));
       event.clipboardData?.setData("text/plain", stringifySpreadsheet(cells));
     } else {
       this.$bvToast.toast(this.$t("non_rectangular_copy").toString(), {
