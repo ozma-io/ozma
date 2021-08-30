@@ -11,7 +11,6 @@
       :cards="column.cards"
       :width="columnWidth"
       :color-variables="column.colorVariables"
-      :header-color="columnHeaderColor"
       :background-color="backgroundColor"
       :create-button="createButton"
       :allow-dragging="allowDragging"
@@ -51,7 +50,6 @@ export default class Board extends Vue {
   @Prop({ type: Array, required: true }) columns!: IColumn<unknown, unknown>[];
   @Prop({ type: Boolean, default: false }) createButton!: boolean;
   @Prop({ type: Number }) columnWidth!: number | null;
-  @Prop({ type: String }) columnHeaderColor!: string;
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: Boolean, default: false }) allowDragging!: string;
 
