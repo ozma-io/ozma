@@ -15,7 +15,10 @@
     }"
   >
     <div class="popper shadow">
-      <ButtonList :buttons="button.buttons" />
+      <ButtonList
+        :buttons="button.buttons"
+        @goto="$emit('goto', $event)"
+      />
     </div>
     <!-- eslint-disable vue/no-deprecated-slot-attribute -->
     <ButtonView
