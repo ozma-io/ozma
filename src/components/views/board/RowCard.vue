@@ -29,19 +29,21 @@
           class="card-text"
           :title="col.value"
         >
+          <!-- TODO: Remove `getIconType` method call from template -->
           <span
             v-if="col.icon && col.value"
-            class="card-icon"
+            :class="['card-icon', { 'material-icons md-18': getIconType(col.icon) === 'material' }]"
           >
             {{ col.icon }}
           </span>
           <!-- eslint-disable vue/no-v-html -->
           <span
             v-if="col.valueHtml !== col.value"
+            class="card-text-text"
             @click.stop
             v-html="col.valueHtml"
           />
-          <span v-else> {{ col.value }} </span>
+          <span v-else class="card-text-text"> {{ col.value }} </span>
           <!-- eslint-enable vue/no-v-html -->
         </span>
       </b-col>
@@ -50,9 +52,11 @@
 </template>
 
 <script lang="ts">
+import { Component, Vue, Prop } from "vue-property-decorator";
+
 import { Link } from "@/links";
 import { RowRef } from "@/user_views/combined";
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { getIconType } from "@/utils";
 
 export interface ICardColumnBase {
   size: number;
@@ -86,6 +90,10 @@ export interface IRowCard {
 export default class RowCard extends Vue {
   @Prop({ type: Object, required: true }) card!: IRowCard;
   @Prop({ type: Boolean, default: false }) dragged!: boolean;
+
+  private getIconType(icon: string) {
+    return getIconType(icon);
+  }
 }
 </script>
 
@@ -106,9 +114,21 @@ export default class RowCard extends Vue {
   }
 
   .card-text {
-    display: block;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
     overflow: hidden;
     text-overflow: ellipsis;
     color: var(--kanbanCard-foregroundColor);
+  }
+
+  .card-icon {
+    margin-right: 0.25rem;
+  }
+
+  .card-text-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 </style>
