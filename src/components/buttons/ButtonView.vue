@@ -6,7 +6,6 @@
     :variant="listItemVariant"
     :disabled="button.disabled"
     @click="$emit('click')"
-    @contextmenu.capture.stop.prevent
   >
     <ButtonContent
       :button="button"
