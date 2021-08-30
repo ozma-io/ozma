@@ -110,6 +110,7 @@
           <ButtonList
             :buttons="cellContextMenu.buttons"
             @button-click="closeCellContextMenu"
+            @goto="$emit('goto', $event)"
           />
         </div>
       </div>
