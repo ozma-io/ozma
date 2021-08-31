@@ -29,7 +29,6 @@
       v-else
       allow-dragging
       :column-width="columnWidth"
-      :column-header-color="columnHeaderColor"
       :background-color="backgroundColor"
       :columns="columns"
       :create-button="createView !== null"
@@ -98,6 +97,57 @@ const query = namespace("query");
 @Component({ components: { Board, Errorbox, RowCard } })
 export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntriesView>(BaseUserView, BaseEntriesView) {
   @query.Action("addWindow") addWindow!: (queryObj: IQuery) => Promise<void>;
+
+  private async mounted() {
+    await this.fixEmptyOrders();
+    await this.fixOrderUniqueness();
+  }
+
+  private async fixEmptyOrders() {
+    if (this.orderIndex === null) return;
+
+    const allCards = Object.values(this.groupedCards).flat();
+    const cardsWithEmptyOrder = allCards.filter(card => valueIsNull(card.card.order));
+    if (cardsWithEmptyOrder.length === 0) return;
+
+    const allOrders = allCards
+      .filter(card => typeof card.card.order === "number")
+      .map(card => card.card.order as number);
+    const minOrder = Math.min(...allOrders);
+    for (const card of cardsWithEmptyOrder) {
+      const ref = {
+        ...card.card.ref,
+        column: this.orderIndex,
+      };
+      // eslint-disable-next-line no-await-in-loop
+      await this.updateValue(ref, Math.random() * minOrder);
+    }
+  }
+
+  private async fixOrderUniqueness() {
+    if (this.orderIndex === null) return;
+
+    const allCards = Object.values(this.groupedCards).flat();
+    const ordersRaw = allCards.map(card => card.card.order);
+    if (ordersRaw.some(order => order === null)) {
+      throw new Error("Can't process null orders.");
+    }
+    const orders = ordersRaw as number[];
+
+    const findDuplicates = (array: any[]) => array.filter((item, index) => array.indexOf(item) !== index);
+    const duplicateOrders = findDuplicates(orders);
+    if (duplicateOrders.length === 0) return;
+
+    const cardsWithDuplicateOrder = allCards.filter(card => duplicateOrders.includes(card.card.order));
+    for (const card of cardsWithDuplicateOrder) {
+      const ref = {
+        ...card.card.ref,
+        column: this.orderIndex,
+      };
+      // eslint-disable-next-line no-await-in-loop
+      await this.updateValue(ref, (card.card.order as number) + 0.1 * Math.random());
+    }
+  }
 
   get columnsType(): BoardColumnsType | null {
     if (this.groupIndex === null) {
@@ -192,13 +242,6 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       return width;
     }
     return undefined;
-  }
-
-  // Attribute
-  // EXAMPLE @"header_color" = '#fff0f5'
-  // Column header background color.
-  get columnHeaderColor(): string {
-    return "header_color" in this.uv.attributes ? String(this.uv.attributes["header_color"]) : "none";
   }
 
   get backgroundColor(): string {
@@ -384,7 +427,8 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     }, row.values);
 
     const group = currentValue(row.values[this.groupIndex!]);
-    const order = this.orderIndex !== null ? Number(currentValue(row.values[this.orderIndex])) : null;
+    const currentRowOrder = this.orderIndex !== null ? currentValue(row.values[this.orderIndex]) : null;
+    const order = (this.orderIndex !== null && typeof currentRowOrder === "number") ? currentRowOrder : null;
     const color = getRowAttr("card_color");
     const variant = getRowAttr("card_variant");
     let colorVariant: any;

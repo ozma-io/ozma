@@ -135,7 +135,6 @@ export default class KanbanColumn extends Vue {
   @Prop({ type: Boolean, default: false }) createButton!: boolean;
   @Prop({ type: Number, default: 300 }) width!: number;
   @Prop({ type: Object }) colorVariables!: Record<string, string>;
-  /* @Prop({ type: String, default: "none" }) headerColor!: string; */
   @Prop({ type: String, default: "none" }) backgroundColor!: string;
   @Prop({ type: Boolean, default: false }) allowDragging!: string;
 
