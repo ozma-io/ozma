@@ -329,7 +329,8 @@ import { IResultColumnInfo, ValueType, RowId, IFieldRef } from "ozma-api";
 import sanitizeHtml from "sanitize-html";
 import Popper from "vue-popperjs";
 
-import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, parseSpreadsheet, stringifySpreadsheet, validNumberFormats, getNumberFormatter, NeverError } from "@/utils";
+import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, stringifySpreadsheet, validNumberFormats, getNumberFormatter, NeverError, parseFromClipboard } from "@/utils";
+import type { ParseValue } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { maxPerFetch } from "@/components/UserView.vue";
@@ -1092,70 +1093,6 @@ const rowIndicesCompare = (aIndex: CommittedRowRef, bIndex: CommittedRowRef, uv:
 
 const isEmptyRow = (row: IRowCommon) => {
   return row.values.every(cell => valueIsNull(cell.rawValue) || cell.info === undefined);
-};
-
-export type ParseValue =
-  | {
-    type: "reference";
-    value: number | null;
-    pun: string;
-  }
-  | {
-    type: "value";
-    value: string;
-  };
-
-export type ParseResult =
-  | {
-    type: "values";
-    values: ParseValue[][];
-  }
-  | {
-    type: "error";
-  };
-
-const htmlElementToParseValue = (el: HTMLElement): ParseValue => {
-  const referenceValue = el.attributes.getNamedItem("data-ozma-reference-value")?.value;
-  if (referenceValue !== undefined) {
-    const value = JSON.parse(referenceValue) as number | null;
-    const pun = el.innerText;
-    return { type: "reference", value, pun };
-  } else {
-    const value = el.innerText;
-    return { type: "value", value };
-  }
-};
-
-const parseFromClipboard = (event: ClipboardEvent): ParseResult => {
-  const serialized = event.clipboardData?.getData("text/html");
-  if (serialized === undefined) return { type: "error" };
-
-  const parsed = (new DOMParser()).parseFromString(serialized, "text/html");
-  if (parsed.documentElement.nodeName !== "parsererror") {
-    const table = parsed.documentElement.querySelector("table");
-    if (!table) return { type: "error" };
-
-    const values = Array.from(table.rows).map(row => Array.from(row.cells).map(htmlElementToParseValue));
-    return { type: "values", values };
-  }
-
-  const sourcePlain = event.clipboardData?.getData("text/plain");
-  if (typeof sourcePlain === "string") {
-    const values = parseSpreadsheet(sourcePlain).map(row => row.map(value => ({ type: "value" as const, value })));
-    return { type: "values", values };
-  }
-
-  return { type: "error" };
-};
-
-const serializeToClipboard = (event: ClipboardEvent, value: unknown, valueText: string): void => {
-  const valueJson = JSON.stringify(value);
-  const span = document.createElement("span");
-  span.setAttribute("data-ozma-value", valueJson);
-  span.textContent = valueText;
-  const valueXml = (new XMLSerializer()).serializeToString(span);
-
-  event.clipboardData?.setData("text/html", valueXml);
 };
 
 interface ITableEditing {
