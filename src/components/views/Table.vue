@@ -1199,7 +1199,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private cellSelectionStartCell: ValueRef | null = null;
 
   private get useInfiniteScrolling() {
-    return this.uv.extra.lazyLoad.type === "infinite_scroll";
+    return this.uv.extra.lazyLoad.type === "infinite_scroll" && !this.showTree;
   }
 
   private get pageSizes() {
