@@ -5,10 +5,12 @@
         "copy": "Copy",
         "paste": "Paste",
         "paste_error": "Pasting error",
+        "copy_error": "Copying error",
         "clear_error": "Clearing error",
         "read_only_cell": "Read-only cell",
         "paste_no_referencefield_data": "Clipboard has no reference field data",
         "paste_error_too_many_columns": "Clipboard has too many columns",
+        "non_rectangular_copy": "Only rectangular selections on copying are supported",
         "no_results": "No entries",
         "add_entry": "Add entry",
         "add_entry_in_modal": "Add new entry (in modal window)",
@@ -22,10 +24,12 @@
         "copy": "Копировать",
         "paste": "Вставить",
         "paste_error": "Ошибка при вставке",
+        "copy_error": "Ошибка при копировании",
         "clear_error": "Ошибка при очистке поля",
         "read_only_cell": "Ячейка только для чтения",
         "paste_no_referencefield_data": "В буфере обмена неверная информация для вставки в данное поле",
         "paste_error_too_many_columns": "В буфере обмена слишком много столбцов",
+        "non_rectangular_copy": "При копировании поддерживаются только прямоугольные выделения",
         "no_results": "Нет записей",
         "add_entry": "Добавить запись",
         "add_entry_in_modal": "Добавить новую запись (в модальном окне)",
@@ -326,7 +330,8 @@ import { IResultColumnInfo, ValueType, RowId, IFieldRef } from "ozma-api";
 import sanitizeHtml from "sanitize-html";
 import Popper from "vue-popperjs";
 
-import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, parseSpreadsheet, validNumberFormats, getNumberFormatter, NeverError } from "@/utils";
+import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, stringifySpreadsheet, validNumberFormats, getNumberFormatter, NeverError, parseFromClipboard } from "@/utils";
+import type { ParseValue } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { maxPerFetch } from "@/components/UserView.vue";
@@ -1091,66 +1096,6 @@ const isEmptyRow = (row: IRowCommon) => {
   return row.values.every(cell => valueIsNull(cell.rawValue) || cell.info === undefined);
 };
 
-export type ParseResult =
-  | {
-    type: "reference";
-    value: number | null;
-  }
-  | {
-    type: "values";
-    values: string[][];
-  }
-  | {
-    type: "error";
-  };
-
-const parseFromClipboard = (event: ClipboardEvent): ParseResult => {
-  const serialized = event.clipboardData?.getData("text/html");
-  if (serialized === undefined) return { type: "error" };
-
-  const parsed = (new DOMParser()).parseFromString(serialized, "text/html");
-  if (parsed.documentElement.nodeName !== "parsererror") {
-    const valueJson = parsed.documentElement.querySelector("span")?.attributes.getNamedItem("data-ozma-value")?.value;
-    if (valueJson !== undefined) {
-      const value = JSON.parse(valueJson) as number | null;
-      return { type: "reference", value };
-    }
-  }
-
-  const sourcePlain = event.clipboardData?.getData("text/plain");
-  if (typeof sourcePlain === "string") {
-    const values = parseSpreadsheet(sourcePlain);
-    return { type: "values", values };
-  }
-
-  return { type: "error" };
-};
-
-const parseReferenceFromClipboard = (event: ClipboardEvent): number | null | undefined => {
-  const serialized = event.clipboardData?.getData("text/html");
-  if (serialized === undefined) return undefined;
-
-  const parsed = (new DOMParser()).parseFromString(serialized, "text/html");
-  if (parsed.documentElement.nodeName !== "parsererror") {
-    const valueJson = parsed.documentElement.querySelector("span")?.attributes.getNamedItem("data-ozma-value")?.value;
-    if (valueJson !== undefined) {
-      const value = JSON.parse(valueJson) as number | null;
-      return value;
-    }
-  }
-  return undefined;
-};
-
-const serializeToClipboard = (event: ClipboardEvent, value: unknown, valueText: string): void => {
-  const valueJson = JSON.stringify(value);
-  const span = document.createElement("span");
-  span.setAttribute("data-ozma-value", valueJson);
-  span.textContent = valueText;
-  const valueXml = (new XMLSerializer()).serializeToString(span);
-
-  event.clipboardData?.setData("text/html", valueXml);
-};
-
 interface ITableEditing {
   lock: AutoSaveLock;
   ref: ValueRef;
@@ -1698,25 +1643,72 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     /* this.$root.$emit("cell-click"); */
   }
 
-  private copySelectedCell(event: ClipboardEvent) {
+  private cellTdByVisualPosition(pos: VisualPosition): HTMLElement {
+    const valueRef = this.getValueRefByVisualPosition(pos);
+    const value = this.uv.getValueByRef(valueRef)!.value;
+    const valueText = sanitizeHtml(value.extra.valueHtml, { allowedTags: [] });
+    const td = document.createElement("td");
+    td.textContent = valueText;
+
+    const fieldType = this.uv.info.columns[valueRef.column].mainField?.field.fieldType;
+    if (fieldType?.type === "reference") {
+      const valueJson = JSON.stringify(value.value);
+      td.setAttribute("data-ozma-reference-value", valueJson);
+    }
+
+    return td;
+  }
+
+  private cellVisualPositionsToSerializedTable(positions: VisualPosition[][]): string {
+    const cellTds = positions.map(row => row.map(cell => this.cellTdByVisualPosition(cell)));
+    const trs = cellTds.map(row => {
+      const tr = document.createElement("tr");
+      for (const cell of row) {
+        tr.appendChild(cell);
+      }
+      return tr;
+    });
+    const tbody = document.createElement("tbody");
+    for (const tr of trs) {
+      tbody.appendChild(tr);
+    }
+    const table = document.createElement("table");
+    table.appendChild(tbody);
+
+    return (new XMLSerializer()).serializeToString(table);
+  }
+
+  private copySelectedCells(event: ClipboardEvent) {
     if (this.editing) return;
-    const valueRef = this.selectedCell;
-    if (!valueRef) return;
+    if (!this.selectedCell) return;
     event.preventDefault();
 
-    const value = this.uv.getValueByRef(valueRef)!.value;
-    const valueText = value.extra.valueHtml;
-    event.clipboardData?.setData("text/plain", valueText);
+    const positions = this.selectedCells.map(cell => this.getCellVisualPosition(cell) as VisualPosition);
+    const positions2D = Object.values(R.groupBy(cell => String(cell.row), positions));
+    const isRectangular = positions2D.every(row => row.length === positions2D[0].length);
 
-    const sourceColumnType = this.uv.info.columns[valueRef.column].mainField?.field.fieldType.type;
-    if (sourceColumnType === "reference") {
-      serializeToClipboard(event, value.value, valueText);
+    const sanitize = (message: string) => sanitizeHtml(message, { allowedTags: [] });
+    const cellTextByVisualPosition = (pos: VisualPosition) =>
+      sanitize(this.uv.getValueByRef(this.getValueRefByVisualPosition(pos))!.value.extra.valueHtml);
+
+    if (isRectangular) {
+      const cells = positions2D.map(row => row.map(cellTextByVisualPosition));
+      event.clipboardData?.setData("text/plain", stringifySpreadsheet(cells));
+
+      const serialized = this.cellVisualPositionsToSerializedTable(positions2D);
+      event.clipboardData?.setData("text/html", serialized);
+    } else {
+      this.$bvToast.toast(this.$t("non_rectangular_copy").toString(), {
+        title: this.$t("copy_error").toString(),
+        variant: "warning",
+        solid: true,
+      });
     }
   }
 
   private cutSelectedCell(event: ClipboardEvent) {
     if (this.editing) return;
-    this.copySelectedCell(event);
+    this.copySelectedCells(event);
     this.clearSelectedCells();
   }
 
@@ -1744,33 +1736,42 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     switch (parseResult.type) {
       case "error":
         return;
-      case "reference":
-        for (const cell of this.selectedCells) {
-          /* eslint-disable-next-line no-await-in-loop */
-          await this.updateValue(cell, parseResult.value);
-        }
-        break;
       case "values": {
         const { values } = parseResult;
         if (values.length === 1 && values[0].length === 1) {
           for (const cell of this.selectedCells) {
-            /* eslint-disable-next-line no-await-in-loop */
-            await this.updateValue(cell, values[0][0]);
+            // eslint-disable-next-line no-await-in-loop
+            await this.updateValueWithParseValue(cell, values[0][0]);
           }
-        } else if (this.selectedCells.length === 1) {
+        } else {
           await this.pasteManyCellsToSelectedCell(event, values);
         }
-        // TODO: Support other clipboard shapes.
       }
     }
   }
 
-  private async pasteManyCellsToSelectedCell(event: ClipboardEvent, values: string[][]) {
+  private async updateValueWithParseValue(ref: ValueRef, value: ParseValue) {
+    const fieldType = this.uv.info.columns[ref.column].mainField?.field.fieldType?.type;
+    if (value.type === "reference") {
+      const punOrValue = fieldType === "reference" ? value.value : value.pun;
+      await this.updateValue(ref, punOrValue);
+    } else if (fieldType === "reference") {
+      this.$bvToast.toast(this.$t("paste_no_referencefield_data").toString(), {
+        title: this.$t("paste_error").toString(),
+        variant: "danger",
+        solid: true,
+      });
+    } else {
+      await this.updateValue(ref, value.value);
+    }
+  }
+
+  private async pasteManyCellsToSelectedCell(event: ClipboardEvent, values: ParseValue[][]) {
     if (this.editing) return;
     let valueRef = this.selectedCell;
     if (!valueRef) return;
 
-    const initialValueRef = valueRef;
+    const changedValueRefs: ValueRef[] = [];
     for (const [rowIndex, row] of values.entries()) {
       let counter = 0;
       for (const [cellIndex, cell] of row.entries()) {
@@ -1778,8 +1779,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
         if (this.valueIsReadOnly(valueRef, true)) return;
 
-        /* eslint-disable-next-line no-await-in-loop */
-        await this.updateValue(valueRef, cell);
+        // eslint-disable-next-line no-await-in-loop
+        await this.updateValueWithParseValue(valueRef, cell);
+        changedValueRefs.push(valueRef);
         if (cellIndex < row.length - 1) {
           const edgeReached = !this.moveSelection("right");
           if (edgeReached) {
@@ -1808,7 +1810,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
         }
       }
     }
-    this.selectCell(initialValueRef);
+    for (const cell of changedValueRefs) {
+      this.selectValue(cell);
+    }
   }
 
   private clearCell(ref: ValueRef) {
@@ -1866,7 +1870,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private get rootEvents(): [name: string, callback: (event: any) => void][] {
     /* eslint-disable @typescript-eslint/unbound-method */
     return [
-      ["copy", this.copySelectedCell],
+      ["copy", this.copySelectedCells],
       ["cut", this.cutSelectedCell],
       ["paste", this.pasteClipboardToSelectedCells],
       ["cell-click", this.onOtherTableClicked],

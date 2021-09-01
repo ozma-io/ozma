@@ -872,6 +872,86 @@ export const parseSpreadsheet = (str: string): string[][] => {
   return arr;
 };
 
+export const stringifySpreadsheet = (arr: string[][]) => {
+  let str = "";
+  let val;
+  for (let r = 0, rlen = arr.length; r < rlen; r += 1) {
+    for (let c = 0, clen = arr[r].length; c < clen; c += 1) {
+      if (c > 0) {
+        str += "\t";
+      }
+      val = arr[r][c];
+      if (typeof val === "string") {
+        if (val.indexOf("\n") > -1) {
+          str += "\"" + val.replace(/"/g, "\"\"") + "\"";
+        } else {
+          str += val;
+        }
+      } else if (val === null || val === undefined) {
+        str += "";
+      } else {
+        str += val;
+      }
+    }
+    str += "\n";
+  }
+  return str;
+};
+
+export type ParseValue =
+  | {
+    type: "reference";
+    value: number | null;
+    pun: string;
+  }
+  | {
+    type: "value";
+    value: string;
+  };
+
+export type ParseResult =
+  | {
+    type: "values";
+    values: ParseValue[][];
+  }
+  | {
+    type: "error";
+  };
+
+const htmlElementToParseValue = (el: HTMLElement): ParseValue => {
+  const referenceValue = el.attributes.getNamedItem("data-ozma-reference-value")?.value;
+  if (referenceValue !== undefined) {
+    const value = JSON.parse(referenceValue) as number | null;
+    const pun = el.innerText;
+    return { type: "reference", value, pun };
+  } else {
+    const value = el.innerText;
+    return { type: "value", value };
+  }
+};
+
+export const parseFromClipboard = (event: ClipboardEvent): ParseResult => {
+  const serialized = event.clipboardData?.getData("text/html");
+  if (serialized === undefined) return { type: "error" };
+
+  const parsed = (new DOMParser()).parseFromString(serialized, "text/html");
+  if (parsed.documentElement.nodeName !== "parsererror") {
+    const table = parsed.documentElement.querySelector("table");
+    if (!table) return { type: "error" };
+
+    const values = Array.from(table.rows).map(row => Array.from(row.cells).map(htmlElementToParseValue));
+    return { type: "values", values };
+  }
+
+  const sourcePlain = event.clipboardData?.getData("text/plain");
+  if (typeof sourcePlain === "string") {
+    const values = parseSpreadsheet(sourcePlain).map(row => row.map(value => ({ type: "value" as const, value })));
+    return { type: "values", values };
+  }
+
+  return { type: "error" };
+};
+
 export const validNumberFormats = ["auto", "ru", "en"] as const;
 export type ValidNumberFormat = typeof validNumberFormats[number];
 const makeMemoKey = (lang: ValidNumberFormat, fractionDigits?: number) => lang + String(fractionDigits);
