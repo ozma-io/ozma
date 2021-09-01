@@ -1199,7 +1199,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private cellSelectionStartCell: ValueRef | null = null;
 
   private get useInfiniteScrolling() {
-    return this.uv.extra.lazyLoad.type === "infinite_scroll" && !this.showTree;
+    return this.uv.extra.lazyLoad.type === "infinite_scroll";
   }
 
   private get pageSizes() {
@@ -1393,6 +1393,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     if (!this.uv.rowLoadState.complete
      && this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength > this.uv.rowLoadState.fetchedRowCount
+     && !this.showTree
     ) {
       this.$emit("load-next-chunk", (result: boolean) => {
         if (this.uv.rowLoadState.complete) {
