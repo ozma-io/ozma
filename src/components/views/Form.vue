@@ -701,6 +701,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
 
 <style lang="scss" scoped>
   .view-form {
+    /* Don't use `height: 100%` here! It breaks table lazy-loading */
     padding: 0.6rem !important;
     overflow-y: auto;
     overflow-x: hidden;
