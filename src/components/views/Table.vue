@@ -1386,14 +1386,19 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return `${this.uv.rows?.length}${this.existingRows}`;
   }
 
-  private infiniteHandler(ev: StateChanger) {
+  private async infiniteHandler(ev: StateChanger) {
     if (this.uv.extra.lazyLoad.type !== "infinite_scroll") return;
 
     this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength += showStep;
 
+    // FIXME: Dirty hack.
+    while (this.showTree && !this.uv.rowLoadState.complete) {
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
     if (!this.uv.rowLoadState.complete
      && this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength > this.uv.rowLoadState.fetchedRowCount
-     && !this.showTree
     ) {
       this.$emit("load-next-chunk", (result: boolean) => {
         if (this.uv.rowLoadState.complete) {
