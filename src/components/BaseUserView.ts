@@ -14,6 +14,7 @@ import { NeverError, ObjectSet, tryDicts } from "@/utils";
 import { IAttrToQueryOpts } from "@/state/query";
 
 import { attrToLink } from "@/links";
+import { attrToButtons } from "@/components/buttons/buttons";
 import { emptyUserViewHandlerFunctions } from "@/user_views/trivial";
 import { eventBus } from "@/main";
 import { isReadonlyDemoInstance } from "@/api";
@@ -312,6 +313,15 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
     };
 
     return attrToLink(this.uv.attributes["create_link"], opts);
+  }
+
+  get creationButtons() {
+    const opts: IAttrToQueryOpts = {
+      infoByDefault: true,
+      homeSchema: this.uv.homeSchema ?? undefined,
+    };
+
+    return attrToButtons(this.uv.attributes["create_buttons"], opts);
   }
 
   async addNewRow(meta?: unknown): Promise<number> {
