@@ -221,6 +221,17 @@
               }
             ]"
           >
+            <ButtonGroup
+              v-if="createEntryButtons"
+              :button="createEntryButtons"
+              @goto="$emit('goto', $event)"
+            />
+            <ButtonItem
+              v-if="createEntryButton"
+              :button="createEntryButton"
+              @goto="$emit('goto', $event)"
+            />
+            <!--
             <FunLink
               v-if="creationLink"
               :link="creationLink"
@@ -234,6 +245,7 @@
                 class="material-icons add-in-modal-icon"
               >add_box</i>
             </FunLink>
+            -->
           </th>
           <th
             v-for="i in columnIndexes"
@@ -1563,6 +1575,30 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return this.uv.extra.hasRowLinks || this.creationLink !== null;
   }
 
+  private get createEntryButtons(): Button | null {
+    return this.creationButtons.length !== 0
+      ? {
+        type: "button-group",
+        icon: "add_box",
+        variant: interfaceButtonVariant,
+        tooltip: this.$t("add_entry_in_modal").toString(),
+        buttons: this.creationButtons,
+      }
+      : null;
+  }
+
+  private get createEntryButton(): Button | null {
+    return this.creationLink && !this.createEntryButtons
+      ? {
+        type: "link",
+        icon: "add_box",
+        variant: interfaceButtonVariant,
+        tooltip: this.$t("add_entry_in_modal").toString(),
+        link: this.creationLink,
+      }
+      : null;
+  }
+
   get editingValue() {
     if (this.editing === null
      || this.editingNonNullableBoolean // Bools are special case because they toggles by double click.
@@ -2851,21 +2887,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  th.tabl_heading {
-    text-overflow: ellipsis;
-    vertical-align: middle;
-  }
-
-  th.links-style {
-    text-align: center;
-    cursor: pointer;
-    padding: 0;
-  }
-
-  .table-th_span {
-    justify-content: center;
-  }
-
   @media screen and (max-device-width: 650px) {
     .tabl {
       flex: 1;
@@ -2948,6 +2969,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
+  ::v-deep .button-element > button {
+    width: 100%;
+  }
+
   ::v-deep .openform-cells {
     position: relative;
     padding: 0;
@@ -2972,17 +2997,36 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       color: var(--cell-foregroundDarkerColor, var(--table-foregroundDarkerColor));
     }
 
-    &.table-th {
-      padding: 0;
-    }
-
-    > a {
+    a {
       display: block;
       text-decoration: none;
 
       &:hover {
         .add-in-modal-icon {
           color: var(--cell-foregroundColor, var(--table-foregroundColor));
+        }
+      }
+    }
+
+    &.table-th {
+      padding: 0;
+      height: 2rem;
+
+      > span,
+      > a {
+        height: 100%;
+        display: flex;
+
+        button {
+          color: var(--cell-foregroundDarkerColor, var(--table-foregroundDarkerColor));
+        }
+
+        &:hover {
+          background-color: var(--cell-backgroundDarker1Color, var(--table-backgroundDarker1Color));
+
+          button {
+            color: var(--cell-foregroundColor, var(--table-foregroundColor));
+          }
         }
       }
     }
@@ -3003,10 +3047,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     > span > i {
       position: absolute;
     }
-  }
-
-  ::v-deep .button-element > button {
-    width: 100%;
   }
 
   .checkbox-col,
