@@ -17,7 +17,7 @@
         "ok": "OK",
         "contextmenu_cut_tooltip": "Use Ctrl+X to cut selected cell",
         "contextmenu_copy_tooltip": "Use Ctrl+C to copy selected cell",
-        "contextmenu_paste_tooltip": "Use Ctrl+P to paste to selected cell"
+        "contextmenu_paste_tooltip": "Use Ctrl+V to paste to selected cell"
       },
       "ru": {
         "cut": "Вырезать",
@@ -36,7 +36,7 @@
         "ok": "Продолжить",
         "contextmenu_cut_tooltip": "Нажмите Ctrl+X, чтобы вырезать выделенную ячейку",
         "contextmenu_copy_tooltip": "Нажмите Ctrl+C, чтобы скопировать выделенную ячейку",
-        "contextmenu_paste_tooltip": "Нажмите Ctrl+P, чтобы вставить в выделенную ячейку"
+        "contextmenu_paste_tooltip": "Нажмите Ctrl+V, чтобы вставить в выделенную ячейку"
       }
     }
 </i18n>
@@ -2339,7 +2339,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       {
         type: "callback",
         icon: "content_paste",
-        caption: this.$t("paste").toString() + " (Ctrl+P)",
+        caption: this.$t("paste").toString() + " (Ctrl+V)",
         variant: defaultVariantAttribute,
         callback: () => {
           void this.$bvModal.msgBoxOk(this.$t("contextmenu_paste_tooltip").toString(), {

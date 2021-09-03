@@ -34,6 +34,10 @@
       :visible-arrow="false"
       :options="{
         placement: 'bottom-start',
+        positionFixed: true,
+        modifiers: {
+          preventOverflow: { escapeWithReference: true, boundariesElement: 'viewport' },
+        },
       }"
       @show="onOpenPopup"
       @hide="onClosePopup"

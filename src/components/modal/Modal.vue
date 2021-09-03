@@ -313,8 +313,8 @@ export default class Modal extends Vue {
   }
 
   .v--modal-top-right {
-    top: 2rem;
-    right: 2rem;
+    top: 2rem !important;
+    right: 2rem !important;
   }
 
   .v--modal-overlay {
