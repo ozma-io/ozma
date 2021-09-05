@@ -4,6 +4,7 @@
         "cut": "Cut",
         "copy": "Copy",
         "paste": "Paste",
+        "edit_error": "Editing error",
         "paste_error": "Pasting error",
         "copy_error": "Copying error",
         "clear_error": "Clearing error",
@@ -23,6 +24,7 @@
         "cut": "Вырезать",
         "copy": "Копировать",
         "paste": "Вставить",
+        "edit_error": "Ошибка при редактировании",
         "paste_error": "Ошибка при вставке",
         "copy_error": "Ошибка при копировании",
         "clear_error": "Ошибка при очистке поля",
@@ -1616,7 +1618,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     const valueRef = this.uv.extra.cursorValue;
     if (!valueRef) return;
 
-    this.cellEditByTarget(valueRef, this.getCellElement(valueRef) as any);
+    this.editCellByTarget(valueRef, this.getCellElement(valueRef) as any);
   }
 
   get columnIndexes() {
@@ -1748,14 +1750,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       this.selectValue(key, false);
     });
     this.lastSelectedRow = null;
-    this.lastSelectedValue = null;
 
     if (clearCursor) {
       this.clearCursorCell();
     }
-
-    // Deselect another cells.
-    /* this.$root.$emit("cell-click"); */
   }
 
   private cellTdByVisualPosition(pos: VisualPosition): HTMLElement {
@@ -1832,7 +1830,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (!value.info || !value.info.field || value.extra.softDisabled) {
       if (throwToastOnReadOnly) {
         this.$bvToast.toast(this.$t("read_only_cell").toString(), {
-          title: this.$t("paste_error").toString(),
+          title: this.$t("edit_error").toString(),
           variant: "danger",
           solid: true,
         });
@@ -1931,17 +1929,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private clearCell(ref: ValueRef) {
-    const value = this.uv.getValueByRef(ref)!.value;
-    if (!value.info || !value.info.field) {
-      this.$bvToast.toast(this.$t("read_only_cell").toString(), {
-        title: this.$t("clear_error").toString(),
-        variant: "danger",
-        solid: true,
-      });
-      return;
+    if (!this.valueIsReadOnly(ref, true)) {
+      void this.updateValue(ref, "");
     }
-
-    void this.updateValue(ref, "");
   }
 
   private clearSelectedCells() {
@@ -2140,7 +2130,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       const childRef = newRowsRef[newRowsRef.length - 1]?.$children?.[1 + firstNotDisabledDOMColumn].$el;
       if (childRef === undefined) return;
 
-      this.cellEditByTarget(
+      this.editCellByTarget(
         {
           type: "added",
           id: rowId,
@@ -2340,8 +2330,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private updateClickTimer(ref: ValueRef) {
-    // this.selectCell() breaks the timer for double click in iOS,
-    // so when we're running iOS we don't check for double click
     const sameCellClicked = deepEquals(this.lastSelectedValue, ref);
     if (this.clickTimeoutId === null) {
       this.clickTimeoutId = setTimeout(() => {
@@ -2484,19 +2472,19 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
         this.selectValue(cell);
       }
     } else {
-      this.cellEditHandler(ref, element);
+      this.handleCellEdit(ref, element);
     }
 
     // `v-click-outside` somehow doesn't triggers on cell clicks, so close context menu there too.
     this.closeCellContextMenu();
   }
 
-  private cellEditByTarget(ref: ValueRef, target: HTMLElement) {
+  private editCellByTarget(ref: ValueRef, target: HTMLElement) {
     this.setCellEditing(ref);
-    this.cellEditHandler(ref, target);
+    this.handleCellEdit(ref, target);
   }
 
-  private cellEditHandler(ref: ValueRef, target: HTMLElement) {
+  private handleCellEdit(ref: ValueRef, target: HTMLElement) {
     this.editParams.width = target.offsetWidth;
     this.editParams.height = target.offsetHeight;
     this.editParams.minHeight = target.offsetHeight;
@@ -2543,13 +2531,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   // More high-level than `selectValue`: deselects other cells and
   // remembers last selected cell.
   private selectCell(ref: ValueRef) {
-    this.uv.extra.selectedValues.keys().forEach(prevRef => {
-      this.selectValue(prevRef, false);
-    });
-
+    this.deselectAllCells({ clearCursor: false });
     this.selectValue(ref, true);
-    this.lastSelectedValue = ref;
     this.setCursorCell(ref);
+    this.lastSelectedValue = ref;
   }
 
   private setCursorCell(ref: ValueRef) {
