@@ -4,6 +4,7 @@
         "cut": "Cut",
         "copy": "Copy",
         "paste": "Paste",
+        "edit_error": "Editing error",
         "paste_error": "Pasting error",
         "copy_error": "Copying error",
         "clear_error": "Clearing error",
@@ -23,6 +24,7 @@
         "cut": "Вырезать",
         "copy": "Копировать",
         "paste": "Вставить",
+        "edit_error": "Ошибка при редактировании",
         "paste_error": "Ошибка при вставке",
         "copy_error": "Ошибка при копировании",
         "clear_error": "Ошибка при очистке поля",
@@ -1832,7 +1834,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (!value.info || !value.info.field || value.extra.softDisabled) {
       if (throwToastOnReadOnly) {
         this.$bvToast.toast(this.$t("read_only_cell").toString(), {
-          title: this.$t("paste_error").toString(),
+          title: this.$t("edit_error").toString(),
           variant: "danger",
           solid: true,
         });
@@ -1931,17 +1933,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private clearCell(ref: ValueRef) {
-    const value = this.uv.getValueByRef(ref)!.value;
-    if (!value.info || !value.info.field) {
-      this.$bvToast.toast(this.$t("read_only_cell").toString(), {
-        title: this.$t("clear_error").toString(),
-        variant: "danger",
-        solid: true,
-      });
-      return;
+    if (!this.valueIsReadOnly(ref, true)) {
+      void this.updateValue(ref, "");
     }
-
-    void this.updateValue(ref, "");
   }
 
   private clearSelectedCells() {
