@@ -2330,8 +2330,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private updateClickTimer(ref: ValueRef) {
-    // this.selectCell() breaks the timer for double click in iOS,
-    // so when we're running iOS we don't check for double click
     const sameCellClicked = deepEquals(this.lastSelectedValue, ref);
     if (this.clickTimeoutId === null) {
       this.clickTimeoutId = setTimeout(() => {
