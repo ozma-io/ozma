@@ -162,10 +162,10 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       }
       const entriesRef: EntriesRef = {
         fetchBy: "domain",
-        entity: this.uv.info.mainEntity!,
+        entity: fieldType.entity,
         referencedBy: {
           field: {
-            entity: this.uv.info.mainEntity!,
+            entity: fieldType.entity,
             name: mainField!.name,
           },
           rowId: null,
@@ -281,7 +281,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     return attrToQuery(
       this.uv.attributes["card_create_view"],
       { infoByDefault: true },
-    ) || undefined;
+    ) || null;
   }
 
   get groupedCards(): Record<string, ICard<IRowCard>[]> {
