@@ -1,8 +1,7 @@
 <template>
   <tr
     :style="[row.extra.style, row.extra.colorVariables, style]"
-    :class="['table-tr',
-             row.extra.selected ? 'selected' : 'none_selected']"
+    :class="['table-tr', { selected: row.extra.selected }]"
   >
     <td
       v-if="uv.extra.isSelectionColumnEnabled"
@@ -105,7 +104,7 @@ export default class TableRow extends Vue {
     display: none;
   }
 
-  .disable_cell {
+  .disabled-cell {
     background-color: var(--ControlDisableColor);
   }
 
@@ -181,7 +180,7 @@ export default class TableRow extends Vue {
     background-color: var(--WarningColor) !important;
   }
 
-  td.select {
+  td.selected {
     z-index: 15; /* обычные ячейки ниже фиксированных */
   }
 

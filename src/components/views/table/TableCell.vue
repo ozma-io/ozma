@@ -24,10 +24,10 @@
         'fixed-column': column.fixed,
         'select_fixed': value.extra.selected && column.fixed,
         'next-after-last-fixed': index === lastFixedColumnIndex,
-        'select': value.extra.selected && !column.fixed,
         'selected': value.extra.selected,
+        'cursor': value.extra.selected === 'cursor',
         'required-cell': requiredButEmpty,
-        'disable_cell': value.info === undefined && from !== 'existing'
+        'disabled-cell': value.info === undefined && from !== 'existing'
       }
     ]"
     @click.stop="$emit('cell-click', columnPosition, $refs.cell, $event)"
@@ -291,11 +291,11 @@ export default class TableCell extends Vue {
     pointer-events: none;
   }
 
-  /* .table-td.selected {
-   *   box-shadow:
-   *     inset 2px 2px 0 var(--FocusBorderColor),
-   *     inset -2px -2px 0 var(--FocusBorderColor);
-   * } */
+  .table-td.cursor {
+    box-shadow:
+      inset 2px 2px 0 var(--FocusBorderColor),
+      inset -2px -2px 0 var(--FocusBorderColor);
+  }
 
   .table-td {
     position: relative;
