@@ -252,13 +252,14 @@
           </th>
         </tr>
       </thead>
-      <!--
-        <transition-group tag="tbody" name="fade-2">
-        -->
       <tbody>
         <TableRow
           v-for="(row, rowIndex) in shownRows"
           :key="row.key"
+          :class="{
+            'last-top-new': row.notExisting && rowIndex + 1 < shownRows.length && !shownRows[rowIndex + 1].notExisting,
+            'first-bottom-new': row.notExisting && rowIndex - 1 > 0 && !shownRows[rowIndex - 1].notExisting,
+          }"
           :uv="uv"
           :row="row.row"
           :column-indexes="columnIndexes"
@@ -277,9 +278,6 @@
           @goto="$emit('goto', $event)"
         />
       </tbody>
-      <!--
-        </transition-group>
-        -->
     </table>
     <InfiniteLoading
       v-if="useInfiniteScrolling"
@@ -3069,6 +3067,21 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       background-color: var(--cell-backgroundDarker1Color, var(--table-backgroundDarker1Color));
       transition: background 0s;
     }
+  }
+
+  ::v-deep {
+    /* Second selctor is for system columns */
+    .table-tr.last-top-new td,
+    .table-tr.last-top-new td ~ td {
+      border-bottom: 2px solid var(--table-backgroundDarker2Color);
+    }
+
+    /* stylelint-disable no-descending-specificity */
+    .table-tr.first-bottom-new td,
+    .table-tr.first-bottom-new td ~ td {
+      border-top: 2px solid var(--table-backgroundDarker2Color);
+    }
+    /* stylelint-enable no-descending-specificity */
   }
 
   ::v-deep .button-element > button {
