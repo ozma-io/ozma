@@ -233,21 +233,6 @@
               :button="createEntryButton"
               @goto="$emit('goto', $event)"
             />
-            <!--
-            <FunLink
-              v-if="creationLink"
-              :link="creationLink"
-              @goto="$emit('goto', $event)"
-            >
-              <i
-                v-b-tooltip.hover.right.noninteractive="{
-                  title: $t('add_entry_in_modal').toString(),
-                  disabled: $isMobile,
-                }"
-                class="material-icons add-in-modal-icon"
-              >add_box</i>
-            </FunLink>
-            -->
           </th>
           <th
             v-for="i in columnIndexes"
@@ -1108,6 +1093,24 @@ const rowIndicesCompare = (aIndex: CommittedRowRef, bIndex: CommittedRowRef, uv:
   const b = uv.getRowByRef(bIndex);
   const aValue = a?.values[sortColumn].value;
   const bValue = b?.values[sortColumn].value;
+  if (aValue === null) {
+    return 1;
+  } else if (bValue === null) {
+    return -1;
+  } else if (aValue instanceof moment) {
+    return (aValue as Moment).unix() - (bValue as Moment).unix();
+  } else if (typeof aValue === "number") {
+    return aValue - (bValue as number);
+  } else {
+    return collator.compare(String(aValue), String(bValue));
+  }
+};
+
+const newRowIndicesCompare = (aIndex: NewRowRef, bIndex: NewRowRef, uv: ITableCombinedUserView, sortColumn: number, collator: Intl.Collator) => {
+  const a = getNewRow(uv, aIndex);
+  const b = getNewRow(uv, bIndex);
+  const aValue = a?.row.values[sortColumn].value;
+  const bValue = b?.row.values[sortColumn].value;
   if (aValue === null) {
     return 1;
   } else if (bValue === null) {
@@ -2711,7 +2714,14 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
           (a, b) => rowIndicesCompare(a, b, this.uv, sortColumn, collator) :
           (a, b) => rowIndicesCompare(b, a, this.uv, sortColumn, collator);
 
+      const sortNewFunction: (a: NewRowRef, b: NewRowRef) => number =
+        this.uv.extra.sortAsc ?
+          (a, b) => newRowIndicesCompare(a, b, this.uv, sortColumn, collator) :
+          (a, b) => newRowIndicesCompare(b, a, this.uv, sortColumn, collator);
+
       this.rowPositions.sort(sortFunction);
+      this.uv.extra.newRowTopSidePositions.sort(sortNewFunction);
+      this.uv.extra.newRowBottomSidePositions.sort(sortNewFunction);
     }
   }
 
