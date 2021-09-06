@@ -82,9 +82,9 @@ import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, userViewT
 import { attrToQuery, IQuery } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
 import type { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
-import { ICommonUserViewData, RowRef, ValueRef } from "@/user_views/combined";
+import { RowRef, ValueRef } from "@/user_views/combined";
+import type { ICommonUserViewData, ICombinedUserViewAny } from "@/user_views/combined";
 import { getReferenceInfo } from "@/state/entries";
-
 import { attrToButton, Button, attrToButtons, attrToButtonsOld } from "@/components/buttons/buttons";
 import { IAttrToLinkOpts } from "@/links";
 import { convertParsedRows, serializeValue, valueFromRaw, valueToText } from "@/values";
@@ -111,6 +111,7 @@ const csvExportOpts: IEntriesRequestOpts = {
 
 const csvImportChunk = 500;
 
+const staging = namespace("staging");
 const errors = namespace("errors");
 
 @Component({
@@ -123,10 +124,30 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
   @Action("reload") reload!: () => Promise<void>;
   @errors.Mutation("setError") setError!: (_: { key: ErrorKey; error: string }) => void;
+  @staging.Mutation("addDisableAutoSaveCount") addDisableAutoSaveCount!: () => void;
+  @staging.Mutation("removeDisableAutoSaveCount") removeDisableAutoSaveCount!: () => void;
 
   modalView: IQuery | null = null;
   openQRCodeScanner = false;
   openBarCodeScanner = false;
+
+  protected beforeDestroy() {
+    if (this.uv.attributes["disable_auto_save"]) {
+      this.removeDisableAutoSaveCount();
+    }
+  }
+
+  @Watch("uv", { immediate: true })
+  private watchUv(newUv: ICombinedUserViewAny, prevUv: ICombinedUserViewAny | null) {
+    const disabledOnNew = newUv.attributes["disable_auto_save"];
+    const disabledOnPrev = prevUv?.attributes["disable_auto_save"];
+    if (disabledOnNew && !disabledOnPrev) {
+      this.addDisableAutoSaveCount();
+    }
+    if (!disabledOnNew && disabledOnPrev) {
+      this.removeDisableAutoSaveCount();
+    }
+  }
 
   private async exportToCsv() {
     // Gods do I hate Excel:

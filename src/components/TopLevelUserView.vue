@@ -7,6 +7,7 @@
             "loading": "Now loading",
             "save": "Save (Ctrl+S)",
             "saved": "All changes saved",
+            "auto_save_disabled": "Auto-save disabled. Data will be saved on manual save or on jump to different user view.",
             "show_errors": "Show errors",
             "clear_changes": "Reset changes after last save",
             "clear_changes_confirm": "Reset changes after last save?",
@@ -33,6 +34,7 @@
             "loading": "Загрузка данных",
             "save": "Сохранить (Ctrl+S)",
             "saved": "Все изменения сохранены",
+            "auto_save_disabled": "Автосохранение отключено. Данные сохранятся при ручном сохранении или при переходе на другое представление.",
             "show_errors": "Показать ошибки",
             "clear_changes": "Сбросить все изменения",
             "clear_changes_confirm": "Сбросить все изменения с последнего сохранения?",
@@ -132,6 +134,21 @@
         },
       ]"
     >
+      <div
+        v-if="autoSaveDisabled"
+        v-b-tooltip.hover.right.noninteractive="{
+          title: $t('auto_save_disabled').toString(),
+          disabled: $isMobile,
+        }"
+        class="auto-save-indicator"
+      >
+        <span
+          class="material-icons md-36"
+        >
+          timer_off
+        </span>
+      </div>
+
       <transition name="fade-2">
         <button
           v-if="canClearUnsavedChanges"
@@ -204,6 +221,8 @@
             cloud_done
           </span>
         </div>
+        <!-- To maintain position of auto-save indicator -->
+        <div v-else class="save-cluster-phantom" />
       </transition>
     </div>
 
@@ -280,6 +299,7 @@ export default class TopLevelUserView extends Vue {
   @auth.Action("login") login!: () => Promise<void>;
   @auth.Action("logout") logout!: () => Promise<void>;
   @staging.State("current") changes!: CurrentChanges;
+  @staging.State("disableAutoSaveCount") disableAutoSaveCount!: number;
   @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<CombinedTransactionResult[]>;
   @staging.Action("reset") clearChanges!: () => Promise<void>;
   @query.State("current") query!: ICurrentQueryHistory | null;
@@ -503,6 +523,10 @@ export default class TopLevelUserView extends Vue {
 
   private get canClearUnsavedChanges() {
     return this.errors.length !== 0 && !this.changes.isEmpty;
+  }
+
+  private get autoSaveDisabled() {
+    return this.disableAutoSaveCount > 0;
   }
 
   @Watch("$route", { deep: true, immediate: true })
@@ -732,6 +756,23 @@ export default class TopLevelUserView extends Vue {
   .save-cluster-indicator {
     height: 4rem;
     width: 4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    color: var(--default-backgroundDarker2Color);
+  }
+
+  .save-cluster-phantom {
+    height: 4rem;
+    width: 4rem;
+  }
+
+  .auto-save-indicator {
+    position: absolute;
+    height: 4rem;
+    width: 4rem;
+    transform: translateX(-100%);
     display: flex;
     justify-content: center;
     align-items: center;
