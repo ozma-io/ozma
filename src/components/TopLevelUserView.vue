@@ -134,21 +134,6 @@
         },
       ]"
     >
-      <div
-        v-if="autoSaveDisabled"
-        v-b-tooltip.hover.right.noninteractive="{
-          title: $t('auto_save_disabled').toString(),
-          disabled: $isMobile,
-        }"
-        class="auto-save-indicator"
-      >
-        <span
-          class="material-icons md-36"
-        >
-          timer_off
-        </span>
-      </div>
-
       <transition name="fade-2">
         <button
           v-if="canClearUnsavedChanges"
@@ -190,23 +175,41 @@
           v-if="!changes.isEmpty && isSaving"
           class="saving-spinner spinner-border"
         />
-        <button
+        <div
           v-else-if="!changes.isEmpty"
-          v-b-tooltip.hover.right.noninteractive="{
-            title: $t('save').toString(),
-            disabled: $isMobile,
-          }"
-          :class="['save-cluster-button save-button shadow', {
-            'save': !changes.isEmpty,
-          }]"
-          @click.capture.stop="saveView"
         >
-          <span
-            class="material-icons md-36"
+          <div
+            v-if="autoSaveDisabled"
+            v-b-tooltip.hover.right.noninteractive="{
+              title: $t('auto_save_disabled').toString(),
+              disabled: $isMobile,
+            }"
+            class="auto-save-indicator"
           >
-            save
-          </span>
-        </button>
+            <span
+              class="material-icons md-36"
+            >
+              timer_off
+            </span>
+          </div>
+
+          <button
+            v-b-tooltip.hover.right.noninteractive="{
+              title: $t('save').toString(),
+              disabled: $isMobile,
+            }"
+            :class="['save-cluster-button save-button shadow', {
+              'save': !changes.isEmpty,
+            }]"
+            @click.capture.stop="saveView"
+          >
+            <span
+              class="material-icons md-36"
+            >
+              save
+            </span>
+          </button>
+        </div>
         <div
           v-else-if="savedRecently.show"
           v-b-tooltip.hover.right.noninteractive="{
@@ -221,8 +224,6 @@
             cloud_done
           </span>
         </div>
-        <!-- To maintain position of auto-save indicator -->
-        <div v-else class="save-cluster-phantom" />
       </transition>
     </div>
 
@@ -763,23 +764,6 @@ export default class TopLevelUserView extends Vue {
     color: var(--default-backgroundDarker2Color);
   }
 
-  .save-cluster-phantom {
-    height: 4rem;
-    width: 4rem;
-  }
-
-  .auto-save-indicator {
-    position: absolute;
-    height: 4rem;
-    width: 4rem;
-    transform: translateX(-100%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 50%;
-    color: var(--default-backgroundDarker2Color);
-  }
-
   .reset-changes-button {
     height: 3rem;
     width: 3rem;
@@ -794,6 +778,18 @@ export default class TopLevelUserView extends Vue {
     margin-bottom: 0.5rem;
     background-color: #6c757d33;
     color: #6c757dcc;
+  }
+
+  .auto-save-indicator {
+    position: absolute;
+    height: 4rem;
+    width: 4rem;
+    transform: translateX(-100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    color: var(--default-backgroundDarker2Color);
   }
 
   .save-button {
