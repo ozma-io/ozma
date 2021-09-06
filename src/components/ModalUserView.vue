@@ -80,7 +80,6 @@ import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { convertToWords } from "@/utils";
 import { ErrorKey } from "@/state/errors";
-import { ISelectionRef } from "./BaseUserView";
 
 const staging = namespace("staging");
 const errors = namespace("errors");
@@ -147,39 +146,6 @@ export default class ModalUserView extends Vue {
 
   private openFullscreen() {
     void router.push(queryLocation(this.view));
-  }
-
-  saveViewIfChanged() {
-    if (!this.changes.isScopeEmpty(this.uid)) {
-      void this.saveView();
-      return true;
-    }
-    return false;
-  }
-
-  private async saveView() {
-    const ops = await this.submitChanges({ scope: this.uid, errorOnIncomplete: true });
-    if (ops.length === 1) {
-      const op = ops[0];
-      if (op.type === "insert") {
-        this.$emit("select", {
-          entity: op.entity,
-          id: op.id,
-        } as ISelectionRef);
-      }
-    }
-
-    if (this.errors.length === 0) {
-      this.$bvToast.hide();
-    }
-
-    if (this.savedRecently.timeoutId !== null) {
-      clearTimeout(this.savedRecently.timeoutId);
-    }
-    this.savedRecently.show = true;
-    this.savedRecently.timeoutId = setTimeout(() => {
-      this.savedRecently.show = false;
-    }, 5000);
   }
 
   private destroyed() {

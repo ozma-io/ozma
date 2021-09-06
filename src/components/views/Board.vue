@@ -98,7 +98,7 @@ const query = namespace("query");
 export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntriesView>(BaseUserView, BaseEntriesView) {
   @query.Action("addWindow") addWindow!: (queryObj: IQuery) => Promise<void>;
 
-  private async mounted() {
+  protected async mounted() {
     await this.fixEmptyOrders();
     await this.fixOrderUniqueness();
   }
