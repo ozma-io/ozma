@@ -162,10 +162,10 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       }
       const entriesRef: EntriesRef = {
         fetchBy: "domain",
-        entity: fieldType.entity,
+        entity: this.uv.info.mainEntity!,
         referencedBy: {
           field: {
-            entity: fieldType.entity,
+            entity: this.uv.info.mainEntity!,
             name: mainField!.name,
           },
           rowId: null,
