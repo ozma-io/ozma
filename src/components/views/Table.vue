@@ -3134,6 +3134,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
         button {
           color: var(--cell-foregroundDarkerColor, var(--table-foregroundDarkerColor));
+          flex: 1;
         }
 
         &:hover {
