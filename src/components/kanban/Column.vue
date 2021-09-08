@@ -274,7 +274,6 @@ export default class KanbanColumn extends Vue {
     opacity: 1 !important;
     transform: rotate(3deg);
     box-shadow: 0 10px 10px -10px;
-    font-size: 14px;
   }
 
   ::-webkit-scrollbar {
