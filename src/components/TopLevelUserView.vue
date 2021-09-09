@@ -16,6 +16,8 @@
             "account": "Account",
             "theme": "Theme",
             "contacts": "Support",
+            "workspaces": "Workspaces",
+            "documentation": "Documentation",
             "login": "Login",
             "logout": "Logout",
             "auth_error": "Authentication error: {msg}",
@@ -43,6 +45,8 @@
             "account": "Профиль",
             "theme": "Тема",
             "contacts": "Помощь",
+            "workspaces": "Базы",
+            "documentation": "Документация",
             "login": "Войти",
             "logout": "Выйти",
             "auth_error": "Ошибка авторизации: {msg}",
@@ -597,7 +601,7 @@ export default class TopLevelUserView extends Vue {
   get burgerButton() {
     const buttons: Button[] = [];
 
-    if (this.themeButtons.length > 0) {
+    if (this.communicationButtons.length > 0) {
       buttons.push({
         icon: "contact_support",
         caption: this.$t("contacts").toString(),
@@ -606,6 +610,22 @@ export default class TopLevelUserView extends Vue {
         buttons: this.communicationButtons,
       });
     }
+
+    buttons.push({
+      icon: "help_center",
+      caption: this.$t("documentation").toString(),
+      variant: defaultVariantAttribute,
+      type: "link",
+      link: { type: "href", href: "https://wiki.ozma.io", target: "_blank" },
+    });
+
+    buttons.push({
+      icon: "view_list",
+      caption: this.$t("workspaces").toString(),
+      variant: defaultVariantAttribute,
+      type: "link",
+      link: { type: "href", href: "https://admin.ozma.io", target: "_blank" },
+    });
 
     if (this.themeButtons.length > 0) {
       buttons.push({
