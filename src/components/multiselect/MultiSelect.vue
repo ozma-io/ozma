@@ -33,7 +33,6 @@
       'popup-container',
       {
         'is-open': isPopupOpen,
-
       }
     ]"
     @keydown.tab="closePopup"
@@ -47,6 +46,7 @@
       leave-active-class="fade-leave fade-leave-active"
       :disabled="disabled"
       :visible-arrow="false"
+      :compact-mode="compactMode"
       :popper-options="{
         placement: 'bottom-start',
         positionFixed: true,
@@ -58,9 +58,14 @@
       @popup-opened="onOpenPopup"
       @popup-closed="onClosePopup"
     >
-      <template #default="{ mode, isOpen }">
+      <template #default="{ mode, isOpen, location }">
         <div
-          class="select-container"
+          :class="[
+            'select-container',
+            {
+              'compact-mode': compactMode && location === 'out_of_popup',
+            }
+          ]"
         >
           <div
             class="default-variant values-container"
@@ -97,7 +102,7 @@
                   <!-- eslint-enable vue/no-v-html -->
                 </slot>
                 <input
-                  v-if="showUnselectOption"
+                  v-if="showUnselectOption && !(compactMode && location === 'out_of_popup')"
                   type="button"
                   class="material-icons md-14 material-button remove-value rounded-circle"
                   value="close"
@@ -109,7 +114,7 @@
 
           <b-input-group-append>
             <b-button
-              v-if="showClearOptions && !(mode === 'modal' && !isOpen)"
+              v-if="showClearOptions && !(mode === 'modal' && !isOpen) && !(compactMode && location === 'out_of_popup')"
               class="button with-material-icon clear-content-button clear-options-button"
               variant="outline-secondary"
               @click.stop="unselectAll"
@@ -120,7 +125,7 @@
             </b-button>
 
             <b-input-group-text
-              v-if="!(mode === 'modal' && isOpen)"
+              v-if="!(mode === 'modal' && isOpen) && !(compactMode && location === 'in_popup')"
               :class="['with-material-icon select-icon', { 'is-mobile': $isMobile }]"
             >
               <i class="material-icons">
@@ -290,6 +295,7 @@ export default class MultiSelect extends Vue {
   @Prop({ type: Object, default: (): LoadingState => ({ status: "ok", moreAvailable: false }) }) loadingState!: LoadingState;
   @Prop({ type: Function }) processFilter!: (_: string) => Promise<boolean> | undefined;
   @Prop({ type: String, default: null }) label!: string | null;
+  @Prop({ type: Boolean, default: false }) compactMode!: boolean;
 
   private filterValue = "";
   private hoveredOpinionIndex: number | null = null;
@@ -710,6 +716,7 @@ export default class MultiSelect extends Vue {
   }
 
   .values-container {
+    min-width: 0;
     max-height: 11rem;
     display: flex;
     flex-direction: row;
@@ -850,5 +857,11 @@ export default class MultiSelect extends Vue {
   .one-of-many-value:hover,
   .one-of-many-value:hover > input.remove-value {
     cursor: pointer;
+  }
+
+  .compact-mode {
+    .selected-values {
+      flex-wrap: nowrap;
+    }
   }
 </style>

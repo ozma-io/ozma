@@ -18,6 +18,7 @@
       :select-views="selectViews"
       :qrcode-input="qrcodeInput"
       :scope="scope"
+      :compact-mode="compactMode"
       @update:value="$emit('update:value', $event)"
       @focus="$emit('focus')"
       @goto="$emit('goto', $event)"
@@ -59,6 +60,7 @@ export default class ReferenceField extends Vue {
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
   @Prop({ type: String, required: true }) scope!: ScopeName;
   @Prop({ type: String, default: null }) label!: string | null;
+  @Prop({ type: Boolean, default: false }) compactMode!: boolean;
 
   get entriesRef(): EntriesRef {
     return this.optionsView
