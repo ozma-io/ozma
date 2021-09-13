@@ -672,7 +672,7 @@ export default class FormControl extends Vue {
     } else if (this.cellColor) {
       return colorVariantFromAttribute({ background: this.cellColor });
     } else {
-      return { type: "existing", className: "default-variant" };
+      return { type: "existing", className: "cell" };
     }
   }
 
