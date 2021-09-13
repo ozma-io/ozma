@@ -51,7 +51,7 @@
         placement: 'bottom-start',
         positionFixed: true,
         modifiers: {
-          preventOverflow: { escapeWithReference: true, boundariesElement: 'viewport' },
+          preventOverflow: { enabled: true, boundariesElement: 'viewport' },
         },
       }"
       @update:showContent="isPopupOpen = $event"
