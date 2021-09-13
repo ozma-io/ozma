@@ -2862,7 +2862,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     right: 0;
     height: 100%;
     width: fit-content;
-    z-index: 9999;
+    z-index: 30;
     pointer-events: none;
   }
 
