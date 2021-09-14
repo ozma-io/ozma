@@ -67,57 +67,6 @@
         </div>
       </div>
     </div>
-    <!--
-    <b-container :fluid="hasManyArguments" class="arguments-editor-container pb-2">
-      <b-row class="sm-gutters">
-        <b-col
-          v-for="(argument, name, index) in args"
-          :key="index"
-          :sm="hasManyArguments ? 2 : 6"
-          class="mt-2"
-        >
-          <FormControl
-            :value="{ value: allValues[name] }"
-            :type="argument.type"
-            :attributes="argument.extra"
-            :caption="argument.caption"
-            force-multiline
-            :scope="mockScope"
-            :uv-args="mockUvArgs"
-            :level="0"
-            :forced-field-type="argument.type"
-            :forced-is-nullable="argument.isOptional"
-            @update="update(name, $event)"
-          />
-        </b-col>
-        <b-col class="mt-2 align-self-end">
-          <div class="buttons">
-            <b-button
-              v-if="canBeClosed"
-              variant="outline-secondary"
-              @click="close"
-            >
-              {{ $t("close") }}
-            </b-button>
-            <b-button
-              variant="outline-danger"
-              :disabled="!hasChanges"
-              @click="reset"
-            >
-              {{ $t("reset") }}
-            </b-button>
-            <b-button
-              variant="primary"
-              :disabled="!hasChanges || someRequiredFieldsAreEmpty"
-              @click="apply"
-            >
-              {{ $t("apply") }}
-            </b-button>
-          </div>
-        </b-col>
-      </b-row>
-    </b-container>
-    -->
   </div>
 </template>
 
