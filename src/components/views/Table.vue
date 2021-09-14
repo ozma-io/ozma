@@ -1798,7 +1798,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     event.preventDefault();
 
     const positions = this.selectedCells.map(cell => this.getCellVisualPosition(cell) as VisualPosition);
-    const positions2D = Object.values(R.groupBy(cell => String(cell.row), positions));
+    const positions2D = Object.values(R.groupBy(cell => String(cell.row), positions)).map(row => row.sort((c1, c2) => c1.column - c2.column));
     const isRectangular = positions2D.every(row => row.length === positions2D[0].length);
 
     const sanitize = (message: string) => sanitizeHtml(message, { allowedTags: [] });
