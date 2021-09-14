@@ -25,11 +25,10 @@
   <fragment>
     <InputSlot
       v-if="inputType.name !== 'userview' && inputType.name !== 'empty_userview'"
-      :inline="!isMultiline && !forceMultiline"
+      :inline="!isMultiline"
       :modal-only="modalOnly"
       :is-cell-edit="isCellEdit"
       :label="usedCaption"
-      :smaller-label="forceMultiline"
       :background-color="cellColor"
       :color-variant-attribute="colorVarinatAttribute"
       :text-align="textAlign"
@@ -137,7 +136,6 @@
           :disabled="isDisabled"
           :background-color="cellColor"
           :uv-args="uvArgs"
-          :compact-mode="compactMode"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
           @blur="$emit('blur', $event)"
@@ -230,7 +228,6 @@
           :background-color="cellColor"
           :qrcode-input="isQRCodeInput"
           :scope="scope"
-          :compact-mode="compactMode"
           @update:actions="actions = $event"
           @update:buttons="buttons = $event"
           @focus="iSlot.onFocus"
@@ -250,7 +247,6 @@
           :autofocus="autofocus || iSlot.autofocus"
           :nullable="isNullable"
           :disabled="isDisabled"
-          :compact-mode="compactMode"
           @focus="iSlot.onFocus"
           @blur="$emit('blur', $event)"
           @update:value="updateValue($event)"
@@ -577,8 +573,6 @@ export default class FormControl extends Vue {
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments; // this.uv.args
   @Prop({ type: String, default: "" }) caption!: string;
   @Prop({ type: Boolean, default: false }) forceCaption!: boolean;
-  @Prop({ type: Boolean, default: false }) forceMultiline!: boolean;
-  @Prop({ type: Boolean, default: false }) compactMode!: boolean;
   @Prop({ type: Boolean, default: false }) disableColor!: boolean;
   @Prop({ type: String, required: true }) scope!: string; // this.scope
   @Prop({ type: Number, required: true }) level!: number; // this.level
