@@ -15,7 +15,15 @@
 </i18n>
 <template>
   <b-row
-    :class="[variantClassName, 'cell-local-variant', {'input_slot__row': inline, 'input-slot_cell-edit': isCellEdit}]"
+    :class="[
+      variantClassName,
+      'cell-local-variant',
+      {
+        'input_slot__row': inline,
+        'input-slot_cell-edit': isCellEdit,
+        'smaller-label': smallerLabel,
+      },
+    ]"
   >
     <Modal
       v-if="modal"
@@ -147,6 +155,7 @@ import { getColorVariantAttributeClassName, getColorVariantAttributeVariables } 
 @Component({ components: { Modal, Input } })
 export default class InputSlot extends Vue {
   @Prop({ type: String }) label!: string;
+  @Prop({ type: Boolean, default: false }) smallerLabel!: boolean;
   @Prop({ type: Boolean, default: true }) inline!: boolean;
   // FIXME: remove this and style parent nodes instead.
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
@@ -241,7 +250,11 @@ export default class InputSlot extends Vue {
   .input_label__container {
     padding: 0;
     display: flex;
-    height: 2em;
+    height: 2rem;
+
+    .smaller-label & {
+      height: initial;
+    }
   }
 
   .input_label {

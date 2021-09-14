@@ -36,6 +36,7 @@
       show-filter
       :loading-state="loadingState"
       :process-filter="f => processFilter(f)"
+      :compact-mode="compactMode"
       @update:value="updateValue"
       @add-value="addValue"
       @remove-value="removeValue"
@@ -58,11 +59,6 @@
               :value="iconValue(select.option.value.link.target)"
             >
           </FunLink>
-
-          <!-- Hack to maintain min-heigth when there are no icons -->
-          <!--
-          <span class="phantom-icon md-18">&#8203;</span>
-          -->
 
           <!-- eslint-disable vue/no-v-html -->
           <span class="value-text" v-html="select.option.labelHtml" />
@@ -188,6 +184,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Prop({ type: Boolean, default: false }) loadPunOnMount!: boolean;
   @Prop({ type: String, default: "no_scope" }) scope!: ScopeName;
   @Prop({ type: String, default: null }) label!: string | null;
+  @Prop({ type: Boolean, default: false }) compactMode!: boolean;
 
   private selectedView: IQuery | null = null;
   private wasOpenedQRCodeScanner = false;
@@ -438,11 +435,6 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     opacity: 0.3;
   }
 
-  .phantom-icon {
-    margin: 0 !important;
-    line-height: 1;
-  }
-
   .action-button {
     padding: 0.5rem 0.25rem;
     border-radius: 0;
@@ -454,5 +446,13 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
 
   .loading-box {
     height: 2rem;
+  }
+
+  .compact-mode {
+    .value-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 </style>
