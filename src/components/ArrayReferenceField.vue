@@ -24,7 +24,6 @@
     :height="height"
     :options-list-height="optionsListHeight"
     :autofocus="autofocus"
-    :compact-mode="compactMode"
     @add-value="addValue"
     @remove-index="removeIndex"
     @clear-values="clearValues"
@@ -58,7 +57,6 @@ export default class ArrayReferenceField extends Vue {
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
   @Prop({ type: String, default: null }) label!: string | null;
-  @Prop({ type: Boolean, default: false }) compactMode!: boolean;
 
   private get entriesRef(): EntriesRef {
     return {

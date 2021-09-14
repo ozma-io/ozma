@@ -19,14 +19,12 @@
               <slot
                 :mode="mode"
                 :isOpen="true"
-                location="in_popup"
               />
             </div>
             <div class="modal-inner-slot">
               <slot
                 name="inner"
                 modal
-                location="in_popup"
                 :autofocus="showContent"
               />
             </div>
@@ -37,7 +35,6 @@
           <slot
             :mode="mode"
             :isOpen="false"
-            location="out_of_popup"
           />
         </div>
       </fragment>
@@ -62,22 +59,11 @@
           <slot
             :mode="mode"
             :isOpen="showContent"
-            location="out_of_popup"
           />
         </div>
         <!-- eslint-enable vue/no-deprecated-slot-attribute -->
         <div class="popper popup border rounded shadow">
-          <div v-if="compactMode" class="popup-field-slot">
-            <slot
-              :mode="mode"
-              :isOpen="true"
-              location="in_popup"
-            />
-          </div>
-
-          <div class="popup-inner-slot">
-            <slot name="inner" />
-          </div>
+          <slot name="inner" />
         </div>
       </popper>
     </template>
@@ -98,7 +84,6 @@ export default class InputPopup extends Vue {
   @Prop({ type: Boolean, default: false }) disabled!: boolean;
   @Prop({ type: String, default: null }) label!: string | null;
   @Prop({ type: Object, default: () => {} }) popperOptions!: any;
-  @Prop({ type: Boolean, default: false }) compactMode!: boolean;
   private showContent = false;
 
   get mode(): Mode {
@@ -178,18 +163,6 @@ export default class InputPopup extends Vue {
     max-height: 15rem;
     display: flex;
     flex-direction: column;
-
-    .popup-field-slot {
-      height: 0;
-      max-height: 5rem;
-      overflow-y: auto;
-      flex: 0 0;
-    }
-
-    .popup-inner-slot {
-      flex: 1 1;
-      height: 0;
-    }
   }
 
   .label {

@@ -19,61 +19,12 @@
     @keyup.enter="applyIfChanged"
     @keyup.escape="close"
   >
-    <div class="arguments-editor-container">
-      <div class="argument-fields">
-        <div
-          v-for="(argument, name) in args"
-          :key="name"
-          class="argument-field-wrapper"
-        >
-          <FormControl
-            :value="{ value: allValues[name] }"
-            :type="argument.type"
-            :attributes="argument.extra"
-            :caption="argument.caption"
-            force-multiline
-            compact-mode
-            :scope="mockScope"
-            :uv-args="mockUvArgs"
-            :level="0"
-            :forced-field-type="argument.type"
-            :forced-is-nullable="argument.isOptional"
-            @update="update(name, $event)"
-          />
-        </div>
-
-        <div class="buttons">
-          <b-button
-            v-if="canBeClosed"
-            variant="outline-secondary"
-            @click="close"
-          >
-            {{ $t("close") }}
-          </b-button>
-          <b-button
-            variant="outline-danger"
-            :disabled="!hasChanges"
-            @click="reset"
-          >
-            {{ $t("reset") }}
-          </b-button>
-          <b-button
-            variant="primary"
-            :disabled="!hasChanges || someRequiredFieldsAreEmpty"
-            @click="apply"
-          >
-            {{ $t("apply") }}
-          </b-button>
-        </div>
-      </div>
-    </div>
-    <!--
     <b-container :fluid="hasManyArguments" class="arguments-editor-container pb-2">
-      <b-row class="sm-gutters">
+      <b-row>
         <b-col
           v-for="(argument, name, index) in args"
           :key="index"
-          :sm="hasManyArguments ? 2 : 6"
+          :sm="hasManyArguments ? 4 : 6"
           class="mt-2"
         >
           <FormControl
@@ -81,7 +32,6 @@
             :type="argument.type"
             :attributes="argument.extra"
             :caption="argument.caption"
-            force-multiline
             :scope="mockScope"
             :uv-args="mockUvArgs"
             :level="0"
@@ -117,7 +67,6 @@
         </b-col>
       </b-row>
     </b-container>
-    -->
   </div>
 </template>
 
@@ -290,31 +239,16 @@ export default class ArgumentEditor extends Vue {
   .arguments-editor {
     min-height: 2rem;
     background-color: var(--default-backgroundDarker1Color);
+    padding: 0.5rem 0;
   }
 
   .arguments-editor-container {
-    padding: 0.5rem;
     border-bottom: 1px solid var(--default-backgroundDarker2Color);
   }
 
-  .argument-fields {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .argument-field-wrapper {
-    flex: 0 1 11rem; /* 11rem is just arbitrary fine-looking size */
-    max-width: 11rem;
-  }
-
   .buttons {
-    height: fit-content;
-    flex: 1 0;
-    align-self: flex-end;
+    float: right;
     display: flex;
-    justify-content: flex-end;
     gap: 0.5rem;
   }
 </style>
