@@ -18,6 +18,7 @@
       :link-attr="linkAttr"
       :select-views="selectViews"
       :qrcode-input="qrcodeInput"
+      :compact-mode="compactMode"
       @update:value="$emit('update:value', $event)"
       @focus="$emit('focus')"
       @goto="$emit('goto', $event)"
@@ -56,6 +57,7 @@ export default class ArgumentReferenceField extends Vue {
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
   @Prop({ type: String, default: null }) label!: string | null;
+  @Prop({ type: Boolean, default: false }) compactMode!: boolean;
 
   private get entriesRef(): EntriesRef {
     return this.optionsView

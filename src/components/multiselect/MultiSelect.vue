@@ -33,7 +33,6 @@
       'popup-container',
       {
         'is-open': isPopupOpen,
-
       }
     ]"
     @keydown.tab="closePopup"
@@ -47,6 +46,7 @@
       leave-active-class="fade-leave fade-leave-active"
       :disabled="disabled"
       :visible-arrow="false"
+      :compact-mode="compactMode"
       :popper-options="{
         placement: 'bottom-start',
         positionFixed: true,
@@ -60,7 +60,12 @@
     >
       <template #default="{ mode, isOpen }">
         <div
-          class="select-container"
+          :class="[
+            'select-container',
+            {
+              'compact-mode': compactMode
+            }
+          ]"
         >
           <div
             class="default-variant values-container"
@@ -97,7 +102,7 @@
                   <!-- eslint-enable vue/no-v-html -->
                 </slot>
                 <input
-                  v-if="showUnselectOption"
+                  v-if="showUnselectOption && !compactMode"
                   type="button"
                   class="material-icons md-14 material-button remove-value rounded-circle"
                   value="close"
@@ -109,7 +114,7 @@
 
           <b-input-group-append>
             <b-button
-              v-if="showClearOptions && !(mode === 'modal' && !isOpen)"
+              v-if="showClearOptions && !(mode === 'modal' && !isOpen) && !compactMode"
               class="button with-material-icon clear-content-button clear-options-button"
               variant="outline-secondary"
               @click.stop="unselectAll"
@@ -120,7 +125,7 @@
             </b-button>
 
             <b-input-group-text
-              v-if="!(mode === 'modal' && isOpen)"
+              v-if="!(mode === 'modal' && isOpen) && !compactMode"
               :class="['with-material-icon select-icon', { 'is-mobile': $isMobile }]"
             >
               <i class="material-icons">
@@ -133,7 +138,7 @@
 
       <template #inner>
         <div
-          class="select-container__options_container overflow-hidden"
+          class="select-container__options_container"
         >
           <b-input-group
             v-if="!disabled && showFilter"
@@ -165,65 +170,106 @@
             </b-input-group-append>
             <slot name="qrcode-button" />
           </b-input-group>
-          <div
-            ref="optionsContainer"
-            class="default-variant options-list"
-            :style="optionsListStyle"
-          >
-            <div
-              v-if="visibleOptions.length === 0 && options.length > 0 && loadingState.status === 'ok'"
-              class="popup-message"
-            >
-              {{ $t("no_results_for_filter") }}
-            </div>
 
+          <div class="all-options-wrapper">
             <div
-              v-for="(option, index) in visibleOptions"
-              :key="index"
-              :class="[
-                'option-wrapper',
-                {
-                  'hovered-value': hoveredOpinionIndex === index,
-                },
-              ]"
-              :style="listValueStyle"
-              @mouseover="hoveredOpinionIndex = index"
-              @click="selectOption(option.index)"
+              v-if="compactMode && !single"
+              class="selected-options-list"
             >
-              <div class="option-variant option-local-variant single-value">
-                <slot
-                  name="option"
-                  :option="option"
+              <div
+                v-for="(option, index) in selectedOptions"
+                :key="index"
+                class="option-variant option-local-variant option-wrapper"
+                @click.stop="unselectOption(index, false)"
+              >
+                <button
+                  v-if="showUnselectOption"
+                  class="material-button remove-value d-flex align-items-center"
                 >
-                  <!-- eslint-disable vue/no-v-html -->
-                  <span v-html="option.labelHtml" />
-                  <!-- eslint-enable vue/no-v-html -->
-                </slot>
+                  <span class="material-icons md-14 remove-value">close</span>
+                </button>
+
+                <div
+                  :style="listValueStyle"
+                  :class="[
+                    single ? 'single-value' : 'one-of-many-value',
+                  ]"
+                >
+                  <slot
+                    name="option"
+                    :option="option"
+                  >
+                    <!-- eslint-disable vue/no-v-html -->
+                    <span v-html="option.labelHtml" />
+                    <!-- eslint-enable vue/no-v-html -->
+                  </slot>
+                </div>
               </div>
             </div>
 
-            <infinite-loading
-              v-if="useInfiniteScrolling"
-              ref="infiniteLoading"
-              spinner="spiral"
-              @infinite="infiniteHandler"
+            <div
+              ref="optionsContainer"
+              class="default-variant options-list"
+              :style="optionsListStyle"
             >
-              <template #no-results>
-                {{ $t("no_results") }}
-              </template>
-              <template #no-more>
-                <span />
-              </template>
-              <template #error>
-                <template v-if="loadingState.status === 'error'">
-                  {{ $t("loading_error", { msg: loadingState.message }) }}
+              <div
+                v-if="visibleOptions.length === 0 && options.length > 0 && loadingState.status === 'ok'"
+                class="popup-message"
+              >
+                {{ $t("no_results_for_filter") }}
+              </div>
+
+              <div
+                v-for="(option, index) in visibleOptions"
+                :key="selectedOptions.length + index"
+                :class="[
+                  'option-wrapper',
+                  'option-variant',
+                  'option-local-variant',
+                  {
+                    'hovered-value': hoveredOptionIndex === index,
+                  },
+                ]"
+                :style="listValueStyle"
+                @mouseover="hoveredOptionIndex = index"
+                @click="selectOption(option.index)"
+              >
+                <div class="option-variant option-local-variant single-value">
+                  <slot
+                    name="option"
+                    :option="option"
+                  >
+                    <!-- eslint-disable vue/no-v-html -->
+                    <span v-html="option.labelHtml" />
+                    <!-- eslint-enable vue/no-v-html -->
+                  </slot>
+                </div>
+              </div>
+
+              <infinite-loading
+                v-if="useInfiniteScrolling"
+                ref="infiniteLoading"
+                spinner="spiral"
+                @infinite="infiniteHandler"
+              >
+                <template #no-results>
+                  {{ $t("no_results") }}
                 </template>
-              </template>
-            </infinite-loading>
-            <div v-else-if="!(loadingState.status === 'ok' && !loadingState.moreAvailable)" class="popup-message">
-              {{ $t("trigram_tooltip") }}
+                <template #no-more>
+                  <span />
+                </template>
+                <template #error>
+                  <template v-if="loadingState.status === 'error'">
+                    {{ $t("loading_error", { msg: loadingState.message }) }}
+                  </template>
+                </template>
+              </infinite-loading>
+              <div v-else-if="!(loadingState.status === 'ok' && !loadingState.moreAvailable)" class="popup-message">
+                {{ $t("trigram_tooltip") }}
+              </div>
             </div>
           </div>
+
           <div
             v-if="$slots['actions']"
             class="select-container__options__actions"
@@ -290,9 +336,10 @@ export default class MultiSelect extends Vue {
   @Prop({ type: Object, default: (): LoadingState => ({ status: "ok", moreAvailable: false }) }) loadingState!: LoadingState;
   @Prop({ type: Function }) processFilter!: (_: string) => Promise<boolean> | undefined;
   @Prop({ type: String, default: null }) label!: string | null;
+  @Prop({ type: Boolean, default: false }) compactMode!: boolean;
 
   private filterValue = "";
-  private hoveredOpinionIndex: number | null = null;
+  private hoveredOptionIndex: number | null = null;
   private isPopupOpen = false;
   private oldLoadingState: LoadingState = { status: "ok", moreAvailable: false };
 
@@ -493,7 +540,7 @@ export default class MultiSelect extends Vue {
   private openPopup() {
     if (this.disabled) return;
 
-    this.hoveredOpinionIndex = null;
+    this.hoveredOptionIndex = null;
     void (this.$refs.popup as InputPopup | undefined)?.openPopup();
   }
 
@@ -535,18 +582,18 @@ export default class MultiSelect extends Vue {
 
   private offsetHoveredOption(offset: number) {
     if (this.visibleOptions.length === 0) {
-      this.hoveredOpinionIndex = null;
+      this.hoveredOptionIndex = null;
     } else {
-      this.hoveredOpinionIndex = Math.max(0, Math.min(this.visibleOptions.length - 1, (this.hoveredOpinionIndex ?? 0) + offset));
+      this.hoveredOptionIndex = Math.max(0, Math.min(this.visibleOptions.length - 1, (this.hoveredOptionIndex ?? 0) + offset));
     }
   }
 
-  @Watch("hoveredOpinionIndex")
-  private scrollToHoveredOption(hoveredOpinionIndex: number | null) {
-    if (hoveredOpinionIndex === null) return;
+  @Watch("hoveredOptionIndex")
+  private scrollToHoveredOption(hoveredOptionIndex: number | null) {
+    if (hoveredOptionIndex === null) return;
 
     const container = this.$refs.optionsContainer as HTMLElement | undefined;
-    const item = container?.children?.[hoveredOpinionIndex];
+    const item = container?.children?.[hoveredOptionIndex];
     item?.scrollIntoView({ block: "nearest" });
   }
 
@@ -568,7 +615,7 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  private unselectOption(index: number) {
+  private unselectOption(index: number, closePopup = true) {
     console.assert(!this.disabled);
 
     if (this.single) {
@@ -578,7 +625,9 @@ export default class MultiSelect extends Vue {
     } else {
       this.$emit("remove-value", index);
     }
-    void this.closePopup();
+    if (closePopup) {
+      void this.closePopup();
+    }
   }
 
   private unselectAll() {
@@ -602,8 +651,8 @@ export default class MultiSelect extends Vue {
   private async filterInputFinished() {
     if (this.processFilter && await this.processFilter(this.filterValue)) {
       this.filterValue = "";
-    } else if (this.hoveredOpinionIndex !== null) {
-      this.selectOption(this.hoveredOpinionIndex);
+    } else if (this.hoveredOptionIndex !== null) {
+      this.selectOption(this.hoveredOptionIndex);
       this.filterValue = "";
     }
   }
@@ -710,6 +759,7 @@ export default class MultiSelect extends Vue {
   }
 
   .values-container {
+    min-width: 0;
     max-height: 11rem;
     display: flex;
     flex-direction: row;
@@ -788,13 +838,33 @@ export default class MultiSelect extends Vue {
     display: flex;
     flex-direction: column;
     z-index: 1001;
+    overflow: hidden;
   }
 
-  .hovered-value {
-    cursor: pointer !important;
-    color: var(--option-foregroundColor) !important;
-    background-color: var(--option-backgroundDarker1Color) !important;
+  .all-options-wrapper {
+    overflow: auto;
   }
+
+  .selected-options-list {
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+
+    .remove-value {
+      background-color: transparent;
+    }
+  }
+
+  .options-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* .hovered-value {
+   *   cursor: pointer !important;
+   *   color: var(--option-foregroundColor) !important;
+   *   background-color: var(--option-backgroundDarker1Color) !important;
+   * } */
 
   div.select-container__options__actions {
     border-top: 1px solid var(--default-borderColor);
@@ -825,15 +895,15 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  .options-list {
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-  }
-
   .option-wrapper {
     padding: 0.15rem 0.25rem;
-    text-align: start;
+    display: flex;
+    flex-direction: row;
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--option-backgroundDarker1Color) !important;
+    }
   }
 
   .one-of-many-value > input.remove-value {
@@ -850,5 +920,11 @@ export default class MultiSelect extends Vue {
   .one-of-many-value:hover,
   .one-of-many-value:hover > input.remove-value {
     cursor: pointer;
+  }
+
+  .compact-mode {
+    .selected-values {
+      flex-wrap: nowrap;
+    }
   }
 </style>

@@ -63,7 +63,9 @@
         </div>
         <!-- eslint-enable vue/no-deprecated-slot-attribute -->
         <div class="popper popup border rounded shadow">
-          <slot name="inner" />
+          <div class="popup-inner-slot">
+            <slot name="inner" />
+          </div>
         </div>
       </popper>
     </template>
@@ -84,6 +86,7 @@ export default class InputPopup extends Vue {
   @Prop({ type: Boolean, default: false }) disabled!: boolean;
   @Prop({ type: String, default: null }) label!: string | null;
   @Prop({ type: Object, default: () => {} }) popperOptions!: any;
+  @Prop({ type: Boolean, default: false }) compactMode!: boolean;
   private showContent = false;
 
   get mode(): Mode {
@@ -158,11 +161,17 @@ export default class InputPopup extends Vue {
   }
 
   .popup {
-    max-width: 98%;
     width: 25rem;
+    max-width: 98%;
+    height: 15rem;
     max-height: 15rem;
     display: flex;
     flex-direction: column;
+
+    .popup-inner-slot {
+      flex: 1 1;
+      height: 100%;
+    }
   }
 
   .label {
