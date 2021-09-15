@@ -224,12 +224,12 @@
             ]"
           >
             <ButtonGroup
-              v-if="createEntryButtons"
+              v-if="createEntryButtons && !uv.extra.softDisabled"
               :button="createEntryButtons"
               @goto="$emit('goto', $event)"
             />
             <ButtonItem
-              v-if="createEntryButton"
+              v-if="createEntryButton && !uv.extra.softDisabled"
               :button="createEntryButton"
               @goto="$emit('goto', $event)"
             />
