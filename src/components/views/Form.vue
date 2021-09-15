@@ -597,7 +597,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     return blocks;
   }
 
-  private init() {
+  private async init() {
     if (this.isTopLevel) {
       this.$emit("update:bodyStyle", `
         @media print {
@@ -606,6 +606,17 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
             }
         }
       `);
+    }
+
+    // Almost dirty hack for saving forms for new entries which has no (required && empty) fields.
+    const isNewEntry = this.uv.args.args === null;
+    if (isNewEntry) {
+      const columnNotRequired =
+        (column: IResultColumnInfo) => column.mainField?.field.isNullable || column.mainField?.field.defaultValue;
+      const canBeSavedImmediately = this.uv.info.columns.every(columnNotRequired);
+      if (canBeSavedImmediately) {
+        await this.updateValue({ ...this.firstRow.ref, column: 0 }, this.firstRow.row.values[0].value ?? "");
+      }
     }
   }
 
@@ -640,13 +651,12 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
   }
 
   private created() {
-    this.init();
+    void this.init();
   }
 
   @Watch("uv")
   private uvChanged() {
-    this.init();
-
+    void this.init();
     // FIXME: Entry selection somehow worked without this before.
     if (this.selectionMode && this.uv.rows?.length === 1) {
       this.$emit("select", this.uv.rows[0].extra.selectionEntry);
