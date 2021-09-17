@@ -254,8 +254,8 @@ export default class ArgumentEditor extends Vue {
   }
 
   .argument-field-wrapper {
-    flex: 0 1 11rem; /* 11rem is just arbitrary fine-looking size */
-    max-width: 11rem;
+    flex: 0 1 20rem; /* 11rem is just arbitrary fine-looking size */
+    max-width: 20rem;
   }
 
   .buttons {

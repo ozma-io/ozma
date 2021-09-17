@@ -114,7 +114,7 @@
 
           <b-input-group-append>
             <b-button
-              v-if="showClearOptions && !(mode === 'modal' && !isOpen) && !compactMode"
+              v-if="showClearOptions && !(mode === 'modal' && !isOpen) && !(compactMode && !single)"
               class="button with-material-icon clear-content-button clear-options-button"
               variant="outline-secondary"
               @click.stop="unselectAll"
@@ -125,7 +125,7 @@
             </b-button>
 
             <b-input-group-text
-              v-if="!(mode === 'modal' && isOpen) && !compactMode"
+              v-if="!(mode === 'modal' && isOpen)"
               :class="['with-material-icon select-icon', { 'is-mobile': $isMobile }]"
             >
               <i class="material-icons">
@@ -925,6 +925,7 @@ export default class MultiSelect extends Vue {
   .compact-mode {
     .selected-values {
       flex-wrap: nowrap;
+      overflow-x: hidden;
     }
   }
 </style>
