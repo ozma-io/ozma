@@ -78,7 +78,9 @@ export default class ButtonsPanel extends Vue {
   }
 
   private onShow() {
-    eventBus.emit("close-all-button-groups", this.uid);
+    if (!this.listItem) {
+      eventBus.emit("close-all-button-groups", this.uid);
+    }
   }
 
   private get someButtonHasIcon() {
