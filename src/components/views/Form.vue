@@ -609,16 +609,15 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     }
 
     // Almost dirty hack for saving forms for new entries which has no (required && empty) fields.
-    if (!this.firstRow) {
-      throw new Error("`firstRow` is missing.");
-    }
-    const isNewEntry = this.uv.args.args === null;
-    if (isNewEntry) {
-      const columnNotRequired =
-        (column: IResultColumnInfo) => column.mainField?.field.isNullable || column.mainField?.field.defaultValue;
-      const canBeSavedImmediately = this.uv.info.columns.every(columnNotRequired);
-      if (canBeSavedImmediately) {
-        await this.updateValue({ ...this.firstRow.ref, column: 0 }, this.firstRow.row.values[0].value ?? "");
+    if (this.firstRow) {
+      const isNewEntry = this.uv.args.args === null;
+      if (isNewEntry) {
+        const columnNotRequired =
+          (column: IResultColumnInfo) => column.mainField?.field.isNullable || column.mainField?.field.defaultValue;
+        const canBeSavedImmediately = this.uv.info.columns.every(columnNotRequired);
+        if (canBeSavedImmediately) {
+          await this.updateValue({ ...this.firstRow.ref, column: 0 }, this.firstRow.row.values[0].value ?? "");
+        }
       }
     }
   }
