@@ -889,6 +889,10 @@ export default class MultiSelect extends Vue {
     line-height: 1rem;
     word-break: break-word;
 
+    > span {
+      text-align: left;
+    }
+
     &:hover .remove-value,
     &:hover ::v-deep .open-modal-button {
       opacity: 1;
