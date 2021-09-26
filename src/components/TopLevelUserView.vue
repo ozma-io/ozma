@@ -16,6 +16,7 @@
             "account": "Account",
             "theme": "Theme",
             "contacts": "Support",
+            "invite_user": "Invite",
             "workspaces": "Workspaces",
             "documentation": "Documentation",
             "login": "Login",
@@ -45,6 +46,7 @@
             "account": "Профиль",
             "theme": "Тема",
             "contacts": "Помощь",
+            "invite_user": "Пригласить",
             "workspaces": "Базы",
             "documentation": "Документация",
             "login": "Войти",
@@ -64,6 +66,10 @@
 <template>
   <div class="main-div">
     <ProgressBar v-show="isLoading" />
+
+    <b-button variant="primary" @click="inviteUser">
+      Invite
+    </b-button>
 
     <template v-if="query !== null">
       <ModalUserView
@@ -392,6 +398,32 @@ export default class TopLevelUserView extends Vue {
     void this.loadBurgerButtons();
   }
 
+  private async inviteUser() {
+    const url = new URL(`http://127.0.0.1:5001/api/invite`);
+    const token = this.currentAuth?.token;
+    const body = JSON.stringify({
+      /* email: `test_21_09_21_${Math.random().toString(36).substring(2, 15)}@example.com`, */
+      email: "kremizov+invite-1@ozma.io",
+      instance_name: "dev",
+      instance_domain: "ozma-dev.org",
+      /* instance_domain: Api.instancesHost, */
+      role_id: 1,
+    });
+    /* url.search = new URLSearchParams(args as any).toString(); */
+    const res = await fetch(url.toString(), {
+      method: "POST",
+      redirect: "manual",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body,
+    });
+
+    console.log(res);
+  }
+
   private destroyed() {
     this.styleNode.remove();
 
@@ -610,6 +642,14 @@ export default class TopLevelUserView extends Vue {
         buttons: this.communicationButtons,
       });
     }
+
+    buttons.push({
+      icon: "group",
+      caption: this.$t("invite_user").toString(),
+      variant: defaultVariantAttribute,
+      type: "callback",
+      callback: () => eventBus.emit("showInviteUserModal"),
+    });
 
     buttons.push({
       icon: "help_center",

@@ -78,7 +78,6 @@ import * as R from "ramda";
 import { ArgumentName, AttributesMap, FieldType, IArgument } from "ozma-api";
 import { objectMap } from "@/utils";
 import { valueIsNull, valueToText } from "@/values";
-import { IQuery } from "@/state/query";
 
 const getValue = (parameter: IArgument, value: unknown) => {
   if (!valueIsNull(value) && (parameter.argType.type === "date" || parameter.argType.type === "datetime")) {
@@ -86,10 +85,6 @@ const getValue = (parameter: IArgument, value: unknown) => {
   }
   return value;
 };
-
-interface IArgumentExtra {
-  referenceEntriesView?: IQuery;
-}
 
 interface ILocalArgument {
   value: any;

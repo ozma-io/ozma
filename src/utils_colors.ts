@@ -176,10 +176,10 @@ export const colorVariantFromAttribute = (attribute: unknown): ColorVariantAttri
       : { type: "existing", className: "default" };
 
 export const getColorVariantAttributeClassName = (attribute: ColorVariantAttribute): ColorVariantFullClassName | null =>
-  attribute.type === "existing" ? `${attribute.className}-variant` as const : null;
+  attribute?.type === "existing" ? `${attribute.className}-variant` as const : null;
 
 export const getColorVariantAttributeVariables = (attribute: ColorVariantAttribute): ColorVariantCssVariables | null =>
-  attribute.type === "inline" ? attribute.variables : null;
+  attribute?.type === "inline" ? attribute.variables : null;
 
 const colorVariantToCssRule = (variantName: string, variant: ColorVariant): string => {
   const variables = (Object.entries(variant) as [VariantKey, string][])

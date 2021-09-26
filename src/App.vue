@@ -41,20 +41,22 @@
         ref="readonlyDemoInstanceModal"
       />
 
+      <InviteUserModal
+        v-if="authToken"
+        ref="inviteUserModal"
+        :auth-token="authToken"
+      />
+
       <template v-if="authErrors.length > 0">
         <span
           v-for="error in authErrors"
           :key="error"
         >
-          {{ $t('auth_error', { msg: error }) }}
+          {{ $t("auth_error", { msg: error }) }}
         </span>
       </template>
       <router-view v-else />
     </div>
-
-    <!--
-    <FabCluster />
-    -->
   </div>
 </template>
 
@@ -62,6 +64,7 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
+import { CurrentAuth, INoAuth } from "@/state/auth";
 import { CurrentSettings } from "@/state/settings";
 import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import FabCluster from "@/components/FabCluster/FabCluster.vue";
@@ -71,6 +74,7 @@ import type { ThemeName } from "@/utils_colors";
 import { eventBus } from "@/main";
 import { isReadonlyDemoInstance } from "@/api";
 import { Button } from "./components/buttons/buttons";
+import InviteUserModal from "./components/InviteUserModal.vue";
 
 const settings = namespace("settings");
 const auth = namespace("auth");
@@ -80,6 +84,7 @@ const staging = namespace("staging");
 @Component({ components: {
   ModalPortalTarget,
   FabCluster,
+  InviteUserModal,
   AlertBanner: () => ({
     component: import("@/components/AlertBanner.vue") as any,
   }),
@@ -90,6 +95,7 @@ const staging = namespace("staging");
 export default class App extends Vue {
   @settings.State("current") settings!: CurrentSettings;
   @settings.State("currentTheme") currentTheme!: ThemeName;
+  @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
@@ -105,6 +111,7 @@ export default class App extends Vue {
     document.addEventListener("paste", this.onPaste);
 
     eventBus.on("showReadonlyDemoModal", this.showDemoModal);
+    eventBus.on("showInviteUserModal", this.showInviteUserModal);
     eventBus.on("updateMainButtons", this.updateMainButtons);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
@@ -116,6 +123,7 @@ export default class App extends Vue {
     document.removeEventListener("paste", this.onPaste);
 
     eventBus.off("showReadonlyDemoModal", this.showDemoModal);
+    eventBus.off("showInviteUserModal", this.showInviteUserModal);
     eventBus.off("updateMainButtons", this.updateMainButtons);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
@@ -143,12 +151,20 @@ export default class App extends Vue {
     return isReadonlyDemoInstance;
   }
 
+  private get authToken(): string | null {
+    return this.currentAuth?.token ?? null;
+  }
+
   get authErrors() {
     return this.rawErrors["auth"] ?? [];
   }
 
   private showDemoModal() {
     (this.$refs?.readonlyDemoInstanceModal as any)?.show();
+  }
+
+  private showInviteUserModal() {
+    (this.$refs?.inviteUserModal as any)?.show();
   }
 
   @Watch("settings")
