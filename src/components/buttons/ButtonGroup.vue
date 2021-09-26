@@ -13,6 +13,7 @@
         hide: { enabled: !listItem },
       }
     }"
+    @show="onShow"
   >
     <div class="popper shadow">
       <ButtonList
@@ -31,13 +32,13 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
+import Popper from "vue-popperjs";
 
 import type { IButtonGroup } from "@/components/buttons/buttons";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import ButtonView from "@/components/buttons/ButtonView.vue";
 import ButtonList from "@/components/buttons/ButtonList.vue";
-
-import Popper from "vue-popperjs";
+import { eventBus } from "@/main";
 
 @Component({
   components: {
@@ -51,6 +52,24 @@ export default class ButtonsPanel extends Vue {
   @Prop({ type: Object, required: true }) button!: IButtonGroup;
   @Prop({ type: Boolean, default: false }) listItem!: boolean;
 
+  private mounted() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    eventBus.on("close-all-button-groups", this.syncCloseGroup);
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  private beforeDestroy() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    eventBus.off("close-all-button-groups", this.syncCloseGroup);
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  private syncCloseGroup(uid?: string) {
+    if (this.uid !== uid) {
+      void this.closeGroup();
+    }
+  }
+
   private async closeGroup() {
     const popupRef: any = this.$refs.popup;
     if (!popupRef) return;
@@ -58,10 +77,8 @@ export default class ButtonsPanel extends Vue {
     await popupRef.doClose();
   }
 
-  private onClick() {
-    this.$emit("button-click");
-
-    void this.closeGroup();
+  private onShow() {
+    eventBus.emit("close-all-button-groups", this.uid);
   }
 
   private get someButtonHasIcon() {

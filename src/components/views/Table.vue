@@ -327,6 +327,7 @@ import { IResultColumnInfo, ValueType, RowId, IFieldRef } from "ozma-api";
 import sanitizeHtml from "sanitize-html";
 import Popper from "vue-popperjs";
 
+import { eventBus } from "@/main";
 import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, stringifySpreadsheet, validNumberFormats, getNumberFormatter, NeverError, parseFromClipboard } from "@/utils";
 import type { ParseValue } from "@/utils";
 import { valueIsNull } from "@/values";
@@ -2478,6 +2479,11 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     // `v-click-outside` somehow doesn't triggers on cell clicks, so close context menu there too.
     this.closeCellContextMenu();
+
+    // We capture click-events from cells so we need to manually close popups here.
+    if (this.uv.extra.columns[ref.column].type !== "buttons") {
+      eventBus.emit("close-all-button-groups");
+    }
   }
 
   private editCellByTarget(ref: ValueRef, target: HTMLElement) {
