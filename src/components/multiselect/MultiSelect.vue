@@ -232,7 +232,7 @@
                 ]"
                 :style="listValueStyle"
                 @mouseover="hoveredOptionIndex = index"
-                @click="selectOption(option.index)"
+                @click.stop="selectOption(option.index)"
               >
                 <div class="option-variant option-local-variant single-value">
                   <slot
