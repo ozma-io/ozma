@@ -67,10 +67,6 @@
   <div class="main-div">
     <ProgressBar v-show="isLoading" />
 
-    <b-button variant="primary" @click="inviteUser">
-      Invite
-    </b-button>
-
     <template v-if="query !== null">
       <ModalUserView
         v-for="(window, i) in query.windows"
@@ -396,32 +392,6 @@ export default class TopLevelUserView extends Vue {
     /* eslint-enable @typescript-eslint/unbound-method */
 
     void this.loadBurgerButtons();
-  }
-
-  private async inviteUser() {
-    const url = new URL(`http://127.0.0.1:5001/api/invite`);
-    const token = this.currentAuth?.token;
-    const body = JSON.stringify({
-      /* email: `test_21_09_21_${Math.random().toString(36).substring(2, 15)}@example.com`, */
-      email: "kremizov+invite-1@ozma.io",
-      instance_name: "dev",
-      instance_domain: "ozma-dev.org",
-      /* instance_domain: Api.instancesHost, */
-      role_id: 1,
-    });
-    /* url.search = new URLSearchParams(args as any).toString(); */
-    const res = await fetch(url.toString(), {
-      method: "POST",
-      redirect: "manual",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-      body,
-    });
-
-    console.log(res);
   }
 
   private destroyed() {

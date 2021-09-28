@@ -151,8 +151,8 @@ export default class InviteUserModal extends Vue {
     const body = JSON.stringify({
       email: this.emailValue,
       role_id: this.roleValueValue,
-      /* instance_name: "dev",
-       * instance_domain: "ozma-dev.org", */
+      /* instance_name: "dev", */
+      /* instance_domain: "ozma-dev.org", */
       instance_name: instanceName,
       instance_domain: instancesHost,
     });
@@ -169,6 +169,7 @@ export default class InviteUserModal extends Vue {
         body,
       });
 
+      await new Promise(resolve => setTimeout(resolve, 100));
       this.$bvToast.hide(id);
       if (res.status === 200) {
         this.$bvToast.toast(this.$t("invite_success_description").toString(), {
@@ -180,6 +181,8 @@ export default class InviteUserModal extends Vue {
         this.emailValue = "";
         this.roleValueValue = null;
       } else {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        this.$bvToast.hide(id);
         this.$bvToast.toast(this.$t("invite_fail_description").toString(), {
           title: this.$t("invite_fail_title").toString(),
           variant: "danger",
@@ -187,6 +190,7 @@ export default class InviteUserModal extends Vue {
         });
       }
     } catch (e) {
+      await new Promise(resolve => setTimeout(resolve, 100));
       this.$bvToast.hide(id);
       this.$bvToast.toast(e, {
         title: this.$t("invite_fail_title").toString(),
