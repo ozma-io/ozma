@@ -73,7 +73,7 @@
 <script lang="ts">
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-import { IEntityRef, IEntriesRequestOpts, IInsertEntityOp, ITransaction } from "ozma-api";
+import { FunDBError, IEntityRef, IEntriesRequestOpts, IInsertEntityOp, ITransaction } from "ozma-api";
 import { Action, namespace } from "vuex-class";
 
 import { encodeUTF16LE, getBOM, mapMaybe, saveToFile, tryDicts } from "@/utils";
@@ -109,7 +109,7 @@ const csvExportOpts: IEntriesRequestOpts = {
   chunk: { limit: 10000 },
 };
 
-const csvImportChunk = 500;
+const csvImportChunk = 100;
 
 const staging = namespace("staging");
 const errors = namespace("errors");
@@ -249,27 +249,46 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       return [columnName, mainField];
     }, this.uv.info.columns));
 
+    const maxTries = streaming ? 3 : 1;
+    let submittedCount = 0;
     let operations: IInsertEntityOp[] = [];
     let previousSubmit: Promise<void> = Promise.resolve();
+
     const submitOperations = () => {
+      const currentOperations = operations;
+      operations = [];
       const prev = previousSubmit;
       previousSubmit = (async () => {
         await prev;
-        if (operations.length === 0) {
+        if (currentOperations.length === 0) {
           return;
         }
 
         try {
           const transaction: ITransaction = {
-            operations,
+            operations: currentOperations,
           };
-          await this.callProtectedApi({
-            func: Api.runTransaction,
-            args: [transaction],
-          });
-          operations = [];
+          let currentTry = 1;
+          while (true) {
+            try {
+              // eslint-disable-next-line no-await-in-loop
+              await this.callProtectedApi({
+                func: Api.runTransaction,
+                args: [transaction],
+              });
+              break;
+            } catch (e) {
+              if (e instanceof FunDBError && (e.name === "concurrent_update" || e.name === "network_failure") && currentTry < maxTries) {
+                currentTry++;
+              } else {
+                throw e;
+              }
+            }
+          }
+          submittedCount += currentOperations.length;
         } catch (e) {
-          this.setError({ key: "import_csv", error: e.message });
+          const suffix = submittedCount > 0 ? ` (imported ${submittedCount} rows)` : "";
+          this.setError({ key: "import_csv", error: e.message + suffix });
           throw e;
         }
       })();
