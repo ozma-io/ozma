@@ -613,10 +613,13 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
       const isNewEntry = this.uv.args.args === null;
       if (isNewEntry) {
         const columnNotRequired =
-          (column: IResultColumnInfo) => !column.mainField || column.mainField.field.isNullable || column.mainField.field.defaultValue;
+          (column: IResultColumnInfo) => !column.mainField || column.mainField.field.isNullable || column.mainField.field.defaultValue !== undefined;
         const canBeSavedImmediately = this.uv.info.columns.every(columnNotRequired);
         if (canBeSavedImmediately) {
-          await this.updateValue({ ...this.firstRow.ref, column: 0 }, this.firstRow.row.values[0].value ?? "");
+          const firstColumnIndex = this.uv.info.columns.findIndex(c => c.mainField);
+          if (firstColumnIndex !== -1) {
+            await this.updateValue({ ...this.firstRow.ref, column: firstColumnIndex }, this.firstRow.row.values[firstColumnIndex].value ?? "");
+          }
         }
       }
     }
