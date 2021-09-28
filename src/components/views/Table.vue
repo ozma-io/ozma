@@ -1651,7 +1651,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   get hasLinksColumn() {
-    return this.uv.extra.hasRowLinks || this.creationLink !== null;
+    return this.uv.extra.hasRowLinks || this.createEntryButton || this.createEntryButtons;
   }
 
   private get createEntryButtons(): Button | null {
