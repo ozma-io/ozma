@@ -179,8 +179,15 @@ export const deepSyncObject = (to: object | null, from: object | null) => {
       Vue.set(to, name, newValue);
     } else {
       const oldValue = (to as any)[name];
+      // FIXME: if `newValue` is array with objects, then it wont work right, doesn't it?
       if (oldValue !== newValue) {
-        if (typeof oldValue === "object" && oldValue !== null && typeof newValue === "object" && newValue !== null) {
+        if (typeof oldValue === "object"
+         && oldValue !== null
+         && !Array.isArray(oldValue)
+         && typeof newValue === "object"
+         && newValue !== null
+         && !Array.isArray(newValue)
+        ) {
           deepSyncObject(oldValue, newValue);
         } else {
           Vue.set(to, name, newValue);

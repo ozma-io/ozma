@@ -77,7 +77,7 @@ import * as R from "ramda";
 
 import { ArgumentName, AttributesMap, FieldType, IArgument } from "ozma-api";
 import { objectMap } from "@/utils";
-import { valueIsNull, valueToText } from "@/values";
+import { valueIsNull, valueToText, valueFromRaw } from "@/values";
 
 const getValue = (parameter: IArgument, value: unknown) => {
   if (!valueIsNull(value) && (parameter.argType.type === "date" || parameter.argType.type === "datetime")) {
@@ -144,7 +144,7 @@ export default class ArgumentEditor extends Vue {
 
   private mockUvArgs = { source: { type: "named", ref: { schema: "mock_schema", name: "mock_name" } }, args: {} };
 
-  // Use this instead of `Vue.set(this.changedValues, namee, newValue)`
+  // Use this instead of `Vue.set(this.changedValues, name, newValue)`
   private changeValue(name: string, newValue: any) {
     const oldValue = this.args[name].value;
     if (valueIsNull(oldValue) && valueIsNull(newValue)) {
@@ -179,17 +179,13 @@ export default class ArgumentEditor extends Vue {
     if (valueIsNull(value)) {
       this.changeValue(name, null);
     } else {
-      switch (this.argumentParams[name].argType.type) {
-        case "int":
-        case "decimal": {
-          const maybeNumber = Number(value);
-          if (Number.isFinite(maybeNumber)) {
-            this.changeValue(name, maybeNumber);
-          }
-          break;
-        }
-        default:
-          this.changeValue(name, value);
+      const fieldInfo = {
+        fieldType: this.argumentParams[name].argType,
+        isNullable: this.argumentParams[name].optional,
+      };
+      const transformed = valueFromRaw(fieldInfo, value);
+      if (transformed !== undefined) {
+        this.changeValue(name, valueFromRaw(fieldInfo, value));
       }
     }
   }
@@ -249,8 +245,8 @@ export default class ArgumentEditor extends Vue {
   }
 
   .argument-field-wrapper {
-    flex: 0 1 11rem; /* 11rem is just arbitrary fine-looking size */
-    max-width: 11rem;
+    flex: 0 1 20rem; /* 11rem is just arbitrary fine-looking size */
+    max-width: 20rem;
   }
 
   .buttons {

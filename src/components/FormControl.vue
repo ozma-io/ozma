@@ -969,6 +969,7 @@ export default class FormControl extends Vue {
     font-size: 1.25em;
 
     &.not-loaded {
+      margin-left: 0.5rem;
       color: var(--MainTextColorLight);
     }
   }

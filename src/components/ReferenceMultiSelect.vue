@@ -448,6 +448,10 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     height: 2rem;
   }
 
+  .value-text {
+    text-align: left;
+  }
+
   .compact-mode {
     .value-text {
       white-space: nowrap;
