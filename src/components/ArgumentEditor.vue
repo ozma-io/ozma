@@ -77,7 +77,7 @@ import * as R from "ramda";
 
 import { ArgumentName, AttributesMap, FieldType, IArgument } from "ozma-api";
 import { objectMap } from "@/utils";
-import { valueIsNull, valueToText } from "@/values";
+import { valueIsNull, valueToText, valueFromRaw } from "@/values";
 import { IQuery } from "@/state/query";
 
 const getValue = (parameter: IArgument, value: unknown) => {
@@ -184,17 +184,13 @@ export default class ArgumentEditor extends Vue {
     if (valueIsNull(value)) {
       this.changeValue(name, null);
     } else {
-      switch (this.argumentParams[name].argType.type) {
-        case "int":
-        case "decimal": {
-          const maybeNumber = Number(value);
-          if (Number.isFinite(maybeNumber)) {
-            this.changeValue(name, maybeNumber);
-          }
-          break;
-        }
-        default:
-          this.changeValue(name, value);
+      const fieldInfo = {
+        fieldType: this.argumentParams[name].argType,
+        isNullable: this.argumentParams[name].optional,
+      };
+      const transformed = valueFromRaw(fieldInfo, value);
+      if (transformed !== undefined) {
+        this.changeValue(name, valueFromRaw(fieldInfo, value));
       }
     }
   }
