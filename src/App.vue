@@ -18,6 +18,7 @@
     <AlertBanner
       v-if="bannerMessage"
       :message="bannerMessage"
+      :show-invite-button="showInviteButtonInBanner"
       :color-variables="bannerColorVariables"
       @banner-close="onBannerClose"
     />
@@ -214,6 +215,10 @@ export default class App extends Vue {
       }
     }
     /* console.log(sheet); */
+  }
+
+  private get showInviteButtonInBanner() {
+    return this.settings.getEntry("show_invite_button_in_banner", Boolean, false) && this.authToken !== null;
   }
 
   private get fontSize(): number {

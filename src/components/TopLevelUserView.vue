@@ -613,13 +613,15 @@ export default class TopLevelUserView extends Vue {
       });
     }
 
-    buttons.push({
-      icon: "group",
-      caption: this.$t("invite_user").toString(),
-      variant: defaultVariantAttribute,
-      type: "callback",
-      callback: () => eventBus.emit("showInviteUserModal"),
-    });
+    if (this.currentAuth?.token) {
+      buttons.push({
+        icon: "person_add",
+        caption: this.$t("invite_user").toString(),
+        variant: defaultVariantAttribute,
+        type: "callback",
+        callback: () => eventBus.emit("showInviteUserModal"),
+      });
+    }
 
     buttons.push({
       icon: "help_center",
