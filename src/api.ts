@@ -5,6 +5,7 @@ export const instanceName = (typeof __INSTANCE_NAME__ === "string") ? String(__I
 export const instancesHost = hostnameParts.length >= 2 ? hostnameParts[hostnameParts.length - 2] + "." + hostnameParts[hostnameParts.length - 1] : null;
 const apiUrl = String(__API_URL__);
 export const documentGeneratorUrl = String(__DOCUMENT_GENERATOR_URL__);
+export const invitesServiceUrl = String(__INVITES_SERVICE_URL__);
 export const developmentMode = Boolean(__DEVELOPMENT_MODE__);
 export const disableAuth = Boolean(__DISABLE_AUTH__);
 const readonlyDemoInstanceName = typeof __READ_ONLY_INSTANCE_NAME__ === "string" ? __READ_ONLY_INSTANCE_NAME__ : undefined;

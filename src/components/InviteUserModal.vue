@@ -96,7 +96,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 import { IEntityRef } from "ozma-api";
-import { instanceName, instancesHost } from "@/api";
+import { invitesServiceUrl, instanceName, instancesHost } from "@/api";
 
 import { randomId } from "@/utils";
 import ReferenceField from "@/components/ReferenceField.vue";
@@ -146,7 +146,7 @@ export default class InviteUserModal extends Vue {
       id,
     });
 
-    const url = new URL(`http://127.0.0.1:5001/api/invite`);
+    const url = new URL(invitesServiceUrl);
     const token = this.authToken;
     const body = JSON.stringify({
       email: this.emailValue,
