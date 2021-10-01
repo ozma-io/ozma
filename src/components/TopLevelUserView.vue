@@ -16,6 +16,7 @@
             "account": "Account",
             "theme": "Theme",
             "contacts": "Support",
+            "invite_user": "Invite",
             "workspaces": "Workspaces",
             "documentation": "Documentation",
             "login": "Login",
@@ -45,6 +46,7 @@
             "account": "Профиль",
             "theme": "Тема",
             "contacts": "Помощь",
+            "invite_user": "Пригласить",
             "workspaces": "Базы",
             "documentation": "Документация",
             "login": "Войти",
@@ -608,6 +610,16 @@ export default class TopLevelUserView extends Vue {
         variant: bootstrapVariantAttribute("info"),
         type: "button-group",
         buttons: this.communicationButtons,
+      });
+    }
+
+    if (this.currentAuth?.token) {
+      buttons.push({
+        icon: "person_add",
+        caption: this.$t("invite_user").toString(),
+        variant: defaultVariantAttribute,
+        type: "callback",
+        callback: () => eventBus.emit("showInviteUserModal"),
       });
     }
 

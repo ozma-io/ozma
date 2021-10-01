@@ -1,3 +1,14 @@
+<i18n>
+    {
+        "en": {
+            "invite_user": "Invite"
+        },
+        "ru": {
+            "invite_user": "Пригласить"
+        }
+    }
+</i18n>
+
 <template>
   <b-alert
     :show="messageHtml !== ''"
@@ -6,15 +17,26 @@
     dismissible
     @dismissed="$emit('banner-close')"
   >
-    <!-- eslint-disable vue/no-v-html -->
-    <span v-html="messageHtml" />
-    <!-- eslint-enable vue/no-v-html -->
+    <div class="content-wrapper">
+      <!-- eslint-disable vue/no-v-html -->
+      <span v-html="messageHtml" />
+      <!-- eslint-enable vue/no-v-html -->
+      <ButtonItem
+        v-if="showInviteButton"
+        class="invite-button"
+        :button="inviteButton"
+      />
+    </div>
   </b-alert>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 import sanitizeHtml from "sanitize-html";
+
+import { bootstrapVariantAttribute } from "@/utils_colors";
+import { eventBus } from "@/main";
+import ButtonItem from "@/components/buttons/ButtonItem.vue";
 
 const sanitizeSettings = {
   allowedTags: ["b", "i", "em", "strong", "a"],
@@ -25,13 +47,24 @@ const sanitizeSettings = {
 
 const sanitize = (message: string) => sanitizeHtml(message, sanitizeSettings);
 
-@Component
+@Component({ components: { ButtonItem } })
 export default class AlertBanner extends Vue {
   @Prop({ type: String, required: true }) message!: string;
-  @Prop({ type: Object, required: true }) colorVariables!: Record<string, unknown> | null;
+  @Prop({ type: Object }) colorVariables!: Record<string, unknown> | null;
+  @Prop({ type: Boolean, default: false }) showInviteButton!: boolean;
 
   private get messageHtml() {
     return sanitize(this.message);
+  }
+
+  private get inviteButton() {
+    return {
+      icon: "person_add",
+      caption: this.$t("invite_user").toString(),
+      variant: bootstrapVariantAttribute("success"),
+      type: "callback",
+      callback: () => eventBus.emit("showInviteUserModal"),
+    };
   }
 }
 </script>
@@ -41,5 +74,16 @@ export default class AlertBanner extends Vue {
     background-color: var(--banner-backgroundColor, #bee5eb);
     color: var(--banner-foregroundColor, #0c5460);
     border-color: var(--banner-borderColor, #bee5eb);
+  }
+
+  .content-wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .invite-button {
+    padding: 0.25rem 1.25rem;
+    align-self: center;
   }
 </style>

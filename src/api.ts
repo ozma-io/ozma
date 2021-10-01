@@ -2,7 +2,7 @@ import FunDBAPI from "ozma-api";
 
 const hostnameParts = location.hostname.split(".");
 export const instanceName = (typeof __INSTANCE_NAME__ === "string") ? String(__INSTANCE_NAME__) : hostnameParts[0];
-const instancesHost = hostnameParts.length >= 2 ? hostnameParts[hostnameParts.length - 2] + "." + hostnameParts[hostnameParts.length - 1] : null;
+export const instancesHost = hostnameParts.length >= 2 ? hostnameParts[hostnameParts.length - 2] + "." + hostnameParts[hostnameParts.length - 1] : null;
 const apiUrl = String(__API_URL__);
 export const documentGeneratorUrl = String(__DOCUMENT_GENERATOR_URL__);
 export const developmentMode = Boolean(__DEVELOPMENT_MODE__);
