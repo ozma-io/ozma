@@ -146,7 +146,7 @@ export default class InviteUserModal extends Vue {
       id,
     });
 
-    const url = new URL(invitesServiceUrl);
+    const url = new URL(`${invitesServiceUrl}/api/invite`);
     const token = this.authToken;
     const body = JSON.stringify({
       email: this.emailValue,
