@@ -1,7 +1,6 @@
 <i18n>
   {
     "en": {
-      "empty_message": "Empty",
       "clear_all": "Clear all",
       "enter_value": "Enter value",
       "search_placeholder": "Search",
@@ -13,7 +12,6 @@
       "loading_error": "Error during loading more data: {msg}"
     },
     "ru": {
-      "empty_message": "Пусто",
       "clear_all": "Очистить",
       "enter_value": "Введите значение",
       "search_placeholder": "Поиск",
@@ -74,9 +72,8 @@
               v-if="valuesLength === 0"
               :style="listValueStyle"
               class="empty-message-text"
-            >
-              {{ $t('empty_message') }}
-            </span>
+              v-html="'&nbsp;'"
+            />
 
             <div
               v-else

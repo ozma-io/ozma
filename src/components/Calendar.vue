@@ -1,12 +1,10 @@
 <i18n>
 {
     "en": {
-        "input_placeholder": "Empty",
         "today": "Today",
         "now": "Now"
     },
     "ru": {
-        "input_placeholder": "Пусто",
         "today": "Сегодня",
         "now": "Сейчас"
     }
@@ -60,7 +58,6 @@
               type="text"
               :class="['calendar-input', 'with-clear-content-button']"
               :style="{ backgroundColor }"
-              :placeholder="$t('input_placeholder')"
               :value="textValue"
               :disabled="disabled"
               @input="$emit('update:value', $event)"

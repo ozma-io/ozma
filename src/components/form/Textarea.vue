@@ -1,20 +1,9 @@
-<i18n>
-    {
-        "en": {
-            "input_placeholder": "Empty"
-        },
-        "ru": {
-            "input_placeholder": "Пусто"
-        }
-    }
-</i18n>
 <template>
   <fragment>
     <!-- eslint-disable vue/no-deprecated-v-on-native-modifier -->
     <textarea-autosize
       v-if="isCellEdit"
       ref="controlTextarea"
-      :placeholder="$t('input_placeholder')"
       :value="value"
       :readonly="disabled"
       rows="1"
@@ -42,7 +31,6 @@
         :style="style"
         :value="value"
         :required="required"
-        :placeholder="$t('input_placeholder')"
         :disabled="disabled"
         :rows="textareaRows"
         @focus="onFocus"
