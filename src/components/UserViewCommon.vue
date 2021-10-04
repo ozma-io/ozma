@@ -399,7 +399,15 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     }
     const buttons: Button[] = extraActionsButtons;
 
-    if (this.creationLink !== null) {
+    if (this.creationButtons) {
+      buttons.push({
+        icon: "add",
+        caption: this.$t("create").toString(),
+        buttons: this.creationButtons,
+        type: "button-group",
+        variant: bootstrapVariantAttribute("success"),
+      });
+    } else if (this.creationLink) {
       buttons.push({
         icon: "add",
         caption: this.$t("create").toString(),

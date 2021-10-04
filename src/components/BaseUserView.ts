@@ -321,7 +321,8 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
       homeSchema: this.uv.homeSchema ?? undefined,
     };
 
-    return attrToButtons(this.uv.attributes["create_buttons"], opts);
+    const buttons = attrToButtons(this.uv.attributes["create_buttons"], opts);
+    return buttons.length !== 0 ? buttons : null;
   }
 
   async addNewRow(meta?: unknown): Promise<number> {

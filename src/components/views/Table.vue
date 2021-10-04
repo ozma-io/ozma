@@ -1655,7 +1655,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private get createEntryButtons(): Button | null {
-    return this.creationButtons.length !== 0
+    return this.creationButtons
       ? {
         type: "button-group",
         icon: "add_box",
