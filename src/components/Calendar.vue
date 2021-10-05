@@ -1,10 +1,12 @@
 <i18n>
 {
     "en": {
+        "clear": "Clear",
         "today": "Today",
         "now": "Now"
     },
     "ru": {
+        "clear": "Очистить",
         "today": "Сегодня",
         "now": "Сейчас"
     }
@@ -56,7 +58,7 @@
             <b-input
               ref="control"
               type="text"
-              :class="['calendar-input', 'with-clear-content-button']"
+              class="calendar-input"
               :style="{ backgroundColor }"
               :value="textValue"
               :disabled="disabled"
@@ -67,18 +69,6 @@
               @keydown.esc.prevent.stop="$emit('blur', $event)"
             />
             <b-input-group-append>
-              <b-button
-                v-if="!disabled"
-                :disabled="!value"
-                class="button with-material-icon clear-content-button"
-                variant="outline-secondary"
-                @click.prevent="updateValue(null)"
-              >
-                <i
-                  class="material-icons"
-                >clear</i>
-              </b-button>
-
               <b-input-group-text
                 class="with-material-icon calendar-icon"
                 :style="{ backgroundColor }"
@@ -93,8 +83,22 @@
       <div class="popper border rounded overflow-hidden shadow">
         <div class="popper-inner">
           <div
-            :class="['days']"
+            class="days"
           >
+            <div
+              v-if="!required"
+              class="clear-button-wrapper"
+            >
+              <button
+                type="button"
+                :disabled="value === null"
+                :class="['material-button clear-button', { 'disabled': value === null }]"
+                @click="updateValue(null)"
+              >
+                {{ $t("clear") }}
+              </button>
+            </div>
+
             <DatePicker
               :value="dateValue"
               @update:value="updateDate"
@@ -391,6 +395,16 @@ export default class Calendar extends Vue {
     display: inline-block;
   }
 
+  .clear-button {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    background: var(--default-backgroundColor);
+  }
+
   .days {
     display: inline-flex;
     flex-direction: column;
@@ -406,6 +420,7 @@ export default class Calendar extends Vue {
   .today,
   .now {
     background: var(--default-backgroundColor);
+    padding: 0.5rem 0.75rem;
     border-radius: 0;
   }
 </style>
