@@ -821,12 +821,15 @@ export default class FormControl extends Vue {
           };
         case "array": {
           const optionsView = attrObjectToQuery(this.attributes["options_view"]);
+          // Deprecated because we have arrays of references as types now.
           const wrappedReferencedEntity = entityRefSchema.safeParse(this.attributes["referenced_entity"]);
+          const subtypeEntity = this.fieldType.subtype.type === "reference" ? this.fieldType.subtype.entity : null;
+          const entity = wrappedReferencedEntity.success ? wrappedReferencedEntity.data : subtypeEntity;
           if (optionsView !== null) {
             return {
               name: "array_select",
               optionsView,
-              entity: wrappedReferencedEntity.success ? wrappedReferencedEntity.data : null,
+              entity,
             };
           } else {
             return { name: "array" };
