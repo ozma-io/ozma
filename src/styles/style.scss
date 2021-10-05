@@ -186,8 +186,10 @@ button:not(.btn) {
   }
 }
 
+input.readonly,
 input.disabled {
   cursor: not-allowed;
+  background-color: var(--cell-backgroundColor) !important;
 
   /* Fixes for Safari */
   opacity: 1;
@@ -241,6 +243,7 @@ $input-focus-border-color: #80bdff;
 $input-focus-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 
 .form-control:focus {
+  background-color: var(--cell-backgroundColor);
   box-shadow: $input-focus-shadow;
 }
 
