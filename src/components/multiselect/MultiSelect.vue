@@ -1,7 +1,7 @@
 <i18n>
   {
     "en": {
-      "clear_all": "Clear all",
+      "clear": "Clear",
       "enter_value": "Enter value",
       "search_placeholder": "Search",
       "no_results": "No entries",
@@ -12,7 +12,7 @@
       "loading_error": "Error during loading more data: {msg}"
     },
     "ru": {
-      "clear_all": "Очистить",
+      "clear": "Очистить",
       "enter_value": "Введите значение",
       "search_placeholder": "Поиск",
       "no_results": "Нет записей",
@@ -68,12 +68,14 @@
           <div
             class="default-variant values-container"
           >
+            <!-- eslint-disable vue/no-v-html -->
             <span
               v-if="valuesLength === 0"
               :style="listValueStyle"
               class="empty-message-text"
               v-html="'&nbsp;'"
             />
+            <!-- eslint-enable vue/no-v-html -->
 
             <div
               v-else
@@ -110,6 +112,7 @@
           </div>
 
           <b-input-group-append>
+            <!--
             <b-button
               v-if="showClearOptions && !(mode === 'modal' && !isOpen) && !(compactMode && !single)"
               class="button with-material-icon clear-content-button clear-options-button"
@@ -120,6 +123,7 @@
                 class="material-icons"
               >clear</i>
             </b-button>
+            -->
 
             <b-input-group-text
               v-if="!(mode === 'modal' && isOpen)"
@@ -169,6 +173,19 @@
           </b-input-group>
 
           <div class="all-options-wrapper">
+            <div
+              v-if="single && !required && value !== null"
+              class="clear-option-button-wrapper"
+            >
+              <button
+                type="button"
+                class="material-button clear-option-button"
+                @click="unselectAll"
+              >
+                {{ $t("clear") }}
+              </button>
+            </div>
+
             <div
               v-if="compactMode && !single"
               class="selected-options-list"
@@ -840,6 +857,15 @@ export default class MultiSelect extends Vue {
 
   .all-options-wrapper {
     overflow: auto;
+  }
+
+  .clear-option-button {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background: var(--default-backgroundColor);
   }
 
   .selected-options-list {
