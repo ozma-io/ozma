@@ -6,7 +6,7 @@
       <div
         :class="[
           'menu_category_block',
-          'default-variant',
+          'menuEntry-variant',
           'menuEntry-local-variant',
           {
             'is-mobile': $isMobile,

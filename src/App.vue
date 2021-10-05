@@ -194,13 +194,16 @@ export default class App extends Vue {
     const defaultVariant = currentTheme?.colorVariants["default"] ?? oldDefaultVariant;
     const interfaceButton = {
       ...transparentVariant,
+      backgroundDarker1: "rgba(0, 0, 0, 0.2)",
+      backgroundDarker2: "rgba(0, 0, 0, 0.4)",
       foreground: defaultVariant.foreground,
       foregroundContrast: defaultVariant.foregroundContrast,
       foregroundDarker: defaultVariant.foregroundDarker,
     };
     const defaultColorVariants = {
-      "default": defaultVariant,
+      default: defaultVariant,
       interfaceButton,
+      menuEntry: interfaceButton,
     };
     const colorVariants = { ...bootstrapColorVariants, ...defaultColorVariants, ...currentTheme?.colorVariants };
     const rules = colorVariantsToCssRules(colorVariants);
