@@ -2,7 +2,7 @@ import { RawLocation } from "vue-router";
 import { Link, IAttrToLinkOpts, attrToLink } from "@/links";
 import { mapMaybe, isMobile, shortLanguage } from "@/utils";
 
-export const buttonDisplays = ["all", "desktop", "mobile", "selectionPanel"] as const;
+export const buttonDisplays = ["all", "desktop", "mobile", "selection_panel", "selectionPanel"] as const;
 export type ButtonDisplay = typeof buttonDisplays[number];
 export const isButtonDisplay = (display: unknown): display is ButtonDisplay => buttonDisplays.includes(display as any);
 import type { ColorVariantAttribute } from "@/utils_colors";

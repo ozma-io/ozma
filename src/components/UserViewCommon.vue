@@ -375,7 +375,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   }
 
   get buttons() {
-    return [...this.staticButtons, ...this.attrButtons.filter(button => button.display !== "selectionPanel")];
+    return [...this.staticButtons, ...this.attrButtons.filter(button => button.display !== "selection_panel" && button.display !== "selectionPanel")];
   }
 
   @Watch("buttons", { deep: true, immediate: true })
@@ -482,7 +482,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   }
 
   get selectionButtons() {
-    const buttons = this.attrButtons.filter(button => button.display === "selectionPanel");
+    const buttons = this.attrButtons.filter(button => button.display === "selection_panel" || button.display === "selectionPanel");
 
     if (this.uv.info.mainEntity && !this.uv.extra.softDisabled) {
       buttons.push(

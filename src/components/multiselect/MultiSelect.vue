@@ -112,19 +112,6 @@
           </div>
 
           <b-input-group-append>
-            <!--
-            <b-button
-              v-if="showClearOptions && !(mode === 'modal' && !isOpen) && !(compactMode && !single)"
-              class="button with-material-icon clear-content-button clear-options-button"
-              variant="outline-secondary"
-              @click.stop="unselectAll"
-            >
-              <i
-                class="material-icons"
-              >clear</i>
-            </b-button>
-            -->
-
             <b-input-group-text
               v-if="!(mode === 'modal' && isOpen)"
               :class="['with-material-icon select-icon', { 'is-mobile': $isMobile }]"
