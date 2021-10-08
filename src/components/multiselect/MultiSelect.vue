@@ -895,17 +895,12 @@ export default class MultiSelect extends Vue {
     background-color: var(--option-backgroundColor);
     color: var(--option-foregroundColor);
     border-radius: 1rem;
-    padding: 0.25rem 0.75rem;
+    padding: 0.25rem 0.25rem;
     line-height: 1rem;
     word-break: break-word;
 
     > span {
       text-align: left;
-    }
-
-    &:hover .remove-value,
-    &:hover ::v-deep .open-modal-button {
-      opacity: 1;
     }
   }
 
@@ -920,7 +915,7 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  .one-of-many-value > input.remove-value {
+  .one-of-many-value > .remove-value {
     @include material-button("reference");
 
     background: none;
@@ -928,11 +923,14 @@ export default class MultiSelect extends Vue {
     padding: 0;
     margin: 0;
     margin-left: 0.25rem;
-    opacity: 0.3;
+
+    &:not(:hover) {
+      opacity: 0.3;
+    }
   }
 
   .one-of-many-value:hover,
-  .one-of-many-value:hover > input.remove-value {
+  .one-of-many-value:hover > .remove-value {
     cursor: pointer;
   }
 

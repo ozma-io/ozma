@@ -53,11 +53,9 @@
             :link="select.option.value.link"
             @goto="$emit('goto', $event)"
           >
-            <input
-              type="button"
-              class="material-icons rounded-circle md-14 open-modal-button"
-              :value="iconValue(select.option.value.link.target)"
-            >
+            <i class="material-icons rounded-circle md-14 open-modal-button">
+              {{ iconValue(select.option.value.link.target) }}
+            </i>
           </FunLink>
 
           <!-- eslint-disable vue/no-v-html -->
@@ -75,11 +73,9 @@
           class="material-button action-button"
           @click="selectedView = action.query"
         >
-          <input
-            type="button"
-            class="material-icons md-18 open-modal-button rounded-circle"
-            value="add"
-          >
+          <i class="material-icons md-18 rounded-circle open-modal-button">
+            add
+          </i>
           {{ action.name }}
         </button>
       </template>
@@ -422,7 +418,6 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
 <style lang="scss" scoped>
   .single-value__link {
     display: flex;
-    text-decoration: underline;
     margin-right: 0.25rem;
   }
 
@@ -432,7 +427,10 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     border: none;
     padding: 0;
     margin: 0;
-    opacity: 0.3;
+
+    &:not(:hover) {
+      opacity: 0.3;
+    }
   }
 
   .action-button {
