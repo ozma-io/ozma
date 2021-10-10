@@ -1,12 +1,12 @@
 <i18n>
   {
     "en": {
-      "close": "Close",
+      "hide": "Hide",
       "reset": "Reset changes",
       "apply": "Apply"
     },
     "ru": {
-      "close": "Закрыть",
+      "hide": "Скрыть",
       "reset": "Сбросить изменения",
       "apply": "Применить"
     }
@@ -40,30 +40,6 @@
             :forced-is-nullable="argument.isOptional"
             @update="update(argument.name, $event)"
           />
-        </div>
-
-        <div class="buttons">
-          <b-button
-            v-if="canBeClosed"
-            variant="outline-secondary"
-            @click="close"
-          >
-            {{ $t("close") }}
-          </b-button>
-          <b-button
-            variant="outline-danger"
-            :disabled="!hasChanges"
-            @click="reset"
-          >
-            {{ $t("reset") }}
-          </b-button>
-          <b-button
-            variant="primary"
-            :disabled="!hasChanges || someRequiredFieldsAreEmpty"
-            @click="apply"
-          >
-            {{ $t("apply") }}
-          </b-button>
         </div>
       </div>
     </div>
@@ -100,7 +76,6 @@ interface ILocalArgument {
 export default class ArgumentEditor extends Vue {
   @Prop({ type: Object, required: true }) argumentParams!: Record<ArgumentName, IArgument>;
   @Prop({ type: Object, required: true }) argumentValues!: Record<string, unknown>;
-  @Prop({ type: Boolean, default: true }) canBeClosed!: boolean;
 
   private changedValues: Record<string, unknown> = {};
 
@@ -216,7 +191,7 @@ export default class ArgumentEditor extends Vue {
     }
   }
 
-  private apply() {
+  apply() {
     this.setDefaults();
     this.$emit("update", this.allValues);
   }
