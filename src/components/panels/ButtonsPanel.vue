@@ -7,17 +7,18 @@
   >
     <slot name="search-panel" />
 
+    <!-- TODO: Make better keys for buttons -->
     <template v-for="(button, i) in buttons">
       <ButtonGroup
         v-if="button.type === 'button-group' && button.buttons.length > 0"
-        :key="i"
+        :key="button.icon + button.caption + button.tooltip + i"
         class="button-element"
         :button="button"
         @goto="$emit('goto', $event)"
       />
       <ButtonItem
         v-else
-        :key="i"
+        :key="button.icon + button.caption + button.tooltip + i"
         :class="[
           'button-element text-decoration-none',
           {

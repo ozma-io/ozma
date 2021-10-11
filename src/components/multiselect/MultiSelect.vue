@@ -1,8 +1,7 @@
 <i18n>
   {
     "en": {
-      "empty_message": "Empty",
-      "clear_all": "Clear all",
+      "clear": "Clear",
       "enter_value": "Enter value",
       "search_placeholder": "Search",
       "no_results": "No entries",
@@ -13,8 +12,7 @@
       "loading_error": "Error during loading more data: {msg}"
     },
     "ru": {
-      "empty_message": "Пусто",
-      "clear_all": "Очистить",
+      "clear": "Очистить",
       "enter_value": "Введите значение",
       "search_placeholder": "Поиск",
       "no_results": "Нет записей",
@@ -70,13 +68,14 @@
           <div
             class="default-variant values-container"
           >
+            <!-- eslint-disable vue/no-v-html -->
             <span
               v-if="valuesLength === 0"
               :style="listValueStyle"
               class="empty-message-text"
-            >
-              {{ $t('empty_message') }}
-            </span>
+              v-html="'&nbsp;'"
+            />
+            <!-- eslint-enable vue/no-v-html -->
 
             <div
               v-else
@@ -113,17 +112,6 @@
           </div>
 
           <b-input-group-append>
-            <b-button
-              v-if="showClearOptions && !(mode === 'modal' && !isOpen) && !(compactMode && !single)"
-              class="button with-material-icon clear-content-button clear-options-button"
-              variant="outline-secondary"
-              @click.stop="unselectAll"
-            >
-              <i
-                class="material-icons"
-              >clear</i>
-            </b-button>
-
             <b-input-group-text
               v-if="!(mode === 'modal' && isOpen)"
               :class="['with-material-icon select-icon', { 'is-mobile': $isMobile }]"
@@ -172,6 +160,19 @@
           </b-input-group>
 
           <div class="all-options-wrapper">
+            <div
+              v-if="single && !required && value !== null"
+              class="clear-option-button-wrapper"
+            >
+              <button
+                type="button"
+                class="material-button clear-option-button"
+                @click="unselectAll"
+              >
+                {{ $t("clear") }}
+              </button>
+            </div>
+
             <div
               v-if="compactMode && !single"
               class="selected-options-list"
@@ -845,6 +846,15 @@ export default class MultiSelect extends Vue {
     overflow: auto;
   }
 
+  .clear-option-button {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background: var(--default-backgroundColor);
+  }
+
   .selected-options-list {
     margin-bottom: 1.5rem;
     display: flex;
@@ -885,17 +895,12 @@ export default class MultiSelect extends Vue {
     background-color: var(--option-backgroundColor);
     color: var(--option-foregroundColor);
     border-radius: 1rem;
-    padding: 0.25rem 0.75rem;
+    padding: 0.25rem 0.25rem;
     line-height: 1rem;
     word-break: break-word;
 
     > span {
       text-align: left;
-    }
-
-    &:hover .remove-value,
-    &:hover ::v-deep .open-modal-button {
-      opacity: 1;
     }
   }
 
@@ -910,7 +915,7 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  .one-of-many-value > input.remove-value {
+  .one-of-many-value > .remove-value {
     @include material-button("reference");
 
     background: none;
@@ -918,11 +923,14 @@ export default class MultiSelect extends Vue {
     padding: 0;
     margin: 0;
     margin-left: 0.25rem;
-    opacity: 0.3;
+
+    &:not(:hover) {
+      opacity: 0.3;
+    }
   }
 
   .one-of-many-value:hover,
-  .one-of-many-value:hover > input.remove-value {
+  .one-of-many-value:hover > .remove-value {
     cursor: pointer;
   }
 

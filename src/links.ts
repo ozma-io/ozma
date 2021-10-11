@@ -108,7 +108,7 @@ export const attrToActionLink = (linkedAttr: Record<string, unknown>, opts?: IAt
 
   const display = linkedAttr["display"];
   const addIds = linkedAttr["add_selected_entry_ids"]; // TODO: deprecated, delete this.
-  if (addIds || display === "selectionPanel") {
+  if (addIds || display === "selection_panel" || display === "selectionPanel") {
     args = { ...opts?.defaultActionArgs, ...args };
   }
 

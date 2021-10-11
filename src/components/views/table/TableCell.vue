@@ -234,7 +234,7 @@ export default class TableCell extends Vue {
   @include variant-to-local("option");
 
   .option {
-    padding: 0.1rem 0.5rem;
+    padding: 0.1rem 0.25rem;
     display: inline-flex;
     align-items: center;
     background-color: var(--option-backgroundColor);
@@ -254,7 +254,7 @@ export default class TableCell extends Vue {
       opacity: 0.3;
     }
 
-    &:hover .option-link {
+    .option-link:hover {
       opacity: 1;
     }
   }

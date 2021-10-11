@@ -26,7 +26,7 @@
         <b-input-group class="shadow-sm">
           <b-textarea
             v-model="message"
-            class="textarea"
+            class="cell-variant cell-local-variant textarea"
             @keypress.ctrl.enter.stop="sendMessage"
           />
           <b-input-group-append>
@@ -249,7 +249,10 @@ export default class UserViewTimeline extends mixins<EmptyBaseUserView>(BaseUser
 </script>
 
 <style lang="scss" scoped>
+  @include variant-to-local("cell");
+
   .timeline-background {
+    padding: 1rem;
     background-color: var(--default-backgroundDarker1Color);
   }
 
@@ -259,7 +262,7 @@ export default class UserViewTimeline extends mixins<EmptyBaseUserView>(BaseUser
   }
 
   .input-container {
-    margin-bottom: 0.25rem;
+    margin-bottom: 1rem;
 
     .textarea {
       height: 3rem;

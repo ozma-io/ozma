@@ -18,6 +18,7 @@
     <div class="popper shadow">
       <ButtonList
         :buttons="button.buttons"
+        @button-click="onClick"
         @goto="$emit('goto', $event)"
       />
     </div>
@@ -80,6 +81,17 @@ export default class ButtonsPanel extends Vue {
   private onShow() {
     if (!this.listItem) {
       eventBus.emit("close-all-button-groups", this.uid);
+    }
+  }
+
+  private onClick() {
+    this.$emit("button-click");
+
+    const popupRef: any = this.$refs.popup;
+    if (!popupRef) return;
+
+    if (!this.listItem && popupRef.showPopper) {
+      popupRef.doClose();
     }
   }
 

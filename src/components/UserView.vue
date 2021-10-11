@@ -10,7 +10,10 @@
             "unknown_error": "Unknown user view fetch error: {msg}",
             "anonymous_query": "(anonymous query)",
             "edit_view": "Edit user view",
-            "edit_arguments": "Edit user view arguments",
+            "reset_changed_arguments": "Reset changed arguments",
+            "apply_changed_arguments": "Apply arguments",
+            "show_argument_editor": "Show user view arguments editor",
+            "hide_argument_editor": "Hide user view arguments editor",
             "new_mode_no_main": "FOR INSERT INTO clause is required for new entry mode.",
             "empty_userview": "Empty userview",
             "link_to_nowhere": "This user view was a link which didn't replace it, so there's nothing to show."
@@ -25,7 +28,10 @@
             "unknown_error": "Неизвестная ошибка загрузки представления: {msg}",
             "anonymous_query": "(анонимный запрос)",
             "edit_view": "Редактировать представление",
-            "edit_arguments": "Редактировать аргументы представления",
+            "reset_changed_arguments": "Сбросить изменения аргументов",
+            "apply_changed_arguments": "Применить аргументы",
+            "show_argument_editor": "Показать редактор аргументов представления",
+            "hide_argument_editor": "Скрыть редактор аргументов представления",
             "new_mode_no_main": "Для режима создания новой записи должна использоваться конструкция FOR INSERT INTO.",
             "empty_userview": "Пустое представление",
             "link_to_nowhere": "Это отображение являлось ссылкой, которая его не заменила. Теперь здесь нечего показать."
@@ -54,7 +60,6 @@
           class="userview-argument-editor"
           :argument-params="state.uv.info.arguments"
           :argument-values="state.uv.args.args"
-          :can-be-closed="!(showArgumentEditorAttr === true)"
           @close="contextMenuShowArgumentEditor = false"
           @update="updateArguments"
           @update:hasChangedValues="argumentEditorHasChangedValues = $event"
@@ -86,10 +91,29 @@
         :infinite-wrapper="isRoot"
       >
         <template #overlay>
-          <div class="overlay-text">
-            {{ $t("arguments_changed") }}
+          <div class="overlay-content">
+            <div class="overlay-text">
+              {{ $t("arguments_changed") }}
+            </div>
+
+            <div class="overlay-buttons">
+              <b-button
+                class="mr-3"
+                variant="light"
+                @click="resetChangedArguments"
+              >
+                {{ $t("reset_changed_arguments") }}
+              </b-button>
+              <b-button
+                variant="primary"
+                @click="applyChangedArguments"
+              >
+                {{ $t("apply_changed_arguments") }}
+              </b-button>
+            </div>
           </div>
         </template>
+
         <transition name="fade-1" mode="out-in">
           <!-- Don't know why there are one row in empty userview -->
           <div v-if="completelyEmptyUserView" class="empty-userview">
@@ -328,20 +352,31 @@ export default class UserView extends Vue {
   }
 
   private contextMenuShowArgumentEditor = false;
-  private get showArgumentEditorAttr(): boolean | undefined {
-    if (this.state.state !== "show") return undefined;
+  private get showArgumentEditorAttr(): boolean | null {
+    if (this.state.state !== "show") return null;
 
     const showArgumentEditorAttr = this.state.uv.attributes["show_argument_editor"];
     return showArgumentEditorAttr !== undefined
       ? Boolean(showArgumentEditorAttr)
-      : undefined;
+      : null;
   }
   private get showArgumentEditor() {
     if (this.state.state !== "show") return false;
 
     if (Object.keys(this.state.uv.info.arguments).length === 0) return false;
 
-    return this.showArgumentEditorAttr || this.contextMenuShowArgumentEditor;
+    // Maybe too ugly and hacky.
+    return this.showArgumentEditorAttr === null
+      ? this.contextMenuShowArgumentEditor
+      : this.showArgumentEditorAttr !== this.contextMenuShowArgumentEditor;
+  }
+
+  private resetChangedArguments() {
+    (this.$refs.argumentEditor as ArgumentEditor | undefined)?.reset();
+  }
+
+  private applyChangedArguments() {
+    (this.$refs.argumentEditor as ArgumentEditor | undefined)?.apply();
   }
 
   get title() {
@@ -357,8 +392,8 @@ export default class UserView extends Vue {
   private get toggleArgumentEditorButton(): Button {
     return {
       icon: "edit_note",
-      caption: this.$t("edit_arguments").toString(),
-      variant: this.contextMenuShowArgumentEditor ? bootstrapVariantAttribute("secondary") : defaultVariantAttribute,
+      caption: this.showArgumentEditor ? this.$t("hide_argument_editor").toString() : this.$t("show_argument_editor").toString(),
+      variant: this.showArgumentEditor ? bootstrapVariantAttribute("secondary") : defaultVariantAttribute,
       callback: () => {
         this.contextMenuShowArgumentEditor = !this.contextMenuShowArgumentEditor;
       },
@@ -392,7 +427,8 @@ export default class UserView extends Vue {
 
         if (this.state.state === "show") {
           const hasArguments = Object.keys(this.state.uv.info.arguments).length !== 0;
-          if (hasArguments && this.state.uv.attributes["show_argument_editor"] !== true) {
+          // if (hasArguments && this.state.uv.attributes["show_argument_editor"] !== true) {
+          if (hasArguments) {
             buttons.push(this.toggleArgumentEditorButton);
           }
         }
@@ -856,11 +892,16 @@ export default class UserView extends Vue {
     }
   }
 
-  .overlay-text {
-    padding: 0.25rem 0.5rem;
+  .overlay-content {
+    padding: 1rem;
     border-radius: 0.5rem;
     color: white;
     background-color: #0005;
+
+    .overlay-text {
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
   }
 
   .empty-userview {

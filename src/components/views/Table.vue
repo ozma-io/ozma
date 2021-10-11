@@ -1655,7 +1655,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private get createEntryButtons(): Button | null {
-    return this.creationButtons.length !== 0
+    return this.creationButtons
       ? {
         type: "button-group",
         icon: "add_box",
@@ -1765,7 +1765,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     const td = document.createElement("td");
     td.textContent = valueText;
 
-    const fieldType = this.uv.info.columns[valueRef.column].mainField?.field.fieldType;
+    const fieldType = value.info?.field?.fieldType;
     if (fieldType?.type === "reference") {
       const valueJson = JSON.stringify(value.value);
       td.setAttribute("data-ozma-reference-value", valueJson);
@@ -1865,10 +1865,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private async updateValueWithParseValue(ref: ValueRef, value: ParseValue) {
-    const fieldType = this.uv.info.columns[ref.column].mainField?.field.fieldType?.type;
-    if (value.type === "reference") {
-      const punOrValue = fieldType === "reference" ? value.value : value.pun;
+  private async updateValueWithParseValue(ref: ValueRef, parseValue: ParseValue) {
+    const value = this.uv.getValueByRef(ref)!.value;
+    const fieldType = value.info?.field?.fieldType.type;
+    if (parseValue.type === "reference") {
+      const punOrValue = fieldType === "reference" ? parseValue.value : parseValue.pun;
+      // FIXME TODO: If `fieldType` is `reference`, how to pass pun? Otherwise it's asks backend for every pasting, which sucks.
       await this.updateValue(ref, punOrValue);
     } else if (fieldType === "reference") {
       this.$bvToast.toast(this.$t("paste_no_referencefield_data").toString(), {
@@ -1877,7 +1879,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
         solid: true,
       });
     } else {
-      await this.updateValue(ref, value.value);
+      await this.updateValue(ref, parseValue.value);
     }
   }
 

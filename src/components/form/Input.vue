@@ -1,13 +1,3 @@
-<i18n>
-    {
-        "en": {
-            "input_placeholder": "Empty"
-        },
-        "ru": {
-            "input_placeholder": "Пусто"
-        }
-    }
-</i18n>
 <template>
   <fragment>
     <b-input-group
@@ -27,7 +17,6 @@
         autocomplete="off"
         :type="type"
         :value="value"
-        :placeholder="$t('input_placeholder')"
         :readonly="disabled"
         @keydown.enter.prevent
         @input="updateInput"
@@ -46,7 +35,6 @@
       <textarea-autosize
         v-if="isCellEdit"
         ref="controlTextarea"
-        :placeholder="$t('input_placeholder')"
         :value="value"
         :readonly="disabled"
         rows="1"

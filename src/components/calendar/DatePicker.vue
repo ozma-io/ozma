@@ -94,4 +94,8 @@ export default class DatePicker extends Vue {
     padding-right: 5px;
     border-right: 1px solid var(--MainBorderColor);
   }
+
+  .select_panel_month {
+    cursor: pointer;
+  }
 </style>

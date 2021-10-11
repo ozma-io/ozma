@@ -146,6 +146,8 @@ export default class SearchPanel extends Vue {
 
   .open-search-button {
     --button-backgroundColor: transparent;
+    --button-backgroundDarker1Color: rgba(0, 0, 0, 0.2);
+    --button-backgroundDarker2Color: rgba(0, 0, 0, 0.4);
     --button-borderColor: transparent;
   }
 

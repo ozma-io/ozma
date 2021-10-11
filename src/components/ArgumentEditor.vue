@@ -1,12 +1,12 @@
 <i18n>
   {
     "en": {
-      "close": "Close",
+      "hide": "Hide",
       "reset": "Reset changes",
       "apply": "Apply"
     },
     "ru": {
-      "close": "Закрыть",
+      "hide": "Скрыть",
       "reset": "Сбросить изменения",
       "apply": "Применить"
     }
@@ -22,12 +22,12 @@
     <div class="arguments-editor-container">
       <div class="argument-fields">
         <div
-          v-for="(argument, name) in args"
-          :key="name"
+          v-for="argument in args"
+          :key="argument.name"
           class="argument-field-wrapper"
         >
           <FormControl
-            :value="{ value: allValues[name] }"
+            :value="{ value: allValues[argument.name] }"
             :type="argument.type"
             :attributes="argument.extra"
             :caption="argument.caption"
@@ -38,32 +38,8 @@
             :level="0"
             :forced-field-type="argument.type"
             :forced-is-nullable="argument.isOptional"
-            @update="update(name, $event)"
+            @update="update(argument.name, $event)"
           />
-        </div>
-
-        <div class="buttons">
-          <b-button
-            v-if="canBeClosed"
-            variant="outline-secondary"
-            @click="close"
-          >
-            {{ $t("close") }}
-          </b-button>
-          <b-button
-            variant="outline-danger"
-            :disabled="!hasChanges"
-            @click="reset"
-          >
-            {{ $t("reset") }}
-          </b-button>
-          <b-button
-            variant="primary"
-            :disabled="!hasChanges || someRequiredFieldsAreEmpty"
-            @click="apply"
-          >
-            {{ $t("apply") }}
-          </b-button>
         </div>
       </div>
     </div>
@@ -76,7 +52,6 @@ import moment, { MomentInput } from "moment";
 import * as R from "ramda";
 
 import { ArgumentName, AttributesMap, FieldType, IArgument } from "ozma-api";
-import { objectMap } from "@/utils";
 import { valueIsNull, valueToText, valueFromRaw } from "@/values";
 
 const getValue = (parameter: IArgument, value: unknown) => {
@@ -87,20 +62,20 @@ const getValue = (parameter: IArgument, value: unknown) => {
 };
 
 interface ILocalArgument {
+  name: string;
   value: any;
   defaultValue: any;
   caption: string;
   type: FieldType;
   isOptional: boolean;
   extra: AttributesMap;
-
+  dirtyHackOrder: number; // Arguments come alphabet-sorted from backend.
 }
 
 @Component
 export default class ArgumentEditor extends Vue {
   @Prop({ type: Object, required: true }) argumentParams!: Record<ArgumentName, IArgument>;
   @Prop({ type: Object, required: true }) argumentValues!: Record<string, unknown>;
-  @Prop({ type: Boolean, default: true }) canBeClosed!: boolean;
 
   private changedValues: Record<string, unknown> = {};
 
@@ -112,32 +87,38 @@ export default class ArgumentEditor extends Vue {
     return Object.keys(this.argumentParams).length > 3;
   }
 
-  private get args(): Record<string, ILocalArgument> {
-    return objectMap((parameter, name) => {
+  private get args(): ILocalArgument[] {
+    const unsortedArgs: ILocalArgument[] = Object.entries(this.argumentParams).map(([name, parameter]) => {
       const value = getValue(parameter, this.argumentValues[name]) ?? parameter.defaultValue;
       const hasCaption = parameter.attributes["caption"] !== undefined;
       const caption = hasCaption ? valueToText(parameter.attributeTypes["caption"], parameter.attributes["caption"]) : name;
       const type = parameter.argType;
       const isOptional = parameter.optional || parameter.defaultValue !== undefined;
+      const dirtyHackOrderRaw = parameter.attributes["dirty_hack_order"];
+      const dirtyHackOrder = typeof dirtyHackOrderRaw === "number" ? dirtyHackOrderRaw : 0;
 
       return {
+        name,
         value,
         defaultValue: parameter.defaultValue,
         caption,
         type,
         isOptional,
+        dirtyHackOrder,
         extra: parameter.attributes,
       };
     }, this.argumentParams);
+
+    return unsortedArgs.sort((a, b) => a.dirtyHackOrder - b.dirtyHackOrder);
   }
 
   private get allValues() {
-    const previousValues = objectMap(arg => arg.value, this.args);
+    const previousValues = Object.fromEntries(this.args.map(arg => [arg.name, arg.value]));
     return { ...previousValues, ...this.changedValues };
   }
 
   private get someRequiredFieldsAreEmpty() {
-    return Object.entries(this.args).some(([name, arg]) => !arg.isOptional && valueIsNull(this.allValues[name]));
+    return this.args.some(arg => !arg.isOptional && valueIsNull(this.allValues[arg.name]));
   }
 
   private mockScope = "mock_scope";
@@ -146,7 +127,7 @@ export default class ArgumentEditor extends Vue {
 
   // Use this instead of `Vue.set(this.changedValues, name, newValue)`
   private changeValue(name: string, newValue: any) {
-    const oldValue = this.args[name].value;
+    const oldValue = this.args.find(arg => arg.name === name)!.value;
     if (valueIsNull(oldValue) && valueIsNull(newValue)) {
       Vue.delete(this.changedValues, name);
     } else {
@@ -179,9 +160,10 @@ export default class ArgumentEditor extends Vue {
     if (valueIsNull(value)) {
       this.changeValue(name, null);
     } else {
+      const argumentParams = this.argumentParams[name];
       const fieldInfo = {
-        fieldType: this.argumentParams[name].argType,
-        isNullable: this.argumentParams[name].optional,
+        fieldType: argumentParams.argType,
+        isNullable: argumentParams.optional,
       };
       const transformed = valueFromRaw(fieldInfo, value);
       if (transformed !== undefined) {
@@ -196,9 +178,9 @@ export default class ArgumentEditor extends Vue {
   }
 
   private setDefaults() {
-    for (const [name, arg] of Object.entries(this.args)) {
-      if (valueIsNull(this.allValues[name]) && !valueIsNull(arg.defaultValue)) {
-        this.update(name, arg.defaultValue);
+    for (const arg of this.args) {
+      if (valueIsNull(this.allValues[arg.name]) && !valueIsNull(arg.defaultValue)) {
+        this.update(arg.name, arg.defaultValue);
       }
     }
   }
@@ -209,7 +191,7 @@ export default class ArgumentEditor extends Vue {
     }
   }
 
-  private apply() {
+  apply() {
     this.setDefaults();
     this.$emit("update", this.allValues);
   }
