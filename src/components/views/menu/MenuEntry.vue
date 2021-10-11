@@ -14,7 +14,9 @@
         ]"
       >
         <MenuHeading :level="level + 1">
-          {{ entry.name }}
+          <span :title="entry.name">
+            {{ entry.name }}
+          </span>
         </MenuHeading>
         <b-row :class="['menu_entries', { 'first_level_entries': level === 0 }]">
           <MenuEntry
@@ -44,7 +46,7 @@
         >
           {{ entry.icon || "chevron_right" }}
         </i>
-        <span class="name">
+        <span class="name" :title="entry.name">
           {{ entry.name }}
         </span>
         <b-badge
@@ -150,6 +152,8 @@ export default class MenuEntry extends Vue {
   .menu_category_block h5,
   .menu_category_block h6 {
     font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .menu_list {
@@ -185,7 +189,8 @@ export default class MenuEntry extends Vue {
 
     .name {
       margin-left: 5px;
-      overflow-wrap: anywhere;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 
