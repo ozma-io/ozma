@@ -52,11 +52,9 @@
             :link="value.extra.link"
             @goto="$emit('goto', $event)"
           >
-            <input
-              type="button"
-              class="material-icons md-18 reference-open-modal rounded-circle"
-              :value="iconValue"
-            >
+            <span class="material-icons md-14 reference-open-modal rounded-circle">
+              {{ iconValue }}
+            </span>
           </FunLink>
           <!-- eslint-disable vue/no-v-html -->
           <span class="reference-text" v-html="value.extra.valueHtml || '&nbsp;'" />
@@ -234,7 +232,7 @@ export default class TableCell extends Vue {
   @include variant-to-local("option");
 
   .option {
-    padding: 0.1rem 0.25rem;
+    padding: 0.1rem 0.5rem;
     display: inline-flex;
     align-items: center;
     background-color: var(--option-backgroundColor);
@@ -247,15 +245,16 @@ export default class TableCell extends Vue {
     .option-link {
       @include material-button("reference");
 
-      margin-right: 0.25rem;
       flex-shrink: 0;
       border: none;
       display: flex;
       opacity: 0.3;
+      overflow: visible;
     }
 
     .option-link:hover {
       opacity: 1;
+      text-decoration: none;
     }
   }
 
@@ -369,6 +368,9 @@ export default class TableCell extends Vue {
   .reference-open-modal {
     @include material-button("option");
 
+    margin: 0;
+    margin-left: -0.25rem;
+    margin-right: 0.25rem;
     pointer-events: auto !important;
     border: none;
     background: none;
@@ -376,9 +378,7 @@ export default class TableCell extends Vue {
   }
 
   span.reference-text {
-    margin: 0 0.25rem;
     display: block;
-    line-height: 1rem;
     white-space: normal;
     word-break: break-word;
   }

@@ -1758,10 +1758,23 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
+  // Cell text intended for copy to clipboard.
+  private getClipboardTextByVisualPosition(pos: VisualPosition): string {
+    const value = this.uv.getValueByRef(this.getValueRefByVisualPosition(pos))!.value;
+    switch (value.info?.field?.fieldType.type) {
+      case "int":
+      case "decimal":
+        // We can't use `valueHtml` there because `number_format` attribute messes with it.
+        return String(value.value);
+      default:
+        return sanitizeHtml(value.extra.valueHtml, { allowedTags: [] });
+    }
+  }
+
   private cellTdByVisualPosition(pos: VisualPosition): HTMLElement {
     const valueRef = this.getValueRefByVisualPosition(pos);
     const value = this.uv.getValueByRef(valueRef)!.value;
-    const valueText = sanitizeHtml(value.extra.valueHtml, { allowedTags: [] });
+    const valueText = this.getClipboardTextByVisualPosition(pos);
     const td = document.createElement("td");
     td.textContent = valueText;
 
@@ -1802,12 +1815,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     const positions2D = Object.values(R.groupBy(cell => String(cell.row), positions)).map(row => row.sort((c1, c2) => c1.column - c2.column));
     const isRectangular = positions2D.every(row => row.length === positions2D[0].length);
 
-    const sanitize = (message: string) => sanitizeHtml(message, { allowedTags: [] });
-    const cellTextByVisualPosition = (pos: VisualPosition) =>
-      sanitize(this.uv.getValueByRef(this.getValueRefByVisualPosition(pos))!.value.extra.valueHtml);
-
     if (isRectangular) {
-      const cells = positions2D.map(row => row.map(cellTextByVisualPosition));
+      const cells = positions2D.map(row => row.map(vp => this.getClipboardTextByVisualPosition(vp)));
       event.clipboardData?.setData("text/plain", stringifySpreadsheet(cells));
 
       const serialized = this.cellVisualPositionsToSerializedTable(positions2D);

@@ -895,7 +895,7 @@ export default class MultiSelect extends Vue {
     background-color: var(--option-backgroundColor);
     color: var(--option-foregroundColor);
     border-radius: 1rem;
-    padding: 0.25rem 0.25rem;
+    padding: 0.25rem 0.5rem;
     line-height: 1rem;
     word-break: break-word;
 
@@ -918,11 +918,12 @@ export default class MultiSelect extends Vue {
   .one-of-many-value > .remove-value {
     @include material-button("reference");
 
-    background: none;
-    border: none;
-    padding: 0;
     margin: 0;
     margin-left: 0.25rem;
+    margin-right: -0.25rem;
+    padding: 0;
+    background: none;
+    border: none;
 
     &:not(:hover) {
       opacity: 0.3;
