@@ -418,15 +418,16 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
 <style lang="scss" scoped>
   .single-value__link {
     display: flex;
-    margin-right: 0.25rem;
   }
 
   .open-modal-button {
     @include material-button("option");
 
+    margin: 0;
+    margin-left: -0.25rem;
+    margin-right: 0.25rem;
     border: none;
     padding: 0;
-    margin: 0;
 
     &:not(:hover) {
       opacity: 0.3;
