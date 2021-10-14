@@ -24,7 +24,7 @@
     />
 
     <div class="app-container">
-      <div class="main-buttons-wrapper">
+      <div v-if="!bannerMessage" class="main-buttons-wrapper">
         <ButtonsPanel
           class="main-buttons"
           :buttons="mainButtons"
@@ -325,6 +325,7 @@ export default class App extends Vue {
   .app-container {
     position: relative;
     height: 100%;
+    overflow: auto;
   }
 
   .main-buttons-wrapper {
