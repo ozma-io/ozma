@@ -93,9 +93,7 @@
         @goto="$emit('goto', $event)"
       >
         <template #main-buttons>
-          <!-- Now used only for space reserving, real buttons are pushed in <App> -->
           <ButtonsPanel
-            v-visible="false"
             :buttons="mainButtons"
             @goto="$emit('goto', $event)"
           />

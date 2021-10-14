@@ -20,36 +20,34 @@
     @keyup.escape="close"
   >
     <div class="arguments-editor-container">
-      <div class="argument-fields">
-        <b-container class="p-0" fluid>
-          <b-row class="sm-gutters">
-            <b-col
-              v-for="argument in args"
-              :key="argument.name"
-              cols="12"
-              sm="6"
-              md="6"
-              lg="4"
-              xl="2"
-            >
-              <FormControl
-                :value="{ value: allValues[argument.name] }"
-                :type="argument.type"
-                :attributes="argument.extra"
-                :caption="argument.caption"
-                force-multiline
-                compact-mode
-                :scope="mockScope"
-                :uv-args="mockUvArgs"
-                :level="0"
-                :forced-field-type="argument.type"
-                :forced-is-nullable="argument.isOptional"
-                @update="update(argument.name, $event)"
-              />
-            </b-col>
-          </b-row>
-        </b-container>
-      </div>
+      <b-container class="p-0" fluid>
+        <b-row class="sm-gutters">
+          <b-col
+            v-for="argument in args"
+            :key="argument.name"
+            cols="12"
+            sm="6"
+            md="6"
+            lg="4"
+            xl="2"
+          >
+            <FormControl
+              :value="{ value: allValues[argument.name] }"
+              :type="argument.type"
+              :attributes="argument.extra"
+              :caption="argument.caption"
+              force-multiline
+              compact-mode
+              :scope="mockScope"
+              :uv-args="mockUvArgs"
+              :level="0"
+              :forced-field-type="argument.type"
+              :forced-is-nullable="argument.isOptional"
+              @update="update(argument.name, $event)"
+            />
+          </b-col>
+        </b-row>
+      </b-container>
     </div>
   </div>
 </template>
@@ -225,21 +223,5 @@ export default class ArgumentEditor extends Vue {
   .arguments-editor-container {
     padding: 0.5rem;
     border-bottom: 1px solid var(--default-backgroundDarker2Color);
-  }
-
-  .argument-fields {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .buttons {
-    height: fit-content;
-    flex: 1 0;
-    align-self: flex-end;
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
   }
 </style>

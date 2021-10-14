@@ -2,7 +2,6 @@
     {
         "en": {
             "loading": "Now loading",
-            "arguments_changed": "Apply or reset arguments changes to continue",
             "forbidden": "Sorry, you are not authorized to use this user view. Contact your administrator.",
             "no_instance": "Instance not found.",
             "not_found": "User view not found.",
@@ -10,8 +9,9 @@
             "unknown_error": "Unknown user view fetch error: {msg}",
             "anonymous_query": "(anonymous query)",
             "edit_view": "Edit user view",
-            "reset_changed_arguments": "Reset changed arguments",
-            "apply_changed_arguments": "Apply arguments",
+            "arguments_changed": "Apply or reset arguments changes to continue",
+            "reset_changed_arguments": "Reset",
+            "apply_changed_arguments": "Apply",
             "show_argument_editor": "Show user view arguments editor",
             "hide_argument_editor": "Hide user view arguments editor",
             "new_mode_no_main": "FOR INSERT INTO clause is required for new entry mode.",
@@ -20,7 +20,6 @@
         },
         "ru": {
             "loading": "Загрузка данных",
-            "arguments_changed": "Примените или сбросьте изменения аргументов, чтобы продолжить",
             "forbidden": "К сожалению у вас нет прав доступа для просмотра этого представления. Свяжитесь с администратором.",
             "no_instance": "База не найдена.",
             "not_found": "Представление не найдено.",
@@ -28,8 +27,9 @@
             "unknown_error": "Неизвестная ошибка загрузки представления: {msg}",
             "anonymous_query": "(анонимный запрос)",
             "edit_view": "Редактировать представление",
-            "reset_changed_arguments": "Сбросить изменения аргументов",
-            "apply_changed_arguments": "Применить аргументы",
+            "arguments_changed": "Примените или сбросьте изменения аргументов, чтобы продолжить",
+            "reset_changed_arguments": "Сбросить",
+            "apply_changed_arguments": "Применить",
             "show_argument_editor": "Показать редактор аргументов представления",
             "hide_argument_editor": "Скрыть редактор аргументов представления",
             "new_mode_no_main": "Для режима создания новой записи должна использоваться конструкция FOR INSERT INTO.",
@@ -896,11 +896,18 @@ export default class UserView extends Vue {
     padding: 1rem;
     border-radius: 0.5rem;
     color: white;
-    background-color: #0005;
+    background-color: #000a;
+    -webkit-transform: translate3d(0, 0, 0); /* Fix for darked element in Safari */
 
     .overlay-text {
       margin-bottom: 0.5rem;
       text-align: center;
+    }
+
+    .overlay-buttons {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: center;
     }
   }
 

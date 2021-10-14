@@ -612,10 +612,6 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       .buttons-panel {
         gap: 0.5rem;
       }
-
-      button {
-        width: 100%;
-      }
     }
   }
 
