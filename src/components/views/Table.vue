@@ -3025,8 +3025,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   @media screen and (max-device-width: 768px), screen and (orientation: portrait) {
-    .fixed-column {
-      left: auto !important;
+    ::v-deep {
+      .fixed-column {
+        left: auto !important;
+      }
     }
   }
 
