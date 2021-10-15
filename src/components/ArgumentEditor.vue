@@ -20,7 +20,7 @@
     @keyup.escape="close"
   >
     <div class="arguments-editor-container">
-      <b-container class="p-0" fluid>
+      <b-container fluid>
         <b-row class="sm-gutters">
           <b-col
             v-for="argument in args"
@@ -221,7 +221,7 @@ export default class ArgumentEditor extends Vue {
   }
 
   .arguments-editor-container {
-    padding: 0.5rem;
+    padding: 0.5rem 0 1rem 0;
     border-bottom: 1px solid var(--default-backgroundDarker2Color);
   }
 </style>
