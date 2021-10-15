@@ -7,7 +7,7 @@
             "no_group": "This query is lacking board_group attribute on the grouping field"
         },
         "ru": {
-            "view_error": "В отбражении следующие ошибки",
+            "view_error": "В отображении следующие ошибки",
             "no_title": "Без заголовка",
             "no_columns": "В запросе отсутствует атрибут board_columns",
             "no_group": "В запросе отсутствует атрибут board_group на поле, по которому идёт группировка"
