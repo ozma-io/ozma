@@ -167,7 +167,7 @@
       :style="{ width: `${parentWidth - 20}px` }"
     >
       <ButtonItem
-        v-if="uv.info.mainEntity && !uv.extra.softDisabled && !uv.extra.dirtyHackPreventEntireReloads"
+        v-if="showAddRowButtons"
         :button="topAddButton"
         align-right
       />
@@ -302,7 +302,7 @@
       </template>
     </InfiniteLoading>
     <div
-      v-if="uv.info.mainEntity && !uv.extra.softDisabled && !uv.extra.dirtyHackPreventEntireReloads"
+      v-if="showAddRowButtons"
       ref="bottomButtonContainer"
       class="button-container"
       :style="{ width: `${parentWidth - 20}px` }"
@@ -323,7 +323,7 @@ import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 import { Moment, default as moment } from "moment";
 import * as R from "ramda";
 import { z } from "zod";
-import { IResultColumnInfo, ValueType, RowId, IFieldRef } from "ozma-api";
+import { IResultColumnInfo, ValueType, RowId, IFieldRef, IEntity, IEntityRef } from "ozma-api";
 import sanitizeHtml from "sanitize-html";
 import Popper from "vue-popperjs";
 
@@ -1132,6 +1132,7 @@ interface ITableEditing {
   ref: ValueRef;
 }
 
+const entities = namespace("entities");
 const entries = namespace("entries");
 const staging = namespace("staging");
 const query = namespace("query");
@@ -1203,6 +1204,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
   @entries.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IFieldRef; reference: ReferenceName }) => void;
   @entries.Mutation("addEntriesConsumer") addEntriesConsumer!: (args: { ref: IFieldRef; reference: ReferenceName }) => void;
+  @entities.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
 
   // These two aren't computed properties for performance. They are computed during `init()` and mutated when other values change.
   // If `init()` is called again, their values after recomputation should be equal to those before it.
@@ -1221,6 +1223,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   };
   // Keep references to entries used for editing once, so we don't re-request them.
   private keptEntries = new ObjectSet<IFieldRef>();
+  private showAddRowButtons = false;
 
   // Used for Tab-Enter selection moving.
   // Probably need to move to extra.
@@ -1745,6 +1748,17 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (this.initialPage !== null && this.uv.extra.lazyLoad.type === "pagination") {
       this.goToPage(this.initialPage);
     }
+
+    void this.updateShowAddRowButtons();
+  }
+
+  private async updateShowAddRowButtons() {
+    this.showAddRowButtons = false;
+
+    if (!this.uv.info.mainEntity || this.uv.extra.softDisabled || this.uv.extra.dirtyHackPreventEntireReloads) return;
+
+    const entity = await this.getEntity(this.uv.info.mainEntity);
+    this.showAddRowButtons = entity?.access.insert ?? false;
   }
 
   private deselectAllCells({ clearCursor = true }: { clearCursor?: boolean } = {}) {
@@ -3025,8 +3039,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   @media screen and (max-device-width: 768px), screen and (orientation: portrait) {
-    .fixed-column {
-      left: auto !important;
+    ::v-deep {
+      .fixed-column {
+        left: auto !important;
+      }
     }
   }
 

@@ -73,7 +73,7 @@
 <script lang="ts">
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-import { FunDBError, IEntityRef, IEntriesRequestOpts, IInsertEntityOp, ITransaction } from "ozma-api";
+import { FunDBError, IEntity, IEntityRef, IEntriesRequestOpts, IInsertEntityOp, ITransaction } from "ozma-api";
 import { Action, namespace } from "vuex-class";
 
 import { encodeUTF16LE, getBOM, mapMaybe, saveToFile, tryDicts } from "@/utils";
@@ -113,6 +113,7 @@ const csvImportChunk = 100;
 
 const staging = namespace("staging");
 const errors = namespace("errors");
+const entities = namespace("entities");
 
 @Component({
   components: {
@@ -126,10 +127,12 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   @errors.Mutation("setError") setError!: (_: { key: ErrorKey; error: string }) => void;
   @staging.Mutation("addDisableAutoSaveCount") addDisableAutoSaveCount!: () => void;
   @staging.Mutation("removeDisableAutoSaveCount") removeDisableAutoSaveCount!: () => void;
+  @entities.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
 
   modalView: IQuery | null = null;
   openQRCodeScanner = false;
   openBarCodeScanner = false;
+  showDeleteEntiesButton = false;
 
   protected beforeDestroy() {
     if (this.uv.attributes["disable_auto_save"]) {
@@ -147,6 +150,18 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     if (!disabledOnNew && disabledOnPrev) {
       this.removeDisableAutoSaveCount();
     }
+
+    void this.updateShowDeleteEntriesButton();
+  }
+
+  private async updateShowDeleteEntriesButton() {
+    this.showDeleteEntiesButton = false;
+
+    if (!this.uv.info.mainEntity) return;
+    if (this.uv.extra.softDisabled) return;
+
+    const entity = await this.getEntity(this.uv.info.mainEntity);
+    this.showDeleteEntiesButton = entity?.access.delete ?? false;
   }
 
   private async exportToCsv() {
@@ -484,7 +499,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   get selectionButtons() {
     const buttons = this.attrButtons.filter(button => button.display === "selection_panel" || button.display === "selectionPanel");
 
-    if (this.uv.info.mainEntity && !this.uv.extra.softDisabled) {
+    if (this.showDeleteEntiesButton) {
       buttons.push(
         {
           icon: "delete_sweep",
