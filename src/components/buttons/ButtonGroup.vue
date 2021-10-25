@@ -18,7 +18,7 @@
     <div class="popper shadow">
       <ButtonList
         :buttons="button.buttons"
-        @button-click="onClick"
+        @button-click="onInnerButtonClick"
         @goto="$emit('goto', $event)"
       />
     </div>
@@ -27,6 +27,7 @@
       slot="reference"
       :list-item="listItem"
       :button="button"
+      @click.capture="onReferenceClick"
     />
   </popper>
 </template>
@@ -65,6 +66,18 @@ export default class ButtonsPanel extends Vue {
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
+  private async onReferenceClick() {
+    const popupRef: any = this.$refs.popup;
+    if (!popupRef) return;
+
+    if (!this.listItem && popupRef.showPopper) {
+      // vue-popper doesn't have trigger for behavior "toggle on click, close on click outside",
+      // so I use little hacks there and with "close-all-button-groups" instead.
+      await new Promise(resolve => setTimeout(resolve, 10));
+      popupRef.doClose();
+    }
+  }
+
   private syncCloseGroup(uid?: string) {
     if (this.uid !== uid) {
       void this.closeGroup();
@@ -84,7 +97,7 @@ export default class ButtonsPanel extends Vue {
     }
   }
 
-  private onClick() {
+  private onInnerButtonClick() {
     this.$emit("button-click");
 
     const popupRef: any = this.$refs.popup;
