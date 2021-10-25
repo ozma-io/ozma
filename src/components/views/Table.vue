@@ -162,20 +162,15 @@
     </div>
 
     <div
-      v-if="uv.info.mainEntity || uv.extra.lazyLoad.type === 'pagination'"
+      v-if="showAddRowButtons || uv.extra.lazyLoad.type === 'pagination'"
       class="button-container"
       :style="{ width: `${parentWidth - 20}px` }"
     >
       <ButtonItem
-        v-if="showAddRowButtons"
+        v-visible="showAddRowButtons"
         :button="topAddButton"
         align-right
       />
-
-      <!-- Required to reserve vertical space above table for pagination-panel when there are no add-new-row button -->
-      <b-button v-if="uv.extra.lazyLoad.type === 'pagination' && !uv.info.mainEntity" v-visible="false">
-        Space reserver
-      </b-button>
     </div>
 
     <table
