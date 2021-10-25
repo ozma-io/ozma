@@ -206,6 +206,7 @@ import { CombinedUserView } from "@/user_views/combined";
 import { UserViewError, fetchUserViewData } from "@/user_views/fetch";
 import { baseUserViewHandler } from "@/components/BaseUserView";
 import Errorbox from "@/components/Errorbox.vue";
+import { CurrentSettings } from "@/state/settings";
 
 const types: RecordSet<string> = {
   "form": null,
@@ -225,6 +226,7 @@ const components = Object.fromEntries(Object.keys(types).map(name => {
 const reload = namespace("reload");
 const staging = namespace("staging");
 const query = namespace("query");
+const settings = namespace("settings");
 
 interface UserViewComponent {
   type: "component";
@@ -316,6 +318,7 @@ export default class UserView extends Vue {
   @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { entityRef: IEntityRef; id: AddedRowId }) => Promise<void>;
   @staging.State("currentSubmit") submitPromise!: Promise<CombinedTransactionResult[]> | null;
   @query.State("current") query!: ICurrentQueryHistory | null;
+  @settings.State("current") settings!: CurrentSettings;
 
   @Prop({ type: Object, required: true }) args!: IUserViewArguments;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
@@ -433,13 +436,15 @@ export default class UserView extends Vue {
           }
         }
 
-        buttons.push({
-          icon: "code",
-          caption: this.$t("edit_view").toString(),
-          variant: defaultVariantAttribute,
-          link: { query: editQuery, target: "modal-auto", type: "query" },
-          type: "link",
-        });
+        if (this.settings.userCanEditUserViews) {
+          buttons.push({
+            icon: "code",
+            caption: this.$t("edit_view").toString(),
+            variant: defaultVariantAttribute,
+            link: { query: editQuery, target: "modal-auto", type: "query" },
+            type: "link",
+          });
+        }
       }
     }
     return buttons;

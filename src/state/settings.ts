@@ -1,5 +1,5 @@
 import { Module } from "vuex";
-import { IViewExprResult } from "ozma-api";
+import { IViewExprResult, IEntity } from "ozma-api";
 
 import { IRef, convertString, waitTimeout } from "@/utils";
 import { funappSchema, default as Api } from "@/api";
@@ -11,13 +11,16 @@ const errorKey = "settings";
 export class CurrentSettings {
   settings: Partial<Record<string, string>>;
   themes: Theme[];
+  userCanEditUserViews: boolean;
 
   constructor(
     settings: Record<string, string>,
     themes: Theme[] = [],
+    userCanEditUserViews = false,
   ) {
     this.settings = settings;
     this.themes = themes;
+    this.userCanEditUserViews = userCanEditUserViews;
   }
 
   getEntry<T>(name: string, constructor: (_: string) => T, defValue: T): T {
@@ -107,7 +110,12 @@ const settingsModule: Module<ISettingsState, {}> = {
           const themes = await loadThemes();
           const themeNames = themes.map(theme => theme.themeName.name);
           const currentThemeName = getPreferredTheme(themeNames);
-          const settings = new CurrentSettings(values, themes);
+
+          const userViewsEntityRef = { schema: "public", name: "user_views" };
+          const userViewsInfo = await dispatch("entities/getEntity", userViewsEntityRef, { root: true }) as IEntity | undefined;
+          const userCanEditUserViews = userViewsInfo?.columnFields["query"]?.access.update ?? false;
+
+          const settings = new CurrentSettings(values, themes, userCanEditUserViews);
           commit("setSettings", settings);
           commit("setCurrentTheme", currentThemeName);
           commit("errors/resetErrors", errorKey, { root: true });
