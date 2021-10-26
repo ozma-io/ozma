@@ -116,8 +116,8 @@ export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtr
     };
   },
 
-  createLocalUserView(uv: IBaseCombinedUserView) {
-    const softDisabled = Boolean(uv.attributes["soft_disabled"]);
+  createLocalUserView(uv: IBaseCombinedUserView, oldView: IBaseViewExtra | null) {
+    const softDisabled = oldView?.softDisabled ?? Boolean(uv.attributes["soft_disabled"]);
 
     return {
       rowCount: 0,
