@@ -39,7 +39,7 @@ const errorsModule: Module<IErrorsState, {}> = {
     },
   },
   actions: {
-    removeAuth: {
+    onAuthRemoved: {
       root: true,
       handler: ({ state, commit }) => {
         Object.keys(state.errors).forEach(key => {

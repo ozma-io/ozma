@@ -24,7 +24,7 @@
     />
 
     <div class="app-container">
-      <div v-if="!bannerMessage" class="main-buttons-wrapper">
+      <div v-if="!bannerMessage && authErrors.length === 0" class="main-buttons-wrapper">
         <ButtonsPanel
           class="main-buttons"
           :buttons="mainButtons"

@@ -63,7 +63,7 @@ const settingsModule: Module<ISettingsState, {}> = {
     },
   },
   actions: {
-    removeAuth: {
+    onAuthRemoved: {
       root: true,
       handler: async ({ dispatch }) => {
         await dispatch("getSettings");
