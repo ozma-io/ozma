@@ -168,12 +168,12 @@ export type ColorVariantAttribute =
   | { type: "existing"; className: ColorVariantClassName }
   | { type: "inline"; variables: ColorVariantCssVariables };
 
-export const colorVariantFromAttribute = (attribute: unknown): ColorVariantAttribute =>
+export const colorVariantFromAttribute = (attribute: unknown, defaultVariant = defaultVariantAttribute): ColorVariantAttribute =>
   typeof attribute === "string"
     ? { type: "existing", className: `${attribute}` }
     : typeof attribute === "object" && attribute !== null
       ? { type: "inline", variables: colorVariantToCssVariables(colorVariantFromRaw(attribute)) }
-      : { type: "existing", className: "default" };
+      : defaultVariant;
 
 export const getColorVariantAttributeClassName = (attribute: ColorVariantAttribute): ColorVariantFullClassName | null =>
   attribute?.type === "existing" ? `${attribute.className}-variant` as const : null;

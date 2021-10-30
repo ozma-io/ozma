@@ -51,10 +51,10 @@
         </span>
         <b-badge
           v-if="entry.badge !== undefined && entry.badge.value !== undefined"
-          :class="['custom-badge', $isMobile ? 'ml-auto' : 'ml-1']"
-          :style="[badgeStyle, entry.badge.colorVariables]"
+          :class="[badgeVariantClassName, 'badge-local-variant', $isMobile ? 'ml-auto' : 'ml-1']"
+          :style="badgeVariantVariables"
           pill
-          :variant="entry.badge.variant"
+          :variant="light"
         >
           {{ entry.badge.value }}
         </b-badge>
@@ -69,11 +69,12 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import MenuHeading from "@/components/menu/MenuHeading.vue";
 import { Link } from "@/links";
 import { getIconType } from "@/utils";
+import type { ColorVariantAttribute } from "@/utils_colors";
+import { getColorVariantAttributeClassName, getColorVariantAttributeVariables } from "@/utils_colors";
 
 export type Badge = {
   value: unknown;
-  colorVariables: Record<string, unknown> | null;
-  color?: string;
+  variant: ColorVariantAttribute;
 };
 
 interface IMenuBase {
@@ -119,16 +120,25 @@ export default class MenuEntry extends Vue {
     return "link" in entry;
   }
 
-  private get badgeStyle() {
-    return this.isMenuLink(this.entry) && this.entry.badge?.color !== undefined
-      ? { backgroundColor: this.entry.badge.color }
-      : null;
+  private get badgeVariantClassName(): string | null {
+    if (!this.isMenuLink(this.entry)) return null;
+    if (!this.entry.badge) return null;
+
+    return getColorVariantAttributeClassName(this.entry.badge.variant);
+  }
+
+  private get badgeVariantVariables(): Record<string, string> | null {
+    if (!this.isMenuLink(this.entry)) return null;
+    if (!this.entry.badge) return null;
+
+    return getColorVariantAttributeVariables(this.entry.badge.variant);
   }
 }
 </script>
 
 <style lang="scss" scoped>
   @include variant-to-local("menuEntry");
+  @include variant-to-local("badge");
 
   .menu_category_block {
     margin-top: 1rem;
@@ -203,11 +213,6 @@ export default class MenuEntry extends Vue {
     font-weight: bold;
   }
 
-  .custom-badge {
-    background-color: var(--badge-backgroundColor, #dc3545);
-    color: var(--badge-foregroundColor, white);
-  }
-
   @media (max-width: 600px) {
     .menu_category_title {
       font-size: 30px !important;
@@ -215,6 +220,13 @@ export default class MenuEntry extends Vue {
 
     .menu_entry > a {
       font-size: 20px !important;
+    }
+  }
+
+  ::v-deep {
+    .badge {
+      background: var(--badge-backgroundColor) !important;
+      color: var(--badge-foregroundColor) !important;
     }
   }
 </style>
