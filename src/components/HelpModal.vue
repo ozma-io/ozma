@@ -1,0 +1,151 @@
+<i18n>
+    {
+        "en": {
+            "dismiss_all": "Dismiss all help pages",
+            "dismiss_tooltip": "You can still find help pages in context menu (three dots in top-right corner)",
+            "dismiss": "Dismiss this help"
+        },
+        "ru": {
+            "dismiss_all": "Скрыть все страницы с помощью",
+            "dismiss_tooltip": "Скрытые страницы помощи можно будет открыть через контекстное меню (три точки сверху справа)",
+            "dismiss": "Скрыть страницу"
+        }
+    }
+</i18n>
+
+<template>
+  <VueModal
+    :width="modalWidth"
+    :height="modalHeight"
+    :name="uid"
+    transition="modal"
+    @closed="onClose"
+  >
+    <div class="help-container">
+      <iframe
+        ref="iframe"
+        class="iframe"
+        sandbox="allow-scripts allow-top-navigation"
+        :srcdoc="markup"
+      />
+      <div class="buttons-container">
+        <b-button
+          v-b-tooltip.hover.bottom.noninteractive="{
+            title: $t('dismiss_tooltip').toString(),
+            disabled: $isMobile,
+          }"
+          class="dismiss-all-button"
+          variant="outline-secondary"
+          @click="dismissAll"
+        >
+          {{ $t("dismiss_all") }}
+        </b-button>
+
+        <b-button
+          v-b-tooltip.hover.bottom.noninteractive="{
+            title: $t('dismiss_tooltip').toString(),
+            disabled: $isMobile,
+          }"
+          class="ok-button"
+          variant="primary"
+          @click="dismiss"
+        >
+          {{ $t("dismiss") }}
+        </b-button>
+      </div>
+    </div>
+  </VueModal>
+</template>
+
+<script lang="ts">
+import { Vue, Component, Prop } from "vue-property-decorator";
+
+@Component
+export default class HelpModal extends Vue {
+  @Prop({ type: String, required: true }) markup!: string;
+
+  private get modalWidth() {
+    return this.$isMobile ? "100%" : "800px";
+  }
+
+  private get modalHeight() {
+    return this.$isMobile ? "80%" : "600px";
+  }
+
+  private mounted() {
+    this.$modal.show(this.uid);
+  }
+
+  private dismissAll() {
+    this.$emit("dismiss-all");
+    this.close();
+  }
+
+  private dismiss() {
+    this.$emit("dismiss");
+    this.close();
+  }
+
+  private close() {
+    this.$modal.hide(this.uid);
+  }
+
+  private onClose() {
+    this.$emit("closed");
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+  .v--modal-overlay {
+    background: rgba(0, 0, 0, 0.8) !important;
+  }
+
+  ::v-deep {
+    .v--modal-box {
+      max-height: 80% !important;
+    }
+
+    .modal-enter-active,
+    .modal-leave-active {
+      transition: all 0.2s ease-out;
+    }
+
+    .modal-enter,
+    .modal-leave-to {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+
+    .modal-enter-to,
+    .modal-leave {
+      opacity: 1;
+    }
+  }
+
+  .help-container {
+    height: 100%;
+    padding: 1rem;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    overflow-y: auto;
+  }
+
+  .iframe {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background-color: white;
+  }
+
+  .buttons-container {
+    width: 100%;
+    margin-top: 1rem;
+    display: flex;
+    flex-flow: row;
+    justify-content: space-between;
+  }
+</style>

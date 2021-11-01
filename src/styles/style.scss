@@ -287,3 +287,31 @@ $input-focus-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 .p-0-5 {
   padding: 0.125rem !important;
 }
+
+.help-button-variant {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.9);
+  border-radius: 50px;
+  background: linear-gradient(-45deg, #ffa63d, #ff3d77, #338aff, #3cf0c5);
+  background-size: 600%;
+  animation: help-button-anim 12s linear infinite;
+  box-shadow: 0 0 0.4rem rgba(255, 100, 100, 1);
+
+  &:hover {
+    background: linear-gradient(-45deg, #ff3d77, #338aff, #3cf0c5, #ffa63d);
+  }
+}
+
+@keyframes help-button-anim {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}

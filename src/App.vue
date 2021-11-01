@@ -12,7 +12,7 @@
 <template>
   <div
     id="app"
-    :style="[styleSettings, colorVariables]"
+    :style="styleSettings"
     class="default-variant default-local-variant"
   >
     <AlertBanner
@@ -48,6 +48,15 @@
         :auth-token="authToken"
       />
 
+      <HelpModal
+        v-if="helpPageInfo"
+        ref="helpModal"
+        :markup="helpPageInfo.markup"
+        @closed="onHelpModalClose"
+        @dismiss="dismissHelpPage"
+        @dismiss-all="dismissAllHelpPages"
+      />
+
       <template v-if="authErrors.length > 0">
         <span
           v-for="error in authErrors"
@@ -63,7 +72,8 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
-import { namespace } from "vuex-class";
+import { namespace, Action } from "vuex-class";
+import { IViewExprResult, IUserViewRef } from "ozma-api";
 
 import { CurrentAuth, INoAuth } from "@/state/auth";
 import { CurrentSettings } from "@/state/settings";
@@ -73,7 +83,7 @@ import { ErrorKey } from "@/state/errors";
 import { colorVariantsToCssRules, bootstrapColorVariants, colorVariantFromRaw, transparentVariant } from "@/utils_colors";
 import type { ThemeName } from "@/utils_colors";
 import { eventBus } from "@/main";
-import { isReadonlyDemoInstance } from "@/api";
+import Api, { isReadonlyDemoInstance } from "@/api";
 import { Button } from "./components/buttons/buttons";
 import InviteUserModal from "./components/InviteUserModal.vue";
 
@@ -82,26 +92,36 @@ const auth = namespace("auth");
 const errors = namespace("errors");
 const staging = namespace("staging");
 
-@Component({ components: {
-  ModalPortalTarget,
-  FabCluster,
-  InviteUserModal,
-  AlertBanner: () => ({
-    component: import("@/components/AlertBanner.vue") as any,
-  }),
-  ReadonlyDemoInstanceModal: () => ({
-    component: import("@/components/ReadonlyDemoInstanceModal.vue") as any,
-  }),
-} })
+@Component({
+  components: {
+    ModalPortalTarget,
+    FabCluster,
+    InviteUserModal,
+    AlertBanner: () => ({
+      component: import("@/components/AlertBanner.vue") as any,
+    }),
+    ReadonlyDemoInstanceModal: () => ({
+      component: import("@/components/ReadonlyDemoInstanceModal.vue") as any,
+    }),
+    HelpModal: () => ({
+      component: import("@/components/HelpModal.vue") as any,
+    }),
+  },
+})
 export default class App extends Vue {
   @settings.State("current") settings!: CurrentSettings;
   @settings.State("currentTheme") currentTheme!: ThemeName;
   @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
+  @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
 
-  private colorVariables: any = null;
+  private helpPageInfo: {
+    userViewRef: IUserViewRef;
+    markupName: string;
+    markup: string;
+  } | null = null;
 
   created() {
     void this.startAuth();
@@ -113,6 +133,7 @@ export default class App extends Vue {
 
     eventBus.on("showReadonlyDemoModal", this.showDemoModal);
     eventBus.on("showInviteUserModal", this.showInviteUserModal);
+    eventBus.on("showHelpModal", this.showHelpModal);
     eventBus.on("updateMainButtons", this.updateMainButtons);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
@@ -125,6 +146,7 @@ export default class App extends Vue {
 
     eventBus.off("showReadonlyDemoModal", this.showDemoModal);
     eventBus.off("showInviteUserModal", this.showInviteUserModal);
+    eventBus.off("showHelpModal", this.showHelpModal);
     eventBus.off("updateMainButtons", this.updateMainButtons);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
@@ -166,6 +188,43 @@ export default class App extends Vue {
 
   private showInviteUserModal() {
     (this.$refs?.inviteUserModal as any)?.show();
+  }
+
+  private showHelpModal(args?: { userViewRef: IUserViewRef; markupName: string }) {
+    if (!args) {
+      console.error("No args for showHelpModal");
+      return;
+    }
+    const { userViewRef, markupName } = args;
+
+    const ref = { schema: "funapp", name: "iframe_markup_by_name" };
+    void (this.callProtectedApi({
+      func: Api.getNamedUserView.bind(Api),
+      args: [ref, { "name": markupName }],
+    }) as Promise<IViewExprResult>).then(res => {
+      const markupRaw = (res.result.rows[0]?.values[0].value as string | undefined) ?? null;
+      const markup = markupRaw ?? `Help page markup with name "${markupName}" not found.`;
+      this.helpPageInfo = { userViewRef, markupName, markup };
+    });
+  }
+
+  private onHelpModalClose() {
+    this.helpPageInfo = null;
+  }
+
+  private dismissHelpPage() {
+    if (!this.helpPageInfo) return;
+
+    const { schema, name } = this.helpPageInfo.userViewRef;
+    localStorage.setItem(`watched-help-page_${schema}.${name}`, this.helpPageInfo.markupName);
+    eventBus.emit("localStorageUpdated");
+
+    this.helpPageInfo = null;
+  }
+
+  private dismissAllHelpPages() {
+    localStorage.setItem("dismiss-help-pages", "true");
+    eventBus.emit("localStorageUpdated");
   }
 
   @Watch("settings")
