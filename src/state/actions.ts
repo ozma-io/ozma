@@ -16,6 +16,10 @@ const messages: Record<string, Record<string, string>> = {
 };
 const funI18n = (key: string) => messages[shortLanguage]?.[key]; // TODO: can't access VueI18n here, but this solution looks stupid too.
 
+const dirtyHackGetErrorMessage = (error: any): string =>
+  // eslint-disable-next-line no-control-regex
+  new RegExp("Unhandled exception (Error: )?(.*):\n", "g").exec(String(error))?.[2] ?? "";
+
 export const saveAndRunAction = async (
   { dispatch }: { dispatch: Dispatch },
   ref: IActionRef,
@@ -31,7 +35,8 @@ export const saveAndRunAction = async (
           args: [ref, args],
         }, { root: true });
       } catch (e) {
-        app.$bvToast.toast(String(e), {
+        // TODO: Return proper messages from backend instead of using regexps.
+        app.$bvToast.toast(dirtyHackGetErrorMessage(e), {
           title: funI18n("exception_in_action"),
           variant: "danger",
           solid: true,
