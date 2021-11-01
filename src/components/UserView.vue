@@ -9,6 +9,7 @@
             "unknown_error": "Unknown user view fetch error: {msg}",
             "anonymous_query": "(anonymous query)",
             "edit_view": "Edit user view",
+            "help_button_caption": "Show help page",
             "arguments_changed": "Apply or reset arguments changes to continue",
             "reset_changed_arguments": "Reset",
             "apply_changed_arguments": "Apply",
@@ -27,6 +28,7 @@
             "unknown_error": "Неизвестная ошибка загрузки представления: {msg}",
             "anonymous_query": "(анонимный запрос)",
             "edit_view": "Редактировать представление",
+            "help_button_caption": "Показать помощь к представлению",
             "arguments_changed": "Примените или сбросьте изменения аргументов, чтобы продолжить",
             "reset_changed_arguments": "Сбросить",
             "apply_changed_arguments": "Применить",
@@ -207,6 +209,7 @@ import { UserViewError, fetchUserViewData } from "@/user_views/fetch";
 import { baseUserViewHandler } from "@/components/BaseUserView";
 import Errorbox from "@/components/Errorbox.vue";
 import { CurrentSettings } from "@/state/settings";
+import { eventBus } from "@/main";
 
 const types: RecordSet<string> = {
   "form": null,
@@ -340,6 +343,28 @@ export default class UserView extends Vue {
   private inhibitReload = false;
   private argumentEditorHasChangedValues = false;
 
+  created() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    eventBus.on("localStorageUpdated", this.updateHelpPageButton);
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  private destroyed() {
+    if (this.state.state === "show") {
+      void this.resetAllAddedEntries(this.state.uv);
+      this.removeStagingHandler(this.uid);
+    }
+    this.destroyCurrentUserView();
+    if (this.isRoot) {
+      this.removeReloadHandler(this.uid);
+    }
+    this.nextUv = null;
+
+    /* eslint-disable @typescript-eslint/unbound-method */
+    eventBus.off("localStorageUpdated", this.updateHelpPageButton);
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
   private get transitionKey() {
     return this.state.state === "show"
       ? JSON.stringify(this.state.uv.args.source)
@@ -404,6 +429,46 @@ export default class UserView extends Vue {
     };
   }
 
+  private helpPageButton: Button | null = null;
+
+  private updateHelpPageButton() {
+    this.helpPageButton = this.getHelpPageButton();
+  }
+
+  private getHelpPageButton(): Button | null {
+    if (this.state.state !== "show") return null;
+    if (this.args.source.type !== "named") return null;
+    const markupName = this.state.uv.attributes["help_markup_name"];
+    if (!markupName) return null;
+
+    const { schema, name } = this.args.source.ref;
+    const dismissHelpPages = Boolean(localStorage.getItem("dismiss-help-pages"));
+    const watchedHelpPage = localStorage.getItem(`watched-help-page_${schema}.${name}`);
+    const alreadyWatched = markupName === watchedHelpPage;
+    const hideToContextMenu = dismissHelpPages || alreadyWatched;
+
+    const display = hideToContextMenu ? undefined : "all";
+    // "help-button" is magic variant only for this case.
+    const variant = hideToContextMenu ? bootstrapVariantAttribute("info") : { type: "existing" as const, className: "help-button" };
+    const caption = hideToContextMenu ? this.$t("help_button_caption").toString() : undefined;
+
+    const eventArgs = {
+      userViewRef: this.args.source.ref,
+      markupName,
+    };
+
+    return {
+      icon: "help_outline",
+      caption,
+      display,
+      variant,
+      type: "callback",
+      callback: () => {
+        eventBus.emit("showHelpModal", eventArgs);
+      },
+    };
+  }
+
   get uvButtons() {
     const buttons: Button[] = [];
     if (this.state.state === "error" || (this.state.state === "show" && !this.state.uv.attributes["hide_default_actions"])) {
@@ -434,6 +499,11 @@ export default class UserView extends Vue {
           if (hasArguments) {
             buttons.push(this.toggleArgumentEditorButton);
           }
+        }
+
+        this.updateHelpPageButton();
+        if (this.helpPageButton) {
+          buttons.push(this.helpPageButton);
         }
 
         if (this.settings.userCanEditUserViews) {
@@ -738,18 +808,6 @@ export default class UserView extends Vue {
     } else {
       return this.$t("unknown_error", { msg: uv.message }).toString();
     }
-  }
-
-  private destroyed() {
-    if (this.state.state === "show") {
-      void this.resetAllAddedEntries(this.state.uv);
-      this.removeStagingHandler(this.uid);
-    }
-    this.destroyCurrentUserView();
-    if (this.isRoot) {
-      this.removeReloadHandler(this.uid);
-    }
-    this.nextUv = null;
   }
 
   @Watch("args", { deep: true, immediate: true })
