@@ -191,6 +191,8 @@ export default class App extends Vue {
   }
 
   private showHelpModal(args?: { userViewRef: IUserViewRef; markupName: string }) {
+    if (this.helpPageInfo) return;
+
     if (!args) {
       console.error("No args for showHelpModal");
       return;

@@ -9,7 +9,9 @@
             "unknown_error": "Unknown user view fetch error: {msg}",
             "anonymous_query": "(anonymous query)",
             "edit_view": "Edit user view",
-            "help_button_caption": "Show help page",
+            "help": "Support",
+            "help_button_caption": "Show help about current page",
+            "contacts": "Contact with support",
             "arguments_changed": "Apply or reset arguments changes to continue",
             "reset_changed_arguments": "Reset",
             "apply_changed_arguments": "Apply",
@@ -28,7 +30,9 @@
             "unknown_error": "Неизвестная ошибка загрузки представления: {msg}",
             "anonymous_query": "(анонимный запрос)",
             "edit_view": "Редактировать представление",
-            "help_button_caption": "Показать помощь к представлению",
+            "help": "Поддержка",
+            "help_button_caption": "Показать справку к текущему представлению",
+            "contacts": "Связаться с поддержкой",
             "arguments_changed": "Примените или сбросьте изменения аргументов, чтобы продолжить",
             "reset_changed_arguments": "Сбросить",
             "apply_changed_arguments": "Применить",
@@ -190,9 +194,10 @@
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { ArgumentName, AttributesMap, IEntityRef, IEntriesRequestOpts } from "ozma-api";
+import * as R from "ramda";
 
 import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, mapMaybe, NeverError } from "@/utils";
-import { defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
+import { interfaceButtonVariant, defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
 import { funappSchema } from "@/api";
 import { equalEntityRef, serializeValue, valueIsNull } from "@/values";
 import { AddedRowId, CombinedTransactionResult, ICombinedInsertEntityResult, IStagingEventHandler, StagingKey } from "@/state/staging_changes";
@@ -277,6 +282,13 @@ interface IUserViewError {
   message: string;
 }
 
+export interface ISocialLinks {
+  telegram?: string;
+  whatsapp?: string;
+  email?: string;
+  [index: string]: string | undefined;
+}
+
 // Check is two user views are "compatible" comparing their arguments, so that we can
 // use data from the older combined user view (new rows, selected rows etc).
 const argsAreCompatible = (a: IUserViewArguments, b: IUserViewArguments): boolean => {
@@ -345,7 +357,7 @@ export default class UserView extends Vue {
 
   created() {
     /* eslint-disable @typescript-eslint/unbound-method */
-    eventBus.on("localStorageUpdated", this.updateHelpPageButton);
+    eventBus.on("localStorageUpdated", this.updateHelpPageState);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
@@ -361,7 +373,7 @@ export default class UserView extends Vue {
     this.nextUv = null;
 
     /* eslint-disable @typescript-eslint/unbound-method */
-    eventBus.off("localStorageUpdated", this.updateHelpPageButton);
+    eventBus.off("localStorageUpdated", this.updateHelpPageState);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
@@ -429,43 +441,78 @@ export default class UserView extends Vue {
     };
   }
 
+  // Local storage is not reactive, so we update it manually.
   private helpPageButton: Button | null = null;
+  private updateHelpPageState() {
+    if (this.state.state !== "show") return;
+    if (this.args.source.type !== "named") return;
 
-  private updateHelpPageButton() {
-    this.helpPageButton = this.getHelpPageButton();
-  }
-
-  private getHelpPageButton(): Button | null {
-    if (this.state.state !== "show") return null;
-    if (this.args.source.type !== "named") return null;
     const markupName = this.state.uv.attributes["help_markup_name"];
-    if (!markupName) return null;
+    if (!markupName) return;
 
     const { schema, name } = this.args.source.ref;
     const dismissHelpPages = Boolean(localStorage.getItem("dismiss-help-pages"));
     const watchedHelpPage = localStorage.getItem(`watched-help-page_${schema}.${name}`);
     const alreadyWatched = markupName === watchedHelpPage;
-    const hideToContextMenu = dismissHelpPages || alreadyWatched;
-
-    const display = hideToContextMenu ? undefined : "all";
-    // "help-button" is magic variant only for this case.
-    const variant = hideToContextMenu ? bootstrapVariantAttribute("info") : { type: "existing" as const, className: "help-button" };
-    const caption = hideToContextMenu ? this.$t("help_button_caption").toString() : undefined;
+    const showHelpPage = this.isRoot && !dismissHelpPages && !alreadyWatched;
 
     const eventArgs = {
       userViewRef: this.args.source.ref,
       markupName,
     };
 
-    return {
-      icon: "help_outline",
-      caption,
-      display,
-      variant,
+    if (showHelpPage) {
+      eventBus.emit("showHelpModal", eventArgs);
+    }
+
+    this.helpPageButton = {
+      icon: "ondemand_video",
+      caption: this.$t("help_button_caption").toString(),
+      variant: { type: "existing", className: "help-button" }, // "help-button" is magic variant only for this case.
       type: "callback",
       callback: () => {
         eventBus.emit("showHelpModal", eventArgs);
       },
+    };
+  }
+
+  private get communicationButtons() {
+    return ([
+      this.communicationStrings.email
+        ? {
+          caption: "E-mail",
+          icon: "email",
+          type: "link",
+          link: { type: "href", href: "mailto:" + this.communicationStrings.email, target: "_blank" },
+          variant: defaultVariantAttribute,
+        }
+        : undefined,
+      this.communicationStrings.whatsapp
+        ? {
+          caption: "WhatsApp",
+          icon: "phone",
+          type: "link",
+          link: { type: "href", href: this.communicationStrings.whatsapp, target: "_blank" },
+          variant: defaultVariantAttribute,
+        }
+        : undefined,
+      this.communicationStrings.telegram
+        ? {
+          caption: "Telegram",
+          icon: "send",
+          type: "link",
+          link: { type: "href", href: this.communicationStrings.telegram, target: "_blank" },
+          variant: defaultVariantAttribute,
+        }
+        : undefined,
+    ] as (Button | undefined)[]).filter(R.identity) as Button[];
+  }
+
+  private get communicationStrings(): ISocialLinks {
+    return {
+      telegram: this.settings.getEntry("instance_help_telegram", String, undefined),
+      whatsapp: this.settings.getEntry("instance_help_whatsapp", String, undefined),
+      email: this.settings.getEntry("instance_help_email", String, undefined),
     };
   }
 
@@ -501,9 +548,32 @@ export default class UserView extends Vue {
           }
         }
 
-        this.updateHelpPageButton();
-        if (this.helpPageButton) {
-          buttons.push(this.helpPageButton);
+        if (this.isRoot && (this.communicationButtons.length > 0 || this.helpPageButton)) {
+          const communicationButton: Button = {
+            icon: "contact_support",
+            caption: this.$t("contacts").toString(),
+            variant: defaultVariantAttribute,
+            type: "button-group",
+            buttons: this.communicationButtons,
+          };
+
+          const helpButtons: Button[] = [
+          ];
+
+          if (this.helpPageButton) {
+            helpButtons.push(this.helpPageButton);
+          }
+
+          helpButtons.push(communicationButton);
+
+          buttons.push({
+            icon: "help_outline",
+            caption: this.$isMobile ? this.$t("help").toString() : undefined,
+            display: "desktop",
+            variant: interfaceButtonVariant,
+            type: "button-group",
+            buttons: helpButtons,
+          });
         }
 
         if (this.settings.userCanEditUserViews) {
@@ -648,9 +718,7 @@ export default class UserView extends Vue {
               ? undefined
               : fetchAll
                 ? fetchAllLimit
-                : options?.limit
-                  ? options.limit
-                  : this.state.uv.rowLoadState.fetchedRowCount + delta;
+                : options?.limit ?? (this.state.uv.rowLoadState.fetchedRowCount + delta);
           }
         } else {
           limit = maxPerFetch;
@@ -791,6 +859,8 @@ export default class UserView extends Vue {
         key: this.uid,
         handler: state.uv,
       });
+
+      this.updateHelpPageState();
     } else {
       this.removeStagingHandler(this.uid);
     }

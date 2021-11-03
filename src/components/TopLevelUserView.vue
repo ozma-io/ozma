@@ -15,7 +15,6 @@
             "cancel": "Cancel",
             "account": "Account",
             "theme": "Theme",
-            "contacts": "Support",
             "invite_user": "Invite",
             "workspaces": "Workspaces",
             "documentation": "Documentation",
@@ -45,7 +44,6 @@
             "cancel": "Отмена",
             "account": "Профиль",
             "theme": "Тема",
-            "contacts": "Помощь",
             "invite_user": "Пригласить",
             "workspaces": "Базы",
             "documentation": "Документация",
@@ -241,7 +239,6 @@
 </template>
 
 <script lang="ts">
-import * as R from "ramda";
 import { Route } from "vue-router";
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
@@ -261,8 +258,7 @@ import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { CurrentSettings } from "@/state/settings";
 import type { FullThemeName, ThemeName } from "@/utils_colors";
-import { interfaceButtonVariant, defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
-import { ISocialLinks } from "./CommunicationsButton.vue";
+import { interfaceButtonVariant, defaultVariantAttribute } from "@/utils_colors";
 
 const auth = namespace("auth");
 const staging = namespace("staging");
@@ -330,7 +326,6 @@ export default class TopLevelUserView extends Vue {
 
   private buttons: Button[] = [];
   private themeButtons: Button[] = [];
-  private communicationButtons: Button[] = [];
 
   private savedRecently: { show: boolean; timeoutId: NodeJS.Timeout | null } = {
     show: false,
@@ -414,44 +409,6 @@ export default class TopLevelUserView extends Vue {
       type: "callback",
       callback: () => this.setCurrentTheme(themeName.name),
     }));
-
-    this.communicationButtons = ([
-      this.communicationStrings.email
-        ? {
-          caption: "E-mail",
-          icon: "email",
-          type: "link",
-          link: { type: "href", href: "mailto:" + this.communicationStrings.email, target: "_blank" },
-          variant: defaultVariantAttribute,
-        }
-        : undefined,
-      this.communicationStrings.whatsapp
-        ? {
-          caption: "WhatsApp",
-          icon: "phone",
-          type: "link",
-          link: { type: "href", href: this.communicationStrings.whatsapp, target: "_blank" },
-          variant: defaultVariantAttribute,
-        }
-        : undefined,
-      this.communicationStrings.telegram
-        ? {
-          caption: "Telegram",
-          icon: "send",
-          type: "link",
-          link: { type: "href", href: this.communicationStrings.telegram, target: "_blank" },
-          variant: defaultVariantAttribute,
-        }
-        : undefined,
-    ] as (Button | undefined)[]).filter(R.identity) as Button[];
-  }
-
-  private get communicationStrings(): ISocialLinks {
-    return {
-      telegram: this.currentSettings.getEntry("instance_help_telegram", String, undefined),
-      whatsapp: this.currentSettings.getEntry("instance_help_whatsapp", String, undefined),
-      email: this.currentSettings.getEntry("instance_help_email", String, undefined),
-    };
   }
 
   private onKeydown(event: KeyboardEvent) {
@@ -601,16 +558,6 @@ export default class TopLevelUserView extends Vue {
   get burgerButton() {
     const buttons: Button[] = [];
 
-    if (this.communicationButtons.length > 0) {
-      buttons.push({
-        icon: "contact_support",
-        caption: this.$t("contacts").toString(),
-        variant: bootstrapVariantAttribute("info"),
-        type: "button-group",
-        buttons: this.communicationButtons,
-      });
-    }
-
     if (this.currentAuth?.token) {
       buttons.push({
         icon: "person_add",
@@ -650,14 +597,33 @@ export default class TopLevelUserView extends Vue {
     if (this.currentAuth?.token) {
       if (Api.developmentMode) {
         const currentAuth = this.currentAuth;
-        buttons.push({ icon: "link",
+        buttons.push({
+          icon: "link",
           caption: this.$t("authed_link").toString(),
+          type: "callback",
           callback: () => {
             const link = getAuthedLink(currentAuth);
             void navigator.clipboard.writeText(link);
           },
           variant: defaultVariantAttribute,
-          type: "callback" });
+        });
+      }
+
+      if (this.currentSettings.userCanEditUserViews) {
+        buttons.push({
+          icon: "layers_clear",
+          caption: "Forget dismissed help pages",
+          type: "callback",
+          callback: () => {
+            const allKeys = Object.keys(localStorage);
+            const keys = ["dismiss-help-pages", ...allKeys.filter(key => key.startsWith("watched-help-page"))];
+            for (const key of keys) {
+              localStorage.removeItem(key);
+            }
+            eventBus.emit("localStorageUpdated");
+          },
+          variant: defaultVariantAttribute,
+        });
       }
       buttons.push({
         icon: "perm_identity",
