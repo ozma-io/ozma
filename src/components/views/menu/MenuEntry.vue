@@ -54,7 +54,7 @@
           :class="[badgeVariantClassName, 'badge-local-variant', $isMobile ? 'ml-auto' : 'ml-1']"
           :style="badgeVariantVariables"
           pill
-          :variant="light"
+          variant="light"
         >
           {{ entry.badge.value }}
         </b-badge>

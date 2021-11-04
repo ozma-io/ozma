@@ -1,14 +1,14 @@
 <i18n>
     {
         "en": {
-            "dismiss_all": "Dismiss all help pages",
-            "dismiss_tooltip": "You can still find help pages in context menu (three dots in top-right corner)",
-            "dismiss": "Dismiss this help"
+            "dismiss_tooltip": "You can still find help pages in buttons with \"?\" sign or in context menu (three dots in top-right corner)",
+            "dismiss_all": "Skip all",
+            "dismiss": "Close"
         },
         "ru": {
-            "dismiss_all": "Скрыть все страницы с помощью",
-            "dismiss_tooltip": "Скрытые страницы помощи можно будет открыть через контекстное меню (три точки сверху справа)",
-            "dismiss": "Скрыть страницу"
+            "dismiss_tooltip": "Скрытые страницы справки можно будет открыть с помощью кнопки с вопросительным знаком или контекстное меню (три точки сверху справа)",
+            "dismiss_all": "Пропустить все",
+            "dismiss": "Закрыть"
         }
     }
 </i18n>
@@ -26,6 +26,7 @@
         ref="iframe"
         class="iframe"
         sandbox="allow-scripts allow-top-navigation"
+        allowfullscreen
         :srcdoc="markup"
       />
       <div class="buttons-container">
@@ -91,6 +92,7 @@ export default class HelpModal extends Vue {
   }
 
   private onClose() {
+    this.$emit("dismiss");
     this.$emit("closed");
   }
 }
@@ -138,7 +140,8 @@ export default class HelpModal extends Vue {
     padding: 0;
     margin: 0;
     border: none;
-    background-color: white;
+    border-radius: 0.75rem;
+    background-color: rgb(245, 245, 245); /* it's backgroundDarker1 color of light theme */
   }
 
   .buttons-container {
