@@ -289,7 +289,7 @@
         />
         <div
           v-if="inputType.name === 'userview'"
-          :style="{ backgroundColor: cellColor }"
+          :style="{ backgroundColor: cellColor, height: `${customHeight}px` }"
         >
           <NestedUserView
             ref="control"
