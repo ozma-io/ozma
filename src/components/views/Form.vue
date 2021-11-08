@@ -71,6 +71,7 @@
            dynamically_. This is as to not lose focus when user starts editing empty row. -->
       <FormEntry
         v-if="firstRow !== null"
+        ref="firstFormEntry"
         :uv="uv"
         :blocks="gridBlocks"
         :row="firstRow.row"
@@ -168,6 +169,7 @@ export interface IElementField {
   columnInfo: IResultColumnInfo;
   caption: string;
   forceCaption: boolean;
+  autofocus: boolean;
 }
 
 export interface IElementButtons {
@@ -541,6 +543,8 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
       const captionAttr = getColumnAttr("caption");
       const caption = String(captionAttr ?? columnInfo.name);
 
+      const autofocus = columnInfo?.name === this.autofocusElementName;
+
       const element: IGridInput<IElementField> = {
         type: "element",
         size: inputWidth,
@@ -550,6 +554,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
           columnInfo,
           caption,
           forceCaption: Boolean(captionAttr),
+          autofocus,
         },
       };
       blocks[block].content.push(element);
@@ -623,6 +628,27 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
         }
       }
     }
+  }
+
+  private get autofocusElementName(): string | null {
+    if (!this.firstRow) return null;
+    const isNewEntry = this.uv.args.args === null;
+    if (!isNewEntry) return null;
+
+    const columnRequiredAndEmpty =
+      (column: IResultColumnInfo) =>
+        column.mainField
+        && !column.mainField.field.isNullable
+        && column.mainField.field.defaultValue === undefined
+        && !(column.name in this.defaultValues);
+    const columnNotRequiredAndEmpty =
+      (column: IResultColumnInfo) =>
+        column.mainField
+        && column.mainField.field.defaultValue === undefined
+        && !(column.name in this.defaultValues);
+    const firstRequiredColumn = this.uv.info.columns.find(columnRequiredAndEmpty);
+    const columnToFocus = firstRequiredColumn ?? this.uv.info.columns.find(columnNotRequiredAndEmpty);
+    return columnToFocus?.name ?? null;
   }
 
   get buttons() {

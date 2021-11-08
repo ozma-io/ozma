@@ -150,8 +150,12 @@ export default class Textarea extends Vue {
   }
 
   .textarea_field:focus {
-    outline: none;
     width: 100%;
+    outline: none;
+  }
+
+  .textarea-field:focus {
+    border-color: #80bdff !important;
   }
 
   .textarea_field__desktop:focus {

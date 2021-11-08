@@ -1245,8 +1245,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private get keymap() {
     return {
       "enter": () => this.onPressEnter(),
-      "tab": () => this.onPressTab(),
-      "shift+tab": () => this.onPressTab(),
+      /* "tab": () => this.onPressTab(), */
+      /* "shift+tab": () => this.onPressTab(), */
       "esc": () => this.removeCellEditing(),
       "delete": () => this.clearSelectedCells(),
       "up": () => this.moveCursor("up"),

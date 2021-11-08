@@ -33,7 +33,6 @@
         'is-open': isPopupOpen,
       }
     ]"
-    @keydown.tab="closePopup"
   >
     <InputPopup
       ref="popup"
@@ -64,6 +63,8 @@
               'compact-mode': compactMode
             }
           ]"
+          tabindex="0"
+          @keydown.enter="openPopup"
         >
           <div
             class="default-variant values-container"
@@ -720,6 +721,14 @@ export default class MultiSelect extends Vue {
     color: var(--cell-foregroundColor);
     border-radius: 0.2rem;
     cursor: pointer;
+
+    &:focus-within,
+    &:focus {
+      /* Styles to match Bootstrap-inputs */
+      border-color: #80bdff;
+      box-shadow: 0 0 0 0.2rem rgb(0 123 255 / 25%);
+      outline: none; /* Remove default outline */
+    }
 
     .clear-options-button {
       border: none;

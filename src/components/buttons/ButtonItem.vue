@@ -36,6 +36,7 @@
       :list-item="listItem"
       :phantom-icon="listItemHasRightMargin"
       :align-right="alignRight"
+      :tabindex="-1"
     />
   </FunLink>
 
