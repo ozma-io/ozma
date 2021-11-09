@@ -9,7 +9,7 @@ export const invitesServiceUrl = typeof __INVITES_SERVICE_URL__ === "string" ? _
 export const developmentMode = Boolean(__DEVELOPMENT_MODE__);
 export const disableAuth = Boolean(__DISABLE_AUTH__);
 const readonlyDemoInstanceName = typeof __READ_ONLY_INSTANCE_NAME__ === "string" ? __READ_ONLY_INSTANCE_NAME__ : undefined;
-export const isReadonlyDemoInstance = instanceName === readonlyDemoInstanceName;
+export const isReadonlyDemoInstance = typeof __IS_READ_ONLY_INSTANCE__ === "boolean" ? __IS_READ_ONLY_INSTANCE__ : (instanceName === readonlyDemoInstanceName);
 
 export const authOrigin = String(__API_AUTH_URL__);
 export const authUrlBase = `${authOrigin}${String(__API_AUTH_URL_BASE__)}`;

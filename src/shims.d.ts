@@ -7,6 +7,7 @@ declare const __DEVELOPMENT_MODE__: boolean;
 declare const __DOCUMENT_GENERATOR_URL__: string | undefined;
 declare const __INVITES_SERVICE_URL__: string | undefined;
 declare const __READ_ONLY_INSTANCE_NAME__: string | undefined;
+declare const __IS_READ_ONLY_INSTANCE__: boolean | undefined;
 declare const __INSTANCE_NAME__: string | undefined;
 
 declare module "v-click-outside" {
