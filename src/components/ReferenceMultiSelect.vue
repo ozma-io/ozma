@@ -332,7 +332,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
 
   private async processRawId(filterValue: string): Promise<boolean> {
     const id = Number(filterValue);
-    if (Number.isNaN(id)) {
+    if (filterValue === "" || Number.isNaN(id)) {
       return false;
     }
 
