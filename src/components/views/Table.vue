@@ -234,7 +234,6 @@
             :key="i"
             :class="['sorting', 'table-th', {
               'fixed-column' : uv.extra.columns[i].fixed,
-              'td-moz': isFirefoxBrowser
             }]"
             :style="uv.extra.columns[i].style"
             :title="uv.extra.columns[i].caption"
@@ -323,7 +322,7 @@ import sanitizeHtml from "sanitize-html";
 import Popper from "vue-popperjs";
 
 import { eventBus } from "@/main";
-import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, stringifySpreadsheet, validNumberFormats, getNumberFormatter, NeverError, parseFromClipboard } from "@/utils";
+import { deepEquals, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, stringifySpreadsheet, validNumberFormats, getNumberFormatter, NeverError, parseFromClipboard } from "@/utils";
 import type { ParseValue } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
@@ -1210,7 +1209,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private editing: ITableEditing | null = null;
   private printListener: { query: MediaQueryList; queryCallback: (mql: MediaQueryListEvent) => void; printCallback: () => void } | null = null;
   private clickTimeoutId: NodeJS.Timeout | null = null;
-  private isFirefoxBrowser: boolean = isFirefox();
   private editParams: IEditParams = {
     height: 0,
     width: 0,
@@ -1245,8 +1243,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private get keymap() {
     return {
       "enter": () => this.onPressEnter(),
-      "tab": () => this.onPressTab(),
-      "shift+tab": () => this.onPressTab(),
+      /* "tab": () => this.onPressTab(), */
+      /* "shift+tab": () => this.onPressTab(), */
       "esc": () => this.removeCellEditing(),
       "delete": () => this.clearSelectedCells(),
       "up": () => this.moveCursor("up"),
@@ -1649,7 +1647,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   get hasLinksColumn() {
-    return this.uv.extra.hasRowLinks || this.createEntryButton || this.createEntryButtons;
+    return Boolean(this.uv.extra.hasRowLinks || this.createEntryButton || this.createEntryButtons);
   }
 
   private get createEntryButtons(): Button | null {
@@ -2127,6 +2125,42 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
+  private get autofocusColumnIndex(): number | null {
+    const columnRequired =
+      (column: IResultColumnInfo) => Boolean(
+        column.mainField
+        && !column.mainField.field.isNullable,
+      );
+    const columnRequiredAndEmpty =
+      (column: IResultColumnInfo) => Boolean(
+        column.mainField
+        && !column.mainField.field.isNullable
+        && column.mainField.field.defaultValue === undefined
+        && !(column.name in this.defaultValues),
+      );
+    const columnNotRequiredAndEmpty =
+      (column: IResultColumnInfo) => Boolean(
+        column.mainField
+        && column.mainField.field.isNullable
+        && column.mainField.field.defaultValue === undefined
+        && !(column.name in this.defaultValues),
+      );
+    const columnNotRequired =
+      (column: IResultColumnInfo) => Boolean(
+        column.mainField
+        && column.mainField.field.isNullable,
+      );
+    const findIndexOrNull = (func: (c: IResultColumnInfo) => boolean) => {
+      const res = this.uv.info.columns.findIndex(func);
+      return res === -1 ? null : res;
+    };
+    const firstRequiredEmptyColumn = findIndexOrNull(columnRequiredAndEmpty);
+    const firstRequiredColumn = findIndexOrNull(columnRequired);
+    const firstNotRequiredEmptyColumn = findIndexOrNull(columnNotRequiredAndEmpty);
+    const firstNotRequiredColumn = findIndexOrNull(columnNotRequired);
+    return firstRequiredEmptyColumn ?? firstNotRequiredEmptyColumn ?? firstRequiredColumn ?? firstNotRequiredColumn ?? null;
+  }
+
   // TODO: Load all rows is temporary until we can't load rows by ids.
   private async loadAllRowsAndAddNewRowOnPosition(side: IAddedValueMeta["side"]): Promise<void> {
     if (!this.uv.rowLoadState.complete) {
@@ -2139,28 +2173,23 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private async addNewRowOnPosition(side: IAddedValueMeta["side"]): Promise<void> {
     const rowId = await this.addNewRow({ side });
-    const firstNotDisabledColumn = this.uv.newRows[rowId].values.findIndex((value, i) => {
-      return value.info !== undefined && this.uv.extra.columns[i].visible;
-    });
-    const firstNotDisabledDOMColumn = this.columnIndexes.indexOf(firstNotDisabledColumn);
-    if (firstNotDisabledDOMColumn === -1) return;
 
     void nextRender().then(() => {
-      const sideName = side === "bottom_back" ? "newRowsBottomSideRef" : "newRowsTopSideRef";
-      const newRowsRef = this.$refs[sideName] as TableRow[] | undefined;
-      if (newRowsRef === undefined) return;
-      const childRef = newRowsRef[newRowsRef.length - 1]?.$children?.[1 + firstNotDisabledDOMColumn].$el;
-      if (childRef === undefined) return;
-
-      this.editCellByTarget(
-        {
-          type: "added",
-          id: rowId,
-          column: firstNotDisabledColumn,
-        },
-        childRef as HTMLElement,
-      );
+      const row = this.getVisualIndexOfAddedRow(rowId);
+      if (row === null || this.autofocusColumnIndex === null) {
+        console.error("Unable to autofocus to new row");
+        return;
+      }
+      const column = this.getVisualColumnIndex(this.autofocusColumnIndex);
+      const cellToFocus = this.getValueRefByVisualPosition({ row, column });
+      this.setCursorCell(cellToFocus);
+      this.editCellOnCursor();
     });
+  }
+
+  private getVisualIndexOfAddedRow(id: number): number | null {
+    const index = this.shownRows.findIndex(row => row.key === `added-${id}`);
+    return index === -1 ? null : index;
   }
 
   private showTreeChildren(parentRef: CommittedRowRef) {

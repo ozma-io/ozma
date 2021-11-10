@@ -152,7 +152,7 @@ export default class Input extends Vue {
           controlTextareaElement.$el.focus();
           this.setCursorPositionEnd(controlTextareaElement.$el);
         } else {
-          (this.$refs.control as HTMLInputElement | undefined)?.focus();
+          (this.$refs.control as any)?.focus();
         }
       });
     }

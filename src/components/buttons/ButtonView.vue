@@ -23,6 +23,7 @@
     variant="light"
     :title="button.tooltip"
     :disabled="button.disabled"
+    :tabindex="tabindex"
     @click="$emit('click')"
   >
     <ButtonContent
@@ -47,6 +48,7 @@ export default class ButtonView extends Vue {
   @Prop({ type: Boolean, default: false }) listItem!: boolean;
   @Prop({ type: Boolean, default: false }) phantomIcon!: boolean;
   @Prop({ type: Boolean, default: false }) alignRight!: boolean;
+  @Prop({ type: Number }) tabindex!: number;
 
   private get buttonClass() {
     return !this.button.caption

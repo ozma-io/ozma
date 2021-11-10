@@ -33,7 +33,6 @@
         'is-open': isPopupOpen,
       }
     ]"
-    @keydown.tab="closePopup"
   >
     <InputPopup
       ref="popup"
@@ -58,12 +57,15 @@
     >
       <template #default="{ mode, isOpen }">
         <div
+          ref="selectContainer"
           :class="[
             'select-container',
             {
               'compact-mode': compactMode
             }
           ]"
+          tabindex="0"
+          @keydown.space="openPopup"
         >
           <div
             class="default-variant values-container"
@@ -144,7 +146,7 @@
               @keydown.backspace="onBackspace"
               @keydown.up="offsetHoveredOption(-1)"
               @keydown.down="offsetHoveredOption(1)"
-              @keydown.enter="filterInputFinished"
+              @keydown.enter.prevent.stop="filterInputFinished"
               @keydown.esc.prevent.stop="$emit('blur', $event)"
               @focus="onFilterInputFocus"
             />
@@ -497,8 +499,9 @@ export default class MultiSelect extends Vue {
   }
 
   private onBackspace() {
-    if (this.filterValue === "" && this.showUnselectOption && this.selectedOptions.length > 0) {
-      this.unselectOption(this.selectedOptions[this.selectedOptions.length - 1].index);
+    if (this.filterValue === "" && !this.disabled && this.selectedOptions.length > 0) {
+      const closePopup = this.selectedOptions.length === 1;
+      this.unselectOption(this.selectedOptions[this.selectedOptions.length - 1].index, closePopup);
     }
   }
 
@@ -534,6 +537,10 @@ export default class MultiSelect extends Vue {
     (this.$refs.filterInput as HTMLInputElement | undefined)?.focus();
   }
 
+  private focusSelect() {
+    (this.$refs.selectContainer as HTMLElement | undefined)?.focus();
+  }
+
   private onFilterInputFocus() {
     this.$emit("focus");
   }
@@ -557,10 +564,10 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  private closePopup() {
+  private async closePopup() {
     if (this.disabled) return;
 
-    void (this.$refs.popup as InputPopup | undefined)?.closePopup();
+    await (this.$refs.popup as InputPopup | undefined)?.closePopup();
   }
 
   private onClosePopup() {
@@ -570,7 +577,7 @@ export default class MultiSelect extends Vue {
 
   private togglePopup() {
     if (this.isPopupOpen) {
-      this.closePopup();
+      void this.closePopup();
     } else {
       this.openPopup();
     }
@@ -612,7 +619,7 @@ export default class MultiSelect extends Vue {
       filterInput.focus();
     }
     if (this.single) {
-      void this.closePopup();
+      void this.closePopup().then(() => this.focusSelect());
     }
   }
 
@@ -627,7 +634,7 @@ export default class MultiSelect extends Vue {
       this.$emit("remove-value", index);
     }
     if (closePopup) {
-      void this.closePopup();
+      void this.closePopup().then(() => this.focusSelect());
     }
   }
 
@@ -653,7 +660,7 @@ export default class MultiSelect extends Vue {
     if (this.processFilter && await this.processFilter(this.filterValue)) {
       this.filterValue = "";
     } else if (this.hoveredOptionIndex !== null) {
-      this.selectOption(this.hoveredOptionIndex);
+      this.selectOption(this.visibleOptions[this.hoveredOptionIndex].index);
       this.filterValue = "";
     }
   }
@@ -720,6 +727,14 @@ export default class MultiSelect extends Vue {
     color: var(--cell-foregroundColor);
     border-radius: 0.2rem;
     cursor: pointer;
+
+    &:focus-within,
+    &:focus {
+      /* Styles to match Bootstrap-inputs */
+      border-color: #80bdff;
+      box-shadow: 0 0 0 0.2rem rgb(0 123 255 / 25%);
+      outline: none; /* Remove default outline */
+    }
 
     .clear-options-button {
       border: none;
@@ -870,11 +885,11 @@ export default class MultiSelect extends Vue {
     flex-direction: column;
   }
 
-  /* .hovered-value {
-   *   cursor: pointer !important;
-   *   color: var(--option-foregroundColor) !important;
-   *   background-color: var(--option-backgroundDarker1Color) !important;
-   * } */
+  .hovered-value {
+    cursor: pointer !important;
+    color: var(--option-foregroundColor) !important;
+    background-color: var(--option-backgroundDarker1Color) !important;
+  }
 
   div.select-container__options__actions {
     border-top: 1px solid var(--default-borderColor);

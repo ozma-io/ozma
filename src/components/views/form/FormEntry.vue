@@ -37,6 +37,7 @@
               :uv-args="uv.args"
               :scope="scope"
               :level="level"
+              :autofocus="element.autofocus"
               @goto="$emit('goto', $event)"
               @update="$emit('update', element.index, $event)"
             />
