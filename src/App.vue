@@ -83,7 +83,7 @@ import { ErrorKey } from "@/state/errors";
 import { colorVariantsToCssRules, bootstrapColorVariants, colorVariantFromRaw, transparentVariant } from "@/utils_colors";
 import type { ThemeName } from "@/utils_colors";
 import { eventBus } from "@/main";
-import Api, { isReadonlyDemoInstance } from "@/api";
+import Api from "@/api";
 import { Button } from "./components/buttons/buttons";
 import InviteUserModal from "./components/InviteUserModal.vue";
 
@@ -171,7 +171,7 @@ export default class App extends Vue {
   }
 
   private get isReadonlyDemoInstance() {
-    return isReadonlyDemoInstance;
+    return this.settings.getEntry("is_read_only_demo_instance", Boolean, false) && !this.currentAuth?.token;
   }
 
   private get authToken(): string | null {
