@@ -1,3 +1,24 @@
+<i18n>
+    {
+        "en": {
+            "header_1": "Sign up",
+            "header_2": "to continue",
+            "description_1": "It's read-only example. To start make changes,",
+            "description_2": "sign up and we will create personal instance for you.",
+            "sign_up": "Sign up",
+            "later": "Later",
+        },
+        "ru": {
+            "header_1": "Зарегистрируйтесь",
+            "header_2": "чтобы продолжить",
+            "description_1": "Это демо-пример. Чтобы начать вносить изменения,",
+            "description_2": "зарегистрируйтесь и мы создадим вам персональную копию.",
+            "sign_up": "Зарегистрироваться",
+            "later": "Посмотреть ещё",
+        }
+    }
+</i18n>
+
 <template>
   <VueModal
     adaptive
@@ -12,19 +33,19 @@
     <div class="demo-message-container">
       <i class="material-icons demo-icon">waving_hand</i>
       <h1 class="demo-header">
-        Зарегистрируйтесь,<br>чтобы продолжить
+        {{ $t("header_1") }}<br>{{ $t("header_2") }}
       </h1>
       <span class="demo-message">
-        Это демо-пример. Чтобы начать вносить изменения,<br>зарегистрируйтесь и мы создадим вам персональную копию.
+        {{ $t("description_1") }}<br>{{ $t("description_2") }}
       </span>
       <div class="buttons-container">
         <b-button
           class="ok-button"
           variant="primary"
-          href="https://onboard.ozma.io/register?locale=ru&lp=demo-x"
+          :href="signUpLink"
           target="_blank"
         >
-          Зарегистрироваться
+          {{ $t("sign_up") }}
         </b-button>
 
         <b-button
@@ -33,7 +54,7 @@
           @click="hide"
         >
           <a>
-            Посмотреть ещё
+          {{ $t("later") }}
           </a>
         </b-button>
       </div>
@@ -43,9 +64,16 @@
 
 <script lang="ts">
 import { Vue, Component } from "vue-property-decorator";
+import { namespace } from "vuex-class";
+
+import { CurrentSettings } from "@/state/settings";
+
+const settings = namespace("settings");
 
 @Component
 export default class ReadonlyDemoInstanceModal extends Vue {
+  @settings.State("current") settings!: CurrentSettings;
+
   private showOverlay = false;
   private show() {
     this.$modal.show(this.uid);
@@ -53,6 +81,10 @@ export default class ReadonlyDemoInstanceModal extends Vue {
 
   private hide() {
     this.$modal.hide(this.uid);
+  }
+
+  private get signUpLink() {
+    return this.settings.getEntry("read_only_demo_instance_sign_up_link", String, "https://onboard.ozma.io/register?locale=ru&lp=demo-x");
   }
 }
 </script>
