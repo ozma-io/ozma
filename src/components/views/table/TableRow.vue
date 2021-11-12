@@ -149,6 +149,7 @@ export default class TableRow extends Vue {
 
   .selected td {
     background-color: var(--table-backgroundDarker1Color);
+    color: var(--table-foregroundColor);
   }
 
   .table-tr > td:last-child {
