@@ -6,7 +6,7 @@
             "description_1": "It's read-only example. To start make changes,",
             "description_2": "sign up and we will create personal instance for you.",
             "sign_up": "Sign up",
-            "later": "Later",
+            "later": "Later"
         },
         "ru": {
             "header_1": "Зарегистрируйтесь",
@@ -14,7 +14,7 @@
             "description_1": "Это демо-пример. Чтобы начать вносить изменения,",
             "description_2": "зарегистрируйтесь и мы создадим вам персональную копию.",
             "sign_up": "Зарегистрироваться",
-            "later": "Посмотреть ещё",
+            "later": "Посмотреть ещё"
         }
     }
 </i18n>
@@ -54,7 +54,7 @@
           @click="hide"
         >
           <a>
-          {{ $t("later") }}
+            {{ $t("later") }}
           </a>
         </b-button>
       </div>
