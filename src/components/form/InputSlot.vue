@@ -279,7 +279,7 @@ export default class InputSlot extends Vue {
     border-radius: 0.2rem;
 
     .indicator-container {
-      $indicator-size: (18px / 14px) * 1rem; /* 14px is preferred font size and 18px is like in `.md-18` */
+      $indicator-size: (18px / 12px) * 1rem; /* 12px is preferred font size and 18px is like in `.md-18` */
       $indicator-padding: 0.2rem;
 
       position: absolute;

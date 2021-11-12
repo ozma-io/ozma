@@ -286,9 +286,9 @@ export default class App extends Vue {
   }
 
   private get fontSize(): number {
-    const defaultSize = 14;
+    const defaultSize = 12;
     const normalSize = this.settings.getEntry("font_size", Number, defaultSize);
-    const mobileSize = this.settings.getEntry("font_size_mobile", Number, 0);
+    const mobileSize = this.settings.getEntry("font_size_mobile", Number, 14);
     return this.$isMobile && mobileSize !== 0
       ? mobileSize
       : normalSize;

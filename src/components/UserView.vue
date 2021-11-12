@@ -510,9 +510,9 @@ export default class UserView extends Vue {
 
   private get communicationStrings(): ISocialLinks {
     return {
-      telegram: this.settings.getEntry("instance_help_telegram", String, undefined),
-      whatsapp: this.settings.getEntry("instance_help_whatsapp", String, undefined),
-      email: this.settings.getEntry("instance_help_email", String, undefined),
+      telegram: this.settings.getEntry("instance_help_telegram", String, "https://t.me/kirmark"),
+      whatsapp: this.settings.getEntry("instance_help_whatsapp", String, "https://api.whatsapp.com/send?phone=74953748820"),
+      email: this.settings.getEntry("instance_help_email", String, "sales@ozma.io"),
     };
   }
 
