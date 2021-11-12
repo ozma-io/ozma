@@ -84,7 +84,7 @@ const rawSimpleBootstrapColorVariants: Record<SimpleBootstrapVariantName, RawCol
   warning: { foreground: "#e8e6e3", background: "#ffc107" },
   danger: { foreground: "#e8e6e3", background: "#dc3545" },
   info: { foreground: "#e8e6e3", background: "#17a2b8" },
-  light: { foreground: "#e8e6e3", background: "#f8f9fa" },
+  light: { foreground: "#212529", background: "#f8f9fa" },
   dark: { foreground: "#e8e6e3", background: "#343a40" },
 };
 const simpleToOutline = (simple: RawColorVariant): RawColorVariant =>
