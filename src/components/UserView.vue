@@ -447,6 +447,8 @@ export default class UserView extends Vue {
     if (this.state.state !== "show") return;
     if (this.args.source.type !== "named") return;
 
+    this.helpPageButton = null;
+
     const markupName = this.state.uv.attributes["help_markup_name"];
     if (!markupName) return;
 
@@ -516,8 +518,43 @@ export default class UserView extends Vue {
     };
   }
 
+  private get helpButton(): Button | null {
+    if (!this.isRoot || (this.communicationButtons.length === 0 && !this.helpPageButton)) return null;
+
+    const communicationButton: Button = {
+      icon: "contact_support",
+      caption: this.$t("contacts").toString(),
+      variant: defaultVariantAttribute,
+      type: "button-group",
+      buttons: this.communicationButtons,
+    };
+
+    const helpButtons: Button[] = [
+    ];
+
+    if (this.helpPageButton) {
+      helpButtons.push(this.helpPageButton);
+    }
+
+    helpButtons.push(communicationButton);
+
+    return {
+      icon: "help_outline",
+      caption: this.$isMobile ? this.$t("help").toString() : undefined,
+      display: "desktop",
+      variant: interfaceButtonVariant,
+      type: "button-group",
+      buttons: helpButtons,
+    };
+  }
+
   get uvButtons() {
     const buttons: Button[] = [];
+
+    if (this.state.state === "show" && this.helpButton) {
+      buttons.push(this.helpButton);
+    }
+
     if (this.state.state === "error" || (this.state.state === "show" && !this.state.uv.attributes["hide_default_actions"])) {
       const args = this.state.state === "show" ? this.state.uv.args : this.state.args;
       if (args.source.type === "named") {
@@ -546,34 +583,6 @@ export default class UserView extends Vue {
           if (hasArguments) {
             buttons.push(this.toggleArgumentEditorButton);
           }
-        }
-
-        if (this.isRoot && (this.communicationButtons.length > 0 || this.helpPageButton)) {
-          const communicationButton: Button = {
-            icon: "contact_support",
-            caption: this.$t("contacts").toString(),
-            variant: defaultVariantAttribute,
-            type: "button-group",
-            buttons: this.communicationButtons,
-          };
-
-          const helpButtons: Button[] = [
-          ];
-
-          if (this.helpPageButton) {
-            helpButtons.push(this.helpPageButton);
-          }
-
-          helpButtons.push(communicationButton);
-
-          buttons.push({
-            icon: "help_outline",
-            caption: this.$isMobile ? this.$t("help").toString() : undefined,
-            display: "desktop",
-            variant: interfaceButtonVariant,
-            type: "button-group",
-            buttons: helpButtons,
-          });
         }
 
         if (this.settings.userCanEditUserViews) {
