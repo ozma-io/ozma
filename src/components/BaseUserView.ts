@@ -17,7 +17,8 @@ import { attrToLink } from "@/links";
 import { attrToButtons } from "@/components/buttons/buttons";
 import { emptyUserViewHandlerFunctions } from "@/user_views/trivial";
 import { eventBus } from "@/main";
-import { isReadonlyDemoInstance } from "@/api";
+import { CurrentSettings } from "@/state/settings";
+import { CurrentAuth, INoAuth } from "@/state/auth";
 
 export interface ISelectionRef {
   entity: IEntityRef;
@@ -165,6 +166,8 @@ export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtr
 
 const staging = namespace("staging");
 const errors = namespace("errors");
+const settings = namespace("settings");
+const auth = namespace("auth");
 
 // Base class for all user views.
 @Component
@@ -177,6 +180,8 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
   @staging.Action("updateField") updateField!: (args: { fieldRef: IFieldRef; id: RowId; value: unknown }) => Promise<void>;
   @errors.Mutation("setError") setError!: (args: { key: ErrorKey; error: string }) => void;
   @errors.Mutation("resetErrors") resetErrors!: (key: ErrorKey) => void;
+  @settings.State("current") settings!: CurrentSettings;
+  @auth.State("current") auth!: CurrentAuth | INoAuth | null;
 
   @Prop({ type: CombinedUserView, required: true }) uv!: ICombinedUserView<ValueT, RowT, ViewT>;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
@@ -259,8 +264,12 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
     return this.uv.extra.selectedRows.length;
   }
 
+  private get isReadonlyDemoInstance() {
+    return this.settings.getEntry("is_read_only_demo_instance", Boolean, false) && !this.auth?.token;
+  }
+
   deleteRow(ref: RowRef) {
-    if (isReadonlyDemoInstance) {
+    if (this.isReadonlyDemoInstance) {
       eventBus.emit("showReadonlyDemoModal");
       return;
     }
@@ -326,7 +335,7 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
   }
 
   async addNewRow(meta?: unknown): Promise<number> {
-    if (isReadonlyDemoInstance) {
+    if (this.isReadonlyDemoInstance) {
       eventBus.emit("showReadonlyDemoModal");
       return -1;
     }
@@ -361,7 +370,7 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
   }
 
   async updateValue(ref: ValueRef, rawValue: unknown): Promise<ValueRef> {
-    if (isReadonlyDemoInstance) {
+    if (this.isReadonlyDemoInstance) {
       eventBus.emit("showReadonlyDemoModal");
       return ref;
     }

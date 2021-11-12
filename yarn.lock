@@ -882,18 +882,6 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@gtm-support/core@1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@gtm-support/core/-/core-1.0.0.tgz#2457ddd2090d93b7b0f3017791949c3c2320c60b"
-  integrity sha512-nti5xrAZYzfZ74KIHoe5KmUo+vF7wJT8km0QuzZzAu8m2DRGPPHfBke2RPR0QDlyFCy/2mdD94+hMV51D/P4GA==
-
-"@gtm-support/vue2-gtm@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@gtm-support/vue2-gtm/-/vue2-gtm-1.0.0.tgz#541ba1efecf999ac0ff8a7b215cec424acf12942"
-  integrity sha512-MIkchCSc8hwwpx/oirYh8oa3oYMZlGSBI7dbwtJIxoTmpcVfDWamHapy2Ao3qis4P1g/FMFMYtFzbV1/SsGxoA==
-  dependencies:
-    "@gtm-support/core" "1.0.0"
-
 "@hapi/address@2.x.x":
   version "2.1.4"
   resolved "https://registry.yarnpkg.com/@hapi/address/-/address-2.1.4.tgz#5d67ed43f3fd41a69d4b9ff7b56e7c0d1d0a81e5"

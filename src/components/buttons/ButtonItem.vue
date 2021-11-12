@@ -78,11 +78,16 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
+import { namespace } from "vuex-class";
 
 import ButtonView from "@/components/buttons/ButtonView.vue";
 import type { Button } from "@/components/buttons/buttons";
-import { isReadonlyDemoInstance } from "@/api";
 import { eventBus } from "@/main";
+import { CurrentSettings } from "@/state/settings";
+import { CurrentAuth, INoAuth } from "@/state/auth";
+
+const settings = namespace("settings");
+const auth = namespace("auth");
 
 @Component({
   components: {
@@ -94,6 +99,8 @@ export default class ButtonItem extends Vue {
   @Prop({ type: Boolean, default: false }) listItem!: boolean;
   @Prop({ type: Boolean, default: false }) listItemHasRightMargin!: boolean;
   @Prop({ type: Boolean, default: false }) alignRight!: boolean;
+  @settings.State("current") settings!: CurrentSettings;
+  @auth.State("current") auth!: CurrentAuth | INoAuth | null;
 
   private uploadFile(input: HTMLInputElement, next: (file: File) => void) {
     const files = input.files as FileList;
@@ -101,7 +108,7 @@ export default class ButtonItem extends Vue {
   }
 
   private get isReadonlyDemoInstance() {
-    return isReadonlyDemoInstance;
+    return this.settings.getEntry("is_read_only_demo_instance", Boolean, false) && !this.auth?.token;
   }
 
   private onClickLinkReadonlyDemoInstance() {
