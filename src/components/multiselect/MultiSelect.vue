@@ -917,6 +917,10 @@ export default class MultiSelect extends Vue {
     > span {
       text-align: left;
     }
+
+    .compact-mode & {
+      height: 1.5rem; /* To match with usual inputs. */
+    }
   }
 
   .option-wrapper {
