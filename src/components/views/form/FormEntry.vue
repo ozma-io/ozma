@@ -109,9 +109,12 @@ export default class FormEntry extends Vue {
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
   @Prop({ type: String, required: true }) scope!: string;
   @Prop({ type: Number, required: true }) level!: number;
+  @Prop({ type: Boolean, default: true }) isTopLevel!: boolean;
   @Prop({ type: Boolean, default: true }) showDelete!: number;
 
   private get maxWidth(): string {
+    if (!this.isTopLevel) return "100%";
+
     const defaultMaxWidth = "1140px";
     const maxWidth = this.uv.attributes["max_width"];
     if (typeof maxWidth === "number") return `${maxWidth}px`;

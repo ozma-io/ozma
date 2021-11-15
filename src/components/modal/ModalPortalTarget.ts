@@ -20,7 +20,7 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
       props: {
         modalTabs: this.modalTabs,
         show: this.showModal,
-        width: "85%",
+        width: "1140px",
         height: "95%",
         startingTab: this.startingTab,
       },
