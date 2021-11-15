@@ -568,21 +568,25 @@ export default class TopLevelUserView extends Vue {
       });
     }
 
-    buttons.push({
-      icon: "help_center",
-      caption: this.$t("documentation").toString(),
-      variant: defaultVariantAttribute,
-      type: "link",
-      link: { type: "href", href: "https://wiki.ozma.io", target: "_blank" },
-    });
+    if (!this.currentAuth?.token || this.currentSettings.userCanEditUserViews) {
+      buttons.push({
+        icon: "help_center",
+        caption: this.$t("documentation").toString(),
+        variant: defaultVariantAttribute,
+        type: "link",
+        link: { type: "href", href: "https://wiki.ozma.io", target: "_blank" },
+      });
+    }
 
-    buttons.push({
-      icon: "view_list",
-      caption: this.$t("workspaces").toString(),
-      variant: defaultVariantAttribute,
-      type: "link",
-      link: { type: "href", href: "https://admin.ozma.io", target: "_blank" },
-    });
+    if (this.currentAuth?.token && this.currentSettings.userCanEditUserViews) {
+      buttons.push({
+        icon: "view_list",
+        caption: this.$t("workspaces").toString(),
+        variant: defaultVariantAttribute,
+        type: "link",
+        link: { type: "href", href: "https://admin.ozma.io", target: "_blank" },
+      });
+    }
 
     if (this.themeButtons.length > 0) {
       buttons.push({
@@ -629,7 +633,7 @@ export default class TopLevelUserView extends Vue {
         icon: "perm_identity",
         caption: this.$t("account").toString(),
         type: "link",
-        link: { href: Api.accountUrl, type: "href", target: "_self" },
+        link: { href: Api.accountUrl, type: "href", target: "_blank" },
         variant: defaultVariantAttribute,
       });
       buttons.push({
