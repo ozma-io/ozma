@@ -199,7 +199,7 @@ export default class App extends Vue {
     }
     const { userViewRef, markupName } = args;
 
-    const ref = { schema: "funapp", name: "help_markup_by_name" };
+    const ref = { schema: "funapp", name: "embedded_page_by_name" };
     void (this.callProtectedApi({
       func: Api.getNamedUserView.bind(Api),
       args: [ref, { "name": markupName }],
