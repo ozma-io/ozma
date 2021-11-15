@@ -449,7 +449,7 @@ export default class UserView extends Vue {
 
     this.helpPageButton = null;
 
-    const markupName = this.state.uv.attributes["help_markup_name"];
+    const markupName = this.state.uv.attributes["help_embedded_page_name"];
     if (!markupName) return;
 
     const { schema, name } = this.args.source.ref;
