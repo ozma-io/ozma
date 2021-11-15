@@ -4,7 +4,7 @@
       <span class="select_panel_year">{{ startValue.format("YYYY") }}</span>
       <span
         v-if="mode === 'days'"
-        class="select_panel_month"
+        :class="['select_panel_month', { 'current-month': startValue.isSame(today, 'month') }]"
         @click="mode = 'months'"
       >{{ startValue.format("MMM") }}</span>
       <div class="actions">
@@ -55,6 +55,10 @@ export default class DatePicker extends Vue {
     return this.value.isValid() ? this.value : moment.utc();
   }
 
+  get today() {
+    return moment();
+  }
+
   @Watch("shownValue")
   private changeValue() {
     this.startValue = this.shownValue;
@@ -75,7 +79,7 @@ export default class DatePicker extends Vue {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   .select-panel {
     padding: 0 0.5rem;
   }
@@ -93,9 +97,16 @@ export default class DatePicker extends Vue {
     margin-right: 5px;
     padding-right: 5px;
     border-right: 1px solid var(--MainBorderColor);
+    color: var(--default-foregroundDarkerColor);
   }
 
   .select_panel_month {
     cursor: pointer;
+
+    &.current-month {
+      border-radius: 3px;
+      outline: 1px solid var(--default-backgroundDarker2Color);
+      outline-offset: 2px;
+    }
   }
 </style>
