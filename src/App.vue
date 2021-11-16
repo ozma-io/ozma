@@ -256,6 +256,27 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     this.loadColors();
   }
 
+  /* So, about themeing:
+   * 1. We use color variants to theme components.
+   *    Color variant is set of colors: several shades of background color, several shades of foreground color, border color, etc.
+   *    We need to define at least main background-color and others will be generated based on it.
+   * 2. Color varaints can be static and custom.
+   *    Static ones are defined in system table funapp.color_variants, custom ones are defined right in attributes.
+   * 3. Variants are bound to specific color theme.
+   *    We have two "magic" themes, "ligth" and "dark", and custom ones can be created.
+   * 4. We have hard-coded variants with colors from Bootstrap-variants and some others not so hard-coded, like "interfaceButton".
+   *    For example, variant "default" is used for almost everything if not otherwise specified.
+   * 5. After loading tables with themes and variants we generate text of CSS-stylesheet (yep) with class for each variant for current theme.
+   *    Each class (with names like `.default-variant`) contains CSS-variable definition for each color in variant with format `--{color name}Color`, like `--backgroundColor`.
+   *    And we inject this stylesheet into DOM.
+   * 6. So now we need to get variables for some components.
+   *    For this we need to use SCSS-mixin `variant-to-local`, for example `@include variant-to-local('componentName')`,
+   *    which creates CSS-class `componentName-local-variant`, which translates variables to format `--{componentName}-{color name}Color`,
+   *    so we can "just" apply to our component our desired varaint-class and local-variant-class (like `class="primary-variant button-local-variant"` for button and variant "primary")
+   *    and we can use variables like `--button-backgroundColor` in styles.
+   *    And it supports CSS-cascading and doesn't affected by scoping, so we have `class="default-variant default-local-variant"` in <App /> and we use this variables in many places.
+   * 7. Custom/inline variants works similar but a little simpler, but I'm too tired to explain, sorry.
+   */
   @Watch("currentTheme", { immediate: true })
   private loadColors() {
     const currentTheme = this.settings.themes.find(theme => theme.themeName.name === this.currentTheme);
