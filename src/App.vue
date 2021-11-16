@@ -1,4 +1,4 @@
-<i18ng
+<i18n>
     {
         "en": {
             "auth_error": "Error during authentication: {msg}"
