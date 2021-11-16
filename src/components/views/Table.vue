@@ -1745,6 +1745,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     void this.updateShowAddRowButtons();
   }
 
+  @Watch("uv.extra.softDisabled")
   private async updateShowAddRowButtons() {
     this.showAddRowButtons = false;
 
