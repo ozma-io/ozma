@@ -1,25 +1,35 @@
 <template>
   <div class="all-days">
     <div class="select-panel">
-      <span class="select_panel_year">{{ startValue.format("YYYY") }}</span>
-      <span
-        v-if="mode === 'days'"
-        class="select_panel_month"
-        @click="mode = 'months'"
-      >{{ startValue.format("MMM") }}</span>
-      <div class="actions">
+      <div class="year-control">
         <span
-          class="arrows"
+          :class="['select_panel_year', { 'current-year': startValue.isSame(today, 'year') }]"
+        >{{ startValue.format("YYYY") }}</span>
+      </div>
+
+      <span class="delimiter" />
+
+      <div class="month-control">
+        <span
+          class="material-button material-icons md-18 month-arrow"
           @click="changeDate(-1)"
-        >◀</span>
+        >arrow_left</span>
+
         <span
-          class="arrows"
+          v-if="mode === 'days'"
+          :class="['select_panel_month material-button', { 'current-month': startValue.isSame(today, 'month') }]"
+          @click="mode = 'months'"
+        >{{ startValue.format("MMM") }}</span>
+
+        <span
+          class="material-button material-icons md-18 month-arrow"
           @click="changeDate(1)"
-        >▶</span>
+        >arrow_right</span>
       </div>
     </div>
     <MonthsInYear
       v-if="mode === 'months'"
+      :is-current-year="startValue.isSame(today, 'year')"
       @click="setMonth"
     />
     <DaysInMonth
@@ -55,6 +65,10 @@ export default class DatePicker extends Vue {
     return this.value.isValid() ? this.value : moment.utc();
   }
 
+  get today() {
+    return moment();
+  }
+
   @Watch("shownValue")
   private changeValue() {
     this.startValue = this.shownValue;
@@ -75,27 +89,54 @@ export default class DatePicker extends Vue {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   .select-panel {
     padding: 0 0.5rem;
+    display: flex;
   }
 
-  .actions {
-    float: right;
+  .year-control {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
-  .actions > span {
-    margin-left: 5px;
-    cursor: pointer;
+  .month-control {
+    width: 50%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+  }
+
+  .month-arrow {
+    border: none;
+    border-radius: 3px;
   }
 
   .select_panel_year {
-    margin-right: 5px;
-    padding-right: 5px;
-    border-right: 1px solid var(--MainBorderColor);
+    margin-right: 10px;
+    color: var(--default-foregroundDarkerColor);
+
+    &.current-year {
+      border-radius: 3px;
+      outline: 1px solid var(--default-backgroundDarker2Color);
+      outline-offset: 2px;
+    }
+  }
+
+  .delimiter {
+    width: 1px;
+    border-right: 1px solid var(--default-foregroundDarkerColor);
   }
 
   .select_panel_month {
-    cursor: pointer;
+    border: none;
+    border-radius: 3px;
+
+    &.current-month {
+      outline: 1px solid var(--default-backgroundDarker2Color);
+      outline-offset: 2px;
+    }
   }
 </style>

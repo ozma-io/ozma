@@ -65,7 +65,7 @@
             }
           ]"
           tabindex="0"
-          @keydown.space="openPopup"
+          @keydown.space.prevent="openPopup"
         >
           <div
             class="default-variant values-container"
@@ -553,6 +553,8 @@ export default class MultiSelect extends Vue {
   }
 
   private async onOpenPopup() {
+    if (this.disabled) return;
+
     this.isPopupOpen = true;
     this.$emit("focus");
     await nextRender();

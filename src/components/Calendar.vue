@@ -95,6 +95,7 @@
                 :class="['material-button clear-button', { 'disabled': value === null }]"
                 @click="updateValue(null)"
               >
+                <span class="material-icons md-18 mr-1">clear</span>
                 {{ $t("clear") }}
               </button>
             </div>
@@ -104,6 +105,7 @@
               @update:value="updateDate"
             />
             <button class="today material-button" @click="setDateToday($event)">
+              <span class="material-icons md-18 mr-1">today</span>
               {{ $t("today").toString() }}
             </button>
           </div>
@@ -415,6 +417,11 @@ export default class Calendar extends Vue {
     display: inline-flex;
     flex-direction: column;
     justify-content: space-between;
+  }
+
+  .today {
+    display: flex;
+    justify-content: center;
   }
 
   .today,
