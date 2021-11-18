@@ -363,10 +363,7 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
           const body = await res.text();
           const status = String(res.status);
           const statusText: string = httpStatusTexts[status]; // HTTP/2 doesn't have meaningful `res.statusText`.
-          const errorTooltip =
-            status === "500" ? "Maybe something is wrong with arguments"
-              : status === "404" ? body
-                : "";
+          const errorTooltip = body;
           const error = `${statusText} (${errorTooltip})`;
           app.$bvToast.toast(error, {
             title: funI18n("generation_fail"),
