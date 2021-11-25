@@ -81,7 +81,7 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseU
     const entriesRef = this.reference?.entries;
     if (!entriesRef) return undefined;
 
-    const optionsView = attrObjectToQuery(this.uv.attributes["options_view"]);
+    const optionsView = attrObjectToQuery(this.uv.columnAttributes[this.selectedValueColumn]["options_view"]);
     if (optionsView) {
       return { ...entriesRef, fetchBy: "options_view", optionsView };
     } else {
