@@ -162,7 +162,7 @@
     </div>
 
     <div
-      v-if="showAddRowButtons || uv.extra.lazyLoad.type === 'pagination'"
+      v-if="(showAddRowButtons || uv.extra.lazyLoad.type === 'pagination') && this.uv.rows.length > 5"
       class="button-container"
       :style="{ width: `${parentWidth - 20}px` }"
     >
