@@ -162,7 +162,7 @@
     </div>
 
     <div
-      v-if="showAddRowButtons || uv.extra.lazyLoad.type === 'pagination'"
+      v-if="(showAddRowButtons || uv.extra.lazyLoad.type === 'pagination') && uv.rows.length > 5"
       class="button-container"
       :style="{ width: `${parentWidth - 20}px` }"
     >
@@ -2900,10 +2900,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     display: flex;
     padding: 0.25rem;
     transition: opacity 0.2s;
-
-    ::v-deep > button {
-      width: 100%;
-    }
   }
 
   .context-menu-wrapper {
