@@ -34,6 +34,7 @@
         :disabled="disabled"
         :rows="textareaRows"
         @focus="onFocus"
+        @blur="onBlur"
         @input="$emit('update:value', $event)"
       />
     </div>
@@ -109,6 +110,10 @@ export default class Textarea extends Vue {
   private onFocus(evt: HTMLInputElement) {
     this.setCursorPositionEnd(evt);
     this.$emit("focus", evt);
+  }
+
+  private onBlur(evt: HTMLInputElement) {
+    this.$emit("blur", evt);
   }
 
   private setCursorPositionEnd(controlElement: HTMLInputElement) {

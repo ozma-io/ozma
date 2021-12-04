@@ -148,7 +148,6 @@
               @keydown.down="offsetHoveredOption(1)"
               @keydown.enter.prevent.stop="filterInputFinished"
               @keydown.esc.prevent.stop="$emit('blur', $event)"
-              @focus="onFilterInputFocus"
             />
             <b-input-group-append>
               <b-input-group-text
@@ -541,10 +540,6 @@ export default class MultiSelect extends Vue {
     (this.$refs.selectContainer as HTMLElement | undefined)?.focus();
   }
 
-  private onFilterInputFocus() {
-    this.$emit("focus");
-  }
-
   private openPopup() {
     if (this.disabled) return;
 
@@ -567,12 +562,14 @@ export default class MultiSelect extends Vue {
   }
 
   private async closePopup() {
+    this.$emit("blur");
     if (this.disabled) return;
 
     await (this.$refs.popup as InputPopup | undefined)?.closePopup();
   }
 
   private onClosePopup() {
+    this.$emit("blur");
     this.isPopupOpen = false;
     this.filterValue = "";
   }
