@@ -44,6 +44,7 @@
       @update:filter="updateFilter"
       @load-more="loadMore"
       @focus="$emit('focus')"
+      @blur="$emit('blur')"
     >
       <template #option="select">
         <fragment>
