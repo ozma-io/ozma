@@ -52,6 +52,8 @@
          https://github.com/SortableJS/Sortable/issues/1268 -->
     <!-- fallbackTolerance > 0 activate iOS bug with content selection
          but important for PC use with open/drag finc -->
+    <!-- FIXME: update when they will update dependencies
+         https://github.com/SortableJS/Vue.Draggable/pull/1085 -->
     <draggable
       class="column_body"
       :group="{ name: $parent.uid, put: true }"
