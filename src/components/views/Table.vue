@@ -164,10 +164,10 @@
     <div
       v-if="(showAddRowButtons && uv.rows.length > 5) || uv.extra.lazyLoad.type === 'pagination'"
       class="button-container"
-      :style="{ width: `${parentWidth - 20}px` }"
+      :style="{ width: `${parentWidth - 20}px`, minHeight: `25px` }"
     >
       <ButtonItem
-        v-visible="showAddRowButtons"
+        v-visible="showAddRowButtons && uv.rows.length > 5"
         :button="topAddButton"
         align-right
       />
