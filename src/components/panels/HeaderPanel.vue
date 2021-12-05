@@ -150,7 +150,7 @@ export default class HeaderPanel extends Vue {
     }
 
     .header-panel:not(.is-root) & {
-      padding-left: 0.25rem;
+      padding-left: 0.7rem;
     }
   }
 
