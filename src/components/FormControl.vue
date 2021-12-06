@@ -978,10 +978,12 @@ export default class FormControl extends Vue {
 
   private onBlur() {
     this.removeAutoSaveLockFormControl();
+    this.$emit("blur");
   }
 
   protected beforeDestroy() {
     this.removeAutoSaveLockFormControl();
+    this.$emit("blur");
   }
 }
 </script>
