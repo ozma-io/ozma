@@ -50,6 +50,10 @@
     </div>
     <!-- force-fallback is needed for *-class properties to work:
          https://github.com/SortableJS/Sortable/issues/1268 -->
+    <!-- fallback-tolerance > 0 activate iOS bug with content selection
+         but important for PC use with open/drag finc -->
+    <!-- FIXME: update when they will update dependencies
+         https://github.com/SortableJS/Vue.Draggable/pull/1085 -->
     <draggable
       class="column_body"
       :group="{ name: $parent.uid, put: true }"
@@ -57,9 +61,8 @@
       chosen-class="card_dragging_chosen"
       drag-class="card_dragging_drag"
       touch-start-threshold="10"
-      delay-on-touch-only="true"
       force-fallback="true"
-      delay="200"
+      fallback-tolerance="5"
       animation="200"
       data-dragscroll
       draggable=".card_container"
