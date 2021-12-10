@@ -63,7 +63,7 @@
 
 <template>
   <div class="main-div">
-    <!-- <ProgressBar v-show="isLoading" /> -->
+    <ProgressBar v-show="isLoading" />
 
     <template v-if="query !== null">
       <ModalUserView
