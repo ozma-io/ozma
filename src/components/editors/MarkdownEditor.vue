@@ -89,7 +89,7 @@ export default class MarkdownEditor extends Vue {
   };
 
   private onFocus(evt: Event) {
-    this.$root.$emit("form-input-focused");
+    this.$root.$emit("form-input-focused"); // FIXME: figure it out why we need it
     this.$emit("focus", evt);
   }
 
