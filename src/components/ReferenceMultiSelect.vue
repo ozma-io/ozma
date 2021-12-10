@@ -43,8 +43,8 @@
       @clear-values="$emit('clear-values')"
       @update:filter="updateFilter"
       @load-more="loadMore"
-      @focus="$emit('focus')"
-      @blur="$emit('blur')"
+      @popup-opened="$emit('focus')"
+      @popup-closed="$emit('blur')"
     >
       <template #option="select">
         <fragment>

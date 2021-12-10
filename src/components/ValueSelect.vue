@@ -25,8 +25,8 @@
     :options-list-height="optionsListHeight"
     :autofocus="autofocus"
     @update:value="updateValue"
-    @focus="$emit('focus')"
-    @blur="$emit('blur')"
+    @popup-opened="$emit('focus')"
+    @popup-closed="$emit('blur')"
   />
 </template>
 
