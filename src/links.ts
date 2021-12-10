@@ -360,12 +360,8 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
           a.setAttribute("download", filename);
           a.click();
         } else {
-          const body = await res.text();
-          const status = String(res.status);
-          const statusText: string = httpStatusTexts[status]; // HTTP/2 doesn't have meaningful `res.statusText`.
-          const errorTooltip = body;
-          const error = `${statusText} (${errorTooltip})`;
-          app.$bvToast.toast(error, {
+          const body = await res.json();
+          app.$bvToast.toast(body.message, {
             title: funI18n("generation_fail"),
             variant: "danger",
             solid: true,
