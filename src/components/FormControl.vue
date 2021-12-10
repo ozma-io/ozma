@@ -446,10 +446,6 @@ interface IButtonsType {
   buttons: Button[];
 }
 
-interface IEditing {
-  lock: AutoSaveLock;
-}
-
 const staging = namespace("staging");
 
 export type IType =
@@ -608,7 +604,7 @@ export default class FormControl extends Vue {
   private title = "";
   private enableFilter = false;
   private isUserViewLoading = false;
-  private editing: IEditing | null = null;
+  private editing: AutoSaveLock | null = null;
 
   get isNullable() {
     return this.forcedIsNullable ?? (this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable);
@@ -960,7 +956,7 @@ export default class FormControl extends Vue {
   private removeAutoSaveLockFormControl() {
     if (this.editing === null) return;
 
-    void this.removeAutoSaveLock(this.editing.lock);
+    void this.removeAutoSaveLock(this.editing);
     this.editing = null;
   }
 
@@ -971,7 +967,7 @@ export default class FormControl extends Vue {
 
     if (this.editing === null) {
       void this.addAutoSaveLock().then(lock => {
-        this.editing = { lock };
+        this.editing = lock;
       });
     }
   }
