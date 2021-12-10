@@ -1022,7 +1022,7 @@ export default class FormControl extends Vue {
   }
 
   .nested-userview {
-    margin: 0.25rem 0;
+    margin-bottom: 0.25rem;
     border: 1px solid var(--default-borderColor);
     border-radius: 0.5rem;
     overflow: hidden;

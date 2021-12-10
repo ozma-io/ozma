@@ -120,7 +120,6 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
 import { valueIsNull } from "@/values";
-import { iconValue } from "@/links";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
 import { attrToButtons, Button } from "@/components/buttons/buttons";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
@@ -216,7 +215,7 @@ export default class TableCell extends Vue {
   }
 
   get iconValue() {
-    return this.value.extra.link && "target" in this.value.extra.link ? iconValue(this.value.extra.link.target) : null;
+    return "open_in_new";
   }
 
   @Watch("value", { immediate: true })
@@ -238,7 +237,7 @@ export default class TableCell extends Vue {
     background-color: var(--option-backgroundColor);
     border: 1px solid var(--option-borderColor);
     color: var(--option-foregroundColor);
-    border-radius: 1rem;
+    border-radius: 0.333rem;
     max-width: 100%;
     word-wrap: break-word;
 

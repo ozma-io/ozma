@@ -3,7 +3,8 @@
     <div class="select-panel">
       <div class="year-control">
         <span
-          :class="['select_panel_year', { 'current-year': startValue.isSame(today, 'year') }]"
+          :class="['select_panel_year', {'material-button': mode === 'days'}, { 'current-year': startValue.isSame(today, 'year') }]"
+          @click="mode = 'months'"
         >{{ startValue.format("YYYY") }}</span>
       </div>
 
@@ -116,12 +117,13 @@ export default class DatePicker extends Vue {
 
   .select_panel_year {
     margin-right: 10px;
-    color: var(--default-foregroundDarkerColor);
+    padding-left: 5px;
+    padding-right: 5px;
 
     &.current-year {
       border-radius: 3px;
-      outline: 1px solid var(--default-backgroundDarker2Color);
-      outline-offset: 2px;
+      border: solid silver;
+      border-width: 0.5px;
     }
   }
 
@@ -133,10 +135,12 @@ export default class DatePicker extends Vue {
   .select_panel_month {
     border: none;
     border-radius: 3px;
+    padding-left: 5px;
+    padding-right: 5px;
 
     &.current-month {
-      outline: 1px solid var(--default-backgroundDarker2Color);
-      outline-offset: 2px;
+      border: solid silver;
+      border-width: 0.5px;
     }
   }
 </style>

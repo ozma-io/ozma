@@ -358,11 +358,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   }
 
   private iconValue(target: string) {
-    if (target === "modal-auto" || target === "modal") {
-      return "flip_to_front";
-    } else {
-      return "open_in_new";
-    }
+    return "open_in_new";
   }
 
   private selectFromView(id: number) {
