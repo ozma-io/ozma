@@ -199,7 +199,6 @@ export default class Calendar extends Vue {
   }
 
   private async openPopup() {
-    this.$emit("focus");
     if (this.disabled) return;
     const popupRef: any = this.$refs.popup;
     if (!popupRef) return;
