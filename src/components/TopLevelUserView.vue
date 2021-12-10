@@ -63,8 +63,6 @@
 
 <template>
   <div class="main-div">
-    <!-- <ProgressBar v-show="isLoading" /> -->
-
     <template v-if="query !== null">
       <ModalUserView
         v-for="(window, i) in query.windows"
