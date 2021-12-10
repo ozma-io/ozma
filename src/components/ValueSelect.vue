@@ -26,7 +26,6 @@
     :autofocus="autofocus"
     @update:value="updateValue"
     @focus="$emit('focus')"
-    @blur="$emit('blur')"
   />
 </template>
 

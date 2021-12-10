@@ -21,7 +21,7 @@
         @keydown.enter.prevent
         @input="updateInput"
         @focus="onFocus"
-        @blur="onBlur"
+        @blur="$emit('blur', $event)"
       />
       <b-input-group-append
         v-if="qrcodeInput || textLink"
@@ -40,8 +40,8 @@
         rows="1"
         class="input-textarea"
         @input="updateInput"
-        @focus.native="onFocus"
-        @blur.native="onBlur"
+        @focus="onFocus"
+        @blur.native="$emit('blur', $event)"
         @keydown.escape.native.prevent="$emit('blur', $event)"
         @keydown.enter.native.prevent.stop="onPressEnter"
         @keydown.tab.native.prevent.stop="onPressTab"
@@ -174,10 +174,6 @@ export default class Input extends Vue {
 
   private onFocus(evt: Event) {
     this.$emit("focus", evt);
-  }
-
-  private onBlur(evt: Event) {
-    this.$emit("blur", evt);
   }
 
   private setCursorPositionEnd(controlElement: HTMLInputElement) {
