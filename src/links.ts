@@ -1,7 +1,7 @@
 import { app } from "@/main";
 import { queryLocation, IQueryState, IQuery, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery, selfIdArgs, refIdArgs } from "@/state/query";
 import { IActionRef } from "ozma-api";
-import { gotoHref, httpStatusTexts, randomId, shortLanguage } from "@/utils";
+import { gotoHref, randomId, shortLanguage } from "@/utils";
 import { saveAndRunAction } from "@/state/actions";
 import { Store } from "vuex";
 import { router } from "@/modules";
