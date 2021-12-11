@@ -210,22 +210,22 @@ export default class ModalUserView extends Vue {
     height: 3rem;
     width: 3rem;
     margin-bottom: 0.5rem;
-    background-color: #dc354533;
-    color: #dc3545cc;
+    background-color: #df4151;
+    color: #831721;
   }
 
   .save-button {
     color: var(--StateTextColor);
 
     &.save {
-      background-color: #97d777;
+      background-color: #39ac00;
     }
   }
 
   .saving-spinner {
     height: 4rem;
     width: 4rem;
-    border-color: #97d777;
+    border-color: #39ac00;
     border-right-color: transparent;
     border-width: 0.5rem;
     opacity: 0.5;

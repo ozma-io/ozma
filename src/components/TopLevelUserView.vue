@@ -766,16 +766,16 @@ export default class TopLevelUserView extends Vue {
     height: 3rem;
     width: 3rem;
     margin-bottom: 0.5rem;
-    background-color: #dc354533;
-    color: #dc3545cc;
+    background-color: #df4151;
+    color: #831721;
   }
 
   .show-errors-button {
     height: 3rem;
     width: 3rem;
     margin-bottom: 0.5rem;
-    background-color: #6c757d33;
-    color: #6c757dcc;
+    background-color: #6c757d;
+    color: #2b2e31;
   }
 
   .auto-save-indicator {
@@ -794,14 +794,18 @@ export default class TopLevelUserView extends Vue {
     color: var(--StateTextColor);
 
     &.save {
-      background-color: #97d777;
+      background-color: #39ac00;
     }
+  }
+
+  .shadow {
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) !important;
   }
 
   .saving-spinner {
     height: 4rem;
     width: 4rem;
-    border-color: #97d777;
+    border-color: #39ac00;
     border-right-color: transparent;
     border-width: 0.5rem;
     opacity: 0.5;
