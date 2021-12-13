@@ -25,7 +25,8 @@
       :height="`${height}px`"
       preview-style="tab"
       @change="onChange"
-      @focus="$root.$emit('form-input-focused')"
+      @focus="onFocus"
+      @blur="onBlur"
     />
   </div>
 </template>
@@ -86,6 +87,15 @@ export default class MarkdownEditor extends Vue {
       "codeblock",
     ],
   };
+
+  private onFocus(evt: Event) {
+    this.$root.$emit("form-input-focused"); // FIXME: figure it out why we need it
+    this.$emit("focus", evt);
+  }
+
+  private onBlur(evt: Event) {
+    this.$emit("blur", evt);
+  }
 
   private onChange() {
     const editor = this.$refs.editor as EditorType;

@@ -556,7 +556,7 @@ export default class MultiSelect extends Vue {
     if (this.disabled) return;
 
     this.isPopupOpen = true;
-    this.$emit("focus");
+    this.$emit("popup-opened");
     await nextRender();
     (this.$refs["infiniteLoading"] as InfiniteLoading | undefined)?.stateChanger.reset();
 
@@ -573,6 +573,7 @@ export default class MultiSelect extends Vue {
   }
 
   private onClosePopup() {
+    this.$emit("popup-closed");
     this.isPopupOpen = false;
     this.filterValue = "";
   }

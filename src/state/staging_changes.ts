@@ -214,7 +214,7 @@ const checkAutoSave = (context: ActionContext<IStagingState, {}>) => {
   const { state } = context;
   if (state.currentSubmit === null
    && Object.keys(state.autoSaveLocks).length === 0
-   && state.current.addedCount === 0
+   //  && state.current.addedCount === 0 // disable autosave for new records
   ) {
     startAutoSave(context);
   } else {
