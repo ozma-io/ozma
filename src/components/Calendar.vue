@@ -214,6 +214,7 @@ export default class Calendar extends Vue {
   }
 
   private async onOpenPopup() {
+    this.$emit("focus");
     this.isPopupOpen = true;
 
     if (this.$isMobile) return;
@@ -222,6 +223,7 @@ export default class Calendar extends Vue {
   }
 
   private onClosePopup() {
+    this.$emit("blur");
     this.isPopupOpen = false;
   }
 

@@ -57,7 +57,7 @@
           :background-color="cellColor"
           @input="updateValue"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
+          @blur="onBlur"
           @move-selection-next-row="$emit('move-selection-next-row', $event)"
           @move-selection-next-column="$emit('move-selection-next-column', $event)"
         />
@@ -73,7 +73,7 @@
           :background-color="cellColor"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
+          @blur="onBlur"
         />
         <Input
           v-else-if="inputType.name === 'array'"
@@ -85,7 +85,7 @@
           :background-color="cellColor"
           @input="updateValue"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
+          @blur="onBlur"
           @move-selection-next-row="$emit('move-selection-next-row', $event)"
           @move-selection-next-column="$emit('move-selection-next-column', $event)"
         />
@@ -103,7 +103,7 @@
           :disabled="isDisabled"
           :background-color="cellColor"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
+          @blur="onBlur"
           @move-selection-next-row="$emit('move-selection-next-row', $event)"
           @move-selection-next-column="$emit('move-selection-next-column', $event)"
           @update:value="updateValue"
@@ -122,7 +122,7 @@
           :background-color="cellColor"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
+          @blur="onBlur"
         />
         <ArrayReferenceField
           v-else-if="inputType.name === 'array_select'"
@@ -140,7 +140,7 @@
           :compact-mode="compactMode"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
+          @blur="onBlur"
         />
         <CodeEditor
           v-else-if="inputType.name === 'codeeditor'"
@@ -154,7 +154,7 @@
           :required="!isNullable"
           @update:content="updateValue"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
+          @blur="onBlur"
         />
         <MarkdownEditor
           v-else-if="inputType.name === 'markdown'"
@@ -167,7 +167,7 @@
           :required="!isNullable"
           @update:content="updateValue"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
+          @blur="onBlur"
         />
         <input
           v-else-if="inputType.name === 'check'"
@@ -181,7 +181,7 @@
           :required="!isNullable"
           @input="updateValue($event.target.value)"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
+          @blur="onBlur"
         >
         <QRCode
           v-else-if="inputType.name === 'qrcode'"
@@ -234,7 +234,7 @@
           @update:actions="actions = $event"
           @update:buttons="buttons = $event"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
+          @blur="onBlur"
           @update:value="updateValue($event)"
           @goto="$emit('goto', $event)"
         />
@@ -252,7 +252,7 @@
           :disabled="isDisabled"
           :compact-mode="compactMode"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
+          @blur="onBlur"
           @update:value="updateValue($event)"
           @goto="$emit('goto', $event)"
         />
@@ -314,6 +314,7 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import type { AttributesMap, FieldType, IFieldRef, ValueType } from "ozma-api";
 import { z } from "zod";
+import { namespace } from "vuex-class";
 
 import { valueToText, valueIsNull } from "@/values";
 import { IQuery, attrToQuerySelf, attrObjectToQuery } from "@/state/query";
@@ -444,6 +445,8 @@ interface IButtonsType {
   name: "buttons";
   buttons: Button[];
 }
+
+const staging = namespace("staging");
 
 export type IType =
   | ITextType
@@ -593,6 +596,8 @@ export default class FormControl extends Vue {
   @Prop({ type: Object, required: false }) forcedFieldType!: FieldType | undefined;
   @Prop({ type: Boolean, default: null }) forcedIsNullable!: boolean | null;
   @Prop() valueFormatted!: string | undefined; // Bigger priority than `currentValue` if defined.
+  @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
+  @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
 
   private buttons: Button[] = [];
   private filterString = "";
