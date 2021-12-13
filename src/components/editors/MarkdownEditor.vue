@@ -26,7 +26,7 @@
       preview-style="tab"
       @change="onChange"
       @focus="onFocus"
-      @blur="$emit('blur')"
+      @blur="onBlur"
     />
   </div>
 </template>
