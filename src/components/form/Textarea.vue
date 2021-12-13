@@ -34,6 +34,7 @@
         :disabled="disabled"
         :rows="textareaRows"
         @focus="onFocus"
+        @blur="$emit('blur')"
         @input="$emit('update:value', $event)"
       />
     </div>

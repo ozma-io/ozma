@@ -70,6 +70,10 @@ export default class CodeEditor extends Vue {
     });
     editor.onDidFocusEditorWidget(() => {
       this.$root.$emit("form-input-focused");
+      this.$emit("focus");
+    });
+    editor.onDidBlurEditorWidget(() => {
+      this.$emit("blur");
     });
     editor.onDidChangeModelContent(event => {
       const content = editor.getValue();
