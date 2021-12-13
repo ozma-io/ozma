@@ -948,6 +948,7 @@ export default class FormControl extends Vue {
     }
 
     if (closeAfterUpdate.has(this.inputType.name)) {
+      this.removeAutoSaveLockFormControl();
       this.$emit("close-modal-input");
     }
   }
