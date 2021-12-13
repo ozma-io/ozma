@@ -321,6 +321,7 @@ import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
 import { IEntityRef } from "ozma-api";
+import { AutoSaveLock } from "@/state/staging_changes";
 
 import { colorVariantFromAttribute } from "@/utils_colors";
 import type { ColorVariantAttribute } from "@/utils_colors";
