@@ -25,8 +25,7 @@
       :height="`${height}px`"
       preview-style="tab"
       @change="onChange"
-      @focus="onFocus"
-      @blur="onBlur"
+      @focus="$root.$emit('form-input-focused')"
     />
   </div>
 </template>

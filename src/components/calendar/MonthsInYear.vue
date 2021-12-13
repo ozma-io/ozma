@@ -48,7 +48,8 @@ export default class MonthsInYear extends Vue {
     border-radius: 3px;
 
     &.current-month {
-      outline: 1px solid var(--default-backgroundDarker2Color);
+      border: solid silver;
+      border-width: 0.5px;
     }
   }
 </style>

@@ -292,7 +292,7 @@ export default class InputSlot extends Vue {
 
       &.inline {
         left: -1 * ($indicator-size  + 2 * $indicator-padding);
-        top: $indicator-size / 4;
+        top: $indicator-size / 6;
 
         &.cell-edit {
           /* False-positive */

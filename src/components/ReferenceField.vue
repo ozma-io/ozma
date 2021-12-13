@@ -21,7 +21,6 @@
       :compact-mode="compactMode"
       @update:value="$emit('update:value', $event)"
       @focus="$emit('focus')"
-      @blur="$emit('blur')"
       @goto="$emit('goto', $event)"
     />
   </div>

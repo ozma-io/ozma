@@ -162,12 +162,12 @@
     </div>
 
     <div
-      v-if="showAddRowButtons || uv.extra.lazyLoad.type === 'pagination'"
+      v-if="(showAddRowButtons && uv.rows.length > 5) || uv.extra.lazyLoad.type === 'pagination'"
       class="button-container"
-      :style="{ width: `${parentWidth - 20}px` }"
+      :style="{ width: `${parentWidth - 20}px`, minHeight: `25px` }"
     >
       <ButtonItem
-        v-visible="showAddRowButtons"
+        v-visible="showAddRowButtons && uv.rows.length > 5"
         :button="topAddButton"
         align-right
       />
@@ -327,7 +327,7 @@ import type { ParseValue } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { maxPerFetch } from "@/components/UserView.vue";
-import { AddedRowId } from "@/state/staging_changes";
+import { AddedRowId, AutoSaveLock } from "@/state/staging_changes";
 import { IAttrToQueryOpts, ICurrentQueryHistory } from "@/state/query";
 import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, baseUserViewHandler } from "@/components/BaseUserView";
 import TableRow from "@/components/views/table/TableRow.vue";
@@ -1122,6 +1122,7 @@ const isEmptyRow = (row: IRowCommon) => {
 };
 
 interface ITableEditing {
+  lock: AutoSaveLock;
   ref: ValueRef;
 }
 
@@ -1193,6 +1194,8 @@ type CellContextMenuData = {
 })
 export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra, ITableRowExtra, ITableViewExtra>>(BaseUserView) {
   @query.State("current") query!: ICurrentQueryHistory | null;
+  @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
+  @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
   @entries.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IFieldRef; reference: ReferenceName }) => void;
   @entries.Mutation("addEntriesConsumer") addEntriesConsumer!: (args: { ref: IFieldRef; reference: ReferenceName }) => void;
   @entities.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
@@ -2319,6 +2322,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private removeCellEditing() {
     if (this.editing === null) return;
 
+    void this.removeAutoSaveLock(this.editing.lock);
     this.editing = null;
   }
 
@@ -2328,8 +2332,18 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     if (!this.canEditCell(ref)) return;
 
-    this.getCellElement(ref)?.scrollIntoView({ block: "nearest" });
-    this.editing = { ref };
+    void this.addAutoSaveLock().then(async lock => {
+      const value = this.uv.getValueByRef(ref);
+
+      if (this.editing !== null // Lock already taken (somehow)
+       || !value
+      ) {
+        await this.removeAutoSaveLock(lock);
+        return;
+      }
+      this.getCellElement(ref)?.scrollIntoView({ block: "nearest" });
+      this.editing = { ref, lock };
+    });
   }
 
   private canEditCell(ref: ValueRef) {
@@ -2886,10 +2900,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     display: flex;
     padding: 0.25rem;
     transition: opacity 0.2s;
-
-    ::v-deep > button {
-      width: 100%;
-    }
   }
 
   .context-menu-wrapper {
