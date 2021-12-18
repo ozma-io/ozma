@@ -1,11 +1,11 @@
 <i18n>
     {
         "en": {
-            "no_cards": "No cards here",
+            "no_cards": "Empty",
             "count_tooltip": "Number of cards in column"
         },
         "ru": {
-            "no_cards": "Пустая колонка",
+            "no_cards": "Пусто",
             "count_tooltip": "Количество карточек в колонке"
         }
     }

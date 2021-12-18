@@ -2,12 +2,12 @@
   {
     "en": {
       "hide": "Hide",
-      "reset": "Reset changes",
+      "reset": "Reset",
       "apply": "Apply"
     },
     "ru": {
       "hide": "Скрыть",
-      "reset": "Сбросить изменения",
+      "reset": "Сбросить",
       "apply": "Применить"
     }
   }
