@@ -74,6 +74,7 @@ export default class AlertBanner extends Vue {
     background-color: var(--banner-backgroundColor, #bee5eb);
     color: var(--banner-foregroundColor, #0c5460);
     border-color: var(--banner-borderColor, #bee5eb);
+    border-radius: 0;
   }
 
   .content-wrapper {
