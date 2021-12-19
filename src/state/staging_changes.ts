@@ -373,7 +373,7 @@ const stagingModule: Module<IStagingState, {}> = {
       state.autoSaveTimeout = timeout;
     },
     addAutoSaveLock: state => {
-      state.autoSaveLocks[state.lastAutoSaveLock] = null;
+      Vue.set(state.autoSaveLocks, state.lastAutoSaveLock, null);
       state.lastAutoSaveLock++;
     },
     removeAutoSaveLock: (state, lock: AutoSaveLock) => {
