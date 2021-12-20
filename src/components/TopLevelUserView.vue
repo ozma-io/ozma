@@ -179,7 +179,7 @@
           v-else-if="!changes.isEmpty"
         >
           <div
-            v-if="autoSaveDisabled"
+            v-if="Object.keys(autoSaveLocks).length > 0"
             v-b-tooltip.hover.right.noninteractive="{
               title: $t('auto_save_disabled').toString(),
               disabled: $isMobile,
@@ -192,7 +192,6 @@
               timer_off
             </span>
           </div>
-
           <button
             v-b-tooltip.hover.right.noninteractive="{
               title: $t('save').toString(),
@@ -226,7 +225,6 @@
         </div>
       </transition>
     </div>
-
     <QRCodeScanner
       v-if="wasOpenedQRCodeScanner"
       :open-scanner="isOpenQRCodeScanner"
@@ -298,7 +296,6 @@ export default class TopLevelUserView extends Vue {
   @auth.Action("login") login!: () => Promise<void>;
   @auth.Action("logout") logout!: () => Promise<void>;
   @staging.State("current") changes!: CurrentChanges;
-  @staging.State("disableAutoSaveCount") disableAutoSaveCount!: number;
   @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<CombinedTransactionResult[]>;
   @staging.Action("reset") clearChanges!: () => Promise<void>;
   @query.State("current") query!: ICurrentQueryHistory | null;
@@ -315,6 +312,7 @@ export default class TopLevelUserView extends Vue {
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @settings.State("current") currentSettings!: CurrentSettings;
   @settings.Action("setCurrentTheme") setCurrentTheme!: (theme: ThemeName) => Promise<void>;
+  @staging.State("autoSaveLocks") autoSaveLocks!: Object | null;
 
   private statusLine = "";
   private enableFilter = false;
@@ -483,10 +481,6 @@ export default class TopLevelUserView extends Vue {
 
   private get canClearUnsavedChanges() {
     return this.errors.length !== 0 && !this.changes.isEmpty;
-  }
-
-  private get autoSaveDisabled() {
-    return this.disableAutoSaveCount > 0;
   }
 
   @Watch("$route", { deep: true, immediate: true })

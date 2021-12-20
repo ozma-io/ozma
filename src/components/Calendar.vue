@@ -262,8 +262,6 @@ export default class Calendar extends Vue {
     // but it can broke some cases on smartphones with keyboard and it's just a little ugly fix.
     if (this.$isMobile && !this.isPopupOpen) {
       (this.$refs.control as HTMLInputElement).blur();
-    } else {
-      this.$emit("focus");
     }
   }
 

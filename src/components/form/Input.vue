@@ -40,7 +40,7 @@
         rows="1"
         class="input-textarea"
         @input="updateInput"
-        @focus="onFocus"
+        @focus.native="onFocus"
         @blur.native="$emit('blur', $event)"
         @keydown.escape.native.prevent="$emit('blur', $event)"
         @keydown.enter.native.prevent.stop="onPressEnter"

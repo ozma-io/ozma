@@ -15,6 +15,8 @@
       @keydown.enter.prevent
       @keydown.escape.native.prevent="$emit('blur', $event)"
       @input="updateInput"
+      @focus.native="$emit('focus', $event)"
+      @blur.native="$emit('blur', $event)"
     />
     <div
       v-else
