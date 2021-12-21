@@ -1,7 +1,7 @@
 <i18n>
     {
         "en": {
-            "in_progress": "Authentication in progress. If this page is visible for too long write to the system administrator."
+            "in_progress": "Authentication in progress. If this page is visible for too long, ask your administrator for help."
         },
         "ru": {
             "in_progress": "Производится аутентификация. Если вы видите эту страницу слишком долго - напишите системному администратору."
