@@ -74,6 +74,7 @@
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { FunDBError, IEntity, IEntityRef, IEntriesRequestOpts, IInsertEntityOp, ITransaction } from "ozma-api";
+import { AutoSaveLock } from "@/state/staging_changes";
 import { Action, namespace } from "vuex-class";
 
 import { encodeUTF16LE, getBOM, mapMaybe, saveToFile, tryDicts } from "@/utils";
@@ -125,30 +126,41 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
   @Action("reload") reload!: () => Promise<void>;
   @errors.Mutation("setError") setError!: (_: { key: ErrorKey; error: string }) => void;
-  @staging.Mutation("addDisableAutoSaveCount") addDisableAutoSaveCount!: () => void;
-  @staging.Mutation("removeDisableAutoSaveCount") removeDisableAutoSaveCount!: () => void;
+  @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
+  @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
   @entities.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
 
   modalView: IQuery | null = null;
   openQRCodeScanner = false;
   openBarCodeScanner = false;
   showDeleteEntiesButton = false;
+  private AutoSaveLockUV: AutoSaveLock | null = null;
 
-  protected beforeDestroy() {
-    if (this.uv.attributes["disable_auto_save"]) {
-      this.removeDisableAutoSaveCount();
-    }
+  private removeAutoSaveLockUV() {
+    if (this.AutoSaveLockUV === null) return;
+
+    void this.removeAutoSaveLock(this.AutoSaveLockUV);
+    this.AutoSaveLockUV = null;
   }
 
+  protected beforeDestroy() {
+    this.removeAutoSaveLockUV();
+  }
+
+  // FIXME: check why do we need logic with the previous UV
   @Watch("uv", { immediate: true })
   private watchUv(newUv: ICombinedUserViewAny, prevUv: ICombinedUserViewAny | null) {
-    const disabledOnNew = newUv.attributes["disable_auto_save"];
-    const disabledOnPrev = prevUv?.attributes["disable_auto_save"];
+    const disabledOnNew = newUv.attributes["disable_auto_save"] || newUv.attributes["post_create_link"];
+    const disabledOnPrev = prevUv?.attributes["disable_auto_save"] || prevUv?.attributes["post_create_link"];
     if (disabledOnNew && !disabledOnPrev) {
-      this.addDisableAutoSaveCount();
+      if (this.AutoSaveLockUV === null) {
+        void this.addAutoSaveLock().then(lock => {
+          this.AutoSaveLockUV = lock;
+        });
+      }
     }
     if (!disabledOnNew && disabledOnPrev) {
-      this.removeDisableAutoSaveCount();
+      this.removeAutoSaveLockUV();
     }
 
     void this.updateShowDeleteEntriesButton();

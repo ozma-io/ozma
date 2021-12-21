@@ -19,7 +19,8 @@
             "hide_argument_editor": "Hide filters",
             "new_mode_no_main": "FOR INSERT INTO clause is required for new entry mode.",
             "empty_userview": "Empty",
-            "link_to_nowhere": "This user view was a link which didn't replace it, so there's nothing to show."
+            "link_to_nowhere": "This user view was a link which didn't replace it, so there's nothing to show.",
+            "switch_argument_editor": "Filters"
         },
         "ru": {
             "loading": "Загрузка данных",
@@ -40,7 +41,8 @@
             "hide_argument_editor": "Скрыть фильтры",
             "new_mode_no_main": "Для режима создания новой записи должна использоваться конструкция FOR INSERT INTO.",
             "empty_userview": "Пусто",
-            "link_to_nowhere": "Это отображение являлось ссылкой, которая его не заменила. Теперь здесь нечего показать."
+            "link_to_nowhere": "Это отображение являлось ссылкой, которая его не заменила. Теперь здесь нечего показать.",
+            "switch_argument_editor": "Фильтры"
         }
     }
 </i18n>
@@ -59,6 +61,30 @@
     <template
       v-if="state.state === 'show'"
     >
+      <button
+        v-if="hasArguments(count=2) || contextMenuShowArgumentEditor === true"
+        class="filter-button list-group-item list-group-item-action list-group-item-default"
+        @click.prevent="contextMenuShowArgumentEditor = !contextMenuShowArgumentEditor;"
+      >
+        <span
+          v-if="contextMenuShowArgumentEditor === true"
+          class="icon material-icons md-14"
+        >
+          filter_alt_off
+        </span>
+        <span
+          v-else
+          class="icon material-icons md-14"
+        >
+          filter_alt
+        </span>
+        <span
+          class="filter-button-text mx-2"
+        >
+          {{ $t("switch_argument_editor").toString() }}
+        </span>
+      </button>
+
       <transition name="fade-move">
         <ArgumentEditor
           v-if="showArgumentEditor"
@@ -578,9 +604,8 @@ export default class UserView extends Vue {
         };
 
         if (this.state.state === "show") {
-          const hasArguments = Object.keys(this.state.uv.info.arguments).length !== 0;
           // if (hasArguments && this.state.uv.attributes["show_argument_editor"] !== true) {
-          if (hasArguments) {
+          if (this.hasArguments()) {
             buttons.push(this.toggleArgumentEditorButton);
           }
         }
@@ -597,6 +622,14 @@ export default class UserView extends Vue {
       }
     }
     return buttons;
+  }
+
+  private hasArguments(count = 1) {
+    if ("uv" in this.state) {
+      return Object.keys(this.state.uv.info.arguments).length >= count;
+    } else {
+      return false;
+    }
   }
 
   get allButtons() {
@@ -1071,5 +1104,30 @@ export default class UserView extends Vue {
   .fade-move-leave-to {
     opacity: 0;
     transform: translateY(-1rem);
+  }
+
+  .filter-button {
+    margin-left: 10px;
+    max-width: 100px;
+    text-align: left;
+    background-color: transparent;
+    border-radius: 0.25rem !important;
+    border-width: 0;
+    width: fit-content;
+    color: var(--MainTextColor);
+
+    .filter-button-text {
+      margin-left: 0.2rem !important;
+    }
+
+    &:hover {
+      background-color: var(--default-backgroundDarker2Color) !important;
+      color: var(--MainTextColor);
+      cursor: pointer;
+    }
+
+    &:focus {
+      background-color: transparent;
+    }
   }
 </style>

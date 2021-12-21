@@ -178,7 +178,6 @@ export interface IStagingState {
   autoSaveTimeoutId: NodeJS.Timeout | null;
   lastAutoSaveLock: AutoSaveLock;
   autoSaveLocks: Record<AutoSaveLock, null>;
-  disableAutoSaveCount: number; // Each userview with disabled autosave adds 1 to count while it's alive.
   handlers: Record<StagingKey, IStagingEventHandler>;
 }
 
@@ -202,9 +201,7 @@ const startAutoSave = (context: ActionContext<IStagingState, {}>) => {
 
   if (state.autoSaveTimeout !== null) {
     const timeoutId = setTimeout(() => {
-      if (state.disableAutoSaveCount === 0) {
-        void dispatch("submit", {});
-      }
+      void dispatch("submit", {});
     }, state.autoSaveTimeout);
     commit("setAutoSaveHandler", timeoutId);
   }
@@ -356,7 +353,6 @@ const stagingModule: Module<IStagingState, {}> = {
     autoSaveTimeout: null,
     autoSaveTimeoutId: null,
     autoSaveLocks: {},
-    disableAutoSaveCount: 0,
     handlers: {},
   },
   mutations: {
@@ -373,17 +369,11 @@ const stagingModule: Module<IStagingState, {}> = {
       state.autoSaveTimeout = timeout;
     },
     addAutoSaveLock: state => {
-      state.autoSaveLocks[state.lastAutoSaveLock] = null;
+      Vue.set(state.autoSaveLocks, state.lastAutoSaveLock, null);
       state.lastAutoSaveLock++;
     },
     removeAutoSaveLock: (state, lock: AutoSaveLock) => {
       Vue.delete(state.autoSaveLocks, lock);
-    },
-    addDisableAutoSaveCount: state => {
-      state.disableAutoSaveCount++;
-    },
-    removeDisableAutoSaveCount: state => {
-      state.disableAutoSaveCount--;
     },
     startSubmit: (state, submit: Promise<CombinedTransactionResult[]>) => {
       state.currentSubmit = submit;
