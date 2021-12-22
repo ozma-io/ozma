@@ -66,11 +66,11 @@ export default class HelpModal extends Vue {
   @Prop({ type: String, required: true }) markup!: string;
 
   private get modalWidth() {
-    return this.$isMobile ? "100%" : "800px";
+    return this.$isMobile ? "95%" : "800px";
   }
 
   private get modalHeight() {
-    return this.$isMobile ? "80%" : "600px";
+    return this.$isMobile ? "95%" : "800px";
   }
 
   private mounted() {
@@ -105,12 +105,12 @@ export default class HelpModal extends Vue {
 
   ::v-deep {
     .v--modal-box {
-      max-height: 80% !important;
+      max-height: 95% !important;
     }
 
     .modal-enter-active,
     .modal-leave-active {
-      transition: all 0.2s ease-out;
+      transition: all 1s ease-out;
     }
 
     .modal-enter,
@@ -146,7 +146,8 @@ export default class HelpModal extends Vue {
 
   .buttons-container {
     width: 100%;
-    margin-top: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid silver;
     display: flex;
     flex-flow: row;
     justify-content: space-between;
