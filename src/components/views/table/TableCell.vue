@@ -4,7 +4,7 @@
             "add_child_tooplip": "Add child row"
         },
         "ru": {
-            "add_child_tooplip": "Добавить строку-потомка"
+            "add_child_tooplip": "Добавить подстроку"
         }
     }
 </i18n>

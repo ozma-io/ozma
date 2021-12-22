@@ -1,12 +1,12 @@
 <i18n>
     {
         "en": {
-            "dismiss_tooltip": "You can still find help pages in buttons with \"?\" sign or in context menu (three dots in top-right corner)",
+            "dismiss_tooltip": "You will still be able to open hidden help pages using \"?\" button in the top-right corner",
             "dismiss_all": "Skip all",
             "dismiss": "Close"
         },
         "ru": {
-            "dismiss_tooltip": "Скрытые страницы справки можно будет открыть с помощью кнопки с вопросительным знаком или контекстное меню (три точки сверху справа)",
+            "dismiss_tooltip": "Скрытые страницы справки можно будет открыть с помощью кнопки с вопросительным знаком сверху справа",
             "dismiss_all": "Пропустить все",
             "dismiss": "Закрыть"
         }
