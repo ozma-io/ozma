@@ -172,7 +172,7 @@
 
       <transition name="fade-2" mode="out-in">
         <div
-          v-if="!changes.isEmpty && isSaving"
+          v-if="( !changes.isEmpty && isSaving ) || isLoading"
           class="saving-spinner spinner-border"
         />
         <div
