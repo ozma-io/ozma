@@ -83,7 +83,9 @@ export default class CodeEditor extends Vue {
     });
     this.editor = editor;
     if (this.autofocus) {
-      editor.focus();
+      // FIXME: With the next line autofocus work for the first table cell open
+      //        with codeeditor. But close the edit cell for a second time.
+      // editor.focus();
     }
   }
 
