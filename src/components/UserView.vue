@@ -62,12 +62,12 @@
       v-if="state.state === 'show'"
     >
       <button
-        v-if="hasArguments(count=2) || contextMenuShowArgumentEditor === true"
+        v-if="showFilterButton"
         class="filter-button list-group-item list-group-item-action list-group-item-default"
         @click.prevent="contextMenuShowArgumentEditor = !contextMenuShowArgumentEditor;"
       >
         <span
-          v-if="contextMenuShowArgumentEditor === true"
+          v-if="showArgumentEditor"
           class="icon material-icons md-14"
         >
           filter_alt_off
@@ -604,8 +604,7 @@ export default class UserView extends Vue {
         };
 
         if (this.state.state === "show") {
-          // if (hasArguments && this.state.uv.attributes["show_argument_editor"] !== true) {
-          if (this.hasArguments()) {
+          if (this.hasArguments) {
             buttons.push(this.toggleArgumentEditorButton);
           }
         }
@@ -624,9 +623,9 @@ export default class UserView extends Vue {
     return buttons;
   }
 
-  private hasArguments(count = 1) {
+  private get hasArguments() {
     if ("uv" in this.state) {
-      return Object.keys(this.state.uv.info.arguments).length >= count;
+      return Object.keys(this.state.uv.info.arguments).length > 0;
     } else {
       return false;
     }
@@ -872,6 +871,19 @@ export default class UserView extends Vue {
 
   private scrollToTop() {
     (this.$refs.userViewRef as Vue)?.$el.scrollTo(0, 0);
+  }
+
+  private get showFilterButton() {
+    return (
+      this.hasArguments
+      && (
+        this.showArgumentEditor
+        || (
+          "uv" in this.state
+          && this.state.uv.attributes["show_argument_button"] === true
+        )
+      )
+    );
   }
 
   private destroyCurrentUserView() {
