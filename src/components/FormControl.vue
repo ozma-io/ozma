@@ -150,6 +150,7 @@
           :style="inputType.style"
           :content="textValue"
           :read-only="isDisabled"
+          :autofocus="autofocus || iSlot.autofocus"
           :required="!isNullable"
           @update:content="updateValue"
           @focus="iSlot.onFocus"
