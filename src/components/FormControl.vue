@@ -284,6 +284,7 @@
           :view="inputType"
           :filter-string="filterString"
           :is-loading="isUserViewLoading"
+          :type="'component'"
           @update:filterString="filterString = $event"
           @goto="$emit('goto', $event)"
         />

@@ -37,6 +37,7 @@
         :filter-string="filterString"
         :view="view"
         :is-loading="isUserViewLoading"
+        :type="'modal'"
         @update:filterString="filterString = $event"
         @goto="$emit('goto', $event)"
       />

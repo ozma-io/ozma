@@ -84,7 +84,7 @@
         :buttons="buttons"
         :is-enable-filter="enableFilter"
         :filter-string="query.root.search"
-        is-root
+        :type="'root'"
         @update:filterString="replaceRootSearch($event)"
         @goto="$emit('goto', $event)"
       >
