@@ -418,12 +418,14 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
 
       const punnedValue = valueToPunnedText(info.valueType, value);
       const icon = getCellAttr("icon");
+      const cellVariant = getCellAttr("cell_variant");
       return {
         type: "text",
         value: punnedValue,
         valueHtml: replaceHtmlLinks(punnedValue),
         size: 12,
         icon: icon ? String(icon) : null,
+        cellVariant: cellVariant,
       };
     }, row.values);
 

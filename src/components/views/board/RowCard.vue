@@ -17,7 +17,10 @@
         v-for="(col, colIndex) in row"
         :key="colIndex"
         :cols="col.size"
-        class="card-col"
+        :class="[
+          'card-col',
+          variantClassName(colorVarinatAttribute(col.cellVariant)),
+        ]"
       >
         <div
           v-if="col.type === 'image'"
@@ -57,6 +60,8 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import { Link } from "@/links";
 import { RowRef } from "@/user_views/combined";
 import { getIconType } from "@/utils";
+import type { ColorVariantAttribute } from "@/utils_colors";
+import { colorVariantFromAttribute, getColorVariantAttributeClassName } from "@/utils_colors";
 
 export interface ICardColumnBase {
   size: number;
@@ -67,6 +72,7 @@ export interface ITextCardColumn extends ICardColumnBase {
   icon: string | null;
   value: string;
   valueHtml: string;
+  cellVariant: string | unknown | null;
 }
 
 export interface IImageCardColumn extends ICardColumnBase {
@@ -94,12 +100,24 @@ export default class RowCard extends Vue {
   private getIconType(icon: string) {
     return getIconType(icon);
   }
+
+  private colorVarinatAttribute(variant: string): ColorVariantAttribute {
+    if (variant) {
+      return colorVariantFromAttribute(variant);
+    } else {
+      return colorVariantFromAttribute(null);
+    }
+  }
+
+  private variantClassName(colorVariantAttribute: ColorVariantAttribute): string | null {
+    return getColorVariantAttributeClassName(colorVariantAttribute);
+  }
 }
 </script>
 
 <style lang="scss" scoped>
   .card-link {
-    padding: 0.5rem;
+    padding: 0.25rem;
     display: block;
     cursor: pointer;
     user-select: none;
@@ -110,7 +128,9 @@ export default class RowCard extends Vue {
   }
 
   .card-col {
-    padding: 0;
+    padding: 0 0.25rem 0 0.25rem;
+    background-color: var(--backgroundColor);
+    border-radius: 0.2rem;
   }
 
   .card-text {
@@ -119,7 +139,7 @@ export default class RowCard extends Vue {
     align-items: center;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: var(--kanbanCard-foregroundColor);
+    color: var(--foregroundColor, --kanbanCard-foregroundColor);
   }
 
   .card-icon {
