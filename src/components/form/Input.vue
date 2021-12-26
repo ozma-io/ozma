@@ -101,7 +101,7 @@ export default class Input extends Vue {
   }
 
   private onPressEnter(event: KeyboardEvent) {
-    this.$emit("move-selection-next-row", event);
+    this.$emit("close-modal-input", event);
   }
 
   private onPressTab(event: KeyboardEvent) {

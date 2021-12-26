@@ -147,7 +147,7 @@
               @keydown.up="offsetHoveredOption(-1)"
               @keydown.down="offsetHoveredOption(1)"
               @keydown.enter.prevent.stop="filterInputFinished"
-              @keydown.esc.prevent.stop="$emit('blur', $event)"
+              @keydown.esc.prevent.stop="closePopup"
               @focus="onFilterInputFocus"
             />
             <b-input-group-append>

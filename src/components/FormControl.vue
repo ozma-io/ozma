@@ -60,6 +60,7 @@
           @blur="onBlur"
           @move-selection-next-row="$emit('move-selection-next-row', $event)"
           @move-selection-next-column="$emit('move-selection-next-column', $event)"
+          @close-modal-input="$emit('close-modal-input')"
         />
         <Textarea
           v-else-if="inputType.name === 'textarea'"
@@ -88,6 +89,7 @@
           @blur="onBlur"
           @move-selection-next-row="$emit('move-selection-next-row', $event)"
           @move-selection-next-column="$emit('move-selection-next-column', $event)"
+          @close-modal-input="$emit('close-modal-input')"
         />
         <Calendar
           v-else-if="inputType.name === 'calendar'"
@@ -106,6 +108,7 @@
           @blur="onBlur"
           @move-selection-next-row="$emit('move-selection-next-row', $event)"
           @move-selection-next-column="$emit('move-selection-next-column', $event)"
+          @close-modal-input="$emit('close-modal-input')"
           @update:value="updateValue"
         />
         <ValueSelect

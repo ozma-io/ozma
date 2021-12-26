@@ -1962,7 +1962,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private onPressEnter() {
     if (this.editing) {
       this.removeCellEditing();
-      this.moveCursorNextRow();
     } else {
       this.editCellOnCursor();
     }
