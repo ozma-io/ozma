@@ -424,8 +424,8 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
         value: punnedValue,
         valueHtml: replaceHtmlLinks(punnedValue),
         size: 12,
-        cellVariant: cellVariant,
         icon: icon ? String(icon) : null,
+        cellVariant,
       };
     }, row.values);
 
