@@ -133,5 +133,9 @@ export default class MarkdownEditor extends Vue {
     .te-mode-switch-section {
       height: 25px;
     }
+
+    .te-preview {
+      background-color: var(--default-backgroundDarker1Color);
+    }
   }
 </style>
