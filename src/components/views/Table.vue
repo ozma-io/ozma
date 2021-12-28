@@ -87,8 +87,6 @@
         autofocus
         modal-only
         @blur="removeCellEditing"
-        @move-selection-next-row="moveCursorNextRow"
-        @move-selection-next-column="moveCursorNextColumn"
         @update="updateCurrentValue"
         @close-modal-input="removeCellEditing"
       />

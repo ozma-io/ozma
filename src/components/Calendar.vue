@@ -254,7 +254,7 @@ export default class Calendar extends Vue {
     this.updateValue(target.value === "" ? null : moment(target.value, this.usedFormat));
     target.blur();
     this.$emit("blur");
-    this.$emit("close-modal-input", event);
+    this.$emit("enter-pressed", event);
   }
 
   private onInputFocus() {

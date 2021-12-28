@@ -58,9 +58,8 @@
           @input="updateValue"
           @focus="iSlot.onFocus"
           @blur="onBlur"
-          @move-selection-next-row="$emit('move-selection-next-row', $event)"
-          @move-selection-next-column="$emit('move-selection-next-column', $event)"
-          @close-modal-input="$emit('close-modal-input')"
+          @enter-pressed="$emit('close-modal-input', $event)"
+          @tab-pressed="$emit('close-modal-input', $event)"
         />
         <Textarea
           v-else-if="inputType.name === 'textarea'"
@@ -87,9 +86,8 @@
           @input="updateValue"
           @focus="iSlot.onFocus"
           @blur="onBlur"
-          @move-selection-next-row="$emit('move-selection-next-row', $event)"
-          @move-selection-next-column="$emit('move-selection-next-column', $event)"
-          @close-modal-input="$emit('close-modal-input')"
+          @enter-pressed="$emit('close-modal-input', $event)"
+          @tab-pressed="$emit('close-modal-input', $event)"
         />
         <Calendar
           v-else-if="inputType.name === 'calendar'"
@@ -106,9 +104,8 @@
           :background-color="cellColor"
           @focus="iSlot.onFocus"
           @blur="onBlur"
-          @move-selection-next-row="$emit('move-selection-next-row', $event)"
-          @move-selection-next-column="$emit('move-selection-next-column', $event)"
-          @close-modal-input="$emit('close-modal-input')"
+          @enter-pressed="$emit('close-modal-input', $event)"
+          @tab-pressed="$emit('close-modal-input', $event)"
           @update:value="updateValue"
         />
         <ValueSelect
