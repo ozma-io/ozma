@@ -877,11 +877,8 @@ export default class UserView extends Vue {
     return (
       this.hasArguments
       && (
-        this.showArgumentEditor
-        || (
-          "uv" in this.state
-          && this.state.uv.attributes["show_argument_button"] === true
-        )
+        "uv" in this.state
+        && this.state.uv.attributes["show_argument_button"] === true
       )
     );
   }
