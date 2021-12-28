@@ -11,6 +11,7 @@
 
 <template>
   <VueModal
+    adaptive
     :width="modalWidth"
     :height="modalHeight"
     :min-width="200"
