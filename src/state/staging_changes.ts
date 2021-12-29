@@ -73,6 +73,7 @@ export interface ICombinedInsertEntityResult extends IInternalInsertEntityOp, II
 }
 
 export interface ICombinedUpdateEntityResult extends IInternalUpdateEntityOp, IUpdateEntityResult {
+  id: RowId;
 }
 
 export interface ICombinedDeleteEntityResult extends IDeleteEntityOp, IDeleteEntityResult {
