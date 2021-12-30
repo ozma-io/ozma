@@ -64,9 +64,9 @@
               :disabled="disabled"
               @input="$emit('update:value', $event)"
               @keypress.enter.prevent.stop="onPressEnter"
+              @keydown.esc.prevent.stop="closePopup"
               @focus="onInputFocus"
               @blur.prevent
-              @keydown.esc.prevent.stop="$emit('blur', $event)"
             />
             <b-input-group-append>
               <b-input-group-text
@@ -254,7 +254,7 @@ export default class Calendar extends Vue {
     this.updateValue(target.value === "" ? null : moment(target.value, this.usedFormat));
     target.blur();
     this.$emit("blur");
-    this.$emit("move-selection-next-row", event);
+    this.$emit("enter-pressed", event);
   }
 
   private onInputFocus() {

@@ -87,8 +87,6 @@
         autofocus
         modal-only
         @blur="removeCellEditing"
-        @move-selection-next-row="moveCursorNextRow"
-        @move-selection-next-column="moveCursorNextColumn"
         @update="updateCurrentValue"
         @close-modal-input="removeCellEditing"
       />
@@ -1962,7 +1960,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private onPressEnter() {
     if (this.editing) {
       this.removeCellEditing();
-      this.moveCursorNextRow();
     } else {
       this.editCellOnCursor();
     }

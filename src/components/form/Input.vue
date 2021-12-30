@@ -101,11 +101,11 @@ export default class Input extends Vue {
   }
 
   private onPressEnter(event: KeyboardEvent) {
-    this.$emit("move-selection-next-row", event);
+    this.$emit("enter-pressed", event);
   }
 
   private onPressTab(event: KeyboardEvent) {
-    this.$emit("move-selection-next-column", event);
+    this.$emit("tab-pressed", event);
   }
 
   @Debounce(1000)
