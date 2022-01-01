@@ -163,6 +163,10 @@ export default class InputSlot extends Vue {
   /* @Prop({ type: Object }) colorVariables!: Record<string, unknown> | null; */
   @Prop({ type: Object }) colorVariantAttribute!: ColorVariantAttribute;
   @Prop({ type: String, default: "left" }) textAlign!: string;
+  // FIXME:
+  // Хм, странно, что у нас теперь модал управляется из InputSlotа - это прямо 
+  // неправильно. Но ок, поставь тогда комментарий, что надо с этим разобраться.
+  // https://bitbucket.org/myprocessx/funwithflags/pull-requests/1097
   @Prop({ type: Boolean, default: false }) modal!: boolean;
   @Prop({ type: Boolean, default: false }) modalOnly!: boolean;
   @Prop({ type: Boolean, default: false }) required!: boolean;
