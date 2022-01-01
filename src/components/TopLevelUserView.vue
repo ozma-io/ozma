@@ -210,6 +210,7 @@
           </button>
         </div>
         <div
+          v-else-if="( !$isMobile || savedRecently.show )"
           v-b-tooltip.hover.right.noninteractive="{
             title: $t('saved').toString(),
             disabled: $isMobile,
