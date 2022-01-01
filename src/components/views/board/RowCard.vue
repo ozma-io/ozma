@@ -19,8 +19,9 @@
         :cols="col.size"
         :class="[
           'card-col',
-          variantClassName(colorVarinatAttribute(col.cellVariant)),
+          col.cellVariantClass
         ]"
+        :styles="col.cellVariantStyles"
       >
         <div
           v-if="col.type === 'image'"
@@ -60,8 +61,7 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import { Link } from "@/links";
 import { RowRef } from "@/user_views/combined";
 import { getIconType } from "@/utils";
-import type { ColorVariantAttribute } from "@/utils_colors";
-import { colorVariantFromAttribute, getColorVariantAttributeClassName } from "@/utils_colors";
+import { ColorVariantFullClassName, ColorVariantCssVariables } from "@/utils_colors";
 
 export interface ICardColumnBase {
   size: number;
@@ -72,7 +72,8 @@ export interface ITextCardColumn extends ICardColumnBase {
   icon: string | null;
   value: string;
   valueHtml: string;
-  cellVariant: string | unknown | null;
+  cellVariantClass: ColorVariantFullClassName | null;
+  cellVariantStyles: ColorVariantCssVariables | null;
 }
 
 export interface IImageCardColumn extends ICardColumnBase {
@@ -99,18 +100,6 @@ export default class RowCard extends Vue {
 
   private getIconType(icon: string) {
     return getIconType(icon);
-  }
-
-  private colorVarinatAttribute(variant: string): ColorVariantAttribute {
-    if (variant) {
-      return colorVariantFromAttribute(variant);
-    } else {
-      return colorVariantFromAttribute(null);
-    }
-  }
-
-  private variantClassName(colorVariantAttribute: ColorVariantAttribute): string | null {
-    return getColorVariantAttributeClassName(colorVariantAttribute);
   }
 }
 </script>
