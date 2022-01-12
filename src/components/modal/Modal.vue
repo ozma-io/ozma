@@ -11,6 +11,7 @@
 
 <template>
   <VueModal
+    adaptive
     :width="modalWidth"
     :height="modalHeight"
     :min-width="200"
@@ -123,7 +124,6 @@ import { Component, InjectReactive, Prop, ProvideReactive, Vue, Watch } from "vu
 import ModalContent from "@/components/modal/ModalContent";
 import ModalTabHeader from "@/components/modal/ModalTabHeader.vue";
 import { IModalTab } from "@/components/modal/types";
-import { homeLink } from "@/utils";
 import { interfaceButtonVariant } from "@/utils_colors";
 import { Button } from "../buttons/buttons";
 
@@ -181,12 +181,6 @@ export default class Modal extends Vue {
         icon: "arrow_back",
         variant: interfaceButtonVariant,
         callback: () => this.$emit("go-back-window"),
-      },
-      {
-        type: "link",
-        icon: "home",
-        variant: interfaceButtonVariant,
-        link: homeLink,
       },
     ];
   }

@@ -15,6 +15,7 @@
 
 <template>
   <VueModal
+    adaptive
     :width="modalWidth"
     :height="modalHeight"
     :name="uid"

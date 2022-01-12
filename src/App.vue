@@ -231,7 +231,7 @@ export default class App extends Vue {
 
   @Watch("settings")
   private updateSettings() {
-    const rawAutoSaveTimeout = Number(this.settings.getEntry("auto_save_timeout", String, "3"));
+    const rawAutoSaveTimeout = Number(this.settings.getEntry("auto_save_timeout", String, "1"));
     const autoSaveTimeout = Number.isNaN(rawAutoSaveTimeout) ? null : rawAutoSaveTimeout * 1000;
     this.setAutoSaveTimeout(autoSaveTimeout);
 

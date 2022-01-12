@@ -239,6 +239,7 @@ export default class InviteUserModal extends Vue {
     flex-flow: column;
     align-items: center;
     overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .invite-icon {
