@@ -67,7 +67,11 @@ import { attrToQuery, IQuery } from "@/state/query";
 import type { ICard } from "@/components/kanban/Column.vue";
 import { IRowCard, default as RowCard, CardColumn } from "@/components/views/board/RowCard.vue";
 import { EntriesRef } from "@/state/entries";
-import { colorVariantFromAttribute } from "@/utils_colors";
+import {
+  colorVariantFromAttribute,
+  getColorVariantAttributeClassName,
+  getColorVariantAttributeVariables,
+} from "@/utils_colors";
 
 interface IGroupColumn {
   group: unknown;
@@ -418,12 +422,15 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
 
       const punnedValue = valueToPunnedText(info.valueType, value);
       const icon = getCellAttr("icon");
+      const colorCellVariant = colorVariantFromAttribute(getCellAttr("cell_variant"));
       return {
         type: "text",
         value: punnedValue,
         valueHtml: replaceHtmlLinks(punnedValue),
         size: 12,
         icon: icon ? String(icon) : null,
+        cellVariantClass: getColorVariantAttributeClassName(colorCellVariant),
+        cellVariantStyles: getColorVariantAttributeVariables(colorCellVariant),
       };
     }, row.values);
 
