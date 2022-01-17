@@ -80,7 +80,9 @@ export const randomId = () => {
   return Math.random().toString(36).substring(2, 15);
 };
 
-export const language = navigator.languages[0];
+// FIXME: remove hardcoded language to stored language in settings for user in instance
+// `export const language = navigator.languages[0];`
+export const language = "ru-RU";
 export const shortLanguage = language.split("-")[0];
 
 export function isFirefox(): boolean {
