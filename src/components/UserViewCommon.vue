@@ -134,35 +134,50 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   openQRCodeScanner = false;
   openBarCodeScanner = false;
   showDeleteEntiesButton = false;
-  private AutoSaveLockUV: AutoSaveLock | null = null;
+  private autoSaveLock: AutoSaveLock | null = null;
 
-  private removeAutoSaveLockUV() {
-    if (this.AutoSaveLockUV === null) return;
+  private async addMyAutoSaveLock() {
+    if (this.autoSaveLock !== null) return;
 
-    void this.removeAutoSaveLock(this.AutoSaveLockUV);
-    this.AutoSaveLockUV = null;
+    const lock = await this.addAutoSaveLock();
+    this.autoSaveLock = lock;
+  }
+
+  private removeMyAutoSaveLock() {
+    if (this.autoSaveLock === null) return;
+
+    void this.removeAutoSaveLock(this.autoSaveLock);
+    this.autoSaveLock = null;
   }
 
   protected beforeDestroy() {
-    this.removeAutoSaveLockUV();
+    this.removeMyAutoSaveLock();
   }
 
-  // FIXME: check why do we need logic with the previous UV
   @Watch("uv", { immediate: true })
-  private watchUv(newUv: ICombinedUserViewAny, prevUv: ICombinedUserViewAny | null) {
-    const disabledOnNew = newUv.attributes["disable_auto_save"] || newUv.attributes["post_create_link"];
-    const disabledOnPrev = prevUv?.attributes["disable_auto_save"] || prevUv?.attributes["post_create_link"];
-    if (disabledOnNew && !disabledOnPrev) {
-      if (this.AutoSaveLockUV === null) {
-        void this.addAutoSaveLock().then(lock => {
-          this.AutoSaveLockUV = lock;
-        });
+  private async onUserViewUpdate(uv: ICombinedUserViewAny) {
+    let disableAutoSave: boolean;
+
+    const disableAutoSaveRaw = uv.attributes["disable_auto_save"];
+    if (typeof disableAutoSaveRaw === "boolean") {
+      disableAutoSave = disableAutoSaveRaw;
+    } else {
+      disableAutoSave = false;
+      if ("post_create_link" in uv.attributes) {
+        disableAutoSave = true;
+      } else if (uv.info.mainEntity) {
+        const entity = await this.getEntity(uv.info.mainEntity);
+        if (entity.hasInsertTriggers) {
+          disableAutoSave = true;
+        }
       }
     }
-    if (!disabledOnNew && disabledOnPrev) {
-      this.removeAutoSaveLockUV();
-    }
 
+    if (disableAutoSave) {
+      this.removeMyAutoSaveLock();
+    } else {
+      void this.addMyAutoSaveLock();
+    }
     void this.updateShowDeleteEntriesButton();
   }
 

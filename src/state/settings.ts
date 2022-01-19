@@ -4,7 +4,7 @@ import { IViewExprResult, IEntity } from "ozma-api";
 import { IRef, convertString, waitTimeout } from "@/utils";
 import { funappSchema, default as Api } from "@/api";
 import { CancelledError } from "@/modules";
-import { ThemesMap, ThemeName, loadThemes, getPreferredTheme, IThemeRef } from "@/utils_colors";
+import { ThemesMap, loadThemes, getPreferredTheme, IThemeRef } from "@/utils_colors";
 
 const errorKey = "settings";
 
@@ -77,9 +77,9 @@ const settingsModule: Module<ISettingsState, {}> = {
         await dispatch("getSettings");
       },
     },
-    setCurrentTheme: ({ commit }, theme: ThemeName) => {
-      localStorage.setItem("preferredTheme", theme);
-      commit("setCurrentTheme", theme);
+    setCurrentTheme: ({ commit }, ref: IThemeRef) => {
+      localStorage.setItem("preferredTheme", JSON.stringify(ref));
+      commit("setCurrentTheme", ref);
     },
     setError: ({ commit }, error: string) => {
       commit("errors/setError", { key: errorKey, error }, { root: true });

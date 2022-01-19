@@ -260,18 +260,16 @@ export const getPreferredTheme = (themes: ThemesMap): IThemeRef | null => {
       const storedThemeRaw = JSON.parse(storedThemeRawStr);
       storedTheme = ThemeRef.parse(storedThemeRaw);
     } catch (e) {
-      // Ignore.
+      console.error(`Failed to fetch preferred theme from local storage: ${e}`);
     }
   }
 
   if (storedTheme !== undefined) {
     const themesSchema = themes[storedTheme.schema];
-    if (themesSchema !== undefined) {
-      const theme = themes[storedTheme.name];
-      if (theme !== undefined) {
-        return storedTheme;
-      }
+    if (themesSchema !== undefined && storedTheme.name in themesSchema) {
+      return storedTheme;
     }
+    console.error(`User theme ${storedTheme.schema}.${storedTheme.name} is not defined`);
   }
 
   const themesSchema = themes["user"];
