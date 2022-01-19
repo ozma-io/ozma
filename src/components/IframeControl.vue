@@ -38,7 +38,7 @@ import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { Action } from "vuex-class";
 import { IViewExprResult } from "ozma-api";
 
-import Api from "@/api";
+import Api, { IIframeRef } from "@/api";
 import Errorbox from "@/components/Errorbox.vue";
 
 export type MessageFromIframe =
@@ -58,9 +58,9 @@ export type MessageToIframe =
 
 @Component({ components: { Errorbox } })
 export default class IframeControl extends Vue {
-  @Prop({ type: String, default: null }) src!: string | null;
-  @Prop({ type: String, default: null }) srcdoc!: string | null;
-  @Prop({ type: String, default: null }) markupName!: string | null;
+  @Prop({ type: String }) src!: string | undefined;
+  @Prop({ type: String }) srcdoc!: string | undefined;
+  @Prop({ type: Object }) iframeRef!: IIframeRef | undefined;
   @Prop({ required: true }) value!: unknown;
   @Prop({ type: Number }) height!: number;
 
@@ -71,20 +71,20 @@ export default class IframeControl extends Vue {
 
   @Watch("markupName", { immediate: true })
   private async loadMarkup() {
-    if (this.markupName === null) return;
+    if (this.iframeRef === undefined) return;
 
-    const ref = { schema: "funapp", name: "iframe_markup_by_name" };
+    const uvRef = { schema: "funapp", name: "iframe_markup_by_name" };
     const res = await this.callProtectedApi({
       func: Api.getNamedUserView.bind(Api),
-      args: [ref, { "name": this.markupName }],
+      args: [uvRef, this.iframeRef],
     }) as IViewExprResult;
     this.markup = res.result.rows[0]?.values[0].value as string | undefined;
   }
 
   @Watch("src")
   @Watch("srcdoc")
-  private watchValue(newValue: string | null, oldValue: string | null) {
-    if (newValue !== oldValue && newValue !== null) {
+  private watchValue(newValue: string | null) {
+    if (newValue !== null) {
       this.markup = null;
     }
   }

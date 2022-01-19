@@ -29,10 +29,11 @@ import errorsModule from "@/state/errors";
 import reloadModule from "@/state/reload";
 
 import "@/styles/style.scss";
+import { IEmbeddedPageRef } from "@/api";
 
 export interface IShowHelpModalArgs {
   userViewRef: IUserViewRef;
-  markupName: string;
+  ref: IEmbeddedPageRef;
 }
 
 type Events = {

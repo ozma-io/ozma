@@ -1,4 +1,4 @@
-import FunDBAPI from "ozma-api";
+import FunDBAPI, { IEntityRef } from "ozma-api";
 
 const hostnameParts = location.hostname.split(".");
 export const instanceName = (typeof __INSTANCE_NAME__ === "string") ? String(__INSTANCE_NAME__) : hostnameParts[0];
@@ -24,3 +24,7 @@ export const funappSchema = "funapp";
 
 const api = new FunDBAPI({ apiUrl });
 export default api;
+
+export type IDocumentRef = IEntityRef;
+export type IEmbeddedPageRef = IEntityRef;
+export type IIframeRef = IEntityRef;

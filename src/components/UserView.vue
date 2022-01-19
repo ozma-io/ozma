@@ -224,7 +224,7 @@ import * as R from "ramda";
 
 import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, mapMaybe, NeverError } from "@/utils";
 import { interfaceButtonVariant, defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
-import { funappSchema } from "@/api";
+import { funappSchema, IEmbeddedPageRef } from "@/api";
 import { equalEntityRef, serializeValue, valueIsNull } from "@/values";
 import { AddedRowId, CombinedTransactionResult, ICombinedInsertEntityResult, IStagingEventHandler, StagingKey } from "@/state/staging_changes";
 import type { ScopeName } from "@/state/staging_changes";
@@ -233,7 +233,7 @@ import { IUserViewConstructor } from "@/components";
 import UserViewCommon from "@/components/UserViewCommon.vue";
 import ArgumentEditor from "@/components/ArgumentEditor.vue";
 import type { Button } from "@/components/buttons/buttons";
-import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams } from "@/links";
+import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams, EntityRef } from "@/links";
 import type { ICombinedUserViewAny, IRowLoadState, IUserViewArguments } from "@/user_views/combined";
 import { CombinedUserView } from "@/user_views/combined";
 import { UserViewError, fetchUserViewData } from "@/user_views/fetch";
@@ -474,19 +474,34 @@ export default class UserView extends Vue {
 
     this.helpPageButton = null;
 
-    const rawMarkupName = this.state.uv.attributes["help_embedded_page_name"];
-    if (!rawMarkupName) return;
-    const markupName = String(rawMarkupName);
+    let pageRef: IEmbeddedPageRef | undefined;
+    const helpRef = EntityRef.safeParse(this.state.uv.attributes["help_page"]);
+    if (helpRef.success) {
+      pageRef = helpRef.data;
+    } else {
+      const rawMarkupName = this.state.uv.attributes["help_embedded_page_name"];
+      if (rawMarkupName) {
+        pageRef = {
+          schema: "user",
+          name: String(rawMarkupName),
+        };
+        console.error("Attribute help_embedded_page_name is deprecated; use help_page");
+      }
+    }
+
+    if (!pageRef) {
+      return;
+    }
 
     const { schema, name } = this.args.source.ref;
     const dismissHelpPages = Boolean(localStorage.getItem("dismiss-help-pages"));
-    const watchedHelpPage = localStorage.getItem(`watched-help-page_${schema}.${name}`);
-    const alreadyWatched = rawMarkupName === watchedHelpPage;
+    const watchedRef = EntityRef.safeParse(localStorage.getItem(`watched-help-page_${schema}.${name}`));
+    const alreadyWatched = watchedRef.success ? equalEntityRef(pageRef, watchedRef.data) : false;
     const showHelpPage = this.isRoot && !dismissHelpPages && !alreadyWatched;
 
     const eventArgs: IShowHelpModalArgs = {
       userViewRef: this.args.source.ref,
-      markupName,
+      ref: pageRef,
     };
 
     if (showHelpPage) {

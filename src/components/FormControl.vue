@@ -5,7 +5,7 @@
             "no": "No",
             "boolean_null": "Empty",
             "invalid_uv": "Nested user view rows should be JSON objects with 'ref' and 'args' defined",
-            "iframe_no_markup": "Iframe requires `iframe_markup_name`, `iframe_src` or `iframe_srcdoc` attribute",
+            "iframe_no_markup": "Iframe requires `iframe_markup`, `iframe_src` or `iframe_srcdoc` attribute",
             "data_will_load_after_save": "Data will load after save",
             "select_view": "Add in modal window"
         },
@@ -14,7 +14,7 @@
             "no": "Нет",
             "boolean_null": "Пусто",
             "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'ref' и 'args'",
-            "iframe_no_markup": "Для Iframe необходим атрибут `iframe_markup_name`, `iframe_src` или `iframe_srcdoc`",
+            "iframe_no_markup": "Для Iframe необходим атрибут `iframe_markup`, `iframe_src` или `iframe_srcdoc`",
             "data_will_load_after_save": "Данные загрузятся после сохранения",
             "select_view": "Создать во вложенном окне"
         }
@@ -202,9 +202,9 @@
         />
         <IframeControl
           v-else-if="inputType.name === 'iframe'"
+          :iframe-ref="inputType.ref"
           :src="inputType.src"
           :srcdoc="inputType.srcdoc"
-          :markup-name="inputType.markupName"
           :value="currentValue"
           :height="customHeight"
         />
@@ -331,6 +331,8 @@ import FormInputPlaceholder from "@/components/FormInputPlaceholder.vue";
 import type { MarkdownEditType } from "@/components/editors/MarkdownEditor.vue";
 import { IReferenceSelectAction } from "@/components/ReferenceMultiSelect.vue";
 import { ITime } from "@/components/calendar/TimePicker.vue";
+import { EntityRef } from "@/links";
+import { IIframeRef } from "@/api";
 
 interface ITextType {
   name: "text";
@@ -370,7 +372,7 @@ type IIframeType =
   }
   | {
     name: "iframe";
-    markupName: string;
+    ref: IIframeRef;
   };
 
 interface IMarkdownEditorType {
@@ -747,11 +749,15 @@ export default class FormControl extends Vue {
     }
 
     if (controlAttr === "iframe") {
-      const markupName = this.attributes["iframe_markup_name"];
-      const srcdoc = this.attributes["iframe_markup"] ?? this.attributes["iframe_srcdoc"];
+      const markupRef = EntityRef.safeParse(this.attributes["iframe_markup"]);
+      const oldMarkupName = this.attributes["iframe_markup_name"];
+      const srcdoc = this.attributes["iframe_srcdoc"];
       const src = this.attributes["iframe_src"];
-      if (typeof markupName === "string") {
-        return { name: "iframe", markupName };
+      if (markupRef.success) {
+        return { name: "iframe", ref: markupRef.data };
+      } else if (typeof oldMarkupName === "string") {
+        console.error("Attribute iframe_markup_name is deprecated, use iframe_markup");
+        return { name: "iframe", ref: { schema: "user", name: oldMarkupName } };
       } else if (typeof srcdoc === "string") {
         return { name: "iframe", srcdoc };
       } else if (typeof src === "string") {

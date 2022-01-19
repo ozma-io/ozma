@@ -78,7 +78,7 @@ import FabCluster from "@/components/FabCluster/FabCluster.vue";
 import { ErrorKey } from "@/state/errors";
 import { colorVariantsToCssRules, bootstrapColorVariants, colorVariantFromRaw, transparentVariant, IThemeRef, ITheme } from "@/utils_colors";
 import { eventBus } from "@/main";
-import Api from "@/api";
+import Api, { IEmbeddedPageRef } from "@/api";
 import InviteUserModal from "./components/InviteUserModal.vue";
 
 const settings = namespace("settings");
@@ -113,7 +113,7 @@ export default class App extends Vue {
 
   private helpPageInfo: {
     userViewRef: IUserViewRef;
-    markupName: string;
+    ref: IEmbeddedPageRef;
     markup: string;
   } | null = null;
 
@@ -177,17 +177,17 @@ export default class App extends Vue {
     (this.$refs?.inviteUserModal as any)?.show();
   }
 
-  private showHelpModal({ userViewRef, markupName }: { userViewRef: IUserViewRef; markupName: string }) {
+  private showHelpModal({ userViewRef, ref }: { userViewRef: IUserViewRef; ref: IEmbeddedPageRef }) {
     if (this.helpPageInfo) return;
 
-    const ref = { schema: "funapp", name: "embedded_page_by_name" };
+    const uvRef = { schema: "funapp", name: "embedded_page_by_name" };
     void (this.callProtectedApi({
       func: Api.getNamedUserView.bind(Api),
-      args: [ref, { "name": markupName }],
+      args: [uvRef, ref],
     }) as Promise<IViewExprResult>).then(res => {
       const markupRaw = (res.result.rows[0]?.values[0].value as string | undefined) ?? null;
-      const markup = markupRaw ?? `Help page markup with name "${markupName}" not found.`;
-      this.helpPageInfo = { userViewRef, markupName, markup };
+      const markup = markupRaw ?? `Help page markup with name "${ref.schema}"."${ref.name}" not found.`;
+      this.helpPageInfo = { userViewRef, ref, markup };
     });
   }
 
@@ -199,7 +199,7 @@ export default class App extends Vue {
     if (!this.helpPageInfo) return;
 
     const { schema, name } = this.helpPageInfo.userViewRef;
-    localStorage.setItem(`watched-help-page_${schema}.${name}`, this.helpPageInfo.markupName);
+    localStorage.setItem(`watched-help-page_${schema}.${name}`, JSON.stringify(this.helpPageInfo.ref));
 
     this.helpPageInfo = null;
   }

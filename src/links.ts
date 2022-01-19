@@ -1,12 +1,14 @@
 import { IActionRef } from "ozma-api";
 import { Store } from "vuex";
+import { z } from "zod";
+
 import { app } from "@/main";
 import { queryLocation, IQueryState, IQuery, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery, selfIdArgs, refIdArgs } from "@/state/query";
 import { gotoHref, randomId, shortLanguage, waitTimeout } from "@/utils";
 import { saveAndRunAction } from "@/state/actions";
 import { router } from "@/modules";
 import { IValueInfo } from "@/user_views/combined";
-import { documentGeneratorUrl, instanceName } from "@/api";
+import { documentGeneratorUrl, IDocumentRef, instanceName } from "@/api";
 
 export const hrefTargetTypes = ["_top", "_blank", "_self", "_parent"] as const;
 export type HrefTargetType = typeof hrefTargetTypes[number];
@@ -42,7 +44,7 @@ export interface IQRCodeLink {
 
 export interface IDocumentLink {
   type: "document";
-  template: { schema: string; name: string };
+  template: IDocumentRef;
   filename: string;
   args: Record<string, unknown>;
 }
@@ -75,6 +77,11 @@ export const addLinkDefaultArgs = (link: Link, args: Record<string, unknown>) =>
     link.query.args.args = { ...args, ...link.query.args.args };
   }
 };
+
+export const EntityRef = z.object({
+  schema: z.string(),
+  name: z.string(),
+});
 
 const attrToQueryLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLinkOpts): IQueryLink | null => {
   const query = attrObjectToQuery(linkedAttr, opts);
@@ -162,23 +169,19 @@ export const attrToDocumentLink = (linkedAttr: Record<string, unknown>, opts?: I
   const templateRaw = linkedAttr["document_template"];
   if (typeof templateRaw !== "object" || templateRaw === null) return null;
   const templateObj = templateRaw as Record<string, unknown>;
-  const schema = templateObj["schema"];
-  const name = templateObj["name"];
+  const ref = EntityRef.safeParse(templateObj);
   const filenameRaw = linkedAttr["filename"];
   const args = attrToRecord(linkedAttr["args"]);
-  if (typeof schema !== "string"
+  if (!ref.success
    || (filenameRaw !== undefined && typeof filenameRaw !== "string")
-   || typeof name !== "string"
    || args === null) {
     return null;
   }
-  const template = { schema, name };
-
   const filename = filenameRaw === undefined
     ? `${name}.pdf`
     : filenameRaw + (filenameHasExtension(filenameRaw) ? "" : ".pdf");
 
-  return { template, filename, args, type: "document" };
+  return { template: ref.data, filename, args, type: "document" };
 };
 
 export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | null => {
