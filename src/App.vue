@@ -81,7 +81,6 @@ import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import FabCluster from "@/components/FabCluster/FabCluster.vue";
 import { ErrorKey } from "@/state/errors";
 import { colorVariantsToCssRules, bootstrapColorVariants, colorVariantFromRaw, transparentVariant, IThemeRef, ITheme } from "@/utils_colors";
-import type { ThemeName } from "@/utils_colors";
 import { eventBus } from "@/main";
 import Api from "@/api";
 import { Button } from "./components/buttons/buttons";
