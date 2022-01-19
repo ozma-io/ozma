@@ -174,11 +174,11 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     }
 
     if (disableAutoSave) {
-      this.removeMyAutoSaveLock();
+      await this.addMyAutoSaveLock();
     } else {
-      void this.addMyAutoSaveLock();
+      this.removeMyAutoSaveLock();
     }
-    void this.updateShowDeleteEntriesButton();
+    await this.updateShowDeleteEntriesButton();
   }
 
   private async updateShowDeleteEntriesButton() {
