@@ -253,8 +253,7 @@ import { Link } from "@/links";
 import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { CurrentSettings } from "@/state/settings";
-import type { FullThemeName, ThemeName } from "@/utils_colors";
-import { interfaceButtonVariant, defaultVariantAttribute } from "@/utils_colors";
+import { interfaceButtonVariant, defaultVariantAttribute, IThemeRef } from "@/utils_colors";
 
 const auth = namespace("auth");
 const staging = namespace("staging");
@@ -311,7 +310,7 @@ export default class TopLevelUserView extends Vue {
   @errors.Mutation("reset") resetErrors!: () => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @settings.State("current") currentSettings!: CurrentSettings;
-  @settings.Action("setCurrentTheme") setCurrentTheme!: (theme: ThemeName) => Promise<void>;
+  @settings.Action("setCurrentTheme") setCurrentTheme!: (theme: IThemeRef) => Promise<void>;
   @staging.State("autoSaveLocks") autoSaveLocks!: Object | null;
 
   private statusLine = "";
@@ -321,7 +320,6 @@ export default class TopLevelUserView extends Vue {
   private isUserViewLoading = false;
 
   private buttons: Button[] = [];
-  private themeButtons: Button[] = [];
 
   private savedRecently: { show: boolean; timeoutId: NodeJS.Timeout | null } = {
     show: false,
@@ -362,7 +360,7 @@ export default class TopLevelUserView extends Vue {
     ];
   }
 
-  @Watch("mainButtons")
+  @Watch("mainButtons", { immediate: true })
   private pushMainButtons() {
     eventBus.emit("updateMainButtons", this.mainButtons);
   }
@@ -379,8 +377,6 @@ export default class TopLevelUserView extends Vue {
     document.addEventListener("keydown", this.onKeydown);
     eventBus.on("closeAllToasts", this.closeAllToasts);
     /* eslint-enable @typescript-eslint/unbound-method */
-
-    void this.loadBurgerButtons();
   }
 
   private destroyed() {
@@ -393,18 +389,31 @@ export default class TopLevelUserView extends Vue {
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
-  @Watch("currentSettings")
-  private loadBurgerButtons() {
+  private get themeButtons(): Button[] {
     const themes = this.currentSettings.themes;
-    const themeNames = themes.map(theme => theme.themeName);
     const locale = this.$i18n.locale;
-    const translate = (theme: FullThemeName) => (typeof theme.localized?.[locale] === "string") ? theme.localized[locale] : theme.name;
-    this.themeButtons = themeNames.map(themeName => ({
-      caption: translate(themeName),
-      variant: defaultVariantAttribute,
-      type: "callback",
-      callback: () => this.setCurrentTheme(themeName.name),
-    }));
+    return Object.entries(this.currentSettings.themes).flatMap(([schemaName, themesSchema]) => {
+      return Object.entries(themesSchema).map(([themeName, theme]) => {
+        const ref = {
+          schema: schemaName,
+          name: themeName,
+        };
+        let name: string;
+        if (locale in theme.localized) {
+          name = theme.localized[locale];
+        } else if ("en" in theme.localized) {
+          name = theme.localized["en"];
+        } else {
+          name = `${schemaName}.${themeName}`;
+        }
+        return {
+          caption: name,
+          variant: defaultVariantAttribute,
+          type: "callback",
+          callback: () => this.setCurrentTheme(ref),
+        };
+      });
+    });
   }
 
   private onKeydown(event: KeyboardEvent) {

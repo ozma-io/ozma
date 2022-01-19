@@ -80,7 +80,7 @@ import { CurrentSettings } from "@/state/settings";
 import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import FabCluster from "@/components/FabCluster/FabCluster.vue";
 import { ErrorKey } from "@/state/errors";
-import { colorVariantsToCssRules, bootstrapColorVariants, colorVariantFromRaw, transparentVariant } from "@/utils_colors";
+import { colorVariantsToCssRules, bootstrapColorVariants, colorVariantFromRaw, transparentVariant, IThemeRef, ITheme } from "@/utils_colors";
 import type { ThemeName } from "@/utils_colors";
 import { eventBus } from "@/main";
 import Api from "@/api";
@@ -110,7 +110,7 @@ const staging = namespace("staging");
 })
 export default class App extends Vue {
   @settings.State("current") settings!: CurrentSettings;
-  @settings.State("currentTheme") currentTheme!: ThemeName;
+  @settings.State("currentThemeRef") currentThemeRef!: IThemeRef | null;
   @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
   @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
@@ -277,9 +277,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
    *    And it supports CSS-cascading and doesn't affected by scoping, so we have `class="default-variant default-local-variant"` in <App /> and we use this variables in many places.
    * 7. Custom/inline variants works similar but a little simpler, but I'm too tired to explain, sorry.
    */
-  @Watch("currentTheme", { immediate: true })
+  @Watch("currentThemeRef", { immediate: true })
   private loadColors() {
-    const currentTheme = this.settings.themes.find(theme => theme.themeName.name === this.currentTheme);
+    let currentTheme: ITheme | undefined;
+    if (this.currentThemeRef !== null) {
+      currentTheme = this.settings.themes[this.currentThemeRef.schema][this.currentThemeRef.name];
+    }
 
     const background = this.styleSettings["--OldMainBackgroundColor"];
     const foreground = this.styleSettings["--OldMainTextColor"];

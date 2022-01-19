@@ -4,19 +4,19 @@ import { IViewExprResult, IEntity } from "ozma-api";
 import { IRef, convertString, waitTimeout } from "@/utils";
 import { funappSchema, default as Api } from "@/api";
 import { CancelledError } from "@/modules";
-import { Theme, ThemeName, loadThemes, getPreferredTheme } from "@/utils_colors";
+import { ThemesMap, ThemeName, loadThemes, getPreferredTheme, IThemeRef } from "@/utils_colors";
 
 const errorKey = "settings";
 
 export class CurrentSettings {
   settings: Partial<Record<string, string>>;
-  themes: Theme[];
+  themes: ThemesMap;
   userCanEditUserViews: boolean;
 
   constructor(
     settings: Record<string, string>,
-    themes: Theme[] = [],
-    userCanEditUserViews = false,
+    themes: ThemesMap,
+    userCanEditUserViews: boolean,
   ) {
     this.settings = settings;
     this.themes = themes;
@@ -33,18 +33,20 @@ export class CurrentSettings {
   }
 }
 
+const emptySettings = new CurrentSettings({}, {}, false);
+
 export interface ISettingsState {
   current: CurrentSettings;
   pending: Promise<CurrentSettings> | null;
-  currentTheme: ThemeName;
+  currentThemeRef: IThemeRef | null;
 }
 
 const settingsModule: Module<ISettingsState, {}> = {
   namespaced: true,
   state: {
-    current: new CurrentSettings({}),
+    current: emptySettings,
     pending: null,
-    currentTheme: "light",
+    currentThemeRef: null,
   },
   mutations: {
     setSettings: (state, settings: CurrentSettings) => {
@@ -55,11 +57,11 @@ const settingsModule: Module<ISettingsState, {}> = {
       state.pending = pending;
     },
     clearSettings: state => {
-      state.current = new CurrentSettings({});
+      state.current = emptySettings;
       state.pending = null;
     },
-    setCurrentTheme: (state, theme: ThemeName) => {
-      state.currentTheme = theme;
+    setCurrentTheme: (state, theme: IThemeRef | null) => {
+      state.currentThemeRef = theme;
     },
   },
   actions: {
@@ -108,8 +110,7 @@ const settingsModule: Module<ISettingsState, {}> = {
             return [key, value];
           }));
           const themes = await loadThemes();
-          const themeNames = themes.map(theme => theme.themeName.name);
-          const currentThemeName = getPreferredTheme(themeNames);
+          const currentThemeName = getPreferredTheme(themes);
 
           const userViewsEntityRef = { schema: "public", name: "user_views" };
           const userViewsInfo = await dispatch("entities/getEntity", userViewsEntityRef, { root: true }) as IEntity | undefined;
