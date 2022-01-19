@@ -67,10 +67,10 @@ export default class Textarea extends Vue {
   private updateAutofocus() {
     if (this.autofocus) {
       if (this.isCellEdit) {
-        const controlTextareaElement = this.$refs.controlTextarea as any;
+        const controlTextareaElement = (this.$refs.controlTextarea as Vue | undefined)?.$el as HTMLInputElement | undefined;
         if (!controlTextareaElement) return;
-        controlTextareaElement.$el.focus();
-        this.setCursorPositionEnd(controlTextareaElement.$el);
+        controlTextareaElement.focus();
+        this.setCursorPositionEnd(controlTextareaElement);
       } else {
         const control = this.$refs.control as HTMLInputElement | undefined;
         control?.focus();

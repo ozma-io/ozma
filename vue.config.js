@@ -70,7 +70,6 @@ module.exports = {
         .end();
   },
 
-  
   css: {
     loaderOptions: {
       sass: {

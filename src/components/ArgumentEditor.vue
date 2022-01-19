@@ -209,7 +209,7 @@ export default class ArgumentEditor extends Vue {
 
   @Watch("changedValues")
   private emitChangedValues() {
-    this.$emit("update:hasChangedValues", this.hasChanges);
+    this.$emit("update:has-changed-values", this.hasChanges);
   }
 }
 </script>

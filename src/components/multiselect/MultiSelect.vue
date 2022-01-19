@@ -51,7 +51,7 @@
           preventOverflow: { enabled: true, boundariesElement: 'viewport' },
         },
       }"
-      @update:showContent="isPopupOpen = $event"
+      @update:show-content="isPopupOpen = $event"
       @popup-opened="onOpenPopup"
       @popup-closed="onClosePopup"
     >

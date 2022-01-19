@@ -214,7 +214,7 @@ export default class ExplainDomains extends Vue {
       this.rowsQuery = res.query;
       this.rowsPlan = JSON.stringify(res.explanation, undefined, 2);
     } catch (e) {
-      this.lastError = e.message;
+      this.lastError = String(e);
       throw e;
     }
   }

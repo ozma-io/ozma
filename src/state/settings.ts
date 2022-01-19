@@ -105,8 +105,8 @@ const settingsModule: Module<ISettingsState, {}> = {
             throw new CancelledError();
           }
           const values = Object.fromEntries(res.result.rows.map(row => {
-            const key = row.values[0].value;
-            const value = row.values[1].value;
+            const key = String(row.values[0].value);
+            const value = String(row.values[1].value);
             return [key, value];
           }));
           const themes = await loadThemes();
@@ -124,7 +124,7 @@ const settingsModule: Module<ISettingsState, {}> = {
           return settings;
         } catch (e) {
           if (state.pending === pending.ref) {
-            void dispatch("setError", e.message);
+            void dispatch("setError", String(e));
           }
           throw e;
         }

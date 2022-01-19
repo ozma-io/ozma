@@ -5,6 +5,8 @@ Vue.config.performance = process.env["NODE_ENV"] !== "production";
 
 import Vuex from "vuex";
 import mitt from "mitt";
+import TextareaAutosize from "vue-textarea-autosize";
+import { IUserViewRef } from "ozma-api";
 
 import * as Modules from "@/modules";
 import { setHeadTitle } from "@/elements";
@@ -17,8 +19,6 @@ import FormControl from "@/components/FormControl.vue";
 import { VueIsMobile } from "@/components";
 import App from "@/App.vue";
 
-import TextareaAutosize from "vue-textarea-autosize";
-
 import authModule from "@/state/auth";
 import settingsModule from "@/state/settings";
 import entitiesModule from "@/state/entities";
@@ -30,7 +30,20 @@ import reloadModule from "@/state/reload";
 
 import "@/styles/style.scss";
 
-export const eventBus = mitt();
+export interface IShowHelpModalArgs {
+  userViewRef: IUserViewRef;
+  markupName: string;
+}
+
+type Events = {
+  ["show-readonly-demo-modal"]?: string;
+  ["show-invite-user-modal"]?: string;
+  ["show-help-modal"]: IShowHelpModalArgs;
+  ["close-all-toasts"]?: string;
+  ["close-all-button-groups"]?: string;
+};
+
+export const eventBus = mitt<Events>();
 
 export const store = new Vuex.Store({
   // Big performance hog on dev!
@@ -47,6 +60,7 @@ export const store = new Vuex.Store({
   },
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 Vue.use(TextareaAutosize);
 Vue.use(VueIsMobile);
 

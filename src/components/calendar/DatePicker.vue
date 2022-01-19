@@ -37,7 +37,7 @@
       v-else-if="mode === 'days'"
       :selected-value="value"
       :start-value="startValue"
-      @update:selectedValue="$emit('update:value', $event)"
+      @update:selected-value="$emit('update:value', $event)"
     />
   </div>
 </template>
@@ -55,12 +55,14 @@ type Mode = "days" | "months";
   components: { DaysInMonth, MonthsInYear },
 })
 export default class DatePicker extends Vue {
-  @Prop({ type: moment }) value!: Moment;
+  @Prop({ type: moment, required: true }) value!: Moment;
 
-  private startValue: Moment = this.value.isValid()
-    ? this.value
-    : moment.utc();
+  private startValue: Moment = moment.invalid();
   private mode: Mode = "days";
+
+  created() {
+    this.startValue = this.value.isValid() ? this.value : moment.utc();
+  }
 
   get shownValue() {
     return this.value.isValid() ? this.value : moment.utc();

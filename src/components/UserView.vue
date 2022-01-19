@@ -94,7 +94,7 @@
           :argument-values="state.uv.args.args"
           @close="contextMenuShowArgumentEditor = false"
           @update="updateArguments"
-          @update:hasChangedValues="argumentEditorHasChangedValues = $event"
+          @update:has-changed-values="argumentEditorHasChangedValues = $event"
         />
       </transition>
 
@@ -168,10 +168,10 @@
             @goto-previous="$emit('goto-previous')"
             @select="$emit('select', $event)"
             @update:buttons="componentButtons = $event"
-            @update:statusLine="$emit('update:statusLine', $event)"
-            @update:enableFilter="$emit('update:enableFilter', $event)"
-            @update:currentPage="$emit('update:currentPage', $event)"
-            @update:bodyStyle="$emit('update:bodyStyle', $event)"
+            @update:status-line="$emit('update:status-line', $event)"
+            @update:enable-filter="$emit('update:enable-filter', $event)"
+            @update:current-page="$emit('update:current-page', $event)"
+            @update:body-style="$emit('update:body-style', $event)"
             @load-next-chunk="loadNextChunk"
             @load-all-chunks="loadAllChunks"
             @load-entries="loadEntries"
@@ -240,7 +240,7 @@ import { UserViewError, fetchUserViewData } from "@/user_views/fetch";
 import { baseUserViewHandler } from "@/components/BaseUserView";
 import Errorbox from "@/components/Errorbox.vue";
 import { CurrentSettings } from "@/state/settings";
-import { eventBus } from "@/main";
+import { eventBus, IShowHelpModalArgs } from "@/main";
 
 const types: RecordSet<string> = {
   "form": null,
@@ -380,10 +380,11 @@ export default class UserView extends Vue {
   private nextUv: Promise<void> | null = null;
   private inhibitReload = false;
   private argumentEditorHasChangedValues = false;
+  private updatePageHandler = () => this.updateHelpPageState();
 
   created() {
     /* eslint-disable @typescript-eslint/unbound-method */
-    eventBus.on("localStorageUpdated", this.updateHelpPageState);
+    window.addEventListener("storage", this.updatePageHandler);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
@@ -398,9 +399,7 @@ export default class UserView extends Vue {
     }
     this.nextUv = null;
 
-    /* eslint-disable @typescript-eslint/unbound-method */
-    eventBus.off("localStorageUpdated", this.updateHelpPageState);
-    /* eslint-enable @typescript-eslint/unbound-method */
+    window.removeEventListener("storage", this.updatePageHandler);
   }
 
   private get transitionKey() {
@@ -475,22 +474,23 @@ export default class UserView extends Vue {
 
     this.helpPageButton = null;
 
-    const markupName = this.state.uv.attributes["help_embedded_page_name"];
-    if (!markupName) return;
+    const rawMarkupName = this.state.uv.attributes["help_embedded_page_name"];
+    if (!rawMarkupName) return;
+    const markupName = String(rawMarkupName);
 
     const { schema, name } = this.args.source.ref;
     const dismissHelpPages = Boolean(localStorage.getItem("dismiss-help-pages"));
     const watchedHelpPage = localStorage.getItem(`watched-help-page_${schema}.${name}`);
-    const alreadyWatched = markupName === watchedHelpPage;
+    const alreadyWatched = rawMarkupName === watchedHelpPage;
     const showHelpPage = this.isRoot && !dismissHelpPages && !alreadyWatched;
 
-    const eventArgs = {
+    const eventArgs: IShowHelpModalArgs = {
       userViewRef: this.args.source.ref,
       markupName,
     };
 
     if (showHelpPage) {
-      eventBus.emit("showHelpModal", eventArgs);
+      eventBus.emit("show-help-modal", eventArgs);
     }
 
     this.helpPageButton = {
@@ -499,7 +499,7 @@ export default class UserView extends Vue {
       variant: { type: "existing", className: "help-button" }, // "help-button" is magic variant only for this case.
       type: "callback",
       callback: () => {
-        eventBus.emit("showHelpModal", eventArgs);
+        eventBus.emit("show-help-modal", eventArgs);
       },
     };
   }
@@ -890,9 +890,9 @@ export default class UserView extends Vue {
 
     this.state = loadingState;
     this.componentButtons = [];
-    this.$emit("update:statusLine", "");
-    this.$emit("update:enableFilter", false);
-    this.$emit("update:bodyStyle", "");
+    this.$emit("update:status-line", "");
+    this.$emit("update:enable-filter", false);
+    this.$emit("update:body-style", "");
   }
 
   private setState(state: UserViewLoadingState) {
@@ -940,7 +940,7 @@ export default class UserView extends Vue {
   updateIsLoading(newValue: string, oldValue: string) {
     if (newValue === oldValue) return;
 
-    this.$emit("update:isLoading", newValue === "loading");
+    this.$emit("update:is-loading", newValue === "loading");
   }
 
   @Watch("title", { immediate: true })

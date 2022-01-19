@@ -112,7 +112,7 @@ export default class ButtonItem extends Vue {
   }
 
   private onClickLinkReadonlyDemoInstance() {
-    eventBus.emit("showReadonlyDemoModal");
+    eventBus.emit("show-readonly-demo-modal");
   }
 
   private onClickLink() {

@@ -60,7 +60,7 @@ export const valueEquals = (valueType: ValueType, a: unknown, b: unknown) : bool
 
   if (valueType.type === "date" || valueType.type === "datetime") {
     if (moment.isMoment(a)) {
-      return a.isSame(b as any);
+      return a.isSame(b as MomentInput);
     } else {
       return a === b;
     }

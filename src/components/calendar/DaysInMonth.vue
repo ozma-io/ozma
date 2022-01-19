@@ -15,7 +15,7 @@
                {'curr-day': day.isSame(selectedValue, 'day')},
                {'today': day.isSame(today, 'day')}]"
       :style="{ gridColumn: day.weekday() + 1 }"
-      @click="$emit('update:selectedValue', day)"
+      @click="$emit('update:selected-value', day)"
     >
       {{ day.date() }}
     </div>

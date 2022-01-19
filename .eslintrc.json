@@ -118,7 +118,9 @@
     "@typescript-eslint/restrict-template-expressions": "off",
     "@typescript-eslint/no-empty-interface": "off",
     // Buggy.
-    "@typescript-eslint/restrict-plus-operands": "off"
+    "@typescript-eslint/restrict-plus-operands": "off",
+    // Also buggy.
+    "@typescript-eslint/no-unsafe-argument": "off"
   },
   "overrides": [
     {

@@ -25,11 +25,7 @@
 
     <div class="app-container">
       <div v-if="!bannerMessage" class="main-buttons-wrapper">
-        <ButtonsPanel
-          class="main-buttons"
-          :buttons="mainButtons"
-          @goto="$emit('goto', $event)"
-        />
+        <portal-target name="main-buttons" />
       </div>
 
       <ModalPortalTarget
@@ -83,7 +79,6 @@ import { ErrorKey } from "@/state/errors";
 import { colorVariantsToCssRules, bootstrapColorVariants, colorVariantFromRaw, transparentVariant, IThemeRef, ITheme } from "@/utils_colors";
 import { eventBus } from "@/main";
 import Api from "@/api";
-import { Button } from "./components/buttons/buttons";
 import InviteUserModal from "./components/InviteUserModal.vue";
 
 const settings = namespace("settings");
@@ -130,10 +125,10 @@ export default class App extends Vue {
     document.addEventListener("cut", this.onCut);
     document.addEventListener("paste", this.onPaste);
 
-    eventBus.on("showReadonlyDemoModal", this.showDemoModal);
-    eventBus.on("showInviteUserModal", this.showInviteUserModal);
-    eventBus.on("showHelpModal", this.showHelpModal);
-    eventBus.on("updateMainButtons", this.updateMainButtons);
+    eventBus.on("show-readonly-demo-modal", this.showDemoModal);
+    eventBus.on("show-invite-user-modal", this.showInviteUserModal);
+    eventBus.on("show-help-modal", this.showHelpModal);
+    eventBus.on("close-all-toasts", this.closeAllToasts);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
@@ -143,10 +138,10 @@ export default class App extends Vue {
     document.removeEventListener("cut", this.onCut);
     document.removeEventListener("paste", this.onPaste);
 
-    eventBus.off("showReadonlyDemoModal", this.showDemoModal);
-    eventBus.off("showInviteUserModal", this.showInviteUserModal);
-    eventBus.off("showHelpModal", this.showHelpModal);
-    eventBus.off("updateMainButtons", this.updateMainButtons);
+    eventBus.off("show-readonly-demo-modal", this.showDemoModal);
+    eventBus.off("show-invite-user-modal", this.showInviteUserModal);
+    eventBus.off("show-help-modal", this.showHelpModal);
+    eventBus.off("close-all-toasts", this.closeAllToasts);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
@@ -160,13 +155,6 @@ export default class App extends Vue {
 
   private onPaste(event: ClipboardEvent) {
     this.$root.$emit("paste", event);
-  }
-
-  private mainButtons: Button[] = [];
-  private updateMainButtons(mainButtons?: Button[]) {
-    if (!mainButtons) return;
-
-    this.mainButtons = mainButtons;
   }
 
   private get isReadonlyDemoInstance() {
@@ -189,14 +177,8 @@ export default class App extends Vue {
     (this.$refs?.inviteUserModal as any)?.show();
   }
 
-  private showHelpModal(args?: { userViewRef: IUserViewRef; markupName: string }) {
+  private showHelpModal({ userViewRef, markupName }: { userViewRef: IUserViewRef; markupName: string }) {
     if (this.helpPageInfo) return;
-
-    if (!args) {
-      console.error("No args for showHelpModal");
-      return;
-    }
-    const { userViewRef, markupName } = args;
 
     const ref = { schema: "funapp", name: "embedded_page_by_name" };
     void (this.callProtectedApi({
@@ -218,14 +200,16 @@ export default class App extends Vue {
 
     const { schema, name } = this.helpPageInfo.userViewRef;
     localStorage.setItem(`watched-help-page_${schema}.${name}`, this.helpPageInfo.markupName);
-    eventBus.emit("localStorageUpdated");
 
     this.helpPageInfo = null;
   }
 
   private dismissAllHelpPages() {
     localStorage.setItem("dismiss-help-pages", "true");
-    eventBus.emit("localStorageUpdated");
+  }
+
+  private closeAllToasts() {
+    this.$bvToast.hide();
   }
 
   @Watch("settings")

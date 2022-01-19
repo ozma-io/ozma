@@ -34,13 +34,13 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
+import { IEntityRef } from "ozma-api";
 
 import ReferenceMultiSelect from "@/components/ReferenceMultiSelect.vue";
 import { valueIsNull } from "@/values";
 import { EntriesRef } from "@/state/entries";
 import type { IQuery } from "@/state/query";
 import type { IUserViewArguments } from "@/user_views/combined";
-import { IEntityRef } from "ozma-api";
 
 @Component({
   components: {

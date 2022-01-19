@@ -137,9 +137,9 @@
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import moment, { Moment } from "moment";
 
+import Popper from "vue-popperjs";
 import DatePicker from "@/components/calendar/DatePicker.vue";
 import TimePicker, { ITime } from "@/components/calendar/TimePicker.vue";
-import Popper from "vue-popperjs";
 
 @Component({
   components: {

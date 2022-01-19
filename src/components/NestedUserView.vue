@@ -7,9 +7,9 @@
     :filter="filterWords"
     @update:buttons="$emit('update:buttons', $event)"
     @goto="$emit('goto', $event)"
-    @update:enableFilter="$emit('update:enableFilter', $event)"
+    @update:enable-filter="$emit('update:enable-filter', $event)"
     @update:title="updateTitle"
-    @update:isLoading="$emit('update:isLoading', $event)"
+    @update:is-loading="$emit('update:is-loading', $event)"
   />
 </template>
 

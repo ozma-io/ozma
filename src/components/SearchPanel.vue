@@ -82,13 +82,12 @@ export default class SearchPanel extends Vue {
 
   private showInput = false;
   private showOpenButton = true;
-  private localFilterString: string;
+  private localFilterString = "";
 
-  constructor() {
-    super();
-    this.localFilterString = this.filterString;
+  created() {
     this.showInput = this.filterString !== "";
     this.showOpenButton = this.filterString === "";
+    this.localFilterString = this.filterString;
   }
 
   private toggleShowInput() {
@@ -100,7 +99,7 @@ export default class SearchPanel extends Vue {
 
   private updateInput() {
     if (this.localFilterString !== this.filterString) {
-      this.$emit("update:filterString", this.localFilterString);
+      this.$emit("update:filter-string", this.localFilterString);
     }
   }
 
@@ -123,6 +122,7 @@ export default class SearchPanel extends Vue {
 }
 
 </script>
+
 <style lang="scss" scoped>
   .search-wrapper {
     display: flex;

@@ -22,7 +22,7 @@
 </i18n>
 
 <template>
-  <fragment>
+  <div>
     <InputSlot
       v-if="inputType.name !== 'userview' && inputType.name !== 'empty_userview'"
       :inline="!isMultiline && !forceMultiline"
@@ -258,57 +258,55 @@
         />
       </template>
     </InputSlot>
-    <template v-if="inputType.name === 'userview' || inputType.name == 'empty_userview'">
-      <div :class="['nested-userview', { 'mobile': $isMobile }]">
-        <div v-if="inputType.name == 'empty_userview'">
-          <div class="nested-menu">
-            <!-- `tabindex` is required for closing tooltip on blur -->
-            <label
-              v-b-tooltip.click.blur.bottom.noninteractive
-              tabindex="0"
-              class="input_label not-loaded"
-              :title="usedCaption"
-            >
-              {{ usedCaption }}
-            </label>
-          </div>
-          <div class="empty_userview_text">
-            {{ $t("data_will_load_after_save") }}
-          </div>
+    <div v-else :class="['nested-userview', { 'mobile': $isMobile }]">
+      <div v-if="inputType.name == 'empty_userview'">
+        <div class="nested-menu">
+          <!-- `tabindex` is required for closing tooltip on blur -->
+          <label
+            v-b-tooltip.click.blur.bottom.noninteractive
+            tabindex="0"
+            class="input_label not-loaded"
+            :title="usedCaption"
+          >
+            {{ usedCaption }}
+          </label>
         </div>
-        <HeaderPanel
-          v-else-if="inputType.name === 'userview'"
-          :title="usedCaption"
-          :buttons="buttons"
-          :is-enable-filter="enableFilter"
-          :view="inputType"
-          :filter-string="filterString"
-          :is-loading="isUserViewLoading"
-          :type="'component'"
-          @update:filterString="filterString = $event"
-          @goto="$emit('goto', $event)"
-        />
-        <div
-          v-if="inputType.name === 'userview'"
-          :style="{ backgroundColor: cellColor, height: `${customHeight}px` }"
-        >
-          <NestedUserView
-            ref="control"
-            :args="inputType.args"
-            :default-values="inputType.defaultValues"
-            :scope="scope"
-            :level="level + 1"
-            :filter-string="filterString"
-            @update:buttons="buttons = $event"
-            @update:enableFilter="enableFilter = $event"
-            @update:isLoading="isUserViewLoading = $event"
-            @update:title="updateTitle"
-            @goto="$emit('goto', $event)"
-          />
+        <div class="empty_userview_text">
+          {{ $t("data_will_load_after_save") }}
         </div>
       </div>
-    </template>
-  </fragment>
+      <HeaderPanel
+        v-else-if="inputType.name === 'userview'"
+        :title="usedCaption"
+        :buttons="buttons"
+        :is-enable-filter="enableFilter"
+        :view="inputType"
+        :filter-string="filterString"
+        :is-loading="isUserViewLoading"
+        :type="'component'"
+        @update:filter-string="filterString = $event"
+        @goto="$emit('goto', $event)"
+      />
+      <div
+        v-if="inputType.name === 'userview'"
+        :style="{ backgroundColor: cellColor, height: `${customHeight}px` }"
+      >
+        <NestedUserView
+          ref="control"
+          :args="inputType.args"
+          :default-values="inputType.defaultValues"
+          :scope="scope"
+          :level="level + 1"
+          :filter-string="filterString"
+          @update:buttons="buttons = $event"
+          @update:enable-filter="enableFilter = $event"
+          @update:is-loading="isUserViewLoading = $event"
+          @update:title="updateTitle"
+          @goto="$emit('goto', $event)"
+        />
+      </div>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -317,12 +315,12 @@ import type { AttributesMap, FieldType, IFieldRef, ValueType } from "ozma-api";
 import { z } from "zod";
 import { namespace } from "vuex-class";
 
+import { IEntityRef } from "ozma-api";
 import { valueToText, valueIsNull } from "@/values";
 import { IQuery, attrToQuerySelf, attrObjectToQuery } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema } from "@/user_views/combined";
-import { IEntityRef } from "ozma-api";
 import { AutoSaveLock } from "@/state/staging_changes";
 
 import { colorVariantFromAttribute } from "@/utils_colors";

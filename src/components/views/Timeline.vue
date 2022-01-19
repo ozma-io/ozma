@@ -125,7 +125,7 @@ export default class UserViewTimeline extends mixins<EmptyBaseUserView>(BaseUser
       };
     }, row.values);
 
-    const typeRaw = this.typeIndex === null ? "messgae" : row.values[this.typeIndex].value;
+    const typeRaw = this.typeIndex === null ? "message" : String(row.values[this.typeIndex].value);
     const type = isPhenomType(typeRaw) ? typeRaw : "message";
 
     const username = this.usernameIndex === null ? null : this.getPunnedValueByIndex(row, this.usernameIndex);

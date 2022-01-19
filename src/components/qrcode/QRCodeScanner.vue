@@ -77,7 +77,7 @@ import BarCode from "@/components/barcode/BarCode.vue";
 import { IQRCode, parseQRCode } from "@/components/qrcode/QRCode.vue";
 import { EntriesRef } from "@/state/entries";
 
-const beep = require("@/resources/beep.mp3");
+const beepSrc = require("@/resources/beep.mp3");
 
 export interface IQRResultContent extends IQRCode {
   value: string;
@@ -104,9 +104,9 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Prop({ type: Object }) entries!: EntriesRef | undefined;
   @Prop({ type: Object }) referenceEntity!: IEntityRef | undefined;
 
-  modalShow = false;
-  result: Array<IQRResultContent> = [];
-  audio = new Audio(beep);
+  private modalShow = false;
+  private result: Array<IQRResultContent> = [];
+  private audio = new Audio(beepSrc as string);
 
   currentContent = "";
   timer = false;

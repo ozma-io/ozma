@@ -143,8 +143,9 @@ import { mixins } from "vue-class-component";
 import { AttributesMap, IResultColumnInfo, ValueType } from "ozma-api";
 import { z } from "zod";
 import { namespace } from "vuex-class";
+import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 
-import { tryDicts, mapMaybe, validNumberFormats, getNumberFormatter, ValidNumberFormat } from "@/utils";
+import { tryDicts, mapMaybe, getNumberFormatter, isValidNumberFormat } from "@/utils";
 import { interfaceButtonVariant, bootstrapVariantAttribute } from "@/utils_colors";
 import { AddedRowId } from "@/state/staging_changes";
 import { UserView } from "@/components";
@@ -158,7 +159,6 @@ import { GridElement, IGridInput, IGridSection } from "@/components/form/FormGri
 import type { Button } from "@/components/buttons/buttons";
 import { lazyLoadSchema } from "@/components/views/Table.vue";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
-import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 
 export interface IButtonAction {
   name: string;
@@ -216,16 +216,15 @@ const createCommonLocalValue = (uv: IFormCombinedUserView, row: IRowCommon & IFo
   const visible = Boolean(attributes["visible"] ?? true);
 
   let valueFormatted: string | undefined;
-  const numberFormat = attributes["number_format"];
-  const isValidFormat = (format: unknown) : format is ValidNumberFormat =>
-    typeof format === "string" && validNumberFormats.includes(format.toLowerCase() as any);
   // Formatting  of editable inputs (or input masking) is a huge pain and brings many troubles, so only for read-only inputs.
   const isReadOnly = value.info === undefined || attributes["soft_disabled"];
-  const isNumber = numberTypes.includes(uv.info.columns[columnIndex].valueType.type);
-  if (isReadOnly && isNumber && isValidFormat(numberFormat)) {
-    const fractionDigitsRaw = attributes["fraction_digits"];
-    const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
-    valueFormatted = getNumberFormatter(numberFormat, fractionDigits).format(value.value as any);
+  if (isReadOnly && typeof value.value === "number") {
+    const numberFormat = attributes["number_format"];
+    if (typeof numberFormat === "string" && isValidNumberFormat(numberFormat)) {
+      const fractionDigitsRaw = attributes["fraction_digits"];
+      const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
+      valueFormatted = getNumberFormatter(numberFormat, fractionDigits).format(value.value);
+    }
   }
 
   return {
@@ -403,7 +402,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
   private get currentVisualPage() {
     if (this.uv.extra.lazyLoad.type !== "pagination") return "0";
 
-    return String(this.uv.extra.lazyLoad.pagination?.currentPage + 1);
+    return String(this.uv.extra.lazyLoad.pagination?.currentPage ?? 0 + 1);
   }
 
   @Watch("currentVisualPage")
@@ -411,7 +410,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     if (this.uv.extra.lazyLoad.type !== "pagination") return;
     if (!this.isTopLevel) return;
 
-    this.$emit("update:currentPage", this.uv.extra.lazyLoad.pagination.currentPage);
+    this.$emit("update:current-page", this.uv.extra.lazyLoad.pagination.currentPage);
   }
 
   private get onLastPage() {
@@ -607,7 +606,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
 
   private async init() {
     if (this.isTopLevel) {
-      this.$emit("update:bodyStyle", `
+      this.$emit("update:body-style", `
         @media print {
             @page {
                 size: portrait;

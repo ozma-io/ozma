@@ -27,6 +27,7 @@
             "select_user_view_error": "Failed to select an entry: {msg}",
             "base_user_view_error": "Failed to perform an operation: {msg}",
             "error": "Error",
+            "forget_dismissed_help_pages": "Forget dismissed help pages",
             "authed_link": "Copy link with authorization"
         },
         "ru": {
@@ -56,6 +57,7 @@
             "select_user_view_error": "Ошибка выбора записи: {msg}",
             "base_user_view_error": "Ошибка выполнения операции: {msg}",
             "error": "Ошибка",
+            "forget_dismissed_help_pages": "Сбросить пропущенные страницы помощи",
             "authed_link": "Скопировать ссылку с авторизацией"
         }
     }
@@ -63,6 +65,13 @@
 
 <template>
   <div class="main-div">
+    <portal to="main-buttons">
+      <ButtonsPanel
+        class="main-buttons"
+        :buttons="mainButtons"
+        @goto="$emit('goto', $event)"
+      />
+    </portal>
     <template v-if="query !== null">
       <ModalUserView
         v-for="(window, i) in query.windows"
@@ -85,7 +94,7 @@
         :is-enable-filter="enableFilter"
         :filter-string="query.root.search"
         :type="'root'"
-        @update:filterString="replaceRootSearch($event)"
+        @update:filter-string="replaceRootSearch($event)"
         @goto="$emit('goto', $event)"
       >
         <template #main-buttons>
@@ -108,12 +117,11 @@
           @goto="pushRoot"
           @goto-previous="gotoPreviousRoot"
           @update:buttons="buttons = $event"
-          @update:statusLine="statusLine = $event"
-          @update:enableFilter="enableFilter = $event"
-          @update:bodyStyle="styleNode.innerHTML = $event"
+          @update:status-line="statusLine = $event"
+          @update:enable-filter="enableFilter = $event"
+          @update:body-style="styleNode.innerHTML = $event"
           @update:title="updateTitle"
-          @update:isLoading="isUserViewLoading = $event"
-          @update:currentPage="replaceRootPage($event)"
+          @update:current-page="replaceRootPage($event)"
         />
       </div>
     </div>
@@ -315,9 +323,8 @@ export default class TopLevelUserView extends Vue {
 
   private statusLine = "";
   private enableFilter = false;
-  private styleNode: HTMLStyleElement;
+  private styleNode!: HTMLStyleElement;
   private title = "";
-  private isUserViewLoading = false;
 
   private buttons: Button[] = [];
 
@@ -360,32 +367,19 @@ export default class TopLevelUserView extends Vue {
     ];
   }
 
-  @Watch("mainButtons", { immediate: true })
-  private pushMainButtons() {
-    eventBus.emit("updateMainButtons", this.mainButtons);
-  }
-
-  constructor() {
-    super();
-    this.styleNode = document.createElement("style");
-    this.styleNode.type = "text/css";
-  }
-
   mounted() {
     /* eslint-disable @typescript-eslint/unbound-method */
     this.$root.$on("open-qrcode-scanner", this.openQRCodeScanner);
     document.addEventListener("keydown", this.onKeydown);
-    eventBus.on("closeAllToasts", this.closeAllToasts);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
-  private destroyed() {
+  destroyed() {
     this.styleNode.remove();
 
     /* eslint-disable @typescript-eslint/unbound-method */
     this.$root.$off("open-qrcode-scanner", this.openQRCodeScanner);
     document.removeEventListener("keydown", this.onKeydown);
-    eventBus.off("closeAllToasts", this.closeAllToasts);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
@@ -472,10 +466,6 @@ export default class TopLevelUserView extends Vue {
     }
   }
 
-  private closeAllToasts() {
-    this.$bvToast.hide();
-  }
-
   private makeErrorToast() {
     this.$bvToast.hide();
     this.errors.forEach(error => {
@@ -510,21 +500,25 @@ export default class TopLevelUserView extends Vue {
   }
 
   private created() {
+    this.styleNode = document.createElement("style");
     document.head.appendChild(this.styleNode);
   }
 
-  private resetChanges() {
-    this.$bvModal.msgBoxConfirm(this.$t("clear_changes_confirm").toString(), {
-      okTitle: this.$t("clear_changes_ok").toString(),
-      cancelTitle: this.$t("cancel").toString(),
-      okVariant: "danger",
-      cancelVariant: "outline-secondary",
-      centered: true,
-    }).then(this.clearChanges)
-      .then(this.resetErrors)
-      .then(() => this.closeAllToasts())
-      .catch(err => {
+  private async resetChanges() {
+    try {
+      await this.$bvModal.msgBoxConfirm(this.$t("clear_changes_confirm").toString(), {
+        okTitle: this.$t("clear_changes_ok").toString(),
+        cancelTitle: this.$t("cancel").toString(),
+        okVariant: "danger",
+        cancelVariant: "outline-secondary",
+        centered: true,
       });
+    } catch (e) {
+      return;
+    }
+    await this.clearChanges();
+    this.resetErrors();
+    this.$bvToast.hide();
   }
 
   private async saveChanges() {
@@ -565,7 +559,7 @@ export default class TopLevelUserView extends Vue {
         caption: this.$t("invite_user").toString(),
         variant: defaultVariantAttribute,
         type: "callback",
-        callback: () => eventBus.emit("showInviteUserModal"),
+        callback: () => eventBus.emit("show-invite-user-modal"),
       });
     }
 
@@ -617,7 +611,7 @@ export default class TopLevelUserView extends Vue {
       if (this.currentSettings.userCanEditUserViews) {
         buttons.push({
           icon: "layers_clear",
-          caption: "Forget dismissed help pages",
+          caption: this.$t("forget_dismissed_help_pages").toString(),
           type: "callback",
           callback: () => {
             const allKeys = Object.keys(localStorage);
@@ -625,7 +619,6 @@ export default class TopLevelUserView extends Vue {
             for (const key of keys) {
               localStorage.removeItem(key);
             }
-            eventBus.emit("localStorageUpdated");
           },
           variant: defaultVariantAttribute,
         });

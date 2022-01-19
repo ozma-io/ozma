@@ -41,6 +41,7 @@ import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import ButtonView from "@/components/buttons/ButtonView.vue";
 import ButtonList from "@/components/buttons/ButtonList.vue";
 import { eventBus } from "@/main";
+import { waitTimeout } from "@/utils";
 
 @Component({
   components: {
@@ -73,7 +74,7 @@ export default class ButtonsPanel extends Vue {
     if (!this.listItem && popupRef.showPopper) {
       // vue-popper doesn't have trigger for behavior "toggle on click, close on click outside",
       // so I use little hacks there and with "close-all-button-groups" instead.
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await waitTimeout(10);
       popupRef.doClose();
     }
   }

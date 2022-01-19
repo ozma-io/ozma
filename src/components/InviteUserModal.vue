@@ -98,7 +98,7 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 import { IEntityRef } from "ozma-api";
 import { invitesServiceUrl, instanceName, instancesHost } from "@/api";
 
-import { randomId } from "@/utils";
+import { randomId, waitTimeout } from "@/utils";
 import ReferenceField from "@/components/ReferenceField.vue";
 import { ICombinedValue } from "@/user_views/combined";
 import InputSlot from "@/components/form/InputSlot.vue";
@@ -169,7 +169,7 @@ export default class InviteUserModal extends Vue {
         body,
       });
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await waitTimeout(100);
       this.$bvToast.hide(id);
       if (res.status === 200) {
         this.$bvToast.toast(this.$t("invite_success_description").toString(), {
@@ -181,7 +181,7 @@ export default class InviteUserModal extends Vue {
         this.emailValue = "";
         this.roleValueValue = null;
       } else {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await waitTimeout(100);
         this.$bvToast.hide(id);
         this.$bvToast.toast(this.$t("invite_fail_description").toString(), {
           title: this.$t("invite_fail_title").toString(),
@@ -190,9 +190,9 @@ export default class InviteUserModal extends Vue {
         });
       }
     } catch (e) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await waitTimeout(100);
       this.$bvToast.hide(id);
-      this.$bvToast.toast(e, {
+      this.$bvToast.toast(String(e), {
         title: this.$t("invite_fail_title").toString(),
         variant: "danger",
         solid: true,

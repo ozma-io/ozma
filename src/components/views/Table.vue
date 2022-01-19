@@ -320,8 +320,7 @@ import sanitizeHtml from "sanitize-html";
 import Popper from "vue-popperjs";
 
 import { eventBus } from "@/main";
-import { deepEquals, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, stringifySpreadsheet, validNumberFormats, getNumberFormatter, NeverError, parseFromClipboard } from "@/utils";
-import type { ParseValue } from "@/utils";
+import { deepEquals, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, getNumberFormatter, NeverError, parseFromClipboard, isValidNumberFormat, waitTimeout, csvStringify, ClipboardParseValue } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { maxPerFetch } from "@/components/UserView.vue";
@@ -341,7 +340,7 @@ import { colorVariantFromAttribute, interfaceButtonVariant, defaultVariantAttrib
 import type { ColorVariantAttribute } from "@/utils_colors";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import ButtonList from "@/components/buttons/ButtonList.vue";
-import { Button } from "../buttons/buttons";
+import { Button } from "@/components/buttons/buttons";
 
 export interface IColumn {
   caption: string;
@@ -514,11 +513,16 @@ const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & IT
   if (numberTypes.includes(punOrValueType.type)) {
     style["text-align"] = "right";
 
-    const numberFormat = getCellAttr("number_format");
-    if (typeof numberFormat === "string" && validNumberFormats.includes(numberFormat.toLowerCase() as any)) {
-      const fractionDigitsRaw = getCellAttr("fraction_digits");
-      const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
-      valueHtml = getNumberFormatter(numberFormat.toLowerCase() as any, fractionDigits).format(value.value as any);
+    if (typeof value.value === "number") {
+      const numberFormatRaw = getCellAttr("number_format");
+      if (typeof numberFormatRaw === "string") {
+        const numberFormat = numberFormatRaw.toLowerCase();
+        if (isValidNumberFormat(numberFormat)) {
+          const fractionDigitsRaw = getCellAttr("fraction_digits");
+          const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
+          valueHtml = getNumberFormatter(numberFormat, fractionDigits).format(value.value);
+        }
+      }
     }
   } else if (punOrValueType.type === "string") {
     valueHtml = replaceHtmlLinks(valueHtml);
@@ -1378,7 +1382,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (this.uv.extra.lazyLoad.type !== "pagination") return;
     if (!this.isTopLevel) return;
 
-    this.$emit("update:currentPage", this.uv.extra.lazyLoad.pagination.currentPage);
+    this.$emit("update:current-page", this.uv.extra.lazyLoad.pagination.currentPage);
   }
 
   private get pagesCount(): number | null {
@@ -1420,7 +1424,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     // FIXME: Dirty hack.
     while (this.showTree && !this.uv.rowLoadState.complete) {
       // eslint-disable-next-line no-await-in-loop
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await waitTimeout(1000);
     }
 
     if (!this.uv.rowLoadState.complete
@@ -1611,7 +1615,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     const valueRef = this.uv.extra.cursorValue;
     if (!valueRef) return;
 
-    this.editCellByTarget(valueRef, this.getCellElement(valueRef) as any);
+    this.editCellByTarget(valueRef, this.getCellElement(valueRef)!);
   }
 
   get columnIndexes() {
@@ -1820,7 +1824,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     if (isRectangular) {
       const cells = positions2D.map(row => row.map(vp => this.getClipboardTextByVisualPosition(vp)));
-      event.clipboardData?.setData("text/plain", stringifySpreadsheet(cells));
+      event.clipboardData?.setData("text/plain", csvStringify(cells));
 
       const serialized = this.cellVisualPositionsToSerializedTable(positions2D);
       event.clipboardData?.setData("text/html", serialized);
@@ -1859,7 +1863,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (this.selectedCells.length === 0) return;
     event.preventDefault();
 
-    const parseResult = parseFromClipboard(event);
+    const parseResult = await parseFromClipboard(event);
     switch (parseResult.type) {
       case "error":
         return;
@@ -1877,7 +1881,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private async updateValueWithParseValue(ref: ValueRef, parseValue: ParseValue) {
+  private async updateValueWithParseValue(ref: ValueRef, parseValue: ClipboardParseValue) {
     const value = this.uv.getValueByRef(ref)!.value;
     const fieldType = value.info?.field?.fieldType.type;
     if (parseValue.type === "reference") {
@@ -1895,7 +1899,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private async pasteManyCellsToSelectedCell(event: ClipboardEvent, values: ParseValue[][]) {
+  private async pasteManyCellsToSelectedCell(event: ClipboardEvent, values: ClipboardParseValue[][]) {
     if (this.editing) return;
     let valueRef = this.uv.extra.cursorValue;
     if (!valueRef) return;
@@ -2068,7 +2072,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     /* eslint-enable @typescript-eslint/unbound-method */
 
     if (this.uv.extra.lazyLoad.type === "pagination" && this.isTopLevel) {
-      this.$emit("update:currentPage", null);
+      this.$emit("update:current-page", null);
     }
 
     if (this.printListener !== null) {
@@ -2386,7 +2390,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.cellContextMenu = null;
   }
 
-  private async openCellContextMenu(ref: ValueRef, element: HTMLElement, event: any) {
+  private async openCellContextMenu(ref: ValueRef, element: HTMLElement, event: MouseEvent) {
     const tableRef = (this.$refs["tableContainer"] as HTMLElement | undefined);
     if (!tableRef) throw new Error("Can't find `tableContainer` ref");
 
@@ -2677,7 +2681,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.releaseEntries();
 
     if (this.isTopLevel) {
-      this.$emit("update:bodyStyle", `
+      this.$emit("update:body-style", `
                 @media print {
                     @page {
                         size: landscape;
@@ -2686,7 +2690,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
             `);
     }
 
-    this.$emit("update:enableFilter", this.uv.rows !== null && !this.uv.extra.dirtyHackPreventEntireReloads);
+    this.$emit("update:enable-filter", this.uv.rows !== null && !this.uv.extra.dirtyHackPreventEntireReloads);
 
     this.updateRows();
   }
@@ -2820,7 +2824,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   @Watch("statusLine", { immediate: true })
   private updateStatusLine() {
-    this.$emit("update:statusLine", this.statusLine);
+    this.$emit("update:status-line", this.statusLine);
   }
 
   get allRows() {

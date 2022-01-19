@@ -37,7 +37,7 @@
             v-if="isEnableFilter"
             class="search-panel"
             :filter-string="filterString"
-            @update:filterString="$emit('update:filterString', $event)"
+            @update:filter-string="$emit('update:filter-string', $event)"
           />
         </template>
       </ButtonsPanel>

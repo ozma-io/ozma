@@ -218,7 +218,7 @@ export default class ExplainQuery extends Vue {
       this.rowsQuery = res.rows.query;
       this.rowsPlan = JSON.stringify(res.rows.explanation, undefined, 2);
     } catch (e) {
-      this.lastError = e.message;
+      this.lastError = String(e);
       throw e;
     }
   }

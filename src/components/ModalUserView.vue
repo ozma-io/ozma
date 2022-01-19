@@ -38,7 +38,7 @@
         :view="view"
         :is-loading="isUserViewLoading"
         :type="'modal'"
-        @update:filterString="filterString = $event"
+        @update:filter-string="filterString = $event"
         @goto="$emit('goto', $event)"
       />
     </template>
@@ -56,8 +56,8 @@
           :filter="filterWords"
           :filter-string="filterString"
           @update:buttons="buttons = $event"
-          @update:enableFilter="enableFilter = $event"
-          @update:isLoading="isUserViewLoading = $event"
+          @update:enable-filter="enableFilter = $event"
+          @update:is-loading="isUserViewLoading = $event"
           @update:title="title = $event"
           @goto="$emit('goto', $event)"
           @goto-previous="$emit('goto-previous')"

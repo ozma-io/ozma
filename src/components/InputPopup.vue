@@ -97,7 +97,7 @@ export default class InputPopup extends Vue {
   private updateShowContent() {
     if (this.disabled) return;
 
-    this.$emit("update:showContent", this.showContent);
+    this.$emit("update:show-content", this.showContent);
   }
 
   async openPopup() {

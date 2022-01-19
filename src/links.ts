@@ -1,9 +1,9 @@
+import { IActionRef } from "ozma-api";
+import { Store } from "vuex";
 import { app } from "@/main";
 import { queryLocation, IQueryState, IQuery, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery, selfIdArgs, refIdArgs } from "@/state/query";
-import { IActionRef } from "ozma-api";
-import { gotoHref, randomId, shortLanguage } from "@/utils";
+import { gotoHref, randomId, shortLanguage, waitTimeout } from "@/utils";
 import { saveAndRunAction } from "@/state/actions";
-import { Store } from "vuex";
 import { router } from "@/modules";
 import { IValueInfo } from "@/user_views/combined";
 import { documentGeneratorUrl, instanceName } from "@/api";
@@ -195,7 +195,7 @@ export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | 
   const href = linkedAttrObj["href"];
   if (typeof href === "string") {
     const targetRaw = "_" + linkedAttrObj["target"];
-    const target = hrefTargetTypes.includes(targetRaw as any) ? targetRaw as HrefTargetType : "_self";
+    const target = hrefTargetTypes.includes(targetRaw as HrefTargetType) ? targetRaw as HrefTargetType : "_self";
     return { href, type: "href", target };
   }
 
@@ -324,9 +324,9 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
       }
     };
   } else if (params.link.type === "qrcode") {
-    // eslint-disable-next-line @typescript-eslint/require-await
-    handler = async () => {
+    handler = () => {
       params.openQRCodeScanner("open-qrcode-scanner", params.link);
+      return Promise.resolve();
     };
   } else if (params.link.type === "document") {
     const { template, filename, args } = params.link;
@@ -342,7 +342,7 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
       const token = params.store.state.auth.current.token;
       const escapedFilename = encodeURIComponent(filename);
       const url = new URL(`${documentGeneratorUrl}/api/${instanceName}/${template.schema}/${template.name}/generate/${escapedFilename}`);
-      url.search = new URLSearchParams(args as any).toString();
+      url.search = new URLSearchParams(args as Record<string, string>).toString();
 
       try {
         const res = await fetch(url.toString(), {
@@ -361,7 +361,7 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
           a.click();
         } else {
           const body = await res.json();
-          app.$bvToast.toast(body.message, {
+          app.$bvToast.toast(String(body.message), {
             title: funI18n("generation_fail"),
             variant: "danger",
             solid: true,
@@ -369,13 +369,14 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
           return;
         }
       } catch (e) {
-        app.$bvToast.toast(e, {
+        app.$bvToast.toast(String(e), {
           title: funI18n("generation_fail"),
           variant: "danger",
           solid: true,
         });
       } finally {
-        await new Promise(resolve => setTimeout(resolve, 100)); // Don't know why it's needed there, but without it toast won't close.
+        // Don't know why it's needed there, but without it toast won't close.
+        await waitTimeout(100);
         app.$bvToast.hide(id);
       }
     };

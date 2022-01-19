@@ -1,6 +1,7 @@
 import { Module, ActionContext } from "vuex";
 import { v4 as uuidv4 } from "uuid";
 import jwtDecode from "jwt-decode";
+import { z } from "zod";
 import { FunDBError } from "ozma-api";
 
 import { IRef } from "@/utils";
@@ -64,12 +65,14 @@ interface IOIDCState {
   nonce: string;
 }
 
-interface IAuthPersistedState {
-  token: string;
-  refreshToken: string;
-  idToken: string;
-  createdTime: number;
-}
+const AuthPersistedState = z.object({
+  token: z.string(),
+  refreshToken: z.string(),
+  idToken: z.string(),
+  createdTime: z.number(),
+});
+
+type IAuthPersistedState = z.infer<typeof AuthPersistedState>;
 
 const authKey = "auth";
 const authNonceKey = "authNonce";
@@ -94,10 +97,17 @@ const dropCurrentAuth = () => {
 };
 
 const loadCurrentAuth = () => {
-  const dumpStr = localStorage.getItem(authKey);
+  let dump: IAuthPersistedState | undefined;
+  try {
+    const dumpStr = localStorage.getItem(authKey);
+    if (dumpStr !== null) {
+      dump = AuthPersistedState.parse(JSON.parse(dumpStr));
+    }
+  } catch (e) {
+    console.error(`Failed to get persisted auth data: ${e}`);
+  }
 
-  if (dumpStr !== null) {
-    const dump = JSON.parse(dumpStr);
+  if (dump) {
     const auth = new CurrentAuth(dump.token, dump.refreshToken, dump.idToken, dump.createdTime);
     const timestamp = Utils.sse();
     if (auth.createdTime + auth.refreshValidFor > timestamp) {
@@ -123,7 +133,7 @@ const requestToken = async (params: Record<string, string>): Promise<CurrentAuth
     body: paramsString,
   });
 
-  return new CurrentAuth(ret.access_token, ret.refresh_token, ret.id_token);
+  return new CurrentAuth(ret.access_token as string, ret.refresh_token as string, ret.id_token as string);
 };
 
 const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<string, string>) => {
@@ -148,7 +158,7 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
       startTimeouts(context);
     } catch (e) {
       if (state.pending === pending.ref) {
-        let description: string | null = e.message;
+        let description: string | null = String(e);
         if (e instanceof Utils.FetchError && typeof e.body === "object") {
           // try setting a better error
           try {
@@ -360,7 +370,9 @@ export const authModule: Module<IAuthState, {}> = {
             return;
           }
 
-          await new Promise(resolve => router.onReady(resolve)); // Await till router is ready.
+          await new Promise(resolve => {
+            router.onReady(resolve);
+          }); // Await till router is ready.
 
           let tryExisting = true;
           if (router.currentRoute.name === "auth_response") {

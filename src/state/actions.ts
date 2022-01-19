@@ -18,7 +18,7 @@ const funI18n = (key: string) => messages[shortLanguage]?.[key]; // TODO: can't 
 
 const dirtyHackGetErrorMessage = (error: any): string =>
   // eslint-disable-next-line no-control-regex
-  new RegExp("Unhandled exception (Error: )?(.*):\n", "g").exec(String(error))?.[2] ?? "";
+  /Unhandled exception (Error: )?(.*):\n/g.exec(String(error))?.[2] ?? "";
 
 export const saveAndRunAction = async (
   { dispatch }: { dispatch: Dispatch },

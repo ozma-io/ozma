@@ -270,7 +270,7 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
 
   deleteRow(ref: RowRef) {
     if (this.isReadonlyDemoInstance) {
-      eventBus.emit("showReadonlyDemoModal");
+      eventBus.emit("show-readonly-demo-modal");
       return;
     }
 
@@ -336,7 +336,7 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
 
   async addNewRow(meta?: unknown): Promise<number> {
     if (this.isReadonlyDemoInstance) {
-      eventBus.emit("showReadonlyDemoModal");
+      eventBus.emit("show-readonly-demo-modal");
       return -1;
     }
 
@@ -371,7 +371,7 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
 
   async updateValue(ref: ValueRef, rawValue: unknown): Promise<ValueRef> {
     if (this.isReadonlyDemoInstance) {
-      eventBus.emit("showReadonlyDemoModal");
+      eventBus.emit("show-readonly-demo-modal");
       return ref;
     }
 

@@ -44,7 +44,7 @@ $color-transition: background-color 0.3s, color 0.3s;
 /* 24px is material icons best size and 14px is default font size */
 // $icon-size: (24px / 12px) + rem;
 @function icon-size($base-size: 24px) {
-  @return ($base-size / 12px) + rem;
+  @return (calc($base-size / 12px)) + rem;
 }
 
 @mixin variant-to-local($local-name) {

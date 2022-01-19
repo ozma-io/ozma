@@ -57,9 +57,9 @@
 import { Vue, Component } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import TelegramIcon from "@/components/SocialIcons/Telegram.vue";
-import WhatsAppIcon from "@/components/SocialIcons/WhatsApp.vue";
-import EmailIcon from "@/components/SocialIcons/Email.vue";
+import TelegramIcon from "@/components/SocialIcons/TelegramIcon.vue";
+import WhatsAppIcon from "@/components/SocialIcons/WhatsAppIcon.vue";
+import EmailIcon from "@/components/SocialIcons/EmailIcon.vue";
 
 import { CurrentSettings } from "@/state/settings";
 

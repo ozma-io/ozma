@@ -320,7 +320,7 @@ const entityChangesToOperations = async (context: ActionContext<IStagingState, {
           });
         return [...updated, ...added, ...deleted];
       } catch (e) {
-        throw new Error(`Invalid value for ${schemaName}.${entityName}: ${e.message}`);
+        throw new Error(`Invalid value for ${schemaName}.${entityName}: ${e}`);
       }
     }));
     return ret.flat(1);
@@ -779,7 +779,7 @@ const stagingModule: Module<IStagingState, {}> = {
       try {
         ops = await entityChangesToOperations(context, params.scope ?? null, params.errorOnIncomplete ?? false);
       } catch (e) {
-        commit("errors/pushError", { key: errorKey, error: e.message }, { root: true });
+        commit("errors/pushError", { key: errorKey, error: String(e) }, { root: true });
         throw e;
       }
       if (ops.length === 0) {
@@ -803,7 +803,11 @@ const stagingModule: Module<IStagingState, {}> = {
             args: [action],
           }, { root: true });
         } catch (e) {
-          result = e;
+          if (e instanceof Error) {
+            result = e;
+          } else {
+            throw e;
+          }
         }
         if (!(result instanceof Error)) {
           try {
@@ -820,7 +824,7 @@ const stagingModule: Module<IStagingState, {}> = {
         commit("finishSubmit");
         if (!(result instanceof Error)) {
           commit("errors/resetErrors", errorKey, { root: true });
-          eventBus.emit("closeAllToasts");
+          eventBus.emit("close-all-toasts");
           const opResults = R.zipWith((op, res) => ({ ...op, ...res } as CombinedTransactionResult), ops, result.results);
           await dispatch("clearUnchanged", opResults);
           return opResults;

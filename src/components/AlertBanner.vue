@@ -63,7 +63,7 @@ export default class AlertBanner extends Vue {
       caption: this.$t("invite_user").toString(),
       variant: bootstrapVariantAttribute("success"),
       type: "callback",
-      callback: () => eventBus.emit("showInviteUserModal"),
+      callback: () => eventBus.emit("show-invite-user-modal"),
     };
   }
 }

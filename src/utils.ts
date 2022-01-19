@@ -21,7 +21,9 @@ export const resultMap = <A, B>(func: ((_: A) => B), res: Result<A>): Result<B> 
   }
 };
 
-export const waitTimeout = (timeout?: number): Promise<void> => new Promise(resolve => setTimeout(resolve, timeout));
+export const waitTimeout = (timeout?: number): Promise<void> => new Promise(resolve => {
+  setTimeout(resolve, timeout);
+});
 
 export const waitForLoad = (): Promise<void> => new Promise((resolve, reject) => {
   const ref: IRef<() => void> = {};
@@ -32,8 +34,9 @@ export const waitForLoad = (): Promise<void> => new Promise((resolve, reject) =>
   addEventListener("load", ref.ref);
 });
 
-export const nextRender = (): Promise<void> => new Promise(resolve =>
-  Vue.nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+export const nextRender = (): Promise<void> => new Promise(resolve => {
+  Vue.nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+});
 
 /* eslint-disable import/no-mutable-exports */
 export declare let process: {
@@ -176,11 +179,11 @@ export const deepSyncObject = (to: object | null, from: object | null) => {
     throw new Error("deepSyncObject: expected two objects");
   }
 
-  Object.entries(from).forEach(([name, newValue]) => {
+  Object.entries(from).forEach(([name, newValue]: [string, unknown]) => {
     if (!(name in to)) {
       Vue.set(to, name, newValue);
     } else {
-      const oldValue = (to as any)[name];
+      const oldValue = (to as Record<string, unknown>)[name];
       // FIXME: if `newValue` is array with objects, then it wont work right, doesn't it?
       if (oldValue !== newValue) {
         if (typeof oldValue === "object"
@@ -223,7 +226,7 @@ export const deepClone = <T>(a: T): T => {
     return a;
   } else if (a instanceof Array) {
     return a.map(deepClone) as any;
-  } else if (!hasUserPrototype(a as any)) {
+  } else if (!hasUserPrototype(a as unknown as object)) {
     const res: Record<string, any> = { ...a };
     /* eslint-disable guard-for-in */
     for (const k in res) {
@@ -248,7 +251,7 @@ export const deepEquals = <T>(a: T, b: T): boolean => {
     } else {
       return a.every((aVal, idx) => deepEquals(aVal, bArr[idx]));
     }
-  } else if (!(hasUserPrototype(a as any) || hasUserPrototype(b as any))) {
+  } else if (!(hasUserPrototype(a as unknown as object) || hasUserPrototype(b as unknown as object))) {
     const bObj = b as any as Record<string, any>;
     return Object.keys(b).every(k => k in a)
         && Object.entries(a).every(([k, v]) => k in b && deepEquals(v, bObj[k]));
@@ -276,7 +279,7 @@ export const valueSignature = <T>(a: T): string => {
     return JSON.stringify(a);
   } else if (a instanceof Array) {
     return "[" + a.map(valueSignature).join(",") + "]";
-  } else if (!hasUserPrototype(a as any)) {
+  } else if (!hasUserPrototype(a as unknown as object)) {
     return "{" + Object.keys(a).sort().map(k => JSON.stringify(k) + ":" + valueSignature((a as any)[k])).join(",") + "}";
   } else {
     throw new Error("Cannot make signatures for objects");
@@ -370,7 +373,7 @@ export class ObjectSet<K> {
   }
 }
 
-const convertDebugArgs = (message?: any, ...optionalParams: any[]) => {
+const convertDebugArgs = <H, T extends any[]>(message?: H, ...optionalParams: T) => {
   return [message, ...optionalParams].map(arg => {
     if (arg === undefined) {
       return arg;
@@ -386,18 +389,19 @@ const convertDebugArgs = (message?: any, ...optionalParams: any[]) => {
 };
 
 // Useful for outputting Vue.js values - this trims all properties.
-export const debugLog = (message?: any, ...optionalParams: any[]) => {
+export const debugLog = <H, T extends any[]>(message?: H, ...optionalParams: T) => {
   const args = convertDebugArgs(message, ...optionalParams);
-  console.log(...args); // eslint-disable-line
+  // eslint-disable-next-line no-console, @typescript-eslint/no-unsafe-argument
+  console.log(...args);
 };
 
-export const debugLogTrace = (message?: any, ...optionalParams: any[]) => {
+export const debugLogTrace = <H, T extends any[]>(message?: H, ...optionalParams: T) => {
   const args = convertDebugArgs(message, ...optionalParams);
+  // eslint-disable-next-line no-console, @typescript-eslint/no-unsafe-argument
   console.trace(...args);
 };
 
-/* tslint:disable:ban-types */
-export const vueEmit = (context: RenderContext, name: string, ...args: any[]) => {
+export const vueEmit = <T extends any[]>(context: RenderContext, name: string, ...args: T) => {
   const listener = context.listeners[name];
   if (listener instanceof Array) {
     listener.forEach(handler => handler(...args));
@@ -838,76 +842,7 @@ export const getIconType = (str: string | null | undefined): IconType => {
 export const bootstrapVariants = ["primary", "secondary", "success", "danger", "warning", "info", "light", "dark"] as const;
 export type BootstrapVariant = typeof bootstrapVariants[number];
 
-/* Modified from https://github.com/warpech/sheetclip/blob/master/sheetclip.js */
-const countQuotes = (str: string) => str.split(`"`).length - 1;
-export const parseSpreadsheet = (str: string): string[][] => {
-  let r;
-  let rlen;
-  const rows: any = str.split("\n");
-  const arr: any = [];
-  let a = 0;
-  let c;
-  let clen;
-  let multiline;
-  let last;
-  if (rows.length > 1 && rows[rows.length - 1] === "") {
-    rows.pop();
-  }
-  for (r = 0, rlen = rows.length; r < rlen; r += 1) {
-    rows[r] = rows[r].split("\t");
-    for (c = 0, clen = rows[r].length; c < clen; c += 1) {
-      if (!arr[a]) {
-        arr[a] = [];
-      }
-      if (multiline && c === 0) {
-        last = arr[a].length - 1;
-        arr[a][last] = arr[a][last] + "\n" + rows[r][0];
-        if (multiline && (countQuotes(rows[r][0]) & 1)) { // `& 1` is a bitwise way of performing mod 2.
-          multiline = false;
-          arr[a][last] = arr[a][last].substring(0, arr[a][last].length - 1).replace(/""/g, `"`);
-        }
-      } else if (c === clen - 1 && rows[r][c].indexOf(`"`) === 0 && (countQuotes(rows[r][c]) & 1)) {
-        arr[a].push(rows[r][c].substring(1).replace(/""/g, `"`));
-        multiline = true;
-      } else {
-        arr[a].push(rows[r][c].replace(/""/g, `"`));
-        multiline = false;
-      }
-    }
-    if (!multiline) {
-      a += 1;
-    }
-  }
-  return arr;
-};
-
-export const stringifySpreadsheet = (arr: string[][]) => {
-  let str = "";
-  let val;
-  for (let r = 0, rlen = arr.length; r < rlen; r += 1) {
-    for (let c = 0, clen = arr[r].length; c < clen; c += 1) {
-      if (c > 0) {
-        str += "\t";
-      }
-      val = arr[r][c];
-      if (typeof val === "string") {
-        if (val.indexOf("\n") > -1) {
-          str += "\"" + val.replace(/"/g, "\"\"") + "\"";
-        } else {
-          str += val;
-        }
-      } else if (val === null || val === undefined) {
-        str += "";
-      } else {
-        str += val;
-      }
-    }
-    str += "\n";
-  }
-  return str;
-};
-
-export type ParseValue =
+export type ClipboardParseValue =
   | {
     type: "reference";
     value: number | null;
@@ -918,16 +853,16 @@ export type ParseValue =
     value: string;
   };
 
-export type ParseResult =
+export type ClipboardParseResult =
   | {
     type: "values";
-    values: ParseValue[][];
+    values: ClipboardParseValue[][];
   }
   | {
     type: "error";
   };
 
-const htmlElementToParseValue = (el: HTMLElement): ParseValue => {
+const htmlElementToParseValue = (el: HTMLElement): ClipboardParseValue => {
   const referenceValue = el.attributes.getNamedItem("data-ozma-reference-value")?.value;
   if (referenceValue !== undefined) {
     const value = JSON.parse(referenceValue) as number | null;
@@ -939,7 +874,7 @@ const htmlElementToParseValue = (el: HTMLElement): ParseValue => {
   }
 };
 
-export const parseFromClipboard = (event: ClipboardEvent): ParseResult => {
+export const parseFromClipboard = async (event: ClipboardEvent): Promise<ClipboardParseResult> => {
   const serialized = event.clipboardData?.getData("text/html");
   if (serialized === undefined) return { type: "error" };
 
@@ -954,15 +889,29 @@ export const parseFromClipboard = (event: ClipboardEvent): ParseResult => {
 
   const sourcePlain = event.clipboardData?.getData("text/plain");
   if (typeof sourcePlain === "string") {
-    const values = parseSpreadsheet(sourcePlain).map(row => row.map(value => ({ type: "value" as const, value })));
+    const Papa = await import("papaparse");
+    const values: ClipboardParseValue[][] = [];
+    Papa.parse<string[]>(sourcePlain, { step: row => {
+      values.push(row.data.map(value => ({ type: "value", value })));
+    } });
     return { type: "values", values };
   }
 
   return { type: "error" };
 };
 
-export const validNumberFormats = ["auto", "ru", "en"] as const;
-export type ValidNumberFormat = typeof validNumberFormats[number];
+const validNumberFormats = {
+  "auto": null,
+  "ru": null,
+  "en": null,
+};
+
+export type ValidNumberFormat = keyof typeof validNumberFormats;
+
+export const isValidNumberFormat = (name: string): name is ValidNumberFormat => {
+  return name in validNumberFormats;
+};
+
 const makeMemoKey = (lang: ValidNumberFormat, fractionDigits?: number) => lang + String(fractionDigits);
 export const getNumberFormatter = R.memoizeWith(makeMemoKey, (lang: ValidNumberFormat, fractionDigits?: number) => {
   const locale = lang === "auto" ? undefined : lang;
@@ -970,6 +919,28 @@ export const getNumberFormatter = R.memoizeWith(makeMemoKey, (lang: ValidNumberF
     : { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits };
   return Intl.NumberFormat(locale, options);
 });
+
+export const csvCell = (str: string): string => {
+  return `"${str.replace(/"/g, `""`)}"`;
+};
+
+export const csvSeparator = "\t";
+
+export const csvStringify = (table: string[][]): string => {
+  let output = "";
+
+  table.forEach(row => {
+    row.forEach((cell, colI) => {
+      output += csvCell(cell);
+      if (colI < row.length - 1) {
+        output += csvSeparator;
+      }
+    });
+    output += "\n";
+  });
+
+  return output;
+};
 
 export const homeLink: Link = {
   type: "query",

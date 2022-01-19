@@ -26,9 +26,12 @@ Vue.use(VueI18n);
 Vue.use(Vuex);
 Vue.use(BootstrapVue);
 Vue.use(UniqueId);
+// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 Vue.use(vClickOutside);
+// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 Vue.use(VueGrid);
 Vue.use(PortalVue);
+// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 Vue.use(FragmentPlugin);
 Vue.use(VueJSModal, { componentName: "VueModal" });
 Vue.use(VueHotkey);

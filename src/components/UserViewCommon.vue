@@ -74,10 +74,10 @@
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { FunDBError, IEntity, IEntityRef, IEntriesRequestOpts, IInsertEntityOp, ITransaction } from "ozma-api";
-import { AutoSaveLock } from "@/state/staging_changes";
 import { Action, namespace } from "vuex-class";
 
-import { encodeUTF16LE, getBOM, mapMaybe, saveToFile, tryDicts } from "@/utils";
+import { AutoSaveLock } from "@/state/staging_changes";
+import { csvCell, csvSeparator, encodeUTF16LE, getBOM, mapMaybe, saveToFile, tryDicts } from "@/utils";
 import { defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
 import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, userViewTitle } from "@/components/BaseUserView";
 import { attrToQuery, IQuery } from "@/state/query";
@@ -89,7 +89,6 @@ import { getReferenceInfo } from "@/state/entries";
 import { attrToButton, Button, attrToButtons, attrToButtonsOld } from "@/components/buttons/buttons";
 import { IAttrToLinkOpts } from "@/links";
 import { convertParsedRows, serializeValue, valueFromRaw, valueToText } from "@/values";
-import { ErrorKey } from "@/state/errors";
 
 import Api from "@/api";
 import { fetchUserViewData } from "@/user_views/fetch";
@@ -99,12 +98,6 @@ interface IModalReferenceField {
   uv: IQuery;
   entity: IEntityRef;
 }
-
-const csvCell = (str: string): string => {
-  return `"${str.replace(/"/g, `""`)}"`;
-};
-
-const csvSeparator = "\t";
 
 const csvExportOpts: IEntriesRequestOpts = {
   chunk: { limit: 10000 },
@@ -125,7 +118,6 @@ const entities = namespace("entities");
 export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>>(BaseUserView) {
   @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
   @Action("reload") reload!: () => Promise<void>;
-  @errors.Mutation("setError") setError!: (_: { key: ErrorKey; error: string }) => void;
   @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
   @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
   @entities.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
@@ -251,13 +243,12 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       const encoded = [bom, encodeUTF16LE(output)];
       saveToFile(`${title}.csv`, encoded, { type: "text/csv;charset=utf-16le" });
     } catch (e) {
-      this.setError({ key: "export_csv", error: e.message });
+      this.setError({ key: "export_csv", error: String(e) });
       throw e;
     }
   }
 
   private async importFromCsv(file: File) {
-    // @ts-ignore
     const Papa = await import("papaparse");
     const streaming = Boolean(this.uv.attributes["csv_import_streaming"]);
     const skipEmptyRows = Boolean(this.uv.attributes["csv_import_skip_empty_rows"] ?? true);
@@ -330,7 +321,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
           submittedCount += currentOperations.length;
         } catch (e) {
           const suffix = submittedCount > 0 ? ` (imported ${submittedCount} rows)` : "";
-          this.setError({ key: "import_csv", error: e.message + suffix });
+          this.setError({ key: "import_csv", error: String(e) + suffix });
           throw e;
         }
       })();
@@ -364,7 +355,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
             entries: row,
           });
         } catch (e) {
-          this.setError({ key: "import_csv", error: e.message });
+          this.setError({ key: "import_csv", error: String(e) });
           throw e;
         }
         if (streaming && operations.length >= csvImportChunk) {

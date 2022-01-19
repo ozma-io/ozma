@@ -58,6 +58,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
+import { Debounce } from "vue-debounce-decorator";
 import Textarea from "@/components/form/Textarea.vue";
 import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
@@ -65,13 +66,12 @@ import { Button } from "@/components/buttons/buttons";
 import { findLink } from "@/utils";
 import type { TextLink } from "@/utils";
 import { bootstrapVariantAttribute } from "@/utils_colors";
-import { Debounce } from "vue-debounce-decorator";
 
 @Component({
   components: { Textarea, QRCodeScanner, ButtonItem },
 })
 export default class Input extends Vue {
-  @Prop() value!: any;
+  @Prop() value!: unknown;
   @Prop({ type: Boolean }) disabled!: boolean;
   @Prop({ type: String, default: "text" }) type!: string;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
@@ -114,7 +114,7 @@ export default class Input extends Vue {
   }
 
   private recalculateTextLink() {
-    this.textLink = this.isCellEdit ? null : findLink(this.value);
+    this.textLink = this.isCellEdit ? null : findLink(String(this.value));
   }
 
   private get textLinkIcon(): string | null {
@@ -148,9 +148,9 @@ export default class Input extends Vue {
     if (this.autofocus) {
       void Vue.nextTick().then(() => {
         if (this.isCellEdit) {
-          const controlTextareaElement = this.$refs.controlTextarea as any;
-          controlTextareaElement.$el.focus();
-          this.setCursorPositionEnd(controlTextareaElement.$el);
+          const controlTextareaElement = (this.$refs.controlTextarea as Vue).$el as HTMLInputElement;
+          controlTextareaElement.focus();
+          this.setCursorPositionEnd(controlTextareaElement);
         } else {
           (this.$refs.control as any)?.focus();
         }
