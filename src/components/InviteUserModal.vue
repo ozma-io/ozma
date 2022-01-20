@@ -32,12 +32,13 @@
 <template>
   <VueModal
     adaptive
+    class="invite-modal"
     :min-width="300"
     :min-height="200"
     :width="350"
     height="auto"
     :name="uid"
-    transition="modal"
+    transition="invite-modal-transition"
   >
     <div class="message-container">
       <i class="material-icons invite-icon">group</i>
@@ -207,29 +208,24 @@ export default class InviteUserModal extends Vue {
     width: 99%;
   }
 
+  .invite-modal ::v-deep > .vm--overlay {
+    background: rgba(0, 0, 0, 0.8) !important;
+  }
+
+  .invite-modal ::v-deep > .vm--modal {
+    max-height: 80% !important;
+  }
+
   ::v-deep {
-    .vm--overlay {
-      background: rgba(0, 0, 0, 0.8) !important;
+    .invite-modal-transition-enter-active,
+    .invite-modal-transition-leave-active {
+      transition: all 1s ease-out;
     }
 
-    .vm--modal {
-      max-height: 80% !important;
-    }
-
-    .modal-enter-active,
-    .modal-leave-active {
-      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.26, 1.55);
-    }
-
-    .modal-enter,
-    .modal-leave-to {
+    .invite-modal-transition-enter,
+    .invite-modal-transition-leave-to {
       transform: translateY(100%);
       opacity: 0;
-    }
-
-    .modal-enter-to,
-    .modal-leave {
-      opacity: 1;
     }
   }
 

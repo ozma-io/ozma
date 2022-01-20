@@ -12,15 +12,16 @@
 <template>
   <VueModal
     adaptive
+    class="tabbed-modal"
     :width="modalWidth"
     :height="modalHeight"
     :min-width="200"
     :min-height="100"
     :pivot-y="0.8"
     :name="uid"
-    transition="fade-move"
+    transition="tabbed-modal-transiton"
     :resizable="!$isMobile"
-    :draggable="$isMobile ? false : '.modal__tab_headers'"
+    :draggable="$isMobile ? false : '.tab-headers'"
     @before-close="beforeClose"
     @opened="$emit('opened')"
   >
@@ -53,7 +54,7 @@
       <div
         v-if="hasTabs"
         :class="[
-          'modal__tab_headers',
+          'tab-headers',
           { 'is-mobile': $isMobile },
         ]"
       >
@@ -76,9 +77,9 @@
     <div
       v-if="hasTabs"
       :class="[
-        'modal__content',
+        'content',
         {
-          'modal__content__fullscreen': fullscreen || $isMobile,
+          'fullscreen': fullscreen || $isMobile,
           'is-mobile': $isMobile,
         }
       ]"
@@ -88,7 +89,7 @@
         v-show="index === selectedTab"
         :key="index"
         :class="[
-          'modal__tab-content',
+          'tab-content',
           { 'is-mobile': $isMobile },
         ]"
       >
@@ -98,9 +99,9 @@
     <div
       v-if="!hasTabs"
       :class="[
-        'modal__content',
+        'content',
         {
-          'modal__content__fullscreen': fullscreen || $isMobile,
+          'fullscreen': fullscreen || $isMobile,
           'is-mobile': $isMobile,
         }
       ]"
@@ -238,7 +239,7 @@ export default class Modal extends Vue {
     border-radius: 10rem;
   }
 
-  .modal__tab_headers {
+  .tab-headers {
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -249,28 +250,19 @@ export default class Modal extends Vue {
     }
   }
 
-  .modal__content {
+  .content {
     overflow: auto;
     height: 100%;
   }
 
-  .modal__content ::v-deep .view-form {
-    width: 100%;
-  }
-
-  .modal__content__fullscreen {
+  .fullscreen {
     width: 100%;
     height: 100%;
     padding: 0;
     overflow: hidden;
   }
-</style>
 
-<style lang="scss">
-  /* styles for vue-js-modal.
-    It's their naming so don't touch this
-    if you refactor styles */
-  .vm--modal {
+  .tabbed-modal ::v-deep > .vm--modal {
     background-color: var(--default-backgroundDarker1Color);
     color: var(--MainTextColor);
     border-radius: 1rem;
@@ -279,7 +271,7 @@ export default class Modal extends Vue {
     flex-grow: 1;
   }
 
-  .modal__tab-content {
+  .tab-content {
     height: 100%;
 
     &.is-mobile {
@@ -287,14 +279,16 @@ export default class Modal extends Vue {
     }
   }
 
-  .fade-move-enter-active,
-  .fade-move-leave-active {
-    transition: opacity 0.4s, transform 0.4s;
-  }
+  ::v-deep {
+    .tabbed-modal-transition-enter-active,
+    .tabbed-modal-transition-leave-active {
+      transition: opacity 0.4s, transform 0.4s;
+    }
 
-  .fade-move-enter,
-  .fade-move-leave-to {
-    opacity: 0;
-    transform: translateY(5rem);
+    .tabbed-modal-transition-enter,
+    .tabbed-modal-transition-leave-to {
+      opacity: 0;
+      transform: translateY(5rem);
+    }
   }
 </style>

@@ -16,10 +16,11 @@
 <template>
   <VueModal
     adaptive
+    class="help-modal"
     :width="modalWidth"
     :height="modalHeight"
     :name="uid"
-    transition="modal"
+    transition="help-modal-transition"
     @closed="onClose"
   >
     <div class="help-container">
@@ -100,28 +101,28 @@ export default class HelpModal extends Vue {
 </script>
 
 <style lang="scss" scoped>
+  .help-modal ::v-deep > .vm--overlay {
+    background: rgba(0, 0, 0, 0.8) !important;
+  }
+
+  .help-modal ::v-deep > .vm--modal {
+    max-height: 95% !important;
+  }
+
   ::v-deep {
-    .vm--overlay {
-      background: rgba(0, 0, 0, 0.8) !important;
-    }
-
-    .vm--modal {
-      max-height: 95% !important;
-    }
-
-    .modal-enter-active,
-    .modal-leave-active {
+    .help-modal-transition-enter-active,
+    .help-modal-transition-leave-active {
       transition: all 1s ease-out;
     }
 
-    .modal-enter,
-    .modal-leave-to {
+    .help-modal-transition-enter,
+    .help-modal-transition-leave-to {
       transform: translateY(100%);
       opacity: 0;
     }
 
-    .modal-enter-to,
-    .modal-leave {
+    .help-modal-transition-enter-to,
+    .help-modal-transition-leave {
       opacity: 1;
     }
   }

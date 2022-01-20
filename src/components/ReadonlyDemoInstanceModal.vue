@@ -22,11 +22,12 @@
 <template>
   <VueModal
     adaptive
+    class="demo-modal"
     :min-width="300"
     :min-height="200"
     height="auto"
     :name="uid"
-    transition="modal"
+    transition="demo-modal-transition"
     @opened="showOverlay = true"
     @closed="showOverlay = false"
   >
@@ -90,28 +91,28 @@ export default class ReadonlyDemoInstanceModal extends Vue {
 </script>
 
 <style lang="scss" scoped>
+  .demo-modal ::v-deep > .vm--overlay {
+    background: rgba(0, 0, 0, 0.8) !important;
+  }
+
+  .demo-modal ::v-deep > .vm--modal {
+    max-height: 80% !important;
+  }
+
   ::v-deep {
-    .vm--overlay {
-      background: rgba(0, 0, 0, 0.8) !important;
-    }
-
-    .vm--modal {
-      max-height: 80% !important;
-    }
-
-    .modal-enter-active,
-    .modal-leave-active {
+    .demo-modal-transition-enter-active,
+    .demo-modal-transition-leave-active {
       transition: all 0.8s cubic-bezier(0.68, -0.55, 0.26, 1.55);
     }
 
-    .modal-enter,
-    .modal-leave-to {
+    .demo-modal-transition-enter,
+    .demo-modal-transition-leave-to {
       transform: translateY(100%);
       opacity: 0;
     }
 
-    .modal-enter-to,
-    .modal-leave {
+    .demo-modal-transition-enter-to,
+    .demo-modal-transition-leave {
       opacity: 1;
     }
   }
