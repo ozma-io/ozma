@@ -4,7 +4,7 @@ import { IViewExprResult, SchemaName, RowId } from "ozma-api";
 import { store } from "@/main";
 import { default as Api } from "@/api";
 // import type { ISettingsState } from "@/state/settings";
-import { mapMaybe, objectMap } from "@/utils";
+import { mapMaybe, objectMap, safeJsonParse } from "@/utils";
 
 const ThemeRef = z.object({
   schema: z.string(),
@@ -253,23 +253,14 @@ export const colorVariantsToCssRules = (colorVariants: Record<string, ColorVaria
 export const getPreferredTheme = (themes: ThemesMap): IThemeRef | null => {
   const prefersDarkTheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-  const storedThemeRawStr = localStorage.getItem("preferredTheme");
-  let storedTheme: IThemeRef | undefined;
-  if (storedThemeRawStr !== null) {
-    try {
-      const storedThemeRaw = JSON.parse(storedThemeRawStr);
-      storedTheme = ThemeRef.parse(storedThemeRaw);
-    } catch (e) {
-      console.error(`Failed to fetch preferred theme from local storage: ${e}`);
-    }
-  }
+  const storedTheme = ThemeRef.safeParse(safeJsonParse(localStorage.getItem("preferredTheme")));
 
-  if (storedTheme !== undefined) {
-    const themesSchema = themes[storedTheme.schema];
-    if (themesSchema !== undefined && storedTheme.name in themesSchema) {
-      return storedTheme;
+  if (storedTheme.success) {
+    const themesSchema = themes[storedTheme.data.schema];
+    if (themesSchema !== undefined && storedTheme.data.name in themesSchema) {
+      return storedTheme.data;
     }
-    console.error(`User theme ${storedTheme.schema}.${storedTheme.name} is not defined`);
+    console.error(`User theme ${storedTheme.data.schema}.${storedTheme.data.name} is not defined`);
   }
 
   const themesSchema = themes["user"];

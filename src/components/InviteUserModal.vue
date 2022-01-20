@@ -203,16 +203,16 @@ export default class InviteUserModal extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  .v--modal-overlay {
-    background: rgba(0, 0, 0, 0.8) !important;
-  }
-
   .form-container {
     width: 99%;
   }
 
   ::v-deep {
-    .v--modal-box {
+    .vm--overlay {
+      background: rgba(0, 0, 0, 0.8) !important;
+    }
+
+    .vm--modal {
       max-height: 80% !important;
     }
 

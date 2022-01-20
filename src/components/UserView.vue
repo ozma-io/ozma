@@ -222,7 +222,7 @@ import { namespace } from "vuex-class";
 import { ArgumentName, AttributesMap, IEntityRef, IEntriesRequestOpts } from "ozma-api";
 import * as R from "ramda";
 
-import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, mapMaybe, NeverError } from "@/utils";
+import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, mapMaybe, NeverError, safeJsonParse } from "@/utils";
 import { interfaceButtonVariant, defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
 import { funappSchema, IEmbeddedPageRef } from "@/api";
 import { equalEntityRef, serializeValue, valueIsNull } from "@/values";
@@ -475,7 +475,7 @@ export default class UserView extends Vue {
     this.helpPageButton = null;
 
     let pageRef: IEmbeddedPageRef | undefined;
-    const helpRef = EntityRef.safeParse(this.state.uv.attributes["help_page"]);
+    const helpRef = EntityRef.safeParse(safeJsonParse(this.state.uv.attributes["help_page"]));
     if (helpRef.success) {
       pageRef = helpRef.data;
     } else {
@@ -495,7 +495,7 @@ export default class UserView extends Vue {
 
     const { schema, name } = this.args.source.ref;
     const dismissHelpPages = Boolean(localStorage.getItem("dismiss-help-pages"));
-    const watchedRef = EntityRef.safeParse(localStorage.getItem(`watched-help-page_${schema}.${name}`));
+    const watchedRef = EntityRef.safeParse(safeJsonParse(localStorage.getItem(`watched-help-page_${schema}.${name}`)));
     const alreadyWatched = watchedRef.success ? equalEntityRef(pageRef, watchedRef.data) : false;
     const showHelpPage = this.isRoot && !dismissHelpPages && !alreadyWatched;
 

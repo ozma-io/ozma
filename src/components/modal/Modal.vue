@@ -18,13 +18,6 @@
     :min-height="100"
     :pivot-y="0.8"
     :name="uid"
-    :classes="[
-      'v--modal',
-      {
-        'is-mobile': $isMobile,
-        'is-nested': isNestedModal,
-      }
-    ]"
     transition="fade-move"
     :resizable="!$isMobile"
     :draggable="$isMobile ? false : '.modal__tab_headers'"
@@ -119,7 +112,7 @@
 
 <script lang="ts">
 import * as R from "ramda";
-import { Component, InjectReactive, Prop, ProvideReactive, Vue, Watch } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 
 import ModalContent from "@/components/modal/ModalContent";
 import ModalTabHeader from "@/components/modal/ModalTabHeader.vue";
@@ -135,10 +128,6 @@ export default class Modal extends Vue {
   @Prop({ type: String }) width!: string;
   @Prop({ type: String }) height!: string;
   @Prop({ type: Number, default: 0 }) startingTab!: number;
-
-  // `isNestedModal` is undefined in root modal and `true` in nested.
-  @InjectReactive() isNestedModal!: true | undefined;
-  @ProvideReactive("isNestedModal") provideIsNestedModal = true;
 
   private selectedTab = 0;
 
@@ -281,45 +270,13 @@ export default class Modal extends Vue {
   /* styles for vue-js-modal.
     It's their naming so don't touch this
     if you refactor styles */
-  .v--modal-box.v--modal {
+  .vm--modal {
     background-color: var(--default-backgroundDarker1Color);
     color: var(--MainTextColor);
     border-radius: 1rem;
     display: flex;
     flex-flow: column nowrap;
     flex-grow: 1;
-
-    &.is-mobile {
-      position: absolute;
-
-      /* VueModal writes these styles in element's inline style,
-        so !important is required */
-      top: auto !important;
-      bottom: 0 !important;
-      height: calc(100% - 3rem) !important;
-      border-bottom-left-radius: 0;
-      border-bottom-right-radius: 0;
-
-      &.is-nested {
-        height: calc(100% - 6rem) !important;
-      }
-    }
-  }
-
-  .v--modal-top-right {
-    top: 2rem !important;
-    right: 2rem !important;
-  }
-
-  .v--modal-overlay {
-    height: 100% !important;
-  }
-
-  .v--modal-background-click {
-    &,
-    .v--modal-overlay {
-      height: 100% !important;
-    }
   }
 
   .modal__tab-content {

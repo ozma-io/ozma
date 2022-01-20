@@ -2308,7 +2308,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     // otherwise any click on this modal will close the cell editing and modal too.
     // FIXME: rely on CSS-classes for logic is bad thing, fix it someone, please.
     if (element === null
-     || (element.closest(".v--modal-box") && !this.$el.closest(".v--modal-box"))
+     || (element.closest(".vm--modal") && !this.$el.closest(".vm--modal"))
      || (element.closest(".modal__tab-content") !== this.$el.closest(".modal__tab-content"))
     ) {
       return;

@@ -373,8 +373,4 @@ export default class InputSlot extends Vue {
     border-radius: 0;
     margin-top: 5px;
   }
-
-  .v--modal-overlay {
-    z-index: 1000;
-  }
 </style>

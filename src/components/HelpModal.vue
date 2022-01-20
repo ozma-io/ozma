@@ -100,12 +100,12 @@ export default class HelpModal extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  .v--modal-overlay {
-    background: rgba(0, 0, 0, 0.8) !important;
-  }
-
   ::v-deep {
-    .v--modal-box {
+    .vm--overlay {
+      background: rgba(0, 0, 0, 0.8) !important;
+    }
+
+    .vm--modal {
       max-height: 95% !important;
     }
 
