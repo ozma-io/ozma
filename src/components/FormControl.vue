@@ -333,7 +333,6 @@ import { IReferenceSelectAction } from "@/components/ReferenceMultiSelect.vue";
 import { ITime } from "@/components/calendar/TimePicker.vue";
 import { EntityRef } from "@/links";
 import { IIframeRef } from "@/api";
-import { safeJsonParse } from "@/utils";
 
 interface ITextType {
   name: "text";
