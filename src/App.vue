@@ -199,7 +199,7 @@ export default class App extends Vue {
     if (!this.helpPageInfo) return;
 
     const { schema, name } = this.helpPageInfo.userViewRef;
-    localStorage.setItem(`watched-help-page_${schema}.${name}`, JSON.stringify(this.helpPageInfo.ref));
+    localStorage.setItem(`watchedHelpPage_${schema}.${name}`, JSON.stringify(this.helpPageInfo.ref));
 
     this.helpPageInfo = null;
   }

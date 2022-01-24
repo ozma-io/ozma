@@ -750,7 +750,7 @@ export default class FormControl extends Vue {
     }
 
     if (controlAttr === "iframe") {
-      const markupRef = EntityRef.safeParse(safeJsonParse(this.attributes["iframe_markup"]));
+      const markupRef = EntityRef.safeParse(this.attributes["iframe_markup"]);
       const oldMarkupName = this.attributes["iframe_markup_name"];
       const srcdoc = this.attributes["iframe_srcdoc"];
       const src = this.attributes["iframe_src"];
@@ -835,7 +835,7 @@ export default class FormControl extends Vue {
         case "array": {
           const optionsView = attrObjectToQuery(this.attributes["options_view"]);
           // Deprecated because we have arrays of references as types now.
-          const wrappedReferencedEntity = entityRefSchema.safeParse(safeJsonParse(this.attributes["referenced_entity"]));
+          const wrappedReferencedEntity = entityRefSchema.safeParse(this.attributes["referenced_entity"]);
           const subtypeEntity = this.fieldType.subtype.type === "reference" ? this.fieldType.subtype.entity : null;
           const entity = wrappedReferencedEntity.success ? wrappedReferencedEntity.data : subtypeEntity;
           if (optionsView !== null) {
