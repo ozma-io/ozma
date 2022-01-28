@@ -874,7 +874,7 @@ const htmlElementToParseValue = (el: HTMLElement): ClipboardParseValue => {
   }
 };
 
-export const parseFromClipboard = async (event: ClipboardEvent): Promise<ClipboardParseResult> => {
+export const parseFromClipboard = (event: ClipboardEvent): ClipboardParseResult => {
   const serialized = event.clipboardData?.getData("text/html");
   if (serialized === undefined) return { type: "error" };
 
@@ -888,16 +888,11 @@ export const parseFromClipboard = async (event: ClipboardEvent): Promise<Clipboa
   }
 
   const sourcePlain = event.clipboardData?.getData("text/plain");
-  if (typeof sourcePlain === "string") {
-    const Papa = await import("papaparse");
-    const values: ClipboardParseValue[][] = [];
-    Papa.parse<string[]>(sourcePlain, { step: row => {
-      values.push(row.data.map(value => ({ type: "value", value })));
-    } });
-    return { type: "values", values };
+  if (sourcePlain === undefined) {
+    return { type: "error" };
   }
 
-  return { type: "error" };
+  return { type: "values", values: [[{ type: "value", value: sourcePlain }]] };
 };
 
 const validNumberFormats = {

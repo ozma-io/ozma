@@ -320,7 +320,7 @@ import sanitizeHtml from "sanitize-html";
 import Popper from "vue-popperjs";
 
 import { eventBus } from "@/main";
-import { deepEquals, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, getNumberFormatter, NeverError, parseFromClipboard, isValidNumberFormat, waitTimeout, csvStringify, ClipboardParseValue } from "@/utils";
+import { deepEquals, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, getNumberFormatter, NeverError, parseFromClipboard, isValidNumberFormat, waitTimeout, ClipboardParseValue } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { maxPerFetch } from "@/components/UserView.vue";
@@ -1184,6 +1184,30 @@ type CellContextMenuData = {
   buttons: Button[];
 };
 
+const plainTextCell = (str: string): string => {
+  if (/\n|\t/.test(str)) {
+    return `"${str.replace(/"/g, `""`)}"`;
+  } else {
+    return str;
+  }
+};
+
+const plainTextStringify = (table: string[][]): string => {
+  let output = "";
+
+  table.forEach(row => {
+    row.forEach((cell, colI) => {
+      output += plainTextCell(cell);
+      if (colI < row.length - 1) {
+        output += "\t";
+      }
+    });
+    output += "\n";
+  });
+
+  return output;
+};
+
 @UserView({
   handler: tableUserViewHandler,
   useLazyLoad: true,
@@ -1824,7 +1848,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     if (isRectangular) {
       const cells = positions2D.map(row => row.map(vp => this.getClipboardTextByVisualPosition(vp)));
-      event.clipboardData?.setData("text/plain", csvStringify(cells));
+      event.clipboardData?.setData("text/plain", plainTextStringify(cells));
 
       const serialized = this.cellVisualPositionsToSerializedTable(positions2D);
       event.clipboardData?.setData("text/html", serialized);
@@ -1863,7 +1887,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (this.selectedCells.length === 0) return;
     event.preventDefault();
 
-    const parseResult = await parseFromClipboard(event);
+    const parseResult = parseFromClipboard(event);
     switch (parseResult.type) {
       case "error":
         return;
