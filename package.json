@@ -39,7 +39,7 @@
     "vue-barcode-reader": "^0.0.3",
     "vue-class-component": "^7.1.0",
     "vue-dragscroll": "^3.0.1",
-    "vue-fragment": "^1.5.1",
+    "vue-fragment": "1.5.1",
     "vue-i18n": "^8.26.8",
     "vue-infinite-loading": "^2.4.5",
     "vue-js-modal": "^2.0.1",
