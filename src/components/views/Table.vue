@@ -2149,39 +2149,27 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private get autofocusColumnIndex(): number | null {
-    const columnRequired =
-      (column: IResultColumnInfo) => Boolean(
-        column.mainField
-        && !column.mainField.field.isNullable,
-      );
-    const columnRequiredAndEmpty =
-      (column: IResultColumnInfo) => Boolean(
-        column.mainField
-        && !column.mainField.field.isNullable
-        && column.mainField.field.defaultValue === undefined
-        && !(column.name in this.defaultValues),
-      );
-    const columnNotRequiredAndEmpty =
-      (column: IResultColumnInfo) => Boolean(
-        column.mainField
-        && column.mainField.field.isNullable
-        && column.mainField.field.defaultValue === undefined
-        && !(column.name in this.defaultValues),
-      );
-    const columnNotRequired =
-      (column: IResultColumnInfo) => Boolean(
-        column.mainField
-        && column.mainField.field.isNullable,
-      );
-    const findIndexOrNull = (func: (c: IResultColumnInfo) => boolean) => {
-      const res = this.uv.info.columns.findIndex(func);
-      return res === -1 ? null : res;
-    };
-    const firstRequiredEmptyColumn = findIndexOrNull(columnRequiredAndEmpty);
-    const firstRequiredColumn = findIndexOrNull(columnRequired);
-    const firstNotRequiredEmptyColumn = findIndexOrNull(columnNotRequiredAndEmpty);
-    const firstNotRequiredColumn = findIndexOrNull(columnNotRequired);
-    return firstRequiredEmptyColumn ?? firstNotRequiredEmptyColumn ?? firstRequiredColumn ?? firstNotRequiredColumn ?? null;
+    let result = this.columnIndexes?.[0];
+    if (!result) return null;
+    const values = this?.uv?.emptyRow?.values;
+    if (!values) return null;
+    for (const icol of this.columnIndexes) {
+      const column = values[icol];
+      if (
+        column.rawValue === undefined
+        && column?.info !== undefined
+      ) {
+        if (!column?.info?.field?.isNullable) {
+          return icol;
+        } else if (
+          values[result].rawValue !== undefined
+          && column.rawValue === undefined
+        ) {
+          result = icol;
+        }
+      }
+    }
+    return result;
   }
 
   // TODO: Load all rows is temporary until we can't load rows by ids.
