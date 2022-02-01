@@ -68,7 +68,7 @@ import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import Phenom, { IPhenom, PhenomType, isPhenomType } from "@/components/views/timeline/Phenom.vue";
 import { mapMaybe, tryDicts } from "@/utils";
 import { ICombinedValue, IRowCommon, RowRef, valueToPunnedText } from "@/user_views/combined";
-import type { ScopeName, CombinedTransactionResult } from "@/state/staging_changes";
+import type { ScopeName, ISubmitResult } from "@/state/staging_changes";
 import { CurrentAuth, INoAuth } from "@/state/auth";
 
 interface IPhenomColumn {
@@ -93,7 +93,7 @@ const staging = namespace("staging");
 @Component({ components: { Phenom, Errorbox } })
 export default class UserViewTimeline extends mixins<EmptyBaseUserView>(BaseUserView) {
   @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
-  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<CombinedTransactionResult[]>;
+  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<ISubmitResult>;
   private message = "";
 
   private get phenoms() {

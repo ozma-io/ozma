@@ -20,7 +20,7 @@
       :parent-scope="scope"
       autofocus
       @select="selectFromView"
-      @close="selectedView = null"
+      @close="closeSelectView"
     />
     <MultiSelect
       v-if="valueOptions !== null"
@@ -43,8 +43,8 @@
       @clear-values="$emit('clear-values')"
       @update:filter="updateFilter"
       @load-more="loadMore"
-      @popup-opened="$emit('focus')"
-      @popup-closed="$emit('blur')"
+      @popup-opened="$emit('popup-opened')"
+      @popup-closed="onPopupClosed"
     >
       <template #option="select">
         <fragment>
@@ -72,7 +72,7 @@
           :key="index"
           type="button"
           class="material-button action-button"
-          @click="selectedView = action.query"
+          @click="beginSelect(action)"
         >
           <i class="material-icons md-18 rounded-circle open-modal-button">
             add
@@ -364,6 +364,21 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   private selectFromView(id: number) {
     this.selectedView = null;
     this.setValue(id);
+  }
+
+  private closeSelectView() {
+    this.selectedView = null;
+    this.$emit("popup-closed");
+  }
+
+  private onPopupClosed() {
+    if (this.selectedView === null) {
+      this.$emit("popup-closed");
+    }
+  }
+
+  private beginSelect(action: IReferenceSelectAction) {
+    this.selectedView = action.query;
   }
 
   get loadingState(): LoadingState {

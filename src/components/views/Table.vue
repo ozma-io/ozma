@@ -2134,9 +2134,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   @Watch("editingValue")
   protected updateEditingValue() {
-    if (this.editingValue === null) {
-      this.removeCellEditing();
-    } else {
+    if (this.editingValue !== null) {
       const info = this.editingValue.value.info;
       const fieldType = info?.field?.fieldType;
       if (fieldType?.type === "reference") {
@@ -2330,15 +2328,11 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private removeCellEditing() {
-    if (this.editing === null) return;
-
     this.editing = null;
   }
 
   // Value is not actually required to be editable - it can be opened in read-only mode too.
   private setCellEditing(ref: ValueRef) {
-    this.removeCellEditing();
-
     if (!this.canEditCell(ref)) return;
 
     this.getCellElement(ref)?.scrollIntoView({ block: "nearest" });

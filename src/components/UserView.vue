@@ -164,6 +164,7 @@
             :level="level"
             :selection-mode="selectionMode"
             :default-values="defaultValues"
+            :auto-saved="state.autoSaved"
             @goto="$emit('goto', $event)"
             @goto-previous="$emit('goto-previous')"
             @select="$emit('select', $event)"
@@ -226,7 +227,7 @@ import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, map
 import { interfaceButtonVariant, defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
 import { funappSchema, IEmbeddedPageRef } from "@/api";
 import { equalEntityRef, serializeValue, valueIsNull } from "@/values";
-import { AddedRowId, CombinedTransactionResult, ICombinedInsertEntityResult, IStagingEventHandler, StagingKey } from "@/state/staging_changes";
+import { AddedRowId, ICombinedInsertEntityResult, IStagingEventHandler, ISubmitResult, StagingKey } from "@/state/staging_changes";
 import type { ScopeName } from "@/state/staging_changes";
 import { ICurrentQueryHistory, IQuery } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
@@ -296,6 +297,7 @@ interface IUserViewShow {
   componentName: string;
   uv: ICombinedUserViewAny;
   component: IUserViewConstructor<Vue> | null;
+  autoSaved: boolean;
 }
 
 interface IUserViewLoading {
@@ -357,7 +359,7 @@ export default class UserView extends Vue {
   @staging.Mutation("setHandler") setStagingHandler!: (args: { key: StagingKey; handler: IStagingEventHandler }) => void;
   @staging.Mutation("removeHandler") removeStagingHandler!: (key: StagingKey) => void;
   @staging.Action("resetAddedEntry") resetAddedEntry!: (args: { entityRef: IEntityRef; id: AddedRowId }) => Promise<void>;
-  @staging.State("currentSubmit") submitPromise!: Promise<CombinedTransactionResult[]> | null;
+  @staging.State("currentSubmit") submitPromise!: Promise<ISubmitResult> | null;
   @query.State("current") query!: ICurrentQueryHistory | null;
   @settings.State("current") settings!: CurrentSettings;
 
@@ -679,9 +681,9 @@ export default class UserView extends Vue {
     this.$emit("goto", linkQuery);
   }
 
-  private reloadIfRoot() {
+  private async reloadIfRoot(autoSaved?: boolean) {
     if (this.isRoot) {
-      this.reload();
+      await this.reload({ autoSaved });
     }
   }
 
@@ -692,7 +694,7 @@ export default class UserView extends Vue {
         key: this.uid,
         handler: () => {
           if (!this.inhibitReload) {
-            this.reload();
+            void this.reload();
           }
         },
       });
@@ -711,28 +713,28 @@ export default class UserView extends Vue {
     }));
   }
 
-  private loadNextChunk(done: () => void) {
+  private async loadNextChunk() {
     if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
 
-    this.reload({ loadNextChunk: true, done });
+    await this.reload({ loadNextChunk: true });
   }
 
-  private loadAllChunks(done: () => void) {
+  private async loadAllChunks() {
     if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
 
-    this.reload({ loadAllChunks: true, done });
+    await this.reload({ loadAllChunks: true });
   }
 
-  private loadAllChunksLimitless(done: () => void) {
+  private async loadAllChunksLimitless() {
     if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
 
-    this.reload({ loadAllChunksLimitless: true, done });
+    await this.reload({ loadAllChunksLimitless: true });
   }
 
-  private loadEntries(limit: number, done: () => void) {
+  private async loadEntries(limit: number) {
     if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
 
-    this.reload({ limit, done });
+    await this.reload({ limit });
   }
 
   private reload(options?: {
@@ -741,8 +743,8 @@ export default class UserView extends Vue {
     loadAllChunks?: boolean; // With `fetchAllLimit`.
     loadAllChunksLimitless?: boolean; // Load ALL rows.
     limit?: number;
-    done?: () => void;
-  }) {
+    autoSaved?: boolean;
+  }): Promise<void> {
     const args = deepClone(this.args);
     if (this.level >= maxLevel) {
       this.setState({
@@ -750,7 +752,7 @@ export default class UserView extends Vue {
         args,
         message: "Too many levels of nested user views",
       });
-      return;
+      return Promise.resolve();
     }
 
     if (this.state.state === "error") {
@@ -841,6 +843,7 @@ export default class UserView extends Vue {
             uv,
             componentName: newType.component,
             component,
+            autoSaved: options?.autoSaved ?? false,
           });
           this.nextUv = null;
         } else if (newType.type === "link") {
@@ -879,9 +882,9 @@ export default class UserView extends Vue {
       }
 
       (this.$refs.argumentEditor as ArgumentEditor | undefined)?.reset();
-      options?.done?.();
     })();
     this.nextUv = pending.ref;
+    return pending.ref;
   }
 
   private scrollToTop() {
@@ -948,7 +951,7 @@ export default class UserView extends Vue {
 
   @Watch("args", { deep: true, immediate: true })
   private argsChanged(newArgs: IUserViewArguments) {
-    this.reload({ differentComponent: true });
+    void this.reload({ differentComponent: true });
   }
 
   @Watch("state.state", { immediate: true })
@@ -971,7 +974,7 @@ export default class UserView extends Vue {
   }
 
   @Watch("submitPromise", { immediate: true })
-  private changesSubmitted(submitPromise: Promise<CombinedTransactionResult[]> | null) {
+  private changesSubmitted(submitPromise: Promise<ISubmitResult> | null) {
     if (this.state.state !== "show" || this.state.uv.rows !== null || submitPromise === null) {
       return;
     }
@@ -981,8 +984,8 @@ export default class UserView extends Vue {
     // We detect if a redirect should happen. If not, we just reload. If it does, we
     // execute it and then reload only if `args` didn't change.
     void (async () => {
-      let ret: CombinedTransactionResult[];
       try {
+        let ret: ISubmitResult;
         try {
           ret = await submitPromise;
         } catch (e) {
@@ -991,13 +994,13 @@ export default class UserView extends Vue {
 
         if (!deepEquals(this.args, uv.args)) {
           // We went somewhere else meanwhile.
-          this.reloadIfRoot();
+          await this.reloadIfRoot(ret.autoSave);
           return;
         }
 
-        const createOp = ret.find(x => x.type === "insert" && equalEntityRef(x.entity, uv.info.mainEntity!));
+        const createOp = ret.results.find(x => x.type === "insert" && equalEntityRef(x.entity, uv.info.mainEntity!));
         if (createOp === undefined) {
-          this.reloadIfRoot();
+          await this.reloadIfRoot(ret.autoSave);
           return;
         }
         const id = (createOp as ICombinedInsertEntityResult).id;
@@ -1029,12 +1032,12 @@ export default class UserView extends Vue {
           };
           await linkHandler(linkHandlerParams).handler();
         } catch (e) {
-          this.reloadIfRoot();
+          await this.reloadIfRoot(ret.autoSave);
           return;
         }
         await this.$nextTick();
         if (deepEquals(oldArgs, this.args)) {
-          this.reloadIfRoot();
+          await this.reloadIfRoot(ret.autoSave);
         }
       } finally {
         this.inhibitReload = false;

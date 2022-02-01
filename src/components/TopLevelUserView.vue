@@ -251,7 +251,7 @@ import * as Api from "@/api";
 import { eventBus } from "@/main";
 import { setHeadTitle } from "@/elements";
 import { ErrorKey } from "@/state/errors";
-import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/staging_changes";
+import { CombinedTransactionResult, CurrentChanges, ISubmitResult, ScopeName } from "@/state/staging_changes";
 import ModalUserView from "@/components/ModalUserView.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { CurrentAuth, getAuthedLink, INoAuth } from "@/state/auth";
@@ -303,7 +303,7 @@ export default class TopLevelUserView extends Vue {
   @auth.Action("login") login!: () => Promise<void>;
   @auth.Action("logout") logout!: () => Promise<void>;
   @staging.State("current") changes!: CurrentChanges;
-  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<CombinedTransactionResult[]>;
+  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<ISubmitResult>;
   @staging.Action("reset") clearChanges!: () => Promise<void>;
   @query.State("current") query!: ICurrentQueryHistory | null;
   @query.Action("resetRoute") resetRoute!: (_: Route) => void;
@@ -521,17 +521,20 @@ export default class TopLevelUserView extends Vue {
     this.$bvToast.hide();
   }
 
-  private async saveChanges() {
+  private async saveChanges(): Promise<CombinedTransactionResult[]> {
     const scopes = Object.keys(this.changes.scopes);
-    const results: CombinedTransactionResult[] = [];
-    for (const scope of scopes) {
-      // eslint-disable-next-line no-await-in-loop
-      results.push(...await this.submitChanges({ scope, errorOnIncomplete: true }));
-    }
     if (scopes.length === 0) {
-      results.push(...await this.submitChanges({ errorOnIncomplete: true }));
+      const ret = await this.submitChanges({ errorOnIncomplete: true });
+      return ret.results;
+    } else {
+      const results: CombinedTransactionResult[] = [];
+      for (const scope of scopes) {
+        // eslint-disable-next-line no-await-in-loop
+        const ret = await this.submitChanges({ scope, errorOnIncomplete: true });
+        results.push(...ret.results);
+      }
+      return results;
     }
-    return results;
   }
 
   private async saveView() {

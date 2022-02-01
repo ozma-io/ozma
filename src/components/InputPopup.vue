@@ -3,10 +3,10 @@
     <template v-if="mode === 'modal'">
       <fragment>
         <Modal
-          :show="showContent"
+          :show="show"
           fullscreen
-          @opened="onOpenModal"
-          @close="closeModal"
+          @opened="onOpen"
+          @close="onClose"
         >
           <div class="modal-slots">
             <div class="header">
@@ -25,13 +25,13 @@
               <slot
                 name="inner"
                 modal
-                :autofocus="showContent"
+                :autofocus="show"
               />
             </div>
           </div>
         </Modal>
 
-        <div class="input-field-wrapper" @click="showContent = true">
+        <div class="input-field-wrapper" @click="$emit('update:show', true)">
           <slot
             :mode="mode"
             :isOpen="false"
@@ -41,24 +41,29 @@
     </template>
 
     <template v-else-if="mode === 'popup'">
+      <!-- eslint-disable vue/v-on-event-hyphenation -->
       <popper
         ref="popup"
         trigger="clickToToggle"
         transition="fade"
         enter-active-class="fade-enter fade-enter-active"
         leave-active-class="fade-leave fade-leave-active"
-        :disabled="disabled"
         :visible-arrow="false"
         :options="popperOptions"
-        @show="onOpenPopup"
-        @hide="onClosePopup"
+        :disabled="!show"
+        :force-show="show"
+        @documentClick="$emit('update:show', false)"
       >
         <!-- eslint-disable vue/no-deprecated-slot-attribute -->
         <!-- TODO: Find or make not deprecated popper.js wrapper -->
-        <div slot="reference" class="input-field-wrapper">
+        <div
+          slot="reference"
+          class="input-field-wrapper"
+          @click="$emit('update:show', true)"
+        >
           <slot
             :mode="mode"
-            :isOpen="showContent"
+            :isOpen="show"
           />
         </div>
         <!-- eslint-enable vue/no-deprecated-slot-attribute -->
@@ -76,62 +81,25 @@
 import Popper from "vue-popperjs";
 import { Portal } from "portal-vue";
 
-import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { Component, Vue, Prop } from "vue-property-decorator";
 import Modal from "@/components/modal/Modal.vue";
 
 type Mode = "popup" | "modal";
 
 @Component({ components: { Popper, Modal, Portal } })
 export default class InputPopup extends Vue {
-  @Prop({ type: Boolean, default: false }) disabled!: boolean;
   @Prop({ type: String, default: null }) label!: string | null;
-  @Prop({ type: Object, default: () => {} }) popperOptions!: any;
-  @Prop({ type: Boolean, default: false }) compactMode!: boolean;
-  private showContent = false;
+  @Prop({ type: Boolean, default: false }) show!: boolean;
+  @Prop({ type: Object, default: () => {} }) popperOptions!: object;
 
   get mode(): Mode {
     return this.$isMobile ? "modal" : "popup";
   }
 
-  @Watch("showContent")
-  private updateShowContent() {
-    if (this.disabled) return;
-
-    this.$emit("update:show-content", this.showContent);
-  }
-
-  async openPopup() {
-    if (this.disabled) return;
-
-    await (this.$refs.popup as any)?.doShow();
-  }
-
-  async closePopup() {
-    if (this.disabled) return;
-
-    await (this.$refs.popup as any)?.doClose();
-    this.showContent = false;
-  }
-
-  closeModal() {
-    this.showContent = false;
-  }
-
-  onOpenModal() {
-  }
-
-  private onOpenPopup() {
-    this.showContent = true;
-    this.$emit("popup-opened");
-  }
-
-  private onClosePopup() {
-    this.showContent = false;
-    this.$emit("popup-closed");
-  }
-
   updatePopper() {
-    (this.$refs.popup as any)?.updatePopper();
+    if (this.mode === "popup") {
+      (this.$refs.popup as any).updatePopper();
+    }
   }
 }
 </script>

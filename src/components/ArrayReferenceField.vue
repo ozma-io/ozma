@@ -28,7 +28,8 @@
     @add-value="addValue"
     @remove-index="removeIndex"
     @clear-values="clearValues"
-    @focus="$emit('focus')"
+    @popup-opened="$emit('popup-opened')"
+    @popup-closed="$emit('popup-closed')"
   />
 </template>
 

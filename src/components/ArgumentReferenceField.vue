@@ -20,7 +20,8 @@
       :qrcode-input="qrcodeInput"
       :compact-mode="compactMode"
       @update:value="$emit('update:value', $event)"
-      @focus="$emit('focus')"
+      @popup-opened="$emit('popup-opened')"
+      @popup-closed="$emit('popup-closed')"
       @goto="$emit('goto', $event)"
     />
   </div>

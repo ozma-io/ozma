@@ -74,7 +74,7 @@ import { namespace } from "vuex-class";
 
 import type { IQuery } from "@/state/query";
 import { queryLocation } from "@/state/query";
-import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/staging_changes";
+import { CurrentChanges, ISubmitResult, ScopeName } from "@/state/staging_changes";
 import ModalPortal from "@/components/modal/ModalPortal";
 import { router } from "@/modules";
 import type { Button } from "@/components/buttons/buttons";
@@ -90,7 +90,7 @@ const auth = namespace("auth");
 export default class ModalUserView extends Vue {
   @auth.State("protectedCalls") protectedCalls!: number;
   @staging.State("current") changes!: CurrentChanges;
-  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<CombinedTransactionResult[]>;
+  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<ISubmitResult>;
   @staging.Action("clearAdded") clearAdded!: (_: { scope?: ScopeName; onlyUntouched?: boolean }) => Promise<void>;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;

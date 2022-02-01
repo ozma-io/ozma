@@ -191,6 +191,7 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
   @Prop({ type: String, required: true }) scope!: ScopeName;
   @Prop({ type: Number, required: true }) level!: number;
   @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, unknown>;
+  @Prop({ type: Boolean, default: false }) autoSaved!: boolean;
 
   get addedLocked() {
     return this.currentSubmit !== null;

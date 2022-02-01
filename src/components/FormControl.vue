@@ -139,7 +139,7 @@
           :uv-args="uvArgs"
           :compact-mode="compactMode"
           @update:value="updateValue"
-          @focus="iSlot.onFocus"
+          @popup-opened="iSlot.onFocus"
           @blur="onBlur"
         />
         <CodeEditor
@@ -233,8 +233,8 @@
           :compact-mode="compactMode"
           @update:actions="actions = $event"
           @update:buttons="buttons = $event"
-          @focus="iSlot.onFocus"
-          @blur="onBlur"
+          @popup-opened="iSlot.onFocus"
+          @popup-closed="onBlur"
           @update:value="updateValue($event)"
           @goto="$emit('goto', $event)"
         />
@@ -251,8 +251,8 @@
           :nullable="isNullable"
           :disabled="isDisabled"
           :compact-mode="compactMode"
-          @focus="iSlot.onFocus"
-          @blur="onBlur"
+          @popup-opened="iSlot.onFocus"
+          @popup-closed="onBlur"
           @update:value="updateValue($event)"
           @goto="$emit('goto', $event)"
         />

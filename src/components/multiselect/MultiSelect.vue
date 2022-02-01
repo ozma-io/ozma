@@ -30,20 +30,13 @@
     :class="[
       'popup-container',
       {
-        'is-open': isPopupOpen,
+        'is-open': showPopup,
       }
     ]"
   >
     <InputPopup
       ref="popup"
       :label="label"
-      trigger="clickToToggle"
-      transition="fade"
-      enter-active-class="fade-enter fade-enter-active"
-      leave-active-class="fade-leave fade-leave-active"
-      :disabled="disabled"
-      :visible-arrow="false"
-      :compact-mode="compactMode"
       :popper-options="{
         placement: 'bottom-start',
         positionFixed: true,
@@ -51,9 +44,8 @@
           preventOverflow: { enabled: true, boundariesElement: 'viewport' },
         },
       }"
-      @update:show-content="isPopupOpen = $event"
-      @popup-opened="onOpenPopup"
-      @popup-closed="onClosePopup"
+      :show="showPopup"
+      @update:show="setShowPopup"
     >
       <template #default="{ mode, isOpen }">
         <div
@@ -119,7 +111,7 @@
               :class="['with-material-icon select-icon', { 'is-mobile': $isMobile }]"
             >
               <i class="material-icons">
-                {{ isPopupOpen ? "expand_less" : "expand_more" }}
+                {{ showPopup ? "expand_less" : "expand_more" }}
               </i>
             </b-input-group-text>
           </b-input-group-append>
@@ -147,7 +139,7 @@
               @keydown.up="offsetHoveredOption(-1)"
               @keydown.down="offsetHoveredOption(1)"
               @keydown.enter.prevent.stop="filterInputFinished"
-              @keydown.esc.prevent.stop="closePopup"
+              @keydown.esc.prevent.stop="showPopup = false"
               @focus="onFilterInputFocus"
             />
             <b-input-group-append>
@@ -276,7 +268,6 @@
           <div
             v-if="$slots['actions']"
             class="select-container__options__actions"
-            @click="closePopup"
           >
             <slot
               name="actions"
@@ -343,7 +334,7 @@ export default class MultiSelect extends Vue {
 
   private filterValue = "";
   private hoveredOptionIndex: number | null = null;
-  private isPopupOpen = false;
+  private showPopup = false;
   private oldLoadingState: LoadingState = { status: "ok", moreAvailable: false };
 
   // Due to trigram indexes require at least 3 symbols.
@@ -413,12 +404,6 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  private mounted() {
-    if (this.autofocus) {
-      void this.$nextTick().then(() => this.openPopup());
-    }
-  }
-
   private loadMoreWithEvent(ev: StateChanger) {
     this.$emit("load-more", (state: LoadingResult) => {
       if (state.status === "error") {
@@ -468,7 +453,7 @@ export default class MultiSelect extends Vue {
   @Watch("disabled")
   private disabledChanged() {
     if (this.disabled) {
-      void this.closePopup();
+      this.showPopup = false;
     }
   }
 
@@ -481,10 +466,10 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  @Watch("autofocus")
-  private onAutofocus(autofocus: boolean) {
-    if (autofocus) {
-      void this.openPopup();
+  @Watch("autofocus", { immediate: true })
+  private onAutofocus() {
+    if (this.autofocus) {
+      this.showPopup = true;
     }
   }
 
@@ -514,7 +499,7 @@ export default class MultiSelect extends Vue {
   }
 
   get containerContentStyle() {
-    const height = this.height && !this.isPopupOpen ? { height: `${this.height}px`, minHeight: "unset" } : {};
+    const height = this.height && !this.showPopup ? { height: `${this.height}px`, minHeight: "unset" } : {};
     return {
       ...height,
     };
@@ -545,44 +530,27 @@ export default class MultiSelect extends Vue {
     this.$emit("focus");
   }
 
-  private openPopup() {
-    if (this.disabled) return;
+  @Watch("showPopup")
+  private async onClosePopup() {
+    if (this.showPopup) {
+      this.hoveredOptionIndex = null;
+      this.$emit("popup-opened");
+      await nextRender();
+      (this.$refs["infiniteLoading"] as InfiniteLoading | undefined)?.stateChanger.reset();
 
-    this.hoveredOptionIndex = null;
-    void (this.$refs.popup as InputPopup | undefined)?.openPopup();
-  }
-
-  private async onOpenPopup() {
-    if (this.disabled) return;
-
-    this.isPopupOpen = true;
-    this.$emit("popup-opened");
-    await nextRender();
-    (this.$refs["infiniteLoading"] as InfiniteLoading | undefined)?.stateChanger.reset();
-
-    // On-screen keyboard disturbs if there are not so many options to filter.
-    if (!this.$isMobile) {
-      this.focusInput();
+      // On-screen keyboard disturbs if there are not so many options to filter.
+      if (!this.$isMobile) {
+        this.focusInput();
+      }
+    } else {
+      this.filterValue = "";
+      this.$emit("popup-closed");
     }
   }
 
-  private async closePopup() {
-    if (this.disabled) return;
-
-    await (this.$refs.popup as InputPopup | undefined)?.closePopup();
-  }
-
-  private onClosePopup() {
-    this.$emit("popup-closed");
-    this.isPopupOpen = false;
-    this.filterValue = "";
-  }
-
-  private togglePopup() {
-    if (this.isPopupOpen) {
-      void this.closePopup();
-    } else {
-      this.openPopup();
+  private setShowPopup(newValue: boolean) {
+    if (!this.disabled) {
+      this.showPopup = newValue;
     }
   }
 
@@ -622,7 +590,8 @@ export default class MultiSelect extends Vue {
       filterInput.focus();
     }
     if (this.single) {
-      void this.closePopup().then(() => this.focusSelect());
+      this.showPopup = false;
+      this.focusSelect();
     }
   }
 
@@ -637,7 +606,8 @@ export default class MultiSelect extends Vue {
       this.$emit("remove-value", index);
     }
     if (closePopup) {
-      void this.closePopup().then(() => this.focusSelect());
+      this.showPopup = false;
+      this.focusSelect();
     }
   }
 

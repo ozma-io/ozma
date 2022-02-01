@@ -63,6 +63,7 @@
     "spaced-comment": "warn",
     "space-in-parens": "warn",
     "no-trailing-spaces": "warn",
+    "no-control-regex": "off",
     "brace-style": ["warn", "1tbs", {
       "allowSingleLine": false
     }],
