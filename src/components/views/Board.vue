@@ -3,8 +3,8 @@
         "en": {
             "view_error": "There are following errors in user view",
             "no_title": "No title",
-            "no_columns": "This query is lacking board_columns attribute",
-            "no_group": "This query is lacking board_group attribute on the grouping field"
+            "no_columns": "This query lacks board_columns attribute",
+            "no_group": "This query lacks board_group attribute on the grouping field"
         },
         "ru": {
             "view_error": "В отображении следующие ошибки",

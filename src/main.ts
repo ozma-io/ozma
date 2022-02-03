@@ -6,7 +6,6 @@ Vue.config.performance = process.env["NODE_ENV"] !== "production";
 import Vuex from "vuex";
 import mitt from "mitt";
 import TextareaAutosize from "vue-textarea-autosize";
-import { IUserViewRef } from "ozma-api";
 
 import * as Modules from "@/modules";
 import { setHeadTitle } from "@/elements";
@@ -32,7 +31,9 @@ import "@/styles/style.scss";
 import { IEmbeddedPageRef } from "@/api";
 
 export interface IShowHelpModalArgs {
-  userViewRef: IUserViewRef;
+  // `null` when we don't store "page is read" state.
+  key: string | null;
+  skipIfShown?: boolean;
   ref: IEmbeddedPageRef;
 }
 

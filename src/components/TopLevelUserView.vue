@@ -618,7 +618,7 @@ export default class TopLevelUserView extends Vue {
           type: "callback",
           callback: () => {
             const allKeys = Object.keys(localStorage);
-            const keys = ["dismiss-help-pages", ...allKeys.filter(key => key.startsWith("watchedHelpPage_"))];
+            const keys = ["dismissHelpPages", ...allKeys.filter(key => key.startsWith("watchedHelpPage_"))];
             for (const key of keys) {
               localStorage.removeItem(key);
             }

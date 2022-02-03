@@ -18,7 +18,8 @@
         "ok": "OK",
         "contextmenu_cut_tooltip": "Use Ctrl+X to cut selected cell",
         "contextmenu_copy_tooltip": "Use Ctrl+C to copy selected cell",
-        "contextmenu_paste_tooltip": "Use Ctrl+V to paste to selected cell"
+        "contextmenu_paste_tooltip": "Use Ctrl+V to paste to selected cell",
+        "no_columns": "This query lacks visible columns"
       },
       "ru": {
         "cut": "Вырезать",
@@ -38,7 +39,8 @@
         "ok": "Продолжить",
         "contextmenu_cut_tooltip": "Нажмите Ctrl+X, чтобы вырезать выделенную ячейку",
         "contextmenu_copy_tooltip": "Нажмите Ctrl+C, чтобы скопировать выделенную ячейку",
-        "contextmenu_paste_tooltip": "Нажмите Ctrl+V, чтобы вставить в выделенную ячейку"
+        "contextmenu_paste_tooltip": "Нажмите Ctrl+V, чтобы вставить в выделенную ячейку",
+        "no_columns": "В запросе отсутствуют видимые колонки"
       }
     }
 </i18n>
@@ -92,218 +94,224 @@
       />
     </TableCellEdit>
 
-    <popper
-      v-if="cellContextMenu"
-      ref="contextMenuPopup"
-      v-click-outside="closeCellContextMenu"
-      force-show
-      :trigger="null"
-      :reference="cellContextMenu.reference"
-      transition="fade"
-      enter-active-class="fade-enter fade-enter-active"
-      leave-active-class="fade-leave fade-leave-active"
-      :visible-arrow="false"
-      :options="{
-        placement: 'bottom-start',
-        positionFixed: true,
-        modifiers: { offset: { offset: 0 } },
-      }"
-    >
-      <div class="popper border rounded overflow-hidden shadow">
-        <div class="context-menu-wrapper">
-          <ButtonList
-            :buttons="cellContextMenu.buttons"
-            @button-click="closeCellContextMenu"
-            @goto="$emit('goto', $event)"
-          />
-        </div>
-      </div>
-    </popper>
-
-    <div
-      v-if="uv.extra.lazyLoad.type === 'pagination'"
-      class="pagination-wrapper"
-      :style="{
-        // It's very bad, but I was unable to do this without JS.
-        right: `${(tableWidth || 0) - (parentWidth || 0) - (parentScrollLeft || 0) + 5}px`,
-      }"
-    >
-      <div
-        :class="['pagination', { 'ml-auto': !uv.info.mainEntity }]"
-        :style="{ top: `${parentScrollTop > 30 ? 2.5 : 0}rem` }"
+    <!-- Don't know why there are one row in empty userview -->
+    <div v-if="uv.info.columns.length === 0" class="empty-userview">
+      {{ $t("empty_userview") }}
+    </div>
+    <template v-else>
+      <popper
+        v-if="cellContextMenu"
+        ref="contextMenuPopup"
+        v-click-outside="closeCellContextMenu"
+        force-show
+        :trigger="null"
+        :reference="cellContextMenu.reference"
+        transition="fade"
+        enter-active-class="fade-enter fade-enter-active"
+        leave-active-class="fade-leave fade-leave-active"
+        :visible-arrow="false"
+        :options="{
+          placement: 'bottom-start',
+          positionFixed: true,
+          modifiers: { offset: { offset: 0 } },
+        }"
       >
-        <b-spinner
-          v-if="uv.extra.lazyLoad.pagination.loading"
-          class="mr-1"
-          small
-          label="Next page is loading"
-        />
-        <div class="select-wrapper">
-          <b-select
-            class="page-select"
-            :value="uv.extra.lazyLoad.pagination.perPage"
-            :options="pageSizes"
-            size="sm"
-            @input="updatePageSize"
-          />
-        </div>
-        <ButtonItem :button="firstPageButton" />
-        <ButtonItem :button="prevPageButton" />
-        <div class="current-page-wrapper">
-          <div class="current-page">
-            {{ currentVisualPage }}
-            <span v-if="pagesCount !== null" class="pages-count">{{ "/" + pagesCount }} </span>
+        <div class="popper border rounded overflow-hidden shadow">
+          <div class="context-menu-wrapper">
+            <ButtonList
+              :buttons="cellContextMenu.buttons"
+              @button-click="closeCellContextMenu"
+              @goto="$emit('goto', $event)"
+            />
           </div>
         </div>
-        <ButtonItem :button="nextPageButton" />
-      </div>
-    </div>
+      </popper>
 
-    <div
-      v-if="(showAddRowButtons && uv.rows.length > 5) || uv.extra.lazyLoad.type === 'pagination'"
-      class="button-container"
-      :style="{ width: `${parentWidth - 20}px`, minHeight: `25px` }"
-    >
-      <ButtonItem
-        v-visible="showAddRowButtons && uv.rows.length > 5"
-        :button="topAddButton"
-        align-right
-      />
-    </div>
-
-    <table
-      ref="table"
-      class="custom-table table table-sm"
-    >
-      <colgroup>
-        <col
-          v-if="uv.extra.isSelectionColumnEnabled"
-          class="checkbox-col"
-        >
-        <col
-          v-if="hasLinksColumn"
-          class="open-form-col"
-        >
-        <col
-          v-for="i in columnIndexes"
-          :key="i"
-          class="data-col"
-          :style="uv.extra.columns[i].style"
-        >
-      </colgroup>
-      <thead
-        class="table-head"
+      <div
+        v-if="uv.extra.lazyLoad.type === 'pagination'"
+        class="pagination-wrapper"
+        :style="{
+          // It's very bad, but I was unable to do this without JS.
+          right: `${(tableWidth || 0) - (parentWidth || 0) - (parentScrollLeft || 0) + 5}px`,
+        }"
       >
-        <tr>
-          <th
+        <div
+          :class="['pagination', { 'ml-auto': !uv.info.mainEntity }]"
+          :style="{ top: `${parentScrollTop > 30 ? 2.5 : 0}rem` }"
+        >
+          <b-spinner
+            v-if="uv.extra.lazyLoad.pagination.loading"
+            class="mr-1"
+            small
+            label="Next page is loading"
+          />
+          <div class="select-wrapper">
+            <b-select
+              class="page-select"
+              :value="uv.extra.lazyLoad.pagination.perPage"
+              :options="pageSizes"
+              size="sm"
+              @input="updatePageSize"
+            />
+          </div>
+          <ButtonItem :button="firstPageButton" />
+          <ButtonItem :button="prevPageButton" />
+          <div class="current-page-wrapper">
+            <div class="current-page">
+              {{ currentVisualPage }}
+              <span v-if="pagesCount !== null" class="pages-count">{{ "/" + pagesCount }} </span>
+            </div>
+          </div>
+          <ButtonItem :button="nextPageButton" />
+        </div>
+      </div>
+
+      <div
+        v-if="(showAddRowButtons && uv.rows.length > 5) || uv.extra.lazyLoad.type === 'pagination'"
+        class="button-container"
+        :style="{ width: `${parentWidth - 20}px`, minHeight: `25px` }"
+      >
+        <ButtonItem
+          v-visible="showAddRowButtons && uv.rows.length > 5"
+          :button="topAddButton"
+          align-right
+        />
+      </div>
+
+      <table
+        ref="table"
+        class="custom-table table table-sm"
+      >
+        <colgroup>
+          <col
             v-if="uv.extra.isSelectionColumnEnabled"
-            class="fixed-column checkbox-cells table-th"
-            @click="toggleAllRows"
+            class="checkbox-col"
           >
-            <Checkbox
-              :checked="selectedAll"
-              :indeterminate="!selectedAll && selectedSome"
-            />
-          </th>
-          <th
+          <col
             v-if="hasLinksColumn"
-            :class="[
-              'table-th',
-              'fixed-column',
-              'openform-cells',
-              {
-                'without-selection-cell': !uv.extra.isSelectionColumnEnabled,
-              }
-            ]"
+            class="open-form-col"
           >
-            <ButtonGroup
-              v-if="createEntryButtons && !uv.extra.softDisabled"
-              :button="createEntryButtons"
-              @goto="$emit('goto', $event)"
-            />
-            <ButtonItem
-              v-if="createEntryButton && !uv.extra.softDisabled"
-              :button="createEntryButton"
-              @goto="$emit('goto', $event)"
-            />
-          </th>
-          <th
+          <col
             v-for="i in columnIndexes"
             :key="i"
-            :class="['sorting', 'table-th', {
-              'fixed-column' : uv.extra.columns[i].fixed,
-            }]"
+            class="data-col"
             :style="uv.extra.columns[i].style"
-            :title="uv.extra.columns[i].caption"
-            @click="loadAllRowsAndUpdateSort(i)"
           >
-            <span class="table_header__content">
-              {{ uv.extra.columns[i].caption }}
-            </span>
-            <span v-if="uv.extra.sortColumn === i">{{ uv.extra.sortAsc ? "▲" : "▼" }}</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <TableRow
-          v-for="(row, rowIndex) in shownRows"
-          :key="row.key"
-          :class="{
-            'last-top-new': row.notExisting && rowIndex + 1 < shownRows.length && !shownRows[rowIndex + 1].notExisting,
-            'first-bottom-new': row.notExisting && rowIndex - 1 > 0 && !shownRows[rowIndex - 1].notExisting,
-          }"
-          :uv="uv"
-          :row="row.row"
-          :column-indexes="columnIndexes"
-          :show-tree="showTree"
-          :not-existing="row.notExisting"
-          :show-link-column="hasLinksColumn"
-          :row-index="rowIndex"
-          @select="selectTableRow(rowIndex, $event)"
-          @cell-click="clickCell({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
-          @cell-mousedown="startCellSelection({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
-          @cell-mouseover="continueCellSelection({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
-          @cell-mouseup="endCellSelection({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
-          @cell-contextmenu="openCellContextMenu({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
-          @toggle-children="toggleChildren(row.ref, $event)"
-          @add-child="addChild(row.ref)"
-          @goto="$emit('goto', $event)"
+        </colgroup>
+        <thead
+          class="table-head"
+        >
+          <tr>
+            <th
+              v-if="uv.extra.isSelectionColumnEnabled"
+              class="fixed-column checkbox-cells table-th"
+              @click="toggleAllRows"
+            >
+              <Checkbox
+                :checked="selectedAll"
+                :indeterminate="!selectedAll && selectedSome"
+              />
+            </th>
+            <th
+              v-if="hasLinksColumn"
+              :class="[
+                'table-th',
+                'fixed-column',
+                'openform-cells',
+                {
+                  'without-selection-cell': !uv.extra.isSelectionColumnEnabled,
+                }
+              ]"
+            >
+              <ButtonGroup
+                v-if="createEntryButtons && !uv.extra.softDisabled"
+                :button="createEntryButtons"
+                @goto="$emit('goto', $event)"
+              />
+              <ButtonItem
+                v-if="createEntryButton && !uv.extra.softDisabled"
+                :button="createEntryButton"
+                @goto="$emit('goto', $event)"
+              />
+            </th>
+            <th
+              v-for="i in columnIndexes"
+              :key="i"
+              :class="['sorting', 'table-th', {
+                'fixed-column' : uv.extra.columns[i].fixed,
+              }]"
+              :style="uv.extra.columns[i].style"
+              :title="uv.extra.columns[i].caption"
+              @click="loadAllRowsAndUpdateSort(i)"
+            >
+              <span class="table_header__content">
+                {{ uv.extra.columns[i].caption }}
+              </span>
+              <span v-if="uv.extra.sortColumn === i">{{ uv.extra.sortAsc ? "▲" : "▼" }}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <TableRow
+            v-for="(row, rowIndex) in shownRows"
+            :key="row.key"
+            :class="{
+              'last-top-new': row.notExisting && rowIndex + 1 < shownRows.length && !shownRows[rowIndex + 1].notExisting,
+              'first-bottom-new': row.notExisting && rowIndex - 1 > 0 && !shownRows[rowIndex - 1].notExisting,
+            }"
+            :uv="uv"
+            :row="row.row"
+            :column-indexes="columnIndexes"
+            :show-tree="showTree"
+            :not-existing="row.notExisting"
+            :show-link-column="hasLinksColumn"
+            :row-index="rowIndex"
+            @select="selectTableRow(rowIndex, $event)"
+            @cell-click="clickCell({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
+            @cell-mousedown="startCellSelection({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
+            @cell-mouseover="continueCellSelection({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
+            @cell-mouseup="endCellSelection({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
+            @cell-contextmenu="openCellContextMenu({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
+            @toggle-children="toggleChildren(row.ref, $event)"
+            @add-child="addChild(row.ref)"
+            @goto="$emit('goto', $event)"
+          />
+        </tbody>
+      </table>
+      <InfiniteLoading
+        v-if="useInfiniteScrolling"
+        ref="infiniteLoading"
+        force-use-infinite-wrapper
+        :identifier="infiniteIdentifier"
+        spinner="spiral"
+        :distance="500"
+        @infinite="infiniteHandler"
+      >
+        <template #no-results>
+          <div v-if="allRows.length === 0" class="no-results">
+            {{ $t("no_results") }}
+          </div>
+          <span v-else />
+        </template>
+        <template #no-more>
+          <span />
+        </template>
+        <template #error>
+          <span />
+        </template>
+      </InfiniteLoading>
+      <div
+        v-if="showAddRowButtons"
+        ref="bottomButtonContainer"
+        class="button-container"
+        :style="{ width: `${parentWidth - 20}px` }"
+      >
+        <ButtonItem
+          :button="bottomAddButton"
+          align-right
         />
-      </tbody>
-    </table>
-    <InfiniteLoading
-      v-if="useInfiniteScrolling"
-      ref="infiniteLoading"
-      force-use-infinite-wrapper
-      :identifier="infiniteIdentifier"
-      spinner="spiral"
-      :distance="500"
-      @infinite="infiniteHandler"
-    >
-      <template #no-results>
-        <div v-if="allRows.length === 0" class="no-results">
-          {{ $t("no_results") }}
-        </div>
-        <span v-else />
-      </template>
-      <template #no-more>
-        <span />
-      </template>
-      <template #error>
-        <span />
-      </template>
-    </InfiniteLoading>
-    <div
-      v-if="showAddRowButtons"
-      ref="bottomButtonContainer"
-      class="button-container"
-      :style="{ width: `${parentWidth - 20}px` }"
-    >
-      <ButtonItem
-        :button="bottomAddButton"
-        align-right
-      />
-    </div>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -3243,5 +3251,14 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   .fade-2-move {
     transition: transform 0.2s;
+  }
+
+  .empty-userview {
+    margin: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    opacity: 0.7;
+    border: 1px solid var(--MainBorderColor);
+    border-radius: 0.2rem;
+    color: var(--MainTextColor);
   }
 </style>

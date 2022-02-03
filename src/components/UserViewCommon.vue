@@ -78,7 +78,7 @@ import { Action, namespace } from "vuex-class";
 
 import { AutoSaveLock } from "@/state/staging_changes";
 import { csvCell, csvSeparator, encodeUTF16LE, getBOM, mapMaybe, saveToFile, tryDicts } from "@/utils";
-import { defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
+import { defaultVariantAttribute, bootstrapVariantAttribute, interfaceButtonVariant } from "@/utils_colors";
 import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, userViewTitle } from "@/components/BaseUserView";
 import { attrToQuery, IQuery } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
@@ -87,11 +87,12 @@ import { RowRef, ValueRef } from "@/user_views/combined";
 import type { ICommonUserViewData, ICombinedUserViewAny } from "@/user_views/combined";
 import { getReferenceInfo } from "@/state/entries";
 import { attrToButton, Button, attrToButtons, attrToButtonsOld } from "@/components/buttons/buttons";
-import { IAttrToLinkOpts } from "@/links";
+import { EntityRef, IAttrToLinkOpts } from "@/links";
 import { convertParsedRows, serializeValue, valueFromRaw, valueToText } from "@/values";
 
 import Api from "@/api";
 import { fetchUserViewData } from "@/user_views/fetch";
+import { eventBus, IShowHelpModalArgs } from "@/main";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -109,6 +110,8 @@ const staging = namespace("staging");
 const errors = namespace("errors");
 const entities = namespace("entities");
 
+const uvHelpPageKey = (ref: IEntityRef) => `uv_${ref.schema}.${ref.name}`;
+
 @Component({
   components: {
     SelectUserView,
@@ -122,11 +125,45 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
   @entities.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
 
-  modalView: IQuery | null = null;
-  openQRCodeScanner = false;
-  openBarCodeScanner = false;
-  showDeleteEntiesButton = false;
+  private modalView: IQuery | null = null;
+  private openQRCodeScanner = false;
+  private openBarCodeScanner = false;
+  private showDeleteEntiesButton = false;
   private autoSaveLock: AutoSaveLock | null = null;
+
+  get helpPageReference() {
+    const helpRef = EntityRef.safeParse(this.uv.attributes["help_page"]);
+    if (helpRef.success) {
+      return helpRef.data;
+    } else {
+      const rawMarkupName = this.uv.attributes["help_embedded_page_name"];
+      if (rawMarkupName) {
+        console.error("Attribute help_embedded_page_name is deprecated; use help_page");
+        return {
+          schema: "user",
+          name: String(rawMarkupName),
+        };
+      }
+    }
+
+    return null;
+  }
+
+  @Watch("helpPageReference", { deep: true, immediate: true })
+  private updateHelpPage() {
+    if (this.helpPageReference !== null) {
+      this.showHelpModal(true);
+    }
+  }
+
+  private showHelpModal(skipIfShown?: boolean) {
+    const eventArgs: IShowHelpModalArgs = {
+      key: this.uv.args.source.type === "named" ? uvHelpPageKey(this.uv.args.source.ref) : null,
+      skipIfShown,
+      ref: this.helpPageReference!,
+    };
+    eventBus.emit("show-help-modal", eventArgs);
+  }
 
   private async addMyAutoSaveLock() {
     if (this.autoSaveLock !== null) return;
@@ -424,6 +461,72 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     return !(this.uv.attributes["hide_default_actions"] === true);
   }
 
+  private get communicationButtons() {
+    const buttons: Button[] = [];
+
+    const emailLink = this.settings.getEntry("instance_help_email", String, "sales@ozma.io");
+    if (emailLink !== "") {
+      buttons.push({
+        caption: "E-mail",
+        icon: "email",
+        type: "link",
+        link: { type: "href", href: "mailto:" + emailLink, target: "_blank" },
+        variant: defaultVariantAttribute,
+      });
+    }
+
+    const whatsappLink = this.settings.getEntry("instance_help_whatsapp", String, "https://api.whatsapp.com/send?phone=74953748820");
+    if (whatsappLink !== "") {
+      buttons.push({
+        caption: "WhatsApp",
+        icon: "phone",
+        type: "link",
+        link: { type: "href", href: whatsappLink, target: "_blank" },
+        variant: defaultVariantAttribute,
+      });
+    }
+
+    const telegramLink = this.settings.getEntry("instance_help_telegram", String, "https://t.me/kirmark");
+    if (telegramLink !== "") {
+      buttons.push({
+        caption: "Telegram",
+        icon: "send",
+        type: "link",
+        link: { type: "href", href: telegramLink, target: "_blank" },
+        variant: defaultVariantAttribute,
+      });
+    }
+
+    return buttons;
+  }
+
+  private get helpButtons(): Button[] {
+    const buttons: Button[] = [];
+
+    if (this.helpPageReference) {
+      buttons.push({
+        icon: "ondemand_video",
+        caption: this.$t("help_button_caption").toString(),
+        variant: { type: "existing", className: "help-button" }, // "help-button" is magic variant only for this case.
+        type: "callback",
+        callback: () => this.showHelpModal(),
+      });
+    }
+
+    if (this.communicationButtons.length > 0) {
+      const communicationButton: Button = {
+        icon: "contact_support",
+        caption: this.$t("contacts").toString(),
+        variant: defaultVariantAttribute,
+        type: "button-group",
+        buttons: this.communicationButtons,
+      };
+      buttons.push(communicationButton);
+    }
+
+    return buttons;
+  }
+
   get staticButtons(): Button[] {
     const extraActions = this.uv.attributes["extra_actions"];
     const extraActionsButtons = attrToButtonsOld(extraActions).map(button => ({ ...button, display: undefined }));
@@ -431,6 +534,17 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       console.warn("@extra_actions attribute deprecated,  will be deleted future.");
     }
     const buttons: Button[] = extraActionsButtons;
+
+    if (this.helpButtons.length > 0) {
+      buttons.push({
+        icon: "help_outline",
+        caption: this.$isMobile ? this.$t("help").toString() : undefined,
+        display: "desktop",
+        variant: interfaceButtonVariant,
+        type: "button-group",
+        buttons: this.helpButtons,
+      });
+    }
 
     if (this.creationButtons) {
       buttons.push({

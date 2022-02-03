@@ -69,17 +69,19 @@
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace, Action } from "vuex-class";
-import { IViewExprResult, IUserViewRef } from "ozma-api";
+import { IViewExprResult } from "ozma-api";
 
 import { CurrentAuth, INoAuth } from "@/state/auth";
 import { CurrentSettings } from "@/state/settings";
 import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
-import FabCluster from "@/components/FabCluster/FabCluster.vue";
 import { ErrorKey } from "@/state/errors";
 import { colorVariantsToCssRules, bootstrapColorVariants, colorVariantFromRaw, transparentVariant, IThemeRef, ITheme } from "@/utils_colors";
-import { eventBus } from "@/main";
+import { eventBus, IShowHelpModalArgs } from "@/main";
 import Api, { IEmbeddedPageRef } from "@/api";
 import InviteUserModal from "./components/InviteUserModal.vue";
+import { EntityRef } from "./links";
+import { safeJsonParse } from "./utils";
+import { equalEntityRef } from "./values";
 
 const settings = namespace("settings");
 const auth = namespace("auth");
@@ -89,7 +91,6 @@ const staging = namespace("staging");
 @Component({
   components: {
     ModalPortalTarget,
-    FabCluster,
     InviteUserModal,
     AlertBanner: () => ({
       component: import("@/components/AlertBanner.vue") as any,
@@ -112,7 +113,7 @@ export default class App extends Vue {
   @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
 
   private helpPageInfo: {
-    userViewRef: IUserViewRef;
+    key: string | null;
     ref: IEmbeddedPageRef;
     markup: string;
   } | null = null;
@@ -177,18 +178,35 @@ export default class App extends Vue {
     (this.$refs?.inviteUserModal as any)?.show();
   }
 
-  private showHelpModal({ userViewRef, ref }: { userViewRef: IUserViewRef; ref: IEmbeddedPageRef }) {
-    if (this.helpPageInfo) return;
+  private showHelpModal(args: IShowHelpModalArgs) {
+    void (async () => {
+      if (this.helpPageInfo) return;
 
-    const uvRef = { schema: "funapp", name: "embedded_page_by_name" };
-    void (this.callProtectedApi({
-      func: Api.getNamedUserView.bind(Api),
-      args: [uvRef, ref],
-    }) as Promise<IViewExprResult>).then(res => {
+      if (args.skipIfShown) {
+        const dismissHelpPages = Boolean(localStorage.getItem("dismissHelpPages"));
+        if (dismissHelpPages) {
+          return;
+        }
+
+        if (args.key !== null) {
+          const watchedRef = EntityRef.safeParse(safeJsonParse(localStorage.getItem(`watchedHelpPage_${args.key}`)));
+          const alreadyWatched = watchedRef.success ? equalEntityRef(args.ref, watchedRef.data) : false;
+          if (alreadyWatched) {
+            return;
+          }
+        }
+      }
+
+      const uvRef = { schema: "funapp", name: "embedded_page_by_name" };
+      const res: IViewExprResult = await this.callProtectedApi({
+        func: Api.getNamedUserView.bind(Api),
+        args: [uvRef, args.ref],
+      });
+
       const markupRaw = (res.result.rows[0]?.values[0].value as string | undefined) ?? null;
-      const markup = markupRaw ?? `Help page markup with name "${ref.schema}"."${ref.name}" not found.`;
-      this.helpPageInfo = { userViewRef, ref, markup };
-    });
+      const markup = markupRaw ?? `Help page markup with name "${args.ref.schema}"."${args.ref.name}" not found.`;
+      this.helpPageInfo = { key: args.key, ref: args.ref, markup };
+    })();
   }
 
   private onHelpModalClose() {
@@ -198,14 +216,14 @@ export default class App extends Vue {
   private dismissHelpPage() {
     if (!this.helpPageInfo) return;
 
-    const { schema, name } = this.helpPageInfo.userViewRef;
-    localStorage.setItem(`watchedHelpPage_${schema}.${name}`, JSON.stringify(this.helpPageInfo.ref));
+    localStorage.setItem(`watchedHelpPage_${this.helpPageInfo.key}`, JSON.stringify(this.helpPageInfo.ref));
 
     this.helpPageInfo = null;
   }
 
   private dismissAllHelpPages() {
-    localStorage.setItem("dismiss-help-pages", "true");
+    localStorage.setItem("dismissHelpPages", "true");
+    this.helpPageInfo = null;
   }
 
   private closeAllToasts() {

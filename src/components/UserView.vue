@@ -12,13 +12,12 @@
             "help": "Help",
             "help_button_caption": "Help page",
             "contacts": "Support",
-            "arguments_changed": "Apply or reset arguments changes to continue",
-            "reset_changed_arguments": "Reset",
-            "apply_changed_arguments": "Apply",
+            "arguments_updated": "Apply or reset arguments changes to continue",
+            "reset_updated_arguments": "Reset",
+            "apply_updated_arguments": "Apply",
             "show_argument_editor": "Show filters",
             "hide_argument_editor": "Hide filters",
             "new_mode_no_main": "FOR INSERT INTO clause is required for new entry mode.",
-            "empty_userview": "Empty",
             "link_to_nowhere": "This user view was a link which didn't replace it, so there's nothing to show.",
             "switch_argument_editor": "Filters"
         },
@@ -34,13 +33,12 @@
             "help": "Помощь",
             "help_button_caption": "Справка",
             "contacts": "Поддержка",
-            "arguments_changed": "Примените или сбросьте изменения аргументов, чтобы продолжить",
-            "reset_changed_arguments": "Сбросить",
-            "apply_changed_arguments": "Применить",
+            "arguments_updated": "Примените или сбросьте изменения аргументов, чтобы продолжить",
+            "reset_updated_arguments": "Сбросить",
+            "apply_updated_arguments": "Применить",
             "show_argument_editor": "Показать фильтры",
             "hide_argument_editor": "Скрыть фильтры",
             "new_mode_no_main": "Для режима создания новой записи должна использоваться конструкция FOR INSERT INTO.",
-            "empty_userview": "Пусто",
             "link_to_nowhere": "Это отображение являлось ссылкой, которая его не заменила. Теперь здесь нечего показать.",
             "switch_argument_editor": "Фильтры"
         }
@@ -62,12 +60,12 @@
       v-if="state.state === 'show'"
     >
       <button
-        v-if="showFilterButton"
+        v-if="showArgumentEditorButton"
         class="filter-button list-group-item list-group-item-action list-group-item-default"
-        @click.prevent="contextMenuShowArgumentEditor = !contextMenuShowArgumentEditor;"
+        @click.prevent="showArgumentEditor = !showArgumentEditor;"
       >
         <span
-          v-if="showArgumentEditor"
+          v-if="argumentEditorVisible"
           class="icon material-icons md-14"
         >
           filter_alt_off
@@ -87,14 +85,14 @@
 
       <transition name="fade-move">
         <ArgumentEditor
-          v-if="showArgumentEditor"
+          v-if="argumentEditorVisible"
           ref="argumentEditor"
           class="userview-argument-editor"
           :argument-params="state.uv.info.arguments"
-          :argument-values="state.uv.args.args"
-          @close="contextMenuShowArgumentEditor = false"
-          @update="updateArguments"
-          @update:has-changed-values="argumentEditorHasChangedValues = $event"
+          :argument-values="currentArguments"
+          @reset="resetUpdatedArguments"
+          @update="updateArgument"
+          @apply="applyUpdatedArguments"
         />
       </transition>
 
@@ -114,7 +112,7 @@
       <!-- `z-index: 30` to work well with popups from ArgumentEditor -->
       <b-overlay
         class="userview-overlay"
-        :show="showArgumentEditor && argumentEditorHasChangedValues"
+        :show="argumentEditorVisible && argumentEditorHasUpdatedValues"
         variant="dark"
         opacity="0.4"
         blur="5px"
@@ -125,35 +123,30 @@
         <template #overlay>
           <div class="overlay-content">
             <div class="overlay-text">
-              {{ $t("arguments_changed") }}
+              {{ $t("arguments_updated") }}
             </div>
 
             <div class="overlay-buttons">
               <b-button
                 class="mr-3"
                 variant="light"
-                @click="resetChangedArguments"
+                @click="resetUpdatedArguments"
               >
-                {{ $t("reset_changed_arguments") }}
+                {{ $t("reset_updated_arguments") }}
               </b-button>
               <b-button
                 variant="primary"
-                @click="applyChangedArguments"
+                @click="applyUpdatedArguments"
               >
-                {{ $t("apply_changed_arguments") }}
+                {{ $t("apply_updated_arguments") }}
               </b-button>
             </div>
           </div>
         </template>
 
         <transition name="fade-1" mode="out-in">
-          <!-- Don't know why there are one row in empty userview -->
-          <div v-if="completelyEmptyUserView" class="empty-userview">
-            {{ $t("empty_userview") }}
-          </div>
           <component
             :is="`UserView${state.componentName}`"
-            v-else
             ref="userViewRef"
             :key="transitionKey"
             :uv="state.uv"
@@ -221,12 +214,11 @@
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { ArgumentName, AttributesMap, IEntityRef, IEntriesRequestOpts } from "ozma-api";
-import * as R from "ramda";
 
-import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, mapMaybe, NeverError, safeJsonParse } from "@/utils";
-import { interfaceButtonVariant, defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
-import { funappSchema, IEmbeddedPageRef } from "@/api";
-import { equalEntityRef, serializeValue, valueIsNull } from "@/values";
+import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, NeverError } from "@/utils";
+import { defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
+import { funappSchema } from "@/api";
+import { equalEntityRef } from "@/values";
 import { AddedRowId, ICombinedInsertEntityResult, IStagingEventHandler, ISubmitResult, StagingKey } from "@/state/staging_changes";
 import type { ScopeName } from "@/state/staging_changes";
 import { ICurrentQueryHistory, IQuery } from "@/state/query";
@@ -234,14 +226,13 @@ import { IUserViewConstructor } from "@/components";
 import UserViewCommon from "@/components/UserViewCommon.vue";
 import ArgumentEditor from "@/components/ArgumentEditor.vue";
 import type { Button } from "@/components/buttons/buttons";
-import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams, EntityRef } from "@/links";
+import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams } from "@/links";
 import type { ICombinedUserViewAny, IRowLoadState, IUserViewArguments } from "@/user_views/combined";
 import { CombinedUserView } from "@/user_views/combined";
 import { UserViewError, fetchUserViewData } from "@/user_views/fetch";
 import { baseUserViewHandler } from "@/components/BaseUserView";
 import Errorbox from "@/components/Errorbox.vue";
 import { CurrentSettings } from "@/state/settings";
-import { eventBus, IShowHelpModalArgs } from "@/main";
 
 const types: RecordSet<string> = {
   "form": null,
@@ -310,13 +301,6 @@ interface IUserViewError {
   message: string;
 }
 
-export interface ISocialLinks {
-  telegram?: string;
-  whatsapp?: string;
-  email?: string;
-  [index: string]: string | undefined;
-}
-
 // Check is two user views are "compatible" comparing their arguments, so that we can
 // use data from the older combined user view (new rows, selected rows etc).
 const argsAreCompatible = (a: IUserViewArguments, b: IUserViewArguments): boolean => {
@@ -378,17 +362,10 @@ export default class UserView extends Vue {
 
   // Old user view is shown while new component for uv is loaded.
   private state: UserViewLoadingState = loadingState;
-  private pendingArgs: IUserViewArguments | null = null;
   private nextUv: Promise<void> | null = null;
   private inhibitReload = false;
-  private argumentEditorHasChangedValues = false;
-  private updatePageHandler = () => this.updateHelpPageState();
-
-  created() {
-    /* eslint-disable @typescript-eslint/unbound-method */
-    window.addEventListener("storage", this.updatePageHandler);
-    /* eslint-enable @typescript-eslint/unbound-method */
-  }
+  private updatedArguments: Record<ArgumentName, unknown> = {};
+  private showArgumentEditor = false;
 
   private destroyed() {
     if (this.state.state === "show") {
@@ -400,8 +377,6 @@ export default class UserView extends Vue {
       this.removeReloadHandler(this.uid);
     }
     this.nextUv = null;
-
-    window.removeEventListener("storage", this.updatePageHandler);
   }
 
   private get transitionKey() {
@@ -410,40 +385,8 @@ export default class UserView extends Vue {
       : "none";
   }
 
-  private get completelyEmptyUserView() {
-    return this.state.state === "show"
-      && this.state.componentName === "Table"
-      && this.state.uv.info.columns.length === 0
-      && this.state.uv.rows !== null
-      && this.state.uv.rows.length <= 1;
-  }
-
-  private contextMenuShowArgumentEditor = false;
-  private get showArgumentEditorAttr(): boolean | null {
-    if (this.state.state !== "show") return null;
-
-    const showArgumentEditorAttr = this.state.uv.attributes["show_argument_editor"];
-    return showArgumentEditorAttr !== undefined
-      ? Boolean(showArgumentEditorAttr)
-      : null;
-  }
-  private get showArgumentEditor() {
-    if (this.state.state !== "show") return false;
-
-    if (Object.keys(this.state.uv.info.arguments).length === 0) return false;
-
-    // Maybe too ugly and hacky.
-    return this.showArgumentEditorAttr === null
-      ? this.contextMenuShowArgumentEditor
-      : this.showArgumentEditorAttr !== this.contextMenuShowArgumentEditor;
-  }
-
-  private resetChangedArguments() {
-    (this.$refs.argumentEditor as ArgumentEditor | undefined)?.reset();
-  }
-
-  private applyChangedArguments() {
-    (this.$refs.argumentEditor as ArgumentEditor | undefined)?.apply();
+  private get hasArgumentEditor() {
+    return this.state.state === "show" && Object.keys(this.state.uv.info.arguments).length > 0;
   }
 
   get title() {
@@ -459,144 +402,17 @@ export default class UserView extends Vue {
   private get toggleArgumentEditorButton(): Button {
     return {
       icon: "edit_note",
-      caption: this.showArgumentEditor ? this.$t("hide_argument_editor").toString() : this.$t("show_argument_editor").toString(),
-      variant: this.showArgumentEditor ? bootstrapVariantAttribute("secondary") : defaultVariantAttribute,
+      caption: this.argumentEditorVisible ? this.$t("hide_argument_editor").toString() : this.$t("show_argument_editor").toString(),
+      variant: this.argumentEditorVisible ? bootstrapVariantAttribute("secondary") : defaultVariantAttribute,
       callback: () => {
-        this.contextMenuShowArgumentEditor = !this.contextMenuShowArgumentEditor;
+        this.showArgumentEditor = !this.showArgumentEditor;
       },
       type: "callback",
-    };
-  }
-
-  // Local storage is not reactive, so we update it manually.
-  private helpPageButton: Button | null = null;
-  private updateHelpPageState() {
-    if (this.state.state !== "show") return;
-    if (this.args.source.type !== "named") return;
-
-    this.helpPageButton = null;
-
-    let pageRef: IEmbeddedPageRef | undefined;
-    const helpRef = EntityRef.safeParse(this.state.uv.attributes["help_page"]);
-    if (helpRef.success) {
-      pageRef = helpRef.data;
-    } else {
-      const rawMarkupName = this.state.uv.attributes["help_embedded_page_name"];
-      if (rawMarkupName) {
-        pageRef = {
-          schema: "user",
-          name: String(rawMarkupName),
-        };
-        console.error("Attribute help_embedded_page_name is deprecated; use help_page");
-      }
-    }
-
-    if (!pageRef) {
-      return;
-    }
-
-    const { schema, name } = this.args.source.ref;
-    const dismissHelpPages = Boolean(localStorage.getItem("dismiss-help-pages"));
-    const watchedRef = EntityRef.safeParse(safeJsonParse(localStorage.getItem(`watchedHelpPage_${schema}.${name}`)));
-    const alreadyWatched = watchedRef.success ? equalEntityRef(pageRef, watchedRef.data) : false;
-    const showHelpPage = this.isRoot && !dismissHelpPages && !alreadyWatched;
-
-    const eventArgs: IShowHelpModalArgs = {
-      userViewRef: this.args.source.ref,
-      ref: pageRef,
-    };
-
-    if (showHelpPage) {
-      eventBus.emit("show-help-modal", eventArgs);
-    }
-
-    this.helpPageButton = {
-      icon: "ondemand_video",
-      caption: this.$t("help_button_caption").toString(),
-      variant: { type: "existing", className: "help-button" }, // "help-button" is magic variant only for this case.
-      type: "callback",
-      callback: () => {
-        eventBus.emit("show-help-modal", eventArgs);
-      },
-    };
-  }
-
-  private get communicationButtons() {
-    return ([
-      this.communicationStrings.email
-        ? {
-          caption: "E-mail",
-          icon: "email",
-          type: "link",
-          link: { type: "href", href: "mailto:" + this.communicationStrings.email, target: "_blank" },
-          variant: defaultVariantAttribute,
-        }
-        : undefined,
-      this.communicationStrings.whatsapp
-        ? {
-          caption: "WhatsApp",
-          icon: "phone",
-          type: "link",
-          link: { type: "href", href: this.communicationStrings.whatsapp, target: "_blank" },
-          variant: defaultVariantAttribute,
-        }
-        : undefined,
-      this.communicationStrings.telegram
-        ? {
-          caption: "Telegram",
-          icon: "send",
-          type: "link",
-          link: { type: "href", href: this.communicationStrings.telegram, target: "_blank" },
-          variant: defaultVariantAttribute,
-        }
-        : undefined,
-    ] as (Button | undefined)[]).filter(R.identity) as Button[];
-  }
-
-  private get communicationStrings(): ISocialLinks {
-    return {
-      telegram: this.settings.getEntry("instance_help_telegram", String, "https://t.me/kirmark"),
-      whatsapp: this.settings.getEntry("instance_help_whatsapp", String, "https://api.whatsapp.com/send?phone=74953748820"),
-      email: this.settings.getEntry("instance_help_email", String, "sales@ozma.io"),
-    };
-  }
-
-  private get helpButton(): Button | null {
-    if (!this.isRoot || (this.communicationButtons.length === 0 && !this.helpPageButton)) return null;
-
-    const communicationButton: Button = {
-      icon: "contact_support",
-      caption: this.$t("contacts").toString(),
-      variant: defaultVariantAttribute,
-      type: "button-group",
-      buttons: this.communicationButtons,
-    };
-
-    const helpButtons: Button[] = [
-    ];
-
-    if (this.helpPageButton) {
-      helpButtons.push(this.helpPageButton);
-    }
-
-    helpButtons.push(communicationButton);
-
-    return {
-      icon: "help_outline",
-      caption: this.$isMobile ? this.$t("help").toString() : undefined,
-      display: "desktop",
-      variant: interfaceButtonVariant,
-      type: "button-group",
-      buttons: helpButtons,
     };
   }
 
   get uvButtons() {
     const buttons: Button[] = [];
-
-    if (this.state.state === "show" && this.helpButton) {
-      buttons.push(this.helpButton);
-    }
 
     if (this.state.state === "error" || (this.state.state === "show" && !this.state.uv.attributes["hide_default_actions"])) {
       const args = this.state.state === "show" ? this.state.uv.args : this.state.args;
@@ -641,11 +457,7 @@ export default class UserView extends Vue {
   }
 
   private get hasArguments() {
-    if ("uv" in this.state) {
-      return Object.keys(this.state.uv.info.arguments).length > 0;
-    } else {
-      return false;
-    }
+    return this.state.state === "show" && Object.keys(this.state.uv.info.arguments).length > 0;
   }
 
   get allButtons() {
@@ -657,28 +469,36 @@ export default class UserView extends Vue {
     this.$emit("update:buttons", this.allButtons);
   }
 
-  private updateArguments(args: Record<ArgumentName, unknown>) {
-    if (this.state.state !== "show") return;
+  get currentArguments() {
+    if (this.args.args === null) {
+      return null;
+    } else {
+      return { ...this.args.args, ...this.updatedArguments };
+    }
+  }
 
-    const argumentParams = this.state.uv.info.arguments;
-    const serialized = Object.fromEntries(mapMaybe(
-      ([key, value]) =>
-        argumentParams[key] === undefined || (argumentParams[key].optional && valueIsNull(value))
-          ? undefined
-          : [key, serializeValue(argumentParams[key].argType, value)],
-      Object.entries(args),
-    ));
+  private resetUpdatedArguments() {
+    this.updatedArguments = {};
+    this.$nextTick(() => this.applyUpdatedArguments());
+  }
+
+  private applyUpdatedArguments() {
     // TODO: In nested views this opens view in fullscreen, it's not good, but not such frequent case either, I suppose.
     const linkQuery: IQuery = {
       args: {
         source: this.args.source,
-        args: serialized,
+        args: this.currentArguments,
       },
       defaultValues: {},
       search: "",
       page: null,
     };
+    this.updatedArguments = {};
     this.$emit("goto", linkQuery);
+  }
+
+  private updateArgument(name: ArgumentName, value: unknown) {
+    Vue.set(this.updatedArguments, name, value);
   }
 
   private async reloadIfRoot(autoSaved?: boolean) {
@@ -857,6 +677,7 @@ export default class UserView extends Vue {
             component,
             autoSaved: options?.autoSaved ?? false,
           });
+          this.showArgumentEditor = Boolean(uv.attributes["show_argument_editor"]);
           this.nextUv = null;
         } else if (newType.type === "link") {
           const linkHandlerParams: ILinkHandlerParams = {
@@ -892,8 +713,6 @@ export default class UserView extends Vue {
         }
         throw e;
       }
-
-      (this.$refs.argumentEditor as ArgumentEditor | undefined)?.reset();
     })();
     this.nextUv = pending.ref;
     return pending.ref;
@@ -903,14 +722,8 @@ export default class UserView extends Vue {
     (this.$refs.userViewRef as Vue)?.$el.scrollTo(0, 0);
   }
 
-  private get showFilterButton() {
-    return (
-      this.hasArguments
-      && (
-        "uv" in this.state
-        && this.state.uv.attributes["show_argument_button"] === true
-      )
-    );
+  private get showArgumentEditorButton() {
+    return this.hasArguments && this.state.state === "show" && Boolean(this.state.uv.attributes["show_argument_button"]);
   }
 
   private destroyCurrentUserView() {
@@ -920,6 +733,8 @@ export default class UserView extends Vue {
 
     this.state = loadingState;
     this.componentButtons = [];
+    this.showArgumentEditor = false;
+    this.updatedArguments = {};
     this.$emit("update:status-line", "");
     this.$emit("update:enable-filter", false);
     this.$emit("update:body-style", "");
@@ -940,8 +755,6 @@ export default class UserView extends Vue {
         key: this.uid,
         handler: state.uv,
       });
-
-      this.updateHelpPageState();
     } else {
       this.removeStagingHandler(this.uid);
     }
@@ -974,15 +787,16 @@ export default class UserView extends Vue {
   }
 
   @Watch("title", { immediate: true })
-  private updateTitle(newTitle: string, oldTitle: string) {
+  private updateTitle() {
     this.$emit("update:title", this.title);
+  }
 
-    // It's... bad way to detect uv change, but it works as needed for now. TODO: Make it better.
-    if (newTitle !== oldTitle) {
-      (this.$refs.argumentEditor as ArgumentEditor | undefined)?.reset();
-      this.argumentEditorHasChangedValues = false;
-      this.contextMenuShowArgumentEditor = false;
-    }
+  private get argumentEditorHasUpdatedValues() {
+    return Object.entries(this.updatedArguments).length > 0;
+  }
+
+  private get argumentEditorVisible() {
+    return this.hasArguments && this.showArgumentEditor;
   }
 
   @Watch("submitPromise", { immediate: true })
@@ -1123,15 +937,6 @@ export default class UserView extends Vue {
       flex-wrap: nowrap;
       justify-content: center;
     }
-  }
-
-  .empty-userview {
-    margin: 0.5rem;
-    padding: 0.25rem 0.5rem;
-    opacity: 0.7;
-    border: 1px solid var(--MainBorderColor);
-    border-radius: 0.2rem;
-    color: var(--MainTextColor);
   }
 
   .fade-move-enter-active,
