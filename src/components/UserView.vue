@@ -713,28 +713,40 @@ export default class UserView extends Vue {
     }));
   }
 
-  private async loadNextChunk() {
+  private async loadNextChunk(next?: () => void | Promise<void>) {
     if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
 
     await this.reload({ loadNextChunk: true });
+    if (next) {
+      await next();
+    }
   }
 
-  private async loadAllChunks() {
+  private async loadAllChunks(next?: () => void | Promise<void>) {
     if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
 
     await this.reload({ loadAllChunks: true });
+    if (next) {
+      await next();
+    }
   }
 
-  private async loadAllChunksLimitless() {
+  private async loadAllChunksLimitless(next?: () => void | Promise<void>) {
     if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
 
     await this.reload({ loadAllChunksLimitless: true });
+    if (next) {
+      await next();
+    }
   }
 
-  private async loadEntries(limit: number) {
+  private async loadEntries(limit: number, next?: () => void | Promise<void>) {
     if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
 
     await this.reload({ limit });
+    if (next) {
+      await next();
+    }
   }
 
   private reload(options?: {
