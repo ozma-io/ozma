@@ -7,7 +7,9 @@
             "import_from_csv": "Import from .csv",
             "selected_n_entries": "{n} out of {loaded} entries are selected",
             "remove_selected_rows": "Delete selected entries",
-            "error": "Error"
+            "error": "Error",
+            "help_button_caption": "Help page",
+            "contacts": "Support"
         },
         "ru": {
             "create": "Создать новую запись",
@@ -16,7 +18,9 @@
             "import_from_csv": "Импорт из .csv",
             "selected_n_entries": "Выбрано {n} из {loaded} записей",
             "remove_selected_rows": "Удалить выбранные записи",
-            "error": "Ошибка"
+            "error": "Ошибка",
+            "help_button_caption": "Справка",
+            "contacts": "Поддержка"
         }
     }
 </i18n>
@@ -464,35 +468,32 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   private get communicationButtons() {
     const buttons: Button[] = [];
 
-    const emailLink = this.settings.getEntry("instance_help_email", String, "sales@ozma.io");
-    if (emailLink !== "") {
+    if (this.settings.communicationLinks.email !== null) {
       buttons.push({
         caption: "E-mail",
         icon: "email",
         type: "link",
-        link: { type: "href", href: "mailto:" + emailLink, target: "_blank" },
+        link: { type: "href", href: "mailto:" + this.settings.communicationLinks.email, target: "_blank" },
         variant: defaultVariantAttribute,
       });
     }
 
-    const whatsappLink = this.settings.getEntry("instance_help_whatsapp", String, "https://api.whatsapp.com/send?phone=74953748820");
-    if (whatsappLink !== "") {
+    if (this.settings.communicationLinks.whatsapp !== null) {
       buttons.push({
         caption: "WhatsApp",
         icon: "phone",
         type: "link",
-        link: { type: "href", href: whatsappLink, target: "_blank" },
+        link: { type: "href", href: this.settings.communicationLinks.whatsapp, target: "_blank" },
         variant: defaultVariantAttribute,
       });
     }
 
-    const telegramLink = this.settings.getEntry("instance_help_telegram", String, "https://t.me/kirmark");
-    if (telegramLink !== "") {
+    if (this.settings.communicationLinks.telegram !== null) {
       buttons.push({
         caption: "Telegram",
         icon: "send",
         type: "link",
-        link: { type: "href", href: telegramLink, target: "_blank" },
+        link: { type: "href", href: this.settings.communicationLinks.telegram, target: "_blank" },
         variant: defaultVariantAttribute,
       });
     }

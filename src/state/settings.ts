@@ -8,8 +8,27 @@ import { ThemesMap, loadThemes, getPreferredTheme, IThemeRef } from "@/utils_col
 
 const errorKey = "settings";
 
+export interface ICommunicationLinks {
+  email: string | null;
+  whatsapp: string | null;
+  telegram: string | null;
+}
+
+const getCommunicationButtons = (settings: CurrentSettings): ICommunicationLinks => {
+  const emailLink = settings.getEntry("instance_help_email", String, "sales@ozma.io");
+  const whatsappLink = settings.getEntry("instance_help_whatsapp", String, "https://api.whatsapp.com/send?phone=74953748820");
+  const telegramLink = settings.getEntry("instance_help_telegram", String, "https://t.me/kirmark");
+
+  return {
+    email: emailLink === "" ? null : emailLink,
+    whatsapp: whatsappLink === "" ? null : whatsappLink,
+    telegram: telegramLink === "" ? null : telegramLink,
+  };
+};
+
 export class CurrentSettings {
-  settings: Partial<Record<string, string>>;
+  settings: Record<string, string>;
+  communicationLinks: ICommunicationLinks;
   themes: ThemesMap;
   userCanEditUserViews: boolean;
 
@@ -21,6 +40,7 @@ export class CurrentSettings {
     this.settings = settings;
     this.themes = themes;
     this.userCanEditUserViews = userCanEditUserViews;
+    this.communicationLinks = getCommunicationButtons(this);
   }
 
   getEntry<T>(name: string, constructor: (_: string) => T, defValue: T): T {
