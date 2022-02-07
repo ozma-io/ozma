@@ -1,5 +1,5 @@
 import { Module } from "vuex";
-import { IViewExprResult, IEntity } from "ozma-api";
+import { IViewExprResult } from "ozma-api";
 
 import { IRef, convertString, waitTimeout } from "@/utils";
 import { funappSchema, default as Api } from "@/api";
@@ -30,16 +30,13 @@ export class CurrentSettings {
   settings: Record<string, string>;
   communicationLinks: ICommunicationLinks;
   themes: ThemesMap;
-  userCanEditUserViews: boolean;
 
   constructor(
     settings: Record<string, string>,
     themes: ThemesMap,
-    userCanEditUserViews: boolean,
   ) {
     this.settings = settings;
     this.themes = themes;
-    this.userCanEditUserViews = userCanEditUserViews;
     this.communicationLinks = getCommunicationButtons(this);
   }
 
@@ -53,12 +50,15 @@ export class CurrentSettings {
   }
 }
 
-const emptySettings = new CurrentSettings({}, {}, false);
+export type DisplayMode = "development" | "business";
+const emptySettings = new CurrentSettings({}, {});
 
 export interface ISettingsState {
   current: CurrentSettings;
   pending: Promise<CurrentSettings> | null;
   currentThemeRef: IThemeRef | null;
+  userIsRoot: boolean;
+  displayMode: DisplayMode;
 }
 
 const settingsModule: Module<ISettingsState, {}> = {
@@ -67,6 +67,13 @@ const settingsModule: Module<ISettingsState, {}> = {
     current: emptySettings,
     pending: null,
     currentThemeRef: null,
+    userIsRoot: false,
+    displayMode: "business",
+  },
+  getters: {
+    developmentModeEnabled: state => state.displayMode === "development",
+
+    businessModeEnabled: state => state.displayMode === "business",
   },
   mutations: {
     setSettings: (state, settings: CurrentSettings) => {
@@ -82,6 +89,12 @@ const settingsModule: Module<ISettingsState, {}> = {
     },
     setCurrentTheme: (state, theme: IThemeRef | null) => {
       state.currentThemeRef = theme;
+    },
+    setUserIsRoot: (state, isRoot: boolean) => {
+      state.userIsRoot = isRoot;
+    },
+    setDisplayMode: (state, mode: DisplayMode) => {
+      state.displayMode = mode;
     },
   },
   actions: {
@@ -101,11 +114,18 @@ const settingsModule: Module<ISettingsState, {}> = {
       localStorage.setItem("preferredTheme", JSON.stringify(ref));
       commit("setCurrentTheme", ref);
     },
+    setUserIsRoot: ({ commit }, isRoot: boolean) => {
+      commit("setUserIsRoot", isRoot);
+    },
+    setDisplayMode: ({ commit }, mode: DisplayMode) => {
+      localStorage.setItem("display-mode", mode);
+      commit("setDisplayMode", mode);
+    },
     setError: ({ commit }, error: string) => {
       commit("errors/setError", { key: errorKey, error }, { root: true });
       commit("setPending", null);
     },
-    getSettings: ({ state, commit, dispatch }) => {
+    getSettings: ({ state, commit, dispatch, rootState }) => {
       if (state.pending !== null) {
         return state.pending;
       }
@@ -132,12 +152,31 @@ const settingsModule: Module<ISettingsState, {}> = {
           const themes = await loadThemes();
           const currentThemeName = getPreferredTheme(themes);
 
-          const userViewsEntityRef = { schema: "public", name: "user_views" };
-          const userViewsInfo = await dispatch("entities/getEntity", userViewsEntityRef, { root: true }) as IEntity | undefined;
-          const userCanEditUserViews = userViewsInfo?.columnFields["query"]?.access.update ?? false;
-
-          const settings = new CurrentSettings(values, themes, userCanEditUserViews);
+          const settings = new CurrentSettings(values, themes);
           commit("setSettings", settings);
+
+          if (settings.getEntry("allow_business_mode", Boolean, false)) {
+            const currentUserEmail = (rootState as any).auth.current.email;
+            const usersEntityRef = {
+              schema: funappSchema,
+              name: "table-public-users",
+            };
+            const usersTable: IViewExprResult = await dispatch("callProtectedApi", {
+              func: Api.getNamedUserView,
+              args: [usersEntityRef, {}],
+            }, { root: true });
+            const emailColumnIndex = usersTable.info.columns.findIndex(column => column.name === "name");
+            const isRootColumnIndex = usersTable.info.columns.findIndex(column => column.name === "is_root");
+            const currentUserRow = usersTable.result.rows.find(row => row.values[emailColumnIndex].value === currentUserEmail);
+            const currentUserIsRoot = Boolean(currentUserRow?.values[isRootColumnIndex].value);
+            const savedDisplayMode = localStorage.getItem("display-mode");
+
+            await dispatch("setUserIsRoot", currentUserIsRoot);
+            await dispatch("setDisplayMode", savedDisplayMode ?? "business");
+          } else {
+            await dispatch("setDisplayMode", "development");
+          }
+
           commit("setCurrentTheme", currentThemeName);
           commit("errors/resetErrors", errorKey, { root: true });
 
