@@ -37,9 +37,7 @@ export const userViewTitle = (uv: ICombinedUserViewAny): string | null => {
 
 // Common extra data for every user view, and its handler.
 
-export interface IBaseValueExtra {
-  softDisabled: boolean; // UI-only edit disabling.
-}
+export interface IBaseValueExtra { }
 
 export interface IBaseRowExtra {
   selected: boolean;
@@ -49,7 +47,6 @@ export interface IBaseRowExtra {
 export interface IBaseViewExtra {
   rowCount: number;
   selectedRows: ObjectSet<RowRef>;
-  softDisabled: boolean;
 }
 
 export type IBaseCombinedUserView = ICombinedUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>;
@@ -57,6 +54,10 @@ export type IBaseExtendedRow = IExtendedRow<IBaseValueExtra, IBaseRowExtra>;
 export type IBaseExtendedRowInfo = IExtendedRowInfo<IBaseRowExtra>;
 export type IBaseExtendedAddedRow = IExtendedAddedRow<IBaseValueExtra, IBaseRowExtra>;
 
+// How to determine whether to add an attribute to local object or just use a computed property:
+// 1. If you need to use correlated values from old handler (say, selected values), add it to a local object;
+// 2. If you need to use loops on (possibly updated) user view values, add it to a local object and update it manually;
+// 3. Otherwise, use computed properties.
 export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra> = {
   ...emptyUserViewHandlerFunctions,
 
@@ -68,20 +69,15 @@ export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtr
         id: value.info.id!,
       };
     }
-    const softDisabled = Boolean(getValueAttr("soft_disabled"));
-    return { softDisabled };
+    return { };
   },
 
   createAddedLocalValue(uv: IBaseCombinedUserView, rowIndex: number, row: ICombinedRow & IBaseExtendedRowInfo, columnIndex: number, value: ICombinedValue) {
-    const getValueAttr = (key: string) => tryDicts(key, value.attributes, row.attributes, uv.columnAttributes[columnIndex], uv.attributes);
-    const softDisabled = Boolean(getValueAttr("soft_disabled"));
-    return { softDisabled };
+    return { };
   },
 
   createEmptyLocalValue(uv: IBaseCombinedUserView, row: ICombinedRow & IBaseExtendedRowInfo, columnIndex: number, value: ICombinedValue) {
-    const getValueAttr = (key: string) => tryDicts(key, value.attributes, row.attributes, uv.columnAttributes[columnIndex], uv.attributes);
-    const softDisabled = Boolean(getValueAttr("soft_disabled"));
-    return { softDisabled };
+    return { };
   },
 
   createLocalRow(uv: IBaseCombinedUserView, rowIndex: number, row: ICombinedRow, oldView: IBaseViewExtra | null, oldRow: IBaseRowExtra | null) {
@@ -118,12 +114,9 @@ export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtr
   },
 
   createLocalUserView(uv: IBaseCombinedUserView, oldView: IBaseViewExtra | null) {
-    const softDisabled = Boolean(uv.attributes["soft_disabled"]);
-
     return {
       rowCount: 0,
       selectedRows: new ObjectSet<RowRef>(),
-      softDisabled,
     };
   },
 

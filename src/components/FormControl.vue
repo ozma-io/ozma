@@ -24,7 +24,7 @@
 <template>
   <div>
     <InputSlot
-      v-if="inputType.name !== 'userview' && inputType.name !== 'empty_userview'"
+      v-if="inputType.name !== 'user_view' && inputType.name !== 'empty_user_view'"
       :inline="!isMultiline && !forceMultiline"
       :modal-only="modalOnly"
       :is-cell-edit="isCellEdit"
@@ -258,8 +258,8 @@
         />
       </template>
     </InputSlot>
-    <div v-else :class="['nested-userview', { 'mobile': $isMobile }]">
-      <div v-if="inputType.name == 'empty_userview'">
+    <div v-else :class="['nested-user_view', { 'mobile': $isMobile }]">
+      <div v-if="inputType.name == 'empty_user_view'">
         <div class="nested-menu">
           <!-- `tabindex` is required for closing tooltip on blur -->
           <label
@@ -276,7 +276,7 @@
         </div>
       </div>
       <HeaderPanel
-        v-else-if="inputType.name === 'userview'"
+        v-else-if="inputType.name === 'user_view'"
         :title="usedCaption"
         :buttons="buttons"
         :is-enable-filter="enableFilter"
@@ -288,7 +288,7 @@
         @goto="$emit('goto', $event)"
       />
       <div
-        v-if="inputType.name === 'userview'"
+        v-if="inputType.name === 'user_view'"
         :style="{ backgroundColor: cellColor, height: `${customHeight}px` }"
       >
         <NestedUserView
@@ -415,11 +415,11 @@ interface ICheckType {
 }
 
 export interface IUserViewType extends IQuery {
-  name: "userview";
+  name: "user_view";
 }
 
 interface IEmptyUserViewType {
-  name: "empty_userview";
+  name: "empty_user_view";
 }
 
 interface IErrorType {
@@ -472,13 +472,9 @@ export type IType =
   | IButtonsType;
 
 const multilineTypes: Set<IType["name"]> =
-  new Set(["markdown", "codeeditor", "textarea", "userview", "empty_userview", "static_image", "iframe"]);
-const disableableTypes: Set<IType["name"]> =
-  new Set(["text", "textarea", "markdown", "codeeditor", "reference", "select", "check", "calendar"]);
+  new Set(["markdown", "codeeditor", "textarea", "user_view", "empty_user_view", "static_image", "iframe"]);
 const closeAfterUpdate: Set<IType["name"]> =
   new Set(["select", "reference"]);
-const autofocusableTypes: Set<IType["name"]> =
-  new Set(["text", "textarea", "check"]);
 
 const parseTime = (raw: string): ITime | null => {
   const [_, hours, mins] = /^([0-9]|0[0-9]|1[0-9]|2[0-3]):([0-9]|[0-5][0-9])$/.exec(raw) ?? [];
@@ -605,7 +601,7 @@ export default class FormControl extends Vue {
   private title = "";
   private enableFilter = false;
   private isUserViewLoading = false;
-  private editing: AutoSaveLock | null = null;
+  private autoSaveLock: AutoSaveLock | null = null;
 
   get isNullable() {
     return this.forcedIsNullable ?? (this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable);
@@ -626,10 +622,8 @@ export default class FormControl extends Vue {
   }
 
   get isDisabled() {
-    const disableable = disableableTypes.has(this.inputType.name);
-    return !this.forcedFieldType
-      && disableable
-      && (this.locked || this.value.info === undefined || this.value.info.field === null);
+    const softDisabled = Boolean(this.attributes["soft_disabled"]);
+    return softDisabled || this.locked || this.value.info === undefined || this.value.info.field === null;
   }
 
   // Textual representation of `currentValue`.
@@ -715,7 +709,7 @@ export default class FormControl extends Vue {
     const controlAttr = String(this.attributes["control"]);
     if (controlAttr === "user_view") {
       if (this.currentValue === null || this.currentValue === undefined) {
-        return { name: "empty_userview" };
+        return { name: "empty_user_view" };
       }
 
       const nestedRef = attrToQuerySelf(this.currentValue, this.value.info, linkOpts);
@@ -723,7 +717,7 @@ export default class FormControl extends Vue {
       if (nestedRef === null) {
         return { name: "error", text: this.$t("invalid_uv").toString() };
       } else {
-        return { name: "userview", ...nestedRef };
+        return { name: "user_view", ...nestedRef };
       }
     } else if (controlAttr === "static_text") {
       return { name: "static_text" };
@@ -939,11 +933,7 @@ export default class FormControl extends Vue {
   private mounted() {
     if (this.autofocus) {
       const control = this.$refs["control"] as HTMLElement | undefined;
-      if (control) {
-        if (autofocusableTypes.has(this.inputType.name)) {
-          control.focus();
-        }
-      }
+      control?.focus?.();
     }
   }
 
@@ -953,27 +943,25 @@ export default class FormControl extends Vue {
     }
 
     if (closeAfterUpdate.has(this.inputType.name)) {
-      this.removeAutoSaveLockFormControl();
       this.$emit("close-modal-input");
     }
   }
 
   private removeAutoSaveLockFormControl() {
-    if (this.editing === null) return;
+    if (this.autoSaveLock === null) return;
 
-    void this.removeAutoSaveLock(this.editing);
-    this.editing = null;
+    void this.removeAutoSaveLock(this.autoSaveLock);
+    this.autoSaveLock = null;
   }
 
-  private onFocus() {
+  private async onFocus() {
     if (!this.isCellEdit) {
       this.$root.$emit("form-input-focused");
     }
 
-    if (this.editing === null) {
-      void this.addAutoSaveLock().then(lock => {
-        this.editing = lock;
-      });
+    if (this.autoSaveLock === null) {
+      const lock = await this.addAutoSaveLock();
+      this.autoSaveLock = lock;
     }
   }
 

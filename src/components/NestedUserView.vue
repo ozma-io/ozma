@@ -8,7 +8,7 @@
     @update:buttons="$emit('update:buttons', $event)"
     @goto="$emit('goto', $event)"
     @update:enable-filter="$emit('update:enable-filter', $event)"
-    @update:title="updateTitle"
+    @update:title="$emit('update:title', $event)"
     @update:is-loading="$emit('update:is-loading', $event)"
   />
 </template>
@@ -33,10 +33,6 @@ export default class NestedUserView extends Vue {
       return Array.from(new Set(convertToWords(value.toString())));
     }
     return [];
-  }
-
-  updateTitle(title: string | null) {
-    this.$emit("update:title", title);
   }
 }
 

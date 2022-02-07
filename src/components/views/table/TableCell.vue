@@ -15,7 +15,7 @@
   <!-- TODO: `@contextmenu` doesn't work on IOS --->
   <td
     ref="cell"
-    :style="[value.extra.style, variantVariables]"
+    :style="style"
     :class="[
       'table-td',
       variantClassName,
@@ -23,18 +23,18 @@
       {
         'fixed-column': column.fixed,
         'select_fixed': value.extra.selected && column.fixed,
-        'next-after-last-fixed': index === lastFixedColumnIndex,
+        'next-after-last-fixed': firstNonFixed,
         'selected': value.extra.selected,
         'cursor': value.extra.selected === 'cursor',
         'required-cell': requiredButEmpty,
         'disabled-cell': value.info === undefined && from !== 'existing'
       }
     ]"
-    @click.stop="$emit('cell-click', columnPosition, $refs.cell, $event)"
-    @mousedown.stop="$emit('cell-mousedown', columnPosition, $refs.cell, $event)"
-    @mouseover.stop="$emit('cell-mouseover', columnPosition, $refs.cell, $event)"
-    @mouseup.stop="$emit('cell-mouseup', columnPosition, $refs.cell, $event)"
-    @contextmenu.prevent="$emit('cell-contextmenu', columnPosition, $refs.cell, $event)"
+    @click.stop="$emit('cell-click', columnIndex, $refs.cell, $event)"
+    @mousedown.stop="$emit('cell-mousedown', columnIndex, $refs.cell, $event)"
+    @mouseover.stop="$emit('cell-mouseover', columnIndex, $refs.cell, $event)"
+    @mouseup.stop="$emit('cell-mouseup', columnIndex, $refs.cell, $event)"
+    @contextmenu.prevent="$emit('cell-contextmenu', columnIndex, $refs.cell, $event)"
   >
     <div v-if="value.extra.selected" class="selection-overlay" />
     <p class="default-variant">
@@ -45,11 +45,11 @@
           @goto="$emit('goto', $event)"
         />
       </template>
-      <template v-else-if="value.extra.link !== null && value.extra.valueHtml.length > 0">
+      <template v-else-if="link !== null && valueHtml.length > 0">
         <div class="option option-variant option-local-variant">
           <FunLink
             class="option-link rounded-circle"
-            :link="value.extra.link"
+            :link="link"
             @goto="$emit('goto', $event)"
           >
             <span class="material-icons md-14 reference-open-modal rounded-circle">
@@ -57,7 +57,7 @@
             </span>
           </FunLink>
           <!-- eslint-disable vue/no-v-html -->
-          <span class="reference-text" v-html="value.extra.valueHtml || '&nbsp;'" />
+          <span class="reference-text" v-html="valueHtml || '&nbsp;'" />
           <!-- eslint-enable -->
         </div>
       </template>
@@ -76,13 +76,13 @@
             'option-variant',
             'option-local-variant',
             {
-              'option': (fieldType == 'enum' || fieldType == 'reference') && value.extra.valueHtml.length > 0,
+              'option': (fieldType == 'enum' || fieldType == 'reference') && valueHtml.length > 0,
               'tree': showTree && column.treeUnfoldColumn && !notExisting,
             }
           ]"
         >
           <ButtonItem
-            v-if="isTreeCell && showAddChild"
+            v-if="addChildButton"
             class="add-child"
             :button="addChildButton"
           />
@@ -108,7 +108,7 @@
           </span>
 
           <!-- eslint-disable vue/no-v-html -->
-          <span class="text" v-html="value.extra.valueHtml || '&nbsp;'" />
+          <span class="text" v-html="valueHtml || '&nbsp;'" />
           <!-- eslint-enable -->
         </div>
       </template>
@@ -117,14 +117,18 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { Component, Vue, Prop } from "vue-property-decorator";
+import moment from "moment";
 
 import { valueIsNull } from "@/values";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
 import { attrToButtons, Button } from "@/components/buttons/buttons";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
-import type { IColumn, ITableExtendedValue, ITableRowTree } from "@/components/views/Table.vue";
-import { getColorVariantAttributeClassName, getColorVariantAttributeVariables, interfaceButtonVariant } from "@/utils_colors";
+import type { IColumn, ITableCombinedUserView, ITableExtendedRow, ITableExtendedValue, ITableRowTree } from "@/components/views/Table.vue";
+import { ColorVariantAttribute, colorVariantFromAttribute, defaultVariantAttribute, getColorVariantAttributeClassName, getColorVariantAttributeVariables, interfaceButtonVariant } from "@/utils_colors";
+import { currentValue, valueToPunnedText } from "@/user_views/combined";
+import { getNumberFormatter, isValidNumberFormat, replaceHtmlLinks } from "@/utils";
+import { attrToLinkRef } from "@/links";
 
 @Component({
   components: {
@@ -136,38 +140,82 @@ export default class TableCell extends Vue {
   // We don't bother to set types here properly, they matter no more than for TableRow.
   // The reason this is not a functional component is because of performance.
   // See https://forum.vuejs.org/t/performance-for-large-numbers-of-components/13545/10
+  @Prop({ type: Object, required: true }) uv!: ITableCombinedUserView;
+  @Prop({ type: Object, required: true }) row!: ITableExtendedRow;
   @Prop({ type: Object, required: true }) value!: ITableExtendedValue;
   @Prop({ type: Object, required: true }) column!: IColumn;
-  @Prop({ type: Number, required: true }) columnPosition!: number;
+  @Prop({ type: Number, required: true }) columnIndex!: number;
   @Prop({ type: String, default: "existing" }) from!: string;
-  @Prop({ type: Number, default: null }) lastFixedColumnIndex!: number;
-  @Prop({ type: Number, default: null }) index!: number;
+  @Prop({ type: Boolean, default: false }) firstNonFixed!: boolean;
+  @Prop({ type: Number }) fixedLeft!: number | undefined;
   @Prop({ type: Object, required: true }) tree!: ITableRowTree;
   @Prop({ type: Boolean, required: true }) showTree!: boolean;
   @Prop({ type: Boolean, required: true }) showAddChild!: boolean;
   @Prop({ type: Boolean, default: false }) notExisting!: boolean;
+  @Prop({ type: Number }) height!: number | undefined;
 
-  private get valueType(): string | null {
+  get valueType(): string | null {
     return this.value.info?.field?.valueType.type ?? null;
   }
 
-  private get fieldType(): string | null {
+  get fieldType(): string | null {
     return this.value.info?.field?.fieldType?.type ?? null;
   }
 
-  private get requiredButEmpty() {
+  get requiredButEmpty() {
     return this.isNull && this.value.info?.field?.isNullable === false;
   }
 
-  private get variantClassName(): string | null {
-    return getColorVariantAttributeClassName(this.value.extra.colorVariant);
+  get variantClassName(): string | null {
+    return getColorVariantAttributeClassName(this.colorVariant);
   }
 
-  private get variantVariables(): Record<string, string> | null {
-    return getColorVariantAttributeVariables(this.value.extra.colorVariant);
+  get colorVariant(): ColorVariantAttribute {
+    const colorVariantAttribute = this.getCellAttr("cell_variant");
+    const cellColor = this.getCellAttr("cell_color");
+    if (colorVariantAttribute) {
+      return colorVariantFromAttribute(colorVariantAttribute);
+    } else if (typeof cellColor === "string") {
+      return colorVariantFromAttribute({ background: cellColor });
+    } else {
+      return defaultVariantAttribute;
+    }
   }
 
-  private get treeLevel() {
+  get valueHtml() {
+    const value = currentValue(this.value);
+    if (typeof value === "number") {
+      const numberFormatRaw = this.getCellAttr("number_format");
+      if (typeof numberFormatRaw === "string") {
+        const numberFormat = numberFormatRaw.toLowerCase();
+        if (isValidNumberFormat(numberFormat)) {
+          const fractionDigitsRaw = this.getCellAttr("fraction_digits");
+          const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
+          return getNumberFormatter(numberFormat, fractionDigits).format(value);
+        }
+      }
+    }
+
+    if (moment.isMoment(value) && this.getCellAttr("show_seconds") === true) {
+      return value.local().format("L LTS");
+    }
+
+    const columnInfo = this.uv.info.columns[this.columnIndex];
+    let valueHtml = valueToPunnedText(columnInfo.valueType, this.value);
+    if (typeof value === "string") {
+      if (valueHtml.length > 1000) {
+        valueHtml = valueHtml.slice(0, 1000) + "...";
+      }
+      valueHtml = replaceHtmlLinks(valueHtml);
+    }
+    return valueHtml;
+  }
+
+  get link() {
+    return this.value.info?.field?.fieldType.type === "reference" ? attrToLinkRef(this.getCellAttr("link"), currentValue(this.value), this.uv.extra.linkOpts) : null;
+  }
+
+  get treeLevel() {
     if (this.column.treeUnfoldColumn) {
       return this.tree.level;
     } else {
@@ -175,13 +223,13 @@ export default class TableCell extends Vue {
     }
   }
 
-  private get isTreeCell() {
+  get isTreeCell() {
     return this.showTree
         && this.column.treeUnfoldColumn
         && !this.notExisting;
   }
 
-  private get treeHasChildren() {
+  get treeHasChildren() {
     return this.isTreeCell
         && this.tree.children !== undefined
         && this.tree.children.length > 0;
@@ -195,14 +243,18 @@ export default class TableCell extends Vue {
     }
   }
 
-  private get addChildButton(): Button {
-    return {
-      type: "callback",
-      icon: "add",
-      tooltip: this.$t("add_child_tooplip").toString(),
-      variant: interfaceButtonVariant,
-      callback: () => this.$emit("add-child"),
-    };
+  get addChildButton(): Button | null {
+    if (!this.isTreeCell || !this.showAddChild) {
+      return null;
+    } else {
+      return {
+        type: "callback",
+        icon: "add",
+        tooltip: this.$t("add_child_tooplip").toString(),
+        variant: interfaceButtonVariant,
+        callback: () => this.$emit("add-child"),
+      };
+    }
   }
 
   get isNull() {
@@ -210,7 +262,7 @@ export default class TableCell extends Vue {
     return valueIsNull(this.value.value);
   }
 
-  private toggleChildren() {
+  toggleChildren() {
     this.$emit("toggle-children", !this.tree.arrowDown);
   }
 
@@ -218,9 +270,39 @@ export default class TableCell extends Vue {
     return "open_in_new";
   }
 
-  @Watch("value", { immediate: true })
-  private async updateHtmlElement() {
-    await this.$nextTick();
+  private getCellAttr(name: string) {
+    return this.value.attributes?.[name] || this.row.attributes?.[name] || this.uv.columnAttributes[this.columnIndex][name] || this.uv.attributes[name];
+  }
+
+  get style() {
+    const style: Record<string, unknown> = {};
+
+    const textAlignAttr = this.getCellAttr("text_align");
+    if (textAlignAttr !== undefined) {
+      style["text-align"] = String(textAlignAttr);
+    }
+
+    if (this.height) {
+      style["height"] = `${this.height}px`;
+    }
+
+    if (this.fixedLeft !== undefined) {
+      style["left"] = `${this.fixedLeft}px`;
+    }
+
+    if (this.getCellAttr("text_type") === "codeeditor") {
+      style["font-family"] = "monospace";
+    }
+
+    const variantAttrs = getColorVariantAttributeVariables(this.colorVariant);
+    if (variantAttrs !== null) {
+      Object.assign(style, variantAttrs);
+    }
+
+    return style;
+  }
+
+  mounted() {
     this.value.extra.htmlElement = this.$refs.cell as HTMLElement;
   }
 }

@@ -189,6 +189,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
 
   @Watch("uv", { immediate: true })
   private async onUserViewUpdate(uv: ICombinedUserViewAny) {
+    this.showDeleteEntiesButton = false;
     let disableAutoSave: boolean;
 
     const disableAutoSaveRaw = uv.attributes["disable_auto_save"];
@@ -214,11 +215,13 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     await this.updateShowDeleteEntriesButton();
   }
 
-  private async updateShowDeleteEntriesButton() {
-    this.showDeleteEntiesButton = false;
+  get softDisabled() {
+    return Boolean(this.uv.attributes["soft_disabled"]);
+  }
 
+  private async updateShowDeleteEntriesButton() {
     if (!this.uv.info.mainEntity) return;
-    if (this.uv.extra.softDisabled) return;
+    if (this.softDisabled) return;
 
     const entity = await this.getEntity(this.uv.info.mainEntity);
     this.showDeleteEntiesButton = entity?.access.delete ?? false;

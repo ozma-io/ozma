@@ -184,18 +184,18 @@
       >
         <colgroup>
           <col
-            v-if="uv.extra.isSelectionColumnEnabled"
+            v-if="showSelectionColumn"
             class="checkbox-col"
           >
           <col
-            v-if="hasLinksColumn"
+            v-if="showLinkColumn"
             class="open-form-col"
           >
           <col
             v-for="i in columnIndexes"
             :key="i"
             class="data-col"
-            :style="uv.extra.columns[i].style"
+            :style="columns[i].style"
           >
         </colgroup>
         <thead
@@ -203,7 +203,7 @@
         >
           <tr>
             <th
-              v-if="uv.extra.isSelectionColumnEnabled"
+              v-if="showSelectionColumn"
               class="fixed-column checkbox-cells table-th"
               @click="toggleAllRows"
             >
@@ -213,23 +213,23 @@
               />
             </th>
             <th
-              v-if="hasLinksColumn"
+              v-if="showLinkColumn"
               :class="[
                 'table-th',
                 'fixed-column',
                 'openform-cells',
                 {
-                  'without-selection-cell': !uv.extra.isSelectionColumnEnabled,
+                  'without-selection-cell': !showSelectionColumn,
                 }
               ]"
             >
               <ButtonGroup
-                v-if="createEntryButtons && !uv.extra.softDisabled"
+                v-if="createEntryButtons && !softDisabled"
                 :button="createEntryButtons"
                 @goto="$emit('goto', $event)"
               />
               <ButtonItem
-                v-if="createEntryButton && !uv.extra.softDisabled"
+                v-if="createEntryButton && !softDisabled"
                 :button="createEntryButton"
                 @goto="$emit('goto', $event)"
               />
@@ -238,14 +238,14 @@
               v-for="i in columnIndexes"
               :key="i"
               :class="['sorting', 'table-th', {
-                'fixed-column' : uv.extra.columns[i].fixed,
+                'fixed-column' : columns[i].fixed,
               }]"
-              :style="uv.extra.columns[i].style"
-              :title="uv.extra.columns[i].caption"
+              :style="columns[i].style"
+              :title="columns[i].caption"
               @click="loadAllRowsAndUpdateSort(i)"
             >
               <span class="table_header__content">
-                {{ uv.extra.columns[i].caption }}
+                {{ columns[i].caption }}
               </span>
               <span v-if="uv.extra.sortColumn === i">{{ uv.extra.sortAsc ? "▲" : "▼" }}</span>
             </th>
@@ -261,10 +261,14 @@
             }"
             :uv="uv"
             :row="row.row"
+            :columns="columns"
             :column-indexes="columnIndexes"
+            :fixed-column-positions="fixedColumnPositions"
+            :fixed-columns-length="fixedColumnsLength"
             :show-tree="showTree"
             :not-existing="row.notExisting"
-            :show-link-column="hasLinksColumn"
+            :show-link-column="showLinkColumn"
+            :show-selection-column="showSelectionColumn"
             :row-index="rowIndex"
             @select="selectTableRow(rowIndex, $event)"
             @cell-click="clickCell({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
@@ -324,11 +328,10 @@ import { Moment, default as moment } from "moment";
 import * as R from "ramda";
 import { z } from "zod";
 import { IResultColumnInfo, ValueType, RowId, IFieldRef, IEntity, IEntityRef } from "ozma-api";
-import sanitizeHtml from "sanitize-html";
 import Popper from "vue-popperjs";
 
 import { eventBus } from "@/main";
-import { deepEquals, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, getNumberFormatter, NeverError, parseFromClipboard, isValidNumberFormat, waitTimeout, ClipboardParseValue } from "@/utils";
+import { deepEquals, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, NeverError, parseFromClipboard, waitTimeout, ClipboardParseValue } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { maxPerFetch } from "@/components/UserView.vue";
@@ -338,14 +341,14 @@ import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, baseUserV
 import TableRow from "@/components/views/table/TableRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
 import TableCellEdit, { ICellCoords, IEditParams } from "@/components/views/table/TableCellEdit.vue";
-import { Link, attrToLinkRef, attrToLinkSelf } from "@/links";
+import { Link, attrToLinkSelf } from "@/links";
 import {
-  currentValue, IAddedRow, IAddedRowRef, ICombinedRow, ICombinedUserView, ICombinedUserViewAny, ICombinedValue, IExistingRowRef, IExtendedAddedRow,
+  currentValue, IAddedRow, IAddedRowRef, ICombinedRow, ICombinedUserView, ICombinedValue, IExistingRowRef, IExtendedAddedRow,
   IExtendedRow, IExtendedRowCommon, IExtendedRowInfo, IExtendedValue, IRowCommon, IUserViewHandler, RowRef, ValueRef,
-  valueToPunnedText, CommittedRowRef,
+  CommittedRowRef,
+  valueToPunnedText,
 } from "@/user_views/combined";
-import { colorVariantFromAttribute, interfaceButtonVariant, defaultVariantAttribute } from "@/utils_colors";
-import type { ColorVariantAttribute } from "@/utils_colors";
+import { interfaceButtonVariant, defaultVariantAttribute } from "@/utils_colors";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import ButtonList from "@/components/buttons/ButtonList.vue";
 import { Button } from "@/components/buttons/buttons";
@@ -362,11 +365,7 @@ export interface IColumn {
 }
 
 export interface ITableValueExtra extends IBaseValueExtra {
-  // FIXME: is this still needed? We could drop it and use computed properties in TableRows instead.
-  valueHtml: string; // Don't forget to sanitize!
-  link: Link | null;
-  style: Record<string, unknown> | null;
-  colorVariant: ColorVariantAttribute;
+  // If an extra value is only needed during render, define it as a computed property instead.
   selected: boolean | "cursor";
   htmlElement: HTMLElement | null;
 }
@@ -381,11 +380,8 @@ export interface ITableRowTree {
 export interface ITableRowExtra extends IBaseRowExtra {
   searchText: string;
   shownAsNewRow: boolean;
-  style: Record<string, unknown> | null;
-  colorVariables: Record<string, unknown> | null;
-  height: number | null;
-  link: Link | null;
   tree: ITableRowTree;
+  link: Link | null;
 }
 
 export interface IAddedNewRowRef {
@@ -402,12 +398,9 @@ export interface ICommittedNewRowRef {
 export type NewRowRef = IAddedNewRowRef | ICommittedNewRowRef;
 
 export interface ITableViewExtra extends IBaseViewExtra {
-  isSelectionColumnEnabled: boolean;
   hasRowLinks: boolean;
   selectedValues: ObjectSet<ValueRef>;
   cursorValue: ValueRef | null;
-  columns: IColumn[];
-  fixedColumnPositions: Record<number, string>;
   rowsParentPositions: Record<number, number>;
   treeParentColumnIndex: number;
   linkOpts?: IAttrToQueryOpts;
@@ -420,8 +413,6 @@ export interface ITableViewExtra extends IBaseViewExtra {
   sortColumn: number | null;
   sortAsc: boolean;
   sortOptions: Intl.CollatorOptions;
-
-  dirtyHackPreventEntireReloads: boolean;
 }
 
 export interface VisualPosition {
@@ -434,69 +425,6 @@ const doubleClickTime = 700;
 // FIXME: Use CSS variables to avoid this constant
 const technicalFieldsWidth = 35; // checkbox's and openform's td width
 
-const createColumns = (uv: ICombinedUserViewAny): IColumn[] => {
-  const viewAttrs = uv.attributes;
-  const columns: IColumn[] = [];
-  let isTreeUnfoldColumnSet = false;
-
-  uv.info.columns.forEach((columnInfo, i) => {
-    const columnAttrs = uv.columnAttributes[i];
-    const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
-
-    const captionAttr = getColumnAttr("caption");
-    const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name;
-
-    const style: Record<string, unknown> = {};
-
-    const columnWidthAttr = Number(getColumnAttr("column_width"));
-    const columnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr;
-    style["width"] = `${columnWidth}px`;
-
-    const textAlignRightTypes: (ValueType["type"])[] = ["int", "decimal"];
-    const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType;
-    if (textAlignRightTypes.includes(punOrValue.type)) {
-      style["text-align"] = "right";
-    }
-
-    const textAlignAttr = getColumnAttr("text_align");
-    if (textAlignAttr !== undefined) {
-      style["text-align"] = String(textAlignAttr);
-    }
-
-    const fixedColumnAttr = getColumnAttr("fixed");
-    const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr);
-
-    const visibleColumnAttr = getColumnAttr("visible");
-    const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
-
-    const treeUnfoldColumnAttr = getColumnAttr("tree_unfold_column");
-    const treeUnfoldColumn = treeUnfoldColumnAttr === undefined ? false : Boolean(treeUnfoldColumnAttr);
-    if (treeUnfoldColumn) {
-      isTreeUnfoldColumnSet = true;
-    }
-
-    // "column_type" is old version, but "control" is consistent with forms.
-    const type = String(getColumnAttr("control") ?? getColumnAttr("column_type"));
-
-    columns[i] = {
-      caption,
-      style,
-      visible: visibleColumn,
-      fixed: fixedColumn,
-      columnInfo,
-      width: columnWidth,
-      treeUnfoldColumn,
-      type,
-    };
-  });
-
-  if (!isTreeUnfoldColumnSet && columns[0]) {
-    columns[0].treeUnfoldColumn = true;
-  }
-
-  return columns;
-};
-
 export type ITableCombinedUserView = ICombinedUserView<ITableValueExtra, ITableRowExtra, ITableViewExtra>;
 export type ITableExtendedValue = IExtendedValue<ITableValueExtra>;
 export type ITableExtendedRowInfo = IExtendedRowInfo<ITableRowExtra>;
@@ -504,92 +432,8 @@ export type ITableExtendedRow = IExtendedRow<ITableValueExtra, ITableRowExtra>;
 export type ITableExtendedRowCommon = IExtendedRowCommon<ITableValueExtra, ITableRowExtra>;
 export type ITableExtendedAddedRow = IExtendedAddedRow<ITableValueExtra, ITableRowExtra>;
 
-const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & ITableExtendedRowInfo, columnIndex: number, value: ICombinedValue) => {
-  const columnInfo = uv.info.columns[columnIndex];
-  const columnAttrs = uv.columnAttributes[columnIndex];
-  const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, uv.attributes);
-
-  let valueHtml = valueToPunnedText(columnInfo.valueType, value);
-  if (valueHtml.length > 1000) {
-    valueHtml = valueHtml.slice(0, 1000) + "...";
-  }
-  const style: Record<string, unknown> = {};
-
-  const punOrValueType: ValueType = columnInfo.punType ?? columnInfo.valueType;
-
-  const numberTypes: (ValueType["type"])[] = ["int", "decimal"];
-  if (numberTypes.includes(punOrValueType.type)) {
-    style["text-align"] = "right";
-
-    if (typeof value.value === "number") {
-      const numberFormatRaw = getCellAttr("number_format");
-      if (typeof numberFormatRaw === "string") {
-        const numberFormat = numberFormatRaw.toLowerCase();
-        if (isValidNumberFormat(numberFormat)) {
-          const fractionDigitsRaw = getCellAttr("fraction_digits");
-          const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
-          valueHtml = getNumberFormatter(numberFormat, fractionDigits).format(value.value);
-        }
-      }
-    }
-  } else if (punOrValueType.type === "string") {
-    valueHtml = replaceHtmlLinks(valueHtml);
-  }
-
-  const cellColor = getCellAttr("cell_color");
-  if (cellColor !== undefined && cellColor !== null) {
-    style["background-color"] = String(cellColor);
-  }
-
-  const textAlignAttr = getCellAttr("text_align");
-  if (textAlignAttr !== undefined) {
-    style["text-align"] = String(textAlignAttr);
-  }
-
-  if (row.extra.height !== null) {
-    style["height"] = `${row.extra.height}px`;
-  }
-
-  const fixedPosition = uv.extra.fixedColumnPositions[columnIndex];
-  if (fixedPosition !== undefined) {
-    style["left"] = fixedPosition;
-  }
-
-  if (getCellAttr("text_type") === "codeeditor") {
-    style["font-family"] = "monospace";
-  }
-
-  if (columnInfo.valueType.type === "datetime"
-   && moment.isMoment(value.value)
-   && getCellAttr("show_seconds") === true) {
-    valueHtml = value.value.local().format("L LTS");
-  }
-
-  const colorVariantAttribute = getCellAttr("cell_variant");
-  let colorVariant: ColorVariantAttribute;
-  if (colorVariantAttribute) {
-    colorVariant = colorVariantFromAttribute(colorVariantAttribute);
-  } else if (cellColor) {
-    colorVariant = colorVariantFromAttribute({ background: String(cellColor) });
-  } else {
-    colorVariant = { type: "existing", className: "default-variant" };
-  }
-
-  const extra = {
-    valueHtml,
-    style: null as Record<string, unknown> | null,
-    colorVariant,
-  };
-  if (Object.keys(style).length !== 0) {
-    extra.style = style;
-  }
-  return extra;
-};
-
 const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLocal: ITableRowExtra | null) => {
   const getRowAttr = (name: string) => tryDicts(name, row.attributes, uv.attributes);
-
-  const style: Record<string, unknown> = {};
 
   const defaultArrow = Boolean(getRowAttr("tree_all_open"));
 
@@ -597,46 +441,20 @@ const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLo
     children: [],
     level: 0,
     parent: null,
-    arrowDown: oldLocal?.tree.arrowDown ?? defaultArrow,
+    arrowDown: oldLocal?.tree!.arrowDown ?? defaultArrow,
   };
 
-  /* const colorVariant = getRowAttr("row_variant"); */
-  const colorVariables = null;
-
-  const extra = {
+  return {
     searchText: "",
-    height: null as number | null,
-    style: null as Record<string, unknown> | null,
-    colorVariables,
     link: null,
     shownAsNewRow: false,
     tree,
   };
-
-  const height = Number(getRowAttr("row_height"));
-  if (!Number.isNaN(height)) {
-    style["white-space"] = "nowrap";
-    extra.height = height;
-  }
-
-  if (Object.keys(style).length !== 0) {
-    extra.style = style;
-  }
-
-  return extra;
-};
-
-const updateCommonValue = (uv: ITableCombinedUserView, row: ITableExtendedRowCommon, columnIndex: number, value: ITableExtendedValue) => {
-  const columnInfo = uv.info.columns[columnIndex];
-
-  const valueHtml = valueToPunnedText(columnInfo.valueType, value);
-  const sanitized = sanitizeHtml(valueHtml, { allowedTags: [], disallowedTagsMode: "escape" });
-  value.extra.valueHtml = sanitized;
 };
 
 const postInitCommonRow = (uv: ITableCombinedUserView, row: ITableExtendedRowCommon) => {
   const searchStrings = row.values.map(value => {
-    return value.extra.valueHtml.toLocaleLowerCase();
+    return String(currentValue(value)).toLocaleLowerCase();
   });
   row.extra.searchText = "\0".concat(...searchStrings);
 };
@@ -674,28 +492,6 @@ const initTreeChildren = (uv: ITableCombinedUserView) => {
   });
 
   return uv;
-};
-
-const technicalWidth = (uv: ITableCombinedUserView): number => {
-  let left = 0;
-  if (uv.extra.isSelectionColumnEnabled) {
-    left += technicalFieldsWidth;
-  }
-  if (uv.extra.hasRowLinks) {
-    left += technicalFieldsWidth;
-  }
-  return left;
-};
-
-const fixedColumnPositions = (uv: ITableCombinedUserView): Record<number, string> => {
-  let left = technicalWidth(uv);
-  const fixedColumnIndexes = mapMaybe((col, colI) => col.fixed ? colI : undefined, uv.extra.columns);
-  const positions: Record<number, string> = {};
-  for (const fixedColumnIndex of fixedColumnIndexes) {
-    positions[fixedColumnIndex] = `${left}px`;
-    left += uv.extra.columns[fixedColumnIndex].width;
-  }
-  return positions;
 };
 
 const equalNewRowRef = (a: NewRowRef, b: NewRowRef): boolean => {
@@ -788,13 +584,10 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     oldValue: ITableValueExtra | null,
   ): ITableValueExtra {
     const baseExtra = baseUserViewHandler.createLocalValue(uv, rowIndex, row, columnIndex, value, oldView, oldRow, oldValue);
-    const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
 
-    const columnInfo = uv.info.columns[columnIndex];
     const columnAttrs = uv.columnAttributes[columnIndex];
     const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, uv.attributes);
 
-    const link = value.info?.field?.fieldType.type === "reference" ? attrToLinkRef(getCellAttr("link"), currentValue(value), uv.extra.linkOpts) : null;
     const currLinkForRow = attrToLinkSelf(getCellAttr("row_link"), value.info, uv.extra.linkOpts);
     const hasRowLinkWithId =
       (row.extra.link?.type === "query" && row.extra.link.query.args.args?.id !== undefined) ||
@@ -834,9 +627,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
 
     return {
       ...baseExtra,
-      ...commonExtra,
       selected,
-      link,
       htmlElement: null,
     };
   },
@@ -852,7 +643,6 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     oldValue: ITableValueExtra | null,
   ) {
     const baseExtra = baseUserViewHandler.createAddedLocalValue(uv, rowId, row, columnIndex, value, oldView, oldRow, oldValue);
-    const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
 
     const valueRef: ValueRef = {
       type: "added",
@@ -868,7 +658,6 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     }
     return {
       ...baseExtra,
-      ...commonExtra,
       selected,
       htmlElement: null,
       link: null,
@@ -885,7 +674,6 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     oldValue: ITableValueExtra | null,
   ) {
     const baseExtra = baseUserViewHandler.createEmptyLocalValue(uv, row, columnIndex, value, oldView, oldRow, oldValue);
-    const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
 
     const valueRef: ValueRef = {
       type: "new",
@@ -900,7 +688,6 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     }
     return {
       ...baseExtra,
-      ...commonExtra,
       selected,
       htmlElement: null,
       link: null,
@@ -909,17 +696,14 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
 
   updateValue(uv: ITableCombinedUserView, rowIndex: number, row: ITableExtendedRow, columnIndex: number, value: ITableExtendedValue) {
     baseUserViewHandler.updateValue(uv, rowIndex, row, columnIndex, value);
-    updateCommonValue(uv, row, columnIndex, value);
   },
 
   updateAddedValue(uv: ITableCombinedUserView, rowId: number, row: ITableExtendedAddedRow, columnIndex: number, value: ITableExtendedValue) {
     baseUserViewHandler.updateAddedValue(uv, rowId, row, columnIndex, value);
-    updateCommonValue(uv, row, columnIndex, value);
   },
 
   updateEmptyValue(uv: ITableCombinedUserView, columnIndex: number, value: ITableExtendedValue) {
     baseUserViewHandler.updateEmptyValue(uv, columnIndex, value);
-    updateCommonValue(uv, uv.emptyRow!, columnIndex, value);
   },
 
   createLocalRow(uv: ITableCombinedUserView, rowIndex: number, row: ICombinedRow, oldView: ITableViewExtra | null, oldRow: ITableRowExtra | null) {
@@ -1013,34 +797,20 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     }
   },
 
-  createLocalUserView(uv: ITableCombinedUserView, oldView: ITableViewExtra | null) {
+  createLocalUserView(uv: ITableCombinedUserView, oldView: ITableViewExtra | null): ITableViewExtra {
     const baseExtra = baseUserViewHandler.createLocalUserView(uv, oldView);
-    const columns = createColumns(uv);
 
-    const disableSelectionColumn = uv.attributes["disable_selection_column"];
-    const isSelectionColumnEnabled = typeof disableSelectionColumn === "boolean"
-      ? !disableSelectionColumn
-      : true;
-
-    const lazyLoad = oldView?.lazyLoad ?? lazyLoadSchema.parse(uv.attributes["lazy_load"]);
+    const lazyLoad = oldView?.lazyLoad ?? TableLazyLoad.parse(uv.attributes["lazy_load"]);
 
     const newRowTopSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowTopSidePositions) : [];
     const newRowBottomSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowBottomSidePositions) : [];
     const addedRowRefs = oldView ? inheritOldRowsPositions(uv, oldView.addedRowRefs) : [];
 
-    const dirtyHackPreventEntireReloadsRaw = uv.attributes["dirty_hack_prevent_entire_reloads"];
-    const dirtyHackPreventEntireReloads = typeof dirtyHackPreventEntireReloadsRaw === "boolean"
-      ? dirtyHackPreventEntireReloadsRaw
-      : false;
-
     return {
       ...baseExtra,
-      isSelectionColumnEnabled,
       hasRowLinks: false,
       selectedValues: new ObjectSet<ValueRef>(),
       cursorValue: null,
-      columns,
-      fixedColumnPositions: {},
       rowsParentPositions: {},
       treeParentColumnIndex: 0,
       newRowTopSidePositions,
@@ -1051,7 +821,6 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       sortOptions: oldView?.sortOptions ?? {},
       addedRowRefs,
       lazyLoad,
-      dirtyHackPreventEntireReloads,
     };
   },
 
@@ -1059,23 +828,6 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     if (!R.isEmpty(uv.extra.rowsParentPositions)) {
       uv = initTreeChildren(uv);
     }
-
-    uv.extra.fixedColumnPositions = fixedColumnPositions(uv);
-    Object.entries(uv.extra.fixedColumnPositions).forEach(([colIRaw, position]) => {
-      const colI = Number(colIRaw);
-      uv.extra.columns[colI].style["left"] = position;
-
-      uv.forEachRow(row => {
-        const value = row.values[colI];
-
-        let style = value.extra.style;
-        if (style === null) {
-          style = {};
-          value.extra.style = style;
-        }
-        style["left"] = position;
-      });
-    });
 
     for (const pos of [...uv.extra.newRowTopSidePositions, ...uv.extra.newRowBottomSidePositions]) {
       if (pos.type === "committed") {
@@ -1137,7 +889,6 @@ interface ITableEditing {
 
 const entities = namespace("entities");
 const entries = namespace("entries");
-const staging = namespace("staging");
 const query = namespace("query");
 
 interface IShownRow {
@@ -1149,7 +900,7 @@ interface IShownRow {
 
 const defaultPageSize = 5;
 // Just look at `ITableLazyLoad` to see which type this mess make.
-export const lazyLoadSchema =
+export const TableLazyLoad =
   z.union([
     z.object({
       pagination: z.object({
@@ -1173,7 +924,7 @@ export const lazyLoadSchema =
     })),
   ]).default({ infinite_scroll: true });
 
-type ITableLazyLoad = z.infer<typeof lazyLoadSchema>;
+export type ITableLazyLoad = z.infer<typeof TableLazyLoad>;
 
 type MoveDirection = "up" | "right" | "down" | "left";
 
@@ -1233,34 +984,129 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   // These two aren't computed properties for performance. They are computed during `init()` and mutated when other values change.
   // If `init()` is called again, their values after recomputation should be equal to those before it.
-  private currentFilter: string[] = [];
-  private rowPositions: CommittedRowRef[] = [];
-  private lastSelectedRow: number | null = null;
-  private lastSelectedValue: ValueRef | null = null;
-  private editing: ITableEditing | null = null;
-  private printListener: { query: MediaQueryList; queryCallback: (mql: MediaQueryListEvent) => void; printCallback: () => void } | null = null;
-  private clickTimeoutId: NodeJS.Timeout | null = null;
-  private editParams: IEditParams = {
+  currentFilter: string[] = [];
+  rowPositions: CommittedRowRef[] = [];
+  lastSelectedRow: number | null = null;
+  lastSelectedValue: ValueRef | null = null;
+  editing: ITableEditing | null = null;
+  printListener: { query: MediaQueryList; queryCallback: (mql: MediaQueryListEvent) => void; printCallback: () => void } | null = null;
+  clickTimeoutId: NodeJS.Timeout | null = null;
+  editParams: IEditParams = {
     height: 0,
     width: 0,
     minHeight: 0,
   };
   // Keep references to entries used for editing once, so we don't re-request them.
-  private keptEntries = new ObjectSet<IFieldRef>();
-  private showAddRowButtons = false;
+  keptEntries = new ObjectSet<IFieldRef>();
+  showAddRowButtons = false;
 
   // Used for Tab-Enter selection moving.
   // Probably need to move to extra.
-  private columnDelta = 0;
+  columnDelta = 0;
 
-  private cellContextMenu: CellContextMenuData | null = null;
-  private cellSelectionStartCell: ValueRef | null = null;
+  cellContextMenu: CellContextMenuData | null = null;
+  cellSelectionStartCell: ValueRef | null = null;
 
-  private get useInfiniteScrolling() {
+  get columns() {
+    const viewAttrs = this.uv.attributes;
+    let isTreeUnfoldColumnSet = false;
+
+    const columns = this.uv.info.columns.map((columnInfo, i): IColumn => {
+      const columnAttrs = this.uv.columnAttributes[i];
+      const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
+
+      const captionAttr = getColumnAttr("caption");
+      const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name;
+
+      const style: Record<string, unknown> = {};
+
+      const columnWidthAttr = Number(getColumnAttr("column_width"));
+      const columnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr;
+      style["width"] = `${columnWidth}px`;
+
+      const textAlignRightTypes: (ValueType["type"])[] = ["int", "decimal"];
+      const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType;
+      if (textAlignRightTypes.includes(punOrValue.type)) {
+        style["text-align"] = "right";
+      }
+
+      const textAlignAttr = getColumnAttr("text_align");
+      if (textAlignAttr !== undefined) {
+        style["text-align"] = String(textAlignAttr);
+      }
+
+      const fixedColumnAttr = getColumnAttr("fixed");
+      const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr);
+
+      const visibleColumnAttr = getColumnAttr("visible");
+      const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
+
+      const treeUnfoldColumnAttr = getColumnAttr("tree_unfold_column");
+      const treeUnfoldColumn = treeUnfoldColumnAttr === undefined ? false : Boolean(treeUnfoldColumnAttr);
+      if (treeUnfoldColumn) {
+        isTreeUnfoldColumnSet = true;
+      }
+
+      // "column_type" is old version, but "control" is consistent with forms.
+      const type = String(getColumnAttr("control") ?? getColumnAttr("column_type"));
+
+      return {
+        caption,
+        style,
+        visible: visibleColumn,
+        fixed: fixedColumn,
+        columnInfo,
+        width: columnWidth,
+        treeUnfoldColumn,
+        type,
+      };
+    });
+
+    if (!isTreeUnfoldColumnSet && columns[0]) {
+      columns[0].treeUnfoldColumn = true;
+    }
+
+    return columns;
+  }
+
+  get technicalWidth() {
+    let left = 0;
+    if (this.showSelectionColumn) {
+      left += technicalFieldsWidth;
+    }
+    if (this.uv.extra.hasRowLinks) {
+      left += technicalFieldsWidth;
+    }
+    return left;
+  }
+
+  get fixedColumnsLength(): number {
+    return this.columns.filter(item => item.fixed).length;
+  }
+
+  get fixedColumnPositions() {
+    let left = this.technicalWidth;
+    const fixedColumnIndexes = mapMaybe((col, colI) => col.fixed ? colI : undefined, this.columns);
+    const positions: Record<number, number> = {};
+    for (const fixedColumnIndex of fixedColumnIndexes) {
+      positions[fixedColumnIndex] = left;
+      left += this.columns[fixedColumnIndex].width;
+    }
+    return positions;
+  }
+
+  get showSelectionColumn() {
+    const disableSelectionColumn = this.uv.attributes["disable_selection_column"];
+    return typeof disableSelectionColumn === "boolean"
+      ? !disableSelectionColumn
+      : true;
+  }
+
+  get useInfiniteScrolling() {
     return this.uv.extra.lazyLoad.type === "infinite_scroll";
   }
 
-  private get pageSizes() {
+  get pageSizes() {
     if (this.uv.extra.lazyLoad.type !== "pagination") return [];
 
     const defaultSizes = [5, 10, 25, 50];
@@ -1444,8 +1290,15 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
    *     this.uv.rowLoadState.perFetch = this.uv.extra.lazyLoad.pagination.perPage;
    *   } */
 
-  private get infiniteIdentifier() {
+  get infiniteIdentifier() {
     return `${this.uv.rows?.length}${this.existingRows}`;
+  }
+
+  get dirtyHackPreventEntireReloads() {
+    const dirtyHackPreventEntireReloadsRaw = this.uv.attributes["dirty_hack_prevent_entire_reloads"];
+    return typeof dirtyHackPreventEntireReloadsRaw === "boolean"
+      ? dirtyHackPreventEntireReloadsRaw
+      : false;
   }
 
   private async infiniteHandler(ev: StateChanger) {
@@ -1651,7 +1504,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   get columnIndexes() {
-    const columns = this.uv.extra.columns.map((column, index) => ({
+    const columns = this.columns.map((column, index) => ({
       index,
       fixed: column.fixed,
       visible: column.visible,
@@ -1662,22 +1515,18 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   get fixedColumnIndexes() {
-    return mapMaybe((col, colI) => col.fixed ? colI : undefined, this.uv.extra.columns);
-  }
-
-  get lastFixedColumnIndex(): number {
-    return this.uv.extra.columns.filter(item => item.fixed).length;
+    return mapMaybe((col, colI) => col.fixed ? colI : undefined, this.columns);
   }
 
   get editingLocked() {
     if (this.editing === null || this.editingValue === null) {
       return false;
     } else {
-      return this.editingValue.value.extra.softDisabled || (this.editing.ref.type !== "existing" && this.addedLocked);
+      return this.editing.ref.type !== "existing" && this.addedLocked;
     }
   }
 
-  get hasLinksColumn() {
+  get showLinkColumn() {
     return Boolean(this.uv.extra.hasRowLinks || this.createEntryButton || this.createEntryButtons);
   }
 
@@ -1707,7 +1556,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   get editingValue() {
     if (this.editing === null
-     || this.editingNonNullableBoolean // Bools are special case because they toggles by double click.
+     || this.editingNonNullableBoolean // Bools are special case because they toggle on double click.
     ) {
       return null;
     } else {
@@ -1731,6 +1580,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   protected created() {
     this.currentFilter = this.filter;
     this.init();
+
+    if (this.initialPage !== null && this.uv.extra.lazyLoad.type === "pagination") {
+      this.goToPage(this.initialPage);
+    }
 
     /* if (this.isTopLevel) {
      *   const queryCallback = (mql: MediaQueryListEvent) => {
@@ -1765,22 +1618,15 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       : this.query.root.page;
   }
 
-  @Watch("uv", { immediate: true })
-  private uvInit(newUv: any, oldUv: any) {
-    if (oldUv) return; // Fire method once.
-
-    if (this.initialPage !== null && this.uv.extra.lazyLoad.type === "pagination") {
-      this.goToPage(this.initialPage);
-    }
-
-    void this.updateShowAddRowButtons();
+  get softDisabled() {
+    return Boolean(this.uv.attributes["soft_disabled"]);
   }
 
-  @Watch("uv.extra.softDisabled")
+  @Watch("softDisabled", { immediate: true })
   private async updateShowAddRowButtons() {
     this.showAddRowButtons = false;
 
-    if (!this.uv.info.mainEntity || this.uv.extra.softDisabled || this.uv.extra.dirtyHackPreventEntireReloads) return;
+    if (!this.uv.info.mainEntity || this.softDisabled || this.dirtyHackPreventEntireReloads) return;
 
     const entity = await this.getEntity(this.uv.info.mainEntity);
     this.showAddRowButtons = entity?.access.insert ?? false;
@@ -1799,15 +1645,11 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   // Cell text intended for copy to clipboard.
   private getClipboardTextByVisualPosition(pos: VisualPosition): string {
-    const value = this.uv.getValueByRef(this.getValueRefByVisualPosition(pos))!.value;
-    switch (value.info?.field?.fieldType.type) {
-      case "int":
-      case "decimal":
-        // We can't use `valueHtml` there because `number_format` attribute messes with it.
-        return String(value.value);
-      default:
-        return sanitizeHtml(value.extra.valueHtml, { allowedTags: [] });
-    }
+    const ref = this.getValueRefByVisualPosition(pos);
+    const value = this.uv.getValueByRef(ref);
+    console.assert(value);
+    const info = this.uv.info.columns[ref.column];
+    return valueToPunnedText(info.valueType, value!.value);
   }
 
   private cellTdByVisualPosition(pos: VisualPosition): HTMLElement {
@@ -1876,8 +1718,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private valueIsReadOnly(valueRef: ValueRef, throwToastOnReadOnly = false): boolean {
-    const value = this.uv.getValueByRef(valueRef)!.value;
-    if (!value.info || !value.info.field || value.extra.softDisabled) {
+    const value = this.uv.getValueByRef(valueRef)!;
+    const rowSoftDisabled = Boolean(value.row.attributes?.["soft_disabled"]);
+    const valueSoftDisabled = Boolean(value.value.attributes?.["soft_disabled"]);
+    if (!value.value.info?.field || this.softDisabled || rowSoftDisabled || valueSoftDisabled) {
       if (throwToastOnReadOnly) {
         this.$bvToast.toast(this.$t("read_only_cell").toString(), {
           title: this.$t("edit_error").toString(),
@@ -2119,7 +1963,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   @Watch("filter", { immediate: true })
   protected updateFilter() {
-    if (this.uv.extra.dirtyHackPreventEntireReloads) return;
+    if (this.dirtyHackPreventEntireReloads) return;
 
     if (this.filter.length !== 0 && this.uv.rowLoadState.complete === false) {
       this.$emit("load-all-chunks");
@@ -2322,16 +2166,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private clickOutsideEdit(event: Event) {
     const element = (event instanceof MouseEvent) ? document.elementFromPoint(event.x, event.y) : null;
-    // Fix for case when some cell is being edited and modal opens,
-    // otherwise any click on this modal will close the cell editing and modal too.
-    // FIXME: rely on CSS-classes for logic is bad thing, fix it someone, please.
-    if (element === null
-     || (element.closest(".vm--modal") && !this.$el.closest(".vm--modal"))
-     || (element.closest(".modal__tab-content") !== this.$el.closest(".modal__tab-content"))
-    ) {
-      return;
-    }
-
+    // Fix for case when some cell is being edited anbug
     this.removeCellEditing();
   }
 
@@ -2348,7 +2183,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private canEditCell(ref: ValueRef) {
-    return !(this.uv.extra.columns[ref.column].type === "buttons");
+    return !(this.columns[ref.column].type === "buttons");
   }
 
   private get editingNonNullableBoolean(): boolean {
@@ -2365,7 +2200,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     const ref = this.editing.ref;
     if (ref.type === "new") return;
 
-    if (this.editingNonNullableBoolean && !this.uv.getValueByRef(this.editing.ref)?.value.extra.softDisabled) {
+    if (this.editingNonNullableBoolean && !this.valueIsReadOnly(ref)) {
       const value = this.uv.getValueByRef(ref)!.value.value;
       await this.updateCurrentValue(!value);
       this.removeCellEditing();
@@ -2532,7 +2367,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.closeCellContextMenu();
 
     // We capture click-events from cells so we need to manually close popups here.
-    if (this.uv.extra.columns[ref.column].type !== "buttons") {
+    if (this.columns[ref.column].type !== "buttons") {
       eventBus.emit("close-all-button-groups");
     }
   }
@@ -2704,7 +2539,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
             `);
     }
 
-    this.$emit("update:enable-filter", this.uv.rows !== null && !this.uv.extra.dirtyHackPreventEntireReloads);
+    this.$emit("update:enable-filter", this.uv.rows !== null && !this.dirtyHackPreventEntireReloads);
 
     this.updateRows();
   }
@@ -2714,7 +2549,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private loadAllRowsAndUpdateSort(sortColumn: number) {
-    if (this.uv.extra.dirtyHackPreventEntireReloads) return;
+    if (this.dirtyHackPreventEntireReloads) return;
 
     if (!this.uv.rowLoadState.complete) {
       this.$emit("load-all-chunks", () => this.updateSort(sortColumn));
@@ -2730,7 +2565,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     string: ascending
   */
   private updateSort(sortColumn: number) {
-    const type = this.uv.extra.columns[sortColumn].columnInfo.valueType.type;
+    const type = this.columns[sortColumn].columnInfo.valueType.type;
     if (this.uv.extra.sortColumn !== sortColumn) {
       this.uv.extra.sortColumn = sortColumn;
       switch (type) {
@@ -3002,7 +2837,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     z-index: 20; /* при скроле таблицы чтобы шапка была видна */
     border-right: 1px solid var(--table-backgroundDarker1Color);
 
-    /* Instead of `0` to fix Safari's bug gap, doesn't needed in normal browsers, but easier to set same for all */
+    /* Instead of `0` to fix Safari's gap bug, not needed in normal browsers, but easier to set same for all. */
     top: -1px;
     cursor: pointer;
     color: var(--MainTextColorLight);

@@ -287,6 +287,7 @@ interface IUserViewShow {
 
 interface IUserViewLoading {
   state: "loading";
+  args: IUserViewArguments | null;
 }
 
 interface IUserViewError {
@@ -309,7 +310,7 @@ export const maxPerFetch = 50;
 export const fetchAllLimit = 5000;
 const getEagerLoadState = (): IRowLoadState => ({ complete: true, perFetch: fetchAllLimit, fetchedRowCount: 0 });
 
-const loadingState: IUserViewLoading = { state: "loading" };
+const loadingState: IUserViewLoading = { state: "loading", args: null };
 
 /* This is enclosing component, which runs Vuex actions to load actual user view data, manages lifetime of
  * user views themselves etc. For instance, it ensures smooth reloading of components when user view data is
@@ -582,7 +583,7 @@ export default class UserView extends Vue {
     }
 
     if (this.state.state === "error") {
-      this.setState(loadingState);
+      this.setState({ state: "loading", args });
     }
 
     let allFetched = false;
@@ -769,7 +770,18 @@ export default class UserView extends Vue {
   }
 
   @Watch("args", { deep: true, immediate: true })
-  private argsChanged(newArgs: IUserViewArguments) {
+  private argsChanged() {
+    let currentArgs: IUserViewArguments | undefined;
+    if (this.state.state === "show") {
+      currentArgs = this.state.uv.args;
+    } else if (this.state.state === "loading" && this.state.args !== null) {
+      currentArgs = this.state.args;
+    } else if (this.state.state === "error") {
+      currentArgs = this.state.args;
+    }
+    if (deepEquals(currentArgs, this.args)) {
+      return;
+    }
     void this.reload({ differentComponent: true });
   }
 

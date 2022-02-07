@@ -24,20 +24,18 @@
             v-slot="{ element }"
             :grid-content="blocks"
           >
-            <FormControl
-              v-if="element.type === 'field' && row.values[element.index].extra.visible"
-              :caption="element.caption"
-              :force-caption="element.forceCaption"
-              :column-info-name="element.columnInfo.name"
+            <!-- We pass `value` here and not calculate it in `FormField`; otherwise,
+                 weirdly, it gets recomputed when any value in a row changes.
+            -->
+            <FormField
+              v-if="element.type === 'field'"
+              :element="element"
+              :row="row"
               :value="row.values[element.index]"
-              :value-formatted="row.values[element.index].extra.valueFormatted"
-              :attributes="row.values[element.index].extra.attributes"
-              :type="element.columnInfo.valueType"
-              :locked="locked || row.values[element.index].extra.softDisabled"
-              :uv-args="uv.args"
+              :uv="uv"
               :scope="scope"
               :level="level"
-              :autofocus="element.autofocus"
+              :locked="locked"
               @goto="$emit('goto', $event)"
               @update="$emit('update', element.index, $event)"
             />
@@ -91,17 +89,16 @@
 </template>
 
 <script lang="ts">
-/* eslint @typescript-eslint/unbound-method: "warn" */
 import { Component, Vue, Prop } from "vue-property-decorator";
 import FormGrid from "@/components/form/FormGrid.vue";
+import FormField from "./FormField.vue";
 import type { IFormCombinedUserView, FormGridElement, IFormExtendedRowCommon } from "@/components/views/Form.vue";
 
 const isNumberWithSuffix = (str: string, suffix: string): boolean =>
   str.slice(-suffix.length) === suffix && !Number.isNaN(Number(str.slice(0, suffix.length)));
 
-@Component({ components: { FormGrid } })
+@Component({ components: { FormGrid, FormField } })
 export default class FormEntry extends Vue {
-  // The reason this is not a functional component is because of i18n.
   @Prop({ type: Object, required: true }) uv!: IFormCombinedUserView;
   @Prop({ type: Array, required: true }) blocks!: FormGridElement[];
   @Prop({ type: Object, required: true }) row!: IFormExtendedRowCommon;
@@ -112,7 +109,7 @@ export default class FormEntry extends Vue {
   @Prop({ type: Boolean, default: true }) isTopLevel!: boolean;
   @Prop({ type: Boolean, default: true }) showDelete!: number;
 
-  private get maxWidth(): string {
+  get maxWidth(): string {
     if (!this.isTopLevel) return "100%";
 
     const defaultMaxWidth = "1140px";
@@ -125,7 +122,7 @@ export default class FormEntry extends Vue {
     return defaultMaxWidth;
   }
 
-  private get style() {
+  get style() {
     return {
       maxWidth: this.maxWidth,
     };

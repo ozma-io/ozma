@@ -140,25 +140,23 @@
 <script lang="ts">
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-import { AttributesMap, IResultColumnInfo, ValueType } from "ozma-api";
-import { z } from "zod";
+import { IResultColumnInfo, ValueType } from "ozma-api";
 import { namespace } from "vuex-class";
 import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 
-import { tryDicts, mapMaybe, getNumberFormatter, isValidNumberFormat } from "@/utils";
+import { tryDicts, mapMaybe } from "@/utils";
 import { interfaceButtonVariant, bootstrapVariantAttribute } from "@/utils_colors";
-import { AddedRowId } from "@/state/staging_changes";
 import { UserView } from "@/components";
 import Errorbox from "@/components/Errorbox.vue";
 import BaseUserView, { baseUserViewHandler, IBaseRowExtra, IBaseValueExtra, IBaseViewExtra } from "@/components/BaseUserView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
 import { attrToLink, Link } from "@/links";
 import { ICurrentQueryHistory } from "@/state/query";
-import { IAddedRow, ICombinedRow, ICombinedUserView, ICombinedValue, IExtendedRowCommon, IExtendedRowInfo, IRowCommon, IUserViewHandler, RowRef } from "@/user_views/combined";
+import { ICombinedUserView, IExtendedRowCommon, IExtendedRowInfo, IUserViewHandler, RowRef } from "@/user_views/combined";
 import { GridElement, IGridInput, IGridSection } from "@/components/form/FormGrid.vue";
 import type { Button } from "@/components/buttons/buttons";
-import { lazyLoadSchema } from "@/components/views/Table.vue";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
+import { ITableLazyLoad, TableLazyLoad } from "./Table.vue";
 
 export interface IButtonAction {
   name: string;
@@ -185,14 +183,13 @@ export type FormElement = IElementField | IElementButtons;
 export type FormGridElement = GridElement<FormElement>;
 
 export interface IFormValueExtra extends IBaseValueExtra {
-  attributes: AttributesMap;
-  visible: boolean;
   valueFormatted?: string; // Used at least for read-only number inputs.
 }
 
 export type IFormRowExtra = IBaseRowExtra;
 
-type IFormLazyLoad = z.infer<typeof lazyLoadSchema>;
+export const FormLazyLoad = TableLazyLoad;
+type IFormLazyLoad = ITableLazyLoad;
 
 const showStep = 3;
 
@@ -205,91 +202,18 @@ export type IFormExtendedRowInfo = IExtendedRowInfo<IFormRowExtra>;
 export type IFormExtendedRowCommon = IExtendedRowCommon<IFormValueExtra, IFormRowExtra>;
 export const numberTypes: (ValueType["type"])[] = ["int", "decimal"];
 
-const createCommonLocalValue = (uv: IFormCombinedUserView, row: IRowCommon & IFormExtendedRowInfo, columnIndex: number, value: ICombinedValue) => {
-  const columnAttrs = uv.columnAttributes[columnIndex];
-  const attributes: Record<string, unknown> = {
-    ...uv.attributes,
-    ...columnAttrs,
-    ...row.attributes,
-    ...value.attributes,
-  };
-  const visible = Boolean(attributes["visible"] ?? true);
-
-  let valueFormatted: string | undefined;
-  // Formatting  of editable inputs (or input masking) is a huge pain and brings many troubles, so only for read-only inputs.
-  const isReadOnly = value.info === undefined || attributes["soft_disabled"];
-  if (isReadOnly && typeof value.value === "number") {
-    const numberFormat = attributes["number_format"];
-    if (typeof numberFormat === "string" && isValidNumberFormat(numberFormat)) {
-      const fractionDigitsRaw = attributes["fraction_digits"];
-      const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
-      valueFormatted = getNumberFormatter(numberFormat, fractionDigits).format(value.value);
-    }
-  }
-
-  return {
-    attributes,
-    visible,
-    valueFormatted,
-  };
-};
-
 export const formUserViewHandler: IUserViewHandler<IFormValueExtra, IFormRowExtra, IFormViewExtra> = {
   ...baseUserViewHandler,
 
   createLocalUserView(uv: IFormCombinedUserView, oldView: IFormViewExtra | null) {
     const baseExtra = baseUserViewHandler.createLocalUserView(uv, oldView);
 
-    const lazyLoad = oldView?.lazyLoad ?? lazyLoadSchema.parse(uv.attributes["lazy_load"]);
+    const lazyLoad = oldView?.lazyLoad ?? FormLazyLoad.parse(uv.attributes["lazy_load"]);
 
     return {
       ...baseExtra,
       lazyLoad,
     };
-  },
-
-  createLocalValue(
-    uv: IFormCombinedUserView,
-    rowIndex: number,
-    row: ICombinedRow & IFormExtendedRowInfo,
-    columnIndex: number,
-    value: ICombinedValue,
-    oldView: IFormViewExtra | null,
-    oldRow: IFormRowExtra | null,
-    oldValue: IFormValueExtra | null,
-  ) {
-    const baseExtra = baseUserViewHandler.createLocalValue(uv, rowIndex, row, columnIndex, value, oldView, oldRow, oldValue);
-    const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
-    return { ...baseExtra, ...commonExtra };
-  },
-
-  createAddedLocalValue(
-    uv: IFormCombinedUserView,
-    rowId: AddedRowId,
-    row: IAddedRow & IFormExtendedRowInfo,
-    columnIndex: number,
-    value: ICombinedValue,
-    oldView: IFormViewExtra | null,
-    oldRow: IFormRowExtra | null,
-    oldValue: IFormValueExtra | null,
-  ) {
-    const baseExtra = baseUserViewHandler.createAddedLocalValue(uv, rowId, row, columnIndex, value, oldView, oldRow, oldValue);
-    const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
-    return { ...baseExtra, ...commonExtra };
-  },
-
-  createEmptyLocalValue(
-    uv: IFormCombinedUserView,
-    row: IRowCommon & IFormExtendedRowInfo,
-    columnIndex: number,
-    value: ICombinedValue,
-    oldView: IFormViewExtra | null,
-    oldRow: IFormRowExtra | null,
-    oldValue: IFormValueExtra | null,
-  ) {
-    const baseExtra = baseUserViewHandler.createEmptyLocalValue(uv, row, columnIndex, value, oldView, oldRow, oldValue);
-    const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
-    return { ...baseExtra, ...commonExtra };
   },
 };
 
