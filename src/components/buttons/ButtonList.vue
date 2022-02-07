@@ -40,8 +40,8 @@ export default class ButtonList extends Vue {
   @Prop({ type: Array, required: true }) buttons!: IButton[];
   @Prop({ type: Boolean, default: false }) listItem!: boolean;
 
-  private onClick() {
-    this.$emit("button-click");
+  private onClick(button: IButton) {
+    this.$emit("button-click", button);
   }
 
   private get someButtonHasIcon() {
