@@ -28,9 +28,6 @@
             "base_user_view_error": "Failed to perform an operation: {msg}",
             "error": "Error",
             "forget_dismissed_help_pages": "Forget dismissed help pages",
-            "enable_development_mode": "Enable development mode",
-            "disable_development_mode": "Disable development mode",
-            "development_mode_indicator": "Development mode is on",
             "authed_link": "Copy link with authorization"
         },
         "ru": {
@@ -61,9 +58,6 @@
             "base_user_view_error": "Ошибка выполнения операции: {msg}",
             "error": "Ошибка",
             "forget_dismissed_help_pages": "Сбросить пропущенные страницы помощи",
-            "enable_development_mode": "Включить режим разработки",
-            "disable_development_mode": "Выключить режим разработки",
-            "development_mode_indicator": "Включён режим разработки",
             "authed_link": "Скопировать ссылку с авторизацией"
         }
     }
@@ -238,16 +232,6 @@
           </span>
         </div>
       </transition>
-
-      <div
-        v-if="allowBusinessMode && !settingsPending && developmentModeEnabled"
-        v-b-tooltip.hover.right.noninteractive="{
-          title: $t('development_mode_indicator').toString(),
-        }"
-        class="development-mode-indicator"
-      >
-        <span class="material-icons md-36">developer_mode</span>
-      </div>
     </div>
     <QRCodeScanner
       v-if="wasOpenedQRCodeScanner"
@@ -276,8 +260,8 @@ import { convertToWords, homeLink, nextRender } from "@/utils";
 import { Link } from "@/links";
 import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
-import { CurrentSettings, DisplayMode } from "@/state/settings";
-import { interfaceButtonVariant, defaultVariantAttribute, bootstrapVariantAttribute, IThemeRef } from "@/utils_colors";
+import { CurrentSettings } from "@/state/settings";
+import { interfaceButtonVariant, defaultVariantAttribute, IThemeRef } from "@/utils_colors";
 
 const auth = namespace("auth");
 const staging = namespace("staging");
@@ -334,12 +318,8 @@ export default class TopLevelUserView extends Vue {
   @errors.Mutation("reset") resetErrors!: () => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @settings.State("current") currentSettings!: CurrentSettings;
-  @settings.State("pending") settingsPending!: Promise<CurrentSettings> | null;
-  @settings.State("userIsRoot") userIsRoot!: boolean;
-  @settings.Getter("developmentModeEnabled") developmentModeEnabled!: boolean;
   @settings.Action("setCurrentTheme") setCurrentTheme!: (theme: IThemeRef) => Promise<void>;
   @staging.State("autoSaveLocks") autoSaveLocks!: Object | null;
-  @settings.Action("setDisplayMode") setDisplayMode!: (mode: DisplayMode) => Promise<void>;
 
   private statusLine = "";
   private enableFilter = false;
@@ -436,12 +416,6 @@ export default class TopLevelUserView extends Vue {
       event.preventDefault();
 
       void this.saveView();
-    }
-
-    if (event.ctrlKey && event.key === "D") {
-      event.preventDefault();
-
-      this.toggleDeveloperMode();
     }
   }
 
@@ -579,16 +553,6 @@ export default class TopLevelUserView extends Vue {
     }, 5000);
   }
 
-  private get allowBusinessMode() {
-    return this.currentSettings.getEntry("allow_business_mode", Boolean, false);
-  }
-
-  private toggleDeveloperMode() {
-    if (this.allowBusinessMode && this.userIsRoot) {
-      void this.setDisplayMode(this.developmentModeEnabled ? "business" : "development");
-    }
-  }
-
   get burgerButton() {
     const buttons: Button[] = [];
 
@@ -599,6 +563,26 @@ export default class TopLevelUserView extends Vue {
         variant: defaultVariantAttribute,
         type: "callback",
         callback: () => eventBus.emit("show-invite-user-modal"),
+      });
+    }
+
+    if (!this.currentAuth?.token || this.currentSettings.userCanEditUserViews) {
+      buttons.push({
+        icon: "help_center",
+        caption: this.$t("documentation").toString(),
+        variant: defaultVariantAttribute,
+        type: "link",
+        link: { type: "href", href: "https://wiki.ozma.io", target: "_blank" },
+      });
+    }
+
+    if (this.currentAuth?.token && this.currentSettings.userCanEditUserViews) {
+      buttons.push({
+        icon: "view_list",
+        caption: this.$t("workspaces").toString(),
+        variant: defaultVariantAttribute,
+        type: "link",
+        link: { type: "href", href: "https://admin.ozma.io", target: "_blank" },
       });
     }
 
@@ -613,52 +597,24 @@ export default class TopLevelUserView extends Vue {
     }
 
     if (this.currentAuth?.token) {
-      if (this.allowBusinessMode && this.userIsRoot) {
+      if (Api.developmentMode) {
+        const currentAuth = this.currentAuth;
         buttons.push({
-          icon: "developer_mode",
-          caption: this.$t(this.developmentModeEnabled ? "disable_development_mode" : "enable_development_mode").toString() + " (Ctrl+Shift+D)",
+          icon: "link",
+          caption: this.$t("authed_link").toString(),
           type: "callback",
-          callback: () => this.toggleDeveloperMode(),
-          variant: this.developmentModeEnabled ? bootstrapVariantAttribute("warning") : bootstrapVariantAttribute("info"),
-          keepButtonGroupOpened: true,
+          callback: () => {
+            const link = getAuthedLink(currentAuth);
+            void navigator.clipboard.writeText(link);
+          },
+          variant: defaultVariantAttribute,
         });
       }
 
-      if (this.developmentModeEnabled) {
-        buttons.push({
-          icon: "help_center",
-          caption: this.$t("documentation").toString(),
-          variant: bootstrapVariantAttribute("info"),
-          type: "link",
-          link: { type: "href", href: "https://wiki.ozma.io", target: "_blank" },
-        });
-
-        buttons.push({
-          icon: "view_list",
-          caption: this.$t("workspaces").toString(),
-          variant: bootstrapVariantAttribute("info"),
-          type: "link",
-          link: { type: "href", href: "https://admin.ozma.io", target: "_blank" },
-        });
-
-        if (Api.developmentMode) {
-          const currentAuth = this.currentAuth;
-          buttons.push({
-            icon: "link",
-            caption: this.$t("authed_link").toString(),
-            variant: bootstrapVariantAttribute("info"),
-            type: "callback",
-            callback: () => {
-              const link = getAuthedLink(currentAuth);
-              void navigator.clipboard.writeText(link);
-            },
-          });
-        }
-
+      if (this.currentSettings.userCanEditUserViews) {
         buttons.push({
           icon: "layers_clear",
           caption: this.$t("forget_dismissed_help_pages").toString(),
-          variant: bootstrapVariantAttribute("info"),
           type: "callback",
           callback: () => {
             const allKeys = Object.keys(localStorage);
@@ -667,6 +623,7 @@ export default class TopLevelUserView extends Vue {
               localStorage.removeItem(key);
             }
           },
+          variant: defaultVariantAttribute,
         });
       }
       buttons.push({
@@ -851,14 +808,6 @@ export default class TopLevelUserView extends Vue {
     border-right-color: transparent;
     border-width: 0.5rem;
     opacity: 0.5;
-  }
-
-  .development-mode-indicator {
-    position: fixed;
-    left: 1rem;
-    bottom: 1rem;
-    color: var(--default-foregroundDarkerColor);
-    opacity: 0.75;
   }
 
   @media screen and (max-aspect-ratio: 13/9) {

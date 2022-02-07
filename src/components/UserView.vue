@@ -1,14 +1,6 @@
 <i18n>
     {
         "en": {
-            "edit_form": "Edit form",
-            "edit_menu": "Edit menu",
-            "edit_table": "Edit table",
-            "edit_multi_select": "Edit multiselect",
-            "edit_board": "Edit board",
-            "edit_timeline": "Edit timeline",
-            "edit_cancel": "Close",
-            "edit_user_view": "Edit user view",
             "loading": "Now loading",
             "forbidden": "Sorry, you are not authorized to use this user view. Contact your administrator.",
             "no_instance": "Instance not found.",
@@ -24,19 +16,9 @@
             "hide_argument_editor": "Hide filters",
             "new_mode_no_main": "FOR INSERT INTO clause is required for new entry mode.",
             "link_to_nowhere": "This user view was a link which didn't replace it, so there's nothing to show.",
-            "edit_view_modal_text_common": "To edit this view contact your integrator using links below.",
-            "edit_view_modal_text_for_roots": "If you feel comfortable editing views source code by yourself, press button below to open the editor. This confirmation is hidden when development mode is enabled (in top left menu). See also about editing user views:",
             "switch_argument_editor": "Filters"
         },
         "ru": {
-            "edit_form": "Редактировать форму",
-            "edit_menu": "Редактировать меню",
-            "edit_table": "Редактировать таблицу",
-            "edit_multi_select": "Редактировать мультиселект",
-            "edit_board": "Редактировать доску",
-            "edit_timeline": "Редактировать таймлайн",
-            "edit_cancel": "Закрыть",
-            "edit_user_view": "Редактировать пользовательское представление",
             "loading": "Загрузка данных",
             "forbidden": "К сожалению у вас нет прав доступа для просмотра этого представления. Свяжитесь с администратором.",
             "no_instance": "База не найдена.",
@@ -52,8 +34,6 @@
             "hide_argument_editor": "Скрыть фильтры",
             "new_mode_no_main": "Для режима создания новой записи должна использоваться конструкция FOR INSERT INTO.",
             "link_to_nowhere": "Это отображение являлось ссылкой, которая его не заменила. Теперь здесь нечего показать.",
-            "edit_view_modal_text_common": "Для изменения представления, обратитесь к вашему интегратору по контактам ниже.",
-            "edit_view_modal_text_for_roots": "Если вы желаете самостоятельно отредактировать исходный код отображения, нажмите кнопку внизу, чтобы открыть редактор. Это подтверждение не показывается, когда включён режим разработки (в верхнем левом меню). Больше информации про редактирование представлений:",
             "switch_argument_editor": "Фильтры"
         }
     }
@@ -70,62 +50,6 @@
   <div
     class="userview-wrapper"
   >
-    <b-modal
-      :id="$id('business_mode_edit_view')"
-      lazy
-      centered
-      ok-variant="danger"
-    >
-      <div>
-        {{ businessModeEditViewText }}
-        <a
-          v-if="userIsRoot"
-          href="https://wiki.ozma.io"
-          target="_blank"
-        >
-          wiki
-        </a>
-        <br>
-        <a
-          v-if="communicationStrings.telegram"
-          :href="communicationStrings.telegram"
-          target="_blank"
-        >
-          Telegram
-        </a>
-        <br>
-        <a
-          v-if="communicationStrings.whatsapp"
-          :href="communicationStrings.whatsapp"
-          target="_blank"
-        >
-          WhatsApp
-        </a>
-        <br>
-        <a
-          v-if="communicationStrings.email"
-          :href="'mailto:' + communicationStrings.email"
-          target="_blank"
-        >
-          E-mail
-        </a>
-      </div>
-
-      <template #modal-footer="{ cancel }">
-        <b-button
-          variant="outline-secondary"
-          @click="cancel()"
-        >
-          {{ $t("edit_cancel") }}
-        </b-button>
-
-        <ButtonItem
-          v-if="enableDeveloperModeButton"
-          :button="enableDeveloperModeButton"
-        />
-      </template>
-    </b-modal>
-
     <template
       v-if="state.state === 'show'"
     >
@@ -295,7 +219,6 @@ import { ICurrentQueryHistory, IQuery } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
 import UserViewCommon from "@/components/UserViewCommon.vue";
 import ArgumentEditor from "@/components/ArgumentEditor.vue";
-import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import type { Button } from "@/components/buttons/buttons";
 import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams } from "@/links";
 import type { ICombinedUserViewAny, IRowLoadState, IUserViewArguments } from "@/user_views/combined";
@@ -303,7 +226,7 @@ import { CombinedUserView } from "@/user_views/combined";
 import { UserViewError, fetchUserViewData } from "@/user_views/fetch";
 import { baseUserViewHandler } from "@/components/BaseUserView";
 import Errorbox from "@/components/Errorbox.vue";
-import { CurrentSettings, DisplayMode } from "@/state/settings";
+import { CurrentSettings } from "@/state/settings";
 
 const types: RecordSet<string> = {
   "form": null,
@@ -312,6 +235,7 @@ const types: RecordSet<string> = {
   "multi_select": null,
   "board": null,
   "timeline": null,
+  "iframe": null,
 };
 
 const components = Object.fromEntries(Object.keys(types).map(name => {
@@ -405,7 +329,6 @@ const loadingState: IUserViewLoading = { state: "loading" };
   UserViewCommon,
   ArgumentEditor,
   Errorbox,
-  ButtonItem,
   ...components,
 } })
 export default class UserView extends Vue {
@@ -417,9 +340,6 @@ export default class UserView extends Vue {
   @staging.State("currentSubmit") submitPromise!: Promise<ISubmitResult> | null;
   @query.State("current") query!: ICurrentQueryHistory | null;
   @settings.State("current") settings!: CurrentSettings;
-  @settings.State("userIsRoot") userIsRoot!: boolean;
-  @settings.Getter("developmentModeEnabled") developmentModeEnabled!: boolean;
-  @settings.Action("setDisplayMode") setDisplayMode!: (mode: DisplayMode) => Promise<void>;
 
   @Prop({ type: Object, required: true }) args!: IUserViewArguments;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
@@ -516,24 +436,13 @@ export default class UserView extends Vue {
           }
         }
 
-        if (this.developmentModeEnabled) {
+        if (this.settings.userCanEditUserViews) {
           buttons.push({
             icon: "code",
             caption: this.$t("edit_view").toString(),
             variant: defaultVariantAttribute,
             link: { query: editQuery, target: "modal-auto", type: "query" },
             type: "link",
-          });
-        } else {
-          const caption = this.$t(this.state.state === "show" ? "edit_" + this.state.componentName.toLowerCase() : "edit_view").toString();
-          buttons.push({
-            icon: "edit",
-            caption,
-            variant: defaultVariantAttribute,
-            type: "callback",
-            callback: () => {
-              this.$bvModal.show(this.$id("business_mode_edit_view"));
-            },
           });
         }
       }
@@ -842,15 +751,6 @@ export default class UserView extends Vue {
       });
     } else {
       this.removeStagingHandler(this.uid);
-    }
-  }
-
-  private switchToDeveloperModeIfUserViewCode() {
-    if (this.state.state !== "show") return;
-    if (this.args.source.type !== "named") return;
-
-    if (this.args.source.ref.schema === funappSchema && this.args.source.ref.name === "user_view_by_name") {
-      void this.setDisplayMode("development");
     }
   }
 

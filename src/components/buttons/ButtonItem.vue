@@ -116,11 +116,11 @@ export default class ButtonItem extends Vue {
   }
 
   private onClickLink() {
-    this.$emit("button-click", this.button);
+    this.$emit("button-click");
   }
 
   private onClickCallback() {
-    this.$emit("button-click", this.button);
+    this.$emit("button-click");
 
     if (this.button.type === "callback") {
       this.button.callback();

@@ -113,7 +113,6 @@ const csvImportChunk = 100;
 const staging = namespace("staging");
 const errors = namespace("errors");
 const entities = namespace("entities");
-const settings = namespace("settings");
 
 const uvHelpPageKey = (ref: IEntityRef) => `uv_${ref.schema}.${ref.name}`;
 
@@ -129,7 +128,6 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
   @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
   @entities.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
-  @settings.Getter("businessModeEnabled") businessModeEnabled!: boolean;
 
   private modalView: IQuery | null = null;
   private openQRCodeScanner = false;
@@ -216,19 +214,14 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     await this.updateShowDeleteEntriesButton();
   }
 
-  @Watch("businessModeEnabled")
   private async updateShowDeleteEntriesButton() {
     this.showDeleteEntiesButton = false;
 
     if (!this.uv.info.mainEntity) return;
     if (this.uv.extra.softDisabled) return;
 
-    if (this.businessModeEnabled) {
-      this.showDeleteEntiesButton = !this.uv.attributes["business_mode_disable_delete"];
-    } else {
-      const entity = await this.getEntity(this.uv.info.mainEntity);
-      this.showDeleteEntiesButton = entity?.access.delete ?? false;
-    }
+    const entity = await this.getEntity(this.uv.info.mainEntity);
+    this.showDeleteEntiesButton = entity?.access.delete ?? false;
   }
 
   private async exportToCsv() {

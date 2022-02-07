@@ -79,7 +79,7 @@
         :scope="scope"
         :level="level"
         :is-top-level="isTopLevel"
-        :show-delete="useDeleteAction.type === 'show'"
+        :show-delete="useDeleteAction === null"
         @update="updateValue({ ...firstRow.ref, column: arguments[0] }, arguments[1])"
         @delete="confirmDelete(firstRow.ref)"
         @goto="$emit('goto', $event)"
@@ -94,7 +94,7 @@
         :scope="scope"
         :level="level"
         :is-top-level="isTopLevel"
-        :show-delete="useDeleteAction.type === 'show'"
+        :show-delete="useDeleteAction === null"
         @update="updateValue({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
         @delete="confirmDelete({ type: 'added', id: rowId })"
         @goto="$emit('goto', $event)"
@@ -110,7 +110,7 @@
         :level="level"
         :is-top-level="isTopLevel"
         :selection-mode="selectionMode"
-        :show-delete="useDeleteAction.type === 'show'"
+        :show-delete="useDeleteAction === null"
         @update="updateValue({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
         @delete="confirmDelete({ type: 'existing', position: rowI })"
         @goto="$emit('goto', $event)"
@@ -294,7 +294,6 @@ export const formUserViewHandler: IUserViewHandler<IFormValueExtra, IFormRowExtr
 };
 
 const query = namespace("query");
-const settings = namespace("settings");
 
 @UserView({
   handler: formUserViewHandler,
@@ -310,7 +309,6 @@ const settings = namespace("settings");
 })
 export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, IFormRowExtra, IFormViewExtra>>(BaseUserView) {
   @query.State("current") query!: ICurrentQueryHistory | null;
-  @settings.Getter("businessModeEnabled") businessModeEnabled!: boolean;
   private deletedOne = false;
   private toBeDeletedRef: RowRef | null = null;
 
@@ -496,15 +494,13 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
   }
 
   // When we only have one record displayed, we hide "Delete" button and add is an an action to menu instead.
-  get useDeleteAction(): { type: "show_with_ref"; ref: RowRef } | { type: "show" } | { type: "hide" } {
-    if (this.businessModeEnabled && this.uv.attributes["business_mode_disable_delete"]) {
-      return { type: "hide" };
-    } else if (this.rowPositions.length === 0 && this.newRowsPositions.length === 1) {
-      return { type: "show_with_ref", ref: { type: "added", id: this.newRowsPositions[0] } };
+  get useDeleteAction(): RowRef | null {
+    if (this.rowPositions.length === 0 && this.newRowsPositions.length === 1) {
+      return { type: "added", id: this.newRowsPositions[0] };
     } else if (this.rowPositions.length === 1 && this.newRowsPositions.length === 0) {
-      return { type: "show_with_ref", ref: { type: "existing", position: this.rowPositions[0] } };
+      return { type: "existing", position: this.rowPositions[0] };
     } else {
-      return { type: "show" };
+      return null;
     }
   }
 
@@ -660,11 +656,11 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
   get buttons() {
     const buttons: Button[] = [];
     const deleteRef = this.useDeleteAction;
-    if (deleteRef.type === "show_with_ref") {
+    if (deleteRef !== null) {
       buttons.push({
         icon: "delete_outline",
         caption: this.$t("delete").toString(),
-        callback: () => this.confirmDelete(deleteRef.ref),
+        callback: () => this.confirmDelete(deleteRef),
         variant: bootstrapVariantAttribute("danger"),
         type: "callback",
       });

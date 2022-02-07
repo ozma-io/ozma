@@ -36,7 +36,8 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 import Popper from "vue-popperjs";
 
-import type { IButton, IButtonGroup } from "@/components/buttons/buttons";
+import type { IButtonGroup } from "@/components/buttons/buttons";
+import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import ButtonView from "@/components/buttons/ButtonView.vue";
 import ButtonList from "@/components/buttons/ButtonList.vue";
 import { eventBus } from "@/main";
@@ -44,6 +45,7 @@ import { waitTimeout } from "@/utils";
 
 @Component({
   components: {
+    ButtonItem,
     ButtonView,
     ButtonList,
     Popper,
@@ -96,13 +98,13 @@ export default class ButtonsPanel extends Vue {
     }
   }
 
-  private onInnerButtonClick(button: IButton) {
-    this.$emit("button-click", button);
+  private onInnerButtonClick() {
+    this.$emit("button-click");
 
     const popupRef: any = this.$refs.popup;
     if (!popupRef) return;
 
-    if (!this.listItem && popupRef.showPopper && !button.keepButtonGroupOpened) {
+    if (!this.listItem && popupRef.showPopper) {
       popupRef.doClose();
     }
   }
