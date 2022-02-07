@@ -26,6 +26,7 @@
             "link_to_nowhere": "This user view was a link which didn't replace it, so there's nothing to show.",
             "edit_view_modal_text_common": "To edit this view contact your integrator using links below.",
             "edit_view_modal_text_for_roots": "If you feel comfortable editing views source code by yourself, press button below to open the editor. This confirmation is hidden when development mode is enabled (in top left menu). See also about editing user views:",
+            "open_editor": "Open editor",
             "switch_argument_editor": "Filters"
         },
         "ru": {
@@ -54,6 +55,7 @@
             "link_to_nowhere": "Это отображение являлось ссылкой, которая его не заменила. Теперь здесь нечего показать.",
             "edit_view_modal_text_common": "Для изменения представления, обратитесь к вашему интегратору по контактам ниже.",
             "edit_view_modal_text_for_roots": "Если вы желаете самостоятельно отредактировать исходный код отображения, нажмите кнопку внизу, чтобы открыть редактор. Это подтверждение не показывается, когда включён режим разработки (в верхнем левом меню). Больше информации про редактирование представлений:",
+            "open_editor": "Открыть редактор",
             "switch_argument_editor": "Фильтры"
         }
     }
@@ -515,7 +517,7 @@ export default class UserView extends Vue {
     if (!this.editViewQuery) return null;
 
     return {
-      caption: this.$t("enable_development_mode").toString(),
+      caption: this.$t("open_editor").toString(),
       variant: bootstrapVariantAttribute("primary"),
       type: "callback",
       callback: () => {
