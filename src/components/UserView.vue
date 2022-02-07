@@ -87,24 +87,24 @@
         </a>
         <br>
         <a
-          v-if="communicationStrings.telegram"
-          :href="communicationStrings.telegram"
+          v-if="settings.communicationLinks.telegram"
+          :href="settings.communicationLinks.telegram"
           target="_blank"
         >
           Telegram
         </a>
         <br>
         <a
-          v-if="communicationStrings.whatsapp"
-          :href="communicationStrings.whatsapp"
+          v-if="settings.communicationLinks.whatsapp"
+          :href="settings.communicationLinks.whatsapp"
           target="_blank"
         >
           WhatsApp
         </a>
         <br>
         <a
-          v-if="communicationStrings.email"
-          :href="'mailto:' + communicationStrings.email"
+          v-if="settings.communicationLinks.email"
+          :href="'mailto:' + settings.communicationLinks.email"
           target="_blank"
         >
           E-mail
@@ -484,6 +484,60 @@ export default class UserView extends Vue {
       },
       type: "callback",
     };
+  }
+
+  private get editViewQuery(): IQuery | null {
+    if (this.state.state === "loading") return null;
+    const args = this.state.state === "show" ? this.state.uv.args : this.state.args;
+    if (args.source.type !== "named") return null;
+
+    return {
+      defaultValues: {},
+      args: {
+        source: {
+          type: "named",
+          ref: {
+            schema: funappSchema,
+            name: "user_view_by_name",
+          },
+        },
+        args: {
+          schema: args.source.ref.schema,
+          name: args.source.ref.name,
+        },
+      },
+      search: "",
+      page: null,
+    };
+  }
+
+  private get enableDeveloperModeButton(): Button | null {
+    if (!this.editViewQuery) return null;
+
+    return {
+      caption: this.$t("enable_development_mode").toString(),
+      variant: bootstrapVariantAttribute("primary"),
+      type: "callback",
+      callback: () => {
+        this.$bvModal.hide(this.$id("business_mode_edit_view"));
+
+        const linkHandlerParams: ILinkHandlerParams = {
+          store: this.$store,
+          goto: target => this.$emit("goto", target),
+          openQRCodeScanner: () => {},
+          link: { query: this.editViewQuery!, target: "modal-auto", type: "query" },
+          replaceInsteadPush: true,
+        };
+        const handler = linkHandler(linkHandlerParams);
+        void handler.handler();
+      },
+    };
+  }
+
+  private get businessModeEditViewText(): string {
+    const common = this.$t("edit_view_modal_text_common").toString();
+    const root = this.userIsRoot ? this.$t("edit_view_modal_text_for_roots").toString() : "";
+    return `${common} ${root}`;
   }
 
   get uvButtons() {
