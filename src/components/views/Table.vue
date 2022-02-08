@@ -1999,10 +1999,11 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private get autofocusColumnIndex(): number | null {
-    let result = this.columnIndexes?.[0];
-    if (!result) return null;
+    if (this.columnIndexes.length === 0) return null;
     const values = this?.uv?.emptyRow?.values;
     if (!values) return null;
+
+    let result = this.columnIndexes[0];
     for (const icol of this.columnIndexes) {
       const column = values[icol];
       if (
