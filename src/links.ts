@@ -255,12 +255,11 @@ export interface ILinkHandler {
   href: string | null;
 }
 
-// TODO: Messy typing, maybe refactor this?
 export interface ILinkHandlerParams {
   store: Store<any>;
   goto: (query: IQuery) => void;
   link: Link;
-  openQRCodeScanner: (name: string, link: Link) => void;
+  openQRCodeScanner: (link: Link) => void;
   replaceInsteadPush?: boolean;
 }
 
@@ -328,7 +327,7 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
     };
   } else if (params.link.type === "qrcode") {
     handler = () => {
-      params.openQRCodeScanner("open-qrcode-scanner", params.link);
+      params.openQRCodeScanner(params.link);
       return Promise.resolve();
     };
   } else if (params.link.type === "document") {

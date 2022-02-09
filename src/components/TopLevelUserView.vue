@@ -233,11 +233,11 @@
         </div>
       </transition>
     </div>
-    <QRCodeScanner
-      v-if="wasOpenedQRCodeScanner"
-      :open-scanner="isOpenQRCodeScanner"
+    <QRCodeScannerModal
+      ref="scanner"
       multi-scan
       :link="currentQRCodeLink"
+      @before-push-root="currentQRCodeLink = null"
     />
   </div>
 </template>
@@ -256,12 +256,13 @@ import ModalUserView from "@/components/ModalUserView.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { CurrentAuth, getAuthedLink, INoAuth } from "@/state/auth";
 import { IQuery, ICurrentQueryHistory } from "@/state/query";
-import { convertToWords, homeLink, nextRender } from "@/utils";
+import { convertToWords, homeLink } from "@/utils";
 import { Link } from "@/links";
 import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { CurrentSettings } from "@/state/settings";
 import { interfaceButtonVariant, defaultVariantAttribute, IThemeRef } from "@/utils_colors";
+import QRCodeScannerModal from "./qrcode/QRCodeScannerModal.vue";
 
 const auth = namespace("auth");
 const staging = namespace("staging");
@@ -273,7 +274,7 @@ const errors = namespace("errors");
   components: {
     ModalUserView,
     ProgressBar,
-    QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
+    QRCodeScannerModal,
     HeaderPanel,
   },
   /* Two hooks below catches only browser navigation buttons,
@@ -333,8 +334,6 @@ export default class TopLevelUserView extends Vue {
     timeoutId: null,
   };
 
-  private wasOpenedQRCodeScanner = false;
-  private isOpenQRCodeScanner = false;
   private currentQRCodeLink: Link | null = null;
 
   private get isSaving(): boolean {
@@ -414,7 +413,6 @@ export default class TopLevelUserView extends Vue {
     // 83 is code for `s`/`ы` key.
     if ((event.ctrlKey || event.metaKey) && (event.key === "s" || event.keyCode === 83)) {
       event.preventDefault();
-
       void this.saveView();
     }
   }
@@ -422,10 +420,7 @@ export default class TopLevelUserView extends Vue {
   private openQRCodeScanner(link: Link | null) {
     if (link !== null) {
       this.currentQRCodeLink = link;
-      this.wasOpenedQRCodeScanner = true;
-      void nextRender().then(() => {
-        this.isOpenQRCodeScanner = !this.isOpenQRCodeScanner;
-      });
+      (this.$refs.scanner as QRCodeScannerModal).scan();
     }
   }
 

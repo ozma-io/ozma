@@ -48,9 +48,9 @@
       />
       <ButtonItem v-if="isCellEdit && qrcodeInput" :button="qrCodeButton" />
     </div>
-    <QRCodeScanner
+    <QRCodeScannerModal
+      ref="scanner"
       raw
-      :open-scanner="openQRCodeScanner"
       @select="updateInput"
     />
   </fragment>
@@ -60,7 +60,7 @@
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { Debounce } from "vue-debounce-decorator";
 import Textarea from "@/components/form/Textarea.vue";
-import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
+import QRCodeScannerModal from "@/components/qrcode/QRCodeScannerModal.vue";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import { Button } from "@/components/buttons/buttons";
 import { findLink } from "@/utils";
@@ -68,7 +68,7 @@ import type { TextLink } from "@/utils";
 import { bootstrapVariantAttribute } from "@/utils_colors";
 
 @Component({
-  components: { Textarea, QRCodeScanner, ButtonItem },
+  components: { Textarea, QRCodeScannerModal, ButtonItem },
 })
 export default class Input extends Vue {
   @Prop() value!: unknown;
@@ -82,7 +82,6 @@ export default class Input extends Vue {
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: String, default: "left" }) textAlign!: string;
 
-  private openQRCodeScanner = false;
   private textLink: TextLink | null = null;
 
   private get qrCodeButton(): Button {
@@ -90,9 +89,7 @@ export default class Input extends Vue {
       type: "callback",
       icon: "qr_code_2",
       variant: bootstrapVariantAttribute("outline-info"),
-      callback: () => {
-        this.openQRCodeScanner = !this.openQRCodeScanner;
-      },
+      callback: () => (this.$refs.scanner as QRCodeScannerModal).scan(),
     };
   }
 

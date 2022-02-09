@@ -107,11 +107,10 @@
         style="border-color: var(--cell-foregroundDarkerColor); border-right-color: transparent;"
       />
     </div>
-    <QRCodeScanner
-      v-if="wasOpenedQRCodeScanner"
+    <QRCodeScannerModal
+      ref="scanner"
       :reference-entity="referenceEntity"
       :entries="entries"
-      :open-scanner="isQRCodeScanner"
       @select="selectFromScanner"
     />
   </span>
@@ -131,11 +130,12 @@ import { IQuery } from "@/state/query";
 import { attrToLinkRef, IAttrToLinkOpts, Link } from "@/links";
 import type { IUserViewArguments } from "@/user_views/combined";
 import { currentValue, homeSchema, ICombinedValue, valueToPunnedText } from "@/user_views/combined";
-import { mapMaybe, NeverError, nextRender } from "@/utils";
+import { mapMaybe, NeverError } from "@/utils";
 import { equalEntityRef, valueIsNull } from "@/values";
 import { CancelledError } from "@/modules";
 import type { EntriesRef } from "@/state/entries";
 import type { ScopeName } from "@/state/staging_changes";
+import QRCodeScannerModal from "./qrcode/QRCodeScannerModal.vue";
 
 export interface IReferenceValue {
   id: RowId;
@@ -161,7 +161,7 @@ const valueIsSingle = (value: ICombinedValue | ICombinedValue[] | null): value i
   components: {
     MultiSelect,
     SelectUserView,
-    QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
+    QRCodeScannerModal,
   },
 })
 export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
@@ -184,14 +184,9 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Prop({ type: Boolean, default: false }) compactMode!: boolean;
 
   private selectedView: IQuery | null = null;
-  private wasOpenedQRCodeScanner = false;
-  private isQRCodeScanner = false;
 
   private openQRCodeScanner() {
-    this.wasOpenedQRCodeScanner = true;
-    void nextRender().then(() => {
-      this.isQRCodeScanner = !this.isQRCodeScanner;
-    });
+    (this.$refs.scanner as QRCodeScannerModal).scan();
   }
 
   @Watch("value", { immediate: true })

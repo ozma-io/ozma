@@ -15,7 +15,8 @@
             "show_argument_editor": "Show filters",
             "hide_argument_editor": "Hide filters",
             "new_mode_no_main": "FOR INSERT INTO clause is required for new entry mode.",
-            "link_to_nowhere": "This user view was a link which didn't replace it, so there's nothing to show.",
+            "invalid_user_view_link": "User view link is invalid.",
+            "user_view_loop": "User view loop is detected.",
             "switch_argument_editor": "Filters"
         },
         "ru": {
@@ -33,7 +34,8 @@
             "show_argument_editor": "Показать фильтры",
             "hide_argument_editor": "Скрыть фильтры",
             "new_mode_no_main": "Для режима создания новой записи должна использоваться конструкция FOR INSERT INTO.",
-            "link_to_nowhere": "Это отображение являлось ссылкой, которая его не заменила. Теперь здесь нечего показать.",
+            "invalid_user_view_link": "Неверная ссылка в представлении.",
+            "user_view_loop": "Обнаружен цикл из ссылок в представлениях.",
             "switch_argument_editor": "Фильтры"
         }
     }
@@ -223,7 +225,7 @@ import type { Button } from "@/components/buttons/buttons";
 import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams } from "@/links";
 import type { ICombinedUserViewAny, IRowLoadState, IUserViewArguments } from "@/user_views/combined";
 import { CombinedUserView } from "@/user_views/combined";
-import { UserViewError, fetchUserViewData } from "@/user_views/fetch";
+import { fetchUserViewData, UserViewError } from "@/user_views/fetch";
 import { baseUserViewHandler } from "@/components/BaseUserView";
 import Errorbox from "@/components/Errorbox.vue";
 import { CurrentSettings } from "@/state/settings";
@@ -248,17 +250,22 @@ const staging = namespace("staging");
 const query = namespace("query");
 const settings = namespace("settings");
 
-interface UserViewComponent {
+interface IUserViewComponent {
   type: "component";
   component: string;
 }
 
-interface UserViewLink {
+interface IUserViewLink {
   type: "link";
   link: Link;
 }
 
-type UserViewType = UserViewComponent | UserViewLink;
+interface IUserViewInvalid {
+  type: "invalid";
+  message: string;
+}
+
+type UserViewType = IUserViewComponent | IUserViewLink | IUserViewInvalid;
 
 const userViewType = (attributes: AttributesMap): UserViewType => {
   const typeAttr = attributes["type"];
@@ -270,6 +277,9 @@ const userViewType = (attributes: AttributesMap): UserViewType => {
     const obj = typeAttr as Record<string, unknown>;
     const link = attrToLink(obj["link"], { defaultTarget: "root" });
     if (link !== null) {
+      if (link.type !== "href" && link.type !== "query") {
+        return { type: "invalid", message: "invalid_user_view_link" };
+      }
       return { type: "link", link };
     }
   }
@@ -305,6 +315,7 @@ const argsAreCompatible = (a: IUserViewArguments, b: IUserViewArguments): boolea
 type UserViewLoadingState = IUserViewShow | IUserViewLoading | IUserViewError;
 
 const maxLevel = 4;
+const maxUserViewRedirects = 3;
 
 export const maxPerFetch = 50;
 export const fetchAllLimit = 5000;
@@ -361,6 +372,7 @@ export default class UserView extends Vue {
   private inhibitReload = false;
   private updatedArguments: Record<ArgumentName, unknown> = {};
   private showArgumentEditor = false;
+  private userViewRedirects = 0;
 
   private destroyed() {
     if (this.state.state === "show") {
@@ -615,6 +627,7 @@ export default class UserView extends Vue {
         };
 
         let uvData = await fetchUserViewData(this.$store, args, opts);
+        if (pending.ref !== this.nextUv) return;
         if (uvData.rows && (limit === undefined || uvData.rows.length < limit)) {
           allFetched = true;
         }
@@ -622,7 +635,6 @@ export default class UserView extends Vue {
         if (newType.type === "component") {
           const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType.component}.vue`)).default;
           // Check we weren't restarted.
-          if (pending.ref !== this.nextUv) return;
 
           const handler = component.handler ?? baseUserViewHandler;
 
@@ -675,25 +687,32 @@ export default class UserView extends Vue {
           this.showArgumentEditor = Boolean(uv.attributes["show_argument_editor"]);
           this.nextUv = null;
         } else if (newType.type === "link") {
+          if (this.userViewRedirects >= maxUserViewRedirects) {
+            this.setState({
+              state: "error",
+              args,
+              message: this.$t("user_view_loop").toString(),
+            });
+            this.nextUv = null;
+            return;
+          }
           const linkHandlerParams: ILinkHandlerParams = {
             store: this.$store,
             goto: target => this.$emit("goto", target),
-            openQRCodeScanner: (name, link) => this.$root.$emit(name, link),
+            openQRCodeScanner: link => this.$root.$emit("open-qrcode-scanner", link),
             link: newType.link,
             replaceInsteadPush: true,
           };
           const handler = linkHandler(linkHandlerParams);
-          await handler.handler();
-          // Because we need router to switch URL.
-          await this.$nextTick();
-          if (pending.ref === this.nextUv) {
-            this.setState({
-              state: "error",
-              args,
-              message: this.$t("link_to_nowhere").toString(),
-            });
-            this.nextUv = null;
-          }
+          this.userViewRedirects++;
+          void handler.handler();
+        } else if (newType.type === "invalid") {
+          this.setState({
+            state: "error",
+            args,
+            message: this.$t(newType.message).toString(),
+          });
+          this.nextUv = null;
         } else {
           throw new NeverError(newType);
         }
@@ -736,6 +755,10 @@ export default class UserView extends Vue {
   }
 
   private setState(state: UserViewLoadingState) {
+    if (state.state !== "loading") {
+      this.userViewRedirects = 0;
+    }
+
     if (state.state === "show"
      && this.state.state === "show"
      && !deepEquals(this.state.uv.args, state.uv.args)
@@ -859,7 +882,7 @@ export default class UserView extends Vue {
           const linkHandlerParams: ILinkHandlerParams = {
             store: this.$store,
             goto: target => this.$emit("goto", target),
-            openQRCodeScanner: (name, qrLink) => this.$root.$emit(name, qrLink),
+            openQRCodeScanner: qrLink => this.$root.$emit("open-qrcode-scanner", qrLink),
             link,
           };
           await linkHandler(linkHandlerParams).handler();
