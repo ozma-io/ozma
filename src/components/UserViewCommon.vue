@@ -9,7 +9,8 @@
             "remove_selected_rows": "Delete selected entries",
             "error": "Error",
             "help_button_caption": "Help page",
-            "contacts": "Support"
+            "contacts": "Support",
+            "help": "Help"
         },
         "ru": {
             "create": "Создать новую запись",
@@ -20,7 +21,8 @@
             "remove_selected_rows": "Удалить выбранные записи",
             "error": "Ошибка",
             "help_button_caption": "Справка",
-            "contacts": "Поддержка"
+            "contacts": "Поддержка",
+            "help": "Помощь"
         }
     }
 </i18n>
