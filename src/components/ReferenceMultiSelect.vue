@@ -120,7 +120,7 @@
 import { Component, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
-import type { IEntityRef, RowId, ValueType } from "ozma-api";
+import type { IEntityRef, RowId, SchemaName, ValueType } from "ozma-api";
 import { Debounce } from "vue-debounce-decorator";
 import { ISelectOption, default as MultiSelect, LoadingResult, LoadingState } from "@/components/multiselect/MultiSelect.vue";
 import { IQRCode, parseQRCode } from "@/components/qrcode/QRCode.vue";
@@ -128,8 +128,7 @@ import BaseEntriesView from "@/components/BaseEntriesView";
 import SelectUserView from "@/components/SelectUserView.vue";
 import { IQuery } from "@/state/query";
 import { attrToLinkRef, IAttrToLinkOpts, Link } from "@/links";
-import type { IUserViewArguments } from "@/user_views/combined";
-import { currentValue, homeSchema, ICombinedValue, valueToPunnedText } from "@/user_views/combined";
+import { currentValue, ICombinedValue, valueToPunnedText } from "@/user_views/combined";
 import { mapMaybe, NeverError } from "@/utils";
 import { equalEntityRef, valueIsNull } from "@/values";
 import { CancelledError } from "@/modules";
@@ -137,7 +136,7 @@ import type { EntriesRef } from "@/state/entries";
 import type { ScopeName } from "@/state/staging_changes";
 import QRCodeScannerModal from "./qrcode/QRCodeScannerModal.vue";
 
-export interface IReferenceValue {
+export interface ICombinedReferenceValue {
   id: RowId;
   link: Link | null;
 }
@@ -147,7 +146,7 @@ export interface IReferenceSelectAction {
   query: IQuery;
 }
 
-export type ReferenceSelectOption = ISelectOption<IReferenceValue>;
+export type ReferenceSelectOption = ISelectOption<ICombinedReferenceValue>;
 
 const compareOptions = (a : ReferenceSelectOption, b : ReferenceSelectOption): number => {
   return a.label.localeCompare(b.label);
@@ -157,6 +156,11 @@ const valueIsSingle = (value: ICombinedValue | ICombinedValue[] | null): value i
   return value !== null && "value" in value;
 };
 
+export interface IReferenceValue {
+  value: number | null;
+  pun?: string | null | undefined;
+}
+
 @Component({
   components: {
     MultiSelect,
@@ -165,7 +169,7 @@ const valueIsSingle = (value: ICombinedValue | ICombinedValue[] | null): value i
   },
 })
 export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
-  @Prop({ required: true }) value!: ICombinedValue | ICombinedValue[] | null;
+  @Prop({ required: true }) value!: IReferenceValue | IReferenceValue[] | null;
   @Prop({ type: Boolean, default: false }) single!: boolean;
   @Prop({ type: Boolean, default: false }) required!: boolean;
   @Prop({ type: Boolean, default: false }) disabled!: boolean;
@@ -175,7 +179,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Prop({ type: Object, required: true }) entries!: EntriesRef;
   @Prop({ type: Object, required: true }) referenceEntity!: IEntityRef;
   @Prop({ type: Array, default: () => [] }) selectViews!: IReferenceSelectAction[];
-  @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
+  @Prop({ type: String }) homeSchema!: SchemaName | undefined;
   @Prop({ type: Object }) linkAttr!: unknown | undefined;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
   @Prop({ type: Boolean, default: false }) loadPunOnMount!: boolean;
@@ -234,8 +238,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   }
 
   get linkOpts(): IAttrToLinkOpts | undefined {
-    const home = homeSchema(this.uvArgs);
-    return home !== null ? { homeSchema: home } : undefined;
+    return this.homeSchema ? { homeSchema: this.homeSchema } : undefined;
   }
 
   private makeOption(id: RowId, pun: string): ReferenceSelectOption {

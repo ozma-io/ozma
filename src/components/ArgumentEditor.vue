@@ -32,18 +32,17 @@
             xl="2"
           >
             <FormControl
-              :value="{ value: argumentValues[argument.name] }"
+              :value="argumentValues[argument.name]"
+              :is-nullable="argument.isOptional"
+              :field-type="argument.type"
               :type="argument.type"
-              :attributes="argument.extra"
+              :attributes="argument.attributes"
               :caption="argument.caption"
               force-multiline
               compact-mode
-              :scope="mockScope"
-              :uv-args="mockUvArgs"
+              :home-schema="homeSchema"
               :level="0"
-              :forced-field-type="argument.type"
-              :forced-is-nullable="argument.isOptional"
-              @update="$emit('update', argument.name, $event)"
+              @update="updateArgument(argument, $event)"
             />
           </b-col>
         </b-row>
@@ -54,37 +53,29 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
-import moment, { MomentInput } from "moment";
 
 import { ArgumentName, AttributesMap, FieldType, IArgument } from "ozma-api";
-import { valueIsNull, valueToText } from "@/values";
+import { valueToText } from "@/values";
+import FormControl from "@/components/FormControl.vue";
 
-const getValue = (parameter: IArgument, value: unknown) => {
-  if (!valueIsNull(value) && (parameter.argType.type === "date" || parameter.argType.type === "datetime")) {
-    return moment(value as MomentInput);
-  }
-  return value;
-};
-
-interface ILocalArgument {
+interface IArgumentInfo {
   name: string;
-  value: any;
   defaultValue: any;
   caption: string;
   type: FieldType;
   isOptional: boolean;
-  extra: AttributesMap;
+  attributes: AttributesMap;
   dirtyHackOrder: number; // Arguments come alphabet-sorted from backend.
 }
 
-@Component
+@Component({ components: { FormControl } })
 export default class ArgumentEditor extends Vue {
   @Prop({ type: Object, required: true }) argumentParams!: Record<ArgumentName, IArgument>;
   @Prop({ type: Object, required: true }) argumentValues!: Record<ArgumentName, unknown>;
+  @Prop({ type: String }) homeSchema!: string | undefined;
 
-  private get args(): ILocalArgument[] {
-    const unsortedArgs: ILocalArgument[] = Object.entries(this.argumentParams).map(([name, parameter]) => {
-      const value = getValue(parameter, this.argumentValues[name]) ?? parameter.defaultValue;
+  private get args(): IArgumentInfo[] {
+    const unsortedArgs: IArgumentInfo[] = Object.entries(this.argumentParams).map(([name, parameter]) => {
       const hasCaption = parameter.attributes["caption"] !== undefined;
       const caption = hasCaption ? valueToText(parameter.attributeTypes["caption"], parameter.attributes["caption"]) : name;
       const type = parameter.argType;
@@ -94,22 +85,23 @@ export default class ArgumentEditor extends Vue {
 
       return {
         name,
-        value,
         defaultValue: parameter.defaultValue,
         caption,
         type,
         isOptional,
         dirtyHackOrder,
-        extra: parameter.attributes,
+        attributes: parameter.attributes,
       };
     }, this.argumentParams);
 
     return unsortedArgs.sort((a, b) => a.dirtyHackOrder - b.dirtyHackOrder);
   }
 
-  private mockScope = "mock_scope";
-
-  private mockUvArgs = { source: { type: "named", ref: { schema: "mock_schema", name: "mock_name" } }, args: {} };
+  private updateArgument(argument: IArgumentInfo, value: unknown) {
+    // Allow to reset arguments.
+    const newValue = argument.isOptional && value === null ? undefined : value;
+    this.$emit("update", argument.name, newValue);
+  }
 }
 </script>
 

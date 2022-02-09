@@ -74,7 +74,6 @@
             :value="roleValue"
             :label="$t('role_label').toString()"
             :reference-entity="roleEntity"
-            :uv-args="mockUvArgs"
             :nullable="true"
             :scope="'no-scope'"
             @update:value="roleValueValue = $event"
@@ -108,8 +107,6 @@ import Input from "@/components/form/Input.vue";
 @Component({ components: { ReferenceField, InputSlot, Input } })
 export default class InviteUserModal extends Vue {
   @Prop({ type: String, required: true }) authToken!: string;
-
-  private mockUvArgs = { source: { type: "named", ref: { schema: "mock_schema", name: "mock_name" } }, args: {} };
 
   private emailValue = "";
 

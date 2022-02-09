@@ -36,7 +36,7 @@
       :modal="$isMobile && (forceModalOnMobile || isMultiline)"
       :required="!isNullable"
       :disabled="isDisabled"
-      :empty="currentValueIsNull"
+      :empty="valueIsNull"
       @close-modal-input="$emit('close-modal-input')"
       @focus="onFocus"
     >
@@ -47,7 +47,7 @@
         />
         <Input
           v-else-if="inputType.name === 'text'"
-          :value="valueFormatted ? valueFormatted : currentValue"
+          :value="valueFormatted ? valueFormatted : value"
           :qrcode-input="isQRCodeInput"
           :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
@@ -63,7 +63,7 @@
         />
         <Textarea
           v-else-if="inputType.name === 'textarea'"
-          :value="currentValue"
+          :value="value"
           :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
           :height="customHeight"
@@ -92,7 +92,7 @@
         <Calendar
           v-else-if="inputType.name === 'calendar'"
           ref="control"
-          :value="currentValue"
+          :value="value"
           :text-value="textValue"
           :autofocus="autofocus || iSlot.autofocus"
           :is-cell-edit="isCellEdit"
@@ -111,7 +111,7 @@
         <ValueSelect
           v-else-if="inputType.name === 'select'"
           ref="control"
-          :value="currentValue"
+          :value="value"
           :label="usedCaption"
           :options="inputType.options"
           :height="customHeight"
@@ -127,7 +127,7 @@
         <ArrayReferenceField
           v-else-if="inputType.name === 'array_select'"
           ref="control"
-          :value="currentValue"
+          :value="value"
           :label="usedCaption"
           :options-view="inputType.optionsView"
           :reference-entity="inputType.entity"
@@ -136,7 +136,7 @@
           :required="!isNullable"
           :disabled="isDisabled"
           :background-color="cellColor"
-          :uv-args="uvArgs"
+          :home-schema="homeSchema"
           :compact-mode="compactMode"
           @update:value="updateValue"
           @popup-opened="iSlot.onFocus"
@@ -173,7 +173,7 @@
           v-else-if="inputType.name === 'check'"
           ref="control"
           type="checkbox"
-          :value="currentValue"
+          :value="value"
           :autofocus="autofocus || iSlot.autofocus"
           :class="['form-control-panel_checkbox',
                    {'form-control-panel_checkbox_req': isAwaited && !disableColor}]"
@@ -185,7 +185,7 @@
         >
         <QRCode
           v-else-if="inputType.name === 'qrcode'"
-          :id="typeof currentValue === 'number' ? currentValue : undefined"
+          :id="typeof value === 'number' ? value : undefined"
           :entity="inputType.ref"
           :height="customHeight"
         />
@@ -205,7 +205,7 @@
           :iframe-ref="inputType.ref"
           :src="inputType.src"
           :srcdoc="inputType.srcdoc"
-          :value="currentValue"
+          :value="value"
           :height="customHeight"
         />
         <div v-else-if="inputType.name === 'static_text'">
@@ -217,13 +217,16 @@
           ref="control"
           :is-cell-edit="isCellEdit"
           :value="value"
+          :pun="pun"
+          :referencing-field="fieldRef"
+          :referencing-row-id="rowId"
           :label="usedCaption"
           :select-views="inputType.selectViews"
           :height="customHeight"
           :reference-entity="fieldType.entity"
           :options-view="inputType.optionsView"
           :link-attr="inputType.linkAttr"
-          :uv-args="uvArgs"
+          :home-schema="homeSchema"
           :autofocus="autofocus || iSlot.autofocus"
           :nullable="isNullable"
           :disabled="isDisabled"
@@ -233,24 +236,6 @@
           :compact-mode="compactMode"
           @update:actions="actions = $event"
           @update:buttons="buttons = $event"
-          @popup-opened="iSlot.onFocus"
-          @popup-closed="onBlur"
-          @update:value="updateValue($event)"
-          @goto="$emit('goto', $event)"
-        />
-        <ArgumentReferenceField
-          v-else-if="inputType.name === 'argument_reference'"
-          ref="control"
-          :value="value"
-          :label="usedCaption"
-          :height="customHeight"
-          :reference-entity="fieldType.entity"
-          :options-view="inputType.optionsView"
-          :uv-args="uvArgs"
-          :autofocus="autofocus || iSlot.autofocus"
-          :nullable="isNullable"
-          :disabled="isDisabled"
-          :compact-mode="compactMode"
           @popup-opened="iSlot.onFocus"
           @popup-closed="onBlur"
           @update:value="updateValue($event)"
@@ -311,7 +296,7 @@
 
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
-import type { AttributesMap, FieldType, IFieldRef, ValueType } from "ozma-api";
+import type { AttributesMap, FieldType, IFieldRef, RowId, ValueType } from "ozma-api";
 import { z } from "zod";
 import { namespace } from "vuex-class";
 
@@ -319,8 +304,6 @@ import { IEntityRef } from "ozma-api";
 import { valueToText, valueIsNull } from "@/values";
 import { IQuery, attrToQuerySelf, attrObjectToQuery } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
-import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
-import { currentValue, homeSchema } from "@/user_views/combined";
 import { AutoSaveLock } from "@/state/staging_changes";
 
 import { colorVariantFromAttribute } from "@/utils_colors";
@@ -398,16 +381,10 @@ interface IArrayReferenceFieldType {
 
 interface IReferenceType {
   name: "reference";
-  ref: IFieldRef;
   optionsView: IQuery | null;
   linkAttr?: unknown;
   selectViews: IReferenceSelectAction[];
   style?: Record<string, unknown>;
-}
-
-interface IArgumentReferenceType {
-  name: "argument_reference";
-  optionsView: IQuery | null;
 }
 
 interface ICheckType {
@@ -458,7 +435,6 @@ export type IType =
   | ISelectType
   | IArrayReferenceFieldType
   | IReferenceType
-  | IArgumentReferenceType
   | ICheckType
   | IUserViewType
   | IEmptyUserViewType
@@ -524,10 +500,6 @@ type IEntityRefSchema = z.infer<typeof entityRefSchema>;
       component: import("@/components/ReferenceField.vue") as any,
       loading: FormInputPlaceholder,
     }),
-    ArgumentReferenceField: () => ({
-      component: import("@/components/ArgumentReferenceField.vue") as any,
-      loading: FormInputPlaceholder,
-    }),
     InputSlot: () => ({
       component: import("@/components/form/InputSlot.vue") as any,
       // InputSlot require different placeholder, otherwise it looks bad, but I don't want to clutter it.
@@ -572,16 +544,21 @@ type IEntityRefSchema = z.infer<typeof entityRefSchema>;
 })
 export default class FormControl extends Vue {
   @Prop({ type: Object, required: true }) type!: ValueType; // this.uv.info.columns[x].valueType
-  @Prop({ type: Object, required: true }) value!: ICombinedValue; // this.local.getValueByRef, or other value
+  @Prop() value!: unknown;
+  @Prop({ type: String }) pun!: string | undefined;
+  @Prop({ type: Boolean, default: false }) isNullable!: boolean;
+  @Prop({ type: Object }) fieldRef!: IFieldRef | undefined;
+  @Prop({ type: Object }) fieldType!: FieldType | undefined;
+  @Prop({ type: Number }) rowId!: RowId | undefined;
   @Prop({ type: Object, default: () => ({}) }) attributes!: AttributesMap; // {...this.uv.attributes, ...this.uv.columnAttributes[x], ...row.attributes, ...value.attributes}
   @Prop({ type: Boolean, default: false }) locked!: boolean;
-  @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments; // this.uv.args
+  @Prop({ type: String }) homeSchema!: string | undefined;
   @Prop({ type: String, default: "" }) caption!: string;
   @Prop({ type: Boolean, default: false }) forceCaption!: boolean;
   @Prop({ type: Boolean, default: false }) forceMultiline!: boolean;
   @Prop({ type: Boolean, default: false }) compactMode!: boolean;
   @Prop({ type: Boolean, default: false }) disableColor!: boolean;
-  @Prop({ type: String, required: true }) scope!: string; // this.scope
+  @Prop({ type: String }) scope!: string | undefined; // this.scope
   @Prop({ type: Number, required: true }) level!: number; // this.level
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   // Whether to only use modal, if applicable.
@@ -590,9 +567,7 @@ export default class FormControl extends Vue {
   // FIXME: maybe we can get rid of this?
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
-  @Prop({ type: Object, required: false }) forcedFieldType!: FieldType | undefined;
-  @Prop({ type: Boolean, default: null }) forcedIsNullable!: boolean | null;
-  @Prop() valueFormatted!: string | undefined; // Bigger priority than `currentValue` if defined.
+  @Prop({ type: String }) valueFormatted!: string | undefined; // Bigger priority than `value` if defined.
   @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
   @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
 
@@ -603,32 +578,23 @@ export default class FormControl extends Vue {
   private isUserViewLoading = false;
   private autoSaveLock: AutoSaveLock | null = null;
 
-  get isNullable() {
-    return this.forcedIsNullable ?? (this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable);
-  }
-
-  // Current value, can be a raw value (e.g., a string for a `datetime` value) or a validated value.
-  get currentValue() {
-    return currentValue(this.value);
-  }
-
-  get currentValueIsNull() {
-    return valueIsNull(this.currentValue);
+  get valueIsNull() {
+    return valueIsNull(this.value);
   }
 
   get isAwaited() {
     // We use `value.value` here to highlight unvalidated values.
-    return !this.isNullable && valueIsNull(this.value.value);
+    return !this.isNullable && valueIsNull(this.value);
   }
 
   get isDisabled() {
     const softDisabled = Boolean(this.attributes["soft_disabled"]);
-    return softDisabled || this.locked || this.value.info === undefined || this.value.info.field === null;
+    return softDisabled || this.locked;
   }
 
-  // Textual representation of `currentValue`.
+  // Textual representation of `value`.
   get textValue() {
-    return valueToText(this.type, this.currentValue);
+    return valueToText(this.type, this.value);
   }
 
   get isMultiline() {
@@ -698,21 +664,18 @@ export default class FormControl extends Vue {
     return { height };
   }
 
-  get fieldType() {
-    return this.forcedFieldType ?? this.value.info?.field?.fieldType ?? null;
-  }
-
   get inputType(): IType {
-    const home = homeSchema(this.uvArgs);
-    const linkOpts = home !== null ? { homeSchema: home } : undefined;
+    const linkOpts = this.homeSchema ? { homeSchema: this.homeSchema } : undefined;
+
+    const idInfo = this.rowId ? { id: this.rowId } : undefined;
 
     const controlAttr = String(this.attributes["control"]);
     if (controlAttr === "user_view") {
-      if (this.currentValue === null || this.currentValue === undefined) {
+      if (valueIsNull(this.value)) {
         return { name: "empty_user_view" };
       }
 
-      const nestedRef = attrToQuerySelf(this.currentValue, this.value.info, linkOpts);
+      const nestedRef = attrToQuerySelf(this.value, idInfo, linkOpts);
 
       if (nestedRef === null) {
         return { name: "error", text: this.$t("invalid_uv").toString() };
@@ -724,7 +687,7 @@ export default class FormControl extends Vue {
     } else if (controlAttr === "static_image") {
       return { name: "static_image" };
     } else if (controlAttr === "buttons") {
-      const buttons = attrToButtons(this.currentValue);
+      const buttons = attrToButtons(this.value);
       return { name: "buttons", buttons };
     }
     // `calc` is needed because sizes should be relative to base font size.
@@ -732,9 +695,9 @@ export default class FormControl extends Vue {
     const heightCodeEditor = "var(--editor-height, 10rem)";
 
     // FIXME: return proper type from backend instead.
-    if (this.value.info?.fieldRef.name === "id") {
+    if (this.fieldRef?.name === "id") {
       if (controlAttr === "qrcode") {
-        return { name: "qrcode", ref: this.value.info.fieldRef.entity };
+        return { name: "qrcode", ref: this.fieldRef.entity };
       }
 
       if (controlAttr === "barcode") {
@@ -764,7 +727,7 @@ export default class FormControl extends Vue {
     const booleanOptions = [{ label: this.$t("yes").toString(), value: true }, { label: this.$t("no").toString(), value: false }];
     const booleanNullableOptions = [...booleanOptions, { label: this.$t("boolean_null").toString(), value: null }];
 
-    if (this.fieldType !== null) {
+    if (this.fieldType) {
       switch (this.fieldType.type) {
         case "reference": {
           if (controlAttr === "qrcode") {
@@ -779,20 +742,16 @@ export default class FormControl extends Vue {
           const optionsView = attrObjectToQuery(this.attributes["options_view"])
             ?? attrObjectToQuery(this.attributes["entries_view"])
             ?? attrObjectToQuery(this.attributes["constraint_view"]);
-          if (this.value.info === undefined) {
-            return { name: "argument_reference", optionsView };
-          }
 
           const refEntry: IReferenceType = {
             name: "reference",
-            ref: this.value.info.fieldRef,
             optionsView,
             selectViews: [],
           };
           refEntry.linkAttr = this.attributes["link"];
           refEntry.style = this.controlStyle();
 
-          const selectView = attrToQuerySelf(this.attributes["select_view"], this.value.info, linkOpts);
+          const selectView = attrToQuerySelf(this.attributes["select_view"], idInfo, linkOpts);
           if (selectView !== null) {
             refEntry.selectViews.push({
               name: this.$t("select_view").toString(),
@@ -803,7 +762,7 @@ export default class FormControl extends Vue {
           if (Array.isArray(extraActions)) {
             extraActions.forEach(action => {
               if (typeof action === "object" && action.name) {
-                const querySelf = attrToQuerySelf(action, this.value.info, linkOpts);
+                const querySelf = attrToQuerySelf(action, idInfo, linkOpts);
                 if (querySelf) {
                   refEntry.selectViews.push({
                     name: String(action.name),
@@ -938,7 +897,7 @@ export default class FormControl extends Vue {
   }
 
   private updateValue(newValue: unknown) {
-    if (this.currentValue !== newValue) {
+    if (this.value !== newValue) {
       this.$emit("update", newValue);
     }
 

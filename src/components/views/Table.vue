@@ -74,13 +74,13 @@
       :height="editParams.height"
       :coords="editCellCoords"
     >
-      <FormControl
+      <FormValueControl
         :value="editingValue.value"
         :attributes="editingValue.attributes"
         :type="editingValue.type"
         :locked="editingLocked"
         :disable-color="editing.ref.type === 'new'"
-        :uv-args="uv.args"
+        :home-schema="uv.homeSchema"
         :scope="scope"
         :level="level"
         caption=""
@@ -352,6 +352,7 @@ import { interfaceButtonVariant, defaultVariantAttribute } from "@/utils_colors"
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import ButtonList from "@/components/buttons/ButtonList.vue";
 import { Button } from "@/components/buttons/buttons";
+import FormValueControl from "@/components/FormValueControl";
 
 export interface IColumn {
   caption: string;
@@ -973,7 +974,7 @@ const plainTextStringify = (table: string[][]): string => {
 })
 @Component({
   components: {
-    TableRow, Checkbox, TableCellEdit, InfiniteLoading, ButtonItem, ButtonList, Popper,
+    TableRow, Checkbox, TableCellEdit, InfiniteLoading, ButtonItem, ButtonList, Popper, FormValueControl,
   },
 })
 export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra, ITableRowExtra, ITableViewExtra>>(BaseUserView) {

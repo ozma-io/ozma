@@ -1,6 +1,6 @@
 <template>
   <span>
-    <FormControl
+    <FormValueControl
       v-if="visible"
       :caption="element.caption"
       :force-caption="element.forceCaption"
@@ -10,7 +10,7 @@
       :attributes="attributes"
       :type="element.columnInfo.valueType"
       :locked="locked || softDisabled"
-      :uv-args="uv.args"
+      :home-schema="uv.homeSchema"
       :scope="scope"
       :level="level"
       :autofocus="element.autofocus"
@@ -26,8 +26,9 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import { getNumberFormatter, isValidNumberFormat } from "@/utils";
 import type { IElementField, IFormCombinedUserView, IFormExtendedRowCommon } from "../Form.vue";
 import type { ICombinedValue } from "@/user_views/combined";
+import FormValueControl from "@/components/FormValueControl";
 
-@Component
+@Component({ components: { FormValueControl } })
 export default class FormField extends Vue {
   @Prop({ type: Object, required: true }) uv!: IFormCombinedUserView;
   @Prop({ type: Object, required: true }) row!: IFormExtendedRowCommon;

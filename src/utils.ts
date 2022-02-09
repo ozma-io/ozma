@@ -401,7 +401,7 @@ export const debugLogTrace = <H, T extends any[]>(message?: H, ...optionalParams
   console.trace(...args);
 };
 
-export const vueEmit = <T extends any[]>(context: RenderContext, name: string, ...args: T) => {
+export const vueEmit = <T extends unknown[]>(context: RenderContext, name: string, ...args: T) => {
   const listener = context.listeners[name];
   if (listener instanceof Array) {
     listener.forEach(handler => handler(...args));

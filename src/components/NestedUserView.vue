@@ -20,7 +20,7 @@ import { convertToWords } from "@/utils";
 @Component
 export default class NestedUserView extends Vue {
   @Prop({ type: Object, required: true }) args!: Record<string, unknown>;
-  @Prop({ type: String, required: true }) scope!: string;
+  @Prop({ type: String, default: "no_scope" }) scope!: string;
   @Prop({ type: Number, required: true }) level!: number;
   @Prop({ type: String, required: true }) filterString!: string;
   @Prop({ type: Object, required: true }) defaultValues!: Record<string, unknown>;

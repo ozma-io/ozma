@@ -19,7 +19,7 @@
       :link-attr="linkAttr"
       :entries="entriesRef"
       :reference-entity="reference.referenceEntity"
-      :uv-args="uv.args"
+      :home-schema="uv.homeSchema"
       @add-value="addValue"
       @remove-index="removeIndex"
       @goto="$emit('goto', $event)"

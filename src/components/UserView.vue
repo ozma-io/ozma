@@ -82,8 +82,8 @@
       <transition name="fade-move">
         <ArgumentEditor
           v-if="argumentEditorVisible"
-          ref="argumentEditor"
           class="userview-argument-editor"
+          :home-schema="state.uv.homeSchema"
           :argument-params="state.uv.info.arguments"
           :argument-values="currentArguments"
           @reset="resetUpdatedArguments"
@@ -505,7 +505,11 @@ export default class UserView extends Vue {
   }
 
   private updateArgument(name: ArgumentName, value: unknown) {
-    Vue.set(this.updatedArguments, name, value);
+    if (value === undefined) {
+      Vue.delete(this.updatedArguments, name);
+    } else {
+      Vue.set(this.updatedArguments, name, value);
+    }
   }
 
   private async reloadIfRoot(autoSaved?: boolean) {

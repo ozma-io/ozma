@@ -1,10 +1,10 @@
 import { Module } from "vuex";
 import { Location, Route } from "vue-router";
-import { UserViewSource, SchemaName, IUserViewRef } from "ozma-api";
+import { UserViewSource, SchemaName, IUserViewRef, RowId } from "ozma-api";
 
 import { deepSyncObject, mapMaybe, deepClone } from "@/utils";
 import { router } from "@/modules";
-import { IUserViewArguments, IValueInfo } from "@/user_views/combined";
+import { IUserViewArguments } from "@/user_views/combined";
 
 export interface IQuery {
   args: IUserViewArguments;
@@ -119,8 +119,12 @@ export const addQueryDefaultArgs = (query: IQuery, args: Record<string, unknown>
   }
 };
 
+export interface IIdInfo {
+  id?: RowId;
+}
+
 // Set 'id' argument to the value id.
-export const selfIdArgs = (update: IValueInfo | undefined): Record<string, unknown> => {
+export const selfIdArgs = (update: IIdInfo | undefined): Record<string, unknown> => {
   return update ? { id: update.id } : {};
 };
 
@@ -131,7 +135,7 @@ export const refIdArgs = (value: unknown): Record<string, unknown> => {
 };
 
 // Set 'id' argument to the value id.
-export const attrToQuerySelf = (linkedAttr: unknown, update?: IValueInfo, opts?: IAttrToQueryOpts): IQuery | null => {
+export const attrToQuerySelf = (linkedAttr: unknown, update?: IIdInfo, opts?: IAttrToQueryOpts): IQuery | null => {
   const ret = attrToQuery(linkedAttr, opts);
   if (ret !== null) {
     addQueryDefaultArgs(ret, selfIdArgs(update));
