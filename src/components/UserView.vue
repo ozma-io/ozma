@@ -211,10 +211,10 @@ import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { ArgumentName, AttributesMap, IEntityRef, IEntriesRequestOpts } from "ozma-api";
 
-import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, NeverError } from "@/utils";
+import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, NeverError, mapMaybe } from "@/utils";
 import { defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
 import { funappSchema } from "@/api";
-import { equalEntityRef } from "@/values";
+import { equalEntityRef, serializeValue, valueFromRaw } from "@/values";
 import { AddedRowId, ICombinedInsertEntityResult, IStagingEventHandler, ISubmitResult, StagingKey } from "@/state/staging_changes";
 import type { ScopeName } from "@/state/staging_changes";
 import { ICurrentQueryHistory, IQuery } from "@/state/query";
@@ -476,11 +476,28 @@ export default class UserView extends Vue {
     this.$emit("update:buttons", this.allButtons);
   }
 
-  get currentArguments() {
-    if (this.args.args === null) {
+  get initialArguments() {
+    if (this.state.state !== "show") {
       return null;
     } else {
-      return { ...this.args.args, ...this.updatedArguments };
+      const uv = this.state.uv;
+      if (uv.args.args === null) {
+        return null;
+      } else {
+        return Object.fromEntries(Object.entries(uv.args.args).map(([name, rawValue]) => {
+          const argInfo = uv.info.arguments[name];
+          const value = valueFromRaw({ fieldType: argInfo.argType, isNullable: argInfo.optional }, rawValue);
+          return [name, value];
+        }));
+      }
+    }
+  }
+
+  get currentArguments() {
+    if (this.initialArguments === null) {
+      return null;
+    } else {
+      return { ...this.initialArguments, ...this.updatedArguments };
     }
   }
 
@@ -490,17 +507,28 @@ export default class UserView extends Vue {
   }
 
   private applyUpdatedArguments() {
+    const args = Object.fromEntries(mapMaybe(([name, value]) => {
+      if (value === undefined) {
+        return undefined;
+      } else {
+        if (this.state.state !== "show") {
+          throw new Error("Unexpected state");
+        }
+        const argInfo = this.state.uv.info.arguments[name];
+        const serialized = serializeValue(argInfo.argType, value);
+        return [name, serialized];
+      }
+    }, Object.entries(this.currentArguments!)));
     // TODO: In nested views this opens view in fullscreen, it's not good, but not such frequent case either, I suppose.
     const linkQuery: IQuery = {
       args: {
         source: this.args.source,
-        args: this.currentArguments,
+        args,
       },
       defaultValues: {},
       search: "",
       page: null,
     };
-    this.updatedArguments = {};
     this.$emit("goto", linkQuery);
   }
 
@@ -769,6 +797,7 @@ export default class UserView extends Vue {
     this.destroyCurrentUserView();
     this.state = state;
     if (state.state === "show") {
+      this.updatedArguments = {};
       this.setStagingHandler({
         key: this.uid,
         handler: state.uv,

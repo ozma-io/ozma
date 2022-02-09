@@ -34,8 +34,8 @@
             <FormControl
               :value="argumentValues[argument.name] ?? null"
               :is-nullable="argument.isOptional"
-              :field-type="argument.type"
-              :type="argument.type"
+              :field-type="argument.fieldType"
+              :type="argument.valueType"
               :attributes="argument.attributes"
               :caption="argument.caption"
               force-multiline
@@ -54,15 +54,16 @@
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 
-import { ArgumentName, AttributesMap, FieldType, IArgument } from "ozma-api";
-import { valueFromRaw, valueToText } from "@/values";
+import { ArgumentName, AttributesMap, FieldType, IArgument, ValueType } from "ozma-api";
+import { fieldToValueType, valueFromRaw, valueToText } from "@/values";
 import FormControl from "@/components/FormControl.vue";
 
 interface IArgumentInfo {
   name: ArgumentName;
   defaultValue: any;
   caption: string;
-  type: FieldType;
+  fieldType: FieldType;
+  valueType: ValueType;
   isOptional: boolean;
   attributes: AttributesMap;
   dirtyHackOrder: number; // Arguments come alphabet-sorted from backend.
@@ -87,7 +88,8 @@ export default class ArgumentEditor extends Vue {
         name,
         defaultValue: parameter.defaultValue,
         caption,
-        type,
+        fieldType: type,
+        valueType: fieldToValueType(type),
         isOptional,
         dirtyHackOrder,
         attributes: parameter.attributes,
@@ -98,12 +100,12 @@ export default class ArgumentEditor extends Vue {
   }
 
   private updateArgument(argument: IArgumentInfo, rawValue: unknown) {
-    const value = valueFromRaw({ fieldType: argument.type, isNullable: argument.isOptional }, rawValue);
+    const value = valueFromRaw({ fieldType: argument.fieldType, isNullable: argument.isOptional }, rawValue);
     if (value === undefined) {
       return;
     }
     // Allow to reset arguments.
-    const newValue = argument.isOptional && value === null ? undefined : value;
+    const newValue = argument.isOptional && rawValue === null ? undefined : rawValue;
     this.$emit("update", argument.name, newValue);
   }
 }
