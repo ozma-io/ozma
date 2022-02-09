@@ -543,6 +543,9 @@ type IEntityRefSchema = z.infer<typeof entityRefSchema>;
   },
 })
 export default class FormControl extends Vue {
+  @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
+  @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
+
   @Prop({ type: Object, required: true }) type!: ValueType; // this.uv.info.columns[x].valueType
   @Prop() value!: unknown;
   @Prop({ type: String }) pun!: string | undefined;
@@ -568,8 +571,6 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
   @Prop({ type: String }) valueFormatted!: string | undefined; // Bigger priority than `value` if defined.
-  @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
-  @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
 
   private buttons: Button[] = [];
   private filterString = "";
