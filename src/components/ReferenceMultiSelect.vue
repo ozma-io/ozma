@@ -158,7 +158,7 @@ const valueIsSingle = (value: ICombinedValue | ICombinedValue[] | null): value i
 
 export interface IReferenceValue {
   value: number | null;
-  pun?: string | null | undefined;
+  pun?: string | null;
 }
 
 @Component({
@@ -182,7 +182,6 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Prop({ type: String }) homeSchema!: SchemaName | undefined;
   @Prop({ type: Object }) linkAttr!: unknown | undefined;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
-  @Prop({ type: Boolean, default: false }) loadPunOnMount!: boolean;
   @Prop({ type: String, default: "no_scope" }) scope!: ScopeName;
   @Prop({ type: String, default: null }) label!: string | null;
   @Prop({ type: Boolean, default: false }) compactMode!: boolean;
@@ -196,8 +195,6 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Watch("value", { immediate: true })
   // TODO: Possible unnecessary requests there, check this.
   private loadPun() {
-    if (!this.loadPunOnMount) return;
-
     if (this.single) {
       const value = this.value as ICombinedValue;
       if (value.pun || typeof value.value !== "number") return;

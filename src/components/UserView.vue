@@ -505,11 +505,7 @@ export default class UserView extends Vue {
   }
 
   private updateArgument(name: ArgumentName, value: unknown) {
-    if (value === undefined) {
-      Vue.delete(this.updatedArguments, name);
-    } else {
-      Vue.set(this.updatedArguments, name, value);
-    }
+    Vue.set(this.updatedArguments, name, value);
   }
 
   private async reloadIfRoot(autoSaved?: boolean) {
@@ -825,7 +821,7 @@ export default class UserView extends Vue {
   }
 
   private get argumentEditorHasUpdatedValues() {
-    return Object.entries(this.updatedArguments).length > 0;
+    return Object.entries(this.updatedArguments).length > 0 && this.state.state !== "loading";
   }
 
   private get argumentEditorVisible() {

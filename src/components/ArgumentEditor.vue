@@ -32,7 +32,7 @@
             xl="2"
           >
             <FormControl
-              :value="argumentValues[argument.name]"
+              :value="argumentValues[argument.name] ?? null"
               :is-nullable="argument.isOptional"
               :field-type="argument.type"
               :type="argument.type"
@@ -55,11 +55,11 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 
 import { ArgumentName, AttributesMap, FieldType, IArgument } from "ozma-api";
-import { valueToText } from "@/values";
+import { valueFromRaw, valueToText } from "@/values";
 import FormControl from "@/components/FormControl.vue";
 
 interface IArgumentInfo {
-  name: string;
+  name: ArgumentName;
   defaultValue: any;
   caption: string;
   type: FieldType;
@@ -97,7 +97,11 @@ export default class ArgumentEditor extends Vue {
     return unsortedArgs.sort((a, b) => a.dirtyHackOrder - b.dirtyHackOrder);
   }
 
-  private updateArgument(argument: IArgumentInfo, value: unknown) {
+  private updateArgument(argument: IArgumentInfo, rawValue: unknown) {
+    const value = valueFromRaw({ fieldType: argument.type, isNullable: argument.isOptional }, rawValue);
+    if (value === undefined) {
+      return;
+    }
     // Allow to reset arguments.
     const newValue = argument.isOptional && value === null ? undefined : value;
     this.$emit("update", argument.name, newValue);
