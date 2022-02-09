@@ -243,7 +243,7 @@
         />
       </template>
     </InputSlot>
-    <div v-else :class="['nested-user_view', { 'mobile': $isMobile }]">
+    <div v-else :class="['nested-userview', { 'mobile': $isMobile }]">
       <div v-if="inputType.name == 'empty_user_view'">
         <div class="nested-menu">
           <!-- `tabindex` is required for closing tooltip on blur -->
