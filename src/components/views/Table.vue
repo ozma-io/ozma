@@ -68,7 +68,7 @@
   >
     <TableCellEdit
       v-if="editingValue"
-      v-click-outside="clickOutsideEdit"
+      v-click-outside="removeCellEditing"
       :width="editParams.width"
       :min-height="editParams.minHeight"
       :height="editParams.height"
@@ -2164,12 +2164,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       }
       this.sortRows();
     }
-  }
-
-  private clickOutsideEdit(event: Event) {
-    const element = (event instanceof MouseEvent) ? document.elementFromPoint(event.x, event.y) : null;
-    // Fix for case when some cell is being edited anbug
-    this.removeCellEditing();
   }
 
   private removeCellEditing() {

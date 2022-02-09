@@ -31,7 +31,7 @@
       :label="usedCaption"
       :smaller-label="forceMultiline"
       :background-color="cellColor"
-      :color-variant-attribute="colorVarinatAttribute"
+      :color-variant-attribute="colorVariantAttribute"
       :text-align="textAlign"
       :modal="$isMobile && (forceModalOnMobile || isMultiline)"
       :required="!isNullable"
@@ -641,7 +641,7 @@ export default class FormControl extends Vue {
     else return null;
   }
 
-  private get colorVarinatAttribute(): ColorVariantAttribute {
+  private get colorVariantAttribute(): ColorVariantAttribute {
     if (this.attributes["cell_variant"]) {
       return colorVariantFromAttribute(this.attributes["cell_variant"]);
     } else if (this.cellColor) {
