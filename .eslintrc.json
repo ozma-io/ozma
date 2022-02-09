@@ -75,6 +75,7 @@
       "allowAllPropertiesOnSameLine": true
     }],
     "eqeqeq": "error",
+    "global-require": "off",
     "import/first": "off",
     "import/no-unresolved": "off",
     "import/no-extraneous-dependencies": "off",
