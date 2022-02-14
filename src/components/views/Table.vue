@@ -1637,11 +1637,11 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return Boolean(this.uv.attributes["soft_disabled"]);
   }
 
-  @Watch("softDisabled", { immediate: true })
+  @Watch("uv.info.mainEntity", { immediate: true })
   private async updateShowAddRowButtons() {
     this.showAddRowButtons = false;
 
-    if (!this.uv.info.mainEntity || this.softDisabled || this.dirtyHackPreventEntireReloads) return;
+    if (!this.uv.info.mainEntity) return;
 
     const entity = await this.getEntity(this.uv.info.mainEntity);
     this.showAddRowButtons = entity?.access.insert ?? false;

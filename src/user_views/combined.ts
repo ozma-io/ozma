@@ -425,12 +425,17 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     this.store = params.store;
     this.handler = params.handler;
     this.args = params.args;
-    this.info = params.info;
     this.attributes = params.attributes;
     this.columnAttributes = params.columnAttributes;
     this.homeSchema = homeSchema(this.args);
     this.oldCommittedRows = {};
     this.rowLoadState = params.rowLoadState;
+
+    if (this.attributes["disable_insert"]) {
+      // FIXME: when FOR UPDATE is implemented, set `insertable` to false instead.
+      params.info.mainEntity = undefined;
+    }
+    this.info = params.info;
 
     this.entries = {};
     if (oldLocal) {
