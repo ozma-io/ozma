@@ -374,15 +374,24 @@ export default class UserView extends Vue {
   private showArgumentEditor = false;
   private userViewRedirects = 0;
 
-  private destroyed() {
+  protected created() {
+    this.setReloadHandler({
+      key: this.uid,
+      handler: () => {
+        if (!this.inhibitReload) {
+          void this.reload();
+        }
+      },
+    });
+  }
+
+  destroyed() {
     if (this.state.state === "show") {
       void this.resetAllAddedEntries(this.state.uv);
       this.removeStagingHandler(this.uid);
     }
-    this.destroyCurrentUserView();
-    if (this.isRoot) {
-      this.removeReloadHandler(this.uid);
-    }
+    this.removeReloadHandler(this.uid);
+    // Stop pending operations.
     this.nextUv = null;
   }
 
@@ -543,22 +552,6 @@ export default class UserView extends Vue {
   private async reloadIfRoot(autoSaved?: boolean) {
     if (this.isRoot) {
       await this.reload({ autoSaved });
-    }
-  }
-
-  @Watch("isRoot", { immediate: true })
-  private handleReloadIfRoot(isRoot: boolean) {
-    if (isRoot) {
-      this.setReloadHandler({
-        key: this.uid,
-        handler: () => {
-          if (!this.inhibitReload) {
-            void this.reload();
-          }
-        },
-      });
-    } else {
-      this.removeReloadHandler(this.uid);
     }
   }
 
@@ -842,7 +835,7 @@ export default class UserView extends Vue {
   }
 
   @Watch("state.state", { immediate: true })
-  updateIsLoading(newValue: string, oldValue: string) {
+  updateIsLoading(newValue: string, oldValue: string | undefined) {
     if (newValue === oldValue) return;
 
     this.$emit("update:is-loading", newValue === "loading");
