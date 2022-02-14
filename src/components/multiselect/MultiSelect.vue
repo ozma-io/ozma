@@ -468,7 +468,7 @@ export default class MultiSelect extends Vue {
 
   @Watch("autofocus", { immediate: true })
   private onAutofocus() {
-    if (this.autofocus) {
+    if (this.autofocus && !this.disabled) {
       this.showPopup = true;
     }
   }
