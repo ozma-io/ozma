@@ -30,11 +30,11 @@
         'disabled-cell': value.info === undefined && from !== 'existing'
       }
     ]"
-    @click.stop="$emit('cell-click', columnIndex, $refs.cell, $event)"
-    @mousedown.stop="$emit('cell-mousedown', columnIndex, $refs.cell, $event)"
-    @mouseover.stop="$emit('cell-mouseover', columnIndex, $refs.cell, $event)"
-    @mouseup.stop="$emit('cell-mouseup', columnIndex, $refs.cell, $event)"
-    @contextmenu.prevent="$emit('cell-contextmenu', columnIndex, $refs.cell, $event)"
+    @click.stop="$emit('cell-click', $refs.cell, $event)"
+    @mousedown.stop="$emit('cell-mousedown', $refs.cell, $event)"
+    @mouseover.stop="$emit('cell-mouseover', $refs.cell, $event)"
+    @mouseup.stop="$emit('cell-mouseup', $refs.cell, $event)"
+    @contextmenu.prevent="$emit('cell-contextmenu', $refs.cell, $event)"
   >
     <div v-if="value.extra.selected" class="selection-overlay" />
     <p class="default-variant">
@@ -300,10 +300,6 @@ export default class TableCell extends Vue {
     }
 
     return style;
-  }
-
-  mounted() {
-    this.value.extra.htmlElement = this.$refs.cell as HTMLElement;
   }
 }
 </script>

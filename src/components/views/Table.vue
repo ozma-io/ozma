@@ -255,6 +255,7 @@
           <TableRow
             v-for="(row, rowIndex) in shownRows"
             :key="row.key"
+            ref="rows"
             :class="{
               'last-top-new': row.notExisting && rowIndex + 1 < shownRows.length && !shownRows[rowIndex + 1].notExisting,
               'first-bottom-new': row.notExisting && rowIndex - 1 > 0 && !shownRows[rowIndex - 1].notExisting,
@@ -269,13 +270,12 @@
             :not-existing="row.notExisting"
             :show-link-column="showLinkColumn"
             :show-selection-column="showSelectionColumn"
-            :row-index="rowIndex"
             @select="selectTableRow(rowIndex, $event)"
-            @cell-click="clickCell({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
-            @cell-mousedown="startCellSelection({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
-            @cell-mouseover="continueCellSelection({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
-            @cell-mouseup="endCellSelection({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
-            @cell-contextmenu="openCellContextMenu({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
+            @cell-click="clickCell({ row: rowIndex, column: arguments[0] }, arguments[1], arguments[2])"
+            @cell-mousedown="startCellSelection({ row: rowIndex, column: arguments[0] }, arguments[1], arguments[2])"
+            @cell-mouseover="continueCellSelection({ row: rowIndex, column: arguments[0] }, arguments[1], arguments[2])"
+            @cell-mouseup="endCellSelection({ row: rowIndex, column: arguments[0] }, arguments[1], arguments[2])"
+            @cell-contextmenu="openCellContextMenu({ row: rowIndex, column: arguments[0] }, arguments[1], arguments[2])"
             @toggle-children="toggleChildren(row.ref, $event)"
             @add-child="addChild(row.ref)"
             @goto="$emit('goto', $event)"
@@ -353,6 +353,7 @@ import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import ButtonList from "@/components/buttons/ButtonList.vue";
 import { Button } from "@/components/buttons/buttons";
 import FormValueControl from "@/components/FormValueControl";
+import type TableCell from "./table/TableCell.vue";
 
 export interface IColumn {
   caption: string;
@@ -368,7 +369,6 @@ export interface IColumn {
 export interface ITableValueExtra extends IBaseValueExtra {
   // If an extra value is only needed during render, define it as a computed property instead.
   selected: boolean | "cursor";
-  htmlElement: HTMLElement | null;
 }
 
 export interface ITableRowTree {
@@ -416,10 +416,14 @@ export interface ITableViewExtra extends IBaseViewExtra {
   sortOptions: Intl.CollatorOptions;
 }
 
-export interface VisualPosition {
+export interface IVisualPosition {
   column: number;
   row: number;
 }
+
+const equalVisualPosition = (a: IVisualPosition, b: IVisualPosition): boolean => {
+  return a.column === b.column && a.row === b.row;
+};
 
 const showStep = 15;
 const doubleClickTime = 700;
@@ -629,7 +633,6 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     return {
       ...baseExtra,
       selected,
-      htmlElement: null,
     };
   },
 
@@ -660,7 +663,6 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     return {
       ...baseExtra,
       selected,
-      htmlElement: null,
       link: null,
     };
   },
@@ -690,7 +692,6 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     return {
       ...baseExtra,
       selected,
-      htmlElement: null,
       link: null,
     };
   },
@@ -988,7 +989,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   currentFilter: string[] = [];
   rowPositions: CommittedRowRef[] = [];
   lastSelectedRow: number | null = null;
-  lastSelectedValue: ValueRef | null = null;
+  lastSelectedValue: IVisualPosition | null = null;
   editing: ITableEditing | null = null;
   printListener: { query: MediaQueryList; queryCallback: (mql: MediaQueryListEvent) => void; printCallback: () => void } | null = null;
   clickTimeoutId: NodeJS.Timeout | null = null;
@@ -1006,7 +1007,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   columnDelta = 0;
 
   cellContextMenu: CellContextMenuData | null = null;
-  cellSelectionStartCell: ValueRef | null = null;
+  cellSelectionStartCell: IVisualPosition | null = null;
 
   get columns() {
     const viewAttrs = this.uv.attributes;
@@ -1118,7 +1119,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private get keymap() {
+  get keymap() {
     return {
       "enter": () => this.onPressEnter(),
       /* "tab": () => this.onPressTab(), */
@@ -1139,7 +1140,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     };
   }
 
-  private get firstPageButton(): Button | null {
+  get firstPageButton(): Button | null {
     if (this.uv.extra.lazyLoad.type !== "pagination") return null;
 
     return {
@@ -1151,7 +1152,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     };
   }
 
-  private get prevPageButton(): Button | null {
+  get prevPageButton(): Button | null {
     if (this.uv.extra.lazyLoad.type !== "pagination") return null;
 
     return {
@@ -1163,7 +1164,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     };
   }
 
-  private get nextPageButton(): Button | null {
+  get nextPageButton(): Button | null {
     if (this.uv.extra.lazyLoad.type !== "pagination") return null;
 
     return {
@@ -1175,7 +1176,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     };
   }
 
-  private get onLastPage() {
+  get onLastPage() {
     if (!this.uv.rows || this.uv.extra.lazyLoad.type !== "pagination") return false;
 
     const shownRowCount = this.uv.extra.lazyLoad.pagination.perPage * (this.uv.extra.lazyLoad.pagination.currentPage + 1);
@@ -1364,7 +1365,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     };
   }
 
-  private getCellVisualPosition(ref: ValueRef): VisualPosition | null {
+  private getCellVisualPosition(ref: ValueRef): IVisualPosition | null {
     const rowWithCell = this.uv.getRowByRef(ref);
     if (!rowWithCell) return null;
     const rowI = this.shownRows.findIndex(row => row.row === rowWithCell);
@@ -1385,7 +1386,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return this.columnIndexes.indexOf(stateIndex);
   }
 
-  private getValueRefByVisualPosition(position: VisualPosition): ValueRef {
+  private getValueRefByVisualPosition(position: IVisualPosition): ValueRef {
     return {
       ...this.shownRows[position.row].ref,
       column: this.columnIndexes[position.column],
@@ -1395,7 +1396,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private expandSelection(direction: MoveDirection) {
     if (this.selectedCells.length === 0) return;
 
-    const positions = this.selectedCells.map(cell => this.getCellVisualPosition(cell) as VisualPosition);
+    const positions = this.selectedCells.map(cell => this.getCellVisualPosition(cell) as IVisualPosition);
     const positions2D =
       Object.entries(R.groupBy(cell => String(cell.row), positions))
         .sort(([y, _]) => Number(y))
@@ -1405,7 +1406,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (!isRectangular) return;
 
     const cursorValue = this.uv.extra.cursorValue as ValueRef;
-    const cursorPosition = this.getCellVisualPosition(cursorValue) as VisualPosition;
+    const cursorPosition = this.getCellVisualPosition(cursorValue) as IVisualPosition;
 
     const height = positions2D.length;
     const width = positions2D[0].length;
@@ -1421,24 +1422,23 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     /* const expandedLeft = cursorPosition.column > left; */
 
     const cornerPosition = positions2D[expandedDown ? height - 1 : 0][expandedRight ? width - 1 : 0];
-    const cornerRef = this.getValueRefByVisualPosition(cornerPosition);
-    const newCornerRef = this.getMovedCell(cornerRef, direction);
+    const newCornerPosition = this.getMovedCell(cornerPosition, direction);
 
     this.deselectAllCells({ clearCursor: false });
-    for (const cell of this.getCellsInRectangle(cursorValue, newCornerRef)) {
-      this.selectValue(cell);
+    for (const cellPos of this.getCellsInRectangle(cornerPosition, newCornerPosition)) {
+      const cellRef = this.getValueRefByVisualPosition(cellPos);
+      this.selectValue(cellRef);
     }
 
     // TODO: fix scrolling to first row and to first non-fixed columns when there are fixed columns.
-    this.getCellElement(newCornerRef)?.scrollIntoView({ block: "nearest" });
+    this.getVisualCellElement(newCornerPosition)?.scrollIntoView({ block: "nearest" });
   }
 
   private getMovedCell(
-    ref: ValueRef,
+    ref: IVisualPosition,
     direction: MoveDirection,
     options: { step?: number } = { step: 1 },
-  ): ValueRef {
-    const oldPosition = this.getCellVisualPosition(ref) as VisualPosition;
+  ): IVisualPosition {
     const maxRow = this.shownRows.length - 1;
     const maxColumn = this.columnIndexes.length - 1;
 
@@ -1449,12 +1449,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     const columnDelta = calcDelta("left", "right");
 
     const newPosition = {
-      row   : R.clamp(0, maxRow   , oldPosition.row    + rowDelta   ),
-      column: R.clamp(0, maxColumn, oldPosition.column + columnDelta),
+      row   : R.clamp(0, maxRow   , ref.row    + rowDelta   ),
+      column: R.clamp(0, maxColumn, ref.column + columnDelta),
     };
     /* eslint-enable no-multi-spaces, comma-spacing, key-spacing, space-in-parens */
 
-    return this.getValueRefByVisualPosition(newPosition);
+    return newPosition;
   }
 
   private moveCursor(
@@ -1469,11 +1469,16 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     this.deselectAllCells({ clearCursor: false });
 
-    const newCursorValue = this.getMovedCell(cursorValue, direction, options);
+    const cursorPosition = this.getCellVisualPosition(cursorValue);
+    if (!cursorPosition) {
+      throw new Error("Cursor is in invalid position");
+    }
+    const newCursorPosition = this.getMovedCell(cursorPosition, direction, options);
+    const newCursorValue = this.getValueRefByVisualPosition(newCursorPosition);
     this.setCursorCell(newCursorValue);
 
     // TODO: fix scrolling to first row and to first non-fixed columns when there are fixed columns.
-    this.getCellElement(newCursorValue)?.scrollIntoView({ block: "nearest" });
+    this.getVisualCellElement(newCursorPosition)?.scrollIntoView({ block: "nearest" });
 
     return !deepEquals(cursorValue, newCursorValue);
   }
@@ -1493,15 +1498,24 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.editCellOnCursor();
   }
 
-  private getCellElement(valueRef: ValueRef): HTMLElement | null {
-    return this.uv.getValueByRef(valueRef)?.value.extra.htmlElement ?? null;
+  private getVisualCellElement(ref: IVisualPosition): HTMLElement | null {
+    const row = (this.$refs["rows"] as TableRow[] | undefined)?.[ref.row];
+    if (!row) {
+      return null;
+    }
+    const cell = (row.$refs["cells"] as TableCell[] | undefined)?.[ref.column];
+    if (!cell) {
+      return null;
+    }
+    return (cell.$refs["cell"] as HTMLElement | undefined) ?? null;
   }
 
   private editCellOnCursor() {
     const valueRef = this.uv.extra.cursorValue;
     if (!valueRef) return;
-
-    this.editCellByTarget(valueRef, this.getCellElement(valueRef)!);
+    const valuePosition = this.getCellVisualPosition(valueRef);
+    if (!valuePosition) return;
+    this.editCellByTarget(valuePosition);
   }
 
   get columnIndexes() {
@@ -1645,7 +1659,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   // Cell text intended for copy to clipboard.
-  private getClipboardTextByVisualPosition(pos: VisualPosition): string {
+  private getClipboardTextByVisualPosition(pos: IVisualPosition): string {
     const ref = this.getValueRefByVisualPosition(pos);
     const value = this.uv.getValueByRef(ref);
     console.assert(value);
@@ -1653,7 +1667,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return valueToPunnedText(info.valueType, value!.value);
   }
 
-  private cellTdByVisualPosition(pos: VisualPosition): HTMLElement {
+  private cellTdByVisualPosition(pos: IVisualPosition): HTMLElement {
     const valueRef = this.getValueRefByVisualPosition(pos);
     const value = this.uv.getValueByRef(valueRef)!.value;
     const valueText = this.getClipboardTextByVisualPosition(pos);
@@ -1669,7 +1683,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return td;
   }
 
-  private cellVisualPositionsToSerializedTable(positions: VisualPosition[][]): string {
+  private cellVisualPositionsToSerializedTable(positions: IVisualPosition[][]): string {
     const cellTds = positions.map(row => row.map(cell => this.cellTdByVisualPosition(cell)));
     const trs = cellTds.map(row => {
       const tr = document.createElement("tr");
@@ -1693,7 +1707,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (this.selectedCells.length === 0) return;
     event.preventDefault();
 
-    const positions = this.selectedCells.map(cell => this.getCellVisualPosition(cell) as VisualPosition);
+    const positions = this.selectedCells.map(cell => this.getCellVisualPosition(cell) as IVisualPosition);
     const positions2D = Object.values(R.groupBy(cell => String(cell.row), positions)).map(row => row.sort((c1, c2) => c1.column - c2.column));
     const isRectangular = positions2D.every(row => row.length === positions2D[0].length);
 
@@ -2167,6 +2181,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private removeCellEditing() {
+    // return;
     this.editing = null;
   }
 
@@ -2174,7 +2189,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private setCellEditing(ref: ValueRef) {
     if (!this.canEditCell(ref)) return;
 
-    this.getCellElement(ref)?.scrollIntoView({ block: "nearest" });
+    const refPos = this.getCellVisualPosition(ref);
+    if (refPos) {
+      this.getVisualCellElement(refPos)?.scrollIntoView({ block: "nearest" });
+    }
     this.editing = { ref };
   }
 
@@ -2203,18 +2221,19 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private get editCellCoords(): ICellCoords | null {
-    if (!this.editing) return null;
-    const cellElement = this.getCellElement(this.editing.ref);
-    if (!cellElement) return null;
+  private get editCellCoords(): ICellCoords | undefined {
+    if (!this.editing) return undefined;
+    const cellPosition = this.getCellVisualPosition(this.editing.ref);
+    if (!cellPosition) return undefined;
+    const cellElement = this.getVisualCellElement(cellPosition);
+    if (!cellElement) return undefined;
 
     const cellRect = cellElement.getBoundingClientRect();
-    const { x, y } = cellRect;
-    return { x, y };
+    return { x: cellRect.x, y: cellRect.y };
   }
 
-  private updateClickTimer(ref: ValueRef) {
-    const sameCellClicked = deepEquals(this.lastSelectedValue, ref);
+  private updateClickTimer(pos: IVisualPosition) {
+    const sameCellClicked = deepEquals(this.lastSelectedValue, pos);
     if (this.clickTimeoutId === null) {
       this.clickTimeoutId = setTimeout(() => {
         this.clickTimeoutId = null;
@@ -2226,7 +2245,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       clearTimeout(this.clickTimeoutId);
       this.clickTimeoutId = null;
       if (this.lastSelectedValue !== null && sameCellClicked) {
-        this.setCellEditing(ref);
+        this.setCellEditing(this.getValueRefByVisualPosition(pos));
       }
     }
   }
@@ -2235,14 +2254,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.cellContextMenu = null;
   }
 
-  private async openCellContextMenu(ref: ValueRef, element: HTMLElement, event: MouseEvent) {
+  private openCellContextMenu(pos: IVisualPosition, element: HTMLElement, event: MouseEvent) {
     const tableRef = (this.$refs["tableContainer"] as HTMLElement | undefined);
     if (!tableRef) throw new Error("Can't find `tableContainer` ref");
 
-    this.selectCell(ref);
+    this.selectCell(pos);
     this.closeCellContextMenu();
-
-    await this.$nextTick();
 
     this.cellContextMenu = {
       reference: {
@@ -2251,11 +2268,11 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
         getBoundingClientRect: () => new DOMRect(event.clientX, event.clientY, 1, 1),
         removeEventListener: () => {},
       },
-      buttons: this.getButtonsForContextMenu(ref),
+      buttons: this.getButtonsForContextMenu(pos),
     };
   }
 
-  private getButtonsForContextMenu(ref: ValueRef): Button[] {
+  private getButtonsForContextMenu(pos: IVisualPosition): Button[] {
     return [
       {
         type: "callback",
@@ -2296,106 +2313,106 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     ];
   }
 
-  private getCellsInRectangle(corner1: ValueRef, corner2: ValueRef): ValueRef[] {
-    const pos1 = this.getCellVisualPosition(corner1);
-    const pos2 = this.getCellVisualPosition(corner2);
-    if (!pos1 || !pos2) return [];
-
-    const top = Math.min(pos1.row, pos2.row);
-    const bottom = Math.max(pos1.row, pos2.row);
-    const left = Math.min(pos1.column, pos2.column);
-    const right = Math.max(pos1.column, pos2.column);
+  private getCellsInRectangle(corner1: IVisualPosition, corner2: IVisualPosition): IVisualPosition[] {
+    const top = Math.min(corner1.row, corner2.row);
+    const bottom = Math.max(corner1.row, corner2.row);
+    const left = Math.min(corner1.column, corner2.column);
+    const right = Math.max(corner1.column, corner2.column);
 
     const range = (start: number, end: number) =>
       Array(end - start + 1).fill(0).map((_, idx) => start + idx);
 
     const rows = this.shownRows.slice(top, bottom + 1);
-    const visualPositions = rows.flatMap(
+    return rows.flatMap(
       (_, rowI) => range(left, right).map(i => ({ column: i, row: top + rowI })),
     );
-
-    return visualPositions.map(pos => this.getValueRefByVisualPosition(pos));
   }
 
-  private startCellSelection(ref: ValueRef, element: HTMLElement, event: MouseEvent) {
+  private startCellSelection(ref: IVisualPosition, element: HTMLElement, event: MouseEvent) {
     if (event.shiftKey || event.ctrlKey) return;
 
     this.deselectAllCells();
 
     this.cellSelectionStartCell = ref;
     /* this.selectValue(ref); */
-    this.setCursorCell(ref);
+    this.setCursorCell(this.getValueRefByVisualPosition(ref));
   }
 
-  private continueCellSelection(ref: ValueRef, element: HTMLElement, event: MouseEvent) {
+  private continueCellSelection(ref: IVisualPosition, element: HTMLElement, event: MouseEvent) {
     if (!this.cellSelectionStartCell) return;
 
     this.deselectAllCells({ clearCursor: false });
 
-    const cells = this.getCellsInRectangle(this.cellSelectionStartCell, ref);
-    for (const cell of cells) {
-      this.selectValue(cell);
+    const positions = this.getCellsInRectangle(this.cellSelectionStartCell, ref);
+    for (const pos of positions) {
+      this.selectValue(this.getValueRefByVisualPosition(pos));
     }
   }
 
-  private endCellSelection(ref: ValueRef, element: HTMLElement, event: MouseEvent) {
+  private endCellSelection(ref: IVisualPosition, element: HTMLElement, event: MouseEvent) {
     this.cellSelectionStartCell = null;
   }
 
-  private clickCell(ref: ValueRef, element: HTMLElement, event: MouseEvent) {
+  private clickCell(pos: IVisualPosition, element: HTMLElement, event: MouseEvent) {
     this.columnDelta = 0;
     this.removeCellEditing();
-    this.updateClickTimer(ref);
+    this.updateClickTimer(pos);
 
     if (event.ctrlKey) {
+      const ref = this.getValueRefByVisualPosition(pos);
       this.selectValue(ref);
     } else if (event.shiftKey && this.uv.extra.cursorValue) {
-      const cells = this.getCellsInRectangle(this.uv.extra.cursorValue, ref);
-      this.deselectAllCells({ clearCursor: false });
-      for (const cell of cells) {
-        this.selectValue(cell);
+      const prevValue = this.getCellVisualPosition(this.uv.extra.cursorValue);
+      if (prevValue) {
+        const cells = this.getCellsInRectangle(prevValue, pos);
+        this.deselectAllCells({ clearCursor: false });
+        for (const cell of cells) {
+          this.selectValue(this.getValueRefByVisualPosition(cell));
+        }
       }
     } else {
-      this.handleCellEdit(ref, element);
+      this.handleCellEdit(pos, element);
     }
 
     // `v-click-outside` somehow doesn't triggers on cell clicks, so close context menu there too.
     this.closeCellContextMenu();
 
     // We capture click-events from cells so we need to manually close popups here.
-    if (this.columns[ref.column].type !== "buttons") {
+    if (this.columns[pos.column].type !== "buttons") {
       eventBus.emit("close-all-button-groups");
     }
   }
 
-  private editCellByTarget(ref: ValueRef, target: HTMLElement) {
-    this.setCellEditing(ref);
-    this.handleCellEdit(ref, target);
+  private editCellByTarget(pos: IVisualPosition) {
+    this.setCellEditing(this.getValueRefByVisualPosition(pos));
+    this.handleCellEdit(pos, this.getVisualCellElement(pos)!);
   }
 
-  private handleCellEdit(ref: ValueRef, target: HTMLElement) {
+  private handleCellEdit(pos: IVisualPosition, target: HTMLElement) {
     this.editParams.width = target.offsetWidth;
     this.editParams.height = target.offsetHeight;
     this.editParams.minHeight = target.offsetHeight;
 
-    this.selectCell(ref);
+    this.selectCell(pos);
 
     if (this.lastSelectedValue
-     && !deepEquals(this.lastSelectedValue, ref)
-     && this.lastSelectedValue.type === "added") {
-      const row = this.uv.newRows[this.lastSelectedValue.id];
-      if (!row) {
-        this.lastSelectedValue = null;
-      } else if (isEmptyRow(row)) {
-        const entity = this.uv.info.mainEntity;
-        if (!entity) {
-          throw new Error("View doesn't have a main entity");
-        }
+        && !equalVisualPosition(this.lastSelectedValue, pos)) {
+      const lastRef = this.getValueRefByVisualPosition(this.lastSelectedValue);
+      if (lastRef.type === "added") {
+        const row = this.uv.newRows[lastRef.id];
+        if (!row) {
+          this.lastSelectedValue = null;
+        } else if (isEmptyRow(row)) {
+          const entity = this.uv.info.mainEntity;
+          if (!entity) {
+            throw new Error("View doesn't have a main entity");
+          }
 
-        void this.resetAddedEntry({
-          entityRef: entity,
-          id: this.lastSelectedValue.id,
-        });
+          void this.resetAddedEntry({
+            entityRef: entity,
+            id: lastRef.id,
+          });
+        }
       }
     }
   }
@@ -2419,11 +2436,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   // More high-level than `selectValue`: deselects other cells and
   // remembers last selected cell.
-  private selectCell(ref: ValueRef) {
+  private selectCell(pos: IVisualPosition) {
     this.deselectAllCells({ clearCursor: false });
+    const ref = this.getValueRefByVisualPosition(pos);
     this.selectValue(ref, true);
     this.setCursorCell(ref);
-    this.lastSelectedValue = ref;
+    this.lastSelectedValue = pos;
   }
 
   private setCursorCell(ref: ValueRef) {
@@ -2702,7 +2720,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     const newRef = await this.updateValue(ref, rawValue);
     if (ref.type === "new") {
       editing.ref = newRef;
-      this.selectCell(newRef);
+      const pos = this.getCellVisualPosition(newRef)!;
+      this.selectCell(pos);
       // FIXME: we shouldn't implement this logic purely for barcodes. Instead, react to keyboard <RET> event!
       if (this.uv.columnAttributes[newRef.column].text_type === "barcode") {
         void this.addNewRowOnPosition("bottom_back");

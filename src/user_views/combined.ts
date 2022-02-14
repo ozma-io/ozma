@@ -113,6 +113,17 @@ export type IMainRowMapping = Record<RowId, CommittedRowRef[]>;
 export type RowRef = IAddedRowRef | IExistingRowRef | INewRowRef;
 export type ValueRef = IAddedValueRef | IExistingValueRef | INewValueRef;
 
+export const equalRowRef = (a: RowRef, b: RowRef) => {
+  return a.type === b.type && (
+    (a.type === "added" && a.id === (b as IAddedRowRef).id) ||
+    (a.type === "existing" && a.position === (b as IExistingRowRef).position) ||
+    (a.type === "new"));
+};
+
+export const equalValueRef = (a: ValueRef, b: ValueRef) => {
+  return equalRowRef(a, b) && a.column === b.column;
+};
+
 export interface IUserViewArguments {
   source: UserViewSource;
   args: Record<string, unknown> | null;

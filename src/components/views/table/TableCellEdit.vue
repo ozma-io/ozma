@@ -31,7 +31,7 @@ export interface IEditParams {
   minHeight: number;
 }
 
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 
 @Component
 export default class TableCellEdit extends Vue {
@@ -42,10 +42,15 @@ export default class TableCellEdit extends Vue {
 
   private movedCellCoords: ICellCoords | null = null;
 
-  private mounted() {
-    const cellRect = (this.$refs["cellEdit"] as HTMLElement).getBoundingClientRect();
+  private updateMovedCoords() {
+    const cellRect = (this.$refs["cellEdit"] as HTMLElement | undefined)?.getBoundingClientRect();
+    if (!cellRect) {
+      this.movedCellCoords = null;
+      return;
+    }
     const viewportRect = document.querySelector(".userview-div")?.getBoundingClientRect();
     if (!viewportRect) {
+      this.movedCellCoords = null;
       throw Error("Can't find `.userview-div` selector");
     }
 
@@ -53,9 +58,18 @@ export default class TableCellEdit extends Vue {
     const offsetY = cellRect.bottom > viewportRect.bottom ? cellRect.bottom - viewportRect.bottom : 0;
 
     this.movedCellCoords = {
-      x: cellRect.x - offsetX,
-      y: cellRect.y - offsetY,
+      x: this.coords.x - offsetX,
+      y: this.coords.y - offsetY,
     };
+  }
+
+  private mounted() {
+    this.updateMovedCoords();
+  }
+
+  @Watch("coords")
+  private coordsUpdated() {
+    this.updateMovedCoords();
   }
 
   private get cellCoords(): ICellCoords {
