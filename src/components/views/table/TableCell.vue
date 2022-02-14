@@ -271,7 +271,7 @@ export default class TableCell extends Vue {
   }
 
   private getCellAttr(name: string) {
-    return this.value.attributes?.[name] || this.row.attributes?.[name] || this.uv.columnAttributes[this.columnIndex][name] || this.uv.attributes[name];
+    return this.value.attributes?.[name] || this.uv.columnAttributes[this.columnIndex][name] || this.row.attributes?.[name] || this.uv.attributes[name];
   }
 
   get style() {

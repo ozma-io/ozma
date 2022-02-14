@@ -408,7 +408,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       const info = this.uv.info.columns[colI];
       const columnAttrs = this.uv.columnAttributes[colI];
       const cellAttrs = value.attributes;
-      const getCellAttr = (name: string) => tryDicts(name, cellAttrs, rowAttrs, columnAttrs, viewAttrs);
+      const getCellAttr = (name: string) => tryDicts(name, cellAttrs, columnAttrs, rowAttrs, viewAttrs);
 
       const rowLink = attrToLinkSelf(getCellAttr("row_link"), value.info);
       if (rowLink !== null) {

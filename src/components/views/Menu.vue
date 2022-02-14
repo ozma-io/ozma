@@ -175,7 +175,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
       const buttonCell = row.values[1];
       const buttonName = valueToPunnedText(buttonColumnInfo.valueType, buttonCell);
       const buttonAttrs = buttonCell.attributes || {};
-      const getButtonAttr = (name: string) => tryDicts(name, buttonAttrs, rowAttrs, buttonsAttrs, viewAttrs);
+      const getButtonAttr = (name: string) => tryDicts(name, buttonAttrs, buttonsAttrs, rowAttrs, viewAttrs);
 
       const toQuery = attrToLink(getButtonAttr("link"), this.linkOpts);
       if (toQuery === null) {

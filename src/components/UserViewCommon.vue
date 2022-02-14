@@ -658,7 +658,8 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   // Used to create referenced entries and automatically insert them into current table.
   get modalReferenceField(): IModalReferenceField | null {
     const modalReferenceField = mapMaybe((column, columnIndex): IModalReferenceField | undefined => {
-      const getColumnAttr = (name: string) => tryDicts(name, this.uv.columnAttributes[columnIndex], this.uv.attributes);
+      const columnAttrs = this.uv.columnAttributes[columnIndex];
+      const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, this.uv.attributes);
       const referenceViewAttr = Boolean(getColumnAttr("main_reference_field"));
       const referenceUV = attrToQuery(getColumnAttr("select_view"));
       const fieldType = this.uv.info.columns[columnIndex].mainField?.field.fieldType;

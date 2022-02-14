@@ -62,7 +62,8 @@ export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtr
   ...emptyUserViewHandlerFunctions,
 
   createLocalValue(uv: IBaseCombinedUserView, rowIndex: number, row: ICombinedRow & IBaseExtendedRowInfo, columnIndex: number, value: ICombinedValue): IBaseValueExtra {
-    const getValueAttr = (key: string) => tryDicts(key, value.attributes, row.attributes, uv.columnAttributes[columnIndex], uv.attributes);
+    const columnAttrs = uv.columnAttributes[columnIndex];
+    const getValueAttr = (key: string) => tryDicts(key, value.attributes, columnAttrs, row.attributes, uv.attributes);
     if (value.info && getValueAttr("selectable")) {
       row.extra.selectionEntry = {
         entity: value.info.fieldRef.entity,

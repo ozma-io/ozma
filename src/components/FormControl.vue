@@ -553,7 +553,7 @@ export default class FormControl extends Vue {
   @Prop({ type: Object }) fieldRef!: IFieldRef | undefined;
   @Prop({ type: Object }) fieldType!: FieldType | undefined;
   @Prop({ type: Number }) rowId!: RowId | undefined;
-  @Prop({ type: Object, default: () => ({}) }) attributes!: AttributesMap; // {...this.uv.attributes, ...this.uv.columnAttributes[x], ...row.attributes, ...value.attributes}
+  @Prop({ type: Object, default: () => ({}) }) attributes!: AttributesMap; // {...this.uv.attributes, ...row.attributes, ...this.uv.columnAttributes[x], ...value.attributes}
   @Prop({ type: Boolean, default: false }) locked!: boolean;
   @Prop({ type: String }) homeSchema!: string | undefined;
   @Prop({ type: String, default: "" }) caption!: string;

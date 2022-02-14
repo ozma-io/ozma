@@ -65,8 +65,8 @@ export default class FormField extends Vue {
     const columnAttrs = this.uv.columnAttributes[this.element.index];
     return {
       ...this.uv.attributes,
-      ...columnAttrs,
       ...this.row.attributes,
+      ...columnAttrs,
       ...this.value.attributes,
     };
   }

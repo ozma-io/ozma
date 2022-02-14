@@ -95,7 +95,8 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseU
   }
 
   get linkAttr() {
-    const getColumnAttr = (name: string) => tryDicts(name, this.uv.columnAttributes[this.selectedValueColumn], this.uv.attributes);
+    const columnAttrs = this.uv.columnAttributes[this.selectedValueColumn];
+    const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, this.uv.attributes);
     return getColumnAttr("row_link");
   }
 

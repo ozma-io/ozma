@@ -591,7 +591,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     const baseExtra = baseUserViewHandler.createLocalValue(uv, rowIndex, row, columnIndex, value, oldView, oldRow, oldValue);
 
     const columnAttrs = uv.columnAttributes[columnIndex];
-    const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, uv.attributes);
+    const getCellAttr = (name: string) => tryDicts(name, value.attributes, columnAttrs, row.attributes, uv.attributes);
 
     const currLinkForRow = attrToLinkSelf(getCellAttr("row_link"), value.info, uv.extra.linkOpts);
     const hasRowLinkWithId =
@@ -1582,7 +1582,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
         const columnInfo = this.uv.info.columns[this.editing.ref.column];
         const columnAttrs = this.uv.columnAttributes[this.editing.ref.column];
         const type = columnInfo.valueType;
-        const attributes = { ...this.uv.attributes, ...columnAttrs, ...value.row.attributes, ...value.value.attributes };
+        const attributes = { ...this.uv.attributes, ...value.row.attributes, ...columnAttrs, ...value.value.attributes };
         return {
           value: value.value,
           attributes,
