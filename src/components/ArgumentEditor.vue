@@ -55,7 +55,7 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 
 import { ArgumentName, AttributesMap, FieldType, IArgument, ValueType } from "ozma-api";
-import { fieldToValueType, valueFromRaw, valueToText } from "@/values";
+import { fieldToValueType, valueFromRaw, valueIsNull, valueToText } from "@/values";
 import FormControl from "@/components/FormControl.vue";
 
 interface IArgumentInfo {
@@ -105,7 +105,7 @@ export default class ArgumentEditor extends Vue {
       return;
     }
     // Allow to reset arguments.
-    const newValue = argument.isOptional && rawValue === null ? undefined : rawValue;
+    const newValue = argument.isOptional && valueIsNull(rawValue) ? undefined : rawValue;
     this.$emit("update", argument.name, newValue);
   }
 }
