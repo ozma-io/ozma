@@ -75,7 +75,7 @@
             :label="$t('role_label').toString()"
             :reference-entity="roleEntity"
             nullable
-            :scope="'no-scope'"
+            scope="no-scope"
             @update:value="roleValue = $event"
           />
         </InputSlot>
