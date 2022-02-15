@@ -68,15 +68,15 @@
           :inline="false"
           :is-cell-edit="false"
           :label="$t('role_label').toString()"
-          :empty="!roleValue.value"
+          :empty="!roleValue"
         >
           <ReferenceField
             :value="roleValue"
             :label="$t('role_label').toString()"
             :reference-entity="roleEntity"
-            :nullable="true"
+            nullable
             :scope="'no-scope'"
-            @update:value="roleValueValue = $event"
+            @update:value="roleValue = $event"
           />
         </InputSlot>
 
@@ -109,23 +109,12 @@ export default class InviteUserModal extends Vue {
   @Prop({ type: String, required: true }) authToken!: string;
 
   private emailValue = "";
+  private roleValue: number | null = null;
 
   private roleEntity: IEntityRef = {
     schema: "public",
-    name: "users",
+    name: "roles",
   };
-
-  private roleValueValue = null;
-
-  private get roleValue(): ICombinedValue {
-    return {
-      value: this.roleValueValue,
-      info: {
-        field: null,
-        fieldRef: { entity: this.roleEntity, name: "role_id" },
-      },
-    };
-  }
 
   private show() {
     this.$modal.show(this.uid);
@@ -148,7 +137,7 @@ export default class InviteUserModal extends Vue {
     const token = this.authToken;
     const body = JSON.stringify({
       email: this.emailValue,
-      role_id: this.roleValueValue,
+      role_id: this.roleValue,
       /* instance_name: "dev", */
       /* instance_domain: "ozma-dev.org", */
       instance_name: instanceName,
