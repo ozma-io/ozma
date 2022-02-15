@@ -1,5 +1,5 @@
 import { Module } from "vuex";
-import { IViewExprResult } from "ozma-api";
+import { IPermissionsInfo, IViewExprResult } from "ozma-api";
 
 import { IRef, convertString, waitTimeout } from "@/utils";
 import { funappSchema, default as Api } from "@/api";
@@ -156,22 +156,12 @@ const settingsModule: Module<ISettingsState, {}> = {
           commit("setSettings", settings);
 
           if (settings.getEntry("allow_business_mode", Boolean, false)) {
-            const currentUserEmail = (rootState as any).auth.current.email;
-            const usersEntityRef = {
-              schema: funappSchema,
-              name: "table-public-users",
-            };
-            const usersTable: IViewExprResult = await dispatch("callProtectedApi", {
-              func: Api.getNamedUserView,
-              args: [usersEntityRef, {}],
+            const userPermissions: IPermissionsInfo = await dispatch("callProtectedApi", {
+              func: Api.getPermissions,
             }, { root: true });
-            const emailColumnIndex = usersTable.info.columns.findIndex(column => column.name === "name");
-            const isRootColumnIndex = usersTable.info.columns.findIndex(column => column.name === "is_root");
-            const currentUserRow = usersTable.result.rows.find(row => row.values[emailColumnIndex].value === currentUserEmail);
-            const currentUserIsRoot = Boolean(currentUserRow?.values[isRootColumnIndex].value);
             const savedDisplayMode = localStorage.getItem("display-mode");
 
-            await dispatch("setUserIsRoot", currentUserIsRoot);
+            await dispatch("setUserIsRoot", userPermissions.isRoot);
             await dispatch("setDisplayMode", savedDisplayMode ?? "business");
           } else {
             await dispatch("setDisplayMode", "development");
