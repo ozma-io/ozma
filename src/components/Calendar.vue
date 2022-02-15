@@ -165,7 +165,6 @@ export default class Calendar extends Vue {
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
 
-  private position = false;
   private isPopupOpen = false;
 
   get usedFormat() {
