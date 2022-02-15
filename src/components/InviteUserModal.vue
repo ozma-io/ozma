@@ -100,7 +100,6 @@ import { invitesServiceUrl, instanceName, instancesHost } from "@/api";
 
 import { randomId, waitTimeout } from "@/utils";
 import ReferenceField from "@/components/ReferenceField.vue";
-import { ICombinedValue } from "@/user_views/combined";
 import InputSlot from "@/components/form/InputSlot.vue";
 import Input from "@/components/form/Input.vue";
 
@@ -166,7 +165,7 @@ export default class InviteUserModal extends Vue {
         });
 
         this.emailValue = "";
-        this.roleValueValue = null;
+        this.roleValue = null;
       } else {
         await waitTimeout(100);
         this.$bvToast.hide(id);
