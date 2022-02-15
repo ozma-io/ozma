@@ -113,6 +113,7 @@
           <div class="time">
             <TimePicker
               v-if="showTime"
+              ref="timePicker"
               :hour="timeForPicker.hour"
               :min="timeForPicker.min"
               :time-step="timeStep"
@@ -222,9 +223,9 @@ export default class Calendar extends Vue {
     this.$emit("focus");
     this.isPopupOpen = true;
 
-    if (this.$isMobile) return;
     await Vue.nextTick();
     this.focusInput();
+    (this.$refs.timePicker as TimePicker | undefined)?.scrollToValue();
   }
 
   private onClosePopup() {

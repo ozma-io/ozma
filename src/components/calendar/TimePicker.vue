@@ -72,17 +72,7 @@ const getTimeRange = (min: number, max: number, step: number): ITimeValue[] => {
 };
 
 const scrollTo = (wrapper: HTMLElement, target: HTMLElement) => {
-  if (wrapper.children) {
-    if (wrapper.childElementCount > 6) {
-      if (!target) {
-        wrapper.scroll(0, 240);
-      } else if (target.children) {
-        Object.values(target.children).forEach(child => {
-          wrapper.scroll(0, (child as HTMLElement).offsetTop - wrapper.offsetTop);
-        });
-      }
-    }
-  }
+  wrapper.scroll(0, target.offsetTop - target.clientHeight / 2 - wrapper.clientHeight / 2);
 };
 
 @Component
@@ -97,7 +87,7 @@ export default class TimePicker extends Vue {
     return getTimeRange(0, 60, this.minsStep);
   }
 
-  mounted() {
+  scrollToValue() {
     const hourIndex = this.hours.findIndex(hour => this.hour === hour.value);
     if (hourIndex !== -1) {
       const hours = this.$refs["hours"] as HTMLElement[];
@@ -109,6 +99,10 @@ export default class TimePicker extends Vue {
       const mins = this.$refs["mins"] as HTMLElement[];
       scrollTo(this.$refs["wrapperMins"] as HTMLElement, mins[minIndex]);
     }
+  }
+
+  mounted() {
+    this.scrollToValue();
   }
 }
 </script>
