@@ -15,6 +15,7 @@ export interface IButton {
   display?: ButtonDisplay;
   disabled?: boolean;
   variant: ColorVariantAttribute;
+  keepButtonGroupOpened?: boolean;
 }
 
 export interface ILocationButton extends IButton {
