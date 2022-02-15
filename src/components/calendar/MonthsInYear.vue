@@ -19,13 +19,8 @@ import moment from "moment";
 export default class MonthsInYear extends Vue {
   @Prop({ type: Boolean }) isCurrentYear!: boolean;
 
-  get months() {
-    return moment.monthsShort();
-  }
-
-  get currentMonth() {
-    return moment().format("MMM");
-  }
+  private months = moment.monthsShort();
+  private currentMonth = moment().format("MMM");
 }
 </script>
 

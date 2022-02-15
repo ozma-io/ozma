@@ -1,42 +1,53 @@
+<i18n>
+  {
+    "en": {
+      "hours": "hours",
+      "mins": "minutes"
+    },
+    "ru": {
+      "hours": "часы",
+      "mins": "минуты"
+    }
+  }
+</i18n>
+
 <template>
   <div class="time">
     <span
-      v-show="hours !== null"
       class="hours"
     >
-      <div>hours</div>
+      <div>{{ $t('hours') }}</div>
       <div
-        ref="wrapperHour"
-        :class="['wrapper', {'with-margin': hours.range.length > 5}]"
+        ref="wrapperHours"
+        :class="['wrapper', {'with-margin': hours.length > 5}]"
       >
         <div
-          v-for="(el, Iel) in hours.range"
-          :key="Iel"
-          :ref="(selectHour(el)) ? 'selectHour' : false"
-          :class="['time-cell', {'select-cell': selectHour(el)}]"
-          @click="setValH(Iel, $event)"
+          v-for="hourItem in hours"
+          ref="hours"
+          :key="hourItem.value"
+          :class="['time-cell', {'select-cell': hour === hourItem.value}]"
+          @click.prevent="$emit('update:hour', hourItem.value)"
         >
-          {{ el.text }}
+          {{ hourItem.text }}
         </div>
       </div>
     </span>
     <span
-      v-show="mins !== null"
       class="mins"
     >
-      <div>minutes</div>
+      <div>{{ $t('mins') }}</div>
       <div
-        ref="wrapperMin"
-        :class="['wrapper', {'with-margin': mins.range.length > 5}]"
+        ref="wrapperMins"
+        :class="['wrapper', {'with-margin': mins.length > 5}]"
       >
         <div
-          v-for="(el, Iel) in mins.range"
-          :key="Iel"
-          :ref="(selectMin(el)) ? 'selectMin' : false"
-          :class="['time-cell', {'select-cell': selectMin(el)}]"
-          @click="setValM(Iel, $event)"
+          v-for="minItem in mins"
+          ref="mins"
+          :key="minItem.value"
+          :class="['time-cell', {'select-cell': min === minItem.value}]"
+          @click.prevent="$emit('update:min', minItem.value)"
         >
-          {{ el.text }}
+          {{ minItem.text }}
         </div>
       </div>
     </span>
@@ -44,48 +55,20 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { Component, Prop, Vue } from "vue-property-decorator";
 
-interface ITimeRange {
-  min: number;
-  max: number;
-  value: number | null;
+interface ITimeValue {
+  value: number;
   text: string;
 }
 
-interface ITimeRangeAll {
-  range: ITimeRange[];
-  history: { min: number; max: number }[];
-  steps: number[];
-  currStep: number;
-}
-
-export interface ITime {
-  hour: number;
-  min: number;
-}
-
-const numToText2 = (num: number) => {
-  return (num < 10) ? `0${num}` : `${num}`;
-};
-
-const getRange = (min: number, max: number, step: number) => {
-  const range: ITimeRange[] = [];
+const getTimeRange = (min: number, max: number, step: number): ITimeValue[] => {
+  const range: ITimeValue[] = [];
   for (let i = min; i < max; i += step) {
-    const el: ITimeRange = { min: -1, max: -1, value: i, text: `${numToText2(i)}` };
-    range.push(el);
+    const text = String(i).padStart(2, "0");
+    range.push({ value: i, text });
   }
   return range;
-};
-
-const dateRange = (min: number, max: number, steps: number[]): ITimeRangeAll => {
-  const stepsTmp = steps.length > 0 ? steps : [1];
-  return {
-    steps: stepsTmp,
-    range: getRange(min, max, stepsTmp[0]),
-    history: [],
-    currStep: 0,
-  };
 };
 
 const scrollTo = (wrapper: HTMLElement, target: HTMLElement) => {
@@ -104,43 +87,28 @@ const scrollTo = (wrapper: HTMLElement, target: HTMLElement) => {
 
 @Component
 export default class TimePicker extends Vue {
-  @Prop() time!: ITime;
-  @Prop({ type: Number, default: 15 }) timeStep!: number;
-  @Prop({ default: true, type: Boolean }) isOpen!: boolean;
+  @Prop({ type: Number }) hour!: number | undefined;
+  @Prop({ type: Number }) min!: number | undefined;
+  @Prop({ type: Number, default: 15 }) minsStep!: number;
 
-  private hours: ITimeRangeAll = dateRange(0, 24, [1]);
-  private mins: ITimeRangeAll = dateRange(0, 60, [this.timeStep]);
+  private hours = getTimeRange(0, 24, 1);
 
-  @Watch("isOpen")
-  private selectedTime() {
-    if (this.isOpen) {
-      scrollTo(this.$refs.wrapperHour as HTMLElement, this.$refs.selectHour as HTMLElement);
-      if (this.$refs.selectMin) {
-        scrollTo(this.$refs.wrapperMin as HTMLElement, this.$refs.selectMin as HTMLElement);
-      }
+  get mins() {
+    return getTimeRange(0, 60, this.minsStep);
+  }
+
+  mounted() {
+    const hourIndex = this.hours.findIndex(hour => this.hour === hour.value);
+    if (hourIndex !== -1) {
+      const hours = this.$refs["hours"] as HTMLElement[];
+      scrollTo(this.$refs["wrapperHours"] as HTMLElement, hours[hourIndex]);
     }
-  }
 
-  private setValM(rng: number, event: Event) {
-    event.preventDefault();
-    if (this.mins !== null) {
-      this.$emit("update:mins", this.mins.range[rng].value);
+    const minIndex = this.mins.findIndex(min => this.min === min.value);
+    if (minIndex !== -1) {
+      const mins = this.$refs["mins"] as HTMLElement[];
+      scrollTo(this.$refs["wrapperMins"] as HTMLElement, mins[minIndex]);
     }
-  }
-
-  private setValH(rng: number, event: Event) {
-    event.preventDefault();
-    if (this.hours !== null) {
-      this.$emit("update:hours", this.hours.range[rng].value);
-    }
-  }
-
-  private selectMin(min: ITimeRange) {
-    return (min.value === this.time.min);
-  }
-
-  private selectHour(hour: ITimeRange) {
-    return (hour.value === this.time.hour);
   }
 }
 </script>

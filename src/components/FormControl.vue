@@ -313,9 +313,9 @@ import { attrToButtons } from "@/components/buttons/buttons";
 import FormInputPlaceholder from "@/components/FormInputPlaceholder.vue";
 import type { MarkdownEditType } from "@/components/editors/MarkdownEditor.vue";
 import { IReferenceSelectAction } from "@/components/ReferenceMultiSelect.vue";
-import { ITime } from "@/components/calendar/TimePicker.vue";
 import { EntityRef } from "@/links";
 import { IIframeRef } from "@/api";
+import { ITime } from "@/components/Calendar.vue";
 
 interface ITextType {
   name: "text";

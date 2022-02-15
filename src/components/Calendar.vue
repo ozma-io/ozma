@@ -113,11 +113,11 @@
           <div class="time">
             <TimePicker
               v-if="showTime"
-              :time="timeForPicker"
-              :is-open="true"
+              :hour="timeForPicker.hour"
+              :min="timeForPicker.min"
               :time-step="timeStep"
-              @update:mins="updateMins"
-              @update:hours="updateHours"
+              @update:min="updateMins"
+              @update:hour="updateHours"
             />
             <button
               v-if="showTime"
@@ -139,7 +139,12 @@ import moment, { Moment } from "moment";
 
 import Popper from "vue-popperjs";
 import DatePicker from "@/components/calendar/DatePicker.vue";
-import TimePicker, { ITime } from "@/components/calendar/TimePicker.vue";
+import TimePicker from "@/components/calendar/TimePicker.vue";
+
+export interface ITime {
+  hour: number;
+  min: number;
+}
 
 @Component({
   components: {
@@ -265,7 +270,7 @@ export default class Calendar extends Vue {
     }
   }
 
-  get timeForPicker() {
+  get timeForPicker(): ITime {
     return (this.dateValue.isUTC())
       ? {
         hour: this.dateValue.utcOffset(moment().utcOffset()).hour(),
