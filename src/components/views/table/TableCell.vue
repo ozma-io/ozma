@@ -24,8 +24,8 @@
         'fixed-column': column.fixed,
         'select_fixed': value.extra.selected && column.fixed,
         'next-after-last-fixed': firstNonFixed,
-        'selected': value.extra.selected,
-        'cursor': value.extra.selected === 'cursor',
+        'selected': value.extra.selected && !value.extra.cursor,
+        'cursor': value.extra.cursor,
         'required-cell': requiredButEmpty,
         'disabled-cell': value.info === undefined && from !== 'existing'
       }

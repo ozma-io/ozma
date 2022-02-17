@@ -372,7 +372,8 @@ export interface IColumn {
 
 export interface ITableValueExtra extends IBaseValueExtra {
   // If an extra value is only needed during render, define it as a computed property instead.
-  selected: boolean | "cursor";
+  selected: boolean;
+  cursor: boolean;
 }
 
 export interface ITableRowTree {
@@ -636,13 +637,15 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       uv.extra.selectedValues.insert(valueRef);
     }
 
-    if (oldValue?.selected === "cursor") {
+    const cursor = (oldValue?.cursor ?? false) && !row.deleted;
+    if (cursor) {
       uv.extra.cursorValue = valueRef;
     }
 
     return {
       ...baseExtra,
       selected,
+      cursor,
     };
   },
 
@@ -655,7 +658,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     oldView: ITableViewExtra | null,
     oldRow: ITableRowExtra | null,
     oldValue: ITableValueExtra | null,
-  ) {
+  ): ITableValueExtra {
     const baseExtra = baseUserViewHandler.createAddedLocalValue(uv, rowId, row, columnIndex, value, oldView, oldRow, oldValue);
 
     const valueRef: ValueRef = {
@@ -667,13 +670,14 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     if (selected) {
       uv.extra.selectedValues.insert(valueRef);
     }
-    if (selected === "cursor") {
+    const cursor = oldValue?.cursor ?? false;
+    if (cursor) {
       uv.extra.cursorValue = valueRef;
     }
     return {
       ...baseExtra,
       selected,
-      link: null,
+      cursor,
     };
   },
 
@@ -685,7 +689,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     oldView: ITableViewExtra | null,
     oldRow: ITableRowExtra | null,
     oldValue: ITableValueExtra | null,
-  ) {
+  ): ITableValueExtra {
     const baseExtra = baseUserViewHandler.createEmptyLocalValue(uv, row, columnIndex, value, oldView, oldRow, oldValue);
 
     const valueRef: ValueRef = {
@@ -696,13 +700,14 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     if (selected) {
       uv.extra.selectedValues.insert(valueRef);
     }
-    if (selected === "cursor") {
+    const cursor = oldValue?.cursor ?? false;
+    if (cursor) {
       uv.extra.cursorValue = valueRef;
     }
     return {
       ...baseExtra,
       selected,
-      link: null,
+      cursor,
     };
   },
 
@@ -789,6 +794,10 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
           column: colI,
         });
       }
+      if (value.extra.cursor) {
+        value.extra.cursor = false;
+        uv.extra.cursorValue = null;
+      }
     });
   },
 
@@ -802,6 +811,10 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
           id: rowId,
           column: colI,
         });
+      }
+      if (value.extra.cursor) {
+        value.extra.cursor = false;
+        uv.extra.cursorValue = null;
       }
     });
     if (row.newId === undefined) {
@@ -1457,7 +1470,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.deselectAllCells({ clearCursor: false });
     for (const cellPos of this.getCellsInRectangle(cornerPosition, newCornerPosition)) {
       const cellRef = this.getValueRefByVisualPosition(cellPos);
-      this.selectValue(cellRef);
+      this.selectValue(cellRef, true);
     }
 
     // TODO: fix scrolling to first row and to first non-fixed columns when there are fixed columns.
@@ -1683,13 +1696,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.showAddRowButtons = entity?.access.insert ?? false;
   }
 
-  private deselectAllCells({ clearCursor = true }: { clearCursor?: boolean } = {}) {
+  private deselectAllCells(opts?: { clearCursor?: boolean }) {
     this.uv.extra.selectedValues.keys().forEach(key => {
       this.selectValue(key, false);
     });
     this.lastSelectedRow = null;
 
-    if (clearCursor) {
+    if (opts?.clearCursor) {
       this.clearCursorCell();
     }
   }
@@ -1871,7 +1884,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       }
     }
     for (const cell of changedValueRefs) {
-      this.selectValue(cell);
+      this.selectValue(cell, true);
     }
   }
 
@@ -2386,7 +2399,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     const positions = this.getCellsInRectangle(this.cellSelectionStartCell, ref);
     for (const pos of positions) {
-      this.selectValue(this.getValueRefByVisualPosition(pos));
+      this.selectValue(this.getValueRefByVisualPosition(pos), true);
     }
   }
 
@@ -2401,14 +2414,14 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     if (event.ctrlKey) {
       const ref = this.getValueRefByVisualPosition(pos);
-      this.selectValue(ref);
+      this.selectValue(ref, true);
     } else if (event.shiftKey && this.uv.extra.cursorValue) {
       const prevValue = this.getCellVisualPosition(this.uv.extra.cursorValue);
       if (prevValue) {
         const cells = this.getCellsInRectangle(prevValue, pos);
         this.deselectAllCells({ clearCursor: false });
         for (const cell of cells) {
-          this.selectValue(this.getValueRefByVisualPosition(cell));
+          this.selectValue(this.getValueRefByVisualPosition(cell), true);
         }
       }
     } else {
@@ -2458,9 +2471,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private selectValue(ref: ValueRef, selectedStatus = true) {
+  private selectValue(ref: ValueRef, selectedStatus: boolean) {
     const cell = this.uv.getValueByRef(ref);
-    if (!cell || cell.value.extra.selected === "cursor") return;
+    if (!cell) return;
 
     if (cell.value.extra.selected !== selectedStatus) {
       cell.value.extra.selected = selectedStatus;
@@ -2492,7 +2505,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.clearCursorCell();
 
     this.uv.extra.cursorValue = ref;
-    cell.value.extra.selected = "cursor";
+    cell.value.extra.cursor = true;
 
     this.$root.$emit("cell-click", this.uid);
   }
@@ -2502,7 +2515,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
     const cell = this.uv.getValueByRef(this.uv.extra.cursorValue);
     if (cell) {
-      cell.value.extra.selected = false;
+      cell.value.extra.cursor = false;
     }
     this.uv.extra.cursorValue = null;
   }
