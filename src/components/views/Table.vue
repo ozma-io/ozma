@@ -252,10 +252,13 @@
           </tr>
         </thead>
         <tbody>
+          <!-- We use dynamic refs here because order of keyed items in ref array is not guaranteed:
+               https://github.com/vuejs/vue/issues/4952
+          -->
           <TableRow
             v-for="(row, rowIndex) in shownRows"
             :key="row.key"
-            ref="rows"
+            :ref="`row-${row.key}`"
             :class="{
               'last-top-new': row.notExisting && rowIndex + 1 < shownRows.length && !shownRows[rowIndex + 1].notExisting,
               'first-bottom-new': row.notExisting && rowIndex - 1 > 0 && !shownRows[rowIndex - 1].notExisting,
@@ -1499,10 +1502,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private getVisualCellElement(ref: IVisualPosition): HTMLElement | null {
-    const row = (this.$refs["rows"] as TableRow[] | undefined)?.[ref.row];
+    const visualRow = this.shownRows[ref.row];
+    const row = (this.$refs[`row-${visualRow.key}`] as TableRow[] | undefined)?.[0];
     if (!row) {
       return null;
     }
+    console.assert(this.shownRows[ref.row].row === row.row, "shown row equal to ref row");
     const cell = (row.$refs["cells"] as TableCell[] | undefined)?.[ref.column];
     if (!cell) {
       return null;
