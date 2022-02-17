@@ -269,6 +269,8 @@ export default class Modal extends Vue {
     display: flex;
     flex-flow: column nowrap;
     flex-grow: 1;
+    margin-top: 38px;
+    max-height: 95% !important;
   }
 
   .tab-content {
