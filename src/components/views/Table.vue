@@ -347,7 +347,7 @@ import Checkbox from "@/components/checkbox/Checkbox.vue";
 import TableCellEdit, { ICellCoords, IEditParams } from "@/components/views/table/TableCellEdit.vue";
 import { Link, attrToLinkSelf } from "@/links";
 import {
-  currentValue, IAddedRow, IAddedRowRef, ICombinedRow, ICombinedUserView, ICombinedValue, IExistingRowRef, IExtendedAddedRow,
+  IAddedRow, IAddedRowRef, ICombinedRow, ICombinedUserView, ICombinedValue, IExistingRowRef, IExtendedAddedRow,
   IExtendedRow, IExtendedRowCommon, IExtendedRowInfo, IExtendedValue, IRowCommon, IUserViewHandler, RowRef, ValueRef,
   CommittedRowRef,
   valueToPunnedText,
@@ -462,10 +462,16 @@ const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLo
 };
 
 const postInitCommonRow = (uv: ITableCombinedUserView, row: ITableExtendedRowCommon) => {
-  const searchStrings = row.values.map(value => {
-    return String(currentValue(value)).toLocaleLowerCase();
-  });
-  row.extra.searchText = "\0".concat(...searchStrings);
+  // Needs to be performant, hence this custom loop.
+  let searchText = "";
+  for (const value of row.values) {
+    if (value.pun) {
+      searchText += value.pun + "\0";
+    } else if (typeof value.value === "string") {
+      searchText += value.value + "\0";
+    }
+  }
+  row.extra.searchText = searchText.toLocaleLowerCase();
 };
 
 const initTreeChildren = (uv: ITableCombinedUserView) => {
