@@ -663,7 +663,6 @@ export default class UserView extends Vue {
 
   private resetUpdatedArguments() {
     this.updatedArguments = {};
-    this.$nextTick(() => this.applyUpdatedArguments());
   }
 
   private applyUpdatedArguments() {
