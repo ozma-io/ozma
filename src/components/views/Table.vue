@@ -68,7 +68,8 @@
   >
     <TableCellEdit
       v-if="editingValue"
-      v-click-outside="removeCellEditing"
+      ref="tableCellEdit"
+      v-click-outside="{ 'handler': removeCellEditing, 'middleware': checkModal }"
       :width="editParams.width"
       :min-height="editParams.minHeight"
       :height="editParams.height"
@@ -334,7 +335,7 @@ import { IResultColumnInfo, ValueType, RowId, IFieldRef, IEntity, IEntityRef } f
 import Popper from "vue-popperjs";
 
 import { eventBus } from "@/main";
-import { deepEquals, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, NeverError, parseFromClipboard, waitTimeout, ClipboardParseValue } from "@/utils";
+import { deepEquals, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, NeverError, parseFromClipboard, waitTimeout, ClipboardParseValue, elementIsVisible } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { maxPerFetch } from "@/components/UserView.vue";
@@ -970,6 +971,26 @@ const plainTextStringify = (table: string[][]): string => {
   });
 
   return output;
+};
+
+const isClickWithinThisWindow = (el: HTMLElement, event: MouseEvent): boolean => {
+  if (!elementIsVisible(el)) {
+    // If element is hidden, don't react to outside clicks.
+    return false;
+  }
+  if (!(event.target instanceof HTMLElement)) {
+    // Default to true.
+    return true;
+  }
+  const myWindow = el.closest(".window");
+  if (myWindow === null) {
+    return true;
+  }
+  const eventWindow = event.target.closest(".window");
+  if (eventWindow === null) {
+    return true;
+  }
+  return myWindow === eventWindow;
 };
 
 @UserView({
@@ -2259,6 +2280,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
+  private checkModal(event: MouseEvent) {
+    const cellEdit = this.$refs["tableCellEdit"] as TableCellEdit;
+    const cellEditEl = cellEdit.$el as HTMLElement;
+    return isClickWithinThisWindow(cellEditEl, event);
+  }
+
   private closeCellContextMenu() {
     this.cellContextMenu = null;
   }
@@ -2268,7 +2295,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (!tableRef) throw new Error("Can't find `tableContainer` ref");
 
     this.selectCell(pos);
-    this.closeCellContextMenu();
 
     this.cellContextMenu = {
       reference: {
@@ -2383,7 +2409,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       this.handleCellEdit(pos, element);
     }
 
-    // `v-click-outside` somehow doesn't triggers on cell clicks, so close context menu there too.
+    // FIXME: `v-click-outside` somehow doesn't trigger on cell clicks, so close context menu there too.
     this.closeCellContextMenu();
 
     // We capture click-events from cells so we need to manually close popups here.

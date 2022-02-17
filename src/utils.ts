@@ -974,3 +974,8 @@ export const safeJsonParse = (str: unknown): unknown | undefined => {
     return undefined;
   }
 };
+
+// https://stackoverflow.com/a/33456469
+export const elementIsVisible = (e: HTMLElement) => {
+  return Boolean(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
+};

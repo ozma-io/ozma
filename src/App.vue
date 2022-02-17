@@ -10,10 +10,11 @@
 </i18n>
 
 <template>
+  <!-- "window" class is used to detect active windows to limit v-click-outside. See also `Table.vue:isClickWithinThisWindow`. -->
   <div
     id="app"
     :style="styleSettings"
-    class="default-variant default-local-variant"
+    class="default-variant default-local-variant window"
   >
     <AlertBanner
       v-if="bannerMessage"

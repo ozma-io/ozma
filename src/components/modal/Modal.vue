@@ -10,9 +10,10 @@
 </i18n>
 
 <template>
+  <!-- "window" class is used to detect active windows to limit v-click-outside. See also `Table.vue:isClickWithinThisWindow`. -->
   <VueModal
     adaptive
-    class="tabbed-modal"
+    class="tabbed-modal window"
     :width="modalWidth"
     :height="modalHeight"
     :min-width="200"
