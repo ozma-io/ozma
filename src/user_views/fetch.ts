@@ -1,7 +1,7 @@
 import { UserViewErrorType, IViewInfoResult, IViewExprResult, FunDBError, IEntriesRequestOpts } from "ozma-api";
 import { Store } from "vuex";
 
-import Api from "@/api";
+import Api, { developmentMode } from "@/api";
 import { IUserViewArguments, ICombinedUserViewDataParams } from "./combined";
 
 export class UserViewError extends Error {
@@ -44,12 +44,17 @@ async (
         };
       } else {
         // Increasing `limit` to compute `complete`.
-        const extendedOpts = opts.chunk?.limit !== undefined
-          ? { ...opts, chunk: { ...opts.chunk, limit: opts.chunk.limit + 1 } }
-          : opts;
+        if (opts.chunk?.limit !== undefined) {
+          opts = { ...opts, chunk: { ...opts.chunk, limit: opts.chunk.limit + 1 } };
+        }
+        // Always recompile user views if development mode is enabled.
+        if (developmentMode) {
+          // Hack `chunk` to pass undocumented call argument.
+          opts = { ...opts, chunk: { ...opts.chunk, forceRecompile: true } as any };
+        }
         const res: IViewExprResult = await store.dispatch("callProtectedApi", {
           func: Api.getNamedUserView.bind(Api),
-          args: [args.source.ref, args.args, extendedOpts],
+          args: [args.source.ref, args.args, opts],
         }, { root: true });
         const complete = opts.chunk?.limit !== undefined && res.result.rows.length <= opts.chunk.limit;
         return {
